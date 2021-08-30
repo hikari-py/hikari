@@ -613,7 +613,7 @@ class Application(guilds.PartialApplication):
             file_format=ext,
         )
 
-    async def fetch_guild(self) -> guilds.RESTGuild:
+    async def fetch_guild(self) -> typing.Optional[guilds.RESTGuild]:
         """Fetch the guild this application is linked to if sold on Discord.
 
         Parameters
@@ -624,8 +624,8 @@ class Application(guilds.PartialApplication):
 
         Returns
         -------
-        hikari.guilds.RESTGuild
-            The requested guild.
+        typing.Optional[hikari.guilds.RESTGuild]
+            The requested guild if the application is linked to a guild, else `builtins.None`.
 
         Raises
         ------
@@ -649,9 +649,11 @@ class Application(guilds.PartialApplication):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
-        return await self.app.rest.fetch_guild(self.guild_id)
+        if self.guild_id is not None:
+            return await self.app.rest.fetch_guild(self.guild_id)
+        return None
 
-    async def fetch_guild_preview(self) -> guilds.GuildPreview:
+    async def fetch_guild_preview(self) -> typing.Optional[guilds.GuildPreview]:
         """Fetch the preview of the guild this application is linked to if sold on Discord.
 
         Parameters
@@ -662,8 +664,8 @@ class Application(guilds.PartialApplication):
 
         Returns
         -------
-        hikari.guilds.GuildPreview
-            The requested guild preview.
+        typing.Optional[hikari.guilds.GuildPreview]
+            The requested guild preview if the application is linked to a guild, else `builtins.None`.
 
         !!! note
             This will only work if you are a part of that guild or it is public.
@@ -688,7 +690,10 @@ class Application(guilds.PartialApplication):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
-        return await self.app.rest.fetch_guild_preview(self.guild_id)
+        if self.guild_id is not None:
+            return await self.app.rest.fetch_guild_preview(self.guild_id)
+
+        return None
 
 
 @attr_extensions.with_copy
