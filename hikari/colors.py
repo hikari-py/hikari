@@ -570,7 +570,7 @@ This may be:
 2. `hikari.colours.Colour` (an alias for `hikari.colors.Color`).
 3. A value that can be cast to an `builtins.int` (RGB hex-code).
 4. a 3-`builtins.tuple` of `builtins.int` (RGB integers in range 0 through 255).
-5. a 3-`builtins.tuple` of `builtins.int` (RGB floats in range 0 through 1).
+5. a 3-`builtins.tuple` of `builtins.float` (RGB floats in range 0 through 1).
 6. a list of `builtins.int`.
 7. a list of `builtins.float`.
 8. a `builtins.str` hex colour code.
