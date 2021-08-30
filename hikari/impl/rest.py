@@ -767,7 +767,7 @@ class RESTClientImpl(rest_api.RESTClient):
                     raise errors.HTTPError(f"Expected JSON [{response.content_type=}, {real_url=}]")
 
                 # Handling 5xx errors
-                if 500 <= response.status < 600 and retries_done <= self._max_retries and self._max_retries != 0:
+                if 500 <= response.status < 600 and retries_done < self._max_retries:
                     if backoff is None:
                         backoff = rate_limits.ExponentialBackOff()
 
