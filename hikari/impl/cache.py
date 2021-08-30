@@ -132,7 +132,7 @@ class CacheImpl(cache.MutableCache):
         return (self._settings.components & required_flag) == required_flag
 
     @staticmethod
-    def _increment_ref_count(obj: cache_utility.RefCell[_T], increment: int = 1) -> None:
+    def _increment_ref_count(obj: cache_utility.RefCell[typing.Any], increment: int = 1) -> None:
         obj.ref_count += increment
 
     def clear(self) -> None:

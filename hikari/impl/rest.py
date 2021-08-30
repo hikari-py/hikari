@@ -1725,7 +1725,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def execute_webhook(
         self,
-        webhook: snowflakes.SnowflakeishOr[webhooks.ExecutableWebhook],
+        webhook: typing.Union[webhooks.ExecutableWebhook, snowflakes.Snowflakeish],
         token: str,
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
@@ -1745,7 +1745,9 @@ class RESTClientImpl(rest_api.RESTClient):
         ] = undefined.UNDEFINED,
         flags: typing.Union[undefined.UndefinedType, int, messages_.MessageFlag] = undefined.UNDEFINED,
     ) -> messages_.Message:
-        route = routes.POST_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
+        # int(ExecutableWebhook) isn't guaranteed to be valid nor the ID used to execute this entity as a webhook.
+        webhook_id = webhook if isinstance(webhook, int) else webhook.webhook_id
+        route = routes.POST_WEBHOOK_WITH_TOKEN.compile(webhook=webhook_id, token=token)
 
         body = data_binding.JSONObjectBuilder()
         body.put("username", username)
@@ -1772,18 +1774,20 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def fetch_webhook_message(
         self,
-        webhook: snowflakes.SnowflakeishOr[webhooks.ExecutableWebhook],
+        webhook: typing.Union[webhooks.ExecutableWebhook, snowflakes.Snowflakeish],
         token: str,
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
     ) -> messages_.Message:
-        route = routes.GET_WEBHOOK_MESSAGE.compile(webhook=webhook, token=token, message=message)
+        # int(ExecutableWebhook) isn't guaranteed to be valid nor the ID used to execute this entity as a webhook.
+        webhook_id = webhook if isinstance(webhook, int) else webhook.webhook_id
+        route = routes.GET_WEBHOOK_MESSAGE.compile(webhook=webhook_id, token=token, message=message)
         response = await self._request(route, no_auth=True)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
 
     async def edit_webhook_message(
         self,
-        webhook: snowflakes.SnowflakeishOr[webhooks.ExecutableWebhook],
+        webhook: typing.Union[webhooks.ExecutableWebhook, snowflakes.Snowflakeish],
         token: str,
         message: snowflakes.SnowflakeishOr[messages_.Message],
         content: undefined.UndefinedNoneOr[typing.Any] = undefined.UNDEFINED,
@@ -1801,7 +1805,9 @@ class RESTClientImpl(rest_api.RESTClient):
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
     ) -> messages_.Message:
-        route = routes.PATCH_WEBHOOK_MESSAGE.compile(webhook=webhook, token=token, message=message)
+        # int(ExecutableWebhook) isn't guaranteed to be valid nor the ID used to execute this entity as a webhook.
+        webhook_id = webhook if isinstance(webhook, int) else webhook.webhook_id
+        route = routes.PATCH_WEBHOOK_MESSAGE.compile(webhook=webhook_id, token=token, message=message)
         body = data_binding.JSONObjectBuilder()
         return await self._edit_message(
             route,
@@ -1821,11 +1827,13 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def delete_webhook_message(
         self,
-        webhook: snowflakes.SnowflakeishOr[webhooks.ExecutableWebhook],
+        webhook: typing.Union[webhooks.ExecutableWebhook, snowflakes.Snowflakeish],
         token: str,
         message: snowflakes.SnowflakeishOr[messages_.Message],
     ) -> None:
-        route = routes.DELETE_WEBHOOK_MESSAGE.compile(webhook=webhook, token=token, message=message)
+        # int(ExecutableWebhook) isn't guaranteed to be valid nor the ID used to execute this entity as a webhook.
+        webhook_id = webhook if isinstance(webhook, int) else webhook.webhook_id
+        route = routes.DELETE_WEBHOOK_MESSAGE.compile(webhook=webhook_id, token=token, message=message)
         await self._request(route, no_auth=True)
 
     async def fetch_gateway_url(self) -> str:
