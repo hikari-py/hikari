@@ -47,6 +47,7 @@ if typing.TYPE_CHECKING:
     from hikari import presences as presence_models
     from hikari import sessions as gateway_models
     from hikari import snowflakes
+    from hikari import stickers as sticker_models
     from hikari import templates as template_models
     from hikari import users as user_models
     from hikari import voices as voice_models
@@ -989,6 +990,38 @@ class EntityFactory(abc.ABC):
         """
 
     @abc.abstractmethod
+    def deserialize_guild_command_permissions(
+        self, payload: data_binding.JSONObject
+    ) -> commands.GuildCommandPermissions:
+        """Parse a raw payload from Discord into guild command permissions object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.commands.GuildCommandPermissions
+            The deserialized guild command permissions object.
+        """
+
+    @abc.abstractmethod
+    def serialize_command_permission(self, permission: commands.CommandPermission) -> data_binding.JSONObject:
+        """Serialize a command permission object to a json serializable dict.
+
+        Parameters
+        ----------
+        permission: hikari.commands.CommandPermission
+            The command permission object to serialize.
+
+        Returns
+        -------
+        hikari.internal.data_binding.JSONObject
+            The serialized representation of the command permission.
+        """
+
+    @abc.abstractmethod
     def deserialize_partial_interaction(self, payload: data_binding.JSONObject) -> base_interactions.PartialInteraction:
         """Parse a raw payload from Discord into a partial interaction object.
 
@@ -1110,9 +1143,74 @@ class EntityFactory(abc.ABC):
         """
 
     ##################
+    # STICKER MODELS #
+    ##################
+
+    @abc.abstractmethod
+    def deserialize_sticker_pack(self, payload: data_binding.JSONObject) -> sticker_models.StickerPack:
+        """Parse a raw payload from Discord into a sticker pack object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.stickers.StickerPack
+            The deserialized sticker pack object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_partial_sticker(self, payload: data_binding.JSONObject) -> sticker_models.PartialSticker:
+        """Parse a raw payload from Discord into a partial sticker object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.stickers.PartialSticker
+            The deserialized partial sticker object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_standard_sticker(self, payload: data_binding.JSONObject) -> sticker_models.StandardSticker:
+        """Parse a raw payload from Discord into a standard sticker object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.stickers.StandardSticker
+            The deserialized standard sticker object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_guild_sticker(self, payload: data_binding.JSONObject) -> sticker_models.GuildSticker:
+        """Parse a raw payload from Discord into a guild sticker object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.stickers.GuildSticker
+            The deserialized guild sticker object.
+        """
+
+    ##################
     # MESSAGE MODELS #
     ##################
 
+    @abc.abstractmethod
     def deserialize_partial_message(self, payload: data_binding.JSONObject) -> message_models.PartialMessage:
         """Parse a raw payload from Discord into a partial message object.
 

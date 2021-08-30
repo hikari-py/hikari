@@ -40,6 +40,7 @@ from hikari import permissions as permission_models
 from hikari import presences as presence_models
 from hikari import sessions as gateway_models
 from hikari import snowflakes
+from hikari import stickers as sticker_models
 from hikari import traits
 from hikari import undefined
 from hikari import users as user_models
@@ -2698,6 +2699,7 @@ class TestEntityFactoryImpl:
             "guild_id": "49949494",
             "name": "good name",
             "description": "very good description",
+            "default_permission": False,
             "options": [
                 {
                     "type": 1,
@@ -2725,6 +2727,7 @@ class TestEntityFactoryImpl:
         assert command.guild_id == 49949494
         assert command.name == "good name"
         assert command.description == "very good description"
+        assert command.default_permission is False
 
         # CommandOption
         assert len(command.options) == 1
@@ -2768,7 +2771,7 @@ class TestEntityFactoryImpl:
 
         assert command.guild_id == 123123
 
-    def test_deserialize_command_with_null_values(self, entity_factory_impl):
+    def test_deserialize_command_with_null_and_unset_values(self, entity_factory_impl):
         payload = {
             "id": "1231231231",
             "application_id": "12354123",
@@ -2781,7 +2784,41 @@ class TestEntityFactoryImpl:
         command = entity_factory_impl.deserialize_command(payload)
 
         assert command.options is None
+        assert command.default_permission is True
         assert isinstance(command, commands.Command)
+
+    @pytest.fixture()
+    def guild_command_permissions_payload(self):
+        return {
+            "id": "123321",
+            "application_id": "431321123",
+            "guild_id": "323223322332",
+            "permissions": [{"id": "22222", "type": 1, "permission": True}],
+        }
+
+    def test_deserialize_guild_command_permissions(self, entity_factory_impl, guild_command_permissions_payload):
+        command = entity_factory_impl.deserialize_guild_command_permissions(guild_command_permissions_payload)
+
+        assert command.command_id == 123321
+        assert command.application_id == 431321123
+        assert command.guild_id == 323223322332
+
+        # CommandPermission
+        assert len(command.permissions) == 1
+        permission = command.permissions[0]
+        assert permission.id == 22222
+        assert permission.type is commands.CommandPermissionType.ROLE
+        assert permission.has_access is True
+        assert isinstance(permission, commands.CommandPermission)
+
+    def test_serialize_command_permission(self, entity_factory_impl):
+        command = commands.CommandPermission(type=commands.CommandPermissionType.ROLE, has_access=True, id=123321)
+
+        assert entity_factory_impl.serialize_command_permission(command) == {
+            "type": 1,
+            "id": "123321",
+            "permission": True,
+        }
 
     @pytest.fixture()
     def partial_interaction_payload(self):
@@ -3414,15 +3451,11 @@ class TestEntityFactoryImpl:
             },
             "referenced_message": {"message_reference_payload": "testing"},
             "flags": 2,
-            "stickers": [
+            "sticker_items": [
                 {
                     "id": "749046696482439188",
                     "name": "Thinking",
-                    "description": "very descript",
-                    "pack_id": "749043879713701898",
-                    "asset": "2be10a547ceb0116998f5bb878d5bc1c",
                     "format_type": 3,
-                    "tags": "curious, huh, what, confused, wut, 🤔, 😕, 🧐",
                 }
             ],
             "nonce": "171000788183678976",
@@ -3521,12 +3554,8 @@ class TestEntityFactoryImpl:
         sticker = partial_message.stickers[0]
         assert sticker.id == 749046696482439188
         assert sticker.name == "Thinking"
-        assert sticker.description == "very descript"
-        assert sticker.pack_id == 749043879713701898
-        assert sticker.asset_hash == "2be10a547ceb0116998f5bb878d5bc1c"
-        assert sticker.format_type is message_models.StickerFormatType.LOTTIE
-        assert sticker.tags == ["curious", "huh", "what", "confused", "wut", "🤔", "😕", "🧐"]
-        assert isinstance(sticker, message_models.Sticker)
+        assert sticker.format_type is sticker_models.StickerFormatType.LOTTIE
+        assert isinstance(sticker, sticker_models.PartialSticker)
 
         assert partial_message.nonce == "171000788183678976"
         assert partial_message.application_id == 123123123123
@@ -3692,12 +3721,8 @@ class TestEntityFactoryImpl:
         sticker = message.stickers[0]
         assert sticker.id == 749046696482439188
         assert sticker.name == "Thinking"
-        assert sticker.description == "very descript"
-        assert sticker.pack_id == 749043879713701898
-        assert sticker.asset_hash == "2be10a547ceb0116998f5bb878d5bc1c"
-        assert sticker.format_type is message_models.StickerFormatType.LOTTIE
-        assert sticker.tags == ["curious", "huh", "what", "confused", "wut", "🤔", "😕", "🧐"]
-        assert isinstance(sticker, message_models.Sticker)
+        assert sticker.format_type is sticker_models.StickerFormatType.LOTTIE
+        assert isinstance(sticker, sticker_models.PartialSticker)
 
         assert message.nonce == "171000788183678976"
         assert message.application_id == 123123123123

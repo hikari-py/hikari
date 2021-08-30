@@ -42,6 +42,7 @@ from hikari import snowflakes
 from hikari import undefined
 from hikari import urls
 from hikari import users
+from hikari import webhooks
 from hikari.api import rest as rest_api
 from hikari.impl import buckets
 from hikari.impl import entity_factory
@@ -1989,19 +1990,20 @@ class TestRESTClientImplAsync:
 
     async def test_execute_webhook_when_attachment_and_attachments_given(self, rest_client):
         with pytest.raises(ValueError, match="You may only specify one of 'attachment' or 'attachments', not both"):
-            await rest_client.execute_webhook(StubModel(123), "token", attachment=object(), attachments=object())
+            await rest_client.execute_webhook(123, "token", attachment=object(), attachments=object())
 
     async def test_execute_webhook_when_embed_and_embeds_given(self, rest_client):
         with pytest.raises(ValueError, match="You may only specify one of 'embed' or 'embeds', not both"):
-            await rest_client.execute_webhook(StubModel(123), "token", embed=object(), embeds=object())
+            await rest_client.execute_webhook(123, "token", embed=object(), embeds=object())
 
-    async def test_fetch_webhook_message(self, rest_client):
+    @pytest.mark.parametrize("webhook", [mock.Mock(webhooks.ExecutableWebhook, webhook_id=432), 432])
+    async def test_fetch_webhook_message(self, rest_client, webhook):
         message_obj = mock.Mock()
-        expected_route = routes.GET_WEBHOOK_MESSAGE.compile(webhook=123, token="hi, im a token", message=456)
+        expected_route = routes.GET_WEBHOOK_MESSAGE.compile(webhook=432, token="hi, im a token", message=456)
         rest_client._request = mock.AsyncMock(return_value={"id": "456"})
         rest_client._entity_factory.deserialize_message = mock.Mock(return_value=message_obj)
 
-        assert await rest_client.fetch_webhook_message(StubModel(123), "hi, im a token", StubModel(456)) is message_obj
+        assert await rest_client.fetch_webhook_message(webhook, "hi, im a token", StubModel(456)) is message_obj
         rest_client._request.assert_awaited_once_with(expected_route, no_auth=True)
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"id": "456"})
 
@@ -2009,11 +2011,12 @@ class TestRESTClientImplAsync:
     async def test_edit_webhook_message(self, rest_client):
         ...  # TODO: Implement
 
-    async def test_delete_webhook_message(self, rest_client):
+    @pytest.mark.parametrize("webhook", [mock.Mock(webhooks.ExecutableWebhook, webhook_id=123), 123])
+    async def test_delete_webhook_message(self, rest_client, webhook):
         expected_route = routes.DELETE_WEBHOOK_MESSAGE.compile(webhook=123, token="token", message=456)
         rest_client._request = mock.AsyncMock()
 
-        await rest_client.delete_webhook_message(StubModel(123), "token", StubModel(456))
+        await rest_client.delete_webhook_message(webhook, "token", StubModel(456))
         rest_client._request.assert_awaited_once_with(expected_route, no_auth=True)
 
     async def test_fetch_gateway_url(self, rest_client):
@@ -2417,8 +2420,8 @@ class TestRESTClientImplAsync:
         expected_route = routes.DELETE_GUILD_EMOJI.compile(guild=123, emoji=456)
         rest_client._request = mock.AsyncMock()
 
-        await rest_client.delete_emoji(StubModel(123), StubModel(456))
-        rest_client._request.assert_awaited_once_with(expected_route)
+        await rest_client.delete_emoji(StubModel(123), StubModel(456), reason="testing")
+        rest_client._request.assert_awaited_once_with(expected_route, reason="testing")
 
     async def test_fetch_guild(self, rest_client):
         guild = StubModel(1234)
@@ -3536,6 +3539,67 @@ class TestRESTClientImplAsync:
         await rest_client.delete_application_command(StubModel(312312), StubModel(65234323))
 
         rest_client._request.assert_awaited_once_with(expected_route)
+
+    async def test_fetch_application_guild_commands_permissions(self, rest_client):
+        expected_route = routes.GET_APPLICATION_GUILD_COMMANDS_PERMISSIONS.compile(application=321431, guild=54123)
+        mock_command_payload = object()
+        rest_client._request = mock.AsyncMock(return_value=[mock_command_payload])
+
+        result = await rest_client.fetch_application_guild_commands_permissions(321431, 54123)
+
+        assert result == [rest_client._entity_factory.deserialize_guild_command_permissions.return_value]
+        rest_client._entity_factory.deserialize_guild_command_permissions.assert_called_once_with(mock_command_payload)
+        rest_client._request.assert_awaited_once_with(expected_route)
+
+    async def test_fetch_application_command_permissions(self, rest_client):
+        expected_route = routes.GET_APPLICATION_COMMAND_PERMISSIONS.compile(
+            application=543421, guild=123321321, command=543123
+        )
+        mock_command_payload = {"id": "9393939393"}
+        rest_client._request = mock.AsyncMock(return_value=mock_command_payload)
+
+        result = await rest_client.fetch_application_command_permissions(543421, 123321321, 543123)
+
+        assert result is rest_client._entity_factory.deserialize_guild_command_permissions.return_value
+        rest_client._entity_factory.deserialize_guild_command_permissions.assert_called_once_with(mock_command_payload)
+        rest_client._request.assert_awaited_once_with(expected_route)
+
+    async def test_set_application_guild_commands_permissions(self, rest_client):
+        expected_route = routes.PUT_APPLICATION_GUILD_COMMANDS_PERMISSIONS.compile(application=321123, guild=542123)
+        mock_command_payload = object()
+        mock_permission = object()
+        rest_client._request = mock.AsyncMock(return_value=[mock_command_payload])
+
+        result = await rest_client.set_application_guild_commands_permissions(
+            321123, 542123, {564123123: [mock_permission]}
+        )
+
+        assert result == [rest_client._entity_factory.deserialize_guild_command_permissions.return_value]
+        rest_client._entity_factory.serialize_command_permission.assert_called_once_with(mock_permission)
+        rest_client._entity_factory.deserialize_guild_command_permissions.assert_called_once_with(mock_command_payload)
+        rest_client._request.assert_awaited_once_with(
+            expected_route,
+            json=[
+                {
+                    "id": "564123123",
+                    "permissions": [rest_client._entity_factory.serialize_command_permission.return_value],
+                }
+            ],
+        )
+
+    async def test_set_application_command_permissions(self, rest_client):
+        route = routes.PUT_APPLICATION_COMMAND_PERMISSIONS.compile(application=2321, guild=431, command=666666)
+        mock_permission = object()
+        mock_command_payload = {"id": "29292929"}
+        rest_client._request = mock.AsyncMock(return_value=mock_command_payload)
+
+        result = await rest_client.set_application_command_permissions(2321, 431, 666666, [mock_permission])
+
+        assert result is rest_client._entity_factory.deserialize_guild_command_permissions.return_value
+        rest_client._entity_factory.deserialize_guild_command_permissions.assert_called_once_with(mock_command_payload)
+        rest_client._request.assert_awaited_once_with(
+            route, json={"permissions": [rest_client._entity_factory.serialize_command_permission.return_value]}
+        )
 
     def test_interaction_deferred_builder(self, rest_client):
         result = rest_client.interaction_deferred_builder(5)

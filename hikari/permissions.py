@@ -234,8 +234,8 @@ class Permissions(enums.Flag):
         (or their owner's account in the case of bot users) and the guild owner.
     """
 
-    MANAGE_EMOJIS = 1 << 30
-    """Allows management and editing of emojis.
+    MANAGE_EMOJIS_AND_STICKERS = 1 << 30
+    """Allows management and editing of emojis and stickers.
 
     !!! note
         In guilds with server-wide 2FA enabled this permission can only be used

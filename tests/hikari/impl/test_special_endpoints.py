@@ -187,10 +187,20 @@ class TestCommandBuilder:
 
         assert builder.id == 3212123
 
+    def test_default_permission(self):
+        builder = special_endpoints.CommandBuilder("oksksksk", "kfdkodfokfd").set_default_permission(True)
+
+        assert builder.default_permission is True
+
     def test_build_with_optional_data(self):
         mock_entity_factory = mock.Mock()
         mock_option = object()
-        builder = special_endpoints.CommandBuilder("we are number", "one").add_option(mock_option).set_id(3412312)
+        builder = (
+            special_endpoints.CommandBuilder("we are number", "one")
+            .add_option(mock_option)
+            .set_id(3412312)
+            .set_default_permission(False)
+        )
 
         result = builder.build(mock_entity_factory)
 
@@ -198,6 +208,7 @@ class TestCommandBuilder:
         assert result == {
             "name": "we are number",
             "description": "one",
+            "default_permission": False,
             "options": [mock_entity_factory.serialize_command_option.return_value],
             "id": "3412312",
         }
@@ -205,6 +216,6 @@ class TestCommandBuilder:
     def test_build_without_optional_data(self):
         builder = special_endpoints.CommandBuilder("we are numberr", "oner")
 
-        result = builder.build(object())
+        result = builder.build(mock.Mock())
 
         assert result == {"name": "we are numberr", "description": "oner", "options": []}

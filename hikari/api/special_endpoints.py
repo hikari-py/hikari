@@ -914,6 +914,19 @@ class CommandBuilder(abc.ABC):
             The ID of this command if set.
         """
 
+    @property
+    @abc.abstractmethod
+    def default_permission(self) -> undefined.UndefinedOr[bool]:
+        """Whether the command should be enabled by default (without any permissions).
+
+        Defaults to `builtins.bool`.
+
+        Returns
+        -------
+        undefined.UndefinedOr[builtins.bool]
+            Whether the command should be enabled by default (without any permissions).
+        """
+
     @abc.abstractmethod
     def set_id(self: _T, id_: undefined.UndefinedOr[snowflakes.Snowflakeish], /) -> _T:
         """Set the ID of this command.
@@ -927,6 +940,21 @@ class CommandBuilder(abc.ABC):
         -------
         CommandBuilder
             Object of this command builder.
+        """
+
+    @abc.abstractmethod
+    def set_default_permission(self: _T, state: undefined.UndefinedOr[bool], /) -> _T:
+        """Whether this command should be enabled by default (without any permissions).
+
+        Parameters
+        ----------
+        state : hikari.undefined.UndefinedOr[builtins.bool]
+            Whether this command should be enabled by default.
+
+        Returns
+        -------
+        CommandBuilder
+            Object of this command builder for chained calls.
         """
 
     @abc.abstractmethod

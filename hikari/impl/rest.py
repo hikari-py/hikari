@@ -89,6 +89,7 @@ if typing.TYPE_CHECKING:
     from hikari import invites
     from hikari import messages as messages_
     from hikari import sessions
+    from hikari import stickers
     from hikari import templates
     from hikari import voices
     from hikari import webhooks
@@ -1724,7 +1725,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def execute_webhook(
         self,
-        webhook: snowflakes.SnowflakeishOr[webhooks.ExecutableWebhook],
+        webhook: typing.Union[webhooks.ExecutableWebhook, snowflakes.Snowflakeish],
         token: str,
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
@@ -1744,7 +1745,9 @@ class RESTClientImpl(rest_api.RESTClient):
         ] = undefined.UNDEFINED,
         flags: typing.Union[undefined.UndefinedType, int, messages_.MessageFlag] = undefined.UNDEFINED,
     ) -> messages_.Message:
-        route = routes.POST_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
+        # int(ExecutableWebhook) isn't guaranteed to be valid nor the ID used to execute this entity as a webhook.
+        webhook_id = webhook if isinstance(webhook, int) else webhook.webhook_id
+        route = routes.POST_WEBHOOK_WITH_TOKEN.compile(webhook=webhook_id, token=token)
 
         body = data_binding.JSONObjectBuilder()
         body.put("username", username)
@@ -1771,18 +1774,20 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def fetch_webhook_message(
         self,
-        webhook: snowflakes.SnowflakeishOr[webhooks.ExecutableWebhook],
+        webhook: typing.Union[webhooks.ExecutableWebhook, snowflakes.Snowflakeish],
         token: str,
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
     ) -> messages_.Message:
-        route = routes.GET_WEBHOOK_MESSAGE.compile(webhook=webhook, token=token, message=message)
+        # int(ExecutableWebhook) isn't guaranteed to be valid nor the ID used to execute this entity as a webhook.
+        webhook_id = webhook if isinstance(webhook, int) else webhook.webhook_id
+        route = routes.GET_WEBHOOK_MESSAGE.compile(webhook=webhook_id, token=token, message=message)
         response = await self._request(route, no_auth=True)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
 
     async def edit_webhook_message(
         self,
-        webhook: snowflakes.SnowflakeishOr[webhooks.ExecutableWebhook],
+        webhook: typing.Union[webhooks.ExecutableWebhook, snowflakes.Snowflakeish],
         token: str,
         message: snowflakes.SnowflakeishOr[messages_.Message],
         content: undefined.UndefinedNoneOr[typing.Any] = undefined.UNDEFINED,
@@ -1800,7 +1805,9 @@ class RESTClientImpl(rest_api.RESTClient):
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
     ) -> messages_.Message:
-        route = routes.PATCH_WEBHOOK_MESSAGE.compile(webhook=webhook, token=token, message=message)
+        # int(ExecutableWebhook) isn't guaranteed to be valid nor the ID used to execute this entity as a webhook.
+        webhook_id = webhook if isinstance(webhook, int) else webhook.webhook_id
+        route = routes.PATCH_WEBHOOK_MESSAGE.compile(webhook=webhook_id, token=token, message=message)
         body = data_binding.JSONObjectBuilder()
         return await self._edit_message(
             route,
@@ -1820,11 +1827,13 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def delete_webhook_message(
         self,
-        webhook: snowflakes.SnowflakeishOr[webhooks.ExecutableWebhook],
+        webhook: typing.Union[webhooks.ExecutableWebhook, snowflakes.Snowflakeish],
         token: str,
         message: snowflakes.SnowflakeishOr[messages_.Message],
     ) -> None:
-        route = routes.DELETE_WEBHOOK_MESSAGE.compile(webhook=webhook, token=token, message=message)
+        # int(ExecutableWebhook) isn't guaranteed to be valid nor the ID used to execute this entity as a webhook.
+        webhook_id = webhook if isinstance(webhook, int) else webhook.webhook_id
+        route = routes.DELETE_WEBHOOK_MESSAGE.compile(webhook=webhook_id, token=token, message=message)
         await self._request(route, no_auth=True)
 
     async def fetch_gateway_url(self) -> str:
@@ -2137,9 +2146,102 @@ class RESTClientImpl(rest_api.RESTClient):
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji],
+        *,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         route = routes.DELETE_GUILD_EMOJI.compile(guild=guild, emoji=emoji)
-        await self._request(route)
+        await self._request(route, reason=reason)
+
+    async def fetch_available_sticker_packs(self) -> typing.Sequence[stickers.StickerPack]:
+        route = routes.GET_STICKER_PACKS.compile()
+        response = await self._request(route, no_auth=True)
+        assert isinstance(response, dict)
+        return [self._entity_factory.deserialize_sticker_pack(pack) for pack in response["sticker_packs"]]
+
+    async def fetch_sticker(
+        self,
+        sticker: snowflakes.SnowflakeishOr[stickers.PartialSticker],
+    ) -> typing.Union[stickers.StandardSticker, stickers.GuildSticker]:
+        route = routes.GET_STICKER.compile(sticker=sticker)
+        response = await self._request(route)
+        assert isinstance(response, dict)
+        return (
+            self._entity_factory.deserialize_guild_sticker(response)
+            if "guild_id" in response
+            else self._entity_factory.deserialize_standard_sticker(response)
+        )
+
+    async def fetch_guild_stickers(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
+    ) -> typing.Sequence[stickers.GuildSticker]:
+        route = routes.GET_GUILD_STICKERS.compile(guild=guild)
+        response = await self._request(route)
+        assert isinstance(response, list)
+        return [self._entity_factory.deserialize_guild_sticker(sticker) for sticker in response]
+
+    async def fetch_guild_sticker(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        sticker: snowflakes.SnowflakeishOr[stickers.PartialSticker],
+    ) -> stickers.GuildSticker:
+        route = routes.GET_GUILD_STICKER.compile(guild=guild, sticker=sticker)
+        response = await self._request(route)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_guild_sticker(response)
+
+    async def create_sticker(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        name: str,
+        tag: str,
+        image: files.Resourceish,
+        *,
+        description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> stickers.GuildSticker:
+        route = routes.POST_GUILD_STICKERS.compile(guild=guild)
+        body = data_binding.JSONObjectBuilder()
+        body.put("name", name)
+        body.put("tags", tag)
+        body.put("description", description)
+
+        image_resource = files.ensure_resource(image)
+        async with image_resource.stream(executor=self._executor) as stream:
+            body.put("image", await stream.data_uri())
+
+        response = await self._request(route, json=body, reason=reason)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_guild_sticker(response)
+
+    async def edit_sticker(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        sticker: snowflakes.SnowflakeishOr[stickers.PartialSticker],
+        *,
+        name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        tag: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> stickers.GuildSticker:
+        route = routes.PATCH_GUILD_STICKER.compile(guild=guild, sticker=sticker)
+        body = data_binding.JSONObjectBuilder()
+        body.put("name", name)
+        body.put("tags", tag)
+        body.put("description", description)
+
+        response = await self._request(route, json=body, reason=reason)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_guild_sticker(response)
+
+    async def delete_sticker(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        sticker: snowflakes.SnowflakeishOr[stickers.PartialSticker],
+        *,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
+        route = routes.DELETE_GUILD_STICKER.compile(guild=guild, sticker=sticker)
+        await self._request(route, reason=reason)
 
     def guild_builder(self, name: str, /) -> special_endpoints.GuildBuilder:
         return special_endpoints_impl.GuildBuilder(
@@ -2959,6 +3061,7 @@ class RESTClientImpl(rest_api.RESTClient):
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         *,
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
+        default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.Command:
         if guild is undefined.UNDEFINED:
             route = routes.POST_APPLICATION_COMMAND.compile(application=application)
@@ -2970,6 +3073,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("name", name)
         body.put("description", description)
         body.put_array("options", options, conversion=self._entity_factory.serialize_command_option)
+        body.put("default_permission", default_permission)
 
         response = await self._request(route, json=body)
         assert isinstance(response, dict)
@@ -3038,6 +3142,67 @@ class RESTClientImpl(rest_api.RESTClient):
             )
 
         await self._request(route)
+
+    async def fetch_application_guild_commands_permissions(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+    ) -> typing.Sequence[commands.GuildCommandPermissions]:
+        route = routes.GET_APPLICATION_GUILD_COMMANDS_PERMISSIONS.compile(application=application, guild=guild)
+        response = await self._request(route)
+        assert isinstance(response, list)
+        return [self._entity_factory.deserialize_guild_command_permissions(payload) for payload in response]
+
+    async def fetch_application_command_permissions(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        command: snowflakes.SnowflakeishOr[commands.Command],
+    ) -> commands.GuildCommandPermissions:
+        route = routes.GET_APPLICATION_COMMAND_PERMISSIONS.compile(
+            application=application, guild=guild, command=command
+        )
+        response = await self._request(route)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_guild_command_permissions(response)
+
+    async def set_application_guild_commands_permissions(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        permissions: typing.Mapping[
+            snowflakes.SnowflakeishOr[commands.Command], typing.Sequence[commands.CommandPermission]
+        ],
+    ) -> typing.Sequence[commands.GuildCommandPermissions]:
+        route = routes.PUT_APPLICATION_GUILD_COMMANDS_PERMISSIONS.compile(application=application, guild=guild)
+        body = [
+            {
+                "id": str(snowflakes.Snowflake(command)),
+                "permissions": [self._entity_factory.serialize_command_permission(permission) for permission in perms],
+            }
+            for command, perms in permissions.items()
+        ]
+        response = await self._request(route, json=body)
+
+        assert isinstance(response, list)
+        return [self._entity_factory.deserialize_guild_command_permissions(payload) for payload in response]
+
+    async def set_application_command_permissions(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        command: snowflakes.SnowflakeishOr[commands.Command],
+        permissions: typing.Sequence[commands.CommandPermission],
+    ) -> commands.GuildCommandPermissions:
+        route = routes.PUT_APPLICATION_COMMAND_PERMISSIONS.compile(
+            application=application, guild=guild, command=command
+        )
+        body = data_binding.JSONObjectBuilder()
+        body.put_array("permissions", permissions, conversion=self._entity_factory.serialize_command_permission)
+        response = await self._request(route, json=body)
+
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_guild_command_permissions(response)
 
     def interaction_deferred_builder(
         self, type_: typing.Union[base_interactions.ResponseType, int], /

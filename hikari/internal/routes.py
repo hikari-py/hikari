@@ -369,6 +369,13 @@ DELETE_GUILD_EMOJI: typing.Final[Route] = Route(DELETE, "/guilds/{guild}/emojis/
 GET_GUILD_EMOJIS: typing.Final[Route] = Route(GET, "/guilds/{guild}/emojis")
 POST_GUILD_EMOJIS: typing.Final[Route] = Route(POST, "/guilds/{guild}/emojis")
 
+GET_GUILD_STICKER: typing.Final[Route] = Route(GET, "/guilds/{guild}/stickers/{sticker}")
+PATCH_GUILD_STICKER: typing.Final[Route] = Route(PATCH, "/guilds/{guild}/stickers/{sticker}")
+DELETE_GUILD_STICKER: typing.Final[Route] = Route(DELETE, "/guilds/{guild}/stickers/{stickers}")
+
+GET_GUILD_STICKERS: typing.Final[Route] = Route(GET, "/guilds/{guild}/stickers")
+POST_GUILD_STICKERS: typing.Final[Route] = Route(POST, "/guilds/{guild}/stickers")
+
 GET_GUILD_INTEGRATIONS: typing.Final[Route] = Route(GET, "/guilds/{guild}/integrations")
 DELETE_GUILD_INTEGRATION: typing.Final[Route] = Route(DELETE, "/guilds/{guild}/integrations/{integration}")
 
@@ -407,7 +414,9 @@ GET_GUILD_VOICE_REGIONS: typing.Final[Route] = Route(GET, "/guilds/{guild}/regio
 
 GET_GUILD_WEBHOOKS: typing.Final[Route] = Route(GET, "/guilds/{guild}/webhooks")
 
-GET_GUILD_BANNER_IMAGE: typing.Final[Route] = Route(GET, "/guilds/{guild}/widget.png")
+# Stickers
+GET_STICKER_PACKS: typing.Final[Route] = Route(GET, "/sticker-packs")
+GET_STICKER: typing.Final[Route] = Route(GET, "/stickers/{sticker}")
 
 # Templates
 DELETE_GUILD_TEMPLATE: typing.Final[Route] = Route(DELETE, "/guilds/{guild}/templates/{template}")
@@ -480,6 +489,19 @@ DELETE_APPLICATION_GUILD_COMMAND: typing.Final[Route] = Route(
     DELETE, "/applications/{application}/guilds/{guild}/commands/{command}"
 )
 
+GET_APPLICATION_GUILD_COMMANDS_PERMISSIONS: typing.Final[Route] = Route(
+    GET, "/applications/{application}/guilds/{guild}/commands/permissions"
+)
+GET_APPLICATION_COMMAND_PERMISSIONS: typing.Final[Route] = Route(
+    GET, "/applications/{application}/guilds/{guild}/commands/{command}/permissions"
+)
+PUT_APPLICATION_COMMAND_PERMISSIONS: typing.Final[Route] = Route(
+    PUT, "/applications/{application}/guilds/{guild}/commands/{command}/permissions"
+)
+PUT_APPLICATION_GUILD_COMMANDS_PERMISSIONS: typing.Final[Route] = Route(
+    PUT, "/applications/{application}/guilds/{guild}/commands/permissions"
+)
+
 # Interactions
 # For these endpoints "webhook" is the application ID.
 GET_INTERACTION_RESPONSE: typing.Final[Route] = Route(GET, "/webhooks/{webhook}/{token}/messages/@original")
@@ -499,30 +521,37 @@ POST_TOKEN_REVOKE: typing.Final[Route] = Route(POST, "/oauth2/token/revoke")
 GET_GATEWAY: typing.Final[Route] = Route(GET, "/gateway")
 GET_GATEWAY_BOT: typing.Final[Route] = Route(GET, "/gateway/bot")
 
-PNG: typing.Final[str] = "png".casefold()
-JPEG: typing.Final[str] = "jpeg".casefold()
-WEBP: typing.Final[str] = "webp".casefold()
-GIF: typing.Final[str] = "gif".casefold()
+PNG: typing.Final[str] = "png"
+JPEG_JPG: typing.Final[typing.Tuple[str, str]] = ("jpeg", "jpg")
+WEBP: typing.Final[str] = "webp"
+GIF: typing.Final[str] = "gif"
+LOTTIE: typing.Final[str] = "json"  # https://airbnb.io/lottie/
 
 # CDN specific endpoints. These reside on a different server.
 CDN_CUSTOM_EMOJI: typing.Final[CDNRoute] = CDNRoute("/emojis/{emoji_id}", {PNG, GIF})
 
-CDN_GUILD_ICON: typing.Final[CDNRoute] = CDNRoute("/icons/{guild_id}/{hash}", {PNG, JPEG, WEBP, GIF})
-CDN_GUILD_SPLASH: typing.Final[CDNRoute] = CDNRoute("/splashes/{guild_id}/{hash}", {PNG, JPEG, WEBP})
+CDN_GUILD_ICON: typing.Final[CDNRoute] = CDNRoute("/icons/{guild_id}/{hash}", {PNG, *JPEG_JPG, WEBP, GIF})
+CDN_GUILD_SPLASH: typing.Final[CDNRoute] = CDNRoute("/splashes/{guild_id}/{hash}", {PNG, *JPEG_JPG, WEBP})
 CDN_GUILD_DISCOVERY_SPLASH: typing.Final[CDNRoute] = CDNRoute(
-    "/discovery-splashes/{guild_id}/{hash}", {PNG, JPEG, WEBP}
+    "/discovery-splashes/{guild_id}/{hash}", {PNG, *JPEG_JPG, WEBP}
 )
-CDN_GUILD_BANNER: typing.Final[CDNRoute] = CDNRoute("/banners/{guild_id}/{hash}", {PNG, JPEG, WEBP})
+CDN_GUILD_BANNER: typing.Final[CDNRoute] = CDNRoute("/banners/{guild_id}/{hash}", {PNG, *JPEG_JPG, WEBP})
 
 CDN_DEFAULT_USER_AVATAR: typing.Final[CDNRoute] = CDNRoute("/embed/avatars/{discriminator}", {PNG}, sizable=False)
-CDN_USER_AVATAR: typing.Final[CDNRoute] = CDNRoute("/avatars/{user_id}/{hash}", {PNG, JPEG, WEBP, GIF})
+CDN_USER_AVATAR: typing.Final[CDNRoute] = CDNRoute("/avatars/{user_id}/{hash}", {PNG, *JPEG_JPG, WEBP, GIF})
 
-CDN_APPLICATION_ICON: typing.Final[CDNRoute] = CDNRoute("/app-icons/{application_id}/{hash}", {PNG, JPEG, WEBP})
-CDN_APPLICATION_COVER: typing.Final[CDNRoute] = CDNRoute("/app-assets/{application_id}/{hash}", {PNG, JPEG, WEBP})
+CDN_APPLICATION_ICON: typing.Final[CDNRoute] = CDNRoute("/app-icons/{application_id}/{hash}", {PNG, *JPEG_JPG, WEBP})
+CDN_APPLICATION_COVER: typing.Final[CDNRoute] = CDNRoute("/app-assets/{application_id}/{hash}", {PNG, *JPEG_JPG, WEBP})
 CDN_ACHIEVEMENT_ICON: typing.Final[CDNRoute] = CDNRoute(
-    "/app-assets/{application_id}/achievements/{achievement_id}/icons/{hash}", {PNG, JPEG, WEBP}
+    "/app-assets/{application_id}/achievements/{achievement_id}/icons/{hash}", {PNG, *JPEG_JPG, WEBP}
 )
 
-CDN_TEAM_ICON: typing.Final[CDNRoute] = CDNRoute("/team-icons/{team_id}/{hash}", {PNG, JPEG, WEBP})
+CDN_TEAM_ICON: typing.Final[CDNRoute] = CDNRoute("/team-icons/{team_id}/{hash}", {PNG, *JPEG_JPG, WEBP})
+
 # undocumented on the Discord docs.
-CDN_CHANNEL_ICON: typing.Final[CDNRoute] = CDNRoute("/channel-icons/{channel_id}/{hash}", {PNG, JPEG, WEBP})
+CDN_CHANNEL_ICON: typing.Final[CDNRoute] = CDNRoute("/channel-icons/{channel_id}/{hash}", {PNG, *JPEG_JPG, WEBP})
+
+CDN_STICKER: typing.Final[CDNRoute] = CDNRoute("/stickers/{hash}", {PNG, LOTTIE}, sizable=False)
+CDN_STICKER_PACK_BANNER: typing.Final[CDNRoute] = CDNRoute(
+    "/app-assets/710982414301790216/store/{hash}", {PNG, *JPEG_JPG, WEBP}
+)
