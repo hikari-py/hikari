@@ -27,6 +27,8 @@ import pytest
 from hikari import applications
 from hikari import urls
 from hikari import users
+from hikari.errors import ForbiddenError
+from hikari.errors import UnauthorizedError
 from hikari.internal import routes
 from tests.hikari import hikari_test_helpers
 
@@ -153,6 +155,33 @@ class TestApplication:
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL, application_id=123, hash="ahashcover", size=1, file_format="jpeg"
         )
+
+    @pytest.mark.asyncio()
+    async def test_fetch_guild(self, model):
+        model.guild_id = 1234
+        model.fetch_guild = mock.AsyncMock()
+
+        model.fetch_guild.return_value.id = model.guild_id
+        assert (await model.fetch_guild()).id == model.guild_id
+
+        model.fetch_guild.side_effect = UnauthorizedError(
+            "blah blah", "interesting", "foo bar", "this is an error", 403
+        )
+        with pytest.raises(UnauthorizedError):
+            await model.fetch_guild()
+
+    @pytest.mark.asyncio()
+    async def test_fetch_guild_preview(self, model):
+        model.fetch_guild_preview = mock.AsyncMock()
+
+        model.fetch_guild_preview.return_value.description = "poggers"
+        assert (await model.fetch_guild_preview()).description == "poggers"
+
+        model.fetch_guild_preview.side_effect = ForbiddenError(
+            "blah blah", "interesting", "foo bar", "this is an error", 403
+        )
+        with pytest.raises(ForbiddenError):
+            await model.fetch_guild_preview()
 
 
 class TestPartialOAuth2Token:

@@ -613,6 +613,83 @@ class Application(guilds.PartialApplication):
             file_format=ext,
         )
 
+    async def fetch_guild(self) -> guilds.RESTGuild:
+        """Fetch the guild this application is linked to if sold on Discord.
+
+        Parameters
+        ----------
+        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+            The guild to fetch. This can be the object
+            or the ID of an existing guild.
+
+        Returns
+        -------
+        hikari.guilds.RESTGuild
+            The requested guild.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you are not part of the guild.
+        hikari.errors.NotFoundError
+            If the guild is not found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        return await self.app.rest.fetch_guild(self.guild_id)
+
+    async def fetch_guild_preview(self) -> guilds.GuildPreview:
+        """Fetch the preview of the guild this application is linked to if sold on Discord.
+
+        Parameters
+        ----------
+        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+            The guild to fetch the preview of. This can be a
+            guild object or the ID of an existing guild.
+
+        Returns
+        -------
+        hikari.guilds.GuildPreview
+            The requested guild preview.
+
+        !!! note
+            This will only work if you are a part of that guild or it is public.
+
+        Raises
+        ------
+        hikari.errors.NotFoundError
+            If the guild is not found or you are not part of the guild.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        return await self.app.rest.fetch_guild_preview(self.guild_id)
+
 
 @attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
