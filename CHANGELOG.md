@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
  - Sticker methods to PartialGuild.
  - Helpful methods to Application object.
+ - Retries for HTTP requests which fail with `5xx` status codes.
 
 ### Changed
  - Fix errors in rest sticker method docstrings.
