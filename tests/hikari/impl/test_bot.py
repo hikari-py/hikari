@@ -113,7 +113,7 @@ class TestGatewayBot:
 
         with stack:
             return bot_impl.GatewayBot(
-                "token", executor=executor, http_settings=http_settings, proxy_settings=proxy_settings, intents=intents
+                "token", executor=executor, http_settings=http_settings, proxy_settings=proxy_settings, intents=intents, max_retries=0
             )
 
     def test_init(self):
@@ -144,6 +144,7 @@ class TestGatewayBot:
                 intents=intents,
                 logs="DEBUG",
                 max_rate_limit=200,
+                max_retries=0,
                 proxy_settings=proxy_settings,
                 rest_url="somewhere.com",
             )
@@ -167,6 +168,7 @@ class TestGatewayBot:
             executor=executor,
             http_settings=bot._http_settings,
             max_rate_limit=200,
+            max_retries=0,
             proxy_settings=bot._proxy_settings,
             rest_url="somewhere.com",
             token="token",

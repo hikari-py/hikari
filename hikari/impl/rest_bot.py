@@ -149,6 +149,11 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         Note that this only applies to the REST API component that communicates
         with Discord, and will not affect sharding or third party HTTP endpoints
         that may be in use.
+    max_retries : typing.Optional[builtins.int]
+        Maximum number of times a request will be retried if
+        it fails with a `5xx` status. Defaults to 3 if set to `builtins.None`.
+
+        If you provide a value above 5, it will default to 5.
     proxy_settings : typing.Optional[config.ProxySettings]
         Custom proxy settings to use with network-layer logic
         in your application to get through an HTTP-proxy.
@@ -197,6 +202,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         http_settings: typing.Optional[config.HTTPSettings] = None,
         logs: typing.Union[None, int, str, typing.Dict[str, typing.Any]] = "INFO",
         max_rate_limit: float = 300.0,
+        max_retries: int = 3,
         proxy_settings: typing.Optional[config.ProxySettings] = None,
         rest_url: typing.Optional[str] = None,
     ) -> None:
@@ -216,6 +222,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         http_settings: typing.Optional[config.HTTPSettings] = None,
         logs: typing.Union[None, int, str, typing.Dict[str, typing.Any]] = "INFO",
         max_rate_limit: float = 300.0,
+        max_retries: int = 3,
         proxy_settings: typing.Optional[config.ProxySettings] = None,
         rest_url: typing.Optional[str] = None,
     ) -> None:
@@ -234,6 +241,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         http_settings: typing.Optional[config.HTTPSettings] = None,
         logs: typing.Union[None, int, str, typing.Dict[str, typing.Any]] = "INFO",
         max_rate_limit: float = 300.0,
+        max_retries: int = 3,
         proxy_settings: typing.Optional[config.ProxySettings] = None,
         rest_url: typing.Optional[str] = None,
     ) -> None:
@@ -261,6 +269,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
             executor=self._executor,
             http_settings=self._http_settings,
             max_rate_limit=max_rate_limit,
+            max_retries=max_retries,
             proxy_settings=self._proxy_settings,
             rest_url=rest_url,
             token=token,

@@ -331,6 +331,7 @@ def rest_app():
         executor=None,
         http_settings=mock.Mock(spec_set=config.HTTPSettings),
         max_rate_limit=float("inf"),
+        max_retries=0,
         proxy_settings=mock.Mock(spec_set=config.ProxySettings),
         url="https://some.url",
     )
@@ -370,6 +371,7 @@ class TestRESTApp:
             executor=rest_app._executor,
             http_settings=rest_app._http_settings,
             max_rate_limit=float("inf"),
+            max_retries=0,
             proxy_settings=rest_app._proxy_settings,
             token="token",
             token_type="Type",
@@ -394,6 +396,7 @@ class TestRESTApp:
             executor=rest_app._executor,
             http_settings=rest_app._http_settings,
             max_rate_limit=float("inf"),
+            max_retries=0,
             proxy_settings=rest_app._proxy_settings,
             token="token",
             token_type=applications.TokenType.BEARER,

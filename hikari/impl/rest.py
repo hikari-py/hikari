@@ -115,6 +115,7 @@ _X_RATELIMIT_LIMIT_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Limit")
 _X_RATELIMIT_REMAINING_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Remaining")
 _X_RATELIMIT_RESET_AFTER_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Reset-After")
 _RETRY_ERROR_CODES: typing.Final[typing.Set[int]] = {500, 502, 503, 504}
+_MAX_BACKOFF_DURATION: typing.Final[int] = 16
 
 
 class ClientCredentialsStrategy(rest_api.TokenStrategy):
@@ -289,6 +290,11 @@ class RESTApp(traits.ExecutorAware):
         rate limits.
 
         Defaults to five minutes if unspecified.
+    max_retries : typing.Optional[builtins.int]
+        Maximum number of times a request will be retried if
+        it fails with a `5xx` status. Defaults to 3 if set to `builtins.None`.
+
+        If you provide a value above 5, it will default to 5.
     proxy_settings : typing.Optional[hikari.config.ProxySettings]
         Proxy settings to use. If `builtins.None` then no proxy configuration
         will be used.
@@ -305,6 +311,7 @@ class RESTApp(traits.ExecutorAware):
         "_executor",
         "_http_settings",
         "_max_rate_limit",
+        "_max_retries",
         "_proxy_settings",
         "_url",
     )
@@ -315,6 +322,7 @@ class RESTApp(traits.ExecutorAware):
         executor: typing.Optional[concurrent.futures.Executor] = None,
         http_settings: typing.Optional[config.HTTPSettings] = None,
         max_rate_limit: float = 300,
+        max_retries: int = 3,
         proxy_settings: typing.Optional[config.ProxySettings] = None,
         url: typing.Optional[str] = None,
     ) -> None:
@@ -322,6 +330,7 @@ class RESTApp(traits.ExecutorAware):
         self._proxy_settings = config.ProxySettings() if proxy_settings is None else proxy_settings
         self._executor = executor
         self._max_rate_limit = max_rate_limit
+        self._max_retries = max_retries
         self._url = url
 
     @property
@@ -410,6 +419,7 @@ class RESTApp(traits.ExecutorAware):
             executor=self._executor,
             http_settings=self._http_settings,
             max_rate_limit=self._max_rate_limit,
+            max_retries=self._max_retries,
             proxy_settings=self._proxy_settings,
             token=token,
             token_type=token_type,
@@ -508,7 +518,7 @@ class RESTClientImpl(rest_api.RESTClient):
         Maximum number of times a request will be retried if
         it fails with a `5xx` status. Defaults to 3 if set to `builtins.None`.
 
-        If you provide above 5, it will default to 5.
+        If you provide a value above 5, it will default to 5.
     token : typing.Union[builtins.str, builtins.None, hikari.api.rest.TokenStrategy]
         The bot or bearer token. If no token is to be used,
         this can be undefined.
@@ -775,7 +785,7 @@ class RESTClientImpl(rest_api.RESTClient):
                 # Handling 5xx errors
                 if response.status in _RETRY_ERROR_CODES and retries_done < self._max_retries:
                     if backoff is None:
-                        backoff = rate_limits.ExponentialBackOff(maximum=16)
+                        backoff = rate_limits.ExponentialBackOff(maximum=_MAX_BACKOFF_DURATION)
 
                     sleep_time = next(backoff)
                     _LOGGER.warning(
