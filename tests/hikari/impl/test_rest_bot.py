@@ -85,7 +85,11 @@ class TestRESTBot:
 
         with stack:
             return hikari_test_helpers.mock_class_namespace(rest_bot_impl.RESTBot, slots_=False)(
-                "token", http_settings=mock_http_settings, proxy_settings=mock_proxy_settings, executor=mock_executor, max_retries=0
+                "token",
+                http_settings=mock_http_settings,
+                proxy_settings=mock_proxy_settings,
+                executor=mock_executor,
+                max_retries=0,
             )
 
     def test___init__(

@@ -113,7 +113,12 @@ class TestGatewayBot:
 
         with stack:
             return bot_impl.GatewayBot(
-                "token", executor=executor, http_settings=http_settings, proxy_settings=proxy_settings, intents=intents, max_retries=0
+                "token",
+                executor=executor,
+                http_settings=http_settings,
+                proxy_settings=proxy_settings,
+                intents=intents,
+                max_retries=0,
             )
 
     def test_init(self):
