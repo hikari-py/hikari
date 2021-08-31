@@ -114,7 +114,7 @@ _X_RATELIMIT_BUCKET_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Bucket")
 _X_RATELIMIT_LIMIT_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Limit")
 _X_RATELIMIT_REMAINING_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Remaining")
 _X_RATELIMIT_RESET_AFTER_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Reset-After")
-_RETRY_ERROR_CODES: typing.Final[typing.Set[int]] = [500, 502, 503, 504]
+_RETRY_ERROR_CODES: typing.Final[typing.Set[int]] = {500, 502, 503, 504}
 
 
 class ClientCredentialsStrategy(rest_api.TokenStrategy):
