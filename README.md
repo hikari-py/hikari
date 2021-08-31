@@ -1,17 +1,16 @@
-[![Hikari PyPI version badge](https://img.shields.io/pypi/v/hikari)](https://pypi.org/project/hikari)
-[![Github Actions Status badge](https://github.com/hikari-py/hikari/actions/workflows/ci.yml/badge.svg?branch=master&event=push)](https://github.com/hikari-py/hikari/actions)
-[![Supported Python versions badge](https://img.shields.io/pypi/pyversions/hikari)](https://pypi.org/project/hikari)
-[![Maintainability badge](https://api.codeclimate.com/v1/badges/f95070b25136a69b0589/maintainability)](https://codeclimate.com/github/hikari-py/hikari/maintainability)
-[![Test Coverage badge](https://api.codeclimate.com/v1/badges/f95070b25136a69b0589/test_coverage)](https://codeclimate.com/github/hikari-py/hikari/test_coverage)
-[![Open Pull Requests badge](https://img.shields.io/github/issues-pr/hikari-py/hikari)](https://github.com/hikari-py/hikari/pulls)
-[![Issues badge](https://img.shields.io/github/issues-raw/hikari-py/hikari)](https://github.com/hikari-py/hikari/issues)
-[![This project uses Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://pypi.org/project/black/)
-[![This project uses MyPy](http://www.mypy-lang.org/static/mypy_badge.svg)](https://pypi.org/project/mypy/)
-[![Documentation badge](https://img.shields.io/badge/documentation-up-00FF00.svg)](https://hikari-py.github.io/hikari/hikari)
-
-[![Discord](https://discord.com/api/guilds/574921006817476608/widget.png?style=banner2)](https://discord.gg/Jx4cNGG)
-
-# hikari
+<h1 align="center">hikari</h1>
+<p align="center">
+<a href="https://pypi.org/project/hikari"><img height="20" alt="PyPI version" src="https://img.shields.io/pypi/v/hikari"></a>
+<a href="https://pypi.org/project/hikari"><img height="20" alt="Supported python versions" src="https://img.shields.io/pypi/pyversions/hikari"></a>
+<br>
+<a href="https://github.com/hikari-py/hikari/actions"><img height="20" alt="CI status" src="https://github.com/hikari-py/hikari/actions/workflows/ci.yml/badge.svg?branch=master&event=push"></a>
+<a href="https://pypi.org/project/mypy/"><img height="20" alt="Mypy badge" src="http://www.mypy-lang.org/static/mypy_badge.svg"></a>
+<a href="https://pypi.org/project/black"><img height="20" alt="Black badge" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
+<a href="https://codeclimate.com/github/hikari-py/hikari/test_coverage"><img height="20" alt="Test coverage" src="https://api.codeclimate.com/v1/badges/f95070b25136a69b0589/test_coverage"></a>
+<br>
+<a href="https://discord.gg/Jx4cNGG"><img height="20" alt="Discord invite" src="https://discord.com/api/guilds/574921006817476608/widget.png"></a>
+<a href="https://hikari-py.github.io/hikari/hikari"><img height="20" alt="Documentation status" src="https://img.shields.io/badge/documentation-up-00FF00.svg"></a>
+</p>
 
 An opinionated, static typed Discord microframework for Python3 and asyncio that supports Discord's V8 REST API and
 Gateway.
