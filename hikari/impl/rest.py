@@ -114,6 +114,8 @@ _X_RATELIMIT_BUCKET_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Bucket")
 _X_RATELIMIT_LIMIT_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Limit")
 _X_RATELIMIT_REMAINING_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Remaining")
 _X_RATELIMIT_RESET_AFTER_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Reset-After")
+_RETRY_ERROR_CODES: typing.Final[typing.Set[int]] = {500, 502, 503, 504}
+_MAX_BACKOFF_DURATION: typing.Final[int] = 16
 
 
 class ClientCredentialsStrategy(rest_api.TokenStrategy):
@@ -288,6 +290,9 @@ class RESTApp(traits.ExecutorAware):
         rate limits.
 
         Defaults to five minutes if unspecified.
+    max_retries : typing.Optional[builtins.int]
+        Maximum number of times a request will be retried if
+        it fails with a `5xx` status. Defaults to 3 if set to `builtins.None`.
     proxy_settings : typing.Optional[hikari.config.ProxySettings]
         Proxy settings to use. If `builtins.None` then no proxy configuration
         will be used.
@@ -304,6 +309,7 @@ class RESTApp(traits.ExecutorAware):
         "_executor",
         "_http_settings",
         "_max_rate_limit",
+        "_max_retries",
         "_proxy_settings",
         "_url",
     )
@@ -314,6 +320,7 @@ class RESTApp(traits.ExecutorAware):
         executor: typing.Optional[concurrent.futures.Executor] = None,
         http_settings: typing.Optional[config.HTTPSettings] = None,
         max_rate_limit: float = 300,
+        max_retries: int = 3,
         proxy_settings: typing.Optional[config.ProxySettings] = None,
         url: typing.Optional[str] = None,
     ) -> None:
@@ -321,6 +328,7 @@ class RESTApp(traits.ExecutorAware):
         self._proxy_settings = config.ProxySettings() if proxy_settings is None else proxy_settings
         self._executor = executor
         self._max_rate_limit = max_rate_limit
+        self._max_retries = max_retries
         self._url = url
 
     @property
@@ -409,6 +417,7 @@ class RESTApp(traits.ExecutorAware):
             executor=self._executor,
             http_settings=self._http_settings,
             max_rate_limit=self._max_rate_limit,
+            max_retries=self._max_retries,
             proxy_settings=self._proxy_settings,
             token=token,
             token_type=token_type,
@@ -503,6 +512,9 @@ class RESTClientImpl(rest_api.RESTClient):
 
         This is provided since some endpoints may respond with non-sensible
         rate limits.
+    max_retries : typing.Optional[builtins.int]
+        Maximum number of times a request will be retried if
+        it fails with a `5xx` status. Defaults to 3 if set to `builtins.None`.
     token : typing.Union[builtins.str, builtins.None, hikari.api.rest.TokenStrategy]
         The bot or bearer token. If no token is to be used,
         this can be undefined.
@@ -522,6 +534,7 @@ class RESTClientImpl(rest_api.RESTClient):
     builtins.ValueError
         * If `token_type` is provided when a token strategy is passed for `token`.
         * if `token_type` is left as `builtins.None` when a string is passed for `token`.
+        * If the a value more than 5 is provided for `max_retries`
     """
 
     __slots__: typing.Sequence[str] = (
@@ -531,6 +544,7 @@ class RESTClientImpl(rest_api.RESTClient):
         "_http_settings",
         "_live_attributes",
         "_max_rate_limit",
+        "_max_retries",
         "_proxy_settings",
         "_rest_url",
         "_token",
@@ -549,17 +563,22 @@ class RESTClientImpl(rest_api.RESTClient):
         executor: typing.Optional[concurrent.futures.Executor],
         http_settings: config.HTTPSettings,
         max_rate_limit: float,
+        max_retries: int = 3,
         proxy_settings: config.ProxySettings,
         token: typing.Union[str, None, rest_api.TokenStrategy],
         token_type: typing.Union[applications.TokenType, str, None],
         rest_url: typing.Optional[str],
     ) -> None:
+        if max_retries > 5:
+            raise ValueError("A value above 5 was provided for 'max_retries'")
+
         self._cache = cache
         self._entity_factory = entity_factory
         self._executor = executor
         self._http_settings = http_settings
         self._live_attributes: typing.Optional[_LiveAttributes] = None
         self._max_rate_limit = max_rate_limit
+        self._max_retries = max_retries
         self._proxy_settings = proxy_settings
 
         self._token: typing.Union[str, rest_api.TokenStrategy, None] = None
@@ -696,6 +715,11 @@ class RESTClientImpl(rest_api.RESTClient):
         headers.put(_X_AUDIT_LOG_REASON_HEADER, reason)
 
         url = compiled_route.create_url(self._rest_url)
+
+        # This is initiated the first time we hit a 5xx error to save memory when nothing goes wrong
+        backoff: typing.Optional[rate_limits.ExponentialBackOff] = None
+        retries_done = 0
+
         while True:
             try:
                 uuid = time.uuid()
@@ -758,6 +782,23 @@ class RESTClientImpl(rest_api.RESTClient):
 
                     real_url = str(response.real_url)
                     raise errors.HTTPError(f"Expected JSON [{response.content_type=}, {real_url=}]")
+
+                # Handling 5xx errors
+                if response.status in _RETRY_ERROR_CODES and retries_done < self._max_retries:
+                    if backoff is None:
+                        backoff = rate_limits.ExponentialBackOff(maximum=_MAX_BACKOFF_DURATION)
+
+                    sleep_time = next(backoff)
+                    _LOGGER.warning(
+                        "Received status %s on request, backing off for %.2fs and retrying. Retries remaining: %s",
+                        response.status,
+                        sleep_time,
+                        self._max_retries - retries_done,
+                    )
+                    retries_done += 1
+
+                    await asyncio.sleep(sleep_time)
+                    raise self._RetryRequest
 
                 can_re_auth = response.status == 401 and not (auth or no_auth or retried)
                 if can_re_auth and isinstance(self._token, rest_api.TokenStrategy):

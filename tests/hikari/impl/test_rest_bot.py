@@ -85,7 +85,11 @@ class TestRESTBot:
 
         with stack:
             return hikari_test_helpers.mock_class_namespace(rest_bot_impl.RESTBot, slots_=False)(
-                "token", http_settings=mock_http_settings, proxy_settings=mock_proxy_settings, executor=mock_executor
+                "token",
+                http_settings=mock_http_settings,
+                proxy_settings=mock_proxy_settings,
+                executor=mock_executor,
+                max_retries=0,
             )
 
     def test___init__(
@@ -116,6 +120,7 @@ class TestRESTBot:
                 http_settings=mock_http_settings,
                 logs="ERROR",
                 max_rate_limit=32123123,
+                max_retries=0,
                 proxy_settings=mock_proxy_settings,
                 rest_url="hresresres",
             )
@@ -128,6 +133,7 @@ class TestRESTBot:
                 executor=mock_executor,
                 http_settings=mock_http_settings,
                 max_rate_limit=32123123,
+                max_retries=0,
                 proxy_settings=mock_proxy_settings,
                 rest_url="hresresres",
                 token="token",
@@ -176,6 +182,7 @@ class TestRESTBot:
                 executor=None,
                 http_settings=config.HTTPSettings.return_value,
                 max_rate_limit=300.0,
+                max_retries=3,
                 proxy_settings=config.ProxySettings.return_value,
                 rest_url=None,
                 token="token",

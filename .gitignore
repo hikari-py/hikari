@@ -12,6 +12,7 @@ venv*/
 # CI pages, coverage reports, etc
 public/
 node_modules/
+package.json
 package-lock.json
 
 # PyCharm/IntelliJ-generated files
