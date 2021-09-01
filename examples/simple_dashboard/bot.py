@@ -55,7 +55,7 @@ class Bot(hikari.GatewayBot):
 # Startup the dashboard.
 # To see the dashboard, go to http://localhost:6361/ui/
 rillrate.install()
-bot = Bot(token=os.environ["DISCORD_TOKEN"])
+bot = Bot(token=os.environ["BOT_TOKEN"])
 
 
 values = list(range(0, 256 + 1, 32))
