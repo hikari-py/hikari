@@ -36,4 +36,12 @@ For this reason, I'd recomennd checking the docs for your usecase.
 
 For example:
  - There is no members attribute, instead it is a method called get_members()
+ 
+ 
+#### Embeds
+
+`discord.Embed` translates over to `hikari.embeds.Embed`
+
+The usage of which is basically the same, with some small changes such as icon vs icon_url. 
+Something notable however, is the lack of `from_dict` and `to_dict` methods
 """
