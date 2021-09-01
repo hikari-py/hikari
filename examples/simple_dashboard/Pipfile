@@ -4,8 +4,8 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-hikari = "*"
-rillrate = "*"
+hikari = "==2.0.0.dev101"
+rillrate = "==0.38.0"
 
 [requires]
 python_version = "3.8"
