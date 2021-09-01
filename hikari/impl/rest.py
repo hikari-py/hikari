@@ -300,7 +300,6 @@ class RESTApp(traits.ExecutorAware):
         The base URL for the API. You can generally leave this as being
         `builtins.None` and the correct default API base URL will be generated.
 
-
     !!! note
         This event loop will be bound to a connector when the first call
         to `acquire` is made.
@@ -754,6 +753,7 @@ class RESTClientImpl(rest_api.RESTClient):
                         proxy=self._proxy_settings.url,
                         proxy_headers=self._proxy_settings.all_headers,
                     )
+                    
                     if _LOGGER.isEnabledFor(ux.TRACE):
                         time_taken = (time.monotonic() - start) * 1_000
                         _LOGGER.log(
