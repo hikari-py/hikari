@@ -1,12 +1,1 @@
-aiohttp==3.7.4.post0
-async-timeout==3.0.1
-attrs==21.2.0
-chardet==4.0.0
-colorlog==6.4.1
-hikari==2.0.0.dev101
-idna==3.2
-multidict==5.1.0
-pure25519==0.0.1
 rillrate==0.38.0
-typing-extensions==3.10.0.0
-yarl==1.6.3
