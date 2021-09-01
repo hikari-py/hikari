@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
  - Fix errors in rest sticker method docstrings.
+ - Remove duplicate raise type in api and guilds docstrings.
 
 ### Fixed
  - Handling of interaction models passed to the webhook message endpoints as the "webhook" field.

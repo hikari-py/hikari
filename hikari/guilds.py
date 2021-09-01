@@ -304,9 +304,6 @@ class GuildWidget:
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitTooLongError
-            Raised in the event that a rate limit occurs that is
-            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
             rate-limits automatically. This includes most bucket-specific
@@ -3021,9 +3018,6 @@ class Guild(PartialGuild):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitTooLongError
-            Raised in the event that a rate limit occurs that is
-            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
             rate-limits automatically. This includes most bucket-specific
@@ -3058,9 +3052,6 @@ class Guild(PartialGuild):
             If you are missing the `READ_MESSAGES` permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
-        hikari.errors.RateLimitTooLongError
-            Raised in the event that a rate limit occurs that is
-            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
@@ -3099,9 +3090,6 @@ class Guild(PartialGuild):
             If you are missing the `READ_MESSAGES` permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
-        hikari.errors.RateLimitTooLongError
-            Raised in the event that a rate limit occurs that is
-            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
@@ -3144,9 +3132,6 @@ class Guild(PartialGuild):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitTooLongError
-            Raised in the event that a rate limit occurs that is
-            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
             rate-limits automatically. This includes most bucket-specific
@@ -3184,9 +3169,6 @@ class Guild(PartialGuild):
             If you are missing the `READ_MESSAGES` permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
-        hikari.errors.RateLimitTooLongError
-            Raised in the event that a rate limit occurs that is
-            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
