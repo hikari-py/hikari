@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+# This code is licended under the WTFPL license.
+"""A simple bot to demonstrate how to use rillrate with hikari to make a web dashboard for the bot.
+
+Just connect to `http://localhost:6361/ui/` to explore your dashboard!
+"""
 import logging
 import os
 from typing import Any
@@ -24,18 +30,23 @@ GROUP_CONFIG = "1 - Config"
 
 
 def is_command(cmd_name: str, content: str) -> bool:
+    """Check if the message sent is a valid command."""
     return content.startswith(f"{PREFIX}{cmd_name}")
 
 
 # This is how I do global data on the library, as Bot is generally accessible everywhere, so
 # it's the best you can do to put the global data in there.
-# In this case, I'll use this to store the values modifyable by the dashboard.
+# In this case, I'll use this to store the values modifiable by the dashboard.
 class Data:
+    """Global data shared across the entire bot, used to store dashboard values."""
+
     def __init__(self) -> None:
         self.value = 0
 
 
 class Bot(hikari.GatewayBot):
+    """Just implementing the data to the Bot."""
+
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.data = Data()
@@ -50,21 +61,13 @@ bot = Bot(token=os.environ["DISCORD_TOKEN"], intents=hikari.Intents.ALL)
 
 values = list(range(0, 256 + 1, 32))
 
-selector = rr_prime.Selector(
-    f"{PACKAGE}.{DASHBOARD}.{GROUP_CONFIG}.Selector",
-    label="Choose!",
-    options=values
-)
+selector = rr_prime.Selector(f"{PACKAGE}.{DASHBOARD}.{GROUP_CONFIG}.Selector", label="Choose!", options=values)
 slider = rr_prime.Slider(
-    f"{PACKAGE}.{DASHBOARD}.{GROUP_CONFIG}.Slider",
-    label="More fine grain control",
-    min=0,
-    max=256,
-    step=2
+    f"{PACKAGE}.{DASHBOARD}.{GROUP_CONFIG}.Slider", label="More fine grain control", min=0, max=256, step=2
 )
 
 
-def selector_callback(activity: rillrate.Activity, action: rillrate.Action) -> None:
+def _selector_callback(activity: rillrate.Activity, action: rillrate.Action) -> None:
     logging.info("Selector activity: %s | action = %s", activity, action)
 
     if action is not None:
@@ -78,7 +81,7 @@ def selector_callback(activity: rillrate.Activity, action: rillrate.Action) -> N
         bot.data.value = int(action.value)
 
 
-def slider_callback(activity: rillrate.Activity, action: rillrate.Action) -> None:
+def _slider_callback(activity: rillrate.Activity, action: rillrate.Action) -> None:
     logging.info("Slider activity: %s | action = %s", activity, action)
 
     if action is not None:
@@ -91,12 +94,13 @@ def slider_callback(activity: rillrate.Activity, action: rillrate.Action) -> Non
         bot.data.value = int(action.value)
 
 
-selector.sync_callback(selector_callback)
-slider.sync_callback(slider_callback)
+selector.sync_callback(_selector_callback)
+slider.sync_callback(_slider_callback)
 
 
 @bot.listen()
 async def message(event: hikari.GuildMessageCreateEvent) -> None:
+    """Listen for messages being created."""
     if event.is_bot or not event.content:
         return
 
@@ -110,6 +114,7 @@ async def message(event: hikari.GuildMessageCreateEvent) -> None:
 
 @bot.listen()
 async def on_ready(event: hikari.ShardReadyEvent) -> None:
+    """Log when the bot is ready."""
     logging.info("Bot is ready! %s", event)
 
 
