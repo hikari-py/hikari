@@ -152,8 +152,6 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
     max_retries : typing.Optional[builtins.int]
         Maximum number of times a request will be retried if
         it fails with a `5xx` status. Defaults to 3 if set to `builtins.None`.
-
-        If you provide a value above 5, it will default to 5.
     proxy_settings : typing.Optional[config.ProxySettings]
         Custom proxy settings to use with network-layer logic
         in your application to get through an HTTP-proxy.

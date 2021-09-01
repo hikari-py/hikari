@@ -293,14 +293,13 @@ class RESTApp(traits.ExecutorAware):
     max_retries : typing.Optional[builtins.int]
         Maximum number of times a request will be retried if
         it fails with a `5xx` status. Defaults to 3 if set to `builtins.None`.
-
-        If you provide a value above 5, it will default to 5.
     proxy_settings : typing.Optional[hikari.config.ProxySettings]
         Proxy settings to use. If `builtins.None` then no proxy configuration
         will be used.
     url : typing.Optional[builtins.str]
         The base URL for the API. You can generally leave this as being
         `builtins.None` and the correct default API base URL will be generated.
+
 
     !!! note
         This event loop will be bound to a connector when the first call
@@ -517,8 +516,6 @@ class RESTClientImpl(rest_api.RESTClient):
     max_retries : typing.Optional[builtins.int]
         Maximum number of times a request will be retried if
         it fails with a `5xx` status. Defaults to 3 if set to `builtins.None`.
-
-        If you provide a value above 5, it will default to 5.
     token : typing.Union[builtins.str, builtins.None, hikari.api.rest.TokenStrategy]
         The bot or bearer token. If no token is to be used,
         this can be undefined.
@@ -538,6 +535,7 @@ class RESTClientImpl(rest_api.RESTClient):
     builtins.ValueError
         * If `token_type` is provided when a token strategy is passed for `token`.
         * if `token_type` is left as `builtins.None` when a string is passed for `token`.
+        * If the a value more than 5 is provided for `max_retries`
     """
 
     __slots__: typing.Sequence[str] = (
@@ -572,13 +570,16 @@ class RESTClientImpl(rest_api.RESTClient):
         token_type: typing.Union[applications.TokenType, str, None],
         rest_url: typing.Optional[str],
     ) -> None:
+        if max_retries > 5:
+            raise ValueError("A value above 5 was provided for 'max_retries'")
+
         self._cache = cache
         self._entity_factory = entity_factory
         self._executor = executor
         self._http_settings = http_settings
         self._live_attributes: typing.Optional[_LiveAttributes] = None
         self._max_rate_limit = max_rate_limit
-        self._max_retries = min(max_retries, 5)
+        self._max_retries = max_retries
         self._proxy_settings = proxy_settings
 
         self._token: typing.Union[str, rest_api.TokenStrategy, None] = None
