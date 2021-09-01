@@ -753,7 +753,7 @@ class RESTClientImpl(rest_api.RESTClient):
                         proxy=self._proxy_settings.url,
                         proxy_headers=self._proxy_settings.all_headers,
                     )
-                    
+
                     if _LOGGER.isEnabledFor(ux.TRACE):
                         time_taken = (time.monotonic() - start) * 1_000
                         _LOGGER.log(
