@@ -177,9 +177,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitTooLongError
-            Raised in the event that a rate limit occurs that is
-            longer than `max_rate_limit` when making a request.
         hikari.errors.RateLimitedError
             Usually, Hikari will handle and retry on hitting
             rate-limits automatically. This includes most bucket-specific
