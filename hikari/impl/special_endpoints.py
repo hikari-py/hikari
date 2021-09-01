@@ -953,7 +953,7 @@ def _build_emoji(
 
     Returns
     -------
-    typing.Union[hikari.undefined.UndefinedOr[builtins.str], hikari.undefined.UndefinedOr[builtins.str]]
+    typing.Tuple[hikari.undefined.UndefinedOr[builtins.str], hikari.undefined.UndefinedOr[builtins.str]]
         A union of the custom emoji's id if defined (index 0) or the unicode
         emoji's string representation (index 1).
     """  # noqa E501 - Line too long

@@ -1864,7 +1864,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             return deserialize(payload)
 
         _LOGGER.debug("Unknown interaction type %s", interaction_type)
-        raise errors.UnrecognisedEntityError(f"Unrecognised interaction type {interaction_type}") from None
+        raise errors.UnrecognisedEntityError(f"Unrecognised interaction type {interaction_type}")
 
     def serialize_command_option(self, option: commands.CommandOption) -> data_binding.JSONObject:
         payload: data_binding.JSONObject = {
@@ -2032,7 +2032,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             return deserialize(payload)
 
         _LOGGER.debug("Unknown component type %s", component_type)
-        raise errors.UnrecognisedEntityError(f"Unrecognised component type {component_type}") from None
+        raise errors.UnrecognisedEntityError(f"Unrecognised component type {component_type}")
 
     def _deserialize_message_activity(self, payload: data_binding.JSONObject) -> message_models.MessageActivity:
         return message_models.MessageActivity(
