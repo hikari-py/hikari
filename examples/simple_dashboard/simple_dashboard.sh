@@ -40,4 +40,5 @@ fi
 export PYTHONPATH
 export BOT_TOKEN="${1}"
 
+python3 -m pip install -r requirements.txt
 python3 "${SCRIPT_PATH}/$(basename "${SCRIPT_PATH}").py"

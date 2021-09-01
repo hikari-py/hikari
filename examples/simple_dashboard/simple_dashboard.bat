@@ -46,6 +46,7 @@ if defined PYTHONPATH (
 
 set BOT_TOKEN=%1
 
+py -m pip install -r requirements.txt
 py "%SCRIPT_PATH%%SCRIPT_NAME%.py"
 
 endlocal
