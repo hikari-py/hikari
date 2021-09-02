@@ -48,10 +48,14 @@ if typing.TYPE_CHECKING:
 
     from hikari.api import entity_factory as entity_factory_api
     from hikari.api import rest as rest_api
+    from hikari.interactions import command_interactions
+    from hikari.interactions import component_interactions
 
-    _InteractionT = typing.TypeVar("_InteractionT", bound=base_interactions.PartialInteraction, covariant=True)
-    _ResponseT = typing.TypeVar("_ResponseT", bound=special_endpoints.InteractionResponseBuilder, covariant=True)
-
+    _InteractionT_co = typing.TypeVar("_InteractionT_co", bound=base_interactions.PartialInteraction, covariant=True)
+    _ResponseT_co = typing.TypeVar("_ResponseT_co", bound=special_endpoints.InteractionResponseBuilder, covariant=True)
+    _MessageResponseBuilderT = typing.Union[
+        special_endpoints.InteractionDeferredBuilder, special_endpoints.InteractionMessageBuilder
+    ]
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.interaction_server")
 
@@ -481,16 +485,58 @@ class InteractionServer(interaction_server.InteractionServer):
             _LOGGER.info("Starting site on %s", site.name)
             await site.start()
 
+    @typing.overload
     def get_listener(
-        self, interaction_type: typing.Type[_InteractionT], /
-    ) -> typing.Optional[interaction_server.ListenerT[_InteractionT, special_endpoints.InteractionResponseBuilder]]:
+        self, interaction_type: typing.Type[command_interactions.CommandInteraction], /
+    ) -> typing.Optional[
+        interaction_server.ListenerT[command_interactions.CommandInteraction, _MessageResponseBuilderT]
+    ]:
+        ...
+
+    @typing.overload
+    def get_listener(
+        self, interaction_type: typing.Type[component_interactions.ComponentInteraction], /
+    ) -> typing.Optional[
+        interaction_server.ListenerT[component_interactions.ComponentInteraction, _MessageResponseBuilderT]
+    ]:
+        ...
+
+    def get_listener(
+        self, interaction_type: typing.Type[_InteractionT_co], /
+    ) -> typing.Optional[interaction_server.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]]:
         return self._listeners.get(interaction_type)
+
+    @typing.overload
+    def set_listener(
+        self,
+        interaction_type: typing.Type[command_interactions.CommandInteraction],
+        listener: typing.Optional[
+            interaction_server.ListenerT[command_interactions.CommandInteraction, _MessageResponseBuilderT]
+        ],
+        /,
+        *,
+        replace: bool = False,
+    ) -> None:
+        ...
+
+    @typing.overload
+    def set_listener(
+        self,
+        interaction_type: typing.Type[component_interactions.ComponentInteraction],
+        listener: typing.Optional[
+            interaction_server.ListenerT[component_interactions.ComponentInteraction, _MessageResponseBuilderT]
+        ],
+        /,
+        *,
+        replace: bool = False,
+    ) -> None:
+        ...
 
     def set_listener(
         self,
-        interaction_type: typing.Type[_InteractionT],
+        interaction_type: typing.Type[_InteractionT_co],
         listener: typing.Optional[
-            interaction_server.ListenerT[_InteractionT, special_endpoints.InteractionResponseBuilder]
+            interaction_server.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]
         ],
         /,
         *,

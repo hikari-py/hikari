@@ -36,6 +36,15 @@ __all__: typing.List[str] = [
     "MessageReference",
     "PartialMessage",
     "Message",
+    "ActionRowComponent",
+    "ButtonComponent",
+    "ButtonStyle",
+    "SelectMenuOption",
+    "SelectMenuComponent",
+    "InteractiveButtonTypes",
+    "InteractiveButtonTypesT",
+    "ComponentType",
+    "PartialComponent",
 ]
 
 import typing
@@ -60,6 +69,7 @@ if typing.TYPE_CHECKING:
     from hikari import emojis as emojis_
     from hikari import stickers as stickers_
     from hikari import users as users_
+    from hikari.api import special_endpoints
     from hikari.interactions import base_interactions
 
 _T = typing.TypeVar("_T")
@@ -473,6 +483,234 @@ class MessageInteraction:
     """Object of the user who invoked this interaction."""
 
 
+@typing.final
+class ComponentType(int, enums.Enum):
+    """Types of components found within Discord."""
+
+    ACTION_ROW = 1
+    """A non-interactive container component for other types of components.
+
+    !!! note
+        As this is a container component it can never be contained within another
+        component and therefore will always be top-level.
+
+    !!! note
+        As of writing this can only contain one component type.
+    """
+
+    BUTTON = 2
+    """A button component.
+
+    !!! note
+        This cannot be top-level and must be within a container component such
+        as `ComponentType.ACTION_ROW`.
+    """
+
+    SELECT_MENU = 3
+    """A select menu component.
+
+    !!! note
+        This cannot be top-level and must be within a container component such
+        as `ComponentType.ACTION_ROW`.
+    """
+
+
+@typing.final
+class ButtonStyle(int, enums.Enum):
+    """Enum of the available button styles.
+
+    More information, such as how these look, can be found at
+    https://discord.com/developers/docs/interactions/message-components#buttons-button-styles
+    """
+
+    PRIMARY = 1
+    """A blurple "call to action" button."""
+
+    SECONDARY = 2
+    """A grey neutral button."""
+
+    SUCCESS = 3
+    """A green button."""
+
+    DANGER = 4
+    """A red button (usually indicates a destructive action)."""
+
+    LINK = 5
+    """A grey button which navigates to a URL.
+
+    !!! warning
+        Unlike the other button styles, clicking this one will not trigger an
+        interaction and custom_id shouldn't be included for this style.
+    """
+
+
+InteractiveButtonTypesT = typing.Union[
+    typing.Literal[ButtonStyle.PRIMARY],
+    typing.Literal[1],
+    typing.Literal[ButtonStyle.SECONDARY],
+    typing.Literal[2],
+    typing.Literal[ButtonStyle.SUCCESS],
+    typing.Literal[3],
+    typing.Literal[ButtonStyle.DANGER],
+    typing.Literal[4],
+]
+"""Type hints of the `ButtonStyle` values which are valid for interactive buttons.
+
+The following values are valid for this:
+
+* `ButtonStyle.PRIMARY`/`1`
+* `ButtonStyle.SECONDARY`/`2`
+* `ButtonStyle.SUCCESS`/`3`
+* `ButtonStyle.DANGER`/`4`
+"""
+
+InteractiveButtonTypes: typing.AbstractSet[InteractiveButtonTypesT] = frozenset(
+    [ButtonStyle.PRIMARY, ButtonStyle.SECONDARY, ButtonStyle.SUCCESS, ButtonStyle.DANGER]
+)
+"""Set of the `ButtonType`s which are valid for interactive buttons.
+
+The following values are included in this:
+
+* `ButtonStyle.PRIMARY`
+* `ButtonStyle.SECONDARY`
+* `ButtonStyle.SUCCESS`
+* `ButtonStyle.DANGER`
+"""
+
+
+@attr.define(kw_only=True, weakref_slot=False)
+class PartialComponent:
+    """Base class for all component entities."""
+
+    type: typing.Union[ComponentType, int] = attr.field()
+    """The type of component this is."""
+
+
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
+class ButtonComponent(PartialComponent):
+    """Represents a message button component.
+
+    !!! note
+        This is an embedded component and will only ever be found within
+        top-level container components such as `ActionRowComponent`.
+    """
+
+    style: typing.Union[ButtonStyle, int] = attr.field(eq=False)
+    """The button's style."""
+
+    label: typing.Optional[str] = attr.field(eq=False)
+    """Text label which appears on the button."""
+
+    emoji: typing.Optional[emojis_.Emoji] = attr.field(eq=False)
+    """Custom or unicode emoji which appears on the button."""
+
+    custom_id: typing.Optional[str] = attr.field(hash=True)
+    """Developer defined identifier for this button (will be >= 100 characters).
+
+    !!! note
+        This is required for the following button styles:
+
+        * `ButtonStyle.PRIMARY`
+        * `ButtonStyle.SECONDARY`
+        * `ButtonStyle.SUCCESS`
+        * `ButtonStyle.DANGER`
+    """
+
+    url: typing.Optional[str] = attr.field(eq=False)
+    """Url for `ButtonStyle.LINK` style buttons."""
+
+    is_disabled: bool = attr.field(eq=False)
+    """Whether the button is disabled."""
+
+
+@attr.define(kw_only=True, weakref_slot=False)
+class SelectMenuOption:
+    """Represents an option for a `SelectMenuComponent`."""
+
+    label: str = attr.field()
+    """User-facing name of the option, max 100 characters."""
+
+    value: str = attr.field()
+    """Dev-defined value of the option, max 100 characters."""
+
+    description: typing.Optional[str] = attr.field()
+    """Optional description of the option, max 100 characters."""
+
+    emoji: typing.Optional[emojis_.Emoji] = attr.field(eq=False)
+    """Custom or unicode emoji which appears on the button."""
+
+    is_default: bool = attr.field()
+    """Whether this option will be selected by default."""
+
+
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
+class SelectMenuComponent(PartialComponent):
+    """Represents a message button component.
+
+    !!! note
+        This is an embedded component and will only ever be found within
+        top-level container components such as `ActionRowComponent`.
+    """
+
+    custom_id: str = attr.field(hash=True)
+    """Developer defined identifier for this menu (will be >= 100 characters)."""
+
+    options: typing.Sequence[SelectMenuOption] = attr.field(eq=False)
+    """Sequence of up to 25 of the options set for this menu."""
+
+    placeholder: typing.Optional[str] = attr.field(eq=False)
+    """Custom placeholder text shown if nothing is selected, max 100 characters."""
+
+    min_values: int = attr.field(eq=False)
+    """The minimum amount of options which must be chosen for this menu.
+
+    This will be less than or equal to 25 and will be greater than or equal to
+    `SelectMenuComponent.max_values`.
+    """
+
+    max_values: int = attr.field(eq=False)
+    """The minimum amount of options which must be chosen for this menu.
+
+    This will be greater than or equal to 0 and will be less than or equal to
+    `SelectMenuComponent.min_values`.
+    """
+
+    is_disabled: bool = attr.field(eq=False)
+    """Whether the select menu is disabled."""
+
+
+@attr.define(weakref_slot=False)
+class ActionRowComponent(PartialComponent):
+    """Represents a row of components attached to a message.
+
+    !!! note
+        This is a top-level container component and will never be found within
+        another component.
+    """
+
+    components: typing.Sequence[PartialComponent] = attr.field()
+    """Sequence of the components contained within this row."""
+
+    @typing.overload
+    def __getitem__(self, index: int, /) -> PartialComponent:
+        ...
+
+    @typing.overload
+    def __getitem__(self, slice_: slice, /) -> typing.Sequence[PartialComponent]:
+        ...
+
+    def __getitem__(
+        self, index_or_slice: typing.Union[int, slice], /
+    ) -> typing.Union[PartialComponent, typing.Sequence[PartialComponent]]:
+        return self.components[index_or_slice]
+
+    def __iter__(self) -> typing.Iterator[PartialComponent]:
+        return iter(self.components)
+
+    def __len__(self) -> int:
+        return len(self.components)
+
+
 @attr_extensions.with_copy
 @attr.define(kw_only=True, repr=True, eq=False, weakref_slot=False)
 class PartialMessage(snowflakes.Unique):
@@ -584,7 +822,7 @@ class PartialMessage(snowflakes.Unique):
     message_reference: undefined.UndefinedNoneOr[MessageReference] = attr.field(hash=False, eq=False, repr=False)
     """The message reference data."""
 
-    flags: undefined.UndefinedNoneOr[MessageFlag] = attr.field(hash=False, eq=False, repr=False)
+    flags: undefined.UndefinedOr[MessageFlag] = attr.field(hash=False, eq=False, repr=False)
     """The message flags."""
 
     stickers: undefined.UndefinedOr[typing.Sequence[stickers_.PartialSticker]] = attr.field(
@@ -615,6 +853,9 @@ class PartialMessage(snowflakes.Unique):
     !!! note
         This will only be provided for interaction messages.
     """
+
+    components: undefined.UndefinedOr[typing.Sequence[PartialComponent]] = attr.field(hash=False, repr=False)
+    """Sequence of the components attached to this message."""
 
     @property  # TODO: update this while refactoring message structure
     def guild_id(self) -> typing.Optional[snowflakes.Snowflake]:
@@ -699,10 +940,14 @@ class PartialMessage(snowflakes.Unique):
         self,
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
-        embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
-        embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
+        component: undefined.UndefinedNoneOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
+        components: undefined.UndefinedNoneOr[
+            typing.Sequence[special_endpoints.ComponentBuilder]
+        ] = undefined.UNDEFINED,
+        embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
+        embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         replace_attachments: bool = False,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -734,6 +979,27 @@ class PartialMessage(snowflakes.Unique):
 
         Other Parameters
         ----------------
+        attachment : hikari.undefined.UndefinedOr[hikari.files.Resourceish]
+            If provided, the attachment to set on the message. If
+            `hikari.undefined.UNDEFINED`, the previous attachment, if
+            present, is not changed. If this is `builtins.None`, then the
+            attachment is removed, if present. Otherwise, the new attachment
+            that was provided will be attached.
+        attachments : hikari.undefined.UndefinedOr[typing.Sequence[hikari.files.Resourceish]]
+            If provided, the attachments to set on the message. If
+            `hikari.undefined.UNDEFINED`, the previous attachments, if
+            present, are not changed. If this is `builtins.None`, then the
+            attachments is removed, if present. Otherwise, the new attachments
+            that were provided will be attached.
+        component : hikari.undefined.UndefinedNoneOr[hikari.api.special_endpoints.ComponentBuilder]
+            If provided, builder object of the component to set for this message.
+            This component will replace any previously set components and passing
+            `builtins.None` will remove all components.
+        components : hikari.undefined.UndefinedNoneOr[typing.Sequence[hikari.api.special_endpoints.ComponentBuilder]]
+            If provided, a sequence of the component builder objects set for
+            this message. These components will replace any previously set
+            components and passing `builtins.None` or an empty sequence will
+            remove all components.
         embed : hikari.undefined.UndefinedNoneOr[hikari.embeds.Embed]
             If provided, the embed to set on the message. If
             `hikari.undefined.UNDEFINED`, the previous embed(s) are not changed.
@@ -746,12 +1012,6 @@ class PartialMessage(snowflakes.Unique):
             If this is `builtins.None` then any present embeds are removed.
             Otherwise, the new embeds that were provided will be used as the
             replacement.
-        attachments : hikari.undefined.UndefinedOr[typing.Sequence[hikari.files.Resourceish]]
-            If provided, the attachments to set on the message. If
-            `hikari.undefined.UNDEFINED`, the previous attachments, if
-            present, are not changed. If this is `builtins.None`, then the
-            attachments is removed, if present. Otherwise, the new attachments
-            that were provided will be attached.
         replace_attachments: bool
             Whether to replace the attachments with the provided ones. Defaults
             to `builtins.False`.
@@ -852,10 +1112,12 @@ class PartialMessage(snowflakes.Unique):
             message=self.id,
             channel=self.channel_id,
             content=content,
-            embed=embed,
-            embeds=embeds,
             attachment=attachment,
             attachments=attachments,
+            component=component,
+            components=components,
+            embed=embed,
+            embeds=embeds,
             replace_attachments=replace_attachments,
             mentions_everyone=mentions_everyone,
             mentions_reply=mentions_reply,
@@ -868,10 +1130,12 @@ class PartialMessage(snowflakes.Unique):
         self,
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
-        embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
-        embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
+        component: undefined.UndefinedOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
+        components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
+        embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
+        embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reply: typing.Union[
@@ -906,16 +1170,21 @@ class PartialMessage(snowflakes.Unique):
 
         Other Parameters
         ----------------
-        embed : hikari.undefined.UndefinedOr[hikari.embeds.Embed]
-            If provided, the message embed.
-        embeds : hikari.undefined.UndefinedOr[typing.Sequence[hikari.embeds.Embed]]
-            If provided, the message embeds.
         attachment : hikari.undefined.UndefinedOr[hikari.files.Resourceish],
             If provided, the message attachment. This can be a resource,
             or string of a path on your computer or a URL.
         attachments : hikari.undefined.UndefinedOr[typing.Sequence[hikari.files.Resourceish]],
             If provided, the message attachments. These can be resources, or
             strings consisting of paths on your computer or URLs.
+        component : hikari.undefined.UndefinedOr[hikari.api.special_endpoints.ComponentBuilder]
+            If provided, builder object of the component to include in this message.
+        components : hikari.undefined.UndefinedOr[typing.Sequence[hikari.api.special_endpoints.ComponentBuilder]]
+            If provided, a sequence of the component builder objects to include
+            in this message.
+        embed : hikari.undefined.UndefinedOr[hikari.embeds.Embed]
+            If provided, the message embed.
+        embeds : hikari.undefined.UndefinedOr[typing.Sequence[hikari.embeds.Embed]]
+            If provided, the message embeds.
         tts : hikari.undefined.UndefinedOr[builtins.bool]
             If provided, whether the message will be TTS (Text To Speech).
         nonce : hikari.undefined.UndefinedOr[builtins.str]
@@ -986,7 +1255,7 @@ class PartialMessage(snowflakes.Unique):
             2000 characters in them, embeds that exceed one of the many embed
             limits; too many attachments; attachments that are too large;
             invalid image URLs in embeds; `reply` not found or not in the same
-            channel.
+            channel; too many components.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
@@ -1010,10 +1279,12 @@ class PartialMessage(snowflakes.Unique):
         return await self.app.rest.create_message(
             channel=self.channel_id,
             content=content,
-            embed=embed,
-            embeds=embeds,
             attachment=attachment,
             attachments=attachments,
+            component=component,
+            components=components,
+            embed=embed,
+            embeds=embeds,
             nonce=nonce,
             tts=tts,
             reply=reply,
@@ -1336,7 +1607,7 @@ class Message(PartialMessage):
     message_reference: typing.Optional[MessageReference]
     """The message reference data."""
 
-    flags: typing.Optional[MessageFlag]
+    flags: MessageFlag
     """The message flags."""
 
     stickers: typing.Sequence[stickers_.PartialSticker]
@@ -1357,3 +1628,6 @@ class Message(PartialMessage):
     !!! note
         This will only be provided for interaction messages.
     """
+
+    components: typing.Sequence[PartialComponent]
+    """Sequence of the components attached to this message."""

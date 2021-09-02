@@ -20,138 +20,106 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Models and enums used for Discord's Slash Commands interaction flow."""
+"""Models and enums used for Discord's Components interaction flow."""
 from __future__ import annotations
 
-__all__: typing.List[str] = [
-    "CommandInteractionOption",
-    "CommandInteraction",
-    "COMMAND_RESPONSE_TYPES",
-    "CommandResponseTypesT",
-    "InteractionChannel",
-    "ResolvedOptionData",
-]
+__all__: typing.List[str] = ["ComponentInteraction", "COMPONENT_RESPONSE_TYPES", "ComponentResponseTypesT"]
 
 import typing
 
 import attr
 
 from hikari import channels
-from hikari import commands
-from hikari import snowflakes
 from hikari import traits
-from hikari import undefined
 from hikari.interactions import base_interactions
-from hikari.internal import attr_extensions
 
 if typing.TYPE_CHECKING:
     from hikari import guilds
-    from hikari import permissions as permissions_
+    from hikari import messages
+    from hikari import snowflakes
     from hikari import users
     from hikari.api import special_endpoints
 
 
-COMMAND_RESPONSE_TYPES: typing.Final[typing.AbstractSet[CommandResponseTypesT]] = frozenset(
-    [base_interactions.ResponseType.MESSAGE_CREATE, base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE]
+_DEFERRED_TYPES: typing.AbstractSet[_DeferredTypesT] = frozenset(
+    [base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE, base_interactions.ResponseType.DEFERRED_MESSAGE_UPDATE]
 )
-"""Set of the response types which are valid for a command interaction.
+_DeferredTypesT = typing.Union[
+    typing.Literal[base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE],
+    typing.Literal[5],
+    typing.Literal[base_interactions.ResponseType.DEFERRED_MESSAGE_UPDATE],
+    typing.Literal[6],
+]
+_IMMEDIATE_TYPES: typing.AbstractSet[_ImmediateTypesT] = frozenset(
+    [base_interactions.ResponseType.MESSAGE_CREATE, base_interactions.ResponseType.MESSAGE_UPDATE]
+)
+_ImmediateTypesT = typing.Union[
+    typing.Literal[base_interactions.ResponseType.MESSAGE_CREATE],
+    typing.Literal[4],
+    typing.Literal[base_interactions.ResponseType.MESSAGE_UPDATE],
+    typing.Literal[7],
+]
+
+
+# This type ignore accounts for a regression introduced to MyPy in v0.900
+COMPONENT_RESPONSE_TYPES: typing.Final[typing.AbstractSet[ComponentResponseTypesT]] = frozenset(  # type: ignore[assignment]
+    [*_DEFERRED_TYPES, *_IMMEDIATE_TYPES]
+)
+"""Set of the response types which are valid for a component interaction.
 
 This includes:
 
 * `hikari.interactions.base_interactions.ResponseType.MESSAGE_CREATE`
 * `hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE`
+* `hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_UPDATE`
+* `hikari.interactions.base_interactions.ResponseType.MESSAGE_UPDATE`
 """
 
-CommandResponseTypesT = typing.Union[
-    typing.Literal[base_interactions.ResponseType.MESSAGE_CREATE],
-    typing.Literal[4],
-    typing.Literal[base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE],
-    typing.Literal[5],
-]
-"""Type-hint of the response types which are valid for a command interaction.
+ComponentResponseTypesT = typing.Union[_ImmediateTypesT, _DeferredTypesT]
+"""Type-hint of the response types which are valid for a component interaction.
 
 The following types are valid for this:
 
 * `hikari.interactions.base_interactions.ResponseType.MESSAGE_CREATE`/`4`
 * `hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE`/`5`
+* `hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_UPDATE`/`6`
+* `hikari.interactions.base_interactions.ResponseType.MESSAGE_UPDATE`/`7`
 """
 
 
-@attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
-class InteractionChannel(channels.PartialChannel):
-    """Represents partial channels returned as resolved entities on interactions."""
+@attr.define(hash=True, weakref_slot=False)
+class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentResponseTypesT]):
+    """Represents a component interaction on Discord."""
 
-    permissions: permissions_.Permissions = attr.field(eq=False, hash=False, repr=True)
-    """Permissions the command's executor has in this channel."""
+    channel_id: snowflakes.Snowflake = attr.field(eq=False)
+    """ID of the channel this interaction was triggered in."""
 
+    component_type: typing.Union[messages.ComponentType, int] = attr.field(eq=False)
+    """The type of component which triggers this interaction.
 
-@attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
-class ResolvedOptionData:
-    """Represents the resolved objects of entities referenced in a command's options."""
-
-    users: typing.Mapping[snowflakes.Snowflake, users.User] = attr.field(repr=False)
-    """Mapping of snowflake IDs to the resolved option user objects."""
-
-    members: typing.Mapping[snowflakes.Snowflake, base_interactions.InteractionMember] = attr.field(repr=False)
-    """Mapping of snowflake IDs to the resolved option member objects."""
-
-    roles: typing.Mapping[snowflakes.Snowflake, guilds.Role] = attr.field(repr=False)
-    """Mapping of snowflake IDs to the resolved option role objects."""
-
-    channels: typing.Mapping[snowflakes.Snowflake, InteractionChannel] = attr.field(repr=False)
-    """Mapping of snowflake iDs to the resolved option partial channel objects."""
-
-
-@attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
-class CommandInteractionOption:
-    """Represents the options passed for a command interaction."""
-
-    name: str = attr.field(repr=True)
-    """Name of this option."""
-
-    type: typing.Union[commands.OptionType, int] = attr.field(repr=True)
-    """Type of this option."""
-
-    value: typing.Union[str, int, bool, None] = attr.field(repr=True)
-    """Value provided for this option.
-
-    Either `CommandInteractionOption.value` or `CommandInteractionOption.options`
-    will be provided with `value` being provided when an option is provided as a
-    parameter with a value and `options` being provided when an option donates a
-    subcommand or group.
+    !!! note
+        This will never be `ButtonStyle.LINK` as link buttons don't trigger
+        interactions.
     """
 
-    options: typing.Optional[typing.Sequence[CommandInteractionOption]] = attr.field(repr=True)
-    """Options provided for this option.
+    custom_id: str = attr.field(eq=False)
+    """Developer defined ID of the component which triggered this interaction."""
 
-    Either `CommandInteractionOption.value` or `CommandInteractionOption.options`
-    will be provided with `value` being provided when an option is provided as a
-    parameter with a value and `options` being provided when an option donates a
-    subcommand or group.
-    """
+    values: typing.Sequence[str] = attr.field(eq=False)
+    """Sequence of the values which were selected for a select menu component."""
 
-
-@attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
-class CommandInteraction(base_interactions.MessageResponseMixin[CommandResponseTypesT]):
-    """Represents a command interaction on Discord."""
-
-    channel_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
-    """ID of the channel this command interaction event was triggered in."""
-
-    guild_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=True)
-    """ID of the guild this command interaction event was triggered in.
+    guild_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False)
+    """ID of the guild this interaction was triggered in.
 
     This will be `builtins.None` for command interactions triggered in DMs.
     """
+    message: messages.Message = attr.field(eq=False, repr=False)
+    """Object of the message the components for this interaction are attached to."""
 
     member: typing.Optional[base_interactions.InteractionMember] = attr.field(eq=False, hash=False, repr=True)
-    """The member who triggered this command interaction.
+    """The member who triggered this interaction.
 
-    This will be `builtins.None` for command interactions triggered in DMs.
+    This will be `builtins.None` for interactions triggered in DMs.
 
     !!! note
         This member object comes with the extra field `permissions` which
@@ -159,35 +127,33 @@ class CommandInteraction(base_interactions.MessageResponseMixin[CommandResponseT
     """
 
     user: users.User = attr.field(eq=False, hash=False, repr=True)
-    """The user who triggered this command interaction."""
+    """The user who triggered this interaction."""
 
-    command_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
-    """ID of the command being invoked."""
-
-    command_name: str = attr.field(eq=False, hash=False, repr=True)
-    """Name of the command being invoked."""
-
-    options: typing.Optional[typing.Sequence[CommandInteractionOption]] = attr.field(eq=False, hash=False, repr=True)
-    """Parameter values provided by the user invoking this command."""
-
-    resolved: typing.Optional[ResolvedOptionData] = attr.field(eq=False, hash=False, repr=False)
-    """Mappings of the objects resolved for the provided command options."""
-
-    def build_response(self) -> special_endpoints.InteractionMessageBuilder:
+    def build_response(self, type_: _ImmediateTypesT, /) -> special_endpoints.InteractionMessageBuilder:
         """Get a message response builder for use in the REST server flow.
 
         !!! note
             For interactions received over the gateway
-            `CommandInteraction.create_initial_response` should be used to set
+            `ComponentInteraction.create_initial_response` should be used to set
             the interaction response message.
+
+        Parameters
+        ----------
+        type_ : typing.Union[builtins.int, hikari.interactions.base_interactions.ResponseType]
+            The type of immediate response this should be.
+
+            This may be one of the following:
+
+            * `hikari.interactions.base_interactions.ResponseType.MESSAGE_CREATE`
+            * `hikari.interactions.base_interactions.ResponseType.MESSAGE_UPDATE`
 
         Examples
         --------
         ```py
-        async def handle_command_interaction(interaction: CommandInteraction) -> InteractionMessageBuilder:
+        async def handle_component_interaction(interaction: ComponentInteraction) -> InteractionMessageBuilder:
             return (
                 interaction
-                .build_response()
+                .build_response(ResponseType.MESSAGE_UPDATE)
                 .add_embed(Embed(description="Hi there"))
                 .set_content("Konnichiwa")
             )
@@ -198,14 +164,17 @@ class CommandInteraction(base_interactions.MessageResponseMixin[CommandResponseT
         hikari.api.special_endpoints.InteractionMessageBuilder
             Interaction message response builder object.
         """
-        return self.app.rest.interaction_message_builder(base_interactions.ResponseType.MESSAGE_CREATE)
+        if type_ not in _IMMEDIATE_TYPES:
+            raise ValueError("Invalid type passed for an immediate response")
 
-    def build_deferred_response(self) -> special_endpoints.InteractionDeferredBuilder:
+        return self.app.rest.interaction_message_builder(type_)
+
+    def build_deferred_response(self, type_: _DeferredTypesT, /) -> special_endpoints.InteractionDeferredBuilder:
         """Get a deferred message response builder for use in the REST server flow.
 
         !!! note
             For interactions received over the gateway
-            `CommandInteraction.create_initial_response` should be used to set
+            `ComponentInteraction.create_initial_response` should be used to set
             the interaction response message.
 
         !!! note
@@ -213,21 +182,33 @@ class CommandInteraction(base_interactions.MessageResponseMixin[CommandResponseT
             the result of this call can be returned as is without any modifications
             being made to it.
 
+        Parameters
+        ----------
+        type_ : typing.Union[builtins.int, hikari.interactions.base_interactions.ResponseType]
+            The type of deferred response this should be.
+
+            This may be one of the following:
+
+            * `hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE`
+            * `hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_UPDATE`
+
         Returns
         -------
-        hikari.api.special_endpoints.InteractionMessageBuilder
+        hikari.api.special_endpoints.InteractionDeferredBuilder
             Deferred interaction message response builder object.
         """
-        return self.app.rest.interaction_deferred_builder(base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE)
+        if type_ not in _DEFERRED_TYPES:
+            raise ValueError("Invalid type passed for a deferred response")
+
+        return self.app.rest.interaction_deferred_builder(type_)
 
     async def fetch_channel(self) -> channels.TextableChannel:
-        """Fetch the guild channel this was triggered in.
+        """Fetch the channel this interaction occurred in.
 
         Returns
         -------
         hikari.channels.TextableChannel
-            The requested partial channel derived object of the channel this was
-            triggered in.
+            The channel. This will be a _derivative_ of `hikari.channels.TextableChannel`.
 
         Raises
         ------
@@ -258,8 +239,8 @@ class CommandInteraction(base_interactions.MessageResponseMixin[CommandResponseT
         assert isinstance(channel, channels.TextableChannel)
         return channel
 
-    def get_channel(self) -> typing.Optional[channels.TextableGuildChannel]:
-        """Get the guild channel this was triggered in from the cache.
+    def get_channel(self) -> typing.Union[channels.GuildTextChannel, channels.GuildNewsChannel, None]:
+        """Get the guild channel this interaction occurred in.
 
         !!! note
             This will always return `builtins.None` for interactions triggered
@@ -267,50 +248,16 @@ class CommandInteraction(base_interactions.MessageResponseMixin[CommandResponseT
 
         Returns
         -------
-        typing.Optional[hikari.channels.TextableGuildChannel]
+        typing.Union[hikari.channels.GuildTextChannel, hikari.channels.GuildNewsChannel, builtins.None]
             The object of the guild channel that was found in the cache or
             `builtins.None`.
         """
         if isinstance(self.app, traits.CacheAware):
             channel = self.app.cache.get_guild_channel(self.channel_id)
-            assert isinstance(channel, channels.TextableGuildChannel)
+            assert isinstance(channel, (channels.GuildTextChannel, channels.GuildNewsChannel))
             return channel
 
         return None
-
-    async def fetch_command(self) -> commands.Command:
-        """Fetch the command which triggered this interaction.
-
-        Returns
-        -------
-        hikari.commands.Command
-            Object of this interaction's command.
-
-        Raises
-        ------
-        hikari.errors.ForbiddenError
-            If you cannot access the target command.
-        hikari.errors.NotFoundError
-            If the command isn't found.
-        hikari.errors.UnauthorizedError
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.RateLimitTooLongError
-            Raised in the event that a rate limit occurs that is
-            longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
-        hikari.errors.InternalServerError
-            If an internal error occurs on Discord while handling the request.
-        """
-        return await self.app.rest.fetch_application_command(
-            application=self.application_id, command=self.id, guild=self.guild_id or undefined.UNDEFINED
-        )
 
     async def fetch_guild(self) -> typing.Optional[guilds.RESTGuild]:
         """Fetch the guild this interaction happened in.
@@ -358,5 +305,50 @@ class CommandInteraction(base_interactions.MessageResponseMixin[CommandResponseT
         """
         if self.guild_id and isinstance(self.app, traits.CacheAware):
             return self.app.cache.get_guild(self.guild_id)
+
+        return None
+
+    async def fetch_parent_message(self) -> messages.Message:
+        """Fetch the message which this interaction was triggered on.
+
+        Returns
+        -------
+        hikari.messages.Message
+            The requested message.
+
+        Raises
+        ------
+        builtins.ValueError
+            If `token` is not available.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the webhook is not found or the webhook's message wasn't found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        return await self.fetch_message(self.message.id)
+
+    def get_parent_message(self) -> typing.Optional[messages.PartialMessage]:
+        """Get the message which this interaction was triggered on from the cache.
+
+        Returns
+        -------
+        typing.Optional[hikari.messages.Message]
+            The object of the message found in the cache or `builtins.None`.
+        """
+        if isinstance(self.app, traits.CacheAware):
+            return self.app.cache.get_message(self.message.id)
 
         return None

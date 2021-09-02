@@ -50,9 +50,13 @@ if typing.TYPE_CHECKING:
     from hikari.api import rest as rest_api
     from hikari.api import special_endpoints
     from hikari.interactions import base_interactions
+    from hikari.interactions import command_interactions
+    from hikari.interactions import component_interactions
 
-    _InteractionT = typing.TypeVar("_InteractionT", bound=base_interactions.PartialInteraction)
-
+    _InteractionT_co = typing.TypeVar("_InteractionT_co", bound=base_interactions.PartialInteraction, covariant=True)
+    _MessageResponseBuilderT = typing.Union[
+        special_endpoints.InteractionDeferredBuilder, special_endpoints.InteractionMessageBuilder
+    ]
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.rest_bot")
 
@@ -566,19 +570,61 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
             ssl_context=ssl_context,
         )
 
+    @typing.overload
     def get_listener(
-        self, interaction_type: typing.Type[_InteractionT], /
-    ) -> typing.Optional[interaction_server_.ListenerT[_InteractionT, special_endpoints.InteractionResponseBuilder]]:
-        return self._server.get_listener(interaction_type)
+        self, interaction_type: typing.Type[command_interactions.CommandInteraction], /
+    ) -> typing.Optional[
+        interaction_server_.ListenerT[command_interactions.CommandInteraction, _MessageResponseBuilderT]
+    ]:
+        ...
 
+    @typing.overload
+    def get_listener(
+        self, interaction_type: typing.Type[component_interactions.ComponentInteraction], /
+    ) -> typing.Optional[
+        interaction_server_.ListenerT[component_interactions.ComponentInteraction, _MessageResponseBuilderT]
+    ]:
+        ...
+
+    def get_listener(
+        self, interaction_type: typing.Type[_InteractionT_co], /
+    ) -> typing.Optional[interaction_server_.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]]:
+        return self._server.get_listener(interaction_type)  # type: ignore[return-value, arg-type]
+
+    @typing.overload
     def set_listener(
         self,
-        interaction_type: typing.Type[_InteractionT],
+        interaction_type: typing.Type[command_interactions.CommandInteraction],
         listener: typing.Optional[
-            interaction_server_.ListenerT[_InteractionT, special_endpoints.InteractionResponseBuilder]
+            interaction_server_.ListenerT[command_interactions.CommandInteraction, _MessageResponseBuilderT]
         ],
         /,
         *,
         replace: bool = False,
     ) -> None:
-        self._server.set_listener(interaction_type, listener, replace=replace)
+        ...
+
+    @typing.overload
+    def set_listener(
+        self,
+        interaction_type: typing.Type[component_interactions.ComponentInteraction],
+        listener: typing.Optional[
+            interaction_server_.ListenerT[component_interactions.ComponentInteraction, _MessageResponseBuilderT]
+        ],
+        /,
+        *,
+        replace: bool = False,
+    ) -> None:
+        ...
+
+    def set_listener(
+        self,
+        interaction_type: typing.Type[_InteractionT_co],
+        listener: typing.Optional[
+            interaction_server_.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]
+        ],
+        /,
+        *,
+        replace: bool = False,
+    ) -> None:
+        self._server.set_listener(interaction_type, listener, replace=replace)  # type: ignore[arg-type]

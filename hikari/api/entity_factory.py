@@ -54,6 +54,7 @@ if typing.TYPE_CHECKING:
     from hikari import webhooks as webhook_models
     from hikari.interactions import base_interactions
     from hikari.interactions import command_interactions
+    from hikari.interactions import component_interactions
     from hikari.internal import data_binding
 
 
@@ -517,6 +518,7 @@ class EntityFactory(abc.ABC):
             `"guild_id"` is not present in the passed payload.
         """
 
+    @abc.abstractmethod
     def deserialize_guild_stage_channel(
         self,
         payload: data_binding.JSONObject,
@@ -1093,6 +1095,23 @@ class EntityFactory(abc.ABC):
             The serialized representation of the command option.
         """
 
+    @abc.abstractmethod
+    def deserialize_component_interaction(
+        self, payload: data_binding.JSONObject
+    ) -> component_interactions.ComponentInteraction:
+        """Parser a raw payload from Discord into a component interaction object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.interactions.component_interactions.ComponentInteraction
+            The deserialized component interaction.
+        """
+
     #################
     # INVITE MODELS #
     #################
@@ -1209,6 +1228,68 @@ class EntityFactory(abc.ABC):
     ##################
     # MESSAGE MODELS #
     ##################
+
+    @abc.abstractmethod
+    def deserialize_action_row(self, payload: data_binding.JSONObject) -> message_models.ActionRowComponent:
+        """Parse a raw payload from Discord into an action row component object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.messages.ActionRowComponent
+            The deserialized action row component.
+        """
+
+    @abc.abstractmethod
+    def deserialize_button(self, payload: data_binding.JSONObject) -> message_models.ButtonComponent:
+        """Parse a raw payload from Discord into a button component object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.messages.ButtonComponent
+            The deserialized button component.
+        """
+
+    @abc.abstractmethod
+    def deserialize_select_menu(self, payload: data_binding.JSONObject) -> message_models.SelectMenuComponent:
+        """Parse a raw payload from Discord into a select menu component object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.messages.SelectMenuComponent
+            The deserialized button component.
+        """
+
+    @abc.abstractmethod
+    def deserialize_component(self, payload: data_binding.JSONObject) -> message_models.PartialComponent:
+        """Parse a raw payload from Discord into a message component object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.messages.PartialComponent
+            The deserialized message component.
+        hikari.errors.UnrecognisedEntityError
+            If the message component type isn't recognised.
+        """
 
     @abc.abstractmethod
     def deserialize_partial_message(self, payload: data_binding.JSONObject) -> message_models.PartialMessage:

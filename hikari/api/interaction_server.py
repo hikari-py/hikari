@@ -31,15 +31,17 @@ import typing
 if typing.TYPE_CHECKING:
     from hikari.api import special_endpoints
     from hikari.interactions import base_interactions
+    from hikari.interactions import command_interactions
+    from hikari.interactions import component_interactions
 
-    _InteractionT = typing.TypeVar("_InteractionT", bound=base_interactions.PartialInteraction, covariant=True)
-    _ResponseT = typing.TypeVar("_ResponseT", bound=special_endpoints.InteractionResponseBuilder, covariant=True)
+    _InteractionT_co = typing.TypeVar("_InteractionT_co", bound=base_interactions.PartialInteraction, covariant=True)
+    _ResponseT_co = typing.TypeVar("_ResponseT_co", bound=special_endpoints.InteractionResponseBuilder, covariant=True)
     _MessageResponseBuilderT = typing.Union[
         special_endpoints.InteractionDeferredBuilder, special_endpoints.InteractionMessageBuilder
     ]
 
 
-ListenerT = typing.Callable[["_InteractionT"], typing.Awaitable["_ResponseT"]]
+ListenerT = typing.Callable[["_InteractionT_co"], typing.Awaitable["_ResponseT_co"]]
 """Type hint of a Interaction server's listener callback.
 
 This should be an async callback which takes in one positional argument which
@@ -130,17 +132,24 @@ class InteractionServer(abc.ABC):
             the interaction request.
         """
 
-    # # This overload cannot be included until component interactions are implemented
-    # @typing.overload
-    # def get_listener(
-    #     self, interaction_type: typing.Type[commands.CommandInteraction], /
-    # ) -> typing.Optional[ListenerT[commands.CommandInteraction, _MessageResponseBuilderT]]:
-    #     ...
+    @typing.overload
+    @abc.abstractmethod
+    def get_listener(
+        self, interaction_type: typing.Type[command_interactions.CommandInteraction], /
+    ) -> typing.Optional[ListenerT[command_interactions.CommandInteraction, _MessageResponseBuilderT]]:
+        ...
+
+    @typing.overload
+    @abc.abstractmethod
+    def get_listener(
+        self, interaction_type: typing.Type[component_interactions.ComponentInteraction], /
+    ) -> typing.Optional[ListenerT[component_interactions.ComponentInteraction, _MessageResponseBuilderT]]:
+        ...
 
     @abc.abstractmethod
     def get_listener(
-        self, interaction_type: typing.Type[_InteractionT], /
-    ) -> typing.Optional[ListenerT[_InteractionT, special_endpoints.InteractionResponseBuilder]]:
+        self, interaction_type: typing.Type[_InteractionT_co], /
+    ) -> typing.Optional[ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]]:
         """Get the listener registered for an interaction.
 
         Parameters
@@ -155,25 +164,35 @@ class InteractionServer(abc.ABC):
             else `builtins.None`.
         """  # noqa E501 - Line too long
 
-    # # This overload cannot be included until component interactions are implemented
-    # @typing.overload
-    # def set_listener(
-    #     self,
-    #     interaction_type: typing.Type[commands.CommandInteraction],
-    #     listener: typing.Optional[
-    #         ListenerT[commands.CommandInteraction, _MessageResponseBuilderT]
-    #     ],
-    #     /,
-    #     *,
-    #     replace: bool = False,
-    # ) -> None:
-    #     ...
+    @typing.overload
+    @abc.abstractmethod
+    def set_listener(
+        self,
+        interaction_type: typing.Type[command_interactions.CommandInteraction],
+        listener: typing.Optional[ListenerT[command_interactions.CommandInteraction, _MessageResponseBuilderT]],
+        /,
+        *,
+        replace: bool = False,
+    ) -> None:
+        ...
+
+    @typing.overload
+    @abc.abstractmethod
+    def set_listener(
+        self,
+        interaction_type: typing.Type[component_interactions.ComponentInteraction],
+        listener: typing.Optional[ListenerT[component_interactions.ComponentInteraction, _MessageResponseBuilderT]],
+        /,
+        *,
+        replace: bool = False,
+    ) -> None:
+        ...
 
     @abc.abstractmethod
     def set_listener(
         self,
-        interaction_type: typing.Type[_InteractionT],
-        listener: typing.Optional[ListenerT[_InteractionT, special_endpoints.InteractionResponseBuilder]],
+        interaction_type: typing.Type[_InteractionT_co],
+        listener: typing.Optional[ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]],
         /,
         *,
         replace: bool = False,

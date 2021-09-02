@@ -766,12 +766,13 @@ class MessageData(BaseData[messages.Message]):
     activity: typing.Optional[messages.MessageActivity] = attr.field()
     application: typing.Optional[messages.MessageApplication] = attr.field()
     message_reference: typing.Optional[messages.MessageReference] = attr.field()
-    flags: typing.Optional[messages.MessageFlag] = attr.field()
+    flags: messages.MessageFlag = attr.field()
     stickers: typing.Tuple[stickers_.PartialSticker, ...] = attr.field()
     nonce: typing.Optional[str] = attr.field()
     referenced_message: typing.Optional[RefCell[MessageData]] = attr.field()
     interaction: typing.Optional[MessageInteractionData] = attr.field()
     application_id: typing.Optional[snowflakes.Snowflake] = attr.field()
+    components: typing.Tuple[messages.PartialComponent, ...] = attr.field()
 
     @classmethod
     def build_from_entity(
@@ -823,6 +824,7 @@ class MessageData(BaseData[messages.Message]):
             referenced_message=referenced_message,
             interaction=interaction,
             application_id=message.application_id,
+            components=tuple(message.components),
         )
 
     def build_entity(self, app: traits.RESTAware, /) -> messages.Message:
@@ -857,6 +859,7 @@ class MessageData(BaseData[messages.Message]):
             referenced_message=referenced_message,
             interaction=self.interaction.build_entity(app) if self.interaction else None,
             application_id=self.application_id,
+            components=self.components,
         )
         message.mentions = self.mentions.build_entity(app, message=message)
         return message
@@ -884,6 +887,9 @@ class MessageData(BaseData[messages.Message]):
 
         if message.embeds is not undefined.UNDEFINED:
             self.embeds = tuple(map(_copy_embed, message.embeds))
+
+        if message.components is not undefined.UNDEFINED:
+            self.components = tuple(message.components)
 
         self.mentions.update(message.mentions, users=mention_users)
 

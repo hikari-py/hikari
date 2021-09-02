@@ -39,7 +39,10 @@ class TestExecutableWebhook:
     async def test_execute_with_optionals(self, executable_webhook):
         mock_attachment_1 = object()
         mock_attachment_2 = object()
+        mock_component = object()
+        mock_components = object(), object()
         mock_embed = object()
+        mock_embeds = object(), object()
 
         result = await executable_webhook.execute(
             content="coooo",
@@ -48,7 +51,10 @@ class TestExecutableWebhook:
             tts=True,
             attachment=mock_attachment_1,
             attachments=mock_attachment_2,
-            embeds=mock_embed,
+            component=mock_component,
+            components=mock_components,
+            embed=mock_embed,
+            embeds=mock_embeds,
             mentions_everyone=False,
             user_mentions=[1235432],
             role_mentions=[65234123],
@@ -65,7 +71,10 @@ class TestExecutableWebhook:
             tts=True,
             attachment=mock_attachment_1,
             attachments=mock_attachment_2,
-            embeds=mock_embed,
+            component=mock_component,
+            components=mock_components,
+            embed=mock_embed,
+            embeds=mock_embeds,
             mentions_everyone=False,
             user_mentions=[1235432],
             role_mentions=[65234123],
@@ -86,6 +95,9 @@ class TestExecutableWebhook:
             tts=undefined.UNDEFINED,
             attachment=undefined.UNDEFINED,
             attachments=undefined.UNDEFINED,
+            component=undefined.UNDEFINED,
+            components=undefined.UNDEFINED,
+            embed=undefined.UNDEFINED,
             embeds=undefined.UNDEFINED,
             mentions_everyone=undefined.UNDEFINED,
             user_mentions=undefined.UNDEFINED,
@@ -118,6 +130,8 @@ class TestExecutableWebhook:
         message = object()
         embed = object()
         attachment = object()
+        component = object()
+        components = object()
 
         returned = await executable_webhook.edit_message(
             message,
@@ -126,6 +140,8 @@ class TestExecutableWebhook:
             embeds=[embed, embed],
             attachment=attachment,
             attachments=[attachment, attachment],
+            component=component,
+            components=components,
             replace_attachments=True,
             mentions_everyone=False,
             user_mentions=True,
@@ -143,6 +159,8 @@ class TestExecutableWebhook:
             embeds=[embed, embed],
             attachment=attachment,
             attachments=[attachment, attachment],
+            component=component,
+            components=components,
             replace_attachments=True,
             mentions_everyone=False,
             user_mentions=True,

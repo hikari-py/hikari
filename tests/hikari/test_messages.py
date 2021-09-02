@@ -88,6 +88,33 @@ class TestMessageApplication:
         )
 
 
+class TestActionRowComponent:
+    def test_getitem_operator_with_index(self):
+        mock_component = object()
+        row = messages.ActionRowComponent(type=1, components=[object(), mock_component, object()])
+
+        assert row[1] is mock_component
+
+    def test_getitem_operator_with_slice(self):
+        mock_component_1 = object()
+        mock_component_2 = object()
+        row = messages.ActionRowComponent(type=1, components=[object(), mock_component_1, object(), mock_component_2])
+
+        assert row[1:4:2] == [mock_component_1, mock_component_2]
+
+    def test_iter_operator(self):
+        mock_component_1 = object()
+        mock_component_2 = object()
+        row = messages.ActionRowComponent(type=1, components=[mock_component_1, mock_component_2])
+
+        assert list(row) == [mock_component_1, mock_component_2]
+
+    def test_len_operator(self):
+        row = messages.ActionRowComponent(type=1, components=[object(), object()])
+
+        assert len(row) == 2
+
+
 @pytest.fixture()
 def message():
     return messages.Message(
@@ -123,6 +150,7 @@ def message():
         stickers=[],
         interaction=None,
         application_id=123123,
+        components=[],
     )
 
 
@@ -168,6 +196,8 @@ class TestAsyncMessage:
         message.channel_id = 456
         embed = object()
         embeds = [object(), object()]
+        component = object()
+        components = object(), object()
         attachment = object()
         roles = [object()]
         await message.edit(
@@ -176,6 +206,8 @@ class TestAsyncMessage:
             embeds=embeds,
             attachment=attachment,
             attachments=[attachment, attachment],
+            component=component,
+            components=components,
             replace_attachments=True,
             mentions_everyone=True,
             mentions_reply=False,
@@ -191,6 +223,8 @@ class TestAsyncMessage:
             embeds=embeds,
             attachment=attachment,
             attachments=[attachment, attachment],
+            component=component,
+            components=components,
             replace_attachments=True,
             mentions_everyone=True,
             mentions_reply=False,
@@ -208,6 +242,8 @@ class TestAsyncMessage:
         roles = [object()]
         attachment = object()
         attachments = [object()]
+        component = object()
+        components = object(), object()
         reference_messsage = object()
         await message.respond(
             content="test content",
@@ -215,6 +251,8 @@ class TestAsyncMessage:
             embeds=embeds,
             attachment=attachment,
             attachments=attachments,
+            component=component,
+            components=components,
             nonce="nonce",
             tts=True,
             reply=reference_messsage,
@@ -230,6 +268,8 @@ class TestAsyncMessage:
             embeds=embeds,
             attachment=attachment,
             attachments=attachments,
+            component=component,
+            components=components,
             nonce="nonce",
             tts=True,
             reply=reference_messsage,
@@ -243,39 +283,23 @@ class TestAsyncMessage:
         message.app = mock.AsyncMock()
         message.id = 123
         message.channel_id = 456
-        embed = object()
-        embeds = [object()]
-        roles = [object()]
-        attachment = object()
-        attachments = [object()]
-        await message.respond(
-            content="test content",
-            embed=embed,
-            embeds=embeds,
-            attachment=attachment,
-            attachments=attachments,
-            nonce="nonce",
-            tts=True,
-            reply=True,
-            mentions_everyone=True,
-            user_mentions=False,
-            role_mentions=roles,
-            mentions_reply=True,
-        )
+        await message.respond(reply=True)
         message.app.rest.create_message.assert_awaited_once_with(
             channel=456,
-            content="test content",
-            embed=embed,
-            embeds=embeds,
-            attachment=attachment,
-            attachments=attachments,
-            nonce="nonce",
-            tts=True,
+            content=undefined.UNDEFINED,
+            embed=undefined.UNDEFINED,
+            embeds=undefined.UNDEFINED,
+            attachment=undefined.UNDEFINED,
+            attachments=undefined.UNDEFINED,
+            component=undefined.UNDEFINED,
+            components=undefined.UNDEFINED,
+            nonce=undefined.UNDEFINED,
+            tts=undefined.UNDEFINED,
             reply=message,
-            mentions_everyone=True,
-            user_mentions=False,
-            role_mentions=roles,
-            mentions_reply=True,
+            mentions_everyone=undefined.UNDEFINED,
+            user_mentions=undefined.UNDEFINED,
+            role_mentions=undefined.UNDEFINED,
+            mentions_reply=undefined.UNDEFINED,
         )
 
     async def test_respond_when_reply_is_False(self, message):
@@ -290,6 +314,8 @@ class TestAsyncMessage:
             embeds=undefined.UNDEFINED,
             attachment=undefined.UNDEFINED,
             attachments=undefined.UNDEFINED,
+            component=undefined.UNDEFINED,
+            components=undefined.UNDEFINED,
             nonce=undefined.UNDEFINED,
             tts=undefined.UNDEFINED,
             reply=undefined.UNDEFINED,
