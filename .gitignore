@@ -63,3 +63,5 @@ prof/
 
 # Logs
 *.log
+
+ Pipfile*
