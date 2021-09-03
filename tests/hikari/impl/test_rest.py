@@ -2899,11 +2899,11 @@ class TestRESTClientImplAsync:
 
     async def test_ban_user(self, rest_client):
         expected_route = routes.PUT_GUILD_BAN.compile(guild=123, user=456)
-        expected_json = {"delete_message_days": 7, "reason": "because i can"}
+        expected_json = {"delete_message_days": 7}
         rest_client._request = mock.AsyncMock()
 
         await rest_client.ban_user(StubModel(123), StubModel(456), delete_message_days=7, reason="because i can")
-        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="because i can")
 
     async def test_unban_user(self, rest_client):
         expected_route = routes.DELETE_GUILD_BAN.compile(guild=123, user=456)

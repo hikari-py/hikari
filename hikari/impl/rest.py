@@ -28,11 +28,7 @@ RESTful functionality.
 
 from __future__ import annotations
 
-__all__: typing.List[str] = [
-    "ClientCredentialsStrategy",
-    "RESTApp",
-    "RESTClientImpl",
-]
+__all__: typing.List[str] = ["ClientCredentialsStrategy", "RESTApp", "RESTClientImpl"]
 
 import asyncio
 import base64
@@ -2777,10 +2773,8 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> None:
         body = data_binding.JSONObjectBuilder()
         body.put("delete_message_days", delete_message_days)
-        # This endpoint specifies a reason in the body, specifically.
-        body.put("reason", reason)
         route = routes.PUT_GUILD_BAN.compile(guild=guild, user=user)
-        await self._request(route, json=body)
+        await self._request(route, json=body, reason=reason)
 
     ban_member = ban_user
 
