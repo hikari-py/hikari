@@ -47,13 +47,13 @@ import typing
 
 import attr
 
+from hikari import emojis
 from hikari import intents
 from hikari.events import base_events
 from hikari.events import shard_events
 from hikari.internal import attr_extensions
 
 if typing.TYPE_CHECKING:
-    from hikari import emojis
     from hikari import guilds
     from hikari import snowflakes
     from hikari import traits
@@ -170,6 +170,23 @@ class ReactionAddEvent(ReactionEvent, abc.ABC):
             Whether the emoji which was added is animated.
         """
 
+    def is_for_emoji(self, emoji: typing.Union[emojis.Emoji, str], /) -> bool:
+        """Get whether the reaction event is for a specific emoji.
+
+        Parameters
+        ----------
+        emoji : typing.Union[hikari.emojis.Emoji, builtins.str]
+            The emoji to check.
+
+            Passing `builtins.str` here indicates a unicode emoji.
+
+        Returns
+        -------
+        builtins.bool
+            Whether the emoji is the one which was added.
+        """
+        return emoji.id == self.emoji_id if isinstance(emoji, emojis.CustomEmoji) else emoji == self.emoji_name
+
 
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGE_REACTIONS, intents.Intents.DM_MESSAGE_REACTIONS)
 class ReactionDeleteEvent(ReactionEvent, abc.ABC):
@@ -216,6 +233,23 @@ class ReactionDeleteEvent(ReactionEvent, abc.ABC):
             `builtins.None`.
         """
 
+    def is_for_emoji(self, emoji: typing.Union[emojis.Emoji, str], /) -> bool:
+        """Get whether the reaction event is for a specific emoji.
+
+        Parameters
+        ----------
+        emoji : typing.Union[hikari.emojis.Emoji, builtins.str]
+            The emoji to check.
+
+            Passing `builtins.str` here indicates a unicode emoji.
+
+        Returns
+        -------
+        builtins.bool
+            Whether the emoji is the one which was removed.
+        """
+        return emoji.id == self.emoji_id if isinstance(emoji, emojis.CustomEmoji) else emoji == self.emoji_name
+
 
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGE_REACTIONS, intents.Intents.DM_MESSAGE_REACTIONS)
 class ReactionDeleteAllEvent(ReactionEvent, abc.ABC):
@@ -257,6 +291,23 @@ class ReactionDeleteEmojiEvent(ReactionEvent, abc.ABC):
             ID of the emoji which was removed if it was a custom emoji or
             `builtins.None`.
         """
+
+    def is_for_emoji(self, emoji: typing.Union[emojis.Emoji, str], /) -> bool:
+        """Get whether the reaction event is for a specific emoji.
+
+        Parameters
+        ----------
+        emoji : typing.Union[hikari.emojis.Emoji, builtins.str]
+            The emoji to check.
+
+            Passing `builtins.str` here indicates a unicode emoji.
+
+        Returns
+        -------
+        builtins.bool
+            Whether the emoji is the one which was removed.
+        """
+        return emoji.id == self.emoji_id if isinstance(emoji, emojis.CustomEmoji) else emoji == self.emoji_name
 
 
 @attr_extensions.with_copy
