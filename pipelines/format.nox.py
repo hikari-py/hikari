@@ -28,63 +28,7 @@ import time
 from pipelines import config
 from pipelines import nox
 
-REFORMATING_PATHS = [
-    config.MAIN_PACKAGE,
-    config.TEST_PACKAGE,
-    "scripts",
-    config.EXAMPLE_SCRIPTS,
-    "pipelines",
-    "setup.py",
-    "noxfile.py",
-    os.path.join(".idea", "fileTemplates"),
-]
-
 GIT = shutil.which("git")
-FILE_EXTS = (
-    ".py",
-    ".pyx",
-    ".pyi",
-    ".c",
-    ".cpp",
-    ".cxx",
-    ".hpp",
-    ".hxx",
-    ".h",
-    ".yml",
-    ".yaml",
-    ".html",
-    ".htm",
-    ".js",
-    ".json",
-    ".toml",
-    ".ini",
-    ".cfg",
-    ".css",
-    ".md",
-    ".dockerfile",
-    "Dockerfile",
-    ".editorconfig",
-    ".gitattributes",
-    ".json",
-    ".gitignore",
-    ".dockerignore",
-    ".flake8",
-    ".txt",
-    ".sh",
-    ".bat",
-    ".ps1",
-    ".rb",
-    ".pl",
-)
-
-LINE_ENDING_PATHS = {
-    *REFORMATING_PATHS,
-    *(f for f in os.listdir(".") if os.path.isfile(f) and f.endswith(FILE_EXTS)),
-    "pages",
-    "docs",
-    "insomnia",
-    ".github",
-}
 
 
 @nox.session(reuse_venv=True)
@@ -94,26 +38,30 @@ def reformat_code(session: nox.Session) -> None:
 
     remove_trailing_whitespaces()
 
-    session.run("isort", *REFORMATING_PATHS)
-    session.run("black", *REFORMATING_PATHS)
-    session.run("codespell", "-w", config.MAIN_PACKAGE, config.TEST_PACKAGE, config.EXAMPLE_SCRIPTS)
+    session.run("isort", *config.PYTHON_REFORMATTING_PATHS)
+    session.run("black", *config.PYTHON_REFORMATTING_PATHS)
+    session.run("codespell", "-w", *config.FULL_REFORMATTING_PATHS)
 
 
 def remove_trailing_whitespaces() -> None:
-    print("\033[36mnox > Searching for stray trailing whitespaces in files ending in", FILE_EXTS, "\033[0m")
+    print(
+        "\033[36mnox > Searching for stray trailing whitespaces in files ending in",
+        config.REFORMATTING_FILE_EXTS,
+        "\033[0m",
+    )
 
     count = 0
     total = 0
 
     start = time.perf_counter()
-    for path in LINE_ENDING_PATHS:
+    for path in config.FULL_REFORMATTING_PATHS:
         if os.path.isfile(path):
             total += 1
             count += remove_trailing_whitespaces_for_file(path)
 
         for root, dirs, files in os.walk(path, topdown=True, followlinks=False):
             for file in files:
-                if file.casefold().endswith(FILE_EXTS):
+                if file.casefold().endswith(config.REFORMATTING_FILE_EXTS):
                     total += 1
                     count += remove_trailing_whitespaces_for_file(os.path.join(root, file))
 
@@ -159,8 +107,8 @@ def remove_trailing_whitespaces_for_file(file) -> bool:
                 [GIT, "add", file, "-vf"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=None
             )
             assert result == 0, f"`git add {file} -v' exited with code {result}"
-            return True
-        return False
+
+        return True
     except Exception as ex:
         print("Failed to check", file, "because", type(ex).__name__, ex)
         return False

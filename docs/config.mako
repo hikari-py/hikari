@@ -35,7 +35,7 @@
 
     hljs_style = "atom-one-dark"
 
-    # Doesnt really do anything, just enables lurn_search
+    # Doesn't really do anything, just enables lurn_search
     lunr_search = {"fuzziness": 0}
 
     site_accent = "#ff029a"
