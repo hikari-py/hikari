@@ -1,0 +1,54 @@
+name: Prepare Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'The version to prepare the release for'
+        required: true
+
+jobs:
+  prepare-relese:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2.3.4
+
+      - name: Setup python
+        uses: actions/setup-python@v2.2.2
+        with:
+          python-version: 3.8
+
+      - name: Setup git config
+        run: |
+          git config user.name --global "hikari-bot"
+          git config user.email --global "90276125+hikari-bot[bot]@users.noreply.github.com"
+
+      - name: Run prepare script
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run:
+          - bash scripts/prepare-release.sh
+
+      - name: Generate token
+        id: generate_token
+        uses: tibdex/github-app-token@v1
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          private_key: ${{ secrets.PRIVATE_KEY }}
+
+      - name: Create pull request
+        uses: repo-sync/pull-request@v2
+        with:
+          # We need to use a bot token to be able to trigger workflows that listen to pull_request calls
+          github_token: ${{ steps.generate_token.outputs.token }}
+          source_branch: task/prepare-release-${{ github.event.inputs.version }}
+          destination_branch: master
+          pr_assignee: ${{ github.event.sender.login }}
+          pr_title: Prepare for release of ${{ github.event.inputs.version }}
+          pr_body: |
+            Release preparation triggered by @${{ github.event.sender.login }}.
+
+            Once the pull request is merged, you can trigger a PyPi release by creating a GitHub release for ${{ github.event.inputs.version }} in the repository.

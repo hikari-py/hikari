@@ -96,4 +96,5 @@ FULL_REFORMATTING_PATHS = (
     ".github",
     "pages",
     "docs",
+    "changes",
 )
