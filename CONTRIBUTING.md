@@ -10,6 +10,21 @@ of conduct can lead to a ban from the project and a report to GitHub.
 
 You can read the code of conduct [here](https://github.com/hikari-py/hikari/blob/master/CODE_OF_CONDUCT.md).
 
+# Versioning scheme
+
+This project follows the versioning scheme stated by [PEP 440](https://www.python.org/dev/peps/pep-0440/), but with a
+slight modification to the pre-release versioning: we denote all pre-releases with the `.dev{num}` extension.
+
+The development version number is increased automatically after each release in the `master` branch in the master
+repository.
+
+Please also refer to the [Semantic Versioning specification](https://semver.org/) for more information.
+
+# Deprecation process
+
+The removal or renaming of anything facing the public facing API must go through a deprecation process, which should
+match that of the versioning scheme. There are utilities under `hikari.internal.deprecation` to aid with it.
+
 # Branches
 
 We would like to keep consistency in naming branches.
