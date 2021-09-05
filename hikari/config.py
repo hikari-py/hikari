@@ -409,7 +409,7 @@ class CacheComponents(enums.Flag):
     """Enables the invites cache."""
 
     EMOJIS = 1 << 5
-    """Enables the invites cache."""
+    """Enables the emojis cache."""
 
     PRESENCES = 1 << 6
     """Enables the presences cache."""

@@ -1028,7 +1028,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------
         channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextableChannel]
             The channel to fetch messages in. This may be the object or
-            the ID of an existing channel.
+            the ID of an existing message.
         message : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
             The message to fetch. This may be the object or the ID of an
             existing channel.
@@ -2227,7 +2227,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        webhook : typing.Union[hikari.snowflakes.Snoflakeish, hikari.webhooks.ExecutableWebhook]
+        webhook : typing.Union[hikari.snowflakes.Snowflakeish, hikari.webhooks.ExecutableWebhook]
             The webhook to execute. This may be the object
             or the ID of an existing webhook.
         token: builtins.str
