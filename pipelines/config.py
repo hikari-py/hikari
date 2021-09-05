@@ -39,3 +39,61 @@ MYPY_INI = "mypy.ini"
 PYTEST_INI = "pytest.ini"
 COVERAGE_INI = "coverage.ini"
 COVERAGE_HTML_PATH = _os.path.join(ARTIFACT_DIRECTORY, "coverage", "html")
+
+# Reformatting paths
+
+REFORMATTING_FILE_EXTS = (
+    ".py",
+    ".pyx",
+    ".pyi",
+    ".c",
+    ".cpp",
+    ".cxx",
+    ".hpp",
+    ".hxx",
+    ".h",
+    ".yml",
+    ".yaml",
+    ".html",
+    ".htm",
+    ".js",
+    ".json",
+    ".toml",
+    ".ini",
+    ".cfg",
+    ".css",
+    ".md",
+    ".dockerfile",
+    "Dockerfile",
+    ".editorconfig",
+    ".gitattributes",
+    ".json",
+    ".gitignore",
+    ".dockerignore",
+    ".flake8",
+    ".txt",
+    ".sh",
+    ".bat",
+    ".ps1",
+    ".rb",
+    ".pl",
+)
+
+PYTHON_REFORMATTING_PATHS = (
+    MAIN_PACKAGE,
+    TEST_PACKAGE,
+    EXAMPLE_SCRIPTS,
+    "scripts",
+    "pipelines",
+    "setup.py",
+    "noxfile.py",
+    _os.path.join(".idea", "fileTemplates"),
+)
+
+FULL_REFORMATTING_PATHS = (
+    *PYTHON_REFORMATTING_PATHS,
+    *(f for f in _os.listdir(".") if _os.path.isfile(f) and f.endswith(REFORMATTING_FILE_EXTS)),
+    ".github",
+    "pages",
+    "docs",
+)

@@ -12,8 +12,7 @@ You can read the code of conduct [here](https://github.com/hikari-py/hikari/blob
 
 # Versioning scheme
 
-This project follows the versioning scheme stated by [PEP 440](https://www.python.org/dev/peps/pep-0440/), but with a
-slight modification to the pre-release versioning: we denote all pre-releases with the `.dev{num}` extension.
+This project follows the versioning scheme stated by [PEP 440](https://www.python.org/dev/peps/pep-0440/).
 
 The development version number is increased automatically after each release in the `master` branch in the master
 repository.

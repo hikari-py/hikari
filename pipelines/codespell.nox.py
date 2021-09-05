@@ -27,4 +27,4 @@ from pipelines import nox
 def codespell(session: nox.Session) -> None:
     """Run codespell to check for spelling mistakes."""
     session.install("-r", "dev-requirements.txt")
-    session.run("codespell", config.MAIN_PACKAGE, config.TEST_PACKAGE, config.EXAMPLE_SCRIPTS)
+    session.run("codespell", *config.FULL_REFORMATTING_PATHS)
