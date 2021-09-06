@@ -133,11 +133,14 @@ class MessageType(int, enums.Enum):
     REPLY = 19
     """A message that replies to another message."""
 
-    APPLICATION_COMMAND = 20
-    """A message sent to indicate a application command has been executed."""
+    CHAT_INPUT = 20
+    """A message sent to indicate a chat input application command has been executed."""
 
     GUILD_INVITE_REMINDER = 22
     """A message sent to remind to invite people to the guild."""
+
+    CONTEXT_MENU_COMMAND = 23
+    """A message sent to indicate a context menu has been executed."""
 
 
 @typing.final
