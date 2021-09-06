@@ -181,6 +181,9 @@ class Command(snowflakes.Unique):
     This will be `builtins.None` if this is a global command.
     """
 
+    version: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
+    """Auto-incrementing version identifier updated during seubstantial record changes."""
+
     async def fetch_self(self) -> Command:
         """Fetch an up-to-date version of this command object.
 
