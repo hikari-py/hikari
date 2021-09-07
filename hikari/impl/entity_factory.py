@@ -1696,6 +1696,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             options=options,
             default_permission=payload.get("default_permission", True),
             guild_id=guild_id,
+            version=snowflakes.Snowflake(payload["version"]),
         )
 
     def deserialize_guild_command_permissions(

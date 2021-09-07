@@ -2717,6 +2717,7 @@ class TestEntityFactoryImpl:
                     ],
                 }
             ],
+            "version": "123321123",
         }
 
     def test_deserialize_command(self, entity_factory_impl, mock_app, command_payload):
@@ -2729,6 +2730,7 @@ class TestEntityFactoryImpl:
         assert command.name == "good name"
         assert command.description == "very good description"
         assert command.default_permission is False
+        assert command.version == 123321123
 
         # CommandOption
         assert len(command.options) == 1
@@ -2766,6 +2768,7 @@ class TestEntityFactoryImpl:
             "name": "good name",
             "description": "very good description",
             "options": [],
+            "version": "123312",
         }
 
         command = entity_factory_impl.deserialize_command(payload, guild_id=123123)
@@ -2780,6 +2783,7 @@ class TestEntityFactoryImpl:
             "name": "good name",
             "description": "very good description",
             "options": [],
+            "version": "43123",
         }
 
         command = entity_factory_impl.deserialize_command(payload)

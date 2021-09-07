@@ -45,6 +45,7 @@ class TestCommand:
             options=[],
             guild_id=snowflakes.Snowflake(31231235),
             default_permission=False,
+            version=snowflakes.Snowflake(43123123),
         )
 
     @pytest.mark.asyncio()
