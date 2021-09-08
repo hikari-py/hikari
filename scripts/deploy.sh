@@ -21,13 +21,18 @@
 # SOFTWARE.
 set -e
 
+if [ $(ls -1 changes/*.*.md 2>/dev/null | wc -l) = 0]; then
+    echo "Cannot create release if CHANGELOG fragment files exist under 'changes/'!"
+    exit 1
+fi
+
 echo "Defined environment variables"
 env | grep -oP "^[^=]+" | sort
 
-if [ -z ${GITHUB_TAG+x} ]; then echo '$GITHUB_TAG environment variable is missing' && exit 1; fi
-if [ -z "${GITHUB_TAG}" ]; then echo '$GITHUB_TAG environment variable is empty' && exit 1; fi
-if [ -z ${GITHUB_SHA+x} ]; then echo '$GITHUB_SHA environment variable is missing' && exit 1; fi
-if [ -z "${GITHUB_SHA}" ]; then echo '$GITHUB_SHA environment variable is empty' && exit 1; fi
+if [ -z ${VERSION+x} ]; then echo '$VERSION environment variable is missing' && exit 1; fi
+if [ -z "${VERSION}" ]; then echo '$VERSION environment variable is empty' && exit 1; fi
+if [ -z ${REF+x} ]; then echo '$REF environment variable is missing' && exit 1; fi
+if [ -z "${REF}" ]; then echo '$REF environment variable is empty' && exit 1; fi
 if [ -z ${GITHUB_TOKEN+x} ]; then echo '$GITHUB_TOKEN environment variable is missing' && exit 1; fi
 if [ -z "${GITHUB_TOKEN}" ]; then echo '$GITHUB_TOKEN environment variable is empty' && exit 1; fi
 if [ -z ${DEPLOY_WEBHOOK_URL+x} ]; then echo '$DEPLOY_WEBHOOK_URL environment variable is missing' && exit 1; fi
@@ -36,9 +41,6 @@ if [ -z ${TWINE_USERNAME+x} ]; then echo '$TWINE_USERNAME environment variable i
 if [ -z "${TWINE_USERNAME}" ]; then echo '$TWINE_USERNAME environment variable is empty' && exit 1; fi
 if [ -z ${TWINE_PASSWORD+x} ]; then echo '$TWINE_PASSWORD environment variable is missing' && exit 1; fi
 if [ -z "${TWINE_PASSWORD}" ]; then echo '$TWINE_PASSWORD environment variable is empty' && exit 1; fi
-
-export VERSION=${GITHUB_TAG}
-export REF=${GITHUB_SHA}
 
 echo "===== INSTALLING DEPENDENCIES ====="
 # Note: We install each of these separately due to issues with the new PIP resolver
@@ -49,17 +51,13 @@ pip install twine
 pip install nox
 pip install -r requirements.txt
 
-echo "-- Bumping repository version to ${VERSION} (ref: ${REF}) --"
-sed "s|^__version__.*|__version__ = \"${VERSION}\"|g" -i hikari/_about.py
+echo "===== DEPLOYING TO PYPI ====="
+echo "-- Setting __git_sha1__ (ref: ${REF}) --"
 sed "s|^__git_sha1__.*|__git_sha1__ = \"${REF}\"|g" -i hikari/_about.py
 echo "=========================================================================="
 cat hikari/_about.py
 echo "=========================================================================="
 
-echo "===== GENERATING STUB FILES ====="
-nox -s generate-stubs
-
-echo "===== DEPLOYING TO PYPI ====="
 python setup.py sdist bdist_wheel
 echo "-- Contents of . --"
 ls -ahl
@@ -82,14 +80,12 @@ NEW_VERSION=$(python scripts/increase_version_number.py "${VERSION}")
 echo "-- Setting up git --"
 git fetch origin
 git checkout -f master
-git config user.name "github-actions"
-git config user.email "github-actions@github.com"
 
-echo "-- Bumping master version to ${NEW_VERSION} --"
+echo "-- Bumping to development version (${NEW_VERSION}) --"
 sed "s|^__version__.*|__version__ = \"${NEW_VERSION}\"|g" -i hikari/_about.py
 
 echo "-- Pushing to repository --"
-git commit -am "Bump version to ${NEW_VERSION}"
+git commit -am "Bump to development version (${NEW_VERSION})"
 git push
 
 echo "===== SENDING WEBHOOK ====="

@@ -24,9 +24,7 @@ nox --sessions pages
 cd public || exit 1
 
 git init
-git config user.name "github-actions"
-git config user.email "github-actions@github.com"
-git remote add origin "https://github-actions:${GITHUB_TOKEN}@github.com/${GITHUB_REPO_SLUG}"
+git remote add origin "https://git:${GITHUB_TOKEN}@github.com/${GITHUB_REPO_SLUG}"
 
 git checkout -B gh-pages
 git add -Av .

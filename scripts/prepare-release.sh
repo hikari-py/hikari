@@ -19,26 +19,34 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-posix_read() {
-    prompt="${1}"
-    var_name="${2}"
-    printf "%s: " "${prompt}"
-    read -r "${var_name?}"
-    export "${var_name?}"
-    return ${?}
-}
+set -e
 
-posix_read "Twine username" TWINE_USERNAME
-posix_read "Twine password" TWINE_PASSWORD
-posix_read "GitHub deploy token" GITHUB_TOKEN
-posix_read "Discord deployment webhook URL" DEPLOY_WEBHOOK_URL
-posix_read "Tag" VERSION
-posix_read "Repo slug (e.g. hikari-py/hikari)" GITHUB_REPO_SLUG
+echo "Defined environment variables"
+env | grep -oP "^[^=]+" | sort
 
-git checkout "${GITHUB_TAG}"
-REF=$(git rev-parse HEAD)
-echo "Detected REF to be ${REF}"
+if [ -z ${VERSION+x} ]; then echo '$VERSION environment variable is missing' && exit 1; fi
+if [ -z "${VERSION}" ]; then echo '$VERSION environment variable is empty' && exit 1; fi
+if [ -z ${GITHUB_TOKEN+x} ]; then echo '$GITHUB_TOKEN environment variable is missing' && exit 1; fi
+if [ -z "${GITHUB_TOKEN}" ]; then echo '$GITHUB_TOKEN environment variable is empty' && exit 1; fi
 
-set -x
-rm public -Rf || true
-bash scripts/deploy.sh
+echo "===== INSTALLING DEPENDENCIES ====="
+pip install towncrier
+
+echo "===== UPDATING INFORMATION ====="
+echo "-- Checkout branch --"
+git checkout -b "task/prepare-release-${VERSION}"
+
+echo "-- Bumping repository version to ${VERSION} --"
+sed "s|^__version__.*|__version__ = \"${VERSION}\"|g" -i hikari/_about.py
+
+echo "-- Running towncrier --"
+towncrier --yes
+
+echo "-- Committing changes --"
+git commit -am "Prepare for release of version ${VERSION}"
+
+if [ "${CI}" ]; then
+    git push origin "task/prepare-release-${VERSION}"
+else
+    echo "Changes committed to 'task/prepare-release-${VERSION}'. You can now push the changes and create a pull request"
+fi

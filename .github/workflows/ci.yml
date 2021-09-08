@@ -184,14 +184,6 @@ jobs:
 
     runs-on: ubuntu-20.04
 
-    env:
-      GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-      GITHUB_TAG: ${{ github.event.release.tag_name }}
-      GITHUB_REPO_SLUG: ${{ github.repository }}
-      DEPLOY_WEBHOOK_URL: ${{ secrets.DEPLOY_WEBHOOK_URL }}
-      TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
-      TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2.3.4
@@ -201,5 +193,18 @@ jobs:
         with:
           python-version: 3.8
 
+      - name: Setup git config
+        run: |
+          git config user.name --global "hikari-bot"
+          git config user.email --global "90276125+hikari-bot[bot]@users.noreply.github.com"
+
       - name: Deploy
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ github.event.release.tag_name }}
+          REF: ${{ github.sha }}
+          GITHUB_REPO_SLUG: ${{ github.repository }}
+          DEPLOY_WEBHOOK_URL: ${{ secrets.DEPLOY_WEBHOOK_URL }}
+          TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
         run: bash scripts/deploy.sh

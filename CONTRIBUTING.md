@@ -24,20 +24,38 @@ Please also refer to the [Semantic Versioning specification](https://semver.org/
 The removal or renaming of anything facing the public facing API must go through a deprecation process, which should
 match that of the versioning scheme. There are utilities under `hikari.internal.deprecation` to aid with it.
 
+# Towncrier
+
+To aid with the generation of `CHANGELOG.md` as well as the releases changelog we use `towncrier`.
+
+For every pull request made to this project, there should be a short explanation of the change under `changes/`
+with the following format: `{pull_request_number}.{type}.md`, 
+
+Possible types are:
+
+- `feature`: Signifying a new feature.
+- `bugfix`: Signifying a bugfix.
+- `doc`: Signifying a documentation improvement.
+- `removal`: Signifying a deprecation or removal of public API.
+- `internal`: Signifying an internal change to the code that is not of interest to the users. 
+  Examples include: code reformatting, CI changes, etc.
+
+Best way to create the fragments is to run `towncrier create {pull_request_number}.{type}.md` after creating the
+pull request, edit the created file and committing the changes.
+
+Multiple fragments types can be created per pull request if it covers multiple areas.
+
 # Branches
 
-We would like to keep consistency in naming branches.
-
-**This should be followed to ensure no issues when specific jobs run.**
-**Your merge request could be closed if a developer/maintainer thinks it is risky due to pipelines failing.**
+We would like to keep consistency in naming branches in the remote.
 
 To push branches directly to the remote, you will have to name them like this:
-  - `task/issue-number-small-info-on-branch`
-    - This should be the default for any commit that doesn't fall in any of the cases under.
   - `feature/issue-number-small-info-on-branch`
     - This should be used for branches that require more tasks to merge into before going as one MR into `master`.
   - `bugfix/issue-number-small-info-on-branch`
     - This should be used for bugfixes.
+  - `task/issue-number-small-info-on-branch`
+    - This should be the default for any commit that doesn't fall in any of the cases above.
 
 `issue-number` is optional (only use if issue exists) and can be left out. `small-info-on-branch` should be replaced
 with a small description of the branch.
@@ -71,6 +89,3 @@ This includes:
     - Generate webpage + documentation.
 
 All jobs will need to succeed before anything gets merged.
-
-Note that this rule may be skipped for `twemoji` if the problem is caused by a change Discord have made to their
-mapping.

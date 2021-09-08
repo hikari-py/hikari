@@ -566,7 +566,7 @@ class RESTClientImpl(rest_api.RESTClient):
         rest_url: typing.Optional[str],
     ) -> None:
         if max_retries > 5:
-            raise ValueError("A value above 5 was provided for 'max_retries'")
+            raise ValueError("'max_retries' must be below or equal to 5")
 
         self._cache = cache
         self._entity_factory = entity_factory
