@@ -112,6 +112,14 @@ class TestPartialChannel:
         model.name = None
         assert str(model) == "Unnamed PartialChannel ID 1234567"
 
+    @pytest.mark.asyncio()
+    async def test_delete(self, model):
+        model.app.rest.delete_channel = mock.AsyncMock()
+
+        assert await model.delete() is model.app.rest.delete_channel.return_value
+
+        model.app.rest.delete_channel.assert_called_once_with(1234567)
+
 
 class TestDMChannel:
     @pytest.fixture()

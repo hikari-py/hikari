@@ -371,7 +371,7 @@ POST_GUILD_EMOJIS: typing.Final[Route] = Route(POST, "/guilds/{guild}/emojis")
 
 GET_GUILD_STICKER: typing.Final[Route] = Route(GET, "/guilds/{guild}/stickers/{sticker}")
 PATCH_GUILD_STICKER: typing.Final[Route] = Route(PATCH, "/guilds/{guild}/stickers/{sticker}")
-DELETE_GUILD_STICKER: typing.Final[Route] = Route(DELETE, "/guilds/{guild}/stickers/{stickers}")
+DELETE_GUILD_STICKER: typing.Final[Route] = Route(DELETE, "/guilds/{guild}/stickers/{sticker}")
 
 GET_GUILD_STICKERS: typing.Final[Route] = Route(GET, "/guilds/{guild}/stickers")
 POST_GUILD_STICKERS: typing.Final[Route] = Route(POST, "/guilds/{guild}/stickers")

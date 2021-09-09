@@ -1942,14 +1942,13 @@ class TestEntityFactoryImpl:
                 "joined_at": "2015-04-26T06:26:56.936000+00:00",
                 "user": user_payload,
                 "guild_id": "123123123",
-                "premium_since": "2019-05-17T06:26:56.936000+00:00",
             }
         )
         assert member.nickname is None
+        assert member.premium_since is None
         assert member.is_deaf is undefined.UNDEFINED
         assert member.is_mute is undefined.UNDEFINED
         assert member.is_pending is undefined.UNDEFINED
-        assert member.premium_since == datetime.datetime(2019, 5, 17, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc)
 
     def test_deserialize_member_with_passed_through_user_object_and_guild_id(self, entity_factory_impl):
         mock_user = mock.Mock(user_models.UserImpl)
@@ -2885,6 +2884,35 @@ class TestEntityFactoryImpl:
         assert member.permissions == permission_models.Permissions(17179869183)
         assert isinstance(member, base_interactions.InteractionMember)
 
+    def test__deserialize_interaction_member_when_guild_id_already_in_roles_doesnt_duplicate(
+        self, entity_factory_impl, interaction_member_payload, user_payload
+    ):
+        interaction_member_payload["roles"] = [
+            582345963851743243,
+            582689893965365248,
+            734164204679856290,
+            757331666388910181,
+            43123123,
+        ]
+
+        member = entity_factory_impl._deserialize_interaction_member(interaction_member_payload, guild_id=43123123)
+        assert member.role_ids == [
+            582345963851743243,
+            582689893965365248,
+            734164204679856290,
+            757331666388910181,
+            43123123,
+        ]
+
+    def test__deserialize_interaction_member_with_unset_fields(
+        self, entity_factory_impl, interaction_member_payload, user_payload
+    ):
+        del interaction_member_payload["premium_since"]
+
+        member = entity_factory_impl._deserialize_interaction_member(interaction_member_payload, guild_id=43123123)
+
+        assert member.premium_since is None
+
     def test__deserialize_interaction_member_with_passed_user(
         self, entity_factory_impl, interaction_member_payload, user_payload
     ):
@@ -3166,6 +3194,112 @@ class TestEntityFactoryImpl:
         assert interaction.user == entity_factory_impl.deserialize_user(user_payload)
         assert interaction.values == ()
         assert isinstance(interaction, component_interactions.ComponentInteraction)
+
+    ##################
+    # STICKER MODELS #
+    ##################
+
+    @pytest.fixture()
+    def partial_sticker_payload(self):
+        return {
+            "id": "749046696482439188",
+            "name": "Thinking",
+            "format_type": 3,
+        }
+
+    @pytest.fixture()
+    def standard_sticker_payload(self):
+        return {
+            "id": "749046696482439188",
+            "name": "Thinking",
+            "description": "thonking",
+            "format_type": 1,
+            "pack_id": "123",
+            "sort_value": 96,
+            "tags": "thinking,thonkang",
+        }
+
+    @pytest.fixture()
+    def guild_sticker_payload(self, user_payload):
+        return {
+            "id": "749046696482439188",
+            "name": "Thinking",
+            "description": "thonking",
+            "guild_id": "987654321",
+            "format_type": 1,
+            "available": True,
+            "tags": "tag",
+            "user": user_payload,
+        }
+
+    @pytest.fixture()
+    def sticker_pack_payload(self, standard_sticker_payload):
+        return {
+            "id": "123",
+            "name": "My sticker pack",
+            "description": "My sticker pack description",
+            "cover_sticker_id": "456",
+            "stickers": [standard_sticker_payload],
+            "sku_id": "789",
+            "banner_asset_id": "hash123",
+        }
+
+    def test_deserialize_partial_sticker(self, entity_factory_impl, partial_sticker_payload):
+        partial_sticker = entity_factory_impl.deserialize_partial_sticker(partial_sticker_payload)
+
+        assert partial_sticker.id == 749046696482439188
+        assert partial_sticker.name == "Thinking"
+        assert partial_sticker.format_type is sticker_models.StickerFormatType.LOTTIE
+
+    def test_deserialize_standard_sticker(self, entity_factory_impl, standard_sticker_payload):
+        standard_sticker = entity_factory_impl.deserialize_standard_sticker(standard_sticker_payload)
+
+        assert standard_sticker.id == 749046696482439188
+        assert standard_sticker.name == "Thinking"
+        assert standard_sticker.description == "thonking"
+        assert standard_sticker.format_type is sticker_models.StickerFormatType.PNG
+        assert standard_sticker.pack_id == 123
+        assert standard_sticker.sort_value == 96
+        assert standard_sticker.tags == ["thinking", "thonkang"]
+
+    def test_deserialize_guild_sticker(self, entity_factory_impl, guild_sticker_payload, user_payload):
+        guild_sticker = entity_factory_impl.deserialize_guild_sticker(guild_sticker_payload)
+
+        assert guild_sticker.id == 749046696482439188
+        assert guild_sticker.name == "Thinking"
+        assert guild_sticker.description == "thonking"
+        assert guild_sticker.format_type is sticker_models.StickerFormatType.PNG
+        assert guild_sticker.is_available is True
+        assert guild_sticker.guild_id == 987654321
+        assert guild_sticker.tag == "tag"
+        assert guild_sticker.user == entity_factory_impl.deserialize_user(user_payload)
+
+    def test_deserialize_guild_sticker_with_unset_fields(self, entity_factory_impl, guild_sticker_payload):
+        del guild_sticker_payload["user"]
+
+        guild_sticker = entity_factory_impl.deserialize_guild_sticker(guild_sticker_payload)
+
+        assert guild_sticker.user is None
+
+    def test_deserialize_sticker_pack(self, entity_factory_impl, sticker_pack_payload):
+        pack = entity_factory_impl.deserialize_sticker_pack(sticker_pack_payload)
+
+        assert pack.id == 123
+        assert pack.name == "My sticker pack"
+        assert pack.description == "My sticker pack description"
+        assert pack.cover_sticker_id == 456
+        assert pack.sku_id == 789
+        assert pack.banner_hash == "hash123"
+
+        assert len(pack.stickers) == 1
+        sticker = pack.stickers[0]
+        assert sticker.id == 749046696482439188
+        assert sticker.name == "Thinking"
+        assert sticker.description == "thonking"
+        assert sticker.format_type is sticker_models.StickerFormatType.PNG
+        assert sticker.pack_id == 123
+        assert sticker.sort_value == 96
+        assert sticker.tags == ["thinking", "thonkang"]
 
     #################
     # INVITE MODELS #
@@ -3649,6 +3783,7 @@ class TestEntityFactoryImpl:
         embed_payload,
         referenced_message,
         action_row_payload,
+        partial_sticker_payload,
     ):
         member_payload = member_payload.copy()
         del member_payload["user"]
@@ -3694,17 +3829,11 @@ class TestEntityFactoryImpl:
             },
             "referenced_message": referenced_message,
             "flags": 2,
-            "sticker_items": [
-                {
-                    "id": "749046696482439188",
-                    "name": "Thinking",
-                    "format_type": 3,
-                }
-            ],
+            "sticker_items": [partial_sticker_payload],
             "nonce": "171000788183678976",
             "application_id": "123123123123",
             "interaction": {"id": "123123123", "type": 2, "name": "OKOKOK", "user": user_payload},
-            "components": [action_row_payload],
+            "components": [action_row_payload, {"type": 1000000000}],
         }
 
     def test_deserialize_partial_message(
@@ -3871,6 +4000,19 @@ class TestEntityFactoryImpl:
         assert partial_message.interaction is undefined.UNDEFINED
         assert partial_message.components is undefined.UNDEFINED
 
+    def test_deserialize_partial_message_deserializes_old_stickers_field(self, entity_factory_impl, message_payload):
+        message_payload["stickers"] = message_payload["sticker_items"]
+        del message_payload["sticker_items"]
+
+        partial_message = entity_factory_impl.deserialize_partial_message(message_payload)
+
+        assert len(partial_message.stickers) == 1
+        sticker = partial_message.stickers[0]
+        assert sticker.id == 749046696482439188
+        assert sticker.name == "Thinking"
+        assert sticker.format_type is sticker_models.StickerFormatType.LOTTIE
+        assert isinstance(sticker, sticker_models.PartialSticker)
+
     def test_deserialize_message(
         self,
         entity_factory_impl,
@@ -4034,6 +4176,19 @@ class TestEntityFactoryImpl:
         assert message.application.cover_image_hash is None
         assert message.application.icon_hash is None
         assert message.referenced_message is None
+
+    def test_deserialize_message_deserializes_old_stickers_field(self, entity_factory_impl, message_payload):
+        message_payload["stickers"] = message_payload["sticker_items"]
+        del message_payload["sticker_items"]
+
+        message = entity_factory_impl.deserialize_message(message_payload)
+
+        assert len(message.stickers) == 1
+        sticker = message.stickers[0]
+        assert sticker.id == 749046696482439188
+        assert sticker.name == "Thinking"
+        assert sticker.format_type is sticker_models.StickerFormatType.LOTTIE
+        assert isinstance(sticker, sticker_models.PartialSticker)
 
     ###################
     # PRESENCE MODELS #

@@ -504,7 +504,7 @@ class TestGatewayBot:
         stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "_close", new=mock.Mock()))
         stack.enter_context(mock.patch.object(aio, "get_or_make_loop"))
         coroutine_tracking_depth = stack.enter_context(
-            mock.patch.object(sys, "set_coroutine_origin_tracking_depth", side_effect=AttributeError)
+            mock.patch.object(sys, "set_coroutine_origin_tracking_depth", create=True, side_effect=AttributeError)
         )
 
         with stack:

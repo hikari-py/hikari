@@ -75,6 +75,7 @@ class TestRESTBot:
     ):
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(ux, "init_logging"))
+        stack.enter_context(mock.patch.object(rest_bot_impl.RESTBot, "print_banner"))
         stack.enter_context(
             mock.patch.object(entity_factory_impl, "EntityFactoryImpl", return_value=mock_entity_factory)
         )
@@ -100,6 +101,7 @@ class TestRESTBot:
 
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(ux, "init_logging"))
+        stack.enter_context(mock.patch.object(rest_bot_impl.RESTBot, "print_banner"))
         stack.enter_context(
             mock.patch.object(entity_factory_impl, "EntityFactoryImpl", return_value=mock_entity_factory)
         )
@@ -156,6 +158,7 @@ class TestRESTBot:
 
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(ux, "init_logging"))
+        stack.enter_context(mock.patch.object(rest_bot_impl.RESTBot, "print_banner"))
         stack.enter_context(mock.patch.object(interaction_server_impl, "InteractionServer"))
 
         with stack:
@@ -169,6 +172,7 @@ class TestRESTBot:
         cls = hikari_test_helpers.mock_class_namespace(rest_bot_impl.RESTBot, print_banner=mock.Mock())
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(ux, "init_logging"))
+        stack.enter_context(mock.patch.object(rest_bot_impl.RESTBot, "print_banner"))
         stack.enter_context(mock.patch.object(rest_impl, "RESTClientImpl"))
         stack.enter_context(mock.patch.object(config, "HTTPSettings"))
         stack.enter_context(mock.patch.object(config, "ProxySettings"))
@@ -220,7 +224,7 @@ class TestRESTBot:
 
     @pytest.mark.asyncio()
     async def test_close_when_is_closing(self, mock_rest_bot, mock_interaction_server, mock_rest_client):
-        mock_rest_bot._close_event = close_event = mock.Mock()
+        mock_rest_bot._close_event = mock.Mock()
         mock_interaction_server.close = mock.AsyncMock()
         mock_rest_bot._is_closing = True
         mock_rest_bot.join = mock.AsyncMock()
@@ -229,7 +233,7 @@ class TestRESTBot:
 
         mock_interaction_server.close.assert_not_called()
         mock_rest_client.close.assert_not_called()
-        close_event.set.assert_not_called()
+        mock_rest_bot._close_event.set.assert_not_called()
         mock_rest_bot.join.assert_awaited_once()
 
     @pytest.mark.asyncio()
@@ -313,37 +317,19 @@ class TestRESTBot:
         with mock.patch.object(aio, "get_or_make_loop") as get_or_make_loop:
             mock_rest_bot.run(asyncio_debug=True)
 
-            get_or_make_loop.return_value.set_debug.assert_called_once_with(True)
+        get_or_make_loop.return_value.set_debug.assert_called_once_with(True)
 
-    @pytest.mark.skipif(not hasattr(sys, "set_coroutine_origin_tracking_depth"), reason="target sys function not found")
-    def test_run_when_coroutine_tracking_depth(self, mock_rest_bot):
-        # Dependent on test-order the current event loop may be pre-set and closed without pytest.mark.asyncio
-        # therefore we need to ensure there's no pre-set event loop.
-        asyncio.set_event_loop(None)
-        mock_rest_bot.start = mock.AsyncMock()
-        mock_rest_bot.join = mock.AsyncMock()
+    def test_run_with_coroutine_tracking_depth(self, mock_rest_bot):
+        mock_rest_bot.start = mock.Mock()
+        mock_rest_bot.join = mock.Mock()
 
-        with mock.patch.object(sys, "set_coroutine_origin_tracking_depth"):
-            mock_rest_bot.run(coroutine_tracking_depth=42)
+        with mock.patch.object(aio, "get_or_make_loop"):
+            with mock.patch.object(
+                sys, "set_coroutine_origin_tracking_depth", side_effect=AttributeError, create=True
+            ) as set_tracking_depth:
+                mock_rest_bot.run(coroutine_tracking_depth=42)
 
-            # Some testing(?) environments seem to also call this function which may be picked up here.
-            sys.set_coroutine_origin_tracking_depth.assert_any_call(42)
-
-    @pytest.mark.skip(reason="Fix")
-    @pytest.mark.skipif(not hasattr(sys, "set_coroutine_origin_tracking_depth"), reason="target sys function not found")
-    def test_run_when_coroutine_tracking_depth_catches_attribute_error(self, mock_rest_bot):
-        # Dependent on test-order the current event loop may be pre-set and closed without pytest.mark.asyncio
-        # therefore we need to ensure there's no pre-set event loop.
-        asyncio.set_event_loop(None)
-        mock_rest_bot.start = mock.AsyncMock()
-        mock_rest_bot.join = mock.AsyncMock()
-
-        # TODO: This test style seems to be capable of interfering with calls to
-        # sys.set_coroutine_origin_tracking_depth either within asyncio or within test environment setup
-        # when this test is run alone.
-        # We can't exactly make it raise an attribute error when that function as accessed so this is the best we can do
-        with mock.patch.object(sys, "set_coroutine_origin_tracking_depth", side_effect=AttributeError("ok")):
-            mock_rest_bot.run(coroutine_tracking_depth=42)
+        set_tracking_depth.assert_called_once_with(42)
 
     def test_run_when_already_running(self, mock_rest_bot):
         mock_rest_bot._close_event = object()

@@ -487,6 +487,11 @@ class _LiveAttributes:
         return self
 
 
+@attr.define(auto_exc=True, repr=False, weakref_slot=False)
+class _RetryRequest(RuntimeError):
+    ...
+
+
 class RESTClientImpl(rest_api.RESTClient):
     """Implementation of the V8-compatible Discord HTTP API.
 
@@ -546,10 +551,6 @@ class RESTClientImpl(rest_api.RESTClient):
         "_token",
         "_token_type",
     )
-
-    @attr.define(auto_exc=True, repr=False, weakref_slot=False)
-    class _RetryRequest(RuntimeError):
-        ...
 
     def __init__(
         self,
@@ -695,7 +696,7 @@ class RESTClientImpl(rest_api.RESTClient):
         headers = data_binding.StringMapBuilder()
         headers.setdefault(_USER_AGENT_HEADER, _HTTP_USER_AGENT)
 
-        retried = False
+        re_authed = False
         token: typing.Optional[str] = None
         if auth:
             headers[_AUTHORIZATION_HEADER] = auth
@@ -714,7 +715,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         # This is initiated the first time we hit a 5xx error to save memory when nothing goes wrong
         backoff: typing.Optional[rate_limits.ExponentialBackOff] = None
-        retries_done = 0
+        retry_count = 0
 
         while True:
             try:
@@ -770,7 +771,7 @@ class RESTClientImpl(rest_api.RESTClient):
                 if response.status == http.HTTPStatus.NO_CONTENT:
                     return None
 
-                # Handle the response.
+                # Handle the response when everything went good
                 if 200 <= response.status < 300:
                     if response.content_type == _APPLICATION_JSON:
                         # Only deserializing here stops Cloudflare shenanigans messing us around.
@@ -780,7 +781,7 @@ class RESTClientImpl(rest_api.RESTClient):
                     raise errors.HTTPError(f"Expected JSON [{response.content_type=}, {real_url=}]")
 
                 # Handling 5xx errors
-                if response.status in _RETRY_ERROR_CODES and retries_done < self._max_retries:
+                if response.status in _RETRY_ERROR_CODES and retry_count < self._max_retries:
                     if backoff is None:
                         backoff = rate_limits.ExponentialBackOff(maximum=_MAX_BACKOFF_DURATION)
 
@@ -789,25 +790,26 @@ class RESTClientImpl(rest_api.RESTClient):
                         "Received status %s on request, backing off for %.2fs and retrying. Retries remaining: %s",
                         response.status,
                         sleep_time,
-                        self._max_retries - retries_done,
+                        self._max_retries - retry_count,
                     )
-                    retries_done += 1
+                    retry_count += 1
 
                     await asyncio.sleep(sleep_time)
-                    raise self._RetryRequest
+                    raise _RetryRequest
 
-                can_re_auth = response.status == 401 and not (auth or no_auth or retried)
+                # Attempt to re-auth on UNAUTHORIZED if we are using a TokenStrategy
+                can_re_auth = response.status == 401 and not (auth or no_auth or re_authed)
                 if can_re_auth and isinstance(self._token, rest_api.TokenStrategy):
                     assert token is not None
                     self._token.invalidate(token)
                     token = await self._token.acquire(self)
                     headers[_AUTHORIZATION_HEADER] = token
-                    retried = True
+                    re_authed = True
                     continue
 
                 await self._handle_error_response(response)
 
-            except self._RetryRequest:
+            except _RetryRequest:
                 continue
 
     @staticmethod
@@ -878,7 +880,7 @@ class RESTClientImpl(rest_api.RESTClient):
                 "rate limited on bucket %s, maybe you are running more than one bot on this token? Retrying request...",
                 bucket,
             )
-            raise self._RetryRequest
+            raise _RetryRequest
 
         if response.content_type != _APPLICATION_JSON:
             # We don't know exactly what this could imply. It is likely Cloudflare interfering
@@ -901,14 +903,14 @@ class RESTClientImpl(rest_api.RESTClient):
                 "contacting Discord to raise this limit. Backing off and retrying request..."
             )
             live_attributes.still_alive().global_rate_limit.throttle(body_retry_after)
-            raise self._RetryRequest
+            raise _RetryRequest
 
         # If the values are within 20% of each other by relativistic tolerance, it is probably
         # safe to retry the request, as they are likely the same value just with some
         # measuring difference. 20% was used as a rounded figure.
         if math.isclose(body_retry_after, reset_after, rel_tol=0.20):
             _LOGGER.error("rate limited on a sub bucket on bucket %s, but it is safe to retry", bucket)
-            raise self._RetryRequest
+            raise _RetryRequest
 
         raise errors.RateLimitedError(
             url=str(response.real_url),
@@ -1084,7 +1086,7 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.GET_CHANNEL_INVITES.compile(channel=channel)
         response = await self._request(route)
         assert isinstance(response, list)
-        return data_binding.cast_json_array(response, self._entity_factory.deserialize_invite_with_metadata)
+        return [self._entity_factory.deserialize_invite_with_metadata(invite_payload) for invite_payload in response]
 
     async def create_invite(
         self,
@@ -1127,7 +1129,7 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.GET_CHANNEL_PINS.compile(channel=channel)
         response = await self._request(route)
         assert isinstance(response, list)
-        return data_binding.cast_json_array(response, self._entity_factory.deserialize_message)
+        return [self._entity_factory.deserialize_message(message_pl) for message_pl in response]
 
     async def pin_message(
         self,
@@ -1228,20 +1230,20 @@ class RESTClientImpl(rest_api.RESTClient):
             raise ValueError("You may only specify one of 'embed' or 'embeds', not both")
 
         if attachments is not undefined.UNDEFINED and not isinstance(attachments, typing.Collection):
-            raise ValueError(
+            raise TypeError(
                 "You passed a non-collection to 'attachments', but this expects a collection. Maybe you meant to "
                 "use 'attachment' (singular) instead?"
             )
 
         if components is not undefined.UNDEFINED and not isinstance(components, typing.Collection):
             raise TypeError(
-                "You passed a non collection to 'components', but this expected a collection. Maybe you "
-                "meant to use 'collection' (singular) instead?"
+                "You passed a non-collection to 'components', but this expects a collection. Maybe you meant to "
+                "use 'component' (singular) instead?"
             )
 
         if embeds not in _NONE_OR_UNDEFINED and not isinstance(embeds, typing.Collection):
             raise TypeError(
-                "You passed a non collection to 'embeds', but this expects a collection. Maybe you meant to "
+                "You passed a non-collection to 'embeds', but this expects a collection. Maybe you meant to "
                 "use 'embed' (singular) instead?"
             )
 
@@ -1402,20 +1404,20 @@ class RESTClientImpl(rest_api.RESTClient):
             raise ValueError("You may only specify one of 'embed' or 'embeds', not both")
 
         if attachments is not undefined.UNDEFINED and not isinstance(attachments, typing.Collection):
-            raise ValueError(
+            raise TypeError(
                 "You passed a non-collection to 'attachments', but this expects a collection. Maybe you meant to "
                 "use 'attachment' (singular) instead?"
             )
 
         if components is not undefined.UNDEFINED and not isinstance(components, typing.Collection):
             raise TypeError(
-                "You passed a non collection to 'components', but this expected a collection. Maybe you "
-                "meant to use 'collection' (singular) instead?"
+                "You passed a non-collection to 'components', but this expects a collection. Maybe you meant to "
+                "use 'component' (singular) instead?"
             )
 
         if embeds not in _NONE_OR_UNDEFINED and not isinstance(embeds, typing.Collection):
             raise TypeError(
-                "You passed a non collection to 'embeds', but this expects a collection. Maybe you meant to "
+                "You passed a non-collection to 'embeds', but this expects a collection. Maybe you meant to "
                 "use 'embed' (singular) instead?"
             )
 
@@ -1755,7 +1757,7 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.GET_CHANNEL_WEBHOOKS.compile(channel=channel)
         response = await self._request(route)
         assert isinstance(response, list)
-        return data_binding.cast_json_array(response, self._entity_factory.deserialize_webhook)
+        return [self._entity_factory.deserialize_webhook(webhook_pl) for webhook_pl in response]
 
     async def fetch_guild_webhooks(
         self,
@@ -1764,7 +1766,7 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.GET_GUILD_WEBHOOKS.compile(guild=guild)
         response = await self._request(route)
         assert isinstance(response, list)
-        return data_binding.cast_json_array(response, self._entity_factory.deserialize_webhook)
+        return [self._entity_factory.deserialize_webhook(webhook_payload) for webhook_payload in response]
 
     async def edit_webhook(
         self,
@@ -1906,10 +1908,9 @@ class RESTClientImpl(rest_api.RESTClient):
         # int(ExecutableWebhook) isn't guaranteed to be valid nor the ID used to execute this entity as a webhook.
         webhook_id = webhook if isinstance(webhook, int) else webhook.webhook_id
         route = routes.PATCH_WEBHOOK_MESSAGE.compile(webhook=webhook_id, token=token, message=message)
-        body = data_binding.JSONObjectBuilder()
         return await self._edit_message(
             route,
-            body,
+            data_binding.JSONObjectBuilder(),
             no_auth=True,
             content=content,
             attachment=attachment,
@@ -1997,7 +1998,7 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.GET_MY_CONNECTIONS.compile()
         response = await self._request(route)
         assert isinstance(response, list)
-        return data_binding.cast_json_array(response, self._entity_factory.deserialize_own_connection)
+        return [self._entity_factory.deserialize_own_connection(connection_payload) for connection_payload in response]
 
     def fetch_my_guilds(
         self,
@@ -2148,7 +2149,9 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.GET_VOICE_REGIONS.compile()
         response = await self._request(route)
         assert isinstance(response, list)
-        return data_binding.cast_json_array(response, self._entity_factory.deserialize_voice_region)
+        return [
+            self._entity_factory.deserialize_voice_region(voice_region_payload) for voice_region_payload in response
+        ]
 
     async def fetch_user(self, user: snowflakes.SnowflakeishOr[users.PartialUser]) -> users.User:
         route = routes.GET_USER.compile(user=user)
@@ -2198,9 +2201,11 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.GET_GUILD_EMOJIS.compile(guild=guild)
         response = await self._request(route)
         assert isinstance(response, list)
-        return data_binding.cast_json_array(
-            response, self._entity_factory.deserialize_known_custom_emoji, guild_id=snowflakes.Snowflake(guild)
-        )
+        guild_id = snowflakes.Snowflake(guild)
+        return [
+            self._entity_factory.deserialize_known_custom_emoji(emoji_payload, guild_id=guild_id)
+            for emoji_payload in response
+        ]
 
     async def create_emoji(
         self,
@@ -2256,7 +2261,10 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.GET_STICKER_PACKS.compile()
         response = await self._request(route, no_auth=True)
         assert isinstance(response, dict)
-        return [self._entity_factory.deserialize_sticker_pack(pack) for pack in response["sticker_packs"]]
+        return [
+            self._entity_factory.deserialize_sticker_pack(sticker_pack_payload)
+            for sticker_pack_payload in response["sticker_packs"]
+        ]
 
     async def fetch_sticker(
         self,
@@ -2277,7 +2285,9 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.GET_GUILD_STICKERS.compile(guild=guild)
         response = await self._request(route)
         assert isinstance(response, list)
-        return [self._entity_factory.deserialize_guild_sticker(sticker) for sticker in response]
+        return [
+            self._entity_factory.deserialize_guild_sticker(guild_sticker_payload) for guild_sticker_payload in response
+        ]
 
     async def fetch_guild_sticker(
         self,
@@ -2453,7 +2463,7 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.GET_GUILD_CHANNELS.compile(guild=guild)
         response = await self._request(route)
         assert isinstance(response, list)
-        channel_sequence = data_binding.cast_json_array(response, self._entity_factory.deserialize_channel)
+        channel_sequence = [self._entity_factory.deserialize_channel(channel_payload) for channel_payload in response]
         # Will always be guild channels unless Discord messes up severely on something!
         return typing.cast("typing.Sequence[channels_.GuildChannel]", channel_sequence)
 
@@ -2683,9 +2693,10 @@ class RESTClientImpl(rest_api.RESTClient):
         query.put("limit", 1000)
         response = await self._request(route, query=query)
         assert isinstance(response, list)
-        return data_binding.cast_json_array(
-            response, self._entity_factory.deserialize_member, guild_id=snowflakes.Snowflake(guild)
-        )
+        guild_id = snowflakes.Snowflake(guild)
+        return [
+            self._entity_factory.deserialize_member(member_payload, guild_id=guild_id) for member_payload in response
+        ]
 
     async def edit_member(
         self,
@@ -2806,7 +2817,7 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.GET_GUILD_BANS.compile(guild=guild)
         response = await self._request(route)
         assert isinstance(response, list)
-        return data_binding.cast_json_array(response, self._entity_factory.deserialize_guild_member_ban)
+        return [self._entity_factory.deserialize_guild_member_ban(ban_payload) for ban_payload in response]
 
     async def fetch_roles(
         self,
@@ -2815,9 +2826,8 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.GET_GUILD_ROLES.compile(guild=guild)
         response = await self._request(route)
         assert isinstance(response, list)
-        return data_binding.cast_json_array(
-            response, self._entity_factory.deserialize_role, guild_id=snowflakes.Snowflake(guild)
-        )
+        guild_id = snowflakes.Snowflake(guild)
+        return [self._entity_factory.deserialize_role(role_payload, guild_id=guild_id) for role_payload in response]
 
     async def create_role(
         self,
@@ -2937,7 +2947,9 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.GET_GUILD_VOICE_REGIONS.compile(guild=guild)
         response = await self._request(route)
         assert isinstance(response, list)
-        return data_binding.cast_json_array(response, self._entity_factory.deserialize_voice_region)
+        return [
+            self._entity_factory.deserialize_voice_region(voice_region_payload) for voice_region_payload in response
+        ]
 
     async def fetch_guild_invites(
         self,
@@ -2946,7 +2958,7 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.GET_GUILD_INVITES.compile(guild=guild)
         response = await self._request(route)
         assert isinstance(response, list)
-        return data_binding.cast_json_array(response, self._entity_factory.deserialize_invite_with_metadata)
+        return [self._entity_factory.deserialize_invite_with_metadata(invite_payload) for invite_payload in response]
 
     async def fetch_integrations(
         self,
@@ -2955,9 +2967,11 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.GET_GUILD_INTEGRATIONS.compile(guild=guild)
         response = await self._request(route)
         assert isinstance(response, list)
-        return data_binding.cast_json_array(
-            response, self._entity_factory.deserialize_integration, guild_id=snowflakes.Snowflake(guild)
-        )
+        guild_id = snowflakes.Snowflake(guild)
+        return [
+            self._entity_factory.deserialize_integration(integration_payload, guild_id=guild_id)
+            for integration_payload in response
+        ]
 
     async def fetch_widget(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> guilds.GuildWidget:
         route = routes.GET_GUILD_WIDGET.compile(guild=guild)
@@ -3036,7 +3050,7 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.GET_GUILD_TEMPLATES.compile(guild=guild)
         response = await self._request(route)
         assert isinstance(response, list)
-        return data_binding.cast_json_array(response, self._entity_factory.deserialize_template)
+        return [self._entity_factory.deserialize_template(template_payload) for template_payload in response]
 
     async def sync_guild_template(
         self,
@@ -3349,13 +3363,13 @@ class RESTClientImpl(rest_api.RESTClient):
 
         if components is not undefined.UNDEFINED and not isinstance(components, typing.Collection):
             raise TypeError(
-                "You passed a non collection to 'components', but this expected a collection. Maybe you "
-                "meant to use 'collection' (singular) instead?"
+                "You passed a non-collection to 'components', but this expects a collection. Maybe you meant to "
+                "use 'component' (singular) instead?"
             )
 
         if embeds not in _NONE_OR_UNDEFINED and not isinstance(embeds, typing.Collection):
             raise TypeError(
-                "You passed a non collection to 'embeds', but this expects a collection. Maybe you meant to "
+                "You passed a non-collection to 'embeds', but this expects a collection. Maybe you meant to "
                 "use 'embed' (singular) instead?"
             )
 

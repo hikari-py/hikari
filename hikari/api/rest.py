@@ -1195,9 +1195,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ------
         builtins.ValueError
             If more than 100 unique objects/entities are passed for
-            `role_mentions` or `user_mentions`.
+            `role_mentions` or `user_mentions` or if both `attachment` and
+            `attachments`, `component` and `components` or `embed` and `embeds`
+            are specified.
         builtins.TypeError
-            If both `attachment` and `attachments` are specified.
+            If `attachments`, `components` or `embeds` is passed but is not a
+            sequence.
         hikari.errors.BadRequestError
             This may be raised in several discrete situations, such as messages
             being empty with no attachments or embeds; messages with more than
@@ -1439,6 +1442,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
+        builtins.ValueError
+            If both `attachment` and `attachments`, `component` and `components`
+            or `embed` and `embeds` are specified.
+        builtins.TypeError
+            If `attachments`, `components` or `embeds` is passed but is not a
+            sequence.
         hikari.errors.BadRequestError
             This may be raised in several discrete situations, such as messages
             being empty with no embeds; messages with more than 2000 characters
@@ -2346,10 +2355,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ------
         builtins.ValueError
             If more than 100 unique objects/entities are passed for
-            `role_mentions` or `user_mentions`.
+            `role_mentions` or `user_mentions` or if both `attachment` and
+            `attachments` or `embed` and `embeds` are specified.
         builtins.TypeError
-            If both `attachment` and `attachments` are specified or if both
-            `embed` and `embeds` are specified.
+            If `attachments`, or `embeds` is passed but is not a sequence.
         hikari.errors.BadRequestError
             This may be raised in several discrete situations, such as messages
             being empty with no attachments or embeds; messages with more than
@@ -2567,11 +2576,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Raises
         ------
         builtins.ValueError
-            If more than 100 unique objects/entities are passed for
-            `role_mentions` or `user_mentions`.
+            If both `attachment` and `attachments`, `component` and `components`
+            or `embed` and `embeds` are specified.
         builtins.TypeError
-            If both `attachment` and `attachments` are specified or if both
-            `embed` and `embeds` are specified.
+            If `attachments`, `components` or `embeds` is passed but is not a
+            sequence.
         hikari.errors.BadRequestError
             This may be raised in several discrete situations, such as messages
             being empty with no attachments or embeds; messages with more than
@@ -7361,10 +7370,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Raises
         ------
         builtins.ValueError
-            If more than 100 unique objects/entities are passed for
-            `role_mentions` or `user_mentions`.
+            If both `attachment` and `attachments`, `component` and `components`
+            or `embed` and `embeds` are specified.
         builtins.TypeError
-            If both `embed` and `embeds` are specified.
+            If `attachments`, `components` or `embeds` is passed but is not a
+            sequence.
         hikari.errors.BadRequestError
             This may be raised in several discrete situations, such as messages
             being empty with no attachments or embeds; messages with more than
