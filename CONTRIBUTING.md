@@ -29,7 +29,7 @@ match that of the versioning scheme. There are utilities under `hikari.internal.
 To aid with the generation of `CHANGELOG.md` as well as the releases changelog we use `towncrier`.
 
 For every pull request made to this project, there should be a short explanation of the change under `changes/`
-with the following format: `{pull_request_number}.{type}.md`, 
+with the following format: `{pull_request_number}.{type}.md`,
 
 Possible types are:
 
@@ -37,7 +37,7 @@ Possible types are:
 - `bugfix`: Signifying a bugfix.
 - `doc`: Signifying a documentation improvement.
 - `removal`: Signifying a deprecation or removal of public API.
-- `internal`: Signifying an internal change to the code that is not of interest to the users. 
+- `internal`: Signifying an internal change to the code that is not of interest to the users.
   Examples include: code reformatting, CI changes, etc.
 
 Best way to create the fragments is to run `towncrier create {pull_request_number}.{type}.md` after creating the
