@@ -30,7 +30,7 @@ from hikari.impl import bot
 
 @pytest.fixture()
 def mock_app():
-    return mock.Mock(spec_set=bot.BotApp)
+    return mock.Mock(spec_set=bot.GatewayBot)
 
 
 def test_Activity_str_operator():
