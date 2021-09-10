@@ -258,7 +258,7 @@ class _RESTProvider(traits.RESTAware):
         return self._rest().proxy_settings
 
 
-_NONE_OR_UNDEFINED: typing.Final[typing.Set[undefined.UndefinedOr[None]]] = {None, undefined.UNDEFINED}
+_NONE_OR_UNDEFINED: typing.Final[typing.Tuple[None, undefined.UndefinedType]] = (None, undefined.UNDEFINED)
 
 
 class RESTApp(traits.ExecutorAware):
@@ -1239,7 +1239,7 @@ class RESTClientImpl(rest_api.RESTClient):
                 "meant to use 'collection' (singular) instead?"
             )
 
-        if embeds is not undefined.UNDEFINED and not isinstance(embeds, typing.Collection):
+        if embeds not in _NONE_OR_UNDEFINED and not isinstance(embeds, typing.Collection):
             raise TypeError(
                 "You passed a non collection to 'embeds', but this expects a collection. Maybe you meant to "
                 "use 'embed' (singular) instead?"
@@ -3353,7 +3353,7 @@ class RESTClientImpl(rest_api.RESTClient):
                 "meant to use 'collection' (singular) instead?"
             )
 
-        if embeds is not undefined.UNDEFINED and not isinstance(embeds, typing.Collection):
+        if embeds not in _NONE_OR_UNDEFINED and not isinstance(embeds, typing.Collection):
             raise TypeError(
                 "You passed a non collection to 'embeds', but this expects a collection. Maybe you meant to "
                 "use 'embed' (singular) instead?"
@@ -3396,7 +3396,7 @@ class RESTClientImpl(rest_api.RESTClient):
             embed_payloads: data_binding.JSONArray = []
             for embed in embeds:
                 serialized_embed, attachments = self._entity_factory.serialize_embed(embed)
-                embed_payloads.append(embed)
+                embed_payloads.append(serialized_embed)
                 if attachments:
                     raise ValueError("Cannot send an embed with attachments in a slash command's initial response")
 
