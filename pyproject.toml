@@ -34,12 +34,10 @@ package = "hikari"
 package_dir = "hikari"
 directory = "changes"
 filename = "CHANGELOG.md"
-template = "changes/TEMPLATE.jinja2"
 issue_format = "[#{issue}](https://github.com/hikari-py/hikari/issues/{issue})"
 type = [
     { name = "Deprecations and Removals", directory = "removal",  showcontent = true },
     { name = "Features",                  directory = "feature",  showcontent = true },
     { name = "Bugfixes",                  directory = "bugfix",   showcontent = true },
     { name = "Improved Documentation",    directory = "doc",      showcontent = true },
-    { name = "Internal",                  directory = "internal", showcontent = false },
 ]

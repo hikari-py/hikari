@@ -37,8 +37,9 @@ Possible types are:
 - `bugfix`: Signifying a bugfix.
 - `doc`: Signifying a documentation improvement.
 - `removal`: Signifying a deprecation or removal of public API.
-- `internal`: Signifying an internal change to the code that is not of interest to the users.
-  Examples include: code reformatting, CI changes, etc.
+
+For changes that do not fall under any of the above cases, please specify the lack of the changelog in the pull request 
+description so that a maintainer can skip the job that checks for newly added fragments.
 
 Best way to create the fragments is to run `towncrier create {pull_request_number}.{type}.md` after creating the
 pull request, edit the created file and committing the changes.
