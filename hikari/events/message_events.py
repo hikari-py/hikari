@@ -46,6 +46,7 @@ from hikari import channels
 from hikari import intents
 from hikari import snowflakes
 from hikari import traits
+from hikari import undefined
 from hikari.events import base_events
 from hikari.events import shard_events
 from hikari.internal import attr_extensions
@@ -54,7 +55,6 @@ if typing.TYPE_CHECKING:
     from hikari import embeds as embeds_
     from hikari import guilds
     from hikari import messages
-    from hikari import undefined
     from hikari import users
     from hikari.api import shard as shard_
 
@@ -343,33 +343,23 @@ class MessageUpdateEvent(MessageEvent, abc.ABC):
         return self.message.app
 
     @property
-    def author(self) -> typing.Optional[users.User]:
+    def author(self) -> undefined.UndefinedOr[users.User]:
         """User that sent the message.
 
-        Returns
-        -------
-        typing.Optional[hikari.users.User]
-            The user that sent the message.
-
-            This will be `builtins.None` in some cases, such as when Discord
-            updates a message with an embed for a URL preview.
+        This will be `hikari.undefined.UNDEFINED` in some cases such as when Discord
+        updates a message with an embed URL preview.
         """
         return self.message.author
 
     @property
-    def author_id(self) -> typing.Optional[snowflakes.Snowflake]:
+    def author_id(self) -> undefined.UndefinedOr[snowflakes.Snowflake]:
         """ID of the author that triggered this event.
 
-        Returns
-        -------
-        typing.Optional[hikari.snowflakes.Snowflake]
-            The ID of the author that triggered this event concerns.
-
-            This will be `builtins.None` in some cases, such as
-            when Discord updates a message with an embed for a URL preview.
+        This will be `hikari.undefined.UNDEFINED` in some cases such as when Discord
+        updates a message with an embed URL preview.
         """
         author = self.message.author
-        return author.id if author is not None else None
+        return author.id if author is not undefined.UNDEFINED else undefined.UNDEFINED
 
     @property
     def channel_id(self) -> snowflakes.Snowflake:
@@ -403,7 +393,7 @@ class MessageUpdateEvent(MessageEvent, abc.ABC):
         return self.message.embeds
 
     @property
-    def is_bot(self) -> typing.Optional[bool]:
+    def is_bot(self) -> undefined.UndefinedOr[bool]:
         """Return `builtins.True` if the message is from a bot.
 
         Returns
@@ -413,14 +403,15 @@ class MessageUpdateEvent(MessageEvent, abc.ABC):
 
             If the author is not known, due to the update event being caused
             by Discord adding an embed preview to accompany a URL, then this
-            will return `builtins.None` instead.
+            will return `hikari.undefined.UNDEFINED` instead.
         """
-        if (author := self.message.author) is not None:
+        if (author := self.message.author) is not undefined.UNDEFINED:
             return author.is_bot
-        return None
+
+        return undefined.UNDEFINED
 
     @property
-    def is_human(self) -> typing.Optional[bool]:
+    def is_human(self) -> undefined.UndefinedOr[bool]:
         """Return `builtins.True` if the message was created by a human.
 
         Returns
@@ -430,20 +421,20 @@ class MessageUpdateEvent(MessageEvent, abc.ABC):
 
             If the author is not known, due to the update event being caused
             by Discord adding an embed preview to accompany a URL, then this
-            may return `builtins.None` instead.
+            may return `hikari.undefined.UNDEFINED` instead.
         """
         # Not second-guessing some weird edge case will occur in the future with this,
         # so I am being safe rather than sorry.
-        if self.message.webhook_id is not None:
-            return False
+        if (webhook_id := self.message.webhook_id) is not undefined.UNDEFINED:
+            return webhook_id is None
 
-        if (author := self.message.author) is not None:
+        if (author := self.message.author) is not undefined.UNDEFINED:
             return not author.is_bot
 
-        return None
+        return undefined.UNDEFINED
 
     @property
-    def is_webhook(self) -> bool:
+    def is_webhook(self) -> undefined.UndefinedOr[bool]:
         """Return `builtins.True` if the message was created by a webhook.
 
         Returns
@@ -451,7 +442,10 @@ class MessageUpdateEvent(MessageEvent, abc.ABC):
         builtins.bool
             `builtins.True` if from a webhook, or `builtins.False` otherwise.
         """
-        return self.message.webhook_id is not None
+        if (webhook_id := self.message.webhook_id) is not undefined.UNDEFINED:
+            return webhook_id is not None
+
+        return undefined.UNDEFINED
 
     @property
     @abc.abstractmethod
@@ -500,28 +494,13 @@ class GuildMessageUpdateEvent(MessageUpdateEvent):
     # <<inherited docstring from ShardEvent>>
 
     @property
-    def author(self) -> typing.Optional[users.User]:
-        """User that sent the message.
-
-        Returns
-        -------
-        typing.Union[builtins.None, hikari.users.User, hikari.guilds.Member]
-            The user that sent the message.
-
-            This will be `builtins.None` in some cases, such as when Discord
-            updates a message with an embed for a URL preview or if the message
-            was sent by a webhook.
-        """
-        return self.message.author
-
-    @property
-    def member(self) -> typing.Optional[guilds.Member]:
+    def member(self) -> undefined.UndefinedNoneOr[guilds.Member]:
         """Member that sent the message if provided by the event.
 
-        !!! note
-            This will be `builtins.None` in some cases, such as when Discord
-            updates a message with an embed for a URL preview or if the message
-            was sent by a webhook.
+        If the message is not in a guild, this will be `builtins.None`.
+
+        This will also be `hikari.undefined.UNDEFINED` in some cases such as when Discord
+        updates a message with an embed URL preview.
         """
         return self.message.member
 
@@ -533,7 +512,7 @@ class GuildMessageUpdateEvent(MessageUpdateEvent):
         typing.Optional[hikari.guilds.Member]
             Cached object of the member that sent the message if found.
         """
-        if self.message.author is not None and isinstance(self.app, traits.CacheAware):
+        if self.message.author is not undefined.UNDEFINED and isinstance(self.app, traits.CacheAware):
             return self.app.cache.get_member(self.guild_id, self.message.author.id)
 
         return None
