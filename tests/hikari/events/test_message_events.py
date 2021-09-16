@@ -120,7 +120,10 @@ class TestMessageUpdateEvent:
 
     @pytest.mark.parametrize(
         ("author", "expected_id"),
-        [(mock.Mock(spec_set=users.User, id=91827), 91827), (None, None)],
+        [
+            (mock.Mock(spec_set=users.User, id=91827), 91827),
+            (undefined.UNDEFINED, undefined.UNDEFINED),
+        ],
     )
     def test_author_id_property(self, event, author, expected_id):
         event.message.author = author
@@ -141,18 +144,18 @@ class TestMessageUpdateEvent:
         assert event.is_bot is is_bot
 
     def test_is_bot_property_if_no_author(self, event):
-        event.message.author = None
-        assert event.is_bot is None
+        event.message.author = undefined.UNDEFINED
+        assert event.is_bot is undefined.UNDEFINED
 
     @pytest.mark.parametrize(
         ("author", "webhook_id", "expected_is_human"),
         [
             (mock.Mock(spec_set=users.User, is_bot=True), 123, False),
-            (mock.Mock(spec_set=users.User, is_bot=True), None, False),
+            (mock.Mock(spec_set=users.User, is_bot=True), undefined.UNDEFINED, False),
             (mock.Mock(spec_set=users.User, is_bot=False), 123, False),
-            (mock.Mock(spec_set=users.User, is_bot=False), None, True),
-            (None, 123, False),
-            (None, None, None),
+            (mock.Mock(spec_set=users.User, is_bot=False), undefined.UNDEFINED, True),
+            (undefined.UNDEFINED, 123, False),
+            (undefined.UNDEFINED, undefined.UNDEFINED, undefined.UNDEFINED),
         ],
     )
     def test_is_human_property(self, event, author, webhook_id, expected_is_human):

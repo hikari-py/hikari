@@ -166,21 +166,6 @@ class TestMessage:
         message.channel_id = 456
         assert message.make_link(None) == "https://discord.com/channels/@me/456/789"
 
-    def test_guild_id_when_guild_is_not_none(self, message):
-        message._guild_id = 123
-
-        assert message.guild_id == 123
-
-    def test_guild_id_when_guild_is_none(self, message):
-        message.app = mock.Mock()
-        message._guild_id = None
-        message.channel_id = 890
-        message.app.cache.get_guild_channel = mock.Mock(return_value=mock.Mock(guild_id=456))
-
-        assert message.guild_id == 456
-
-        message.app.cache.get_guild_channel.assert_called_once_with(890)
-
 
 @pytest.mark.asyncio()
 class TestAsyncMessage:

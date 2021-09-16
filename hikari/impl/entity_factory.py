@@ -2103,17 +2103,20 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     def deserialize_partial_message(  # noqa CFQ001 - Function too long
         self, payload: data_binding.JSONObject
     ) -> message_models.PartialMessage:
-        author: typing.Optional[user_models.User] = None
+        author: undefined.UndefinedOr[user_models.User] = undefined.UNDEFINED
         if author_pl := payload.get("author"):
             author = self.deserialize_user(author_pl)
 
         guild_id: typing.Optional[snowflakes.Snowflake] = None
-        member: typing.Optional[guild_models.Member] = None
+        member: undefined.UndefinedNoneOr[guild_models.Member] = None
         if "guild_id" in payload:
             guild_id = snowflakes.Snowflake(payload["guild_id"])
 
-            if author is not None and (member_pl := payload.get("member")):
+            if member_pl := payload.get("member"):
+                assert author is not None, "received message with a member object without a user object"
                 member = self.deserialize_member(member_pl, user=author, guild_id=guild_id)
+            else:
+                member = undefined.UNDEFINED
 
         timestamp: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED
         if "timestamp" in payload:
@@ -2246,13 +2249,17 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     def deserialize_message(  # noqa CFQ001 - Function too long
         self, payload: data_binding.JSONObject
     ) -> message_models.Message:
-        guild_id = snowflakes.Snowflake(payload["guild_id"]) if "guild_id" in payload else None
         author = self.deserialize_user(payload["author"])
 
-        member: typing.Optional[guild_models.Member] = None
-        if "member" in payload:
-            assert guild_id is not None
-            member = self.deserialize_member(payload["member"], guild_id=guild_id, user=author)
+        guild_id: typing.Optional[snowflakes.Snowflake] = None
+        member: undefined.UndefinedNoneOr[guild_models.Member] = None
+        if "guild_id" in payload:
+            guild_id = snowflakes.Snowflake(payload["guild_id"])
+
+            if member_pl := payload.get("member"):
+                member = self.deserialize_member(member_pl, user=author, guild_id=guild_id)
+            else:
+                member = undefined.UNDEFINED
 
         edited_timestamp: typing.Optional[datetime.datetime] = None
         if (raw_edited_timestamp := payload["edited_timestamp"]) is not None:

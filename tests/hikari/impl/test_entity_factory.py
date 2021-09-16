@@ -3816,10 +3816,10 @@ class TestEntityFactoryImpl:
     def test_deserialize_partial_message_with_partial_fields(self, entity_factory_impl, message_payload):
         message_payload["content"] = ""
         message_payload["edited_timestamp"] = None
-        message_payload["member"] = None
         message_payload["application"]["primary_sku_id"] = None
         message_payload["application"]["icon"] = None
         message_payload["referenced_message"] = None
+        del message_payload["member"]
         del message_payload["message_reference"]["message_id"]
         del message_payload["message_reference"]["guild_id"]
         del message_payload["application"]["cover_image"]
@@ -3829,7 +3829,7 @@ class TestEntityFactoryImpl:
         assert partial_message.content is None
         assert partial_message.edited_timestamp is None
         assert partial_message.guild_id is not None
-        assert partial_message.member is None
+        assert partial_message.member is undefined.UNDEFINED
         assert partial_message.application.primary_sku_id is None
         assert partial_message.application.icon_hash is None
         assert partial_message.application.cover_image_hash is None
@@ -3844,7 +3844,7 @@ class TestEntityFactoryImpl:
         assert partial_message.id == 123
         assert partial_message.channel_id == 456
         assert partial_message.guild_id is None
-        assert partial_message.author is None
+        assert partial_message.author is undefined.UNDEFINED
         assert partial_message.member is None
         assert partial_message.content is undefined.UNDEFINED
         assert partial_message.timestamp is undefined.UNDEFINED

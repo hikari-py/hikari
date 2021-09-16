@@ -741,25 +741,32 @@ class PartialMessage(snowflakes.Unique):
     channel_id: snowflakes.Snowflake = attr.field(hash=False, eq=False, repr=True)
     """The ID of the channel that the message was sent in."""
 
-    _guild_id: typing.Optional[snowflakes.Snowflake] = attr.field(hash=False, eq=False, repr=True)
-    #: Try to determine this best-effort in the property defined further
-    #: down.
+    guild_id: typing.Optional[snowflakes.Snowflake] = attr.field(hash=False, eq=False, repr=True)
+    """The ID of the guild that the message was sent in or `builtins.None` for messages out of guilds.
 
-    author: typing.Optional[users_.User] = attr.field(hash=False, eq=False, repr=True)
-    """The author of this message.
-
-    This will be `builtins.None` in some cases such as when Discord
-    updates a message with an embed URL preview.
+    !!! warning
+        This will also be `builtins.None` for messages received from the REST API.
+        This is a Discord limitation as stated here https://github.com/discord/discord-api-docs/issues/912
     """
 
-    member: typing.Optional[guilds.Member] = attr.field(hash=False, eq=False, repr=False)
+    author: undefined.UndefinedOr[users_.User] = attr.field(hash=False, eq=False, repr=True)
+    """The author of this message.
+
+    This will also be `hikari.undefined.UNDEFINED` in some cases such as when Discord
+    updates a message with an embed URL preview or in messages fetched from the REST API.
+    """
+
+    member: undefined.UndefinedNoneOr[guilds.Member] = attr.field(hash=False, eq=False, repr=False)
     """The member for the author who created the message.
 
     If the message is not in a guild, this will be `builtins.None`.
 
-    This will also be `builtins.None` in some cases such as when Discord updates
-    a message with an embed URL preview, in messages fetched from the
-    REST API or messages sent by discord.
+    This will also be `hikari.undefined.UNDEFINED` in some cases such as when Discord
+    updates a message with an embed URL preview.
+
+    !!! warning
+        This will also be `builtins.None` for messages received from the REST API.
+        This is a Discord limitation as stated here https://github.com/discord/discord-api-docs/issues/912
     """
 
     content: undefined.UndefinedNoneOr[str] = attr.field(hash=False, eq=False, repr=False)
@@ -859,27 +866,6 @@ class PartialMessage(snowflakes.Unique):
 
     components: undefined.UndefinedOr[typing.Sequence[PartialComponent]] = attr.field(hash=False, repr=False)
     """Sequence of the components attached to this message."""
-
-    @property  # TODO: update this while refactoring message structure
-    def guild_id(self) -> typing.Optional[snowflakes.Snowflake]:
-        """ID of the guild that the message was sent in.
-
-        This will not be present on REST API responses if the application is
-        stateless or missing the `GUILDS` intent.
-        """
-        if self._guild_id:
-            return self._guild_id
-
-        if not isinstance(self.app, traits.CacheAware):
-            return None
-        # Don't check the member, as if the guild_id is missing, the member
-        # will always be missing too.
-        channel = self.app.cache.get_guild_channel(self.channel_id)
-
-        if channel is None:
-            return None
-
-        return channel.guild_id
 
     def make_link(self, guild: typing.Optional[snowflakes.SnowflakeishOr[guilds.PartialGuild]]) -> str:
         """Generate a jump link to this message.
