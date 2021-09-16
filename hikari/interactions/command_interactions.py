@@ -115,7 +115,7 @@ class CommandInteractionOption:
     type: typing.Union[commands.OptionType, int] = attr.field(repr=True)
     """Type of this option."""
 
-    value: typing.Union[str, int, bool, None] = attr.field(repr=True)
+    value: typing.Union[snowflakes.Snowflake, str, int, bool, None] = attr.field(repr=True)
     """Value provided for this option.
 
     Either `CommandInteractionOption.value` or `CommandInteractionOption.options`

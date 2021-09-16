@@ -2908,7 +2908,14 @@ class TestEntityFactoryImpl:
                 "id": "43123123",
                 "name": "okokokok",
                 "options": [
-                    {"name": "an option", "type": 1, "options": [{"name": "go ice", "type": 4, "value": "42"}]},
+                    {
+                        "name": "an option",
+                        "type": 1,
+                        "options": [
+                            {"name": "go ice", "type": 4, "value": "42"},
+                            {"name": "go fire", "type": 6, "value": 123123123},
+                        ],
+                    },
                 ],
                 "resolved": {
                     "channels": {
@@ -2969,13 +2976,20 @@ class TestEntityFactoryImpl:
         assert option.name == "an option"
         assert option.value is None
         assert option.type is commands.OptionType.SUB_COMMAND
-        assert len(option.options) == 1
-        sub_option = option.options[0]
-        assert sub_option.name == "go ice"
-        assert sub_option.value == "42"
-        assert sub_option.type is commands.OptionType.INTEGER
-        assert sub_option.options is None
-        assert isinstance(sub_option, command_interactions.CommandInteractionOption)
+        assert len(option.options) == 2
+        sub_option1 = option.options[0]
+        assert sub_option1.name == "go ice"
+        assert sub_option1.value == "42"
+        assert sub_option1.type is commands.OptionType.INTEGER
+        assert sub_option1.options is None
+        assert isinstance(sub_option1, command_interactions.CommandInteractionOption)
+        sub_option2 = option.options[1]
+        assert sub_option2.name == "go fire"
+        assert sub_option2.value == 123123123
+        assert isinstance(sub_option2.value, snowflakes.Snowflake)
+        assert sub_option2.type is commands.OptionType.USER
+        assert sub_option2.options is None
+        assert isinstance(sub_option2, command_interactions.CommandInteractionOption)
         assert isinstance(option, command_interactions.CommandInteractionOption)
 
         # ResolvedOptionData
