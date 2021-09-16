@@ -71,12 +71,12 @@ class TestReactionAddEvent:
 
 class TestReactionDeleteEvent:
     def test_is_for_emoji_when_custom_emoji_matches(self):
-        event = hikari_test_helpers.mock_class_namespace(reaction_events.ReactionAddEvent, emoji_id=333)()
+        event = hikari_test_helpers.mock_class_namespace(reaction_events.ReactionDeleteEvent, emoji_id=333)()
 
         assert event.is_for_emoji(emojis.CustomEmoji(id=333, name=None, is_animated=True))
 
     def test_is_for_emoji_when_unicode_emoji_matches(self):
-        event = hikari_test_helpers.mock_class_namespace(reaction_events.ReactionAddEvent, emoji_name="e")()
+        event = hikari_test_helpers.mock_class_namespace(reaction_events.ReactionDeleteEvent, emoji_name="e")()
 
         assert event.is_for_emoji(emojis.UnicodeEmoji("e"))
 
@@ -89,7 +89,7 @@ class TestReactionDeleteEvent:
     )
     def test_is_for_emoji_when_wrong_emoji_type(self, emoji_id, emoji_name, emoji):
         event = hikari_test_helpers.mock_class_namespace(
-            reaction_events.ReactionAddEvent, emoji_id=emoji_id, emoji_name=emoji_name
+            reaction_events.ReactionDeleteEvent, emoji_id=emoji_id, emoji_name=emoji_name
         )()
 
         assert event.is_for_emoji(emoji) is False
@@ -103,7 +103,7 @@ class TestReactionDeleteEvent:
     )
     def test_is_for_emoji_when_emoji_miss_match(self, emoji_id, emoji_name, emoji):
         event = hikari_test_helpers.mock_class_namespace(
-            reaction_events.ReactionAddEvent, emoji_id=emoji_id, emoji_name=emoji_name
+            reaction_events.ReactionDeleteEvent, emoji_id=emoji_id, emoji_name=emoji_name
         )()
 
         assert event.is_for_emoji(emoji) is False
@@ -111,12 +111,12 @@ class TestReactionDeleteEvent:
 
 class TestReactionDeleteEmojiEvent:
     def test_is_for_emoji_when_custom_emoji_matches(self):
-        event = hikari_test_helpers.mock_class_namespace(reaction_events.ReactionAddEvent, emoji_id=332223333)()
+        event = hikari_test_helpers.mock_class_namespace(reaction_events.ReactionDeleteEmojiEvent, emoji_id=332223333)()
 
         assert event.is_for_emoji(emojis.CustomEmoji(id=332223333, name=None, is_animated=True))
 
     def test_is_for_emoji_when_unicode_emoji_matches(self):
-        event = hikari_test_helpers.mock_class_namespace(reaction_events.ReactionAddEvent, emoji_name="🌲e")()
+        event = hikari_test_helpers.mock_class_namespace(reaction_events.ReactionDeleteEmojiEvent, emoji_name="🌲e")()
 
         assert event.is_for_emoji(emojis.UnicodeEmoji("🌲e"))
 
@@ -129,7 +129,7 @@ class TestReactionDeleteEmojiEvent:
     )
     def test_is_for_emoji_when_wrong_emoji_type(self, emoji_id, emoji_name, emoji):
         event = hikari_test_helpers.mock_class_namespace(
-            reaction_events.ReactionAddEvent, emoji_id=emoji_id, emoji_name=emoji_name
+            reaction_events.ReactionDeleteEmojiEvent, emoji_id=emoji_id, emoji_name=emoji_name
         )()
 
         assert event.is_for_emoji(emoji) is False
@@ -143,7 +143,7 @@ class TestReactionDeleteEmojiEvent:
     )
     def test_is_for_emoji_when_emoji_miss_match(self, emoji_id, emoji_name, emoji):
         event = hikari_test_helpers.mock_class_namespace(
-            reaction_events.ReactionAddEvent, emoji_id=emoji_id, emoji_name=emoji_name
+            reaction_events.ReactionDeleteEmojiEvent, emoji_id=emoji_id, emoji_name=emoji_name
         )()
 
         assert event.is_for_emoji(emoji) is False

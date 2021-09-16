@@ -503,9 +503,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                         new_value = value_converter(new_value) if new_value is not None else None
                         old_value = value_converter(old_value) if old_value is not None else None
 
-                    elif _LOGGER.isEnabledFor(logging.DEBUG) and not isinstance(
-                        key, audit_log_models.AuditLogChangeKey
-                    ):
+                    elif not isinstance(key, audit_log_models.AuditLogChangeKey):
                         _LOGGER.debug("Unknown audit log change key found %r", key)
 
                     changes.append(audit_log_models.AuditLogChange(key=key, new_value=new_value, old_value=old_value))
@@ -2283,7 +2281,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         if "reactions" in payload:
             reactions = [self._deserialize_message_reaction(reaction) for reaction in payload["reactions"]]
-
         else:
             reactions = []
 
@@ -2308,7 +2305,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         if "sticker_items" in payload:
             stickers = [self.deserialize_partial_sticker(sticker) for sticker in payload["sticker_items"]]
-
+        elif "stickers" in payload:
+            stickers = [self.deserialize_partial_sticker(sticker) for sticker in payload["stickers"]]
         else:
             stickers = []
 

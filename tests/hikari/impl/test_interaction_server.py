@@ -124,10 +124,26 @@ class TestInteractionServer:
         assert mock_interaction_server.is_alive is True
 
     @pytest.mark.asyncio()
+    async def test___fetch_public_key_when_lock_is_None_gets_new_lock_and_doesnt_overwrite_existing_ones(
+        self, mock_interaction_server, mock_rest_client
+    ):
+        mock_interaction_server._application_fetch_lock = None
+
+        with mock.patch.object(asyncio, "Lock") as lock_class:
+            with mock.patch.object(ed25519, "build_ed25519_verifier"):
+                # Run some times to make sure it does not overwrite it
+                for _ in range(5):
+                    await mock_interaction_server._fetch_public_key()
+
+        assert mock_interaction_server._application_fetch_lock is lock_class.return_value
+        lock_class.assert_called_once_with()
+        lock_class.return_value.__aenter__.assert_has_awaits([mock.call() for _ in range(5)])
+        lock_class.return_value.__aexit__.assert_has_awaits([mock.call(None, None, None) for _ in range(5)])
+
+    @pytest.mark.asyncio()
     async def test__fetch_public_key_with_bearer_token(self, mock_interaction_server, mock_rest_client):
         mock_rest_client.token_type = "Bearer"
-        mock_lock = mock.AsyncMock()
-        mock_interaction_server._application_fetch_lock = mock_lock
+        mock_interaction_server._application_fetch_lock = mock.AsyncMock()
 
         with mock.patch.object(ed25519, "build_ed25519_verifier") as build_verifier:
             assert await mock_interaction_server._fetch_public_key() is build_verifier.return_value
@@ -138,14 +154,13 @@ class TestInteractionServer:
 
         mock_rest_client.fetch_authorization.assert_awaited_once()
         mock_rest_client.fetch_application.assert_not_called()
-        mock_lock.__aenter__.assert_awaited_once()
-        mock_lock.__aexit__.assert_awaited_once()
+        mock_interaction_server._application_fetch_lock.__aenter__.assert_awaited_once()
+        mock_interaction_server._application_fetch_lock.__aexit__.assert_awaited_once()
 
     @pytest.mark.asyncio()
     async def test__fetch_public_key_fetch_with_bot_token(self, mock_interaction_server, mock_rest_client):
         mock_rest_client.token_type = "Bot"
-        mock_lock = mock.AsyncMock()
-        mock_interaction_server._application_fetch_lock = mock_lock
+        mock_interaction_server._application_fetch_lock = mock.AsyncMock()
 
         with mock.patch.object(ed25519, "build_ed25519_verifier") as build_verifier:
             assert await mock_interaction_server._fetch_public_key() is build_verifier.return_value
@@ -154,8 +169,8 @@ class TestInteractionServer:
 
         mock_rest_client.fetch_authorization.assert_not_called()
         mock_rest_client.fetch_application.assert_awaited_once()
-        mock_lock.__aenter__.assert_awaited_once()
-        mock_lock.__aexit__.assert_awaited_once()
+        mock_interaction_server._application_fetch_lock.__aenter__.assert_awaited_once()
+        mock_interaction_server._application_fetch_lock.__aexit__.assert_awaited_once()
 
     @pytest.mark.asyncio()
     async def test__fetch_public_key_when_verify_already_set(self, mock_interaction_server):

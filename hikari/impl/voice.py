@@ -202,9 +202,7 @@ class VoiceComponentImpl(voice.VoiceComponent):
                 **kwargs,
             )
         except Exception:
-            _LOGGER.debug(
-                "error occurred in initialization, leaving voice channel %s in guild %s again", channel, guild
-            )
+            _LOGGER.debug("error occurred in initialization, leaving voice channel %s in guild %s", channel, guild)
             try:
                 await asyncio.wait_for(shard.update_voice_state(guild, None), timeout=5.0)
             except asyncio.TimeoutError:

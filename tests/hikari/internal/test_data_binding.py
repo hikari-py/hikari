@@ -229,35 +229,3 @@ class TestJSONObjectBuilder:
         builder = data_binding.JSONObjectBuilder()
         builder.put_snowflake_array("test", undefined.UNDEFINED)
         assert builder == {}
-
-
-class TestCastJSONArray:
-    def test_cast_is_invoked_with_each_item(self):
-        cast = mock.Mock()
-        arr = ["foo", "bar", "baz"]
-
-        data_binding.cast_json_array(arr, cast)
-
-        assert cast.call_args_list[0] == mock.call("foo")
-        assert cast.call_args_list[1] == mock.call("bar")
-        assert cast.call_args_list[2] == mock.call("baz")
-
-    def test_cast_result_is_used_for_each_item(self):
-        r1 = mock.Mock()
-        r2 = mock.Mock()
-        r3 = mock.Mock()
-        cast = mock.Mock(side_effect=[r1, r2, r3])
-
-        arr = ["foo", "bar", "baz"]
-
-        assert data_binding.cast_json_array(arr, cast) == [r1, r2, r3]
-
-    def test_passes_kwargs_for_every_cast(self):
-        cast = mock.Mock()
-        arr = ["foo", "bar", "baz"]
-
-        data_binding.cast_json_array(arr, cast, foo=42, bar="OK")
-
-        assert cast.call_args_list[0] == mock.call("foo", foo=42, bar="OK")
-        assert cast.call_args_list[1] == mock.call("bar", foo=42, bar="OK")
-        assert cast.call_args_list[2] == mock.call("baz", foo=42, bar="OK")

@@ -36,6 +36,13 @@ class TestExecutableWebhook:
         )()
 
     @pytest.mark.asyncio()
+    async def test_execute_when_no_token(self, executable_webhook):
+        executable_webhook.token = None
+
+        with pytest.raises(ValueError, match=r"Cannot send a message using a webhook where we don't know the token"):
+            await executable_webhook.execute()
+
+    @pytest.mark.asyncio()
     async def test_execute_with_optionals(self, executable_webhook):
         mock_attachment_1 = object()
         mock_attachment_2 = object()

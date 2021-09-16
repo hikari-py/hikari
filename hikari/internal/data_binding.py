@@ -34,7 +34,6 @@ __all__: typing.List[str] = [
     "load_json",
     "JSONDecodeError",
     "JSONObjectBuilder",
-    "cast_json_array",
 ]
 
 import typing
@@ -361,43 +360,3 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
         """  # noqa: E501 - Line too long
         if values is not undefined.UNDEFINED:
             self[key] = [str(int(value)) for value in values]
-
-
-def cast_json_array(array: JSONArray, /, cast: typing.Callable[..., T], **kwargs: typing.Any) -> typing.List[T]:
-    """Cast a JSON array to a given generic collection type.
-
-    This will perform casts on each internal item individually.
-
-    Note that
-
-        >>> cast_json_array(raw_list, foo, bar="OK")
-
-    ...is equivalent to doing....
-
-        >>> [foo(item, bar="OK") for item in raw_list]
-
-    Parameters
-    ----------
-    array : JSONArray
-        The raw JSON-decoded array.
-    cast : typing.Callable[[JSONish], T]
-        The cast to apply to each item in the array. This should
-        consume any valid JSON-decoded type and return the type
-        corresponding to the generic type of the provided collection.
-    **kwargs : typing.Any
-        Extra keyword arguments to be passed during every call to cast.
-
-    Returns
-    -------
-    typing.List[T]
-        The generated list.
-
-    Example
-    -------
-    ```py
-    >>> arr = [123, 456, 789, 123]
-    >>> cast_json_array(arr, str)
-    ["123", "456", "789", "123"]
-    ```
-    """
-    return [cast(item, **kwargs) for item in array]
