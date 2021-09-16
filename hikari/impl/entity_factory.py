@@ -66,6 +66,13 @@ from hikari.internal import time
 _ValueT = typing.TypeVar("_ValueT")
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.entity_factory")
 
+_interaction_option_type_mapping: typing.Dict[int, typing.Callable[[typing.Any], typing.Any]] = {
+    commands.OptionType.USER: snowflakes.Snowflake,
+    commands.OptionType.CHANNEL: snowflakes.Snowflake,
+    commands.OptionType.ROLE: snowflakes.Snowflake,
+    commands.OptionType.MENTIONABLE: snowflakes.Snowflake,
+}
+
 
 def _with_int_cast(cast: typing.Callable[[int], _ValueT]) -> typing.Callable[[typing.Any], _ValueT]:
     """Wrap a cast to ensure the value passed to it will first be cast to int."""
@@ -1737,10 +1744,15 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_suboptions := payload.get("options"):
             suboptions = [self._deserialize_interaction_command_option(suboption) for suboption in raw_suboptions]
 
+        option_type = commands.OptionType(payload["type"])
+        value = payload.get("value")
+        if modifier := _interaction_option_type_mapping.get(option_type):
+            value = modifier(value)
+
         return command_interactions.CommandInteractionOption(
             name=payload["name"],
-            type=commands.OptionType(payload["type"]),
-            value=payload.get("value"),
+            type=option_type,
+            value=value,
             options=suboptions,
         )
 
