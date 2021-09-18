@@ -47,4 +47,10 @@ Something notable however, is the lack of `from_dict` and `to_dict` methods on e
 
 - https://hikari-py.github.io/hikari/hikari/api/entity_factory.html#hikari.api.entity_factory.EntityFactory.serialize_embed
 - https://hikari-py.github.io/hikari/hikari/api/entity_factory.html#hikari.api.entity_factory.EntityFactory.deserialize_embed
+
+
+#### Channels
+
+Channels translate over well. Notable differences are:
+- Categories are referred to by `parent_id`
 """
