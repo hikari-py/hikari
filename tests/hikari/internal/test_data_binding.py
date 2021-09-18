@@ -19,8 +19,10 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+import contextlib
 import typing
 
+import aiohttp
 import attr
 import mock
 import multidict
@@ -34,6 +36,52 @@ from hikari.internal import data_binding
 @attr.define()
 class MyUnique(snowflakes.Unique):
     id: snowflakes.Snowflake = attr.field(converter=snowflakes.Snowflake)
+
+
+class TestURLEncodedFormBuilder:
+    @pytest.fixture()
+    def form_builder(self):
+        return data_binding.URLEncodedFormBuilder()
+
+    def test_add_field(self, form_builder):
+        form_builder.add_field("test_name", "test_data", content_type="mimetype")
+
+        assert form_builder._fields == [("test_name", "test_data", "mimetype")]
+
+    def test_add_resource(self, form_builder):
+        mock_resource = object()
+
+        form_builder.add_resource(mock_resource)
+
+        assert form_builder._resources == [mock_resource]
+
+    @pytest.mark.asyncio()
+    async def test_build(self, form_builder):
+        resource1 = mock.Mock()
+        resource2 = mock.Mock()
+        stream1 = mock.Mock(filename="testing1", mimetype="text")
+        stream2 = mock.Mock(filename="testing2", mimetype=None)
+        mock_stack = mock.AsyncMock(enter_async_context=mock.AsyncMock(side_effect=[stream1, stream2]))
+        form_builder._executor = object()
+        form_builder._fields = [("test_name", "test_data", "mimetype"), ("test_name2", "test_data2", "mimetype2")]
+        form_builder._resources = [resource1, resource2]
+
+        with mock.patch.object(aiohttp, "FormData") as mock_form_class:
+            assert await form_builder.build(mock_stack) is mock_form_class.return_value
+
+        resource1.stream.assert_called_once_with(executor=form_builder._executor)
+        resource2.stream.assert_called_once_with(executor=form_builder._executor)
+        mock_stack.enter_async_context.assert_has_awaits(
+            [mock.call(resource1.stream.return_value), mock.call(resource2.stream.return_value)]
+        )
+        mock_form_class.return_value.add_field.assert_has_calls(
+            [
+                mock.call("test_name", "test_data", content_type="mimetype"),
+                mock.call("test_name2", "test_data2", content_type="mimetype2"),
+                mock.call("file0", stream1, filename="testing1", content_type="text"),
+                mock.call("file1", stream2, filename="testing2", content_type="application/octet-stream"),
+            ]
+        )
 
 
 class TestStringMapBuilder:

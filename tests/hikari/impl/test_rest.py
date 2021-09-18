@@ -1043,6 +1043,26 @@ class TestRESTClientImplAsync:
         rest_client.close.assert_awaited_once_with()
 
     @hikari_test_helpers.timeout()
+    async def test__request_builds_form_when_passed(self, rest_client, exit_exception, live_attributes):
+        route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
+        mock_session = mock.AsyncMock(request=mock.AsyncMock(side_effect=exit_exception))
+        live_attributes.buckets.is_started = True
+        live_attributes.client_session = mock_session
+        rest_client._token = None
+        mock_form = mock.AsyncMock()
+        mock_stack = mock.AsyncMock()
+        mock_stack.__aenter__ = mock_stack
+
+        with mock.patch.object(contextlib, "AsyncExitStack", return_value=mock_stack) as exit_stack:
+            with pytest.raises(exit_exception):
+                await rest_client._request(route, form_builder=mock_form)
+
+        _, kwargs = mock_session.request.call_args_list[0]
+        mock_form.build.assert_awaited_once_with(exit_stack.return_value)
+        assert kwargs["data"] is mock_form.build.return_value
+        assert live_attributes.still_alive.call_count == 3
+
+    @hikari_test_helpers.timeout()
     async def test__request_with_strategy_token(self, rest_client, exit_exception, live_attributes):
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         mock_session = mock.AsyncMock(request=mock.AsyncMock(side_effect=exit_exception))
@@ -2607,14 +2627,14 @@ class TestRESTClientImplAsync:
         mock_url_encoded_form = mock.Mock()
         rest_client._request = mock.AsyncMock(return_value={"access_token": "43212123123123"})
 
-        with mock.patch.object(data_binding, "URLEncodedForm", return_value=mock_url_encoded_form):
+        with mock.patch.object(data_binding, "URLEncodedFormBuilder", return_value=mock_url_encoded_form):
             await rest_client.authorize_client_credentials_token(65234123, "4312312", scopes=["scope1", "scope2"])
 
         mock_url_encoded_form.add_field.assert_has_calls(
             [mock.call("grant_type", "client_credentials"), mock.call("scope", "scope1 scope2")]
         )
         rest_client._request.assert_awaited_once_with(
-            expected_route, form=mock_url_encoded_form, auth="Basic NjUyMzQxMjM6NDMxMjMxMg=="
+            expected_route, form_builder=mock_url_encoded_form, auth="Basic NjUyMzQxMjM6NDMxMjMxMg=="
         )
         rest_client._entity_factory.deserialize_partial_token.assert_called_once_with(rest_client._request.return_value)
 
@@ -2623,7 +2643,7 @@ class TestRESTClientImplAsync:
         mock_url_encoded_form = mock.Mock()
         rest_client._request = mock.AsyncMock(return_value={"access_token": 42})
 
-        with mock.patch.object(data_binding, "URLEncodedForm", return_value=mock_url_encoded_form):
+        with mock.patch.object(data_binding, "URLEncodedFormBuilder", return_value=mock_url_encoded_form):
             result = await rest_client.authorize_access_token(65234, "43123", "a.code", "htt:redirect//me")
 
         mock_url_encoded_form.add_field.assert_has_calls(
@@ -2638,7 +2658,7 @@ class TestRESTClientImplAsync:
             rest_client._request.return_value
         )
         rest_client._request.assert_awaited_once_with(
-            expected_route, form=mock_url_encoded_form, auth="Basic NjUyMzQ6NDMxMjM="
+            expected_route, form_builder=mock_url_encoded_form, auth="Basic NjUyMzQ6NDMxMjM="
         )
 
     async def test_authorize_access_token_with_scopes(self, rest_client):
@@ -2646,7 +2666,7 @@ class TestRESTClientImplAsync:
         mock_url_encoded_form = mock.Mock()
         rest_client._request = mock.AsyncMock(return_value={"access_token": 42})
 
-        with mock.patch.object(data_binding, "URLEncodedForm", return_value=mock_url_encoded_form):
+        with mock.patch.object(data_binding, "URLEncodedFormBuilder", return_value=mock_url_encoded_form):
             result = await rest_client.authorize_access_token(12343, "1235555", "a.codee", "htt:redirect//mee")
 
         mock_url_encoded_form.add_field.assert_has_calls(
@@ -2661,7 +2681,7 @@ class TestRESTClientImplAsync:
             rest_client._request.return_value
         )
         rest_client._request.assert_awaited_once_with(
-            expected_route, form=mock_url_encoded_form, auth="Basic MTIzNDM6MTIzNTU1NQ=="
+            expected_route, form_builder=mock_url_encoded_form, auth="Basic MTIzNDM6MTIzNTU1NQ=="
         )
 
     async def test_refresh_access_token_without_scopes(self, rest_client):
@@ -2669,7 +2689,7 @@ class TestRESTClientImplAsync:
         mock_url_encoded_form = mock.Mock()
         rest_client._request = mock.AsyncMock(return_value={"access_token": 42})
 
-        with mock.patch.object(data_binding, "URLEncodedForm", return_value=mock_url_encoded_form):
+        with mock.patch.object(data_binding, "URLEncodedFormBuilder", return_value=mock_url_encoded_form):
             result = await rest_client.refresh_access_token(454123, "123123", "a.codet")
 
         mock_url_encoded_form.add_field.assert_has_calls(
@@ -2683,7 +2703,7 @@ class TestRESTClientImplAsync:
             rest_client._request.return_value
         )
         rest_client._request.assert_awaited_once_with(
-            expected_route, form=mock_url_encoded_form, auth="Basic NDU0MTIzOjEyMzEyMw=="
+            expected_route, form_builder=mock_url_encoded_form, auth="Basic NDU0MTIzOjEyMzEyMw=="
         )
 
     async def test_refresh_access_token_with_scopes(self, rest_client):
@@ -2691,7 +2711,7 @@ class TestRESTClientImplAsync:
         mock_url_encoded_form = mock.Mock()
         rest_client._request = mock.AsyncMock(return_value={"access_token": 42})
 
-        with mock.patch.object(data_binding, "URLEncodedForm", return_value=mock_url_encoded_form):
+        with mock.patch.object(data_binding, "URLEncodedFormBuilder", return_value=mock_url_encoded_form):
             result = await rest_client.refresh_access_token(54123, "312312", "a.codett", scopes=["1", "3", "scope43"])
 
         mock_url_encoded_form.add_field.assert_has_calls(
@@ -2706,7 +2726,7 @@ class TestRESTClientImplAsync:
             rest_client._request.return_value
         )
         rest_client._request.assert_awaited_once_with(
-            expected_route, form=mock_url_encoded_form, auth="Basic NTQxMjM6MzEyMzEy"
+            expected_route, form_builder=mock_url_encoded_form, auth="Basic NTQxMjM6MzEyMzEy"
         )
 
     async def test_revoke_access_token(self, rest_client):
@@ -2714,12 +2734,12 @@ class TestRESTClientImplAsync:
         mock_url_encoded_form = mock.Mock()
         rest_client._request = mock.AsyncMock()
 
-        with mock.patch.object(data_binding, "URLEncodedForm", return_value=mock_url_encoded_form):
+        with mock.patch.object(data_binding, "URLEncodedFormBuilder", return_value=mock_url_encoded_form):
             await rest_client.revoke_access_token(54123, "123542", "not.a.token")
 
         mock_url_encoded_form.add_field.assert_called_once_with("token", "not.a.token")
         rest_client._request.assert_awaited_once_with(
-            expected_route, form=mock_url_encoded_form, auth="Basic NTQxMjM6MTIzNTQy"
+            expected_route, form_builder=mock_url_encoded_form, auth="Basic NTQxMjM6MTIzNTQy"
         )
 
     async def test_add_user_to_guild(self, rest_client):
