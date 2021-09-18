@@ -14,7 +14,7 @@ The following will detail major thing's I've picked up. There are details missin
 `discord.User` translates over to `hikari.users.User`
 
 The usage of which is fairly similar between packages with a notable exception
-being hikari uses `username` where discord.py simply uses `hikari.users.User.name`
+being hikari uses `hikari.users.User.username` where discord.py simply uses `discord.User.name` or `discord.User.display_name`
 
 
 #### Members
