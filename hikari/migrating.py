@@ -43,5 +43,8 @@ For example:
 `discord.Embed` translates over to `hikari.embeds.Embed`
 
 The usage of which is basically the same, with some small changes such as icon vs icon_url. 
-Something notable however, is the lack of `from_dict` and `to_dict` methods
+Something notable however, is the lack of `from_dict` and `to_dict` methods on embeds. You can however find them here
+
+- https://hikari-py.github.io/hikari/hikari/api/entity_factory.html#hikari.api.entity_factory.EntityFactory.serialize_embed
+- https://hikari-py.github.io/hikari/hikari/api/entity_factory.html#hikari.api.entity_factory.EntityFactory.deserialize_embed
 """
