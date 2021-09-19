@@ -22,15 +22,14 @@ jobs:
 
       - name: Setup git config
         run: |
-          git config user.name --global "hikari-bot"
-          git config user.email --global "90276125+hikari-bot[bot]@users.noreply.github.com"
+          git config --global user.name "hikari-bot"
+          git config --global user.email "90276125+hikari-bot[bot]@users.noreply.github.com"
 
       - name: Run prepare script
         env:
           VERSION: ${{ github.event.inputs.version }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run:
-          - bash scripts/prepare-release.sh
+        run: bash scripts/prepare-release.sh
 
       - name: Generate token
         id: generate_token
@@ -51,4 +50,4 @@ jobs:
           pr_body: |
             Release preparation triggered by @${{ github.event.sender.login }}.
 
-            Once the pull request is merged, you can trigger a PyPi release by creating a GitHub release for ${{ github.event.inputs.version }} in the repository.
+            Once the pull request is merged, you can trigger a PyPI release by creating a GitHub release for `${{ github.event.inputs.version }}` in the repository.
