@@ -31,6 +31,7 @@ if [ -z "${GITHUB_TOKEN}" ]; then echo '$GITHUB_TOKEN environment variable is em
 
 echo "===== INSTALLING DEPENDENCIES ====="
 pip install towncrier
+pip install -e .
 
 echo "===== UPDATING INFORMATION ====="
 echo "-- Checkout branch --"

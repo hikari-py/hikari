@@ -195,8 +195,8 @@ jobs:
 
       - name: Setup git config
         run: |
-          git config user.name --global "hikari-bot"
-          git config user.email --global "90276125+hikari-bot[bot]@users.noreply.github.com"
+          git config --global user.name "hikari-bot"
+          git config --global user.email "90276125+hikari-bot[bot]@users.noreply.github.com"
 
       - name: Deploy
         env:
