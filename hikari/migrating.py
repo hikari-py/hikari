@@ -53,4 +53,6 @@ Something notable however, is the lack of `from_dict` and `to_dict` methods on e
 
 Channels translate over well. Notable differences are:
 - Categories are referred to by `parent_id`
+
+`discord.TextChannel` -> `hikari.channels.GuildTextChannel` | `hikari.channels.DMChannel`
 """
