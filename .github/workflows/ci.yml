@@ -187,6 +187,8 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2.3.4
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
 
       - name: Setup python
         uses: actions/setup-python@v2.2.2
@@ -198,9 +200,15 @@ jobs:
           git config --global user.name "hikari-bot"
           git config --global user.email "90276125+hikari-bot[bot]@users.noreply.github.com"
 
+      - name: Temporarily disable "include administrators" branch protection
+        uses: benjefferies/branch-protection-bot@master
+        with:
+          access_token: ${{ secrets.PAT_TOKEN }}
+          enforce_admins: false
+
       - name: Deploy
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
           VERSION: ${{ github.event.release.tag_name }}
           REF: ${{ github.sha }}
           GITHUB_REPO_SLUG: ${{ github.repository }}
@@ -208,3 +216,10 @@ jobs:
           TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
         run: bash scripts/deploy.sh
+
+      - name: Re-enable "include administrators" branch protection
+        uses: benjefferies/branch-protection-bot@master
+        if: always()
+        with:
+          access_token: ${{ secrets.PAT_TOKEN }}
+          enforce_admins: true
