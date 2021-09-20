@@ -52,6 +52,8 @@ if typing.TYPE_CHECKING:
     import concurrent.futures
     import datetime
 
+    _T = typing.TypeVar("_T", bound="EmbedResource[files.AsyncReader]")
+
 AsyncReaderT = typing.TypeVar("AsyncReaderT", bound=files.AsyncReader)
 
 
@@ -161,7 +163,7 @@ class EmbedFooter:
     text: typing.Optional[str] = attr.field(default=None, repr=True)
     """The footer text, or `builtins.None` if not present."""
 
-    icon: typing.Optional[EmbedResourceWithProxy[files.AsyncReader]] = attr.field(default=None, repr=False)
+    icon: typing.Optional[EmbedResourceWithProxy[files.AsyncReader]] = attr.field(default=None, repr=True)
     """The URL of the footer icon, or `builtins.None` if not present."""
 
 
@@ -274,6 +276,13 @@ class EmbedField:
     @is_inline.setter
     def is_inline(self, value: bool) -> None:
         self._inline = value
+
+
+def _ensure_embed_resource(resource: files.Resourceish, cls: typing.Type[_T]) -> _T:
+    if isinstance(resource, EmbedResource):
+        return cls(resource=resource.resource)
+
+    return cls(resource=files.ensure_resource(resource))
 
 
 class Embed:
@@ -733,11 +742,11 @@ class Embed:
         if name is None and url is None and icon is None:
             self._author = None
         else:
-            real_icon = EmbedResourceWithProxy(resource=files.ensure_resource(icon)) if icon is not None else None
+            real_icon = _ensure_embed_resource(icon, EmbedResourceWithProxy) if icon is not None else None
             self._author = EmbedAuthor(name=name, url=url, icon=real_icon)
         return self
 
-    def set_footer(self, *, text: typing.Optional[str], icon: typing.Optional[files.Resourceish] = None) -> Embed:
+    def set_footer(self, text: typing.Optional[str], *, icon: typing.Optional[files.Resourceish] = None) -> Embed:
         """Set the footer of this embed.
 
         Parameters
@@ -782,7 +791,7 @@ class Embed:
 
             self._footer = None
         else:
-            real_icon = EmbedResourceWithProxy(resource=files.ensure_resource(icon)) if icon is not None else None
+            real_icon = _ensure_embed_resource(icon, EmbedResourceWithProxy) if icon is not None else None
             self._footer = EmbedFooter(icon=real_icon, text=text)
         return self
 
@@ -820,7 +829,7 @@ class Embed:
             This embed. Allows for call chaining.
         """
         if image is not None:
-            self._image = EmbedImage(resource=files.ensure_resource(image))
+            self._image = _ensure_embed_resource(image, EmbedImage)
         else:
             self._image = None
 
@@ -859,7 +868,7 @@ class Embed:
             This embed. Allows for call chaining.
         """
         if image is not None:
-            self._thumbnail = EmbedImage(resource=files.ensure_resource(image))
+            self._thumbnail = _ensure_embed_resource(image, EmbedImage)
         else:
             self._thumbnail = None
 
