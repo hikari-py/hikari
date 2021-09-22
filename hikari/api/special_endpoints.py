@@ -1351,8 +1351,8 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
         """Minimum number of options which must be chosen.
 
         Defaults to 1.
-        Must be greater than or equal to `SelectMenuBuilder.min_values` and less
-        than or equal to 25.
+        Must be less than or equal to `SelectMenuBuilder.max_values` and greater
+        than or equal to 0.
 
         Returns
         -------
@@ -1363,16 +1363,16 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
     @property
     @abc.abstractmethod
     def max_values(self) -> int:
-        """Maximum number of options which must be chosen.
+        """Maximum number of options which can be chosen.
 
         Defaults to 1.
-        Must be greater than or equal to `SelectMenuBuilder.max_values` and
-        greater than or equal to 0.
+        Must be greater than or equal to `SelectMenuBuilder.min_values` and
+        less than or equal to 25.
 
         Returns
         -------
         builtins.str
-            Maximum number of options which must be chosen.
+            Maximum number of options which can be chosen.
         """
 
     @abc.abstractmethod
@@ -1431,7 +1431,7 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
         """Set the minimum amount of options which need to be selected for this menu.
 
         !!! note
-            This defaults to 1 if not set and can be greater than or equal to 0
+            This defaults to 1 if not set and must be greater than or equal to 0
             and less than or equal to `SelectMenuBuilder.max_values`.
 
         Parameters
@@ -1447,16 +1447,16 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
 
     @abc.abstractmethod
     def set_max_values(self: _T, value: int, /) -> _T:
-        """Set the maximum amount of options which need to be selected for this menu.
+        """Set the maximum amount of options which can be selected for this menu.
 
         !!! note
-            This defaults to 1 if not set and can be less than or equal to 25
+            This defaults to 1 if not set and must be less than or equal to 25
             and greater than or equal to `SelectMenuBuilder.min_values`.
 
         Parameters
         ----------
         value : builtins.int
-            The maximum amount of options which need to be selected for this menu.
+            The maximum amount of options which can selected for this menu.
 
         Returns
         -------

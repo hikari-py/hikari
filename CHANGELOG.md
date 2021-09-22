@@ -45,7 +45,7 @@ Bugfixes
   - Fix the use of `typing.Optional` where `undefined.UndefinedOr` should have been used
   - Remove trying to acquire guild_id from the cached channel on PartialMessage
     - Instead, clearly document the issue Discord imposes by not sending the guild_id
-  - `is_webhook` will now return `undefined.UNDEFINED` if the information is not available 
+  - `is_webhook` will now return `undefined.UNDEFINED` if the information is not available
   - Fix logic in `is_human` to account for the changes in the typing
   - Set `PartialMessage.member` to `undefined.UNDEFINED` when Discord edit the message to display an embed/attachment ([#783](https://github.com/hikari-py/hikari/issues/783))
 - `CommandOption.value` will now be cast to a `Snowflake` for types 6-9 ([#785](https://github.com/hikari-py/hikari/issues/785))

@@ -667,14 +667,14 @@ class SelectMenuComponent(PartialComponent):
     min_values: int = attr.field(eq=False)
     """The minimum amount of options which must be chosen for this menu.
 
-    This will be less than or equal to 25 and will be greater than or equal to
+    This will be greater than or equal to 0 and will be less than or equal to
     `SelectMenuComponent.max_values`.
     """
 
     max_values: int = attr.field(eq=False)
-    """The minimum amount of options which must be chosen for this menu.
+    """The minimum amount of options which can be chosen for this menu.
 
-    This will be greater than or equal to 0 and will be less than or equal to
+    This will be less than or equal to 25 and will be greater than or equal to
     `SelectMenuComponent.min_values`.
     """
 

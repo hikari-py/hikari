@@ -38,7 +38,7 @@ Possible types are:
 - `doc`: Signifying a documentation improvement.
 - `removal`: Signifying a deprecation or removal of public API.
 
-For changes that do not fall under any of the above cases, please specify the lack of the changelog in the pull request 
+For changes that do not fall under any of the above cases, please specify the lack of the changelog in the pull request
 description so that a maintainer can skip the job that checks for newly added fragments.
 
 Best way to create the fragments is to run `towncrier create {pull_request_number}.{type}.md` after creating the
