@@ -74,6 +74,9 @@ python -m twine upload --disable-progress-bar --skip-existing dist/* --non-inter
 echo "===== DEPLOYING PAGES ====="
 bash scripts/deploy-pages.sh
 
+echo "===== SENDING WEBHOOK ====="
+bash scripts/deploy-webhook.sh
+
 echo "===== UPDATING VERSION IN REPOSITORY ====="
 NEW_VERSION=$(python scripts/increase_version_number.py "${VERSION}")
 
@@ -87,6 +90,3 @@ sed "s|^__version__.*|__version__ = \"${NEW_VERSION}\"|g" -i hikari/_about.py
 echo "-- Pushing to repository --"
 git commit -am "Bump to development version (${NEW_VERSION})"
 git push
-
-echo "===== SENDING WEBHOOK ====="
-bash scripts/deploy-webhook.sh

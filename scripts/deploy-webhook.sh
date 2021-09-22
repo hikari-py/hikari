@@ -29,7 +29,7 @@ curl \
           {
             "title": "'"${VERSION} has been deployed to PyPI"'",
             "color": 6697881,
-            "description": "'"Install it now by executing: \`\`\`pip install hikari==${VERSION}\`\`\`\\nDocumentation can be found at https://hikari-py.github.io/docs/${VERSION}"'",
+            "description": "'"Install it now by executing: \`\`\`pip install hikari==${VERSION}\`\`\`"'",
             "footer": {
               "text": "'"SHA: ${REF}"'"
             }

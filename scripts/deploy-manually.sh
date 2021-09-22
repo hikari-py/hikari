@@ -36,7 +36,7 @@ posix_read "Tag" VERSION
 posix_read "Repo slug (e.g. hikari-py/hikari)" GITHUB_REPO_SLUG
 
 git checkout "${GITHUB_TAG}"
-REF=$(git rev-parse HEAD)
+export REF=$(git rev-parse HEAD)
 echo "Detected REF to be ${REF}"
 
 set -x
