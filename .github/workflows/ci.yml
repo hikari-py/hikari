@@ -97,6 +97,7 @@ jobs:
           python-version: 3.8
 
       - name: Check stubs
+        if: always()
         run: |
           pip install nox
           nox -s generate-stubs
@@ -106,8 +107,9 @@ jobs:
           fi
 
       - name: Linting
+        if: always()
         run: |
-          nox -s safety mypy flake8 codespell
+          nox -s safety mypy flake8 codespell check-trailing-whitespaces
 
   twemoji:
     runs-on: ubuntu-latest
