@@ -1000,9 +1000,9 @@ class Embed:
                 total += len(field.name) + len(field.value)
 
         if self._footer is not None:
-            total += len(self._footer.text)
+            total += len(self._footer.text or "")
 
         if self._author is not None:
-            total += len(self._author.name)
+            total += len(self._author.name or "")
 
         return total
