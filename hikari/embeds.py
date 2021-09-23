@@ -993,7 +993,7 @@ class Embed:
         return False
 
     def __len__(self) -> int:
-        total = len(self.title) + len(self.description)
+        total = len(self._title) + len(self._description)
         if self._fields:
             for field in self._fields:
                 total += len(field.name) + len(field.value)
