@@ -992,24 +992,17 @@ class Embed:
                 return True
         return False
 
-    def __len__(self) -> int:
-        total = len(self._title) + len(self._description)
-        if self._fields:
-            for field in self._fields:
-                total += len(field.name) + len(field.value)
+        def __len__(self) -> int:
+            total = len(self._title or "") + len(self._description or "")
 
-        try:
-            footer_text = self._footer.text
-        except AttributeError:
-            pass
-        else:
-            total += len(footer_text)
+            if self._fields:
+                for field in self._fields:
+                    total += len(field.name) + len(field.value)
 
-        try:
-            author = self._author
-        except AttributeError:
-            pass
-        else:
-            total += len(author.name)
+            if self._footer.text:
+                total += len(self._footer.text)
 
-        return total
+            if self._author:
+                total += len(self._author.name)
+
+            return total
