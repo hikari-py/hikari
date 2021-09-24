@@ -1001,7 +1001,7 @@ class Embed:
 
         Returns
         -------
-        int
+        builtins.int
             The total character count of this embed, including title, description,
             fields, footer, and author combined.
         """
