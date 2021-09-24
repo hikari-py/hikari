@@ -992,7 +992,16 @@ class Embed:
                 return True
         return False
 
-    def __len__(self) -> int:
+    def total_length(self) -> int:
+        """The total length or character count of the embed.
+        Useful for determining if the embed exceeds Discord's 6000 character limit.
+
+        Returns
+        -------
+        int
+            Total character count of this embed, including title, description,
+            fields (all field names and values), footer, and author combined.
+        """
         total = len(self._title or "") + len(self._description or "")
 
         if self._fields:
