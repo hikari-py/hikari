@@ -62,3 +62,21 @@ class TestEmbedResourceWithProxy:
     def test_proxy_filename_when_resource_is_none(self, resource_with_proxy):
         resource_with_proxy.proxy_resource = None
         assert resource_with_proxy.proxy_filename is None
+
+class TestEmbedTotalLength:
+    @pytest.fixture()
+    def embed(self):
+        embed = embeds.Embed()
+        return embed
+
+    def test_total_length_when_embed_is_empty(self, embed):
+        assert embed.total_length() == 0
+
+    def test_total_length(self, embed):
+        embed.title='title'
+        embed.description='description'
+        embed.set_author(name='author name')
+        embed.set_footer(text='footer text')
+        embed.add_field(name='field name 1', value='field value 1')
+        embed.add_field(name='field name 2', value='field value 2')
+        assert embed.total_length() == 88
