@@ -64,7 +64,7 @@ class TestEmbedResourceWithProxy:
         assert resource_with_proxy.proxy_filename is None
 
 
-class TestEmbedTotalLength:
+class TestEmbed:
     @pytest.fixture()
     def embed(self):
         embed = embeds.Embed()
