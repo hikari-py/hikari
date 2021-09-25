@@ -105,6 +105,6 @@ class TestEmbed:
         embed = embeds.Embed(title="title", description="description")
         embed.set_author(name="author name")
         embed.set_footer(text="footer text")
-        embed.add_field(name="field name 1", value="field value 1")
-        embed.add_field(name="field name 2", value="field value 2")
+        embed.add_field(name="field name 1", value="field value 2")
+        embed.add_field(name="field name 3", value="field value 4")
         assert embed.total_length() == 88
