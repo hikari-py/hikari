@@ -264,14 +264,17 @@ class Permissions(enums.Flag):
         (or their owner's account in the case of bot users) and the guild owner.
     """
 
-    USE_PUBLIC_THREADS = 1 << 35
-    """Allows for creating and participating in threads."""
+    CREATE_PUBLIC_THREADS = 1 << 35
+    """Allows for creating threads."""
 
-    USE_PRIVATE_THREADS = 1 << 36
-    """Allows for creating and participating in private threads."""
+    CREATE_PRIVATE_THREADS = 1 << 36
+    """Allows for creating private threads."""
 
     USE_EXTERNAL_STICKERS = 1 << 37
     """Allows the usage of custom stickers from other servers."""
+
+    SEND_MESSAGES_IN_THREADS = 1 << 38
+    """Allows for sending messages in threads."""
 
     @classmethod
     def all_permissions(cls) -> Permissions:
