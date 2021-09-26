@@ -1742,16 +1742,17 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_suboptions := payload.get("options"):
             suboptions = [self._deserialize_interaction_command_option(suboption) for suboption in raw_suboptions]
 
+        channel_types: typing.Optional[typing.Sequence[typing.Union[channel_models.ChannelType, int]]] = None
+        if raw_channel_types := payload.get("channel_types"):
+            channel_types = [channel_models.ChannelType(channel_type) for channel_type in raw_channel_types]
+
         option_type = commands.OptionType(payload["type"])
         value = payload.get("value")
         if modifier := _interaction_option_type_mapping.get(option_type):
             value = modifier(value)
 
         return command_interactions.CommandInteractionOption(
-            name=payload["name"],
-            type=option_type,
-            value=value,
-            options=suboptions,
+            name=payload["name"], type=option_type, value=value, options=suboptions, channel_types=channel_types
         )
 
     def _deserialize_interaction_member(
@@ -1887,6 +1888,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             "name": option.name,
             "description": option.description,
             "required": option.is_required,
+            "channel_types": option.channel_types,
         }
 
         if option.choices is not None:
