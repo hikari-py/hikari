@@ -36,9 +36,9 @@ directory = "changes"
 filename = "CHANGELOG.md"
 issue_format = "[#{issue}](https://github.com/hikari-py/hikari/issues/{issue})"
 type = [
-    { name = "Breaking Changes",           directory = "breaking",     showcontent = true },
-    { name = "Deprecation",                directory = "deprecation",  showcontent = true },
-    { name = "Features",                   directory = "feature",      showcontent = true },
-    { name = "Bugfixes",                   directory = "bugfix",       showcontent = true },
-    { name = "Documentation Impovements",  directory = "doc",          showcontent = true },
+    { name = "Breaking Changes",            directory = "breaking",     showcontent = true },
+    { name = "Deprecation",                 directory = "deprecation",  showcontent = true },
+    { name = "Features",                    directory = "feature",      showcontent = true },
+    { name = "Bugfixes",                    directory = "bugfix",       showcontent = true },
+    { name = "Documentation Improvements",  directory = "doc",          showcontent = true },
 ]
