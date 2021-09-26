@@ -48,7 +48,7 @@ Bugfixes
   - `is_webhook` will now return `undefined.UNDEFINED` if the information is not available
   - Fix logic in `is_human` to account for the changes in the typing
   - Set `PartialMessage.member` to `undefined.UNDEFINED` when Discord edit the message to display an embed/attachment ([#783](https://github.com/hikari-py/hikari/issues/783))
-- `CommandOption.value` will now be cast to a `Snowflake` for types 6-9 ([#785](https://github.com/hikari-py/hikari/issues/785))
+- `CommandInteractionOption.value` will now be cast to a `Snowflake` for types 6-9 ([#785](https://github.com/hikari-py/hikari/issues/785))
 
 
 Improved Documentation
