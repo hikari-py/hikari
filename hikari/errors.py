@@ -356,6 +356,9 @@ class RESTErrorCode(int, enums.Enum):
     MAXIMUM_PRUNE_REQUESTS_REACHED = 30_040
     """Maximum number of prune requests has been reached. Try again later."""
 
+    MAXIMUM_WIDGET_UPDATE_REQUESTS_REACHED = 30_042
+    """Maximum number of guild widget settings updates has been reached. Try again later."""
+
     REQUEST_TOO_LARGE = 40_005
     """Request too large. Try sending something smaller in size."""
 
@@ -391,6 +394,9 @@ class RESTErrorCode(int, enums.Enum):
 
     MESSAGE_IN_VC = 50_008
     """Cannot send messages in a voice channel."""
+
+    GUILD_NEEDS_MORE_BOOSTS = 50_101
+    """The guild needs more boosts to perform this action."""
 
     PINS_ONLY_ON_ORIGIN_CHANNEL = 50_019
     """A message can only be pinned to the channel it was sent in."""
