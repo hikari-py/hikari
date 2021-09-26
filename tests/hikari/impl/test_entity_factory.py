@@ -3091,6 +3091,25 @@ class TestEntityFactoryImpl:
         with pytest.raises(errors.UnrecognisedEntityError):
             entity_factory_impl.deserialize_interaction({"type": -999})
 
+    def test_serialize_command_option_with_channel_type(self, entity_factory_impl):
+        option = commands.CommandOption(
+            type=commands.OptionType.INTEGER,
+            name="a name",
+            description="go away",
+            is_required=True,
+            channel_types=[channel_models.ChannelType.GUILD_STAGE, channel_models.ChannelType.GUILD_TEXT, 100],
+        )
+
+        result = entity_factory_impl.serialize_command_option(option)
+
+        assert result == {
+            "type": 4,
+            "name": "a name",
+            "description": "go away",
+            "required": True,
+            "channel_types": [13, 0, 100],
+        }
+
     def test_serialize_command_option_with_choices(self, entity_factory_impl):
         option = commands.CommandOption(
             type=commands.OptionType.INTEGER,
