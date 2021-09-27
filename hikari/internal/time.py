@@ -63,8 +63,6 @@ References
 * [Discord API documentation - Snowflakes](https://discord.com/developers/docs/reference#snowflakes)
 """
 
-_ISO_8601_FORMAT: typing.Final[str] = "%Y-%m-%dT%H:%M:%s"
-
 
 # Default to the standard lib parser, that isn't really ISO compliant but seems
 # to work for what we need.

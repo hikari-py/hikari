@@ -5290,8 +5290,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If an internal error occurs on Discord while handling the request.
         """
 
-    kick_member = kick_user
-    """This is simply an alias for readability."""
+    @abc.abstractmethod
+    async def kick_member(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        *,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
+        """Alias of `RESTClient.kick_user`."""
 
     @abc.abstractmethod
     async def ban_user(
@@ -5347,8 +5354,16 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If an internal error occurs on Discord while handling the request.
         """
 
-    ban_member = ban_user
-    """This is simply an alias for readability."""
+    @abc.abstractmethod
+    async def ban_member(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        *,
+        delete_message_days: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
+        """Alias of `RESTClient.ban_user`."""
 
     @abc.abstractmethod
     async def unban_user(
@@ -5398,8 +5413,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If an internal error occurs on Discord while handling the request.
         """
 
-    unban_member = unban_user
-    """This is simply an alias for readability."""
+    @abc.abstractmethod
+    async def unban_member(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        *,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
+        """Alias of `RESTClient.unban_user`."""
 
     @abc.abstractmethod
     async def fetch_ban(

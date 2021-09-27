@@ -26,6 +26,7 @@ from __future__ import annotations
 __all__: typing.List[str] = ["init_logging", "print_banner", "supports_color", "HikariVersion", "check_for_updates"]
 
 import importlib.resources
+import logging
 import logging.config
 import os
 import platform

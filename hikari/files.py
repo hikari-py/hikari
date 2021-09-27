@@ -57,7 +57,7 @@ import typing
 import urllib.parse
 import urllib.request
 
-import aiohttp.client
+import aiohttp
 import attr
 
 from hikari.internal import aio
@@ -569,7 +569,7 @@ class _WebReaderAsyncReaderContextManagerImpl(AsyncReaderContextManager[WebReade
         self._web_resource = web_resource
         self._head_only = head_only
         self._client_session: aiohttp.ClientSession = NotImplemented
-        self._client_response_ctx: typing.AsyncContextManager[aiohttp.client.ClientResponse] = NotImplemented
+        self._client_response_ctx: typing.AsyncContextManager[aiohttp.ClientResponse] = NotImplemented
 
     async def __aenter__(self) -> WebReader:
         client_session = aiohttp.ClientSession()
