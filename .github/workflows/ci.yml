@@ -141,7 +141,7 @@ jobs:
           python-version: 3.8
 
       - name: Setup node
-        uses: actions/setup-node@v2.4.0
+        uses: actions/setup-node@v2.4.1
 
       - name: Build pages
         run: |
