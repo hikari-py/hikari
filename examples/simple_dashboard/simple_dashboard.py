@@ -8,7 +8,7 @@ import logging
 import os
 from typing import Any
 
-import rillrate
+import rillrate  # type: ignore[import]
 from rillrate import prime as rr_prime
 
 import hikari
