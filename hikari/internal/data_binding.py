@@ -36,8 +36,6 @@ __all__: typing.List[str] = [
     "URLEncodedFormBuilder",
 ]
 
-import concurrent
-import contextlib
 import typing
 
 import aiohttp
@@ -48,6 +46,9 @@ from hikari import snowflakes
 from hikari import undefined
 
 if typing.TYPE_CHECKING:
+    import concurrent
+    import contextlib
+
     T = typing.TypeVar("T", covariant=True)
 
 Headers = typing.Mapping[str, str]
