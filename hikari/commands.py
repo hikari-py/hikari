@@ -44,6 +44,7 @@ from hikari.internal import attr_extensions
 from hikari.internal import enums
 
 if typing.TYPE_CHECKING:
+    from hikari import channels
     from hikari import guilds
 
 
@@ -135,6 +136,14 @@ class CommandOption:
 
     options: typing.Optional[typing.Sequence[CommandOption]] = attr.field(default=None, repr=False)
     """Sequence of up to (and including) 25 of the options for this command option."""
+
+    channel_types: typing.Optional[typing.Sequence[typing.Union[channels.ChannelType, int]]] = attr.field(
+        default=None, repr=False
+    )
+    """The channel types that this option will accept.
+
+    If `builtins.None`, then all channel types will be accepted.
+    """
 
 
 @attr_extensions.with_copy

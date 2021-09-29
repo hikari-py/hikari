@@ -608,7 +608,7 @@ class ButtonComponent(PartialComponent):
     """Custom or unicode emoji which appears on the button."""
 
     custom_id: typing.Optional[str] = attr.field(hash=True)
-    """Developer defined identifier for this button (will be >= 100 characters).
+    """Developer defined identifier for this button (will be <= 100 characters).
 
     !!! note
         This is required for the following button styles:
@@ -656,7 +656,7 @@ class SelectMenuComponent(PartialComponent):
     """
 
     custom_id: str = attr.field(hash=True)
-    """Developer defined identifier for this menu (will be >= 100 characters)."""
+    """Developer defined identifier for this menu (will be <= 100 characters)."""
 
     options: typing.Sequence[SelectMenuOption] = attr.field(eq=False)
     """Sequence of up to 25 of the options set for this menu."""

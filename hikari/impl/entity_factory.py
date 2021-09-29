@@ -1669,6 +1669,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_options := payload.get("options"):
             suboptions = [self._deserialize_command_option(option) for option in raw_options]
 
+        channel_types: typing.Optional[typing.Sequence[typing.Union[channel_models.ChannelType, int]]] = None
+        if raw_channel_types := payload.get("channel_types"):
+            channel_types = [channel_models.ChannelType(channel_type) for channel_type in raw_channel_types]
+
         return commands.CommandOption(
             type=commands.OptionType(payload["type"]),
             name=payload["name"],
@@ -1676,6 +1680,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             is_required=payload.get("required", False),
             choices=choices,
             options=suboptions,
+            channel_types=channel_types,
         )
 
     def deserialize_command(
@@ -1888,6 +1893,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             "description": option.description,
             "required": option.is_required,
         }
+
+        if option.channel_types is not None:
+            payload["channel_types"] = option.channel_types
 
         if option.choices is not None:
             payload["choices"] = [{"name": choice.name, "value": choice.value} for choice in option.choices]
