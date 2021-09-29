@@ -276,6 +276,9 @@ class Permissions(enums.Flag):
     SEND_MESSAGES_IN_THREADS = 1 << 38
     """Allows for sending messages in threads."""
 
+    START_EMBEDDED_ACTIVITIES = 1 << 39
+    """Allows for launching activities (applications with the `EMBEDDED` flag) in a voice channel"""
+
     @classmethod
     def all_permissions(cls) -> Permissions:
         """Get an instance of `Permissions` with all the known permissions.
