@@ -140,7 +140,10 @@ class CommandOption:
     channel_types: typing.Optional[typing.Sequence[typing.Union[channels.ChannelType, int]]] = attr.field(
         default=None, repr=False
     )
-    """If a channel type option, the channel types that this option will accept."""
+    """The channel types that this option will accept.
+
+    If `builtins.None`, then all channel types will be accepted.
+    """
 
 
 @attr_extensions.with_copy
