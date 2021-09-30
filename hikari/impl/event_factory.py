@@ -222,7 +222,7 @@ class EventFactoryImpl(event_factory.EventFactory):
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
         *,
-        old_guild: typing.Optional[guild_models.Guild],
+        old_guild: typing.Optional[guild_models.GatewayGuild],
     ) -> guild_events.GuildUpdateEvent:
         guild_information = self._app.entity_factory.deserialize_gateway_guild(payload)
         return guild_events.GuildUpdateEvent(
@@ -238,7 +238,7 @@ class EventFactoryImpl(event_factory.EventFactory):
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
         *,
-        old_guild: typing.Optional[guild_models.Guild],
+        old_guild: typing.Optional[guild_models.GatewayGuild],
     ) -> guild_events.GuildLeaveEvent:
         return guild_events.GuildLeaveEvent(
             app=self._app, shard=shard, guild_id=snowflakes.Snowflake(payload["id"]), old_guild=old_guild

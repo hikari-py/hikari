@@ -292,7 +292,7 @@ class GuildUpdateEvent(GuildEvent):
     shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    old_guild: typing.Optional[guilds.Guild] = attr.field()
+    old_guild: typing.Optional[guilds.GatewayGuild] = attr.field()
     """The old guild object.
 
     This will be `builtins.None` if the guild missing from the cache.

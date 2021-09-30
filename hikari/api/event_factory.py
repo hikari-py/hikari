@@ -260,7 +260,7 @@ class EventFactory(abc.ABC):
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
         *,
-        old_guild: typing.Optional[guild_models.Guild],
+        old_guild: typing.Optional[guild_models.GatewayGuild],
     ) -> guild_events.GuildUpdateEvent:
         """Parse a raw payload from Discord into a guild update event object.
 
@@ -270,7 +270,7 @@ class EventFactory(abc.ABC):
             The shard that emitted this event.
         payload : hikari.internal.data_binding.JSONObject
             The dict payload to parse.
-        old_guild : typing.Optional[hikari.guilds.Guild]
+        old_guild : typing.Optional[hikari.guilds.GatewayGuild]
             The guild object or `builtins.None`.
 
         Returns
@@ -285,7 +285,7 @@ class EventFactory(abc.ABC):
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
         *,
-        old_guild: typing.Optional[guild_models.Guild],
+        old_guild: typing.Optional[guild_models.GatewayGuild],
     ) -> guild_events.GuildLeaveEvent:
         """Parse a raw payload from Discord into a guild leave event object.
 
@@ -295,7 +295,7 @@ class EventFactory(abc.ABC):
             The shard that emitted this event.
         payload : hikari.internal.data_binding.JSONObject
             The dict payload to parse.
-        old_guild : typing.Optional[hikari.guilds.Guild]
+        old_guild : typing.Optional[hikari.guilds.GatewayGuild]
             The guild object or `builtins.None`.
 
         Returns
