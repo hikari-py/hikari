@@ -418,11 +418,112 @@ class GatewayBot(traits.GatewayBotAware):
         self._closed_event = None
 
     def dispatch(self, event: event_manager_.EventT_inv) -> asyncio.Future[typing.Any]:
+        """Dispatch an event.
+
+        Parameters
+        ----------
+        event : hikari.events.base_events.Event
+            The event to dispatch.
+
+        Example
+        -------
+        We can dispatch custom events by first defining a class that
+        derives from `hikari.events.base_events.Event`.
+
+        ```py
+        import attr
+
+        from hikari.traits import RESTAware
+        from hikari.events.base_events import Event
+        from hikari.users import User
+        from hikari.snowflakes import Snowflake
+
+        @attr.define()
+        class EveryoneMentionedEvent(Event):
+            app: RESTAware = attr.field()
+
+            author: User = attr.field()
+            '''The user who mentioned everyone.'''
+
+            content: str = attr.field()
+            '''The message that was sent.'''
+
+            message_id: Snowflake = attr.field()
+            '''The message ID.'''
+
+            channel_id: Snowflake = attr.field()
+            '''The channel ID.'''
+        ```
+
+        We can then dispatch our event as we see fit.
+
+        ```py
+        from hikari.events.messages import MessageCreateEvent
+
+        @bot.listen(MessageCreateEvent)
+        async def on_message(event):
+            if "@everyone" in event.content or "@here" in event.content:
+                event = EveryoneMentionedEvent(
+                    author=event.author,
+                    content=event.content,
+                    message_id=event.id,
+                    channel_id=event.channel_id,
+                )
+
+                bot.dispatch(event)
+        ```
+
+        This event can be listened to elsewhere by subscribing to it with
+        `EventManager.subscribe`.
+
+        ```py
+        @bot.listen(EveryoneMentionedEvent)
+        async def on_everyone_mentioned(event):
+            print(event.user, "just pinged everyone in", event.channel_id)
+        ```
+
+        Returns
+        -------
+        asyncio.Future[typing.Any]
+            A future that can be optionally awaited. If awaited, the future
+            will complete once all corresponding event listeners have been
+            invoked. If not awaited, this will schedule the dispatch of the
+            events in the background for later.
+
+        See Also
+        --------
+        Listen: `hikari.impl.bot.GatewayBot.listen`
+        Stream: `hikari.impl.bot.GatewayBot.stream`
+        Subscribe: `hikari.impl.bot.GatewayBot.subscribe`
+        Unubscribe: `hikari.impl.bot.GatewayBot.unsubscribe`
+        Wait_for: `hikari.impl.bot.GatewayBot.wait_for`
+        """
         return self._event_manager.dispatch(event)
 
     def get_listeners(
         self, event_type: typing.Type[event_manager_.EventT_co], /, *, polymorphic: bool = True
     ) -> typing.Collection[event_manager_.CallbackT[event_manager_.EventT_co]]:
+        """Get the listeners for a given event type, if there are any.
+
+        Parameters
+        ----------
+        event_type : typing.Type[T]
+            The event type to look for.
+            `T` must be a subclass of `hikari.events.base_events.Event`.
+        polymorphic : builtins.bool
+            If `builtins.True`, this will also return the listeners of the
+            subclasses of the given event type. If `builtins.False`, then
+            only listeners for this class specifically are returned. The
+            default is `builtins.True`.
+
+        Returns
+        -------
+        typing.Collection[typing.Callable[[T], typing.Coroutine[typing.Any, typing.Any, builtins.None]]
+            A copy of the collection of listeners for the event. Will return
+            an empty collection if nothing is registered.
+
+            `T` must be a subclass of `hikari.events.base_events.Event`.
+        """
         return self._event_manager.get_listeners(event_type, polymorphic=polymorphic)
 
     async def join(self, until_close: bool = True) -> None:
@@ -440,6 +541,34 @@ class GatewayBot(traits.GatewayBotAware):
         [event_manager_.CallbackT[event_manager_.EventT_co]],
         event_manager_.CallbackT[event_manager_.EventT_co],
     ]:
+        """Generate a decorator to subscribe a callback to an event type.
+
+        This is a second-order decorator.
+
+        Parameters
+        ----------
+        event_type : typing.Optional[typing.Type[T]]
+            The event type to subscribe to. The implementation may allow this
+            to be undefined. If this is the case, the event type will be inferred
+            instead from the type hints on the function signature.
+
+            `T` must be a subclass of `hikari.events.base_events.Event`.
+
+        Returns
+        -------
+        typing.Callable[[T], T]
+            A decorator for a coroutine function that passes it to
+            `EventManager.subscribe` before returning the function
+            reference.
+
+        See Also
+        --------
+        Dispatch: `hikari.impl.bot.GatewayBot.dispatch`
+        Stream: `hikari.impl.bot.GatewayBot.stream`
+        Subscribe: `hikari.impl.bot.GatewayBot.subscribe`
+        Unubscribe: `hikari.impl.bot.GatewayBot.unsubscribe`
+        Wait_for: `hikari.impl.bot.GatewayBot.wait_for`
+        """
         return self._event_manager.listen(event_type)
 
     @staticmethod
@@ -872,13 +1001,138 @@ class GatewayBot(traits.GatewayBotAware):
         timeout: typing.Union[float, int, None],
         limit: typing.Optional[int] = None,
     ) -> event_manager_.EventStream[event_manager_.EventT_co]:
+        """Return a stream iterator for the given event and sub-events.
+
+        Parameters
+        ----------
+        event_type : typing.Type[hikari.events.base_events.Event]
+            The event type to listen for. This will listen for subclasses of
+            this type additionally.
+        timeout : typing.Optional[builtins.int, builtins.float]
+            How long this streamer should wait for the next event before
+            ending the iteration. If `builtins.None` then this will continue
+            until explicitly broken from.
+        limit : typing.Optional[builtins.int]
+            The limit for how many events this should queue at one time before
+            dropping extra incoming events, leave this as `builtins.None` for
+            the cache size to be unlimited.
+
+        Returns
+        -------
+        EventStream[hikari.events.base_events.Event]
+            The async iterator to handle streamed events. This must be started
+            with `async with stream:` or `await stream.open()` before
+            asynchronously iterating over it.
+
+        !!! warning
+            If you use `await stream.open()` to start the stream then you must
+            also close it with `await stream.close()` otherwise it may queue
+            events in memory indefinitely.
+
+        Examples
+        --------
+
+        ```py
+        async with bot.stream(events.ReactionAddEvent, timeout=30).filter(("message_id", message.id)) as stream:
+            async for user_id in stream.map("user_id").limit(50):
+                ...
+        ```
+
+        or using await `open()` and await `close()`
+
+        ```py
+        stream = bot.stream(events.ReactionAddEvent, timeout=30).filter(("message_id", message.id))
+        await stream.open()
+
+        async for user_id in stream.map("user_id").limit(50)
+            ...
+
+        await stream.close()
+        ```
+
+        See Also
+        --------
+        Dispatch: `hikari.impl.bot.GatewayBot.dispatch`
+        Listen: `hikari.impl.bot.GatewayBot.listen`
+        Subscribe: `hikari.impl.bot.GatewayBot.subscribe`
+        Unubscribe: `hikari.impl.bot.GatewayBot.unsubscribe`
+        Wait_for: `hikari.impl.bot.GatewayBot.wait_for`
+        """
         self._check_if_alive()
         return self._event_manager.stream(event_type, timeout=timeout, limit=limit)
 
     def subscribe(self, event_type: typing.Type[typing.Any], callback: event_manager_.CallbackT[typing.Any]) -> None:
+        """Subscribe a given callback to a given event type.
+
+        Parameters
+        ----------
+        event_type : typing.Type[T]
+            The event type to listen for. This will also listen for any
+            subclasses of the given type.
+            `T` must be a subclass of `hikari.events.base_events.Event`.
+        callback
+            Must be a coroutine function to invoke. This should
+            consume an instance of the given event, or an instance of a valid
+            subclass if one exists. Any result is discarded.
+
+        Example
+        -------
+        The following demonstrates subscribing a callback to message creation
+        events.
+
+        ```py
+        from hikari.events.messages import MessageCreateEvent
+
+        async def on_message(event):
+            ...
+
+        bot.subscribe(MessageCreateEvent, on_message)
+        ```
+
+        See Also
+        --------
+        Dispatch: `hikari.impl.bot.GatewayBot.dispatch`
+        Listen: `hikari.impl.bot.GatewayBot.listen`
+        Stream: `hikari.impl.bot.GatewayBot.stream`
+        Unubscribe: `hikari.impl.bot.GatewayBot.unsubscribe`
+        Wait_for: `hikari.impl.bot.GatewayBot.wait_for`
+        """
         self._event_manager.subscribe(event_type, callback)
 
     def unsubscribe(self, event_type: typing.Type[typing.Any], callback: event_manager_.CallbackT[typing.Any]) -> None:
+        """Unsubscribe a given callback from a given event type, if present.
+
+        Parameters
+        ----------
+        event_type : typing.Type[T]
+            The event type to unsubscribe from. This must be the same exact
+            type as was originally subscribed with to be removed correctly.
+            `T` must derive from `hikari.events.base_events.Event`.
+        callback
+            The callback to unsubscribe.
+
+        Example
+        -------
+        The following demonstrates unsubscribing a callback from a message
+        creation event.
+
+        ```py
+        from hikari.events.messages import MessageCreateEvent
+
+        async def on_message(event):
+            ...
+
+        bot.unsubscribe(MessageCreateEvent, on_message)
+        ```
+
+        See Also
+        --------
+        Dispatch: `hikari.impl.bot.GatewayBot.dispatch`
+        Listen: `hikari.impl.bot.GatewayBot.listen`
+        Stream: `hikari.impl.bot.GatewayBot.stream`
+        Subscribe: `hikari.impl.bot.GatewayBot.subscribe`
+        Wait_for: `hikari.impl.bot.GatewayBot.wait_for`
+        """
         self._event_manager.unsubscribe(event_type, callback)
 
     async def wait_for(
@@ -888,6 +1142,48 @@ class GatewayBot(traits.GatewayBotAware):
         timeout: typing.Union[float, int, None],
         predicate: typing.Optional[event_manager_.PredicateT[event_manager_.EventT_co]] = None,
     ) -> event_manager_.EventT_co:
+        """Wait for a given event to occur once, then return the event.
+
+        Parameters
+        ----------
+        event_type : typing.Type[hikari.events.base_events.Event]
+            The event type to listen for. This will listen for subclasses of
+            this type additionally.
+        predicate
+            A function taking the event as the single parameter.
+            This should return `builtins.True` if the event is one you want to
+            return, or `builtins.False` if the event should not be returned.
+            If left as `None` (the default), then the first matching event type
+            that the bot receives (or any subtype) will be the one returned.
+
+            !!! warning
+                Async predicates are not supported.
+        timeout : typing.Union[builtins.float, builtins.int, builtins.None]
+            The amount of time to wait before raising an `asyncio.TimeoutError`
+            and giving up instead. This is measured in seconds. If
+            `builtins.None`, then no timeout will be waited for (no timeout can
+            result in "leaking" of coroutines that never complete if called in
+            an uncontrolled way, so is not recommended).
+
+        Returns
+        -------
+        hikari.events.base_events.Event
+            The event that was provided.
+
+        Raises
+        ------
+        asyncio.TimeoutError
+            If the timeout is not `builtins.None` and is reached before an
+            event is received that the predicate returns `builtins.True` for.
+
+        See Also
+        --------
+        Dispatch: `hikari.impl.bot.GatewayBot.dispatch`
+        Listen: `hikari.impl.bot.GatewayBot.listen`
+        Stream: `hikari.impl.bot.GatewayBot.stream`
+        Subscribe: `hikari.impl.bot.GatewayBot.subscribe`
+        Unubscribe: `hikari.impl.bot.GatewayBot.unsubscribe`
+        """
         self._check_if_alive()
         return await self._event_manager.wait_for(event_type, timeout=timeout, predicate=predicate)
 

@@ -28,6 +28,11 @@ match that of the versioning scheme. There are utilities under `hikari.internal.
 
 To aid with the generation of `CHANGELOG.md` as well as the releases changelog we use `towncrier`.
 
+You will need to install `towncrier` and `.` locally before making changelog additions.
+```bash
+pip install towncrier .
+```
+
 For every pull request made to this project, there should be a short explanation of the change under `changes/`
 with the following format: `{pull_request_number}.{type}.md`,
 
@@ -44,7 +49,7 @@ description so that a maintainer can skip the job that checks for newly added fr
 Best way to create the fragments is to run `towncrier create {pull_request_number}.{type}.md` after creating the
 pull request, edit the created file and committing the changes.
 
-Multiple fragments types can be created per pull request if it covers multiple areas.
+Multiple fragment types can be created per pull request if it covers multiple areas.
 
 # Branches
 
@@ -64,6 +69,11 @@ with a small description of the branch.
 # Nox
 
 We have nox to help out with running pipelines locally and provides some helpful functionality.
+
+You will need to install `nox` locally before running any pipelines.
+```bash
+pip install nox
+```
 
 Nox is similar to tox, but uses a pure Python configuration instead of an INI based configuration. Nox and tox are
 both tools for generating virtual environments and running commands in those environments. Examples of usage include

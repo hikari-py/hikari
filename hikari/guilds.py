@@ -2931,7 +2931,7 @@ class Guild(PartialGuild):
     def get_emoji(
         self, emoji: snowflakes.SnowflakeishOr[emojis_.CustomEmoji]
     ) -> typing.Optional[emojis_.KnownCustomEmoji]:
-        """Get a cached role that belongs to the guild by it's ID or object.
+        """Get a cached emoji that belongs to the guild by it's ID or object.
 
         Parameters
         ----------
