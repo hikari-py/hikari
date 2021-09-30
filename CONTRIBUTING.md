@@ -28,9 +28,10 @@ match that of the versioning scheme. There are utilities under `hikari.internal.
 
 To aid with the generation of `CHANGELOG.md` as well as the releases changelog we use `towncrier`.
 
-You will need to install `towncrier` and `.` locally before making changelog additions.
+You will need to install `towncrier` and `hikari` from source before making changelog additions.
 ```bash
-pip install towncrier .
+pip install towncrier
+pip install -e .
 ```
 
 For every pull request made to this project, there should be a short explanation of the change under `changes/`
