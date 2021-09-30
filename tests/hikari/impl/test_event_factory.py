@@ -268,13 +268,15 @@ class TestEventFactoryImpl:
 
     def test_deserialize_guild_leave_event(self, event_factory, mock_app, mock_shard):
         mock_payload = {"id": "43123123"}
+        mock_old_guild = object()
 
-        event = event_factory.deserialize_guild_leave_event(mock_shard, mock_payload)
+        event = event_factory.deserialize_guild_leave_event(mock_shard, mock_payload, old_guild=mock_old_guild)
 
         assert isinstance(event, guild_events.GuildLeaveEvent)
         assert event.app is mock_app
         assert event.shard is mock_shard
         assert event.guild_id == 43123123
+        assert event.old_guild is mock_old_guild
 
     def test_deserialize_guild_unavailable_event(self, event_factory, mock_app, mock_shard):
         mock_payload = {"id": "6541233"}

@@ -376,7 +376,7 @@ class TestEventManagerImpl:
 
     @pytest.mark.asyncio()
     async def test_on_guild_delete_stateful_when_available(self, event_manager, shard, event_factory):
-        payload = {"unavailable": False}
+        payload = {"unavailable": False, "id": "123"}
         event = mock.Mock(guild_id=123)
 
         event_factory.deserialize_guild_leave_event.return_value = event
@@ -391,12 +391,15 @@ class TestEventManagerImpl:
         event_manager._cache.clear_guild_channels_for_guild.assert_called_once_with(123)
         event_manager._cache.clear_emojis_for_guild.assert_called_once_with(123)
         event_manager._cache.clear_roles_for_guild.assert_called_once_with(123)
-        event_factory.deserialize_guild_leave_event.assert_called_once_with(shard, payload)
+        event_manager._cache.get_guild.assert_called_once_with()
+        event_factory.deserialize_guild_leave_event.assert_called_once_with(
+            shard, payload, old_guild=event_manager._cache.delete_guild.return_value
+        )
         event_manager.dispatch.assert_awaited_once_with(event)
 
     @pytest.mark.asyncio()
     async def test_on_guild_delete_stateful_when_unavailable(self, event_manager, shard, event_factory):
-        payload = {"unavailable": True}
+        payload = {"unavailable": True, "id": "123"}
         event = mock.Mock(guild_id=123)
 
         event_factory.deserialize_guild_unavailable_event.return_value = event
@@ -409,11 +412,11 @@ class TestEventManagerImpl:
 
     @pytest.mark.asyncio()
     async def test_on_guild_delete_stateless_when_available(self, stateless_event_manager, shard, event_factory):
-        payload = {"unavailable": False}
+        payload = {"unavailable": False, "id": "123"}
 
         await stateless_event_manager.on_guild_delete(shard, payload)
 
-        event_factory.deserialize_guild_leave_event.assert_called_once_with(shard, payload)
+        event_factory.deserialize_guild_leave_event.assert_called_once_with(shard, payload, old_guild=None)
         stateless_event_manager.dispatch.assert_awaited_once_with(
             event_factory.deserialize_guild_leave_event.return_value
         )

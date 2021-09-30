@@ -218,18 +218,20 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
                 self._cache.set_guild_availability(event.guild_id, False)
 
         else:
-            event = self._event_factory.deserialize_guild_leave_event(shard, payload)
-
+            old: typing.Optional[guilds.GatewayGuild] = None
             if self._cache:
+                guild_id = snowflakes.Snowflake(payload["id"])
                 #  TODO: this doesn't work in all intent scenarios
-                self._cache.delete_guild(event.guild_id)
-                self._cache.clear_voice_states_for_guild(event.guild_id)
-                self._cache.clear_invites_for_guild(event.guild_id)
-                self._cache.clear_members_for_guild(event.guild_id)
-                self._cache.clear_presences_for_guild(event.guild_id)
-                self._cache.clear_guild_channels_for_guild(event.guild_id)
-                self._cache.clear_emojis_for_guild(event.guild_id)
-                self._cache.clear_roles_for_guild(event.guild_id)
+                old = self._cache.delete_guild(guild_id)
+                self._cache.clear_voice_states_for_guild(guild_id)
+                self._cache.clear_invites_for_guild(guild_id)
+                self._cache.clear_members_for_guild(guild_id)
+                self._cache.clear_presences_for_guild(guild_id)
+                self._cache.clear_guild_channels_for_guild(guild_id)
+                self._cache.clear_emojis_for_guild(guild_id)
+                self._cache.clear_roles_for_guild(guild_id)
+
+            event = self._event_factory.deserialize_guild_leave_event(shard, payload, old_guild=old)
 
         await self.dispatch(event)
 
