@@ -391,7 +391,6 @@ class TestEventManagerImpl:
         event_manager._cache.clear_guild_channels_for_guild.assert_called_once_with(123)
         event_manager._cache.clear_emojis_for_guild.assert_called_once_with(123)
         event_manager._cache.clear_roles_for_guild.assert_called_once_with(123)
-        event_manager._cache.get_guild.assert_called_once_with()
         event_factory.deserialize_guild_leave_event.assert_called_once_with(
             shard, payload, old_guild=event_manager._cache.delete_guild.return_value
         )
