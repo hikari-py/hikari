@@ -127,7 +127,7 @@ class TypingIndicator(special_endpoints.TypingIndicator):
 
     async def __aenter__(self) -> None:
         if self._task is not None:
-            raise TypeError("cannot enter a typing indicator context more than once.")
+            raise TypeError("Cannot enter a typing indicator context more than once")
         self._task = asyncio.create_task(self._keep_typing(), name=self._task_name)
 
     async def __aexit__(

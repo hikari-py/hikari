@@ -29,11 +29,11 @@ __all__: typing.List[str] = [
     "JSONObject",
     "JSONArray",
     "JSONish",
-    "URLEncodedForm",
     "dump_json",
     "load_json",
     "JSONDecodeError",
     "JSONObjectBuilder",
+    "URLEncodedFormBuilder",
 ]
 
 import typing
@@ -41,10 +41,14 @@ import typing
 import aiohttp
 import multidict
 
+from hikari import files
 from hikari import snowflakes
 from hikari import undefined
 
 if typing.TYPE_CHECKING:
+    import concurrent
+    import contextlib
+
     T = typing.TypeVar("T", covariant=True)
 
 Headers = typing.Mapping[str, str]
@@ -52,9 +56,6 @@ Headers = typing.Mapping[str, str]
 
 Query = typing.Union[typing.Dict[str, str], multidict.MultiDict[str]]
 """Type hint for HTTP query string."""
-
-URLEncodedForm = aiohttp.FormData
-"""Type hint for content of type application/x-www-form-encoded."""
 
 # MyPy does not support recursive types yet. This has been ongoing for a long time, unfortunately.
 # See https://github.com/python/typing/issues/182
@@ -78,6 +79,8 @@ _StringMapBuilderArg = typing.Union[
     typing.Iterable[typing.Tuple[str, str]],
 ]
 
+_APPLICATION_OCTET_STREAM: typing.Final[str] = "application/octet-stream"
+
 if typing.TYPE_CHECKING:
     JSONDecodeError: typing.Type[Exception] = Exception
     """Exception raised when loading an invalid JSON string"""
@@ -100,6 +103,37 @@ else:
 
     JSONDecodeError = json.JSONDecodeError
     """Exception raised when loading an invalid JSON string"""
+
+
+@typing.final
+class URLEncodedFormBuilder:
+    """Helper class to generate `aiohttp.FormData`."""
+
+    __slots__: typing.Sequence[str] = ("_executor", "_fields", "_resources")
+
+    def __init__(self, executor: typing.Optional[concurrent.futures.Executor] = None) -> None:
+        self._executor = executor
+        self._fields: typing.List[typing.Tuple[str, str, typing.Optional[str]]] = []
+        self._resources: typing.List[files.Resource[files.AsyncReader]] = []
+
+    def add_field(self, name: str, data: str, *, content_type: typing.Optional[str] = None) -> None:
+        self._fields.append((name, data, content_type))
+
+    def add_resource(self, resource: files.Resource[files.AsyncReader]) -> None:
+        self._resources.append(resource)
+
+    async def build(self, stack: contextlib.AsyncExitStack) -> aiohttp.FormData:
+        form = aiohttp.FormData()
+
+        for field in self._fields:
+            form.add_field(field[0], field[1], content_type=field[2])
+
+        for i, resource in enumerate(self._resources):
+            stream = await stack.enter_async_context(resource.stream(executor=self._executor))
+            mimetype = stream.mimetype or _APPLICATION_OCTET_STREAM
+            form.add_field(f"file{i}", stream, filename=stream.filename, content_type=mimetype)
+
+        return form
 
 
 @typing.final
