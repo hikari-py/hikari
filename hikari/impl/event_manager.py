@@ -143,7 +143,12 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
 
     async def on_guild_create(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-create for more info."""
-        event = self._event_factory.deserialize_guild_create_event(shard, payload)
+        event: typing.Union[guild_events.GuildAvailableEvent, guild_events.GuildJoinEvent]
+
+        if payload.get("unavailable") is not None:
+            event = self._event_factory.deserialize_guild_available_event(shard, payload)
+        else:
+            event = self._event_factory.deserialize_guild_join_event(shard, payload)
 
         if self._cache:
             self._cache.update_guild(event.guild)

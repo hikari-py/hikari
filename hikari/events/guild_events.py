@@ -28,6 +28,7 @@ __all__: typing.List[str] = [
     "GuildEvent",
     "GuildVisibilityEvent",
     "GuildAvailableEvent",
+    "GuildJoinEvent",
     "GuildUnavailableEvent",
     "GuildLeaveEvent",
     "GuildUpdateEvent",

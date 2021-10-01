@@ -239,7 +239,7 @@ class TestEventManagerImpl:
             chunk_nonce=None,
         )
 
-        event_factory.deserialize_guild_create_event.return_value = event
+        event_factory.deserialize_guild_join_event.return_value = event
         shard.request_guild_members = mock.AsyncMock()
 
         await event_manager.on_guild_create(shard, payload)
@@ -267,7 +267,7 @@ class TestEventManagerImpl:
         event_manager._cache.clear_voice_states_for_guild.assert_called_once_with(123)
         event_manager._cache.set_voice_state.assert_called_once_with(345)
 
-        event_factory.deserialize_guild_create_event.assert_called_once_with(shard, payload)
+        event_factory.deserialize_guild_join_event.assert_called_once_with(shard, payload)
         event_manager.dispatch.assert_awaited_once_with(event)
 
     @pytest.mark.asyncio()
@@ -284,7 +284,7 @@ class TestEventManagerImpl:
             chunk_nonce=None,
         )
 
-        event_factory.deserialize_guild_create_event.return_value = event
+        event_factory.deserialize_guild_join_event.return_value = event
         shard.request_guild_members = mock.Mock()
 
         stack = contextlib.ExitStack()
@@ -325,7 +325,7 @@ class TestEventManagerImpl:
         event_manager._cache.clear_voice_states_for_guild.assert_called_once_with(123)
         event_manager._cache.set_voice_state.assert_called_once_with(345)
 
-        event_factory.deserialize_guild_create_event.assert_called_once_with(shard, payload)
+        event_factory.deserialize_guild_join_event.assert_called_once_with(shard, payload)
         event_manager.dispatch.assert_awaited_once_with(event)
 
     @pytest.mark.asyncio()
@@ -336,9 +336,9 @@ class TestEventManagerImpl:
 
         await stateless_event_manager.on_guild_create(shard, payload)
 
-        event_factory.deserialize_guild_create_event.assert_called_once_with(shard, payload)
+        event_factory.deserialize_guild_join_event.assert_called_once_with(shard, payload)
         stateless_event_manager.dispatch.assert_awaited_once_with(
-            event_factory.deserialize_guild_create_event.return_value
+            event_factory.deserialize_guild_join_event.return_value
         )
 
     @pytest.mark.asyncio()

@@ -236,13 +236,29 @@ class TestEventFactoryImpl:
     # GUILD EVENTS #
     ################
 
-    def test_deserialize_guild_create_event(self, event_factory, mock_app, mock_shard):
+    def test_deserialize_guild_available_event(self, event_factory, mock_app, mock_shard):
         mock_payload = mock.Mock(app=mock_app)
 
-        event = event_factory.deserialize_guild_create_event(mock_shard, mock_payload)
+        event = event_factory.deserialize_guild_available_event(mock_shard, mock_payload)
 
         mock_app.entity_factory.deserialize_gateway_guild.assert_called_once_with(mock_payload)
         assert isinstance(event, guild_events.GuildAvailableEvent)
+        assert event.shard is mock_shard
+        assert event.guild is mock_app.entity_factory.deserialize_gateway_guild.return_value.guild
+        assert event.emojis is mock_app.entity_factory.deserialize_gateway_guild.return_value.emojis
+        assert event.roles is mock_app.entity_factory.deserialize_gateway_guild.return_value.roles
+        assert event.channels is mock_app.entity_factory.deserialize_gateway_guild.return_value.channels
+        assert event.members is mock_app.entity_factory.deserialize_gateway_guild.return_value.members
+        assert event.presences is mock_app.entity_factory.deserialize_gateway_guild.return_value.presences
+        assert event.voice_states is mock_app.entity_factory.deserialize_gateway_guild.return_value.voice_states
+
+    def test_deserialize_guild_join_event(self, event_factory, mock_app, mock_shard):
+        mock_payload = mock.Mock(app=mock_app)
+
+        event = event_factory.deserialize_guild_join_event(mock_shard, mock_payload)
+
+        mock_app.entity_factory.deserialize_gateway_guild.assert_called_once_with(mock_payload)
+        assert isinstance(event, guild_events.GuildJoinEvent)
         assert event.shard is mock_shard
         assert event.guild is mock_app.entity_factory.deserialize_gateway_guild.return_value.guild
         assert event.emojis is mock_app.entity_factory.deserialize_gateway_guild.return_value.emojis

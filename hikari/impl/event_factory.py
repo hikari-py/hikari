@@ -198,7 +198,7 @@ class EventFactoryImpl(event_factory.EventFactory):
     # GUILD EVENTS #
     ################
 
-    def deserialize_guild_create_event(
+    def deserialize_guild_available_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> guild_events.GuildAvailableEvent:
         guild_information = self._app.entity_factory.deserialize_gateway_guild(payload)
@@ -207,6 +207,25 @@ class EventFactoryImpl(event_factory.EventFactory):
         assert guild_information.presences is not None
         assert guild_information.voice_states is not None
         return guild_events.GuildAvailableEvent(
+            shard=shard,
+            guild=guild_information.guild,
+            emojis=guild_information.emojis,
+            roles=guild_information.roles,
+            channels=guild_information.channels,
+            members=guild_information.members,
+            presences=guild_information.presences,
+            voice_states=guild_information.voice_states,
+        )
+
+    def deserialize_guild_join_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> guild_events.GuildJoinEvent:
+        guild_information = self._app.entity_factory.deserialize_gateway_guild(payload)
+        assert guild_information.channels is not None
+        assert guild_information.members is not None
+        assert guild_information.presences is not None
+        assert guild_information.voice_states is not None
+        return guild_events.GuildJoinEvent(
             shard=shard,
             guild=guild_information.guild,
             emojis=guild_information.emojis,
