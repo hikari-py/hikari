@@ -449,6 +449,17 @@ class MessageUpdateEvent(MessageEvent, abc.ABC):
 
     @property
     @abc.abstractmethod
+    def old_message(self) -> typing.Optional[messages.PartialMessage]:
+        """Object of the old message stored in cache.
+
+        Returns
+        -------
+        typing.Optional[hikari.snowflakes.Snowflake]
+            The old message, if in cache, else `builtins.None`.
+        """
+
+    @property
+    @abc.abstractmethod
     def message(self) -> messages.PartialMessage:
         """Partial message that was sent in the event.
 
@@ -607,8 +618,39 @@ class MessageDeleteEvent(MessageEvent, abc.ABC):
     __slots__: typing.Sequence[str] = ()
 
     @property
+    def old_message(self) -> typing.Optional[messages.PartialMessage]:
+        """Object of the first deleted message.
+
+        This is contextually useful if you know this is not a bulk deletion
+        event. For all other purposes, this is the same as running
+        `self.old_messages.get(next(iter(self.message_ids)))`.
+
+        Returns
+        -------
+        typing.Optional[hikari.snowflakes.Snowflake]
+            The first deleted message, if in cache, else `builtins.None`.
+        """
+        try:
+            return self.old_messages.get(next(iter(self.message_ids)))
+        except StopIteration:
+            raise RuntimeError("No messages were sent in a bulk delete! This should not happen!") from None
+
+    @property
+    @abc.abstractmethod
+    def old_messages(self) -> typing.Mapping[snowflakes.Snowflake, messages.PartialMessage]:
+        """Mapping of snowflakes to old message objects.
+
+        The mapping may be missing messages if they were not found in the cache.
+
+        Returns
+        -------
+        typing.Mapping[hikari.snowflakes.Snowflake, hikari.messages.PartialMessage]
+            A mapping of message IDs to the message objects.
+        """
+
+    @property
     def message_id(self) -> snowflakes.Snowflake:
-        """Get the ID of the first deleted message.
+        """ID of the first deleted message.
 
         This is contextually useful if you know this is not a bulk deletion
         event. For all other purposes, this is the same as running
@@ -622,7 +664,7 @@ class MessageDeleteEvent(MessageEvent, abc.ABC):
         try:
             return next(iter(self.message_ids))
         except StopIteration:
-            raise RuntimeError("No messages were sent in a bulk delete! Please shout at Discord to fix this!") from None
+            raise RuntimeError("No messages were sent in a bulk delete! This should not happen!") from None
 
     @property
     @abc.abstractmethod
@@ -682,6 +724,9 @@ class GuildMessageDeleteEvent(MessageDeleteEvent):
     # <<inherited docstring from MessageDeleteEvent>>
 
     message_ids: typing.AbstractSet[snowflakes.Snowflake] = attr.field()
+    # <<inherited docstring from MessageDeleteEvent>>
+
+    old_messages: typing.Mapping[snowflakes.Snowflake, messages.PartialMessage] = attr.field()
     # <<inherited docstring from MessageDeleteEvent>>
 
     shard: shard_.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
@@ -751,6 +796,9 @@ class DMMessageDeleteEvent(MessageDeleteEvent):
     # <<inherited docstring from MessageDeleteEvent>>
 
     message_ids: typing.AbstractSet[snowflakes.Snowflake] = attr.field()
+    # <<inherited docstring from MessageDeleteEvent>>
+
+    old_messages: typing.Mapping[snowflakes.Snowflake, messages.PartialMessage] = attr.field()
     # <<inherited docstring from MessageDeleteEvent>>
 
     shard: shard_.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})

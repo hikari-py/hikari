@@ -36,6 +36,7 @@ if typing.TYPE_CHECKING:
     from hikari import invites as invite_models
     from hikari import messages as messages_models
     from hikari import presences as presences_models
+    from hikari import snowflakes
     from hikari import users as user_models
     from hikari import voices as voices_models
     from hikari.api import shard as gateway_shard
@@ -727,7 +728,11 @@ class EventFactory(abc.ABC):
 
     @abc.abstractmethod
     def deserialize_message_delete_event(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+        *,
+        old_message: typing.Optional[messages_models.PartialMessage],
     ) -> message_events.MessageDeleteEvent:
         """Parse a raw payload from Discord into a message delete event object.
 
@@ -737,6 +742,8 @@ class EventFactory(abc.ABC):
             The shard that emitted this event.
         payload : hikari.internal.data_binding.JSONObject
             The dict payload to parse.
+        old_message: typing.Optional[hikari.messages.PartialMessage]
+            The message object or `builtins.None`.
 
         Returns
         -------
@@ -746,7 +753,11 @@ class EventFactory(abc.ABC):
 
     @abc.abstractmethod
     def deserialize_message_delete_bulk_event(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+        *,
+        old_messages: typing.Mapping[snowflakes.Snowflake, messages_models.PartialMessage],
     ) -> message_events.MessageDeleteEvent:
         """Parse a raw payload from Discord into a message delete bulk event object.
 
@@ -756,6 +767,8 @@ class EventFactory(abc.ABC):
             The shard that emitted this event.
         payload : hikari.internal.data_binding.JSONObject
             The dict payload to parse.
+        old_messages: typing.Mapping[hikari.snowflakes.Snowflake, hikari.messages_models.PartialMessage]
+            The dict of snowflakes to message objects.
 
         Returns
         -------

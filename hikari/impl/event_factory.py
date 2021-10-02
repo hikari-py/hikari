@@ -471,10 +471,20 @@ class EventFactoryImpl(event_factory.EventFactory):
         return message_events.GuildMessageUpdateEvent(shard=shard, message=message, old_message=old_message)
 
     def deserialize_message_delete_event(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+        *,
+        old_message: typing.Optional[messages_models.PartialMessage],
     ) -> message_events.MessageDeleteEvent:
         channel_id = snowflakes.Snowflake(payload["channel_id"])
-        message_ids = collections.SnowflakeSet(int(payload["id"]))
+        message_id = snowflakes.Snowflake(payload["id"])
+        message_ids = collections.SnowflakeSet(message_id)
+
+        if old_message is not None:
+            old_messages = {message_id: old_message}
+        else:
+            old_messages = {}
 
         if "guild_id" in payload:
             return message_events.GuildMessageDeleteEvent(
@@ -484,6 +494,7 @@ class EventFactoryImpl(event_factory.EventFactory):
                 message_ids=message_ids,
                 is_bulk=False,
                 guild_id=snowflakes.Snowflake(payload["guild_id"]),
+                old_messages=old_messages,
             )
 
         return message_events.DMMessageDeleteEvent(
@@ -492,12 +503,16 @@ class EventFactoryImpl(event_factory.EventFactory):
             channel_id=channel_id,
             message_ids=message_ids,
             is_bulk=False,
+            old_messages=old_messages,
         )
 
     def deserialize_message_delete_bulk_event(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+        *,
+        old_messages: typing.Mapping[snowflakes.Snowflake, messages_models.PartialMessage],
     ) -> message_events.MessageDeleteEvent:
-
         message_ids = collections.SnowflakeSet(*(snowflakes.Snowflake(message_id) for message_id in payload["ids"]))
         channel_id = snowflakes.Snowflake(payload["channel_id"])
 
@@ -509,10 +524,16 @@ class EventFactoryImpl(event_factory.EventFactory):
                 guild_id=snowflakes.Snowflake(payload["guild_id"]),
                 message_ids=message_ids,
                 is_bulk=True,
+                old_messages=old_messages,
             )
 
         return message_events.DMMessageDeleteEvent(
-            app=self._app, shard=shard, channel_id=channel_id, message_ids=message_ids, is_bulk=True
+            app=self._app,
+            shard=shard,
+            channel_id=channel_id,
+            message_ids=message_ids,
+            is_bulk=True,
+            old_messages=old_messages,
         )
 
     ###################
