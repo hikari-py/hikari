@@ -2715,6 +2715,110 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return response
 
+    async def create_message_thread(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
+        message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
+        name: str,
+        *,
+        auto_archive_duration: typing.Union[undefined.UndefinedType, int, datetime.timedelta] = datetime.timedelta(
+            minutes=60
+        ),
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> channels_.GuildThreadChannel:
+        if auto_archive_duration is not undefined.UNDEFINED and isinstance(auto_archive_duration, datetime.timedelta):
+            auto_archive_duration = round(auto_archive_duration.total_seconds() / 60)
+
+        route = routes.POST_MESSAGE_THREADS.compile(channel=channel, message=message)
+        body = data_binding.JSONObjectBuilder()
+        body.put("name", name)
+        body.put("auto_archive_duration", auto_archive_duration)
+
+        response = await self._request(route, json=body, reason=reason)
+
+        assert isinstance(response, dict)
+        channel = self._entity_factory.deserialize_channel(response)
+        assert isinstance(channel, channels_.GuildThreadChannel)
+        return channel
+
+    # TODO: edit thread plus default archive duration and other fields
+    async def create_thread(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
+        type: typing.Union[channels_.ChannelType, int],  # TODO: more specific type?
+        name: str,
+        *,
+        auto_archive_duration: typing.Union[undefined.UndefinedType, int, datetime.timedelta] = datetime.timedelta(
+            minutes=60
+        ),
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> channels_.GuildThreadChannel:
+        if auto_archive_duration is not undefined.UNDEFINED and isinstance(auto_archive_duration, datetime.timedelta):
+            auto_archive_duration = round(auto_archive_duration.total_seconds() / 60)
+
+        route = routes.POST_CHANNEL_THREADS.compile(channel=channel)
+        body = data_binding.JSONObjectBuilder()
+        body.put("type", type)
+        body.put("name", name)
+        body.put("auto_archive_duration", auto_archive_duration)
+
+        response = await self._request(route, json=body, reason=reason)
+
+        assert isinstance(response, dict)
+        channel = self._entity_factory.deserialize_channel(response)
+        assert isinstance(channel, channels_.GuildThreadChannel)
+        return channel
+
+    async def join_thread(self, channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel]) -> None:
+        route = routes.PUT_MY_THREAD_MEMBER.compile(channel=channel)
+        await self._request(route)
+
+    async def add_thread_member(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildThreadChannel],
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
+    ) -> None:
+        route = routes.PUT_THREAD_MEMBER.compile(channel=channel, user=user)
+        await self._request(route)
+
+    async def leave_thread(self, channel: snowflakes.SnowflakeishOr[channels_.GuildThreadChannel]) -> None:
+        route = routes.DELETE_MY_THREAD_MEMBER.compile(channel=channel)
+        await self._request(route)
+
+    async def remove_thread_member(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildThreadChannel],
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
+    ) -> None:
+        route = routes.DELETE_THREAD_MEMBER.compile(channel=channel, user=user)
+        await self._request(route)
+
+    async def fetch_thread_members(
+        self, channel: snowflakes.SnowflakeishOr[channels_.GuildThreadChannel]
+    ) -> typing.Sequence[channels_.ThreadMember]:
+        route = routes.GET_THREAD_MEMBERS.compile(channel=channel)
+        response = await self._request(route)
+        assert isinstance(response, list)
+        return [self._entity_factory.deserialize_thread_member(member) for member in response]
+
+    def fetch_active_threads(self, channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel]) -> None:
+        raise NotImplementedError
+
+    def fetch_public_archived_threads(
+        self, channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel]
+    ) -> None:
+        raise NotImplementedError
+
+    def fetch_private_archived_threads(
+        self, channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel]
+    ) -> None:
+        raise NotImplementedError
+
+    def fetch_joined_private_archived_threads(
+        self, channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel]
+    ) -> None:
+        raise NotImplementedError
+
     async def reposition_channels(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],

@@ -41,6 +41,13 @@ __all__: typing.Sequence[str] = (
     "InviteCreateEvent",
     "InviteDeleteEvent",
     "WebhookUpdateEvent",
+    "GuildThreadEvent",
+    "GuildThreadCreateEvent",
+    "GuildThreadUpdateEvent",
+    "GuildThreadDeleteEvent",
+    "OwnThreadMemberUpdateEvent",
+    "ThreadMembersUpdateEvent",
+    "ThreadListSyncEvent",
 )
 
 import abc
@@ -94,9 +101,8 @@ class ChannelEvent(shard_events.ShardEvent, abc.ABC):
         Returns
         -------
         hikari.channels.PartialChannel
-            A derivative of `hikari.channels.PartialChannel`. The actual
-            type will vary depending on the type of channel this event
-            concerns.
+            A derivative of `hikari.channels.PartialChannel`. The actual type
+            will vary depending on the type of channel this event concerns.
 
         Raises
         ------
@@ -187,7 +193,7 @@ class GuildChannelEvent(ChannelEvent, abc.ABC):
         """
         return await self.app.rest.fetch_guild(self.guild_id)
 
-    def get_channel(self) -> typing.Optional[channels.GuildChannel]:
+    def get_channel(self) -> typing.Optional[channels.GuildChannel]:  # TODO: be more specific about type on subclasses
         """Get the cached channel that this event relates to, if known.
 
         If not, return `builtins.None`.
@@ -203,7 +209,7 @@ class GuildChannelEvent(ChannelEvent, abc.ABC):
 
         return self.app.cache.get_guild_channel(self.channel_id)
 
-    async def fetch_channel(self) -> channels.GuildChannel:
+    async def fetch_channel(self) -> channels.GuildChannel:  # TODO: be more specific about type on subclasses
         """Perform an API call to fetch the details about this channel.
 
         !!! note
@@ -212,9 +218,9 @@ class GuildChannelEvent(ChannelEvent, abc.ABC):
 
         Returns
         -------
-        hikari.channels.GuildChannel
-            A derivative of `hikari.channels.GuildChannel`. The actual
-            type will vary depending on the type of channel this event
+        hikari.channels.PermissibleGuildChannel
+            A derivative of `hikari.channels.PermissibleGuildChannel`. The
+            actual type will vary depending on the type of channel this event
             concerns.
 
         Raises
@@ -299,7 +305,7 @@ class GuildChannelCreateEvent(GuildChannelEvent):
     shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    channel: channels.GuildChannel = attr.field(repr=True)
+    channel: channels.PermissibleGuildChannel = attr.field(repr=True)
     """Guild channel that this event represents.
 
     Returns
@@ -312,6 +318,17 @@ class GuildChannelCreateEvent(GuildChannelEvent):
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.channel.app
+
+    @property
+    @abc.abstractmethod
+    def channel(self) -> channels.PermissibleGuildChannel:
+        """Channel this event represents.
+
+        Returns
+        -------
+        hikari.channels.PermissibleGuildChannel
+            The channel that was updated.
+        """
 
     @property
     def channel_id(self) -> snowflakes.Snowflake:
@@ -333,18 +350,18 @@ class GuildChannelUpdateEvent(GuildChannelEvent):
     shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    old_channel: typing.Optional[channels.GuildChannel] = attr.field(repr=True)
+    old_channel: typing.Optional[channels.PermissibleGuildChannel] = attr.field(repr=True)
     """The old guild channel object.
 
     This will be `builtins.None` if the channel missing from the cache.
     """
 
-    channel: channels.GuildChannel = attr.field(repr=True)
+    channel: channels.PermissibleGuildChannel = attr.field(repr=True)
     """Guild channel that this event represents.
 
     Returns
     -------
-    hikari.channels.GuildChannel
+    hikari.channels.PermissibleGuildChannel
         The guild channel that was updated.
     """
 
@@ -352,6 +369,17 @@ class GuildChannelUpdateEvent(GuildChannelEvent):
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.channel.app
+
+    @property
+    @abc.abstractmethod
+    def channel(self) -> channels.PermissibleGuildChannel:
+        """Channel this event represents.
+
+        Returns
+        -------
+        hikari.channels.PermissibleGuildChannel
+            The channel that was deleted.
+        """
 
     @property
     def channel_id(self) -> snowflakes.Snowflake:
@@ -373,12 +401,12 @@ class GuildChannelDeleteEvent(GuildChannelEvent):
     shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    channel: channels.GuildChannel = attr.field(repr=True)
+    channel: channels.PermissibleGuildChannel = attr.field(repr=True)
     """Guild channel that this event represents.
 
     Returns
     -------
-    hikari.channels.GuildChannel
+    hikari.channels.PermissibleGuildChannel
         The guild channel that was deleted.
     """
 
@@ -780,3 +808,139 @@ class WebhookUpdateEvent(GuildChannelEvent):
             If an internal error occurs on Discord while handling the request.
         """
         return await self.app.rest.fetch_guild_webhooks(self.guild_id)
+
+
+@base_events.requires_intents(intents.Intents.GUILDS, intents.Intents.GUILD_MEMBERS)
+class GuildThreadEvent(shard_events.ShardEvent, abc.ABC):
+    @property
+    @abc.abstractmethod
+    def guild_id(self) -> snowflakes.Snowflake:
+        ...
+
+    @property
+    @abc.abstractmethod
+    def thread_id(self) -> snowflakes.Snowflake:
+        ...
+
+
+@base_events.requires_intents(intents.Intents.GUILDS)
+@attr_extensions.with_copy
+@attr.define(kw_only=True, weakref_slot=False)
+class GuildThreadCreateEvent(GuildThreadEvent):
+    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from ShardEvent>>.
+
+    thread: channels.GuildThreadChannel = attr.field()
+
+    @property
+    def app(self) -> traits.RESTAware:
+        # <<inherited docstring from Event>>.
+        return self.thread.app
+
+    @property
+    def guild_id(self) -> snowflakes.Snowflake:
+        return self.thread.guild_id
+
+    @property
+    def thread_id(self) -> snowflakes.Snowflake:
+        return self.thread.id
+
+
+@base_events.requires_intents(intents.Intents.GUILDS)
+@attr_extensions.with_copy
+@attr.define(kw_only=True, weakref_slot=False)
+class GuildThreadUpdateEvent(GuildThreadEvent):
+    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from ShardEvent>>.
+    thread: channels.GuildThreadChannel = attr.field()
+
+    @property
+    def app(self) -> traits.RESTAware:
+        # <<inherited docstring from Event>>.
+        return self.thread.app
+
+    @property
+    def guild_id(self) -> snowflakes.Snowflake:
+        return self.thread.guild_id
+
+    @property
+    def thread_id(self) -> snowflakes.Snowflake:
+        return self.thread.id
+
+
+@base_events.requires_intents(intents.Intents.GUILDS)
+@attr_extensions.with_copy
+@attr.define(kw_only=True, weakref_slot=False)
+class GuildThreadDeleteEvent(GuildThreadEvent):
+    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from ShardEvent>>.
+    thread_id: snowflakes.Snowflake = attr.field()
+    guild_id: snowflakes.Snowflake = attr.field()
+    parent_id: snowflakes.Snowflake = attr.field()
+    type: channels.ChannelType = attr.field()
+
+
+@base_events.requires_intents(intents.Intents.GUILDS)
+@attr_extensions.with_copy
+@attr.define(kw_only=True, weakref_slot=False)
+class OwnThreadMemberUpdateEvent(GuildThreadEvent):
+    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from ShardEvent>>.
+    member: channels.ThreadMember = attr.field()
+
+    @property
+    def guild_id(self) -> snowflakes.Snowflake:
+        raise NotImplementedError  # TODO: is this actually not included
+
+    @property
+    def thread_id(self) -> snowflakes.Snowflake:
+        return self.member.thread_id
+
+
+@base_events.requires_intents(intents.Intents.GUILDS, intents.Intents.GUILD_MEMBERS)
+@attr_extensions.with_copy
+@attr.define(kw_only=True, weakref_slot=False)
+class ThreadMembersUpdateEvent(GuildThreadEvent):
+    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from ShardEvent>>.
+
+    thread_id: snowflakes.Snowflake = attr.field()
+
+    guild_id: snowflakes.Snowflake = attr.field()
+
+    approximate_member_count: int = attr.field(eq=False, hash=False, repr=True)
+    """Approximate count of members in the thread channel.
+
+    !!! warning
+        This stop counting at 50.
+    """
+
+    added_members: typing.Sequence[channels.ThreadMember] = attr.field()
+    removed_member_ids: typing.Sequence[snowflakes.Snowflake] = attr.field()
+
+
+@base_events.requires_intents(intents.Intents.GUILDS)
+@attr_extensions.with_copy
+@attr.define(kw_only=True, weakref_slot=False)
+class ThreadListSyncEvent:
+    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from ShardEvent>>.
+    guild_id: snowflakes.Snowflake = attr.field()
+    channel_ids: typing.Optional[typing.Sequence[snowflakes.Snowflake]] = attr.field()
+    threads: typing.Sequence[channels.GuildThreadChannel] = attr.field()
+    members: typing.Sequence[channels.ThreadMember] = attr.field()
+
+
+# TODO: old state fields on update and delete events

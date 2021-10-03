@@ -31,6 +31,7 @@ __all__: typing.Sequence[str] = (
     "PermissionOverwrite",
     "PermissionOverwriteType",
     "PartialChannel",
+    "PermissibleGuildChannel",
     "TextableChannel",
     "TextableGuildChannel",
     "PrivateChannel",
@@ -40,10 +41,14 @@ __all__: typing.Sequence[str] = (
     "GuildChannel",
     "GuildTextChannel",
     "GuildNewsChannel",
+    "GuildNewsThread",
+    "GuildPrivateThread",
+    "GuildPublicThread",
     "GuildVoiceChannel",
     "GuildStageChannel",
     "WebhookChannelT",
     "WebhookChannelTypes",
+    "ThreadMember",
 )
 
 import typing
@@ -95,6 +100,20 @@ class ChannelType(int, enums.Enum):
 
     GUILD_NEWS = 5
     """A channel that can be followed and can crosspost."""
+
+    GUILD_NEWS_THREAD = 10
+    """A temporary sub-channel within a `ChannelType.GUILD_NEWS` channel."""
+
+    GUILD_PUBLIC_THREAD = 11
+    """A temporary sub-channel within a `ChannelType.GUILD_TEXT` channel."""
+
+    GUILD_PRIVATE_THREAD = 12
+    """A temporary sub-channel with restricted access.
+
+    Like `ChannelType.GUILD_PUBLIC_THREAD`, these exist within
+    `ChannelType.GUILD_TEXT` channels but can only be accessed by members who
+    are invited to them or have `MANAGE_THREADS` permission.
+    """
 
     GUILD_STAGE = 13
     """A few to many voice channel for hosting events."""
@@ -928,20 +947,6 @@ class GuildChannel(PartialChannel):
     guild_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
     """The ID of the guild the channel belongs to."""
 
-    position: int = attr.field(eq=False, hash=False, repr=False)
-    """The sorting position of the channel.
-
-    Higher numbers appear further down the channel list.
-    """
-
-    permission_overwrites: typing.Mapping[snowflakes.Snowflake, PermissionOverwrite] = attr.field(
-        eq=False, hash=False, repr=False
-    )
-    """The permission overwrites for the channel.
-
-    This maps the ID of the entity in the overwrite to the overwrite data.
-    """
-
     is_nsfw: typing.Optional[bool] = attr.field(eq=False, hash=False, repr=False)
     """Whether the channel is marked as NSFW.
 
@@ -951,9 +956,12 @@ class GuildChannel(PartialChannel):
     """
 
     parent_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=True)
-    """The ID of the parent category the channel belongs to.
+    """The ID of the parent channel the channel belongs to.
 
-    If no parent category is set for the channel, this will be `builtins.None`.
+    For thread channels this will refer to the parent textable guild channel.
+    For other guild channel types this will refer to the parent category and
+    if no parent category is set for the channel, this will be `builtins.None`.
+    For guild categories this will always be `builtins.None`.
     """
 
     @property
@@ -1011,6 +1019,124 @@ class GuildChannel(PartialChannel):
             If an internal error occurs on Discord while handling the request.
         """
         return await self.app.rest.fetch_guild(self.guild_id)
+
+    async def edit(
+        self,
+        *,
+        name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        bitrate: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        video_quality_mode: undefined.UndefinedOr[typing.Union[VideoQualityMode, int]] = undefined.UNDEFINED,
+        user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        region: undefined.UndefinedOr[typing.Union[voices.VoiceRegion, str]] = undefined.UNDEFINED,
+        permission_overwrites: undefined.UndefinedOr[typing.Sequence[PermissionOverwrite]] = undefined.UNDEFINED,
+        parent_category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[GuildCategory]] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> PartialChannel:
+        """Edit the text channel.
+
+        Other Parameters
+        ----------------
+        name : hikari.undefined.UndefinedOr[[builtins.str]
+            If provided, the new name for the channel.
+        position : hikari.undefined.UndefinedOr[[builtins.int]
+            If provided, the new position for the channel.
+        topic : hikari.undefined.UndefinedOr[builtins.str]
+            If provided, the new topic for the channel.
+        nsfw : hikari.undefined.UndefinedOr[builtins.bool]
+            If provided, whether the channel should be marked as NSFW or not.
+        bitrate : hikari.undefined.UndefinedOr[builtins.int]
+            If provided, the new bitrate for the channel.
+        video_quality_mode: hikari.undefined.UndefinedOr[typing.Union[hikari.channels.VideoQualityMode, builtins.int]]
+            If provided, the new video quality mode for the channel.
+        user_limit : hikari.undefined.UndefinedOr[builtins.int]
+            If provided, the new user limit in the channel.
+        rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
+            If provided, the new rate limit per user in the channel.
+        region : hikari.undefined.UndefinedOr[typing.Union[hikari.voices.VoiceRegion, builtins.str]]
+            If provided, the voice region to set for this channel. Passing
+            `builtins.None` here will set it to "auto" mode where the used
+            region will be decided based on the first person who connects to it
+            when it's empty.
+        permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
+            If provided, the new permission overwrites for the channel.
+        parent_category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
+            If provided, the new guild category for the channel.
+        reason : hikari.undefined.UndefinedOr[builtins.str]
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Returns
+        -------
+        hikari.channels.PartialChannel
+            The edited channel.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you are missing permissions to edit the channel.
+        hikari.errors.NotFoundError
+            If the channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """  # noqa: E501 - Line too long
+        return await self.app.rest.edit_channel(
+            self.id,
+            name=name,
+            position=position,
+            topic=topic,
+            nsfw=nsfw,
+            bitrate=bitrate,
+            video_quality_mode=video_quality_mode,
+            user_limit=user_limit,
+            rate_limit_per_user=rate_limit_per_user,
+            region=region,
+            permission_overwrites=permission_overwrites,
+            parent_category=parent_category,
+            reason=reason,
+        )
+
+
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
+class PermissibleGuildChannel(GuildChannel):
+    """Base class for all guild channels which have permission overwrites.
+
+    !!! note
+        This doesn't apply to thread channels as they implicitly inherit
+        permissions from their parent channel.
+    """
+
+    position: int = attr.field(eq=False, hash=False, repr=False)
+    """The sorting position of the channel.
+
+    Higher numbers appear further down the channel list.
+    """
+
+    permission_overwrites: typing.Mapping[snowflakes.Snowflake, PermissionOverwrite] = attr.field(
+        eq=False, hash=False, repr=False
+    )
+    """The permission overwrites for the channel.
+
+    This maps the ID of the entity in the overwrite to the overwrite data.
+    """
 
     async def edit_overwrite(
         self,
@@ -1117,100 +1243,6 @@ class GuildChannel(PartialChannel):
         """  # noqa: E501 - Line too long
         return await self.app.rest.delete_permission_overwrite(self.id, target)
 
-    async def edit(
-        self,
-        *,
-        name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-        topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        bitrate: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-        video_quality_mode: undefined.UndefinedOr[typing.Union[VideoQualityMode, int]] = undefined.UNDEFINED,
-        user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-        rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
-        region: undefined.UndefinedOr[typing.Union[voices.VoiceRegion, str]] = undefined.UNDEFINED,
-        permission_overwrites: undefined.UndefinedOr[typing.Sequence[PermissionOverwrite]] = undefined.UNDEFINED,
-        parent_category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[GuildCategory]] = undefined.UNDEFINED,
-        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> PartialChannel:
-        """Edit the text channel.
-
-        Other Parameters
-        ----------------
-        name : hikari.undefined.UndefinedOr[[builtins.str]
-            If provided, the new name for the channel.
-        position : hikari.undefined.UndefinedOr[[builtins.int]
-            If provided, the new position for the channel.
-        topic : hikari.undefined.UndefinedOr[builtins.str]
-            If provided, the new topic for the channel.
-        nsfw : hikari.undefined.UndefinedOr[builtins.bool]
-            If provided, whether the channel should be marked as NSFW or not.
-        bitrate : hikari.undefined.UndefinedOr[builtins.int]
-            If provided, the new bitrate for the channel.
-        video_quality_mode: hikari.undefined.UndefinedOr[typing.Union[hikari.channels.VideoQualityMode, builtins.int]]
-            If provided, the new video quality mode for the channel.
-        user_limit : hikari.undefined.UndefinedOr[builtins.int]
-            If provided, the new user limit in the channel.
-        rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
-            If provided, the new rate limit per user in the channel.
-        region : hikari.undefined.UndefinedOr[typing.Union[hikari.voices.VoiceRegion, builtins.str]]
-            If provided, the voice region to set for this channel. Passing
-            `builtins.None` here will set it to "auto" mode where the used
-            region will be decided based on the first person who connects to it
-            when it's empty.
-        permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
-            If provided, the new permission overwrites for the channel.
-        parent_category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
-            If provided, the new guild category for the channel.
-        reason : hikari.undefined.UndefinedOr[builtins.str]
-            If provided, the reason that will be recorded in the audit logs.
-            Maximum of 512 characters.
-
-        Returns
-        -------
-        hikari.channels.PartialChannel
-            The edited channel.
-
-        Raises
-        ------
-        hikari.errors.BadRequestError
-            If any of the fields that are passed have an invalid value.
-        hikari.errors.UnauthorizedError
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.ForbiddenError
-            If you are missing permissions to edit the channel.
-        hikari.errors.NotFoundError
-            If the channel is not found.
-        hikari.errors.RateLimitTooLongError
-            Raised in the event that a rate limit occurs that is
-            longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
-        hikari.errors.InternalServerError
-            If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
-        return await self.app.rest.edit_channel(
-            self.id,
-            name=name,
-            position=position,
-            topic=topic,
-            nsfw=nsfw,
-            bitrate=bitrate,
-            video_quality_mode=video_quality_mode,
-            user_limit=user_limit,
-            rate_limit_per_user=rate_limit_per_user,
-            region=region,
-            permission_overwrites=permission_overwrites,
-            parent_category=parent_category,
-            reason=reason,
-        )
-
 
 class TextableGuildChannel(GuildChannel, TextableChannel):
     """Mixin class for any guild channel which can have text messages in it."""
@@ -1220,16 +1252,18 @@ class TextableGuildChannel(GuildChannel, TextableChannel):
 
 
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
-class GuildCategory(GuildChannel):
+class GuildCategory(PermissibleGuildChannel):
     """Represents a guild category channel.
 
     These can contain other channels inside, and act as a method for
     organisation.
     """
 
+    parent_id: None
+
 
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
-class GuildTextChannel(TextableGuildChannel):
+class GuildTextChannel(PermissibleGuildChannel, TextableGuildChannel):
     """Represents a guild text channel."""
 
     topic: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
@@ -1262,9 +1296,11 @@ class GuildTextChannel(TextableGuildChannel):
         these cases are. Trust no one!
     """
 
+    default_auto_archive_duration: datetime.timedelta = attr.field(eq=False, hash=False, repr=False)
+
 
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
-class GuildNewsChannel(TextableGuildChannel):
+class GuildNewsChannel(PermissibleGuildChannel, TextableGuildChannel):
     """Represents an news channel."""
 
     topic: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
@@ -1286,9 +1322,11 @@ class GuildNewsChannel(TextableGuildChannel):
         these cases are. Trust no one!
     """
 
+    default_auto_archive_duration: datetime.timedelta = attr.field(eq=False, hash=False, repr=False)
+
 
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
-class GuildVoiceChannel(TextableGuildChannel):
+class GuildVoiceChannel(PermissibleGuildChannel):
     """Represents a voice channel."""
 
     bitrate: int = attr.field(eq=False, hash=False, repr=True)
@@ -1321,7 +1359,7 @@ class GuildVoiceChannel(TextableGuildChannel):
 
 
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
-class GuildStageChannel(GuildChannel):
+class GuildStageChannel(PermissibleGuildChannel):
     """Represents a stage channel."""
 
     bitrate: int = attr.field(eq=False, hash=False, repr=True)
@@ -1330,7 +1368,7 @@ class GuildStageChannel(GuildChannel):
     region: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
     """ID of the voice region for this stage channel.
 
-    If set to `builtins.None` then this is set to "auto" mode where the used
+    If set to `builtins.None` then this is set to F"auto" mode where the used
     region will be decided based on the first person who connects to it when
     it's empty.
     """
@@ -1362,3 +1400,134 @@ This includes:
 * `GuildTextChannel`
 * `GuildNewsChannel`
 """
+
+
+@attr.define(kw_only=True, weakref_slot=False)
+class ThreadMember:
+    """Represents a thread's member."""
+
+    thread_id: snowflakes.Snowflake = attr.field(eq=True, repr=True)
+    """ID of the thread this member is in."""
+
+    # TODO: can we infer the actual value for this in guild create from context?
+    user_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=True, repr=True)
+    """The member's user ID.
+
+    !!! note
+        This will only ever be `builtins.None` on thread members attached to
+        guild create events, where this is the current bot's user.
+    """
+
+    joined_at: datetime.datetime = attr.field(eq=True, repr=True)
+    """When the user joined the relevant thread."""
+
+    flags: int = attr.field(eq=True, repr=True)
+    """Bitfield flag of the user's settings for the thread.
+
+    !!! note
+        As of writing, the values of this field's are undocumented.
+    """
+
+
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
+class GuildThreadChannel(TextableGuildChannel):
+    """Base class for all guild thread channels."""
+
+    last_message_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
+    """The ID of the last message sent in this channel.
+
+    !!! warning
+        This might point to an invalid or deleted message. Do not assume that
+        this will always be valid.
+    """
+
+    last_pin_timestamp: typing.Optional[datetime.datetime] = attr.field(eq=False, hash=False, repr=False)
+    """The timestamp of the last-pinned message.
+
+    !!! note
+        This may be `builtins.None` in several cases; Discord does not document what
+        these cases are. Trust no one!
+    """
+
+    rate_limit_per_user: datetime.timedelta = attr.field(eq=False, hash=False, repr=False)
+    """The delay (in seconds) between a user can send a message to this channel.
+
+    If there is no rate limit, this will be 0 seconds.
+
+    !!! note
+        Any user that has permissions allowing `MANAGE_MESSAGES`,
+        `MANAGE_CHANNEL`, `ADMINISTRATOR` will not be limited. Likewise, bots
+        will not be affected by this rate limit.
+    """
+
+    approximate_message_count: int = attr.field(eq=False, hash=False, repr=True)
+    """Approximate number of messages in the thread channel.
+
+    !!! warning
+        This stops counting at 50.
+    """
+
+    approximate_member_count: int = attr.field(eq=False, hash=False, repr=True)
+    """Approximate count of members in the thread channel.
+
+    !!! warning
+        This stop counting at 50.
+    """
+
+    is_archived: bool = attr.field(eq=False, hash=False, repr=True)
+    """Whether the thread is archived."""
+
+    auto_archive_duration: datetime.timedelta = attr.field(eq=False, hash=False, repr=True)
+    """How long the thread will be left inactive before being automatically archived.
+
+    As of writing this may be one of 60, 1_440, 4_320 or 10_080 minutes.
+    """
+
+    # TODO: does this count when it was last unarchived?
+    last_archived_at: datetime.datetime = attr.field(eq=False, hash=False, repr=True)
+    """When the thread was last archived.
+
+    !!! note
+        If the thread has never been archived then this will be the thread's
+        creation date.
+    """
+
+    is_locked: bool = attr.field(eq=False, hash=False, repr=True)
+    """Whether the thread is locked.
+
+    When a thread is locked, only users with `MANAGE_THREADS` permission
+    can un-archive it.
+    """
+
+    member: typing.Optional[ThreadMember] = attr.field(eq=False, hash=False, repr=True)
+    """Thread member object for the current user, if they are in the thread.
+
+    !!! note
+        This is only returned by some endpoints
+    """  # TODO: WHICH ENDPOINTS?!?!?!?!?!??!?!?!??!?!?!?!?
+
+    owner_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
+    """ID of the user who created this thread."""
+
+    parent_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
+    """Id of this thread's textable parent channel."""
+
+
+class GuildNewsThread(GuildThreadChannel):
+    """Represents a guild news channel public thread."""
+
+    __slots__: typing.Sequence[str] = ()
+
+
+class GuildPublicThread(GuildThreadChannel):
+    """Represents a non-news guild channel public thread."""
+
+    __slots__: typing.Sequence[str] = ()
+
+
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
+class GuildPrivateThread(GuildThreadChannel):
+    """Represents a guild private thread."""
+
+    is_invitable: bool = attr.field(eq=False, hash=False, repr=True)
+    """Whether non-moderators can add other non-moderators to a private thread."""

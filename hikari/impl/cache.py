@@ -87,7 +87,7 @@ class CacheImpl(cache.MutableCache):
     _me: typing.Optional[users.OwnUser]
     _emoji_entries: collections.ExtendedMutableMapping[snowflakes.Snowflake, cache_utility.KnownCustomEmojiData]
     _dm_channel_entries: collections.ExtendedMutableMapping[snowflakes.Snowflake, snowflakes.Snowflake]
-    _guild_channel_entries: collections.ExtendedMutableMapping[snowflakes.Snowflake, channels.GuildChannel]
+    _guild_channel_entries: collections.ExtendedMutableMapping[snowflakes.Snowflake, channels.PermissibleGuildChannel]
     _guild_entries: collections.ExtendedMutableMapping[snowflakes.Snowflake, cache_utility.GuildRecord]
     _invite_entries: collections.ExtendedMutableMapping[str, cache_utility.InviteData]
     _role_entries: collections.ExtendedMutableMapping[snowflakes.Snowflake, guilds.Role]
@@ -567,7 +567,7 @@ class CacheImpl(cache.MutableCache):
         self.set_guild(guild)
         return cached_guild, self.get_guild(guild.id)
 
-    def clear_guild_channels(self) -> cache.CacheView[snowflakes.Snowflake, channels.GuildChannel]:
+    def clear_guild_channels(self) -> cache.CacheView[snowflakes.Snowflake, channels.PermissibleGuildChannel]:
         if not self._is_cache_enabled_for(config_api.CacheComponents.GUILD_CHANNELS):
             return cache_utility.EmptyCacheView()
 
@@ -583,7 +583,7 @@ class CacheImpl(cache.MutableCache):
 
     def clear_guild_channels_for_guild(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
-    ) -> cache.CacheView[snowflakes.Snowflake, channels.GuildChannel]:
+    ) -> cache.CacheView[snowflakes.Snowflake, channels.PermissibleGuildChannel]:
         if not self._is_cache_enabled_for(config_api.CacheComponents.GUILD_CHANNELS):
             return cache_utility.EmptyCacheView()
 
@@ -599,7 +599,7 @@ class CacheImpl(cache.MutableCache):
 
     def delete_guild_channel(
         self, channel: snowflakes.SnowflakeishOr[channels.PartialChannel], /
-    ) -> typing.Optional[channels.GuildChannel]:
+    ) -> typing.Optional[channels.PermissibleGuildChannel]:
         if not self._is_cache_enabled_for(config_api.CacheComponents.GUILD_CHANNELS):
             return None
 
@@ -620,21 +620,21 @@ class CacheImpl(cache.MutableCache):
 
     def get_guild_channel(
         self, channel: snowflakes.SnowflakeishOr[channels.PartialChannel], /
-    ) -> typing.Optional[channels.GuildChannel]:
+    ) -> typing.Optional[channels.PermissibleGuildChannel]:
         if not self._is_cache_enabled_for(config_api.CacheComponents.GUILD_CHANNELS):
             return None
 
         channel = self._guild_channel_entries.get(snowflakes.Snowflake(channel))
         return cache_utility.copy_guild_channel(channel) if channel else None
 
-    def get_guild_channels_view(self) -> cache.CacheView[snowflakes.Snowflake, channels.GuildChannel]:
+    def get_guild_channels_view(self) -> cache.CacheView[snowflakes.Snowflake, channels.PermissibleGuildChannel]:
         return cache_utility.CacheMappingView(
             self._guild_channel_entries.freeze(), builder=cache_utility.copy_guild_channel  # type: ignore[type-var]
         )
 
     def get_guild_channels_view_for_guild(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
-    ) -> cache.CacheView[snowflakes.Snowflake, channels.GuildChannel]:
+    ) -> cache.CacheView[snowflakes.Snowflake, channels.PermissibleGuildChannel]:
         if not self._is_cache_enabled_for(config_api.CacheComponents.GUILD_CHANNELS):
             return cache_utility.EmptyCacheView()
 
@@ -644,7 +644,9 @@ class CacheImpl(cache.MutableCache):
 
         cached_channels = {sf: self._guild_channel_entries[sf] for sf in guild_record.channels}
 
-        def sorter(args: typing.Tuple[snowflakes.Snowflake, channels.GuildChannel]) -> typing.Tuple[int, int, int]:
+        def sorter(
+            args: typing.Tuple[snowflakes.Snowflake, channels.PermissibleGuildChannel]
+        ) -> typing.Tuple[int, int, int]:
             channel = args[1]
             if isinstance(channel, channels.GuildCategory):
                 return channel.position, -1, 0
@@ -661,7 +663,7 @@ class CacheImpl(cache.MutableCache):
             cached_channels, builder=cache_utility.copy_guild_channel  # type: ignore[type-var]
         )
 
-    def set_guild_channel(self, channel: channels.GuildChannel, /) -> None:
+    def set_guild_channel(self, channel: channels.PermissibleGuildChannel, /) -> None:
         if not self._is_cache_enabled_for(config_api.CacheComponents.GUILD_CHANNELS):
             return None
 
@@ -674,8 +676,10 @@ class CacheImpl(cache.MutableCache):
         guild_record.channels.add(channel.id)
 
     def update_guild_channel(
-        self, channel: channels.GuildChannel, /
-    ) -> typing.Tuple[typing.Optional[channels.GuildChannel], typing.Optional[channels.GuildChannel]]:
+        self, channel: channels.PermissibleGuildChannel, /
+    ) -> typing.Tuple[
+        typing.Optional[channels.PermissibleGuildChannel], typing.Optional[channels.PermissibleGuildChannel]
+    ]:
         if not self._is_cache_enabled_for(config_api.CacheComponents.GUILD_CHANNELS):
             return None, None
 

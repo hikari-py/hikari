@@ -26,6 +26,7 @@ from __future__ import annotations
 __all__: typing.Sequence[str] = ("RESTClient", "TokenStrategy")
 
 import abc
+import datetime
 import typing
 
 from hikari import scheduled_events
@@ -33,7 +34,6 @@ from hikari import traits
 from hikari import undefined
 
 if typing.TYPE_CHECKING:
-    import datetime
 
     from hikari import applications
     from hikari import audit_logs
@@ -4735,6 +4735,86 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
+
+    @abc.abstractmethod
+    async def create_message_thread(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
+        message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
+        name: str,
+        *,
+        auto_archive_duration: typing.Union[undefined.UndefinedType, int, datetime.timedelta] = datetime.timedelta(
+            minutes=60
+        ),
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> channels_.GuildThreadChannel:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    async def create_thread(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
+        type: typing.Union[channels_.ChannelType, int],  # TODO: more specific type?
+        name: str,
+        *,
+        auto_archive_duration: typing.Union[undefined.UndefinedType, int, datetime.timedelta] = datetime.timedelta(
+            minutes=60
+        ),
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> channels_.GuildThreadChannel:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    async def join_thread(self, channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel]) -> None:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    async def add_thread_member(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildThreadChannel],
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
+    ) -> None:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    async def leave_thread(self, channel: snowflakes.SnowflakeishOr[channels_.GuildThreadChannel]) -> None:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    async def remove_thread_member(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildThreadChannel],
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
+    ) -> None:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    async def fetch_thread_members(
+        self, channel: snowflakes.SnowflakeishOr[channels_.GuildThreadChannel]
+    ) -> typing.Sequence[channels_.ThreadMember]:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def fetch_active_threads(self, channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel]) -> None:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def fetch_public_archived_threads(
+        self, channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel]
+    ) -> None:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def fetch_private_archived_threads(
+        self, channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel]
+    ) -> None:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def fetch_joined_private_archived_threads(
+        self, channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel]
+    ) -> None:
+        raise NotImplementedError
 
     @abc.abstractmethod
     async def reposition_channels(

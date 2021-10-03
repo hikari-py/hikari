@@ -182,12 +182,12 @@ class GuildAvailableEvent(GuildVisibilityEvent):
         The roles in the guild.
     """
 
-    channels: typing.Mapping[snowflakes.Snowflake, channels_.GuildChannel] = attr.field(repr=False)
+    channels: typing.Mapping[snowflakes.Snowflake, channels_.PermissibleGuildChannel] = attr.field(repr=False)
     """Mapping of channel IDs to the channels in the guild.
 
     Returns
     -------
-    typing.Mapping[hikari.snowflakes.Snowflake, hikari.channels.GuildChannel]
+    typing.Mapping[hikari.snowflakes.Snowflake, hikari.channels.PermissibleGuildChannel]
         The channels in the guild.
     """
 
