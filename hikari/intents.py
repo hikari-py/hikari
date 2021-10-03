@@ -146,6 +146,12 @@ class Intents(enums.Flag):
     - `CHANNEL_UPDATE`
     - `CHANNEL_DELETE`
     - `CHANNEL_PINS_UPDATE (guilds only)`
+    - `THREAD_CREATE`
+    - `THREAD_UPDATE`
+    - `THREAD_DELETE`
+    - `THREAD_LIST_SYNC`
+    - `THREAD_MEMBER_UPDATE`
+    - `THREAD_MEMBERS_UPDATE`
     - `MESSAGE_CREATE`
     - `MESSAGE_UPDATE`
     - `MESSAGE_DELETE`
@@ -185,7 +191,12 @@ class Intents(enums.Flag):
     * `CHANNEL_UPDATE`
     * `CHANNEL_DELETE`
     * `CHANNEL_PINS_UPDATE`
-    """
+    * THREAD_CREATE
+    * THREAD_UPDATE
+    * THREAD_DELETE
+    * THREAD_LIST_SYNC
+    * THREAD_MEMBER_UPDATE
+    """  # TODO: THREAD_MEMBERS_UPDATE ?
 
     GUILD_MEMBERS = 1 << 1
     """Subscribes to the following events:
@@ -196,7 +207,7 @@ class Intents(enums.Flag):
 
     !!! warning
         This intent is privileged, and requires enabling/whitelisting to use.
-    """
+    """  # TODO: THREAD_MEMBERS_UPDATE ?
 
     GUILD_BANS = 1 << 2
     """Subscribes to the following events:

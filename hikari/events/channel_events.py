@@ -320,17 +320,6 @@ class GuildChannelCreateEvent(GuildChannelEvent):
         return self.channel.app
 
     @property
-    @abc.abstractmethod
-    def channel(self) -> channels.PermissibleGuildChannel:
-        """Channel this event represents.
-
-        Returns
-        -------
-        hikari.channels.PermissibleGuildChannel
-            The channel that was updated.
-        """
-
-    @property
     def channel_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from ChannelEvent>>.
         return self.channel.id
@@ -369,17 +358,6 @@ class GuildChannelUpdateEvent(GuildChannelEvent):
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.channel.app
-
-    @property
-    @abc.abstractmethod
-    def channel(self) -> channels.PermissibleGuildChannel:
-        """Channel this event represents.
-
-        Returns
-        -------
-        hikari.channels.PermissibleGuildChannel
-            The channel that was deleted.
-        """
 
     @property
     def channel_id(self) -> snowflakes.Snowflake:
@@ -811,7 +789,7 @@ class WebhookUpdateEvent(GuildChannelEvent):
 
 
 @base_events.requires_intents(intents.Intents.GUILDS, intents.Intents.GUILD_MEMBERS)
-class GuildThreadEvent(shard_events.ShardEvent, abc.ABC):
+class GuildThreadEvent(shard_events.ShardEvent, abc.ABC):  # TODO: old thread(s) attributes?
     @property
     @abc.abstractmethod
     def guild_id(self) -> snowflakes.Snowflake:
@@ -931,7 +909,7 @@ class ThreadMembersUpdateEvent(GuildThreadEvent):
 @base_events.requires_intents(intents.Intents.GUILDS)
 @attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
-class ThreadListSyncEvent:
+class ThreadListSyncEvent(shard_events.ShardEvent):  # TODO: ThreadEvent?
     app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 

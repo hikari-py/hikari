@@ -173,6 +173,63 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         # TODO: we need a method for this specifically
         await self.dispatch(self._event_factory.deserialize_channel_pins_update_event(shard, payload))
 
+    async def on_thread_create(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
+        """See https://discord.com/developers/docs/topics/gateway#thread-create for more info."""
+        event = self._event_factory.deserialize_guild_thread_create_event(shard, payload)
+
+        if self._cache:
+            self._cache.set_guild_thread(event.thread)
+
+        await self.dispatch(event)
+
+    async def on_thread_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
+        """See https://discord.com/developers/docs/topics/gateway#thread-update for more info."""
+        event = self._event_factory.deserialize_guild_thread_update_event(shard, payload)
+
+        if self._cache:
+            self._cache.update_guild_thread(event.thread)
+
+        await self.dispatch(event)
+
+    async def on_thread_delete(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
+        """See https://discord.com/developers/docs/topics/gateway#thread-delete for more info."""
+        event = self._event_factory.deserialize_guild_thread_delete_event(shard, payload)
+
+        if self._cache:
+            self._cache.delete_guild_thread(event.thread_id)
+
+        await self.dispatch(event)
+
+    async def on_thread_list_sync(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
+        """See https://discord.com/developers/docs/topics/gateway#thread-list-sync for more info."""
+        event = self._event_factory.deserialize_thread_list_sync_event(shard, payload)
+
+        if self._cache:
+            if event.channel_ids:
+                self._cache.clear_guild_threads_for_channels(event.guild_id, event.channel_ids)
+
+            else:
+                self._cache.clear_guild_threads_for_guild(event.guild_id)
+
+            for thread in event.threads:
+                self._cache.set_guild_thread(thread)
+
+        await self.dispatch(event)
+
+    async def thread_member_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
+        """See https://discord.com/developers/docs/topics/gateway#thread-member-update for more info."""
+        event = self._event_factory.deserialize_own_thread_member_update_event(shard, payload)
+        # TODO: own thread member cache store
+        await self.dispatch(event)
+
+    async def on_thread_members_update(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> None:
+        """See https://discord.com/developers/docs/topics/gateway#thread-members-update for more info."""
+        event = self._event_factory.deserialize_thread_members_update_event(shard, payload)
+        # TODO: thread member cache store
+        await self.dispatch(event)
+
     # Internal granularity is preferred for GUILD_CREATE over decorator based filtering due to its large scope.
     async def on_guild_create(  # noqa: C901 - Function too complex
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
@@ -387,6 +444,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
                 self._cache.clear_members_for_guild(guild_id)
                 self._cache.clear_presences_for_guild(guild_id)
                 self._cache.clear_guild_channels_for_guild(guild_id)
+                self._cache.clear_guild_threads_for_guild(guild_id)
                 self._cache.clear_emojis_for_guild(guild_id)
                 self._cache.clear_stickers_for_guild(guild_id)
                 self._cache.clear_roles_for_guild(guild_id)
