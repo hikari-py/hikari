@@ -1491,6 +1491,30 @@ class ActionRowBuilder(ComponentBuilder, abc.ABC):
             Sequence of the component builders registered within this action row.
         """
 
+    @abc.abstractmethod
+    def add_component(
+        self: _T,
+        component: ComponentBuilder,
+        /,
+    ) -> _T:
+        """Add a component to this action row builder.
+
+        !!! warning
+            It is generally better to use `ActionRowBuilder.add_button`
+            and `ActionRowBuilder.add_select_menu` to add your
+            component to the builder. Those methods utilize this one.
+
+        Parameters
+        ----------
+        component : ComponentBuilder
+            The component builder to add to the action row.
+
+        Returns
+        -------
+        ActionRowBuilder
+            The builder object to enable chained calls.
+        """
+
     @typing.overload
     @abc.abstractmethod
     def add_button(

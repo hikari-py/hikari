@@ -231,9 +231,11 @@ class EventManager(abc.ABC):
 
         See Also
         --------
-        Subscribe: `hikari.api.event_manager.EventManager.subscribe`
+        Listen: `hikari.api.event_manager.EventManager.listen`
         Stream: `hikari.api.event_manager.EventManager.stream`
-        Wait for: `hikari.api.event_manager.EventManager.wait_for`
+        Subscribe: `hikari.api.event_manager.EventManager.subscribe`
+        Unsubscribe: `hikari.api.event_manager.EventManager.unsubscribe`
+        Wait_for: `hikari.api.event_manager.EventManager.wait_for`
         """
 
     # Yes, this is not generic. The reason for this is MyPy complains about
@@ -271,9 +273,11 @@ class EventManager(abc.ABC):
 
         See Also
         --------
+        Dispatch: `hikari.api.event_manager.EventManager.dispatch`
         Listen: `hikari.api.event_manager.EventManager.listen`
         Stream: `hikari.api.event_manager.EventManager.stream`
-        Wait for: `hikari.api.event_manager.EventManager.wait_for`
+        Unsubscribe: `hikari.api.event_manager.EventManager.unsubscribe`
+        Wait_for: `hikari.api.event_manager.EventManager.wait_for`
         """
 
     # Yes, this is not generic. The reason for this is MyPy complains about
@@ -306,6 +310,14 @@ class EventManager(abc.ABC):
 
         bot.unsubscribe(MessageCreateEvent, on_message)
         ```
+
+        See Also
+        --------
+        Dispatch: `hikari.api.event_manager.EventManager.dispatch`
+        Listen: `hikari.api.event_manager.EventManager.listen`
+        Stream: `hikari.api.event_manager.EventManager.stream`
+        Subscribe: `hikari.api.event_manager.EventManager.subscribe`
+        Wait_for: `hikari.api.event_manager.EventManager.wait_for`
         """
 
     @abc.abstractmethod
@@ -373,7 +385,7 @@ class EventManager(abc.ABC):
         Stream: `hikari.api.event_manager.EventManager.stream`
         Subscribe: `hikari.api.event_manager.EventManager.subscribe`
         Unsubscribe: `hikari.api.event_manager.EventManager.unsubscribe`
-        Wait for: `hikari.api.event_manager.EventManager.wait_for`
+        Wait_for: `hikari.api.event_manager.EventManager.wait_for`
         """
 
     @abc.abstractmethod
@@ -439,7 +451,7 @@ class EventManager(abc.ABC):
         Listen: `hikari.api.event_manager.EventManager.listen`
         Subscribe: `hikari.api.event_manager.EventManager.subscribe`
         Unsubscribe: `hikari.api.event_manager.EventManager.unsubscribe`
-        Wait for: `hikari.api.event_manager.EventManager.wait_for`
+        Wait_for: `hikari.api.event_manager.EventManager.wait_for`
         """
 
     @abc.abstractmethod
@@ -486,8 +498,9 @@ class EventManager(abc.ABC):
 
         See Also
         --------
+        Dispatch: `hikari.api.event_manager.EventManager.dispatch`
         Listen: `hikari.api.event_manager.EventManager.listen`
         Stream: `hikari.api.event_manager.EventManager.stream`
         Subscribe: `hikari.api.event_manager.EventManager.subscribe`
-        Dispatch: `hikari.api.event_manager.EventManager.dispatch`
+        Unsubscribe: `hikari.api.event_manager.EventManager.unsubscribe`
         """
