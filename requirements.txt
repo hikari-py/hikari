@@ -1,5 +1,5 @@
 aiohttp==3.7.4.post0
 attrs==21.2.0
 colorlog==6.4.1
-multidict==5.1.0
+multidict==5.2.0
 pure25519==0.0.1
