@@ -254,67 +254,25 @@ class GuildJoinEvent(GuildVisibilityEvent):
     # <<inherited docstring from ShardEvent>>.
 
     guild: guilds.GatewayGuild = attr.field()
-    """The guild the bot just joined.
-
-    Returns
-    -------
-    hikari.guilds.Guild
-        The guild that relates to this event.
-    """
+    """The guild the bot just joined."""
 
     emojis: typing.Mapping[snowflakes.Snowflake, emojis_.KnownCustomEmoji] = attr.field(repr=False)
-    """Mapping of emoji IDs to the emojis in the guild.
-
-    Returns
-    -------
-    typing.Mapping[hikari.snowflakes.Snowflake, hikari.emojis.KnownCustomEmoji]
-        The emojis in the guild.
-    """
+    """Mapping of emoji IDs to the emojis in the guild."""
 
     roles: typing.Mapping[snowflakes.Snowflake, guilds.Role] = attr.field(repr=False)
-    """Mapping of role IDs to the roles in the guild.
-
-    Returns
-    -------
-    typing.Mapping[hikari.snowflakes.Snowflake, hikari.guilds.Role]
-        The roles in the guild.
-    """
+    """Mapping of role IDs to the roles in the guild."""
 
     channels: typing.Mapping[snowflakes.Snowflake, channels_.GuildChannel] = attr.field(repr=False)
-    """Mapping of channel IDs to the channels in the guild.
-
-    Returns
-    -------
-    typing.Mapping[hikari.snowflakes.Snowflake, hikari.channels.GuildChannel]
-        The channels in the guild.
-    """
+    """Mapping of channel IDs to the channels in the guild."""
 
     members: typing.Mapping[snowflakes.Snowflake, guilds.Member] = attr.field(repr=False)
-    """Mapping of user IDs to the members in the guild.
-
-    Returns
-    -------
-    typing.Mapping[hikari.snowflakes.Snowflake, hikari.guilds.Member]
-        The members in the guild.
-    """
+    """Mapping of user IDs to the members in the guild."""
 
     presences: typing.Mapping[snowflakes.Snowflake, presences_.MemberPresence] = attr.field(repr=False)
-    """Mapping of user IDs to the presences for the guild.
-
-    Returns
-    -------
-    typing.Mapping[hikari.snowflakes.Snowflake, hikari.presences.MemberPresence]
-        The member presences in the guild.
-    """
+    """Mapping of user IDs to the presences for the guild."""
 
     voice_states: typing.Mapping[snowflakes.Snowflake, voices.VoiceState] = attr.field(repr=False)
-    """Mapping of user IDs to the voice states active in this guild.
-
-    Returns
-    -------
-    typing.Mapping[hikari.snowflakes.Snowflake, hikari.voices.VoiceState]
-        The voice states active in the guild.
-    """
+    """Mapping of user IDs to the voice states active in this guild."""
 
     chunk_nonce: typing.Optional[str] = attr.field(repr=False, default=None)
     """Nonce used to request the member chunks for this guild.
@@ -323,11 +281,6 @@ class GuildJoinEvent(GuildVisibilityEvent):
 
     !!! note
         This is a synthetic field.
-
-    Returns
-    -------
-    typing.Optional[builtins.str]
-        The nonce used to request the member chunks.
     """
 
     @property
