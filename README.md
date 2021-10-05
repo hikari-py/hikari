@@ -9,7 +9,7 @@
 <a href="https://codeclimate.com/github/hikari-py/hikari/test_coverage"><img height="20" alt="Test coverage" src="https://api.codeclimate.com/v1/badges/f95070b25136a69b0589/test_coverage"></a>
 <br>
 <a href="https://discord.gg/Jx4cNGG"><img height="20" alt="Discord invite" src="https://discord.com/api/guilds/574921006817476608/widget.png"></a>
-<a href="https://hikari-py.dev/hikari"><img height="20" alt="Documentation status" src="https://img.shields.io/badge/documentation-up-00FF00.svg"></a>
+<a href="https://www.hikari-py.dev/hikari"><img height="20" alt="Documentation status" src="https://img.shields.io/badge/documentation-up-00FF00.svg"></a>
 </p>
 
 An opinionated, static typed Discord microframework for Python3 and asyncio that supports Discord's V8 REST API and
@@ -60,9 +60,9 @@ bot = hikari.GatewayBot(intents=hikari.Intents.ALL, token="...")
 
 The above example would enable all intents, thus enabling events relating to member presences to be received
 (you'd need to whitelist your application first to be able to start the bot if you do this).
-[Other options also exist](https://hikari-py.dev/hikari/impl/bot.html#hikari.impl.bot.GatewayBot) such as
-[customising timeouts for requests](https://hikari-py.dev/hikari/config.html#hikari.config.HTTPSettings.timeouts)
-and [enabling a proxy](https://hikari-py.dev/hikari/config.html#hikari.config.ProxySettings).
+[Other options also exist](https://www.hikari-py.dev/hikari/impl/bot.html#hikari.impl.bot.GatewayBot) such as
+[customising timeouts for requests](https://www.hikari-py.dev/hikari/config.html#hikari.config.HTTPSettings.timeouts)
+and [enabling a proxy](https://www.hikari-py.dev/hikari/config.html#hikari.config.ProxySettings).
 
 Also note that you could pass extra options to `bot.run` during development, for example:
 
@@ -77,7 +77,7 @@ bot.run(
 )
 ```
 
-[Many other helpful options](https://hikari-py.dev/hikari/impl/bot.html#hikari.impl.bot.GatewayBot.run)
+[Many other helpful options](https://www.hikari-py.dev/hikari/impl/bot.html#hikari.impl.bot.GatewayBot.run)
 exist for you to take advantage of if you wish.
 
 Events are determined by the type annotation on the event parameter, or alternatively as a type passed to the
