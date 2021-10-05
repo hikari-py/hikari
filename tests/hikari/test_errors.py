@@ -97,7 +97,7 @@ class TestHTTPResponseError:
 
     def test_str_when_code_is_not_zero(self, error):
         error.code = 100
-        assert str(error) == "Bad Request 400: 'message' for https://some.url"
+        assert str(error) == "Bad Request 400: (100) 'message' for https://some.url"
 
 
 class TestBadRequestError:
