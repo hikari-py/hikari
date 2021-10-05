@@ -259,7 +259,7 @@ class PermissionOverwriteType(int, enums.Enum):
 
 
 @attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class PermissionOverwrite:
     """Represents permission overwrites for a channel or role in a channel.
 
