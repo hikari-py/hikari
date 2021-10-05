@@ -260,7 +260,7 @@ class PermissionOverwriteType(int, enums.Enum):
 
 @attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
-class PermissionOverwrite(snowflakes.Unique):
+class PermissionOverwrite:
     """Represents permission overwrites for a channel or role in a channel.
 
     You may sometimes need to make instances of this object to add/edit
@@ -286,29 +286,23 @@ class PermissionOverwrite(snowflakes.Unique):
     ```
     """
 
-    id: snowflakes.Snowflake = attr.field(
-        converter=snowflakes.Snowflake,
-        hash=True,
-        repr=True,
-    )
+    id: snowflakes.Snowflake = attr.field(converter=snowflakes.Snowflake, repr=True)
     """The ID of this entity."""
 
     type: typing.Union[PermissionOverwriteType, int] = attr.field(
-        converter=PermissionOverwriteType, hash=True, repr=True
+        converter=PermissionOverwriteType, repr=True
     )
     """The type of entity this overwrite targets."""
 
     allow: permissions.Permissions = attr.field(
         converter=permissions.Permissions,
         default=permissions.Permissions.NONE,
-        eq=False,
-        hash=False,
         repr=False,
     )
     """The permissions this overwrite allows."""
 
     deny: permissions.Permissions = attr.field(
-        converter=permissions.Permissions, default=permissions.Permissions.NONE, eq=False, hash=False, repr=False
+        converter=permissions.Permissions, default=permissions.Permissions.NONE, repr=False
     )
     """The permissions this overwrite denies."""
 
