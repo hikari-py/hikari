@@ -1419,16 +1419,20 @@ class PartialMessage(snowflakes.Unique):
             # reaction.
             await message.remove_reaction("\N{OK HAND SIGN}")
 
+            # Using a custom emoji's name and ID to remove a specific user's
+            # reaction from this reaction.
+            await message.remove_reaction("a:Distraction", 745991233939439616, user=some_user)
+
             # Using a unicode emoji and removing a specific user from this
             # reaction.
-            await message.remove_reaction("\N{OK HAND SIGN}", some_user)
+            await message.remove_reaction("\N{OK HAND SIGN}", user=some_user)
 
             # Using the name and id.
             await message.add_reaction("rooAYAYA", 705837374319493284)
 
             # Using an Emoji object and removing a specific user from this
             # reaction.
-            await message.remove_reaction(some_emoji_object, some_user)
+            await message.remove_reaction(some_emoji_object, user=some_user)
 
         Raises
         ------
