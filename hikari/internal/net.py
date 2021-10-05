@@ -48,7 +48,7 @@ async def generate_error_response(response: aiohttp.ClientResponse) -> errors.HT
     try:
         json_body = await response.json()
         args.append(json_body.get("message", ""))
-        args.append(errors.RESTErrorCode(json_body.get("code", 0)))
+        args.append(json_body.get("code", 0))
         raw_error_array: typing.Optional[data_binding.JSONObject] = json_body.get("errors")
     except aiohttp.ContentTypeError:
         raw_error_array = None

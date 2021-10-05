@@ -36,7 +36,6 @@ __all__: typing.List[str] = [
     "UnauthorizedError",
     "ForbiddenError",
     "BadRequestError",
-    "RESTErrorCode",
     "HTTPError",
     "HTTPResponseError",
     "ClientHTTPResponseError",
@@ -223,221 +222,6 @@ class HTTPError(HikariError):
     """The error message."""
 
 
-@typing.final
-class RESTErrorCode(int, enums.Enum):
-    """Non-exhaustive enum of error codes provided as further info on errors returned by the REST API."""
-
-    GENERAL_ERROR = 0
-    """A general error, no further info provided."""
-
-    UNKNOWN_APPLICATION = 10_002
-    """Unknown application provided."""
-
-    UNKNOWN_CHANNEL = 10_003
-    """Unknown channel provided."""
-
-    UNKNOWN_GUILD = 10_004
-    """Unknown guild provided."""
-
-    UNKNOWN_INTEGRATION = 10_005
-    """Unknown integration provided."""
-
-    UNKNOWN_INVITE = 10_006
-    """Unknown invite provided."""
-
-    UNKNOWN_MEMBER = 10_007
-    """Unknown member provided."""
-
-    UNKNOWN_MESSAGE = 10_008
-    """Unknown message provided."""
-
-    UNKNOWN_PERMISSION_OVERWRITE = 10_009
-    """Unknown permission overwrite provided."""
-
-    UNKNOWN_ROLE = 10_011
-    """Unknown role provided."""
-
-    UNKNOWN_USER = 10_013
-    """Unknown user provided."""
-
-    UNKNOWN_EMOJI = 10_014
-    """Unknown emoji provided."""
-
-    UNKNOWN_WEBHOOK = 10_015
-    """Unknown webhook provided."""
-
-    UNKNOWN_BAN = 10_026
-    """Unknown ban provided."""
-
-    UNKNOWN_GUILD_TEMPLATE = 10_057
-    """Unknown guild template provided."""
-
-    UNKNOWN_STICKER = 10_060
-    """Unknown sticker provided."""
-
-    UNKNOWN_INTERACTION = 10_062
-    """Unknown interaction provided."""
-
-    UNKNOWN_APPLICATION_COMMAND = 10_063
-    """Unknown application command provided."""
-
-    UNKNOWN_APPLICATION_COMMAND_PERMISSIONS = 10_066
-    """Unknown application command permissions provided."""
-
-    UNKNOWN_STAGE_INSTANCE = 10_067
-    """Unknown stage instance provided."""
-
-    UNKNOWN_GUILD_WELCOME_SCREEN = 10_069
-    """Unknown guild welcome screen provided."""
-
-    EXPLICIT_CONTENT_BLOCKED = 20_009
-    """Explicit content cannot be sent to the desired recipient(s)."""
-
-    ANNOUNCEMENT_LIMIT_HIT = 20_022
-    """Message can not be edited due to announcement rate limits."""
-
-    WRITE_LIMIT_HIT = 20_028
-    """The global write limit on a channel has been hit."""
-
-    DISALLOWED_WORDS_FOR_PUBLIC_STAGES = 20_031
-    """The guild contains disallowed words for public stages.
-
-    This may include guild name, guild description or channel names.
-    """
-
-    GUILD_PREMIUM_LEVEL_TOO_LOW = 20_035
-    """The guilds premium level is too low."""
-
-    MAXIMUM_GUILDS = 30_001
-    """Maximum number of guilds reached (100)."""
-
-    MAXIMUM_PINS = 30_003
-    """Maximum number of pins reached for the channel (50)."""
-
-    MAXIMUM_RECIPIENTS = 30_004
-    """Maximum number of recipients reached (10)."""
-
-    MAXIMUM_ROLES = 30_005
-    """Maximum number of guild roles reached (250)."""
-
-    MAXIMUM_WEBHOOKS = 30_007
-    """Maximum number of webhooks in a channel reached (10)."""
-
-    MAXIMUM_EMOJIS = 30_008
-    """Maximum number of emojis reached."""
-
-    MAXIMUM_REACTIONS = 30_010
-    """Maximum number of reactions on a message reached (20)."""
-
-    MAXIMUM_CHANNELS = 30_013
-    """Maximum number of guild channels reached (500)."""
-
-    MAXIMUM_INVITES = 30_016
-    """Maximum number of invites reached (1000)."""
-
-    MAXIMUM_ANIMATED_EMOJIS = 30_018
-    """Maximum number of animated emojis reached."""
-
-    MAXIMUM_NUMBER_OF_GUILD_MEMBERS_REACHED = 30_019
-    """Maximum number of guild members reached."""
-
-    GUILD_ALREADY_HAS_TEMPLATE = 30_031
-    """Guild already has a template."""
-
-    MAXIMUM_NUMBER_OF_THREAD_PARTICIPANTS_REACHED = 30_033
-    """Maximum number of thread participants reached."""
-
-    MAXIMUM_BANS_FOR_NON_GUILD_MEMBERS = 30_035
-    """Maximum number of bans for non-guild members reached."""
-
-    MAXIMUM_NUMBER_OF_STICKERS_REACHED = 30_037
-    """Maximum number of stickers reached."""
-
-    MAXIMUM_PRUNE_REQUESTS_REACHED = 30_040
-    """Maximum number of prune requests has been reached. Try again later."""
-
-    REQUEST_TOO_LARGE = 40_005
-    """Request too large. Try sending something smaller in size."""
-
-    TEMPORARILY_DISABLED = 40_006
-    """This feature has been temporarily disabled server-side."""
-
-    USER_BANNED = 40_003
-    """The user is banned from this guild."""
-
-    ALREADY_CROSSPOSTED = 40_033
-    """This message has already been crossposted."""
-
-    APPLICATION_COMMAND_ALREADY_EXISTS = 40_041
-    """An application command with that name already exists."""
-
-    INVALID_ACCOUNT_TYPE = 50_002
-    """Invalid account type."""
-
-    PROHIBITED_ON_DM = 50_003
-    """Cannot execute action on a DM channel."""
-
-    GUILD_WIDGET_DISABLED = 50_004
-    """Guild widget disabled."""
-
-    NOT_MESSAGE_AUTHOR = 50_005
-    """Cannot edit a message created by another user."""
-
-    EMPTY_MESSAGE = 50_006
-    """Cannot send an empty message."""
-
-    USER_DM_CLOSED = 50_007
-    """Cannot send messages to this user."""
-
-    MESSAGE_IN_VC = 50_008
-    """Cannot send messages in a voice channel."""
-
-    PINS_ONLY_ON_ORIGIN_CHANNEL = 50_019
-    """A message can only be pinned to the channel it was sent in."""
-
-    INVALID_INVITE_CODE = 50_020
-    """Invite code was either invalid or taken."""
-
-    PROHIBITED_ON_SYSTEM_MESSAGE = 50_021
-    """Cannot execute action on a system message."""
-
-    PROHIBITED_ON_CHANNEL_TYPE = 50_024
-    """Cannot execute action on this channel type."""
-
-    INVALID_OAUTH2_TOKEN = 50_025
-    """Invalid OAuth2 access token provided."""
-
-    MISSING_REQUIRED_OAUTH2_SCOPE = 50_026
-    """Missing required OAuth2 scope."""
-
-    INVALID_ROLE = 50_028
-    """Invalid role."""
-
-    INVALID_RECIPIENTS = 50_033
-    """Invalid recipients."""
-
-    MESSAGE_TOO_OLD = 50_034
-    """A message provided was too old to bulk delete."""
-
-    REQUIRED_CHANNEL = 50_074
-    """Cannot delete a channel required for community guilds."""
-
-    NO_USERS_WITH_TAG = 80_004
-    """No users with this tag exist."""
-
-    REACTION_BLOCKED = 90_001
-    """The reaction was blocked."""
-
-    TWO_FACTOR_AUTHENTICATION_REQUIRED = 60_003
-    """2FA is required to use this endpoint."""
-
-    SYSTEM_OVERLOADED = 130_000
-    """API resource is currently overloaded. Try again a little later."""
-
-    STAGE_ALREADY_OPEN = 150_006
-    """The stage channel is already open."""
-
-
 @attr.define(auto_exc=True, repr=False, weakref_slot=False)
 class HTTPResponseError(HTTPError):
     """Base exception for an erroneous HTTP response."""
@@ -457,15 +241,15 @@ class HTTPResponseError(HTTPError):
     message: str = attr.field(default="")
     """The error message."""
 
-    code: typing.Union[RESTErrorCode, int] = attr.field(default=RESTErrorCode.GENERAL_ERROR)
+    code: int = attr.field(default=0)
     """The error code."""
 
     def __str__(self) -> str:
         name = self.status.name.replace("_", " ").title()
         name_value = f"{name} {self.status.value}"
 
-        if isinstance(self.code, RESTErrorCode) and self.code != RESTErrorCode.GENERAL_ERROR:
-            code_str = f" ({self.code.name})"
+        if self.code:
+            code_str = f" ({self.code})"
         else:
             code_str = ""
 
