@@ -145,7 +145,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         """See https://discord.com/developers/docs/topics/gateway#guild-create for more info."""
         event: typing.Union[guild_events.GuildAvailableEvent, guild_events.GuildJoinEvent]
 
-        if payload.get("unavailable") is not None:
+        if "unavailable" in payload:
             event = self._event_factory.deserialize_guild_available_event(shard, payload)
         else:
             event = self._event_factory.deserialize_guild_join_event(shard, payload)
