@@ -81,23 +81,23 @@ class TestHTTPResponseError:
             {},
             "raw body",
             "message",
-            errors.RESTErrorCode.UNKNOWN_GUILD,
+            12345,
         )
 
     def test_str(self, error):
-        assert str(error) == "Bad Request 400: (UNKNOWN_GUILD) 'message' for https://some.url"
+        assert str(error) == "Bad Request 400: (12345) 'message' for https://some.url"
 
     def test_str_when_message_is_None(self, error):
         error.message = None
-        assert str(error) == "Bad Request 400: (UNKNOWN_GUILD) 'raw body' for https://some.url"
+        assert str(error) == "Bad Request 400: (12345) 'raw body' for https://some.url"
 
-    def test_str_when_code_is_GENERAL_ERROR(self, error):
-        error.code = errors.RESTErrorCode.GENERAL_ERROR
+    def test_str_when_code_is_zero(self, error):
+        error.code = 0
         assert str(error) == "Bad Request 400: 'message' for https://some.url"
 
-    def test_str_when_code_is_int(self, error):
+    def test_str_when_code_is_not_zero(self, error):
         error.code = 100
-        assert str(error) == "Bad Request 400: 'message' for https://some.url"
+        assert str(error) == "Bad Request 400: (100) 'message' for https://some.url"
 
 
 class TestBadRequestError:
