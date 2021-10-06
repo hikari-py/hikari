@@ -3846,6 +3846,7 @@ class TestEntityFactoryImpl:
                     "proxy_url": "https://media.somewhere.com/attachments/123/456/IMG.jpg",
                     "width": 1844,
                     "height": 2638,
+                    "ephemeral": True,
                 }
             ],
             "embeds": [embed_payload],
@@ -3915,6 +3916,7 @@ class TestEntityFactoryImpl:
         assert attachment.proxy_url == "https://media.somewhere.com/attachments/123/456/IMG.jpg"
         assert attachment.width == 1844
         assert attachment.height == 2638
+        assert attachment.is_ephemeral is True  # TODO: test case for when not present
         assert isinstance(attachment, message_models.Attachment)
 
         expected_embed = entity_factory_impl.deserialize_embed(embed_payload)
@@ -4053,7 +4055,6 @@ class TestEntityFactoryImpl:
         message_payload,
         user_payload,
         member_payload,
-        partial_application_payload,
         custom_emoji_payload,
         embed_payload,
         referenced_message,
@@ -4089,6 +4090,7 @@ class TestEntityFactoryImpl:
         assert attachment.proxy_url == "https://media.somewhere.com/attachments/123/456/IMG.jpg"
         assert attachment.width == 1844
         assert attachment.height == 2638
+        assert attachment.is_ephemeral is True  # TODO: test case for when not present
         assert isinstance(attachment, message_models.Attachment)
 
         expected_embed = entity_factory_impl.deserialize_embed(embed_payload)
