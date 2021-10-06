@@ -1598,7 +1598,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
                 else:
                     body = data_binding.JSONObjectBuilder()
-                    chunk = pending[: min(100, len(pending))]
+                    chunk = pending[:100]
                     body.put_snowflake_array("messages", chunk)
                     await self._request(route, json=body)
                     deleted += chunk
