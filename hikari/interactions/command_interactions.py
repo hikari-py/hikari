@@ -62,11 +62,8 @@ This includes:
 * `hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE`
 """
 
-CommandResponseTypesT = typing.Union[
-    typing.Literal[base_interactions.ResponseType.MESSAGE_CREATE],
-    typing.Literal[4],
-    typing.Literal[base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE],
-    typing.Literal[5],
+CommandResponseTypesT = typing.Literal[
+    base_interactions.ResponseType.MESSAGE_CREATE, 4, base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE, 5
 ]
 """Type-hint of the response types which are valid for a command interaction.
 
