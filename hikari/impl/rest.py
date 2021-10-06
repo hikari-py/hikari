@@ -1067,6 +1067,7 @@ class RESTClientImpl(rest_api.RESTClient):
                     "Cannot determine the type of the target to update. Try specifying 'target_type' manually."
                 )
 
+        target = target.id if isinstance(target, channels_.PermissionOverwrite) else target
         route = routes.PUT_CHANNEL_PERMISSIONS.compile(channel=channel, overwrite=target)
         body = data_binding.JSONObjectBuilder()
         body.put("type", target_type)

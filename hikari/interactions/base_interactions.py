@@ -127,12 +127,7 @@ This includes the following:
 * `ResponseType.MESSAGE_UPDATE`
 """
 
-MessageResponseTypesT = typing.Union[
-    typing.Literal[ResponseType.MESSAGE_CREATE],
-    typing.Literal[4],
-    typing.Literal[ResponseType.MESSAGE_UPDATE],
-    typing.Literal[7],
-]
+MessageResponseTypesT = typing.Literal[ResponseType.MESSAGE_CREATE, 4, ResponseType.MESSAGE_UPDATE, 7]
 """Type-hint of the response types which are valid for message responses.
 
 The following are valid for this:
@@ -152,12 +147,10 @@ This includes the following:
 * `ResponseType.DEFERRED_MESSAGE_UPDATE`
 """
 
-DeferredResponseTypesT = typing.Union[
-    typing.Literal[ResponseType.DEFERRED_MESSAGE_CREATE],
-    typing.Literal[5],
-    typing.Literal[ResponseType.DEFERRED_MESSAGE_UPDATE],
-    typing.Literal[6],
+DeferredResponseTypesT = typing.Literal[
+    ResponseType.DEFERRED_MESSAGE_CREATE, 5, ResponseType.DEFERRED_MESSAGE_UPDATE, 6
 ]
+
 """Type-hint of the response types which are valid for deferred messages responses.
 
 The following are valid for this:

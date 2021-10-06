@@ -44,20 +44,14 @@ if typing.TYPE_CHECKING:
 _DEFERRED_TYPES: typing.AbstractSet[_DeferredTypesT] = frozenset(
     [base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE, base_interactions.ResponseType.DEFERRED_MESSAGE_UPDATE]
 )
-_DeferredTypesT = typing.Union[
-    typing.Literal[base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE],
-    typing.Literal[5],
-    typing.Literal[base_interactions.ResponseType.DEFERRED_MESSAGE_UPDATE],
-    typing.Literal[6],
+_DeferredTypesT = typing.Literal[
+    base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE, 5, base_interactions.ResponseType.DEFERRED_MESSAGE_UPDATE, 6
 ]
 _IMMEDIATE_TYPES: typing.AbstractSet[_ImmediateTypesT] = frozenset(
     [base_interactions.ResponseType.MESSAGE_CREATE, base_interactions.ResponseType.MESSAGE_UPDATE]
 )
-_ImmediateTypesT = typing.Union[
-    typing.Literal[base_interactions.ResponseType.MESSAGE_CREATE],
-    typing.Literal[4],
-    typing.Literal[base_interactions.ResponseType.MESSAGE_UPDATE],
-    typing.Literal[7],
+_ImmediateTypesT = typing.Literal[
+    base_interactions.ResponseType.MESSAGE_CREATE, 4, base_interactions.ResponseType.MESSAGE_UPDATE, 7
 ]
 
 

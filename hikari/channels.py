@@ -289,9 +289,7 @@ class PermissionOverwrite:
     id: snowflakes.Snowflake = attr.field(converter=snowflakes.Snowflake, repr=True)
     """The ID of this entity."""
 
-    type: typing.Union[PermissionOverwriteType, int] = attr.field(
-        converter=PermissionOverwriteType, repr=True
-    )
+    type: typing.Union[PermissionOverwriteType, int] = attr.field(converter=PermissionOverwriteType, repr=True)
     """The type of entity this overwrite targets."""
 
     allow: permissions.Permissions = attr.field(
