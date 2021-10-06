@@ -1563,8 +1563,8 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> None:
         route = routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel)
 
-        pending = []
-        deleted = []
+        pending: typing.List[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = []
+        deleted: typing.List[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = []
 
         if isinstance(messages, typing.Iterable):  # Syntactic sugar. Allows to use iterables
             pending.extend(messages)
