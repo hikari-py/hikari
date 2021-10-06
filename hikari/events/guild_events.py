@@ -28,6 +28,7 @@ __all__: typing.List[str] = [
     "GuildEvent",
     "GuildVisibilityEvent",
     "GuildAvailableEvent",
+    "GuildJoinEvent",
     "GuildUnavailableEvent",
     "GuildLeaveEvent",
     "GuildUpdateEvent",
@@ -138,7 +139,7 @@ class GuildVisibilityEvent(GuildEvent, abc.ABC):
 class GuildAvailableEvent(GuildVisibilityEvent):
     """Event fired when a guild becomes available.
 
-    This will occur on startup, after outages, and if the bot joins a new guild.
+    This will occur on startup or after outages.
 
     !!! note
         Some fields like `members` and `presences` are included here but not on
@@ -224,6 +225,62 @@ class GuildAvailableEvent(GuildVisibilityEvent):
     -------
     typing.Optional[builtins.str]
         The nonce used to request the member chunks.
+    """
+
+    @property
+    def app(self) -> traits.RESTAware:
+        # <<inherited docstring from Event>>.
+        return self.guild.app
+
+    @property
+    def guild_id(self) -> snowflakes.Snowflake:
+        # <<inherited docstring from GuildEvent>>.
+        return self.guild.id
+
+
+@attr_extensions.with_copy
+@attr.define(kw_only=True, weakref_slot=False)
+@base_events.requires_intents(intents.Intents.GUILDS)
+class GuildJoinEvent(GuildVisibilityEvent):
+    """Event fired when the bot joins a new guild.
+
+    !!! note
+        Some fields like `members` and `presences` are included here but not on
+        the other `GuildUpdateEvent` and `GuildUnavailableEvent` guild visibility
+        event models.
+    """
+
+    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from ShardEvent>>.
+
+    guild: guilds.GatewayGuild = attr.field()
+    """The guild the bot just joined."""
+
+    emojis: typing.Mapping[snowflakes.Snowflake, emojis_.KnownCustomEmoji] = attr.field(repr=False)
+    """Mapping of emoji IDs to the emojis in the guild."""
+
+    roles: typing.Mapping[snowflakes.Snowflake, guilds.Role] = attr.field(repr=False)
+    """Mapping of role IDs to the roles in the guild."""
+
+    channels: typing.Mapping[snowflakes.Snowflake, channels_.GuildChannel] = attr.field(repr=False)
+    """Mapping of channel IDs to the channels in the guild."""
+
+    members: typing.Mapping[snowflakes.Snowflake, guilds.Member] = attr.field(repr=False)
+    """Mapping of user IDs to the members in the guild."""
+
+    presences: typing.Mapping[snowflakes.Snowflake, presences_.MemberPresence] = attr.field(repr=False)
+    """Mapping of user IDs to the presences for the guild."""
+
+    voice_states: typing.Mapping[snowflakes.Snowflake, voices.VoiceState] = attr.field(repr=False)
+    """Mapping of user IDs to the voice states active in this guild."""
+
+    chunk_nonce: typing.Optional[str] = attr.field(repr=False, default=None)
+    """Nonce used to request the member chunks for this guild.
+
+    This will be `builtins.None` if no chunks were requested.
+
+    !!! note
+        This is a synthetic field.
     """
 
     @property

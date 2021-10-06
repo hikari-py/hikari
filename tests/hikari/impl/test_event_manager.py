@@ -226,8 +226,8 @@ class TestEventManagerImpl:
         stateless_event_manager.dispatch.assert_awaited_once_with(event)
 
     @pytest.mark.asyncio()
-    async def test_on_guild_create_stateful(self, event_manager, shard, event_factory):
-        payload = {}
+    async def test_on_guild_create_stateful_with_unavailable_field(self, event_manager, shard, event_factory):
+        payload = {"unavailable": False}
         event = mock.Mock(
             guild=mock.Mock(id=123, is_large=False),
             channels={"TestChannel": 456},
@@ -239,7 +239,7 @@ class TestEventManagerImpl:
             chunk_nonce=None,
         )
 
-        event_factory.deserialize_guild_create_event.return_value = event
+        event_factory.deserialize_guild_available_event.return_value = event
         shard.request_guild_members = mock.AsyncMock()
 
         await event_manager.on_guild_create(shard, payload)
@@ -267,12 +267,59 @@ class TestEventManagerImpl:
         event_manager._cache.clear_voice_states_for_guild.assert_called_once_with(123)
         event_manager._cache.set_voice_state.assert_called_once_with(345)
 
-        event_factory.deserialize_guild_create_event.assert_called_once_with(shard, payload)
+        event_factory.deserialize_guild_available_event.assert_called_once_with(shard, payload)
         event_manager.dispatch.assert_awaited_once_with(event)
 
     @pytest.mark.asyncio()
-    async def test_on_guild_create_when_request_chunks(self, event_manager, shard, event_factory):
+    async def test_on_guild_create_stateful_without_unavailable_field(self, event_manager, shard, event_factory):
         payload = {}
+        event = mock.Mock(
+            guild=mock.Mock(id=123, is_large=False),
+            channels={"TestChannel": 456},
+            emojis={"TestEmoji": 789},
+            roles={"TestRole": 1234},
+            members={"TestMember": 5678},
+            presences={"TestPresence": 9012},
+            voice_states={"TestState": 345},
+            chunk_nonce=None,
+        )
+
+        event_factory.deserialize_guild_join_event.return_value = event
+        shard.request_guild_members = mock.AsyncMock()
+
+        await event_manager.on_guild_create(shard, payload)
+
+        assert event.chunk_nonce is None
+        shard.request_guild_members.assert_not_called()
+
+        event_manager._cache.update_guild.assert_called_once_with(event.guild)
+
+        event_manager._cache.clear_guild_channels_for_guild.assert_called_once_with(123)
+        event_manager._cache.set_guild_channel.assert_called_once_with(456)
+
+        event_manager._cache.clear_emojis_for_guild.assert_called_once_with(123)
+        event_manager._cache.set_emoji.assert_called_once_with(789)
+
+        event_manager._cache.clear_roles_for_guild.assert_called_once_with(123)
+        event_manager._cache.set_role.assert_called_once_with(1234)
+
+        event_manager._cache.clear_members_for_guild.assert_called_once_with(123)
+        event_manager._cache.set_member.assert_called_once_with(5678)
+
+        event_manager._cache.clear_presences_for_guild.assert_called_once_with(123)
+        event_manager._cache.set_presence.assert_called_once_with(9012)
+
+        event_manager._cache.clear_voice_states_for_guild.assert_called_once_with(123)
+        event_manager._cache.set_voice_state.assert_called_once_with(345)
+
+        event_factory.deserialize_guild_join_event.assert_called_once_with(shard, payload)
+        event_manager.dispatch.assert_awaited_once_with(event)
+
+    @pytest.mark.asyncio()
+    async def test_on_guild_create_when_request_chunks_with_unavailable_field(
+        self, event_manager, shard, event_factory
+    ):
+        payload = {"unavailable": False}
         event = mock.Mock(
             guild=mock.Mock(id=123, is_large=True),
             channels={"TestChannel": 456},
@@ -284,7 +331,7 @@ class TestEventManagerImpl:
             chunk_nonce=None,
         )
 
-        event_factory.deserialize_guild_create_event.return_value = event
+        event_factory.deserialize_guild_available_event.return_value = event
         shard.request_guild_members = mock.Mock()
 
         stack = contextlib.ExitStack()
@@ -325,20 +372,97 @@ class TestEventManagerImpl:
         event_manager._cache.clear_voice_states_for_guild.assert_called_once_with(123)
         event_manager._cache.set_voice_state.assert_called_once_with(345)
 
-        event_factory.deserialize_guild_create_event.assert_called_once_with(shard, payload)
+        event_factory.deserialize_guild_available_event.assert_called_once_with(shard, payload)
         event_manager.dispatch.assert_awaited_once_with(event)
 
     @pytest.mark.asyncio()
-    async def test_on_guild_create_stateless(self, stateless_event_manager, shard, event_factory):
+    async def test_on_guild_create_when_request_chunks_without_unavailable_field(
+        self, event_manager, shard, event_factory
+    ):
+        payload = {}
+        event = mock.Mock(
+            guild=mock.Mock(id=123, is_large=True),
+            channels={"TestChannel": 456},
+            emojis={"TestEmoji": 789},
+            roles={"TestRole": 1234},
+            members={"TestMember": 5678},
+            presences={"TestPresence": 9012},
+            voice_states={"TestState": 345},
+            chunk_nonce=None,
+        )
+
+        event_factory.deserialize_guild_join_event.return_value = event
+        shard.request_guild_members = mock.Mock()
+
+        stack = contextlib.ExitStack()
+        create_task = stack.enter_context(mock.patch.object(asyncio, "create_task"))
+        uuid = stack.enter_context(mock.patch("hikari.impl.event_manager._fixed_size_nonce", return_value="uuid"))
+        _request_guild_members = stack.enter_context(
+            mock.patch("hikari.impl.event_manager._request_guild_members", new_callable=mock.Mock)
+        )
+
+        with stack:
+            await event_manager.on_guild_create(shard, payload)
+
+        uuid.assert_called_once_with()
+        nonce = "987.uuid"
+        assert event.chunk_nonce == nonce
+        _request_guild_members.assert_called_once_with(shard, event.guild, include_presences=True, nonce=nonce)
+        create_task.assert_called_once_with(
+            _request_guild_members.return_value, name="987:123 guild create members request"
+        )
+
+        event_manager._cache.update_guild.assert_called_once_with(event.guild)
+
+        event_manager._cache.clear_guild_channels_for_guild.assert_called_once_with(123)
+        event_manager._cache.set_guild_channel.assert_called_once_with(456)
+
+        event_manager._cache.clear_emojis_for_guild.assert_called_once_with(123)
+        event_manager._cache.set_emoji.assert_called_once_with(789)
+
+        event_manager._cache.clear_roles_for_guild.assert_called_once_with(123)
+        event_manager._cache.set_role.assert_called_once_with(1234)
+
+        event_manager._cache.clear_members_for_guild.assert_called_once_with(123)
+        event_manager._cache.set_member.assert_called_once_with(5678)
+
+        event_manager._cache.clear_presences_for_guild.assert_called_once_with(123)
+        event_manager._cache.set_presence.assert_called_once_with(9012)
+
+        event_manager._cache.clear_voice_states_for_guild.assert_called_once_with(123)
+        event_manager._cache.set_voice_state.assert_called_once_with(345)
+
+        event_factory.deserialize_guild_join_event.assert_called_once_with(shard, payload)
+        event_manager.dispatch.assert_awaited_once_with(event)
+
+    @pytest.mark.asyncio()
+    async def test_on_guild_create_stateless_with_unavailable_field(
+        self, stateless_event_manager, shard, event_factory
+    ):
+        payload = {"unavailable": False}
+
+        shard.request_guild_members = mock.AsyncMock()
+
+        await stateless_event_manager.on_guild_create(shard, payload)
+
+        event_factory.deserialize_guild_available_event.assert_called_once_with(shard, payload)
+        stateless_event_manager.dispatch.assert_awaited_once_with(
+            event_factory.deserialize_guild_available_event.return_value
+        )
+
+    @pytest.mark.asyncio()
+    async def test_on_guild_create_stateless_without_unavailable_field(
+        self, stateless_event_manager, shard, event_factory
+    ):
         payload = {}
 
         shard.request_guild_members = mock.AsyncMock()
 
         await stateless_event_manager.on_guild_create(shard, payload)
 
-        event_factory.deserialize_guild_create_event.assert_called_once_with(shard, payload)
+        event_factory.deserialize_guild_join_event.assert_called_once_with(shard, payload)
         stateless_event_manager.dispatch.assert_awaited_once_with(
-            event_factory.deserialize_guild_create_event.return_value
+            event_factory.deserialize_guild_join_event.return_value
         )
 
     @pytest.mark.asyncio()
