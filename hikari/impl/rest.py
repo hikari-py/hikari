@@ -32,7 +32,6 @@ __all__: typing.List[str] = ["ClientCredentialsStrategy", "RESTApp", "RESTClient
 
 import asyncio
 import base64
-import collections
 import contextlib
 import copy
 import datetime
@@ -1565,8 +1564,8 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> None:
         route = routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel)
 
-        pending: typing.Deque[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = collections.deque()
-        deleted: typing.Deque[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = collections.deque()
+        pending: typing.List[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = []
+        deleted: typing.List[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = []
 
         if isinstance(messages, typing.Iterable):  # Syntactic sugar. Allows to use iterables
             pending.extend(messages)
@@ -1594,15 +1593,18 @@ class RESTClientImpl(rest_api.RESTClient):
             # I am just gonna invoke these sequentially instead.
             try:
                 if len(pending) == 1:
-                    message = pending.popleft()
+                    message = pending[0]
                     await self.delete_message(channel, message)
                     deleted.append(message)
+
                 else:
                     body = data_binding.JSONObjectBuilder()
-                    chunk = [pending.popleft() for _ in range(min(100, len(pending)))]
+                    chunk = pending[:100]
                     body.put_snowflake_array("messages", chunk)
                     await self._request(route, json=body)
                     deleted += chunk
+
+                pending = pending[100:]
             except Exception as ex:
                 raise errors.BulkDeleteError(deleted, pending) from ex
 
