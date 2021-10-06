@@ -293,14 +293,12 @@ class PermissionOverwrite:
     """The type of entity this overwrite targets."""
 
     allow: permissions.Permissions = attr.field(
-        converter=permissions.Permissions,
-        default=permissions.Permissions.NONE,
-        repr=False,
+        converter=permissions.Permissions, default=permissions.Permissions.NONE, repr=True
     )
     """The permissions this overwrite allows."""
 
     deny: permissions.Permissions = attr.field(
-        converter=permissions.Permissions, default=permissions.Permissions.NONE, repr=False
+        converter=permissions.Permissions, default=permissions.Permissions.NONE, repr=True
     )
     """The permissions this overwrite denies."""
 
