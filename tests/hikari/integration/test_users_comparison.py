@@ -77,6 +77,7 @@ def make_guild_member(user_id, username):
         joined_at=datetime.datetime.now(),
         nickname=user.username,
         premium_since=None,
+        guild_avatar_hash="no",
         is_deaf=False,
         is_mute=False,
         is_pending=False,

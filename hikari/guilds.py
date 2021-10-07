@@ -378,6 +378,13 @@ class Member(users.User):
     user: users.User = attr.field(repr=True)
     """This member's corresponding user object."""
 
+    guild_avatar_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    """Hash of the member's guild avatar guild if set, else `builtins.None`.
+
+    !!! note
+        This takes precedence over `Member.avatar_hash`.
+    """
+
     @property
     def app(self) -> traits.RESTAware:
         """Return the app that is bound to the user object."""
@@ -390,6 +397,15 @@ class Member(users.User):
     @property
     def avatar_url(self) -> typing.Optional[files.URL]:
         return self.user.avatar_url
+
+    @property
+    def guild_avatar_url(self) -> typing.Optional[files.URL]:
+        """Guild Avatar URL for the user, if they have one set.
+
+        May be `builtins.None` if no guild avatar is set. In this case, you
+        should use `avatar_hash` or `default_avatar_url` instead.
+        """
+        return self.make_guild_avatar_url()
 
     @property
     def default_avatar_url(self) -> files.URL:
@@ -531,6 +547,58 @@ class Member(users.User):
 
     def make_avatar_url(self, *, ext: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
         return self.user.make_avatar_url(ext=ext, size=size)
+
+    def make_guild_avatar_url(
+        self, *, ext: typing.Optional[str] = None, size: int = 4096
+    ) -> typing.Optional[files.URL]:
+        """Generate the guild specific avatar url for this member, if set.
+
+        If no guild avatar is set, this returns `builtins.None`. You can then
+        use the `make_avatar_url` to get their global custom avatar or
+        `default_avatar_url` if they have no custom avatar set.
+
+        Parameters
+        ----------
+        ext : typing.Optional[builtins.str]
+            The ext to use for this URL, defaults to `png` or `gif`.
+            Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
+            animated). Will be ignored for default avatars which can only be
+            `png`.
+
+            If `builtins.None`, then the correct default extension is
+            determined based on whether the icon is animated or not.
+        size : builtins.int
+            The size to set for the URL, defaults to `4096`.
+            Can be any power of two between 16 and 4096.
+            Will be ignored for default avatars.
+
+        Returns
+        -------
+        typing.Optional[hikari.files.URL]
+            The URL to the avatar, or `builtins.None` if not present.
+
+        Raises
+        ------
+        builtins.ValueError
+            If `size` is not a power of two or not between 16 and 4096.
+        """
+        if self.guild_avatar_hash is None:
+            return None
+
+        if ext is None:
+            if self.guild_avatar_hash.startswith("a_"):
+                ext = "gif"
+            else:
+                ext = "png"
+
+        return routes.CDN_MEMBER_AVATAR.compile_to_file(
+            urls.CDN_URL,
+            guild_id=self.guild_id,
+            user_id=self.id,
+            hash=self.guild_avatar_hash,
+            size=size,
+            file_format=ext,
+        )
 
     async def fetch_self(self) -> Member:
         """Fetch an up-to-date view of this member from the API.

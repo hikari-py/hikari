@@ -192,6 +192,7 @@ class TestMember:
             is_pending=False,
             joined_at=datetime.datetime.now().astimezone(),
             nickname="davb",
+            guild_avatar_hash="dab",
             premium_since=None,
             role_ids=[
                 snowflakes.Snowflake(456),
@@ -205,6 +206,16 @@ class TestMember:
 
     def test_app_property(self, model, mock_user):
         assert model.app is mock_user.app
+
+    def test_guild_avatar_url_property_when_hash(self, model):
+        avatar = object()
+
+        with mock.patch.object(guilds.Member, "make_guild_avatar_url", return_value=avatar):
+            assert model.guild_avatar_url is avatar
+
+    def test_guild_avatar_url_property_when_no_hash(self, model):
+        with mock.patch.object(guilds.Member, "make_guild_avatar_url", return_value=None):
+            assert model.guild_avatar_url is None
 
     def test_id_property(self, model, mock_user):
         assert model.id is mock_user.id
@@ -234,6 +245,61 @@ class TestMember:
         result = model.make_avatar_url(ext="png", size=4096)
         mock_user.make_avatar_url.assert_called_once_with(ext="png", size=4096)
         assert result is mock_user.make_avatar_url.return_value
+
+    def test_make_guild_avatar_url_when_no_hash(self, model):
+        model.guild_avatar_hash = None
+        assert model.make_guild_avatar_url(ext="png", size=1024) is None
+
+    def test_make_guild_avatar_url_when_format_is_None_and_avatar_hash_is_for_gif(self, model):
+        model.guild_avatar_hash = "a_18dnf8dfbakfdh"
+
+        with mock.patch.object(
+            routes, "CDN_MEMBER_AVATAR", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert model.make_guild_avatar_url(ext=None, size=4096) == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL,
+            user_id=model.id,
+            guild_id=model.guild_id,
+            hash=model.guild_avatar_hash,
+            size=4096,
+            file_format="gif",
+        )
+
+    def test_make_guild_avatar_url_when_format_is_None_and_avatar_hash_is_not_for_gif(self, model):
+        model.guild_avatar_hash = "18dnf8dfbakfdh"
+
+        with mock.patch.object(
+            routes, "CDN_MEMBER_AVATAR", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert model.make_guild_avatar_url(ext=None, size=4096) == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL,
+            user_id=model.id,
+            guild_id=model.guild_id,
+            hash=model.guild_avatar_hash,
+            size=4096,
+            file_format="png",
+        )
+
+    def test_make_guild_avatar_url_with_all_args(self, model):
+        model.guild_avatar_hash = "18dnf8dfbakfdh"
+
+        with mock.patch.object(
+            routes, "CDN_MEMBER_AVATAR", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert model.make_guild_avatar_url(ext="url", size=4096) == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL,
+            guild_id=model.guild_id,
+            user_id=model.id,
+            hash=model.guild_avatar_hash,
+            size=4096,
+            file_format="url",
+        )
 
     @pytest.mark.asyncio()
     async def test_fetch_dm_channel(self, model):

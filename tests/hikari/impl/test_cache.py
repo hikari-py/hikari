@@ -1495,6 +1495,7 @@ class TestCacheImpl:
             user=cache_utilities.RefCell(mock_user),
             guild_id=snowflakes.Snowflake(6434435234),
             nickname="NICK",
+            guild_avatar_hash="only slightly gay",
             role_ids=(snowflakes.Snowflake(65234), snowflakes.Snowflake(654234123)),
             joined_at=datetime.datetime(2020, 7, 9, 13, 11, 18, 384554, tzinfo=datetime.timezone.utc),
             premium_since=datetime.datetime(2020, 7, 17, 13, 11, 18, 384554, tzinfo=datetime.timezone.utc),
@@ -1509,6 +1510,7 @@ class TestCacheImpl:
         assert member.user is not mock_user
         assert member.guild_id == 6434435234
         assert member.nickname == "NICK"
+        assert member.guild_avatar_hash == "only slightly gay"
         assert member.role_ids == (snowflakes.Snowflake(65234), snowflakes.Snowflake(654234123))
         assert member.joined_at == datetime.datetime(2020, 7, 9, 13, 11, 18, 384554, tzinfo=datetime.timezone.utc)
         assert member.premium_since == datetime.datetime(2020, 7, 17, 13, 11, 18, 384554, tzinfo=datetime.timezone.utc)
@@ -1845,6 +1847,7 @@ class TestCacheImpl:
             joined_at=datetime.datetime(2020, 7, 15, 23, 30, 59, 501602, tzinfo=datetime.timezone.utc),
             premium_since=datetime.datetime(2020, 7, 1, 2, 0, 12, 501602, tzinfo=datetime.timezone.utc),
             is_deaf=True,
+            guild_avatar_hash="gay",
             is_mute=False,
             is_pending=True,
         )
@@ -1865,6 +1868,7 @@ class TestCacheImpl:
         assert member_entry.object.nickname == "A NICK LOL"
         assert member_entry.object.role_ids == (65345234, 123123)
         assert member_entry.object.role_ids is not member_model.role_ids
+        assert member_entry.object.guild_avatar_hash == "gay"
         assert isinstance(member_entry.object.role_ids, tuple)
         assert member_entry.object.joined_at == datetime.datetime(
             2020, 7, 15, 23, 30, 59, 501602, tzinfo=datetime.timezone.utc

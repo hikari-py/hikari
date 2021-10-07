@@ -225,6 +225,14 @@ class Attachment(snowflakes.Unique, files.WebResource):
     width: typing.Optional[int] = attr.field(hash=False, eq=False, repr=False)
     """The width of the image (if the file is an image)."""
 
+    is_ephemeral: bool = attr.field(hash=False, eq=False, repr=True)
+    """Whether this attachment is ephemeral.
+
+    This is a part of the ephemeral message response interactions feature
+    and indicates that the attachment will be removed after a set period of
+    time (but will exist as long as their relevant message exists).
+    """
+
     def __str__(self) -> str:
         return self.filename
 

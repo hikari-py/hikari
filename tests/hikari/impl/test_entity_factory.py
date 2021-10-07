@@ -1877,6 +1877,7 @@ class TestEntityFactoryImpl:
             "roles": ["11111", "22222", "33333", "44444"],
             "joined_at": "2015-04-26T06:26:56.936000+00:00",
             "premium_since": "2019-05-17T06:26:56.936000+00:00",
+            "avatar": "estrogen",
             "deaf": False,
             "mute": True,
             "pending": False,
@@ -1888,6 +1889,7 @@ class TestEntityFactoryImpl:
         member = entity_factory_impl.deserialize_member(member_payload)
         assert member.app is mock_app
         assert member.guild_id == 76543325
+        assert member.guild_avatar_hash == "estrogen"
         assert member.user == entity_factory_impl.deserialize_user(user_payload)
         assert member.nickname == "foobarbaz"
         assert member.role_ids == [11111, 22222, 33333, 44444, 76543325]
@@ -1925,6 +1927,7 @@ class TestEntityFactoryImpl:
                 "joined_at": "2015-04-26T06:26:56.936000+00:00",
                 "premium_since": None,
                 "deaf": False,
+                "avatar": None,
                 "mute": True,
                 "pending": False,
                 "user": user_payload,
@@ -1933,6 +1936,7 @@ class TestEntityFactoryImpl:
         )
         assert member.nickname is None
         assert member.premium_since is None
+        assert member.guild_avatar_hash is None
         assert isinstance(member, guild_models.Member)
 
     def test_deserialize_member_with_undefined_fields(self, entity_factory_impl, user_payload):
@@ -1946,6 +1950,7 @@ class TestEntityFactoryImpl:
         )
         assert member.nickname is None
         assert member.premium_since is None
+        assert member.guild_avatar_hash is None
         assert member.is_deaf is undefined.UNDEFINED
         assert member.is_mute is undefined.UNDEFINED
         assert member.is_pending is undefined.UNDEFINED
@@ -2853,6 +2858,7 @@ class TestEntityFactoryImpl:
             "joined_at": "2020-09-27T22:58:10.282000+00:00",
             "nick": "Snab",
             "pending": False,
+            "avatar": "oestrogen",
             "permissions": "17179869183",
             "premium_since": "2020-10-01T23:06:10.431000+00:00",
             "roles": [
@@ -2868,6 +2874,7 @@ class TestEntityFactoryImpl:
         assert member.id == 115590097100865541
         assert member.joined_at == datetime.datetime(2020, 9, 27, 22, 58, 10, 282000, tzinfo=datetime.timezone.utc)
         assert member.nickname == "Snab"
+        assert member.guild_avatar_hash == "oestrogen"
         assert member.guild_id == 43123123
         assert member.is_deaf is undefined.UNDEFINED
         assert member.is_mute is undefined.UNDEFINED
@@ -2908,9 +2915,11 @@ class TestEntityFactoryImpl:
         self, entity_factory_impl, interaction_member_payload, user_payload
     ):
         del interaction_member_payload["premium_since"]
+        del interaction_member_payload["avatar"]
 
         member = entity_factory_impl._deserialize_interaction_member(interaction_member_payload, guild_id=43123123)
 
+        assert member.guild_avatar_hash is None
         assert member.premium_since is None
 
     def test__deserialize_interaction_member_with_passed_user(
@@ -3846,6 +3855,7 @@ class TestEntityFactoryImpl:
                     "proxy_url": "https://media.somewhere.com/attachments/123/456/IMG.jpg",
                     "width": 1844,
                     "height": 2638,
+                    "ephemeral": True,
                 }
             ],
             "embeds": [embed_payload],
@@ -3915,6 +3925,7 @@ class TestEntityFactoryImpl:
         assert attachment.proxy_url == "https://media.somewhere.com/attachments/123/456/IMG.jpg"
         assert attachment.width == 1844
         assert attachment.height == 2638
+        assert attachment.is_ephemeral is True
         assert isinstance(attachment, message_models.Attachment)
 
         expected_embed = entity_factory_impl.deserialize_embed(embed_payload)
@@ -4053,7 +4064,6 @@ class TestEntityFactoryImpl:
         message_payload,
         user_payload,
         member_payload,
-        partial_application_payload,
         custom_emoji_payload,
         embed_payload,
         referenced_message,
@@ -4089,6 +4099,7 @@ class TestEntityFactoryImpl:
         assert attachment.proxy_url == "https://media.somewhere.com/attachments/123/456/IMG.jpg"
         assert attachment.width == 1844
         assert attachment.height == 2638
+        assert attachment.is_ephemeral is True
         assert isinstance(attachment, message_models.Attachment)
 
         expected_embed = entity_factory_impl.deserialize_embed(embed_payload)
@@ -4149,6 +4160,60 @@ class TestEntityFactoryImpl:
         assert isinstance(message.interaction, message_models.MessageInteraction)
 
         assert message.components == [entity_factory_impl.deserialize_component(action_row_payload)]
+
+    def test_deserialize_message_with_unset_sub_fields(self, entity_factory_impl, message_payload):
+        del message_payload["application"]["cover_image"]
+        del message_payload["application"]["primary_sku_id"]
+        del message_payload["attachments"][0]["content_type"]
+        del message_payload["attachments"][0]["height"]
+        del message_payload["attachments"][0]["width"]
+        del message_payload["attachments"][0]["ephemeral"]
+        del message_payload["activity"]["party_id"]
+        del message_payload["message_reference"]["message_id"]
+        del message_payload["message_reference"]["guild_id"]
+        del message_payload["mention_channels"]
+
+        message = entity_factory_impl.deserialize_message(message_payload)
+
+        assert message.mentions.channels == {}
+        # Attachment
+        assert len(message.attachments) == 1
+        attachment = message.attachments[0]
+        assert attachment.width is None
+        assert attachment.height is None
+        assert attachment.is_ephemeral is False
+        assert isinstance(attachment, message_models.Attachment)
+
+        # Activity
+        assert message.activity.party_id is None
+        assert isinstance(message.activity, message_models.MessageActivity)
+
+        # MessageApplication
+        assert message.application.cover_image_hash is None
+        assert message.application.primary_sku_id is None
+        assert isinstance(message.application, message_models.MessageApplication)
+
+        # MessageReference
+        assert message.message_reference.id is None
+        assert message.message_reference.guild_id is None
+        assert isinstance(message.message_reference, message_models.MessageReference)
+
+    def test_deserialize_message_with_null_sub_fields(self, entity_factory_impl, message_payload):
+        message_payload["attachments"][0]["height"] = None
+        message_payload["attachments"][0]["width"] = None
+        message_payload["application"]["icon"] = None
+        message = entity_factory_impl.deserialize_message(message_payload)
+
+        # Attachment
+        assert len(message.attachments) == 1
+        attachment = message.attachments[0]
+        assert attachment.width is None
+        assert attachment.height is None
+        assert isinstance(attachment, message_models.Attachment)
+
+        # MessageApplication
+        assert message.application.icon_hash is None
+        assert isinstance(message.application, message_models.MessageApplication)
 
     def test_deserialize_message_with_null_and_unset_fields(
         self,

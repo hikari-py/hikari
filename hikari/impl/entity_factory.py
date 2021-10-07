@@ -1182,6 +1182,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             role_ids=role_ids,
             joined_at=joined_at,
             nickname=payload.get("nick"),
+            guild_avatar_hash=payload.get("avatar"),
             premium_since=premium_since,
             is_deaf=payload.get("deaf", undefined.UNDEFINED),
             is_mute=payload.get("mute", undefined.UNDEFINED),
@@ -1787,6 +1788,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             role_ids=role_ids,
             joined_at=time.iso8601_datetime_string_to_datetime(payload["joined_at"]),
             premium_since=premium_since,
+            guild_avatar_hash=payload.get("avatar"),
             nickname=payload.get("nick"),
             is_deaf=payload.get("deaf", undefined.UNDEFINED),
             is_mute=payload.get("mute", undefined.UNDEFINED),
@@ -2089,6 +2091,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             proxy_url=payload["proxy_url"],
             height=payload.get("height"),
             width=payload.get("width"),
+            is_ephemeral=payload.get("ephemeral", False),
         )
 
     def _deserialize_message_reaction(self, payload: data_binding.JSONObject) -> message_models.Reaction:

@@ -2103,10 +2103,54 @@ class TestRESTClientImplAsync:
 
         await rest_client.delete_messages(StubModel(123), *messages)
 
-        assert rest_client._request.await_args_list == [
-            mock.call(expected_route, json=expected_json1),
-            mock.call(expected_route, json=expected_json2),
-        ]
+        rest_client._request.assert_has_awaits(
+            [
+                mock.call(expected_route, json=expected_json1),
+                mock.call(expected_route, json=expected_json2),
+            ]
+        )
+
+    async def test_delete_messages_when_one_message_left_in_chunk_and_delete_message_raises_message_not_found(
+        self, rest_client
+    ):
+        channel = StubModel(123)
+        messages = [StubModel(i) for i in range(101)]
+        message = messages[-1]
+        expected_json = {"messages": [str(i) for i in range(100)]}
+
+        rest_client._request = mock.AsyncMock()
+        rest_client.delete_message = mock.AsyncMock(
+            side_effect=errors.NotFoundError(url="", headers={}, raw_body="", code=10008)
+        )
+
+        await rest_client.delete_messages(channel, *messages)
+
+        rest_client._request.assert_awaited_once_with(
+            routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel), json=expected_json
+        )
+        rest_client.delete_message.assert_awaited_once_with(channel, message)
+
+    async def test_delete_messages_when_one_message_left_in_chunk_and_delete_message_raises_channel_not_found(
+        self, rest_client
+    ):
+        channel = StubModel(123)
+        messages = [StubModel(i) for i in range(101)]
+        message = messages[-1]
+        expected_json = {"messages": [str(i) for i in range(100)]}
+
+        rest_client._request = mock.AsyncMock()
+        mock_not_found = errors.NotFoundError(url="", headers={}, raw_body="", code=10003)
+        rest_client.delete_message = mock.AsyncMock(side_effect=mock_not_found)
+
+        with pytest.raises(errors.BulkDeleteError) as exc_info:
+            await rest_client.delete_messages(channel, *messages)
+
+        assert exc_info.value.__cause__ is mock_not_found
+
+        rest_client._request.assert_awaited_once_with(
+            routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel), json=expected_json
+        )
+        rest_client.delete_message.assert_awaited_once_with(channel, message)
 
     async def test_delete_messages_when_one_message_left_in_chunk(self, rest_client):
         channel = StubModel(123)
@@ -2118,10 +2162,12 @@ class TestRESTClientImplAsync:
 
         await rest_client.delete_messages(channel, *messages)
 
-        assert rest_client._request.await_args_list == [
-            mock.call(routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel), json=expected_json),
-            mock.call(routes.DELETE_CHANNEL_MESSAGE.compile(channel=channel, message=message)),
-        ]
+        rest_client._request.assert_has_awaits(
+            [
+                mock.call(routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel), json=expected_json),
+                mock.call(routes.DELETE_CHANNEL_MESSAGE.compile(channel=channel, message=message)),
+            ]
+        )
 
     async def test_delete_messages_when_exception(self, rest_client):
         channel = StubModel(123)
