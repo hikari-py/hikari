@@ -1524,8 +1524,8 @@ class TestEntityFactoryImpl:
         assert embed.fields == []
 
     def test_serialize_embed_with_non_url_resources_provides_attachments(self, entity_factory_impl):
-        footer_icon = embed_models.EmbedResource(resource=files.File("cat.png"))
-        thumbnail = embed_models.EmbedImage(resource=files.File("dog.png"))
+        footer_icon = embed_models.EmbedResource(resource=files.Bytes(b"kung fu panda", "panda.pdf"))
+        thumbnail = embed_models.EmbedImage(resource=files.Bytes(b"", "ideas.txt"))
         image = embed_models.EmbedImage(resource=files.Bytes(b"potato kung fu", "sushi.pdf"))
         author_icon = embed_models.EmbedResource(resource=files.Bytes(b"potato kung fu^2", "sushi².jpg"))
         video_icon = embed_models.EmbedResource(resource=files.Bytes(b"whatevr", "sushi².mp4"))

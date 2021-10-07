@@ -20,10 +20,41 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import pathlib
+
+import mock
 import pytest
 
 from hikari import files
 from tests.hikari import hikari_test_helpers
+
+
+class TestEnsurePath:
+    def test_when_doesnt_exists(self):
+        mock_path = mock.Mock(exists=mock.Mock(return_value=False))
+
+        with mock.patch.object(pathlib, "Path", return_value=mock_path) as pathlib_path:
+            with pytest.raises(FileNotFoundError):
+                files.ensure_path("cats.py")
+
+        pathlib_path.assert_called_once_with("cats.py")
+
+    def test_when_is_dir(self):
+        mock_path = mock.Mock(exists=mock.Mock(return_value=True), is_dir=mock.Mock(return_value=True))
+
+        with mock.patch.object(pathlib, "Path", return_value=mock_path) as pathlib_path:
+            with pytest.raises(IsADirectoryError):
+                files.ensure_path("cats.py")
+
+        pathlib_path.assert_called_once_with("cats.py")
+
+    def test_ensure_path(self):
+        mock_path = mock.Mock(exists=mock.Mock(return_value=True), is_dir=mock.Mock(return_value=False))
+
+        with mock.patch.object(pathlib, "Path", return_value=mock_path) as pathlib_path:
+            assert files.ensure_path("cats.py") is mock_path
+
+        pathlib_path.assert_called_once_with("cats.py")
 
 
 class TestAsyncReaderContextManager:
