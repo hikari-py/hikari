@@ -131,7 +131,8 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
 
         If a `typing.Dict[str, typing.Any]` equivalent, then this value is
         passed to `logging.config.dictConfig` to allow the user to provide a
-        specialized logging configuration of their choice.
+        specialized logging configuration of their choice. If any handlers are
+        defined in the dict, default handlers will not be setup.
 
         As a side note, you can always opt to leave this on the default value
         and then use an incremental `logging.config.dictConfig` that applies

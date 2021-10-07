@@ -85,7 +85,8 @@ def init_logging(
         to `sys.stderr` using this configuration.
 
         If you pass a `builtins.dict`, it is treated as the mapping to pass to
-        `logging.config.dictConfig`.
+        `logging.config.dictConfig`. If the dict defines any handlers, default
+        handlers will not be setup.
     allow_color : builtins.bool
         If `builtins.False`, no colour is allowed. If `builtins.True`, the
         output device must be supported for this to return `builtins.True`.
@@ -112,11 +113,17 @@ def init_logging(
 
     if isinstance(flavor, dict):
         logging.config.dictConfig(flavor)
-        return
+
+        if flavor.get("handlers"):
+            # Handlers are defined => don't configure the default ones
+            return
+
+        flavor = None
 
     # Apparently this makes logging even more efficient!
     logging.logThreads = False
     logging.logProcesses = False
+
     if supports_color(allow_color, force_color):
         colorlog.basicConfig(
             level=flavor,
