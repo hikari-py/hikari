@@ -1594,14 +1594,13 @@ class RESTClientImpl(rest_api.RESTClient):
             try:
                 if len(pending) == 1:
                     message = pending[0]
-                    # Unfortunately this means if this method is used to delete a single message,
-                    # it will silently hide the channel not existing but this method shouldn't
-                    # ever raise a 404 if one of the messages doesn't exist and unfortunately we
-                    # cannot distinguish between the message not existing and the channel not existing.
                     try:
                         await self.delete_message(channel, message)
-                    except errors.NotFoundError:
-                        pass
+                    except errors.NotFoundError as exc:
+                        # If the message is not found then this error should be suppressed
+                        # to keep consistency with how the bulk delete endpoint functions.
+                        if exc.code != 10008:  # Unknown Message
+                            raise
 
                     deleted.append(message)
 
