@@ -45,6 +45,7 @@ class TestAttachment:
             proxy_url="htt",
             size=543,
             url="htttt",
+            is_ephemeral=False,
         )
         assert str(attachment) == "super_cool_file.cool"
 

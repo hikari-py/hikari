@@ -2087,6 +2087,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             proxy_url=payload["proxy_url"],
             height=payload.get("height"),
             width=payload.get("width"),
+            is_ephemeral=payload.get("ephemeral", False),
         )
 
     def _deserialize_message_reaction(self, payload: data_binding.JSONObject) -> message_models.Reaction:
