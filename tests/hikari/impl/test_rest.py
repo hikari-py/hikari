@@ -3432,15 +3432,6 @@ class TestRESTClientImplAsync:
         )
         rest_client._request.assert_awaited_once_with(expected_route, json={}, reason=undefined.UNDEFINED)
 
-    async def test_edit_my_nick(self, rest_client):
-        expected_route = routes.PATCH_MY_GUILD_NICKNAME.compile(guild=123)
-        expected_json = {"nick": "hikari is the best"}
-        rest_client._request = mock.AsyncMock()
-
-        await rest_client.edit_my_nick(StubModel(123), "hikari is the best", reason="because its true")
-
-        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="because its true")
-
     async def test_add_role_to_member(self, rest_client):
         expected_route = routes.PUT_GUILD_MEMBER_ROLE.compile(guild=123, user=456, role=789)
         rest_client._request = mock.AsyncMock()
