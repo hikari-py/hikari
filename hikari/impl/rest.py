@@ -1594,7 +1594,14 @@ class RESTClientImpl(rest_api.RESTClient):
             try:
                 if len(pending) == 1:
                     message = pending[0]
-                    await self.delete_message(channel, message)
+                    try:
+                        await self.delete_message(channel, message)
+                    except errors.NotFoundError as exc:
+                        # If the message is not found then this error should be suppressed
+                        # to keep consistency with how the bulk delete endpoint functions.
+                        if exc.code != 10008:  # Unknown Message
+                            raise
+
                     deleted.append(message)
 
                 else:
