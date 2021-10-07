@@ -69,6 +69,7 @@ from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import rate_limits
 from hikari.impl import special_endpoints as special_endpoints_impl
 from hikari.internal import data_binding
+from hikari.internal import deprecation
 from hikari.internal import mentions
 from hikari.internal import net
 from hikari.internal import routes
@@ -2721,6 +2722,35 @@ class RESTClientImpl(rest_api.RESTClient):
         response = await self._request(route, json=body, reason=reason)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_member(response, guild_id=snowflakes.Snowflake(guild))
+
+    async def edit_my_member(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        *,
+        nick: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> guilds.Member:
+        route = routes.PATCH_MY_GUILD_MEMBER.compile(guild=guild)
+        body = data_binding.JSONObjectBuilder()
+        body.put("nick", nick)
+
+        response = await self._request(route, json=body, reason=reason)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_member(response, guild_id=snowflakes.Snowflake(guild))
+
+    async def edit_my_nick(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.Guild],
+        nick: typing.Optional[str],
+        *,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
+        deprecation.warn_deprecated(
+            RESTClientImpl.edit_my_nick,
+            version="2.0.0.dev104",
+            alternative="RESTClientImpl.edit_my_member's nick parameter",
+        )
+        return (await self.edit_my_member(guild, nick=nick, reason=reason)).nickname
 
     async def add_role_to_member(
         self,
