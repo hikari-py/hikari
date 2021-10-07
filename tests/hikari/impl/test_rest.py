@@ -3466,7 +3466,7 @@ class TestRESTClientImplAsync:
             warnings.simplefilter("ignore", category=DeprecationWarning)
             result = await rest_client.edit_my_nick(123, "hikari is the best", reason="because its true")
 
-        assert result is rest_client.edit_my_member.return_value.nickname
+        assert result is None
         rest_client.edit_my_member.assert_awaited_once_with(123, nick="hikari is the best", reason="because its true")
 
     async def test_add_role_to_member(self, rest_client):

@@ -2750,7 +2750,7 @@ class RESTClientImpl(rest_api.RESTClient):
             version="2.0.0.dev104",
             alternative="RESTClientImpl.edit_my_member's nick parameter",
         )
-        return (await self.edit_my_member(guild, nick=nick, reason=reason)).nickname
+        await self.edit_my_member(guild, nick=nick, reason=reason)
 
     async def add_role_to_member(
         self,
