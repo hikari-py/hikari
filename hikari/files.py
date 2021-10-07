@@ -48,6 +48,7 @@ import abc
 import asyncio
 import base64
 import concurrent.futures
+import errno
 import inspect
 import io
 import mimetypes
@@ -145,8 +146,16 @@ This may be one of:
 
 
 def ensure_path(pathish: Pathish) -> pathlib.Path:
-    """Convert a path-like object to a `pathlib.Path` instance."""
-    return pathlib.Path(pathish)
+    """Convert a path-like object to a `pathlib.Path` instance that points to an existing file."""
+    path = pathlib.Path(pathish)
+
+    if not path.exists():
+        raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), str(path))
+
+    if path.is_dir():
+        raise IsADirectoryError(errno.EISDIR, os.strerror(errno.EISDIR), str(path))
+
+    return path
 
 
 def unwrap_bytes(data: Rawish) -> bytes:
