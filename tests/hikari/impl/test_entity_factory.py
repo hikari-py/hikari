@@ -4152,6 +4152,60 @@ class TestEntityFactoryImpl:
 
         assert message.components == [entity_factory_impl.deserialize_component(action_row_payload)]
 
+    def test_deserialize_message_with_unset_sub_fields(self, entity_factory_impl, message_payload):
+        del message_payload["application"]["cover_image"]
+        del message_payload["application"]["primary_sku_id"]
+        del message_payload["attachments"][0]["content_type"]
+        del message_payload["attachments"][0]["height"]
+        del message_payload["attachments"][0]["width"]
+        del message_payload["attachments"][0]["ephemeral"]
+        del message_payload["activity"]["party_id"]
+        del message_payload["message_reference"]["message_id"]
+        del message_payload["message_reference"]["guild_id"]
+        del message_payload["mention_channels"]
+
+        message = entity_factory_impl.deserialize_message(message_payload)
+
+        assert message.mentions.channels == {}
+        # Attachment
+        assert len(message.attachments) == 1
+        attachment = message.attachments[0]
+        assert attachment.width is None
+        assert attachment.height is None
+        assert attachment.is_ephemeral is False  # TODO: test case for when not present
+        assert isinstance(attachment, message_models.Attachment)
+
+        # Activity
+        assert message.activity.party_id is None
+        assert isinstance(message.activity, message_models.MessageActivity)
+
+        # MessageApplication
+        assert message.application.cover_image_hash is None
+        assert message.application.primary_sku_id is None
+        assert isinstance(message.application, message_models.MessageApplication)
+
+        # MessageReference
+        assert message.message_reference.id is None
+        assert message.message_reference.guild_id is None
+        assert isinstance(message.message_reference, message_models.MessageReference)
+
+    def test_deserialize_message_with_null_sub_fields(self, entity_factory_impl, message_payload):
+        message_payload["attachments"][0]["height"] = None
+        message_payload["attachments"][0]["width"] = None
+        message_payload["application"]["icon"] = None
+        message = entity_factory_impl.deserialize_message(message_payload)
+
+        # Attachment
+        assert len(message.attachments) == 1
+        attachment = message.attachments[0]
+        assert attachment.width is None
+        assert attachment.height is None
+        assert isinstance(attachment, message_models.Attachment)
+
+        # MessageApplication
+        assert message.application.icon_hash is None
+        assert isinstance(message.application, message_models.MessageApplication)
+
     def test_deserialize_message_with_null_and_unset_fields(
         self,
         entity_factory_impl,
