@@ -3916,7 +3916,7 @@ class TestEntityFactoryImpl:
         assert attachment.proxy_url == "https://media.somewhere.com/attachments/123/456/IMG.jpg"
         assert attachment.width == 1844
         assert attachment.height == 2638
-        assert attachment.is_ephemeral is True  # TODO: test case for when not present
+        assert attachment.is_ephemeral is True
         assert isinstance(attachment, message_models.Attachment)
 
         expected_embed = entity_factory_impl.deserialize_embed(embed_payload)
@@ -4090,7 +4090,7 @@ class TestEntityFactoryImpl:
         assert attachment.proxy_url == "https://media.somewhere.com/attachments/123/456/IMG.jpg"
         assert attachment.width == 1844
         assert attachment.height == 2638
-        assert attachment.is_ephemeral is True  # TODO: test case for when not present
+        assert attachment.is_ephemeral is True
         assert isinstance(attachment, message_models.Attachment)
 
         expected_embed = entity_factory_impl.deserialize_embed(embed_payload)
@@ -4172,7 +4172,7 @@ class TestEntityFactoryImpl:
         attachment = message.attachments[0]
         assert attachment.width is None
         assert attachment.height is None
-        assert attachment.is_ephemeral is False  # TODO: test case for when not present
+        assert attachment.is_ephemeral is False
         assert isinstance(attachment, message_models.Attachment)
 
         # Activity
