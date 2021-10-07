@@ -5092,7 +5092,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """Edit the associated token's member nick.
 
         .. deprecated:: 2.0.0.dev104
-            Use `RESTClient.edit_my_member`'s `nick` argument instead
+            Use `RESTClient.edit_my_member`'s `nick` argument instead.
 
         Parameters
         ----------
