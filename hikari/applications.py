@@ -346,7 +346,7 @@ class TeamMember(users.User):
         return self.user.banner_url
 
     @property
-    def accent_color(self) -> undefined.UndefinedOr[colors.Color]:
+    def accent_color(self) -> typing.Optional[colors.Color]:
         return self.user.accent_color
 
     @property

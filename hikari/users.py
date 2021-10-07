@@ -153,14 +153,14 @@ class PartialUser(snowflakes.Unique, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def accent_color(self) -> undefined.UndefinedOr[colors.Color]:
+    def accent_color(self) -> undefined.UndefinedNoneOr[colors.Color]:
         """The custom banner color for the user, if set else `hikari.undefined.UNDEFINED`.
 
         The official client will decide the default color if not set.
         """  # noqa: D401 - Imperative mood
 
     @property
-    def accent_colour(self) -> undefined.UndefinedOr[colors.Color]:
+    def accent_colour(self) -> undefined.UndefinedNoneOr[colors.Color]:
         """Alias for `accent_color` field."""
         return self.accent_color
 
@@ -515,6 +515,19 @@ class User(PartialUser, abc.ABC):
 
     @property
     @abc.abstractmethod
+    def accent_color(self) -> typing.Optional[colors.Color]:
+        """The custom banner color for the user, if set else `hikari.undefined.UNDEFINED`.
+
+        The official client will decide the default color if not set.
+        """  # noqa: D401 - Imperative mood
+
+    @property
+    def accent_colour(self) -> typing.Optional[colors.Color]:
+        """Alias for `accent_color` field."""
+        return self.accent_color
+
+    @property
+    @abc.abstractmethod
     def avatar_hash(self) -> typing.Optional[str]:
         """Avatar hash for the user, if they have one, otherwise `builtins.None`."""
 
@@ -664,7 +677,7 @@ class PartialUserImpl(PartialUser):
     banner_hash: undefined.UndefinedNoneOr[str] = attr.field(eq=False, hash=False, repr=False)
     """Banner hash of the user, if a custom banner is set."""
 
-    accent_color: undefined.UndefinedOr[colors.Color] = attr.field(eq=False, hash=False, repr=False)
+    accent_color: undefined.UndefinedNoneOr[colors.Color] = attr.field(eq=False, hash=False, repr=False)
     """The custom banner color for the user, if set.
 
     The official client will decide the default color if not set.
@@ -724,7 +737,7 @@ class UserImpl(PartialUserImpl, User):
     banner_hash: typing.Optional[str]
     """Banner hash of the user, if they have one, otherwise `builtins.None`"""
 
-    accent_color: undefined.UndefinedOr[colors.Color]
+    accent_color: typing.Optional[colors.Color]
     """The custom banner color for the user, if set.
 
     The official client will decide the default color if not set.

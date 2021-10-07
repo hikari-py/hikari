@@ -174,7 +174,7 @@ class _UserFields:
     username: str = attr.field()
     avatar_hash: str = attr.field()
     banner_hash: typing.Optional[str] = attr.field()
-    accent_color: undefined.UndefinedOr[color_models.Color] = attr.field()
+    accent_color: typing.Optional[color_models.Color] = attr.field()
     is_bot: bool = attr.field()
     is_system: bool = attr.field()
 
@@ -2584,19 +2584,14 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
     @staticmethod
     def _set_user_attributes(payload: data_binding.JSONObject) -> _UserFields:
-        accent_color: undefined.UndefinedOr[color_models.Color]
-        if ac := payload.get("accent_color", None):
-            accent_color = color_models.Color(ac)
-        else:
-            accent_color = undefined.UNDEFINED
-
+        accent_color = payload.get("accent_color")
         return _UserFields(
             id=snowflakes.Snowflake(payload["id"]),
             discriminator=payload["discriminator"],
             username=payload["username"],
             avatar_hash=payload["avatar"],
             banner_hash=payload.get("banner", None),
-            accent_color=accent_color,
+            accent_color=color_models.Color(accent_color) if accent_color is not None else None,
             is_bot=payload.get("bot", False),
             is_system=payload.get("system", False),
         )

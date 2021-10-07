@@ -354,11 +354,10 @@ class EventFactoryImpl(event_factory.EventFactory):
             if "public_flags" in user_payload:
                 flags = user_models.UserFlag(user_payload["public_flags"])
 
-            accent_color: undefined.UndefinedOr[colors.Color]
-            if ac := user_payload.get("accent_color", None):
-                accent_color = colors.Color(ac)
-            else:
-                accent_color = undefined.UNDEFINED
+            accent_color: undefined.UndefinedNoneOr[colors.Color] = undefined.UNDEFINED
+            if "accent_color" in user_payload:
+                raw_accent_color = user_payload["accent_color"]
+                accent_color = colors.Color(raw_accent_color) if raw_accent_color is not None else raw_accent_color
 
             user = user_models.PartialUserImpl(
                 app=self._app,
