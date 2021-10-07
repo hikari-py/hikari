@@ -405,6 +405,7 @@ class MemberData(BaseData[guilds.Member]):
     user: RefCell[users_.User] = attr.field()
     guild_id: snowflakes.Snowflake = attr.field()
     nickname: typing.Optional[str] = attr.field()
+    guild_avatar_hash: typing.Optional[str] = attr.field()
     role_ids: typing.Tuple[snowflakes.Snowflake, ...] = attr.field()
     joined_at: datetime.datetime = attr.field()
     premium_since: typing.Optional[datetime.datetime] = attr.field()
@@ -423,6 +424,7 @@ class MemberData(BaseData[guilds.Member]):
             nickname=member.nickname,
             joined_at=member.joined_at,
             premium_since=member.premium_since,
+            guild_avatar_hash=member.guild_avatar_hash,
             is_deaf=member.is_deaf,
             is_mute=member.is_mute,
             is_pending=member.is_pending,
@@ -437,6 +439,7 @@ class MemberData(BaseData[guilds.Member]):
             nickname=self.nickname,
             role_ids=self.role_ids,
             joined_at=self.joined_at,
+            guild_avatar_hash=self.guild_avatar_hash,
             premium_since=self.premium_since,
             is_deaf=self.is_deaf,
             is_mute=self.is_mute,
