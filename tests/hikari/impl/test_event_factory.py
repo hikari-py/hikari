@@ -410,6 +410,8 @@ class TestEventFactoryImpl:
                 "id": "1231312",
                 "username": "OK",
                 "avatar": "NOK",
+                "banner": "12122hssjamanmdd",
+                "accent_color": 12342,
                 "bot": True,
                 "system": False,
                 "public_flags": 42,
@@ -432,6 +434,8 @@ class TestEventFactoryImpl:
         assert event.user.username == "OK"
         assert event.user.discriminator == "1231"
         assert event.user.avatar_hash == "NOK"
+        assert event.user.banner_hash == "12122hssjamanmdd"
+        assert event.user.accent_color == 12342
         assert event.user.is_bot is True
         assert event.user.is_system is False
         assert event.user.flags == 42
@@ -457,6 +461,8 @@ class TestEventFactoryImpl:
         assert event.user.username is undefined.UNDEFINED
         assert event.user.discriminator is undefined.UNDEFINED
         assert event.user.avatar_hash is undefined.UNDEFINED
+        assert event.user.banner_hash is undefined.UNDEFINED
+        assert event.user.accent_color is undefined.UNDEFINED
         assert event.user.is_bot is undefined.UNDEFINED
         assert event.user.is_system is undefined.UNDEFINED
         assert event.user.flags is undefined.UNDEFINED

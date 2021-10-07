@@ -1706,6 +1706,8 @@ class TestRESTClientImplAsync:
                     id=456,
                     app=object(),
                     avatar_hash="",
+                    banner_hash="",
+                    accent_color=123456,
                     discriminator="",
                     flags=0,
                     username="",

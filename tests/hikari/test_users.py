@@ -255,6 +255,64 @@ class TestUser:
             file_format="png",
         )
 
+    def test_banner_url_when_hash(self, obj):
+        banner = object()
+
+        with mock.patch.object(users.User, "make_banner_url", return_value=banner):
+            assert obj.banner_url is banner
+
+    def test_banner_url_when_no_hash(self, obj):
+        with mock.patch.object(users.User, "make_banner_url", return_value=None):
+            assert obj.banner_url is None
+
+    def test_make_banner_url_when_format_is_None_and_banner_hash_is_for_gif(self, obj):
+        obj.banner_hash = "a_18dnf8dfbakfdh"
+
+        with mock.patch.object(
+            routes, "CDN_USER_BANNER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert obj.make_banner_url(ext=None, size=4096) == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL,
+            user_id=obj.id,
+            hash="a_18dnf8dfbakfdh",
+            size=4096,
+            file_format="gif",
+        )
+
+    def test_make_banner_url_when_format_is_None_and_banner_hash_is_not_for_gif(self, obj):
+        obj.banner_hash = "18dnf8dfbakfdh"
+
+        with mock.patch.object(
+            routes, "CDN_USER_BANNER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert obj.make_banner_url(ext=None, size=4096) == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL,
+            user_id=obj.id,
+            hash=obj.banner_hash,
+            size=4096,
+            file_format="png",
+        )
+
+    def test_make_banner_url_with_all_args(self, obj):
+        obj.banner_hash = "18dnf8dfbakfdh"
+
+        with mock.patch.object(
+            routes, "CDN_USER_BANNER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert obj.make_banner_url(ext="url", size=4096) == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL,
+            user_id=obj.id,
+            hash=obj.banner_hash,
+            size=4096,
+            file_format="url",
+        )
+
 
 class TestPartialUserImpl:
     @pytest.fixture()
@@ -265,6 +323,8 @@ class TestPartialUserImpl:
             discriminator="8637",
             username="thomm.o",
             avatar_hash=None,
+            banner_hash=None,
+            accent_color=None,
             is_bot=False,
             is_system=False,
             flags=users.UserFlag.DISCORD_EMPLOYEE,
@@ -298,6 +358,8 @@ class TestOwnUser:
             discriminator="1234",
             username="foobar",
             avatar_hash="69420",
+            banner_hash="42069",
+            accent_color=123456,
             is_bot=False,
             is_system=False,
             flags=users.UserFlag.PARTNERED_SERVER_OWNER,

@@ -32,6 +32,7 @@ import typing
 
 from hikari import applications as application_models
 from hikari import channels as channel_models
+from hikari import colors
 from hikari import emojis as emojis_models
 from hikari import snowflakes
 from hikari import undefined
@@ -353,12 +354,19 @@ class EventFactoryImpl(event_factory.EventFactory):
             if "public_flags" in user_payload:
                 flags = user_models.UserFlag(user_payload["public_flags"])
 
+            accent_color: undefined.UndefinedNoneOr[colors.Color] = undefined.UNDEFINED
+            if "accent_color" in user_payload:
+                raw_accent_color = user_payload["accent_color"]
+                accent_color = colors.Color(raw_accent_color) if raw_accent_color is not None else raw_accent_color
+
             user = user_models.PartialUserImpl(
                 app=self._app,
                 id=snowflakes.Snowflake(user_payload["id"]),
                 discriminator=discriminator,
                 username=user_payload.get("username", undefined.UNDEFINED),
                 avatar_hash=user_payload.get("avatar", undefined.UNDEFINED),
+                banner_hash=user_payload.get("banner", undefined.UNDEFINED),
+                accent_color=accent_color,
                 is_bot=user_payload.get("bot", undefined.UNDEFINED),
                 is_system=user_payload.get("system", undefined.UNDEFINED),
                 flags=flags,
