@@ -64,7 +64,6 @@ if typing.TYPE_CHECKING:
     from hikari import files
     from hikari import permissions as permissions_
     from hikari import traits
-    from hikari import undefined
     from hikari import webhooks
 
 

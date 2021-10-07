@@ -265,10 +265,6 @@ class TestUser:
         with mock.patch.object(users.User, "make_banner_url", return_value=None):
             assert obj.banner_url is None
 
-    def test_make_banner_url_when_undefined(self, obj):
-        obj.banner_hash = undefined.UNDEFINED
-        assert obj.make_banner_url(ext="png", size=1024) is None
-
     def test_make_banner_url_when_format_is_None_and_banner_hash_is_for_gif(self, obj):
         obj.banner_hash = "a_18dnf8dfbakfdh"
 

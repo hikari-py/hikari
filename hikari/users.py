@@ -144,14 +144,6 @@ class PartialUser(snowflakes.Unique, abc.ABC):
         """Banner hash for the user, if they have one, otherwise `hikari.undefined.UNDEFINED`."""
 
     @property
-    def banner_url(self) -> typing.Optional[files.URL]:
-        """Banner URL for the user, if they have one set.
-
-        May be `builtins.None` if no custom banner is set.
-        """
-        return self.make_banner_url()
-
-    @property
     @abc.abstractmethod
     def accent_color(self) -> undefined.UndefinedNoneOr[colors.Color]:
         """The custom banner color for the user, if set else `hikari.undefined.UNDEFINED`.
@@ -207,53 +199,6 @@ class PartialUser(snowflakes.Unique, abc.ABC):
         builtins.str
             The mention string to use.
         """
-
-    def make_banner_url(self, *, ext: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
-        """Generate the banner URL for this user, if set.
-
-        If no custom banner is set, this returns `builtins.None`.
-
-        Parameters
-        ----------
-        ext : typing.Optional[builtins.str]
-            The ext to use for this URL, defaults to `png` or `gif`.
-            Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
-            animated). Will be ignored for default banner which can only be
-            `png`.
-
-            If `builtins.None`, then the correct default extension is
-            determined based on whether the banner is animated or not.
-        size : builtins.int
-            The size to set for the URL, defaults to `4096`.
-            Can be any power of two between 16 and 4096.
-            Will be ignored for default banner.
-
-        Returns
-        -------
-        typing.Optional[hikari.files.URL]
-            The URL to the banner, or `builtins.None` if not present.
-
-        Raises
-        ------
-        builtins.ValueError
-            If `size` is not a power of two or not between 16 and 4096.
-        """
-        if self.banner_hash is None or self.banner_hash is undefined.UNDEFINED:
-            return None
-
-        if ext is None:
-            if self.banner_hash.startswith("a_"):
-                ext = "gif"
-            else:
-                ext = "png"
-
-        return routes.CDN_USER_BANNER.compile_to_file(
-            urls.CDN_URL,
-            user_id=self.id,
-            hash=self.banner_hash,
-            size=size,
-            file_format=ext,
-        )
 
     async def fetch_dm_channel(self) -> channels.DMChannel:
         """Fetch the DM channel for this user.
@@ -532,11 +477,6 @@ class User(PartialUser, abc.ABC):
         """Avatar hash for the user, if they have one, otherwise `builtins.None`."""
 
     @property
-    @abc.abstractmethod
-    def banner_hash(self) -> typing.Optional[str]:
-        """Banner hash for the user, if they have one, otherwise `hikari.undefined.UNDEFINED`."""
-
-    @property
     def avatar_url(self) -> typing.Optional[files.URL]:
         """Avatar URL for the user, if they have one set.
 
@@ -544,6 +484,19 @@ class User(PartialUser, abc.ABC):
         should use `default_avatar_url` instead.
         """
         return self.make_avatar_url()
+
+    @property
+    @abc.abstractmethod
+    def banner_hash(self) -> typing.Optional[str]:
+        """Banner hash for the user, if they have one, otherwise `hikari.undefined.UNDEFINED`."""
+
+    @property
+    def banner_url(self) -> typing.Optional[files.URL]:
+        """Banner URL for the user, if they have one set.
+
+        May be `builtins.None` if no custom banner is set.
+        """
+        return self.make_banner_url()
 
     @property
     def default_avatar_url(self) -> files.URL:
@@ -643,6 +596,53 @@ class User(PartialUser, abc.ABC):
             urls.CDN_URL,
             user_id=self.id,
             hash=self.avatar_hash,
+            size=size,
+            file_format=ext,
+        )
+
+    def make_banner_url(self, *, ext: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the banner URL for this user, if set.
+
+        If no custom banner is set, this returns `builtins.None`.
+
+        Parameters
+        ----------
+        ext : typing.Optional[builtins.str]
+            The ext to use for this URL, defaults to `png` or `gif`.
+            Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
+            animated). Will be ignored for default banner which can only be
+            `png`.
+
+            If `builtins.None`, then the correct default extension is
+            determined based on whether the banner is animated or not.
+        size : builtins.int
+            The size to set for the URL, defaults to `4096`.
+            Can be any power of two between 16 and 4096.
+            Will be ignored for default banner.
+
+        Returns
+        -------
+        typing.Optional[hikari.files.URL]
+            The URL to the banner, or `builtins.None` if not present.
+
+        Raises
+        ------
+        builtins.ValueError
+            If `size` is not a power of two or not between 16 and 4096.
+        """
+        if self.banner_hash is None:
+            return None
+
+        if ext is None:
+            if self.banner_hash.startswith("a_"):
+                ext = "gif"
+            else:
+                ext = "png"
+
+        return routes.CDN_USER_BANNER.compile_to_file(
+            urls.CDN_URL,
+            user_id=self.id,
+            hash=self.banner_hash,
             size=size,
             file_format=ext,
         )
