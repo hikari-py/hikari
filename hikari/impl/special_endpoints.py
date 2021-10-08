@@ -820,7 +820,7 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
     def set_content(
         self: _InteractionMessageBuilderT, content: undefined.UndefinedOr[str], /
     ) -> _InteractionMessageBuilderT:
-        self._content = content
+        self._content = str(content) if content is not undefined.UNDEFINED else undefined.UNDEFINED
         return self
 
     def set_flags(

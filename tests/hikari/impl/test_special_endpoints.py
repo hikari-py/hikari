@@ -87,6 +87,12 @@ class TestInteractionMessageBuilder:
 
         assert builder.content == "ayayayaya"
 
+    def test_set_content_casts_to_str(self):
+        mock_thing = mock.Mock(__str__=mock.Mock(return_value="meow nya"))
+        builder = special_endpoints.InteractionMessageBuilder(4).set_content(mock_thing)
+
+        assert builder.content == "meow nya"
+
     def test_embeds_property(self):
         mock_embed = object()
         builder = special_endpoints.InteractionMessageBuilder(4)

@@ -3386,7 +3386,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("type", response_type)
 
         data = data_binding.JSONObjectBuilder()
-        data.put("content", content)
+        data.put("content", content, conversion=str)
         data.put("flags", flags)
         data.put("tts", tts)
         data.put(
