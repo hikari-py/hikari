@@ -35,7 +35,7 @@ LOGO_SOURCE = "logo.png"
 
 # Linting and test configs.
 FLAKE8_REPORT = "public/flake8"
-MYPY_INI = "mypy.ini"
+MYPY_INI = "pyproject.toml"
 PYTEST_INI = "pytest.ini"
 COVERAGE_INI = "coverage.ini"
 COVERAGE_HTML_PATH = _os.path.join(ARTIFACT_DIRECTORY, "coverage", "html")
