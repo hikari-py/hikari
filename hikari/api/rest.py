@@ -5620,11 +5620,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             An alias for `color`.
         hoist : hikari.undefined.UndefinedOr[builtins.bool]
             If provided, whether to hoist the role.
-        icon : undefined.UndefinedNoneOr[files.Resourceish]
-            If provided, the updated role icon. Must be a 64x64 image
+        icon : hikari.undefined.UndefinedNoneOr[hikari.files.Resourceish]
+            If provided, the new role icon. Must be a 64x64 image
             under 256kb.
-        unicode_emoji : unicode_emoji: undefined.UndefinedOr[str]
-            If provided, the updated role icon as a standard emoji string.
+        unicode_emoji : hikari.undefined.UndefinedOr[builtins.str]
+            If provided, the new unicode emoji to set as the role icon.
         mentionable : hikari.undefined.UndefinedOr[builtins.bool]
             If provided, whether to make the role mentionable.
         reason : hikari.undefined.UndefinedOr[builtins.str]

@@ -2864,11 +2864,7 @@ class RESTClientImpl(rest_api.RESTClient):
         elif icon is not undefined.UNDEFINED:
             icon_resource = files.ensure_resource(icon)
             async with icon_resource.stream(executor=self._executor) as stream:
-                task = asyncio.create_task(stream.data_uri())
-                task.add_done_callback(lambda future: body.put("icon", future.result()))
-                tasks.append(task)
-
-        await asyncio.gather(*tasks)
+                body.put("icon", await stream.data_uri())
 
         response = await self._request(route, json=body, reason=reason)
         assert isinstance(response, dict)

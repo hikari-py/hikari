@@ -1080,7 +1080,7 @@ class Role(PartialRole):
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL to the avatar, or `builtins.None` if not present.
+            The URL to the icon, or `builtins.None` if not present.
 
         Raises
         ------
