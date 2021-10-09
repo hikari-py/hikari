@@ -5472,6 +5472,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        icon: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
+        unicode_emoji: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         mentionable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.Role:
@@ -5498,6 +5500,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             An alias for `color`.
         hoist : hikari.undefined.UndefinedOr[builtins.bool]
             If provided, whether to hoist the role.
+        icon : undefined.UndefinedNoneOr[files.Resourceish]
+            If provided, the new role icon. Must be a 64x64 image under 256kb.
+        unicode_emoji : unicode_emoji: undefined.UndefinedOr[str]
+            If provided, the new role icon as a standard emoji string.
         mentionable : hikari.undefined.UndefinedOr[builtins.bool]
             If provided, whether to make the role mentionable.
         reason : hikari.undefined.UndefinedOr[builtins.str]
@@ -5586,6 +5592,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        icon: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
+        unicode_emoji: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         mentionable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.Role:
@@ -5612,6 +5620,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             An alias for `color`.
         hoist : hikari.undefined.UndefinedOr[builtins.bool]
             If provided, whether to hoist the role.
+        icon : undefined.UndefinedNoneOr[files.Resourceish]
+            If provided, the updated role icon. Must be a 64x64 image
+            under 256kb.
+        unicode_emoji : unicode_emoji: undefined.UndefinedOr[str]
+            If provided, the updated role icon as a standard emoji string.
         mentionable : hikari.undefined.UndefinedOr[builtins.bool]
             If provided, whether to make the role mentionable.
         reason : hikari.undefined.UndefinedOr[builtins.str]

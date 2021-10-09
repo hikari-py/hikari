@@ -1723,6 +1723,8 @@ class TestRESTClientImplAsync:
                     color=None,
                     guild_id=123,
                     is_hoisted=True,
+                    icon_hash="icon_hash",
+                    unicode_emoji=None,
                     is_managed=False,
                     name="",
                     is_mentionable=True,

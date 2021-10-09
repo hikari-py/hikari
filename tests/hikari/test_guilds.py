@@ -135,6 +135,8 @@ class TestRole:
             color=colors.Color(0x1A2B3C),
             guild_id=snowflakes.Snowflake(112233),
             is_hoisted=False,
+            icon_hash="icon_hash",
+            unicode_emoji=None,
             is_managed=False,
             is_mentionable=True,
             permissions=permissions.Permissions.CONNECT,

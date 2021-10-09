@@ -2839,6 +2839,8 @@ class RESTClientImpl(rest_api.RESTClient):
         color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        icon: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
+        unicode_emoji: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         mentionable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.Role:
@@ -2852,7 +2854,21 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("color", color, conversion=colors.Color.of)
         body.put("color", colour, conversion=colors.Color.of)
         body.put("hoist", hoist)
+        body.put("unicode_emoji", unicode_emoji)
         body.put("mentionable", mentionable)
+
+        tasks: typing.List[asyncio.Task[str]] = []
+
+        if icon is None:
+            body.put("icon", None)
+        elif icon is not undefined.UNDEFINED:
+            icon_resource = files.ensure_resource(icon)
+            async with icon_resource.stream(executor=self._executor) as stream:
+                task = asyncio.create_task(stream.data_uri())
+                task.add_done_callback(lambda future: body.put("icon", future.result()))
+                tasks.append(task)
+
+        await asyncio.gather(*tasks)
 
         response = await self._request(route, json=body, reason=reason)
         assert isinstance(response, dict)
@@ -2877,6 +2893,8 @@ class RESTClientImpl(rest_api.RESTClient):
         color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        icon: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
+        unicode_emoji: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         mentionable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.Role:
@@ -2891,7 +2909,21 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("color", color, conversion=colors.Color.of)
         body.put("color", colour, conversion=colors.Color.of)
         body.put("hoist", hoist)
+        body.put("unicode_emoji", unicode_emoji)
         body.put("mentionable", mentionable)
+
+        tasks: typing.List[asyncio.Task[str]] = []
+
+        if icon is None:
+            body.put("icon", None)
+        elif icon is not undefined.UNDEFINED:
+            icon_resource = files.ensure_resource(icon)
+            async with icon_resource.stream(executor=self._executor) as stream:
+                task = asyncio.create_task(stream.data_uri())
+                task.add_done_callback(lambda future: body.put("icon", future.result()))
+                tasks.append(task)
+
+        await asyncio.gather(*tasks)
 
         response = await self._request(route, json=body, reason=reason)
         assert isinstance(response, dict)

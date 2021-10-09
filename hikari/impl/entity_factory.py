@@ -1214,6 +1214,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=payload["name"],
             color=color_models.Color(payload["color"]),
             is_hoisted=payload["hoist"],
+            icon_hash=payload.get("icon"),
+            unicode_emoji=payload.get("unicode_emoji"),
             position=int(payload["position"]),
             permissions=permission_models.Permissions(int(payload["permissions"])),
             is_managed=payload["managed"],
