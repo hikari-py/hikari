@@ -78,5 +78,6 @@ warn_unreachable = true
 warn_unused_configs = true
 warn_unused_ignores = true
 
-[tool.mypy-rillrate."*"]
+[[tool.mypy.overrides]]
+module = 'rillrate.*'
 ignore_missing_imports = true
