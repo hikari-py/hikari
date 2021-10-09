@@ -1531,7 +1531,7 @@ class TestEntityFactoryImpl:
         video_icon = embed_models.EmbedResource(resource=files.Bytes(b"whatevr", "sushi².mp4"))
 
         payload, resources = entity_factory_impl.serialize_embed(
-            embed_models.Embed.from_received_embed(
+            embed_models.Embed._from_received_embed(
                 title="Title",
                 description="Nyaa",
                 url="https://some-url",
@@ -1583,7 +1583,7 @@ class TestEntityFactoryImpl:
         author_icon = embed_models.EmbedResource(resource=files.URL("http://foobar.com"))
 
         payload, resources = entity_factory_impl.serialize_embed(
-            embed_models.Embed.from_received_embed(
+            embed_models.Embed._from_received_embed(
                 title="Title",
                 description="Nyaa",
                 url="https://some-url",
@@ -1623,7 +1623,7 @@ class TestEntityFactoryImpl:
 
     def test_serialize_embed_with_null_sub_fields(self, entity_factory_impl):
         payload, resources = entity_factory_impl.serialize_embed(
-            embed_models.Embed.from_received_embed(
+            embed_models.Embed._from_received_embed(
                 title="Title",
                 description="Nyaa",
                 url="https://some-url",

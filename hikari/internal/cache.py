@@ -729,7 +729,7 @@ class MessageInteractionData(BaseData[messages.MessageInteraction]):
 
 
 def _copy_embed(embed: embeds_.Embed) -> embeds_.Embed:
-    return embeds_.Embed.from_received_embed(
+    return embeds_.Embed._from_received_embed(
         title=embed.title,
         description=embed.description,
         url=embed.url,

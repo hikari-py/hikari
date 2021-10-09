@@ -921,7 +921,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 )
                 fields.append(field)
 
-        return embed_models.Embed.from_received_embed(
+        return embed_models.Embed._from_received_embed(
             title=title,
             description=description,
             url=url,

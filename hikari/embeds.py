@@ -303,11 +303,8 @@ class Embed:
         "_fields",
     )
 
-    # Don't document this.
-    __pdoc__: typing.ClassVar[typing.Mapping[str, typing.Any]] = {"from_received_embed": False}
-
     @classmethod
-    def from_received_embed(
+    def _from_received_embed(
         cls,
         *,
         title: typing.Optional[str],
@@ -323,10 +320,6 @@ class Embed:
         footer: typing.Optional[EmbedFooter],
         fields: typing.Optional[typing.MutableSequence[EmbedField]],
     ) -> Embed:
-        """Generate an embed from the given attributes.
-
-        You should never call this.
-        """
         # Create an empty instance without the overhead of invoking the regular
         # constructor.
         embed: Embed = super().__new__(cls)
