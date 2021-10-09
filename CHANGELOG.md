@@ -6,6 +6,26 @@ This file is updated every release with the use of `towncrier` from the fragment
 
 .. towncrier release notes start
 
+Hikari 2.0.0.dev104 (2021-10-09)
+================================
+
+Features
+--------
+
+- User banners and accent colors to user models. ([#811](https://github.com/hikari-py/hikari/issues/811))
+- Add attachment "is_ephemeral" field ([#824](https://github.com/hikari-py/hikari/issues/824))
+- Guild member avatars ([#825](https://github.com/hikari-py/hikari/issues/825))
+- Add role icons ([#838](https://github.com/hikari-py/hikari/issues/838))
+
+
+Bugfixes
+--------
+
+- Don't raise in bulk delete when message not found by delete single message endpoint ([#828](https://github.com/hikari-py/hikari/issues/828))
+- Setup basic handler if no handlers are defined in favour passed to `logging.config.dictConfig` ([#832](https://github.com/hikari-py/hikari/issues/832))
+- InteractionMessageBuilder and RESTClientImpl.create_interaction_response now cast content to str to be consistent with the other message create methods. ([#834](https://github.com/hikari-py/hikari/issues/834))
+
+
 Hikari 2.0.0.dev103 (2021-10-06)
 ================================
 
