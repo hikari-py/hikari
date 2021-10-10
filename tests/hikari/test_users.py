@@ -37,6 +37,11 @@ class TestPartialUser:
         # ABC, so must be stubbed.
         return hikari_test_helpers.mock_class_namespace(users.PartialUser, slots_=False)()
 
+    def test_accent_colour_alias_property(self, obj):
+        obj.accent_color = object()
+
+        assert obj.accent_colour is obj.accent_color
+
     @pytest.mark.asyncio()
     async def test_fetch_self(self, obj):
         obj.id = 123
@@ -178,15 +183,14 @@ class TestUser:
         # ABC, so must be stubbed.
         return hikari_test_helpers.mock_class_namespace(users.User, slots_=False)()
 
-    def test_avatar_url_when_hash(self, obj):
-        avatar = object()
+    def test_accent_colour_alias_property(self, obj):
+        obj.accent_color = object()
 
-        with mock.patch.object(users.User, "make_avatar_url", return_value=avatar):
-            assert obj.avatar_url is avatar
+        assert obj.accent_colour is obj.accent_color
 
-    def test_avatar_url_when_no_hash(self, obj):
-        with mock.patch.object(users.User, "make_avatar_url", return_value=None):
-            assert obj.avatar_url is None
+    def test_avatar_url_property(self, obj):
+        with mock.patch.object(users.User, "make_avatar_url") as make_avatar_url:
+            assert obj.avatar_url is make_avatar_url.return_value
 
     def test_make_avatar_url_when_no_hash(self, obj):
         obj.avatar_hash = None
@@ -255,15 +259,17 @@ class TestUser:
             file_format="png",
         )
 
-    def test_banner_url_when_hash(self, obj):
-        banner = object()
+    def test_banner_url_property(self, obj):
+        with mock.patch.object(users.User, "make_banner_url") as make_banner_url:
+            assert obj.banner_url is make_banner_url.return_value
 
-        with mock.patch.object(users.User, "make_banner_url", return_value=banner):
-            assert obj.banner_url is banner
+    def test_make_banner_url_when_no_hash(self, obj):
+        obj.banner_hash = None
 
-    def test_banner_url_when_no_hash(self, obj):
-        with mock.patch.object(users.User, "make_banner_url", return_value=None):
-            assert obj.banner_url is None
+        with mock.patch.object(routes, "CDN_USER_BANNER") as route:
+            assert obj.make_banner_url(ext=None, size=4096) is None
+
+        route.compile_to_file.assert_not_called()
 
     def test_make_banner_url_when_format_is_None_and_banner_hash_is_for_gif(self, obj):
         obj.banner_hash = "a_18dnf8dfbakfdh"

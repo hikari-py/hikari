@@ -146,14 +146,16 @@ class PartialUser(snowflakes.Unique, abc.ABC):
     @property
     @abc.abstractmethod
     def accent_color(self) -> undefined.UndefinedNoneOr[colors.Color]:
-        """The custom banner color for the user, if set else `hikari.undefined.UNDEFINED`.
+        """The custom banner color for the user, if set else `builtins.None`.
+
+        Will be `hikari.undefined.UNDEFINED` if not known.
 
         The official client will decide the default color if not set.
         """  # noqa: D401 - Imperative mood
 
     @property
     def accent_colour(self) -> undefined.UndefinedNoneOr[colors.Color]:
-        """Alias for `accent_color` field."""
+        """Alias for the `accent_color` field."""
         return self.accent_color
 
     @property
@@ -461,14 +463,14 @@ class User(PartialUser, abc.ABC):
     @property
     @abc.abstractmethod
     def accent_color(self) -> typing.Optional[colors.Color]:
-        """The custom banner color for the user, if set else `hikari.undefined.UNDEFINED`.
+        """The custom banner color for the user, if set else `builtins.None`.
 
         The official client will decide the default color if not set.
         """  # noqa: D401 - Imperative mood
 
     @property
     def accent_colour(self) -> typing.Optional[colors.Color]:
-        """Alias for `accent_color` field."""
+        """Alias for the `accent_color` field."""
         return self.accent_color
 
     @property
@@ -610,15 +612,13 @@ class User(PartialUser, abc.ABC):
         ext : typing.Optional[builtins.str]
             The ext to use for this URL, defaults to `png` or `gif`.
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
-            animated). Will be ignored for default banner which can only be
-            `png`.
+            animated).
 
             If `builtins.None`, then the correct default extension is
             determined based on whether the banner is animated or not.
         size : builtins.int
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
-            Will be ignored for default banner.
 
         Returns
         -------

@@ -163,7 +163,9 @@ class TestMessageUpdateEvent:
         event.message.webhook_id = webhook_id
         assert event.is_human is expected_is_human
 
-    @pytest.mark.parametrize(("webhook_id", "is_webhook"), [(123, True), (None, False)])
+    @pytest.mark.parametrize(
+        ("webhook_id", "is_webhook"), [(123, True), (None, False), (undefined.UNDEFINED, undefined.UNDEFINED)]
+    )
     def test_is_webhook_property(self, event, webhook_id, is_webhook):
         event.message.webhook_id = webhook_id
         assert event.is_webhook is is_webhook
