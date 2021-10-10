@@ -3576,8 +3576,7 @@ class TestRESTClientImplAsync:
             [mock.call({"id": "456"}, guild_id=123), mock.call({"id": "789"}, guild_id=123)]
         )
 
-    async def test_create_role(self, rest_client, file_resource):
-        icon_resource = file_resource("icon data")
+    async def test_create_role(self, rest_client, file_resource_patch):
         expected_route = routes.POST_GUILD_ROLES.compile(guild=123)
         expected_json = {
             "name": "admin",
@@ -3659,7 +3658,7 @@ class TestRESTClientImplAsync:
         }
         rest_client._request = mock.AsyncMock(return_value={"id": "123"})
 
-        with mock.patch.object(files, "ensure_resource", side_effect=[icon_resource]):
+        with mock.patch.object(files, "ensure_resource", return_value=icon_resource):
             returned = await rest_client.edit_role(
                 StubModel(123),
                 StubModel(789),

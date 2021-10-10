@@ -153,9 +153,8 @@ class TestRole:
         assert model.colour == colors.Color(0x1A2B3C)
 
     def test_icon_url_property(self, model):
-        model.make_icon_url = mock.Mock(return_value="url")
-
-        assert model.icon_url == "url"
+        with mock.patch.object(guilds.Role, "make_icon_url") as make_icon_url:
+            assert model.icon_url == make_icon_url.return_value
 
         model.make_icon_url.assert_called_once_with()
 
