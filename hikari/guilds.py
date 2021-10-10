@@ -1021,7 +1021,7 @@ class Role(PartialRole):
     icon_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
     """Hash of the role's icon if set, else `builtins.None`."""
 
-    unicode_emoji: typing.Union[str, emojis_.UnicodeEmoji, None] = attr.field(eq=False, hash=False, repr=False)
+    unicode_emoji: typing.Optional[emojis_.UnicodeEmoji] = attr.field(eq=False, hash=False, repr=False)
     """Role's unicode emoji if set, else `builtins.None`."""
 
     is_managed: bool = attr.field(eq=False, hash=False, repr=False)

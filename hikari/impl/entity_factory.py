@@ -1207,9 +1207,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             if "premium_subscriber" in tags_payload:
                 is_premium_subscriber_role = True
 
-        emoji = payload.get("unicode_emoji")
-        if emoji:
-            emoji = self.deserialize_unicode_emoji(emoji)
+        emoji: typing.Optional[emoji_models.UnicodeEmoji] = None
+        if (raw_emoji := payload.get("unicode_emoji")) is not None:
+            emoji = emoji_models.UnicodeEmoji(raw_emoji)
 
         return guild_models.Role(
             app=self._app,
