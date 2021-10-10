@@ -207,16 +207,6 @@ class TestMember:
     def test_app_property(self, model, mock_user):
         assert model.app is mock_user.app
 
-    def test_guild_avatar_url_property_when_hash(self, model):
-        avatar = object()
-
-        with mock.patch.object(guilds.Member, "make_guild_avatar_url", return_value=avatar):
-            assert model.guild_avatar_url is avatar
-
-    def test_guild_avatar_url_property_when_no_hash(self, model):
-        with mock.patch.object(guilds.Member, "make_guild_avatar_url", return_value=None):
-            assert model.guild_avatar_url is None
-
     def test_id_property(self, model, mock_user):
         assert model.id is mock_user.id
 
@@ -240,6 +230,19 @@ class TestMember:
 
     def test_avatar_url_property(self, model, mock_user):
         assert model.avatar_url is mock_user.avatar_url
+
+    def test_banner_hash_property(self, model, mock_user):
+        assert model.banner_hash is mock_user.banner_hash
+
+    def test_banner_url_property(self, model, mock_user):
+        assert model.banner_url is mock_user.banner_url
+
+    def test_accent_color_property(self, model, mock_user):
+        assert model.accent_color is mock_user.accent_color
+
+    def test_guild_avatar_url_property(self, model):
+        with mock.patch.object(guilds.Member, "make_guild_avatar_url") as make_guild_avatar_url:
+            assert model.guild_avatar_url is make_guild_avatar_url.return_value
 
     def test_make_avatar_url(self, model, mock_user):
         result = model.make_avatar_url(ext="png", size=4096)

@@ -2710,6 +2710,7 @@ class TestEntityFactoryImpl:
                     "type": 1,
                     "name": "a dumb name",
                     "description": "42",
+                    "channel_types": [0, 1, 2],
                     "required": True,
                     "options": [
                         {
@@ -2745,14 +2746,20 @@ class TestEntityFactoryImpl:
         assert option.is_required is True
         assert option.description == "42"
         assert option.choices is None
-        assert len(option.options) == 1
+        assert option.channel_types == [
+            channel_models.ChannelType.GUILD_TEXT,
+            channel_models.ChannelType.DM,
+            channel_models.ChannelType.GUILD_VOICE,
+        ]
 
+        assert len(option.options) == 1
         suboption = option.options[0]
         assert suboption.type is commands.OptionType.USER
         assert suboption.name == "a name"
         assert suboption.description == "84"
         assert suboption.is_required is False
         assert suboption.options is None
+        assert suboption.channel_types is None
 
         # CommandChoice
         assert len(suboption.choices) == 1
@@ -4267,6 +4274,7 @@ class TestEntityFactoryImpl:
         message_payload["application"]["primary_sku_id"] = None
         message_payload["application"]["icon"] = None
         message_payload["referenced_message"] = None
+        del message_payload["member"]
         del message_payload["application"]["cover_image"]
 
         message = entity_factory_impl.deserialize_message(message_payload)
@@ -4274,6 +4282,7 @@ class TestEntityFactoryImpl:
         assert message.application.cover_image_hash is None
         assert message.application.icon_hash is None
         assert message.referenced_message is None
+        assert message.member is undefined.UNDEFINED
 
     def test_deserialize_message_deserializes_old_stickers_field(self, entity_factory_impl, message_payload):
         message_payload["stickers"] = message_payload["sticker_items"]
