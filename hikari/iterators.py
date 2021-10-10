@@ -60,7 +60,7 @@ class All(typing.Generic[ValueT]):
     For example...
 
     ```py
-    if w(foo) and x(foo) andy(foo) and z(foo):
+    if w(foo) and x(foo) and y(foo) and z(foo):
         ...
     ```
     is equivalent to
