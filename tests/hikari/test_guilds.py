@@ -128,10 +128,7 @@ class TestPartialIntegration:
 class TestRole:
     @pytest.fixture()
     def model(self, mock_app):
-        return hikari_test_helpers.mock_class_namespace(
-            guilds.Role,
-            init_=False,
-            slots_=False,
+        return guilds.Role(
             app=mock_app,
             id=snowflakes.Snowflake(979899100),
             name="@everyone",
@@ -147,7 +144,7 @@ class TestRole:
             bot_id=None,
             integration_id=None,
             is_premium_subscriber_role=False,
-        )()
+        )
 
     def test_colour_property(self, model):
         assert model.colour == colors.Color(0x1A2B3C)
@@ -156,7 +153,7 @@ class TestRole:
         with mock.patch.object(guilds.Role, "make_icon_url") as make_icon_url:
             assert model.icon_url == make_icon_url.return_value
 
-        model.make_icon_url.assert_called_once_with()
+            model.make_icon_url.assert_called_once_with()
 
     def test_make_icon_url_when_hash_is_None(self, model):
         model.icon_hash = None

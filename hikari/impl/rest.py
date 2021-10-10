@@ -2847,6 +2847,9 @@ class RESTClientImpl(rest_api.RESTClient):
         if not undefined.any_undefined(color, colour):
             raise TypeError("Can not specify 'color' and 'colour' together.")
 
+        if not undefined.any_undefined(icon, unicode_emoji):
+            raise ValueError("Can not specify 'icon' and 'unicode_emoji' together.")
+
         route = routes.POST_GUILD_ROLES.compile(guild=guild)
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
@@ -2895,6 +2898,9 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> guilds.Role:
         if not undefined.any_undefined(color, colour):
             raise TypeError("Can not specify 'color' and 'colour' together.")
+
+        if not undefined.any_undefined(icon, unicode_emoji):
+            raise ValueError("Can not specify 'icon' and 'unicode_emoji' together.")
 
         route = routes.PATCH_GUILD_ROLE.compile(guild=guild, role=role)
 
