@@ -244,19 +244,24 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
         exc: typing.Optional[BaseException],
         exc_tb: typing.Optional[types.TracebackType],
     ) -> None:
-        self._lock.release()
+        self.release()
 
     @property
     def is_unknown(self) -> bool:
         """Return `builtins.True` if the bucket represents an `UNKNOWN` bucket."""
         return self.name.startswith(UNKNOWN_HASH)
 
+    def release(self) -> None:
+        """Release the lock on the bucket."""
+        self._lock.release()
+
     async def acquire(self) -> None:
-        """Acquire time on this rate limiter.
+        """Acquire time and the lock on this bucket.
 
         !!! note
             You should afterwards invoke `RESTBucket.update_rate_limit` to
-            update any rate limit information you are made aware of.
+            update any rate limit information you are made aware of and
+            `RESTBucket.release` to release the lock.
 
         Raises
         ------
@@ -272,6 +277,8 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
         retry_after = self.reset_at - now
 
         if self.is_rate_limited(now) and retry_after > self._max_rate_limit:
+            # Release lock before we error
+            self._lock.release()
             raise errors.RateLimitTooLongError(
                 route=self._compiled_route,
                 retry_after=retry_after,
@@ -303,18 +310,6 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
         self.limit: int = limit
         self.reset_at: float = reset_at
         self.period: float = max(0.0, self.reset_at - time.monotonic())
-
-    def drip(self) -> None:
-        """Decrement the remaining count for this bucket.
-
-        !!! note
-            If the bucket is marked as `RESTBucket.is_unknown`, then this will
-            not do anything. `Unknown` buckets have infinite rate limits.
-        """
-        # We don't drip unknown buckets: we cannot rate limit them as we don't know their real bucket hash or
-        # the current rate limit values Discord put on them...
-        if not self.is_unknown:
-            self.remaining -= 1
 
     def resolve(self, real_bucket_hash: str) -> None:
         """Resolve an unknown bucket.
@@ -533,7 +528,7 @@ class RESTBucketManager:
 
         _LOGGER.log(ux.TRACE, "purged %s stale buckets, %s remain in survival, %s active", dead, survival, active)
 
-    def acquire(self, compiled_route: routes.CompiledRoute) -> typing.AsyncContextManager[None]:
+    def acquire(self, compiled_route: routes.CompiledRoute) -> RESTBucket:
         """Acquire a bucket for the given route.
 
         Parameters
@@ -543,17 +538,16 @@ class RESTBucketManager:
 
         Returns
         -------
-        typing.AsyncContextManager[builtins.None]
-            A context manager to enter while doing the request.
+        hikari.impl.RESTBucket
+            The bucket for this route.
 
         !!! note
-            You MUST keep the context manager acquired during the whole of the
-            request. From making the request until calling `update_rate_limits`.
+            You MUST keep the context manager of the bucket acquired during the
+            full duration of the request. From making the request until calling
+            `update_rate_limits`.
         """
-        template = compiled_route.route
-
         try:
-            bucket_hash = self.routes_to_hashes[template]
+            bucket_hash = self.routes_to_hashes[compiled_route.route]
             real_bucket_hash = compiled_route.create_real_bucket_hash(bucket_hash)
         except KeyError:
             real_bucket_hash = _create_unknown_hash(compiled_route)
