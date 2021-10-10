@@ -1021,7 +1021,7 @@ class Role(PartialRole):
     icon_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
     """Hash of the role's icon if set, else `builtins.None`."""
 
-    unicode_emoji: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    unicode_emoji: typing.Union[str, emojis_.UnicodeEmoji, None] = attr.field(eq=False, hash=False, repr=False)
     """Role's unicode emoji if set, else `builtins.None`."""
 
     is_managed: bool = attr.field(eq=False, hash=False, repr=False)
@@ -1062,6 +1062,17 @@ class Role(PartialRole):
     def colour(self) -> colours.Colour:
         """Alias for the `color` field."""
         return self.color
+
+    @property
+    def icon_url(self) -> typing.Optional[files.URL]:
+        """Role icon URL, if there is one.
+
+        Returns
+        -------
+        typing.Optional[hikari.files.URL]
+            The URL, or `builtins.None` if no icon exists.
+        """
+        return self.make_icon_url()
 
     def make_icon_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the icon URL for this role, if set.

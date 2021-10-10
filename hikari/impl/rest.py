@@ -2839,7 +2839,7 @@ class RESTClientImpl(rest_api.RESTClient):
         color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        icon: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
+        icon: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         unicode_emoji: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         mentionable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -2857,11 +2857,10 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("unicode_emoji", unicode_emoji)
         body.put("mentionable", mentionable)
 
-        tasks: typing.List[asyncio.Task[str]] = []
+        if icon and unicode_emoji:
+            ValueError("Roles cannot have both icons and unicode emojis.")
 
-        if icon is None:
-            body.put("icon", None)
-        elif icon is not undefined.UNDEFINED:
+        if icon is not undefined.UNDEFINED:
             icon_resource = files.ensure_resource(icon)
             async with icon_resource.stream(executor=self._executor) as stream:
                 body.put("icon", await stream.data_uri())
@@ -2889,7 +2888,7 @@ class RESTClientImpl(rest_api.RESTClient):
         color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        icon: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
+        icon: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         unicode_emoji: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         mentionable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -2908,18 +2907,13 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("unicode_emoji", unicode_emoji)
         body.put("mentionable", mentionable)
 
-        tasks: typing.List[asyncio.Task[str]] = []
+        if icon and unicode_emoji:
+            ValueError("Roles cannot have both icons and unicode emojis.")
 
-        if icon is None:
-            body.put("icon", None)
-        elif icon is not undefined.UNDEFINED:
+        if icon is not undefined.UNDEFINED:
             icon_resource = files.ensure_resource(icon)
             async with icon_resource.stream(executor=self._executor) as stream:
-                task = asyncio.create_task(stream.data_uri())
-                task.add_done_callback(lambda future: body.put("icon", future.result()))
-                tasks.append(task)
-
-        await asyncio.gather(*tasks)
+                body.put("icon", await stream.data_uri())
 
         response = await self._request(route, json=body, reason=reason)
         assert isinstance(response, dict)

@@ -128,7 +128,10 @@ class TestPartialIntegration:
 class TestRole:
     @pytest.fixture()
     def model(self, mock_app):
-        return guilds.Role(
+        return hikari_test_helpers.mock_class_namespace(
+            guilds.Role,
+            init_=False,
+            slots_=False,
             app=mock_app,
             id=snowflakes.Snowflake(979899100),
             name="@everyone",
@@ -144,10 +147,37 @@ class TestRole:
             bot_id=None,
             integration_id=None,
             is_premium_subscriber_role=False,
-        )
+        )()
 
     def test_colour_property(self, model):
         assert model.colour == colors.Color(0x1A2B3C)
+
+    def test_icon_url_property(self, model):
+        model.make_icon_url = mock.Mock(return_value="url")
+
+        assert model.icon_url == "url"
+
+        model.make_icon_url.assert_called_once_with()
+
+    def test_make_icon_url_when_hash_is_None(self, model):
+        model.icon_hash = None
+
+        with mock.patch.object(
+            routes, "CDN_ROLE_ICON", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert model.make_icon_url(ext="jpeg", size=1) is None
+
+        route.compile_to_file.assert_not_called()
+
+    def test_make_icon_url_when_hash_is_not_None(self, model):
+        with mock.patch.object(
+            routes, "CDN_ROLE_ICON", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert model.make_icon_url(ext="jpeg", size=1) == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL, role_id=979899100, hash="icon_hash", size=1, file_format="jpeg"
+        )
 
 
 class TestGuildWidget:

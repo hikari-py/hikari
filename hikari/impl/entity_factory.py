@@ -1207,6 +1207,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             if "premium_subscriber" in tags_payload:
                 is_premium_subscriber_role = True
 
+        emoji = payload.get("unicode_emoji")
+        if emoji:
+            emoji = self.deserialize_unicode_emoji(emoji)
+
         return guild_models.Role(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
@@ -1215,7 +1219,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             color=color_models.Color(payload["color"]),
             is_hoisted=payload["hoist"],
             icon_hash=payload.get("icon"),
-            unicode_emoji=payload.get("unicode_emoji"),
+            unicode_emoji=emoji,
             position=int(payload["position"]),
             permissions=permission_models.Permissions(int(payload["permissions"])),
             is_managed=payload["managed"],
