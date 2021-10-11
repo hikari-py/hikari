@@ -23,6 +23,7 @@ import asyncio
 import contextlib
 import datetime
 import http
+import warnings
 
 import mock
 import pytest
@@ -3480,14 +3481,43 @@ class TestRESTClientImplAsync:
         )
         rest_client._request.assert_awaited_once_with(expected_route, json={}, reason=undefined.UNDEFINED)
 
+    async def test_my_edit_member(self, rest_client):
+        expected_route = routes.PATCH_MY_GUILD_MEMBER.compile(guild=123)
+        expected_json = {"nick": "test"}
+        rest_client._request = mock.AsyncMock(return_value={"id": "789"})
+
+        result = await rest_client.edit_my_member(StubModel(123), nickname="test", reason="because i can")
+        assert result is rest_client._entity_factory.deserialize_member.return_value
+
+        rest_client._entity_factory.deserialize_member.assert_called_once_with(
+            rest_client._request.return_value, guild_id=123
+        )
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="because i can")
+
+    async def test_edit_my_member_without_optionals(self, rest_client):
+        expected_route = routes.PATCH_MY_GUILD_MEMBER.compile(guild=123)
+        rest_client._request = mock.AsyncMock(return_value={"id": "789"})
+
+        result = await rest_client.edit_my_member(StubModel(123))
+        assert result is rest_client._entity_factory.deserialize_member.return_value
+
+        rest_client._entity_factory.deserialize_member.assert_called_once_with(
+            rest_client._request.return_value, guild_id=123
+        )
+        rest_client._request.assert_awaited_once_with(expected_route, json={}, reason=undefined.UNDEFINED)
+
     async def test_edit_my_nick(self, rest_client):
-        expected_route = routes.PATCH_MY_GUILD_NICKNAME.compile(guild=123)
-        expected_json = {"nick": "hikari is the best"}
+        rest_client.edit_my_member = mock.AsyncMock()
         rest_client._request = mock.AsyncMock()
 
-        await rest_client.edit_my_nick(StubModel(123), "hikari is the best", reason="because its true")
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=DeprecationWarning)
+            result = await rest_client.edit_my_nick(123, "hikari is the best", reason="because its true")
 
-        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="because its true")
+        assert result is None
+        rest_client.edit_my_member.assert_awaited_once_with(
+            123, nickname="hikari is the best", reason="because its true"
+        )
 
     async def test_add_role_to_member(self, rest_client):
         expected_route = routes.PUT_GUILD_MEMBER_ROLE.compile(guild=123, user=456, role=789)

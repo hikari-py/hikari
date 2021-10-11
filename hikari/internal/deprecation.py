@@ -41,7 +41,7 @@ def warn_deprecated(
     *,
     version: typing.Optional[str] = None,
     alternative: typing.Optional[str] = None,
-    stack_level: int = 1,
+    stack_level: int = 3,
 ) -> None:
     """Raise a deprecated warning.
 
@@ -57,7 +57,7 @@ def warn_deprecated(
     alternative: typing.Optional[str]
         If specified, the alternative to use.
     stack_level: int
-        The stack level for the warning. Defaults to `1`.
+        The stack level for the warning. Defaults to `3`.
     """
     if inspect.isclass(obj) or inspect.isfunction(obj):
         obj = f"{obj.__module__}.{obj.__qualname__}"
