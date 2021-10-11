@@ -2738,7 +2738,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_member(response, guild_id=snowflakes.Snowflake(guild))
 
-    @deprecation.deprecated("2.0.0.dev104", alternative="RESTClientImpl.edit_my_member's nick parameter")
+    @deprecation.deprecated("2.0.0.dev104", alternative="RESTClientImpl.edit_my_member's nickname parameter")
     async def edit_my_nick(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.Guild],
