@@ -2727,17 +2727,18 @@ class RESTClientImpl(rest_api.RESTClient):
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         *,
-        nick: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
+        nickname: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.Member:
         route = routes.PATCH_MY_GUILD_MEMBER.compile(guild=guild)
         body = data_binding.JSONObjectBuilder()
-        body.put("nick", nick)
+        body.put("nick", nickname)
 
         response = await self._request(route, json=body, reason=reason)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_member(response, guild_id=snowflakes.Snowflake(guild))
 
+    @deprecation.deprecated("2.0.0.dev104", alternative="RESTClientImpl.edit_my_member's nick parameter")
     async def edit_my_nick(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.Guild],
@@ -2745,12 +2746,7 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
-        deprecation.warn_deprecated(
-            RESTClientImpl.edit_my_nick,
-            version="2.0.0.dev104",
-            alternative="RESTClientImpl.edit_my_member's nick parameter",
-        )
-        await self.edit_my_member(guild, nick=nick, reason=reason)
+        await self.edit_my_member(guild, nickname=nick, reason=reason)
 
     async def add_role_to_member(
         self,

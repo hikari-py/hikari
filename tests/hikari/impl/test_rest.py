@@ -3438,7 +3438,7 @@ class TestRESTClientImplAsync:
         expected_json = {"nick": "test"}
         rest_client._request = mock.AsyncMock(return_value={"id": "789"})
 
-        result = await rest_client.edit_my_member(StubModel(123), nick="test", reason="because i can")
+        result = await rest_client.edit_my_member(StubModel(123), nickname="test", reason="because i can")
         assert result is rest_client._entity_factory.deserialize_member.return_value
 
         rest_client._entity_factory.deserialize_member.assert_called_once_with(
@@ -3467,7 +3467,9 @@ class TestRESTClientImplAsync:
             result = await rest_client.edit_my_nick(123, "hikari is the best", reason="because its true")
 
         assert result is None
-        rest_client.edit_my_member.assert_awaited_once_with(123, nick="hikari is the best", reason="because its true")
+        rest_client.edit_my_member.assert_awaited_once_with(
+            123, nickname="hikari is the best", reason="because its true"
+        )
 
     async def test_add_role_to_member(self, rest_client):
         expected_route = routes.PUT_GUILD_MEMBER_ROLE.compile(guild=123, user=456, role=789)
