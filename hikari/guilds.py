@@ -1022,7 +1022,7 @@ class Role(PartialRole):
     """Hash of the role's icon if set, else `builtins.None`."""
 
     unicode_emoji: typing.Optional[emojis_.UnicodeEmoji] = attr.field(eq=False, hash=False, repr=False)
-    """Role's unicode emoji if set, else `builtins.None`."""
+    """Role's icon as an unicode emoji if set, else `builtins.None`."""
 
     is_managed: bool = attr.field(eq=False, hash=False, repr=False)
     """Whether this role is managed by an integration."""

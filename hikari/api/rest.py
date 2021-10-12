@@ -5500,9 +5500,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             An alias for `color`.
         hoist : hikari.undefined.UndefinedOr[builtins.bool]
             If provided, whether to hoist the role.
-        icon : undefined.UndefinedOr[files.Resourceish]
+        icon : hikari.undefined.UndefinedOr[hikari.files.Resourceish]
             If provided, the role icon. Must be a 64x64 image under 256kb.
-        unicode_emoji : unicode_emoji: undefined.UndefinedOr[str]
+        unicode_emoji : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the standard emoji to set as the role icon.
         mentionable : hikari.undefined.UndefinedOr[builtins.bool]
             If provided, whether to make the role mentionable.
@@ -5518,7 +5518,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Raises
         ------
         builtins.TypeError
-            If both `color` and `colour` are specified.
+            If both `color` and `colour` are specified or if both `icon` and
+            `unicode_emoji` are specified.
         hikari.errors.BadRequestError
             If any of the fields that are passed have an invalid value.
         hikari.errors.ForbiddenError
@@ -5592,8 +5593,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        icon: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
-        unicode_emoji: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        icon: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
+        unicode_emoji: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
         mentionable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.Role:
@@ -5620,10 +5621,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             An alias for `color`.
         hoist : hikari.undefined.UndefinedOr[builtins.bool]
             If provided, whether to hoist the role.
-        icon : hikari.undefined.UndefinedOr[hikari.files.Resourceish]
+        icon : hikari.undefined.UndefinedNoneOr[hikari.files.Resourceish]
             If provided, the new role icon. Must be a 64x64 image
             under 256kb.
-        unicode_emoji : hikari.undefined.UndefinedOr[builtins.str]
+        unicode_emoji : hikari.undefined.UndefinedNoneOr[builtins.str]
             If provided, the new unicode emoji to set as the role icon.
         mentionable : hikari.undefined.UndefinedOr[builtins.bool]
             If provided, whether to make the role mentionable.
@@ -5639,7 +5640,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Raises
         ------
         builtins.TypeError
-            If both `color` and `colour` are specified.
+            If both `color` and `colour` are specified or if both `icon` and
+            `unicode_emoji` are specified.
         hikari.errors.BadRequestError
             If any of the fields that are passed have an invalid value.
         hikari.errors.ForbiddenError

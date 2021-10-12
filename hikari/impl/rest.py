@@ -2848,7 +2848,7 @@ class RESTClientImpl(rest_api.RESTClient):
             raise TypeError("Can not specify 'color' and 'colour' together.")
 
         if not undefined.any_undefined(icon, unicode_emoji):
-            raise ValueError("Can not specify 'icon' and 'unicode_emoji' together.")
+            raise TypeError("Can not specify 'icon' and 'unicode_emoji' together.")
 
         route = routes.POST_GUILD_ROLES.compile(guild=guild)
         body = data_binding.JSONObjectBuilder()
@@ -2859,9 +2859,6 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("hoist", hoist)
         body.put("unicode_emoji", unicode_emoji)
         body.put("mentionable", mentionable)
-
-        if icon and unicode_emoji:
-            ValueError("Roles cannot have both icons and unicode emojis.")
 
         if icon is not undefined.UNDEFINED:
             icon_resource = files.ensure_resource(icon)
@@ -2892,7 +2889,7 @@ class RESTClientImpl(rest_api.RESTClient):
         colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         icon: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
-        unicode_emoji: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        unicode_emoji: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
         mentionable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.Role:
@@ -2900,7 +2897,7 @@ class RESTClientImpl(rest_api.RESTClient):
             raise TypeError("Can not specify 'color' and 'colour' together.")
 
         if not undefined.any_undefined(icon, unicode_emoji):
-            raise ValueError("Can not specify 'icon' and 'unicode_emoji' together.")
+            raise TypeError("Can not specify 'icon' and 'unicode_emoji' together.")
 
         route = routes.PATCH_GUILD_ROLE.compile(guild=guild, role=role)
 
@@ -2912,9 +2909,6 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("hoist", hoist)
         body.put("unicode_emoji", unicode_emoji)
         body.put("mentionable", mentionable)
-
-        if icon and unicode_emoji:
-            ValueError("Roles cannot have both icons and unicode emojis.")
 
         if icon is None:
             body.put("icon", None)
