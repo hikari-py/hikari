@@ -1724,6 +1724,8 @@ class TestRESTClientImplAsync:
                     color=None,
                     guild_id=123,
                     is_hoisted=True,
+                    icon_hash="icon_hash",
+                    unicode_emoji=None,
                     is_managed=False,
                     name="",
                     is_mentionable=True,
@@ -3603,18 +3605,17 @@ class TestRESTClientImplAsync:
             [mock.call({"id": "456"}, guild_id=123), mock.call({"id": "789"}, guild_id=123)]
         )
 
-    async def test_create_role(self, rest_client):
-        role = StubModel(456)
+    async def test_create_role(self, rest_client, file_resource_patch):
         expected_route = routes.POST_GUILD_ROLES.compile(guild=123)
         expected_json = {
             "name": "admin",
             "permissions": 8,
             "color": colors.Color.from_int(12345),
             "hoist": True,
+            "icon": "some data",
             "mentionable": False,
         }
         rest_client._request = mock.AsyncMock(return_value={"id": "456"})
-        rest_client._entity_factory.deserialize_role = mock.Mock(return_value=role)
 
         returned = await rest_client.create_role(
             StubModel(123),
@@ -3622,10 +3623,11 @@ class TestRESTClientImplAsync:
             permissions=permissions.Permissions.ADMINISTRATOR,
             color=colors.Color.from_int(12345),
             hoist=True,
+            icon="icon.png",
             mentionable=False,
             reason="roles are cool",
         )
-        assert returned is role
+        assert returned is rest_client._entity_factory.deserialize_role.return_value
 
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="roles are cool")
         rest_client._entity_factory.deserialize_role.assert_called_once_with({"id": "456"}, guild_id=123)
@@ -3657,10 +3659,14 @@ class TestRESTClientImplAsync:
         rest_client._entity_factory.deserialize_role.assert_called_once_with({"id": "456"}, guild_id=123)
 
     async def test_create_role_when_color_and_colour_specified(self, rest_client):
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeError, match=r"Can not specify 'color' and 'colour' together."):
             await rest_client.create_role(
                 StubModel(123), color=colors.Color.from_int(12345), colour=colors.Color.from_int(12345)
             )
+
+    async def test_create_role_when_icon_unicode_emoji_specified(self, rest_client):
+        with pytest.raises(TypeError, match=r"Can not specify 'icon' and 'unicode_emoji' together."):
+            await rest_client.create_role(StubModel(123), icon="icon.png", unicode_emoji="\N{OK HAND SIGN}")
 
     async def test_reposition_roles(self, rest_client):
         expected_route = routes.POST_GUILD_ROLES.compile(guild=123)
@@ -3671,18 +3677,17 @@ class TestRESTClientImplAsync:
 
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
 
-    async def test_edit_role(self, rest_client):
-        role = StubModel(456)
+    async def test_edit_role(self, rest_client, file_resource_patch):
         expected_route = routes.PATCH_GUILD_ROLE.compile(guild=123, role=789)
         expected_json = {
             "name": "admin",
             "permissions": 8,
             "color": colors.Color.from_int(12345),
             "hoist": True,
+            "icon": "some data",
             "mentionable": False,
         }
         rest_client._request = mock.AsyncMock(return_value={"id": "456"})
-        rest_client._entity_factory.deserialize_role = mock.Mock(return_value=role)
 
         returned = await rest_client.edit_role(
             StubModel(123),
@@ -3691,18 +3696,25 @@ class TestRESTClientImplAsync:
             permissions=permissions.Permissions.ADMINISTRATOR,
             color=colors.Color.from_int(12345),
             hoist=True,
+            icon="icon.png",
             mentionable=False,
             reason="roles are cool",
         )
-        assert returned is role
+        assert returned is rest_client._entity_factory.deserialize_role.return_value
 
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="roles are cool")
         rest_client._entity_factory.deserialize_role.assert_called_once_with({"id": "456"}, guild_id=123)
 
     async def test_edit_role_when_color_and_colour_specified(self, rest_client):
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeError, match=r"Can not specify 'color' and 'colour' together."):
             await rest_client.edit_role(
                 StubModel(123), StubModel(456), color=colors.Color.from_int(12345), colour=colors.Color.from_int(12345)
+            )
+
+    async def test_edit_role_when_icon_and_unicode_emoji_specified(self, rest_client):
+        with pytest.raises(TypeError, match=r"Can not specify 'icon' and 'unicode_emoji' together."):
+            await rest_client.edit_role(
+                StubModel(123), StubModel(456), icon="icon.png", unicode_emoji="\N{OK HAND SIGN}"
             )
 
     async def test_delete_role(self, rest_client):
