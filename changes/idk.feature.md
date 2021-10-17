@@ -1,0 +1,1 @@
+RESTClient.entity_factory property

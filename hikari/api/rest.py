@@ -54,6 +54,7 @@ if typing.TYPE_CHECKING:
     from hikari import users
     from hikari import voices
     from hikari import webhooks
+    from hikari.api import entity_factory as entity_factory_
     from hikari.api import special_endpoints
     from hikari.interactions import base_interactions
     from hikari.internal import time
@@ -113,6 +114,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     def is_alive(self) -> bool:
         """Whether this component is alive."""
+
+    @property
+    @abc.abstractmethod
+    def entity_factory(self) -> entity_factory_.EntityFactory:
+        """Entity factory used by this REST client."""
 
     @property
     @abc.abstractmethod
