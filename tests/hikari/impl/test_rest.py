@@ -664,6 +664,9 @@ class TestRESTClientImpl:
 
         assert rest_client.is_alive is expected_result
 
+    def test_entity_factory_property(self, rest_client):
+        assert rest_client.entity_factory is rest_client._entity_factory
+
     def test_http_settings_property(self, rest_client):
         mock_http_settings = object()
         rest_client._http_settings = mock_http_settings

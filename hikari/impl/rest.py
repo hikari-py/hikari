@@ -609,6 +609,10 @@ class RESTClientImpl(rest_api.RESTClient):
         return self._proxy_settings
 
     @property
+    def entity_factory(self) -> entity_factory_.EntityFactory:
+        return self._entity_factory
+
+    @property
     def token_type(self) -> typing.Union[str, applications.TokenType, None]:
         return self._token_type
 
