@@ -773,13 +773,16 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
     _user_mentions: undefined.UndefinedOr[
         typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
     ] = attr.field(default=undefined.UNDEFINED, kw_only=True)
-
-    # Non-arguments.
-    _embeds: typing.List[embeds_.Embed] = attr.field(factory=list)
+    _components: typing.List[special_endpoints.ComponentBuilder] = attr.field(factory=list, kw_only=True)
+    _embeds: typing.List[embeds_.Embed] = attr.field(factory=list, kw_only=True)
 
     @property
     def content(self) -> undefined.UndefinedOr[str]:
         return self._content
+
+    @property
+    def components(self) -> typing.Sequence[special_endpoints.ComponentBuilder]:
+        return self._components.copy()
 
     @property
     def embeds(self) -> typing.Sequence[embeds_.Embed]:
@@ -812,6 +815,12 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
         self,
     ) -> undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]]:
         return self._user_mentions
+
+    def add_component(
+        self: _InteractionMessageBuilderT, component: special_endpoints.ComponentBuilder, /
+    ) -> _InteractionMessageBuilderT:
+        self._components.append(component)
+        return self
 
     def add_embed(self: _InteractionMessageBuilderT, embed: embeds_.Embed, /) -> _InteractionMessageBuilderT:
         self._embeds.append(embed)
@@ -872,6 +881,7 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
 
             data["embeds"] = embeds
 
+        data.put_array("components", self._components, conversion=lambda component: component.build())
         data.put("flags", self.flags)
         data.put("tts", self.is_tts)
 
