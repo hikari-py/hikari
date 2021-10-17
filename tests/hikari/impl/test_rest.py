@@ -384,10 +384,6 @@ class TestRESTApp:
         rest_app._proxy_settings = mock_proxy_settings
         assert rest_app.proxy_settings is mock_proxy_settings
 
-    def test_entity_factory_property(self, rest_app):
-        rest_app._entity_factory = object()
-        assert rest_app.entity_factory is rest_app._entity_factory
-
     def test_acquire(self, rest_app):
         stack = contextlib.ExitStack()
         mock_entity_factory = stack.enter_context(mock.patch.object(entity_factory, "EntityFactoryImpl"))
@@ -667,6 +663,9 @@ class TestRESTClientImpl:
         rest_client._live_attributes = attributes
 
         assert rest_client.is_alive is expected_result
+
+    def test_entity_factory_property(self, rest_client):
+        assert rest_client.entity_factory is rest_client._entity_factory
 
     def test_http_settings_property(self, rest_client):
         mock_http_settings = object()
