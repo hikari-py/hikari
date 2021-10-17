@@ -816,7 +816,9 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
     ) -> undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]]:
         return self._user_mentions
 
-    def add_component(self: _T, component: special_endpoints.ComponentBuilder, /) -> _T:
+    def add_component(
+        self: _InteractionMessageBuilderT, component: special_endpoints.ComponentBuilder, /
+    ) -> _InteractionMessageBuilderT:
         self._components.append(component)
         return self
 
