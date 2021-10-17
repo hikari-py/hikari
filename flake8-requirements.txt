@@ -1,4 +1,3 @@
-# Android support
 flake8==3.9.2
 
 # Plugins
