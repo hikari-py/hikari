@@ -13,7 +13,7 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2.3.5
         with:
           # `towncrier check` runs `git diff --name-only origin/main...`, which
           # needs a non-shallow clone.
