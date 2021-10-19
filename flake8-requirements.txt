@@ -1,5 +1,5 @@
 # Android support
-flake8==3.9.2
+flake8==4.0.1
 
 # Plugins
 # Ref: https://github.com/DmytroLitvinov/awesome-flake8-extensions
