@@ -2319,11 +2319,8 @@ class RESTClientImpl(rest_api.RESTClient):
         form = data_binding.URLEncodedFormBuilder(executor=self._executor)
         form.add_field("name", name)
         form.add_field("tags", tag)
-
-        if description is not undefined.UNDEFINED:
-            form.add_field("description", description)
-
-        form.add_resource("image", files.ensure_resource(image))
+        form.add_field("description", description or "")
+        form.add_resource("file", files.ensure_resource(image))
 
         response = await self._request(route, form_builder=form, reason=reason)
         assert isinstance(response, dict)
