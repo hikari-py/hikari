@@ -104,7 +104,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
 
     async def on_channel_create(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#channel-create for more info."""
-        event = self._event_factory.deserialize_channel_create_event(shard, payload)
+        event = self._event_factory.deserialize_guild_channel_create_event(shard, payload)
 
         if self._cache:
             assert isinstance(
@@ -117,19 +117,16 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
     async def on_channel_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#channel-update for more info."""
         old = self._cache.get_guild_channel(snowflakes.Snowflake(payload["id"])) if self._cache else None
-        event = self._event_factory.deserialize_channel_update_event(shard, payload, old_channel=old)
+        event = self._event_factory.deserialize_guild_channel_update_event(shard, payload, old_channel=old)
 
         if self._cache:
-            assert isinstance(
-                event.channel, channels.GuildChannel
-            ), "channel update events for DM channels are unexpected"
             self._cache.update_guild_channel(event.channel)
 
         await self.dispatch(event)
 
     async def on_channel_delete(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#channel-delete for more info."""
-        event = self._event_factory.deserialize_channel_delete_event(shard, payload)
+        event = self._event_factory.deserialize_guild_channel_delete_event(shard, payload)
 
         if self._cache:
             self._cache.delete_guild_channel(event.channel.id)

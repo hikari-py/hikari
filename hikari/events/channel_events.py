@@ -31,11 +31,8 @@ __all__: typing.List[str] = [
     "ChannelEvent",
     "GuildChannelEvent",
     "DMChannelEvent",
-    "ChannelCreateEvent",
     "GuildChannelCreateEvent",
-    "ChannelUpdateEvent",
     "GuildChannelUpdateEvent",
-    "ChannelDeleteEvent",
     "GuildChannelDeleteEvent",
     "PinsUpdateEvent",
     "GuildPinsUpdateEvent",
@@ -90,7 +87,7 @@ class ChannelEvent(shard_events.ShardEvent, abc.ABC):
         """Perform an API call to fetch the details about this channel.
 
         !!! note
-            For `ChannelDeleteEvent`-derived events, this will always raise
+            For `GuildChannelDeleteEvent` events, this will always raise
             an exception, since the channel will have already been removed.
 
         Returns
@@ -209,7 +206,7 @@ class GuildChannelEvent(ChannelEvent, abc.ABC):
         """Perform an API call to fetch the details about this channel.
 
         !!! note
-            For `ChannelDeleteEvent`-derived events, this will always raise
+            For `GuildChannelDeleteEvent` events, this will always raise
             an exception, since the channel will have already been removed.
 
         Returns
@@ -255,7 +252,7 @@ class DMChannelEvent(ChannelEvent, abc.ABC):
         """Perform an API call to fetch the details about this channel.
 
         !!! note
-            For `ChannelDeleteEvent`-derived events, this will always raise
+            For `GuildChannelDeleteEvent` events, this will always raise
             an exception, since the channel will have already been removed.
 
         Returns
@@ -292,38 +289,10 @@ class DMChannelEvent(ChannelEvent, abc.ABC):
         return channel
 
 
-@base_events.requires_intents(intents.Intents.GUILDS, intents.Intents.DM_MESSAGES)
-class ChannelCreateEvent(ChannelEvent, abc.ABC):
-    """Base event for any channel being created."""
-
-    __slots__: typing.Sequence[str] = ()
-
-    @property
-    def app(self) -> traits.RESTAware:
-        # <<inherited docstring from Event>>.
-        return self.channel.app
-
-    @property
-    @abc.abstractmethod
-    def channel(self) -> channels.PartialChannel:
-        """Channel this event represents.
-
-        Returns
-        -------
-        hikari.channels.PartialChannel
-            The channel that was created.
-        """
-
-    @property
-    def channel_id(self) -> snowflakes.Snowflake:
-        # <<inherited docstring from ChannelEvent>>.
-        return self.channel.id
-
-
 @base_events.requires_intents(intents.Intents.GUILDS)
 @attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
-class GuildChannelCreateEvent(GuildChannelEvent, ChannelCreateEvent):
+class GuildChannelCreateEvent(GuildChannelEvent):
     """Event fired when a guild channel is created."""
 
     shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
@@ -339,43 +308,25 @@ class GuildChannelCreateEvent(GuildChannelEvent, ChannelCreateEvent):
     """
 
     @property
-    def guild_id(self) -> snowflakes.Snowflake:
-        # <<inherited docstring from GuildChannelEvent>>.
-        return self.channel.guild_id
-
-
-@base_events.requires_intents(intents.Intents.GUILDS, intents.Intents.DM_MESSAGES)
-class ChannelUpdateEvent(ChannelEvent, abc.ABC):
-    """Base event for any channel being updated."""
-
-    __slots__: typing.Sequence[str] = ()
-
-    @property
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.channel.app
-
-    @property
-    @abc.abstractmethod
-    def channel(self) -> channels.PartialChannel:
-        """Channel this event represents.
-
-        Returns
-        -------
-        hikari.channels.PartialChannel
-            The channel that was updated.
-        """
 
     @property
     def channel_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from ChannelEvent>>.
         return self.channel.id
 
+    @property
+    def guild_id(self) -> snowflakes.Snowflake:
+        # <<inherited docstring from GuildChannelEvent>>.
+        return self.channel.guild_id
+
 
 @base_events.requires_intents(intents.Intents.GUILDS)
 @attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
-class GuildChannelUpdateEvent(GuildChannelEvent, ChannelUpdateEvent):
+class GuildChannelUpdateEvent(GuildChannelEvent):
     """Event fired when a guild channel is edited."""
 
     shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
@@ -397,48 +348,25 @@ class GuildChannelUpdateEvent(GuildChannelEvent, ChannelUpdateEvent):
     """
 
     @property
-    def guild_id(self) -> snowflakes.Snowflake:
-        # <<inherited docstring from GuildChannelEvent>>.
-        return self.channel.guild_id
-
-
-@base_events.requires_intents(intents.Intents.GUILDS, intents.Intents.DM_MESSAGES)
-class ChannelDeleteEvent(ChannelEvent, abc.ABC):
-    """Base event for any channel being deleted."""
-
-    __slots__: typing.Sequence[str] = ()
-
-    @property
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.channel.app
-
-    @property
-    @abc.abstractmethod
-    def channel(self) -> channels.PartialChannel:
-        """Channel this event represents.
-
-        Returns
-        -------
-        hikari.channels.PartialChannel
-            The channel that was deleted.
-        """
 
     @property
     def channel_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from ChannelEvent>>.
         return self.channel.id
 
-    if typing.TYPE_CHECKING:
-        # Channel will never be found.
-        async def fetch_channel(self) -> typing.NoReturn:
-            ...
+    @property
+    def guild_id(self) -> snowflakes.Snowflake:
+        # <<inherited docstring from GuildChannelEvent>>.
+        return self.channel.guild_id
 
 
 @base_events.requires_intents(intents.Intents.GUILDS)
 @attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
-class GuildChannelDeleteEvent(GuildChannelEvent, ChannelDeleteEvent):
+class GuildChannelDeleteEvent(GuildChannelEvent):
     """Event fired when a guild channel is deleted."""
 
     shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
@@ -452,6 +380,16 @@ class GuildChannelDeleteEvent(GuildChannelEvent, ChannelDeleteEvent):
     hikari.channels.GuildChannel
         The guild channel that was deleted.
     """
+
+    @property
+    def app(self) -> traits.RESTAware:
+        # <<inherited docstring from Event>>.
+        return self.channel.app
+
+    @property
+    def channel_id(self) -> snowflakes.Snowflake:
+        # <<inherited docstring from ChannelEvent>>.
+        return self.channel.id
 
     @property
     def guild_id(self) -> snowflakes.Snowflake:
