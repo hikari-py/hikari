@@ -126,7 +126,7 @@ class EventStream(event_manager_.EventStream[event_manager_.EventT]):
         # The registered wrapping function for the weak ref to this class's _listener method.
         self._timeout = timeout
 
-    # These are only included at runtime in-order to avoid the model being typed as a asynchronous context manager.
+    # These are only included at runtime in-order to avoid the model being typed as an asynchronous context manager.
     if not typing.TYPE_CHECKING:
 
         async def __aenter__(self) -> typing.NoReturn:
