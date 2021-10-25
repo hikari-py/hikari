@@ -1309,8 +1309,8 @@ class RESTClientImpl(rest_api.RESTClient):
             form = data_binding.URLEncodedFormBuilder(executor=self._executor)
             form.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
 
-            for attachment in final_attachments:
-                form.add_resource(attachment)
+            for i, attachment in enumerate(final_attachments):
+                form.add_resource(f"file{i}", attachment)
 
             response = await self._request(route, form_builder=form, query=query, no_auth=no_auth)
         else:
@@ -1494,8 +1494,8 @@ class RESTClientImpl(rest_api.RESTClient):
             form_builder = data_binding.URLEncodedFormBuilder(executor=self._executor)
             form_builder.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
 
-            for attachment in final_attachments:
-                form_builder.add_resource(attachment)
+            for i, attachment in enumerate(final_attachments):
+                form_builder.add_resource(f"file{i}", attachment)
 
             response = await self._request(route, form_builder=form_builder, no_auth=no_auth)
         else:
@@ -2316,16 +2316,13 @@ class RESTClientImpl(rest_api.RESTClient):
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> stickers.GuildSticker:
         route = routes.POST_GUILD_STICKERS.compile(guild=guild)
-        body = data_binding.JSONObjectBuilder()
-        body.put("name", name)
-        body.put("tags", tag)
-        body.put("description", description)
+        form = data_binding.URLEncodedFormBuilder(executor=self._executor)
+        form.add_field("name", name)
+        form.add_field("tags", tag)
+        form.add_field("description", description or "")
+        form.add_resource("file", files.ensure_resource(image))
 
-        image_resource = files.ensure_resource(image)
-        async with image_resource.stream(executor=self._executor) as stream:
-            body.put("image", await stream.data_uri())
-
-        response = await self._request(route, json=body, reason=reason)
+        response = await self._request(route, form_builder=form, reason=reason)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_guild_sticker(response)
 
