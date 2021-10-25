@@ -61,33 +61,25 @@ class TestEventFactoryImpl:
     # CHANNEL EVENTS #
     ##################
 
-    def test_deserialize_channel_create_event_for_guild_channel(self, event_factory, mock_app, mock_shard):
+    def test_deserialize_guild_channel_create_event(self, event_factory, mock_app, mock_shard):
         mock_app.entity_factory.deserialize_channel.return_value = mock.Mock(spec=channel_models.GuildChannel)
         mock_payload = mock.Mock(app=mock_app)
 
-        event = event_factory.deserialize_channel_create_event(mock_shard, mock_payload)
+        event = event_factory.deserialize_guild_channel_create_event(mock_shard, mock_payload)
 
         mock_app.entity_factory.deserialize_channel.assert_called_once_with(mock_payload)
         assert isinstance(event, channel_events.GuildChannelCreateEvent)
         assert event.shard is mock_shard
         assert event.channel is mock_app.entity_factory.deserialize_channel.return_value
 
-    def test_deserialize_channel_create_event_for_dm_channel(self, event_factory, mock_app, mock_shard):
-        mock_app.entity_factory.deserialize_channel.return_value = mock.Mock(spec=channel_models.DMChannel)
-
-        with pytest.raises(NotImplementedError):
-            event_factory.deserialize_channel_create_event(mock_shard, {"id": "42"})
-
-    def test_deserialize_channel_create_event_for_unexpected_channel_type(self, event_factory, mock_app, mock_shard):
-        with pytest.raises(TypeError, match="Expected GuildChannel or PrivateChannel but received Mock"):
-            event_factory.deserialize_channel_create_event(mock_shard, {"id": "42"})
-
-    def test_deserialize_channel_update_event_with_guild_channel(self, event_factory, mock_app, mock_shard):
+    def test_deserialize_guild_channel_update_event(self, event_factory, mock_app, mock_shard):
         mock_app.entity_factory.deserialize_channel.return_value = mock.Mock(spec=channel_models.GuildChannel)
         mock_old_channel = object()
         mock_payload = object()
 
-        event = event_factory.deserialize_channel_update_event(mock_shard, mock_payload, old_channel=mock_old_channel)
+        event = event_factory.deserialize_guild_channel_update_event(
+            mock_shard, mock_payload, old_channel=mock_old_channel
+        )
 
         mock_app.entity_factory.deserialize_channel.assert_called_once_with(mock_payload)
         assert isinstance(event, channel_events.GuildChannelUpdateEvent)
@@ -95,39 +87,16 @@ class TestEventFactoryImpl:
         assert event.channel is mock_app.entity_factory.deserialize_channel.return_value
         assert event.old_channel is mock_old_channel
 
-    def test_deserialize_channel_update_event_with_dm_channel(self, event_factory, mock_app, mock_shard):
-        mock_app.entity_factory.deserialize_channel.return_value = mock.Mock(spec=channel_models.DMChannel)
-
-        with pytest.raises(NotImplementedError):
-            event_factory.deserialize_channel_update_event(mock_shard, {"id": "42"}, old_channel=None)
-
-    def test_deserialize_channel_update_event_with_unexpected_channel_type(self, event_factory, mock_app, mock_shard):
-        with pytest.raises(TypeError, match="Expected GuildChannel or PrivateChannel but received Mock"):
-            event_factory.deserialize_channel_update_event(mock_shard, {"id": "42"}, old_channel=None)
-
-    def test_deserialize_channel_delete_event_with_guild_channel(self, event_factory, mock_app, mock_shard):
+    def test_deserialize_guild_channel_delete_event(self, event_factory, mock_app, mock_shard):
         mock_app.entity_factory.deserialize_channel.return_value = mock.Mock(spec=channel_models.GuildChannel)
         mock_payload = mock.Mock(app=mock_app)
 
-        event = event_factory.deserialize_channel_delete_event(mock_shard, mock_payload)
+        event = event_factory.deserialize_guild_channel_delete_event(mock_shard, mock_payload)
 
         mock_app.entity_factory.deserialize_channel.assert_called_once_with(mock_payload)
         assert isinstance(event, channel_events.GuildChannelDeleteEvent)
         assert event.shard is mock_shard
         assert event.channel is mock_app.entity_factory.deserialize_channel.return_value
-
-    def test_deserialize_channel_delete_event_with_dm_channel(self, event_factory, mock_app, mock_shard):
-        mock_app.entity_factory.deserialize_channel.return_value = mock.Mock(spec=channel_models.DMChannel)
-        mock_payload = object()
-
-        with pytest.raises(NotImplementedError):
-            event_factory.deserialize_channel_delete_event(mock_shard, mock_payload)
-
-    def test_deserialize_channel_delete_event_with_unexpected_channel_type(self, event_factory, mock_app, mock_shard):
-        mock_payload = object()
-
-        with pytest.raises(TypeError, match="Expected GuildChannel or PrivateChannel but received Mock"):
-            event_factory.deserialize_channel_delete_event(mock_shard, mock_payload)
 
     def test_deserialize_channel_pins_update_event_for_guild(self, event_factory, mock_app, mock_shard):
         mock_payload = {"channel_id": "123435", "last_pin_timestamp": None, "guild_id": "43123123"}
