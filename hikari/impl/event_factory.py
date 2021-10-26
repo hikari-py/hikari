@@ -215,13 +215,13 @@ class EventFactoryImpl(event_factory.EventFactory):
         assert guild_information.voice_states is not None
         return guild_events.GuildJoinEvent(
             shard=shard,
-            guild=guild_information.guild,
-            emojis=guild_information.emojis,
-            roles=guild_information.roles,
-            channels=guild_information.channels,
-            members=guild_information.members,
-            presences=guild_information.presences,
-            voice_states=guild_information.voice_states,
+            guild=guild_information.guild(),
+            emojis=guild_information.emojis(),
+            roles=guild_information.roles(),
+            channels=guild_information.channels(),
+            members=guild_information.members(),
+            presences=guild_information.presences(),
+            voice_states=guild_information.voice_states(),
         )
 
     def deserialize_guild_update_event(

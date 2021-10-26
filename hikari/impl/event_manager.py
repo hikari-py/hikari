@@ -168,7 +168,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         enabled_for_event = self._enabled_for_event(guild_events.GuildAvailableEvent)
         if not enabled_for_event and self._cache:
             _LOGGER.log(ux.TRACE, "Skipping on_guild_create dispatch due to lack of any registered listeners")
-            event: typing.Optional[guild_events.GuildAvailableEvent] = None
+            event: typing.Union[guild_events.GuildAvailableEvent, guild_events.GuildJoinEvent, None] = None
             gd = self._entity_factory.deserialize_gateway_guild(payload)
 
             channels = gd.channels() if self._cache_enabled_for(config.CacheComponents.GUILD_CHANNELS) else None

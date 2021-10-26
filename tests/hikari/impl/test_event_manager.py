@@ -326,7 +326,7 @@ class TestEventManagerImpl:
         event_manager._cache.set_voice_state.assert_called_once_with(345)
 
         event_factory.deserialize_guild_join_event.assert_called_once_with(shard, payload)
-        entity_factory.deserialize_gateway_guild.assert_not_called()
+        event_factory.deserialize_gateway_guild.assert_not_called()
         event_factory.deserialize_guild_join_event.assert_called_once_with(shard, payload)
         event_manager.dispatch.assert_awaited_once_with(event)
 
@@ -390,7 +390,7 @@ class TestEventManagerImpl:
         event_factory.deserialize_guild_available_event.assert_called_once_with(shard, payload)
         event_manager.dispatch.assert_awaited_once_with(event)
 
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_on_guild_create_stateful_and_not_dispatching_with_all_cache_components(
         self, event_manager, shard, entity_factory, event_factory
     ):
@@ -564,7 +564,6 @@ class TestEventManagerImpl:
         event_manager._cache.set_voice_state.assert_called_once_with(345)
 
         event_factory.deserialize_guild_join_event.assert_called_once_with(shard, payload)
-        event_manager.dispatch.assert_awaited_once_with(event)
 
     @pytest.mark.asyncio()
     async def test_on_guild_create_stateless_with_unavailable_field(

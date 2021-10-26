@@ -92,13 +92,7 @@ class Cache(abc.ABC):
     @property
     @abc.abstractmethod
     def settings(self) -> config.CacheSettings:
-        """Get the configured settings for this cache.
-
-        Returns
-        -------
-        hikari.config.CacheSettings
-            The configured settings for this cache.
-        """
+        """Get the configured settings for this cache."""
 
     @abc.abstractmethod
     def get_dm_channel_id(
