@@ -31,7 +31,6 @@ import base64
 import random
 import typing
 
-from hikari import channels
 from hikari import errors
 from hikari import intents as intents_
 from hikari import presences
@@ -107,9 +106,6 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         event = self._event_factory.deserialize_guild_channel_create_event(shard, payload)
 
         if self._cache:
-            assert isinstance(
-                event.channel, channels.GuildChannel
-            ), "channel create events for DM channels are unexpected"
             self._cache.set_guild_channel(event.channel)
 
         await self.dispatch(event)
