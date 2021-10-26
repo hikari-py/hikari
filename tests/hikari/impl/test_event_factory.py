@@ -208,7 +208,7 @@ class TestEventFactoryImpl:
     def test_deserialize_guild_available_event(self, event_factory, mock_app, mock_shard):
         mock_payload = mock.Mock(app=mock_app)
 
-        event = event_factory.deserialize_guild_create_event(mock_shard, mock_payload)
+        event = event_factory.deserialize_guild_available_event(mock_shard, mock_payload)
         mock_app.entity_factory.deserialize_gateway_guild.assert_called_once_with(mock_payload)
         assert isinstance(event, guild_events.GuildAvailableEvent)
         assert event.shard is mock_shard
