@@ -117,7 +117,7 @@ def guild_news_channel_payload(permission_overwrite_payload):
 
 
 @pytest.fixture()
-def user_payload(self):
+def user_payload():
     return {
         "id": "115590097100865541",
         "username": "nyaa",
@@ -151,7 +151,7 @@ def known_custom_emoji_payload(user_payload):
 
 
 @pytest.fixture()
-def member_payload(self, user_payload):
+def member_payload(user_payload):
     return {
         "nick": "foobarbaz",
         "roles": ["11111", "22222", "33333", "44444"],
@@ -204,7 +204,7 @@ def member_presence_payload(user_payload, presence_activity_payload):
 
 
 @pytest.fixture()
-def guild_role_payload(self):
+def guild_role_payload():
     return {
         "id": "41771983423143936",
         "name": "WE DEM BOYZZ!!!!!!",
