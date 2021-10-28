@@ -100,7 +100,7 @@ class TypingIndicator(special_endpoints.TypingIndicator):
     the typing indicator once, or an async context manager to keep triggering
     the typing indicator repeatedly until the context finishes.
 
-    !!! note
+    .. note::
         This is a helper class that is used by `hikari.api.rest.RESTClient`.
         You should only ever need to use instances of this class that are
         produced by that API.
@@ -184,7 +184,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
     the logic behind creating a guild on an API level is somewhat confusing
     and detailed.
 
-    !!! note
+    .. note::
         This is a helper class that is used by `hikari.api.rest.RESTClient`.
         You should only ever need to use instances of this class that are
         produced by that API, thus, any details about the constructor are
@@ -221,15 +221,15 @@ class GuildBuilder(special_endpoints.GuildBuilder):
     await guild_builder.create()
     ```
 
-    !!! warning
+    .. warning::
         The first role must always be the `@everyone` role.
 
-    !!! note
+    .. note::
         If you call `add_role`, the default roles provided by discord will
         be created. This also applies to the `add_` functions for
         text channels/voice channels/categories.
 
-    !!! note
+    .. note::
         Functions that return a `hikari.snowflakes.Snowflake` do
         **not** provide the final ID that the object will have once the
         API call is made. The returned IDs are only able to be used to
@@ -747,7 +747,7 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
 
     Other Parameters
     ----------------
-    content : hikari.undefined.UndefinedOr[builtins.str]
+    content : hikari.undefined.UndefinedOr[str]
         The content of this response, if supplied. This follows the same rules
         as "content" on create message.
     """
@@ -958,12 +958,12 @@ def _build_emoji(
 
     Parameters
     ----------
-    emoji : typing.Union[hikari.snowflakes.Snowflakeish, hikari.emojis.Emoji, builtins.str, hikari.undefined.UndefinedType]
+    emoji : typing.Union[hikari.snowflakes.Snowflakeish, hikari.emojis.Emoji, str, hikari.undefined.UndefinedType]
         The ID, object or raw string of an emoji to set on a component.
 
     Returns
     -------
-    typing.Tuple[hikari.undefined.UndefinedOr[builtins.str], hikari.undefined.UndefinedOr[builtins.str]]
+    typing.Tuple[hikari.undefined.UndefinedOr[str], hikari.undefined.UndefinedOr[str]]
         A union of the custom emoji's id if defined (index 0) or the unicode
         emoji's string representation (index 1).
     """  # noqa E501 - Line too long

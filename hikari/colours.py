@@ -28,5 +28,10 @@ __all__: typing.List[str] = ["Colour", "Colourish"]
 
 import typing
 
-from hikari.colors import Color as Colour
-from hikari.colors import Colorish as Colourish
+from hikari import colors
+
+Colour = colors.Color
+"""An alias for `hikari.colors.Color`."""
+
+Colourish = colors.Colorish
+"""An alias for `hikari.colors.Colorish`."""

@@ -55,13 +55,7 @@ class VoiceEvent(shard_events.ShardEvent, abc.ABC):
     @property
     @abc.abstractmethod
     def guild_id(self) -> snowflakes.Snowflake:
-        """ID of the guild this event is for.
-
-        Returns
-        -------
-        hikari.snowflakes.Snowflake
-            The guild ID of the guild this event relates to.
-        """
+        """ID of the guild this event is for."""
 
 
 @base_events.requires_intents(intents.Intents.GUILD_VOICE_STATES)
@@ -82,17 +76,11 @@ class VoiceStateUpdateEvent(VoiceEvent):
     old_state: typing.Optional[voices.VoiceState] = attr.field(repr=True)
     """The old voice state.
 
-    This will be `builtins.None` if the voice state missing from the cache.
+    This will be `None` if the voice state missing from the cache.
     """
 
     state: voices.VoiceState = attr.field(repr=True)
-    """Voice state that this update contained.
-
-    Returns
-    -------
-    hikari.voices.VoiceState
-        The voice state that was updated.
-    """
+    """Voice state that this update contained."""
 
     @property
     def app(self) -> traits.RESTAware:
@@ -124,44 +112,27 @@ class VoiceServerUpdateEvent(VoiceEvent):
     # <<inherited docstring from VoiceEvent>>
 
     token: str = attr.field(repr=False)
-    """Token that should be used to authenticate with the voice gateway.
-
-    Returns
-    -------
-    builtins.str
-        The token to use to authenticate with the voice gateway.
-    """
+    """Token that should be used to authenticate with the voice gateway."""
 
     raw_endpoint: typing.Optional[str] = attr.field(repr=True)
     """Raw endpoint URI that Discord sent.
 
-    If this is `builtins.None`, it means that the server has been deallocated
+    If this is `None`, it means that the server has been deallocated
     and you have to disconnect. You will later receive a new event specifying
     what endpoint to connect to.
 
-    !!! warning
+    .. warning::
         This will not contain the scheme to use. Use the `endpoint` property
         to get a representation that has this prepended.
-
-    Returns
-    -------
-    builtins.str
-        A scheme-less endpoint URI for the endpoint to use for a new voice
-        websocket.
     """
 
     @property
     def endpoint(self) -> typing.Optional[str]:
         """URI for this voice server host, with the correct scheme prepended.
 
-        If this is `builtins.None`, it means that the server has been deallocated
+        If this is `None`, it means that the server has been deallocated
         and you have to disconnect. You will later receive a new event specifying
         what endpoint to connect to.
-
-        Returns
-        -------
-        typing.Optional[builtins.str]
-            If not `builtins.None`, the URI to use to connect to the voice gateway.
         """
         if self.raw_endpoint is None:
             return None

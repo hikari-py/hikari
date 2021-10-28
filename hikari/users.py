@@ -136,7 +136,7 @@ class PartialUser(snowflakes.Unique, abc.ABC):
     @property
     @abc.abstractmethod
     def avatar_hash(self) -> undefined.UndefinedNoneOr[str]:
-        """Avatar hash for the user, if they have one, otherwise `builtins.None`."""
+        """Avatar hash for the user, if they have one, otherwise `None`."""
 
     @property
     @abc.abstractmethod
@@ -146,7 +146,7 @@ class PartialUser(snowflakes.Unique, abc.ABC):
     @property
     @abc.abstractmethod
     def accent_color(self) -> undefined.UndefinedNoneOr[colors.Color]:
-        """The custom banner color for the user, if set else `builtins.None`.
+        """Custom banner color for the user if set, else `None`.
 
         Will be `hikari.undefined.UNDEFINED` if not known.
 
@@ -171,12 +171,12 @@ class PartialUser(snowflakes.Unique, abc.ABC):
     @property
     @abc.abstractmethod
     def is_bot(self) -> undefined.UndefinedOr[bool]:
-        """`builtins.True` if this user is a bot account, `builtins.False` otherwise."""
+        """Whether this user is a bot account."""
 
     @property
     @abc.abstractmethod
     def is_system(self) -> undefined.UndefinedOr[bool]:
-        """`builtins.True` if this user is a system account, `builtins.False` otherwise."""
+        """`Whether  this user is a system account."""
 
     @property
     @abc.abstractmethod
@@ -190,16 +190,10 @@ class PartialUser(snowflakes.Unique, abc.ABC):
 
         Example
         -------
-
         ```py
         >>> some_user.mention
         '<@123456789123456789>'
         ```
-
-        Returns
-        -------
-        builtins.str
-            The mention string to use.
         """
 
     async def fetch_dm_channel(self) -> channels.DMChannel:
@@ -290,7 +284,7 @@ class PartialUser(snowflakes.Unique, abc.ABC):
             If provided, the message contents. If
             `hikari.undefined.UNDEFINED`, then nothing will be sent
             in the content. Any other value here will be cast to a
-            `builtins.str`.
+            `str`.
 
             If this is a `hikari.embeds.Embed` and no `embed` nor `embeds` kwarg
             is provided, then this will instead update the embed. This allows
@@ -306,6 +300,32 @@ class PartialUser(snowflakes.Unique, abc.ABC):
         attachment : hikari.undefined.UndefinedOr[hikari.files.Resourceish],
             If provided, the message attachment. This can be a resource,
             or string of a path on your computer or a URL.
+
+            Attachments can be passed as many different things, to aid in
+            convenience.
+
+            - If a `pathlib.PurePath` or `str` to a valid URL, the
+                resource at the given URL will be streamed to Discord when
+                sending the message. Subclasses of
+                `hikari.files.WebResource` such as
+                `hikari.files.URL`,
+                `hikari.messages.Attachment`,
+                `hikari.emojis.Emoji`,
+                `EmbedResource`, etc will also be uploaded this way.
+                This will use bit-inception, so only a small percentage of the
+                resource will remain in memory at any one time, thus aiding in
+                scalability.
+            - If a `hikari.files.Bytes` is passed, or a `str`
+                that contains a valid data URI is passed, then this is uploaded
+                with a randomized file name if not provided.
+            - If a `hikari.files.File`, `pathlib.PurePath` or
+                `str` that is an absolute or relative path to a file
+                on your file system is passed, then this resource is uploaded
+                as an attachment using non-blocking code internally and streamed
+                using bit-inception where possible. This depends on the
+                type of `concurrent.futures.Executor` that is being used for
+                the application (default is a thread pool which supports this
+                behaviour).
         attachments : hikari.undefined.UndefinedOr[typing.Sequence[hikari.files.Resourceish]],
             If provided, the message attachments. These can be resources, or
             strings consisting of paths on your computer or URLs.
@@ -318,10 +338,10 @@ class PartialUser(snowflakes.Unique, abc.ABC):
             If provided, the message embed.
         embeds : hikari.undefined.UndefinedOr[typing.Sequence[hikari.embeds.Embed]]
             If provided, the message embeds.
-        tts : hikari.undefined.UndefinedOr[builtins.bool]
+        tts : hikari.undefined.UndefinedOr[bool]
             If provided, whether the message will be read out by a screen
             reader using Discord's TTS (text-to-speech) system.
-        nonce : hikari.undefined.UndefinedOr[builtins.str]
+        nonce : hikari.undefined.UndefinedOr[str]
             An arbitrary identifier to associate with the message. This
             can be used to identify it later in received events. If provided,
             this must be less than 32 bytes. If not provided, then
@@ -329,57 +349,30 @@ class PartialUser(snowflakes.Unique, abc.ABC):
             see this value.
         reply : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]]
             If provided, the message to reply to.
-        mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
+        mentions_everyone : hikari.undefined.UndefinedOr[bool]
             If provided, whether the message should parse @everyone/@here
             mentions.
-        mentions_reply : hikari.undefined.UndefinedOr[builtins.bool]
+        mentions_reply : hikari.undefined.UndefinedOr[bool]
             If provided, whether to mention the author of the message
             that is being replied to.
 
             This will not do anything if not being used with `reply`.
-        user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], builtins.bool]]
-            If provided, and `builtins.True`, all user mentions will be detected.
-            If provided, and `builtins.False`, all user mentions will be ignored
+        user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
+            If provided, and `True`, all user mentions will be detected.
+            If provided, and `False`, all user mentions will be ignored
             if appearing in the message body.
             Alternatively this may be a collection of
             `hikari.snowflakes.Snowflake`, or
             `hikari.users.PartialUser` derivatives to enforce mentioning
             specific users.
-        role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], builtins.bool]]
-            If provided, and `builtins.True`, all role mentions will be detected.
-            If provided, and `builtins.False`, all role mentions will be ignored
+        role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], bool]]
+            If provided, and `True`, all role mentions will be detected.
+            If provided, and `False`, all role mentions will be ignored
             if appearing in the message body.
             Alternatively this may be a collection of
             `hikari.snowflakes.Snowflake`, or
             `hikari.guilds.PartialRole` derivatives to enforce mentioning
             specific roles.
-
-        !!! note
-            Attachments can be passed as many different things, to aid in
-            convenience.
-
-            - If a `pathlib.PurePath` or `builtins.str` to a valid URL, the
-                resource at the given URL will be streamed to Discord when
-                sending the message. Subclasses of
-                `hikari.files.WebResource` such as
-                `hikari.files.URL`,
-                `hikari.messages.Attachment`,
-                `hikari.emojis.Emoji`,
-                `EmbedResource`, etc will also be uploaded this way.
-                This will use bit-inception, so only a small percentage of the
-                resource will remain in memory at any one time, thus aiding in
-                scalability.
-            - If a `hikari.files.Bytes` is passed, or a `builtins.str`
-                that contains a valid data URI is passed, then this is uploaded
-                with a randomized file name if not provided.
-            - If a `hikari.files.File`, `pathlib.PurePath` or
-                `builtins.str` that is an absolute or relative path to a file
-                on your file system is passed, then this resource is uploaded
-                as an attachment using non-blocking code internally and streamed
-                using bit-inception where possible. This depends on the
-                type of `concurrent.futures.Executor` that is being used for
-                the application (default is a thread pool which supports this
-                behaviour).
 
         Returns
         -------
@@ -388,10 +381,10 @@ class PartialUser(snowflakes.Unique, abc.ABC):
 
         Raises
         ------
-        builtins.ValueError
+        ValueError
             If more than 100 unique objects/entities are passed for
             `role_mentions` or `user_mentions`.
-        builtins.TypeError
+        TypeError
             If both `attachment` and `attachments` are specified.
         hikari.errors.BadRequestError
             This may be raised in several discrete situations, such as messages
@@ -463,7 +456,7 @@ class User(PartialUser, abc.ABC):
     @property
     @abc.abstractmethod
     def accent_color(self) -> typing.Optional[colors.Color]:
-        """The custom banner color for the user, if set else `builtins.None`.
+        """The custom banner color for the user, if set else `None`.
 
         The official client will decide the default color if not set.
         """  # noqa: D401 - Imperative mood
@@ -476,13 +469,13 @@ class User(PartialUser, abc.ABC):
     @property
     @abc.abstractmethod
     def avatar_hash(self) -> typing.Optional[str]:
-        """Avatar hash for the user, if they have one, otherwise `builtins.None`."""
+        """Avatar hash for the user, if they have one, otherwise `None`."""
 
     @property
     def avatar_url(self) -> typing.Optional[files.URL]:
         """Avatar URL for the user, if they have one set.
 
-        May be `builtins.None` if no custom avatar is set. In this case, you
+        May be `None` if no custom avatar is set. In this case, you
         should use `default_avatar_url` instead.
         """
         return self.make_avatar_url()
@@ -496,7 +489,7 @@ class User(PartialUser, abc.ABC):
     def banner_url(self) -> typing.Optional[files.URL]:
         """Banner URL for the user, if they have one set.
 
-        May be `builtins.None` if no custom banner is set.
+        May be `None` if no custom banner is set.
         """
         return self.make_banner_url()
 
@@ -522,12 +515,12 @@ class User(PartialUser, abc.ABC):
     @property
     @abc.abstractmethod
     def is_bot(self) -> bool:
-        """`builtins.True` if this user is a bot account, `builtins.False` otherwise."""
+        """Whether user is a bot account."""
 
     @property
     @abc.abstractmethod
     def is_system(self) -> bool:
-        """`builtins.True` if this user is a system account, `builtins.False` otherwise."""
+        """Whether this user is a system account."""
 
     @property
     @abc.abstractmethod
@@ -536,16 +529,10 @@ class User(PartialUser, abc.ABC):
 
         Example
         -------
-
         ```py
         >>> some_user.mention
         '<@123456789123456789>'
         ```
-
-        Returns
-        -------
-        builtins.str
-            The mention string to use.
         """
 
     @property
@@ -556,21 +543,21 @@ class User(PartialUser, abc.ABC):
     def make_avatar_url(self, *, ext: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the avatar URL for this user, if set.
 
-        If no custom avatar is set, this returns `builtins.None`. You can then
+        If no custom avatar is set, this returns `None`. You can then
         use the `default_avatar_url` attribute instead to fetch the displayed
         URL.
 
         Parameters
         ----------
-        ext : typing.Optional[builtins.str]
+        ext : typing.Optional[str]
             The ext to use for this URL, defaults to `png` or `gif`.
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
             animated). Will be ignored for default avatars which can only be
             `png`.
 
-            If `builtins.None`, then the correct default extension is
+            If `None`, then the correct default extension is
             determined based on whether the icon is animated or not.
-        size : builtins.int
+        size : int
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
             Will be ignored for default avatars.
@@ -578,11 +565,11 @@ class User(PartialUser, abc.ABC):
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL to the avatar, or `builtins.None` if not present.
+            The URL to the avatar, or `None` if not present.
 
         Raises
         ------
-        builtins.ValueError
+        ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.avatar_hash is None:
@@ -605,29 +592,29 @@ class User(PartialUser, abc.ABC):
     def make_banner_url(self, *, ext: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the banner URL for this user, if set.
 
-        If no custom banner is set, this returns `builtins.None`.
+        If no custom banner is set, this returns `None`.
 
         Parameters
         ----------
-        ext : typing.Optional[builtins.str]
+        ext : typing.Optional[str]
             The ext to use for this URL, defaults to `png` or `gif`.
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
             animated).
 
-            If `builtins.None`, then the correct default extension is
+            If `None`, then the correct default extension is
             determined based on whether the banner is animated or not.
-        size : builtins.int
+        size : int
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL to the banner, or `builtins.None` if not present.
+            The URL to the banner, or `None` if not present.
 
         Raises
         ------
-        builtins.ValueError
+        ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.banner_hash is None:
@@ -703,11 +690,6 @@ class PartialUserImpl(PartialUser):
         >>> some_user.mention
         '<@123456789123456789>'
         ```
-
-        Returns
-        -------
-        builtins.str
-            The mention string to use.
         """
         return f"<@{self.id}>"
 
@@ -732,10 +714,10 @@ class UserImpl(PartialUserImpl, User):
     """The user's username."""
 
     avatar_hash: typing.Optional[str]
-    """The user's avatar hash, if they have one, otherwise `builtins.None`."""
+    """The user's avatar hash, if they have one, otherwise `None`."""
 
     banner_hash: typing.Optional[str]
-    """Banner hash of the user, if they have one, otherwise `builtins.None`"""
+    """Banner hash of the user, if they have one, otherwise `None`"""
 
     accent_color: typing.Optional[colors.Color]
     """The custom banner color for the user, if set.
@@ -744,10 +726,10 @@ class UserImpl(PartialUserImpl, User):
     """  # noqa: D401 - Imperative mood
 
     is_bot: bool
-    """`builtins.True` if this user is a bot account, `builtins.False` otherwise."""
+    """`True` if this user is a bot account, `False` otherwise."""
 
     is_system: bool
-    """`builtins.True` if this user is a system account, `builtins.False` otherwise."""
+    """`True` if this user is a system account, `False` otherwise."""
 
     flags: UserFlag
     """The public flags for this user."""
@@ -766,21 +748,21 @@ class OwnUser(UserImpl):
     is_verified: typing.Optional[bool] = attr.field(eq=False, hash=False, repr=False)
     """Whether the email for this user's account has been verified.
 
-    Will be `builtins.None` if retrieved through the OAuth2 flow without the `email`
+    Will be `None` if retrieved through the OAuth2 flow without the `email`
     scope.
     """
 
     email: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
     """The user's set email.
 
-    Will be `builtins.None` if retrieved through OAuth2 flow without the `email`
-    scope. Will always be `builtins.None` for bot users.
+    Will be `None` if retrieved through OAuth2 flow without the `email`
+    scope. Will always be `None` for bot users.
     """
 
     premium_type: typing.Union[PremiumType, int, None] = attr.field(eq=False, hash=False, repr=False)
     """The type of Nitro Subscription this user account had.
 
-    This will always be `builtins.None` for bots.
+    This will always be `None` for bots.
     """
 
     async def fetch_self(self) -> OwnUser:

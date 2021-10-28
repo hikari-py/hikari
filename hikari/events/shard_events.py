@@ -62,13 +62,7 @@ class ShardEvent(base_events.Event, abc.ABC):
     @property
     @abc.abstractmethod
     def shard(self) -> gateway_shard.GatewayShard:
-        """Shard that received this event.
-
-        Returns
-        -------
-        hikari.api.shard.GatewayShard
-            The shard that triggered the event.
-        """
+        """Shard that received this event."""
 
 
 @attr_extensions.with_copy
@@ -76,7 +70,7 @@ class ShardEvent(base_events.Event, abc.ABC):
 class ShardPayloadEvent(ShardEvent):
     """Event fired for most shard events with their raw payload.
 
-    !!! note
+    .. note::
         This will only be dispatched for real dispatch events received from
         Discord and not artificial events like the `ShardStateEvent` events.
     """
@@ -136,61 +130,26 @@ class ShardReadyEvent(ShardStateEvent):
     # <<docstring inherited from ShardEvent>>.
 
     actual_gateway_version: int = attr.field(repr=True)
-    """Actual gateway version being used.
-
-    Returns
-    -------
-    builtins.int
-        The actual gateway version we are actively using for this protocol.
-    """
+    """Actual gateway version being used."""
 
     session_id: str = attr.field(repr=True)
-    """ID for this session.
-
-    Returns
-    -------
-    builtins.str
-        The session ID for this gateway session.
-    """
+    """ID for this session."""
 
     my_user: users.OwnUser = attr.field(repr=True)
-    """User for the current bot account this connection is authenticated with.
-
-    Returns
-    -------
-    hikari.users.OwnUser
-        This bot's user.
-    """
+    """User for the current bot account this connection is authenticated with."""
 
     unavailable_guilds: typing.Sequence[snowflakes.Snowflake] = attr.field(repr=False)
     """Sequence of the IDs for all guilds this bot is currently in.
 
     All guilds will start off "unavailable" and should become available after
     a few seconds of connecting one-by-one.
-
-    Returns
-    -------
-    typing.Sequence[hikari.snowflakes.Snowflake]
-        All guild IDs that the bot is in for this shard.
     """
 
     application_id: snowflakes.Snowflake = attr.field(repr=True)
-    """ID of the application this ready event is for.
-
-    Returns
-    -------
-    hikari.snowflakes.Snowflake
-        The current application's ID.
-    """
+    """ID of the application this ready event is for."""
 
     application_flags: applications.ApplicationFlags = attr.field(repr=True)
-    """Flags of the application this ready event is for.
-
-    Returns
-    -------
-    hikari.applications.ApplicationFlags
-        The current application's flags.
-    """
+    """Flags of the application this ready event is for."""
 
     @property
     def app(self) -> traits.RESTAware:
@@ -225,65 +184,33 @@ class MemberChunkEvent(ShardEvent, typing.Sequence["guilds.Member"]):
     # <<docstring inherited from ShardEvent>>.
 
     members: typing.Mapping[snowflakes.Snowflake, guilds.Member] = attr.field(repr=False)
-    """Mapping of user IDs to the objects of the members in this chunk.
-
-    Returns
-    -------
-    typing.Mapping[hikari.snowflakes.Snowflake, hikari.guilds.Member]
-        Mapping of user IDs to corresponding member objects.
-    """
+    """Mapping of user IDs to the objects of the members in this chunk."""
 
     chunk_index: int = attr.field(repr=True)
-    """Zero-indexed position of this within the queued up chunks for this request.
-
-    Returns
-    -------
-    builtins.int
-        The sequence index for this chunk.
-    """
+    """Zero-indexed position of this within the queued up chunks for this request."""
 
     chunk_count: int = attr.field(repr=True)
-    """Total number of expected chunks for the request this is associated with.
-
-    Returns
-    -------
-    builtins.int
-        Total number of chunks to be expected.
-    """
+    """Total number of expected chunks for the request this is associated with."""
 
     not_found: typing.Sequence[snowflakes.Snowflake] = attr.field(repr=True)
     """Sequence of the snowflakes that were not found while making this request.
 
     This is only applicable when user IDs are specified while making the
     member request the chunk is associated with.
-
-    Returns
-    -------
-    typing.Sequence[hikari.snowflakes.Snowflake]
-        Sequence of user IDs that were not found.
     """
 
     presences: typing.Mapping[snowflakes.Snowflake, presences_.MemberPresence] = attr.field(repr=False)
     """Mapping of user IDs to found member presence objects.
 
     This will be empty if no presences are found or `include_presences` is not passed as
-    `builtins.True` while requesting the member chunks.
-
-    Returns
-    -------
-    typing.Mapping[hikari.snowflakes.Snowflake, hikari.presences.MemberPresence]
-        Mapping of user IDs to corresponding presences.
+    `True` while requesting the member chunks.
     """
 
     nonce: typing.Optional[str] = attr.field(repr=True)
     """String nonce used to identify the request member chunks are associated with.
 
-    This is the nonce value passed while requesting member chunks.
-
-    Returns
-    -------
-    typing.Optional[builtins.str]
-        The request nonce if set, or `builtins.None` otherwise.
+    This is the nonce value passed while requesting member chunks or `None`
+    if there was no nonce passed.
     """
 
     @typing.overload

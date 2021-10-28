@@ -53,7 +53,7 @@ class VoiceState:
     channel_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=True)
     """The ID of the channel this user is connected to.
 
-    This will be `builtins.None` if they are leaving voice.
+    This will be `None` if they are leaving voice.
     """
 
     guild_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
@@ -96,7 +96,7 @@ class VoiceState:
     requested_to_speak_at: typing.Optional[datetime.datetime] = attr.field(eq=False, hash=False, repr=True)
     """When the user requested to speak in a stage channel.
 
-    Will be `builtins.None` if they have not requested to speak.
+    Will be `None` if they have not requested to speak.
     """
 
 
@@ -108,7 +108,7 @@ class VoiceRegion:
     id: str = attr.field(hash=True, repr=True)
     """The string ID of this region.
 
-    !!! note
+    .. note::
         Unlike most parts of this API, this ID will always be a string type.
         This is intentional.
     """

@@ -85,7 +85,7 @@ def _generate_weak_listener(
 class EventStream(event_manager_.EventStream[event_manager_.EventT]):
     """An implementation of an event `EventStream` class.
 
-    !!! note
+    .. note::
         While calling `EventStream.filter` on an active "opened" event stream
         will return a wrapping lazy iterator, calling it on an inactive "closed"
         event stream will return the event stream and add the given predicates

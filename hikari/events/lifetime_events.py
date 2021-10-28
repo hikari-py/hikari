@@ -50,7 +50,7 @@ class StartingEvent(base_events.Event):
     opening database connections and other resources that need to be
     initialized within a coroutine function.
 
-    !!! warning
+    .. warning::
         The application will not proceed to connect to Discord until all event
         handlers for this event have completed/terminated. This prevents the
         risk of race conditions occurring (e.g. allowing message events
@@ -92,7 +92,7 @@ class StoppingEvent(base_events.Event):
     closing database connections and other resources that need to be
     closed within a coroutine function.
 
-    !!! warning
+    .. warning::
         The application will not proceed to disconnect from Discord until all
         event handlers for this event have completed/terminated. This
         prevents the risk of race conditions occurring from code that relies
@@ -115,7 +115,7 @@ class StoppedEvent(base_events.Event):
     closing database connections and other resources that need to be
     closed within a coroutine function.
 
-    !!! warning
+    .. warning::
         The application will not proceed to leave the `bot.run` call until all
         event handlers for this event have completed/terminated. This
         prevents the risk of race conditions occurring where a script may

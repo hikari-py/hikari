@@ -69,27 +69,27 @@ class GatewayGuildDefinition:
     channels: typing.Optional[typing.Mapping[snowflakes.Snowflake, channel_models.GuildChannel]] = attr.field()
     """Mapping of channel IDs to the channels that belong to the guild.
 
-    Will be `builtins.None` when returned by guild update gateway events rather
+    Will be `None` when returned by guild update gateway events rather
     than create.
     """
 
     members: typing.Optional[typing.Mapping[snowflakes.Snowflake, guild_models.Member]] = attr.field()
     """Mapping of user IDs to the members that belong to the guild.
 
-    Will be `builtins.None` when returned by guild update gateway events rather
+    Will be `None` when returned by guild update gateway events rather
     than create.
 
-    !!! note
+    .. note::
         This may be a partial mapping of members in the guild.
     """
 
     presences: typing.Optional[typing.Mapping[snowflakes.Snowflake, presence_models.MemberPresence]] = attr.field()
     """Mapping of user IDs to the presences that are active in the guild.
 
-    Will be `builtins.None` when returned by guild update gateway events rather
+    Will be `None` when returned by guild update gateway events rather
     than create.
 
-    !!! note
+    .. note::
         This may be a partial mapping of presences active in the guild.
     """
 
@@ -102,7 +102,7 @@ class GatewayGuildDefinition:
     voice_states: typing.Optional[typing.Mapping[snowflakes.Snowflake, voice_models.VoiceState]] = attr.field()
     """Mapping of user IDs to the voice states that are active in the guild.
 
-    !!! note
+    .. note::
         This may be a partial mapping of voice states active in the guild.
     """
 
@@ -358,9 +358,8 @@ class EntityFactory(abc.ABC):
             The ID of the guild this channel belongs to. If passed then this
             will be prioritised over `"guild_id"` in the payload.
 
-        !!! note
-            `guild_id` currently only covers the gateway GUILD_CREATE event
-            where `"guild_id"` is not included in the channel's payload.
+            This currently only covers the gateway `GUILD_CREATE` event,
+            where it is not included in the channel's payload.
 
         Returns
         -------
@@ -369,7 +368,7 @@ class EntityFactory(abc.ABC):
 
         Raises
         ------
-        builtins.KeyError
+        KeyError
             If `guild_id` is left as `hikari.undefined.UNDEFINED` when
             `"guild_id"` is not present in the passed payload.
         """
@@ -394,9 +393,8 @@ class EntityFactory(abc.ABC):
             The ID of the guild this channel belongs to. If passed then this
             will be prioritised over `"guild_id"` in the payload.
 
-        !!! note
-            `guild_id` currently only covers the gateway GUILD_CREATE event
-            where `"guild_id"` is not included in the channel's payload.
+            This currently only covers the gateway `GUILD_CREATE` event,
+            where it is not included in the channel's payload.
 
         Returns
         -------
@@ -405,7 +403,7 @@ class EntityFactory(abc.ABC):
 
         Raises
         ------
-        builtins.KeyError
+        KeyError
             If `guild_id` is left as `hikari.undefined.UNDEFINED` when
             `"guild_id"` is not present in the passed payload.
         """
@@ -430,9 +428,8 @@ class EntityFactory(abc.ABC):
             The ID of the guild this channel belongs to. If passed then this
             will be prioritised over `"guild_id"` in the payload.
 
-        !!! note
-            `guild_id` currently only covers the gateway GUILD_CREATE event
-            where `"guild_id"` is not included in the channel's payload.
+            This currently only covers the gateway `GUILD_CREATE` event,
+            where it is not included in the channel's payload.
 
         Returns
         -------
@@ -441,7 +438,7 @@ class EntityFactory(abc.ABC):
 
         Raises
         ------
-        builtins.KeyError
+        KeyError
             If `guild_id` is left as `hikari.undefined.UNDEFINED` when
             `"guild_id"` is not present in the passed payload.
         """
@@ -466,9 +463,8 @@ class EntityFactory(abc.ABC):
             The ID of the guild this channel belongs to. If passed then this
             will be prioritised over `"guild_id"` in the payload.
 
-        !!! note
-            `guild_id` currently only covers the gateway GUILD_CREATE event
-            where `"guild_id"` is not included in the channel's payload.
+            This currently only covers the gateway `GUILD_CREATE` event,
+            where it is not included in the channel's payload.
 
         Returns
         -------
@@ -477,7 +473,7 @@ class EntityFactory(abc.ABC):
 
         Raises
         ------
-        builtins.KeyError
+        KeyError
             If `guild_id` is left as `hikari.undefined.UNDEFINED` when
             `"guild_id"` is not present in the passed payload.
         """
@@ -502,9 +498,8 @@ class EntityFactory(abc.ABC):
             The ID of the guild this channel belongs to. If passed then this
             will be prioritised over `"guild_id"` in the payload.
 
-        !!! note
-            `guild_id` currently only covers the gateway GUILD_CREATE event
-            where `"guild_id"` is npt included in the channel's payload.
+            This currently only covers the gateway `GUILD_CREATE` event,
+            where it is not included in the channel's payload.
 
         Returns
         -------
@@ -513,7 +508,7 @@ class EntityFactory(abc.ABC):
 
         Raises
         ------
-        builtins.KeyError
+        KeyError
             If `guild_id` is left as `hikari.undefined.UNDEFINED` when
             `"guild_id"` is not present in the passed payload.
         """
@@ -538,9 +533,8 @@ class EntityFactory(abc.ABC):
             The ID of the guild this channel belongs to. If passed then this
             will be prioritised over `"guild_id"` in the payload.
 
-        !!! note
-            `guild_id` currently only covers the gateway GUILD_CREATE event
-            where `"guild_id"` is npt included in the channel's payload.
+            This currently only covers the gateway `GUILD_CREATE` event,
+            where it is not included in the channel's payload.
 
         Returns
         -------
@@ -549,7 +543,7 @@ class EntityFactory(abc.ABC):
 
         Raises
         ------
-        builtins.KeyError
+        KeyError
             If `guild_id` is left as `hikari.undefined.UNDEFINED` when
             `"guild_id"` is not present in the passed payload.
         """
@@ -563,6 +557,10 @@ class EntityFactory(abc.ABC):
     ) -> channel_models.PartialChannel:
         """Parse a raw payload from Discord into a channel object.
 
+        .. note::
+            `guild_id` currently only covers the gateway GUILD_CREATE event
+            where `"guild_id"` is not included in the channel's payload.
+
         Parameters
         ----------
         payload : hikari.internal.data_binding.JSONObject
@@ -575,10 +573,6 @@ class EntityFactory(abc.ABC):
             for DM and group DM channels and will be prioritised over
             `"guild_id"` in the payload when passed.
 
-        !!! note
-            `guild_id` currently only covers the gateway GUILD_CREATE event
-            where `"guild_id"` is not included in the channel's payload.
-
         Returns
         -------
         hikari.channels.PartialChannel
@@ -586,7 +580,7 @@ class EntityFactory(abc.ABC):
 
         Raises
         ------
-        builtins.KeyError
+        KeyError
             If `guild_id` is left as `hikari.undefined.UNDEFINED` when
             `"guild_id"` is not present in the passed payload of a guild
             channel.
@@ -782,6 +776,11 @@ class EntityFactory(abc.ABC):
     ) -> guild_models.Member:
         """Parse a raw payload from Discord into a member object.
 
+        .. note::
+            `guild_id` covers cases such as the GUILD_CREATE gateway event and
+            GET Guild Member where `"guild_id"` is not included in the returned
+            payload.
+
         Parameters
         ----------
         payload : hikari.internal.data_binding.JSONObject
@@ -796,11 +795,6 @@ class EntityFactory(abc.ABC):
             The ID of the guild this member belongs to. If this is specified
             then this will be prioritised over `"guild_id"` in the payload.
 
-        !!! note
-            `guild_id` covers cases such as the GUILD_CREATE gateway event and
-            GET Guild Member where `"guild_id"` is not included in the returned
-            payload.
-
         Returns
         -------
         hikari.guilds.Member
@@ -808,7 +802,7 @@ class EntityFactory(abc.ABC):
 
         Raises
         ------
-        builtins.KeyError
+        KeyError
             If `guild_id` is left as `hikari.undefined.UNDEFINED` when
             `"guild_id"` is not present in the passed payload.
         """
@@ -879,7 +873,7 @@ class EntityFactory(abc.ABC):
 
         Raises
         ------
-        builtins.KeyError
+        KeyError
             If `guild_id` is left as `hikari.undefined.UNDEFINED` when
             `"guild_id"` is not present in the passed payload for the payload of
             the integration.
@@ -985,7 +979,7 @@ class EntityFactory(abc.ABC):
 
         Raises
         ------
-        builtins.KeyError
+        KeyError
             If `guild_id` is left as `hikari.undefined.UNDEFINED` when
             `"guild_id"` is not present in the passed payload for the payload of
             the integration.
@@ -1059,7 +1053,7 @@ class EntityFactory(abc.ABC):
     def deserialize_interaction(self, payload: data_binding.JSONObject) -> base_interactions.PartialInteraction:
         """Parse a raw payload from Discord into a interaction object.
 
-        !!! note
+        .. note::
             This isn't required to implement logic for deserializing
             PING interactions and if you want to unmarshal those
             `EntityFactory.deserialize_partial_interaction` should be compatible.
@@ -1334,6 +1328,12 @@ class EntityFactory(abc.ABC):
     ) -> presence_models.MemberPresence:
         """Parse a raw payload from Discord into a member presence object.
 
+        .. note::
+            At the time of writing, the only place where `guild_id` will be
+            mandatory is when parsing presences sent in a `GUILD_CREATE` event
+            from Discord, since the `guild_id` attribute in the payload will
+            have been omitted for redundancy.
+
         Parameters
         ----------
         payload : hikari.internal.data_binding.JSONObject
@@ -1345,12 +1345,6 @@ class EntityFactory(abc.ABC):
             The ID of the guild the presence belongs to. If this is specified
             then it is prioritised over `guild_id` in the payload.
 
-        !!! note
-            At the time of writing, the only place where `guild_id` will be
-            mandatory is when parsing presences sent in a `GUILD_CREATE` event
-            from Discord, since the `guild_id` attribute in the payload will
-            have been omitted for redundancy.
-
         Returns
         -------
         hikari.presences.MemberPresence
@@ -1358,7 +1352,7 @@ class EntityFactory(abc.ABC):
 
         Raises
         ------
-        builtins.KeyError
+        KeyError
             If `guild_id` is not an attribute of the `payload` dict, and no
             guild ID was passed for the `guild_id` parameter.
 
@@ -1432,6 +1426,12 @@ class EntityFactory(abc.ABC):
     ) -> voice_models.VoiceState:
         """Parse a raw payload from Discord into a voice state object.
 
+        .. note::
+            At the time of writing, `GUILD_CREATE` events are the only known
+            place where neither `guild_id` nor `member` will be keys on the
+            payload. In this case, you will need to provide the former
+            parameters explicitly.
+
         Parameters
         ----------
         payload : hikari.internal.data_binding.JSONObject
@@ -1447,12 +1447,6 @@ class EntityFactory(abc.ABC):
             specified then this will be prioritised over `"member"` in the
             payload.
 
-        !!! note
-            At the time of writing, `GUILD_CREATE` events are the only known
-            place where neither `guild_id` nor `member` will be keys on the
-            payload. In this case, you will need to provide the former
-            parameters explicitly.
-
         Returns
         -------
         hikari.voices.VoiceState
@@ -1460,7 +1454,7 @@ class EntityFactory(abc.ABC):
 
         Raises
         ------
-        builtins.KeyError
+        KeyError
             If `guild_id` is left as `hikari.undefined.UNDEFINED` when
             `"guild_id"` is not present in the passed payload for the payload of
             the voice state.

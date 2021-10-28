@@ -87,12 +87,12 @@ def create_tcp_connector(
 
     Optional Parameters
     -------------------
-    dns_cache: typing.Union[builtins.None, builtins.bool, int]
-        If `builtins.True`, DNS caching is used with a default TTL of 10 seconds.
-        If `builtins.False`, DNS caching is disabled. If an `builtins.int` is
+    dns_cache: typing.Union[None, bool, int]
+        If `True`, DNS caching is used with a default TTL of 10 seconds.
+        If `False`, DNS caching is disabled. If an `int` is
         given, then DNS caching is enabled with an explicit TTL set. If
-        `builtins.None`, the cache will be enabled and never invalidate.
-    limit : builtins.int
+        `None`, the cache will be enabled and never invalidate.
+    limit : int
         Number of connections to allow in the pool at a maximum.
 
     Returns
@@ -120,10 +120,10 @@ def create_client_session(
 ) -> aiohttp.ClientSession:
     """Generate a client session using the given settings.
 
-    !!! warning
+    .. warning::
         You must invoke this from within a running event loop.
 
-    !!! note
+    .. note::
         If you pass an explicit connector, then the connection
         that is created will not own the connector. You will be
         expected to manually close it __after__ the returned
@@ -133,17 +133,17 @@ def create_client_session(
     ----------
     connector : aiohttp.BaseConnector
         The connector to use.
-    connector_owner : builtins.bool
-        If `builtins.True`, then the client session will close the
+    connector_owner : bool
+        If `True`, then the client session will close the
         connector on shutdown. Otherwise, you must do it manually.
     http_settings : hikari.config.HTTPSettings
         HTTP settings to use.
-    raise_for_status : builtins.bool
-        `builtins.True` to default to throwing exceptions if a request
-        fails, or `builtins.False` to default to not.
-    trust_env : builtins.bool
-        `builtins.True` to trust anything in environment variables
-        and the `netrc` file, `builtins.False` to ignore it.
+    raise_for_status : bool
+        `True` to default to throwing exceptions if a request
+        fails, or `False` to default to not.
+    trust_env : bool
+        `True` to trust anything in environment variables
+        and the `netrc` file, `False` to ignore it.
     ws_response_cls : typing.Type[aiohttp.ClientWebSocketResponse]
         The websocket response class to use.
 

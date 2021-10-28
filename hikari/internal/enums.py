@@ -101,6 +101,7 @@ _Enum = NotImplemented
 
 class _EnumMeta(type):
     def __call__(cls, value: typing.Any) -> typing.Any:
+        """Cast a value to the enum, returning the raw value that was passed if value not found."""
         try:
             return cls._value_to_member_map_[value]
         except KeyError:
@@ -236,37 +237,37 @@ class Enum(metaclass=_EnumMeta):
     Operators on the class
     ----------------------
     * `EnumType["FOO"]` :
-        Return the member that has the name `FOO`, raising a `builtins.KeyError`
+        Return the member that has the name `FOO`, raising a `KeyError`
         if it is not present.
     * `EnumType.FOO` :
         Return the member that has the name `FOO`, raising a
-        `builtins.AttributeError` if it is not present.
+        `AttributeError` if it is not present.
     * `EnumType(x)` :
         Attempt to cast `x` to the enum type by finding an existing member that
         has the same __value__. If this fails, you should expect a
-        `builtins.ValueError` to be raised.
+        `ValueError` to be raised.
 
     Operators on each enum member
     -----------------------------
-    * `e1 == e2` : `builtins.bool`
+    * `e1 == e2` : `bool`
         Compare equality.
-    * `e1 != e2` : `builtins.bool`
+    * `e1 != e2` : `bool`
         Compare inequality.
-    * `builtins.repr(e)` : `builtins.str`
+    * `repr(e)` : `str`
         Get the machine readable representation of the enum member `e`.
-    * `builtins.str(e)` : `builtins.str`
-        Get the `builtins.str` name of the enum member `e`.
+    * `str(e)` : `str`
+        Get the `str` name of the enum member `e`.
 
     Special properties on each enum member
     --------------------------------------
-    * `name` : `builtins.str`
+    * `name` : `str`
         The name of the member.
     * `value` :
         The value of the member. The type depends on the implementation type
         of the enum you are using.
 
     All other methods and operators on enum members are inherited from the
-    member's __value__. For example, an enum extending `builtins.int` would
+    member's __value__. For example, an enum extending `int` would
     be able to be used as an `int` type outside these overridden definitions.
     """
 
@@ -281,7 +282,7 @@ class Enum(metaclass=_EnumMeta):
 
     @property
     def name(self) -> str:
-        """Return the name of the enum member as a `builtins.str`."""
+        """Return the name of the enum member as a `str`."""
         return self._name_
 
     @property
@@ -322,6 +323,7 @@ def _name_resolver(members: typing.Dict[int, _Flag], value: int) -> typing.Gener
 
 class _FlagMeta(type):
     def __call__(cls, value: int = 0) -> typing.Any:
+        """Cast a value to the flag enum, returning the raw value that was passed if values not found."""
         # We want to handle value invariantly to avoid issues brought in by different behaviours from sub-classed ints
         # and floats. This also ensures that .__int__ only returns an invariant int.
         value = int(value)
@@ -455,23 +457,20 @@ class Flag(metaclass=_FlagMeta):
     implementation, while retaining the majority of the external interface
     that Python's `enum.Flag` provides.
 
-    In simple terms, an `Flag` is a set of wrapped constant `builtins.int`
+    In simple terms, an `Flag` is a set of wrapped constant `int`
     values that can be combined in any combination to make a special value.
     This is a more efficient way of combining things like permissions together
     into a single integral value, and works by setting individual `1`s and `0`s
     on the binary representation of the integer.
 
     This implementation has extra features, in that it will actively behave
-    like a `builtins.set` as well.
+    like a `set` as well.
 
-    !!! warning
-        Despite wrapping `builtins.int` values, conceptually this does not
-        behave as if it were a subclass of `int`.
-
-    !!! danger
-        Some semantics such as subtype checking and instance checking may
-        differ. It is recommended to compare these values using the
-        `==` operator rather than the `is` operator for safety reasons.
+    .. warning::
+        It is important to keep in mind that some semantics such as subtype
+        checking and instance checking may differ. It is recommended to compare
+        these values using the `==` operator rather than the `is` operator for
+        safety reasons.
 
         Especially where pseudo-members created from combinations are cached,
         results of using of `is` may not be deterministic. This is a side
@@ -479,6 +478,9 @@ class Flag(metaclass=_FlagMeta):
 
         Failing to observe this __will__ result in unexpected behaviour
         occurring in your application!
+
+        Also important to note is that despite wrapping `int` values,
+        conceptually this does not behave as if it were a subclass of `int`.
 
     Special Members on the class
     ----------------------------
@@ -490,16 +492,16 @@ class Flag(metaclass=_FlagMeta):
         An immutable `typing.Mapping` that maps each member name to the member
         value.
     * ` __objtype__` :
-        Always `builtins.int`.
+        Always `int`.
 
     Operators on the class
     ----------------------
     * `FlagType["FOO"]` :
-        Return the member that has the name `FOO`, raising a `builtins.KeyError`
+        Return the member that has the name `FOO`, raising a `KeyError`
         if it is not present.
     * `FlagType.FOO` :
         Return the member that has the name `FOO`, raising a
-        `builtins.AttributeError` if it is not present.
+        `AttributeError` if it is not present.
     * `FlagType(x)` :
         Attempt to cast `x` to the enum type by finding an existing member that
         has the same __value__. If this fails, then a special __composite__
@@ -511,17 +513,17 @@ class Flag(metaclass=_FlagMeta):
     * `e1 & e2` :
         Bitwise `AND` operation. Will return a member that contains all flags
         that are common between both oprands on the values. This also works with
-        one of the oprands being an `builtins.int`eger. You may instead use
+        one of the oprands being an `int`eger. You may instead use
         the `intersection` method.
     * `e1 | e2` :
         Bitwise `OR` operation. Will return a member that contains all flags
         that appear on at least one of the oprands. This also works with
-        one of the oprands being an `builtins.int`eger. You may instead use
+        one of the oprands being an `int`eger. You may instead use
         the `union` method.
     * `e1 ^ e2` :
         Bitwise `XOR` operation. Will return a member that contains all flags
         that only appear on at least one and at most one of the oprands.
-        This also works with one of the oprands being an `builtins.int`eger.
+        This also works with one of the oprands being an `int`eger.
         You may instead use the `symmetric_difference` method.
     * `~e` :
         Return the inverse of this value. This is equivalent to disabling all
@@ -532,11 +534,11 @@ class Flag(metaclass=_FlagMeta):
         Bitwise set difference operation. Returns all flags set on `e1` that are
         not set on `e2` as well. You may instead use the `difference`
         method.
-    * `bool(e)` : `builtins.bool`
-        Return `builtins.True` if `e` has a non-zero value, otherwise
-        `builtins.False`.
-    * `E.A in e`: `builtins.bool`
-        `builtins.True` if `E.A` is in `e`. This is functionally equivalent
+    * `bool(e)` : `bool`
+        Return `True` if `e` has a non-zero value, otherwise
+        `False`.
+    * `E.A in e`: `bool`
+        `True` if `E.A` is in `e`. This is functionally equivalent
         to `E.A & e == E.A`.
     * `iter(e)` :
         Explode the value into a iterator of each __documented__ flag that can
@@ -546,36 +548,36 @@ class Flag(metaclass=_FlagMeta):
         powers of two (this means if converted to twos-compliment binary,
         exactly one bit must be a `1`). In simple terms, this means that you
         should not expect combination flags to be returned.
-    * `e1 == e2` : `builtins.bool`
+    * `e1 == e2` : `bool`
         Compare equality.
-    * `e1 != e2` : `builtins.bool`
+    * `e1 != e2` : `bool`
         Compare inequality.
-    * `e1 < e2` : `builtins.bool`
+    * `e1 < e2` : `bool`
         Compare by ordering.
-    * `builtins.int(e)` : `builtins.int`
+    * `int(e)` : `int`
         Get the integer value of this flag
-    * `builtins.repr(e)` : `builtins.str`
+    * `repr(e)` : `str`
         Get the machine readable representation of the flag member `e`.
-    * `builtins.str(e)` : `builtins.str`
-        Get the `builtins.str` name of the flag member `e`.
+    * `str(e)` : `str`
+        Get the `str` name of the flag member `e`.
 
     Special properties on each flag member
     --------------------------------------
-    * `e.name` : `builtins.str`
+    * `e.name` : `str`
         The name of the member. For composite members, this will be generated.
-    * `e.value` : `builtins.int`
+    * `e.value` : `int`
         The value of the member.
 
     Special members on each flag member
     -----------------------------------
-    * `e.all(E.A, E.B, E.C, ...)` : `builtins.bool`
-        Returns `builtins.True` if __all__ of `E.A`, `E.B`, `E.C`, et cetera
+    * `e.all(E.A, E.B, E.C, ...)` : `bool`
+        Returns `True` if __all__ of `E.A`, `E.B`, `E.C`, et cetera
         make up the value of `e`.
-    * `e.any(E.A, E.B, E.C, ...)` : `builtins.bool`
-        Returns `builtins.True` if __any__ of `E.A`, `E.B`, `E.C`, et cetera
+    * `e.any(E.A, E.B, E.C, ...)` : `bool`
+        Returns `True` if __any__ of `E.A`, `E.B`, `E.C`, et cetera
         make up the value of `e`.
-    * `e.none(E.A, E.B, E.C, ...)` : `builtins.bool`
-        Returns `builtins.True` if __none__ of `E.A`, `E.B`, `E.C`, et cetera
+    * `e.none(E.A, E.B, E.C, ...)` : `bool`
+        Returns `True` if __none__ of `E.A`, `E.B`, `E.C`, et cetera
         make up the value of `e`.
     * `e.split()` : `typing.Sequence`
         Explode the value into a sequence of each __documented__ flag that can
@@ -586,7 +588,7 @@ class Flag(metaclass=_FlagMeta):
     All other methods and operators on `Flag` members are inherited from the
     member's __value__.
 
-    !!! note
+    .. note::
         Due to limitations around how this is re-implemented, this class is not
         considered a subclass of `Enum` at runtime, even if MyPy believes this
         is possible
@@ -605,14 +607,14 @@ class Flag(metaclass=_FlagMeta):
 
     @property
     def name(self) -> str:
-        """Return the name of the flag combination as a `builtins.str`."""
+        """Return the name of the flag combination as a `str`."""
         if self._name_ is None:
             self._name_ = "|".join(_name_resolver(self._value_to_member_map_, self._value_))
         return self._name_
 
     @property
     def value(self) -> int:
-        """Return the `builtins.int` value of the flag."""
+        """Return the `int` value of the flag."""
         return self._value_
 
     def all(self: _T, *flags: _T) -> bool:
@@ -620,9 +622,9 @@ class Flag(metaclass=_FlagMeta):
 
         Returns
         -------
-        builtins.bool
-            `builtins.True` if any of the given flags are part of this value.
-            Otherwise, return `builtins.False`.
+        bool
+            `True` if any of the given flags are part of this value.
+            Otherwise, return `False`.
         """
         return all((flag & self) == flag for flag in flags)
 
@@ -631,9 +633,9 @@ class Flag(metaclass=_FlagMeta):
 
         Returns
         -------
-        builtins.bool
-            `builtins.True` if any of the given flags are part of this value.
-            Otherwise, return `builtins.False`.
+        bool
+            `True` if any of the given flags are part of this value.
+            Otherwise, return `False`.
         """
         return any((flag & self) == flag for flag in flags)
 
@@ -661,8 +663,8 @@ class Flag(metaclass=_FlagMeta):
         """Return whether two sets have a intersection or not.
 
         If the two sets have an intersection, then this returns
-        `builtins.False`. If no common flag values exist between them, then
-        this returns `builtins.True`.
+        `False`. If no common flag values exist between them, then
+        this returns `True`.
         """
         return not (self & other)
 
@@ -680,14 +682,14 @@ class Flag(metaclass=_FlagMeta):
     def none(self: _T, *flags: _T) -> bool:
         """Check if none of the given flags are part of this value.
 
-        !!! note
+        .. note::
             This is essentially the opposite of `Flag.any`.
 
         Returns
         -------
-        builtins.bool
-            `builtins.True` if none of the given flags are part of this value.
-            Otherwise, return `builtins.False`.
+        bool
+            `True` if none of the given flags are part of this value.
+            Otherwise, return `False`.
         """
         return not self.any(*flags)
 

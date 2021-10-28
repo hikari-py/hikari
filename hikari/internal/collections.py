@@ -75,7 +75,7 @@ class ExtendedMutableMapping(typing.MutableMapping[KeyT, ValueT], abc.ABC):
         This may look like calling `dict.copy` and wrapping the result in a
         mapped collection.
 
-        !!! note
+        .. note::
             Any removal policy on this mapped collection will be copied over.
 
         Returns
@@ -92,7 +92,7 @@ class ExtendedMutableMapping(typing.MutableMapping[KeyT, ValueT], abc.ABC):
         around how the data is being stored to allow for a more efficient copy.
         This may look like calling `dict.copy`.
 
-        !!! note
+        .. note::
             Unlike `ExtendedMutableMapping.copy`, this should return a pure
             mapping with no removal policy at all.
 
@@ -171,13 +171,13 @@ class TimedCacheMap(ExtendedMutableMapping[KeyT, ValueT]):
 
     Other Parameters
     ----------------
-    source : typing.Optional[typing.Dict[KeyT, typing.Tuple[builtins.float, ValueT]]
+    source : typing.Optional[typing.Dict[KeyT, typing.Tuple[float, ValueT]]
         A source dictionary of keys to tuples of float timestamps and values to
         create this from.
     on_expire : typing.Optional[typing.Callable[[ValueT], None]]
         A function to call each time an item is garbage collected from this
         map. This should take one positional argument of the same type stored
-        in this mapping as the value and should return `builtins.None`.
+        in this mapping as the value and should return `None`.
 
         This will always be called after the entry has been removed.
     """
@@ -264,7 +264,7 @@ class LimitedCapacityCacheMap(ExtendedMutableMapping[KeyT, ValueT]):
     on_expire : typing.Optional[typing.Callable[[ValueT], None]]
         A function to call each time an item is garbage collected from this
         map. This should take one positional argument of the same type stored
-        in this mapping as the value and should return `builtins.None.
+        in this mapping as the value and should return `None.
 
         This will always be called after the entry has been removed.
     """
@@ -342,13 +342,13 @@ class SnowflakeSet(typing.MutableSet[snowflakes.Snowflake]):
     $$ \mathcal{O} \left( \log n \right) $$ and best case will be
     $$ \Omega \left\( k \right) $$
 
-    !!! warning
+    .. warning::
         This is not thread-safe and must not be iterated across whilst being
         concurrently modified.
 
     Other Parameters
     ----------------
-    *ids : builtins.int
+    *ids : int
         The IDs to fill this table with.
     """
 
@@ -447,7 +447,7 @@ def get_index_or_slice(
     Raises
     ------
     TypeError
-        If `index_or_slice` isn't a `builtins.slice` or `builtins.int`.
+        If `index_or_slice` isn't a `slice` or `int`.
     IndexError
         If `index_or_slice` is an int and is outside the range of the mapping's
         contents.

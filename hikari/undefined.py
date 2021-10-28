@@ -91,17 +91,17 @@ UndefinedOr = typing.Union[T, UndefinedType]
 
 If you see a type with this marker, it may be `UNDEFINED` or the value it wraps.
 For example, `UndefinedOr[float]` would mean the value could be a
-`builtins.float`, or the literal `UNDEFINED` value.
+`float`, or the literal `UNDEFINED` value.
 
 On the other hand, `typing.Optional[float]` would mean the value could be
-a `builtins.float`, or the literal `builtins.None` value.
+a `float`, or the literal `None` value.
 
 The reason for using this is in some places, there is a semantic difference
-between specifying something as being `builtins.None`, i.e. "no value", and
+between specifying something as being `None`, i.e. "no value", and
 having a default to specify that the value has just not been mentioned. The
 main example of this is in `edit` endpoints where the contents will only be
 changed if they are explicitly mentioned in the call. Editing a message content
-and setting it to `builtins.None` would be expected to clear the content,
+and setting it to `None` would be expected to clear the content,
 whereas setting it to `UNDEFINED` would be expected to leave the value as it
 is without changing it.
 
@@ -112,13 +112,13 @@ If in doubt, remember:
 
 - `UNDEFINED` means there is no value present, or that it has been left to
     the default value.
-- `builtins.None` means the value is present and explicitly empty/null/void,
+- `None` means the value is present and explicitly empty/null/void,
     where this has a deterministic documented behaviour and no differentiation
-    is made between a `builtins.None` value, and one that has been omitted.
+    is made between a `None` value, and one that has been omitted.
 """
 
 UndefinedNoneOr = typing.Union[UndefinedOr[T], None]
-"""Type hint for a value that may be `undefined.UNDEFINED`, or `builtins.None`.
+"""Type hint for a value that may be `undefined.UNDEFINED`, or `None`.
 
 `UndefinedNoneOr[T]` is simply an alias for
 `UndefinedOr[typing.Optional[T]]`, which would expand to

@@ -73,58 +73,31 @@ class GatewayShard(abc.ABC):
     @property
     @abc.abstractmethod
     def heartbeat_latency(self) -> float:
-        """Return the shard's most recent heartbeat latency.
+        """Shard's most recent heartbeat latency.
 
-        Returns
-        -------
-        builtins.float
-            Heartbeat latency measured in seconds. If the information is
-            not yet available, then this will be `float('nan')` instead.
+        If the information is not yet available, then this will be
+        `float('nan')` instead.
         """
 
     @property
     @abc.abstractmethod
     def id(self) -> int:
-        """Return the shard ID for this shard.
-
-        Returns
-        -------
-        builtins.int
-            The integer 0-based shard ID.
-        """
+        """0-based shard ID for this shard."""
 
     @property
     @abc.abstractmethod
     def intents(self) -> intents_.Intents:
-        """Return the intents set on this shard.
-
-        Returns
-        -------
-        hikari.intents.Intents
-            The intents being used on this shard.
-        """
+        """Intents set on this shard."""
 
     @property
     @abc.abstractmethod
     def is_alive(self) -> bool:
-        """Return `builtins.True` if the shard is alive and connected.
-
-        Returns
-        -------
-        builtins.bool
-            `builtins.True` if connected, or `builtins.False` if not.
-        """
+        """Whether the shard is alive and connected."""
 
     @property
     @abc.abstractmethod
     def shard_count(self) -> int:
-        """Return the total number of shards expected in the entire application.
-
-        Returns
-        -------
-        builtins.int
-            A number of shards greater than or equal to 1.
-        """
+        """Return the total number of shards expected in the entire application."""
 
     @abc.abstractmethod
     async def get_user_id(self) -> snowflakes.Snowflake:
@@ -175,8 +148,8 @@ class GatewayShard(abc.ABC):
         idle_since : hikari.undefined.UndefinedNoneOr[datetime.datetime]
             The datetime that the user started being idle. If undefined, this
             will not be changed.
-        afk : hikari.undefined.UndefinedOr[builtins.bool]
-            If `builtins.True`, the user is marked as AFK. If `builtins.False`,
+        afk : hikari.undefined.UndefinedOr[bool]
+            If `True`, the user is marked as AFK. If `False`,
             the user is marked as being active. If undefined, this will not be
             changed.
         activity : hikari.undefined.UndefinedNoneOr[hikari.presences.Activity]
@@ -202,15 +175,15 @@ class GatewayShard(abc.ABC):
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             The guild or guild ID to update the voice state for.
         channel : typing.Optional[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildVoiceChannel]]
-            The channel or channel ID to update the voice state for. If `builtins.None`
+            The channel or channel ID to update the voice state for. If `None`
             then the bot will leave the voice channel that it is in for the
             given guild.
-        self_mute : builtins.bool
-            If specified and `builtins.True`, the bot will mute itself in that
-            voice channel. If `builtins.False`, then it will unmute itself.
-        self_deaf : builtins.bool
-            If specified and `builtins.True`, the bot will deafen itself in that
-            voice channel. If `builtins.False`, then it will undeafen itself.
+        self_mute : bool
+            If specified and `True`, the bot will mute itself in that
+            voice channel. If `False`, then it will unmute itself.
+        self_deaf : bool
+            If specified and `True`, the bot will deafen itself in that
+            voice channel. If `False`, then it will undeafen itself.
         """
 
     @abc.abstractmethod
@@ -226,6 +199,10 @@ class GatewayShard(abc.ABC):
     ) -> None:
         """Request for a guild chunk.
 
+        .. note::
+            To request the full list of members, set `query` to `""` (empty
+            string) and `limit` to `0`.
+
         Parameters
         ----------
         guild: hikari.guilds.Guild
@@ -233,20 +210,16 @@ class GatewayShard(abc.ABC):
 
         Other Parameters
         ----------------
-        include_presences: hikari.undefined.UndefinedOr[builtins.bool]
+        include_presences: hikari.undefined.UndefinedOr[bool]
             If provided, whether to request presences.
-        query: builtins.str
+        query: str
             If not `""`, request the members which username starts with the string.
-        limit: builtins.int
+        limit: int
             Maximum number of members to send matching the query.
         users: hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.users.User]]
             If provided, the users to request for.
-        nonce: hikari.undefined.UndefinedOr[builtins.str]
+        nonce: hikari.undefined.UndefinedOr[str]
             If provided, the nonce to be sent with guild chunks.
-
-        !!! note
-            To request the full list of members, set `query` to `""` (empty
-            string) and `limit` to `0`.
 
         Raises
         ------

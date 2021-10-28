@@ -98,7 +98,7 @@ class Permissions(enums.Flag):
     KICK_MEMBERS = 1 << 1
     """Allows kicking members.
 
-    !!! note
+    .. note::
         In guilds with server-wide 2FA enabled this permission can only be used
         by users who have two-factor authentication enabled on their account
         (or their owner's account in the case of bot users) and the guild owner.
@@ -107,7 +107,7 @@ class Permissions(enums.Flag):
     BAN_MEMBERS = 1 << 2
     """Allows banning members.
 
-    !!! note
+    .. note::
         In guilds with server-wide 2FA enabled this permission can only be used
         by users who have two-factor authentication enabled on their account
         (or their owner's account in the case of bot users) and the guild owner.
@@ -116,7 +116,7 @@ class Permissions(enums.Flag):
     ADMINISTRATOR = 1 << 3
     """Allows all permissions and bypasses channel permission overwrites.
 
-    !!! note
+    .. note::
         In guilds with server-wide 2FA enabled this permission can only be used
         by users who have two-factor authentication enabled on their account
         (or their owner's account in the case of bot users) and the guild owner.
@@ -125,7 +125,7 @@ class Permissions(enums.Flag):
     MANAGE_CHANNELS = 1 << 4
     """Allows management and editing of channels.
 
-    !!! note
+    .. note::
         In guilds with server-wide 2FA enabled this permission can only be used
         by users who have two-factor authentication enabled on their account
         (or their owner's account in the case of bot users) and the guild owner.
@@ -134,7 +134,7 @@ class Permissions(enums.Flag):
     MANAGE_GUILD = 1 << 5
     """Allows management and editing of the guild.
 
-    !!! note
+    .. note::
         In guilds with server-wide 2FA enabled this permission can only be used
         by users who have two-factor authentication enabled on their account
         (or their owner's account in the case of bot users) and the guild owner.
@@ -164,7 +164,7 @@ class Permissions(enums.Flag):
     MANAGE_MESSAGES = 1 << 13
     """Allows for deletion of other users messages.
 
-    !!! note
+    .. note::
         In guilds with server-wide 2FA enabled this permission can only be used
         by users who have two-factor authentication enabled on their account
         (or their owner's account in the case of bot users) and the guild owner.
@@ -219,7 +219,7 @@ class Permissions(enums.Flag):
     MANAGE_ROLES = 1 << 28
     """Allows management and editing of roles.
 
-    !!! note
+    .. note::
         In guilds with server-wide 2FA enabled this permission can only be used
         by users who have two-factor authentication enabled on their account
         (or their owner's account in the case of bot users) and the guild owner.
@@ -228,7 +228,7 @@ class Permissions(enums.Flag):
     MANAGE_WEBHOOKS = 1 << 29
     """Allows management and editing of webhooks.
 
-    !!! note
+    .. note::
         In guilds with server-wide 2FA enabled this permission can only be used
         by users who have two-factor authentication enabled on their account
         (or their owner's account in the case of bot users) and the guild owner.
@@ -237,7 +237,7 @@ class Permissions(enums.Flag):
     MANAGE_EMOJIS_AND_STICKERS = 1 << 30
     """Allows management and editing of emojis and stickers.
 
-    !!! note
+    .. note::
         In guilds with server-wide 2FA enabled this permission can only be used
         by users who have two-factor authentication enabled on their account
         (or their owner's account in the case of bot users) and the guild owner.
@@ -249,7 +249,7 @@ class Permissions(enums.Flag):
     REQUEST_TO_SPEAK = 1 << 32
     """Allows for requesting to speak in stage channels.
 
-    !!! warning
+    .. warning::
         This permissions is currently defined as being "under active
         development" by Discord meaning that "it may be changed or removed"
         without warning.
@@ -258,7 +258,7 @@ class Permissions(enums.Flag):
     MANAGE_THREADS = 1 << 34
     """Allows for deleting and archiving threads, and viewing all private threads.
 
-     !!! note
+     .. note::
         In guilds with server-wide 2FA enabled this permission can only be used
         by users who have two-factor authentication enabled on their account
         (or their owner's account in the case of bot users) and the guild owner.

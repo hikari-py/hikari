@@ -86,7 +86,7 @@ class Emoji(files.WebResource, abc.ABC):
 
         Parameters
         ----------
-        string : builtins.str
+        string : str
             The emoji object to parse.
 
         Returns
@@ -97,7 +97,7 @@ class Emoji(files.WebResource, abc.ABC):
 
         Raises
         ------
-        builtins.ValueError
+        ValueError
             If a mention is given that has an invalid format.
         """
         if string.startswith("<") and string.endswith(">"):
@@ -108,7 +108,7 @@ class Emoji(files.WebResource, abc.ABC):
 class UnicodeEmoji(str, Emoji):
     """Represents a unicode emoji.
 
-    !!! warning
+    .. warning::
         A word of warning if you try to upload this emoji as a file attachment.
 
         While this emoji type can be used to upload the Twemoji representations
@@ -178,7 +178,11 @@ class UnicodeEmoji(str, Emoji):
 
         Example
         -------
-            https://github.com/twitter/twemoji/raw/master/assets/72x72/1f004.png
+        ```py
+        >>> emoji = hikari.UnicodeEmoji("\N{OK HAND SIGN}")
+        >>> emoji.url
+        'https://raw.githubusercontent.com/twitter/twemoji/master/assets/72x72/1f44c.png'
+        ```
         """
         return _TWEMOJI_PNG_BASE_URL + self.filename
 
@@ -217,7 +221,7 @@ class UnicodeEmoji(str, Emoji):
 
         Parameters
         ----------
-        string : builtins.str
+        string : str
             The emoji object to parse.
 
         Returns
@@ -248,7 +252,7 @@ class CustomEmoji(snowflakes.Unique, Emoji):
         >>> picks = random.choices(emojis, 5)
         >>> await event.respond(files=picks)
 
-    !!! warning
+    .. warning::
         Discord will not provide information on whether these emojis are
         animated or not when a reaction is removed and an event is fired. This
         is problematic if you need to try and determine the emoji that was
@@ -256,7 +260,7 @@ class CustomEmoji(snowflakes.Unique, Emoji):
         will not be correct.
 
         This will not be changed as stated here:
-        https://github.com/discord/discord-api-docs/issues/1614#issuecomment-628548913
+        <https://github.com/discord/discord-api-docs/issues/1614#issuecomment-628548913>
     """
 
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
@@ -298,7 +302,7 @@ class CustomEmoji(snowflakes.Unique, Emoji):
 
         Parameters
         ----------
-        string : builtins.str
+        string : str
             The emoji mention to parse.
 
         Returns
@@ -308,7 +312,7 @@ class CustomEmoji(snowflakes.Unique, Emoji):
 
         Raises
         ------
-        builtins.ValueError
+        ValueError
             If a mention is given that has an invalid format.
         """
         if emoji_match := _CUSTOM_EMOJI_REGEX.match(string):
@@ -346,8 +350,8 @@ class KnownCustomEmoji(CustomEmoji):
     user: typing.Optional[users.User] = attr.field(eq=False, hash=False, repr=False)
     """The user that created the emoji.
 
-    !!! note
-        This will be `builtins.None` if you are missing the `MANAGE_EMOJIS_AND_STICKERS`
+    .. note::
+        This will be `None` if you are missing the `MANAGE_EMOJIS_AND_STICKERS`
         permission in the server the emoji is from.
     """
 
@@ -360,5 +364,5 @@ class KnownCustomEmoji(CustomEmoji):
     is_available: bool = attr.field(eq=False, hash=False, repr=False)
     """Whether this emoji can currently be used.
 
-    May be `builtins.False` due to a loss of Sever Boosts on the emoji's guild.
+    May be `False` due to a loss of Sever Boosts on the emoji's guild.
     """

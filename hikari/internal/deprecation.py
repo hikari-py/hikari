@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["deprecated", "warn_deprecated"]
+__all__: typing.List[str] = ["warn_deprecated", "deprecated"]
 
 import functools
 import inspect
@@ -35,72 +35,63 @@ if typing.TYPE_CHECKING:
     T = typing.TypeVar("T", bound=typing.Callable[..., typing.Any])
 
 
-def warn_deprecated(
-    obj: typing.Any,
-    /,
-    *,
-    version: typing.Optional[str] = None,
-    alternative: typing.Optional[str] = None,
-    stack_level: int = 3,
-) -> None:
+def warn_deprecated(obj: typing.Any, additional_information: str, /, *, stack_level: int = 3) -> None:
     """Raise a deprecated warning.
 
     Parameters
     ----------
     obj: typing.Any
         The object that is deprecated.
+    additional_information: str
+        Additional information on the deprecation for the user.
 
     Other Parameters
     ----------------
-    version: typing.Optional[str]
-        If specified, the version it will be removed in.
-    alternative: typing.Optional[str]
-        If specified, the alternative to use.
     stack_level: int
         The stack level for the warning. Defaults to `3`.
     """
-    if inspect.isclass(obj) or inspect.isfunction(obj):
+    if inspect.isclass(obj):
+        action = ("Instantiation of", "class")
         obj = f"{obj.__module__}.{obj.__qualname__}"
+    else:
+        if inspect.isfunction(obj):
+            obj = f"{obj.__module__}.{obj.__qualname__}"
 
-    version_str = f"version {version}" if version is not None else "a following version"
-    message = f"'{obj}' is deprecated and will be removed in {version_str}."
+        action = ("Call to", "function/method")
 
-    if alternative is not None:
-        message += f" You can use '{alternative}' instead."
+    warnings.warn(
+        f"{action[0]} deprecated {action[1]} {obj!r} ({additional_information})",
+        category=DeprecationWarning,
+        stacklevel=stack_level,
+    )
 
-    warnings.warn(message, category=DeprecationWarning, stacklevel=stack_level)
 
+def deprecated(version: str, additional_information: str) -> typing.Callable[[T], T]:
+    """Mark a function or object as being deprecated.
 
-def deprecated(
-    version: typing.Optional[str] = None, alternative: typing.Optional[str] = None
-) -> typing.Callable[[T], T]:
-    """Mark a function as deprecated.
-
-    Other Parameters
-    ----------------
-    version: typing.Optional[str]
-        If specified, the version it will be removed in.
-    alternative: typing.Optional[str]
-        If specified, the alternative to use.
+    Parameters
+    ----------
+    version: typing.Any
+        The version this function or object is deprecated in.
+    additional_information: str
+        Additional information on the deprecation for the user.
     """
 
     def decorator(obj: T) -> T:
-        type_str = "class" if inspect.isclass(obj) else "function"
-        version_str = f"version {version}" if version is not None else "a following version"
-        alternative_str = f"You can use `{alternative}` instead." if alternative else ""
+        old_doc = inspect.getdoc(obj)
 
-        doc = inspect.getdoc(obj) or ""
-        doc += (
-            "\n"
-            "!!! warning\n"
-            f"    This {type_str} is deprecated and will be removed in {version_str}.\n"
-            f"    {alternative_str}\n"
-        )
-        obj.__doc__ = doc
+        # If the docstring is inherited we can assume that the deprecation warning was already added there
+        if old_doc:
+            first_line_end = old_doc.index("\n")
+            obj.__doc__ = (
+                old_doc[:first_line_end]
+                + f"\n\n.. deprecated:: {version}\n    {additional_information}"
+                + old_doc[first_line_end:]
+            )
 
         @functools.wraps(obj)
         def wrapper(*args: typing.Any, **kwargs: typing.Any) -> typing.Any:
-            warn_deprecated(obj, version=version, alternative=alternative, stack_level=3)
+            warn_deprecated(obj, additional_information)
             return obj(*args, **kwargs)
 
         return typing.cast("T", wrapper)

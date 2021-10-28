@@ -68,43 +68,22 @@ class BasicAuthHeader:
     username: str = attr.field(validator=attr.validators.instance_of(str))
     """Username for the header.
 
-    Returns
-    -------
-    builtins.str
-        The username to use. This must not contain `":"`.
+    ...warning :: This must not contain `":"`.
     """
 
     password: str = attr.field(repr=False, validator=attr.validators.instance_of(str))
-    """Password to use.
-
-    Returns
-    -------
-    builtins.str
-        The password to use.
-    """
+    """Password to use."""
 
     charset: str = attr.field(default="utf-8", validator=attr.validators.instance_of(str))
     """Encoding to use for the username and password.
 
     Default is `"utf-8"`, but you may choose to use something else,
     including third-party encodings (e.g. IBM's EBCDIC codepages).
-
-    Returns
-    -------
-    builtins.str
-        The encoding to use.
     """
 
     @property
     def header(self) -> str:
-        """Create the full `Authentication` header value.
-
-        Returns
-        -------
-        builtins.str
-            A base64-encoded string containing
-            `"{username}:{password}"`.
-        """
+        """Create the full `Authentication` header value."""
         raw_token = f"{self.username}:{self.password}".encode(self.charset)
         token_part = base64.b64encode(raw_token).decode(self.charset)
         return f"{_BASICAUTH_TOKEN_PREFIX} {token_part}"
@@ -121,20 +100,20 @@ class ProxySettings:
     auth: typing.Any = attr.field(default=None)
     """Authentication header value to use.
 
-    When cast to a `builtins.str`, this should provide the full value
+    When cast to a `str`, this should provide the full value
     for the authentication header.
 
     If you are using basic auth, you should consider using the
     `BasicAuthHeader` helper object here, as this will provide any
     transformations you may require into a base64 string.
 
-    The default is to have this set to `builtins.None`, which will
+    The default is to have this set to `None`, which will
     result in no authentication being provided.
 
     Returns
     -------
     typing.Any
-        The value for the `Authentication` header, or `builtins.None`
+        The value for the `Authentication` header, or `None`
         to disable.
     """
 
@@ -144,12 +123,12 @@ class ProxySettings:
     url: typing.Union[None, str, yarl.URL] = attr.field(default=None)
     """Proxy URL to use.
 
-    Defaults to `builtins.None` which disables the use of an explicit proxy.
+    Defaults to `None` which disables the use of an explicit proxy.
 
     Returns
     -------
-    typing.Union[builtins.None, builtins.str, yarl.URL]
-        The proxy URL to use, or `builtins.None` to disable it.
+    typing.Union[None, str, yarl.URL]
+        The proxy URL to use, or `None` to disable it.
     """
 
     @url.validator
@@ -160,23 +139,23 @@ class ProxySettings:
     trust_env: bool = attr.field(default=False, validator=attr.validators.instance_of(bool))
     """Toggle whether to look for a `netrc` file or environment variables.
 
-    If `builtins.True`, and no `url` is given on this object, then
+    If `True`, and no `url` is given on this object, then
     `HTTP_PROXY` and `HTTPS_PROXY` will be used from the environment
     variables, or a `netrc` file may be read to determine credentials.
 
-    If `builtins.False`, then this information is instead ignored.
+    If `False`, then this information is instead ignored.
 
-    Defaults to `builtins.False` to prevent potentially unwanted behavior.
+    Defaults to `False` to prevent potentially unwanted behavior.
 
-    !!! note
+    .. note::
         For more details of using `netrc`, visit:
-        https://www.gnu.org/software/inetutils/manual/html_node/The-_002enetrc-file.html
+        <https://www.gnu.org/software/inetutils/manual/html_node/The-_002enetrc-file.html>
 
     Returns
     -------
-    builtins.bool
-        `builtins.True` if allowing the use of environment variables
-        and/or `netrc` to determine proxy settings; `builtins.False`
+    bool
+        `True` if allowing the use of environment variables
+        and/or `netrc` to determine proxy settings; `False`
         if this should be disabled explicitly.
     """
 
@@ -184,11 +163,7 @@ class ProxySettings:
     def all_headers(self) -> typing.Optional[data_binding.Headers]:
         """Return all proxy headers.
 
-        Returns
-        -------
-        typing.Optional[hikari.internal.data_binding.Headers]
-            Any headers that are set, or `builtins.None` if no headers are to
-            be sent with any request.
+        Will be `None` if no headers are to be send with any request.
         """
         if self.headers is None:
             if self.auth is None:
@@ -208,45 +183,29 @@ class HTTPTimeoutSettings:
     acquire_and_connect: typing.Optional[float] = attr.field(default=None)
     """Timeout for `request_socket_connect` PLUS connection acquisition.
 
-    By default, this has no timeout allocated.
-
-    Returns
-    -------
-    typing.Optional[builtins.float]
-        The timeout, or `builtins.None` to disable it.
+    By default, this has no timeout allocated. Setting it to `None`
+    will disable it.
     """
 
     request_socket_connect: typing.Optional[float] = attr.field(default=None)
     """Timeout for connecting a socket.
 
-    By default, this has no timeout allocated.
-
-    Returns
-    -------
-    typing.Optional[builtins.float]
-        The timeout, or `builtins.None` to disable it.
+    By default, this has no timeout allocated. Setting it to `None`
+    will disable it.
     """
 
     request_socket_read: typing.Optional[float] = attr.field(default=None)
     """Timeout for reading a socket.
 
-    By default, this has no timeout allocated.
-
-    Returns
-    -------
-    typing.Optional[builtins.float]
-        The timeout, or `builtins.None` to disable it.
+    By default, this has no timeout allocated. Setting it to `None`
+    will disable it.
     """
 
     total: typing.Optional[float] = attr.field(default=30.0)
     """Total timeout for entire request.
 
-    By default, this has a 30 second timeout allocated.
-
-    Returns
-    -------
-    typing.Optional[builtins.float]
-        The timeout, or `builtins.None` to disable it.
+    By default, this has a 30 second timeout allocated. Setting it to `None`
+    will disable it.
     """
 
     @acquire_and_connect.validator
@@ -268,41 +227,29 @@ class HTTPSettings:
     enable_cleanup_closed: bool = attr.field(default=True, validator=attr.validators.instance_of(bool))
     """Toggle whether to clean up closed transports.
 
-    This defaults to `builtins.True` to combat various protocol and asyncio
+    This defaults to `True` to combat various protocol and asyncio
     issues present when using Microsoft Windows. If you are sure you know
     what you are doing, you may instead set this to `False` to disable this
     behavior internally.
-
-    Returns
-    -------
-    builtins.bool
-        `builtins.True` to enable this behavior, `builtins.False` to disable
-        it.
     """
 
     force_close_transports: bool = attr.field(default=True, validator=attr.validators.instance_of(bool))
     """Toggle whether to force close transports on shutdown.
 
-    This defaults to `builtins.True` to combat various protocol and asyncio
+    This defaults to `True` to combat various protocol and asyncio
     issues present when using Microsoft Windows. If you are sure you know
     what you are doing, you may instead set this to `False` to disable this
     behavior internally.
-
-    Returns
-    -------
-    builtins.bool
-        `builtins.True` to enable this behavior, `builtins.False` to disable
-        it.
     """
 
     max_redirects: typing.Optional[int] = attr.field(default=10)
     """Behavior for handling redirect HTTP responses.
 
-    If a `builtins.int`, allow following redirects from `3xx` HTTP responses
+    If a `int`, allow following redirects from `3xx` HTTP responses
     for up to this many redirects. Exceeding this value will raise an
     exception.
 
-    If `builtins.None`, then disallow any redirects.
+    If `None`, then disallow any redirects.
 
     The default is to disallow this behavior for security reasons.
 
@@ -310,17 +257,9 @@ class HTTPSettings:
     future where you need to enable this if Discord change their URL without
     warning.
 
-    !!! note
+    .. note::
         This will only apply to the REST API. WebSockets remain unaffected
         by any value set here.
-
-    Returns
-    -------
-    typing.Optional[builtins.int]
-        The number of redirects to allow at a maximum per request.
-        `builtins.None` disables the handling
-        of redirects and will result in exceptions being raised instead
-        should one occur.
     """
 
     @max_redirects.validator
@@ -337,24 +276,24 @@ class HTTPSettings:
     )
     """SSL context to use.
 
-    This may be __assigned__ a `builtins.bool` or an `ssl.SSLContext` object.
+    This may be __assigned__ a `bool` or an `ssl.SSLContext` object.
 
-    If assigned to `builtins.True`, a default SSL context is generated by
+    If assigned to `True`, a default SSL context is generated by
     this class that will enforce SSL verification. This is then stored in
     this field.
 
-    If `builtins.False`, then a default SSL context is generated by this
+    If `False`, then a default SSL context is generated by this
     class that will **NOT** enforce SSL verification. This is then stored
     in this field.
 
     If an instance of `ssl.SSLContext`, then this context will be used.
 
-    !!! warning
+    .. warning::
         Setting a custom value here may have security implications, or
         may result in the application being unable to connect to Discord
         at all.
 
-    !!! warning
+    .. warning::
         Disabling SSL verification is almost always unadvised. This
         is because your application will no longer check whether you are
         connecting to Discord, or to some third party spoof designed
@@ -365,11 +304,6 @@ class HTTPSettings:
         allows you to work around any issues that are occurring, but
         you should immediately seek a better solution where possible
         if any form of personal security is in your interest.
-
-    Returns
-    -------
-    ssl.SSLContext
-        The SSL context to use for this application.
     """
 
     timeouts: HTTPTimeoutSettings = attr.field(
@@ -379,11 +313,6 @@ class HTTPSettings:
 
     The behaviour if this is not explicitly defined is to use sane
     defaults that are most efficient for optimal use of this library.
-
-    Returns
-    -------
-    HTTPTimeoutSettings
-        The HTTP timeout settings to use for connection timeouts.
     """
 
 

@@ -104,17 +104,10 @@ async def message(event: hikari.GuildMessageCreateEvent) -> None:
         return
 
     # Command Framework 101 :D
-    if event.content.startswith(PREFIX):
-        if is_command("ping", event.content):
-            await event.message.respond("Ping?")
-        elif is_command("value", event.content):
-            await event.message.respond(f"Current value: {bot.data.value}")
-
-
-@bot.listen()
-async def on_ready(event: hikari.ShardReadyEvent) -> None:
-    """Log when the bot is ready."""
-    logging.info("Bot is ready! %s", event)
+    if is_command("ping", event.content):
+        await event.message.respond("Ping?")
+    elif is_command("value", event.content):
+        await event.message.respond(f"Current value: {bot.data.value}")
 
 
 bot.run()

@@ -66,22 +66,22 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
 
     Parameters
     ----------
-    token : typing.Union[builtins.str, builtins.None, hikari.api.rest.TokenStrategy]
+    token : typing.Union[str, None, hikari.api.rest.TokenStrategy]
         The bot or bearer token. If no token is to be used,
         this can be undefined.
-    token_type : typing.Union[builtins.str, hikari.applications.TokenType, builtins.None]
-        The type of token in use. This should only be passed when `builtins.str`
+    token_type : typing.Union[str, hikari.applications.TokenType, None]
+        The type of token in use. This should only be passed when `str`
         is passed for `token`, can be `"Bot"` or `"Bearer"` and will be
         defaulted to `"Bearer"` in this situation.
 
-        This should be left as `builtins.None` when either
-        `hikari.api.rest.TokenStrategy` or `builtins.None` is passed for
+        This should be left as `None` when either
+        `hikari.api.rest.TokenStrategy` or `None` is passed for
         `token`.
 
     Other Parameters
     ----------------
-    allow_color : builtins.bool
-        Defaulting to `builtins.True`, this will enable coloured console logs
+    allow_color : bool
+        Defaulting to `True`, this will enable coloured console logs
         on any platform that is a TTY.
         Setting a `"CLICOLOR"` environment variable to any **non `0`** value
         will override this setting.
@@ -91,12 +91,12 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         awkward or not support features in a standard way, the option to
         explicitly disable this is provided. See `force_color` for an
         alternative.
-    banner : typing.Optional[builtins.str]
+    banner : typing.Optional[str]
         The package to search for a `banner.txt` in. Defaults to `"hikari"` for
         the `"hikari/banner.txt"` banner.
-        Setting this to `builtins.None` will disable the banner being shown.
+        Setting this to `None` will disable the banner being shown.
     executor : typing.Optional[concurrent.futures.Executor]
-        Defaults to `builtins.None`. If non-`builtins.None`, then this executor
+        Defaults to `None`. If non-`None`, then this executor
         is used instead of the `concurrent.futures.ThreadPoolExecutor` attached
         to the `asyncio.AbstractEventLoop` that the bot will run on. This
         executor is used primarily for file-IO.
@@ -107,20 +107,22 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         relies on all objects used in IPC to be `pickle`able. Many third-party
         libraries will not support this fully though, so your mileage may vary
         on using ProcessPoolExecutor implementations with this parameter.
-    force_color : builtins.bool
-        Defaults to `builtins.False`. If `builtins.True`, then this application
+    force_color : bool
+        Defaults to `False`. If `True`, then this application
         will __force__ colour to be used in console-based output. Specifying a
         `"CLICOLOR_FORCE"` environment variable with a non-`"0"` value will
         override this setting.
+
+        This will take precedence over `allow_color` if both are specified.
     http_settings : typing.Optional[hikari.config.HTTPSettings]
         Optional custom HTTP configuration settings to use. Allows you to
         customise functionality such as whether SSL-verification is enabled,
         what timeouts `aiohttp` should expect to use for requests, and behavior
         regarding HTTP-redirects.
-    logs : typing.Union[builtins.None, LoggerLevel, typing.Dict[str, typing.Any]]
+    logs : typing.Union[None, LoggerLevel, typing.Dict[str, typing.Any]]
         Defaults to `"INFO"`.
 
-        If `builtins.None`, then the Python logging system is left uninitialized
+        If `None`, then the Python logging system is left uninitialized
         on startup, and you will need to configure it manually to view most
         logs that are output by components of this library.
 
@@ -141,7 +143,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
 
         Note that `"TRACE_HIKARI"` is a library-specific logging level
         which is expected to be more verbose than `"DEBUG"`.
-    max_rate_limit : builtins.float
+    max_rate_limit : float
         The max number of seconds to backoff for when rate limited. Anything
         greater than this will instead raise an error.
 
@@ -154,31 +156,28 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         Note that this only applies to the REST API component that communicates
         with Discord, and will not affect sharding or third party HTTP endpoints
         that may be in use.
-    max_retries : typing.Optional[builtins.int]
+    max_retries : typing.Optional[int]
         Maximum number of times a request will be retried if
-        it fails with a `5xx` status. Defaults to 3 if set to `builtins.None`.
+        it fails with a `5xx` status. Defaults to 3 if set to `None`.
     proxy_settings : typing.Optional[config.ProxySettings]
         Custom proxy settings to use with network-layer logic
         in your application to get through an HTTP-proxy.
-    public_key : typing.Union[builtins.str, builtins.bytes, builtins.None]
+    public_key : typing.Union[str, bytes, None]
         The public key to use to verify received interaction requests.
-        This may be a hex encoded `builtins.str` or the raw `builtins.bytes`.
-        If left as `builtins.None` then the client will try to work this value
+        This may be a hex encoded `str` or the raw `bytes`.
+        If left as `None` then the client will try to work this value
         out based on `token`.
-    rest_url : typing.Optional[builtins.str]
-        Defaults to the Discord REST API URL if `builtins.None`. Can be
+    rest_url : typing.Optional[str]
+        Defaults to the Discord REST API URL if `None`. Can be
         overridden if you are attempting to point to an unofficial endpoint, or
         if you are attempting to mock/stub the Discord API for any reason.
         Generally you do not want to change this.
 
-    !!! note
-        `force_color` will always take precedence over `allow_color`.
-
     Raises
     ------
-    builtins.ValueError
+    ValueError
         * If `token_type` is provided when a token strategy is passed for `token`.
-        * if `token_type` is left as `builtins.None` when a string is passed for `token`.
+        * if `token_type` is left as `None` when a string is passed for `token`.
     """
 
     __slots__: typing.Sequence[str] = (
@@ -327,19 +326,18 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
 
         Parameters
         ----------
-        banner : typing.Optional[builtins.str]
+        banner : typing.Optional[str]
             The package to find a `banner.txt` in.
-        allow_color : builtins.bool
+        allow_color : bool
             A flag that allows advising whether to allow color if supported or
             not. Can be overridden by setting a `"CLICOLOR"` environment
             variable to a non-`"0"` string.
-        force_color : builtins.bool
+        force_color : bool
             A flag that allows forcing color to always be output, even if the
             terminal device may not support it. Setting the `"CLICOLOR_FORCE"`
             environment variable to a non-`"0"` string will override this.
 
-        !!! note
-            `force_color` will always take precedence over `allow_color`.
+            This will take precedence over `allow_color` if both are specified.
         """
         ux.print_banner(banner, allow_color, force_color)
 
@@ -389,17 +387,17 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
 
         Other Parameters
         ----------------
-        asyncio_debug : builtins.bool
-            Defaults to `builtins.False`. If `builtins.True`, then debugging is
+        asyncio_debug : bool
+            Defaults to `False`. If `True`, then debugging is
             enabled for the asyncio event loop in use.
-        backlog : builtins.int
+        backlog : int
             The number of unaccepted connections that the system will allow before
             refusing new connections.
-        check_for_updates : builtins.bool
-            Defaults to `builtins.True`. If `builtins.True`, will check for
+        check_for_updates : bool
+            Defaults to `True`. If `True`, will check for
             newer versions of `hikari` on PyPI and notify if available.
-        close_loop : builtins.bool
-            Defaults to `builtins.True`. If `builtins.True`, then once the bot
+        close_loop : bool
+            Defaults to `True`. If `True`, then once the bot
             enters a state where all components have shut down permanently
             during application shutdown, then all asyngens and background tasks
             will be destroyed, and the event loop will be shut down.
@@ -408,42 +406,42 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
             had time to attempt to shut down correctly (around 250ms), and on
             Python 3.9 and newer, will also shut down the default event loop
             executor too.
-        close_passed_executor : builtins.bool
-            Defaults to `builtins.False`. If `builtins.True`, any custom
+        close_passed_executor : bool
+            Defaults to `False`. If `True`, any custom
             `concurrent.futures.Executor` passed to the constructor will be
             shut down when the application terminates. This does not affect the
             default executor associated with the event loop, and will not
             do anything if you do not provide a custom executor to the
             constructor.
-        coroutine_tracking_depth : typing.Optional[builtins.int]
-            Defaults to `builtins.None`. If an integer value and supported by
+        coroutine_tracking_depth : typing.Optional[int]
+            Defaults to `None`. If an integer value and supported by
             the interpreter, then this many nested coroutine calls will be
             tracked with their call origin state. This allows you to determine
             where non-awaited coroutines may originate from, but generally you
             do not want to leave this enabled for performance reasons.
-        enable_signal_handlers : builtins.bool
-            Defaults to `builtins.True`. If on a __non-Windows__ OS with builtin
+        enable_signal_handlers : bool
+            Defaults to `True`. If on a __non-Windows__ OS with builtin
             support for kernel-level POSIX signals, then setting this to
-            `builtins.True` will allow treating keyboard interrupts and other
+            `True` will allow treating keyboard interrupts and other
             OS signals to safely shut down the application as calls to
             shut down the application properly rather than just killing the
             process in a dirty state immediately. You should leave this disabled
             unless you plan to implement your own signal handling yourself.
-        host : typing.Optional[typing.Union[builtins.str, aiohttp.web.HostSequence]]
+        host : typing.Optional[typing.Union[str, aiohttp.web.HostSequence]]
             TCP/IP host or a sequence of hosts for the HTTP server.
-        port : typing.Optional[builtins.int]
+        port : typing.Optional[int]
             TCP/IP port for the HTTP server.
-        path : typing.Optional[builtins.str]
+        path : typing.Optional[str]
             File system path for HTTP server unix domain socket.
-        reuse_address : typing.Optional[builtins.bool]
+        reuse_address : typing.Optional[bool]
             Tells the kernel to reuse a local socket in TIME_WAIT state, without
             waiting for its natural timeout to expire.
-        reuse_port : typing.Optional[builtins.bool]
+        reuse_port : typing.Optional[bool]
             Tells the kernel to allow this endpoint to be bound to the same port
             as other existing endpoints are also bound to.
         socket : typing.Optional[socket.socket]
             A pre-existing socket object to accept connections on.
-        shutdown_timeout : builtins.float
+        shutdown_timeout : float
             A delay to wait for graceful server shutdown before forcefully
             disconnecting all open client sockets. This defaults to 60 seconds.
         ssl_context : typing.Optional[ssl.SSLContext]
@@ -505,45 +503,45 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
     ) -> None:
         """Start the bot and wait for the internal server to startup then return.
 
+        .. note::
+            For more information on the other parameters such as defaults see
+            AIOHTTP's documentation.
+
         Other Parameters
         ----------------
-        backlog : builtins.int
+        backlog : int
             The number of unaccepted connections that the system will allow before
             refusing new connections.
-        check_for_updates : builtins.bool
-            Defaults to `builtins.True`. If `builtins.True`, will check for
+        check_for_updates : bool
+            Defaults to `True`. If `True`, will check for
             newer versions of `hikari` on PyPI and notify if available.
-        enable_signal_handlers : builtins.bool
-            Defaults to `builtins.True`. If on a __non-Windows__ OS with builtin
+        enable_signal_handlers : bool
+            Defaults to `True`. If on a __non-Windows__ OS with builtin
             support for kernel-level POSIX signals, then setting this to
-            `builtins.True` will allow treating keyboard interrupts and other
+            `True` will allow treating keyboard interrupts and other
             OS signals to safely shut down the application as calls to
             shut down the application properly rather than just killing the
             process in a dirty state immediately. You should leave this disabled
             unless you plan to implement your own signal handling yourself.
-        host : typing.Optional[typing.Union[builtins.str, aiohttp.web.HostSequence]]
+        host : typing.Optional[typing.Union[str, aiohttp.web.HostSequence]]
             TCP/IP host or a sequence of hosts for the HTTP server.
-        port : typing.Optional[builtins.int]
+        port : typing.Optional[int]
             TCP/IP port for the HTTP server.
-        path : typing.Optional[builtins.str]
+        path : typing.Optional[str]
             File system path for HTTP server unix domain socket.
-        reuse_address : typing.Optional[builtins.bool]
+        reuse_address : typing.Optional[bool]
             Tells the kernel to reuse a local socket in TIME_WAIT state, without
             waiting for its natural timeout to expire.
-        reuse_port : typing.Optional[builtins.bool]
+        reuse_port : typing.Optional[bool]
             Tells the kernel to allow this endpoint to be bound to the same port
             as other existing endpoints are also bound to.
         socket : typing.Optional[socket.socket]
             A pre-existing socket object to accept connections on.
-        shutdown_timeout : builtins.float
+        shutdown_timeout : float
             A delay to wait for graceful server shutdown before forcefully
             disconnecting all open client sockets. This defaults to 60 seconds.
         ssl_context : typing.Optional[ssl.SSLContext]
             SSL context for HTTPS servers.
-
-        !!! note
-            For more information on the other parameters such as defaults see
-            AIOHTTP's documentation.
         """
         if self.is_alive:
             raise errors.ComponentStateConflictError("Cannot start an already active interaction server")

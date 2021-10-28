@@ -65,7 +65,7 @@ class ActivityType(int, enums.Enum):
     STREAMING = 1
     """Shows up as `Streaming` and links to a Twitch or YouTube stream/video.
 
-    !!! warning
+    .. warning::
         You **MUST** provide a valid Twitch or YouTube stream URL to the
         activity you create in order for this to be valid. If you fail to
         do this, then the activity **WILL NOT** update.
@@ -83,7 +83,7 @@ class ActivityType(int, enums.Enum):
     To set an emoji with the status, place a unicode emoji or Discord emoji
     (`:smiley:`) as the first part of the status activity name.
 
-    !!! warning
+    .. warning::
         Bots **DO NOT** support setting custom statuses.
     """
 

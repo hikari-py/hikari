@@ -54,13 +54,13 @@ class All(typing.Generic[ValueT]):
     """Helper that wraps predicates and invokes them together.
 
     Calling this object will pass the input item to each item, returning
-    `builtins.True` only when all wrapped predicates return True when called
+    `True` only when all wrapped predicates return True when called
     with the given item.
 
     For example...
 
     ```py
-    if w(foo) and x(foo) andy(foo) and z(foo):
+    if w(foo) and x(foo) and y(foo) and z(foo):
         ...
     ```
     is equivalent to
@@ -71,30 +71,30 @@ class All(typing.Generic[ValueT]):
         ...
     ```
 
-    This behaves like a lazy wrapper implementation of the `builtins.all` builtin.
+    This behaves like a lazy wrapper implementation of the `all` builtin.
 
-    !!! note
+    .. note::
         Like the rest of the standard library, this is a short-circuiting
-        operation. This means that if a predicate returns `builtins.False`, no
+        operation. This means that if a predicate returns `False`, no
         predicates after this are invoked, as the result is already known. In
         this sense, they are invoked in-order.
 
-    !!! warning
+    .. warning::
         You should not generally need to use this outside of extending the
         iterators API in this library!
 
     Operators
     ---------
     * `this(value : ValueT) -> bool`:
-        Return `builtins.True` if all conditions return `builtins.True` when
+        Return `True` if all conditions return `True` when
         invoked with the given value.
     * `~this`:
         Return a condition that, when invoked with the value, returns
-        `builtins.False` if all conditions were `builtins.True` in this object.
+        `False` if all conditions were `True` in this object.
 
     Parameters
     ----------
-    *conditions : typing.Callable[[ValueT], builtins.bool]
+    *conditions : typing.Callable[[ValueT], bool]
         The predicates to wrap.
     """
 
@@ -129,7 +129,7 @@ class AttrComparator(typing.Generic[ValueT]):
 
     Parameters
     ----------
-    attr_name : builtins.str
+    attr_name : str
         The attribute name. Can be prepended with a `.` optionally.
         If the attribute name ends with a `()`, then the call is invoked
         rather than treated as a property (useful for methods like
@@ -197,7 +197,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
     Additionally, you can make use of some of the provided helper methods
     on this class to perform basic operations easily.
 
-    Iterating across the items with indexes (like `builtins.enumerate` for normal
+    Iterating across the items with indexes (like `enumerate` for normal
     iterables):
 
     ```py
@@ -241,7 +241,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
 
         Parameters
         ----------
-        transformation : typing.Union[typing.Callable[[ValueT], builtins.bool], builtins.str]
+        transformation : typing.Union[typing.Callable[[ValueT], bool], str]
             The function to use to map the attribute. This may alternatively
             be a string attribute name to replace the input value with. You
             can provide nested attributes using the `.` operator.
@@ -275,17 +275,17 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
         Each condition is treated as a predicate, being called with each item
         that this iterator would return when it is requested.
 
-        All conditions must evaluate to `builtins.True` for the item to be
+        All conditions must evaluate to `True` for the item to be
         returned. If this is not met, then the item is discarded and ignored,
         the next matching item will be returned instead, if there is one.
 
         Parameters
         ----------
-        *predicates : typing.Union[typing.Callable[[ValueT], builtins.bool], typing.Tuple[builtins.str, typing.Any]]
+        *predicates : typing.Union[typing.Callable[[ValueT], bool], typing.Tuple[str, typing.Any]]
             Predicates to invoke. These are functions that take a value and
-            return `builtins.True` if it is of interest, or `builtins.False`
-            otherwise. These may instead include 2-`builtins.tuple` objects
-            consisting of a `builtins.str` attribute name (nested attributes
+            return `True` if it is of interest, or `False`
+            otherwise. These may instead include 2-`tuple` objects
+            consisting of a `str` attribute name (nested attributes
             are referred to using the `.` operator), and values to compare for
             equality. This allows you to specify conditions such as
             `members.filter(("user.bot", True))`.
@@ -311,11 +311,11 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
 
         Parameters
         ----------
-        *predicates : typing.Union[typing.Callable[[ValueT], builtins.bool], typing.Tuple[builtins.str, typing.Any]]
+        *predicates : typing.Union[typing.Callable[[ValueT], bool], typing.Tuple[str, typing.Any]]
             Predicates to invoke. These are functions that take a value and
-            return `builtins.True` if it is of interest, or `builtins.False`
-            otherwise. These may instead include 2-`builtins.tuple` objects
-            consisting of a `builtins.str` attribute name (nested attributes
+            return `True` if it is of interest, or `False`
+            otherwise. These may instead include 2-`tuple` objects
+            consisting of a `str` attribute name (nested attributes
             are referred to using the `.` operator), and values to compare for
             equality. This allows you to specify conditions such as
             `members.take_while(("user.bot", True))`.
@@ -341,11 +341,11 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
 
         Parameters
         ----------
-        *predicates : typing.Union[typing.Callable[[ValueT], builtins.bool], typing.Tuple[builtins.str, typing.Any]]
+        *predicates : typing.Union[typing.Callable[[ValueT], bool], typing.Tuple[str, typing.Any]]
             Predicates to invoke. These are functions that take a value and
-            return `builtins.True` if it is of interest, or `builtins.False`
-            otherwise. These may instead include 2-`builtins.tuple` objects
-            consisting of a `builtins.str` attribute name (nested attributes are
+            return `True` if it is of interest, or `False`
+            otherwise. These may instead include 2-`tuple` objects
+            consisting of a `str` attribute name (nested attributes are
             referred to using the `.` operator), and values to compare for
             equality. This allows you to specify conditions such as
             `members.take_until(("user.bot", True))`.
@@ -373,11 +373,11 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
 
         Parameters
         ----------
-        *predicates : typing.Union[typing.Callable[[ValueT], builtins.bool], typing.Tuple[builtins.str, typing.Any]]
+        *predicates : typing.Union[typing.Callable[[ValueT], bool], typing.Tuple[str, typing.Any]]
             Predicates to invoke. These are functions that take a value and
-            return `builtins.True` if it is of interest, or `builtins.False`
-            otherwise. These may instead include 2-`builtins.tuple` objects
-            consisting of a `builtins.str` attribute name (nested attributes
+            return `True` if it is of interest, or `False`
+            otherwise. These may instead include 2-`tuple` objects
+            consisting of a `str` attribute name (nested attributes
             are referred to using the `.` operator), and values to compare for
             equality. This allows you to specify conditions such as
             `members.skip_while(("user.bot", True))`.
@@ -405,11 +405,11 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
 
         Parameters
         ----------
-        *predicates : typing.Union[typing.Callable[[ValueT], builtins.bool], typing.Tuple[builtins.str, typing.Any]]
+        *predicates : typing.Union[typing.Callable[[ValueT], bool], typing.Tuple[str, typing.Any]]
             Predicates to invoke. These are functions that take a value and
-            return `builtins.True` if it is of interest, or `builtins.False`
-            otherwise. These may instead include 2-`builtins.tuple` objects
-            consisting of a `builtins.str` attribute name (nested attributes are
+            return `True` if it is of interest, or `False`
+            otherwise. These may instead include 2-`tuple` objects
+            consisting of a `str` attribute name (nested attributes are
             referred to using the `.` operator), and values to compare for
             equality. This allows you to specify conditions such as
             `members.skip_until(("user.bot", True))`.
@@ -429,42 +429,44 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
     def enumerate(self, *, start: int = 0) -> LazyIterator[typing.Tuple[int, ValueT]]:
         """Enumerate the paginated results lazily.
 
-        This behaves as an asyncio-friendly version of `builtins.enumerate`
+        This behaves as an asyncio-friendly version of `enumerate`
         which uses much less memory than collecting all the results first and
-        calling `builtins.enumerate` across them.
+        calling `enumerate` across them.
 
         Parameters
         ----------
-        start : builtins.int
+        start : int
             Optional int to start at. If omitted, this is `0`.
 
         Examples
         --------
-            >>> async for i, item in paginated_results.enumerate():
-            ...    print(i, item)
-            (0, foo)
-            (1, bar)
-            (2, baz)
-            (3, bork)
-            (4, qux)
+        ```py
+        >>> async for i, item in paginated_results.enumerate():
+        ...    print(i, item)
+        (0, foo)
+        (1, bar)
+        (2, baz)
+        (3, bork)
+        (4, qux)
 
-            >>> async for i, item in paginated_results.enumerate(start=9):
-            ...    print(i, item)
-            (9, foo)
-            (10, bar)
-            (11, baz)
-            (12, bork)
-            (13, qux)
+        >>> async for i, item in paginated_results.enumerate(start=9):
+        ...    print(i, item)
+        (9, foo)
+        (10, bar)
+        (11, baz)
+        (12, bork)
+        (13, qux)
 
-            >>> async for i, item in paginated_results.enumerate(start=9).limit(3):
-            ...    print(i, item)
-            (9, foo)
-            (10, bar)
-            (11, baz)
+        >>> async for i, item in paginated_results.enumerate(start=9).limit(3):
+        ...    print(i, item)
+        (9, foo)
+        (10, bar)
+        (11, baz)
+        ```
 
         Returns
         -------
-        LazyIterator[typing.Tuple[builtins.int, T]]
+        LazyIterator[typing.Tuple[int, T]]
             A paginated results view that asynchronously yields an increasing
             counter in a tuple with each result, lazily.
         """
@@ -475,13 +477,15 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
 
         Parameters
         ----------
-        limit : builtins.int
+        limit : int
             The number of items to get. This must be greater than zero.
 
         Examples
         --------
-            >>> async for item in paginated_results.limit(3):
-            ...     print(item)
+        ```py
+        >>> async for item in paginated_results.limit(3):
+        ...     print(item)
+        ```
 
         Returns
         -------
@@ -496,7 +500,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
 
         Parameters
         ----------
-        number : builtins.int
+        number : int
             The max number of items to drop before any items are yielded.
 
         Returns
@@ -517,7 +521,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
 
         Raises
         ------
-        builtins.LookupError
+        LookupError
             If no more results exist.
         """
         try:
@@ -533,12 +537,12 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
         ValueT
             The last result.
 
-        !!! note
+        .. note::
             This method will consume the whole iterator if run.
 
         Raises
         ------
-        builtins.LookupError
+        LookupError
             If no result exists.
         """
         return await self.reversed().next()
@@ -575,7 +579,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
 
         Returns
         -------
-        builtins.int
+        int
             Number of results found.
         """
         count = 0
@@ -650,20 +654,20 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
         LazyIterator[ValueT]
             The new lazy iterator to return.
 
-        !!! warning
+        .. warning::
             Setting a large window size, or setting it to 0 to await everything
             is a dangerous thing to do if you are making API calls. Some
             endpoints will get ratelimited and cause a backup of waiting
             tasks, others may begin to spam global rate limits instead
             (the `fetch_user` endpoint seems to be notorious for doing this).
 
-        !!! note
+        .. note::
             This call assumes that the iterator contains awaitable values as
             input. MyPy cannot detect this nicely, so any cast is forced
             internally.
 
             If the item is not awaitable, you will receive a
-            `builtins.TypeError` instead.
+            `TypeError` instead.
 
             You have been warned. You cannot escape the ways of the duck type
             young grasshopper.
@@ -738,7 +742,7 @@ class BufferedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT], abc.ABC
     thus reducing the amount of work needed if only a few objects out of, say,
     100, need to be deserialized.
 
-    This `_next_chunk` should return `builtins.None` once the end of all items
+    This `_next_chunk` should return `None` once the end of all items
     has been reached.
 
     An example would look like the following:

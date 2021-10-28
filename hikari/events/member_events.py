@@ -62,46 +62,28 @@ class MemberEvent(shard_events.ShardEvent, abc.ABC):
     @property
     @abc.abstractmethod
     def guild_id(self) -> snowflakes.Snowflake:
-        """ID of the guild that this event relates to.
-
-        Returns
-        -------
-        hikari.snowflakes.Snowflake
-            The ID of the guild that relates to this event.
-        """
+        """ID of the guild that this event relates to."""
 
     @property
     @abc.abstractmethod
     def user(self) -> users.User:
-        """User object for the member this event concerns.
-
-        Returns
-        -------
-        hikari.users.User
-            User object for the member this event concerns.
-        """
+        """User object for the member this event concerns."""
 
     @property
     def user_id(self) -> snowflakes.Snowflake:
-        """ID of the user that this event concerns.
-
-        Returns
-        -------
-        hikari.snowflakes.Snowflake
-            The ID of the user that this event relates to.
-        """
+        """ID of the user that this event concerns."""
         return self.user.id
 
     def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
         """Get the cached view of the guild this member event occurred in.
 
-        If the guild itself is not cached, this will return `builtins.None`.
+        If the guild itself is not cached, this will return `None`.
 
         Returns
         -------
         typing.Optional[hikari.guilds.GatewayGuild]
             The guild that this event occurred in, if known, else
-            `builtins.None`.
+            `None`.
         """
         if not isinstance(self.app, traits.CacheAware):
             return None
@@ -119,13 +101,7 @@ class MemberCreateEvent(MemberEvent):
     # <<inherited docstring from ShardEvent>>.
 
     member: guilds.Member = attr.field()
-    """Member object for the member that joined the guild.
-
-    Returns
-    -------
-    hikari.guilds.Member
-        The member object for the member who just joined.
-    """
+    """Member object for the member that joined the guild."""
 
     @property
     def guild_id(self) -> snowflakes.Snowflake:
@@ -153,17 +129,11 @@ class MemberUpdateEvent(MemberEvent):
     old_member: typing.Optional[guilds.Member] = attr.field()
     """The old member object.
 
-    This will be `builtins.None` if the member missing from the cache.
+    This will be `None` if the member missing from the cache.
     """
 
     member: guilds.Member = attr.field()
-    """Member object for the member that was updated.
-
-    Returns
-    -------
-    hikari.guilds.Member
-        The member object for the member that was updated.
-    """
+    """Member object for the member that was updated."""
 
     @property
     def guild_id(self) -> snowflakes.Snowflake:
@@ -194,5 +164,5 @@ class MemberDeleteEvent(MemberEvent):
     old_member: typing.Optional[guilds.Member] = attr.field()
     """The old member object.
 
-    This will be `builtins.None` if the member was missing from the cache.
+    This will be `None` if the member was missing from the cache.
     """

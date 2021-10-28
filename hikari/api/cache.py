@@ -65,7 +65,7 @@ class CacheView(typing.Mapping[_KeyT, _ValueT], abc.ABC):
 
     @abc.abstractmethod
     def get_item_at(self, index: typing.Union[slice, int], /) -> typing.Union[_ValueT, typing.Sequence[_ValueT]]:
-        ...
+        """Get an item at a specific position or slice."""
 
     @abc.abstractmethod
     def iterator(self) -> iterators.LazyIterator[_ValueT]:
@@ -103,7 +103,7 @@ class Cache(abc.ABC):
         -------
         typing.Optional[hikari.snowflakes.Snowflake]
             ID of the DM channel which was found cached for the supplied user or
-            `builtins.None`.
+            `None`.
         """
 
     @abc.abstractmethod
@@ -130,7 +130,7 @@ class Cache(abc.ABC):
         Returns
         -------
         typing.Optional[hikari.emojis.KnownCustomEmoji]
-            The object of the emoji that was found in the cache or `builtins.None`.
+            The object of the emoji that was found in the cache or `None`.
         """
 
     @abc.abstractmethod
@@ -168,7 +168,7 @@ class Cache(abc.ABC):
     ) -> typing.Optional[guilds.GatewayGuild]:
         """Get a guild from the cache.
 
-        !!! warning
+        .. warning::
             This will return a guild regardless of whether it is available or
             not. To only query available guilds, use `get_available_guild`
             instead. Likewise, to only query unavailable guilds, use
@@ -182,7 +182,7 @@ class Cache(abc.ABC):
         Returns
         -------
         typing.Optional[hikari.guilds.GatewayGuild]
-            The object of the guild if found, else `builtins.None`.
+            The object of the guild if found, else `None`.
         """
 
     @abc.abstractmethod
@@ -199,7 +199,7 @@ class Cache(abc.ABC):
         Returns
         -------
         typing.Optional[hikari.guilds.GatewayGuild]
-            The object of the guild if found, else `builtins.None`.
+            The object of the guild if found, else `None`.
         """
 
     @abc.abstractmethod
@@ -208,7 +208,7 @@ class Cache(abc.ABC):
     ) -> typing.Optional[guilds.GatewayGuild]:
         """Get the object of a unavailable guild from the cache.
 
-        !!! note
+        .. note::
             Unlike `Cache.get_available_guild`, the objects returned by this
             method will likely be out of date and inaccurate as they are
             considered unavailable, meaning that we are not receiving gateway
@@ -222,7 +222,7 @@ class Cache(abc.ABC):
         Returns
         -------
         typing.Optional[hikari.guilds.GatewayGuild]
-            The object of the guild if found, else `builtins.None`.
+            The object of the guild if found, else `None`.
         """
 
     @abc.abstractmethod
@@ -249,7 +249,7 @@ class Cache(abc.ABC):
     def get_unavailable_guilds_view(self) -> CacheView[snowflakes.Snowflake, guilds.GatewayGuild]:
         """Get a view of the unavailable guild objects in the cache.
 
-        !!! note
+        .. note::
             Unlike `Cache.get_available_guilds_view`, the objects returned by
             this method will likely be out of date and inaccurate as they are
             considered unavailable, meaning that we are not receiving gateway
@@ -276,7 +276,7 @@ class Cache(abc.ABC):
         -------
         typing.Optional[hikari.channels.GuildChannel]
             The object of the guild channel that was found in the cache or
-            `builtins.None`.
+            `None`.
         """
 
     @abc.abstractmethod
@@ -314,13 +314,13 @@ class Cache(abc.ABC):
 
         Parameters
         ----------
-        code : typing.Union[hikari.invites.InviteCode, builtins.str]
+        code : typing.Union[hikari.invites.InviteCode, str]
             The object or string code of the invite to get from the cache.
 
         Returns
         -------
         typing.Optional[hikari.invites.InviteWithMetadata]
-            The object of the invite that was found in the cache or `builtins.None`.
+            The object of the invite that was found in the cache or `None`.
         """
 
     @abc.abstractmethod
@@ -329,7 +329,7 @@ class Cache(abc.ABC):
 
         Returns
         -------
-        CacheView[builtins.str, hikari.invites.InviteWithMetadata]
+        CacheView[str, hikari.invites.InviteWithMetadata]
             A view of string codes to objects of the invites that were found in
             the cache.
         """
@@ -347,7 +347,7 @@ class Cache(abc.ABC):
 
         Returns
         -------
-        CacheView[builtins.str, hikari.invites.InviteWithMetadata]
+        CacheView[str, hikari.invites.InviteWithMetadata]
             A view of string code to objects of the invites that were found in
             the cache for the specified guild.
         """
@@ -382,7 +382,7 @@ class Cache(abc.ABC):
         Returns
         -------
         typing.Optional[hikari.users.OwnUser]
-            The own user object that was found in the cache, else `builtins.None`.
+            The own user object that was found in the cache, else `None`.
         """
 
     @abc.abstractmethod
@@ -404,7 +404,7 @@ class Cache(abc.ABC):
         Returns
         -------
         typing.Optional[hikari.guilds.Member]
-            The object of the member found in the cache, else `builtins.None`.
+            The object of the member found in the cache, else `None`.
         """
 
     @abc.abstractmethod
@@ -449,7 +449,7 @@ class Cache(abc.ABC):
         Returns
         -------
         typing.Optional[hikari.messages.Message]
-            The object of the message found in the cache or `builtins.None`.
+            The object of the message found in the cache or `None`.
         """
 
     @abc.abstractmethod
@@ -482,7 +482,7 @@ class Cache(abc.ABC):
         -------
         typing.Optional[hikari.presences.MemberPresence]
             The object of the presence that was found in the cache or
-            `builtins.None`.
+            `None`.
         """
 
     @abc.abstractmethod
@@ -528,7 +528,7 @@ class Cache(abc.ABC):
         Returns
         -------
         typing.Optional[hikari.guilds.Role]
-            The object of the role found in the cache or `builtins.None`.
+            The object of the role found in the cache or `None`.
         """
 
     @abc.abstractmethod
@@ -572,7 +572,7 @@ class Cache(abc.ABC):
         -------
         typing.Optional[hikari.users.User]
             The object of the user that was found in the cache, else
-            `builtins.None`.
+            `None`.
         """
 
     @abc.abstractmethod
@@ -605,7 +605,7 @@ class Cache(abc.ABC):
         -------
         typing.Optional[hikari.voices.VoiceState]
             The object of the voice state that was found in the cache, or
-            `builtins.None`.
+            `None`.
         """
 
     @abc.abstractmethod
@@ -702,7 +702,7 @@ class MutableCache(Cache, abc.ABC):
         -------
         typing.Optional[hikari.snowflakes.Snowflake]
             The DM channel ID which was removed from the cache if found, else
-            `builtins.None`.
+            `None`.
         """
 
     @abc.abstractmethod
@@ -726,7 +726,7 @@ class MutableCache(Cache, abc.ABC):
     def clear_emojis(self) -> CacheView[snowflakes.Snowflake, emojis.KnownCustomEmoji]:
         """Remove all the known custom emoji objects from the cache.
 
-        !!! note
+        .. note::
             This will skip emojis that are being kept alive by a reference
             on a presence entry.
 
@@ -743,14 +743,14 @@ class MutableCache(Cache, abc.ABC):
     ) -> CacheView[snowflakes.Snowflake, emojis.KnownCustomEmoji]:
         """Remove the known custom emoji objects cached for a specific guild.
 
+        .. note::
+            This will skip emojis that are being kept alive by a reference
+            on a presence entry.
+
         Parameters
         ----------
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             Object or ID of the guild to remove the cached emoji objects for.
-
-        !!! note
-            This will skip emojis that are being kept alive by a reference
-            on a presence entry.
 
         Returns
         -------
@@ -770,7 +770,7 @@ class MutableCache(Cache, abc.ABC):
         emoji : hikari.snowflakes.SnowflakeishOr[hikari.emojis.CustomEmoji]
             Object or ID of the emoji to remove from the cache.
 
-        !!! note
+        .. note::
             This will not delete emojis that are being kept alive by a reference
             on a presence entry.
 
@@ -778,7 +778,7 @@ class MutableCache(Cache, abc.ABC):
         -------
         typing.Optional[hikari.emojis.KnownCustomEmoji]
             The object of the emoji that was removed from the cache or
-            `builtins.None`.
+            `None`.
         """
 
     @abc.abstractmethod
@@ -805,9 +805,9 @@ class MutableCache(Cache, abc.ABC):
         Returns
         -------
         typing.Tuple[typing.Optional[hikari.emojis.KnownCustomEmoji], typing.Optional[hikari.emojis.KnownCustomEmoji]]
-            A tuple of the old cached emoji object if found (else `builtins.None`)
+            A tuple of the old cached emoji object if found (else `None`)
             and the new cached emoji object if it could be cached (else
-            `builtins.None`).
+            `None`).
         """
 
     @abc.abstractmethod
@@ -836,7 +836,7 @@ class MutableCache(Cache, abc.ABC):
         -------
         typing.Optional[hikari.guilds.GatewayGuild]
             The object of the guild that was removed from the cache, will be
-            `builtins.None` if not found.
+            `None` if not found.
         """
 
     @abc.abstractmethod
@@ -859,7 +859,7 @@ class MutableCache(Cache, abc.ABC):
         ----------
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             Object or ID of the guild to set the availability for.
-        is_available : builtins.bool
+        is_available : bool
             The availability to set for the guild.
         """
 
@@ -877,9 +877,9 @@ class MutableCache(Cache, abc.ABC):
         Returns
         -------
         typing.Tuple[typing.Optional[hikari.guilds.GatewayGuild], typing.Optional[hikari.guilds.GatewayGuild]]
-            A tuple of the old cached guild object if found (else `builtins.None`)
+            A tuple of the old cached guild object if found (else `None`)
             and the object of the guild that was added to the cache if it could
-            be added (else `builtins.None`).
+            be added (else `None`).
         """  # noqa E501 - Line too long
 
     @abc.abstractmethod
@@ -926,7 +926,7 @@ class MutableCache(Cache, abc.ABC):
         -------
         typing.Optional[hikari.channels.GuildChannel]
             The object of the guild channel that was removed from the cache if
-            found, else `builtins.None`.
+            found, else `None`.
         """
 
     @abc.abstractmethod
@@ -953,9 +953,9 @@ class MutableCache(Cache, abc.ABC):
         Returns
         -------
         typing.Tuple[typing.Optional[hikari.channels.GuildChannel], typing.Optional[hikari.channels.GuildChannel]]
-            A tuple of the old cached guild channel if found (else `builtins.None`)
+            A tuple of the old cached guild channel if found (else `None`)
             and the new cached guild channel if it could be cached
-            (else `builtins.None`).
+            (else `None`).
         """  # noqa E501 - Line too long
 
     @abc.abstractmethod
@@ -964,7 +964,7 @@ class MutableCache(Cache, abc.ABC):
 
         Returns
         -------
-        CacheView[builtins.str, hikari.invites.InviteWithMetadata]
+        CacheView[str, hikari.invites.InviteWithMetadata]
             A view of invite code strings to objects of the invites that were
             removed from the cache.
         """
@@ -982,7 +982,7 @@ class MutableCache(Cache, abc.ABC):
 
         Returns
         -------
-        CacheView[builtins.str, hikari.invites.InviteWithMetadata]
+        CacheView[str, hikari.invites.InviteWithMetadata]
             A view of invite code strings to objects of the invites that were
             removed from the cache for the specified guild.
         """
@@ -1005,7 +1005,7 @@ class MutableCache(Cache, abc.ABC):
 
         Returns
         -------
-        CacheView[builtins.str, hikari.invites.InviteWithMetadata]
+        CacheView[str, hikari.invites.InviteWithMetadata]
             A view of invite code strings to objects of the invites that were
             removed from the cache for the specified channel.
         """
@@ -1018,14 +1018,14 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        code : typing.Union[hikari.invites.InviteCode, builtins.str]
+        code : typing.Union[hikari.invites.InviteCode, str]
             Object or string code of the invite to remove from the cache.
 
         Returns
         -------
         typing.Optional[hikari.invites.InviteWithMetadata]
             The object of the invite that was removed from the cache if found,
-            else `builtins.None`.
+            else `None`.
         """
 
     @abc.abstractmethod
@@ -1053,8 +1053,8 @@ class MutableCache(Cache, abc.ABC):
         -------
         typing.Tuple[typing.Optional[hikari.invites.InviteWithMetadata], typing.Optional[hikari.invites.InviteWithMetadata]]
             A tuple of the old cached invite object if found (else
-            `builtins.None`) and the new cached invite object if it could be
-            cached (else `builtins.None`).
+            `None`) and the new cached invite object if it could be
+            cached (else `None`).
         """  # noqa E501 - Line too long
 
     @abc.abstractmethod
@@ -1065,7 +1065,7 @@ class MutableCache(Cache, abc.ABC):
         -------
         typing.Optional[hikari.users.OwnUser]
             The own user object that was removed from the cache if found,
-            else `builtins.None`.
+            else `None`.
         """
 
     @abc.abstractmethod
@@ -1093,8 +1093,8 @@ class MutableCache(Cache, abc.ABC):
         -------
         typing.Tuple[typing.Optional[hikari.users.OwnUser], typing.Optional[hikari.users.OwnUser]]
             A tuple of the old cached own user object if found (else
-            `builtins.None`) and the new cached own user object if it could be
-            cached, else `builtins.None`.
+            `None`) and the new cached own user object if it could be
+            cached, else `None`.
         """
 
     @abc.abstractmethod
@@ -1114,14 +1114,14 @@ class MutableCache(Cache, abc.ABC):
     ) -> CacheView[snowflakes.Snowflake, guilds.Member]:
         """Remove the members for a specific guild from the cache.
 
+        .. note::
+            This will skip members that are being referenced by other entries in
+            the cache; a matching voice state will keep a member entry alive.
+
         Parameters
         ----------
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             Object or ID of the guild to remove cached members for.
-
-        !!! note
-            This will skip members that are being referenced by other entries in
-            the cache; a matching voice state will keep a member entry alive.
 
         Returns
         -------
@@ -1146,7 +1146,7 @@ class MutableCache(Cache, abc.ABC):
         user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
             Object or ID of the user to remove a member from the cache for.
 
-        !!! note
+        .. note::
             You cannot delete a member entry that's being referenced by other
             entries in the cache; a matching voice state will keep a member
             entry alive.
@@ -1155,7 +1155,7 @@ class MutableCache(Cache, abc.ABC):
         -------
         typing.Optional[hikari.guilds.Member]
             The object of the member that was removed from the cache if found,
-            else `builtins.None`.
+            else `None`.
         """
 
     @abc.abstractmethod
@@ -1182,9 +1182,9 @@ class MutableCache(Cache, abc.ABC):
         Returns
         -------
         typing.Tuple[typing.Optional[hikari.guilds.Member], typing.Optional[hikari.guilds.Member]]
-            A tuple of the old cached member object if found (else `builtins.None`)
+            A tuple of the old cached member object if found (else `None`)
             and the new cached member object if it could be cached (else
-            `builtins.None`)
+            `None`)
         """
 
     @abc.abstractmethod
@@ -1238,7 +1238,7 @@ class MutableCache(Cache, abc.ABC):
         -------
         typing.Optional[hikari.presences.MemberPresence]
             The object of the presence that was removed from the cache if found,
-            else `builtins.None`.
+            else `None`.
         """
 
     @abc.abstractmethod
@@ -1265,9 +1265,9 @@ class MutableCache(Cache, abc.ABC):
         Returns
         -------
         typing.Tuple[typing.Optional[hikari.presences.MemberPresence], typing.Optional[hikari.presences.MemberPresence]]
-            A tuple of the old cached invite object if found (else `builtins.None`
+            A tuple of the old cached invite object if found (else `None`
             and the new cached invite object if it could be cached ( else
-            `builtins.None`).
+            `None`).
         """  # noqa E501 - Line too long
 
     @abc.abstractmethod
@@ -1312,7 +1312,7 @@ class MutableCache(Cache, abc.ABC):
         -------
         typing.Optional[hikari.guilds.Role]
             The object of the role that was removed from the cache if found,
-            else `builtins.None`.
+            else `None`.
         """
 
     @abc.abstractmethod
@@ -1339,9 +1339,9 @@ class MutableCache(Cache, abc.ABC):
         Returns
         -------
         typing.Tuple[typing.Optional[hikari.guilds.Role], typing.Optional[hikari.guilds.Role]]
-            A tuple of the old cached role object if found (else `builtins.None`
+            A tuple of the old cached role object if found (else `None`
             and the new cached role object if it could be cached (else
-            `builtins.None`).
+            `None`).
         """
 
     @abc.abstractmethod
@@ -1416,7 +1416,7 @@ class MutableCache(Cache, abc.ABC):
         -------
         typing.Optional[hikari.voices.VoiceState]
             The object of the voice state that was removed from the cache if
-            found, else `builtins.None`.
+            found, else `None`.
         """
 
     @abc.abstractmethod
@@ -1443,9 +1443,9 @@ class MutableCache(Cache, abc.ABC):
         Returns
         -------
         typing.Tuple[typing.Optional[hikari.voices.VoiceState], typing.Optional[hikari.voices.VoiceState]]
-            A tuple of the old cached voice state if found (else `builtins.None`)
+            A tuple of the old cached voice state if found (else `None`)
             and the new cached voice state object if it could be cached
-            (else `builtins.None`).
+            (else `None`).
         """
 
     @abc.abstractmethod
@@ -1473,7 +1473,7 @@ class MutableCache(Cache, abc.ABC):
         -------
         typing.Optional[hikari.messages.Message]
             The object of the message that was removed from the cache if found,
-            else `builtins.None`.
+            else `None`.
         """
 
     @abc.abstractmethod
@@ -1500,7 +1500,7 @@ class MutableCache(Cache, abc.ABC):
         Returns
         -------
         typing.Tuple[typing.Optional[hikari.messages.Message], typing.Optional[hikari.messages.Message]]
-            A tuple of the old cached message object if found (else `builtins.None`)
+            A tuple of the old cached message object if found (else `None`)
             and the new cached message object if it could be cached (else
-            `builtins.None`).
+            `None`).
         """

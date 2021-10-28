@@ -60,35 +60,17 @@ class TypingEvent(shard_events.ShardEvent, abc.ABC):
     @property
     @abc.abstractmethod
     def channel_id(self) -> snowflakes.Snowflake:
-        """ID of the channel that this event concerns.
-
-        Returns
-        -------
-        hikari.snowflakes.Snowflake
-            The ID of the channel that this event concerns.
-        """
+        """ID of the channel that this event concerns."""
 
     @property
     @abc.abstractmethod
     def user_id(self) -> snowflakes.Snowflake:
-        """ID of the user who triggered this typing event.
-
-        Returns
-        -------
-        hikari.snowflakes.Snowflake
-            ID of the user who is typing.
-        """
+        """ID of the user who triggered this typing event."""
 
     @property
     @abc.abstractmethod
     def timestamp(self) -> datetime.datetime:
-        """Timestamp of when this typing event started.
-
-        Returns
-        -------
-        datetime.datetime
-            UTC timestamp of when the user started typing.
-        """
+        """Timestamp of when this typing event started."""
 
     async def fetch_channel(self) -> channels.TextableChannel:
         """Perform an API call to fetch an up-to-date image of this channel.
@@ -173,22 +155,10 @@ class GuildTypingEvent(TypingEvent):
     # <<inherited docstring from TypingEvent>>.
 
     guild_id: snowflakes.Snowflake = attr.field()
-    """ID of the guild that this event relates to.
-
-    Returns
-    -------
-    hikari.snowflakes.Snowflake
-        The ID of the guild that relates to this event.
-    """
+    """ID of the guild that this event relates to."""
 
     member: guilds.Member = attr.field(repr=False)
-    """Object of the member who triggered this typing event.
-
-    Returns
-    -------
-    hikari.guilds.Member
-        Object of the member who triggered this typing event.
-    """
+    """Object of the member who triggered this typing event."""
 
     @property
     def app(self) -> traits.RESTAware:
@@ -264,12 +234,12 @@ class GuildTypingEvent(TypingEvent):
     def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
         """Get the cached object of the guild this typing event occurred in.
 
-        If the guild is not found then this will return `builtins.None`.
+        If the guild is not found then this will return `None`.
 
         Returns
         -------
         typing.Optional[hikari.guilds.GatewayGuild]
-            The object of the gateway guild if found else `builtins.None`.
+            The object of the gateway guild if found else `None`.
         """
         if not isinstance(self.app, traits.CacheAware):
             return None

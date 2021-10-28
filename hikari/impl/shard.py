@@ -107,11 +107,6 @@ def _log_filterer(token: str) -> typing.Callable[[str], str]:
     return filterer
 
 
-if typing.TYPE_CHECKING:
-    # noinspection PyProtectedMember,PyUnresolvedReferences
-    _ZlibDecompressor = zlib._Decompress
-
-
 @typing.final
 class _GatewayTransport(aiohttp.ClientWebSocketResponse):
     """Internal component to handle lower-level communication logic.
@@ -127,7 +122,7 @@ class _GatewayTransport(aiohttp.ClientWebSocketResponse):
 
     def __init__(self, *args: typing.Any, **kwargs: typing.Any) -> None:
         super().__init__(*args, **kwargs)
-        self.zlib: _ZlibDecompressor = zlib.decompressobj()
+        self.zlib = zlib.decompressobj()
         self.sent_close = False
 
         # Initialized from `connect'
@@ -322,53 +317,7 @@ class _GatewayTransport(aiohttp.ClientWebSocketResponse):
 class GatewayShardImpl(shard.GatewayShard):
     """Implementation of a V8 compatible gateway.
 
-    Parameters
-    ----------
-    token : builtins.str
-        The bot token to use.
-    url : builtins.str
-        The gateway URL to use. This should not contain a query-string or
-        fragments.
-    event_manager : hikari.api.event_manager.EventManager
-        The event manager this shard should make calls to.
-    event_factory : hikari.api.event_factory.EventFactory
-        The event factory this shard should use.
-
-    Other Parameters
-    ----------------
-    compression : typing.Optional[builtins.str]
-        Compression format to use for the shard. Only supported values are
-        `"transport_zlib_stream"` or `builtins.None` to disable it.
-    initial_activity : typing.Optional[hikari.presences.Activity]
-        The initial activity to appear to have for this shard, or
-        `builtins.None` if no activity should be set initially. This is the
-        default.
-    initial_idle_since : typing.Optional[datetime.datetime]
-        The datetime to appear to be idle since, or `builtins.None` if the
-        shard should not provide this. The default is `builtins.None`.
-    initial_is_afk : bool
-        Whether to appear to be AFK or not on login. Defaults to
-        `builtins.False`.
-    initial_status : hikari.presences.Status
-        The initial status to set on login for the shard. Defaults to
-        `hikari.presences.Status.ONLINE`.
-    intents : hikari.intents.Intents
-        Collection of intents to use.
-    large_threshold : builtins.int
-        The number of members to have in a guild for it to be considered large.
-    shard_id : builtins.int
-        The shard ID.
-    shard_count : builtins.int
-        The shard count.
-    http_settings : hikari.config.HTTPSettings
-        The HTTP-related settings to use while negotiating a websocket.
-    proxy_settings : hikari.config.ProxySettings
-        The proxy settings to use while negotiating a websocket.
-    data_format : builtins.str
-        Data format to use for inbound data. Only supported format is
-        `"json"`.
-
-    !!! note
+    .. note::
         If all four of `initial_activity`, `initial_idle_since`,
         `initial_is_afk`, and `initial_status` are not defined and left to their
         default values, then the presence will not be _updated_ on startup
@@ -378,6 +327,52 @@ class GatewayShardImpl(shard.GatewayShard):
         only occur during startup, and is an artifact of how Discord manages
         these updates internally. All other calls to update the status of
         the shard will support partial updates.
+
+    Parameters
+    ----------
+    token : str
+        The bot token to use.
+    url : str
+        The gateway URL to use. This should not contain a query-string or
+        fragments.
+    event_manager : hikari.api.event_manager.EventManager
+        The event manager this shard should make calls to.
+    event_factory : hikari.api.event_factory.EventFactory
+        The event factory this shard should use.
+
+    Other Parameters
+    ----------------
+    compression : typing.Optional[str]
+        Compression format to use for the shard. Only supported values are
+        `"transport_zlib_stream"` or `None` to disable it.
+    initial_activity : typing.Optional[hikari.presences.Activity]
+        The initial activity to appear to have for this shard, or
+        `None` if no activity should be set initially. This is the
+        default.
+    initial_idle_since : typing.Optional[datetime.datetime]
+        The datetime to appear to be idle since, or `None` if the
+        shard should not provide this. The default is `None`.
+    initial_is_afk : bool
+        Whether to appear to be AFK or not on login. Defaults to
+        `False`.
+    initial_status : hikari.presences.Status
+        The initial status to set on login for the shard. Defaults to
+        `hikari.presences.Status.ONLINE`.
+    intents : hikari.intents.Intents
+        Collection of intents to use.
+    large_threshold : int
+        The number of members to have in a guild for it to be considered large.
+    shard_id : int
+        The shard ID.
+    shard_count : int
+        The shard count.
+    http_settings : hikari.config.HTTPSettings
+        The HTTP-related settings to use while negotiating a websocket.
+    proxy_settings : hikari.config.ProxySettings
+        The proxy settings to use while negotiating a websocket.
+    data_format : str
+        Data format to use for inbound data. Only supported format is
+        `"json"`.
     """
 
     __slots__: typing.Sequence[str] = (

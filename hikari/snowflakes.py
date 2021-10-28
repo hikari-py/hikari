@@ -52,7 +52,7 @@ if typing.TYPE_CHECKING:
 class Snowflake(int):
     """A concrete representation of a unique ID for an entity on Discord.
 
-    This object can be treated as a regular `builtins.int` for most purposes.
+    This object can be treated as a regular `int` for most purposes.
     """
 
     __slots__: typing.Sequence[str] = ()
@@ -157,7 +157,7 @@ def calculate_shard_id(
 
     Parameters
     ----------
-    app_or_count : typing.Union[hikari.traits.ShardAware, builtins.int]
+    app_or_count : typing.Union[hikari.traits.ShardAware, int]
         The shard aware app of the current application or the integer count of
         the current app's shards.
     guild : SnowflakeishOr[hikari.guilds.PartialGuild]
@@ -165,7 +165,7 @@ def calculate_shard_id(
 
     Returns
     -------
-    builtins.int
+    int
         The zero-indexed integer ID of the shard that should cover this guild.
     """
     shard_count = app_or_count if isinstance(app_or_count, int) else app_or_count.shard_count
@@ -182,7 +182,7 @@ a `Snowflake`.
 
 The valid types for this type hint are:
 
-- `builtins.int`
+- `int`
 - `Snowflake`
 """
 
@@ -194,8 +194,8 @@ This is just a `Snowflakeish` that can alternatively be some form of
 
 The valid types for this type hint are:
 
-- `builtins.str` containing digits.
-- `builtins.int`
+- `str` containing digits.
+- `int`
 - `Snowflake`
 - `datetime.datetime`
 """
@@ -208,7 +208,7 @@ SnowflakeishOr = typing.Union[T, Snowflakeish]
 This is a value that is `Snowflake`-ish or a specific type covariant.
 
 If you see `SnowflakeishOr[Foo]` anywhere as a type hint, it means the value
-may be a `Foo` instance, a `Snowflake`, a `builtins.int` or a `builtins.str`
+may be a `Foo` instance, a `Snowflake`, a `int` or a `str`
 with numeric digits only.
 
 Essentially this represents any concrete object, or ID of that object. It is

@@ -91,7 +91,7 @@ class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentRespo
     component_type: typing.Union[messages.ComponentType, int] = attr.field(eq=False)
     """The type of component which triggers this interaction.
 
-    !!! note
+    .. note::
         This will never be `ButtonStyle.LINK` as link buttons don't trigger
         interactions.
     """
@@ -105,7 +105,7 @@ class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentRespo
     guild_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False)
     """ID of the guild this interaction was triggered in.
 
-    This will be `builtins.None` for command interactions triggered in DMs.
+    This will be `None` for command interactions triggered in DMs.
     """
     message: messages.Message = attr.field(eq=False, repr=False)
     """Object of the message the components for this interaction are attached to."""
@@ -113,9 +113,9 @@ class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentRespo
     member: typing.Optional[base_interactions.InteractionMember] = attr.field(eq=False, hash=False, repr=True)
     """The member who triggered this interaction.
 
-    This will be `builtins.None` for interactions triggered in DMs.
+    This will be `None` for interactions triggered in DMs.
 
-    !!! note
+    .. note::
         This member object comes with the extra field `permissions` which
         contains the member's permissions in the current channel.
     """
@@ -126,14 +126,14 @@ class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentRespo
     def build_response(self, type_: _ImmediateTypesT, /) -> special_endpoints.InteractionMessageBuilder:
         """Get a message response builder for use in the REST server flow.
 
-        !!! note
+        .. note::
             For interactions received over the gateway
             `ComponentInteraction.create_initial_response` should be used to set
             the interaction response message.
 
         Parameters
         ----------
-        type_ : typing.Union[builtins.int, hikari.interactions.base_interactions.ResponseType]
+        type_ : typing.Union[int, hikari.interactions.base_interactions.ResponseType]
             The type of immediate response this should be.
 
             This may be one of the following:
@@ -166,19 +166,19 @@ class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentRespo
     def build_deferred_response(self, type_: _DeferredTypesT, /) -> special_endpoints.InteractionDeferredBuilder:
         """Get a deferred message response builder for use in the REST server flow.
 
-        !!! note
+        .. note::
             For interactions received over the gateway
             `ComponentInteraction.create_initial_response` should be used to set
             the interaction response message.
 
-        !!! note
+        .. note::
             Unlike `hikari.api.special_endpoints.InteractionMessageBuilder`,
             the result of this call can be returned as is without any modifications
             being made to it.
 
         Parameters
         ----------
-        type_ : typing.Union[builtins.int, hikari.interactions.base_interactions.ResponseType]
+        type_ : typing.Union[int, hikari.interactions.base_interactions.ResponseType]
             The type of deferred response this should be.
 
             This may be one of the following:
@@ -236,15 +236,15 @@ class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentRespo
     def get_channel(self) -> typing.Union[channels.GuildTextChannel, channels.GuildNewsChannel, None]:
         """Get the guild channel this interaction occurred in.
 
-        !!! note
-            This will always return `builtins.None` for interactions triggered
+        .. note::
+            This will always return `None` for interactions triggered
             in a DM channel.
 
         Returns
         -------
-        typing.Union[hikari.channels.GuildTextChannel, hikari.channels.GuildNewsChannel, builtins.None]
+        typing.Union[hikari.channels.GuildTextChannel, hikari.channels.GuildNewsChannel, None]
             The object of the guild channel that was found in the cache or
-            `builtins.None`.
+            `None`.
         """
         if isinstance(self.app, traits.CacheAware):
             channel = self.app.cache.get_guild_channel(self.channel_id)
@@ -259,7 +259,7 @@ class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentRespo
         Returns
         -------
         typing.Optional[hikari.guilds.RESTGuild]
-            Object of the guild this interaction happened in or `builtins.None`
+            Object of the guild this interaction happened in or `None`
             if this occurred within a DM channel.
 
         Raises
@@ -295,7 +295,7 @@ class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentRespo
         Returns
         -------
         typing.Optional[hikari.guilds.GatewayGuild]
-            The object of the guild if found, else `builtins.None`.
+            The object of the guild if found, else `None`.
         """
         if self.guild_id and isinstance(self.app, traits.CacheAware):
             return self.app.cache.get_guild(self.guild_id)
@@ -312,7 +312,7 @@ class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentRespo
 
         Raises
         ------
-        builtins.ValueError
+        ValueError
             If `token` is not available.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
@@ -340,7 +340,7 @@ class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentRespo
         Returns
         -------
         typing.Optional[hikari.messages.Message]
-            The object of the message found in the cache or `builtins.None`.
+            The object of the message found in the cache or `None`.
         """
         if isinstance(self.app, traits.CacheAware):
             return self.app.cache.get_message(self.message.id)

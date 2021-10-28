@@ -33,6 +33,7 @@ __all__: typing.List[str] = [
     "load_json",
     "JSONDecodeError",
     "JSONObjectBuilder",
+    "StringMapBuilder",
     "URLEncodedFormBuilder",
 ]
 
@@ -144,8 +145,8 @@ class StringMapBuilder(multidict.MultiDict[str]):
     the amount of boilerplate needed for generating the headers and query strings for
     low-level HTTP API interaction, amongst other things.
 
-    !!! warning
-        Because this subclasses `builtins.dict`, you should not use the
+    .. warning::
+        Because this subclasses `dict`, you should not use the
         index operator to set items on this object. Doing so will skip any
         form of validation on the type. Use the `put*` methods instead.
     """
@@ -187,9 +188,15 @@ class StringMapBuilder(multidict.MultiDict[str]):
     ) -> None:
         """Add a key and value to the string map.
 
+        .. note::
+            The value will always be cast to a `str` before inserting it.
+            `True` will be translated to `"true"`, `False` will be
+            translated to `"false"`, and `None` will be translated to
+            `"null"`.
+
         Parameters
         ----------
-        key : builtins.str
+        key : str
             The string key.
         value : hikari.undefined.UndefinedOr[typing.Any]
             The value to set.
@@ -198,13 +205,6 @@ class StringMapBuilder(multidict.MultiDict[str]):
         ----------------
         conversion : typing.Optional[typing.Callable[[typing.Any], typing.Any]]
             An optional conversion to perform.
-
-        !!! note
-            The value will always be cast to a `builtins.str` before inserting it.
-
-            `builtins.True` will be translated to `"true"`, `builtins.False`
-            ill be translated to `"false"`, and `builtins.None` will be
-            translated to `"null"`.
         """
         if value is not undefined.UNDEFINED:
             if conversion is not None:
@@ -235,8 +235,8 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
     This speeds up generation of JSON payloads for low level HTTP and websocket
     API interaction.
 
-    !!! warning
-        Because this subclasses `builtins.dict`, you should not use the
+    .. warning::
+        Because this subclasses `dict`, you should not use the
         index operator to set items on this object. Doing so will skip any
         form of validation on the type. Use the `put*` methods instead.
     """
@@ -276,7 +276,7 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
 
         Parameters
         ----------
-        key : builtins.str
+        key : str
             The key to give the element.
         value : hikari.undefined.UndefinedOr[typing.Any]
             The JSON type to put. This may be a non-JSON type if a conversion
@@ -332,7 +332,7 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
 
         Parameters
         ----------
-        key : builtins.str
+        key : str
             The key to give the element.
         values : hikari.undefined.UndefinedOr[typing.Iterable[T]]
             The JSON types to put. This may be an iterable of non-JSON types if
@@ -359,11 +359,11 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
 
         Parameters
         ----------
-        key : builtins.str
+        key : str
             The key to give the element.
         value : hikari.undefined.UndefinedNoneOr[hikari.snowflakes.SnowflakeishOr[hikari.snowflakes.Unique]]
             The JSON type to put. This may alternatively be undefined, in this
-            case, nothing is performed. This may also be `builtins.None`, in this
+            case, nothing is performed. This may also be `None`, in this
             case the value isn't cast.
         """
         if value is not undefined.UNDEFINED and value is not None:
@@ -381,11 +381,11 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
 
         If the value is `hikari.undefined.UNDEFINED` it will not be stored.
 
-        Each snowflake should be castable to an `builtins.int`.
+        Each snowflake should be castable to an `int`.
 
         Parameters
         ----------
-        key : builtins.str
+        key : str
             The key to give the element.
         values : hikari.undefined.UndefinedOr[typing.Iterable[hikari.snowflakes.SnowflakeishOr[hikari.snowflakes.Unique]]]
             The JSON snowflakes to put. This may alternatively be undefined.

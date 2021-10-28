@@ -311,13 +311,13 @@ class Mentions:
 
         If this message was sent in a DM, this will always be empty.
 
-        !!! warning
+        .. warning::
             This will only return valid results on gateway events. For REST
             endpoints, this will potentially be empty. This is a limitation of
             Discord's API, as they do not consistently notify of the ID of the
             guild a message was sent in.
 
-        !!! note
+        .. note::
             If you are using a stateless application such as a stateless bot
             or a REST-only client, this will always be empty. Furthermore,
             if you are running a stateful bot and have the GUILD_MEMBERS
@@ -345,13 +345,13 @@ class Mentions:
 
         If this message was sent in a DM, this will always be empty.
 
-        !!! warning
+        .. warning::
             This will only return valid results on gateway events. For REST
             endpoints, this will potentially be empty. This is a limitation of
             Discord's API, as they do not consistently notify of the ID of the
             guild a message was sent in.
 
-        !!! note
+        .. note::
             If you are using a stateless application such as a stateless bot
             or a REST-only client, this will always be empty. Furthermore,
             if you are running a stateful bot and have the GUILD intent
@@ -404,7 +404,7 @@ class MessageReference:
     id: typing.Optional[snowflakes.Snowflake] = attr.field(repr=True)
     """The ID of the original message.
 
-    This will be `builtins.None` for channel follow add messages. This may
+    This will be `None` for channel follow add messages. This may
     point to a deleted message.
     """
 
@@ -414,7 +414,7 @@ class MessageReference:
     guild_id: typing.Optional[snowflakes.Snowflake] = attr.field(repr=True)
     """The ID of the guild that the message originated from.
 
-    This will be `builtins.None` when the original message is not from
+    This will be `None` when the original message is not from
     a guild.
     """
 
@@ -432,13 +432,7 @@ class MessageApplication(guilds.PartialApplication):
 
     @property
     def cover_image_url(self) -> typing.Optional[files.URL]:
-        """Cover image URL used on the store.
-
-        Returns
-        -------
-        typing.Optional[hikari.files.URL]
-            The URL, or `builtins.None` if no cover image exists.
-        """
+        """Cover image URL used on the store or `None` if no cover image exists."""
         return self.make_cover_image_url()
 
     def make_cover_image_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
@@ -446,21 +440,21 @@ class MessageApplication(guilds.PartialApplication):
 
         Parameters
         ----------
-        ext : builtins.str
+        ext : str
             The extension to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : builtins.int
+        size : int
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL, or `builtins.None` if no cover image exists.
+            The URL, or `None` if no cover image exists.
 
         Raises
         ------
-        builtins.ValueError
+        ValueError
             If the size is not an integer power of 2 between 16 and 4096
             (inclusive).
         """
@@ -501,18 +495,18 @@ class ComponentType(int, enums.Enum):
     ACTION_ROW = 1
     """A non-interactive container component for other types of components.
 
-    !!! note
+    .. note::
         As this is a container component it can never be contained within another
         component and therefore will always be top-level.
 
-    !!! note
+    .. note::
         As of writing this can only contain one component type.
     """
 
     BUTTON = 2
     """A button component.
 
-    !!! note
+    .. note::
         This cannot be top-level and must be within a container component such
         as `ComponentType.ACTION_ROW`.
     """
@@ -520,7 +514,7 @@ class ComponentType(int, enums.Enum):
     SELECT_MENU = 3
     """A select menu component.
 
-    !!! note
+    .. note::
         This cannot be top-level and must be within a container component such
         as `ComponentType.ACTION_ROW`.
     """
@@ -531,7 +525,7 @@ class ButtonStyle(int, enums.Enum):
     """Enum of the available button styles.
 
     More information, such as how these look, can be found at
-    https://discord.com/developers/docs/interactions/message-components#buttons-button-styles
+    <https://discord.com/developers/docs/interactions/message-components#buttons-button-styles>
     """
 
     PRIMARY = 1
@@ -549,7 +543,7 @@ class ButtonStyle(int, enums.Enum):
     LINK = 5
     """A grey button which navigates to a URL.
 
-    !!! warning
+    .. warning::
         Unlike the other button styles, clicking this one will not trigger an
         interaction and custom_id shouldn't be included for this style.
     """
@@ -601,7 +595,7 @@ class PartialComponent:
 class ButtonComponent(PartialComponent):
     """Represents a message button component.
 
-    !!! note
+    .. note::
         This is an embedded component and will only ever be found within
         top-level container components such as `ActionRowComponent`.
     """
@@ -618,7 +612,7 @@ class ButtonComponent(PartialComponent):
     custom_id: typing.Optional[str] = attr.field(hash=True)
     """Developer defined identifier for this button (will be <= 100 characters).
 
-    !!! note
+    .. note::
         This is required for the following button styles:
 
         * `ButtonStyle.PRIMARY`
@@ -658,7 +652,7 @@ class SelectMenuOption:
 class SelectMenuComponent(PartialComponent):
     """Represents a message button component.
 
-    !!! note
+    .. note::
         This is an embedded component and will only ever be found within
         top-level container components such as `ActionRowComponent`.
     """
@@ -694,7 +688,7 @@ class SelectMenuComponent(PartialComponent):
 class ActionRowComponent(PartialComponent):
     """Represents a row of components attached to a message.
 
-    !!! note
+    .. note::
         This is a top-level container component and will never be found within
         another component.
     """
@@ -731,7 +725,7 @@ class PartialMessage(snowflakes.Unique):
     `MessageUpdateEvent`, but for all other purposes should be treated as
     being optionally specified.
 
-    !!! warning
+    .. warning::
         All fields on this model except `channel` and `id` may be set to
         `hikari.undefined.UNDEFINED` (a singleton) if we have not
         received information about their state from Discord alongside field
@@ -750,11 +744,11 @@ class PartialMessage(snowflakes.Unique):
     """The ID of the channel that the message was sent in."""
 
     guild_id: typing.Optional[snowflakes.Snowflake] = attr.field(hash=False, eq=False, repr=True)
-    """The ID of the guild that the message was sent in or `builtins.None` for messages out of guilds.
+    """The ID of the guild that the message was sent in or `None` for messages out of guilds.
 
-    !!! warning
-        This will also be `builtins.None` for messages received from the REST API.
-        This is a Discord limitation as stated here https://github.com/discord/discord-api-docs/issues/912
+    .. warning::
+        This will also be `None` for messages received from the REST API.
+        This is a Discord limitation as stated here <https://github.com/discord/discord-api-docs/issues/912>
     """
 
     author: undefined.UndefinedOr[users_.User] = attr.field(hash=False, eq=False, repr=True)
@@ -767,14 +761,14 @@ class PartialMessage(snowflakes.Unique):
     member: undefined.UndefinedNoneOr[guilds.Member] = attr.field(hash=False, eq=False, repr=False)
     """The member for the author who created the message.
 
-    If the message is not in a guild, this will be `builtins.None`.
+    If the message is not in a guild, this will be `None`.
 
     This will also be `hikari.undefined.UNDEFINED` in some cases such as when Discord
     updates a message with an embed URL preview.
 
-    !!! warning
-        This will also be `builtins.None` for messages received from the REST API.
-        This is a Discord limitation as stated here https://github.com/discord/discord-api-docs/issues/912
+    .. warning::
+        This will also be `None` for messages received from the REST API.
+        This is a Discord limitation as stated here <https://github.com/discord/discord-api-docs/issues/912>
     """
 
     content: undefined.UndefinedNoneOr[str] = attr.field(hash=False, eq=False, repr=False)
@@ -786,7 +780,7 @@ class PartialMessage(snowflakes.Unique):
     edited_timestamp: undefined.UndefinedNoneOr[datetime.datetime] = attr.field(hash=False, eq=False, repr=False)
     """The timestamp that the message was last edited at.
 
-    Will be `builtins.None` if the message wasn't ever edited, or `undefined`
+    Will be `None` if the message wasn't ever edited, or `undefined`
     if the info is not available.
     """
 
@@ -796,7 +790,7 @@ class PartialMessage(snowflakes.Unique):
     mentions: Mentions = attr.field(hash=False, eq=False, repr=True)
     """Description of who is mentioned in a message.
 
-    !!! warning
+    .. warning::
         If the contents have not mutated and this is a message update event,
         some fields that are not affected may be empty instead.
 
@@ -824,7 +818,7 @@ class PartialMessage(snowflakes.Unique):
     activity: undefined.UndefinedNoneOr[MessageActivity] = attr.field(hash=False, eq=False, repr=False)
     """The message activity.
 
-    !!! note
+    .. note::
         This will only be provided for messages with rich-presence related chat
         embeds.
     """
@@ -832,7 +826,7 @@ class PartialMessage(snowflakes.Unique):
     application: undefined.UndefinedNoneOr[MessageApplication] = attr.field(hash=False, eq=False, repr=False)
     """The message application.
 
-    !!! note
+    .. note::
         This will only be provided for messages with rich-presence related chat
         embeds.
     """
@@ -859,7 +853,7 @@ class PartialMessage(snowflakes.Unique):
 
     If `type` is `MessageType.REPLY` and `hikari.undefined.UNDEFINED`, Discord's
     backend didn't attempt to fetch the message, so the status is unknown. If
-    `type` is `MessageType.REPLY` and `builtins.None`, the message was deleted.
+    `type` is `MessageType.REPLY` and `None`, the message was deleted.
     """
 
     interaction: undefined.UndefinedNoneOr[MessageInteraction] = attr.field(hash=False, repr=False)
@@ -868,7 +862,7 @@ class PartialMessage(snowflakes.Unique):
     application_id: undefined.UndefinedNoneOr[snowflakes.Snowflake] = attr.field(hash=False, repr=False)
     """ID of the application this message was sent by.
 
-    !!! note
+    .. note::
         This will only be provided for interaction messages.
     """
 
@@ -880,21 +874,19 @@ class PartialMessage(snowflakes.Unique):
 
         Other Parameters
         ----------------
-        guild : typing.Union[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
-            Object or ID of the guild this message is in or `builtins.None`
+        guild : typing.Optional[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
+            Object or ID of the guild this message is in or `None`
             to generate a DM message link.
 
-            !!! note
-                This parameter is necessary since `PartialMessage.guild_id`
-                isn't returned by the REST API regardless of whether the message
-                is in a DM or not.
+            This parameter is necessary since `PartialMessage.guild_id`
+            isn't returned by the REST API regardless of whether the message
+            is in a DM or not.
 
         Returns
         -------
-        builtins.str
+        str
             The jump link to the message.
         """
-        # TODO: this doesn't seem like a safe assumption for rest only applications
         guild_id_str = "@me" if guild is None else str(int(guild))
         return f"{urls.BASE_URL}/channels/{guild_id_str}/{self.channel_id}/{self.id}"
 
@@ -958,14 +950,34 @@ class PartialMessage(snowflakes.Unique):
     ) -> Message:
         """Edit an existing message in a given channel.
 
+        .. note::
+            Mentioning everyone, roles, or users in message edits currently
+            will not send a push notification showing a new mention to people
+            on Discord. It will still highlight in their chat as if they
+            were mentioned, however.
+
+        .. warning::
+            If you specify a text `content`, `mentions_everyone`,
+            `mentions_reply`, `user_mentions`, and `role_mentions` will default
+            to `False` as the message will be re-parsed for mentions. This will
+            also occur if only one of the four are specified
+
+            This is a limitation of Discord's design. If in doubt, specify all
+            four of them each time.
+
+        .. warning::
+            If the message was not sent by your user, the only parameter
+            you may provide to this call is the `flags` parameter. Anything
+            else will result in a `hikari.errors.ForbiddenError` being raised.
+
         Parameters
         ----------
         content : hikari.undefined.UndefinedOr[typing.Any]
             If provided, the message content to update with. If
             `hikari.undefined.UNDEFINED`, then the content will not
-            be changed. If `builtins.None`, then the content will be removed.
+            be changed. If `None`, then the content will be removed.
 
-            Any other value will be cast to a `builtins.str` before sending.
+            Any other value will be cast to a `str` before sending.
 
             If this is a `hikari.embeds.Embed` and neither the `embed` or
             `embeds` kwargs are provided or if this is a
@@ -979,67 +991,67 @@ class PartialMessage(snowflakes.Unique):
         attachment : hikari.undefined.UndefinedOr[hikari.files.Resourceish]
             If provided, the attachment to set on the message. If
             `hikari.undefined.UNDEFINED`, the previous attachment, if
-            present, is not changed. If this is `builtins.None`, then the
+            present, is not changed. If this is `None`, then the
             attachment is removed, if present. Otherwise, the new attachment
             that was provided will be attached.
         attachments : hikari.undefined.UndefinedOr[typing.Sequence[hikari.files.Resourceish]]
             If provided, the attachments to set on the message. If
             `hikari.undefined.UNDEFINED`, the previous attachments, if
-            present, are not changed. If this is `builtins.None`, then the
+            present, are not changed. If this is `None`, then the
             attachments is removed, if present. Otherwise, the new attachments
             that were provided will be attached.
         component : hikari.undefined.UndefinedNoneOr[hikari.api.special_endpoints.ComponentBuilder]
             If provided, builder object of the component to set for this message.
             This component will replace any previously set components and passing
-            `builtins.None` will remove all components.
+            `None` will remove all components.
         components : hikari.undefined.UndefinedNoneOr[typing.Sequence[hikari.api.special_endpoints.ComponentBuilder]]
             If provided, a sequence of the component builder objects set for
             this message. These components will replace any previously set
-            components and passing `builtins.None` or an empty sequence will
+            components and passing `None` or an empty sequence will
             remove all components.
         embed : hikari.undefined.UndefinedNoneOr[hikari.embeds.Embed]
             If provided, the embed to set on the message. If
             `hikari.undefined.UNDEFINED`, the previous embed(s) are not changed.
-            If this is `builtins.None` then any present embeds are removed.
+            If this is `None` then any present embeds are removed.
             Otherwise, the new embed that was provided will be used as the
             replacement.
         embeds : hikari.undefined.UndefinedNoneOr[typing.Sequence[hikari.embeds.Embed]]
             If provided, the embeds to set on the message. If
             `hikari.undefined.UNDEFINED`, the previous embed(s) are not changed.
-            If this is `builtins.None` then any present embeds are removed.
+            If this is `None` then any present embeds are removed.
             Otherwise, the new embeds that were provided will be used as the
             replacement.
         replace_attachments: bool
             Whether to replace the attachments with the provided ones. Defaults
-            to `builtins.False`.
+            to `False`.
 
             Note this will also overwrite the embed attachments.
-        mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
+        mentions_everyone : hikari.undefined.UndefinedOr[bool]
             Sanitation for `@everyone` mentions. If
             `hikari.undefined.UNDEFINED`, then the previous setting is
-            not changed. If `builtins.True`, then `@everyone`/`@here` mentions
+            not changed. If `True`, then `@everyone`/`@here` mentions
             in the message content will show up as mentioning everyone that can
             view the chat.
-        mentions_reply : hikari.undefined.UndefinedOr[builtins.bool]
+        mentions_reply : hikari.undefined.UndefinedOr[bool]
             If provided, whether to mention the author of the message
             that is being replied to.
 
             This will not do anything if this is not a reply message.
-        user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], builtins.bool]]
+        user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
             Sanitation for user mentions. If
             `hikari.undefined.UNDEFINED`, then the previous setting is
-            not changed. If `builtins.True`, all valid user mentions will behave
-            as mentions. If `builtins.False`, all valid user mentions will not
+            not changed. If `True`, all valid user mentions will behave
+            as mentions. If `False`, all valid user mentions will not
             behave as mentions.
 
             You may alternatively pass a collection of
             `hikari.snowflakes.Snowflake` user IDs, or
             `hikari.users.PartialUser`-derived objects.
-        role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], builtins.bool]]
+        role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], bool]]
             Sanitation for role mentions. If
             `hikari.undefined.UNDEFINED`, then the previous setting is
-            not changed. If `builtins.True`, all valid role mentions will behave
-            as mentions. If `builtins.False`, all valid role mentions will not
+            not changed. If `True`, all valid role mentions will behave
+            as mentions. If `False`, all valid role mentions will not
             behave as mentions.
 
             You may alternatively pass a collection of
@@ -1053,33 +1065,6 @@ class PartialMessage(snowflakes.Unique):
             flags that can be set are `NONE` and `SUPPRESS_EMBEDS`. If you
             have `MANAGE_MESSAGES` permissions, you can use this call to
             suppress embeds on another user's message.
-
-        !!! note
-            Mentioning everyone, roles, or users in message edits currently
-            will not send a push notification showing a new mention to people
-            on Discord. It will still highlight in their chat as if they
-            were mentioned, however.
-
-        !!! warning
-            If you specify a non-embed `content`, `mentions_everyone`,
-            `mentions_reply`, `user_mentions`, and `role_mentions` will default
-            to `builtins.False` as the message will be re-parsed for mentions.
-
-            This is a limitation of Discord's design. If in doubt, specify all
-            four of them each time.
-
-        !!! warning
-            If you specify one of `mentions_everyone`, `mentions_reply`,
-            `user_mentions`, or `role_mentions`, then all others will default to
-            `builtins.False`, even if they were enabled previously.
-
-            This is a limitation of Discord's design. If in doubt, specify all
-            four of them each time.
-
-        !!! warning
-            If the message was not sent by your user, the only parameter
-            you may provide to this call is the `flags` parameter. Anything
-            else will result in a `hikari.errors.ForbiddenError` being raised.
 
         Returns
         -------
@@ -1155,7 +1140,7 @@ class PartialMessage(snowflakes.Unique):
             If provided, the message contents. If
             `hikari.undefined.UNDEFINED`, then nothing will be sent
             in the content. Any other value here will be cast to a
-            `builtins.str`.
+            `str`.
 
             If this is a `hikari.embeds.Embed` and no `embed` nor `embeds` kwarg
             is provided, then this will instead update the embed. This allows
@@ -1170,6 +1155,32 @@ class PartialMessage(snowflakes.Unique):
         attachment : hikari.undefined.UndefinedOr[hikari.files.Resourceish],
             If provided, the message attachment. This can be a resource,
             or string of a path on your computer or a URL.
+
+            Attachments can be passed as many different things, to aid in
+            convenience.
+
+            - If a `pathlib.PurePath` or `str` to a valid URL, the
+                resource at the given URL will be streamed to Discord when
+                sending the message. Subclasses of
+                `hikari.files.WebResource` such as
+                `hikari.files.URL`,
+                `hikari.messages.Attachment`,
+                `hikari.emojis.Emoji`,
+                `EmbedResource`, etc will also be uploaded this way.
+                This will use bit-inception, so only a small percentage of the
+                resource will remain in memory at any one time, thus aiding in
+                scalability.
+            - If a `hikari.files.Bytes` is passed, or a `str`
+                that contains a valid data URI is passed, then this is uploaded
+                with a randomized file name if not provided.
+            - If a `hikari.files.File`, `pathlib.PurePath` or
+                `str` that is an absolute or relative path to a file
+                on your file system is passed, then this resource is uploaded
+                as an attachment using non-blocking code internally and streamed
+                using bit-inception where possible. This depends on the
+                type of `concurrent.futures.Executor` that is being used for
+                the application (default is a thread pool which supports this
+                behaviour).
         attachments : hikari.undefined.UndefinedOr[typing.Sequence[hikari.files.Resourceish]],
             If provided, the message attachments. These can be resources, or
             strings consisting of paths on your computer or URLs.
@@ -1182,62 +1193,35 @@ class PartialMessage(snowflakes.Unique):
             If provided, the message embed.
         embeds : hikari.undefined.UndefinedOr[typing.Sequence[hikari.embeds.Embed]]
             If provided, the message embeds.
-        tts : hikari.undefined.UndefinedOr[builtins.bool]
+        tts : hikari.undefined.UndefinedOr[bool]
             If provided, whether the message will be TTS (Text To Speech).
-        nonce : hikari.undefined.UndefinedOr[builtins.str]
+        nonce : hikari.undefined.UndefinedOr[str]
             If provided, a nonce that can be used for optimistic message
             sending.
-        reply : typing.Union[hikari.undefined.UndefinedType, hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage], builtins.bool]
-            If provided and `builtins.True`, reply to this message.
-            If provided and not `builtins.bool`, the message to reply to.
-        mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
+        reply : typing.Union[hikari.undefined.UndefinedType, hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage], bool]
+            If provided and `True`, reply to this message.
+            If provided and not `bool`, the message to reply to.
+        mentions_everyone : hikari.undefined.UndefinedOr[bool]
             If provided, whether the message should parse @everyone/@here
             mentions.
-        mentions_reply : hikari.undefined.UndefinedOr[builtins.bool]
+        mentions_reply : hikari.undefined.UndefinedOr[bool]
             If provided, whether to mention the author of the message
             that is being replied to.
 
             This will not do anything if not being used with `reply`.
-        user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], builtins.bool]]
-            If provided, and `builtins.True`, all mentions will be parsed.
-            If provided, and `builtins.False`, no mentions will be parsed.
+        user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
+            If provided, and `True`, all mentions will be parsed.
+            If provided, and `False`, no mentions will be parsed.
             Alternatively this may be a collection of
             `hikari.snowflakes.Snowflake`, or `hikari.users.PartialUser`
             derivatives to enforce mentioning specific users.
-        role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], builtins.bool]]
-            If provided, and `builtins.True`, all mentions will be parsed.
-            If provided, and `builtins.False`, no mentions will be parsed.
+        role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], bool]]
+            If provided, and `True`, all mentions will be parsed.
+            If provided, and `False`, no mentions will be parsed.
             Alternatively this may be a collection of
             `hikari.snowflakes.Snowflake`, or
             `hikari.guilds.PartialRole` derivatives to enforce mentioning
             specific roles.
-
-        !!! note
-            Attachments can be passed as many different things, to aid in
-            convenience.
-
-            - If a `pathlib.PurePath` or `builtins.str` to a valid URL, the
-                resource at the given URL will be streamed to Discord when
-                sending the message. Subclasses of
-                `hikari.files.WebResource` such as
-                `hikari.files.URL`,
-                `hikari.messages.Attachment`,
-                `hikari.emojis.Emoji`,
-                `EmbedResource`, etc will also be uploaded this way.
-                This will use bit-inception, so only a small percentage of the
-                resource will remain in memory at any one time, thus aiding in
-                scalability.
-            - If a `hikari.files.Bytes` is passed, or a `builtins.str`
-                that contains a valid data URI is passed, then this is uploaded
-                with a randomized file name if not provided.
-            - If a `hikari.files.File`, `pathlib.PurePath` or
-                `builtins.str` that is an absolute or relative path to a file
-                on your file system is passed, then this resource is uploaded
-                as an attachment using non-blocking code internally and streamed
-                using bit-inception where possible. This depends on the
-                type of `concurrent.futures.Executor` that is being used for
-                the application (default is a thread pool which supports this
-                behaviour).
 
         Returns
         -------
@@ -1261,10 +1245,10 @@ class PartialMessage(snowflakes.Unique):
             If the channel is not found.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        builtins.ValueError
+        ValueError
             If more than 100 unique objects/entities are passed for
             `role_mentions` or `user_mentions`.
-        builtins.TypeError
+        TypeError
             If both `attachment` and `attachments` are specified.
         """  # noqa: E501 - Line too long
         if reply is True:
@@ -1328,7 +1312,7 @@ class PartialMessage(snowflakes.Unique):
 
         Parameters
         ----------
-        emoji: typing.Union[builtins.str, hikari.emojis.Emoji]
+        emoji: typing.Union[str, hikari.emojis.Emoji]
             Object or name of the emoji to react with.
 
             Note that if the emoji is an `hikari.emojis.CustomEmoji`
@@ -1408,7 +1392,7 @@ class PartialMessage(snowflakes.Unique):
 
         Parameters
         ----------
-        emoji : typing.Union[builtins.str, hikari.emojis.Emoji]
+        emoji : typing.Union[str, hikari.emojis.Emoji]
             Object or name of the emoji to remove the reaction for.
 
         Other Parameters
@@ -1423,24 +1407,26 @@ class PartialMessage(snowflakes.Unique):
 
         Examples
         --------
-            # Using a unicode emoji and removing the bot's reaction from this
-            # reaction.
-            await message.remove_reaction("\N{OK HAND SIGN}")
+        ```py
+        # Using a unicode emoji and removing the bot's reaction from this
+        # reaction.
+        await message.remove_reaction("\N{OK HAND SIGN}")
 
-            # Using a custom emoji's name and ID to remove a specific user's
-            # reaction from this reaction.
-            await message.remove_reaction("a:Distraction", 745991233939439616, user=some_user)
+        # Using a custom emoji's name and ID to remove a specific user's
+        # reaction from this reaction.
+        await message.remove_reaction("a:Distraction", 745991233939439616, user=some_user)
 
-            # Using a unicode emoji and removing a specific user from this
-            # reaction.
-            await message.remove_reaction("\N{OK HAND SIGN}", user=some_user)
+        # Using a unicode emoji and removing a specific user from this
+        # reaction.
+        await message.remove_reaction("\N{OK HAND SIGN}", user=some_user)
 
-            # Using the name and id.
-            await message.add_reaction("rooAYAYA", 705837374319493284)
+        # Using the name and id.
+        await message.add_reaction("rooAYAYA", 705837374319493284)
 
-            # Using an Emoji object and removing a specific user from this
-            # reaction.
-            await message.remove_reaction(some_emoji_object, user=some_user)
+        # Using an Emoji object and removing a specific user from this
+        # reaction.
+        await message.remove_reaction(some_emoji_object, user=some_user)
+        ```
 
         Raises
         ------
@@ -1495,7 +1481,7 @@ class PartialMessage(snowflakes.Unique):
 
         Other Parameters
         ----------------
-        emoji : hikari.undefined.UndefinedOr[typing.Union[builtins.str, hikari.emojis.Emoji]]
+        emoji : hikari.undefined.UndefinedOr[typing.Union[str, hikari.emojis.Emoji]]
             Object or name of the emoji to get the reactions for. If not specified
             then all reactions are removed.
         emoji_id : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.emojis.CustomEmoji]]
@@ -1503,17 +1489,19 @@ class PartialMessage(snowflakes.Unique):
             This should only be provided when a custom emoji's name is passed
             for `emoji`.
 
-        Example
+        Examples
         --------
-            # Using a unicode emoji and removing all 👌 reacts from the message.
-            # reaction.
-            await message.remove_all_reactions("\N{OK HAND SIGN}")
+        ```py
+        # Using a unicode emoji and removing all 👌 reacts from the message.
+        # reaction.
+        await message.remove_all_reactions("\N{OK HAND SIGN}")
 
-            # Using the name and id.
-            await message.add_reaction("rooAYAYA", 705837374319493284)
+        # Using the name and id.
+        await message.add_reaction("rooAYAYA", 705837374319493284)
 
-            # Removing all reactions entirely.
-            await message.remove_all_reactions()
+        # Removing all reactions entirely.
+        await message.remove_all_reactions()
+        ```
 
         Raises
         ------
@@ -1562,7 +1550,7 @@ class Message(PartialMessage):
     edited_timestamp: typing.Optional[datetime.datetime]
     """The timestamp that the message was last edited at.
 
-    Will be `builtins.None` if it wasn't ever edited.
+    Will be `None` if it wasn't ever edited.
     """
 
     is_tts: bool
@@ -1592,7 +1580,7 @@ class Message(PartialMessage):
     activity: typing.Optional[MessageActivity]
     """The message activity.
 
-    !!! note
+    .. note::
         This will only be provided for messages with rich-presence related chat
         embeds.
     """
@@ -1600,7 +1588,7 @@ class Message(PartialMessage):
     application: typing.Optional[MessageApplication]
     """The message application.
 
-    !!! note
+    .. note::
         This will only be provided for messages with rich-presence related chat
         embeds.
     """
@@ -1626,7 +1614,7 @@ class Message(PartialMessage):
     application_id: typing.Optional[snowflakes.Snowflake]
     """ID of the application this message was sent by.
 
-    !!! note
+    .. note::
         This will only be provided for interaction messages.
     """
 

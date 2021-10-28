@@ -35,7 +35,9 @@ if typing.TYPE_CHECKING:
     from hikari import guilds
     from hikari import snowflakes
 
-_VoiceConnectionT = typing.TypeVar("_VoiceConnectionT", bound="VoiceConnection")
+    _T = typing.TypeVar("_T")
+
+    _VoiceConnectionT = typing.TypeVar("_VoiceConnectionT", bound="VoiceConnection")
 
 
 class VoiceComponent(abc.ABC):
@@ -99,12 +101,12 @@ class VoiceComponent(abc.ABC):
         voice_connection_type : typing.Type[VoiceConnection]
             The type of voice connection to use. This should be initialized
             internally using the `VoiceConnection.initialize`
-            `builtins.classmethod`.
-        deaf : builtins.bool
-            Defaulting to `builtins.False`, if `builtins.True`, the client will
+            `classmethod`.
+        deaf : bool
+            Defaulting to `False`, if `True`, the client will
             enter the voice channel deafened (thus unable to hear other users).
-        mute : builtins.bool
-            Defaulting to `builtins.False`, if `builtins.True`, the client will
+        mute : bool
+            Defaulting to `False`, if `True`, the client will
             enter the voice channel muted (thus unable to send audio).
         **kwargs : typing.Any
             Any arguments to provide to the `VoiceConnection.initialize`
@@ -134,9 +136,6 @@ class VoiceConnection(abc.ABC):
     """
 
     __slots__: typing.Sequence[str] = ()
-
-    if typing.TYPE_CHECKING:
-        _T = typing.TypeVar("_T")
 
     @classmethod
     @abc.abstractmethod
@@ -171,12 +170,12 @@ class VoiceConnection(abc.ABC):
             connection is unregistered from the voice component safely.
         owner : VoiceComponent
             The component that made this connection object.
-        session_id : builtins.str
+        session_id : str
             The voice session ID to use.
-        shard_id : builtins.int
+        shard_id : int
             The associated shard ID that the voice connection was generated
             from.
-        token : builtins.str
+        token : str
             The voice token to use.
         user_id : hikari.snowflakes.Snowflake
             The user ID of the account that just joined the voice channel.
@@ -193,22 +192,22 @@ class VoiceConnection(abc.ABC):
     @property
     @abc.abstractmethod
     def channel_id(self) -> snowflakes.Snowflake:
-        """Return the ID of the voice channel this voice connection is in."""
+        """ID of the voice channel this voice connection is in."""
 
     @property
     @abc.abstractmethod
     def guild_id(self) -> snowflakes.Snowflake:
-        """Return the ID of the guild this voice connection is in."""
+        """ID of the guild this voice connection is in."""
 
     @property
     @abc.abstractmethod
     def is_alive(self) -> bool:
-        """Return `builtins.True` if the connection is alive."""
+        """Whether the connection is alive."""
 
     @property
     @abc.abstractmethod
     def shard_id(self) -> int:
-        """Return the ID of the shard that requested the connection."""
+        """ID of the shard that requested the connection."""
 
     @property
     @abc.abstractmethod

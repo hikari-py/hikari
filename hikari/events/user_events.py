@@ -49,17 +49,11 @@ class OwnUserUpdateEvent(shard_events.ShardEvent):
     old_user: typing.Optional[users.OwnUser] = attr.field()
     """The old application user.
 
-    This will be `builtins.None` if the user missing from the cache.
+    This will be `None` if the user missing from the cache.
     """
 
     user: users.OwnUser = attr.field()
-    """This application user.
-
-    Returns
-    -------
-    hikari.users.OwnUser
-        This application user.
-    """
+    """This application user."""
 
     @property
     def app(self) -> traits.RESTAware:

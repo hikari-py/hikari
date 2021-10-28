@@ -49,13 +49,7 @@ class InteractionCreateEvent(shard_events.ShardEvent):
     """Shard that received this event."""
 
     interaction: base_interactions.PartialInteraction = attr.field(repr=True)
-    """Interaction that this event is related to.
-
-    Returns
-    -------
-    hikari.interactions.base_interactions.PartialInteraction
-        Object of the interaction that this event is related to.
-    """
+    """Interaction that this event is related to."""
 
     @property
     def app(self) -> traits.RESTAware:

@@ -60,13 +60,7 @@ class Event(abc.ABC):
     @property
     @abc.abstractmethod
     def app(self) -> traits.RESTAware:
-        """App instance for this application.
-
-        Returns
-        -------
-        hikari.traits.RESTAware
-            The REST-aware app trait.
-        """
+        """App instance for this application."""
 
 
 def get_required_intents_for(event_type: typing.Type[Event]) -> typing.Collection[intents.Intents]:
@@ -130,7 +124,7 @@ def no_recursive_throw() -> typing.Callable[[typing.Type[T]], typing.Type[T]]:
         doc = inspect.getdoc(cls) or ""
         doc += (
             "\n"
-            "!!! warning\n"
+            ".. warning::\n"
             "    Any exceptions raised by handlers for this event will be dumped to the\n"
             "    application logger and silently discarded, preventing recursive loops\n"
             "    produced by faulty exception event handling. Thus, it is imperative\n"
@@ -160,8 +154,8 @@ FailedCallbackT = typing.Callable[[FailedEventT], typing.Coroutine[typing.Any, t
 class ExceptionEvent(Event, typing.Generic[FailedEventT]):
     """Event that is raised when another event handler raises an `Exception`.
 
-    !!! note
-        Only exceptions that derive from `builtins.Exception` will be caught.
+    .. note::
+        Only exceptions that derive from `Exception` will be caught.
         Other exceptions outside this range will propagate past this callback.
         This prevents event handlers interfering with critical exceptions
         such as `KeyboardError` which would have potentially undesired
@@ -173,7 +167,7 @@ class ExceptionEvent(Event, typing.Generic[FailedEventT]):
 
     Returns
     -------
-    builtins.Exception
+    Exception
         Exception that was raised in the event handler.
     """
 
@@ -204,13 +198,8 @@ class ExceptionEvent(Event, typing.Generic[FailedEventT]):
     def shard(self) -> typing.Optional[gateway_shard.GatewayShard]:
         """Shard that received the event, if there was one associated.
 
-        Returns
-        -------
-        typing.Optional[hikari.api.shard.GatewayShard]
-            Shard that raised this exception.
-
-            This may be `builtins.None` if no specific shard was the cause of this
-            exception (e.g. when starting up or shutting down).
+        This may be `None` if no specific shard was the cause of this
+        exception (e.g. when starting up or shutting down).
         """
         shard = getattr(self.failed_event, "shard", None)
         if isinstance(shard, gateway_shard.GatewayShard):
@@ -221,11 +210,8 @@ class ExceptionEvent(Event, typing.Generic[FailedEventT]):
     def exc_info(self) -> typing.Tuple[typing.Type[Exception], Exception, typing.Optional[types.TracebackType]]:
         """Exception triplet that follows the same format as `sys.exc_info`.
 
-        Returns
-        -------
-        builtins.tuple[typing.Type[Exception], Exception, typing.Optional[types.TracebackType]]
-            The `sys.exc_info`-compatible tuple of the exception type, the
-            exception instance, and the traceback of the exception.
+        The `sys.exc_info` tiplet consists of the exception type, the exception
+        instance, and the traceback of the exception.
         """
         return type(self.exception), self.exception, self.exception.__traceback__
 

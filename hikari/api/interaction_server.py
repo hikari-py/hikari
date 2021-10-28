@@ -50,7 +50,7 @@ instance of the relevant `hikari.api.special_endpoints.InteractionResponseBuilde
 subclass for the provided interaction type which will instruct the server on how
 to respond.
 
-!!! note
+.. note::
     For the standard implementations of
     `hikari.api.special_endpoints.InteractionResponseBuilder` see
     `hikari.impl.special_endpoints`.
@@ -68,28 +68,16 @@ class Response(typing.Protocol):
 
     @property
     def headers(self) -> typing.Optional[typing.Mapping[str, str]]:
-        """Headers that should be added to the response if applicable.
-
-        Returns
-        -------
-        typing.Optional[typing.Mapping[builtins.str, builtins.str]]
-            A mapping of string header names to string header values that should
-            be included in the response if applicable else `builtins.None`.
-        """
+        """Headers that should be added to the response if applicable."""
         raise NotImplementedError
 
     @property
     def payload(self) -> typing.Optional[bytes]:
         """Payload to provide in the response.
 
-        !!! note
-            If this is not `builtins.None` then an appropriate `"Content-Type"`
+        .. note::
+            If this is not `None` then an appropriate `"Content-Type"`
             header should be declared in `Response.headers`
-
-        Returns
-        -------
-        typing.Optional[builtins.bytes]
-            The bytes payload to respond with if applicable else `builtins.None`.
         """
         raise NotImplementedError
 
@@ -97,12 +85,7 @@ class Response(typing.Protocol):
     def status_code(self) -> int:
         """Status code that should be used to respond.
 
-        Returns
-        -------
-        builtins.int
-            The response code to use for the response. This should be a valid
-            HTTP status code, for more information see
-            https://developer.mozilla.org/en-US/docs/Web/HTTP/Status.
+        For more information see <https://developer.mozilla.org/en-US/docs/Web/HTTP/Status>.
         """
         raise NotImplementedError
 
@@ -118,11 +101,11 @@ class InteractionServer(abc.ABC):
 
         Parameters
         ----------
-        body : builtins.bytes
+        body : bytes
             The interaction payload.
-        signature : builtins.bytes
+        signature : bytes
             Value of the `"X-Signature-Ed25519"` header used to verify the body.
-        timestamp : builtins.bytes
+        timestamp : bytes
             Value of the `"X-Signature-Timestamp"` header used to verify the body.
 
         Returns
@@ -161,7 +144,7 @@ class InteractionServer(abc.ABC):
         -------
         typing.Optional[ListenersT[hikari.interactions.base_interactions.PartialInteraction, hikari.api.special_endpoints.InteractionResponseBuilder]
             The callback registered for the provided interaction type if found,
-            else `builtins.None`.
+            else `None`.
         """  # noqa E501 - Line too long
 
     @typing.overload
@@ -204,18 +187,18 @@ class InteractionServer(abc.ABC):
         interaction_type : typing.Type[hikari.interactions.base_interactions.PartialInteraction]
             The type of interaction this listener should be registered for.
         listener : typing.Optional[ListenerT[hikari.interactions.base_interactions.PartialInteraction, hikari.api.special_endpoints.InteractionResponseBuilder]]
-            The asynchronous listener callback to set or `builtins.None` to
+            The asynchronous listener callback to set or `None` to
             unset the previous listener.
 
         Other Parameters
         ----------------
-        replace : builtins.bool
+        replace : bool
             Whether this call should replace the previously set listener or not.
-            This call will raise a `builtins.ValueError` if set to `builtins.False`
+            This call will raise a `ValueError` if set to `False`
             when a listener is already set.
 
         Raises
         ------
-        builtins.TypeError
-            If `replace` is `builtins.False` when a listener is already set.
+        TypeError
+            If `replace` is `False` when a listener is already set.
         """  # noqa E501 - Line too long

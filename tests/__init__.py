@@ -19,8 +19,4 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-
-"""Pytest fails without this file in some cases.
-
-Fixes https://gitlab.com/nekokatt/hikari/-/issues/408.
-"""
+"""Mark this as a module to help pytest discover it."""

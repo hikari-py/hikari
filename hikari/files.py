@@ -73,12 +73,12 @@ SPOILER_TAG: typing.Final[str] = "SPOILER_"
 ReaderImplT = typing.TypeVar("ReaderImplT", bound="AsyncReader")
 ReaderImplT_co = typing.TypeVar("ReaderImplT_co", bound="AsyncReader", covariant=True)
 
-Pathish = typing.Union["os.PathLike[str]", str]
+Pathish = typing.Union[os.PathLike, str]
 """Type hint representing a literal file or path.
 
 This may be one of:
 
-- `builtins.str` path.
+- `str` path.
 - `os.PathLike` derivative, such as `pathlib.PurePath` and `pathlib.Path`.
 """
 
@@ -128,21 +128,6 @@ This may be one of:
 - `aiohttp.StreamReader`
 """
 
-Resourceish = typing.Union["Resource[typing.Any]", Pathish, Rawish]
-"""Type hint representing a file or path to a file/URL/data URI.
-
-This may be one of:
-
-- `Resource` or a derivative.
-- `builtins.str` path.
-- `os.PathLike` derivative, such as `pathlib.PurePath` and `pathlib.Path`.
-- `bytes`
-- `bytearray`
-- `memoryview`
-- `io.BytesIO`
-- `io.StringIO` (assuming UTF-8 encoding).
-"""
-
 
 def ensure_path(pathish: Pathish) -> pathlib.Path:
     """Convert a path-like object to a `pathlib.Path` instance."""
@@ -169,7 +154,7 @@ def ensure_resource(url_or_resource: Resourceish, /) -> Resource[AsyncReader]:
     Parameters
     ----------
     url_or_resource : Resourceish
-        The item to convert. Ff a `Resource` is passed, it is
+        The item to convert. If a `Resource` is passed, it is
         simply returned again. Anything else is converted to a `Resource` first.
 
     Returns
@@ -205,13 +190,13 @@ def guess_mimetype_from_filename(name: str, /) -> typing.Optional[str]:
 
     Parameters
     ----------
-    name : builtins.bytes
+    name : bytes
         The filename to inspect.
 
     Returns
     -------
-    typing.Optional[builtins.str]
-        The closest guess to the given filename. May be `builtins.None` if
+    typing.Optional[str]
+        The closest guess to the given filename. May be `None` if
         no match was found.
     """
     guess, _ = mimetypes.guess_type(name)
@@ -221,20 +206,20 @@ def guess_mimetype_from_filename(name: str, /) -> typing.Optional[str]:
 def guess_mimetype_from_data(data: bytes, /) -> typing.Optional[str]:
     """Guess the mimetype of some data from the header.
 
-    !!! warning
+    .. warning::
         This function only detects valid image headers that Discord allows
         the use of. Anything else will go undetected.
 
     Parameters
     ----------
-    data : builtins.bytes
+    data : bytes
         The byte content to inspect.
 
     Returns
     -------
-    typing.Optional[builtins.str]
+    typing.Optional[str]
         The mimetype, if it was found. If the header is unrecognised, then
-        `builtins.None` is returned.
+        `None` is returned.
     """
     if data.startswith(b"\211PNG\r\n\032\n"):
         return "image/png"
@@ -252,7 +237,7 @@ def guess_file_extension(mimetype: str) -> typing.Optional[str]:
 
     Parameters
     ----------
-    mimetype : builtins.str
+    mimetype : str
         The mimetype to guess the extension for.
 
     Example
@@ -264,9 +249,9 @@ def guess_file_extension(mimetype: str) -> typing.Optional[str]:
 
     Returns
     -------
-    typing.Optional[builtins.str]
+    typing.Optional[str]
         The file extension, prepended with a `.`. If no match was found,
-        return `builtins.None`.
+        return `None`.
     """
     return mimetypes.guess_extension(mimetype)
 
@@ -281,16 +266,16 @@ def generate_filename_from_details(
 
     Parameters
     ----------
-    mimetype : typing.Optional[builtins.str]
-        The mimetype of the content, or `builtins.None` if not known.
-    extension : typing.Optional[builtins.str]
-        The file extension to use, or `builtins.None` if not known.
-    data : typing.Optional[builtins.bytes]
-        The data to inspect, or `builtins.None` if not known.
+    mimetype : typing.Optional[str]
+        The mimetype of the content, or `None` if not known.
+    extension : typing.Optional[str]
+        The file extension to use, or `None` if not known.
+    data : typing.Optional[bytes]
+        The data to inspect, or `None` if not known.
 
     Returns
     -------
-    builtins.str
+    str
         A generated quasi-unique filename.
     """
     if data is not None and mimetype is None:
@@ -313,14 +298,14 @@ def to_data_uri(data: bytes, mimetype: typing.Optional[str]) -> str:
 
     Parameters
     ----------
-    data : builtins.bytes
+    data : bytes
         The data to encode as base64.
-    mimetype : typing.Optional[builtins.str]
-        The mimetype, or `builtins.None` if we should attempt to guess it.
+    mimetype : typing.Optional[str]
+        The mimetype, or `None` if we should attempt to guess it.
 
     Returns
     -------
-    builtins.str
+    str
         A data URI string.
     """
     if mimetype is None:
@@ -345,7 +330,7 @@ class AsyncReader(typing.AsyncIterable[bytes], abc.ABC):
     """The filename of the resource."""
 
     mimetype: typing.Optional[str] = attr.field(repr=True)
-    """The mimetype of the resource. May be `builtins.None` if not known."""
+    """The mimetype of the resource. May be `None` if not known."""
 
     async def data_uri(self) -> str:
         """Fetch the data URI.
@@ -355,7 +340,7 @@ class AsyncReader(typing.AsyncIterable[bytes], abc.ABC):
         return to_data_uri(await self.read(), self.mimetype)
 
     async def read(self) -> bytes:
-        """Read the rest of the resource and return it in a `builtins.bytes` object."""
+        """Read the rest of the resource and return it in a `bytes` object."""
         buff = bytearray()
         async for chunk in self:
             buff.extend(chunk)
@@ -449,7 +434,7 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
             data = await reader.read()
         ```
 
-        !!! warning
+        .. warning::
             If you simply wish to re-upload this resource to Discord via
             any endpoint in Hikari, you should opt to just pass this
             resource object directly. This way, Hikari can perform byte
@@ -460,12 +445,12 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
         ----------
         executor : typing.Optional[concurrent.futures.Executor]
             The executor to run in for blocking operations.
-            If `builtins.None`, then the default executor is used for the
+            If `None`, then the default executor is used for the
             current event loop.
 
         Returns
         -------
-        builtins.bytes
+        bytes
             The entire resource.
         """
         async with self.stream(executor=executor) as reader:
@@ -484,10 +469,10 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
         ----------
         executor : typing.Optional[concurrent.futures.Executor]
             The executor to run in for blocking operations.
-            If `builtins.None`, then the default executor is used for the
+            If `None`, then the default executor is used for the
             current event loop.
-        head_only : builtins.bool
-            Defaults to `builtins.False`. If `builtins.True`, then the
+        head_only : bool
+            Defaults to `False`. If `True`, then the
             implementation may only retrieve HEAD information if supported.
             This currently only has any effect for web requests. This will
             fetch the headers for the HTTP resource this object points to
@@ -543,7 +528,7 @@ class WebReader(AsyncReader):
     """The size of the resource, if known."""
 
     head_only: bool = attr.field()
-    """If `builtins.True`, then only the HEAD was requested.
+    """If `True`, then only the HEAD was requested.
 
     In this case, neither `__aiter__` nor `read` would return anything other
     than an empty byte string.
@@ -629,16 +614,15 @@ class WebResource(Resource[WebReader], abc.ABC):
     The logic for identifying this resource is left to each implementation
     to define.
 
-    !!! info
-        For a usable concrete implementation, use `URL` instead.
+    For a usable concrete implementation, use `URL` instead.
 
-    !!! note
+    .. note::
         Some components may choose to not upload this resource directly and
         instead simply refer to the URL as needed. The main place this will
         occur is within embeds.
 
         If you need to re-upload the resource, you should download it into
-        a `builtins.bytes` and pass that instead in these cases.
+        a `bytes` and pass that instead in these cases.
     """
 
     __slots__: typing.Sequence[str] = ()
@@ -658,8 +642,8 @@ class WebResource(Resource[WebReader], abc.ABC):
         ----------
         executor : typing.Optional[concurrent.futures.Executor]
             Not used. Provided only to match the underlying interface.
-        head_only : builtins.bool
-            Defaults to `builtins.False`. If `builtins.True`, then the
+        head_only : bool
+            Defaults to `False`. If `True`, then the
             implementation may only retrieve HEAD information if supported.
             This currently only has any effect for web requests.
 
@@ -720,16 +704,16 @@ class URL(WebResource):
 
     Parameters
     ----------
-    url : builtins.str
+    url : str
         The URL of the resource.
 
-    !!! note
+    .. note::
         Some components may choose to not upload this resource directly and
         instead simply refer to the URL as needed. The main place this will
         occur is within embeds.
 
         If you need to re-upload the resource, you should download it into
-        a `builtins.bytes` and pass that instead in these cases.
+        a `bytes` and pass that instead in these cases.
     """
 
     __slots__: typing.Sequence[str] = ("_url",)
@@ -848,21 +832,21 @@ class File(Resource[FileReader]):
 
     Parameters
     ----------
-    path : typing.Union[builtins.str, os.PathLike, pathlib.Path]
+    path : typing.Union[str, os.PathLike, pathlib.Path]
         The path to use.
 
-        !!! note
+        .. note::
             If passing a `pathlib.Path`, this must not be a `pathlib.PurePath`
             directly, as it will be used to expand tokens such as `~` that
             denote the home directory, and `..` for relative paths.
 
             This will all be performed as required in an executor to prevent
             blocking the event loop.
-    filename : typing.Optional[builtins.str]
-        The filename to use. If this is `builtins.None`, the name of the file is taken
+    filename : typing.Optional[str]
+        The filename to use. If this is `None`, the name of the file is taken
         from the path instead.
     spoiler : bool
-        Whether to mark the file as a spoiler in Discord. Defaults to `builtins.False`.
+        Whether to mark the file as a spoiler in Discord. Defaults to `False`.
     """
 
     __slots__: typing.Sequence[str] = ("path", "_filename", "is_spoiler")
@@ -906,9 +890,9 @@ class File(Resource[FileReader]):
         ----------
         executor : typing.Optional[concurrent.futures.Executor]
             The executor to run the blocking read operations in. If
-            `builtins.None`, the default executor for the running event loop
+            `None`, the default executor for the running event loop
             will be used instead.
-        head_only : builtins.bool
+        head_only : bool
             Not used. Provided only to match the underlying interface.
 
         Returns
@@ -1008,14 +992,14 @@ class Bytes(Resource[IteratorReader]):
     ----------
     data : typing.Union[Rawish, LazyByteIteratorish]
         The raw data.
-    filename : builtins.str
+    filename : str
         The filename to use.
-    mimetype : typing.Optional[builtins.str]
-        The mimetype, or `builtins.None` if you do not wish to specify this.
+    mimetype : typing.Optional[str]
+        The mimetype, or `None` if you do not wish to specify this.
         If not provided, then this will be generated from the file extension
         of the filename instead.
     spoiler : bool
-        Whether to mark the file as a spoiler in Discord. Defaults to `builtins.False`.
+        Whether to mark the file as a spoiler in Discord. Defaults to `False`.
     """
 
     __slots__: typing.Sequence[str] = ("data", "_filename", "mimetype", "is_spoiler")
@@ -1024,7 +1008,7 @@ class Bytes(Resource[IteratorReader]):
     """The raw data/provider of raw data to upload."""
 
     mimetype: typing.Optional[str]
-    """The provided mimetype, if provided. Otherwise `builtins.None`."""
+    """The provided mimetype, if provided. Otherwise `None`."""
 
     is_spoiler: bool
     """Whether the file will be marked as a spoiler."""
@@ -1076,7 +1060,7 @@ class Bytes(Resource[IteratorReader]):
         ----------
         executor : typing.Optional[concurrent.futures.Executor]
             Not used. Provided only to match the underlying interface.
-        head_only : builtins.bool
+        head_only : bool
             Not used. Provided only to match the underlying interface.
 
         Returns
@@ -1093,9 +1077,9 @@ class Bytes(Resource[IteratorReader]):
 
         Parameters
         ----------
-        data_uri : builtins.str
+        data_uri : str
             The data URI to parse.
-        filename : typing.Optional[builtins.str]
+        filename : typing.Optional[str]
             Filename to use. If this is not provided, then this is generated
             instead.
 
@@ -1106,7 +1090,7 @@ class Bytes(Resource[IteratorReader]):
 
         Raises
         ------
-        builtins.ValueError
+        ValueError
             If the parsed argument is not a data URI.
         """
         if not data_uri.startswith("data:"):
@@ -1125,3 +1109,19 @@ class Bytes(Resource[IteratorReader]):
             filename = generate_filename_from_details(mimetype=mimetype, data=data)
 
         return Bytes(data, filename, mimetype=mimetype)
+
+
+Resourceish = typing.Union[Resource[typing.Any], Pathish, Rawish]
+"""Type hint representing a file or path to a file/URL/data URI.
+
+This may be one of:
+
+- `Resource` or a derivative.
+- `str` path.
+- `os.PathLike` derivative, such as `pathlib.PurePath` and `pathlib.Path`.
+- `bytes`
+- `bytearray`
+- `memoryview`
+- `io.BytesIO`
+- `io.StringIO` (assuming UTF-8 encoding).
+"""

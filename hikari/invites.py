@@ -74,13 +74,7 @@ class InviteCode(abc.ABC):
     @property
     @abc.abstractmethod
     def code(self) -> str:
-        """Return the code for this invite.
-
-        Returns
-        -------
-        builtins.str
-            The invite code that can be appended to a URL.
-        """
+        """Code for this invite."""
 
     def __str__(self) -> str:
         return f"https://discord.gg/{self.code}"
@@ -117,14 +111,14 @@ class InviteGuild(guilds.PartialGuild):
     """The hash for the guild's banner.
 
     This is only present if `hikari.guilds.GuildFeature.BANNER` is in the
-    `features` for this guild. For all other purposes, it is `builtins.None`.
+    `features` for this guild. For all other purposes, it is `None`.
     """
 
     description: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
     """The guild's description.
 
     This is only present if certain `features` are set in this guild.
-    Otherwise, this will always be `builtins.None`. For all other purposes, it is `builtins.None`.
+    Otherwise, this will always be `None`. For all other purposes, it is `None`.
     """
 
     verification_level: typing.Union[guilds.GuildVerificationLevel, int] = attr.field(eq=False, hash=False, repr=False)
@@ -134,7 +128,7 @@ class InviteGuild(guilds.PartialGuild):
     """The vanity URL code for the guild's vanity URL.
 
     This is only present if `hikari.guilds.GuildFeature.VANITY_URL` is in the
-    `features` for this guild. If not, this will always be `builtins.None`.
+    `features` for this guild. If not, this will always be `None`.
     """
 
     welcome_screen: typing.Optional[guilds.WelcomeScreen] = attr.field(eq=False, hash=False, repr=False)
@@ -153,21 +147,21 @@ class InviteGuild(guilds.PartialGuild):
 
         Parameters
         ----------
-        ext : builtins.str
+        ext : str
             The extension to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : builtins.int
+        size : int
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL to the splash, or `builtins.None` if not set.
+            The URL to the splash, or `None` if not set.
 
         Raises
         ------
-        builtins.ValueError
+        ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.splash_hash is None:
@@ -191,21 +185,21 @@ class InviteGuild(guilds.PartialGuild):
 
         Parameters
         ----------
-        ext : builtins.str
+        ext : str
             The extension to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : builtins.int
+        size : int
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL of the banner, or `builtins.None` if no banner is set.
+            The URL of the banner, or `None` if no banner is set.
 
         Raises
         ------
-        builtins.ValueError
+        ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.banner_hash is None:
@@ -236,20 +230,20 @@ class Invite(InviteCode):
     guild: typing.Optional[InviteGuild] = attr.field(eq=False, hash=False, repr=False)
     """The partial object of the guild this invite belongs to.
 
-    Will be `builtins.None` for group DM invites and when attached to a gateway event;
+    Will be `None` for group DM invites and when attached to a gateway event;
     for invites received over the gateway you should refer to `Invite.guild_id`.
     """
 
     guild_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=True)
     """The ID of the guild this invite belongs to.
 
-    Will be `builtins.None` for group DM invites.
+    Will be `None` for group DM invites.
     """
 
     channel: typing.Optional[channels.PartialChannel] = attr.field(eq=False, hash=False, repr=False)
     """The partial object of the channel this invite targets.
 
-    Will be `builtins.None` for invite objects that are attached to gateway events,
+    Will be `None` for invite objects that are attached to gateway events,
     in which case you should refer to `Invite.channel_id`.
     """
 
@@ -284,8 +278,8 @@ class Invite(InviteCode):
     """When this invite will expire.
 
     This field is only returned by the GET Invite REST endpoint and will be
-    returned as `builtins.None` by said endpoint if the invite doesn't have a set
-    expiry date. Other places will always return this as `builtins.None`.
+    returned as `None` by said endpoint if the invite doesn't have a set
+    expiry date. Other places will always return this as `None`.
     """
 
 
@@ -303,7 +297,7 @@ class InviteWithMetadata(Invite):
     max_uses: typing.Optional[int] = attr.field(eq=False, hash=False, repr=True)
     """The limit for how many times this invite can be used before it expires.
 
-    If set to `builtins.None` then this is unlimited.
+    If set to `None` then this is unlimited.
     """
 
     # TODO: can we use a non-None value to represent infinity here somehow, or
@@ -311,7 +305,7 @@ class InviteWithMetadata(Invite):
     max_age: typing.Optional[datetime.timedelta] = attr.field(eq=False, hash=False, repr=False)
     """The timedelta of how long this invite will be valid for.
 
-    If set to `builtins.None` then this is unlimited.
+    If set to `None` then this is unlimited.
     """
 
     is_temporary: bool = attr.field(eq=False, hash=False, repr=True)
@@ -323,18 +317,14 @@ class InviteWithMetadata(Invite):
     expires_at: typing.Optional[datetime.datetime]
     """When this invite will expire.
 
-    If this invite doesn't have a set expiry then this will be `builtins.None`.
+    If this invite doesn't have a set expiry then this will be `None`.
     """
 
     @property
     def uses_left(self) -> typing.Optional[int]:
         """Return the number of uses left for this invite.
 
-        Returns
-        -------
-        typing.Optional[builtins.int]
-            The number of uses left for this invite. This will be `builtins.None`
-            if the invite has unlimited uses.
+        This will be `None` if the invite has unlimited uses.
         """
         if self.max_uses:
             return self.max_uses - self.uses

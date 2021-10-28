@@ -92,7 +92,7 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
     """The name of the rate limiter."""
 
     throttle_task: typing.Optional[asyncio.Task[typing.Any]]
-    """The throttling task, or `builtins.None` if it is not running."""
+    """The throttling task, or `None` if it is not running."""
 
     queue: typing.List[asyncio.Future[typing.Any]]
     """The queue of any futures under a rate limit."""
@@ -138,7 +138,7 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
 
     @property
     def is_empty(self) -> bool:
-        """Return `builtins.True` if no futures are on the queue being rate limited."""
+        """Return `True` if no futures are on the queue being rate limited."""
         return len(self.queue) == 0
 
 
@@ -195,18 +195,18 @@ class ManualRateLimiter(BurstRateLimiter):
 
         Parameters
         ----------
-        retry_after : builtins.float
+        retry_after : float
             How long to sleep for before unlocking and releasing any futures
             in the queue.
 
-        !!! note
+        .. note::
             This will invoke `ManualRateLimiter.unlock_later` as a scheduled
             task in the future (it will not await it to finish).
 
             When the `ManualRateLimiter.unlock_later` coroutine function
             completes, it should be expected to set the `throttle_task` to
-            `builtins.None`. This means you can check if throttling is occurring
-            by checking if `throttle_task` is not `builtins.None`.
+            `None`. This means you can check if throttling is occurring
+            by checking if `throttle_task` is not `None`.
 
             If this is invoked while another throttle is in progress, that one
             is cancelled and a new one is started. This enables new rate limits
@@ -223,18 +223,18 @@ class ManualRateLimiter(BurstRateLimiter):
 
         Parameters
         ----------
-        retry_after : builtins.float
+        retry_after : float
             How long to sleep for before unlocking and releasing any futures
             in the queue.
 
-        !!! note
+        .. note::
             You should not need to invoke this directly. Call
             `ManualRateLimiter.throttle` instead.
 
             When the `ManualRateLimiter.unlock_later` coroutine function
             completes, it should be expected to set the `throttle_task` to
-            `builtins.None`. This means you can check if throttling is occurring
-            by checking if `throttle_task` is not `builtins.None`.
+            `None`. This means you can check if throttling is occurring
+            by checking if `throttle_task` is not `None`.
         """
         _LOGGER.warning("you are being globally rate limited for %ss", retry_after)
         await asyncio.sleep(retry_after)
@@ -329,10 +329,10 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
 
         Parameters
         ----------
-        now : builtins.float
+        now : float
             The monotonic `time.monotonic_timestamp` timestamp.
 
-        !!! warning
+        .. warning::
             Invoking this method will update the internal state if we were
             previously rate limited, but at the given time are no longer under
             that limit. This makes it imperative that you only pass the current
@@ -341,7 +341,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
 
         Returns
         -------
-        builtins.float
+        float
             The time left to sleep before the rate limit is reset. If no rate limit
             is in effect, then this will return `0.0` instead.
         """
@@ -354,16 +354,16 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
 
         Parameters
         ----------
-        now : builtins.float
+        now : float
             The monotonic `time.monotonic_timestamp` timestamp.
 
         Returns
         -------
-        builtins.bool
-            `builtins.True` if we are being rate limited, or `builtins.False` if
+        bool
+            `True` if we are being rate limited, or `False` if
             we are not.
 
-        !!! warning
+        .. warning::
             Invoking this method will update the internal state if we were
             previously rate limited, but at the given time are no longer under
             that limit. This makes it imperative that you only pass the current
@@ -387,14 +387,14 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
         Iterates repeatedly while the queue is not empty, adhering to any
         rate limits that occur in the mean time.
 
-        !!! note
+        .. note::
             You should usually not need to invoke this directly, but if you do,
             ensure to call it using `asyncio.create_task`, and store the
             task immediately in `throttle_task`.
 
             When this coroutine function completes, it will set the
-            `throttle_task` to `builtins.None`. This means you can check if throttling
-            is occurring by checking if `throttle_task` is not `builtins.None`.
+            `throttle_task` to `None`. This means you can check if throttling
+            is occurring by checking if `throttle_task` is not `None`.
         """
         _LOGGER.debug(
             "you are being rate limited on bucket %s, backing off for %ss",
@@ -428,23 +428,23 @@ class ExponentialBackOff:
 
     Parameters
     ----------
-    base : builtins.float
+    base : float
         The base to use. Defaults to `2.0`.
-    maximum : builtins.float
+    maximum : float
         The max value the backoff can be in a single iteration. Anything above
         this will be capped to this base value plus random jitter.
-    jitter_multiplier : builtins.float
+    jitter_multiplier : float
         The multiplier for the random jitter. Defaults to `1.0`.
         Set to `0` to disable jitter.
-    initial_increment : builtins.int
+    initial_increment : int
         The initial increment to start at. Defaults to `0`.
 
     Raises
     ------
     ValueError
-        If an `builtins.int` that's too big to be represented as a
-        `builtins.float` or a non-finite value is passed in place of a field
-        that's annotated as `builtins.float`.
+        If an `int` that's too big to be represented as a
+        `float` or a non-finite value is passed in place of a field
+        that's annotated as `float`.
     """
 
     __slots__: typing.Sequence[str] = ("base", "increment", "maximum", "jitter_multiplier")

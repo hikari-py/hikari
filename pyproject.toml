@@ -79,7 +79,6 @@ norecursedirs = [
     "public",
     "ci",
 ]
-filterwarnings = ["ignore:.*\"@coroutine\" decorator is deprecated.*:DeprecationWarning"]
 
 [tool.towncrier]
 package = "hikari"
