@@ -76,39 +76,30 @@ class EventFactoryImpl(event_factory.EventFactory):
     # CHANNEL EVENTS #
     ##################
 
-    def deserialize_channel_create_event(
+    def deserialize_guild_channel_create_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
-    ) -> channel_events.ChannelCreateEvent:
+    ) -> channel_events.GuildChannelCreateEvent:
         channel = self._app.entity_factory.deserialize_channel(payload)
-        if isinstance(channel, channel_models.GuildChannel):
-            return channel_events.GuildChannelCreateEvent(shard=shard, channel=channel)
-        if isinstance(channel, channel_models.PrivateChannel):
-            raise NotImplementedError("DM channel create events are undocumented behaviour")
-        raise TypeError(f"Expected GuildChannel or PrivateChannel but received {type(channel).__name__}")
+        assert isinstance(channel, channel_models.GuildChannel), "DM channel create events are undocumented behaviour"
+        return channel_events.GuildChannelCreateEvent(shard=shard, channel=channel)
 
-    def deserialize_channel_update_event(
+    def deserialize_guild_channel_update_event(
         self,
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
         *,
         old_channel: typing.Optional[channel_models.GuildChannel],
-    ) -> channel_events.ChannelUpdateEvent:
+    ) -> channel_events.GuildChannelUpdateEvent:
         channel = self._app.entity_factory.deserialize_channel(payload)
-        if isinstance(channel, channel_models.GuildChannel):
-            return channel_events.GuildChannelUpdateEvent(shard=shard, channel=channel, old_channel=old_channel)
-        if isinstance(channel, channel_models.PrivateChannel):
-            raise NotImplementedError("DM channel update events are undocumented behaviour")
-        raise TypeError(f"Expected GuildChannel or PrivateChannel but received {type(channel).__name__}")
+        assert isinstance(channel, channel_models.GuildChannel), "DM channel update events are undocumented behaviour"
+        return channel_events.GuildChannelUpdateEvent(shard=shard, channel=channel, old_channel=old_channel)
 
-    def deserialize_channel_delete_event(
+    def deserialize_guild_channel_delete_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
-    ) -> channel_events.ChannelDeleteEvent:
+    ) -> channel_events.GuildChannelDeleteEvent:
         channel = self._app.entity_factory.deserialize_channel(payload)
-        if isinstance(channel, channel_models.GuildChannel):
-            return channel_events.GuildChannelDeleteEvent(shard=shard, channel=channel)
-        if isinstance(channel, channel_models.PrivateChannel):
-            raise NotImplementedError("DM channel delete events are undocumented behaviour")
-        raise TypeError(f"Expected GuildChannel or PrivateChannel but received {type(channel).__name__}")
+        assert isinstance(channel, channel_models.GuildChannel), "DM channel delete events are undocumented behaviour"
+        return channel_events.GuildChannelDeleteEvent(shard=shard, channel=channel)
 
     def deserialize_channel_pins_update_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject

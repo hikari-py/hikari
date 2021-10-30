@@ -114,13 +114,13 @@ class URLEncodedFormBuilder:
     def __init__(self, executor: typing.Optional[concurrent.futures.Executor] = None) -> None:
         self._executor = executor
         self._fields: typing.List[typing.Tuple[str, str, typing.Optional[str]]] = []
-        self._resources: typing.List[files.Resource[files.AsyncReader]] = []
+        self._resources: typing.List[typing.Tuple[str, files.Resource[files.AsyncReader]]] = []
 
     def add_field(self, name: str, data: str, *, content_type: typing.Optional[str] = None) -> None:
         self._fields.append((name, data, content_type))
 
-    def add_resource(self, resource: files.Resource[files.AsyncReader]) -> None:
-        self._resources.append(resource)
+    def add_resource(self, name: str, resource: files.Resource[files.AsyncReader]) -> None:
+        self._resources.append((name, resource))
 
     async def build(self, stack: contextlib.AsyncExitStack) -> aiohttp.FormData:
         form = aiohttp.FormData()
@@ -128,10 +128,10 @@ class URLEncodedFormBuilder:
         for field in self._fields:
             form.add_field(field[0], field[1], content_type=field[2])
 
-        for i, resource in enumerate(self._resources):
+        for name, resource in self._resources:
             stream = await stack.enter_async_context(resource.stream(executor=self._executor))
             mimetype = stream.mimetype or _APPLICATION_OCTET_STREAM
-            form.add_field(f"file{i}", stream, filename=stream.filename, content_type=mimetype)
+            form.add_field(name, stream, filename=stream.filename, content_type=mimetype)
 
         return form
 

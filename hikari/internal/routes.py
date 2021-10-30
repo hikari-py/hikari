@@ -383,6 +383,7 @@ GET_GUILD_INVITES: typing.Final[Route] = Route(GET, "/guilds/{guild}/invites")
 
 GET_GUILD_MEMBER: typing.Final[Route] = Route(GET, "/guilds/{guild}/members/{user}")
 PATCH_GUILD_MEMBER: typing.Final[Route] = Route(PATCH, "/guilds/{guild}/members/{user}")
+PATCH_MY_GUILD_MEMBER: typing.Final[Route] = Route(PATCH, "/guilds/{guild}/members/@me")
 PUT_GUILD_MEMBER: typing.Final[Route] = Route(PUT, "/guilds/{guild}/members/{user}")
 
 GET_GUILD_MEMBERS: typing.Final[Route] = Route(GET, "/guilds/{guild}/members")
@@ -440,7 +441,6 @@ GET_MY_CONNECTIONS: typing.Final[Route] = Route(GET, "/users/@me/connections")  
 DELETE_MY_GUILD: typing.Final[Route] = Route(DELETE, "/users/@me/guilds/{guild}")
 
 GET_MY_GUILDS: typing.Final[Route] = Route(GET, "/users/@me/guilds")
-PATCH_MY_GUILD_NICKNAME: typing.Final[Route] = Route(PATCH, "/guilds/{guild}/members/@me/nick")
 
 GET_MY_USER: typing.Final[Route] = Route(GET, "/users/@me")
 PATCH_MY_USER: typing.Final[Route] = Route(PATCH, "/users/@me")
@@ -543,6 +543,7 @@ CDN_USER_BANNER: typing.Final[CDNRoute] = CDNRoute("/banners/{user_id}/{hash}", 
 CDN_MEMBER_AVATAR: typing.Final[CDNRoute] = CDNRoute(
     "/guilds/{guild_id}/users/{user_id}/avatars/{hash}", {PNG, *JPEG_JPG, WEBP, GIF}
 )
+CDN_ROLE_ICON: typing.Final[CDNRoute] = CDNRoute("/role-icons/{role_id}/{hash}.png", {PNG, *JPEG_JPG, WEBP})
 
 CDN_APPLICATION_ICON: typing.Final[CDNRoute] = CDNRoute("/app-icons/{application_id}/{hash}", {PNG, *JPEG_JPG, WEBP})
 CDN_APPLICATION_COVER: typing.Final[CDNRoute] = CDNRoute("/app-assets/{application_id}/{hash}", {PNG, *JPEG_JPG, WEBP})

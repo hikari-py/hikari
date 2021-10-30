@@ -654,6 +654,11 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    def components(self) -> typing.Sequence[ComponentBuilder]:
+        """Sequence of up to 5 component builders to send in this response."""
+
+    @property
+    @abc.abstractmethod
     def embeds(self) -> typing.Sequence[embeds_.Embed]:
         """Sequence of up to 10 of the embeds included in this response.
 
@@ -745,6 +750,21 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
             `builtins.False` or `hikari.undefined.UNDEFINED` to disallow any user
             mentions or `True` to allow all user mentions.
         """  # noqa: E501 - Line too long
+
+    @abc.abstractmethod
+    def add_component(self: _T, component: ComponentBuilder, /) -> _T:
+        """Add a component to this response.
+
+        Parameters
+        ----------
+        component : ComponentBuilder
+            The component builder to add to this response.
+
+        Returns
+        -------
+        InteractionMessageBuilder
+            Object of this builder.
+        """
 
     @abc.abstractmethod
     def add_embed(self: _T, embed: embeds_.Embed, /) -> _T:

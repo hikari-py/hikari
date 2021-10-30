@@ -143,12 +143,12 @@ class TestEventManagerImpl:
         payload = {}
         event = mock.Mock(channel=mock.Mock(channels.GuildChannel))
 
-        event_factory.deserialize_channel_create_event.return_value = event
+        event_factory.deserialize_guild_channel_create_event.return_value = event
 
         await event_manager.on_channel_create(shard, payload)
 
         event_manager._cache.set_guild_channel.assert_called_once_with(event.channel)
-        event_factory.deserialize_channel_create_event.assert_called_once_with(shard, payload)
+        event_factory.deserialize_guild_channel_create_event.assert_called_once_with(shard, payload)
         event_manager.dispatch.assert_awaited_once_with(event)
 
     @pytest.mark.asyncio()
@@ -157,9 +157,9 @@ class TestEventManagerImpl:
 
         await stateless_event_manager.on_channel_create(shard, payload)
 
-        event_factory.deserialize_channel_create_event.assert_called_once_with(shard, payload)
+        event_factory.deserialize_guild_channel_create_event.assert_called_once_with(shard, payload)
         stateless_event_manager.dispatch.assert_awaited_once_with(
-            event_factory.deserialize_channel_create_event.return_value
+            event_factory.deserialize_guild_channel_create_event.return_value
         )
 
     @pytest.mark.asyncio()
@@ -168,14 +168,16 @@ class TestEventManagerImpl:
         old_channel = object()
         event = mock.Mock(channel=mock.Mock(channels.GuildChannel))
 
-        event_factory.deserialize_channel_update_event.return_value = event
+        event_factory.deserialize_guild_channel_update_event.return_value = event
         event_manager._cache.get_guild_channel.return_value = old_channel
 
         await event_manager.on_channel_update(shard, payload)
 
         event_manager._cache.get_guild_channel.assert_called_once_with(123)
         event_manager._cache.update_guild_channel.assert_called_once_with(event.channel)
-        event_factory.deserialize_channel_update_event.assert_called_once_with(shard, payload, old_channel=old_channel)
+        event_factory.deserialize_guild_channel_update_event.assert_called_once_with(
+            shard, payload, old_channel=old_channel
+        )
         event_manager.dispatch.assert_awaited_once_with(event)
 
     @pytest.mark.asyncio()
@@ -184,9 +186,9 @@ class TestEventManagerImpl:
 
         await stateless_event_manager.on_channel_update(shard, payload)
 
-        event_factory.deserialize_channel_update_event.assert_called_once_with(shard, payload, old_channel=None)
+        event_factory.deserialize_guild_channel_update_event.assert_called_once_with(shard, payload, old_channel=None)
         stateless_event_manager.dispatch.assert_awaited_once_with(
-            event_factory.deserialize_channel_update_event.return_value
+            event_factory.deserialize_guild_channel_update_event.return_value
         )
 
     @pytest.mark.asyncio()
@@ -194,12 +196,12 @@ class TestEventManagerImpl:
         payload = {}
         event = mock.Mock(channel=mock.Mock(id=123))
 
-        event_factory.deserialize_channel_delete_event.return_value = event
+        event_factory.deserialize_guild_channel_delete_event.return_value = event
 
         await event_manager.on_channel_delete(shard, payload)
 
         event_manager._cache.delete_guild_channel.assert_called_once_with(123)
-        event_factory.deserialize_channel_delete_event.assert_called_once_with(shard, payload)
+        event_factory.deserialize_guild_channel_delete_event.assert_called_once_with(shard, payload)
         event_manager.dispatch.assert_awaited_once_with(event)
 
     @pytest.mark.asyncio()
@@ -208,9 +210,9 @@ class TestEventManagerImpl:
 
         await stateless_event_manager.on_channel_delete(shard, payload)
 
-        event_factory.deserialize_channel_delete_event.assert_called_once_with(shard, payload)
+        event_factory.deserialize_guild_channel_delete_event.assert_called_once_with(shard, payload)
         stateless_event_manager.dispatch.assert_awaited_once_with(
-            event_factory.deserialize_channel_delete_event.return_value
+            event_factory.deserialize_guild_channel_delete_event.return_value
         )
 
     @pytest.mark.asyncio()

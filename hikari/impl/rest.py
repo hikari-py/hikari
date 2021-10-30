@@ -69,6 +69,7 @@ from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import rate_limits
 from hikari.impl import special_endpoints as special_endpoints_impl
 from hikari.internal import data_binding
+from hikari.internal import deprecation
 from hikari.internal import mentions
 from hikari.internal import net
 from hikari.internal import routes
@@ -606,6 +607,10 @@ class RESTClientImpl(rest_api.RESTClient):
     @property
     def proxy_settings(self) -> config.ProxySettings:
         return self._proxy_settings
+
+    @property
+    def entity_factory(self) -> entity_factory_.EntityFactory:
+        return self._entity_factory
 
     @property
     def token_type(self) -> typing.Union[str, applications.TokenType, None]:
@@ -1304,8 +1309,8 @@ class RESTClientImpl(rest_api.RESTClient):
             form = data_binding.URLEncodedFormBuilder(executor=self._executor)
             form.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
 
-            for attachment in final_attachments:
-                form.add_resource(attachment)
+            for i, attachment in enumerate(final_attachments):
+                form.add_resource(f"file{i}", attachment)
 
             response = await self._request(route, form_builder=form, query=query, no_auth=no_auth)
         else:
@@ -1489,8 +1494,8 @@ class RESTClientImpl(rest_api.RESTClient):
             form_builder = data_binding.URLEncodedFormBuilder(executor=self._executor)
             form_builder.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
 
-            for attachment in final_attachments:
-                form_builder.add_resource(attachment)
+            for i, attachment in enumerate(final_attachments):
+                form_builder.add_resource(f"file{i}", attachment)
 
             response = await self._request(route, form_builder=form_builder, no_auth=no_auth)
         else:
@@ -2311,16 +2316,13 @@ class RESTClientImpl(rest_api.RESTClient):
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> stickers.GuildSticker:
         route = routes.POST_GUILD_STICKERS.compile(guild=guild)
-        body = data_binding.JSONObjectBuilder()
-        body.put("name", name)
-        body.put("tags", tag)
-        body.put("description", description)
+        form = data_binding.URLEncodedFormBuilder(executor=self._executor)
+        form.add_field("name", name)
+        form.add_field("tags", tag)
+        form.add_field("description", description or "")
+        form.add_resource("file", files.ensure_resource(image))
 
-        image_resource = files.ensure_resource(image)
-        async with image_resource.stream(executor=self._executor) as stream:
-            body.put("image", await stream.data_uri())
-
-        response = await self._request(route, json=body, reason=reason)
+        response = await self._request(route, form_builder=form, reason=reason)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_guild_sticker(response)
 
@@ -2729,6 +2731,22 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_member(response, guild_id=snowflakes.Snowflake(guild))
 
+    async def edit_my_member(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        *,
+        nickname: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> guilds.Member:
+        route = routes.PATCH_MY_GUILD_MEMBER.compile(guild=guild)
+        body = data_binding.JSONObjectBuilder()
+        body.put("nick", nickname)
+
+        response = await self._request(route, json=body, reason=reason)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_member(response, guild_id=snowflakes.Snowflake(guild))
+
+    @deprecation.deprecated("2.0.0.dev104", alternative="RESTClientImpl.edit_my_member's nickname parameter")
     async def edit_my_nick(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.Guild],
@@ -2736,10 +2754,7 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
-        route = routes.PATCH_MY_GUILD_NICKNAME.compile(guild=guild)
-        body = data_binding.JSONObjectBuilder()
-        body.put("nick", nick)
-        await self._request(route, json=body, reason=reason)
+        await self.edit_my_member(guild, nickname=nick, reason=reason)
 
     async def add_role_to_member(
         self,
@@ -2839,11 +2854,16 @@ class RESTClientImpl(rest_api.RESTClient):
         color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        icon: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
+        unicode_emoji: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         mentionable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.Role:
         if not undefined.any_undefined(color, colour):
             raise TypeError("Can not specify 'color' and 'colour' together.")
+
+        if not undefined.any_undefined(icon, unicode_emoji):
+            raise TypeError("Can not specify 'icon' and 'unicode_emoji' together.")
 
         route = routes.POST_GUILD_ROLES.compile(guild=guild)
         body = data_binding.JSONObjectBuilder()
@@ -2852,7 +2872,13 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("color", color, conversion=colors.Color.of)
         body.put("color", colour, conversion=colors.Color.of)
         body.put("hoist", hoist)
+        body.put("unicode_emoji", unicode_emoji)
         body.put("mentionable", mentionable)
+
+        if icon is not undefined.UNDEFINED:
+            icon_resource = files.ensure_resource(icon)
+            async with icon_resource.stream(executor=self._executor) as stream:
+                body.put("icon", await stream.data_uri())
 
         response = await self._request(route, json=body, reason=reason)
         assert isinstance(response, dict)
@@ -2877,11 +2903,16 @@ class RESTClientImpl(rest_api.RESTClient):
         color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        icon: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
+        unicode_emoji: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
         mentionable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.Role:
         if not undefined.any_undefined(color, colour):
             raise TypeError("Can not specify 'color' and 'colour' together.")
+
+        if not undefined.any_undefined(icon, unicode_emoji):
+            raise TypeError("Can not specify 'icon' and 'unicode_emoji' together.")
 
         route = routes.PATCH_GUILD_ROLE.compile(guild=guild, role=role)
 
@@ -2891,7 +2922,15 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("color", color, conversion=colors.Color.of)
         body.put("color", colour, conversion=colors.Color.of)
         body.put("hoist", hoist)
+        body.put("unicode_emoji", unicode_emoji)
         body.put("mentionable", mentionable)
+
+        if icon is None:
+            body.put("icon", None)
+        elif icon is not undefined.UNDEFINED:
+            icon_resource = files.ensure_resource(icon)
+            async with icon_resource.stream(executor=self._executor) as stream:
+                body.put("icon", await stream.data_uri())
 
         response = await self._request(route, json=body, reason=reason)
         assert isinstance(response, dict)

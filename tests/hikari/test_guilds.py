@@ -135,6 +135,8 @@ class TestRole:
             color=colors.Color(0x1A2B3C),
             guild_id=snowflakes.Snowflake(112233),
             is_hoisted=False,
+            icon_hash="icon_hash",
+            unicode_emoji=None,
             is_managed=False,
             is_mentionable=True,
             permissions=permissions.Permissions.CONNECT,
@@ -146,6 +148,32 @@ class TestRole:
 
     def test_colour_property(self, model):
         assert model.colour == colors.Color(0x1A2B3C)
+
+    def test_icon_url_property(self, model):
+        with mock.patch.object(guilds.Role, "make_icon_url") as make_icon_url:
+            assert model.icon_url == make_icon_url.return_value
+
+            model.make_icon_url.assert_called_once_with()
+
+    def test_make_icon_url_when_hash_is_None(self, model):
+        model.icon_hash = None
+
+        with mock.patch.object(
+            routes, "CDN_ROLE_ICON", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert model.make_icon_url(ext="jpeg", size=1) is None
+
+        route.compile_to_file.assert_not_called()
+
+    def test_make_icon_url_when_hash_is_not_None(self, model):
+        with mock.patch.object(
+            routes, "CDN_ROLE_ICON", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert model.make_icon_url(ext="jpeg", size=1) == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL, role_id=979899100, hash="icon_hash", size=1, file_format="jpeg"
+        )
 
 
 class TestGuildWidget:
