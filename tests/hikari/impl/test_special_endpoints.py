@@ -93,6 +93,16 @@ class TestInteractionMessageBuilder:
 
         assert builder.content == "meow nya"
 
+    def test_components_property(self):
+        mock_component = object()
+        builder = special_endpoints.InteractionMessageBuilder(4)
+
+        assert builder.components == []
+
+        builder.add_component(mock_component)
+
+        assert builder.components == [mock_component]
+
     def test_embeds_property(self):
         mock_embed = object()
         builder = special_endpoints.InteractionMessageBuilder(4)
@@ -131,11 +141,13 @@ class TestInteractionMessageBuilder:
     def test_build(self):
         mock_entity_factory = mock.Mock()
         mock_embed = object()
+        mock_component = mock.Mock()
         mock_serialized_embed = object()
         mock_entity_factory.serialize_embed.return_value = (mock_serialized_embed, [])
         builder = (
             special_endpoints.InteractionMessageBuilder(base_interactions.ResponseType.MESSAGE_CREATE)
             .add_embed(mock_embed)
+            .add_component(mock_component)
             .set_content("a content")
             .set_flags(2323)
             .set_tts(True)
@@ -147,10 +159,12 @@ class TestInteractionMessageBuilder:
         result = builder.build(mock_entity_factory)
 
         mock_entity_factory.serialize_embed.assert_called_once_with(mock_embed)
+        mock_component.build.assert_called_once_with()
         assert result == {
             "type": base_interactions.ResponseType.MESSAGE_CREATE,
             "data": {
                 "content": "a content",
+                "components": [mock_component.build.return_value],
                 "embeds": [mock_serialized_embed],
                 "flags": 2323,
                 "tts": True,

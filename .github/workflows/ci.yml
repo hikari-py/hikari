@@ -17,7 +17,7 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2.3.5
 
       - name: Setup python
         if: ${{ matrix.python-version }}
@@ -58,7 +58,7 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2.3.5
 
       - name: Setup python
         uses: actions/setup-python@v2.2.2
@@ -88,7 +88,7 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2.3.5
 
       - name: Setup python
         uses: actions/setup-python@v2.2.2
@@ -115,7 +115,7 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2.3.5
 
       - name: Setup python
         uses: actions/setup-python@v2.2.2
@@ -132,7 +132,7 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2.3.5
 
       - name: Setup python
         uses: actions/setup-python@v2.2.2

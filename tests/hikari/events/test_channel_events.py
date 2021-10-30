@@ -87,11 +87,10 @@ class TestGuildChannelEvent:
         event.app.rest.fetch_channel.assert_awaited_once_with(432432432)
 
 
-class TestChannelCreateEvent:
+class TestGuildChannelCreateEvent:
     @pytest.fixture()
     def event(self):
-        cls = hikari_test_helpers.mock_class_namespace(channel_events.ChannelCreateEvent)
-        return cls()
+        return channel_events.GuildChannelCreateEvent(channel=mock.Mock(), shard=None)
 
     def test_app_property(self, event):
         assert event.app is event.channel.app
@@ -99,22 +98,16 @@ class TestChannelCreateEvent:
     def test_channel_id_property(self, event):
         event.channel.id = 123
         assert event.channel_id == 123
-
-
-class TestGuildChannelCreateEvent:
-    @pytest.fixture()
-    def event(self):
-        return channel_events.GuildChannelCreateEvent(channel=mock.Mock(), shard=None)
 
     def test_guild_id_property(self, event):
         event.channel.guild_id = 123
         assert event.guild_id == 123
 
 
-class TestChannelUpdateEvent:
+class TestGuildChannelUpdateEvent:
     @pytest.fixture()
     def event(self):
-        return hikari_test_helpers.mock_class_namespace(channel_events.ChannelUpdateEvent)()
+        return channel_events.GuildChannelUpdateEvent(channel=mock.Mock(), old_channel=mock.Mock(), shard=None)
 
     def test_app_property(self, event):
         assert event.app is event.channel.app
@@ -122,12 +115,6 @@ class TestChannelUpdateEvent:
     def test_channel_id_property(self, event):
         event.channel.id = 123
         assert event.channel_id == 123
-
-
-class TestGuildChannelUpdateEvent:
-    @pytest.fixture()
-    def event(self):
-        return channel_events.GuildChannelUpdateEvent(channel=mock.Mock(), old_channel=mock.Mock(), shard=None)
 
     def test_guild_id_property(self, event):
         event.channel.guild_id = 123
@@ -138,10 +125,10 @@ class TestGuildChannelUpdateEvent:
         assert event.old_channel.id == 123
 
 
-class TestChannelDeleteEvent:
+class TestGuildChannelDeleteEvent:
     @pytest.fixture()
     def event(self):
-        return hikari_test_helpers.mock_class_namespace(channel_events.ChannelDeleteEvent)()
+        return channel_events.GuildChannelDeleteEvent(channel=mock.Mock(), shard=None)
 
     def test_app_property(self, event):
         assert event.app is event.channel.app
@@ -149,12 +136,6 @@ class TestChannelDeleteEvent:
     def test_channel_id_property(self, event):
         event.channel.id = 123
         assert event.channel_id == 123
-
-
-class TestGuildChannelDeleteEvent:
-    @pytest.fixture()
-    def event(self):
-        return channel_events.GuildChannelDeleteEvent(channel=mock.Mock(), shard=None)
 
     def test_guild_id_property(self, event):
         event.channel.guild_id = 123

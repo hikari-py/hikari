@@ -64,9 +64,9 @@ class EventFactory(abc.ABC):
     ##################
 
     @abc.abstractmethod
-    def deserialize_channel_create_event(
+    def deserialize_guild_channel_create_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
-    ) -> channel_events.ChannelCreateEvent:
+    ) -> channel_events.GuildChannelCreateEvent:
         """Parse a raw payload from Discord into a channel create event object.
 
         Parameters
@@ -78,18 +78,18 @@ class EventFactory(abc.ABC):
 
         Returns
         -------
-        hikari.events.channel_events.ChannelCreateEvent
+        hikari.events.channel_events.GuildChannelCreateEvent
             The parsed channel create event object.
         """
 
     @abc.abstractmethod
-    def deserialize_channel_update_event(
+    def deserialize_guild_channel_update_event(
         self,
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
         *,
         old_channel: typing.Optional[channel_models.GuildChannel],
-    ) -> channel_events.ChannelUpdateEvent:
+    ) -> channel_events.GuildChannelUpdateEvent:
         """Parse a raw payload from Discord into a channel update event object.
 
         Parameters
@@ -103,14 +103,14 @@ class EventFactory(abc.ABC):
 
         Returns
         -------
-        hikari.events.channel_events.ChannelUpdateEvent
+        hikari.events.channel_events.GuildChannelUpdateEvent
             The parsed  event object.
         """
 
     @abc.abstractmethod
-    def deserialize_channel_delete_event(
+    def deserialize_guild_channel_delete_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
-    ) -> channel_events.ChannelDeleteEvent:
+    ) -> channel_events.GuildChannelDeleteEvent:
         """Parse a raw payload from Discord into a channel delete event object.
 
         Parameters
@@ -122,7 +122,7 @@ class EventFactory(abc.ABC):
 
         Returns
         -------
-        hikari.events.channel_events.ChannelDeleteEvent
+        hikari.events.channel_events.GuildChannelDeleteEvent
             The parsed channel delete event object.
         """
 

@@ -1018,6 +1018,12 @@ class Role(PartialRole):
     members will be hoisted under their highest role where this is set to `builtins.True`.
     """
 
+    icon_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    """Hash of the role's icon if set, else `builtins.None`."""
+
+    unicode_emoji: typing.Optional[emojis_.UnicodeEmoji] = attr.field(eq=False, hash=False, repr=False)
+    """Role's icon as an unicode emoji if set, else `builtins.None`."""
+
     is_managed: bool = attr.field(eq=False, hash=False, repr=False)
     """Whether this role is managed by an integration."""
 
@@ -1056,6 +1062,52 @@ class Role(PartialRole):
     def colour(self) -> colours.Colour:
         """Alias for the `color` field."""
         return self.color
+
+    @property
+    def icon_url(self) -> typing.Optional[files.URL]:
+        """Role icon URL, if there is one.
+
+        Returns
+        -------
+        typing.Optional[hikari.files.URL]
+            The URL, or `builtins.None` if no icon exists.
+        """
+        return self.make_icon_url()
+
+    def make_icon_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the icon URL for this role, if set.
+
+        If no role icon is set, this returns `builtins.None`.
+
+        Parameters
+        ----------
+        ext : builtins.str
+            The extension to use for this URL, defaults to `png`.
+            Supports `png`, `jpeg`, `jpg` and `webp`.
+        size : builtins.int
+            The size to set for the URL, defaults to `4096`.
+            Can be any power of two between 16 and 4096.
+
+        Returns
+        -------
+        typing.Optional[hikari.files.URL]
+            The URL to the icon, or `builtins.None` if not present.
+
+        Raises
+        ------
+        builtins.ValueError
+            If `size` is not a power of two or not between 16 and 4096.
+        """
+        if self.icon_hash is None:
+            return None
+
+        return routes.CDN_ROLE_ICON.compile_to_file(
+            urls.CDN_URL,
+            role_id=self.id,
+            hash=self.icon_hash,
+            size=size,
+            file_format=ext,
+        )
 
 
 @typing.final

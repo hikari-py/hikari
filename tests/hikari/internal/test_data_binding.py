@@ -50,9 +50,9 @@ class TestURLEncodedFormBuilder:
     def test_add_resource(self, form_builder):
         mock_resource = object()
 
-        form_builder.add_resource(mock_resource)
+        form_builder.add_resource("lick", mock_resource)
 
-        assert form_builder._resources == [mock_resource]
+        assert form_builder._resources == [("lick", mock_resource)]
 
     @pytest.mark.asyncio()
     async def test_build(self, form_builder):
@@ -63,7 +63,7 @@ class TestURLEncodedFormBuilder:
         mock_stack = mock.AsyncMock(enter_async_context=mock.AsyncMock(side_effect=[stream1, stream2]))
         form_builder._executor = object()
         form_builder._fields = [("test_name", "test_data", "mimetype"), ("test_name2", "test_data2", "mimetype2")]
-        form_builder._resources = [resource1, resource2]
+        form_builder._resources = [("aye", resource1), ("lmao", resource2)]
 
         with mock.patch.object(aiohttp, "FormData") as mock_form_class:
             assert await form_builder.build(mock_stack) is mock_form_class.return_value
@@ -77,8 +77,8 @@ class TestURLEncodedFormBuilder:
             [
                 mock.call("test_name", "test_data", content_type="mimetype"),
                 mock.call("test_name2", "test_data2", content_type="mimetype2"),
-                mock.call("file0", stream1, filename="testing1", content_type="text"),
-                mock.call("file1", stream2, filename="testing2", content_type="application/octet-stream"),
+                mock.call("aye", stream1, filename="testing1", content_type="text"),
+                mock.call("lmao", stream2, filename="testing2", content_type="application/octet-stream"),
             ]
         )
 
