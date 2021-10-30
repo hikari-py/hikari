@@ -619,6 +619,7 @@ class GatewayBot(traits.GatewayBotAware):
         status: presences.Status = presences.Status.ONLINE,
         shard_ids: typing.Optional[typing.AbstractSet[int]] = None,
         shard_count: typing.Optional[int] = None,
+        start_function: typing.Optional[typing.Callable[..., typing.Awaitable[typing.Any]]] = None,
     ) -> None:
         """Start the bot, wait for all shards to become ready, and then return.
 
@@ -701,6 +702,10 @@ class GatewayBot(traits.GatewayBotAware):
         status : hikari.presences.Status
             The initial status to show for the user presence on startup.
             Defaults to `hikari.presences.Status.ONLINE`.
+        start_function : typing.Optional[typing.Callable[..., typing.Awaitable[typing.Any]]]
+            The function that should be injected into the event loop to start the bot.
+            This function must have the same signature as `GatewayBot.start()` and return a coroutine.
+            Defaults to `builtins.None`, which means the `GatewayBot.start()` method is used instead.
 
         Raises
         ------
@@ -776,19 +781,34 @@ class GatewayBot(traits.GatewayBotAware):
                     _LOGGER.log(ux.TRACE, "signal %s is not implemented on your platform", sig)
 
         try:
-            loop.run_until_complete(
-                self.start(
-                    activity=activity,
-                    afk=afk,
-                    check_for_updates=check_for_updates,
-                    idle_since=idle_since,
-                    ignore_session_start_limit=ignore_session_start_limit,
-                    large_threshold=large_threshold,
-                    shard_ids=shard_ids,
-                    shard_count=shard_count,
-                    status=status,
+            if start_function is not None:
+                loop.run_until_complete(
+                    start_function(
+                        activity=activity,
+                        afk=afk,
+                        check_for_updates=check_for_updates,
+                        idle_since=idle_since,
+                        ignore_session_start_limit=ignore_session_start_limit,
+                        large_threshold=large_threshold,
+                        shard_ids=shard_ids,
+                        shard_count=shard_count,
+                        status=status,
+                    )
                 )
-            )
+            else:
+                loop.run_until_complete(
+                    self.start(
+                        activity=activity,
+                        afk=afk,
+                        check_for_updates=check_for_updates,
+                        idle_since=idle_since,
+                        ignore_session_start_limit=ignore_session_start_limit,
+                        large_threshold=large_threshold,
+                        shard_ids=shard_ids,
+                        shard_count=shard_count,
+                        status=status,
+                    )
+                )
 
             loop.run_until_complete(self.join())
 
