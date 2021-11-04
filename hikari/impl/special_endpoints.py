@@ -1261,10 +1261,16 @@ class ActionRowBuilder(special_endpoints.ActionRowBuilder):
     @typing.overload
     def add_button(
         self: _ActionRowBuilderT,
-        style: typing.Union[typing.Literal[messages.ButtonStyle.LINK], typing.Literal[5]],
+        style: typing.Literal[messages.ButtonStyle.LINK, 5],
         url: str,
         /,
     ) -> special_endpoints.LinkButtonBuilder[_ActionRowBuilderT]:
+        ...
+
+    @typing.overload
+    def add_button(
+        self: _ActionRowBuilderT, style: typing.Union[int, messages.ButtonStyle], url_or_custom_id: str, /
+    ) -> special_endpoints.ButtonBuilder[_ActionRowBuilderT]:
         ...
 
     def add_button(

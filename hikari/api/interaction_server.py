@@ -146,6 +146,13 @@ class InteractionServer(abc.ABC):
     ) -> typing.Optional[ListenerT[component_interactions.ComponentInteraction, _MessageResponseBuilderT]]:
         ...
 
+    @typing.overload
+    @abc.abstractmethod
+    def get_listener(
+        self, interaction_type: typing.Type[_InteractionT_co], /
+    ) -> typing.Optional[ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]]:
+        ...
+
     @abc.abstractmethod
     def get_listener(
         self, interaction_type: typing.Type[_InteractionT_co], /
@@ -182,6 +189,18 @@ class InteractionServer(abc.ABC):
         self,
         interaction_type: typing.Type[component_interactions.ComponentInteraction],
         listener: typing.Optional[ListenerT[component_interactions.ComponentInteraction, _MessageResponseBuilderT]],
+        /,
+        *,
+        replace: bool = False,
+    ) -> None:
+        ...
+
+    @typing.overload
+    @abc.abstractmethod
+    def set_listener(
+        self,
+        interaction_type: typing.Type[_InteractionT_co],
+        listener: typing.Optional[ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]],
         /,
         *,
         replace: bool = False,
