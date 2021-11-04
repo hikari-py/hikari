@@ -1551,13 +1551,13 @@ class ActionRowBuilder(ComponentBuilder, abc.ABC):
     @abc.abstractmethod
     def add_button(
         self: _T, style: typing.Union[int, messages.ButtonStyle], url_or_custom_id: str, /
-    ) -> ButtonBuilder[_T]:
+    ) -> typing.Union[LinkButtonBuilder[_T], InteractiveButtonBuilder[_T]]:
         ...
 
     @abc.abstractmethod
     def add_button(
         self: _T, style: typing.Union[int, messages.ButtonStyle], url_or_custom_id: str, /
-    ) -> ButtonBuilder[_T]:
+    ) -> typing.Union[LinkButtonBuilder[_T], InteractiveButtonBuilder[_T]]:
         """Add a button component to this action row builder.
 
         Parameters
@@ -1573,7 +1573,7 @@ class ActionRowBuilder(ComponentBuilder, abc.ABC):
 
         Returns
         -------
-        ButtonBuilder[Self]
+        typing.Union[LinkButtonBuilder[Self], InteractiveButtonBuilder[Self]]
             Button builder object.
             `ButtonBuilder.add_to_container` should be called to finalise the
             button.
