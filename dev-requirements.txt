@@ -2,6 +2,9 @@
 # UNIT TESTING #
 ################
 
+# nox to run test sessions locally.
+nox==2021.10.1
+
 # Mocks (stdlib ones change between versions of Python, so are not consistent in behaviour like the backport is).
 mock==4.0.3
 
@@ -36,9 +39,9 @@ mypy==0.910
 
 safety~=1.10.3
 
-#############
+##############
 # FORMATTING #
-#############
+##############
 
 black==21.10b0
 isort==5.10.0
