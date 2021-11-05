@@ -42,6 +42,7 @@ body:
         located at /home/username/my-bot/.venv/lib/python3.10/site-packages/hikari
         CPython 3.10.0 GCC 10.2.1 20210110
         Linux Skye 5.4.72-microsoft-standard-WSL2 #1 SMP Wed Oct 28 23:40:43 UTC 2020 x86_64
+    render: shell
     validations:
       required: true
 

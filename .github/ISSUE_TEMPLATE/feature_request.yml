@@ -14,14 +14,17 @@ body:
   - type: textarea
     id: problem
     attributes:
-      label: Problem
-      description: What problem will this feature solve (if any)?
+      label: Why is this needed?
+      description: Why should this feature be implemented? What problem(s) would it solve?
+    validations:
+      required: true
 
   - type: textarea
     id: ideal-implementation
     attributes:
       label: Ideal implementation
       description: How should this feature be implemented?
+      value: To be decided.
 
   - type: checkboxes
     id: checklist
