@@ -623,14 +623,6 @@ class RESTClientImpl(rest_api.RESTClient):
         self._live_attributes = None
         await live_attributes.close()
 
-        # We have to sleep to allow aiohttp time to close SSL transports...
-        # https://github.com/aio-libs/aiohttp/issues/1925
-        # https://docs.aiohttp.org/en/stable/client_advanced.html#graceful-shutdown
-        #
-        # TODO: Remove when we update to aiohttp 4.0.0
-        # https://github.com/aio-libs/aiohttp/issues/1925#issuecomment-715977247
-        await asyncio.sleep(0.25)
-
     @typing.final
     def start(self) -> None:
         """Start the HTTP client.
