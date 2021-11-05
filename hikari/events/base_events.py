@@ -69,7 +69,7 @@ class Event(abc.ABC):
         """
 
 
-def get_required_intents_for(event_type: typing.Type[Event]) -> typing.Collection[intents.Intents]:
+def get_required_intents_for(event_type: typing.Type[Event]) -> typing.Sequence[intents.Intents]:
     """Retrieve the intents that are required to listen to an event type.
 
     Parameters
@@ -79,12 +79,12 @@ def get_required_intents_for(event_type: typing.Type[Event]) -> typing.Collectio
 
     Returns
     -------
-    typing.Collection[hikari.intents.Intents]
-        Collection of acceptable subset combinations of intent needed to
+    typing.Sequence[hikari.intents.Intents]
+        Sequence of acceptable subset combinations of intent needed to
         be able to receive the given event type.
     """
     result = getattr(event_type, REQUIRED_INTENTS_ATTR, ())
-    assert isinstance(result, typing.Collection)
+    assert isinstance(result, typing.Sequence)
     return result
 
 

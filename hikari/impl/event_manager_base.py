@@ -320,7 +320,7 @@ class EventManagerBase(event_manager_.EventManager):
         /,
         *,
         polymorphic: bool = True,
-    ) -> typing.Collection[event_manager_.CallbackT[event_manager_.EventT_co]]:
+    ) -> typing.Sequence[event_manager_.CallbackT[event_manager_.EventT_co]]:
         if polymorphic:
             listeners: typing.List[event_manager_.CallbackT[event_manager_.EventT_co]] = []
             for subscribed_event_type, subscribed_listeners in self._listeners.items():

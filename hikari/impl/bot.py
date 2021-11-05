@@ -503,7 +503,7 @@ class GatewayBot(traits.GatewayBotAware):
 
     def get_listeners(
         self, event_type: typing.Type[event_manager_.EventT_co], /, *, polymorphic: bool = True
-    ) -> typing.Collection[event_manager_.CallbackT[event_manager_.EventT_co]]:
+    ) -> typing.Sequence[event_manager_.CallbackT[event_manager_.EventT_co]]:
         """Get the listeners for a given event type, if there are any.
 
         Parameters
@@ -519,8 +519,8 @@ class GatewayBot(traits.GatewayBotAware):
 
         Returns
         -------
-        typing.Collection[typing.Callable[[T], typing.Coroutine[typing.Any, typing.Any, builtins.None]]
-            A copy of the collection of listeners for the event. Will return
+        typing.Sequence[typing.Callable[[T], typing.Coroutine[typing.Any, typing.Any, builtins.None]]
+            A copy of the sequence of listeners for the event. Will return
             an empty collection if nothing is registered.
 
             `T` must be a subclass of `hikari.events.base_events.Event`.

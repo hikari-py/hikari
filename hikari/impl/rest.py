@@ -1238,19 +1238,19 @@ class RESTClientImpl(rest_api.RESTClient):
         if not undefined.any_undefined(embed, embeds):
             raise ValueError("You may only specify one of 'embed' or 'embeds', not both")
 
-        if attachments is not undefined.UNDEFINED and not isinstance(attachments, typing.Collection):
+        if attachments is not undefined.UNDEFINED and not isinstance(attachments, typing.Sequence):
             raise TypeError(
                 "You passed a non-collection to 'attachments', but this expects a collection. Maybe you meant to "
                 "use 'attachment' (singular) instead?"
             )
 
-        if components is not undefined.UNDEFINED and not isinstance(components, typing.Collection):
+        if components is not undefined.UNDEFINED and not isinstance(components, typing.Sequence):
             raise TypeError(
                 "You passed a non-collection to 'components', but this expects a collection. Maybe you meant to "
                 "use 'component' (singular) instead?"
             )
 
-        if embeds not in _NONE_OR_UNDEFINED and not isinstance(embeds, typing.Collection):
+        if embeds not in _NONE_OR_UNDEFINED and not isinstance(embeds, typing.Sequence):
             raise TypeError(
                 "You passed a non-collection to 'embeds', but this expects a collection. Maybe you meant to "
                 "use 'embed' (singular) instead?"
@@ -1405,19 +1405,19 @@ class RESTClientImpl(rest_api.RESTClient):
         if not undefined.any_undefined(embed, embeds):
             raise ValueError("You may only specify one of 'embed' or 'embeds', not both")
 
-        if attachments is not undefined.UNDEFINED and not isinstance(attachments, typing.Collection):
+        if attachments is not undefined.UNDEFINED and not isinstance(attachments, typing.Sequence):
             raise TypeError(
                 "You passed a non-collection to 'attachments', but this expects a collection. Maybe you meant to "
                 "use 'attachment' (singular) instead?"
             )
 
-        if components is not undefined.UNDEFINED and not isinstance(components, typing.Collection):
+        if components is not undefined.UNDEFINED and not isinstance(components, typing.Sequence):
             raise TypeError(
                 "You passed a non-collection to 'components', but this expects a collection. Maybe you meant to "
                 "use 'component' (singular) instead?"
             )
 
-        if embeds not in _NONE_OR_UNDEFINED and not isinstance(embeds, typing.Collection):
+        if embeds not in _NONE_OR_UNDEFINED and not isinstance(embeds, typing.Sequence):
             raise TypeError(
                 "You passed a non-collection to 'embeds', but this expects a collection. Maybe you meant to "
                 "use 'embed' (singular) instead?"
@@ -3401,13 +3401,13 @@ class RESTClientImpl(rest_api.RESTClient):
         if not undefined.any_undefined(embed, embeds):
             raise ValueError("You may only specify one of 'embed' or 'embeds', not both")
 
-        if components is not undefined.UNDEFINED and not isinstance(components, typing.Collection):
+        if components is not undefined.UNDEFINED and not isinstance(components, typing.Sequence):
             raise TypeError(
                 "You passed a non-collection to 'components', but this expects a collection. Maybe you meant to "
                 "use 'component' (singular) instead?"
             )
 
-        if embeds not in _NONE_OR_UNDEFINED and not isinstance(embeds, typing.Collection):
+        if embeds not in _NONE_OR_UNDEFINED and not isinstance(embeds, typing.Sequence):
             raise TypeError(
                 "You passed a non-collection to 'embeds', but this expects a collection. Maybe you meant to "
                 "use 'embed' (singular) instead?"

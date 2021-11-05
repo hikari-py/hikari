@@ -100,7 +100,7 @@ class All(typing.Generic[ValueT]):
 
     __slots__: typing.Sequence[str] = ("conditions",)
 
-    def __init__(self, conditions: typing.Collection[typing.Callable[[ValueT], bool]]) -> None:
+    def __init__(self, conditions: typing.Sequence[typing.Callable[[ValueT], bool]]) -> None:
         self.conditions = conditions
 
     def __bool__(self) -> bool:
