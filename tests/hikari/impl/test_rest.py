@@ -2387,8 +2387,14 @@ class TestRESTClientImplAsync:
         await rest_client.delete_webhook(StubModel(123))
         rest_client._request.assert_awaited_once_with(expected_route, no_auth=False)
 
-    @pytest.mark.parametrize("webhook", [mock.Mock(webhooks.ExecutableWebhook, webhook_id=432), 432])
-    async def test_execute_webhook(self, rest_client, webhook):
+    @pytest.mark.parametrize(
+        ("webhook", "avatar_url"),
+        [
+            (mock.Mock(webhooks.ExecutableWebhook, webhook_id=432), files.URL("https://website.com/davfsa_logo")),
+            (432, "https://website.com/davfsa_logo"),
+        ],
+    )
+    async def test_execute_webhook(self, rest_client, webhook, avatar_url):
         mock_object = object()
         attachment_obj = object()
         attachment_obj2 = object()
@@ -2403,7 +2409,7 @@ class TestRESTClientImplAsync:
             webhook,
             "hi, im a token",
             username="davfsa",
-            avatar_url="https://website.com/davfsa_logo",
+            avatar_url=avatar_url,
             content="new content",
             attachment=attachment_obj,
             attachments=[attachment_obj2],

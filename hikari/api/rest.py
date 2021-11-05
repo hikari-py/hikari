@@ -2221,7 +2221,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
         username: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        avatar_url: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        avatar_url: typing.Union[undefined.UndefinedType, str, files.URL] = undefined.UNDEFINED,
         attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
         component: undefined.UndefinedOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
@@ -2267,7 +2267,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         username : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the username to override the webhook's username
             for this request.
-        avatar_url : hikari.undefined.UndefinedOr[builtins.str]
+        avatar_url : typing.Union[hikari.undefined.UndefinedType, builtins.str, hikari.files.URL]
             If provided, the url of an image to override the webhook's
             avatar with for this request.
         attachment : hikari.undefined.UndefinedOr[hikari.files.Resourceish],

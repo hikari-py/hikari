@@ -594,7 +594,9 @@ class RESTClientImpl(rest_api.RESTClient):
             self._token = token
             self._token_type = token.token_type
 
-        self._rest_url = rest_url if rest_url is not None else urls.REST_API_URL
+        # While passing files.URL for rest_url is not officially supported, this is still
+        # casted to string here to avoid confusing issues passing a URL here could lead to.
+        self._rest_url = str(rest_url) if rest_url is not None else urls.REST_API_URL
 
     @property
     def is_alive(self) -> bool:
@@ -1828,7 +1830,7 @@ class RESTClientImpl(rest_api.RESTClient):
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
         username: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        avatar_url: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        avatar_url: typing.Union[undefined.UndefinedType, str, files.URL] = undefined.UNDEFINED,
         attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
         component: undefined.UndefinedOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
@@ -1851,7 +1853,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         body = data_binding.JSONObjectBuilder()
         body.put("username", username)
-        body.put("avatar_url", avatar_url)
+        body.put("avatar_url", avatar_url, conversion=str)
         body.put("flags", flags)
         query = data_binding.StringMapBuilder()
         query.put("wait", True)
