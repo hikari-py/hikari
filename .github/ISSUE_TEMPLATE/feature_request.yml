@@ -1,0 +1,36 @@
+name: Feature request
+description: Got a cool idea you would like implemented? Share it with us!
+labels: ["enhancement"]
+
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: Small summary of the feature.
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Why is this needed?
+      description: Why should this feature be implemented? What problem(s) would it solve?
+    validations:
+      required: true
+
+  - type: textarea
+    id: ideal-implementation
+    attributes:
+      label: Ideal implementation
+      description: How should this feature be implemented?
+      value: To be decided.
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      description: Make sure to tick all the following boxes.
+      options:
+        - label: I have searched the issue tracker and have made sure it's not a duplicate. If it is a follow up of another issue, I have specified it.
+          required: true
