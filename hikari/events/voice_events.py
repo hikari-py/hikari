@@ -44,6 +44,7 @@ if typing.TYPE_CHECKING:
     from hikari import snowflakes
     from hikari import traits
     from hikari import voices
+    from hikari import guilds
     from hikari.api import shard as gateway_shard
 
 
@@ -62,6 +63,21 @@ class VoiceEvent(shard_events.ShardEvent, abc.ABC):
         hikari.snowflakes.Snowflake
             The guild ID of the guild this event relates to.
         """
+    
+    def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
+        """Get the cached guild that this event relates to, if known.
+
+        If not known, this will return `builtins.None` instead.
+
+        Returns
+        -------
+        typing.Optional[hikari.guilds.GatewayGuild]
+            The guild this event relates to, or `builtins.None` if not known.
+        """
+        if not isinstance(self.app, traits.CacheAware):
+            return None
+
+        return self.app.cache.get_available_guild(self.guild_id) or self.app.cache.get_unavailable_guild(self.guild_id)
 
 
 @base_events.requires_intents(intents.Intents.GUILD_VOICE_STATES)
