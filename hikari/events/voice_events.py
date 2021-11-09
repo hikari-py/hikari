@@ -41,10 +41,10 @@ from hikari.events import shard_events
 from hikari.internal import attr_extensions
 
 if typing.TYPE_CHECKING:
+    from hikari import guilds
     from hikari import snowflakes
     from hikari import traits
     from hikari import voices
-    from hikari import guilds
     from hikari.api import shard as gateway_shard
 
 
@@ -63,7 +63,7 @@ class VoiceEvent(shard_events.ShardEvent, abc.ABC):
         hikari.snowflakes.Snowflake
             The guild ID of the guild this event relates to.
         """
-    
+
     def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
         """Get the cached guild that this event relates to, if known.
 
