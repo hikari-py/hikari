@@ -926,41 +926,45 @@ class TestEventManagerImpl:
         )
 
     @pytest.mark.asyncio()
-    async def test_on_message_delete_stateless(self, event_manager, shard, event_factory):
-        payload = {}
-        event = mock.Mock(message_id=123)
-
-        event_factory.deserialize_message_delete_event.return_value = event
+    async def test_on_message_delete_stateful(self, event_manager, shard, event_factory):
+        payload = {"id": 123}
 
         await event_manager.on_message_delete(shard, payload)
 
         event_manager._cache.delete_message.assert_called_once_with(123)
-        event_factory.deserialize_message_delete_event.assert_called_once_with(shard, payload)
-        event_manager.dispatch.assert_awaited_once_with(event)
+        event_factory.deserialize_message_delete_event.assert_called_once_with(
+            shard, payload, old_message=event_manager._cache.delete_message.return_value
+        )
+        event_manager.dispatch.assert_awaited_once_with(event_factory.deserialize_message_delete_event.return_value)
 
     @pytest.mark.asyncio()
-    async def test_on_message_delete_stateful(self, stateless_event_manager, shard, event_factory):
+    async def test_on_message_delete_stateless(self, stateless_event_manager, shard, event_factory):
         payload = {}
 
         await stateless_event_manager.on_message_delete(shard, payload)
 
-        event_factory.deserialize_message_delete_event.assert_called_once_with(shard, payload)
+        event_factory.deserialize_message_delete_event.assert_called_once_with(shard, payload, old_message=None)
         stateless_event_manager.dispatch.assert_awaited_once_with(
             event_factory.deserialize_message_delete_event.return_value
         )
 
     @pytest.mark.asyncio()
     async def test_on_message_delete_bulk_stateful(self, event_manager, shard, event_factory):
-        payload = {}
-        event = mock.Mock(message_ids=[123, 456, 789])
-
-        event_factory.deserialize_message_delete_bulk_event.return_value = event
+        payload = {"ids": [123, 456, 789]}
+        message1 = object()
+        message2 = object()
+        message3 = object()
+        event_manager._cache.delete_message.side_effect = [message1, message2, message3]
 
         await event_manager.on_message_delete_bulk(shard, payload)
 
         event_manager._cache.delete_message.assert_has_calls([mock.call(123), mock.call(456), mock.call(789)])
-        event_factory.deserialize_message_delete_bulk_event.assert_called_once_with(shard, payload)
-        event_manager.dispatch.assert_awaited_once_with(event)
+        event_factory.deserialize_guild_message_delete_bulk_event.assert_called_once_with(
+            shard, payload, old_messages={123: message1, 456: message2, 789: message3}
+        )
+        event_manager.dispatch.assert_awaited_once_with(
+            event_factory.deserialize_guild_message_delete_bulk_event.return_value
+        )
 
     @pytest.mark.asyncio()
     async def test_on_message_delete_bulk_stateless(self, stateless_event_manager, shard, event_factory):
@@ -968,9 +972,11 @@ class TestEventManagerImpl:
 
         await stateless_event_manager.on_message_delete_bulk(shard, payload)
 
-        event_factory.deserialize_message_delete_bulk_event.assert_called_once_with(shard, payload)
+        event_factory.deserialize_guild_message_delete_bulk_event.assert_called_once_with(
+            shard, payload, old_messages={}
+        )
         stateless_event_manager.dispatch.assert_awaited_once_with(
-            event_factory.deserialize_message_delete_bulk_event.return_value
+            event_factory.deserialize_guild_message_delete_bulk_event.return_value
         )
 
     @pytest.mark.asyncio()

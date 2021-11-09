@@ -36,6 +36,7 @@ if typing.TYPE_CHECKING:
     from hikari import invites as invite_models
     from hikari import messages as messages_models
     from hikari import presences as presences_models
+    from hikari import snowflakes
     from hikari import users as user_models
     from hikari import voices as voices_models
     from hikari.api import shard as gateway_shard
@@ -752,7 +753,11 @@ class EventFactory(abc.ABC):
 
     @abc.abstractmethod
     def deserialize_message_delete_event(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+        *,
+        old_message: typing.Optional[messages_models.Message],
     ) -> message_events.MessageDeleteEvent:
         """Parse a raw payload from Discord into a message delete event object.
 
@@ -762,6 +767,8 @@ class EventFactory(abc.ABC):
             The shard that emitted this event.
         payload : hikari.internal.data_binding.JSONObject
             The dict payload to parse.
+        old_message : typing.Optional[hikari.messages.Message]
+            The old message object.
 
         Returns
         -------
@@ -770,10 +777,14 @@ class EventFactory(abc.ABC):
         """
 
     @abc.abstractmethod
-    def deserialize_message_delete_bulk_event(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
-    ) -> message_events.MessageDeleteEvent:
-        """Parse a raw payload from Discord into a message delete bulk event object.
+    def deserialize_guild_message_delete_bulk_event(
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+        *,
+        old_messages: typing.Mapping[snowflakes.Snowflake, messages_models.Message],
+    ) -> message_events.GuildBulkMessageDeleteEvent:
+        """Parse a raw payload from Discord into a guild message delete bulk event object.
 
         Parameters
         ----------
@@ -781,16 +792,13 @@ class EventFactory(abc.ABC):
             The shard that emitted this event.
         payload : hikari.internal.data_binding.JSONObject
             The dict payload to parse.
+        old_messages : typing.Mapping[hikari.snowflakes.Snowflake, hikari.messages.Message]
+            A mapping of the old message objects.
 
         Returns
         -------
-        hikari.events.message_events.MessageDeleteEvent
-            The parsed message delete bulk event object.
-
-        Raises
-        ------
-        builtins.NotImplementedError
-            If a bulk delete occurs in a DM channel.
+        hikari.events.message_events.GuildBulkMessageDeleteEvent
+            The parsed guild message delete bulk event object.
         """
 
     ###################

@@ -615,53 +615,46 @@ class TestEventFactoryImpl:
 
     def test_deserialize_message_delete_event_in_guild(self, event_factory, mock_app, mock_shard):
         mock_payload = {"id": "5412", "channel_id": "541123", "guild_id": "9494949"}
+        old_message = object()
 
-        event = event_factory.deserialize_message_delete_event(mock_shard, mock_payload)
+        event = event_factory.deserialize_message_delete_event(mock_shard, mock_payload, old_message=old_message)
 
         assert isinstance(event, message_events.GuildMessageDeleteEvent)
         assert event.app is mock_app
         assert event.shard is mock_shard
+        assert event.old_message is old_message
         assert event.channel_id == 541123
-        assert event.message_ids == {5412}
-        assert event.is_bulk is False
+        assert event.message_id == 5412
         assert event.guild_id == 9494949
 
     def test_deserialize_message_delete_event_in_dm(self, event_factory, mock_app, mock_shard):
         mock_payload = {"id": "5412", "channel_id": "541123"}
+        old_message = object()
 
-        event = event_factory.deserialize_message_delete_event(mock_shard, mock_payload)
+        event = event_factory.deserialize_message_delete_event(mock_shard, mock_payload, old_message=old_message)
 
         assert isinstance(event, message_events.DMMessageDeleteEvent)
         assert event.app is mock_app
         assert event.shard is mock_shard
+        assert event.old_message is old_message
         assert event.channel_id == 541123
-        assert event.message_ids == {5412}
-        assert event.is_bulk is False
+        assert event.message_id == 5412
 
-    def test_deserialize_message_delete_bulk_event_in_guild(self, event_factory, mock_app, mock_shard):
+    def test_deserialize_guild_message_delete_bulk_event(self, event_factory, mock_app, mock_shard):
         mock_payload = {"ids": ["6523423", "345123"], "channel_id": "564123", "guild_id": "4394949"}
+        old_messages = object()
 
-        event = event_factory.deserialize_message_delete_bulk_event(mock_shard, mock_payload)
+        event = event_factory.deserialize_guild_message_delete_bulk_event(
+            mock_shard, mock_payload, old_messages=old_messages
+        )
 
-        assert isinstance(event, message_events.GuildMessageDeleteEvent)
+        assert isinstance(event, message_events.GuildBulkMessageDeleteEvent)
         assert event.app is mock_app
         assert event.shard is mock_shard
+        assert event.old_messages is old_messages
         assert event.channel_id == 564123
         assert event.message_ids == {6523423, 345123}
-        assert event.is_bulk is True
         assert event.guild_id == 4394949
-
-    def test_deserialize_message_delete_bulk_event_in_dm(self, event_factory, mock_app, mock_shard):
-        mock_payload = {"ids": ["6523423", "345123"], "channel_id": "564123"}
-
-        event = event_factory.deserialize_message_delete_bulk_event(mock_shard, mock_payload)
-
-        assert isinstance(event, message_events.DMMessageDeleteEvent)
-        assert event.app is mock_app
-        assert event.shard is mock_shard
-        assert event.channel_id == 564123
-        assert event.message_ids == {6523423, 345123}
-        assert event.is_bulk is True
 
     ###################
     # REACTION EVENTS #

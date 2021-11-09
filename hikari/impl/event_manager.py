@@ -389,22 +389,30 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
 
     async def on_message_delete(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#message-delete for more info."""
-        event = self._event_factory.deserialize_message_delete_event(shard, payload)
-
         if self._cache:
-            self._cache.delete_message(event.message_id)
+            message_id = snowflakes.Snowflake(payload["id"])
+            old_message = self._cache.delete_message(message_id)
+        else:
+            old_message = None
+
+        event = self._event_factory.deserialize_message_delete_event(shard, payload, old_message=old_message)
 
         await self.dispatch(event)
 
     async def on_message_delete_bulk(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#message-delete-bulk for more info."""
-        event = self._event_factory.deserialize_message_delete_bulk_event(shard, payload)
+        old_messages = {}
 
         if self._cache:
-            for message_id in event.message_ids:
-                self._cache.delete_message(message_id)
+            for message_id in payload["ids"]:
+                message_id = snowflakes.Snowflake(message_id)
 
-        await self.dispatch(event)
+                if message := self._cache.delete_message(message_id):
+                    old_messages[message_id] = message
+
+        await self.dispatch(
+            self._event_factory.deserialize_guild_message_delete_bulk_event(shard, payload, old_messages=old_messages)
+        )
 
     async def on_message_reaction_add(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
