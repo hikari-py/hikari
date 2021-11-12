@@ -3003,7 +3003,7 @@ class TestRESTClientImplAsync:
 
         assert await rest_client.fetch_webhook_message(webhook, "hi, im a token", StubModel(456)) is message_obj
 
-        rest_client._request.assert_awaited_once_with(expected_route, no_auth=True)
+        rest_client._request.assert_awaited_once_with(expected_route, no_auth=True, query={})
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"id": "456"})
 
     @pytest.mark.parametrize("webhook", [mock.Mock(webhooks.ExecutableWebhook, webhook_id=432), 432])
@@ -3114,7 +3114,16 @@ class TestRESTClientImplAsync:
 
         await rest_client.delete_webhook_message(webhook, "token", StubModel(456))
 
-        rest_client._request.assert_awaited_once_with(expected_route, no_auth=True)
+        rest_client._request.assert_awaited_once_with(expected_route, no_auth=True, query={})
+
+    @pytest.mark.parametrize("webhook", [mock.Mock(webhooks.ExecutableWebhook, webhook_id=123), 123])
+    async def test_delete_webhook_message_when_thread(self, rest_client, webhook):
+        expected_route = routes.DELETE_WEBHOOK_MESSAGE.compile(webhook=123, token="token", message=456)
+        rest_client._request = mock.AsyncMock()
+
+        await rest_client.delete_webhook_message(webhook, "token", StubModel(456), thread=StubModel(432123))
+
+        rest_client._request.assert_awaited_once_with(expected_route, no_auth=True, query={"thread_id": "432123"})
 
     async def test_fetch_gateway_url(self, rest_client):
         expected_route = routes.GET_GATEWAY.compile()

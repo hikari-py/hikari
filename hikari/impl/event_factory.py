@@ -97,7 +97,7 @@ class EventFactoryImpl(event_factory.EventFactory):
         channel = self._app.entity_factory.deserialize_channel(payload)
         assert isinstance(
             channel, channel_models.PermissibleGuildChannel
-        ), "DM channel create events are undocumented behaviour"
+        ), "CHANNEL_CREATE events for threads and DMS are undocumented behaviour"
         return channel_events.GuildChannelCreateEvent(shard=shard, channel=channel)
 
     def deserialize_guild_channel_update_event(
@@ -110,7 +110,7 @@ class EventFactoryImpl(event_factory.EventFactory):
         channel = self._app.entity_factory.deserialize_channel(payload)
         assert isinstance(
             channel, channel_models.PermissibleGuildChannel
-        ), "DM channel update events are undocumented behaviour"
+        ), "CHANNEL_UPDATE events for threads and DMS are undocumented behaviour"
         return channel_events.GuildChannelUpdateEvent(shard=shard, channel=channel, old_channel=old_channel)
 
     def deserialize_guild_channel_delete_event(
@@ -119,7 +119,7 @@ class EventFactoryImpl(event_factory.EventFactory):
         channel = self._app.entity_factory.deserialize_channel(payload)
         assert isinstance(
             channel, channel_models.PermissibleGuildChannel
-        ), "DM channel delete events are undocumented behaviour"
+        ), "CHANNEL_DELETE events for threads and DMS are undocumented behaviour"
         return channel_events.GuildChannelDeleteEvent(shard=shard, channel=channel)
 
     def deserialize_channel_pins_update_event(

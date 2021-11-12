@@ -40,6 +40,7 @@ __all__: typing.Sequence[str] = (
     "GuildCategory",
     "GuildChannel",
     "GuildTextChannel",
+    "GuildThreadChannel",
     "GuildNewsChannel",
     "GuildNewsThread",
     "GuildPrivateThread",

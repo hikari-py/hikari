@@ -1786,6 +1786,9 @@ class RESTClientImpl(rest_api.RESTClient):
         token: str,
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
+        thread: typing.Union[
+            undefined.UndefinedType, snowflakes.SnowflakeishOr[channels_.GuildThreadChannel]
+        ] = undefined.UNDEFINED,
         username: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         avatar_url: typing.Union[undefined.UndefinedType, str, files.URL] = undefined.UNDEFINED,
         attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
@@ -1810,6 +1813,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         query = data_binding.StringMapBuilder()
         query.put("wait", True)
+        query.put("thread_id", thread)
 
         body, form_builder = self._build_message_payload(
             content=content,
@@ -1842,11 +1846,17 @@ class RESTClientImpl(rest_api.RESTClient):
         webhook: typing.Union[webhooks.ExecutableWebhook, snowflakes.Snowflakeish],
         token: str,
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
+        *,
+        thread: typing.Union[
+            undefined.UndefinedType, snowflakes.SnowflakeishOr[channels_.GuildThreadChannel]
+        ] = undefined.UNDEFINED,
     ) -> messages_.Message:
         # int(ExecutableWebhook) isn't guaranteed to be valid nor the ID used to execute this entity as a webhook.
         webhook_id = webhook if isinstance(webhook, int) else webhook.webhook_id
         route = routes.GET_WEBHOOK_MESSAGE.compile(webhook=webhook_id, token=token, message=message)
-        response = await self._request(route, no_auth=True)
+        query = data_binding.StringMapBuilder()
+        query.put("thread_id", thread)
+        response = await self._request(route, no_auth=True, query=query)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
 
@@ -1857,6 +1867,9 @@ class RESTClientImpl(rest_api.RESTClient):
         message: snowflakes.SnowflakeishOr[messages_.Message],
         content: undefined.UndefinedNoneOr[typing.Any] = undefined.UNDEFINED,
         *,
+        thread: typing.Union[
+            undefined.UndefinedType, snowflakes.SnowflakeishOr[channels_.GuildThreadChannel]
+        ] = undefined.UNDEFINED,
         attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
         component: undefined.UndefinedNoneOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
@@ -1877,6 +1890,8 @@ class RESTClientImpl(rest_api.RESTClient):
         # int(ExecutableWebhook) isn't guaranteed to be valid nor the ID used to execute this entity as a webhook.
         webhook_id = webhook if isinstance(webhook, int) else webhook.webhook_id
         route = routes.PATCH_WEBHOOK_MESSAGE.compile(webhook=webhook_id, token=token, message=message)
+        query = data_binding.StringMapBuilder()
+        query.put("thread_id", thread)
 
         body, form_builder = self._build_message_payload(
             content=content,
@@ -1895,9 +1910,9 @@ class RESTClientImpl(rest_api.RESTClient):
 
         if form_builder is not None:
             form_builder.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
-            response = await self._request(route, form_builder=form_builder, no_auth=True)
+            response = await self._request(route, form_builder=form_builder, query=query, no_auth=True)
         else:
-            response = await self._request(route, json=body, no_auth=True)
+            response = await self._request(route, json=body, query=query, no_auth=True)
 
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
@@ -1907,11 +1922,17 @@ class RESTClientImpl(rest_api.RESTClient):
         webhook: typing.Union[webhooks.ExecutableWebhook, snowflakes.Snowflakeish],
         token: str,
         message: snowflakes.SnowflakeishOr[messages_.Message],
+        *,
+        thread: typing.Union[
+            undefined.UndefinedType, snowflakes.SnowflakeishOr[channels_.GuildThreadChannel]
+        ] = undefined.UNDEFINED,
     ) -> None:
         # int(ExecutableWebhook) isn't guaranteed to be valid nor the ID used to execute this entity as a webhook.
         webhook_id = webhook if isinstance(webhook, int) else webhook.webhook_id
+        query = data_binding.StringMapBuilder()
+        query.put("thread_id", thread)
         route = routes.DELETE_WEBHOOK_MESSAGE.compile(webhook=webhook_id, token=token, message=message)
-        await self._request(route, no_auth=True)
+        await self._request(route, no_auth=True, query=query)
 
     async def fetch_gateway_url(self) -> str:
         route = routes.GET_GATEWAY.compile()
@@ -2801,23 +2822,99 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, list)
         return [self._entity_factory.deserialize_thread_member(member) for member in response]
 
-    def fetch_active_threads(self, channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel]) -> None:
-        raise NotImplementedError
+    async def fetch_active_threads(
+        self, guild: snowflakes.SnowflakeishOr[guilds.Guild]
+    ) -> typing.Sequence[channels_.GuildThreadChannel]:
+        route = routes.GET_ACTIVE_THREADS.compile(guild=guild)
+        response = await self._request(route)
+        assert isinstance(response, dict)
+        members = {
+            member.thread_id: member
+            for member in map(self._entity_factory.deserialize_thread_member, response["members"])
+        }
+        return [
+            self._entity_factory.deserialize_guild_thread(
+                thread, member=members.get(snowflakes.Snowflake(thread["id"]))
+            )
+            for thread in response["threads"]
+        ]
+
+    @staticmethod
+    def _process_thread_start_at(
+        channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
+        start_at: undefined.UndefinedOr[
+            snowflakes.SearchableSnowflakeishOr[channels_.GuildThreadChannel]
+        ] = undefined.UNDEFINED,
+    ) -> str:
+        if start_at is undefined.UNDEFINED:
+            return snowflakes.Snowflake(channel).created_at.isoformat()
+
+        if isinstance(start_at, datetime.datetime):
+            return start_at.isoformat()
+
+        return snowflakes.Snowflake(start_at).created_at.isoformat()
+
+    def _deserialize_public_thread(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+        member: undefined.UndefinedNoneOr[channels_.ThreadMember] = undefined.UNDEFINED,
+    ) -> typing.Union[channels_.GuildNewsThread, channels_.GuildPublicThread]:
+        channel = self._entity_factory.deserialize_guild_thread(payload, guild_id=guild_id, member=member)
+        assert isinstance(channel, (channels_.GuildNewsThread, channels_.GuildPublicThread))
+        return channel
 
     def fetch_public_archived_threads(
-        self, channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel]
-    ) -> None:
-        raise NotImplementedError
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
+        *,
+        start_at: undefined.UndefinedOr[
+            snowflakes.SearchableSnowflakeishOr[channels_.GuildThreadChannel]
+        ] = undefined.UNDEFINED,
+    ) -> iterators.LazyIterator[typing.Union[channels_.GuildNewsThread, channels_.GuildPublicThread]]:
+        route = routes.GET_PUBLIC_ARCHIVED_THREADS.compile(channel=channel)
+        return special_endpoints_impl.GuildThreadIterator(
+            self._deserialize_public_thread,
+            self._entity_factory,
+            self._request,
+            route,
+            self._process_thread_start_at(channel, start_at),
+        )
 
     def fetch_private_archived_threads(
-        self, channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel]
-    ) -> None:
-        raise NotImplementedError
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
+        *,
+        start_at: undefined.UndefinedOr[
+            snowflakes.SearchableSnowflakeishOr[channels_.GuildThreadChannel]
+        ] = undefined.UNDEFINED,
+    ) -> iterators.LazyIterator[channels_.GuildPrivateThread]:
+        route = routes.GET_PRIVATE_ARCHIVED_THREADS.compile(channel=channel)
+        return special_endpoints_impl.GuildThreadIterator(
+            self._entity_factory.deserialize_guild_private_thread,
+            self._entity_factory,
+            self._request,
+            route,
+            self._process_thread_start_at(channel, start_at),
+        )
 
     def fetch_joined_private_archived_threads(
-        self, channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel]
-    ) -> None:
-        raise NotImplementedError
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
+        *,
+        start_at: undefined.UndefinedOr[
+            snowflakes.SearchableSnowflakeishOr[channels_.GuildThreadChannel]
+        ] = undefined.UNDEFINED,
+    ) -> iterators.LazyIterator[channels_.GuildPrivateThread]:
+        route = routes.GET_JOINED_PRIVATE_ARCHIVED_THREADS.compile(channel=channel)
+        return special_endpoints_impl.GuildThreadIterator(
+            self._entity_factory.deserialize_guild_private_thread,
+            self._entity_factory,
+            self._request,
+            route,
+            self._process_thread_start_at(channel, start_at),
+        )
 
     async def reposition_channels(
         self,

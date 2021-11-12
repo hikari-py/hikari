@@ -337,6 +337,55 @@ class TestGuildChannel:
         assert model.shard_id == 2
 
     @pytest.mark.asyncio()
+    async def test_fetch_guild(self, model):
+        model.app.rest.fetch_guild = mock.AsyncMock()
+
+        assert await model.fetch_guild() == model.app.rest.fetch_guild.return_value
+
+        model.app.rest.fetch_guild.assert_awaited_once_with(123456789)
+
+    @pytest.mark.asyncio()
+    async def test_edit(self, model):
+        model.app.rest.edit_channel = mock.AsyncMock()
+
+        assert (
+            await model.edit(name="Supa fast boike", bitrate=420, reason="left right")
+            == model.app.rest.edit_channel.return_value
+        )
+
+        model.app.rest.edit_channel.assert_awaited_once_with(
+            69420,
+            name="Supa fast boike",
+            position=undefined.UNDEFINED,
+            topic=undefined.UNDEFINED,
+            nsfw=undefined.UNDEFINED,
+            bitrate=420,
+            video_quality_mode=undefined.UNDEFINED,
+            user_limit=undefined.UNDEFINED,
+            rate_limit_per_user=undefined.UNDEFINED,
+            region=undefined.UNDEFINED,
+            permission_overwrites=undefined.UNDEFINED,
+            parent_category=undefined.UNDEFINED,
+            reason="left right",
+        )
+
+
+class TestPermissibleGuildChannel:
+    @pytest.fixture()
+    def model(self, mock_app):
+        return hikari_test_helpers.mock_class_namespace(channels.PermissibleGuildChannel)(
+            app=mock_app,
+            id=snowflakes.Snowflake(69420),
+            name="foo1",
+            type=channels.ChannelType.GUILD_VOICE,
+            guild_id=snowflakes.Snowflake(123456789),
+            is_nsfw=True,
+            parent_id=None,
+            position=54,
+            permission_overwrites=[],
+        )
+
+    @pytest.mark.asyncio()
     async def test_edit_overwrite(self, model):
         model.app.rest.edit_permission_overwrite = mock.AsyncMock()
         user = mock.Mock(users.PartialUser)
@@ -411,28 +460,3 @@ class TestGuildChannel:
         assert await model.fetch_guild() == model.app.rest.fetch_guild.return_value
 
         model.app.rest.fetch_guild.assert_awaited_once_with(123456789)
-
-    @pytest.mark.asyncio()
-    async def test_edit(self, model):
-        model.app.rest.edit_channel = mock.AsyncMock()
-
-        assert (
-            await model.edit(name="Supa fast boike", bitrate=420, reason="left right")
-            == model.app.rest.edit_channel.return_value
-        )
-
-        model.app.rest.edit_channel.assert_awaited_once_with(
-            69420,
-            name="Supa fast boike",
-            position=undefined.UNDEFINED,
-            topic=undefined.UNDEFINED,
-            nsfw=undefined.UNDEFINED,
-            bitrate=420,
-            video_quality_mode=undefined.UNDEFINED,
-            user_limit=undefined.UNDEFINED,
-            rate_limit_per_user=undefined.UNDEFINED,
-            region=undefined.UNDEFINED,
-            permission_overwrites=undefined.UNDEFINED,
-            parent_category=undefined.UNDEFINED,
-            reason="left right",
-        )

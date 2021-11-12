@@ -1434,7 +1434,8 @@ class TestEntityFactoryImpl:
             4242: entity_factory_impl.deserialize_permission_overwrite(permission_overwrite_payload)
         }
         assert guild_category.is_nsfw is True
-        assert guild_category.parent_id == 664565
+        # Categories cannot have parents, this field should be ignored as it is erroneous if included here.
+        assert guild_category.parent_id is None
         assert isinstance(guild_category, channel_models.GuildCategory)
 
     def test_deserialize_guild_category_with_unset_fields(self, entity_factory_impl, permission_overwrite_payload):
