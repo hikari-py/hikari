@@ -1471,6 +1471,13 @@ class TestCacheImpl:
         assert cache_impl._me == mock_own_user
         assert cache_impl._me is not mock_own_user
 
+    def test_set_me_when_not_enabled(self, cache_impl):
+        cache_impl._settings.components = 0
+
+        cache_impl.set_me(object())
+
+        assert cache_impl._me is None
+
     def test_update_me_for_cached_me(self, cache_impl):
         mock_cached_own_user = mock.MagicMock(users.OwnUser)
         mock_own_user = mock.MagicMock(users.OwnUser)
@@ -1488,6 +1495,17 @@ class TestCacheImpl:
 
         assert result == (None, mock_own_user)
         assert cache_impl._me == mock_own_user
+
+    def test_update_me_for_when_not_enabled(self, cache_impl):
+        cache_impl._settings.components = 0
+        cache_impl.get_me = mock.Mock()
+        cache_impl.set_me = mock.Mock()
+
+        result = cache_impl.update_me(object())
+
+        assert result == (None, None)
+        cache_impl.get_me.assert_not_called()
+        cache_impl.set_me.assert_not_called()
 
     def test__build_member(self, cache_impl):
         mock_user = mock.MagicMock(users.User)

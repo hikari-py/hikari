@@ -420,6 +420,9 @@ class CacheComponents(enums.Flag):
     MESSAGES = 1 << 8
     """Enables the messages cache."""
 
+    ME = 1 << 9
+    """Enables the me cache."""
+
     DM_CHANNEL_IDS = 1 << 10
     """Enables the DM channel IDs cache."""
 
@@ -433,6 +436,7 @@ class CacheComponents(enums.Flag):
         | PRESENCES
         | VOICE_STATES
         | MESSAGES
+        | ME
         | DM_CHANNEL_IDS
     )
     """Fully enables the cache."""
@@ -443,13 +447,13 @@ class CacheComponents(enums.Flag):
 class CacheSettings:
     """Settings to control the cache."""
 
-    components: CacheComponents = attr.field(default=CacheComponents.ALL)
+    components: CacheComponents = attr.field(converter=CacheComponents, default=CacheComponents.ALL)
     """The cache components to use.
 
     Defaults to `CacheComponents.ALL`.
     """
 
-    max_messages: int = attr.field(default=300)
+    max_messages: int = attr.field(converter=int, default=300)
     """The maximum number of messages to store in the cache at once.
 
     This will have no effect if the messages cache is not enabled.
