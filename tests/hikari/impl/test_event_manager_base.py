@@ -29,11 +29,14 @@ import weakref
 import mock
 import pytest
 
+from hikari import config
 from hikari import errors
 from hikari import intents
 from hikari import iterators
+from hikari import undefined
 from hikari.events import base_events
 from hikari.events import member_events
+from hikari.events import shard_events
 from hikari.impl import event_manager_base
 from hikari.internal import reflect
 from tests.hikari import hikari_test_helpers
@@ -398,20 +401,160 @@ class TestEventManagerBase:
 
     def test___init___loads_consumers(self):
         class StubManager(event_manager_base.EventManagerBase):
+            @event_manager_base.filtered(shard_events.ShardEvent, config.CacheComponents.MEMBERS)
             async def on_foo(self, event):
                 raise NotImplementedError
 
+            @event_manager_base.filtered((shard_events.ShardStateEvent, shard_events.ShardPayloadEvent))
             async def on_bar(self, event):
+                raise NotImplementedError
+
+            @event_manager_base.filtered(shard_events.MemberChunkEvent, config.CacheComponents.MESSAGES)
+            async def on_bat(self, event):
+                raise NotImplementedError
+
+            async def on_not_decorated(self, event):
                 raise NotImplementedError
 
             async def not_a_listener(self):
                 raise NotImplementedError
 
-        manager = StubManager(mock.Mock(), mock.Mock(intents=42))
-        assert manager._consumers == {"foo": manager.on_foo, "bar": manager.on_bar}
+        expected_bar_events = (
+            shard_events.ShardStateEvent,
+            shard_events.ShardEvent,
+            base_events.Event,
+            shard_events.ShardPayloadEvent,
+        )
+        expected_bat_events = (shard_events.MemberChunkEvent, shard_events.ShardEvent, base_events.Event)
+        manager = StubManager(
+            mock.Mock(),
+            0,
+            cache_components=config.CacheComponents.MEMBERS | config.CacheComponents.GUILD_CHANNELS,
+        )
+        assert manager._consumers == {
+            "foo": event_manager_base._Consumer(manager.on_foo, (shard_events.ShardEvent, base_events.Event), True),
+            "bar": event_manager_base._Consumer(manager.on_bar, expected_bar_events, False),
+            "bat": event_manager_base._Consumer(manager.on_bat, expected_bat_events, False),
+            "not_decorated": event_manager_base._Consumer(manager.on_not_decorated, undefined.UNDEFINED, True),
+        }
+
+    def test___init___loads_consumers_when_cacheless(self):
+        class StubManager(event_manager_base.EventManagerBase):
+            @event_manager_base.filtered(shard_events.ShardEvent, config.CacheComponents.MEMBERS)
+            async def on_foo(self, event):
+                raise NotImplementedError
+
+            @event_manager_base.filtered((shard_events.ShardStateEvent, shard_events.ShardPayloadEvent))
+            async def on_bar(self, event):
+                raise NotImplementedError
+
+            @event_manager_base.filtered(shard_events.MemberChunkEvent, config.CacheComponents.MESSAGES)
+            async def on_bat(self, event):
+                raise NotImplementedError
+
+            async def on_not_decorated(self, event):
+                raise NotImplementedError
+
+            async def not_a_listener(self):
+                raise NotImplementedError
+
+        expected_bar_events = (
+            shard_events.ShardStateEvent,
+            shard_events.ShardEvent,
+            base_events.Event,
+            shard_events.ShardPayloadEvent,
+        )
+        expected_bat_events = (shard_events.MemberChunkEvent, shard_events.ShardEvent, base_events.Event)
+        manager = StubManager(mock.Mock(), 0, cache_components=config.CacheComponents.NONE)
+        assert manager._consumers == {
+            "foo": event_manager_base._Consumer(manager.on_foo, (shard_events.ShardEvent, base_events.Event), False),
+            "bar": event_manager_base._Consumer(manager.on_bar, expected_bar_events, False),
+            "bat": event_manager_base._Consumer(manager.on_bat, expected_bat_events, False),
+            "not_decorated": event_manager_base._Consumer(manager.on_not_decorated, undefined.UNDEFINED, False),
+        }
+
+    def test__clear_enabled_cache(self):
+        event_manager = hikari_test_helpers.mock_class_namespace(event_manager_base.EventManagerBase, init_=False)()
+        event_manager._enabled_consumers_cache = {object: object(), "ok": object()}
+
+        event_manager._clear_enabled_cache()
+
+        assert event_manager._enabled_consumers_cache == {}
+
+    def test__enabled_for_event_when_listener_registered(self, event_manager):
+        event_manager._listeners = {}
+
+    def test__enabled_for_event_when_waiter_registered(self, event_manager):
+        event_manager._listeners = {}
+
+    def test__enabled_for_event_when_not_registered(self, event_manager):
+        event_manager._listeners = {shard_events.ShardPayloadEvent: [], shard_events.MemberChunkEvent: []}
+
+        assert event_manager._enabled_for_event(shard_events.ShardStateEvent) is False
+
+    def test__enabled_for_consumer_when_event_types_is_undefined(self, event_manager):
+        consumer = mock.Mock(event_types=undefined.UNDEFINED)
+
+        assert event_manager._enabled_for_consumer(consumer) is True
+
+    def test__enabled_for_consumer_when_caching(self, event_manager):
+        consumer = mock.Mock(event_types=(), is_caching=True)
+
+        assert event_manager._enabled_for_consumer(consumer) is True
+
+    @pytest.mark.parametrize("cached_state", [False, True])
+    def test__enabled_for_consumer_when_consumer_state_cached(self, event_manager, cached_state):
+        consumer = mock.Mock(event_types=(), is_caching=False)
+        event_manager._enabled_consumers_cache[consumer] = cached_state
+
+        assert event_manager._enabled_for_consumer(consumer) is cached_state
+
+    def test__enabled_for_consumer_when_consumer_state_not_cached_and_listeners_present(self, event_manager):
+        event_manager._listeners[shard_events.MemberChunkEvent] = []
+        consumer = mock.Mock(
+            event_types=(shard_events.ShardEvent, shard_events.ShardPayloadEvent, shard_events.MemberChunkEvent),
+            is_caching=False,
+        )
+
+        result = event_manager._enabled_for_consumer(consumer)
+
+        assert result is True
+        assert event_manager._enabled_consumers_cache[consumer] is True
+
+    def test__enabled_for_consumer_when_consumer_state_not_cached_and_waiters_present(self, event_manager):
+        event_manager._waiters[shard_events.MemberChunkEvent] = []
+        consumer = mock.Mock(
+            event_types=(shard_events.ShardEvent, shard_events.ShardPayloadEvent, shard_events.MemberChunkEvent),
+            is_caching=False,
+        )
+
+        result = event_manager._enabled_for_consumer(consumer)
+
+        assert result is True
+        assert event_manager._enabled_consumers_cache[consumer] is True
+
+    def test__enabled_for_consumer_when_consumer_state_not_cached_and_not_enabled(self, event_manager):
+        consumer = mock.Mock(
+            event_types=(shard_events.ShardEvent, shard_events.ShardPayloadEvent, shard_events.MemberChunkEvent),
+            is_caching=False,
+        )
+
+        result = event_manager._enabled_for_consumer(consumer)
+
+        assert result is False
+        assert event_manager._enabled_consumers_cache[consumer] is False
+
+    def test__enabled_for_consumer_when_consumer_state_not_cached_and_no_event_types(self, event_manager):
+        consumer = mock.Mock(event_types=(), is_caching=False)
+
+        result = event_manager._enabled_for_consumer(consumer)
+
+        assert result is False
+        assert event_manager._enabled_consumers_cache[consumer] is False
 
     @pytest.mark.asyncio()
     async def test_consume_raw_event_when_KeyError(self, event_manager):
+        event_manager._enabled_for_event = mock.Mock(return_value=True)
         mock_payload = {"id": "3123123123"}
         mock_shard = mock.Mock(id=123)
         event_manager._handle_dispatch = mock.Mock()
@@ -427,9 +570,11 @@ class TestEventManagerBase:
         event_manager._event_factory.deserialize_shard_payload_event.assert_called_once_with(
             mock_shard, mock_payload, name="UNEXISTING_EVENT"
         )
+        event_manager._enabled_for_event.assert_called_once_with(shard_events.ShardPayloadEvent)
 
     @pytest.mark.asyncio()
     async def test_consume_raw_event_when_found(self, event_manager):
+        event_manager._enabled_for_event = mock.Mock(return_value=True)
         event_manager._handle_dispatch = mock.Mock()
         event_manager.dispatch = mock.Mock()
         on_existing_event = object()
@@ -451,43 +596,69 @@ class TestEventManagerBase:
         event_manager._event_factory.deserialize_shard_payload_event.assert_called_once_with(
             shard, payload, name="EXISTING_EVENT"
         )
+        event_manager._enabled_for_event.assert_called_once_with(shard_events.ShardPayloadEvent)
+
+    @pytest.mark.asyncio()
+    async def test_consume_raw_event_skips_raw_dispatch_when_not_enabled(self, event_manager):
+        event_manager._enabled_for_event = mock.Mock(return_value=False)
+        event_manager._handle_dispatch = mock.Mock()
+        event_manager.dispatch = mock.Mock()
+        on_existing_event = object()
+        event_manager._consumers = {"existing_event": on_existing_event}
+        shard = object()
+        payload = {"berp": "baz"}
+
+        with mock.patch("asyncio.create_task") as create_task:
+            event_manager.consume_raw_event("EXISTING_EVENT", shard, payload)
+
+        event_manager._handle_dispatch.assert_called_once_with(on_existing_event, shard, {"berp": "baz"})
+        create_task.assert_called_once_with(
+            event_manager._handle_dispatch(on_existing_event, shard, {"berp": "baz"}),
+            name="dispatch EXISTING_EVENT",
+        )
+        event_manager.dispatch.assert_not_called()
+        event_manager._event_factory.deserialize_shard_payload_event.vassert_not_called()
+        event_manager._enabled_for_event.assert_called_once_with(shard_events.ShardPayloadEvent)
 
     @pytest.mark.asyncio()
     async def test_handle_dispatch_invokes_callback(self, event_manager, event_loop):
-        callback = mock.AsyncMock()
+        event_manager._enabled_for_consumer = mock.Mock(return_value=True)
+        consumer = mock.AsyncMock()
         error_handler = mock.MagicMock()
         event_loop.set_exception_handler(error_handler)
         shard = object()
         pl = {"foo": "bar"}
 
-        await event_manager._handle_dispatch(callback, shard, pl)
+        await event_manager._handle_dispatch(consumer, shard, pl)
 
-        callback.assert_awaited_once_with(shard, pl)
+        consumer.callback.assert_awaited_once_with(shard, pl)
         error_handler.assert_not_called()
 
     @pytest.mark.asyncio()
     async def test_handle_dispatch_ignores_cancelled_errors(self, event_manager, event_loop):
-        callback = mock.AsyncMock(side_effect=asyncio.CancelledError)
+        event_manager._enabled_for_consumer = mock.Mock(return_value=True)
+        consumer = mock.AsyncMock(side_effect=asyncio.CancelledError)
         error_handler = mock.MagicMock()
         event_loop.set_exception_handler(error_handler)
         shard = object()
         pl = {"lorem": "ipsum"}
 
-        await event_manager._handle_dispatch(callback, shard, pl)
+        await event_manager._handle_dispatch(consumer, shard, pl)
 
         error_handler.assert_not_called()
 
     @pytest.mark.asyncio()
     async def test_handle_dispatch_handles_exceptions(self, event_manager, event_loop):
+        event_manager._enabled_for_consumer = mock.Mock(return_value=True)
         exc = Exception("aaaa!")
-        callback = mock.AsyncMock(side_effect=exc)
+        consumer = mock.Mock(callback=mock.AsyncMock(side_effect=exc))
         error_handler = mock.MagicMock()
         event_loop.set_exception_handler(error_handler)
         shard = object()
         pl = {"i like": "cats"}
 
         with mock.patch.object(asyncio, "current_task") as current_task:
-            await event_manager._handle_dispatch(callback, shard, pl)
+            await event_manager._handle_dispatch(consumer, shard, pl)
 
         error_handler.assert_called_once_with(
             event_loop,
@@ -497,6 +668,20 @@ class TestEventManagerBase:
                 "task": current_task(),
             },
         )
+
+    @pytest.mark.asyncio()
+    async def test_handle_dispatch_invokes_when_consumer_not_enabled(self, event_manager, event_loop):
+        event_manager._enabled_for_consumer = mock.Mock(return_value=False)
+        consumer = mock.Mock(callback=mock.AsyncMock(__name__="ok"))
+        error_handler = mock.MagicMock()
+        event_loop.set_exception_handler(error_handler)
+        shard = object()
+        pl = {"foo": "bar"}
+
+        await event_manager._handle_dispatch(consumer, shard, pl)
+
+        consumer.callback.assert_not_called()
+        error_handler.assert_not_called()
 
     def test_subscribe_when_callback_is_not_coroutine(self, event_manager):
         def test():
@@ -513,6 +698,8 @@ class TestEventManagerBase:
             event_manager.subscribe("test", test)
 
     def test_subscribe_when_event_type_not_in_listeners(self, event_manager):
+        event_manager._clear_enabled_cache = mock.Mock()
+
         async def test():
             ...
 
@@ -521,6 +708,7 @@ class TestEventManagerBase:
 
         assert event_manager._listeners == {member_events.MemberCreateEvent: [test]}
         check.assert_called_once_with(member_events.MemberCreateEvent, 1)
+        event_manager._clear_enabled_cache.assert_called_once_with()
 
     def test_subscribe_when_event_type_in_listeners(self, event_manager):
         async def test():
@@ -529,6 +717,7 @@ class TestEventManagerBase:
         async def test2():
             ...
 
+        event_manager._clear_enabled_cache = mock.Mock()
         event_manager._listeners[member_events.MemberCreateEvent] = [test2]
 
         with mock.patch.object(event_manager_base.EventManagerBase, "_check_intents") as check:
@@ -536,6 +725,7 @@ class TestEventManagerBase:
 
         assert event_manager._listeners == {member_events.MemberCreateEvent: [test2, test]}
         check.assert_called_once_with(member_events.MemberCreateEvent, 2)
+        event_manager._clear_enabled_cache.assert_not_called()
 
     def test__check_intents_when_no_intents_required(self, event_manager):
         event_manager._intents = intents.Intents.ALL
@@ -579,7 +769,7 @@ class TestEventManagerBase:
     def test_get_listeners_when_not_event(self, event_manager):
         assert len(event_manager.get_listeners("test")) == 0
 
-    def test_get_listeners_polimorphic(self, event_manager):
+    def test_get_listeners_polymorphic(self, event_manager):
         event_manager._listeners = {
             base_events.Event: ["this will never appear"],
             member_events.MemberEvent: ["coroutine0"],
@@ -597,17 +787,16 @@ class TestEventManagerBase:
             "coroutine5",
         ]
 
-    def test_get_listeners_no_polimorphic_and_no_results(self, event_manager):
+    def test_get_listeners_monomorphic_and_no_results(self, event_manager):
         event_manager._listeners = {
             member_events.MemberCreateEvent: ["coroutine1", "coroutine2"],
             member_events.MemberUpdateEvent: ["coroutine3"],
-            member_events.MemberDeleteEvent: ["coroutine4", "coroutine5"],
             member_events.MemberDeleteEvent: ["coroutine4", "coroutine5"],
         }
 
         assert event_manager.get_listeners(member_events.MemberEvent, polymorphic=False) == []
 
-    def test_get_listeners_no_polimorphic_and_results(self, event_manager):
+    def test_get_listeners_monomorphic_and_results(self, event_manager):
         event_manager._listeners = {
             member_events.MemberEvent: ["coroutine0"],
             member_events.MemberCreateEvent: ["coroutine1", "coroutine2"],
@@ -634,6 +823,7 @@ class TestEventManagerBase:
         async def test2():
             ...
 
+        event_manager._clear_enabled_cache = mock.Mock()
         event_manager._listeners = {
             member_events.MemberCreateEvent: [test, test2],
             member_events.MemberDeleteEvent: [test],
@@ -645,16 +835,19 @@ class TestEventManagerBase:
             member_events.MemberCreateEvent: [test2],
             member_events.MemberDeleteEvent: [test],
         }
+        event_manager._clear_enabled_cache.assert_not_called()
 
     def test_unsubscribe_when_event_type_when_list_empty_after_delete(self, event_manager):
         async def test():
             ...
 
+        event_manager._clear_enabled_cache = mock.Mock()
         event_manager._listeners = {member_events.MemberCreateEvent: [test], member_events.MemberDeleteEvent: [test]}
 
         event_manager.unsubscribe(member_events.MemberCreateEvent, test)
 
         assert event_manager._listeners == {member_events.MemberDeleteEvent: [test]}
+        event_manager._clear_enabled_cache.assert_called_once_with()
 
     def test_listen_when_no_params(self, event_manager):
         with pytest.raises(TypeError):
