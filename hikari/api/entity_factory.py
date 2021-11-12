@@ -42,7 +42,6 @@ if typing.TYPE_CHECKING:
     from hikari import invites as invite_models
     from hikari import messages as message_models
     from hikari import presences as presence_models
-    from hikari import scheduled_events as scheduled_events_models
     from hikari import sessions as gateway_models
     from hikari import snowflakes
     from hikari import stickers as sticker_models
@@ -960,72 +959,6 @@ class EntityFactory(abc.ABC):
     ######################
 
     @abc.abstractmethod
-    def deserialize_slash_command(
-        self,
-        payload: data_binding.JSONObject,
-        *,
-        guild_id: undefined.UndefinedNoneOr[snowflakes.Snowflake] = undefined.UNDEFINED,
-    ) -> commands.SlashCommand:
-        """Parse a raw payload from Discord into a slash command object.
-
-        Parameters
-        ----------
-        payload : hikari.internal.data_binding.JSONObject
-            The JSON payload to deserialize.
-
-        Other Parameters
-        ----------------
-        guild_id : hikari.undefined.UndefinedNoneOr[hikari.snowflakes.Snowflake]
-            The ID of the guild this command belongs to. If this is specified
-            then this will be prioritised over `"guild_id"` in the payload.
-
-        Returns
-        -------
-        hikari.commands.SlashCommand
-            The deserialized slash command object.
-
-        Raises
-        ------
-        builtins.KeyError
-            If `guild_id` is left as `hikari.undefined.UNDEFINED` when
-            `"guild_id"` is not present in the passed payload for the payload of
-            the integration.
-        """
-
-    @abc.abstractmethod
-    def deserialize_context_menu_command(
-        self,
-        payload: data_binding.JSONObject,
-        *,
-        guild_id: undefined.UndefinedNoneOr[snowflakes.Snowflake] = undefined.UNDEFINED,
-    ) -> commands.ContextMenuCommand:
-        """Parse a raw payload from Discord into a context menu command object.
-
-        Parameters
-        ----------
-        payload : hikari.internal.data_binding.JSONObject
-            The JSON payload to deserialize.
-
-        Other Parameters
-        ----------------
-        guild_id : hikari.undefined.UndefinedNoneOr[hikari.snowflakes.Snowflake]
-            The ID of the guild this command belongs to. If this is specified
-            then this will be prioritised over `"guild_id"` in the payload.
-
-        Returns
-        -------
-        hikari.commands.ContextMenuCommand
-            The deserialized context menu command object.
-
-        Raises
-        ------
-        builtins.KeyError
-            If `guild_id` is left as `hikari.undefined.UNDEFINED` when
-            `"guild_id"` is not present in the passed payload for the payload of
-            the integration.
-        """
-
-    @abc.abstractmethod
     def deserialize_command(
         self,
         payload: data_binding.JSONObject,
@@ -1297,6 +1230,68 @@ class EntityFactory(abc.ABC):
     ##################
 
     @abc.abstractmethod
+    def deserialize_action_row(self, payload: data_binding.JSONObject) -> message_models.ActionRowComponent:
+        """Parse a raw payload from Discord into an action row component object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.messages.ActionRowComponent
+            The deserialized action row component.
+        """
+
+    @abc.abstractmethod
+    def deserialize_button(self, payload: data_binding.JSONObject) -> message_models.ButtonComponent:
+        """Parse a raw payload from Discord into a button component object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.messages.ButtonComponent
+            The deserialized button component.
+        """
+
+    @abc.abstractmethod
+    def deserialize_select_menu(self, payload: data_binding.JSONObject) -> message_models.SelectMenuComponent:
+        """Parse a raw payload from Discord into a select menu component object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.messages.SelectMenuComponent
+            The deserialized button component.
+        """
+
+    @abc.abstractmethod
+    def deserialize_component(self, payload: data_binding.JSONObject) -> message_models.PartialComponent:
+        """Parse a raw payload from Discord into a message component object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.messages.PartialComponent
+            The deserialized message component.
+        hikari.errors.UnrecognisedEntityError
+            If the message component type isn't recognised.
+        """
+
+    @abc.abstractmethod
     def deserialize_partial_message(self, payload: data_binding.JSONObject) -> message_models.PartialMessage:
         """Parse a raw payload from Discord into a partial message object.
 
@@ -1368,102 +1363,6 @@ class EntityFactory(abc.ABC):
             guild ID was passed for the `guild_id` parameter.
 
             If this is raised, no guild ID info was provided anywhere.
-        """
-
-    ##########################
-    # SCHEDULED EVENT MODELS #
-    ##########################
-
-    @abc.abstractmethod
-    def deserialize_scheduled_external_event(
-        self, payload: data_binding.JSONObject
-    ) -> scheduled_events_models.ScheduledExternalEvent:
-        """Parse a raw payload from Discord into a scheduled external event object.
-
-        Parameters
-        ----------
-        payload : hikari.internal.data_binding.JSONObject
-            The JSON payload to deserialize.
-
-        Returns
-        -------
-        hikari.scheduled_events.ScheduledExternalEvent
-            The deserialized scheduled external event object.
-        """
-
-    @abc.abstractmethod
-    def deserialize_scheduled_stage_event(
-        self, payload: data_binding.JSONObject
-    ) -> scheduled_events_models.ScheduledStageEvent:
-        """Parse a raw payload from Discord into a scheduled stage event object.
-
-        Parameters
-        ----------
-        payload : hikari.internal.data_binding.JSONObject
-            The JSON payload to deserialize.
-
-        Returns
-        -------
-        hikari.scheduled_events.ScheduledStageEvent
-            The deserialized scheduled stage event object.
-        """
-
-    @abc.abstractmethod
-    def deserialize_scheduled_voice_event(
-        self, payload: data_binding.JSONObject
-    ) -> scheduled_events_models.ScheduledVoiceEvent:
-        """Parse a raw payload from Discord into a scheduled voice event object.
-
-        Parameters
-        ----------
-        payload : hikari.internal.data_binding.JSONObject
-            The JSON payload to deserialize.
-
-        Returns
-        -------
-        hikari.scheduled_events.ScheduledVoiceEvent
-            The deserialized scheduled voice event object.
-        """
-
-    @abc.abstractmethod
-    def deserialize_scheduled_event(self, payload: data_binding.JSONObject) -> scheduled_events_models.ScheduledEvent:
-        """Parse a raw payload from Discord into a scheduled event object.
-
-        Parameters
-        ----------
-        payload : hikari.internal.data_binding.JSONObject
-            The JSON payload to deserialize.
-
-        Returns
-        -------
-        hikari.scheduled_events.ScheduledEvent
-            The deserialized scheduled event object.
-        """
-
-    @abc.abstractmethod
-    def deserialize_scheduled_event_user(
-        self,
-        payload: data_binding.JSONObject,
-        *,
-        guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
-    ) -> scheduled_events_models.ScheduledEventUser:
-        """Parse a raw payload from Discord into a scheduled event user object.
-
-        Parameters
-        ----------
-        payload : hikari.internal.data_binding.JSONObject
-            The JSON payload to deserialize.
-
-        Other Parameters
-        ----------------
-        guild_id : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
-            The ID of the guild the user belongs to. If this is specified
-            then it is prioritised over `guild_id` in the payload.
-
-        Returns
-        -------
-        hikari.scheduled_events.ScheduledEventUser
-            The deserialized scheduled event user object.
         """
 
     ###################

@@ -654,33 +654,3 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
     async def on_interaction_create(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#interaction-create for more info."""
         await self.dispatch(self._event_factory.deserialize_interaction_create_event(shard, payload))
-
-    async def on_guild_scheduled_event_create(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
-    ) -> None:
-        """See https://discord.com/developers/docs/topics/gateway#guild-scheduled-event-create for more info."""
-        await self.dispatch(self._event_factory.deserialize_scheduled_event_create_event(shard, payload))
-
-    async def on_guild_scheduled_event_delete(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
-    ) -> None:
-        """See https://discord.com/developers/docs/topics/gateway#guild-scheduled-event-delete for more info."""
-        await self.dispatch(self._event_factory.deserialize_scheduled_event_delete_event(shard, payload))
-
-    async def on_guild_scheduled_event_update(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
-    ) -> None:
-        """See https://discord.com/developers/docs/topics/gateway#guild-scheduled-event-update for more info."""
-        await self.dispatch(self._event_factory.deserialize_scheduled_event_update_event(shard, payload))
-
-    async def on_guild_scheduled_event_user_add(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
-    ) -> None:
-        """See https://discord.com/developers/docs/topics/gateway#guild-scheduled-event-user-add for more info."""
-        await self.dispatch(self._event_factory.deserialize_scheduled_event_user_add_event(shard, payload))
-
-    async def on_guild_scheduled_event_user_remove(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
-    ) -> None:
-        """See https://discord.com/developers/docs/topics/gateway#guild-scheduled-event-user-remove for more info."""
-        await self.dispatch(self._event_factory.deserialize_scheduled_event_user_remove_event(shard, payload))
