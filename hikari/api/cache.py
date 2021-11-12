@@ -32,6 +32,7 @@ from hikari import iterators
 
 if typing.TYPE_CHECKING:
     from hikari import channels
+    from hikari import config
     from hikari import emojis
     from hikari import guilds
     from hikari import invites
@@ -87,6 +88,11 @@ class Cache(abc.ABC):
     """
 
     __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def settings(self) -> config.CacheSettings:
+        """Get the configured settings for this cache."""
 
     @abc.abstractmethod
     def get_dm_channel_id(

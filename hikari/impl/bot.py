@@ -350,7 +350,9 @@ class GatewayBot(traits.GatewayBotAware):
         self._event_factory = event_factory_impl.EventFactoryImpl(self)
 
         # Event handling
-        self._event_manager = event_manager_impl.EventManagerImpl(self._event_factory, self._intents, cache=self._cache)
+        self._event_manager = event_manager_impl.EventManagerImpl(
+            self._entity_factory, self._event_factory, self._intents, cache=self._cache
+        )
 
         # Voice subsystem
         self._voice = voice_impl.VoiceComponentImpl(self)

@@ -57,6 +57,23 @@ class Event(abc.ABC):
 
     __slots__: typing.Sequence[str] = ()
 
+    __dispatches: typing.ClassVar[typing.Tuple[typing.Type[Event], ...]]
+
+    def __init_subclass__(cls) -> None:
+        super().__init_subclass__()
+        # hasattr doesn't work with private variables in this case so we use a try except.
+        # We need to set Event's __dispatches when the first subclass is made as Event cannot
+        # be included in a tuple literal on itself due to not existing yet.
+        try:
+            Event.__dispatches
+        except AttributeError:
+            Event.__dispatches = (Event,)
+
+        mro = cls.mro()
+        # We don't have to explicitly include Event here as issubclass(Event, Event) returns True.
+        # Non-event classes should be ignored.
+        cls.__dispatches = tuple(cls for cls in mro if issubclass(cls, Event))
+
     @property
     @abc.abstractmethod
     def app(self) -> traits.RESTAware:
@@ -67,6 +84,11 @@ class Event(abc.ABC):
         hikari.traits.RESTAware
             The REST-aware app trait.
         """
+
+    @classmethod
+    def dispatches(cls) -> typing.Sequence[typing.Type[Event]]:
+        """Sequence of the event classes this event is dispatched as."""
+        return cls.__dispatches
 
 
 def get_required_intents_for(event_type: typing.Type[Event]) -> typing.Collection[intents.Intents]:
