@@ -32,6 +32,7 @@ __all__: typing.List[str] = [
     "GuildMessageCreateEvent",
     "GuildMessageUpdateEvent",
     "GuildMessageDeleteEvent",
+    "GuildBulkMessageDeleteEvent",
     "DMMessageCreateEvent",
     "DMMessageUpdateEvent",
     "DMMessageDeleteEvent",
@@ -594,57 +595,26 @@ class DMMessageUpdateEvent(MessageUpdateEvent):
 
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGES, intents.Intents.DM_MESSAGES)
 class MessageDeleteEvent(MessageEvent, abc.ABC):
-    """Special event that is triggered when one or more messages get deleted.
+    """Special event that is triggered when a message gets deleted.
 
     !!! note
         Due to Discord limitations, most message information is unavailable
         during deletion events.
-
-    You can check if the message was in a singular deletion by checking the
-    `is_bulk` attribute.
     """
 
     __slots__: typing.Sequence[str] = ()
 
     @property
+    @abc.abstractmethod
     def message_id(self) -> snowflakes.Snowflake:
-        """Get the ID of the first deleted message.
-
-        This is contextually useful if you know this is not a bulk deletion
-        event. For all other purposes, this is the same as running
-        `next(iter(event.message_ids))`.
-
-        Returns
-        -------
-        hikari.snowflakes.Snowflake
-            The first deleted message ID.
-        """
-        try:
-            return next(iter(self.message_ids))
-        except StopIteration:
-            raise RuntimeError("No messages were sent in a bulk delete! Please shout at Discord to fix this!") from None
+        """ID of the message that was deleted."""
 
     @property
     @abc.abstractmethod
-    def message_ids(self) -> typing.AbstractSet[snowflakes.Snowflake]:
-        """Set of message IDs that were bulk deleted.
+    def old_message(self) -> typing.Optional[messages.Message]:
+        """Object of the message that was deleted.
 
-        Returns
-        -------
-        typing.AbstractSet[hikari.snowflakes.Snowflake]
-            A sequence of message IDs that were bulk deleted.
-        """
-
-    @property
-    @abc.abstractmethod
-    def is_bulk(self) -> bool:
-        """Flag that determines whether this was a bulk deletion or not.
-
-        Returns
-        -------
-        builtins.bool
-            `builtins.True` if this was a bulk deletion, or `builtins.False`
-            if it was a regular message deletion.
+        Will be `None` if the message was not found in the cache.
         """
 
 
@@ -652,15 +622,11 @@ class MessageDeleteEvent(MessageEvent, abc.ABC):
 @attr.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGES)
 class GuildMessageDeleteEvent(MessageDeleteEvent):
-    """Event that is triggered if messages are deleted in a guild.
+    """Event that is triggered if a message is deleted in a guild.
 
     !!! note
         Due to Discord limitations, most message information is unavailable
         during deletion events.
-
-    This is triggered for singular message deletion, and bulk message
-    deletion. You can check if the message was in a singular deletion by
-    checking the `is_bulk` attribute.
     """
 
     app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
@@ -670,25 +636,19 @@ class GuildMessageDeleteEvent(MessageDeleteEvent):
     # <<inherited docstring from MessageEvent>>
 
     guild_id: snowflakes.Snowflake = attr.field()
-    """ID of the guild that this event occurred in.
+    """ID of the guild that this event occurred in."""
 
-    Returns
-    -------
-    hikari.snowflakes.Snowflake
-        The ID of the guild.
-    """
-
-    is_bulk: bool = attr.field()
+    message_id: snowflakes.Snowflake = attr.field()
     # <<inherited docstring from MessageDeleteEvent>>
 
-    message_ids: typing.AbstractSet[snowflakes.Snowflake] = attr.field()
+    old_message: typing.Optional[messages.Message] = attr.field()
     # <<inherited docstring from MessageDeleteEvent>>
 
     shard: shard_.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>
 
     def get_channel(self) -> typing.Optional[channels.TextableGuildChannel]:
-        """Get the cached channel the messages were sent in, if known.
+        """Get the cached channel the message were sent in, if known.
 
         Returns
         -------
@@ -728,17 +688,11 @@ class GuildMessageDeleteEvent(MessageDeleteEvent):
 @attr.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.DM_MESSAGES)
 class DMMessageDeleteEvent(MessageDeleteEvent):
-    """Event that is triggered if messages are deleted in a DM.
+    """Event that is triggered if a message is deleted in a DM.
 
     !!! note
         Due to Discord limitations, most message information is unavailable
         during deletion events.
-
-    This is triggered for singular message deletion, and bulk message
-    deletion, although the latter is not expected to occur in DMs.
-
-    You can check if the message was in a singular deletion by checking the
-    `is_bulk` attribute.
     """
 
     app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
@@ -747,11 +701,80 @@ class DMMessageDeleteEvent(MessageDeleteEvent):
     channel_id: snowflakes.Snowflake = attr.field()
     # <<inherited docstring from MessageEvent>>
 
-    is_bulk: bool = attr.field()
+    message_id: snowflakes.Snowflake = attr.field()
     # <<inherited docstring from MessageDeleteEvent>>
 
-    message_ids: typing.AbstractSet[snowflakes.Snowflake] = attr.field()
+    old_message: typing.Optional[messages.Message] = attr.field()
     # <<inherited docstring from MessageDeleteEvent>>
 
     shard: shard_.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>
+
+
+@attr_extensions.with_copy
+@attr.define(kw_only=True, weakref_slot=False)
+@base_events.requires_intents(intents.Intents.GUILD_MESSAGES)
+class GuildBulkMessageDeleteEvent(shard_events.ShardEvent):
+    """Event that is triggered when a bulk deletion is triggered in a guild.
+
+    !!! note
+        Due to Discord limitations, most message information is unavailable
+        during deletion events.
+    """
+
+    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>
+
+    channel_id: snowflakes.Snowflake = attr.field()
+    """ID of the channel that this event concerns."""
+
+    guild_id: snowflakes.Snowflake = attr.field()
+    """ID of the guild that this event occurred in."""
+
+    message_ids: typing.AbstractSet[snowflakes.Snowflake] = attr.field()
+    """Set of message IDs that were bulk deleted."""
+
+    old_messages: typing.Mapping[snowflakes.Snowflake, messages.Message] = attr.field()
+    """Mapping of a snowflake to the deleted message object.
+
+    If the message was not found in the cache it will be missing from the mapping.
+    """
+
+    shard: shard_.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from ShardEvent>>
+
+    def get_channel(self) -> typing.Optional[channels.TextableGuildChannel]:
+        """Get the cached channel the messages were sent in, if known.
+
+        Returns
+        -------
+        typing.Optional[hikari.channels.TextableGuildChannel]
+            The channel the messages were sent in, or `builtins.None` if not
+            known/cached.
+        """
+        if not isinstance(self.app, traits.CacheAware):
+            return None
+
+        channel = self.app.cache.get_guild_channel(self.channel_id)
+        assert channel is None or isinstance(
+            channel, channels.TextableGuildChannel
+        ), f"Cached channel ID is not a TextableGuildChannel, but a {type(channel).__name__}!"
+        return channel
+
+    def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
+        """Get the cached guild this event corresponds to, if known.
+
+        !!! note
+            You will need `hikari.intents.Intents.GUILDS` enabled to receive this
+            information.
+
+        Returns
+        -------
+        hikari.guilds.GatewayGuild
+            The gateway guild that this event corresponds to, if known and
+            cached.
+        """
+        if not isinstance(self.app, traits.CacheAware):
+            return None
+
+        return self.app.cache.get_guild(self.guild_id)

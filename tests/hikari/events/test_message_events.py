@@ -319,17 +319,6 @@ class TestDMMessageUpdateEvent:
         assert event.old_message.id == 123
 
 
-class TestMessageDeleteEvent:
-    def test_message_id_property(self):
-        event = hikari_test_helpers.mock_class_namespace(message_events.MessageDeleteEvent, message_ids=[9, 18, 27])()
-        assert event.message_id == 9
-
-    def test_message_id_property_if_empty_errors(self):
-        event = hikari_test_helpers.mock_class_namespace(message_events.MessageDeleteEvent, message_ids=[])()
-        with pytest.raises(RuntimeError):
-            _ = event.message_id
-
-
 class TestGuildMessageDeleteEvent:
     @pytest.fixture()
     def event(self):
@@ -337,9 +326,9 @@ class TestGuildMessageDeleteEvent:
             guild_id=snowflakes.Snowflake(542342354564),
             channel_id=snowflakes.Snowflake(54213123123),
             app=mock.Mock(),
-            shard=mock.Mock(),
-            message_ids={9, 18, 27, 36},
-            is_bulk=True,
+            shard=object(),
+            message_id=9,
+            old_message=object(),
         )
 
     def test_get_channel_when_no_cache_trait(self, event):
