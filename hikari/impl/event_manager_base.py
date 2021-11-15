@@ -129,10 +129,17 @@ class EventStream(event_manager_.EventStream[event_manager_.EventT]):
     # These are only included at runtime in-order to avoid the model being typed as an asynchronous context manager.
     if not typing.TYPE_CHECKING:
 
-        async def __aenter__(self) -> typing.NoReturn:
+        async def __aenter__(self: _EventStreamT) -> _EventStreamT:
             # This is sync only.
-            cls = type(self)
-            raise TypeError(f"{cls.__module__}.{cls.__qualname__} is sync-only, did you mean 'with'?") from None
+            warnings.warn(
+                "Using EventStream as an async context manager has been deprecated since 2.0.0.dev104. "
+                "Please use it as a sycnrhonous context manager (e.g. with bot.stream(...)) instead.",
+                category=DeprecationWarning,
+                stacklevel=2,
+            )
+
+            self.open()
+            return self
 
         async def __aexit__(
             self,
@@ -140,7 +147,7 @@ class EventStream(event_manager_.EventStream[event_manager_.EventT]):
             exc: typing.Optional[BaseException],
             exc_tb: typing.Optional[types.TracebackType],
         ) -> None:
-            pass
+            self.close()
 
     def __enter__(self: _EventStreamT) -> _EventStreamT:
         self.open()
