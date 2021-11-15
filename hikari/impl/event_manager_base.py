@@ -64,6 +64,7 @@ if typing.TYPE_CHECKING:
     WaiterMapT = typing.MutableMapping[
         typing.Type[event_manager_.EventT_co], typing.MutableSet[WaiterT[event_manager_.EventT_co]]
     ]
+    _EventStreamT = typing.TypeVar("_EventStreamT", bound="EventStream[typing.Any]")
 
 
 def _generate_weak_listener(
@@ -94,9 +95,11 @@ class EventStream(event_manager_.EventStream[event_manager_.EventT]):
     __slots__: typing.Sequence[str] = (
         "__weakref__",
         "_active",
+        "_event",
         "_event_manager",
         "_event_type",
         "_filters",
+        "_limit",
         "_queue",
         "_registered_listener",
         "_timeout",
@@ -110,55 +113,70 @@ class EventStream(event_manager_.EventStream[event_manager_.EventT]):
         timeout: typing.Union[float, int, None],
         limit: typing.Optional[int] = None,
     ) -> None:
-        self._event_manager = event_manager
         self._active = False
+        self._event: typing.Optional[asyncio.Event] = None
+        self._event_manager = event_manager
         self._event_type = event_type
         self._filters: iterators.All[event_manager_.EventT] = iterators.All(())
-        # We accept `None` to represent unlimited here to be consistent with how `None` is already used to represent
-        # unlimited for timeout in other places.
-        self._queue: asyncio.Queue[event_manager_.EventT] = asyncio.Queue(limit or 0)
+        self._limit = limit
+        self._queue: typing.List[event_manager_.EventT] = []
         self._registered_listener: typing.Optional[
             typing.Callable[[event_manager_.EventT], typing.Coroutine[typing.Any, typing.Any, None]]
         ] = None
         # The registered wrapping function for the weak ref to this class's _listener method.
         self._timeout = timeout
 
-    async def __aenter__(self) -> EventStream[event_manager_.EventT]:
-        await self.open()
-        return self
-
-    async def __aexit__(
-        self,
-        exc_type: typing.Optional[typing.Type[BaseException]],
-        exc: typing.Optional[BaseException],
-        exc_tb: typing.Optional[types.TracebackType],
-    ) -> None:
-        await self.close()
-
-    # These are only included at runtime in-order to avoid the model being typed as a synchronous context manager.
+    # These are only included at runtime in-order to avoid the model being typed as an asynchronous context manager.
     if not typing.TYPE_CHECKING:
 
-        def __enter__(self) -> typing.NoReturn:
-            # This is async only.
-            cls = type(self)
-            raise TypeError(f"{cls.__module__}.{cls.__qualname__} is async-only, did you mean 'async with'?") from None
+        async def __aenter__(self: _EventStreamT) -> _EventStreamT:
+            # This is sync only.
+            warnings.warn(
+                "Using EventStream as an async context manager has been deprecated since 2.0.0.dev104. "
+                "Please use it as a sycnrhonous context manager (e.g. with bot.stream(...)) instead.",
+                category=DeprecationWarning,
+                stacklevel=2,
+            )
 
-        def __exit__(
+            self.open()
+            return self
+
+        async def __aexit__(
             self,
-            exc_type: typing.Optional[typing.Type[Exception]],
-            exc_val: typing.Optional[Exception],
+            exc_type: typing.Optional[typing.Type[BaseException]],
+            exc: typing.Optional[BaseException],
             exc_tb: typing.Optional[types.TracebackType],
         ) -> None:
-            return None
+            self.close()
+
+    def __enter__(self: _EventStreamT) -> _EventStreamT:
+        self.open()
+        return self
+
+    def __exit__(
+        self,
+        exc_type: typing.Optional[typing.Type[BaseException]],
+        exc_val: typing.Optional[BaseException],
+        exc_tb: typing.Optional[types.TracebackType],
+    ) -> None:
+        self.close()
 
     async def __anext__(self) -> event_manager_.EventT:
         if not self._active:
-            raise TypeError("stream must be started with `async with` before entering it")
+            raise TypeError("stream must be started with before entering it")
 
-        try:
-            return await asyncio.wait_for(self._queue.get(), timeout=self._timeout)
-        except asyncio.TimeoutError:
-            raise StopAsyncIteration from None
+        while not self._queue:
+            if not self._event:
+                self._event = asyncio.Event()
+
+            try:
+                await asyncio.wait_for(self._event.wait(), timeout=self._timeout)
+            except asyncio.TimeoutError:
+                raise StopAsyncIteration from None
+
+            self._event.clear()
+
+        return self._queue.pop(0)
 
     def __await__(self) -> typing.Generator[None, None, typing.Sequence[event_manager_.EventT]]:
         return self._await_all().__await__()
@@ -170,27 +188,23 @@ class EventStream(event_manager_.EventStream[event_manager_.EventT]):
         # ominous memory leak.
         if self._active:
             _LOGGER.warning("active %r streamer fell out of scope before being closed", self._event_type.__name__)
-            try:
-                asyncio.ensure_future(self.close())
-            except RuntimeError:
-                pass
+            self.close()
 
     async def _await_all(self) -> typing.Sequence[event_manager_.EventT]:
-        await self.open()
+        self.open()
         result = [event async for event in self]
-        await self.close()
+        self.close()
         return result
 
     async def _listener(self, event: event_manager_.EventT) -> None:
-        if not self._filters(event):
+        if not self._filters(event) or (self._limit is not None and len(self._queue) >= self._limit):
             return
 
-        try:
-            self._queue.put_nowait(event)
-        except asyncio.QueueFull:
-            pass
+        self._queue.append(event)
+        if self._event:
+            self._event.set()
 
-    async def close(self) -> None:
+    def close(self) -> None:
         if self._active and self._registered_listener is not None:
             try:
                 self._event_manager.unsubscribe(self._event_type, self._registered_listener)
@@ -202,17 +216,18 @@ class EventStream(event_manager_.EventStream[event_manager_.EventT]):
         self._active = False
 
     def filter(
-        self,
+        self: _EventStreamT,
         *predicates: typing.Union[typing.Tuple[str, typing.Any], typing.Callable[[event_manager_.EventT], bool]],
         **attrs: typing.Any,
-    ) -> typing.Union[EventStream[event_manager_.EventT], iterators.LazyIterator[event_manager_.EventT]]:
+    ) -> _EventStreamT:
+        filter_ = self._map_predicates_and_attr_getters("filter", *predicates, **attrs)
         if self._active:
-            return super().filter(*predicates, **attrs)
+            self._queue = [entry for entry in self._queue if filter_(entry)]
 
-        self._filters |= self._map_predicates_and_attr_getters("filter", *predicates, **attrs)
+        self._filters |= filter_
         return self
 
-    async def open(self) -> None:
+    def open(self) -> None:
         if not self._active:
             # For the sake of protecting highly intelligent people who forget to close this, we register the event
             # listener with a weakref then try to close this on deletion. While this may lead to their consoles being

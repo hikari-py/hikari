@@ -57,12 +57,12 @@ class EventStream(iterators.LazyIterator[EventT], abc.ABC):
 
     Examples
     --------
-    A streamer may either be started and closed using `async with` syntax
+    A streamer may either be started and closed using `with` syntax
     where `EventStream.open` and `EventStream.close` are implicitly called based on
     context.
 
     ```py
-    async with EventStream(app, EventType, timeout=50) as stream:
+    with EventStream(app, EventType, timeout=50) as stream:
         async for entry in stream:
             ...
     ```
@@ -89,33 +89,33 @@ class EventStream(iterators.LazyIterator[EventT], abc.ABC):
     __slots__: typing.Sequence[str] = ()
 
     @abc.abstractmethod
-    async def close(self) -> None:
+    def close(self) -> None:
         """Mark this streamer as closed to stop it from queueing and receiving events.
 
         If called on an already closed streamer then this will do nothing.
 
         !!! note
-            `async with streamer` may be used as a short-cut for opening and
+            `with streamer` may be used as a short-cut for opening and
             closing a streamer.
         """
 
     @abc.abstractmethod
-    async def open(self) -> None:
+    def open(self) -> None:
         """Mark this streamer as opened to let it start receiving and queueing events.
 
         If called on an already started streamer then this will do nothing.
 
         !!! note
-            `async with streamer` may be used as a short-cut for opening and
+            `with streamer` may be used as a short-cut for opening and
             closing a stream.
         """
 
     @abc.abstractmethod
-    async def __aenter__(self) -> EventStream[EventT]:
+    def __enter__(self) -> EventStream[EventT]:
         raise NotImplementedError
 
     @abc.abstractmethod
-    async def __aexit__(
+    def __exit__(
         self,
         exc_type: typing.Optional[typing.Type[BaseException]],
         exc: typing.Optional[BaseException],
@@ -416,33 +416,33 @@ class EventManager(abc.ABC):
         -------
         EventStream[hikari.events.base_events.Event]
             The async iterator to handle streamed events. This must be started
-            with `async with stream:` or `await stream.open()` before
+            with `with stream:` or `stream.open()` before
             asynchronously iterating over it.
 
         !!! warning
-            If you use `await stream.open()` to start the stream then you must
-            also close it with `await stream.close()` otherwise it may queue
+            If you use `stream.open()` to start the stream then you must
+            also close it with `stream.close()` otherwise it may queue
             events in memory indefinitely.
 
         Examples
         --------
 
         ```py
-        async with bot.stream(events.ReactionAddEvent, timeout=30).filter(("message_id", message.id)) as stream:
+        with bot.stream(events.ReactionAddEvent, timeout=30).filter(("message_id", message.id)) as stream:
             async for user_id in stream.map("user_id").limit(50):
                 ...
         ```
 
-        or using await `open()` and await `close()`
+        or using `open()` and `close()`
 
         ```py
         stream = bot.stream(events.ReactionAddEvent, timeout=30).filter(("message_id", message.id))
-        await stream.open()
+        stream.open()
 
         async for user_id in stream.map("user_id").limit(50)
             ...
 
-        await stream.close()
+        stream.close()
         ```
 
         See Also
