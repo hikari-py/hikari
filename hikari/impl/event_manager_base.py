@@ -222,9 +222,7 @@ class EventStream(event_manager_.EventStream[event_manager_.EventT]):
     ) -> _EventStreamT:
         filter_ = self._map_predicates_and_attr_getters("filter", *predicates, **attrs)
         if self._active:
-            for entry in self._queue.copy():
-                if not filter_(entry):
-                    self._queue.remove(entry)
+            self._queue = [entry for entry in self._queue if filter_(entry)]
 
         self._filters |= filter_
         return self
