@@ -1,5 +1,5 @@
-aiohttp~=3.8.0
-attrs~=21.2.0
-colorlog~=6.6.0
-multidict~=5.2.0
-pure25519~=0.0.1
+aiohttp~=3.8
+attrs~=21.2
+colorlog~=6.6
+multidict~=5.2
+pure25519==0.0.1
