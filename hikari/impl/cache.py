@@ -1473,8 +1473,13 @@ class CacheImpl(cache.MutableCache):
             if guild_record:
                 self._garbage_collect_member(guild_record, message.object.member, decrement=1)
 
-        if message.object.referenced_message:
-            self._garbage_collect_message(message.object.referenced_message, decrement=1)
+        referenced_message = message.object.referenced_message
+        if not referenced_message and message.object.message_reference and message.object.message_reference.id:
+            msg_id = message.object.message_reference.id
+            referenced_message = self._message_entries.get(msg_id) or self._referenced_messages.get(msg_id)
+
+        if referenced_message:
+            self._garbage_collect_message(referenced_message, decrement=1)
 
         if message.object.mentions.users:
             for user in message.object.mentions.users.values():
