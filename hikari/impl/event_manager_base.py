@@ -248,7 +248,7 @@ def _assert_is_listener(parameters: typing.Iterator[inspect.Parameter], /) -> No
     if next(parameters, None) is None:
         raise TypeError("Event listener must have one positional argument for the event object.")
 
-    if any(param.default is not inspect.Parameter.empty for param in parameters):
+    if any(param.default is inspect.Parameter.empty for param in parameters):
         raise TypeError("Only the first argument for a listener can be required, the event argument.")
 
 
