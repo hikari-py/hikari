@@ -44,7 +44,7 @@ echo "-- Running towncrier --"
 towncrier --yes
 
 echo "-- Committing changes --"
-git commit -am "Prepare for release of version ${VERSION} [skip-ci]"
+git commit -am "Prepare for release of version ${VERSION} [skip ci]"
 
 if [ "${CI}" ]; then
     git push origin "task/prepare-release-${VERSION}"

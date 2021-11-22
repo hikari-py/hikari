@@ -88,5 +88,5 @@ echo "-- Bumping to development version (${NEW_VERSION}) --"
 sed "s|^__version__.*|__version__ = \"${NEW_VERSION}\"|g" -i hikari/_about.py
 
 echo "-- Pushing to repository --"
-git commit -am "Bump to development version (${NEW_VERSION}) [skip-ci]"
+git commit -am "Bump to development version (${NEW_VERSION}) [skip ci]"
 git push
