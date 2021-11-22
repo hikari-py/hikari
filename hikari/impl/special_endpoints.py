@@ -1244,7 +1244,9 @@ class ActionRowBuilder(special_endpoints.ActionRowBuilder):
 
     def _assert_can_add_type(self, type_: messages.ComponentType, /) -> None:
         if self._stored_type is not None and self._stored_type != type_:
-            raise ValueError(f"{type_} component type cannot be added to a container which already holds {type_}")
+            raise ValueError(
+                f"{type_} component type cannot be added to a container which already holds {self._stored_type}"
+            )
 
         self._stored_type = type_
 
