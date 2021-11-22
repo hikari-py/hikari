@@ -6,6 +6,52 @@ This file is updated every release with the use of `towncrier` from the fragment
 
 .. towncrier release notes start
 
+Hikari 2.0.0.dev104 (2021-11-22)
+================================
+
+Breaking Changes
+----------------
+
+- Remove the redundant `ChannelCreateEvent`, `ChannelUpdateEvent` and `ChannelDeleteEvent` base classes.
+  `GuildChannelCreateEvent`, `GuildChannelUpdateEvent` and `GuildChannelDeleteEvent` should now be used. ([#862](https://github.com/hikari-py/hikari/issues/862))
+- Split bulk message delete from normal delete
+    - The new event is now `hikari.events.message_events.GuildBulkMessageDeleteEvent` ([#897](https://github.com/hikari-py/hikari/issues/897))
+
+
+Deprecation
+-----------
+
+- `edit_my_nick` rest method. ([#827](https://github.com/hikari-py/hikari/issues/827))
+- EventStream is now a sync context menu not async. ([#864](https://github.com/hikari-py/hikari/issues/864))
+
+
+Features
+--------
+
+- User banners and accent colors to user models. ([#811](https://github.com/hikari-py/hikari/issues/811))
+- Add attachment "is_ephemeral" field ([#824](https://github.com/hikari-py/hikari/issues/824))
+- Guild member avatars ([#825](https://github.com/hikari-py/hikari/issues/825))
+- RESTClient `edit_my_member` method which currently only takes "nick". ([#827](https://github.com/hikari-py/hikari/issues/827))
+- Add role icons ([#838](https://github.com/hikari-py/hikari/issues/838))
+- RESTClient.entity_factory property ([#848](https://github.com/hikari-py/hikari/issues/848))
+- Added component support to InteractionMessageBuilder. ([#851](https://github.com/hikari-py/hikari/issues/851))
+- `EventStream.filter` now always returns `EventStream`. ([#864](https://github.com/hikari-py/hikari/issues/864))
+- Allow for passing a URL for avatar_url on execute_webhook. ([#889](https://github.com/hikari-py/hikari/issues/889))
+- Add `old_message` attribute to `hikari.events.message_events.MessageDelete` ([#897](https://github.com/hikari-py/hikari/issues/897))
+- Switch to more relaxed requirements. ([#906](https://github.com/hikari-py/hikari/issues/906))
+
+
+Bugfixes
+--------
+
+- Don't raise in bulk delete when message not found by delete single message endpoint ([#828](https://github.com/hikari-py/hikari/issues/828))
+- Setup basic handler if no handlers are defined in favour passed to `logging.config.dictConfig` ([#832](https://github.com/hikari-py/hikari/issues/832))
+- InteractionMessageBuilder and RESTClientImpl.create_interaction_response now cast content to str to be consistent with the other message create methods. ([#834](https://github.com/hikari-py/hikari/issues/834))
+- create_sticker method failing due to using an incorrect body. ([#858](https://github.com/hikari-py/hikari/issues/858))
+- Fix logic for asserting listeners to not error when using defaults for other arguments ([#911](https://github.com/hikari-py/hikari/issues/911))
+- Fix error message given by action row when a conflicted type is added. ([#912](https://github.com/hikari-py/hikari/issues/912))
+
+
 Hikari 2.0.0.dev103 (2021-10-06)
 ================================
 
