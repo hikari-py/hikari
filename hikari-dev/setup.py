@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021-present davfsa
+# Copyright (c) 2021 davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -19,18 +19,41 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Pyright integrations."""
+"""This is a mock package to install the dev requirements for hikari."""
+import pathlib
 
-from pipelines import config
-from pipelines import nox
+import setuptools
 
 
-@nox.session()
-def verify_types(session: nox.Session) -> None:
-    """Verify the "type completeness" of types exported by the library using Pyright."""
-    session.install("./hikari-dev[pyright]")
-    session.install(".")
-    # session.env["PYRIGHT_PYTHON_GLOBAL_NODE"] = "off"
-    session.env["PYRIGHT_PYTHON_FORCE_VERSION"] = config.PYRIGHT_VERSION
-    session.run("python", "-m", "pyright", "--version")
-    session.run("python", "-m", "pyright", "--verifytypes", "hikari", "--ignoreexternal")
+def parse_requirements_file(path):
+    with open(path) as fp:
+        raw_dependencies = fp.readlines()
+
+    dependencies = []
+    for dependency in raw_dependencies:
+        comment_index = dependency.find("#")
+        if comment_index == 0:
+            continue
+
+        if comment_index != -1:  # Remove any comments after the requirement
+            dependency = dependency[:comment_index]
+
+        if d := dependency.strip():
+            dependencies.append(d)
+
+    return dependencies
+
+
+all_requirement_files_path = pathlib.Path(".").glob("*-requirements.txt")
+
+all_extras = []
+extras = {"all": all_extras}
+magic_len = len("-requirements.txt")
+for path in all_requirement_files_path:
+    name = str(path)[:-magic_len]
+
+    requirements = parse_requirements_file(path)
+    all_extras.extend(requirements)
+    extras[name] = requirements
+
+setuptools.setup(name="hikari-dev", extras_require=extras)

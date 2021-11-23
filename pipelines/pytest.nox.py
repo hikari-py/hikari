@@ -51,7 +51,7 @@ def pytest(session: nox.Session) -> None:
 
     Coverage can be disabled with the `--skip-coverage` flag.
     """
-    session.install("-r", "requirements.txt", "-r", "dev-requirements.txt")
+    session.install("-r", "requirements.txt", "./hikari-dev[pytest]")
     _pytest(session)
 
 
@@ -61,7 +61,7 @@ def pytest_speedups(session: nox.Session) -> None:
 
     Coverage can be disabled with the `--skip-coverage` flag.
     """
-    session.install("-r", "requirements.txt", "-r", "speedup-requirements.txt", "-r", "dev-requirements.txt")
+    session.install("-r", "requirements.txt", "-r", "speedup-requirements.txt", "./hikari-dev[pytest]")
     _pytest(session, "-OO")
 
 

@@ -57,7 +57,7 @@ def pages(session: nox.Session) -> None:
     copy_from_in(config.PAGES_DIRECTORY, config.ARTIFACT_DIRECTORY)
 
     # Documentation
-    session.install("-r", "requirements.txt", "-r", "dev-requirements.txt")
+    session.install("-r", "requirements.txt", "./hikari-dev[docs]")
     session.env["PDOC3_GENERATING"] = "1"
 
     print("Building documentation...")

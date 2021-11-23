@@ -40,7 +40,6 @@ COVERAGE_HTML_PATH = _os.path.join(ARTIFACT_DIRECTORY, "coverage", "html")
 PYRIGHT_VERSION = "1.1.190"  # 2021-11-25 (UTC+0)
 
 # Reformatting paths
-
 REFORMATTING_FILE_EXTS = (
     ".py",
     ".pyx",
@@ -82,6 +81,7 @@ PYTHON_REFORMATTING_PATHS = (
     MAIN_PACKAGE,
     TEST_PACKAGE,
     EXAMPLE_SCRIPTS,
+    "hikari-dev",
     "scripts",
     "pipelines",
     "setup.py",

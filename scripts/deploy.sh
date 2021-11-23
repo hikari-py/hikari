@@ -48,7 +48,7 @@ echo "===== INSTALLING DEPENDENCIES ====="
 pip install setuptools
 pip install wheel
 pip install twine
-pip install nox
+pip install ./hikari-dev[nox]
 pip install -r requirements.txt
 
 echo "===== DEPLOYING TO PYPI ====="

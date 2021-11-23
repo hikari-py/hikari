@@ -21,3 +21,16 @@ updates:
       - FasterSpeeding
     rebase-strategy: auto
     target-branch: master
+
+  - package-ecosystem: pip
+    directory: /hikari-dev/
+    schedule:
+      interval: daily
+    assignees:
+      - davfsa
+      - FasterSpeeding
+    reviewers:
+      - davfsa
+      - FasterSpeeding
+    rebase-strategy: auto
+    target-branch: master
