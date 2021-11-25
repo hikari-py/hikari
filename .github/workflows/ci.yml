@@ -71,7 +71,7 @@ jobs:
 
       - name: Combine coverage
         run: |
-          pip install coverage
+          pip install -r dev-requirements.txt
           coverage combine
           coverage xml -i
 
