@@ -100,7 +100,7 @@ try:
 except ImportError:
     fast_iso8601_datetime_string_to_datetime = None
 
-iso8601_datetime_string_to_datetime = (
+iso8601_datetime_string_to_datetime: typing.Callable[[str], datetime.datetime] = (
     fast_iso8601_datetime_string_to_datetime or slow_iso8601_datetime_string_to_datetime
 )
 

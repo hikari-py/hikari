@@ -21,20 +21,25 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Package metadata."""
+from __future__ import annotations
 
-# DO NOT ADD TYPE HINTS TO THESE FIELDS. THESE ARE AUTOMATICALLY UPDATED
+import typing
+
+# DO NOT CHANGE THE TYPE HINTS FOR THESE FIELDS. THESE ARE AUTOMATICALLY UPDATED
 # FROM THE CI SCRIPT AND DOING THIS MAY LEAD TO THE DEPLOY PROCESS FAILING.
 
-__author__ = "Nekokatt"
-__maintainer__ = "davfsa"
-__ci__ = "https://github.com/hikari-py/hikari/actions"
-__copyright__ = "© 2021 davfsa"
-__coverage__ = "https://codeclimate.com/github/hikari-py/hikari"
-__discord_invite__ = "https://discord.gg/Jx4cNGG"
-__docs__ = "https://hikari-py.dev/hikari"
-__email__ = "davfsa@gmail.com"
-__issue_tracker__ = "https://github.com/hikari-py/hikari/issues"
-__license__ = "MIT"
-__url__ = "https://github.com/hikari-py/hikari"
-__version__ = "2.0.0.dev105"
-__git_sha1__ = "HEAD"
+
+# TODO: fix CI SCRIPt
+__author__: typing.Final[str] = "Nekokatt"
+__maintainer__: typing.Final[str] = "davfsa"
+__ci__: typing.Final[str] = "https://github.com/hikari-py/hikari/actions"
+__copyright__: typing.Final[str] = "© 2021 davfsa"
+__coverage__: typing.Final[str] = "https://codeclimate.com/github/hikari-py/hikari"
+__discord_invite__: typing.Final[str] = "https://discord.gg/Jx4cNGG"
+__docs__: typing.Final[str] = "https://hikari-py.dev/hikari"
+__email__: typing.Final[str] = "davfsa@gmail.com"
+__issue_tracker__: typing.Final[str] = "https://github.com/hikari-py/hikari/issues"
+__license__: typing.Final[str] = "MIT"
+__url__: typing.Final[str] = "https://github.com/hikari-py/hikari"
+__version__: typing.Final[str] = "2.0.0.dev105"
+__git_sha1__: typing.Final[str] = "HEAD"

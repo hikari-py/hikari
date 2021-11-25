@@ -1003,14 +1003,32 @@ class TestRESTClientImpl:
                 guild=guild,
             )
 
-    def test_kick_member(self, rest_client):
-        assert rest_client.kick_member == rest_client.kick_user
+    def test_kick_member(self, rest_client: rest.RESTClientImpl):
+        mock_kick_user = mock.Mock()
+        rest_client.kick_user = mock_kick_user
 
-    def test_ban_member(self, rest_client):
-        assert rest_client.ban_member == rest_client.ban_user
+        result = rest_client.kick_member(123, 5423, reason="oewkwkwk")
 
-    def test_unban_member(self, rest_client):
-        assert rest_client.unban_member == rest_client.unban_user
+        assert result is mock_kick_user.return_value
+        mock_kick_user.assert_called_once_with(123, 5423, reason="oewkwkwk")
+
+    def test_ban_member(self, rest_client: rest.RESTClientImpl):
+        mock_ban_user = mock.Mock()
+        rest_client.ban_user = mock_ban_user
+
+        result = rest_client.ban_member(43123, 54123, delete_message_days=6, reason="wowowowo")
+
+        assert result is mock_ban_user.return_value
+        mock_ban_user.assert_called_once_with(43123, 54123, delete_message_days=6, reason="wowowowo")
+
+    def test_unban_member(self, rest_client: rest.RESTClientImpl):
+        mock_unban_user = mock.Mock()
+        rest_client.unban_user = mock_unban_user
+
+        reason = rest_client.unban_member(123, 321, reason="ayaya")
+
+        assert reason is mock_unban_user.return_value
+        mock_unban_user.assert_called_once_with(123, 321, reason="ayaya")
 
     def test_command_builder(self, rest_client):
         result = rest_client.command_builder("a name", "very very good")

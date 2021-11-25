@@ -35,10 +35,11 @@ LOGO_SOURCE = "logo.png"
 
 # Linting and test configs.
 FLAKE8_REPORT = "public/flake8"
-MYPY_INI = "pyproject.toml"
+PYPROJECT_TOML = "pyproject.toml"
 PYTEST_INI = "pytest.ini"
 COVERAGE_INI = "coverage.ini"
 COVERAGE_HTML_PATH = _os.path.join(ARTIFACT_DIRECTORY, "coverage", "html")
+PYRIGHT_VERSION = "1.1.190"  # 2021-11-25 (UTC+0)
 
 # Reformatting paths
 

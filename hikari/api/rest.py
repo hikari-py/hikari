@@ -598,8 +598,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def delete_permission_overwrite(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
-        target: snowflakes.SnowflakeishOr[
-            typing.Union[channels_.PermissionOverwrite, guilds.PartialRole, users.PartialUser, snowflakes.Snowflakeish]
+        target: typing.Union[
+            channels_.PermissionOverwrite, guilds.PartialRole, users.PartialUser, snowflakes.Snowflakeish
         ],
     ) -> None:
         """Delete a custom permission for an entity in a given guild channel.

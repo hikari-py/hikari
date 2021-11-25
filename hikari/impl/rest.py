@@ -97,7 +97,6 @@ if typing.TYPE_CHECKING:
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.rest")
 
 _APPLICATION_JSON: typing.Final[str] = "application/json"
-_APPLICATION_OCTET_STREAM: typing.Final[str] = "application/octet-stream"
 _AUTHORIZATION_HEADER: typing.Final[str] = sys.intern("Authorization")
 _HTTP_USER_AGENT: typing.Final[str] = (
     f"DiscordBot ({about.__url__}, {about.__version__}) {about.__author__} "
@@ -1076,8 +1075,8 @@ class RESTClientImpl(rest_api.RESTClient):
     async def delete_permission_overwrite(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
-        target: snowflakes.SnowflakeishOr[
-            typing.Union[channels_.PermissionOverwrite, guilds.PartialRole, users.PartialUser, snowflakes.Snowflakeish]
+        target: typing.Union[
+            channels_.PermissionOverwrite, guilds.PartialRole, users.PartialUser, snowflakes.Snowflakeish
         ],
     ) -> None:
         route = routes.DELETE_CHANNEL_PERMISSIONS.compile(channel=channel, overwrite=target)
@@ -2782,7 +2781,14 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.DELETE_GUILD_MEMBER.compile(guild=guild, user=user)
         await self._request(route, reason=reason)
 
-    kick_member = kick_user
+    def kick_member(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        *,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> typing.Coroutine[typing.Any, typing.Any, None]:
+        return self.kick_user(guild, user, reason=reason)
 
     async def ban_user(
         self,
@@ -2797,7 +2803,15 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.PUT_GUILD_BAN.compile(guild=guild, user=user)
         await self._request(route, json=body, reason=reason)
 
-    ban_member = ban_user
+    def ban_member(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        *,
+        delete_message_days: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> typing.Coroutine[typing.Any, typing.Any, None]:
+        return self.ban_user(guild, user, delete_message_days=delete_message_days, reason=reason)
 
     async def unban_user(
         self,
@@ -2809,7 +2823,14 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.DELETE_GUILD_BAN.compile(guild=guild, user=user)
         await self._request(route, reason=reason)
 
-    unban_member = unban_user
+    def unban_member(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        *,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> typing.Coroutine[typing.Any, typing.Any, None]:
+        return self.unban_user(guild, user, reason=reason)
 
     async def fetch_ban(
         self,

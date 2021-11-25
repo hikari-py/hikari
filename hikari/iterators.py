@@ -100,6 +100,9 @@ class All(typing.Generic[ValueT]):
 
     __slots__: typing.Sequence[str] = ("conditions",)
 
+    conditions: typing.Collection[typing.Callable[[ValueT], bool]]
+    """Collection of the condition callbacks within this."""
+
     def __init__(self, conditions: typing.Collection[typing.Callable[[ValueT], bool]]) -> None:
         self.conditions = conditions
 
@@ -886,7 +889,7 @@ class _ChunkedLazyIterator(typing.Generic[ValueT], LazyIterator[typing.Sequence[
         self._chunk_size = chunk_size
 
     async def __anext__(self) -> typing.Sequence[ValueT]:
-        chunk = []
+        chunk: list[ValueT] = []
 
         async for item in self._iterator:
             chunk.append(item)

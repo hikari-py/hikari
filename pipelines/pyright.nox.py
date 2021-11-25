@@ -19,21 +19,18 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+"""Pyright integrations."""
+
 from pipelines import config
 from pipelines import nox
 
 
-@nox.session(reuse_venv=True)
-def pyright(session: nox.Session) -> None:
-    """Perform static type analysis on Python source code."""
-    session.install("-r", "requirements.txt", "-r", "speedup-requirements.txt", "-r", "dev-requirements.txt")
-
-    session.run("python", "-m", "pyright")
-
-
-@nox.session(reuse_venv=True)
-def pyright_verify_types(session: nox.Session) -> None:
-    """Verify how complete the library's exported types are according to pyright."""
-    session.install(".", "-r", "dev-requirements.txt")
-
-    session.run("python", "-m", "pyright", "--verifytypes", config.MAIN_PACKAGE)
+@nox.session()
+def verify_types(session: nox.Session) -> None:
+    """Verify the "type completeness" of types exported by the library using Pyright."""
+    session.install("-r", "dev-requirements.txt")
+    session.install(".")
+    # session.env["PYRIGHT_PYTHON_GLOBAL_NODE"] = "off"
+    session.env["PYRIGHT_PYTHON_FORCE_VERSION"] = config.PYRIGHT_VERSION
+    session.run("python", "-m", "pyright", "--version")
+    session.run("python", "-m", "pyright", "--verifytypes", "hikari", "--ignoreexternal")

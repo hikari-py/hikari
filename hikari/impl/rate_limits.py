@@ -165,6 +165,9 @@ class ManualRateLimiter(BurstRateLimiter):
 
     __slots__: typing.Sequence[str] = ()
 
+    throttle_task: typing.Optional[asyncio.Task[typing.Any]]
+    """The throttling task, or `builtins.None` if it is not running."""
+
     def __init__(self) -> None:
         super().__init__("global")
 
@@ -271,6 +274,9 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
     """
 
     __slots__: typing.Sequence[str] = ("reset_at", "remaining", "limit", "period")
+
+    throttle_task: typing.Optional[asyncio.Task[typing.Any]]
+    #
 
     reset_at: float
     """The `time.monotonic_timestamp` that the limit window ends at."""

@@ -833,10 +833,10 @@ class MultiprocessingFileReader(FileReader):
         return {"path": self.path, "filename": self.filename}
 
     def __setstate__(self, state: typing.Dict[str, typing.Any]) -> None:
-        self.path = state["path"]
-        self.filename = state["filename"]
-        self.executor = None
-        self.mimetype = None
+        self.path: pathlib.Path = state["path"]
+        self.filename: str = state["filename"]
+        self.executor: typing.Optional[concurrent.futures.Executor] = None
+        self.mimetype: typing.Optional[str] = None
 
     def _read_all(self) -> bytes:
         with open(self.path, "rb") as fp:

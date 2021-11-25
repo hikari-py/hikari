@@ -274,6 +274,9 @@ class HikariVersion:
 
     __slots__: typing.Sequence[str] = ("version", "prerelease", "_cmp")
 
+    version: typing.Tuple[int, int, int]
+    prerelease: typing.Optional[typing.Tuple[str, int]]
+
     def __init__(self, vstring: str) -> None:
         match = _VERSION_REGEX.match(vstring)
         if not match:
