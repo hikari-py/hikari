@@ -28,8 +28,6 @@ import typing
 # DO NOT CHANGE THE TYPE HINTS FOR THESE FIELDS. THESE ARE AUTOMATICALLY UPDATED
 # FROM THE CI SCRIPT AND DOING THIS MAY LEAD TO THE DEPLOY PROCESS FAILING.
 
-
-# TODO: fix CI SCRIPt
 __author__: typing.Final[str] = "Nekokatt"
 __maintainer__: typing.Final[str] = "davfsa"
 __ci__: typing.Final[str] = "https://github.com/hikari-py/hikari/actions"
