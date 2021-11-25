@@ -53,7 +53,7 @@ pip install -r requirements.txt
 
 echo "===== DEPLOYING TO PYPI ====="
 echo "-- Setting __git_sha1__ (ref: ${REF}) --"
-sed "s|^__git_sha1__.*|__git_sha1__ = \"${REF}\"|g" -i hikari/_about.py
+sed "s|^__git_sha1__.*|__git_sha1__: typing.Final[str] = \"${REF}\"|g" -i hikari/_about.py
 echo "=========================================================================="
 cat hikari/_about.py
 echo "=========================================================================="
@@ -85,7 +85,7 @@ git fetch origin
 git checkout -f master
 
 echo "-- Bumping to development version (${NEW_VERSION}) --"
-sed "s|^__version__.*|__version__ = \"${NEW_VERSION}\"|g" -i hikari/_about.py
+sed "s|^__version__.*|__version__: typing.Final[str] = \"${NEW_VERSION}\"|g" -i hikari/_about.py
 
 echo "-- Pushing to repository --"
 git commit -am "Bump to development version (${NEW_VERSION}) [skip ci]"
