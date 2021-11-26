@@ -113,7 +113,8 @@ class CommandOption:
     r"""The command option's name.
 
     !!! note
-        This will match the regex `^[a-z0-9_-]{1,32}$`.
+        This will match the regex `^\w{1,32}$` in Unicode mode and will be
+        lowercase.
     """
 
     description: str = attr.field(repr=False)
@@ -164,7 +165,8 @@ class Command(snowflakes.Unique):
     r"""The command's name.
 
     !!! note
-        This will match the regex `^[a-z0-9_-]{1,32}$`.
+        This will match the regex `^\w{1,32}$` in Unicode mode and will be
+        lowercase.
     """
 
     description: str = attr.field(eq=False, hash=False, repr=False)
