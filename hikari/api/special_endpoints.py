@@ -901,7 +901,7 @@ class CommandBuilder(abc.ABC):
         r"""Name to set for this command.
 
         !!! warning
-            This should match the regex `^\w{1,32}$` in Unicode mode
+            This should match the regex `^[\w-]{1,32}$` in Unicode mode
             and must be lowercase.
 
         Returns
