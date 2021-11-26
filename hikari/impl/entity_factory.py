@@ -1916,14 +1916,12 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if option.options is not None:
             payload["options"] = [self.serialize_command_option(suboption) for suboption in option.options]
 
+        # because discord does not allow floating point min and max values with integer options we have to round
+        is_integer = option.type is commands.OptionType.INTEGER
         if option.min_value is not None:
-            payload["min_value"] = (
-                math.ceil(option.min_value) if option.type is commands.OptionType.INTEGER else option.min_value
-            )
+            payload["min_value"] = math.ceil(option.min_value) if is_integer else option.min_value
         if option.max_value is not None:
-            payload["max_value"] = (
-                math.floor(option.max_value) if option.type is commands.OptionType.INTEGER else option.max_value
-            )
+            payload["max_value"] = math.floor(option.max_value) if is_integer else option.max_value
 
         return payload
 
