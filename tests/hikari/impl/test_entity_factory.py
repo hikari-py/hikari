@@ -2719,6 +2719,8 @@ class TestEntityFactoryImpl:
                     "description": "42",
                     "channel_types": [0, 1, 2],
                     "required": True,
+                    "min_value": 0,
+                    "max_value": 10,
                     "options": [
                         {
                             "type": 6,
@@ -2758,6 +2760,8 @@ class TestEntityFactoryImpl:
             channel_models.ChannelType.DM,
             channel_models.ChannelType.GUILD_VOICE,
         ]
+        assert option.min_value == 0
+        assert option.max_value == 10
 
         assert len(option.options) == 1
         suboption = option.options[0]
@@ -3131,6 +3135,27 @@ class TestEntityFactoryImpl:
             "description": "go away",
             "required": True,
             "channel_types": [13, 0, 100],
+        }
+
+    def test_serialize_command_option_with_min_and_max_value(self, entity_factory_impl):
+        option = commands.CommandOption(
+            type=commands.OptionType.INTEGER,
+            name="a name",
+            description="go away",
+            is_required=True,
+            min_value=1.2,
+            max_value=9.99,
+        )
+
+        result = entity_factory_impl.serialize_command_option(option)
+
+        assert result == {
+            "type": 4,
+            "name": "a name",
+            "description": "go away",
+            "required": True,
+            "min_value": 2,
+            "max_value": 9,
         }
 
     def test_serialize_command_option_with_choices(self, entity_factory_impl):

@@ -146,6 +146,12 @@ class CommandOption:
     If `builtins.None`, then all channel types will be accepted.
     """
 
+    min_value: typing.Optional[float] = attr.field(default=None, repr=False)
+    """The minimum value permitted (inclusive)"""
+
+    max_value: typing.Optional[float] = attr.field(default=None, repr=False)
+    """The minimum value permitted (inclusive)"""
+
 
 @attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)

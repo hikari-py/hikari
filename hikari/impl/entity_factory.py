@@ -28,6 +28,7 @@ __all__: typing.List[str] = ["EntityFactoryImpl"]
 
 import datetime
 import logging
+import math
 import typing
 
 import attr
@@ -1690,6 +1691,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             choices=choices,
             options=suboptions,
             channel_types=channel_types,
+            min_value=payload.get("min_value"),
+            max_value=payload.get("max_value"),
         )
 
     def deserialize_command(
@@ -1912,6 +1915,15 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         if option.options is not None:
             payload["options"] = [self.serialize_command_option(suboption) for suboption in option.options]
+
+        if option.min_value is not None:
+            payload["min_value"] = (
+                math.ceil(option.min_value) if option.type is commands.OptionType.INTEGER else option.min_value
+            )
+        if option.max_value is not None:
+            payload["max_value"] = (
+                math.floor(option.max_value) if option.type is commands.OptionType.INTEGER else option.max_value
+            )
 
         return payload
 
