@@ -113,7 +113,7 @@ class CommandOption:
     r"""The command option's name.
 
     !!! note
-        This will match the regex `^\w{1,32}$` in Unicode mode and will be
+        This will match the regex `^[\w-]{1,32}$` in Unicode mode and will be
         lowercase.
     """
 
@@ -165,7 +165,7 @@ class Command(snowflakes.Unique):
     r"""The command's name.
 
     !!! note
-        This will match the regex `^\w{1,32}$` in Unicode mode and will be
+        This will match the regex `^[\w-]{1,32}$` in Unicode mode and will be
         lowercase.
     """
 
