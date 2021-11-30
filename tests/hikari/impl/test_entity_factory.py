@@ -2947,7 +2947,9 @@ class TestEntityFactoryImpl:
         assert member.user is mock_user
 
     @pytest.fixture()
-    def command_interaction_payload(self, member_payload, user_payload, guild_role_payload, interaction_member_payload):
+    def command_interaction_payload(
+        self, member_payload, user_payload, guild_role_payload, interaction_member_payload, message_payload
+    ):
         member_payload = member_payload.copy()
         member_payload["permissions"] = "47"
         del member_payload["user"]
@@ -2958,12 +2960,13 @@ class TestEntityFactoryImpl:
             "data": {
                 "id": "43123123",
                 "name": "okokokok",
+                "type": 1,
                 "options": [
                     {
                         "name": "an option",
                         "type": 1,
                         "options": [
-                            {"name": "go ice", "type": 4, "value": "42"},
+                            {"name": "go ice", "type": 4, "value": "42", "focused": True},
                             {"name": "go fire", "type": 6, "value": 123123123},
                         ],
                     },
@@ -2980,6 +2983,7 @@ class TestEntityFactoryImpl:
                     "members": {"115590097100865541": member_payload},
                     "roles": {"41771983423143936": guild_role_payload},
                     "users": {"115590097100865541": user_payload},
+                    "messages": {"123": message_payload},
                 },
             },
             "channel_id": "49949494",
@@ -2998,6 +3002,7 @@ class TestEntityFactoryImpl:
         guild_role_payload,
         interaction_member_payload,
         member_payload,
+        message_payload,
     ):
         interaction = entity_factory_impl.deserialize_command_interaction(command_interaction_payload)
         member_payload = member_payload.copy()
@@ -3033,6 +3038,7 @@ class TestEntityFactoryImpl:
         assert sub_option1.value == "42"
         assert sub_option1.type is commands.OptionType.INTEGER
         assert sub_option1.options is None
+        assert sub_option1.focused == True
         assert isinstance(sub_option1, command_interactions.CommandInteractionOption)
         sub_option2 = option.options[1]
         assert sub_option2.name == "go fire"
@@ -3040,6 +3046,7 @@ class TestEntityFactoryImpl:
         assert isinstance(sub_option2.value, snowflakes.Snowflake)
         assert sub_option2.type is commands.OptionType.USER
         assert sub_option2.options is None
+        assert sub_option2.focused == False
         assert isinstance(sub_option2, command_interactions.CommandInteractionOption)
         assert isinstance(option, command_interactions.CommandInteractionOption)
 
@@ -3062,6 +3069,9 @@ class TestEntityFactoryImpl:
             41771983423143936: entity_factory_impl.deserialize_role(guild_role_payload, guild_id=43123123)
         }
         assert interaction.resolved.users == {115590097100865541: entity_factory_impl.deserialize_user(user_payload)}
+
+        assert interaction.resolved.messages == {123: entity_factory_impl.deserialize_message(message_payload)}
+
         assert isinstance(interaction.resolved, command_interactions.ResolvedOptionData)
 
         assert isinstance(interaction, command_interactions.CommandInteraction)
@@ -3188,6 +3198,25 @@ class TestEntityFactoryImpl:
                     "choices": [{"name": "boo", "value": "hoo"}],
                 }
             ],
+        }
+
+    def test_serialize_command_option_with_autocomplete(self, entity_factory_impl):
+        option = commands.CommandOption(
+            type=commands.OptionType.STRING,
+            name="a name",
+            description="go away",
+            is_required=True,
+            autocomplete=True,
+        )
+
+        result = entity_factory_impl.serialize_command_option(option)
+
+        assert result == {
+            "type": 3,
+            "name": "a name",
+            "description": "go away",
+            "required": True,
+            "autocomplete": True,
         }
 
     @pytest.fixture()

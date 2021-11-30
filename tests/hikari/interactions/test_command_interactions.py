@@ -50,6 +50,7 @@ class TestCommandInteraction:
             application_id=snowflakes.Snowflake(43123),
             command_id=snowflakes.Snowflake(3123123),
             command_name="OKOKOK",
+            command_type=1,
             options=[],
             resolved=None,
         )

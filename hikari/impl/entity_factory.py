@@ -1914,7 +1914,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             "name": option.name,
             "description": option.description,
             "required": option.is_required,
-            "autocomplete": option.autocomplete,
         }
 
         if option.channel_types is not None:
@@ -1925,6 +1924,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         if option.options is not None:
             payload["options"] = [self.serialize_command_option(suboption) for suboption in option.options]
+
+        if option.autocomplete:
+            payload["autocomplete"] = True
 
         return payload
 
