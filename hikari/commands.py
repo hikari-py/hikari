@@ -29,6 +29,7 @@ __all__: typing.List[str] = [
     "CommandOption",
     "CommandPermission",
     "CommandPermissionType",
+    "CommandType",
     "GuildCommandPermissions",
     "OptionType",
 ]
@@ -46,6 +47,20 @@ from hikari.internal import enums
 if typing.TYPE_CHECKING:
     from hikari import channels
     from hikari import guilds
+
+
+@typing.final
+class CommandType(int, enums.Enum):
+    """The type of a command"""
+
+    CHAT_INPUT = 1
+    """Slash commands; a text-based command that shows up when a user types /"""
+
+    USER = 2
+    """A UI-based command that shows up when you right click or tap on a user"""
+
+    MESSAGE = 3
+    """A UI-based command that shows up when you right click or tap on a message"""
 
 
 @typing.final
@@ -146,6 +161,9 @@ class CommandOption:
     If `builtins.None`, then all channel types will be accepted.
     """
 
+    autocomplete: bool = attr.field(default=False, repr=False)
+    """Enable autocomplete interactions for this option"""
+
 
 @attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
@@ -157,6 +175,9 @@ class Command(snowflakes.Unique):
 
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
     # <<inherited docstring from Unique>>.
+
+    type: CommandType = attr.field(default=CommandType.CHAT_INPUT, hash=True, repr=True)
+    """The type of a command"""
 
     application_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
     """ID of the application this command belongs to."""

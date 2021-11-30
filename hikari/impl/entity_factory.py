@@ -273,6 +273,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         ] = {
             base_interactions.InteractionType.APPLICATION_COMMAND: self.deserialize_command_interaction,
             base_interactions.InteractionType.MESSAGE_COMPONENT: self.deserialize_component_interaction,
+            base_interactions.InteractionType.AUTOCOMPLETE: self.deserialize_command_interaction,
         }
         self._webhook_type_mapping = {
             webhook_models.WebhookType.INCOMING: self.deserialize_incoming_webhook,
@@ -1690,6 +1691,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             choices=choices,
             options=suboptions,
             channel_types=channel_types,
+            autocomplete=payload.get("autocomplete", False),
         )
 
     def deserialize_command(
@@ -1709,6 +1711,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         return commands.Command(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
+            type=commands.CommandType(payload.get("type", 0)),
             application_id=snowflakes.Snowflake(payload["application_id"]),
             name=payload["name"],
             description=payload["description"],
@@ -1766,6 +1769,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             type=option_type,
             value=value,
             options=suboptions,
+            focused=payload.get("focused", False),
         )
 
     def _deserialize_interaction_member(
@@ -1863,11 +1867,18 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             else:
                 roles = {}
 
+            if raw_messages := resolved_payload.get("messages"):
+                messages = {m.id: m for m in map(self.deserialize_message, raw_messages.values())}
+
+            else:
+                messages = {}
+
             resolved = command_interactions.ResolvedOptionData(
                 channels=channels,
                 members=members,
                 users=users,
                 roles=roles,
+                messages=messages,
             )
 
         return command_interactions.CommandInteraction(
@@ -1883,6 +1894,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             version=payload["version"],
             command_id=snowflakes.Snowflake(data_payload["id"]),
             command_name=data_payload["name"],
+            command_type=commands.CommandType(data_payload.get("type", 1)),
             options=options,
             resolved=resolved,
         )
@@ -1902,6 +1914,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             "name": option.name,
             "description": option.description,
             "required": option.is_required,
+            "autocomplete": option.autocomplete,
         }
 
         if option.channel_types is not None:
@@ -2275,9 +2288,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         return message
 
-    def deserialize_message(  # noqa CFQ001 - Function too long
+    def deserialize_message(
         self, payload: data_binding.JSONObject
-    ) -> message_models.Message:
+    ) -> message_models.Message:  # noqa CFQ001 - Function too long
         author = self.deserialize_user(payload["author"])
 
         guild_id: typing.Optional[snowflakes.Snowflake] = None

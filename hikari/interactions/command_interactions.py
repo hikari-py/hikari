@@ -38,6 +38,7 @@ import attr
 
 from hikari import channels
 from hikari import commands
+from hikari import messages
 from hikari import snowflakes
 from hikari import traits
 from hikari import undefined
@@ -100,6 +101,9 @@ class ResolvedOptionData:
     channels: typing.Mapping[snowflakes.Snowflake, InteractionChannel] = attr.field(repr=False)
     """Mapping of snowflake iDs to the resolved option partial channel objects."""
 
+    messages: typing.Mapping[snowflakes.Snowflake, messages.PartialMessage]
+    """Mapping of snowflake iDs to the resolved option partial message objects."""
+
 
 @attr_extensions.with_copy
 @attr.define(hash=False, kw_only=True, weakref_slot=False)
@@ -129,6 +133,9 @@ class CommandInteractionOption:
     parameter with a value and `options` being provided when an option donates a
     subcommand or group.
     """
+
+    focused: bool = attr.field(default=False, repr=False)
+    """whether this option is the currently focused option for autocomplete"""
 
 
 @attr_extensions.with_copy
@@ -163,6 +170,9 @@ class CommandInteraction(base_interactions.MessageResponseMixin[CommandResponseT
 
     command_name: str = attr.field(eq=False, hash=False, repr=True)
     """Name of the command being invoked."""
+
+    command_type: commands.CommandType = attr.field(eq=False, hash=False, repr=True)
+    """The type of a command"""
 
     options: typing.Optional[typing.Sequence[CommandInteractionOption]] = attr.field(eq=False, hash=False, repr=True)
     """Parameter values provided by the user invoking this command."""
