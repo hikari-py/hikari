@@ -37,7 +37,9 @@ if typing.TYPE_CHECKING:
     _InteractionT_co = typing.TypeVar("_InteractionT_co", bound=base_interactions.PartialInteraction, covariant=True)
     _ResponseT_co = typing.TypeVar("_ResponseT_co", bound=special_endpoints.InteractionResponseBuilder, covariant=True)
     _MessageResponseBuilderT = typing.Union[
-        special_endpoints.InteractionDeferredBuilder, special_endpoints.InteractionMessageBuilder
+        special_endpoints.InteractionDeferredBuilder,
+        special_endpoints.InteractionMessageBuilder,
+        special_endpoints.InteractionAutocompleteBuilder,
     ]
 
 
@@ -132,20 +134,6 @@ class InteractionServer(abc.ABC):
             the interaction request.
         """
 
-    @typing.overload
-    @abc.abstractmethod
-    def get_listener(
-        self, interaction_type: typing.Type[command_interactions.CommandInteraction], /
-    ) -> typing.Optional[ListenerT[command_interactions.CommandInteraction, _MessageResponseBuilderT]]:
-        ...
-
-    @typing.overload
-    @abc.abstractmethod
-    def get_listener(
-        self, interaction_type: typing.Type[component_interactions.ComponentInteraction], /
-    ) -> typing.Optional[ListenerT[component_interactions.ComponentInteraction, _MessageResponseBuilderT]]:
-        ...
-
     @abc.abstractmethod
     def get_listener(
         self, interaction_type: typing.Type[_InteractionT_co], /
@@ -163,30 +151,6 @@ class InteractionServer(abc.ABC):
             The callback registered for the provided interaction type if found,
             else `builtins.None`.
         """  # noqa E501 - Line too long
-
-    @typing.overload
-    @abc.abstractmethod
-    def set_listener(
-        self,
-        interaction_type: typing.Type[command_interactions.CommandInteraction],
-        listener: typing.Optional[ListenerT[command_interactions.CommandInteraction, _MessageResponseBuilderT]],
-        /,
-        *,
-        replace: bool = False,
-    ) -> None:
-        ...
-
-    @typing.overload
-    @abc.abstractmethod
-    def set_listener(
-        self,
-        interaction_type: typing.Type[component_interactions.ComponentInteraction],
-        listener: typing.Optional[ListenerT[component_interactions.ComponentInteraction, _MessageResponseBuilderT]],
-        /,
-        *,
-        replace: bool = False,
-    ) -> None:
-        ...
 
     @abc.abstractmethod
     def set_listener(

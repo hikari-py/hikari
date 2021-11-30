@@ -7147,6 +7147,16 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
+    def interaction_autocomplete_builder(self) -> special_endpoints.InteractionApplicationBuilder:
+        """Create a builder for an autocomplete interaction response.
+
+        Returns
+        -------
+        hikari.api.special_endpoints.InteractionApplicationBuilder
+            The autocomplete interaction response builder object.
+        """
+
+    @abc.abstractmethod
     def interaction_message_builder(
         self, type: typing.Union[base_interactions.ResponseType, int], /
     ) -> special_endpoints.InteractionMessageBuilder:
@@ -7225,6 +7235,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         role_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
+        choices: undefined.UndefinedOr[typing.Sequence[commands.CommandChoice]] = undefined.UNDEFINED,
     ) -> None:
         """Create the initial response for a interaction.
 

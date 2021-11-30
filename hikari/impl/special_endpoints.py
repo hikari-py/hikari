@@ -78,6 +78,9 @@ if typing.TYPE_CHECKING:
     _CommandBuilderT = typing.TypeVar("_CommandBuilderT", bound="CommandBuilder")
     _InteractionMessageBuilderT = typing.TypeVar("_InteractionMessageBuilderT", bound="InteractionMessageBuilder")
     _InteractionDeferredBuilderT = typing.TypeVar("_InteractionDeferredBuilderT", bound="InteractionDeferredBuilder")
+    _InteractionAutocompleteBuilderT = typing.TypeVar(
+        "_InteractionAutocompleteBuilderT", bound="InteractionAutocompleteBuilder"
+    )
     _ActionRowBuilderT = typing.TypeVar("_ActionRowBuilderT", bound="ActionRowBuilder")
     _ButtonBuilderT = typing.TypeVar("_ButtonBuilderT", bound="_ButtonBuilder[typing.Any]")
     _SelectOptionBuilderT = typing.TypeVar("_SelectOptionBuilderT", bound="_SelectOptionBuilder[typing.Any]")
@@ -691,6 +694,33 @@ class AuditLogIterator(iterators.LazyIterator["audit_logs.AuditLog"]):
         # may be missing entries.
         self._first_id = str(min(entry["id"] for entry in audit_log_entries))
         return log
+
+
+@attr_extensions.with_copy
+@attr.define(kw_only=False, weakref_slot=False)
+class InteractionAutocompleteBuilder(special_endpoints.InteractionAutocompleteBuilder):
+    """Standard implementation of `hikari.api.special_endpoints.InteractionAutocompleteBuilder`."""
+
+    _choices: typing.Sequence[commands.CommandChoice] = attr.field(factory=list)
+
+    @property
+    def choices(self) -> typing.Sequence[commands.CommandChoice]:
+        return self._choices
+
+    def set_choices(
+        self: _InteractionAutocompleteBuilderT, choices: typing.Sequence[commands.CommandChoice], /
+    ) -> _InteractionAutocompleteBuilderT:
+        """Set autocomplete choices
+
+        Returns
+        -------
+        InteractionAutocompleteBuilder
+            Object of this builder.
+        """
+        self._choices = choices
+
+    def build(self, _: entity_factory_.EntityFactory, /) -> data_binding.JSONObject:
+        return {"choices": self._choices}
 
 
 @attr_extensions.with_copy

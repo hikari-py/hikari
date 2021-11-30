@@ -3355,6 +3355,9 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> special_endpoints.InteractionDeferredBuilder:
         return special_endpoints_impl.InteractionDeferredBuilder(type=type_)
 
+    def interaction_autocomplete_builder(self) -> special_endpoints.InteractionApplicationBuilder:
+        return special_endpoints.InteractionApplicationBuilder()
+
     def interaction_message_builder(
         self, type_: typing.Union[base_interactions.ResponseType, int], /
     ) -> special_endpoints.InteractionMessageBuilder:
@@ -3388,6 +3391,7 @@ class RESTClientImpl(rest_api.RESTClient):
         role_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
+        choices: undefined.UndefinedOr[typing.Sequence[commands.CommandChoice]] = undefined.UNDEFINED,
     ) -> None:
         if not undefined.any_undefined(component, components):
             raise ValueError("You may only specify one of 'component' or 'components', not both")
@@ -3449,6 +3453,9 @@ class RESTClientImpl(rest_api.RESTClient):
                     raise ValueError("Cannot send an embed with attachments in a slash command's initial response")
 
             data.put("embeds", embed_payloads)
+
+        if choices is not undefined.UNDEFINED:
+            data.put("choices", [{"name": choice.name, "value": choice.value} for choice in choices])
 
         body.put("data", data)
         await self._request(route, json=body, no_auth=True)

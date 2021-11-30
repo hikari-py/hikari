@@ -30,6 +30,7 @@ __all__: typing.List[str] = [
     "ComponentBuilder",
     "TypingIndicator",
     "GuildBuilder",
+    "InteractionAutocompleteBuilder",
     "InteractionDeferredBuilder",
     "InteractionResponseBuilder",
     "InteractionMessageBuilder",
@@ -623,6 +624,27 @@ class InteractionDeferredBuilder(InteractionResponseBuilder, abc.ABC):
         Returns
         -------
         InteractionMessageBuilder
+            Object of this builder.
+        """
+
+
+class InteractionAutocompleteBuilder(InteractionResponseBuilder, abc.ABC):
+    """Interface of an autocomplete interaction response builder."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def choices(self) -> typing.Sequence[commands.CommandChoice]:
+        """Return autocomplete choices"""
+
+    @abc.abstractmethod
+    def set_choices(self: _T, choices: typing.Sequence[commands.CommandChoice], /) -> _T:
+        """Set autocomplete choices
+
+        Returns
+        -------
+        InteractionAutocompleteBuilder
             Object of this builder.
         """
 

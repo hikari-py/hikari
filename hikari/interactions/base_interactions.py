@@ -118,6 +118,14 @@ class ResponseType(int, enums.Enum):
     * `InteractionType.MESSAGE_COMPONENT`
     """
 
+    AUTOCOMPLETE = 8
+    """Respond to an autocomplete interaction with suggested choices
+
+    This is valid for the following interaction types:
+
+    * `InteractionType.APPLICATION_COMMAND`
+    """
+
 
 MESSAGE_RESPONSE_TYPES: typing.Final[typing.AbstractSet[MessageResponseTypesT]] = frozenset(
     [ResponseType.MESSAGE_CREATE, ResponseType.MESSAGE_UPDATE]

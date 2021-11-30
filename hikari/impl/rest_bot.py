@@ -55,7 +55,9 @@ if typing.TYPE_CHECKING:
 
     _InteractionT_co = typing.TypeVar("_InteractionT_co", bound=base_interactions.PartialInteraction, covariant=True)
     _MessageResponseBuilderT = typing.Union[
-        special_endpoints.InteractionDeferredBuilder, special_endpoints.InteractionMessageBuilder
+        special_endpoints.InteractionDeferredBuilder,
+        special_endpoints.InteractionMessageBuilder,
+        special_endpoints.InteractionAutocompleteBuilder,
     ]
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.rest_bot")
@@ -571,52 +573,10 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
             ssl_context=ssl_context,
         )
 
-    @typing.overload
-    def get_listener(
-        self, interaction_type: typing.Type[command_interactions.CommandInteraction], /
-    ) -> typing.Optional[
-        interaction_server_.ListenerT[command_interactions.CommandInteraction, _MessageResponseBuilderT]
-    ]:
-        ...
-
-    @typing.overload
-    def get_listener(
-        self, interaction_type: typing.Type[component_interactions.ComponentInteraction], /
-    ) -> typing.Optional[
-        interaction_server_.ListenerT[component_interactions.ComponentInteraction, _MessageResponseBuilderT]
-    ]:
-        ...
-
     def get_listener(
         self, interaction_type: typing.Type[_InteractionT_co], /
     ) -> typing.Optional[interaction_server_.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]]:
         return self._server.get_listener(interaction_type)  # type: ignore[return-value, arg-type]
-
-    @typing.overload
-    def set_listener(
-        self,
-        interaction_type: typing.Type[command_interactions.CommandInteraction],
-        listener: typing.Optional[
-            interaction_server_.ListenerT[command_interactions.CommandInteraction, _MessageResponseBuilderT]
-        ],
-        /,
-        *,
-        replace: bool = False,
-    ) -> None:
-        ...
-
-    @typing.overload
-    def set_listener(
-        self,
-        interaction_type: typing.Type[component_interactions.ComponentInteraction],
-        listener: typing.Optional[
-            interaction_server_.ListenerT[component_interactions.ComponentInteraction, _MessageResponseBuilderT]
-        ],
-        /,
-        *,
-        replace: bool = False,
-    ) -> None:
-        ...
 
     def set_listener(
         self,
