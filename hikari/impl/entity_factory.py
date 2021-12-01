@@ -64,6 +64,7 @@ from hikari.internal import data_binding
 from hikari.internal import time
 
 _ValueT = typing.TypeVar("_ValueT")
+CommandInteractionT = typing.TypeVar("CommandInteractionT", bound="command_interactions.BaseCommandInteraction")
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.entity_factory")
 
 _interaction_option_type_mapping: typing.Dict[int, typing.Callable[[typing.Any], typing.Any]] = {
@@ -273,7 +274,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         ] = {
             base_interactions.InteractionType.APPLICATION_COMMAND: self.deserialize_command_interaction,
             base_interactions.InteractionType.MESSAGE_COMPONENT: self.deserialize_component_interaction,
-            base_interactions.InteractionType.AUTOCOMPLETE: self.deserialize_command_interaction,
+            base_interactions.InteractionType.AUTOCOMPLETE: self.deserialize_autocomplete_interaction,
         }
         self._webhook_type_mapping = {
             webhook_models.WebhookType.INCOMING: self.deserialize_incoming_webhook,
@@ -1806,9 +1807,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             permissions=permission_models.Permissions(int(payload["permissions"])),
         )
 
-    def deserialize_command_interaction(
-        self, payload: data_binding.JSONObject
-    ) -> command_interactions.CommandInteraction:
+    def _deserialize_command_interaction(
+        self, payload: data_binding.JSONObject, cls: typing.Type[CommandInteractionT]
+    ) -> CommandInteractionT:
         data_payload = payload["data"]
 
         guild_id: typing.Optional[snowflakes.Snowflake] = None
@@ -1881,7 +1882,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 messages=messages,
             )
 
-        return command_interactions.CommandInteraction(
+        return cls(
             app=self._app,
             application_id=snowflakes.Snowflake(payload["application_id"]),
             id=snowflakes.Snowflake(payload["id"]),
@@ -1898,6 +1899,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             options=options,
             resolved=resolved,
         )
+
+    def deserialize_command_interaction(
+        self, payload: data_binding.JSONObject
+    ) -> command_interactions.CommandInteraction:
+        return self._deserialize_command_interaction(payload, cls=command_interactions.CommandInteraction)
 
     def deserialize_interaction(self, payload: data_binding.JSONObject) -> base_interactions.PartialInteraction:
         interaction_type = base_interactions.InteractionType(payload["type"])
@@ -1966,6 +1972,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             component_type=message_models.ComponentType(data_payload["component_type"]),
             message=self.deserialize_message(payload["message"]),
         )
+
+    def deserialize_autocomplete_interaction(
+        self, payload: data_binding.JSONObject
+    ) -> command_interactions.AutocompleteInteraction:
+        return self._deserialize_command_interaction(payload, cls=command_interactions.AutocompleteInteraction)
 
     ##################
     # STICKER MODELS #

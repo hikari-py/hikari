@@ -24,6 +24,7 @@
 from __future__ import annotations
 
 __all__: typing.List[str] = [
+    "BaseCommandInteraction",
     "CommandInteractionOption",
     "CommandInteraction",
     "COMMAND_RESPONSE_TYPES",
