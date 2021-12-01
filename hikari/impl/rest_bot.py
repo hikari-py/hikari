@@ -576,7 +576,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
     def get_listener(
         self, interaction_type: typing.Type[_InteractionT_co], /
     ) -> typing.Optional[interaction_server_.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]]:
-        return self._server.get_listener(interaction_type)  # type: ignore[return-value, arg-type]
+        return self._server.get_listener(interaction_type)
 
     def set_listener(
         self,
@@ -588,4 +588,4 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         *,
         replace: bool = False,
     ) -> None:
-        self._server.set_listener(interaction_type, listener, replace=replace)  # type: ignore[arg-type]
+        self._server.set_listener(interaction_type, listener, replace=replace)

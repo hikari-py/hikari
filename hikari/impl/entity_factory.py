@@ -1769,7 +1769,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             type=option_type,
             value=value,
             options=suboptions,
-            focused=payload.get("focused", False),
+            is_focused=payload.get("focused", False),
         )
 
     def _deserialize_interaction_member(

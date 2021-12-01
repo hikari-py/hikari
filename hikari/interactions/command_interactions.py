@@ -140,8 +140,11 @@ class CommandInteractionOption:
 
 @attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
-class CommandInteraction(base_interactions.MessageResponseMixin[CommandResponseTypesT]):
-    """Represents a command interaction on Discord."""
+class BaseCommandInteraction(base_interactions.PartialInteraction):
+    """Represents a base command interaction on Discord.
+
+    May be a command interaction or an autocomplete interaction.
+    """
 
     channel_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
     """ID of the channel this command interaction event was triggered in."""
@@ -179,53 +182,6 @@ class CommandInteraction(base_interactions.MessageResponseMixin[CommandResponseT
 
     resolved: typing.Optional[ResolvedOptionData] = attr.field(eq=False, hash=False, repr=False)
     """Mappings of the objects resolved for the provided command options."""
-
-    def build_response(self) -> special_endpoints.InteractionMessageBuilder:
-        """Get a message response builder for use in the REST server flow.
-
-        !!! note
-            For interactions received over the gateway
-            `CommandInteraction.create_initial_response` should be used to set
-            the interaction response message.
-
-        Examples
-        --------
-        ```py
-        async def handle_command_interaction(interaction: CommandInteraction) -> InteractionMessageBuilder:
-            return (
-                interaction
-                .build_response()
-                .add_embed(Embed(description="Hi there"))
-                .set_content("Konnichiwa")
-            )
-        ```
-
-        Returns
-        -------
-        hikari.api.special_endpoints.InteractionMessageBuilder
-            Interaction message response builder object.
-        """
-        return self.app.rest.interaction_message_builder(base_interactions.ResponseType.MESSAGE_CREATE)
-
-    def build_deferred_response(self) -> special_endpoints.InteractionDeferredBuilder:
-        """Get a deferred message response builder for use in the REST server flow.
-
-        !!! note
-            For interactions received over the gateway
-            `CommandInteraction.create_initial_response` should be used to set
-            the interaction response message.
-
-        !!! note
-            Unlike `hikari.api.special_endpoints.InteractionMessageBuilder`,
-            the result of this call can be returned as is without any modifications
-            being made to it.
-
-        Returns
-        -------
-        hikari.api.special_endpoints.InteractionMessageBuilder
-            Deferred interaction message response builder object.
-        """
-        return self.app.rest.interaction_deferred_builder(base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE)
 
     async def fetch_channel(self) -> channels.TextableChannel:
         """Fetch the guild channel this was triggered in.
@@ -367,3 +323,104 @@ class CommandInteraction(base_interactions.MessageResponseMixin[CommandResponseT
             return self.app.cache.get_guild(self.guild_id)
 
         return None
+
+
+@attr_extensions.with_copy
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
+class CommandInteraction(BaseCommandInteraction, base_interactions.MessageResponseMixin[CommandResponseTypesT]):
+    """Represents a command interaction on Discord."""
+
+    def build_response(self) -> special_endpoints.InteractionMessageBuilder:
+        """Get a message response builder for use in the REST server flow.
+
+        !!! note
+            For interactions received over the gateway
+            `CommandInteraction.create_initial_response` should be used to set
+            the interaction response message.
+
+        Examples
+        --------
+        ```py
+        async def handle_command_interaction(interaction: CommandInteraction) -> InteractionMessageBuilder:
+            return (
+                interaction
+                .build_response()
+                .add_embed(Embed(description="Hi there"))
+                .set_content("Konnichiwa")
+            )
+        ```
+
+        Returns
+        -------
+        hikari.api.special_endpoints.InteractionMessageBuilder
+            Interaction message response builder object.
+        """
+        return self.app.rest.interaction_message_builder(base_interactions.ResponseType.MESSAGE_CREATE)
+
+    def build_deferred_response(self) -> special_endpoints.InteractionDeferredBuilder:
+        """Get a deferred message response builder for use in the REST server flow.
+
+        !!! note
+            For interactions received over the gateway
+            `CommandInteraction.create_initial_response` should be used to set
+            the interaction response message.
+
+        !!! note
+            Unlike `hikari.api.special_endpoints.InteractionMessageBuilder`,
+            the result of this call can be returned as is without any modifications
+            being made to it.
+
+        Returns
+        -------
+        hikari.api.special_endpoints.InteractionMessageBuilder
+            Deferred interaction message response builder object.
+        """
+        return self.app.rest.interaction_deferred_builder(base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE)
+
+
+@attr_extensions.with_copy
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
+class AutocompleteInteraction(BaseCommandInteraction):
+    """Represents an autocomplete interaction on Discord."""
+
+    def build_response(self) -> special_endpoints.InteractionAutocompleteBuilder:
+        """Get a message response builder for use in the REST server flow.
+
+        !!! note
+            For interactions received over the gateway
+            `AutocompleteInteraction.create_response` should be used to set
+            the interaction response.
+
+        Examples
+        --------
+        ```py
+        async def handle_autocomplete_interaction(interaction: AutocompleteInteraction) -> InteractionAutocompleteBuilder:
+            return (
+                interaction
+                .build_response()
+                .set_choices(
+                    [
+                        OptionChoice(name="foo", value=1),
+                        OptionChoice(name="bar", value=2),
+                        OptionChoice(name="baz", value=3),
+                    ]
+                )
+            )
+        ```
+
+        Returns
+        -------
+        hikari.api.special_endpoints.InteractionAutocompleteBuilder
+            Interaction autocomplete response builder object.
+        """
+        return self.app.rest.interaction_autocomplete_builder()
+
+    async def create_response(self, choices: typing.Sequence[commands.CommandChoice]) -> None:
+        """Create a response for this autocomplete interaction"""
+
+        await self.app.rest.create_interaction_response(
+            self.id,
+            self.token,
+            base_interactions.ResponseType.AUTOCOMPLETE,
+            choices=choices,
+        )

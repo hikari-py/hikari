@@ -161,8 +161,8 @@ class CommandOption:
     If `builtins.None`, then all channel types will be accepted.
     """
 
-    is_autocomplete: bool = attr.field(default=False, repr=False)
-    """Whether this option is an autocomplete interaction."""
+    autocomplete: bool = attr.field(default=False, repr=False)
+    """Whether this option has autocomplete."""
 
 
 @attr_extensions.with_copy

@@ -31,6 +31,7 @@ __all__: typing.List[str] = [
     "CommandBuilder",
     "TypingIndicator",
     "GuildBuilder",
+    "InteractionAutocompleteBuilder",
     "InteractionDeferredBuilder",
     "InteractionMessageBuilder",
     "InteractiveButtonBuilder",
@@ -704,6 +705,10 @@ class InteractionAutocompleteBuilder(special_endpoints.InteractionAutocompleteBu
     _choices: typing.Sequence[commands.CommandChoice] = attr.field(factory=list)
 
     @property
+    def type(self) -> typing.Literal[base_interactions.ResponseType.AUTOCOMPLETE]:
+        return base_interactions.ResponseType.AUTOCOMPLETE
+
+    @property
     def choices(self) -> typing.Sequence[commands.CommandChoice]:
         return self._choices
 
@@ -721,7 +726,8 @@ class InteractionAutocompleteBuilder(special_endpoints.InteractionAutocompleteBu
         return self
 
     def build(self, _: entity_factory_.EntityFactory, /) -> data_binding.JSONObject:
-        return {"choices": [{"name": choice.name, "value": choice.value} for choice in self._choices]}
+        data = {"choices": [{"name": choice.name, "value": choice.value} for choice in self._choices]}
+        return {"type": self.type, "data": data}
 
 
 @attr_extensions.with_copy

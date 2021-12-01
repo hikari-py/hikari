@@ -7147,12 +7147,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    def interaction_autocomplete_builder(self) -> special_endpoints.InteractionApplicationBuilder:
+    def interaction_autocomplete_builder(self) -> special_endpoints.InteractionAutocompleteBuilder:
         """Create a builder for an autocomplete interaction response.
 
         Returns
         -------
-        hikari.api.special_endpoints.InteractionApplicationBuilder
+        hikari.api.special_endpoints.InteractionAutocompleteBuilder
             The autocomplete interaction response builder object.
         """
 
