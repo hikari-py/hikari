@@ -147,15 +147,17 @@ class CommandOption:
     """
 
     min_value: typing.Union[int, float, None] = attr.field(default=None, repr=False)
-    """The minimum value permitted (inclusive)
+    """The minimum value permitted (inclusive).
 
-    If the option type is `hikari.commands.OptionType.INTEGER` than this must be an `builtins.int`.
+    This will be `builtins.int` if the type of the option is `hikari.commands.OptionType.INTEGER`
+    and `builtins.float` if the type is `hikari.commands.OptionType.NUMBER`. 
     """
 
     max_value: typing.Union[int, float, None] = attr.field(default=None, repr=False)
-    """The minimum value permitted (inclusive)
+    """The maximum value permitted (inclusive).
 
-    If the option type is `hikari.commands.OptionType.INTEGER` than this must be an `builtins.int`.
+    This will be `builtins.int` if the type of the option is `hikari.commands.OptionType.INTEGER`
+    and `builtins.float` if the type is `hikari.commands.OptionType.NUMBER`. 
     """
 
 
