@@ -1711,7 +1711,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         return commands.Command(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
-            type=commands.CommandType(payload.get("type", 0)),
+            type=commands.CommandType(payload.get("type", commands.CommandType.CHAT_INPUT)),
             application_id=snowflakes.Snowflake(payload["application_id"]),
             name=payload["name"],
             description=payload["description"],
@@ -1894,7 +1894,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             version=payload["version"],
             command_id=snowflakes.Snowflake(data_payload["id"]),
             command_name=data_payload["name"],
-            command_type=commands.CommandType(data_payload.get("type", 1)),
+            command_type=commands.CommandType(data_payload.get("type", commands.CommandType.CHAT_INPUT)),
             options=options,
             resolved=resolved,
         )
