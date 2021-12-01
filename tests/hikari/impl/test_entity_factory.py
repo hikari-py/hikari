@@ -3139,23 +3139,23 @@ class TestEntityFactoryImpl:
 
     def test_serialize_command_option_with_min_and_max_value(self, entity_factory_impl):
         option = commands.CommandOption(
-            type=commands.OptionType.INTEGER,
+            type=commands.OptionType.FLOAT,
             name="a name",
             description="go away",
             is_required=True,
             min_value=1.2,
-            max_value=9.99,
+            max_value=9.999,
         )
 
         result = entity_factory_impl.serialize_command_option(option)
 
         assert result == {
-            "type": 4,
+            "type": 10,
             "name": "a name",
             "description": "go away",
             "required": True,
-            "min_value": 2,
-            "max_value": 9,
+            "min_value": 1.2,
+            "max_value": 9.999,
         }
 
     def test_serialize_command_option_with_choices(self, entity_factory_impl):
