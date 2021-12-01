@@ -54,13 +54,13 @@ class CommandType(int, enums.Enum):
     """The type of a command"""
 
     CHAT_INPUT = 1
-    """Slash commands; a text-based command that shows up when a user types /"""
+    """A text-based command."""
 
     USER = 2
-    """A UI-based command that shows up when you right click or tap on a user"""
+    """A user-based command."""
 
     MESSAGE = 3
-    """A UI-based command that shows up when you right click or tap on a message"""
+    """A message-based command."""
 
 
 @typing.final
@@ -161,8 +161,8 @@ class CommandOption:
     If `builtins.None`, then all channel types will be accepted.
     """
 
-    autocomplete: bool = attr.field(default=False, repr=False)
-    """Enable autocomplete interactions for this option"""
+    is_autocomplete: bool = attr.field(default=False, repr=False)
+    """Whether this option is an autocomplete interaction."""
 
 
 @attr_extensions.with_copy

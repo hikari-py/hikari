@@ -119,7 +119,7 @@ class ResponseType(int, enums.Enum):
     """
 
     AUTOCOMPLETE = 8
-    """Respond to an autocomplete interaction with suggested choices
+    """Respond to an autocomplete interaction with suggested choices.
 
     This is valid for the following interaction types:
 

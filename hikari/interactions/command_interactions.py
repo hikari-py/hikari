@@ -134,8 +134,8 @@ class CommandInteractionOption:
     subcommand or group.
     """
 
-    focused: bool = attr.field(default=False, repr=False)
-    """whether this option is the currently focused option for autocomplete"""
+    is_focused: bool = attr.field(default=False, repr=False)
+    """Whether this option is the currently focused option for autocomplete."""
 
 
 @attr_extensions.with_copy
@@ -172,7 +172,7 @@ class CommandInteraction(base_interactions.MessageResponseMixin[CommandResponseT
     """Name of the command being invoked."""
 
     command_type: commands.CommandType = attr.field(eq=False, hash=False, repr=True)
-    """The type of a command"""
+    """The type of a command."""
 
     options: typing.Optional[typing.Sequence[CommandInteractionOption]] = attr.field(eq=False, hash=False, repr=True)
     """Parameter values provided by the user invoking this command."""
