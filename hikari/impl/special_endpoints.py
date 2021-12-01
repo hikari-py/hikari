@@ -718,9 +718,10 @@ class InteractionAutocompleteBuilder(special_endpoints.InteractionAutocompleteBu
             Object of this builder.
         """
         self._choices = choices
+        return self
 
     def build(self, _: entity_factory_.EntityFactory, /) -> data_binding.JSONObject:
-        return {"choices": self._choices}
+        return {"choices": [{"name": choice.name, "value": choice.value} for choice in self._choices]}
 
 
 @attr_extensions.with_copy
