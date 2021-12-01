@@ -12,7 +12,7 @@ pytest-cov==3.0.0
 pytest-randomly==3.10.3
 
 # Coverage testing.
-coverage==6.1.2
+coverage==6.2
 
 # Other stuff
 async-timeout==4.0.1  # Used for timeouts in some test cases.
