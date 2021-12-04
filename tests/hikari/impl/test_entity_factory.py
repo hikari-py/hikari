@@ -3038,7 +3038,7 @@ class TestEntityFactoryImpl:
         assert sub_option1.value == "42"
         assert sub_option1.type is commands.OptionType.INTEGER
         assert sub_option1.options is None
-        assert sub_option1.focused == True
+        assert sub_option1.is_focused == True
         assert isinstance(sub_option1, command_interactions.CommandInteractionOption)
         sub_option2 = option.options[1]
         assert sub_option2.name == "go fire"
@@ -3046,7 +3046,7 @@ class TestEntityFactoryImpl:
         assert isinstance(sub_option2.value, snowflakes.Snowflake)
         assert sub_option2.type is commands.OptionType.USER
         assert sub_option2.options is None
-        assert sub_option2.focused == False
+        assert sub_option2.is_focused == False
         assert isinstance(sub_option2, command_interactions.CommandInteractionOption)
         assert isinstance(option, command_interactions.CommandInteractionOption)
 
