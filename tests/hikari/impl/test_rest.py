@@ -23,11 +23,11 @@ import asyncio
 import contextlib
 import datetime
 import http
+import re
 import warnings
 
 import mock
 import pytest
-import regex
 
 from hikari import applications
 from hikari import audit_logs
@@ -1903,7 +1903,7 @@ class TestRESTClientImplAsync:
             f"'{singular_arg}' (singular) instead?"
         )
 
-        with pytest.raises(TypeError, match=regex.escape(expected_error_message)):
+        with pytest.raises(TypeError, match=re.escape(expected_error_message)):
             await rest_client._create_message(None, {}, **kwargs)
 
     @pytest.mark.skip("TODO")
@@ -2025,7 +2025,7 @@ class TestRESTClientImplAsync:
             f"'{singular_arg}' (singular) instead?"
         )
 
-        with pytest.raises(TypeError, match=regex.escape(expected_error_message)):
+        with pytest.raises(TypeError, match=re.escape(expected_error_message)):
             await rest_client._edit_message(None, {}, **kwargs)
 
     @pytest.mark.skip("TODO")
