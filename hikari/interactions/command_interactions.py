@@ -24,6 +24,7 @@
 from __future__ import annotations
 
 __all__: typing.List[str] = [
+    "AutocompleteInteraction",
     "BaseCommandInteraction",
     "CommandInteractionOption",
     "CommandInteraction",
