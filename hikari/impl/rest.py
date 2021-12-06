@@ -2883,7 +2883,7 @@ class RESTClientImpl(rest_api.RESTClient):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         positions: typing.Mapping[int, snowflakes.SnowflakeishOr[guilds.PartialRole]],
     ) -> None:
-        route = routes.POST_GUILD_ROLES.compile(guild=guild)
+        route = routes.PATCH_GUILD_ROLES.compile(guild=guild)
         body = [{"id": str(int(role)), "position": pos} for pos, role in positions.items()]
         await self._request(route, json=body)
 
