@@ -3678,7 +3678,7 @@ class TestRESTClientImplAsync:
             await rest_client.create_role(StubModel(123), icon="icon.png", unicode_emoji="\N{OK HAND SIGN}")
 
     async def test_reposition_roles(self, rest_client):
-        expected_route = routes.POST_GUILD_ROLES.compile(guild=123)
+        expected_route = routes.PATCH_GUILD_ROLES.compile(guild=123)
         expected_json = [{"id": "456", "position": 1}, {"id": "789", "position": 2}]
         rest_client._request = mock.AsyncMock()
 
