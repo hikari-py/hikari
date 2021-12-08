@@ -146,6 +146,20 @@ class CommandOption:
     If `builtins.None`, then all channel types will be accepted.
     """
 
+    min_value: typing.Union[int, float, None] = attr.field(default=None, repr=False)
+    """The minimum value permitted (inclusive).
+
+    This will be `builtins.int` if the type of the option is `hikari.commands.OptionType.INTEGER`
+    and `builtins.float` if the type is `hikari.commands.OptionType.NUMBER`.
+    """
+
+    max_value: typing.Union[int, float, None] = attr.field(default=None, repr=False)
+    """The maximum value permitted (inclusive).
+
+    This will be `builtins.int` if the type of the option is `hikari.commands.OptionType.INTEGER`
+    and `builtins.float` if the type is `hikari.commands.OptionType.NUMBER`.
+    """
+
 
 @attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
