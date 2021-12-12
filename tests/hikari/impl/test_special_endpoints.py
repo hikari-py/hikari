@@ -23,6 +23,7 @@
 import mock
 import pytest
 
+from hikari import commands
 from hikari import emojis
 from hikari import messages
 from hikari import snowflakes
@@ -211,6 +212,11 @@ class TestCommandBuilder:
 
         assert builder.id == 3212123
 
+    def test_type_property(self):
+        builder = special_endpoints.CommandBuilder("OKSKDKSDK", "inmjfdsmjiooikjsa").set_type(2)
+
+        assert builder.type == commands.CommandType.USER
+
     def test_default_permission(self):
         builder = special_endpoints.CommandBuilder("oksksksk", "kfdkodfokfd").set_default_permission(True)
 
@@ -232,6 +238,7 @@ class TestCommandBuilder:
         assert result == {
             "name": "we are number",
             "description": "one",
+            "type": 1,
             "default_permission": False,
             "options": [mock_entity_factory.serialize_command_option.return_value],
             "id": "3412312",
@@ -242,7 +249,7 @@ class TestCommandBuilder:
 
         result = builder.build(mock.Mock())
 
-        assert result == {"name": "we are numberr", "description": "oner", "options": []}
+        assert result == {"name": "we are numberr", "description": "oner", "type": 1, "options": []}
 
 
 @pytest.mark.parametrize("emoji", ["UNICORN", emojis.UnicodeEmoji("UNICORN")])

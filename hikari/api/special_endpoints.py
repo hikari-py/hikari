@@ -948,6 +948,17 @@ class CommandBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
+    def type(self) -> commands.CommandType:
+        """The type of this command
+
+        Returns
+        -------
+        hikari.commands.CommandType
+            The type of this command
+        """
+
+    @property
+    @abc.abstractmethod
     def options(self) -> typing.Sequence[commands.CommandOption]:
         """Sequence of up to 25 of the options set for this command.
 
@@ -989,6 +1000,21 @@ class CommandBuilder(abc.ABC):
         ----------
         id_ : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
             The ID to set for this command.
+
+        Returns
+        -------
+        CommandBuilder
+            Object of this command builder.
+        """
+
+    @abc.abstractmethod
+    def set_type(self: _T, type: typing.Union[int, commands.CommandType], /) -> _T:
+        """Set the command type of this command.
+
+        Parameters
+        ----------
+        type : Union[int, hikari.commands.CommandType]
+            The command type to set for this command.
 
         Returns
         -------

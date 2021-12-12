@@ -940,6 +940,7 @@ class CommandBuilder(special_endpoints.CommandBuilder):
     _description: str = attr.field()
 
     # Key-word only not-required arguments.
+    _type: commands.CommandType = attr.field(default=commands.CommandType.CHAT_INPUT, kw_only=True)
     _id: undefined.UndefinedOr[snowflakes.Snowflake] = attr.field(default=undefined.UNDEFINED, kw_only=True)
     _default_permission: undefined.UndefinedOr[bool] = attr.field(default=undefined.UNDEFINED, kw_only=True)
 
@@ -953,6 +954,10 @@ class CommandBuilder(special_endpoints.CommandBuilder):
     @property
     def id(self) -> undefined.UndefinedOr[snowflakes.Snowflake]:
         return self._id
+
+    @property
+    def type(self) -> commands.CommandType:
+        return self._type
 
     @property
     def default_permission(self) -> undefined.UndefinedOr[bool]:
@@ -974,6 +979,10 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         self._id = snowflakes.Snowflake(id_) if id_ is not undefined.UNDEFINED else undefined.UNDEFINED
         return self
 
+    def set_type(self: _CommandBuilderT, type: typing.Union[int, commands.CommandType], /) -> _CommandBuilderT:
+        self._type = commands.CommandType(type)
+        return self
+
     def set_default_permission(self: _CommandBuilderT, state: undefined.UndefinedOr[bool], /) -> _CommandBuilderT:
         self._default_permission = state
         return self
@@ -982,6 +991,7 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         data = data_binding.JSONObjectBuilder()
         data["name"] = self._name
         data["description"] = self._description
+        data["type"] = self._type.value
         data.put_array("options", self._options, conversion=entity_factory.serialize_command_option)
         data.put_snowflake("id", self._id)
         data.put("default_permission", self._default_permission)
