@@ -177,13 +177,16 @@ class BaseCommandInteraction(base_interactions.PartialInteraction):
     """Name of the command being invoked."""
 
     command_type: commands.CommandType = attr.field(eq=False, hash=False, repr=True)
-    """The type of a command."""
+    """The type of the command."""
 
     options: typing.Optional[typing.Sequence[CommandInteractionOption]] = attr.field(eq=False, hash=False, repr=True)
     """Parameter values provided by the user invoking this command."""
 
     resolved: typing.Optional[ResolvedOptionData] = attr.field(eq=False, hash=False, repr=False)
     """Mappings of the objects resolved for the provided command options."""
+
+    target_id: typing.Optional[snowflakes.Snowflake] = attr.field(default=None, eq=False, hash=False, repr=True)
+    """The target of the command. Only available if the command is a context menu command."""
 
     async def fetch_channel(self) -> channels.TextableChannel:
         """Fetch the guild channel this was triggered in.

@@ -1882,6 +1882,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 messages=messages,
             )
 
+        target_id: typing.Optional[Snowflake] = None
+        if raw_target_id := payload.get("target_id"):
+            target_id = snowflakes.Snowflake(raw_target_id)
+
         return cls(
             app=self._app,
             application_id=snowflakes.Snowflake(payload["application_id"]),
@@ -1898,6 +1902,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             command_type=commands.CommandType(data_payload.get("type", commands.CommandType.CHAT_INPUT)),
             options=options,
             resolved=resolved,
+            target_id=target_id,
         )
 
     def deserialize_command_interaction(
