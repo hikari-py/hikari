@@ -73,7 +73,7 @@ class TestPartialSticker:
         ) as route:
             assert model.image_url == "file"
 
-        route.compile_to_file.assert_called_once_with(urls.CDN_URL, hash=123, file_format="png")
+        route.compile_to_file.assert_called_once_with(urls.CDN_URL, sticker_id=123, file_format="png")
 
     def test_image_url_when_LOTTIE(self, model):
         model.format_type = stickers.StickerFormatType.LOTTIE
@@ -83,4 +83,4 @@ class TestPartialSticker:
         ) as route:
             assert model.image_url == "file"
 
-        route.compile_to_file.assert_called_once_with(urls.CDN_URL, hash=123, file_format="json")
+        route.compile_to_file.assert_called_once_with(urls.CDN_URL, sticker_id=123, file_format="json")
