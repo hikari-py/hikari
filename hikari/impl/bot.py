@@ -724,7 +724,7 @@ class GatewayBot(traits.GatewayBotAware):
         if coroutine_tracking_depth is not None:
             try:
                 # Provisionally defined in CPython, may be removed without notice.
-                sys.set_coroutine_origin_tracking_depth(coroutine_tracking_depth)  # type: ignore[attr-defined]
+                sys.set_coroutine_origin_tracking_depth(coroutine_tracking_depth)
             except AttributeError:
                 _LOGGER.log(ux.TRACE, "cannot set coroutine tracking depth for sys, no functionality exists for this")
 
@@ -733,7 +733,7 @@ class GatewayBot(traits.GatewayBotAware):
         interrupt: typing.Optional[errors.HikariInterrupt] = None
         loop_thread_id = threading.get_native_id()
 
-        def handle_os_interrupt(signum: int, frame: types.FrameType) -> None:
+        def handle_os_interrupt(signum: int, frame: typing.Optional[types.FrameType]) -> None:
             # If we use a POSIX system, then raising an exception in here works perfectly and shuts the loop down
             # with an exception, which is good.
             # Windows, however, is special on this front. On Windows, the exception is caught by whatever was

@@ -427,7 +427,11 @@ class Color(int):
     # Partially chose to override these as the docstrings contain typos according to Sphinx.
     @classmethod
     def from_bytes(
-        cls, bytes_: typing.Union[typing.Iterable[int], typing.SupportsBytes], byteorder: str, *, signed: bool = True
+        cls,
+        bytes_: typing.Union[typing.Iterable[typing.SupportsIndex], typing.SupportsBytes],
+        byteorder: typing.Literal["little", "big"],
+        *,
+        signed: bool = True,
     ) -> Color:
         """Convert the bytes to a `Color`.
 
@@ -532,7 +536,13 @@ class Color(int):
 
         raise ValueError(f"Could not transform {value!r} into a {cls.__qualname__} object")
 
-    def to_bytes(self, length: int, byteorder: str, *, signed: bool = True) -> bytes:
+    def to_bytes(
+        self,
+        length: typing.SupportsIndex,
+        byteorder: typing.Literal["little", "big"],
+        *,
+        signed: bool = True,
+    ) -> bytes:
         """Convert the color code to bytes.
 
         Parameters
