@@ -4083,6 +4083,13 @@ class TestEntityFactoryImpl:
         assert partial_message.interaction is undefined.UNDEFINED
         assert partial_message.components is undefined.UNDEFINED
 
+    def test_deserialize_partial_message_with_guild_id_but_no_author(self, entity_factory_impl):
+        partial_message = entity_factory_impl.deserialize_partial_message(
+            {"id": 123, "channel_id": 456, "guild_id": 987}
+        )
+
+        assert partial_message.member is None
+
     def test_deserialize_partial_message_deserializes_old_stickers_field(self, entity_factory_impl, message_payload):
         message_payload["stickers"] = message_payload["sticker_items"]
         del message_payload["sticker_items"]
@@ -4295,7 +4302,7 @@ class TestEntityFactoryImpl:
         assert message.activity is None
         assert message.application is None
         assert message.message_reference is None
-        assert message.referenced_message is undefined.UNDEFINED
+        assert message.referenced_message is None
         assert message.stickers == []
         assert message.nonce is None
         assert message.application_id is None
@@ -4314,7 +4321,7 @@ class TestEntityFactoryImpl:
         assert message.application.cover_image_hash is None
         assert message.application.icon_hash is None
         assert message.referenced_message is None
-        assert message.member is undefined.UNDEFINED
+        assert message.member is None
 
     def test_deserialize_message_deserializes_old_stickers_field(self, entity_factory_impl, message_payload):
         message_payload["stickers"] = message_payload["sticker_items"]
