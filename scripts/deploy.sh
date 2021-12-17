@@ -21,7 +21,7 @@
 # SOFTWARE.
 set -e
 
-if [ $(ls -1 changes/*.*.md 2>/dev/null | wc -l) = 0]; then
+if [ $(ls -1 changes/*.*.md 2>/dev/null | wc -l) != 0 ]; then
     echo "Cannot create release if CHANGELOG fragment files exist under 'changes/'!"
     exit 1
 fi
