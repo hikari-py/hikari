@@ -961,7 +961,7 @@ class IteratorReader(AsyncReader):
         elif aio.is_async_iterator(self.data) or inspect.isasyncgen(self.data):
             try:
                 while True:
-                    yield self._assert_bytes(await self.data.__anext__())  # type: ignore[union-attr]
+                    yield self._assert_bytes(await self.data.__anext__())
             except StopAsyncIteration:
                 pass
 
@@ -975,7 +975,7 @@ class IteratorReader(AsyncReader):
         elif inspect.isgenerator(self.data):
             try:
                 while True:
-                    yield self._assert_bytes(self.data.send(None))  # type: ignore[union-attr]
+                    yield self._assert_bytes(self.data.send(None))
             except StopIteration:
                 pass
 
