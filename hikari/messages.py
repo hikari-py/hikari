@@ -1267,10 +1267,10 @@ class PartialMessage(snowflakes.Unique):
         builtins.TypeError
             If both `attachment` and `attachments` are specified.
         """  # noqa: E501 - Line too long
-        if reply is True:
+        if reply:
             reply = self
 
-        elif reply is False:
+        elif not reply:
             reply = undefined.UNDEFINED
 
         return await self.app.rest.create_message(

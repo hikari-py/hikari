@@ -899,7 +899,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body = await response.json()
         body_retry_after = float(body["retry_after"])
 
-        if body.get("global", False) is True:
+        if body.get("global", False):
             _LOGGER.error(
                 "rate limited on the global bucket. You should consider lowering the number of requests you make or "
                 "contacting Discord to raise this limit. Backing off and retrying request..."
@@ -1019,10 +1019,10 @@ class RESTClientImpl(rest_api.RESTClient):
         if isinstance(request_to_speak, datetime.datetime):
             body.put("request_to_speak_timestamp", request_to_speak.isoformat())
 
-        elif request_to_speak is True:
+        elif request_to_speak:
             body.put("request_to_speak_timestamp", time.utc_datetime().isoformat())
 
-        elif request_to_speak is False:
+        elif not request_to_speak:
             body.put("request_to_speak_timestamp", None)
 
         await self._request(route, json=body)
