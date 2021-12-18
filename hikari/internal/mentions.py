@@ -75,14 +75,14 @@ def generate_allowed_mentions(
     if mentions_reply:
         allowed_mentions["replied_user"] = True
 
-    if user_mentions:
+    if user_mentions is True:
         parsed_mentions.append("users")
     elif isinstance(user_mentions, typing.Collection):
         # Duplicates will cause discord to error.
         ids = {str(int(u)) for u in user_mentions}
         allowed_mentions["users"] = list(ids)
 
-    if role_mentions:
+    if role_mentions is True:
         parsed_mentions.append("roles")
     elif isinstance(role_mentions, typing.Collection):
         # Duplicates will cause discord to error.
