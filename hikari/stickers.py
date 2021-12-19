@@ -157,7 +157,7 @@ class PartialSticker(snowflakes.Unique):
         """
         ext = "json" if self.format_type is StickerFormatType.LOTTIE else "png"
 
-        return routes.CDN_STICKER.compile_to_file(urls.CDN_URL, hash=self.id, file_format=ext)
+        return routes.CDN_STICKER.compile_to_file(urls.CDN_URL, sticker_id=self.id, file_format=ext)
 
 
 @attr_extensions.with_copy
