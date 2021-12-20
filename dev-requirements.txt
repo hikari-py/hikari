@@ -15,7 +15,7 @@ pytest-randomly==3.10.3
 coverage==6.2
 
 # Other stuff
-async-timeout==4.0.1  # Used for timeouts in some test cases.
+async-timeout==4.0.2  # Used for timeouts in some test cases.
 
 #################
 # DOCUMENTATION #
