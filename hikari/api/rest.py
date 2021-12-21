@@ -218,6 +218,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         parent_category: undefined.UndefinedOr[
             snowflakes.SnowflakeishOr[channels_.GuildCategory]
         ] = undefined.UNDEFINED,
+        default_auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        archived: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        locked: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        invitable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.PartialChannel:
         """Edit a channel.
@@ -255,6 +260,28 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the new permission overwrites for the channel.
         parent_category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
             If provided, the new guild category for the channel.
+        default_auto_archive_duration : hikari.undefined.UndefinedOr[hikari.time.Intervalish]
+            If provided, the auto archive duration Discord's end user client
+            should default to when creating threads in this channel.
+
+            This should be either 60, 1440, 4320 or 10080 seconds and, as of
+            writing.
+        archived : hikari.undefined.UndefinedOr[bool]
+            If provided, whether to archive or unarchive this thread channel.
+        locked : hikari.undefined.UndefinedOr[bool]
+            If provided, whether to lock or unlock this thread channel.
+
+            If it's locked then only people with `MANAGE_THREADS` can unarchive it.
+        invitable : undefined.UndefinedOr[bool]
+            If provided, whether non-moderators should be able to add other non-moderators to the thread.
+
+            This only applies to private threads.
+        auto_archive_duration : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
+            If provided, how long the thread should remain inactive its archived.
+
+            This should be either 60, 1440, 4320 or 10080 seconds and, as of
+            writing, ignores the parent channel's set default_auto_archive_duration
+            when passed as `hikari.undefined.UNDEFINED`.
         reason : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -4408,6 +4435,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             typing.Sequence[channels_.PermissionOverwrite]
         ] = undefined.UNDEFINED,
         category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
+        default_auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.GuildTextChannel:
         """Create a text channel in a guild.
@@ -4438,6 +4466,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
             The category to create the channel under. This may be the
             object or the ID of an existing category.
+        default_auto_archive_duration : hikari.undefined.UndefinedOr[hikari.time.Intervalish]
+            If provided, the auto archive duration Discord's end user client
+            should default to when creating threads in this channel.
+
+            This should be either 60, 1440, 4320 or 10080 seconds and, as of
+            writing.
         reason : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -4486,6 +4520,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             typing.Sequence[channels_.PermissionOverwrite]
         ] = undefined.UNDEFINED,
         category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
+        default_auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.GuildNewsChannel:
         """Create a news channel in a guild.
@@ -4516,6 +4551,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
             The category to create the channel under. This may be the
             object or the ID of an existing category.
+        default_auto_archive_duration : hikari.undefined.UndefinedOr[hikari.time.Intervalish]
+            If provided, the auto archive duration Discord's end user client
+            should default to when creating threads in this channel.
+
+            This should be either 60, 1440, 4320 or 10080 seconds and, as of
+            writing.
         reason : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -4788,12 +4829,61 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         # While there is a "default archive duration" setting this doesn't seem to effect this context
         # since it always defaults to 1440 minutes if auto_archive_duration is left undefined.
-        auto_archive_duration: typing.Union[undefined.UndefinedType, int, datetime.timedelta] = datetime.timedelta(
-            minutes=60
-        ),
+        auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = datetime.timedelta(minutes=60),
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> channels_.GuildThreadChannel:
-        raise NotImplementedError
+    ) -> typing.Union[channels_.GuildPublicThread, channels_.GuildNewsThread]:
+        """Create a public or news thread on a message in a guild channel.
+
+        !!! warning
+            Public threads can only be made in guild text channels
+            and news threads can only be made in guild news channels.
+
+        Parameters
+        ----------
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.PermissibleGuildChannel]
+            Object or ID of the guild news or text channel to create a public thread in.
+        message : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
+            Object or ID of the message to attach the created thread to.
+        name : str
+            Name of the thread channel.
+
+        Other Parameters
+        ----------------
+        auto_archive_duration : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
+            If provided, how long the thread should remain inactive its archived.
+
+            This should be either 60, 1440, 4320 or 10080 seconds and, as of
+            writing, ignores the parent channel's set default_auto_archive_duration
+            when passed as `hikari.undefined.UNDEFINED`.
+
+        Returns
+        -------
+        typing.Union[hikari.channels.GuildPublicThread, hikari.channels.GuildNewsThread]
+            The created public or news thread channel.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you are missing the `CREATE_PUBLIC_THREADS` permission or if you
+            can't send messages in the target channel.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
 
     @abc.abstractmethod
     async def create_thread(
@@ -4804,12 +4894,58 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         # While there is a "default archive duration" setting this doesn't seem to effect this context
         # since it always defaults to 1440 minutes if auto_archive_duration is left undefined.
-        auto_archive_duration: typing.Union[undefined.UndefinedType, int, datetime.timedelta] = datetime.timedelta(
-            minutes=60
-        ),
+        auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = datetime.timedelta(minutes=60),
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> channels_.GuildThreadChannel:
-        raise NotImplementedError
+    ) -> channels_.GuildPrivateThread:
+        """Create a private thread in a guild channel.
+
+        !!! warning
+            Private threads can only be made in guild text channels.
+
+        Parameters
+        ----------
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.PermissibleGuildChannel]
+            Object or ID of the guild news or text channel to create a private thread in.
+        name : str
+            Name of the thread channel.
+
+        Other Parameters
+        ----------------
+        auto_archive_duration : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
+            If provided, how long the thread should remain inactive its archived.
+
+            This should be either 60, 1440, 4320 or 10080 seconds and, as of
+            writing, ignores the parent channel's set default_auto_archive_duration
+            when passed as `hikari.undefined.UNDEFINED`.
+
+        Returns
+        -------
+        hikari.channels.GuildPrivateThread
+            The created private thread channel.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you are missing the `CREATE_PUBLIC_THREADS` permission or if you
+            can't send messages in the target channel.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
 
     @abc.abstractmethod
     async def join_thread(self, channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel]) -> None:
@@ -4852,7 +4988,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
         *,
-        start_at: undefined.UndefinedOr[
+        before: undefined.UndefinedOr[
             snowflakes.SearchableSnowflakeishOr[channels_.GuildThreadChannel]
         ] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[typing.Union[channels_.GuildNewsThread, channels_.GuildPublicThread]]:
@@ -4863,7 +4999,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
         *,
-        start_at: undefined.UndefinedOr[
+        before: undefined.UndefinedOr[
             snowflakes.SearchableSnowflakeishOr[channels_.GuildThreadChannel]
         ] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[channels_.GuildPrivateThread]:
@@ -4874,7 +5010,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
         *,
-        start_at: undefined.UndefinedOr[
+        before: undefined.UndefinedOr[
             snowflakes.SearchableSnowflakeishOr[channels_.GuildThreadChannel]
         ] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[channels_.GuildPrivateThread]:

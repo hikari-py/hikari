@@ -959,6 +959,11 @@ class RESTClientImpl(rest_api.RESTClient):
         parent_category: undefined.UndefinedOr[
             snowflakes.SnowflakeishOr[channels_.GuildCategory]
         ] = undefined.UNDEFINED,
+        default_auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        archived: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        locked: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        invitable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.PartialChannel:
         route = routes.PATCH_CHANNEL.compile(channel=channel)
@@ -978,6 +983,12 @@ class RESTClientImpl(rest_api.RESTClient):
             permission_overwrites,
             conversion=self._entity_factory.serialize_permission_overwrite,
         )
+        body.put("default_auto_archive_duration", default_auto_archive_duration, conversion=time.timespan_to_int)
+        # thread-only fields
+        body.put("archived", archived)
+        body.put("auto_archive_duration", auto_archive_duration, conversion=time.timespan_to_int)
+        body.put("locked", locked)
+        body.put("invitable", invitable)
 
         response = await self._request(route, json=body, reason=reason)
         assert isinstance(response, dict)
@@ -2567,6 +2578,7 @@ class RESTClientImpl(rest_api.RESTClient):
             typing.Sequence[channels_.PermissionOverwrite]
         ] = undefined.UNDEFINED,
         category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
+        default_auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.GuildTextChannel:
         response = await self._create_guild_channel(
@@ -2579,6 +2591,7 @@ class RESTClientImpl(rest_api.RESTClient):
             rate_limit_per_user=rate_limit_per_user,
             permission_overwrites=permission_overwrites,
             category=category,
+            default_auto_archive_duration=default_auto_archive_duration,
             reason=reason,
         )
         return self._entity_factory.deserialize_guild_text_channel(response)
@@ -2596,6 +2609,7 @@ class RESTClientImpl(rest_api.RESTClient):
             typing.Sequence[channels_.PermissionOverwrite]
         ] = undefined.UNDEFINED,
         category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
+        default_auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.GuildNewsChannel:
         response = await self._create_guild_channel(
@@ -2608,6 +2622,7 @@ class RESTClientImpl(rest_api.RESTClient):
             rate_limit_per_user=rate_limit_per_user,
             permission_overwrites=permission_overwrites,
             category=category,
+            default_auto_archive_duration=default_auto_archive_duration,
             reason=reason,
         )
         return self._entity_factory.deserialize_guild_news_channel(response)
@@ -2711,6 +2726,7 @@ class RESTClientImpl(rest_api.RESTClient):
         ] = undefined.UNDEFINED,
         region: undefined.UndefinedOr[typing.Union[voices.VoiceRegion, str]] = undefined.UNDEFINED,
         category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
+        default_auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> data_binding.JSONObject:
         route = routes.POST_GUILD_CHANNELS.compile(guild=guild)
@@ -2731,6 +2747,7 @@ class RESTClientImpl(rest_api.RESTClient):
             permission_overwrites,
             conversion=self._entity_factory.serialize_permission_overwrite,
         )
+        body.put("default_auto_archive_duration", default_auto_archive_duration, conversion=time.timespan_to_int)
 
         response = await self._request(route, json=body, reason=reason)
         assert isinstance(response, dict)
@@ -2742,11 +2759,9 @@ class RESTClientImpl(rest_api.RESTClient):
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         name: str,
         *,
-        auto_archive_duration: typing.Union[undefined.UndefinedType, int, datetime.timedelta] = datetime.timedelta(
-            minutes=60
-        ),
+        auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = datetime.timedelta(minutes=60),
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> channels_.GuildThreadChannel:
+    ) -> typing.Union[channels_.GuildPublicThread, channels_.GuildNewsThread]:
         if auto_archive_duration is not undefined.UNDEFINED and isinstance(auto_archive_duration, datetime.timedelta):
             auto_archive_duration = round(auto_archive_duration.total_seconds() / 60)
 
@@ -2758,8 +2773,8 @@ class RESTClientImpl(rest_api.RESTClient):
         response = await self._request(route, json=body, reason=reason)
 
         assert isinstance(response, dict)
-        channel = self._entity_factory.deserialize_channel(response)
-        assert isinstance(channel, channels_.GuildThreadChannel)
+        channel = self._entity_factory.deserialize_guild_thread(response)
+        assert isinstance(channel, (channels_.GuildPublicThread, channels_.GuildNewsThread))
         return channel
 
     # TODO: edit thread plus default archive duration and other fields
@@ -2769,11 +2784,10 @@ class RESTClientImpl(rest_api.RESTClient):
         type: typing.Union[channels_.ChannelType, int],  # TODO: more specific type?
         name: str,
         *,
-        auto_archive_duration: typing.Union[undefined.UndefinedType, int, datetime.timedelta] = datetime.timedelta(
-            minutes=60
-        ),
+        auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = datetime.timedelta(minutes=60),
+        invitable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> channels_.GuildThreadChannel:
+    ) -> channels_.GuildPrivateThread:
         if auto_archive_duration is not undefined.UNDEFINED and isinstance(auto_archive_duration, datetime.timedelta):
             auto_archive_duration = round(auto_archive_duration.total_seconds() / 60)
 
@@ -2786,9 +2800,7 @@ class RESTClientImpl(rest_api.RESTClient):
         response = await self._request(route, json=body, reason=reason)
 
         assert isinstance(response, dict)
-        channel = self._entity_factory.deserialize_channel(response)
-        assert isinstance(channel, channels_.GuildThreadChannel)
-        return channel
+        return self._entity_factory.deserialize_guild_private_thread(response)
 
     async def join_thread(self, channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel]) -> None:
         route = routes.PUT_MY_THREAD_MEMBER.compile(channel=channel)
@@ -2840,19 +2852,18 @@ class RESTClientImpl(rest_api.RESTClient):
         ]
 
     @staticmethod
-    def _process_thread_start_at(
-        channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
-        start_at: undefined.UndefinedOr[
+    def _process_thread_before(
+        before: undefined.UndefinedOr[
             snowflakes.SearchableSnowflakeishOr[channels_.GuildThreadChannel]
         ] = undefined.UNDEFINED,
     ) -> str:
-        if start_at is undefined.UNDEFINED:
-            return snowflakes.Snowflake(channel).created_at.isoformat()
+        if before is undefined.UNDEFINED:
+            return snowflakes.Snowflake.max().created_at.isoformat()
 
-        if isinstance(start_at, datetime.datetime):
-            return start_at.isoformat()
+        if isinstance(before, datetime.datetime):
+            return before.isoformat()
 
-        return snowflakes.Snowflake(start_at).created_at.isoformat()
+        return snowflakes.Snowflake(before).created_at.isoformat()
 
     def _deserialize_public_thread(
         self,
@@ -2869,51 +2880,60 @@ class RESTClientImpl(rest_api.RESTClient):
         self,
         channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
         *,
-        start_at: undefined.UndefinedOr[
+        before: undefined.UndefinedOr[
             snowflakes.SearchableSnowflakeishOr[channels_.GuildThreadChannel]
         ] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[typing.Union[channels_.GuildNewsThread, channels_.GuildPublicThread]]:
-        route = routes.GET_PUBLIC_ARCHIVED_THREADS.compile(channel=channel)
         return special_endpoints_impl.GuildThreadIterator(
-            self._deserialize_public_thread,
-            self._entity_factory,
-            self._request,
-            route,
-            self._process_thread_start_at(channel, start_at),
+            deserialize=self._deserialize_public_thread,
+            entity_factory=self._entity_factory,
+            request_call=self._request,
+            route=routes.GET_PUBLIC_ARCHIVED_THREADS.compile(channel=channel),
+            before=self._process_thread_before(before),
+            before_is_timestamp=True,
         )
 
     def fetch_private_archived_threads(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
         *,
-        start_at: undefined.UndefinedOr[
+        before: undefined.UndefinedOr[
             snowflakes.SearchableSnowflakeishOr[channels_.GuildThreadChannel]
         ] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[channels_.GuildPrivateThread]:
-        route = routes.GET_PRIVATE_ARCHIVED_THREADS.compile(channel=channel)
         return special_endpoints_impl.GuildThreadIterator(
-            self._entity_factory.deserialize_guild_private_thread,
-            self._entity_factory,
-            self._request,
-            route,
-            self._process_thread_start_at(channel, start_at),
+            deserialize=self._entity_factory.deserialize_guild_private_thread,
+            entity_factory=self._entity_factory,
+            request_call=self._request,
+            route=routes.GET_PRIVATE_ARCHIVED_THREADS.compile(channel=channel),
+            before=self._process_thread_before(before),
+            before_is_timestamp=True,
         )
 
     def fetch_joined_private_archived_threads(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
         *,
-        start_at: undefined.UndefinedOr[
+        before: undefined.UndefinedOr[
             snowflakes.SearchableSnowflakeishOr[channels_.GuildThreadChannel]
         ] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[channels_.GuildPrivateThread]:
-        route = routes.GET_JOINED_PRIVATE_ARCHIVED_THREADS.compile(channel=channel)
+        if before is undefined.UNDEFINED:
+            before = snowflakes.Snowflake.max()
+
+        elif isinstance(before, datetime.datetime):
+            before = snowflakes.Snowflake.from_datetime(before)
+
+        else:
+            before = snowflakes.Snowflake(before)
+
         return special_endpoints_impl.GuildThreadIterator(
-            self._entity_factory.deserialize_guild_private_thread,
-            self._entity_factory,
-            self._request,
-            route,
-            self._process_thread_start_at(channel, start_at),
+            deserialize=self._entity_factory.deserialize_guild_private_thread,
+            entity_factory=self._entity_factory,
+            request_call=self._request,
+            route=routes.GET_JOINED_PRIVATE_ARCHIVED_THREADS.compile(channel=channel),
+            before=str(before),
+            before_is_timestamp=False,
         )
 
     async def reposition_channels(

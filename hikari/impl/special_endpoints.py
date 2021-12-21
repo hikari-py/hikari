@@ -832,12 +832,13 @@ class GuildThreadIterator(iterators.BufferedLazyIterator[_GuildThreadChannelT]):
     """Iterator implemented for guild thread endpoints."""
 
     __slots__: typing.Sequence[str] = (
+        "_before_is_timestamp",
         "_deserialize",
         "_entity_factory",
         "_has_more",
+        "_next_before",
         "_request_call",
         "_route",
-        "_next_timestamp",
     )
 
     def __init__(
@@ -847,38 +848,44 @@ class GuildThreadIterator(iterators.BufferedLazyIterator[_GuildThreadChannelT]):
         request_call: _RequestCallSig,
         route: routes.CompiledRoute,
         before: undefined.UndefinedOr[str],
+        before_is_timestamp: bool,
     ) -> None:
+        super().__init__()
+        self._before_is_timestamp = before_is_timestamp
         self._deserialize = deserialize
         self._entity_factory = entity_factory
-        self._next_timestamp = before
         self._has_more = True
+        self._next_before = before
         self._request_call = request_call
         self._route = route
 
     async def _next_chunk(self) -> typing.Optional[typing.Generator[_GuildThreadChannelT, typing.Any, None]]:
-        while self._has_more:
-            query = data_binding.StringMapBuilder()
-            query.put("limit", 100)
-            query.put("before", self._next_timestamp)
+        if not self._has_more:
+            return None
 
-            response = await self._request_call(compiled_route=self._route, query=query)
-            assert isinstance(response, dict)
-            self._has_more = response["has_more"]
+        query = data_binding.StringMapBuilder()
+        query.put("limit", 100)
+        query.put("before", self._next_before)
 
-            if not (threads := response["threads"]):
-                continue
+        response = await self._request_call(compiled_route=self._route, query=query)
+        assert isinstance(response, dict)
 
-            members = {
-                member.thread_id: member
-                for member in map(self._entity_factory.deserialize_thread_member, response["members"])
-            }
-            self._first_timestamp = snowflakes.Snowflake(min(thread["id"] for thread in threads)).created_at.isoformat()
-            return (
-                self._deserialize(payload, member=members.get(snowflakes.Snowflake(payload["id"])))
-                for payload in threads
-            )
+        if not (threads := response["threads"]):
+            # Since GET is idempotent, has_more should always be false if there
+            # are no threads in the current response.
+            self._has_more = False
+            return None
 
-        return None
+        self._has_more = response["has_more"]
+        members = {
+            member.thread_id: member
+            for member in map(self._entity_factory.deserialize_thread_member, response["members"])
+        }
+        next_before = snowflakes.Snowflake(min(thread["id"] for thread in threads))
+        self._next_before = next_before.created_at.isoformat() if self._before_is_timestamp else str(next_before)
+        return (
+            self._deserialize(payload, member=members.get(snowflakes.Snowflake(payload["id"]))) for payload in threads
+        )
 
 
 @attr_extensions.with_copy

@@ -189,7 +189,9 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         """See https://discord.com/developers/docs/topics/gateway#thread-list-sync for more info."""
         await self.dispatch(self._event_factory.deserialize_thread_list_sync_event(shard, payload))
 
-    async def thread_member_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
+    async def on_thread_member_update(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> None:
         """See https://discord.com/developers/docs/topics/gateway#thread-member-update for more info."""
         await self.dispatch(self._event_factory.deserialize_own_thread_member_update_event(shard, payload))
 
