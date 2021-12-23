@@ -889,7 +889,7 @@ class _ChunkedLazyIterator(typing.Generic[ValueT], LazyIterator[typing.Sequence[
         self._chunk_size = chunk_size
 
     async def __anext__(self) -> typing.Sequence[ValueT]:
-        chunk: list[ValueT] = []
+        chunk: typing.List[ValueT] = []
 
         async for item in self._iterator:
             chunk.append(item)
