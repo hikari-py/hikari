@@ -1,3 +1,4 @@
+{# This file expands on pdoc's module template #}
 {% extends "default/module.html.jinja2" %}
 
 {# ##### #}
@@ -43,17 +44,31 @@
     </div>
 {% endmacro %}
 
+{# ######### #}
+{# Inventory #}
+{# ######### #}
+{% macro member(doc) %}
+    {{ add_to_inventory(doc) }}
+    {% if doc.type == "class" %}
+        {{ class(doc) }}
+    {% elif doc.type == "function" %}
+        {{ function(doc) }}
+    {% elif doc.type == "module" %}
+        {{ submodule(doc) }}
+    {% else %}
+        {{ variable(doc) }}
+    {% endif %}
+    {% if doc.type != "variable" %}
+        {{ view_source(doc) }}
+    {% endif %}
+    {{ docstring(doc) }}
+{% endmacro %}
+
 {# ############## #}
 {# Better sidebar #}
 {# ############## #}
 {% block nav %}
-<script>
-    "use strict";
-    const html = document.querySelector("html");
-    if (document.body.clientWidth < 1080)
-        html.classList.add("sidebar-hidden");
-</script>
-
+{{ add_to_inventory(module) if module.name != "" }}
 <nav class="pdoc">
     <div id="sidebar" class="sidebar">
         <div class="sidebar-buttons">

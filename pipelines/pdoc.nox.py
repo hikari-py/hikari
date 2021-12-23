@@ -57,7 +57,7 @@ def _pdoc(session: nox.Session, extra_arguments: typing.Sequence[str] = ()):
 
 @nox.session(reuse_venv=True)
 def pdoc(session: nox.Session) -> None:
-    """Generate pdoc pages."""
+    """Generate documentation using pdoc."""
     if not os.path.exists(config.ARTIFACT_DIRECTORY):
         os.mkdir(config.ARTIFACT_DIRECTORY)
 
@@ -70,4 +70,4 @@ def pdoc_int(session: nox.Session) -> None:
     if not os.path.exists(config.ARTIFACT_DIRECTORY):
         os.mkdir(config.ARTIFACT_DIRECTORY)
 
-    _pdoc(session, ("-n"))
+    _pdoc(session, ("-n",))

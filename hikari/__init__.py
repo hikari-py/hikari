@@ -37,6 +37,7 @@ from hikari._about import __copyright__
 from hikari._about import __discord_invite__
 from hikari._about import __docs__
 from hikari._about import __email__
+from hikari._about import __git_sha1__
 from hikari._about import __issue_tracker__
 from hikari._about import __license__
 from hikari._about import __url__

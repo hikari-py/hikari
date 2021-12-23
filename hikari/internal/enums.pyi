@@ -63,19 +63,18 @@ class Flag(__enum.IntFlag):
     def __len__(self) -> int: ...
     @staticmethod
     def __new__(cls: __Type[__FlagT], value: int = 0) -> __FlagT: ...
-
     # Aliases
-    def isdisjoint(self: __FlagT, other: __Union[int, __FlagT]) -> bool: ... # is_disjoint
-    def issuperset(self: __FlagT, other: __Union[int, __FlagT]) -> bool: ... # is_superset
-    def symmetricdifference(self: __FlagT, other: __Union[int, __FlagT]) -> __FlagT: ... # symmetric_difference
+    def isdisjoint(self: __FlagT, other: __Union[int, __FlagT]) -> bool: ...  # is_disjoint
+    def issuperset(self: __FlagT, other: __Union[int, __FlagT]) -> bool: ...  # is_superset
+    def symmetricdifference(self: __FlagT, other: __Union[int, __FlagT]) -> __FlagT: ...  # symmetric_difference
     def issubset(self: __FlagT, other: __Union[int, __FlagT]) -> bool: ...  # is_subset
     def __contains__(self: __FlagT, other: __Union[int, __FlagT]) -> bool: ...  # is_subset
-    def __rand__(self: __FlagT, other: __Union[int, __FlagT]) -> __FlagT: ... # intersection
-    def __and__(self: __FlagT, other: __Union[int, __FlagT]) -> __FlagT: ... # intersection
-    def __ror__(self: __FlagT, other: __Union[int, __FlagT]) -> __FlagT: ... # union
-    def __or__(self: __FlagT, other: __Union[int, __FlagT]) -> __FlagT: ... # union
-    def __rsub__(self: __FlagT, other: __Union[int, __FlagT]) -> __FlagT: ... # difference
-    def __sub__(self: __FlagT, other: __Union[int, __FlagT]) -> __FlagT: ... # difference
-    def __rxor__(self: __FlagT, other: __Union[int, __FlagT]) -> __FlagT: ... # symmetric_difference
-    def __xor__(self: __FlagT, other: __Union[int, __FlagT]) -> __FlagT: ... # symmetric_difference
-    def __invert__(self: __FlagT) -> __FlagT: ... # invert
+    def __rand__(self: __FlagT, other: __Union[int, __FlagT]) -> __FlagT: ...  # intersection
+    def __and__(self: __FlagT, other: __Union[int, __FlagT]) -> __FlagT: ...  # intersection
+    def __ror__(self: __FlagT, other: __Union[int, __FlagT]) -> __FlagT: ...  # union
+    def __or__(self: __FlagT, other: __Union[int, __FlagT]) -> __FlagT: ...  # union
+    def __rsub__(self: __FlagT, other: __Union[int, __FlagT]) -> __FlagT: ...  # difference
+    def __sub__(self: __FlagT, other: __Union[int, __FlagT]) -> __FlagT: ...  # difference
+    def __rxor__(self: __FlagT, other: __Union[int, __FlagT]) -> __FlagT: ...  # symmetric_difference
+    def __xor__(self: __FlagT, other: __Union[int, __FlagT]) -> __FlagT: ...  # symmetric_difference
+    def __invert__(self: __FlagT) -> __FlagT: ...  # invert

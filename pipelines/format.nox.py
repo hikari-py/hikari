@@ -40,7 +40,9 @@ def reformat_code(session: nox.Session) -> None:
 
     session.run("isort", *config.PYTHON_REFORMATTING_PATHS)
     session.run("black", *config.PYTHON_REFORMATTING_PATHS)
-    session.run("codespell", "-w", *config.FULL_REFORMATTING_PATHS)
+
+    ignore_words_list_flag = ",".join(i for i in config.CODESPELL_IGNORE_WORDS)
+    session.run("codespell", "--ignore-words-list", ignore_words_list_flag, "-w", *config.FULL_REFORMATTING_PATHS)
 
 
 @nox.session(reuse_venv=True)

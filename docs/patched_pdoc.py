@@ -21,16 +21,74 @@
 # SOFTWARE.
 """A script that patches some pdoc functionality before calling it."""
 import os
+import pathlib
 import sys
 
-import pdoc.render
+import sphobjinv
 from pdoc import __main__ as pdoc_main
+from pdoc import doc as pdoc_doc
+from pdoc.render import env as pdoc_env
 
 sys.path.append(os.getcwd())
 
 import hikari
 
-# Inject hikari's version
-pdoc.render.env.globals["__hikari_version__"] = hikari.__version__
+# '-o' is the flag to provide the output dir. If it wasn't provided, we don't output the inventory
+generate_inventory = "-o" in sys.argv
 
+if generate_inventory:
+    project_inventory = sphobjinv.Inventory()
+    project_inventory.project = "hikari"
+    project_inventory.version = hikari.__version__
+
+    type_to_role = {
+        "module": "module",
+        "class": "class",
+        "function": "func",
+        "variable": "var",
+    }
+
+    def _add_to_inventory(dobj: pdoc_doc.Doc):
+        if dobj.name.startswith("_"):
+            # These won't be documented anyways, so we can ignore them
+            return ""
+
+        uri = dobj.modulename.replace(".", "/") + ".html"
+
+        if dobj.qualname:
+            uri += "#" + dobj.qualname
+
+        project_inventory.objects.append(
+            sphobjinv.DataObjStr(
+                name=dobj.fullname,
+                domain="py",
+                role=type_to_role[dobj.type],
+                uri=uri,
+                priority="1",
+                dispname="-",
+            )
+        )
+
+        return ""
+
+    pdoc_env.globals["add_to_inventory"] = _add_to_inventory
+
+else:
+    # Just dummy functions
+    def _empty(*args, **kwargs):
+        return ""
+
+    pdoc_env.globals["add_to_inventory"] = _empty
+
+# Run pdoc
+pdoc_env.globals["__hikari_version__"] = hikari.__version__
+pdoc_env.globals["__git_sha1__"] = hikari.__git_sha1__
 pdoc_main.cli()
+
+if generate_inventory:
+    # Output the inventory
+    text = project_inventory.data_file(contract=True)
+    ztext = sphobjinv.compress(text)
+    path = str(pathlib.Path.cwd() / "public" / "docs" / "objects.inv")
+    sphobjinv.writebytes(path, ztext)
+    print(f"Inventory written to {path!r}")
