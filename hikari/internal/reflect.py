@@ -34,7 +34,7 @@ import typing
 if typing.TYPE_CHECKING:
     _T = typing.TypeVar("_T")
 
-EMPTY: typing.Final[inspect.Parameter.empty] = inspect.Parameter.empty
+EMPTY: typing.Final[typing.Any] = inspect.Parameter.empty
 """A singleton that empty annotations will be set to in `resolve_signature`."""
 
 

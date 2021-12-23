@@ -12,7 +12,7 @@ pytest-cov==3.0.0
 pytest-randomly==3.10.3
 
 # Coverage testing.
-coverage==6.2
+coverage[toml]==6.2
 
 # Other stuff
 async-timeout==4.0.2  # Used for timeouts in some test cases.
@@ -29,6 +29,7 @@ sphobjinv==2.1
 #################
 
 mypy==0.921
+pyright==0.0.13
 
 #######################
 # DEPENDENCY CHECKING #
