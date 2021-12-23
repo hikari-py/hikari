@@ -347,6 +347,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             rpc_origins=payload.get("rpc_origins"),
             summary=payload["summary"] or None,
             public_key=bytes.fromhex(payload["verify_key"]),
+            flags=application_models.ApplicationFlags(payload["flags"]),
             icon_hash=payload.get("icon"),
             team=team,
             guild_id=snowflakes.Snowflake(payload["guild_id"]) if "guild_id" in payload else None,

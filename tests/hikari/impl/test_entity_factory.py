@@ -202,6 +202,7 @@ class TestEntityFactoryImpl:
             "owner": owner_payload,
             "summary": "not a blank string",
             "verify_key": "698c5d0859abb686be1f8a19e0e7634d8471e33817650f9fb29076de227bca90",
+            "flags": 65536,
             "team": {
                 "icon": "hashtag",
                 "id": "202020202",
@@ -237,6 +238,7 @@ class TestEntityFactoryImpl:
             application.public_key
             == b'i\x8c]\x08Y\xab\xb6\x86\xbe\x1f\x8a\x19\xe0\xe7cM\x84q\xe38\x17e\x0f\x9f\xb2\x90v\xde"{\xca\x90'
         )
+        assert application.flags == application_models.ApplicationFlags.VERIFICATION_PENDING_GUILD_LIMIT
         assert application.privacy_policy_url == "hahaha://hahaha"
         assert application.terms_of_service_url == "haha2:2h2h2h2"
         assert application.icon_hash == "iwiwiwiwiw"
@@ -271,6 +273,7 @@ class TestEntityFactoryImpl:
                 "bot_public": True,
                 "bot_require_code_grant": False,
                 "verify_key": "1232313223",
+                "flags": 0,
                 "owner": owner_payload,
             }
         )
@@ -298,6 +301,7 @@ class TestEntityFactoryImpl:
                 "bot_public": True,
                 "bot_require_code_grant": False,
                 "verify_key": "1232313223",
+                "flags": 0,
             }
         )
 
