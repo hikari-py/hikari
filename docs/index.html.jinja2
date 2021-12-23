@@ -1,0 +1,14 @@
+{# This site will never be publicly available, its just for developers sake #}
+{% extends "default/index.html.jinja2" %}
+<style>
+    {% block style_theme %}
+        :root {
+            --pdoc-background: #212529;
+        }
+        .pdoc {
+            --text: #FFF;
+            --accent: #333;
+            --active: #9e7700;
+        }
+    {% endblock %}
+</style>

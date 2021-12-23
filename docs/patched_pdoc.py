@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -20,93 +19,76 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+"""A script that patches some pdoc functionality before calling it."""
+import os
+import pathlib
+import sys
 
-import json
-import os.path as path
-import re
+import sphobjinv
+from pdoc import __main__ as pdoc_main
+from pdoc import doc as pdoc_doc
+from pdoc.render import env as pdoc_env
 
-import pdoc
-from pdoc import cli
+sys.path.append(os.getcwd())
 
+import hikari
 
-def _patched_generate_lunr_search(modules, index_docstrings, template_config):
-    # This will only be called once due to how we generate the documentation, so we can ignore the rest
-    assert len(modules) == 1, "expected only 1 module to be generated, got more"
-    top_module = modules[0]
+# '-o' is the flag to provide the output dir. If it wasn't provided, we don't output the inventory
+generate_inventory = "-o" in sys.argv
 
-    def trim_docstring(docstring):
-        return re.sub(
-            r"""
-            \s+[-=~]{3,}\s+|       # title underlines
-            ^[ \t]*[`~]{3,}\w*$|   # code blocks
-            \s*[`#*]+\s*|          # common markdown chars
-            \s*([^\w\d_>])\1\s*|   # sequences of punct of the same kind
-            \s*</?\w*[^>]*>\s*     # simple HTML tags
-            \s+                    # whitespace sequences
-        """,
-            " ",
-            docstring,
-            flags=re.VERBOSE | re.MULTILINE,
+if generate_inventory:
+    project_inventory = sphobjinv.Inventory()
+    project_inventory.project = "hikari"
+    project_inventory.version = hikari.__version__
+
+    type_to_role = {
+        "module": "module",
+        "class": "class",
+        "function": "func",
+        "variable": "var",
+    }
+
+    def _add_to_inventory(dobj: pdoc_doc.Doc):
+        if dobj.name.startswith("_"):
+            # These won't be documented anyways, so we can ignore them
+            return ""
+
+        uri = dobj.modulename.replace(".", "/") + ".html"
+
+        if dobj.qualname:
+            uri += "#" + dobj.qualname
+
+        project_inventory.objects.append(
+            sphobjinv.DataObjStr(
+                name=dobj.fullname,
+                domain="py",
+                role=type_to_role[dobj.type],
+                uri=uri,
+                priority="1",
+                dispname="-",
+            )
         )
 
-    def recursive_add_to_index(dobj):
-        if dobj.module.name != "hikari":  # Do not index root
-            url = to_url_id(dobj)
-            # r: ref
-            # u: url
-            # d: docstring
-            # f: function
-            info = {"r": dobj.refname, "u": url}
-            if index_docstrings:
-                info["d"] = trim_docstring(dobj.docstring)
-            if isinstance(dobj, pdoc.Function):
-                info["f"] = 1
+        return ""
 
-            index.append(info)
+    pdoc_env.globals["add_to_inventory"] = _add_to_inventory
 
-        for member_dobj in getattr(dobj, "doc", {}).values():
-            if dobj.module.name == "hikari" and not isinstance(member_dobj, pdoc.Module):
-                continue
+else:
+    # Just dummy functions
+    def _empty(*args, **kwargs):
+        return ""
 
-            recursive_add_to_index(member_dobj)
+    pdoc_env.globals["add_to_inventory"] = _empty
 
-    def to_url_id(dobj):
-        # pdocs' .url() doesn't take in account that some attributes are inherited,
-        # which generates an invalid url. Because of this, we need to take matter
-        # into our own hands.
-        url = dobj.refname.replace(".", "/")
-        if not isinstance(dobj, pdoc.Module):
-            depth = 1
-            obj = getattr(dobj, "cls", None)
-            while obj:
-                depth += 1
-                obj = getattr(obj, "cls", None)
+# Run pdoc
+pdoc_env.globals["__hikari_version__"] = hikari.__version__
+pdoc_env.globals["__git_sha1__"] = hikari.__git_sha1__
+pdoc_main.cli()
 
-            url = "/".join(url.split("/")[:-depth])
-
-        if top_module.is_package:  # Reference from subfolder if its a package
-            _, url = url.split("/", maxsplit=1)
-        if url not in url_cache:
-            url_cache[url] = len(url_cache)
-        return url_cache[url]
-
-    index = []
-    url_cache = {}
-    recursive_add_to_index(top_module)
-    urls = sorted(url_cache.keys(), key=url_cache.__getitem__)
-
-    # If top module is a package, output the index in its subfolder, else, in the output dir
-    main_path = path.join(cli.args.output_dir, *top_module.name.split(".") if top_module.is_package else "")
-    with cli._open_write_file(path.join(main_path, "index.json")) as f:
-        json.dump({"urls": urls, "index": index}, f)
-
-    # Generate search.html
-    with cli._open_write_file(path.join(main_path, "search.html")) as f:
-        rendered_template = pdoc._render_template("/search.mako", module=top_module, **template_config)
-        f.write(rendered_template)
-
-
-if __name__ == "__main__":
-    cli._generate_lunr_search = _patched_generate_lunr_search
-
-    cli.main()
+if generate_inventory:
+    # Output the inventory
+    text = project_inventory.data_file(contract=True)
+    ztext = sphobjinv.compress(text)
+    path = str(pathlib.Path.cwd() / "public" / "docs" / "objects.inv")
+    sphobjinv.writebytes(path, ztext)
+    print(f"Inventory written to {path!r}")

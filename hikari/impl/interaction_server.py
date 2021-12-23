@@ -173,9 +173,9 @@ class InteractionServer(interaction_server.InteractionServer):
         The JSON encoder this server should use. Defaults to `json.dumps`.
     loads : aiohttp.typedefs.JSONDecoder
         The JSON decoder this server should use. Defaults to `json.loads`.
-    public_key : builtins.bytes
+    public_key : bytes
         The public key this server should use for verifying request payloads from
-        Discord. If left as `builtins.None` then the client will try to work this
+        Discord. If left as `None` then the client will try to work this
         out using `rest_client`.
     rest_client : hikari.api.rest.RESTClient
         The client this should use for making REST requests.
@@ -237,7 +237,7 @@ class InteractionServer(interaction_server.InteractionServer):
 
         Returns
         -------
-        builtins.bool
+        bool
             Whether this interaction server is active
         """
         return self._server is not None
@@ -376,18 +376,18 @@ class InteractionServer(interaction_server.InteractionServer):
     async def on_interaction(self, body: bytes, signature: bytes, timestamp: bytes) -> interaction_server.Response:
         """Handle an interaction received from Discord as a REST server.
 
-        !!! note
+        .. note::
             If this server instance is alive then this will be called internally
             by the server but if the instance isn't alive then this may still be
             called externally to trigger interaction dispatch.
 
         Parameters
         ----------
-        body : builtins.bytes
+        body : bytes
             The interaction payload.
-        signature : builtins.bytes
+        signature : bytes
             Value of the `"X-Signature-Ed25519"` header used to verify the body.
-        timestamp : builtins.bytes
+        timestamp : bytes
             Value of the `"X-Signature-Timestamp"` header used to verify the body.
 
         Returns
@@ -471,40 +471,40 @@ class InteractionServer(interaction_server.InteractionServer):
 
         Other Parameters
         ----------------
-        backlog : builtins.int
+        backlog : int
             The number of unaccepted connections that the system will allow before
             refusing new connections.
-        enable_signal_handlers : typing.Optional[builtins.bool]
-            Defaults to `builtins.True` if this is started in the main thread.
+        enable_signal_handlers : typing.Optional[bool]
+            Defaults to `True` if this is started in the main thread.
 
             If on a __non-Windows__ OS with builtin support for kernel-level
-            POSIX signals, then setting this to `builtins.True` will allow
+            POSIX signals, then setting this to `True` will allow
             treating keyboard interrupts and other OS signals to safely shut
             down the application as calls to shut down the application properly
             rather than just killing the process in a dirty state immediately.
             You should leave this enabled unless you plan to implement your own
             signal handling yourself.
-        host : typing.Optional[typing.Union[builtins.str, aiohttp.web.HostSequence]]
+        host : typing.Optional[typing.Union[str, aiohttp.web.HostSequence]]
             TCP/IP host or a sequence of hosts for the HTTP server.
-        port : typing.Optional[builtins.int]
+        port : typing.Optional[int]
             TCP/IP port for the HTTP server.
-        path : typing.Optional[builtins.str]
+        path : typing.Optional[str]
             File system path for HTTP server unix domain socket.
-        reuse_address : typing.Optional[builtins.bool]
+        reuse_address : typing.Optional[bool]
             Tells the kernel to reuse a local socket in TIME_WAIT state, without
             waiting for its natural timeout to expire.
-        reuse_port : typing.Optional[builtins.bool]
+        reuse_port : typing.Optional[bool]
             Tells the kernel to allow this endpoint to be bound to the same port
             as other existing endpoints are also bound to.
         socket : typing.Optional[socket.socket]
             A pre-existing socket object to accept connections on.
-        shutdown_timeout : builtins.float
+        shutdown_timeout : float
             A delay to wait for graceful server shutdown before forcefully
             disconnecting all open client sockets. This defaults to 60 seconds.
         ssl_context : typing.Optional[ssl.SSLContext]
             SSL context for HTTPS servers.
 
-        !!! note
+        .. note::
             For more information on the other parameters such as defaults see
             AIOHTTP's documentation.
         """

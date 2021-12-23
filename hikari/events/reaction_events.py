@@ -136,13 +136,13 @@ class ReactionAddEvent(ReactionEvent, abc.ABC):
     def emoji_name(self) -> typing.Union[emojis.UnicodeEmoji, str, None]:
         """Name of the emoji which was added if known.
 
-        !!! note
-            This will be `builtins.None` when the relevant custom emoji's data
+        .. note::
+            This will be `None` when the relevant custom emoji's data
             is not available (e.g. the emoji has been deleted).
 
         Returns
         -------
-        typing.Union[hikari.emojis.UnicodeEmoji, builtins.str, builtins.None]
+        typing.Union[hikari.emojis.UnicodeEmoji, str, None]
             Either the string name of the custom emoji which was added
             or the object of the `hikari.emojis.UnicodeEmoji` which was added.
         """
@@ -156,7 +156,7 @@ class ReactionAddEvent(ReactionEvent, abc.ABC):
         -------
         typing.Optional[hikari.snowflakes.Snowflake]
             ID of the emoji which was added if it was a custom emoji or
-            `builtins.None`.
+            `None`.
         """
 
     @property
@@ -166,7 +166,7 @@ class ReactionAddEvent(ReactionEvent, abc.ABC):
 
         Returns
         -------
-        builtins.bool
+        bool
             Whether the emoji which was added is animated.
         """
 
@@ -175,14 +175,14 @@ class ReactionAddEvent(ReactionEvent, abc.ABC):
 
         Parameters
         ----------
-        emoji : typing.Union[hikari.emojis.Emoji, builtins.str]
+        emoji : typing.Union[hikari.emojis.Emoji, str]
             The emoji to check.
 
-            Passing `builtins.str` here indicates a unicode emoji.
+            Passing `str` here indicates a unicode emoji.
 
         Returns
         -------
-        builtins.bool
+        bool
             Whether the emoji is the one which was added.
         """
         return emoji.id == self.emoji_id if isinstance(emoji, emojis.CustomEmoji) else emoji == self.emoji_name
@@ -210,13 +210,13 @@ class ReactionDeleteEvent(ReactionEvent, abc.ABC):
     def emoji_name(self) -> typing.Union[emojis.UnicodeEmoji, str, None]:
         """Name of the emoji which was removed.
 
-        !!! note
-            This will be `builtins.None` when the relevant custom emoji's data
+        .. note::
+            This will be `None` when the relevant custom emoji's data
             is not available (e.g. the emoji has been deleted).
 
         Returns
         -------
-        typing.Union[hikari.emojis.UnicodeEmoji, builtins.str, builtins.None]
+        typing.Union[hikari.emojis.UnicodeEmoji, str, None]
             Either the string name of the custom emoji which was removed
             or the object of the `hikari.emojis.UnicodeEmoji` which was removed.
         """
@@ -230,7 +230,7 @@ class ReactionDeleteEvent(ReactionEvent, abc.ABC):
         -------
         typing.Optional[hikari.snowflakes.Snowflake]
             ID of the emoji which was removed if it was a custom emoji or
-            `builtins.None`.
+            `None`.
         """
 
     def is_for_emoji(self, emoji: typing.Union[emojis.Emoji, str], /) -> bool:
@@ -238,14 +238,14 @@ class ReactionDeleteEvent(ReactionEvent, abc.ABC):
 
         Parameters
         ----------
-        emoji : typing.Union[hikari.emojis.Emoji, builtins.str]
+        emoji : typing.Union[hikari.emojis.Emoji, str]
             The emoji to check.
 
-            Passing `builtins.str` here indicates a unicode emoji.
+            Passing `str` here indicates a unicode emoji.
 
         Returns
         -------
-        builtins.bool
+        bool
             Whether the emoji is the one which was removed.
         """
         return emoji.id == self.emoji_id if isinstance(emoji, emojis.CustomEmoji) else emoji == self.emoji_name
@@ -269,13 +269,13 @@ class ReactionDeleteEmojiEvent(ReactionEvent, abc.ABC):
     def emoji_name(self) -> typing.Union[emojis.UnicodeEmoji, str, None]:
         """Name of the emoji which was removed if known.
 
-        !!! note
-            This will be `builtins.None` when the relevant custom emoji's data
+        .. note::
+            This will be `None` when the relevant custom emoji's data
             is not available (e.g. the emoji has been deleted).
 
         Returns
         -------
-        typing.Union[hikari.emojis.UnicodeEmoji, builtins.str, builtins.None]
+        typing.Union[hikari.emojis.UnicodeEmoji, str, None]
             Either the string name of the custom emoji which was removed
             or the object of the `hikari.emojis.UnicodeEmoji` which was removed.
         """
@@ -289,7 +289,7 @@ class ReactionDeleteEmojiEvent(ReactionEvent, abc.ABC):
         -------
         typing.Optional[hikari.snowflakes.Snowflake]
             ID of the emoji which was removed if it was a custom emoji or
-            `builtins.None`.
+            `None`.
         """
 
     def is_for_emoji(self, emoji: typing.Union[emojis.Emoji, str], /) -> bool:
@@ -297,14 +297,14 @@ class ReactionDeleteEmojiEvent(ReactionEvent, abc.ABC):
 
         Parameters
         ----------
-        emoji : typing.Union[hikari.emojis.Emoji, builtins.str]
+        emoji : typing.Union[hikari.emojis.Emoji, str]
             The emoji to check.
 
-            Passing `builtins.str` here indicates a unicode emoji.
+            Passing `str` here indicates a unicode emoji.
 
         Returns
         -------
-        builtins.bool
+        bool
             Whether the emoji is the one which was removed.
         """
         return emoji.id == self.emoji_id if isinstance(emoji, emojis.CustomEmoji) else emoji == self.emoji_name

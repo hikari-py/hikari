@@ -63,7 +63,7 @@ time, so hard coding this logic is not a useful thing to be doing.
 Rate limits, on the other hand, apply to a bucket and are specific to the major
 parameters of the compiled route. This means that `POST /channels/123/messages`
 and `POST /channels/456/messages` do not share the same real bucket, despite
-Discord providing the same bucket hash. A real bucket hash is the `builtins.str` hash of
+Discord providing the same bucket hash. A real bucket hash is the `str` hash of
 the bucket that Discord sends us in a response concatenated to the corresponding
 major parameters. This is used for quick bucket indexing internally in this
 module.
@@ -121,15 +121,15 @@ the vital rate limit headers manually and parse them to the correct data types.
 These headers are:
 
 * `X-RateLimit-Limit`:
-    an `builtins.int` describing the max requests in the bucket from empty to
+    an `int` describing the max requests in the bucket from empty to
     being rate limited.
 * `X-RateLimit-Remaining`:
-    an `builtins.int` describing the remaining number of requests before rate
+    an `int` describing the remaining number of requests before rate
     limiting occurs in the current window.
 * `X-RateLimit-Bucket`:
-    a `builtins.str` containing the initial bucket hash.
+    a `str` containing the initial bucket hash.
 * `X-RateLimit-Reset-After`:
-    a `builtins.float` containing the number of seconds when the current rate
+    a `float` containing the number of seconds when the current rate
     limit bucket will reset with decimal millisecond precision.
 
 Each of the above values should be passed to the `update_rate_limits` method to
@@ -165,7 +165,7 @@ on what attributes you send in a JSON or form data payload.
 
 No information is sent in headers about these specific limits. You will only
 be made aware that they exist once you get ratelimited. In the 429 ratelimited
-response, you will have the `"global"` attribute set to `builtins.False`, and a
+response, you will have the `"global"` attribute set to `False`, and a
 `"reset_after"` attribute that differs entirely to the `X-RateLimit-Reset-After`
 header. Thus, it is important to not assume the value in the 429 response
 for the reset time is the same as the one in the bucket headers. Hikari's
@@ -248,7 +248,7 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
 
     @property
     def is_unknown(self) -> bool:
-        """Return `builtins.True` if the bucket represents an `UNKNOWN` bucket."""
+        """Return `True` if the bucket represents an `UNKNOWN` bucket."""
         return self.name.startswith(UNKNOWN_HASH)
 
     def release(self) -> None:
@@ -258,7 +258,7 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
     async def acquire(self) -> None:
         """Acquire time and the lock on this bucket.
 
-        !!! note
+        .. note::
             You should afterwards invoke `RESTBucket.update_rate_limit` to
             update any rate limit information you are made aware of and
             `RESTBucket.release` to release the lock.
@@ -295,14 +295,14 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
 
         Parameters
         ----------
-        remaining : builtins.int
+        remaining : int
             The calls remaining in this time window.
-        limit : builtins.int
+        limit : int
             The total calls allowed in this time window.
-        reset_at : builtins.float
+        reset_at : float
             The epoch at which to reset the limit.
 
-        !!! note
+        .. note::
             The `reset_at` epoch is expected to be a `time.monotonic_timestamp`
             monotonic epoch, rather than a `time.time` date-based epoch.
         """
@@ -316,12 +316,12 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
 
         Parameters
         ----------
-        real_bucket_hash: builtins.str
+        real_bucket_hash: str
             The real bucket hash for this bucket.
 
         Raises
         ------
-        builtins.RuntimeError
+        RuntimeError
             If the hash of the bucket is already known.
         """
         if not self.is_unknown:
@@ -343,7 +343,7 @@ class RESTBucketManager:
 
     Parameters
     ----------
-    max_rate_limit : builtins.float
+    max_rate_limit : float
         The max number of seconds to backoff for when rate limited. Anything
         greater than this will instead raise an error.
     """
@@ -407,10 +407,10 @@ class RESTBucketManager:
 
         Parameters
         ----------
-        poll_period : builtins.float
+        poll_period : float
             Period to poll the garbage collector at in seconds. Defaults
             to `20` seconds.
-        expire_after : builtins.float
+        expire_after : float
             Time after which the last `reset_at` was hit for a bucket to
             remove it. Higher values will retain unneeded ratelimit info for
             longer, but may produce more effective rate-limiting logic as a
@@ -448,16 +448,16 @@ class RESTBucketManager:
 
         Parameters
         ----------
-        poll_period : builtins.float
+        poll_period : float
             The period to poll at.
-        expire_after : builtins.float
+        expire_after : float
             Time after which the last `reset_at` was hit for a bucket to
             remove it. Higher values will retain unneeded ratelimit info for
             longer, but may produce more effective ratelimiting logic as a
             result. Using `0` will make the bucket get garbage collected as soon
             as the rate limit has reset.
 
-        !!! warning
+        .. warning::
             You generally have no need to invoke this directly. Use
             `RESTBucketManager.start` and `RESTBucketManager.close` to control
             this instead.
@@ -485,13 +485,13 @@ class RESTBucketManager:
 
         Parameters
         ----------
-        expire_after : builtins.float
+        expire_after : float
             Time after which the last `reset_at` was hit for a bucket to\
             remove it. Defaults to `reset_at` + 20 seconds. Higher values will
             retain unneeded ratelimit info for longer, but may produce more
             effective ratelimiting logic as a result.
 
-        !!! warning
+        .. warning::
             You generally have no need to invoke this directly. Use
             `RESTBucketManager.start` and `RESTBucketManager.close` to control
             this instead.
@@ -541,7 +541,7 @@ class RESTBucketManager:
         hikari.impl.RESTBucket
             The bucket for this route.
 
-        !!! note
+        .. note::
             You MUST keep the context manager of the bucket acquired during the
             full duration of the request. From making the request until calling
             `update_rate_limits`.
@@ -576,14 +576,14 @@ class RESTBucketManager:
         ----------
         compiled_route : hikari.internal.routes.CompiledRoute
             The compiled route to get the bucket for.
-        bucket_header : typing.Optional[builtins.str]
+        bucket_header : typing.Optional[str]
             The `X-RateLimit-Bucket` header that was provided in the response.
-        remaining_header : builtins.int
-            The `X-RateLimit-Remaining` header cast to an `builtins.int`.
-        limit_header : builtins.int
-            The `X-RateLimit-Limit` header cast to an `builtins.int`.
-        reset_after : builtins.float
-            The `X-RateLimit-Reset-After` header cast to a `builtins.float`.
+        remaining_header : int
+            The `X-RateLimit-Remaining` header cast to an `int`.
+        limit_header : int
+            The `X-RateLimit-Limit` header cast to an `int`.
+        reset_after : float
+            The `X-RateLimit-Reset-After` header cast to a `float`.
         """
         self.routes_to_hashes[compiled_route.route] = bucket_header
         real_bucket_hash = compiled_route.create_real_bucket_hash(bucket_header)
@@ -628,5 +628,5 @@ class RESTBucketManager:
 
     @property
     def is_started(self) -> bool:
-        """Return `builtins.True` if the rate limiter GC task is started."""
+        """Return `True` if the rate limiter GC task is started."""
         return self.gc_task is not None

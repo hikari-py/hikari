@@ -458,7 +458,7 @@ class TestMember:
 
         with pytest.warns(
             DeprecationWarning,
-            match="'nick' is deprecated and will be removed in a following version. You can use 'nickname' instead.",
+            match=r"Use of deprecated argument 'nick' \(Use 'nickname' argument instead\)",
         ):
             edit = await model.edit(nick="meow")
 

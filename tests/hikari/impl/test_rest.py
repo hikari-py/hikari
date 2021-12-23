@@ -3380,8 +3380,7 @@ class TestRESTClientImplAsync:
         rest_client._entity_factory.deserialize_member = mock.Mock(return_value=member)
 
         with pytest.warns(
-            DeprecationWarning,
-            match="'nick' is deprecated and will be removed in a following version. You can use 'nickname' instead.",
+            DeprecationWarning, match=r"Use of deprecated argument 'nick' \(Use 'nickname' argument instead\)"
         ):
             returned = await rest_client.add_user_to_guild(
                 "token",
@@ -4053,7 +4052,7 @@ class TestRESTClientImplAsync:
 
         with pytest.warns(
             DeprecationWarning,
-            match="'nick' is deprecated and will be removed in a following version. You can use 'nickname' instead.",
+            match=r"Use of deprecated argument 'nick' \(Use 'nickname' argument instead\)",
         ):
             result = await rest_client.edit_member(StubModel(123), StubModel(456), nick="eeeeeestrogen")
 

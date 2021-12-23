@@ -144,7 +144,7 @@ jobs:
       - name: Build pages
         run: |
           pip install nox
-          nox -s pages
+          nox -s pdoc
 
       - name: Upload artifacts
         if: github.event_name != 'release'

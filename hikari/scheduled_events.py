@@ -144,7 +144,7 @@ class ScheduledEvent(snowflakes.Unique):
     user_count: typing.Optional[int] = attr.field(hash=False, repr=False)
     """The number of users that have subscribed to the event.
 
-    This will be `builtins.None` on gateway events when creating and
+    This will be `None` on gateway events when creating and
     editing a scheduled event.
     """
 
@@ -161,21 +161,21 @@ class ScheduledEvent(snowflakes.Unique):
 
         Parameters
         ----------
-        ext : builtins.str
+        ext : str
             The extension to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : builtins.int
+        size : int
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL, or `builtins.None` if no cover image is set.
+            The URL, or `None` if no cover image is set.
 
         Raises
         ------
-        builtins.ValueError
+        ValueError
             If `size` is not a power of two between 16 and 4096 (inclusive).
         """
         if self.image_hash is None:
@@ -198,7 +198,7 @@ class ScheduledExternalEvent(ScheduledEvent):
     location: str = attr.field(hash=False, repr=False)
     """The location of the scheduled event.
 
-    !!! note
+    .. note::
         There is no strict format for this field, and it will likely be a user
         friendly string.
     """

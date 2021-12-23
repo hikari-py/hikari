@@ -22,13 +22,12 @@
 # SOFTWARE.
 """A sane Python framework for writing modern Discord bots.
 
-To get started, you will want to initialize an instance of `GatewayBot`
-for writing a bot, or `RESTApp` if you only need to use the REST API.
+To get started, you will want to initialize an instance of `hikari.impl.bot.GatewayBot`
+for writing a gateway based bot, `hikari.impl.rest_bot.RESTBot` for a REST based bot,
+or `hikari.impl.rest.RESTApp` if you only need to use the REST API.
 """
 
 from __future__ import annotations
-
-import os as _os
 
 from hikari import api
 from hikari import applications
@@ -44,6 +43,7 @@ from hikari._about import __copyright__
 from hikari._about import __discord_invite__
 from hikari._about import __docs__
 from hikari._about import __email__
+from hikari._about import __git_sha1__
 from hikari._about import __issue_tracker__
 from hikari._about import __license__
 from hikari._about import __url__
@@ -127,9 +127,3 @@ from hikari.undefined import UndefinedType
 from hikari.users import *
 from hikari.voices import *
 from hikari.webhooks import *
-
-# Only expose this during documentation, as we need it to make anything visible.
-if _os.getenv("PDOC3_GENERATING") == "1":  # pragma: no cover
-    __all__ = [name for name in dir() if not name.startswith("_")]
-
-del _os

@@ -117,7 +117,7 @@ class RoleUpdateEvent(RoleEvent):
     old_role: typing.Optional[guilds.Role] = attr.field()
     """The old role object.
 
-    This will be `builtins.None` if the role missing from the cache.
+    This will be `None` if the role missing from the cache.
     """
 
     role: guilds.Role = attr.field()
@@ -166,5 +166,5 @@ class RoleDeleteEvent(RoleEvent):
     old_role: typing.Optional[guilds.Role] = attr.field()
     """The old role object.
 
-    This will be `builtins.None` if the role was missing from the cache.
+    This will be `None` if the role was missing from the cache.
     """

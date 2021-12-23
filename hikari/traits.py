@@ -78,7 +78,7 @@ class NetworkSettingsAware(fast_protocol.FastProtocolChecking, typing.Protocol):
 
         Returns
         -------
-        hikari.config.HTTPSettings
+        hikari.impl.config.HTTPSettings
             The HTTP settings in use.
         """
         raise NotImplementedError
@@ -89,7 +89,7 @@ class NetworkSettingsAware(fast_protocol.FastProtocolChecking, typing.Protocol):
 
         Returns
         -------
-        hikari.config.ProxySettings
+        hikari.impl.config.ProxySettings
             The proxy settings in use.
         """
         raise NotImplementedError
@@ -142,7 +142,7 @@ class ExecutorAware(fast_protocol.FastProtocolChecking, typing.Protocol):
     """Structural supertype for an executor-aware object.
 
     These components will contain an `executor` attribute that may return
-    a `concurrent.futures.Executor` or `builtins.None` if the
+    a `concurrent.futures.Executor` or `None` if the
     default `asyncio` thread pool for the event loop is used.
     """
 
@@ -152,13 +152,13 @@ class ExecutorAware(fast_protocol.FastProtocolChecking, typing.Protocol):
     def executor(self) -> typing.Optional[futures.Executor]:
         """Return the executor to use for blocking operations.
 
-        This may return `builtins.None` if the default `asyncio` thread pool
+        This may return `None` if the default `asyncio` thread pool
         should be used instead.
 
         Returns
         -------
         typing.Optional[concurrent.futures.Executor]
-            The executor to use, or `builtins.None` to use the `asyncio` default
+            The executor to use, or `None` to use the `asyncio` default
             instead.
         """
         raise NotImplementedError
@@ -273,7 +273,7 @@ class ShardAware(
 
         Returns
         -------
-        typing.Mapping[builtins.int, builtins.float]
+        typing.Mapping[int, float]
             Each shard ID mapped to the corresponding heartbeat latency.
             Each latency is measured in seconds.
         """
@@ -287,7 +287,7 @@ class ShardAware(
 
         Returns
         -------
-        builtins.float
+        float
             The average heartbeat latency of all started shards, or
             `float('nan')` if no shards are started. This is measured
             in seconds.
@@ -319,7 +319,7 @@ class ShardAware(
 
         Returns
         -------
-        builtins.int
+        int
             The number of shards in the total application.
         """
         raise NotImplementedError
@@ -330,12 +330,12 @@ class ShardAware(
         This should be available as soon as the bot has fired the
         `hikari.events.lifetime_events.StartingEvent`.
 
-        Until then, this may or may not be `builtins.None`.
+        Until then, this may or may not be `None`.
 
         Returns
         -------
         typing.Optional[hikari.users.OwnUser]
-            The bot user, if known, otherwise `builtins.None`.
+            The bot user, if known, otherwise `None`.
         """
         raise NotImplementedError
 
@@ -359,8 +359,8 @@ class ShardAware(
         idle_since : hikari.undefined.UndefinedNoneOr[datetime.datetime]
             The datetime that the user started being idle. If undefined, this
             will not be changed.
-        afk : hikari.undefined.UndefinedOr[builtins.bool]
-            If `builtins.True`, the user is marked as AFK. If `builtins.False`,
+        afk : hikari.undefined.UndefinedOr[bool]
+            If `True`, the user is marked as AFK. If `False`,
             the user is marked as being active. If undefined, this will not be
             changed.
         activity : hikari.undefined.UndefinedNoneOr[hikari.presences.Activity]
@@ -369,12 +369,12 @@ class ShardAware(
         status : hikari.undefined.UndefinedOr[hikari.presences.Status]
             The web status to show. If undefined, this will not be changed.
 
-        !!! note
+        .. note::
             This will only send the update payloads to shards that are alive.
             Any shards that are not alive will cache the new presence for
             when they do start.
 
-        !!! note
+        .. note::
             If you want to set presences per shard, access the shard you wish
             to update (e.g. by using `GatewayBot.shards`), and call
             `hikari.api.shard.GatewayShard.update_presence` on that shard.
@@ -399,19 +399,19 @@ class ShardAware(
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             The guild or guild ID to update the voice state for.
         channel : typing.Optional[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildVoiceChannel]]
-            The channel or channel ID to update the voice state for. If `builtins.None`
+            The channel or channel ID to update the voice state for. If `None`
             then the bot will leave the voice channel that it is in for the
             given guild.
-        self_mute : builtins.bool
-            If specified and `builtins.True`, the bot will mute itself in that
-            voice channel. If `builtins.False`, then it will unmute itself.
-        self_deaf : builtins.bool
-            If specified and `builtins.True`, the bot will deafen itself in that
-            voice channel. If `builtins.False`, then it will undeafen itself.
+        self_mute : bool
+            If specified and `True`, the bot will mute itself in that
+            voice channel. If `False`, then it will unmute itself.
+        self_deaf : bool
+            If specified and `True`, the bot will deafen itself in that
+            voice channel. If `False`, then it will undeafen itself.
 
         Raises
         ------
-        builtins.RuntimeError
+        RuntimeError
             If the guild passed isn't covered by any of the shards in this sharded
             client.
         """
@@ -435,18 +435,18 @@ class ShardAware(
 
         Other Parameters
         ----------------
-        include_presences: hikari.undefined.UndefinedOr[builtins.bool]
+        include_presences: hikari.undefined.UndefinedOr[bool]
             If provided, whether to request presences.
-        query: builtins.str
+        query: str
             If not `""`, request the members which username starts with the string.
-        limit: builtins.int
+        limit: int
             Maximum number of members to send matching the query.
         users: hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.users.User]]
             If provided, the users to request for.
-        nonce: hikari.undefined.UndefinedOr[builtins.str]
+        nonce: hikari.undefined.UndefinedOr[str]
             If provided, the nonce to be sent with guild chunks.
 
-        !!! note
+        .. note::
             To request the full list of members, set `query` to `""` (empty
             string) and `limit` to `0`.
 
@@ -458,7 +458,7 @@ class ShardAware(
         hikari.errors.MissingIntentError
             When trying to request presences without the `GUILD_MEMBERS` or when trying to
             request the full list of members without `GUILD_PRESENCES`.
-        builtins.RuntimeError
+        RuntimeError
             If the guild passed isn't covered by any of the shards in this sharded
             client.
         """
@@ -515,11 +515,11 @@ class Runnable(fast_protocol.FastProtocolChecking, typing.Protocol):
 
         This is useful as some functions might raise
         `hikari.errors.ComponentStateConflictError` if this is
-        `builtins.False`.
+        `False`.
 
         Returns
         -------
-        builtins.bool
+        bool
             Whether the bot is running or not.
         """
         raise NotImplementedError
@@ -569,12 +569,12 @@ class GatewayBotAware(
 
         Other Parameters
         ----------------
-        until_close : builtins.bool
-            Defaults to `builtins.True`. If set, the waiter will stop as soon as
+        until_close : bool
+            Defaults to `True`. If set, the waiter will stop as soon as
             a request for shut down is processed. This can allow you to break
             and begin closing your own resources.
 
-            If `builtins.False`, then this will wait until all shards' tasks
+            If `False`, then this will wait until all shards' tasks
             have died.
         """
         raise NotImplementedError
@@ -598,12 +598,12 @@ class GatewayBotAware(
         ----------------
         activity : typing.Optional[hikari.presences.Activity]
             The initial activity to display in the bot user presence, or
-            `builtins.None` (default) to not show any.
-        afk : builtins.bool
+            `None` (default) to not show any.
+        afk : bool
             The initial AFK state to display in the bot user presence, or
-            `builtins.False` (default) to not show any.
-        close_executor : builtins.bool
-            Defaults to `builtins.False`. If `builtins.True`, any custom
+            `False` (default) to not show any.
+        close_executor : bool
+            Defaults to `False`. If `True`, any custom
             `concurrent.futures.Executor` passed to the constructor will be
             shut down when the application terminates. This does not affect the
             default executor associated with the event loop, and will not
@@ -611,25 +611,25 @@ class GatewayBotAware(
             constructor.
         idle_since : typing.Optional[datetime.datetime]
             The `datetime.datetime` the user should be marked as being idle
-            since, or `builtins.None` (default) to not show this.
-        ignore_session_start_limit : builtins.bool
-            Defaults to `builtins.False`. If `builtins.False`, then attempting
+            since, or `None` (default) to not show this.
+        ignore_session_start_limit : bool
+            Defaults to `False`. If `False`, then attempting
             to start more sessions than you are allowed in a 24 hour window
             will throw a `hikari.errors.GatewayError` rather than going ahead
             and hitting the IDENTIFY limit, which may result in your token
-            being reset. Setting to `builtins.True` disables this behavior.
-        large_threshold : builtins.int
+            being reset. Setting to `True` disables this behavior.
+        large_threshold : int
             Threshold for members in a guild before it is treated as being
             "large" and no longer sending member details in the `GUILD CREATE`
             event. Defaults to `250`.
-        shard_ids : typing.Optional[typing.AbstractSet[builtins.int]]
-            The shard IDs to create shards for. If not `builtins.None`, then
+        shard_ids : typing.Optional[typing.AbstractSet[int]]
+            The shard IDs to create shards for. If not `None`, then
             a non-`None` `shard_count` must ALSO be provided. Defaults to
-            `builtins.None`, which means the Discord-recommended count is used
+            `None`, which means the Discord-recommended count is used
             for your application instead.
-        shard_count : typing.Optional[builtins.int]
+        shard_count : typing.Optional[int]
             The number of shards to use in the entire distributed application.
-            Defaults to `builtins.None` which results in the count being
+            Defaults to `None` which results in the count being
             determined dynamically on startup.
         status : hikari.presences.Status
             The initial status to show for the user presence on startup.
@@ -655,31 +655,31 @@ class GatewayBotAware(
         ----------------
         activity : typing.Optional[hikari.presences.Activity]
             The initial activity to display in the bot user presence, or
-            `builtins.None` (default) to not show any.
-        afk : builtins.bool
+            `None` (default) to not show any.
+        afk : bool
             The initial AFK state to display in the bot user presence, or
-            `builtins.False` (default) to not show any.
+            `False` (default) to not show any.
         idle_since : typing.Optional[datetime.datetime]
             The `datetime.datetime` the user should be marked as being idle
-            since, or `builtins.None` (default) to not show this.
-        ignore_session_start_limit : builtins.bool
-            Defaults to `builtins.False`. If `builtins.False`, then attempting
+            since, or `None` (default) to not show this.
+        ignore_session_start_limit : bool
+            Defaults to `False`. If `False`, then attempting
             to start more sessions than you are allowed in a 24 hour window
             will throw a `hikari.errors.GatewayError` rather than going ahead
             and hitting the IDENTIFY limit, which may result in your token
-            being reset. Setting to `builtins.True` disables this behavior.
-        large_threshold : builtins.int
+            being reset. Setting to `True` disables this behavior.
+        large_threshold : int
             Threshold for members in a guild before it is treated as being
             "large" and no longer sending member details in the `GUILD CREATE`
             event. Defaults to `250`.
-        shard_ids : typing.Optional[typing.AbstractSet[builtins.int]]
-            The shard IDs to create shards for. If not `builtins.None`, then
+        shard_ids : typing.Optional[typing.AbstractSet[int]]
+            The shard IDs to create shards for. If not `None`, then
             a non-`None` `shard_count` must ALSO be provided. Defaults to
-            `builtins.None`, which means the Discord-recommended count is used
+            `None`, which means the Discord-recommended count is used
             for your application instead.
-        shard_count : typing.Optional[builtins.int]
+        shard_count : typing.Optional[int]
             The number of shards to use in the entire distributed application.
-            Defaults to `builtins.None` which results in the count being
+            Defaults to `None` which results in the count being
             determined dynamically on startup.
         status : hikari.presences.Status
             The initial status to show for the user presence on startup.

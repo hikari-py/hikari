@@ -124,7 +124,7 @@ class ClientCredentialsStrategy(rest_api.TokenStrategy):
     client: typing.Optional[snowflakes.SnowflakeishOr[guilds.PartialApplication]]
         Object or ID of the application this client credentials strategy should
         authorize as.
-    client_secret : typing.Optional[builtins.str]
+    client_secret : typing.Optional[str]
         Client secret to use when authorizing.
 
     Other Parameters
@@ -163,13 +163,7 @@ class ClientCredentialsStrategy(rest_api.TokenStrategy):
 
     @property
     def client_id(self) -> snowflakes.Snowflake:
-        """ID of the application this token strategy authenticates with.
-
-        Returns
-        -------
-        hikari.snowflakes.Snowflake
-            ID of the application this token strategy authenticates with.
-        """
+        """ID of the application this token strategy authenticates with."""
         return self._client_id
 
     @property
@@ -178,13 +172,7 @@ class ClientCredentialsStrategy(rest_api.TokenStrategy):
 
     @property
     def scopes(self) -> typing.Sequence[typing.Union[applications.OAuth2Scope, str]]:
-        """Scopes this token strategy authenticates for.
-
-        Returns
-        -------
-        typing.Sequence[typing.Union[hikari.applications.OAuth2Scope, builtins.str]]
-            The scopes this token strategy authenticates for.
-        """
+        """Sequence of scopes this token strategy authenticates for."""
         return self._scopes
 
     @property
@@ -270,16 +258,20 @@ class RESTApp(traits.ExecutorAware):
     `RESTClientImpl` instances for specific credentials acquired
     from it.
 
+    .. note::
+        This event loop will be bound to a connector when the first call
+        to `acquire` is made.
+
     Parameters
     ----------
     executor : typing.Optional[concurrent.futures.Executor]
-        The executor to use for blocking file IO operations. If `builtins.None`
+        The executor to use for blocking file IO operations. If `None`
         is passed, then the default `concurrent.futures.ThreadPoolExecutor` for
         the `asyncio.AbstractEventLoop` will be used instead.
     http_settings : typing.Optional[hikari.impl.config.HTTPSettings]
         HTTP settings to use. Sane defaults are used if this is
-        `builtins.None`.
-    max_rate_limit : builtins.float
+        `None`.
+    max_rate_limit : float
         Maximum number of seconds to sleep for when rate limited. If a rate
         limit occurs that is longer than this value, then a
         `hikari.errors.RateLimitedError` will be raised instead of waiting.
@@ -288,19 +280,15 @@ class RESTApp(traits.ExecutorAware):
         rate limits.
 
         Defaults to five minutes if unspecified.
-    max_retries : typing.Optional[builtins.int]
+    max_retries : typing.Optional[int]
         Maximum number of times a request will be retried if
-        it fails with a `5xx` status. Defaults to 3 if set to `builtins.None`.
+        it fails with a `5xx` status. Defaults to 3 if set to `None`.
     proxy_settings : typing.Optional[hikari.impl.config.ProxySettings]
-        Proxy settings to use. If `builtins.None` then no proxy configuration
+        Proxy settings to use. If `None` then no proxy configuration
         will be used.
-    url : typing.Optional[builtins.str]
+    url : typing.Optional[str]
         The base URL for the API. You can generally leave this as being
-        `builtins.None` and the correct default API base URL will be generated.
-
-    !!! note
-        This event loop will be bound to a connector when the first call
-        to `acquire` is made.
+        `None` and the correct default API base URL will be generated.
     """
 
     __slots__: typing.Sequence[str] = (
@@ -360,7 +348,7 @@ class RESTApp(traits.ExecutorAware):
     ) -> RESTClientImpl:
         """Acquire an instance of this REST client.
 
-        !!! note
+        .. note::
             The returned REST client should be started before it can be used,
             either by calling `RESTClientImpl.start` or by using it as an
             asynchronous context manager.
@@ -378,16 +366,16 @@ class RESTApp(traits.ExecutorAware):
 
         Parameters
         ----------
-        token : typing.Union[builtins.str, builtins.None, hikari.api.rest.TokenStrategy]
+        token : typing.Union[str, None, hikari.api.rest.TokenStrategy]
             The bot or bearer token. If no token is to be used,
             this can be undefined.
-        token_type : typing.Union[builtins.str, hikari.applications.TokenType, builtins.None]
-            The type of token in use. This should only be passed when `builtins.str`
+        token_type : typing.Union[str, hikari.applications.TokenType, None]
+            The type of token in use. This should only be passed when `str`
             is passed for `token`, can be `"Bot"` or `"Bearer"` and will be
             defaulted to `"Bearer"` in this situation.
 
-            This should be left as `builtins.None` when either
-            `hikari.api.rest.TokenStrategy` or `builtins.None` is passed for
+            This should be left as `None` when either
+            `hikari.api.rest.TokenStrategy` or `None` is passed for
             `token`.
 
         Returns
@@ -397,7 +385,7 @@ class RESTApp(traits.ExecutorAware):
 
         Raises
         ------
-        builtins.ValueError
+        ValueError
             If `token_type` is provided when a token strategy is passed for `token`.
         """
         # Since we essentially mimic a fake App instance, we need to make a circular provider.
@@ -432,7 +420,7 @@ class RESTApp(traits.ExecutorAware):
 class _LiveAttributes:
     """Fields which are only present within `RESTClientImpl` while it's "alive".
 
-    !!! note
+    .. note::
         This must be started within an active asyncio event loop.
     """
 
@@ -450,7 +438,7 @@ class _LiveAttributes:
     ) -> _LiveAttributes:
         """Build a live attributes object.
 
-        !!! warning
+        .. warning::
             This can only be called when the current thread has an active
             asyncio loop.
         """
@@ -511,36 +499,36 @@ class RESTClientImpl(rest_api.RESTClient):
         The entity factory to use.
     executor : typing.Optional[concurrent.futures.Executor]
         The executor to use for blocking IO. Defaults to the `asyncio` thread
-        pool if set to `builtins.None`.
-    max_rate_limit : builtins.float
+        pool if set to `None`.
+    max_rate_limit : float
         Maximum number of seconds to sleep for when rate limited. If a rate
         limit occurs that is longer than this value, then a
         `hikari.errors.RateLimitedError` will be raised instead of waiting.
 
         This is provided since some endpoints may respond with non-sensible
         rate limits.
-    max_retries : typing.Optional[builtins.int]
+    max_retries : typing.Optional[int]
         Maximum number of times a request will be retried if
-        it fails with a `5xx` status. Defaults to 3 if set to `builtins.None`.
-    token : typing.Union[builtins.str, builtins.None, hikari.api.rest.TokenStrategy]
+        it fails with a `5xx` status. Defaults to 3 if set to `None`.
+    token : typing.Union[str, None, hikari.api.rest.TokenStrategy]
         The bot or bearer token. If no token is to be used,
         this can be undefined.
-    token_type : typing.Union[builtins.str, hikari.applications.TokenType, builtins.None]
-        The type of token in use. This must be passed when a `builtins.str` is
+    token_type : typing.Union[str, hikari.applications.TokenType, None]
+        The type of token in use. This must be passed when a `str` is
         passed for `token` but and can be `"Bot"` or `"Bearer"`.
 
-        This should be left as `builtins.None` when either
-        `hikari.api.rest.TokenStrategy` or `builtins.None` is passed for
+        This should be left as `None` when either
+        `hikari.api.rest.TokenStrategy` or `None` is passed for
         `token`.
-    rest_url : builtins.str
+    rest_url : str
         The HTTP API base URL. This can contain format-string specifiers to
         interpolate information such as API version in use.
 
     Raises
     ------
-    builtins.ValueError
+    ValueError
         * If `token_type` is provided when a token strategy is passed for `token`.
-        * if `token_type` is left as `builtins.None` when a string is passed for `token`.
+        * if `token_type` is left as `None` when a string is passed for `token`.
         * If the a value more than 5 is provided for `max_retries`
     """
 
@@ -635,7 +623,7 @@ class RESTClientImpl(rest_api.RESTClient):
     def start(self) -> None:
         """Start the HTTP client.
 
-        !!! note
+        .. note::
             This must be called within an active event loop.
 
         Raises
@@ -2060,7 +2048,7 @@ class RESTClientImpl(rest_api.RESTClient):
         deaf: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> typing.Optional[guilds.Member]:
         if nick is not undefined.UNDEFINED:
-            deprecation.warn_deprecated("nick", alternative="nickname")
+            deprecation.warn_deprecated("nick", "Use 'nickname' argument instead")
             nickname = nick
 
         route = routes.PUT_GUILD_MEMBER.compile(guild=guild, user=user)
@@ -2644,7 +2632,7 @@ class RESTClientImpl(rest_api.RESTClient):
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.Member:
         if nick is not undefined.UNDEFINED:
-            deprecation.warn_deprecated("nick", alternative="nickname")
+            deprecation.warn_deprecated("nick", "Use 'nickname' argument instead")
             nickname = nick
 
         route = routes.PATCH_GUILD_MEMBER.compile(guild=guild, user=user)
@@ -2683,7 +2671,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_member(response, guild_id=snowflakes.Snowflake(guild))
 
-    @deprecation.deprecated("2.0.0.dev104", alternative="RESTClientImpl.edit_my_member's nickname parameter")
+    @deprecation.deprecated("2.0.0.dev104", "Use `edit_my_member`'s `nick` argument instead.")
     async def edit_my_nick(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.Guild],

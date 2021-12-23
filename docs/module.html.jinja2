@@ -1,0 +1,152 @@
+{# This file expands on pdoc's module template #}
+{% extends "default/module.html.jinja2" %}
+
+{# ##### #}
+{# Theme #}
+{# ##### #}
+{% block style %}
+    {% filter minify_css %}
+        <style>{% include 'resources/bootstrap-reboot.min.css' %}</style>
+        <style>{% include 'syntax-highlighting.css' %}</style>
+        <style>{% include 'main.css' %}</style>
+    {% endfilter %}
+{% endblock %}
+
+{# ######################## #}
+{# Better inherited section #}
+{# ######################## #}
+{% macro inherited(cls) %}
+{% for base, members in cls.inherited_members.items() %}
+{% set m = None %}{# workaround for https://github.com/pallets/jinja/issues/1427 #}
+{% set member_html %}
+{% for m in members if is_public(m) | trim %}
+    <dd id="{{ m.qualname }}" class="{{ m.type }}">
+        {{- m.taken_from | link(text=m.name.replace("__init__",base[1])) -}}
+    </dd>
+{% endfor %}
+{% endset %}
+{# we may not have any public members, in which case we don't want to print anything. #}
+{% if member_html %}
+    <div><dt>{{ base | link }}:</dt>
+        {{ member_html }}
+    </div>
+{% endif %}
+{% endfor %}
+{% endmacro %}
+
+
+{# #################### #}
+{# Remove default value #}
+{# #################### #}
+{% macro variable(var) %}
+    <div class="attr variable">{{ headerlink(var) }}
+        <span class="name">{{ var.name }}</span>{{ annotation(var) }}
+    </div>
+{% endmacro %}
+
+{# ######### #}
+{# Inventory #}
+{# ######### #}
+{% macro member(doc) %}
+    {{ add_to_inventory(doc) }}
+    {% if doc.type == "class" %}
+        {{ class(doc) }}
+    {% elif doc.type == "function" %}
+        {{ function(doc) }}
+    {% elif doc.type == "module" %}
+        {{ submodule(doc) }}
+    {% else %}
+        {{ variable(doc) }}
+    {% endif %}
+    {% if doc.type != "variable" %}
+        {{ view_source(doc) }}
+    {% endif %}
+    {{ docstring(doc) }}
+{% endmacro %}
+
+{# ############## #}
+{# Better sidebar #}
+{# ############## #}
+{% block nav %}
+{{ add_to_inventory(module) if module.name != "" }}
+<nav class="pdoc">
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-buttons">
+            <span>Hikari {{ __hikari_version__ }}</span>
+            <div class="push"></div>
+            <a href="{{ "../" * module.modulename.count(".") }}index.html" title="Home" class="svg-button">{% include "assets/home.svg" %}</a>
+            <a href="https://discord.gg/Jx4cNGG" title="Discord" class="svg-button">{% include "assets/discord.svg" %}</a>
+            <a href="https://pypi.org/project/hikari" title="PyPI" class="svg-button">{% include "assets/crates.svg" %}</a>
+        </div>
+
+        {% if search and all_modules|length > 1 %}
+            {# we set a pattern here so that we can use the :valid CSS selector #}
+            <input type="search" placeholder="Search..." role="searchbox" title="Search the documentation" pattern=".+">
+        {% endif %}
+
+        {% set index = module.docstring | to_markdown | to_html | attr("toc_html") %}
+        {% if index %}
+            <h2>Contents</h2>
+            {{ index | safe }}
+        {% endif %}
+
+        {% if module.submodules %}
+            <h2>Submodules</h2>
+            <ul>
+                {% for submodule in module.submodules %}
+                    <li>{{ submodule.taken_from | link }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        {% if module.members %}
+            <h2>API Documentation</h2>
+            {{ nav_members(module.members.values()) }}
+        {% endif %}
+    </div>
+
+    <div class="sidebar-toggle" id="sidebar-toggle"></div>
+</nav>
+
+<script>
+    "use strict";
+    const sidebarToggle = document.getElementById("sidebar-toggle");
+
+    // Button control
+    sidebarToggle.addEventListener('click', function () {
+        if (html.classList.contains("sidebar-hidden")) {
+            html.classList.remove("sidebar-hidden");
+        } else {
+            html.classList.add("sidebar-hidden");
+        }
+    });
+
+    // Swipe controls
+    let firstContact = null;
+
+    document.addEventListener('touchstart', function (e) {
+        firstContact = {
+            x: e.touches[0].clientX,
+            time: Date.now()
+        };
+    }, { passive: true });
+
+    document.addEventListener('touchmove', function (e) {
+        if (!firstContact)
+            return;
+        let curX = e.touches[0].clientX;
+        let xDiff = curX - firstContact.x;
+        let tDiff = Date.now() - firstContact.time;
+        if (tDiff < 300 && Math.abs(xDiff) >= 100) {
+            if (xDiff >= 0 && firstContact.x < Math.min(document.body.clientWidth * 0.25, 300)) {
+                html.classList.remove("sidebar-hidden");
+                firstContact = null;
+            }
+            else if (xDiff < 0 && curX < 150) {
+                html.classList.add("sidebar-hidden");
+                firstContact = null;
+            }
+        }
+    }, { passive: true });
+</script>
+{% endblock %}

@@ -41,7 +41,7 @@ class Intents(enums.Flag):
     Any events not in an intent category will be fired regardless of what
     intents you provide.
 
-    !!! info
+    .. note::
         Discord now places limits on certain events you can receive without
         whitelisting your bot first. On the `Bot` tab in the developer's portal
         for your bot, you should now have the option to enable functionality
@@ -51,7 +51,7 @@ class Intents(enums.Flag):
         your bot for, you will be disconnected on startup with a `4014` closure
         code.
 
-    !!! warning
+    .. warning::
         If you are using the V7 Gateway, you will be REQUIRED to provide some
         form of intent value when you connect. Failure to do so may result in
         immediate termination of the session server-side.
@@ -194,7 +194,7 @@ class Intents(enums.Flag):
     * `GUILD_MEMBER_UPDATE`
     * `GUILD_MEMBER_REMOVE`
 
-    !!! warning
+    .. warning::
         This intent is privileged, and requires enabling/whitelisting to use.
     """
 
@@ -243,7 +243,7 @@ class Intents(enums.Flag):
 
     * `PRESENCE_UPDATE`
 
-    !!! warning
+    .. warning::
         This intent is privileged, and requires enabling/whitelisting to use."""
 
     GUILD_MESSAGES = 1 << 9
@@ -298,7 +298,7 @@ class Intents(enums.Flag):
 
     DM's to the bot and messages that mention it are exempt from this.
 
-    !!! warning
+    .. warning::
         This intent is privileged, and requires enabling/whitelisting to use.
     """
 
@@ -335,7 +335,7 @@ class Intents(enums.Flag):
     ALL_GUILDS_PRIVILEGED = GUILD_MEMBERS | GUILD_PRESENCES
     """All privileged guild intents.
 
-    !!! warning
+    .. warning::
         This set of intent is privileged, and requires enabling/whitelisting to
         use.
     """
@@ -346,7 +346,7 @@ class Intents(enums.Flag):
     This combines `Intents.ALL_GUILDS_UNPRIVILEGED` and
     `Intents.ALL_GUILDS_PRIVILEGED`.
 
-    !!! warning
+    .. warning::
         This set of intent is privileged, and requires enabling/whitelisting to
         use.
     """
@@ -369,7 +369,7 @@ class Intents(enums.Flag):
     ALL_PRIVILEGED = ALL_GUILDS_PRIVILEGED | MESSAGE_CONTENT
     """All privileged intents.
 
-    !!! warning
+    .. warning::
         This set of intent is privileged, and requires enabling/whitelisting to
         use.
     """
@@ -377,7 +377,7 @@ class Intents(enums.Flag):
     ALL = ALL_UNPRIVILEGED | ALL_PRIVILEGED
     """All unprivileged and privileged intents.
 
-    !!! warning
+    .. warning::
         This set of intent is privileged, and requires enabling/whitelisting to
         use.
     """
@@ -386,7 +386,7 @@ class Intents(enums.Flag):
     def is_privileged(self) -> bool:
         """Determine whether the intent requires elevated privileges.
 
-        If this is `builtins.True`, you will be required to opt-in to using
+        If this is `True`, you will be required to opt-in to using
         this intent on the Discord Developer Portal before you can utilise it
         in your application.
         """
