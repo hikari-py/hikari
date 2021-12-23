@@ -105,6 +105,8 @@ class EventStream(event_manager_.EventStream[event_manager_.EventT]):
         "_timeout",
     )
 
+    __weakref__: typing.Optional[weakref.ref[EventStream[event_manager_.EventT]]]
+
     def __init__(
         self,
         event_manager: event_manager_.EventManager,

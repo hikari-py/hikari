@@ -71,7 +71,7 @@ jobs:
 
       - name: Combine coverage
         run: |
-          pip install coverage
+          pip install -r dev-requirements.txt
           coverage combine
           coverage xml -i
 
@@ -107,7 +107,7 @@ jobs:
       - name: Linting
         if: always()
         run: |
-          nox -s safety mypy flake8 codespell check-trailing-whitespaces
+          nox -s safety mypy verify-types flake8 codespell check-trailing-whitespaces
 
   twemoji:
     runs-on: ubuntu-latest

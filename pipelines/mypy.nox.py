@@ -39,8 +39,8 @@ def mypy(session: nox.Session) -> None:
 
     _generate_stubs(session)
 
-    session.run("mypy", "-p", config.MAIN_PACKAGE, "--config", config.MYPY_INI)
-    session.run("mypy", "-p", config.EXAMPLE_SCRIPTS, "--config", config.MYPY_INI)
+    session.run("mypy", "-p", config.MAIN_PACKAGE, "--config", config.PYPROJECT_TOML)
+    session.run("mypy", "-p", config.EXAMPLE_SCRIPTS, "--config", config.PYPROJECT_TOML)
 
 
 @nox.session(reuse_venv=True)

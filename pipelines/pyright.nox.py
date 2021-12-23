@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021 davfsa
 #
@@ -20,24 +19,18 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Package metadata."""
-from __future__ import annotations
+"""Pyright integrations."""
 
-import typing
+from pipelines import config
+from pipelines import nox
 
-# DO NOT CHANGE THE TYPE HINTS FOR THESE FIELDS. THESE ARE AUTOMATICALLY UPDATED
-# FROM THE CI SCRIPT AND DOING THIS MAY LEAD TO THE DEPLOY PROCESS FAILING.
 
-__author__: typing.Final[str] = "Nekokatt"
-__maintainer__: typing.Final[str] = "davfsa"
-__ci__: typing.Final[str] = "https://github.com/hikari-py/hikari/actions"
-__copyright__: typing.Final[str] = "© 2021 davfsa"
-__coverage__: typing.Final[str] = "https://codeclimate.com/github/hikari-py/hikari"
-__discord_invite__: typing.Final[str] = "https://discord.gg/Jx4cNGG"
-__docs__: typing.Final[str] = "https://hikari-py.dev/hikari"
-__email__: typing.Final[str] = "davfsa@gmail.com"
-__issue_tracker__: typing.Final[str] = "https://github.com/hikari-py/hikari/issues"
-__license__: typing.Final[str] = "MIT"
-__url__: typing.Final[str] = "https://github.com/hikari-py/hikari"
-__version__: typing.Final[str] = "2.0.0.dev105"
-__git_sha1__: typing.Final[str] = "HEAD"
+@nox.session()
+def verify_types(session: nox.Session) -> None:
+    """Verify the "type completeness" of types exported by the library using Pyright."""
+    session.install("-r", "dev-requirements.txt")
+    session.install(".")
+    # session.env["PYRIGHT_PYTHON_GLOBAL_NODE"] = "off"
+    session.env["PYRIGHT_PYTHON_FORCE_VERSION"] = config.PYRIGHT_VERSION
+    session.run("python", "-m", "pyright", "--version")
+    session.run("python", "-m", "pyright", "--verifytypes", "hikari", "--ignoreexternal")

@@ -165,6 +165,9 @@ class ManualRateLimiter(BurstRateLimiter):
 
     __slots__: typing.Sequence[str] = ()
 
+    throttle_task: typing.Optional[asyncio.Task[typing.Any]]
+    # <<inherited docstring from BurstRateLimiter>>.
+
     def __init__(self) -> None:
         super().__init__("global")
 
@@ -271,6 +274,9 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
     """
 
     __slots__: typing.Sequence[str] = ("reset_at", "remaining", "limit", "period")
+
+    throttle_task: typing.Optional[asyncio.Task[typing.Any]]
+    # <<inherited docstring from BurstRateLimiter>>.
 
     reset_at: float
     """The `time.monotonic_timestamp` that the limit window ends at."""
