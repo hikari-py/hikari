@@ -55,32 +55,34 @@ if typing.TYPE_CHECKING:
     from hikari.api import shard as gateway_shard
     from hikari.internal import data_binding
 
-    ConsumerT = typing.Callable[
+    _ConsumerT = typing.Callable[
         [gateway_shard.GatewayShard, data_binding.JSONObject], typing.Coroutine[typing.Any, typing.Any, None]
     ]
-    ListenerMapT = typing.Dict[
-        typing.Type[event_manager_.EventT_co],
-        typing.List[event_manager_.CallbackT[event_manager_.EventT_co]],
+    _ListenerMapT = typing.Dict[
+        typing.Type[base_events.EventT],
+        typing.List[event_manager_.CallbackT[base_events.EventT]],
     ]
-    WaiterT = typing.Tuple[
-        typing.Optional[event_manager_.PredicateT[event_manager_.EventT_co]], asyncio.Future[event_manager_.EventT_co]
+    _WaiterT = typing.Tuple[
+        typing.Optional[event_manager_.PredicateT[base_events.EventT]], asyncio.Future[base_events.EventT]
     ]
-    WaiterMapT = typing.Dict[typing.Type[event_manager_.EventT_co], typing.Set[WaiterT[event_manager_.EventT_co]]]
+    _WaiterMapT = typing.Dict[typing.Type[base_events.EventT], typing.Set[_WaiterT[base_events.EventT]]]
 
-    EventManagerBaseT = typing.TypeVar("EventManagerBaseT", bound="EventManagerBase")
-    UnboundMethodT = typing.Callable[
-        [EventManagerBaseT, gateway_shard.GatewayShard, data_binding.JSONObject],
+    _EventManagerBaseT = typing.TypeVar("_EventManagerBaseT", bound="EventManagerBase")
+    _UnboundMethodT = typing.Callable[
+        [_EventManagerBaseT, gateway_shard.GatewayShard, data_binding.JSONObject],
         typing.Coroutine[typing.Any, typing.Any, None],
     ]
+
     _EventStreamT = typing.TypeVar("_EventStreamT", bound="EventStream[typing.Any]")
 
-_LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.event_manager")
 
 if sys.version_info >= (3, 10):
     # We can use types.UnionType on 3.10+
-    UNIONS = frozenset((typing.Union, types.UnionType))
+    _UNIONS = frozenset((typing.Union, types.UnionType))
 else:
-    UNIONS = frozenset((typing.Union,))
+    _UNIONS = frozenset((typing.Union,))
+
+_LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.event_manager")
 
 
 @typing.runtime_checkable
@@ -101,8 +103,8 @@ class _FilteredMethodT(fast_protocol.FastProtocolChecking, typing.Protocol):
 
 def _generate_weak_listener(
     reference: weakref.WeakMethod[typing.Any],
-) -> typing.Callable[[event_manager_.EventT], typing.Coroutine[typing.Any, typing.Any, None]]:
-    async def call_weak_method(event: event_manager_.EventT) -> None:
+) -> typing.Callable[[base_events.EventT], typing.Coroutine[typing.Any, typing.Any, None]]:
+    async def call_weak_method(event: base_events.EventT) -> None:
         method = reference()
         if method is None:
             raise TypeError(
@@ -114,7 +116,7 @@ def _generate_weak_listener(
     return call_weak_method
 
 
-class EventStream(event_manager_.EventStream[event_manager_.EventT]):
+class EventStream(event_manager_.EventStream[base_events.EventT]):
     """An implementation of an event `EventStream` class.
 
     !!! note
@@ -137,12 +139,12 @@ class EventStream(event_manager_.EventStream[event_manager_.EventT]):
         "_timeout",
     )
 
-    __weakref__: typing.Optional[weakref.ref[EventStream[event_manager_.EventT]]]
+    __weakref__: typing.Optional[weakref.ref[EventStream[base_events.EventT]]]
 
     def __init__(
         self,
         event_manager: event_manager_.EventManager,
-        event_type: typing.Type[event_manager_.EventT],
+        event_type: typing.Type[base_events.EventT],
         *,
         timeout: typing.Union[float, int, None],
         limit: typing.Optional[int] = None,
@@ -151,11 +153,11 @@ class EventStream(event_manager_.EventStream[event_manager_.EventT]):
         self._event: typing.Optional[asyncio.Event] = None
         self._event_manager = event_manager
         self._event_type = event_type
-        self._filters: iterators.All[event_manager_.EventT] = iterators.All(())
+        self._filters: iterators.All[base_events.EventT] = iterators.All(())
         self._limit = limit
-        self._queue: typing.List[event_manager_.EventT] = []
+        self._queue: typing.List[base_events.EventT] = []
         self._registered_listener: typing.Optional[
-            typing.Callable[[event_manager_.EventT], typing.Coroutine[typing.Any, typing.Any, None]]
+            typing.Callable[[base_events.EventT], typing.Coroutine[typing.Any, typing.Any, None]]
         ] = None
         # The registered wrapping function for the weak ref to this class's _listener method.
         self._timeout = timeout
@@ -163,7 +165,7 @@ class EventStream(event_manager_.EventStream[event_manager_.EventT]):
     # These are only included at runtime in-order to avoid the model being typed as an asynchronous context manager.
     if not typing.TYPE_CHECKING:
 
-        async def __aenter__(self: _EventStreamT) -> _EventStreamT:
+        async def __aenter__(self: event_manager_.EventStreamT) -> event_manager_.EventStreamT:
             # This is sync only.
             warnings.warn(
                 "Using EventStream as an async context manager has been deprecated since 2.0.0.dev104. "
@@ -195,7 +197,7 @@ class EventStream(event_manager_.EventStream[event_manager_.EventT]):
     ) -> None:
         self.close()
 
-    async def __anext__(self) -> event_manager_.EventT:
+    async def __anext__(self) -> base_events.EventT:
         if not self._active:
             raise TypeError("stream must be started with before entering it")
 
@@ -212,7 +214,7 @@ class EventStream(event_manager_.EventStream[event_manager_.EventT]):
 
         return self._queue.pop(0)
 
-    def __await__(self) -> typing.Generator[None, None, typing.Sequence[event_manager_.EventT]]:
+    def __await__(self) -> typing.Generator[None, None, typing.Sequence[base_events.EventT]]:
         return self._await_all().__await__()
 
     def __del__(self) -> None:
@@ -224,13 +226,13 @@ class EventStream(event_manager_.EventStream[event_manager_.EventT]):
             _LOGGER.warning("active %r streamer fell out of scope before being closed", self._event_type.__name__)
             self.close()
 
-    async def _await_all(self) -> typing.Sequence[event_manager_.EventT]:
+    async def _await_all(self) -> typing.Sequence[base_events.EventT]:
         self.open()
         result = [event async for event in self]
         self.close()
         return result
 
-    async def _listener(self, event: event_manager_.EventT) -> None:
+    async def _listener(self, event: base_events.EventT) -> None:
         if not self._filters(event) or (self._limit is not None and len(self._queue) >= self._limit):
             return
 
@@ -251,7 +253,7 @@ class EventStream(event_manager_.EventStream[event_manager_.EventT]):
 
     def filter(
         self: _EventStreamT,
-        *predicates: typing.Union[typing.Tuple[str, typing.Any], typing.Callable[[event_manager_.EventT], bool]],
+        *predicates: typing.Union[typing.Tuple[str, typing.Any], typing.Callable[[base_events.EventT], bool]],
         **attrs: typing.Any,
     ) -> _EventStreamT:
         filter_ = self._map_predicates_and_attr_getters("filter", *predicates, **attrs)
@@ -286,7 +288,7 @@ def filtered(
     event_types: typing.Union[typing.Type[base_events.Event], typing.Sequence[typing.Type[base_events.Event]]],
     cache_components: config.CacheComponents = config.CacheComponents.NONE,
     /,
-) -> typing.Callable[[UnboundMethodT[EventManagerBaseT]], UnboundMethodT[EventManagerBaseT]]:
+) -> typing.Callable[[_UnboundMethodT[_EventManagerBaseT]], _UnboundMethodT[_EventManagerBaseT]]:
     """Add metadata to a consumer method to indicate when it should be unmarshalled and dispatched.
 
     Parameters
@@ -313,7 +315,7 @@ def filtered(
         bitmask |= event_type.bitmask()
 
     # https://github.com/python/mypy/issues/2087
-    def decorator(method: UnboundMethodT[EventManagerBaseT], /) -> UnboundMethodT[EventManagerBaseT]:
+    def decorator(method: _UnboundMethodT[_EventManagerBaseT], /) -> _UnboundMethodT[_EventManagerBaseT]:
         method.__cache_components__ = cache_components  # type: ignore[attr-defined]
         method.__events_bitmask__ = bitmask  # type: ignore[attr-defined]
         assert isinstance(method, _FilteredMethodT), "Incorrect attribute(s) set for a filtered method"
@@ -324,7 +326,7 @@ def filtered(
 
 @attr.define(weakref_slot=False)
 class _Consumer:
-    callback: ConsumerT = attr.field(hash=True)
+    callback: _ConsumerT = attr.field(hash=True)
     """The callback function for this consumer."""
 
     events_bitmask: int = attr.field()
@@ -369,8 +371,8 @@ class EventManagerBase(event_manager_.EventManager):
         self._consumers: typing.Dict[str, _Consumer] = {}
         self._event_factory = event_factory
         self._intents = intents
-        self._listeners: ListenerMapT[base_events.Event] = {}
-        self._waiters: WaiterMapT[base_events.Event] = {}
+        self._listeners: _ListenerMapT[base_events.Event] = {}
+        self._waiters: _WaiterMapT[base_events.Event] = {}
 
         for name, member in inspect.getmembers(self):
             if name.startswith("on_"):
@@ -406,52 +408,15 @@ class EventManagerBase(event_manager_.EventManager):
 
         return False
 
-    def consume_raw_event(
-        self, event_name: str, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
-    ) -> None:
-        if self._enabled_for_event(shard_events.ShardPayloadEvent):
-            payload_event = self._event_factory.deserialize_shard_payload_event(shard, payload, name=event_name)
-            self.dispatch(payload_event)
-        consumer = self._consumers[event_name.lower()]
-        asyncio.create_task(self._handle_dispatch(consumer, shard, payload), name=f"dispatch {event_name}")
-
-    def subscribe(
-        self,
-        event_type: typing.Type[event_manager_.EventT_co],
-        callback: event_manager_.CallbackT[event_manager_.EventT_co],
-        *,
-        _nested: int = 0,
-    ) -> None:
+    def _check_event(self, event_type: typing.Type[typing.Any], nested: int) -> None:
         try:
             is_event = issubclass(event_type, base_events.Event)
         except TypeError:
             is_event = False
 
         if not is_event:
-            raise TypeError("Cannot subscribe to a non-Event type")
+            raise TypeError("'event_type' is a non-Event type")
 
-        if not inspect.iscoroutinefunction(callback):
-            raise TypeError("Cannot subscribe a non-coroutine function callback")
-
-        # `_nested` is used to show the correct source code snippet if an intent
-        # warning is triggered.
-        self._check_intents(event_type, _nested)
-
-        _LOGGER.debug(
-            "subscribing callback 'async def %s%s' to event-type %s.%s",
-            getattr(callback, "__name__", "<anon>"),
-            inspect.signature(callback),
-            event_type.__module__,
-            event_type.__qualname__,
-        )
-
-        try:
-            self._listeners[event_type].append(callback)  # type: ignore[arg-type]
-        except KeyError:
-            self._listeners[event_type] = [callback]  # type: ignore[list-item]
-            self._increment_listener_group_count(event_type, 1)
-
-    def _check_intents(self, event_type: typing.Type[event_manager_.EventT_co], nested: int) -> None:
         # Collection of combined bitfield combinations of intents that
         # could be enabled to receive this event.
         expected_intent_groups = base_events.get_required_intents_for(event_type)
@@ -470,15 +435,56 @@ class EventManagerBase(event_manager_.EventManager):
                     stacklevel=nested + 3,
                 )
 
+    def consume_raw_event(
+        self, event_name: str, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> None:
+        if self._enabled_for_event(shard_events.ShardPayloadEvent):
+            payload_event = self._event_factory.deserialize_shard_payload_event(shard, payload, name=event_name)
+            self.dispatch(payload_event)
+        consumer = self._consumers[event_name.lower()]
+        asyncio.create_task(self._handle_dispatch(consumer, shard, payload), name=f"dispatch {event_name}")
+
+    # Yes, this is not generic. The reason for this is MyPy complains about
+    # using ABCs that are not concrete in generic types passed to functions.
+    # For the sake of UX, I will check this at runtime instead and let the
+    # user use a static type checker.
+    def subscribe(
+        self,
+        event_type: typing.Type[typing.Any],
+        callback: event_manager_.CallbackT[typing.Any],
+        *,
+        _nested: int = 0,
+    ) -> None:
+        if not inspect.iscoroutinefunction(callback):
+            raise TypeError("Cannot subscribe a non-coroutine function callback")
+
+        # `_nested` is used to show the correct source code snippet if an intent
+        # warning is triggered.
+        self._check_event(event_type, _nested)
+
+        _LOGGER.debug(
+            "subscribing callback 'async def %s%s' to event-type %s.%s",
+            getattr(callback, "__name__", "<anon>"),
+            inspect.signature(callback),
+            event_type.__module__,
+            event_type.__qualname__,
+        )
+
+        try:
+            self._listeners[event_type].append(callback)
+        except KeyError:
+            self._listeners[event_type] = [callback]
+            self._increment_listener_group_count(event_type, 1)
+
     def get_listeners(
         self,
-        event_type: typing.Type[event_manager_.EventT_co],
+        event_type: typing.Type[base_events.EventT],
         /,
         *,
         polymorphic: bool = True,
-    ) -> typing.Collection[event_manager_.CallbackT[event_manager_.EventT_co]]:
+    ) -> typing.Collection[event_manager_.CallbackT[base_events.EventT]]:
         if polymorphic:
-            listeners: typing.List[event_manager_.CallbackT[event_manager_.EventT_co]] = []
+            listeners: typing.List[event_manager_.CallbackT[base_events.EventT]] = []
             for event in event_type.dispatches():
                 if subscribed_listeners := self._listeners.get(event):
                     listeners.extend(subscribed_listeners)
@@ -490,10 +496,14 @@ class EventManagerBase(event_manager_.EventManager):
 
         return []
 
+    # Yes, this is not generic. The reason for this is MyPy complains about
+    # using ABCs that are not concrete in generic types passed to functions.
+    # For the sake of UX, I will check this at runtime instead and let the
+    # user use a static type checker.
     def unsubscribe(
         self,
-        event_type: typing.Type[event_manager_.EventT_co],
-        callback: event_manager_.CallbackT[event_manager_.EventT_co],
+        event_type: typing.Type[typing.Any],
+        callback: event_manager_.CallbackT[typing.Any],
     ) -> None:
         if listeners := self._listeners.get(event_type):
             _LOGGER.debug(
@@ -503,20 +513,18 @@ class EventManagerBase(event_manager_.EventManager):
                 event_type.__module__,
                 event_type.__qualname__,
             )
-            listeners.remove(callback)  # type: ignore[arg-type]
+            listeners.remove(callback)
             if not listeners:
                 del self._listeners[event_type]
                 self._increment_listener_group_count(event_type, -1)
 
     def listen(
         self,
-        *event_types: typing.Type[event_manager_.EventT_co],
-    ) -> typing.Callable[
-        [event_manager_.CallbackT[event_manager_.EventT_co]], event_manager_.CallbackT[event_manager_.EventT_co]
-    ]:
+        *event_types: typing.Type[base_events.EventT],
+    ) -> typing.Callable[[event_manager_.CallbackT[base_events.EventT]], event_manager_.CallbackT[base_events.EventT]]:
         def decorator(
-            callback: event_manager_.CallbackT[event_manager_.EventT_co],
-        ) -> event_manager_.CallbackT[event_manager_.EventT_co]:
+            callback: event_manager_.CallbackT[base_events.EventT],
+        ) -> event_manager_.CallbackT[base_events.EventT]:
             # Avoid resolving forward references in the function's signature if
             # event_type was explicitly provided as this may lead to errors.
             if event_types:
@@ -533,7 +541,7 @@ class EventManagerBase(event_manager_.EventManager):
                 if annotation is event_param.empty:
                     raise TypeError("Must provide the event type in the @listen decorator or as a type hint!")
 
-                if typing.get_origin(annotation) in UNIONS:
+                if typing.get_origin(annotation) in _UNIONS:
                     # Resolve the types inside the union
                     resolved_types = typing.get_args(annotation)
                 else:
@@ -547,7 +555,7 @@ class EventManagerBase(event_manager_.EventManager):
 
         return decorator
 
-    def dispatch(self, event: event_manager_.EventT_inv) -> asyncio.Future[typing.Any]:
+    def dispatch(self, event: base_events.EventT) -> asyncio.Future[typing.Any]:
         if not isinstance(event, base_events.Event):
             raise TypeError(f"Events must be subclasses of {base_events.Event.__name__}, not {type(event).__name__}")
 
@@ -583,24 +591,27 @@ class EventManagerBase(event_manager_.EventManager):
 
     def stream(
         self,
-        event_type: typing.Type[event_manager_.EventT_co],
+        event_type: typing.Type[base_events.EventT],
         /,
         timeout: typing.Union[float, int, None],
         limit: typing.Optional[int] = None,
-    ) -> event_manager_.EventStream[event_manager_.EventT_co]:
-        self._check_intents(event_type, 1)
+    ) -> event_manager_.EventStream[base_events.EventT]:
+        self._check_event(event_type, 1)
         return EventStream(self, event_type, timeout=timeout, limit=limit)
 
     async def wait_for(
         self,
-        event_type: typing.Type[event_manager_.EventT_co],
+        event_type: typing.Type[base_events.EventT],
         /,
         timeout: typing.Union[float, int, None],
-        predicate: typing.Optional[event_manager_.PredicateT[event_manager_.EventT_co]] = None,
-    ) -> event_manager_.EventT_co:
-        self._check_intents(event_type, 1)
+        predicate: typing.Optional[event_manager_.PredicateT[base_events.EventT]] = None,
+    ) -> base_events.EventT:
+        if not inspect.isclass(event_type) or not issubclass(event_type, base_events.Event):
+            raise TypeError("Cannot wait for a non-Event type")
 
-        future: asyncio.Future[event_manager_.EventT_co] = asyncio.get_running_loop().create_future()
+        self._check_event(event_type, 1)
+
+        future: asyncio.Future[base_events.EventT] = asyncio.get_running_loop().create_future()
 
         try:
             waiter_set = self._waiters[event_type]
@@ -652,7 +663,7 @@ class EventManagerBase(event_manager_.EventManager):
             )
 
     async def _invoke_callback(
-        self, callback: event_manager_.CallbackT[event_manager_.EventT_inv], event: event_manager_.EventT_inv
+        self, callback: event_manager_.CallbackT[base_events.EventT], event: base_events.EventT
     ) -> None:
         try:
             await callback(event)
