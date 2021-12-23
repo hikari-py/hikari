@@ -5,9 +5,6 @@ updates:
     directory: /
     schedule:
       interval: daily
-    assignees:
-      - davfsa
-      - FasterSpeeding
     reviewers:
       - davfsa
       - FasterSpeeding
@@ -19,9 +16,6 @@ updates:
     directory: /
     schedule:
       interval: daily
-    assignees:
-      - davfsa
-      - FasterSpeeding
     reviewers:
       - davfsa
       - FasterSpeeding

@@ -113,7 +113,8 @@ class CommandOption:
     r"""The command option's name.
 
     !!! note
-        This will match the regex `^[a-z0-9_-]{1,32}$`.
+        This will match the regex `^[\w-]{1,32}$` in Unicode mode and will be
+        lowercase.
     """
 
     description: str = attr.field(repr=False)
@@ -145,6 +146,20 @@ class CommandOption:
     If `builtins.None`, then all channel types will be accepted.
     """
 
+    min_value: typing.Union[int, float, None] = attr.field(default=None, repr=False)
+    """The minimum value permitted (inclusive).
+
+    This will be `builtins.int` if the type of the option is `hikari.commands.OptionType.INTEGER`
+    and `builtins.float` if the type is `hikari.commands.OptionType.NUMBER`.
+    """
+
+    max_value: typing.Union[int, float, None] = attr.field(default=None, repr=False)
+    """The maximum value permitted (inclusive).
+
+    This will be `builtins.int` if the type of the option is `hikari.commands.OptionType.INTEGER`
+    and `builtins.float` if the type is `hikari.commands.OptionType.NUMBER`.
+    """
+
 
 @attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
@@ -164,7 +179,8 @@ class Command(snowflakes.Unique):
     r"""The command's name.
 
     !!! note
-        This will match the regex `^[a-z0-9_-]{1,32}$`.
+        This will match the regex `^[\w-]{1,32}$` in Unicode mode and will be
+        lowercase.
     """
 
     description: str = attr.field(eq=False, hash=False, repr=False)

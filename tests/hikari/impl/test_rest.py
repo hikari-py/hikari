@@ -23,11 +23,11 @@ import asyncio
 import contextlib
 import datetime
 import http
+import re
 import warnings
 
 import mock
 import pytest
-import regex
 
 from hikari import applications
 from hikari import audit_logs
@@ -1921,7 +1921,7 @@ class TestRESTClientImplAsync:
             f"'{singular_arg}' (singular) instead?"
         )
 
-        with pytest.raises(TypeError, match=regex.escape(expected_error_message)):
+        with pytest.raises(TypeError, match=re.escape(expected_error_message)):
             await rest_client._create_message(None, {}, **kwargs)
 
     @pytest.mark.skip("TODO")
@@ -2043,7 +2043,7 @@ class TestRESTClientImplAsync:
             f"'{singular_arg}' (singular) instead?"
         )
 
-        with pytest.raises(TypeError, match=regex.escape(expected_error_message)):
+        with pytest.raises(TypeError, match=re.escape(expected_error_message)):
             await rest_client._edit_message(None, {}, **kwargs)
 
     @pytest.mark.skip("TODO")
@@ -3696,7 +3696,7 @@ class TestRESTClientImplAsync:
             await rest_client.create_role(StubModel(123), icon="icon.png", unicode_emoji="\N{OK HAND SIGN}")
 
     async def test_reposition_roles(self, rest_client):
-        expected_route = routes.POST_GUILD_ROLES.compile(guild=123)
+        expected_route = routes.PATCH_GUILD_ROLES.compile(guild=123)
         expected_json = [{"id": "456", "position": 1}, {"id": "789", "position": 2}]
         rest_client._request = mock.AsyncMock()
 

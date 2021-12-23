@@ -91,7 +91,6 @@ if typing.TYPE_CHECKING:
     def load_json(_: typing.AnyStr, /) -> typing.Union[JSONArray, JSONObject]:
         """Convert a JSON string to a Python type."""
 
-
 else:
     import json
 
