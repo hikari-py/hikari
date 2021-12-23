@@ -49,7 +49,7 @@ Intervalish = typing.Union[int, float, datetime.timedelta]
 This is a type that is like an interval of some sort.
 
 This is an alias for `typing.Union[int, float, datetime.datetime]`,
-where `builtins.int` and `builtins.float` types are interpreted as a number of seconds.
+where `int` and `float` types are interpreted as a number of seconds.
 """
 
 DISCORD_EPOCH: typing.Final[int] = 1_420_070_400
@@ -71,7 +71,7 @@ def slow_iso8601_datetime_string_to_datetime(datetime_str: str) -> datetime.date
 
     Parameters
     ----------
-    datetime_str : builtins.str
+    datetime_str : str
         The date string to parse.
 
     Returns
@@ -110,7 +110,7 @@ def discord_epoch_to_datetime(epoch: int, /) -> datetime.datetime:
 
     Parameters
     ----------
-    epoch : builtins.int
+    epoch : int
         Number of milliseconds since `1/1/2015 00:00:00 UTC`.
 
     Returns
@@ -122,7 +122,7 @@ def discord_epoch_to_datetime(epoch: int, /) -> datetime.datetime:
 
 
 def datetime_to_discord_epoch(timestamp: datetime.datetime) -> int:
-    """Parse a `datetime.datetime` object into an `builtins.int` `DISCORD_EPOCH` offset.
+    """Parse a `datetime.datetime` object into an `int` `DISCORD_EPOCH` offset.
 
     Parameters
     ----------
@@ -131,7 +131,7 @@ def datetime_to_discord_epoch(timestamp: datetime.datetime) -> int:
 
     Returns
     -------
-    builtins.int
+    int
         Number of milliseconds since `1/1/2015 00:00:00 UTC`.
     """
     return int((timestamp.timestamp() - DISCORD_EPOCH) * 1_000)
@@ -140,17 +140,17 @@ def datetime_to_discord_epoch(timestamp: datetime.datetime) -> int:
 def unix_epoch_to_datetime(epoch: typing.Union[int, float], /, *, is_millis: bool = True) -> datetime.datetime:
     """Parse a UNIX epoch to a `datetime.datetime` object.
 
-    !!! note
+    .. note::
         If an epoch that's outside the range of what this system can handle,
         this will return `datetime.datetime.max` if the timestamp is positive,
         or `datetime.datetime.min` otherwise.
 
     Parameters
     ----------
-    epoch : typing.Union[builtins.int, builtins.float]
+    epoch : typing.Union[int, float]
         Number of seconds/milliseconds since `1/1/1970 00:00:00 UTC`.
-    is_millis : builtins.bool
-        `builtins.True` by default, indicates the input timestamp is measured in
+    is_millis : bool
+        `True` by default, indicates the input timestamp is measured in
         milliseconds rather than seconds
 
     Returns
@@ -180,7 +180,7 @@ def timespan_to_int(value: Intervalish, /) -> int:
 
     Returns
     -------
-    builtins.int
+    int
         The integer number of seconds. Fractions are discarded. Negative values
         are removed.
     """

@@ -53,8 +53,8 @@ def completed_future(result: typing.Optional[T_inv] = None, /) -> asyncio.Future
     result : T
         The value to set for the result of the future.
         `T` is a generic type placeholder for the type that
-        the future will have set as the result. `T` may be `builtins.None`, in
-        which case, this will return `asyncio.Future[builtins.None]`.
+        the future will have set as the result. `T` may be `None`, in
+        which case, this will return `asyncio.Future[None]`.
 
     Returns
     -------
@@ -119,10 +119,10 @@ async def first_completed(
     *aws : typing.Awaitable[typing.Any]
         Awaitables to wait for.
     timeout : typing.Optional[float]
-        Optional timeout to wait for, or `builtins.None` to not use one.
+        Optional timeout to wait for, or `None` to not use one.
         If the timeout is reached, all awaitables are cancelled immediately.
 
-    !!! note
+    .. note::
         If more than one awaitable is completed before entering this call, then
         the first future is always returned.
     """
@@ -158,7 +158,7 @@ async def all_of(
     *aws : typing.Awaitable[T_co]
         Awaitables to wait for.
     timeout : typing.Optional[float]
-        Optional timeout to wait for, or `builtins.None` to not use one.
+        Optional timeout to wait for, or `None` to not use one.
         If the timeout is reached, all awaitables are cancelled immediately.
 
     Returns

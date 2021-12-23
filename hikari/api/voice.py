@@ -99,12 +99,12 @@ class VoiceComponent(abc.ABC):
         voice_connection_type : typing.Type[VoiceConnection]
             The type of voice connection to use. This should be initialized
             internally using the `VoiceConnection.initialize`
-            `builtins.classmethod`.
-        deaf : builtins.bool
-            Defaulting to `builtins.False`, if `builtins.True`, the client will
+            `classmethod`.
+        deaf : bool
+            Defaulting to `False`, if `True`, the client will
             enter the voice channel deafened (thus unable to hear other users).
-        mute : builtins.bool
-            Defaulting to `builtins.False`, if `builtins.True`, the client will
+        mute : bool
+            Defaulting to `False`, if `True`, the client will
             enter the voice channel muted (thus unable to send audio).
         **kwargs : typing.Any
             Any arguments to provide to the `VoiceConnection.initialize`
@@ -171,12 +171,12 @@ class VoiceConnection(abc.ABC):
             connection is unregistered from the voice component safely.
         owner : VoiceComponent
             The component that made this connection object.
-        session_id : builtins.str
+        session_id : str
             The voice session ID to use.
-        shard_id : builtins.int
+        shard_id : int
             The associated shard ID that the voice connection was generated
             from.
-        token : builtins.str
+        token : str
             The voice token to use.
         user_id : hikari.snowflakes.Snowflake
             The user ID of the account that just joined the voice channel.
@@ -203,7 +203,7 @@ class VoiceConnection(abc.ABC):
     @property
     @abc.abstractmethod
     def is_alive(self) -> bool:
-        """Return `builtins.True` if the connection is alive."""
+        """Return `True` if the connection is alive."""
 
     @property
     @abc.abstractmethod

@@ -133,8 +133,8 @@ class MessageCreateEvent(MessageEvent, abc.ABC):
 
         Returns
         -------
-        typing.Optional[builtins.str]
-            The content of the message, if present. This may be `builtins.None`
+        typing.Optional[str]
+            The content of the message, if present. This may be `None`
             or an empty string (or any falsy value) if no content is present
             (e.g. if only an embed was sent).
         """
@@ -153,23 +153,23 @@ class MessageCreateEvent(MessageEvent, abc.ABC):
 
     @property
     def is_bot(self) -> bool:
-        """Return `builtins.True` if the message is from a bot.
+        """Return `True` if the message is from a bot.
 
         Returns
         -------
-        builtins.bool
-            `builtins.True` if from a bot, or `builtins.False` otherwise.
+        bool
+            `True` if from a bot, or `False` otherwise.
         """
         return self.message.author.is_bot
 
     @property
     def is_human(self) -> bool:
-        """Return `builtins.True` if the message was created by a human.
+        """Return `True` if the message was created by a human.
 
         Returns
         -------
-        builtins.bool
-            `builtins.True` if from a human user, or `builtins.False` otherwise.
+        bool
+            `True` if from a human user, or `False` otherwise.
         """
         # Not second-guessing some weird edge case will occur in the future with this,
         # so I am being safe rather than sorry.
@@ -177,12 +177,12 @@ class MessageCreateEvent(MessageEvent, abc.ABC):
 
     @property
     def is_webhook(self) -> bool:
-        """Return `builtins.True` if the message was created by a webhook.
+        """Return `True` if the message was created by a webhook.
 
         Returns
         -------
-        builtins.bool
-            `builtins.True` if from a webhook, or `builtins.False` otherwise.
+        bool
+            `True` if from a webhook, or `False` otherwise.
         """
         return self.message.webhook_id is not None
 
@@ -243,7 +243,7 @@ class GuildMessageCreateEvent(MessageCreateEvent):
         -------
         typing.Optional[hikari.guilds.Member]
             The member object of the user that sent the message or
-            `builtins.None` if sent by a webhook.
+            `None` if sent by a webhook.
         """
         return self.message.member
 
@@ -268,7 +268,7 @@ class GuildMessageCreateEvent(MessageCreateEvent):
         -------
         typing.Optional[hikari.channels.TextableGuildChannel]
             The channel that the message was sent in, if known and cached,
-            otherwise, `builtins.None`.
+            otherwise, `None`.
         """
         if not isinstance(self.app, traits.CacheAware):
             return None
@@ -282,7 +282,7 @@ class GuildMessageCreateEvent(MessageCreateEvent):
     def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
         """Get the cached guild that this event occurred in, if known.
 
-        !!! note
+        .. note::
             This will require the `GUILDS` intent to be specified on start-up
             in order to be known.
 
@@ -290,7 +290,7 @@ class GuildMessageCreateEvent(MessageCreateEvent):
         -------
         typing.Optional[hikari.guilds.GatewayGuild]
             The guild that this event occurred in, if cached. Otherwise,
-            `builtins.None` instead.
+            `None` instead.
         """
         if not isinstance(self.app, traits.CacheAware):
             return None
@@ -331,7 +331,7 @@ class DMMessageCreateEvent(MessageCreateEvent):
 class MessageUpdateEvent(MessageEvent, abc.ABC):
     """Event that is fired when a message is updated.
 
-    !!! note
+    .. note::
         Less information will be available here than in the creation event
         due to Discord limitations.
     """
@@ -373,8 +373,8 @@ class MessageUpdateEvent(MessageEvent, abc.ABC):
 
         Returns
         -------
-        hikari.undefined.UndefinedNoneOr[builtins.str]
-            The content of the message, if present. This may be `builtins.None`
+        hikari.undefined.UndefinedNoneOr[str]
+            The content of the message, if present. This may be `None`
             or an empty string (or any falsy value) if no content is present
             (e.g. if only an embed was sent). If not part of the update, then
             this will be `hikari.undefined.UNDEFINED` instead.
@@ -395,12 +395,12 @@ class MessageUpdateEvent(MessageEvent, abc.ABC):
 
     @property
     def is_bot(self) -> undefined.UndefinedOr[bool]:
-        """Return `builtins.True` if the message is from a bot.
+        """Return `True` if the message is from a bot.
 
         Returns
         -------
-        typing.Optional[builtins.bool]
-            `builtins.True` if from a bot, or `builtins.False` otherwise.
+        typing.Optional[bool]
+            `True` if from a bot, or `False` otherwise.
 
             If the author is not known, due to the update event being caused
             by Discord adding an embed preview to accompany a URL, then this
@@ -413,12 +413,12 @@ class MessageUpdateEvent(MessageEvent, abc.ABC):
 
     @property
     def is_human(self) -> undefined.UndefinedOr[bool]:
-        """Return `builtins.True` if the message was created by a human.
+        """Return `True` if the message was created by a human.
 
         Returns
         -------
-        typing.Optional[builtins.bool]
-            `builtins.True` if from a human user, or `builtins.False` otherwise.
+        typing.Optional[bool]
+            `True` if from a human user, or `False` otherwise.
 
             If the author is not known, due to the update event being caused
             by Discord adding an embed preview to accompany a URL, then this
@@ -436,12 +436,12 @@ class MessageUpdateEvent(MessageEvent, abc.ABC):
 
     @property
     def is_webhook(self) -> undefined.UndefinedOr[bool]:
-        """Return `builtins.True` if the message was created by a webhook.
+        """Return `True` if the message was created by a webhook.
 
         Returns
         -------
-        builtins.bool
-            `builtins.True` if from a webhook, or `builtins.False` otherwise.
+        bool
+            `True` if from a webhook, or `False` otherwise.
         """
         if (webhook_id := self.message.webhook_id) is not undefined.UNDEFINED:
             return webhook_id is not None
@@ -477,7 +477,7 @@ class MessageUpdateEvent(MessageEvent, abc.ABC):
 class GuildMessageUpdateEvent(MessageUpdateEvent):
     """Event that is fired when a message is updated in a guild.
 
-    !!! note
+    .. note::
         Less information will be available here than in the creation event
         due to Discord limitations.
     """
@@ -485,7 +485,7 @@ class GuildMessageUpdateEvent(MessageUpdateEvent):
     old_message: typing.Optional[messages.PartialMessage] = attr.field()
     """The old message object.
 
-    This will be `builtins.None` if the message missing from the cache.
+    This will be `None` if the message missing from the cache.
     """
 
     message: messages.PartialMessage = attr.field()
@@ -498,7 +498,7 @@ class GuildMessageUpdateEvent(MessageUpdateEvent):
     def member(self) -> undefined.UndefinedNoneOr[guilds.Member]:
         """Member that sent the message if provided by the event.
 
-        If the message is not in a guild, this will be `builtins.None`.
+        If the message is not in a guild, this will be `None`.
 
         This will also be `hikari.undefined.UNDEFINED` in some cases such as when Discord
         updates a message with an embed URL preview.
@@ -539,7 +539,7 @@ class GuildMessageUpdateEvent(MessageUpdateEvent):
         -------
         typing.Optional[hikari.channels.TextableGuildChannel]
             The channel that the message was sent in, if known and cached,
-            otherwise, `builtins.None`.
+            otherwise, `None`.
         """
         if not isinstance(self.app, traits.CacheAware):
             return None
@@ -553,7 +553,7 @@ class GuildMessageUpdateEvent(MessageUpdateEvent):
     def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
         """Get the cached guild that this event occurred in, if known.
 
-        !!! note
+        .. note::
             This will require the `GUILDS` intent to be specified on start-up
             in order to be known.
 
@@ -561,7 +561,7 @@ class GuildMessageUpdateEvent(MessageUpdateEvent):
         -------
         typing.Optional[hikari.guilds.GatewayGuild]
             The guild that this event occurred in, if cached. Otherwise,
-            `builtins.None` instead.
+            `None` instead.
         """
         if not isinstance(self.app, traits.CacheAware):
             return None
@@ -575,7 +575,7 @@ class GuildMessageUpdateEvent(MessageUpdateEvent):
 class DMMessageUpdateEvent(MessageUpdateEvent):
     """Event that is fired when a message is updated in a DM.
 
-    !!! note
+    .. note::
         Less information will be available here than in the creation event
         due to Discord limitations.
     """
@@ -583,7 +583,7 @@ class DMMessageUpdateEvent(MessageUpdateEvent):
     old_message: typing.Optional[messages.PartialMessage] = attr.field()
     """The old message object.
 
-    This will be `builtins.None` if the message missing from the cache.
+    This will be `None` if the message missing from the cache.
     """
 
     message: messages.PartialMessage = attr.field()
@@ -597,7 +597,7 @@ class DMMessageUpdateEvent(MessageUpdateEvent):
 class MessageDeleteEvent(MessageEvent, abc.ABC):
     """Special event that is triggered when a message gets deleted.
 
-    !!! note
+    .. note::
         Due to Discord limitations, most message information is unavailable
         during deletion events.
     """
@@ -624,7 +624,7 @@ class MessageDeleteEvent(MessageEvent, abc.ABC):
 class GuildMessageDeleteEvent(MessageDeleteEvent):
     """Event that is triggered if a message is deleted in a guild.
 
-    !!! note
+    .. note::
         Due to Discord limitations, most message information is unavailable
         during deletion events.
     """
@@ -653,7 +653,7 @@ class GuildMessageDeleteEvent(MessageDeleteEvent):
         Returns
         -------
         typing.Optional[hikari.channels.TextableGuildChannel]
-            The channel the messages were sent in, or `builtins.None` if not
+            The channel the messages were sent in, or `None` if not
             known/cached.
         """
         if not isinstance(self.app, traits.CacheAware):
@@ -668,7 +668,7 @@ class GuildMessageDeleteEvent(MessageDeleteEvent):
     def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
         """Get the cached guild this event corresponds to, if known.
 
-        !!! note
+        .. note::
             You will need `hikari.intents.Intents.GUILDS` enabled to receive this
             information.
 
@@ -690,7 +690,7 @@ class GuildMessageDeleteEvent(MessageDeleteEvent):
 class DMMessageDeleteEvent(MessageDeleteEvent):
     """Event that is triggered if a message is deleted in a DM.
 
-    !!! note
+    .. note::
         Due to Discord limitations, most message information is unavailable
         during deletion events.
     """
@@ -717,7 +717,7 @@ class DMMessageDeleteEvent(MessageDeleteEvent):
 class GuildBulkMessageDeleteEvent(shard_events.ShardEvent):
     """Event that is triggered when a bulk deletion is triggered in a guild.
 
-    !!! note
+    .. note::
         Due to Discord limitations, most message information is unavailable
         during deletion events.
     """
@@ -749,7 +749,7 @@ class GuildBulkMessageDeleteEvent(shard_events.ShardEvent):
         Returns
         -------
         typing.Optional[hikari.channels.TextableGuildChannel]
-            The channel the messages were sent in, or `builtins.None` if not
+            The channel the messages were sent in, or `None` if not
             known/cached.
         """
         if not isinstance(self.app, traits.CacheAware):
@@ -764,7 +764,7 @@ class GuildBulkMessageDeleteEvent(shard_events.ShardEvent):
     def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
         """Get the cached guild this event corresponds to, if known.
 
-        !!! note
+        .. note::
             You will need `hikari.intents.Intents.GUILDS` enabled to receive this
             information.
 

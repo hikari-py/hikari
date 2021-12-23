@@ -87,7 +87,7 @@ class ChannelEvent(shard_events.ShardEvent, abc.ABC):
     async def fetch_channel(self) -> channels.PartialChannel:
         """Perform an API call to fetch the details about this channel.
 
-        !!! note
+        .. note::
             For `GuildChannelDeleteEvent` events, this will always raise
             an exception, since the channel will have already been removed.
 
@@ -142,13 +142,13 @@ class GuildChannelEvent(ChannelEvent, abc.ABC):
     def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
         """Get the cached guild that this event relates to, if known.
 
-        If not, return `builtins.None`.
+        If not, return `None`.
 
         Returns
         -------
         typing.Optional[hikari.guilds.GatewayGuild]
             The gateway guild this event relates to, if known. Otherwise
-            this will return `builtins.None`.
+            this will return `None`.
         """
         if not isinstance(self.app, traits.CacheAware):
             return None
@@ -190,13 +190,13 @@ class GuildChannelEvent(ChannelEvent, abc.ABC):
     def get_channel(self) -> typing.Optional[channels.GuildChannel]:
         """Get the cached channel that this event relates to, if known.
 
-        If not, return `builtins.None`.
+        If not, return `None`.
 
         Returns
         -------
         typing.Optional[hikari.channels.GuildChannel]
             The cached channel this event relates to. If not known, this
-            will return `builtins.None` instead.
+            will return `None` instead.
         """
         if not isinstance(self.app, traits.CacheAware):
             return None
@@ -206,7 +206,7 @@ class GuildChannelEvent(ChannelEvent, abc.ABC):
     async def fetch_channel(self) -> channels.GuildChannel:
         """Perform an API call to fetch the details about this channel.
 
-        !!! note
+        .. note::
             For `GuildChannelDeleteEvent` events, this will always raise
             an exception, since the channel will have already been removed.
 
@@ -252,7 +252,7 @@ class DMChannelEvent(ChannelEvent, abc.ABC):
     async def fetch_channel(self) -> channels.PrivateChannel:
         """Perform an API call to fetch the details about this channel.
 
-        !!! note
+        .. note::
             For `GuildChannelDeleteEvent` events, this will always raise
             an exception, since the channel will have already been removed.
 
@@ -336,7 +336,7 @@ class GuildChannelUpdateEvent(GuildChannelEvent):
     old_channel: typing.Optional[channels.GuildChannel] = attr.field(repr=True)
     """The old guild channel object.
 
-    This will be `builtins.None` if the channel missing from the cache.
+    This will be `None` if the channel missing from the cache.
     """
 
     channel: channels.GuildChannel = attr.field(repr=True)
@@ -414,14 +414,14 @@ class PinsUpdateEvent(ChannelEvent, abc.ABC):
     def last_pin_timestamp(self) -> typing.Optional[datetime.datetime]:
         """Datetime of when the most recent message was pinned in the channel.
 
-        Will be `builtins.None` if nothing is pinned or the information is
+        Will be `None` if nothing is pinned or the information is
         unavailable.
 
         Returns
         -------
         typing.Optional[datetime.datetime]
             The datetime of the most recent pinned message in the channel,
-            or `builtins.None` if no pins are available.
+            or `None` if no pins are available.
         """
 
     @abc.abstractmethod
@@ -471,13 +471,13 @@ class GuildPinsUpdateEvent(PinsUpdateEvent, GuildChannelEvent):
     def get_channel(self) -> typing.Optional[channels.TextableGuildChannel]:
         """Get the cached channel that this event relates to, if known.
 
-        If not, return `builtins.None`.
+        If not, return `None`.
 
         Returns
         -------
         typing.Optional[hikari.channels.TextableGuildChannel]
             The cached channel this event relates to. If not known, this
-            will return `builtins.None` instead.
+            will return `None` instead.
         """
         channel = super().get_channel()
         assert channel is None or isinstance(channel, channels.TextableGuildChannel)
@@ -584,7 +584,7 @@ class InviteEvent(GuildChannelEvent, abc.ABC):
 
         Returns
         -------
-        builtins.str
+        str
             The invite code.
         """
 
@@ -684,7 +684,7 @@ class InviteDeleteEvent(InviteEvent):
     old_invite: typing.Optional[invites.InviteWithMetadata] = attr.field()
     """Object of the old cached invite.
 
-    This will be `builtins.None` if the invite is missing from the cache.
+    This will be `None` if the invite is missing from the cache.
     """
 
     if typing.TYPE_CHECKING:

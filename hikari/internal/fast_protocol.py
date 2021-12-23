@@ -105,7 +105,7 @@ class _FastProtocolChecking(type(typing.Protocol)):
 class FastProtocolChecking(typing.Protocol, metaclass=_FastProtocolChecking):
     """An extension to make protocols with faster instance checks.
 
-    !!! note
+    .. note::
         All protocols that subclass this class must be decorated with
         `@typing.runtime_checkable` to keep mypy happy.
     """

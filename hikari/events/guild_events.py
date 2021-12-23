@@ -107,12 +107,12 @@ class GuildEvent(shard_events.ShardEvent, abc.ABC):
     def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
         """Get the cached guild that this event relates to, if known.
 
-        If not known, this will return `builtins.None` instead.
+        If not known, this will return `None` instead.
 
         Returns
         -------
         typing.Optional[hikari.guilds.GatewayGuild]
-            The guild this event relates to, or `builtins.None` if not known.
+            The guild this event relates to, or `None` if not known.
         """
         if not isinstance(self.app, traits.CacheAware):
             return None
@@ -141,7 +141,7 @@ class GuildAvailableEvent(GuildVisibilityEvent):
 
     This will occur on startup or after outages.
 
-    !!! note
+    .. note::
         Some fields like `members` and `presences` are included here but not on
         the other `GuildUpdateEvent` and `GuildUnavailableEvent` guild visibility
         event models.
@@ -216,14 +216,14 @@ class GuildAvailableEvent(GuildVisibilityEvent):
     chunk_nonce: typing.Optional[str] = attr.field(repr=False, default=None)
     """Nonce used to request the member chunks for this guild.
 
-    This will be `builtins.None` if no chunks were requested.
+    This will be `None` if no chunks were requested.
 
-    !!! note
+    .. note::
         This is a synthetic field.
 
     Returns
     -------
-    typing.Optional[builtins.str]
+    typing.Optional[str]
         The nonce used to request the member chunks.
     """
 
@@ -244,7 +244,7 @@ class GuildAvailableEvent(GuildVisibilityEvent):
 class GuildJoinEvent(GuildVisibilityEvent):
     """Event fired when the bot joins a new guild.
 
-    !!! note
+    .. note::
         Some fields like `members` and `presences` are included here but not on
         the other `GuildUpdateEvent` and `GuildUnavailableEvent` guild visibility
         event models.
@@ -277,9 +277,9 @@ class GuildJoinEvent(GuildVisibilityEvent):
     chunk_nonce: typing.Optional[str] = attr.field(repr=False, default=None)
     """Nonce used to request the member chunks for this guild.
 
-    This will be `builtins.None` if no chunks were requested.
+    This will be `None` if no chunks were requested.
 
-    !!! note
+    .. note::
         This is a synthetic field.
     """
 
@@ -315,7 +315,7 @@ class GuildLeaveEvent(GuildVisibilityEvent):
     old_guild: typing.Optional[guilds.GatewayGuild] = attr.field()
     """The old guild object.
 
-    This will be `builtins.None` if the guild missing from the cache.
+    This will be `None` if the guild missing from the cache.
     """
 
     if typing.TYPE_CHECKING:
@@ -352,7 +352,7 @@ class GuildUpdateEvent(GuildEvent):
     old_guild: typing.Optional[guilds.GatewayGuild] = attr.field()
     """The old guild object.
 
-    This will be `builtins.None` if the guild missing from the cache.
+    This will be `None` if the guild missing from the cache.
     """
 
     guild: guilds.GatewayGuild = attr.field()
@@ -500,7 +500,7 @@ class EmojisUpdateEvent(GuildEvent):
     old_emojis: typing.Optional[typing.Sequence[emojis_.KnownCustomEmoji]] = attr.field()
     """Sequence of all old emojis in this guild.
 
-    This will be `builtins.None` if it's missing from the cache.
+    This will be `None` if it's missing from the cache.
     """
 
     emojis: typing.Sequence[emojis_.KnownCustomEmoji] = attr.field()
@@ -554,7 +554,7 @@ class IntegrationEvent(GuildEvent, abc.ABC):
     async def fetch_integrations(self) -> typing.Sequence[guilds.Integration]:
         """Perform an API call to fetch some number of guild integrations.
 
-        !!! warning
+        .. warning::
             The results of this are not clearly defined by Discord. The current
             behaviour appears to be that only the first 50 integrations actually
             get returned. Discord have made it clear that they are not willing
@@ -677,7 +677,7 @@ class PresenceUpdateEvent(shard_events.ShardEvent):
     old_presence: typing.Optional[presences_.MemberPresence] = attr.field()
     """The old member presence object.
 
-    This will be `builtins.None` if the member presence missing from the cache.
+    This will be `None` if the member presence missing from the cache.
     """
 
     presence: presences_.MemberPresence = attr.field()
@@ -695,7 +695,7 @@ class PresenceUpdateEvent(shard_events.ShardEvent):
     This is a partial user object that only contains the fields that were
     updated on the user profile.
 
-    Will be `builtins.None` if the user itself did not change.
+    Will be `None` if the user itself did not change.
     This is always the case if the user only updated their member
     representation and did not change their user profile directly.
 
@@ -738,7 +738,7 @@ class PresenceUpdateEvent(shard_events.ShardEvent):
         Returns
         -------
         typing.Optional[hikari.users.User]
-            The full cached user, or `builtins.None` if not cached.
+            The full cached user, or `None` if not cached.
         """
         if not isinstance(self.app, traits.CacheAware):
             return None

@@ -76,7 +76,7 @@ class ShardEvent(base_events.Event, abc.ABC):
 class ShardPayloadEvent(ShardEvent):
     """Event fired for most shard events with their raw payload.
 
-    !!! note
+    .. note::
         This will only be dispatched for real dispatch events received from
         Discord and not artificial events like the `ShardStateEvent` events.
     """
@@ -140,7 +140,7 @@ class ShardReadyEvent(ShardStateEvent):
 
     Returns
     -------
-    builtins.int
+    int
         The actual gateway version we are actively using for this protocol.
     """
 
@@ -149,7 +149,7 @@ class ShardReadyEvent(ShardStateEvent):
 
     Returns
     -------
-    builtins.str
+    str
         The session ID for this gateway session.
     """
 
@@ -238,7 +238,7 @@ class MemberChunkEvent(ShardEvent, typing.Sequence["guilds.Member"]):
 
     Returns
     -------
-    builtins.int
+    int
         The sequence index for this chunk.
     """
 
@@ -247,7 +247,7 @@ class MemberChunkEvent(ShardEvent, typing.Sequence["guilds.Member"]):
 
     Returns
     -------
-    builtins.int
+    int
         Total number of chunks to be expected.
     """
 
@@ -267,7 +267,7 @@ class MemberChunkEvent(ShardEvent, typing.Sequence["guilds.Member"]):
     """Mapping of user IDs to found member presence objects.
 
     This will be empty if no presences are found or `include_presences` is not passed as
-    `builtins.True` while requesting the member chunks.
+    `True` while requesting the member chunks.
 
     Returns
     -------
@@ -282,8 +282,8 @@ class MemberChunkEvent(ShardEvent, typing.Sequence["guilds.Member"]):
 
     Returns
     -------
-    typing.Optional[builtins.str]
-        The request nonce if set, or `builtins.None` otherwise.
+    typing.Optional[str]
+        The request nonce if set, or `None` otherwise.
     """
 
     @typing.overload

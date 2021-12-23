@@ -1,35 +1,257 @@
 <!doctype html>
 <html lang="en">
-
 <head>
-    <link rel="shortcut icon" type="image/png" href="logo.png" />
+    <meta charset="utf-8">
+    <title>Hikari</title>
     <meta property="og:title" content="Hikari.py" />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://hikari-py.dev/logo.png" />
-    <meta property="og:description"
-        content="A Discord Bot framework for modern Python and asyncio built on good intentions" />
+    <meta property="og:image" content="https://www.hikari-py.dev/logo.png" />
+    <meta property="og:description" content="A Discord Bot framework for modern Python and asyncio built on good intentions" />
     <meta property="theme-color" content="#ff029a" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <meta charset="utf-8" />
-    <title>Hikari</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
-        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous" />
-    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.1/styles/default.min.css">
+    <link rel="icon" href="https://www.hikari-py.dev/logo.png"/>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.3.1/styles/default.min.css" integrity="sha512-3xLMEigMNYLDJLAgaGlDSxpGykyb+nQnJBzbkQy2a0gyVKL2ZpNOPIj1rD8IPFaJbwAgId/atho1+LBpWu5DhA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="site.css" />
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat+Alternates:wght@100;300;400&display=swap&family=Source+Code+Pro:wght@200');
+
+        /* Globals */
+        :root {
+            --dark-bg: #191919;
+            --light-fg: #C66CB7;
+            --unfocused-fg: #C66CB7;
+            --dark-fg: #8F3881;
+            --accent-1: #e44ecc;
+        }
+
+        /* Links */
+        a,
+        a:focus,
+        a:hover {
+            color: var(--light-fg);
+        }
+
+        .display-1 {
+            color: var(--accent-1);
+            font-size: 4rem;
+            font-weight: 300 !important;
+        }
+
+        .display-1 > small {
+            color: var(--accent-1);
+            font-size: 0.35em;
+            font-weight: 100 !important;
+            font-family: 'Source Code Pro', monospace;
+        }
+
+        .mono {
+            font-family: SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace
+        }
+
+        /*
+         * Base structure
+         */
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            min-width: 360px;
+            background-color: var(--dark-bg);
+            overflow-y: hidden;
+        }
+
+        header, main, footer {
+            display: none;
+        }
+
+        html, body, .lead {
+            font-family: 'Montserrat Alternates', sans-serif !important;
+            font-weight: 400 !important;
+        }
+
+        .lead {
+            font-weight: 400 !important;
+        }
+
+        strong {
+            font-weight: 400 !important;
+            text-decoration: underline;
+        }
+
+        body {
+            display: -ms-flexbox;
+            display: -webkit-box;
+            display: flex;
+            -ms-flex-pack: center;
+            -webkit-box-pack: center;
+            color: rgba(255, 255, 255, 255);
+            box-shadow: inset 0 0 100rem rgba(0, 0, 0, 1);
+        }
+
+        .cover-container {
+            overflow-y: auto;
+            padding-left: 10% !important;
+            padding-right: 10% !important;
+            max-width: 100%;
+            position: absolute;
+        }
+
+        /*
+        * Cover
+        */
+        .cover {
+            padding: 0 1.5rem;
+        }
+        .cover .btn-lg {
+            padding: .75rem 1.25rem;
+            font-weight: 700;
+        }
+
+        /*
+        * Footer
+        */
+        .mastfoot {
+            color: rgba(255, 255, 255, .2);
+        }
+
+        /*
+        * Add text to the background
+        */
+        .background-only-base {
+            background: inherit;
+            display: contents;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            z-index: -1;
+        }
+
+        .background-only {
+            overflow: hidden;
+            padding-top: 10vh;
+            filter: blur(0.15em) contrast(45%) brightness(50%);
+            font-size: 0.7vmax;
+        }
+
+        /*
+        * highlight.js
+        * https://github.com/highlightjs/highlight.js/blob/master/src/styles/monokai-sublime.css
+        */
+        .hljs {
+            display: block;
+            overflow-x: hidden;
+            overflow-y: hidden;
+            background: inherit;
+        }
+
+        .hljs,
+        .hljs-tag,
+        .hljs-subst {
+            color: #f8f8f2;
+        }
+
+        .hljs-strong,
+        .hljs-emphasis {
+            color: #a8a8a2;
+        }
+
+        .hljs-bullet,
+        .hljs-quote,
+        .hljs-number,
+        .hljs-regexp,
+        .hljs-literal,
+        .hljs-link {
+            color: #ae81ff;
+        }
+
+        .hljs-code,
+        .hljs-title,
+        .hljs-section,
+        .hljs-selector-class {
+            color: #a6e22e;
+        }
+
+        .hljs-strong {
+            font-weight: bold;
+        }
+
+        .hljs-emphasis {
+            font-style: italic;
+        }
+
+        .hljs-keyword,
+        .hljs-selector-tag,
+        .hljs-name,
+        .hljs-attr {
+            color: #f92672;
+        }
+
+        .hljs-symbol,
+        .hljs-attribute {
+            color: #66d9ef;
+        }
+
+        .hljs-params,
+        .hljs-class .hljs-title {
+            color: #f8f8f2;
+        }
+
+        .hljs-string,
+        .hljs-type,
+        .hljs-built_in,
+        .hljs-builtin-name,
+        .hljs-selector-id,
+        .hljs-selector-attr,
+        .hljs-selector-pseudo,
+        .hljs-addition,
+        .hljs-variable,
+        .hljs-template-variable {
+            color: #e6db74;
+        }
+
+        .hljs-comment,
+        .hljs-deletion,
+        .hljs-meta {
+            color: #75715e;
+        }
+
+        .red { color: red !important; }
+        .yel { color: yellow !important; }
+        .gre { color: green !important; }
+        .cya { color: cyan !important; }
+        .blu { color: blue !important; }
+        .pur { color: purple !important; }
+        .gra { color: gray !important; }
+        .whi { color: white !important; }
+        .bwh { color: white !important; font-weight: bold; }
+        .lin { color: aqua !important; text-decoration: underline; }
+        .pre {
+            white-space: pre;
+        }
+    </style>
+    <noscript>
+        <style>
+            header, main, footer {
+                display: revert;
+            }
+        </style>
+    </noscript>
 </head>
-
 <body>
-    <div class="pre mono background-only-base">
+<div class="pre mono background-only-base">
         <pre class="background-only">
-            <span class="red">  oooo         o8o  oooo                            o8o   </span>  <span class="bwh">  &copy; 2020 Nekokatt, licensed under MIT   </span>
-            <span class="ora">  `888         `"'  `888                            `"'   </span>  <span class="whi">  Installed at:  </span><span class="lin">/home/hikari-py/code/hikari</span>
-            <span class="yel">   888 .oo.   oooo   888  oooo   .oooo.   oooo d8b oooo   </span>  <span class="whi">  Support:       </span><span class="lin">https://discord.gg/Jx4cNGG</span>
-            <span class="gre">   888P"Y88b  `888   888 .8P'   `P  )88b  `888""8P `888   </span>  <span class="whi">  Documentation: </span><span class="lin">https://hikari-py.dev/hikari</span>
-            <span class="cya">   888   888   888   888888.     .oP"888   888      888   </span>
-            <span class="blu">   888   888   888   888 `88b.  d8(  888   888      888   </span>  <span class="bwh">  CPython 3.8.5  </span>
-            <span class="pur">  o888o o888o o888o o888o o888o `Y888""8o d888b    o888o  </span>  <span class="whi">  compiled with GCC 10.1.0 (default May 17 2020 18:15:42)  </span>
-
-            <span class="gra">                                               v2.0.0     </span>
+            <span class="red">  oooo         o8o  oooo                            o8o   </span>  <span class="bwh">  光 2.0.0.dev101  [HEAD] </span>
+            <span class="red">  `888         `"'  `888                            `"'   </span>  <span class="whi">  © 2021 davfsa - MIT license </span><span class="lin">/home/nekokatt/code/hikari</span>
+            <span class="yel">   888 .oo.   oooo   888  oooo   .oooo.   oooo d8b oooo   </span>  <span class="whi">  interpreter:   </span><span class="lin">CPython 3.8.10</span>
+            <span class="gre">   888P"Y88b  `888   888 .8P'   `P  )88b  `888""8P `888   </span>  <span class="whi">  running on:    </span><span class="lin">x86_64 Linux 5.8.0-59-generic</span>
+            <span class="blu">   888   888   888   888888.     .oP"888   888      888   </span>  <span class="whi">  installed at:  </span><span class="lin">/home/nekokatt/code/hikari</span>
+            <span class="cya">   888   888   888   888 `88b.  d8(  888   888      888   </span>  <span class="bwh">  documentation: </span><span class="lin">https://www.hikari-py.dev/hikari</span>
+            <span class="pur">  o888o o888o o888o o888o o888o `Y888""8o d888b    o888o  </span>  <span class="whi">  support:       </span><span class="lin">https://discord.gg/Jx4cNGG</span>
 
             <span class="red">I</span> <span class="yel">2020-07-15 16:45:11,476</span><span class="gre">               hikari:</span><span class="cya"> single-sharded configuration -- you have started 29/1000 sessions prior to connecting (resets at 16/07/20 11:38:05 BST)</span>
             <span class="red">I</span> <span class="yel">2020-07-15 16:45:11,779</span><span class="gre">     hikari.gateway.0:</span><span class="cya"> received HELLO, heartbeat interval is 41.25s</span>
@@ -37,7 +259,7 @@
 
             <span class="whi">^C</span>
             <span class="whi">Terminated 13897</span>
-            <span class="gre">[nekokatt@pc <span class="gra">~/hikari</span> ] $ </span> <span class="whi">cat bot.py</span>
+            <span class="gre">[nekokatt@pc <span class="gra">~/hikari</span> ] $</span> <span class="whi">cat bot.py</span>
             <code class="python">
             #!/usr/bin/env python
             # -*- coding: utf-8 -*-
@@ -54,7 +276,8 @@
                 def decorator(fn):
                     @functools.wraps(fn)
                     async def wrapper(event):
-                        if event.is_human and event.message.content.startswith(name):
+                        content = event.message.content
+                        if event.is_human and content is not None and content.startswith(name):
                             await fn(event)
 
                     return wrapper
@@ -75,6 +298,7 @@
                     return (
                         event.message.author == e.message.author
                         and event.message.channel_id == e.message.channel_id
+                        and e.message.content
                         and e.message.content.isdigit()
                     )
 
@@ -99,63 +323,53 @@
             bot.run()
             </code>
         </pre>
-    </div>
+</div>
+<div class="cover-container d-flex h-100 p-3 mx-auto flex-column text-center" id="main-content">
+    <header class="masthead mb-auto">
+        <div class="inner">
+            <ul class="nav justify-content-center">
+                <li class="nav-item"><a class="nav-link active" href="#">Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="hikari">Documentation</a></li>
+                <li class="nav-item"><a class="nav-link" href="https://github.com/hikari-py/hikari">GitHub</a></li>
+                <li class="nav-item"><a class="nav-link" href="https://pypi.org/project/hikari">PyPI</a></li>
+            </ul>
+        </div>
+    </header>
 
-    <div class="cover-container d-flex h-100 p-3 mx-auto flex-column text-center" id="main-content">
-        <header class="masthead mb-auto">
-            <div class="inner">
-                <ul class="nav justify-content-center">
-                    <li class="nav-item"><a class="nav-link active" href="#">Home</a></li>
-                    <li class="nav-item"><a class="nav-link" href="hikari/index.html">Documentation</a></li>
-                    <li class="nav-item"><a class="nav-link" href="https://github.com/hikari-py/hikari">GitHub</a></li>
-                    <li class="nav-item"><a class="nav-link" href="https://pypi.org/project/hikari">PyPI</a></li>
-                </ul>
-            </div>
-        </header>
-
-        <main role="main" class="inner cover">
-            <h1 class="display-1"><small>pip install</small><br />hikari</h1>
-            <p class="lead">A new, powerful, static-typed Python API for writing Discord bots.</p>
-            <p>
-                This API is still in a alpha state, and is a <strong>work in progress</strong>! Features may change
-                or undergo improvements before the design is finalized. Until then, why not join our Discord? Feel free
-                to drop in to ask questions, get updates on progress, and be able to provide valuable contributions and
-                feedback.
-            </p>
-            <p>
-                Tutorials, tips, and additional resources will come soon!
-            </p>
-            <br />
-            <p class="lead">
-                <a class="btn btn-lg" href="https://discord.gg/Jx4cNGG">Slide into our server</a>
-            </p>
-        </main>
-
-        <footer class="mastfoot mt-auto">
-            <div class="inner">
-                &copy; 2020, Nekokatt, MIT<br>&copy; 2021, davfsa, MIT
-            </div>
-        </footer>
-    </div>
-
-
-    <script src="https://code.jquery.com/jquery-3.5.0.min.js"
-        integrity="sha256-xNzN2a4ltkB44Mc/Jz3pT4iU1cmeR0FkXs4pru/JxaQ=" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
-        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
-        crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
-        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
-        crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.1/highlight.min.js"></script>
-    <script>
-        hljs.initHighlightingOnLoad();
-        $(document).ready(function () {
-            $("header").fadeIn(1500);
-            $("main").fadeIn(1500);
-            $("footer").fadeIn(1500);
-        });
-    </script>
+    <main role="main" class="inner cover">
+        <h1 class="display-1"><small>pip install</small><br />hikari</h1>
+        <p class="lead">A new, powerful, static-typed Python API for writing Discord bots.</p>
+        <p>
+            This API is still in an alpha state, and is a <strong>work in progress</strong>! Features may change
+            or undergo improvements before the design is finalized. Until then, why not join our Discord? Feel free
+            to drop in to ask questions, get updates on progress, and be able to provide valuable contributions and
+            feedback.
+        </p>
+        <p>
+            Tutorials, tips, and additional resources will come soon!
+        </p>
+        <br />
+        <p class="lead">
+            <a class="btn btn-lg" href="https://discord.gg/Jx4cNGG">Slide into our server</a>
+        </p>
+    </main>
+    <footer class="mastfoot mt-auto">
+        <div class="inner">
+            &copy; 2020, Nekokatt, MIT<br>&copy; 2021, davfsa, MIT
+        </div>
+    </footer>
+</div>
+<script src="https://code.jquery.com/jquery-3.5.0.min.js" integrity="sha256-xNzN2a4ltkB44Mc/Jz3pT4iU1cmeR0FkXs4pru/JxaQ=" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"  referrerpolicy="no-referrer"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.3.1/highlight.min.js" integrity="sha512-Pbb8o120v5/hN/a6LjF4N4Lxou+xYZ0QcVF8J6TWhBbHmctQWd8O6xTDmHpE/91OjPzCk4JRoiJsexHYg4SotQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+    hljs.initHighlightingOnLoad();
+    $(document).ready(function () {
+        $("header").fadeIn(1500);
+        $("main").fadeIn(1500);
+        $("footer").fadeIn(1500);
+    });
+</script>
 </body>
-
 </html>

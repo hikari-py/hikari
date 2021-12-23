@@ -68,7 +68,7 @@ class ActivityType(int, enums.Enum):
     STREAMING = 1
     """Shows up as `Streaming` and links to a Twitch or YouTube stream/video.
 
-    !!! warning
+    .. warning::
         You **MUST** provide a valid Twitch or YouTube stream URL to the
         activity you create in order for this to be valid. If you fail to
         do this, then the activity **WILL NOT** update.
@@ -86,7 +86,7 @@ class ActivityType(int, enums.Enum):
     To set an emoji with the status, place a unicode emoji or Discord emoji
     (`:smiley:`) as the first part of the status activity name.
 
-    !!! warning
+    .. warning::
         Bots **DO NOT** support setting custom statuses.
     """
 
@@ -168,8 +168,8 @@ class ActivityAssets:
     def large_image_url(self) -> typing.Optional[files.URL]:
         """Large image asset URL.
 
-        !!! note
-            This will be `builtins.None` if no large image asset exists or if the
+        .. note::
+            This will be `None` if no large image asset exists or if the
             asset's dynamic URL (indicated by a `{name}:` prefix) is not known.
         """
         try:
@@ -181,30 +181,30 @@ class ActivityAssets:
     def make_large_image_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the large image asset URL for this application.
 
-        !!! note
+        .. note::
             `ext` and `size` are ignored for images hosted outside of Discord
             or on Discord's media proxy.
 
         Parameters
         ----------
-        ext : builtins.str
+        ext : str
             The extension to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : builtins.int
+        size : int
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL, or `builtins.None` if no icon exists.
+            The URL, or `None` if no icon exists.
 
         Raises
         ------
-        builtins.ValueError
+        ValueError
             If the size is not an integer power of 2 between 16 and 4096
             (inclusive).
-        builtins.RuntimeError
+        RuntimeError
             If `ActivityAssets.large_image` points towards an unknown asset type.
         """
         return self._make_asset_url(self.large_image, ext, size)
@@ -213,8 +213,8 @@ class ActivityAssets:
     def small_image_url(self) -> typing.Optional[files.URL]:
         """Small image asset URL.
 
-        !!! note
-            This will be `builtins.None` if no large image asset exists or if the
+        .. note::
+            This will be `None` if no large image asset exists or if the
             asset's dynamic URL (indicated by a `{name}:` prefix) is not known.
         """
         try:
@@ -228,24 +228,24 @@ class ActivityAssets:
 
         Parameters
         ----------
-        ext : builtins.str
+        ext : str
             The extension to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : builtins.int
+        size : int
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL, or `builtins.None` if no icon exists.
+            The URL, or `None` if no icon exists.
 
         Raises
         ------
-        builtins.ValueError
+        ValueError
             If the size is not an integer power of 2 between 16 and 4096
             (inclusive).
-        builtins.RuntimeError
+        RuntimeError
             If `ActivityAssets.small_image` points towards an unknown asset type.
         """
         return self._make_asset_url(self.small_image, ext, size)

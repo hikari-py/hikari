@@ -260,12 +260,12 @@ class GuildTypingEvent(TypingEvent):
     def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
         """Get the cached object of the guild this typing event occurred in.
 
-        If the guild is not found then this will return `builtins.None`.
+        If the guild is not found then this will return `None`.
 
         Returns
         -------
         typing.Optional[hikari.guilds.GatewayGuild]
-            The object of the gateway guild if found else `builtins.None`.
+            The object of the gateway guild if found else `None`.
         """
         if not isinstance(self.app, traits.CacheAware):
             return None

@@ -112,10 +112,10 @@ class StickerPack(snowflakes.Unique):
 
         Parameters
         ----------
-        ext : builtins.str
+        ext : str
             The extension to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : builtins.int
+        size : int
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
 
@@ -126,7 +126,7 @@ class StickerPack(snowflakes.Unique):
 
         Raises
         ------
-        builtins.ValueError
+        ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
         return routes.CDN_STICKER_PACK_BANNER.compile_to_file(

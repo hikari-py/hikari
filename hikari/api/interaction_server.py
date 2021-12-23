@@ -52,7 +52,7 @@ instance of the relevant `hikari.api.special_endpoints.InteractionResponseBuilde
 subclass for the provided interaction type which will instruct the server on how
 to respond.
 
-!!! note
+.. note::
     For the standard implementations of
     `hikari.api.special_endpoints.InteractionResponseBuilder` see
     `hikari.impl.special_endpoints`.
@@ -85,31 +85,21 @@ class Response(typing.Protocol):
 
     @property
     def payload(self) -> typing.Optional[bytes]:
-        """Payload to provide in the response.
-
-        Returns
-        -------
-        typing.Optional[builtins.bytes]
-            The bytes payload to respond with if applicable else `builtins.None`.
-        """
+        """Payload to provide in the response."""
         raise NotImplementedError
 
     @property
     def status_code(self) -> int:
         """Status code that should be used to respond.
 
-        Returns
-        -------
-        builtins.int
-            The response code to use for the response. This should be a valid
-            HTTP status code, for more information see
-            https://developer.mozilla.org/en-US/docs/Web/HTTP/Status.
+        For more information see
+        <https://developer.mozilla.org/en-US/docs/Web/HTTP/Status>.
         """
         raise NotImplementedError
 
 
 class InteractionServer(abc.ABC):
-    """Interface for an implementation of a Interactions compatible REST server."""
+    """Interface for an implementation of an interactions compatible REST server."""
 
     __slots__: typing.Sequence[str] = ()
 
@@ -119,11 +109,11 @@ class InteractionServer(abc.ABC):
 
         Parameters
         ----------
-        body : builtins.bytes
+        body : bytes
             The interaction payload.
-        signature : builtins.bytes
+        signature : bytes
             Value of the `"X-Signature-Ed25519"` header used to verify the body.
-        timestamp : builtins.bytes
+        timestamp : bytes
             Value of the `"X-Signature-Timestamp"` header used to verify the body.
 
         Returns
@@ -178,7 +168,7 @@ class InteractionServer(abc.ABC):
         -------
         typing.Optional[ListenersT[hikari.interactions.base_interactions.PartialInteraction, hikari.api.special_endpoints.InteractionResponseBuilder]
             The callback registered for the provided interaction type if found,
-            else `builtins.None`.
+            else `None`.
         """  # noqa E501 - Line too long
 
     @typing.overload
@@ -235,18 +225,18 @@ class InteractionServer(abc.ABC):
         interaction_type : typing.Type[hikari.interactions.base_interactions.PartialInteraction]
             The type of interaction this listener should be registered for.
         listener : typing.Optional[ListenerT[hikari.interactions.base_interactions.PartialInteraction, hikari.api.special_endpoints.InteractionResponseBuilder]]
-            The asynchronous listener callback to set or `builtins.None` to
+            The asynchronous listener callback to set or `None` to
             unset the previous listener.
 
         Other Parameters
         ----------------
-        replace : builtins.bool
+        replace : bool
             Whether this call should replace the previously set listener or not.
-            This call will raise a `builtins.ValueError` if set to `builtins.False`
+            This call will raise a `ValueError` if set to `False`
             when a listener is already set.
 
         Raises
         ------
-        builtins.TypeError
-            If `replace` is `builtins.False` when a listener is already set.
+        TypeError
+            If `replace` is `False` when a listener is already set.
         """  # noqa E501 - Line too long

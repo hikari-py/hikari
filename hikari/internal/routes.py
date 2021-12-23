@@ -78,12 +78,12 @@ class CompiledRoute:
 
         Parameters
         ----------
-        base_url : builtins.str
+        base_url : str
             The base of the URL to prepend to the compiled path.
 
         Returns
         -------
-        builtins.str
+        str
             The full URL for the route.
         """
         return base_url + self.compiled_path
@@ -96,13 +96,13 @@ class CompiledRoute:
 
         Parameters
         ----------
-        initial_bucket_hash : builtins.str
+        initial_bucket_hash : str
             The initial bucket hash provided by Discord in the HTTP headers
             for a given response.
 
         Returns
         -------
-        builtins.str
+        str
             The input hash amalgamated with a hash code produced by the
             major parameters in this compiled route instance.
         """
@@ -123,9 +123,9 @@ class Route:
 
     Parameters
     ----------
-    method : builtins.str
+    method : str
         The HTTP method
-    path_template : builtins.str
+    path_template : str
         The template string for the path to use.
     """
 
@@ -204,8 +204,8 @@ class CDNRoute:
         if not values:
             raise ValueError(f"{self.path_template} must have at least one valid format set")
 
-    sizable: bool = attr.field(default=True, kw_only=True, repr=False, hash=False, eq=False)
-    """`builtins.True` if a `size` param can be specified, or `builtins.False` otherwise."""
+    is_sizable: bool = attr.field(default=True, kw_only=True, repr=False, hash=False, eq=False)
+    """Whether a `size` param can be specified."""
 
     def compile(
         self,
@@ -219,30 +219,29 @@ class CDNRoute:
 
         Parameters
         ----------
-        base_url : builtins.str
+        base_url : str
             The base URL for the CDN. The generated route is concatenated onto
             this.
-        file_format : builtins.str
+        file_format : str
             The file format to use for the asset.
-        size : typing.Optional[builtins.int]
-            The custom size query parameter to set. If `builtins.None`,
+        size : typing.Optional[int]
+            The custom size query parameter to set. If `None`,
             it is not passed.
         **kwargs : typing.Any
             Parameters to interpolate into the path template.
 
         Returns
         -------
-        builtins.str
+        str
             The full asset URL.
 
         Raises
         ------
-        builtins.TypeError
+        TypeError
             If a GIF is requested, but the asset is not animated;
             if an invalid file format for the endpoint is passed; or if a `size`
-            is passed but the route is not `sizable`.
-
-        builtins.ValueError
+            is passed but the route is not sizable.
+        ValueError
             If `size` is specified, but is not an integer power of `2` between
             `16` and `4096` inclusive or is negative.
         """
@@ -262,7 +261,7 @@ class CDNRoute:
         url = base_url + self.path_template.format(**kwargs) + f".{file_format}"
 
         if size is not None:
-            if not self.sizable:
+            if not self.is_sizable:
                 raise TypeError("This asset cannot be resized.")
 
             if size < 0:
@@ -548,7 +547,7 @@ CDN_GUILD_DISCOVERY_SPLASH: typing.Final[CDNRoute] = CDNRoute(
 )
 CDN_GUILD_BANNER: typing.Final[CDNRoute] = CDNRoute("/banners/{guild_id}/{hash}", {PNG, *JPEG_JPG, WEBP, GIF})
 
-CDN_DEFAULT_USER_AVATAR: typing.Final[CDNRoute] = CDNRoute("/embed/avatars/{discriminator}", {PNG}, sizable=False)
+CDN_DEFAULT_USER_AVATAR: typing.Final[CDNRoute] = CDNRoute("/embed/avatars/{discriminator}", {PNG}, is_sizable=False)
 CDN_USER_AVATAR: typing.Final[CDNRoute] = CDNRoute("/avatars/{user_id}/{hash}", {PNG, *JPEG_JPG, WEBP, GIF})
 CDN_USER_BANNER: typing.Final[CDNRoute] = CDNRoute("/banners/{user_id}/{hash}", {PNG, *JPEG_JPG, WEBP, GIF})
 CDN_MEMBER_AVATAR: typing.Final[CDNRoute] = CDNRoute(
@@ -568,7 +567,7 @@ CDN_TEAM_ICON: typing.Final[CDNRoute] = CDNRoute("/team-icons/{team_id}/{hash}",
 # undocumented on the Discord docs.
 CDN_CHANNEL_ICON: typing.Final[CDNRoute] = CDNRoute("/channel-icons/{channel_id}/{hash}", {PNG, *JPEG_JPG, WEBP})
 
-CDN_STICKER: typing.Final[CDNRoute] = CDNRoute("/stickers/{sticker_id}", {PNG, LOTTIE}, sizable=False)
+CDN_STICKER: typing.Final[CDNRoute] = CDNRoute("/stickers/{sticker_id}", {PNG, LOTTIE}, is_sizable=False)
 CDN_STICKER_PACK_BANNER: typing.Final[CDNRoute] = CDNRoute(
     "/app-assets/710982414301790216/store/{hash}", {PNG, *JPEG_JPG, WEBP}
 )

@@ -38,7 +38,6 @@ if typing.TYPE_CHECKING:
 
     from hikari import channels as channels_
     from hikari import colors
-    from hikari import locales
     from hikari import permissions as permissions_
     from hikari import snowflakes
     from hikari import users
@@ -64,7 +63,7 @@ class TemplateRole(guilds.PartialRole):
     is_hoisted: bool = attr.field(eq=False, hash=False, repr=True)
     """Whether this role is hoisting the members it's attached to in the member list.
 
-    members will be hoisted under their highest role where this is set to `builtins.True`.
+    members will be hoisted under their highest role where this is set to `True`.
     """
 
     is_mentionable: bool = attr.field(eq=False, hash=False, repr=False)
@@ -92,7 +91,7 @@ class TemplateGuild(guilds.PartialGuild):
     )
     """The setting for the explicit content filter in this guild."""
 
-    preferred_locale: typing.Union[str, locales.Locale] = attr.field(eq=False, hash=False, repr=False)
+    preferred_locale: str = attr.field(eq=False, hash=False, repr=False)
     """The preferred locale to use for this guild.
 
     This can only be change if `GuildFeature.COMMUNITY` is in `Guild.features`
@@ -109,7 +108,7 @@ class TemplateGuild(guilds.PartialGuild):
     roles: typing.Mapping[snowflakes.Snowflake, TemplateRole] = attr.field(eq=False, hash=False, repr=False)
     """The roles in the guild.
 
-    !!! note
+    .. note::
         `hikari.guilds.Role.id` will be a unique placeholder on all the role
         objects found attached this template guild.
     """
@@ -119,7 +118,7 @@ class TemplateGuild(guilds.PartialGuild):
     )
     """The channels for the guild.
 
-    !!! note
+    .. note::
         `hikari.channels.GuildChannel.id` will be a unique placeholder on all
         the channel objects found attached this template guild.
     """
@@ -127,11 +126,11 @@ class TemplateGuild(guilds.PartialGuild):
     afk_channel_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
     """The ID for the channel that AFK voice users get sent to.
 
-    If `builtins.None`, then no AFK channel is set up for this guild.
+    If `None`, then no AFK channel is set up for this guild.
     """
 
     system_channel_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
-    """The ID of the system channel or `builtins.None` if it is not enabled.
+    """The ID of the system channel or `None` if it is not enabled.
 
     Welcome messages and Nitro boost messages may be sent to this channel.
     """

@@ -1,0 +1,443 @@
+:root {
+    --pdoc-background: #212529;
+}
+
+.pdoc {
+    --text: #f7f7f7;
+    --muted: #9d9d9d;
+    --link: #d264d0;
+    --link-hover: #3989ff;
+    --code: #333;
+    --active: #555;
+    --accent: #343434;
+    --accent2: #555;
+    --nav-hover: rgba(0, 0, 0, 0.1);
+    --def: #ff79c6;
+    --name: #61aeee;
+    --annotation: #F471E6;
+
+    font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+/* Colors of overall document */
+body {
+    background-color: var(--pdoc-background);
+}
+
+/* Responsive Layout */
+html, body {
+    width: 100%;
+    height: 100%;
+    word-break: break-word;
+}
+
+@media (max-width: 1079px) {
+    :root {
+        --sidebar-width: 30rem;
+    }
+
+    html {
+        font-size: 3vw;
+    }
+
+    main, header {
+        padding: 2rem 3vw 0 1.5rem;
+    }
+
+    /* Prevent scrolling when sidebar is open */
+    html:not(.sidebar-hidden) body {
+        overflow: hidden !important;
+    }
+
+    .sidebar-hidden nav.pdoc {
+        transform: translateX(calc(0px - var(--sidebar-width)));
+    }
+
+    nav.pdoc {
+        transition: transform 0.2s;
+    }
+
+    /* We only want to show this on mobile */
+    .pdoc .sidebar-toggle {
+        position: fixed;
+        top: 0;
+        bottom: calc(100% - 6rem);
+        left: var(--sidebar-width);
+
+        border-left: 5px solid grey;
+        border-top: 5px solid rgba(0, 0, 0, 0);
+        border-bottom: 5px solid rgba(0, 0, 0, 0);
+    }
+}
+
+@media (min-width: 1080px) {
+    :root {
+        --sidebar-width: clamp(12.5rem, 28vw, 26rem);
+    }
+
+    main, header {
+        padding: 3rem 2rem 3rem calc(var(--sidebar-width) + 3rem);
+    }
+}
+
+/* Nav */
+nav.pdoc {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    height: 100vh;
+    width: var(--sidebar-width);
+
+    z-index: 1;
+}
+
+.pdoc .sidebar {
+    height: 100vh;
+    overflow: auto;
+
+    padding: 1rem 1rem;
+
+    background-color: var(--accent);
+    border-right: 1px solid var(--accent2);
+    scrollbar-color: var(--accent2) transparent /* Scrollbar color on Firefox */
+}
+
+.pdoc .sidebar::-webkit-scrollbar-thumb {
+    background-color: var(--accent2); /* Scrollbar color on Chromium-based browsers */
+}
+
+.pdoc .sidebar input[type=search] {
+    display: block;
+    outline-offset: 0;
+    width: 102%;
+}
+
+.pdoc .sidebar ul {
+    list-style: none;
+    padding-left: 1rem;
+}
+
+.pdoc .sidebar li {
+    display: block;
+    margin: 0;
+    padding: .2rem 0 .2rem .5rem;
+    transition: all 100ms;
+}
+
+.pdoc .sidebar > ul > li {
+    padding-left: 0;
+}
+
+.pdoc .sidebar li:hover {
+    background-color: var(--nav-hover);
+}
+
+.pdoc .sidebar a:hover {
+    color: var(--text);
+}
+
+.pdoc .sidebar a {
+    display: block;
+}
+
+.pdoc .sidebar > h2:first-of-type {
+    margin-top: 1rem;
+}
+
+.pdoc .sidebar .class:before {
+    content: "class ";
+    color: var(--muted);
+}
+
+.pdoc .sidebar .function:after {
+    content: "()";
+    color: var(--muted);
+}
+
+.pdoc .sidebar .sidebar-buttons {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.pdoc .sidebar .sidebar-buttons .push {
+    margin-left: auto;
+}
+
+.pdoc .svg-button > svg {
+    width: 1.5rem;
+    margin-left: .5rem;
+    cursor: pointer;
+}
+
+/* General styling */
+html, main {
+    scroll-behavior: smooth;
+}
+
+.pdoc {
+    color: var(--text);
+    /* enforce some styling even if bootstrap reboot is not included */
+    box-sizing: border-box;
+    line-height: 1.5;
+    /* override background from pygments */
+    background: none;
+}
+
+.pdoc h1, .pdoc h2, .pdoc h3 {
+    font-weight: 300;
+    margin: .3em 0;
+    padding: .2em 0;
+}
+
+.pdoc a {
+    text-decoration: none;
+    color: var(--link);
+}
+
+.pdoc a:hover {
+    color: var(--link-hover);
+}
+
+.pdoc blockquote {
+    margin-left: 2rem;
+}
+
+.pdoc pre {
+    background-color: var(--code);
+    border-top: 1px solid var(--accent2);
+    border-bottom: 1px solid var(--accent2);
+    margin-bottom: 1em;
+    padding: .5rem 0 .5rem .5rem;
+    overflow-x: auto;
+}
+
+.pdoc code {
+    color: var(--text);
+    padding: .2em .4em;
+    margin: 0;
+    font-size: 85%;
+    background-color: var(--code);
+    border-radius: 6px;
+}
+
+.pdoc a > code {
+    color: inherit;
+}
+
+.pdoc pre > code {
+    display: inline-block;
+    font-size: inherit;
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+/* Page Heading */
+.pdoc .modulename {
+    margin-top: 0;
+    font-weight: bold;
+}
+
+.pdoc .modulename a {
+    color: var(--link);
+    transition: 100ms all;
+}
+
+/* GitHub Button */
+.pdoc .git-button {
+    float: right;
+    border: solid var(--link) 1px;
+}
+
+.pdoc .git-button:hover {
+    background-color: var(--link);
+    color: var(--pdoc-background);
+}
+
+/* View Source */
+.pdoc details {
+    --shift: -2.4rem;
+    text-align: right;
+    margin-top: var(--shift);
+    margin-bottom: calc(0px - var(--shift));
+    clear: both;
+    /*
+     stay on top of .attr even if it is filtered, see
+     https://stackoverflow.com/questions/25764404/why-does-stacking-order-change-on-webkit-filter-hover
+     */
+    filter: opacity(1);
+}
+
+.pdoc details:not([open]) {
+    height: 0;
+    overflow: visible;
+}
+
+.pdoc details > summary {
+    font-size: .75rem;
+    cursor: pointer;
+    color: var(--muted);
+    border-width: 0;
+    padding: 0 .7em;
+    /* Firefox hides the arrow if we specify inline-block,
+       see https://bugzilla.mozilla.org/show_bug.cgi?id=1270163.
+       Chrome on the other hand does not support the two-property syntax yet,
+       so the last statement is ignored. See https://crbug.com/995106. */
+    display: inline-block;
+    display: inline list-item;
+    user-select: none;
+}
+
+.pdoc details > summary:focus {
+    outline: 0;
+}
+
+.pdoc details > div {
+    margin-top: calc(0px - var(--shift) / 2);
+    text-align: left;
+}
+
+/* Docstrings */
+.pdoc .docstring {
+    margin: 0 0 2rem 2rem;
+}
+
+.pdoc .docstring pre {
+    margin-left: 1em;
+    margin-right: 1em;
+}
+
+.pdoc .docstring li {
+    margin-bottom: 15px;
+}
+
+.pdoc .docstring li:last-child {
+    margin-bottom: 0;
+}
+
+.pdoc .docstring p {
+    margin-top: 0;
+    margin-bottom: .5rem;
+}
+
+
+/* Highlight focused element */
+.pdoc h1:target,
+.pdoc h2:target,
+.pdoc h3:target,
+.pdoc h4:target,
+.pdoc h5:target,
+.pdoc h6:target {
+    background-color: var(--active);
+    box-shadow: -1rem 0 0 0 var(--active);
+}
+
+.pdoc div:target > .attr,
+.pdoc section:target > .attr,
+.pdoc dd:target > a {
+    background-color: var(--active);
+}
+
+.pdoc .attr:hover {
+    filter: contrast(0.95);
+}
+
+/* Header link */
+.pdoc .headerlink {
+    position: absolute;
+    width: 0;
+    margin-left: -1.5rem;
+    line-height: 1.4rem;
+    /*font-size: 1.5rem;*/
+    font-weight: normal;
+    transition: all 100ms ease-in-out;
+    opacity: 0;
+}
+
+.pdoc .attr > .headerlink {
+    margin-left: -2.5rem;
+}
+
+.pdoc *:hover > .headerlink,
+.pdoc *:target > .attr > .headerlink {
+    opacity: 1;
+}
+
+/* Attributes */
+.pdoc .attr {
+    display: block;
+    color: var(--text);
+    margin: 1rem 0 .5rem;
+    /*
+    lots of padding on the right to accommodate the view source button.
+    This is not ideal, but probably good enough for now.
+    */
+    padding: .4rem 5rem .4rem 1rem;
+    background-color: var(--accent);
+}
+
+.pdoc .classattr {
+    margin-left: 2rem;
+}
+
+.pdoc .name {
+    color: var(--name);
+    font-weight: bold;
+}
+
+.pdoc .def {
+    color: var(--def);
+    font-weight: bold;
+}
+
+.pdoc .signature {
+    white-space: pre-wrap;
+}
+
+.pdoc .annotation {
+    color: var(--annotation);
+}
+
+/* Inherited Members */
+.pdoc .inherited {
+    margin-left: 2rem;
+}
+
+.pdoc .inherited div {
+    margin-left: 2rem;
+}
+
+.pdoc .inherited dt {
+    font-weight: 700;
+}
+
+.pdoc .inherited dt, .pdoc .inherited dd {
+    display: inline;
+    margin-left: 0;
+    margin-bottom: .5rem;
+}
+
+.pdoc .inherited dd:not(:last-child):after {
+    content: ", ";
+}
+
+.pdoc .inherited .class:before {
+    content: "class ";
+}
+
+.pdoc .inherited .function a:after {
+    content: "()";
+}
+
+/* Search results */
+.pdoc .search-result .docstring {
+    overflow: auto;
+    max-height: 25vh;
+}
+
+.pdoc .search-result.focused > .attr {
+    background-color: var(--active);
+}
