@@ -53,9 +53,9 @@ __all__: typing.List[str] = [
 import http
 import typing
 
-import attr
+import attrs
 
-from hikari.internal import attr_extensions
+from hikari.internal import attrs_extensions
 from hikari.internal import data_binding
 from hikari.internal import enums
 
@@ -66,8 +66,8 @@ if typing.TYPE_CHECKING:
     from hikari.internal import routes
 
 
-@attr_extensions.with_copy
-@attr.define(auto_exc=True, repr=False, init=False, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(auto_exc=True, repr=False, init=False, weakref_slot=False)
 class HikariError(RuntimeError):
     """Base for an error raised by this API.
 
@@ -78,8 +78,8 @@ class HikariError(RuntimeError):
     """
 
 
-@attr_extensions.with_copy
-@attr.define(auto_exc=True, repr=False, init=False, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(auto_exc=True, repr=False, init=False, weakref_slot=False)
 class HikariWarning(RuntimeWarning):
     """Base for a warning raised by this API.
 
@@ -90,18 +90,18 @@ class HikariWarning(RuntimeWarning):
     """
 
 
-@attr.define(auto_exc=True, repr=False, weakref_slot=False)
+@attrs.define(auto_exc=True, repr=False, weakref_slot=False)
 class HikariInterrupt(KeyboardInterrupt, HikariError):
     """Exception raised when a kill signal is handled internally."""
 
-    signum: int = attr.field()
+    signum: int = attrs.field()
     """The signal number that was raised."""
 
-    signame: str = attr.field()
+    signame: str = attrs.field()
     """The signal name that was raised."""
 
 
-@attr.define(auto_exc=True, repr=False, weakref_slot=False)
+@attrs.define(auto_exc=True, repr=False, weakref_slot=False)
 class ComponentStateConflictError(HikariError):
     """Exception thrown when an action cannot be executed in the component's current state.
 
@@ -109,29 +109,29 @@ class ComponentStateConflictError(HikariError):
     running or haven't been started yet.
     """
 
-    reason: str = attr.field()
+    reason: str = attrs.field()
     """A string to explain the issue."""
 
     def __str__(self) -> str:
         return self.reason
 
 
-@attr.define(auto_exc=True, repr=False, weakref_slot=False)
+@attrs.define(auto_exc=True, repr=False, weakref_slot=False)
 class UnrecognisedEntityError(HikariError):
     """An exception thrown when an unrecognised entity is found."""
 
-    reason: str = attr.field()
+    reason: str = attrs.field()
     """A string to explain the issue."""
 
     def __str__(self) -> str:
         return self.reason
 
 
-@attr.define(auto_exc=True, repr=False, weakref_slot=False)
+@attrs.define(auto_exc=True, repr=False, weakref_slot=False)
 class GatewayError(HikariError):
     """A base exception type for anything that can be thrown by the Gateway."""
 
-    reason: str = attr.field()
+    reason: str = attrs.field()
     """A string to explain the issue."""
 
     def __str__(self) -> str:
@@ -171,7 +171,7 @@ class ShardCloseCode(int, enums.Enum):
         return (self.value // 1000) == 1
 
 
-@attr.define(auto_exc=True, repr=False, weakref_slot=False)
+@attrs.define(auto_exc=True, repr=False, weakref_slot=False)
 class GatewayConnectionError(GatewayError):
     """An exception thrown if a connection issue occurs."""
 
@@ -179,11 +179,11 @@ class GatewayConnectionError(GatewayError):
         return f"Failed to connect to server: {self.reason!r}"
 
 
-@attr.define(auto_exc=True, repr=False, weakref_slot=False)
+@attrs.define(auto_exc=True, repr=False, weakref_slot=False)
 class GatewayServerClosedConnectionError(GatewayError):
     """An exception raised when the server closes the connection."""
 
-    code: typing.Union[ShardCloseCode, int, None] = attr.field(default=None)
+    code: typing.Union[ShardCloseCode, int, None] = attrs.field(default=None)
     """Return the close code that was received, if there is one.
 
     Returns
@@ -196,7 +196,7 @@ class GatewayServerClosedConnectionError(GatewayError):
         If no close code was received, this will be `builtins.None`.
     """
 
-    can_reconnect: bool = attr.field(default=False)
+    can_reconnect: bool = attrs.field(default=False)
     """Return `builtins.True` if we can recover from this closure.
 
     If `builtins.True`, it will try to reconnect after this is raised rather
@@ -214,34 +214,34 @@ class GatewayServerClosedConnectionError(GatewayError):
         return f"Server closed connection with code {self.code} ({self.reason})"
 
 
-@attr.define(auto_exc=True, repr=False, weakref_slot=False)
+@attrs.define(auto_exc=True, repr=False, weakref_slot=False)
 class HTTPError(HikariError):
     """Base exception raised if an HTTP error occurs while making a request."""
 
-    message: str = attr.field()
+    message: str = attrs.field()
     """The error message."""
 
 
-@attr.define(auto_exc=True, repr=False, weakref_slot=False)
+@attrs.define(auto_exc=True, repr=False, weakref_slot=False)
 class HTTPResponseError(HTTPError):
     """Base exception for an erroneous HTTP response."""
 
-    url: str = attr.field()
+    url: str = attrs.field()
     """The URL that produced this error message."""
 
-    status: http.HTTPStatus = attr.field()
+    status: http.HTTPStatus = attrs.field()
     """The HTTP status code for the response."""
 
-    headers: data_binding.Headers = attr.field()
+    headers: data_binding.Headers = attrs.field()
     """The headers received in the error response."""
 
-    raw_body: typing.Any = attr.field()
+    raw_body: typing.Any = attrs.field()
     """The response body."""
 
-    message: str = attr.field(default="")
+    message: str = attrs.field(default="")
     """The error message."""
 
-    code: int = attr.field(default=0)
+    code: int = attrs.field(default=0)
     """The error code."""
 
     def __str__(self) -> str:
@@ -266,7 +266,7 @@ class HTTPResponseError(HTTPError):
         return f"{name_value}:{code_str} '{body[:200]}{'...' if chomped else ''}' for {self.url}"
 
 
-@attr.define(auto_exc=True, repr=False, weakref_slot=False)
+@attrs.define(auto_exc=True, repr=False, weakref_slot=False)
 class ClientHTTPResponseError(HTTPResponseError):
     """Base exception for an erroneous HTTP response that is a client error.
 
@@ -275,14 +275,14 @@ class ClientHTTPResponseError(HTTPResponseError):
     """
 
 
-@attr.define(auto_exc=True, repr=False, weakref_slot=False)
+@attrs.define(auto_exc=True, repr=False, weakref_slot=False)
 class BadRequestError(ClientHTTPResponseError):
     """Raised when you send an invalid request somehow."""
 
-    status: http.HTTPStatus = attr.field(default=http.HTTPStatus.BAD_REQUEST, init=False)
+    status: http.HTTPStatus = attrs.field(default=http.HTTPStatus.BAD_REQUEST, init=False)
     """The HTTP status code for the response."""
 
-    errors: typing.Optional[typing.Dict[str, data_binding.JSONObject]] = attr.field(default=None, kw_only=True)
+    errors: typing.Optional[typing.Dict[str, data_binding.JSONObject]] = attrs.field(default=None, kw_only=True)
     """Dict of top level field names to field specific error paths.
 
     For more information, this error format is loosely defined at
@@ -290,7 +290,7 @@ class BadRequestError(ClientHTTPResponseError):
     returned for 50035 errors.
     """
 
-    _cached_str: str = attr.field(default=None, init=False)
+    _cached_str: str = attrs.field(default=None, init=False)
 
     def __str__(self) -> str:
         if self._cached_str:
@@ -304,15 +304,15 @@ class BadRequestError(ClientHTTPResponseError):
         return value
 
 
-@attr.define(auto_exc=True, repr=False, weakref_slot=False)
+@attrs.define(auto_exc=True, repr=False, weakref_slot=False)
 class UnauthorizedError(ClientHTTPResponseError):
     """Raised when you are not authorized to access a specific resource."""
 
-    status: http.HTTPStatus = attr.field(default=http.HTTPStatus.UNAUTHORIZED, init=False)
+    status: http.HTTPStatus = attrs.field(default=http.HTTPStatus.UNAUTHORIZED, init=False)
     """The HTTP status code for the response."""
 
 
-@attr.define(auto_exc=True, repr=False, weakref_slot=False)
+@attrs.define(auto_exc=True, repr=False, weakref_slot=False)
 class ForbiddenError(ClientHTTPResponseError):
     """Raised when you are not allowed to access a specific resource.
 
@@ -321,19 +321,19 @@ class ForbiddenError(ClientHTTPResponseError):
     to use a specific endpoint.
     """
 
-    status: http.HTTPStatus = attr.field(default=http.HTTPStatus.FORBIDDEN, init=False)
+    status: http.HTTPStatus = attrs.field(default=http.HTTPStatus.FORBIDDEN, init=False)
     """The HTTP status code for the response."""
 
 
-@attr.define(auto_exc=True, repr=False, weakref_slot=False)
+@attrs.define(auto_exc=True, repr=False, weakref_slot=False)
 class NotFoundError(ClientHTTPResponseError):
     """Raised when something is not found."""
 
-    status: http.HTTPStatus = attr.field(default=http.HTTPStatus.NOT_FOUND, init=False)
+    status: http.HTTPStatus = attrs.field(default=http.HTTPStatus.NOT_FOUND, init=False)
     """The HTTP status code for the response."""
 
 
-@attr.define(auto_exc=True, kw_only=True, repr=False, weakref_slot=False)
+@attrs.define(auto_exc=True, kw_only=True, repr=False, weakref_slot=False)
 class RateLimitedError(ClientHTTPResponseError):
     """Raised when a non-global rate limit that cannot be handled occurs.
 
@@ -350,16 +350,16 @@ class RateLimitedError(ClientHTTPResponseError):
     collection of attributes as the previous request.
     """
 
-    route: routes.CompiledRoute = attr.field()
+    route: routes.CompiledRoute = attrs.field()
     """The route that produced this error."""
 
-    retry_after: float = attr.field()
+    retry_after: float = attrs.field()
     """How many seconds to wait before you can reuse the route with the specific request."""
 
-    status: http.HTTPStatus = attr.field(default=http.HTTPStatus.TOO_MANY_REQUESTS, init=False)
+    status: http.HTTPStatus = attrs.field(default=http.HTTPStatus.TOO_MANY_REQUESTS, init=False)
     """The HTTP status code for the response."""
 
-    message: str = attr.field(init=False)
+    message: str = attrs.field(init=False)
     """The error message."""
 
     @message.default
@@ -367,7 +367,7 @@ class RateLimitedError(ClientHTTPResponseError):
         return f"You are being rate-limited for {self.retry_after:,} seconds on route {self.route}. Please slow down!"
 
 
-@attr.define(auto_exc=True, kw_only=True, repr=False, weakref_slot=False)
+@attrs.define(auto_exc=True, kw_only=True, repr=False, weakref_slot=False)
 class RateLimitTooLongError(HTTPError):
     """Internal error raised if the wait for a rate limit is too long.
 
@@ -380,25 +380,25 @@ class RateLimitTooLongError(HTTPError):
     will also have this rate limit.
     """
 
-    route: routes.CompiledRoute = attr.field()
+    route: routes.CompiledRoute = attrs.field()
     """The route that produced this error."""
 
-    retry_after: float = attr.field()
+    retry_after: float = attrs.field()
     """How many seconds to wait before you can retry this specific request."""
 
-    max_retry_after: float = attr.field()
+    max_retry_after: float = attrs.field()
     """How long the client is allowed to wait for at a maximum before raising."""
 
-    reset_at: float = attr.field()
+    reset_at: float = attrs.field()
     """UNIX timestamp of when this limit will be lifted."""
 
-    limit: int = attr.field()
+    limit: int = attrs.field()
     """The maximum number of calls per window for this rate limit."""
 
-    period: float = attr.field()
+    period: float = attrs.field()
     """How long the rate limit window lasts for from start to end."""
 
-    message: str = attr.field(init=False)
+    message: str = attrs.field(init=False)
     """The error message."""
 
     @message.default
@@ -428,7 +428,7 @@ class RateLimitTooLongError(HTTPError):
         return self.message
 
 
-@attr.define(auto_exc=True, repr=False, weakref_slot=False)
+@attrs.define(auto_exc=True, repr=False, weakref_slot=False)
 class InternalServerError(HTTPResponseError):
     """Base exception for an erroneous HTTP response that is a server error.
 
@@ -437,7 +437,7 @@ class InternalServerError(HTTPResponseError):
     """
 
 
-@attr.define(auto_exc=True, repr=False, init=False, weakref_slot=False)
+@attrs.define(auto_exc=True, repr=False, init=False, weakref_slot=False)
 class MissingIntentWarning(HikariWarning):
     """Warning raised when subscribing to an event that cannot be fired.
 
@@ -445,7 +445,7 @@ class MissingIntentWarning(HikariWarning):
     """
 
 
-@attr.define(auto_exc=True, repr=False, weakref_slot=False)
+@attrs.define(auto_exc=True, repr=False, weakref_slot=False)
 class BulkDeleteError(HikariError):
     """Exception raised when a bulk delete fails midway through a call.
 
@@ -453,10 +453,10 @@ class BulkDeleteError(HikariError):
     and will have a cause containing the initial exception.
     """
 
-    messages_deleted: snowflakes.SnowflakeishSequence[messages.PartialMessage] = attr.field()
+    messages_deleted: snowflakes.SnowflakeishSequence[messages.PartialMessage] = attrs.field()
     """Any message objects that were deleted before an exception occurred."""
 
-    messages_skipped: snowflakes.SnowflakeishSequence[messages.PartialMessage] = attr.field()
+    messages_skipped: snowflakes.SnowflakeishSequence[messages.PartialMessage] = attrs.field()
     """Any message objects that were skipped due to an exception."""
 
     @property
@@ -478,12 +478,12 @@ class BulkDeleteError(HikariError):
         return f"Error encountered when bulk deleting messages ({deleted}/{total} messages deleted)"
 
 
-@attr.define(auto_exc=True, repr=False, init=False, weakref_slot=False)
+@attrs.define(auto_exc=True, repr=False, init=False, weakref_slot=False)
 class VoiceError(HikariError):
     """Error raised when a problem occurs with the voice subsystem."""
 
 
-@attr.define(auto_exc=True, repr=False, weakref_slot=False)
+@attrs.define(auto_exc=True, repr=False, weakref_slot=False)
 class MissingIntentError(HikariError, ValueError):
     """Error raised when you try to perform an action without an intent.
 
@@ -491,7 +491,7 @@ class MissingIntentError(HikariError, ValueError):
     unavailable due to certain intents being disabled.
     """
 
-    intents: intents_.Intents = attr.field()
+    intents: intents_.Intents = attrs.field()
     """The combination of intents that are missing."""
 
     def __str__(self) -> str:

@@ -36,12 +36,12 @@ import abc
 import inspect
 import typing
 
-import attr
+import attrs
 
 from hikari import intents
 from hikari import traits
 from hikari.api import shard as gateway_shard
-from hikari.internal import attr_extensions
+from hikari.internal import attrs_extensions
 
 if typing.TYPE_CHECKING:
     import types
@@ -155,8 +155,8 @@ FailedCallbackT = typing.Callable[[FailedEventT], typing.Coroutine[typing.Any, t
 
 
 @no_recursive_throw()
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 class ExceptionEvent(Event, typing.Generic[FailedEventT]):
     """Event that is raised when another event handler raises an `Exception`.
 
@@ -168,7 +168,7 @@ class ExceptionEvent(Event, typing.Generic[FailedEventT]):
         side-effects on the application runtime.
     """
 
-    exception: Exception = attr.field()
+    exception: Exception = attrs.field()
     """Exception that was raised.
 
     Returns
@@ -177,7 +177,7 @@ class ExceptionEvent(Event, typing.Generic[FailedEventT]):
         Exception that was raised in the event handler.
     """
 
-    failed_event: FailedEventT = attr.field()
+    failed_event: FailedEventT = attrs.field()
     """Event instance that caused the exception.
 
     Returns
@@ -186,7 +186,7 @@ class ExceptionEvent(Event, typing.Generic[FailedEventT]):
         Event that was being processed when the exception occurred.
     """
 
-    failed_callback: FailedCallbackT[FailedEventT] = attr.field()
+    failed_callback: FailedCallbackT[FailedEventT] = attrs.field()
     """Event callback that threw an exception.
 
     Returns

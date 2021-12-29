@@ -35,7 +35,7 @@ import copy as std_copy
 import logging
 import typing
 
-import attr
+import attrs
 
 ModelT = typing.TypeVar("ModelT")
 SKIP_DEEP_COPY: typing.Final[str] = "skip_deep_copy"
@@ -62,7 +62,7 @@ def invalidate_deep_copy_cache() -> None:
 def get_fields_definition(
     cls: typing.Type[ModelT],
 ) -> typing.Tuple[
-    typing.Sequence[typing.Tuple[attr.Attribute[typing.Any], str]], typing.Sequence[attr.Attribute[typing.Any]]
+    typing.Sequence[typing.Tuple[attrs.Attribute[typing.Any], str]], typing.Sequence[attrs.Attribute[typing.Any]]
 ]:
     """Get a sequence of init key-words to their relative attribute.
 
@@ -79,7 +79,7 @@ def get_fields_definition(
     init_results = []
     non_init_results = []
 
-    for field in attr.fields(cls):
+    for field in attrs.fields(cls):
         if field.init:
             key_word = field.name[1:] if field.name.startswith("_") else field.name
             init_results.append((field, key_word))
@@ -154,9 +154,9 @@ def copy_attrs(model: ModelT) -> ModelT:
 
 
 def _normalize_kwargs_and_setters(
-    kwargs: typing.Sequence[typing.Tuple[attr.Attribute[typing.Any], str]],
-    setters: typing.Sequence[attr.Attribute[typing.Any]],
-) -> typing.Iterable[attr.Attribute[typing.Any]]:
+    kwargs: typing.Sequence[typing.Tuple[attrs.Attribute[typing.Any], str]],
+    setters: typing.Sequence[attrs.Attribute[typing.Any]],
+) -> typing.Iterable[attrs.Attribute[typing.Any]]:
     for attribute, _ in kwargs:
         yield attribute
 

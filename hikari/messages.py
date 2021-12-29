@@ -49,7 +49,7 @@ __all__: typing.List[str] = [
 
 import typing
 
-import attr
+import attrs
 
 from hikari import files
 from hikari import guilds
@@ -57,7 +57,7 @@ from hikari import snowflakes
 from hikari import traits
 from hikari import undefined
 from hikari import urls
-from hikari.internal import attr_extensions
+from hikari.internal import attrs_extensions
 from hikari.internal import enums
 from hikari.internal import routes
 
@@ -192,8 +192,8 @@ class MessageActivityType(int, enums.Enum):
     """Request to join an activity."""
 
 
-@attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class Attachment(snowflakes.Unique, files.WebResource):
     """Represents a file attached to a message.
 
@@ -201,31 +201,31 @@ class Attachment(snowflakes.Unique, files.WebResource):
     by passing it as an attached file when creating a message, etc.
     """
 
-    id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
+    id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
     """The ID of this entity."""
 
-    url: str = attr.field(hash=False, eq=False, repr=True)
+    url: str = attrs.field(hash=False, eq=False, repr=True)
     """The source URL of file."""
 
-    filename: str = attr.field(hash=False, eq=False, repr=True)
+    filename: str = attrs.field(hash=False, eq=False, repr=True)
     """The name of the file."""
 
-    media_type: typing.Optional[str] = attr.field(hash=False, eq=False, repr=True)
+    media_type: typing.Optional[str] = attrs.field(hash=False, eq=False, repr=True)
     """The media type of the file."""
 
-    size: int = attr.field(hash=False, eq=False, repr=True)
+    size: int = attrs.field(hash=False, eq=False, repr=True)
     """The size of the file in bytes."""
 
-    proxy_url: str = attr.field(hash=False, eq=False, repr=False)
+    proxy_url: str = attrs.field(hash=False, eq=False, repr=False)
     """The proxied URL of file."""
 
-    height: typing.Optional[int] = attr.field(hash=False, eq=False, repr=False)
+    height: typing.Optional[int] = attrs.field(hash=False, eq=False, repr=False)
     """The height of the image (if the file is an image)."""
 
-    width: typing.Optional[int] = attr.field(hash=False, eq=False, repr=False)
+    width: typing.Optional[int] = attrs.field(hash=False, eq=False, repr=False)
     """The width of the image (if the file is an image)."""
 
-    is_ephemeral: bool = attr.field(hash=False, eq=False, repr=True)
+    is_ephemeral: bool = attrs.field(hash=False, eq=False, repr=True)
     """Whether this attachment is ephemeral.
 
     This is a part of the ephemeral message response interactions feature
@@ -237,59 +237,59 @@ class Attachment(snowflakes.Unique, files.WebResource):
         return self.filename
 
 
-@attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class Reaction:
     """Represents a reaction in a message."""
 
-    count: int = attr.field(eq=False, hash=False, repr=True)
+    count: int = attrs.field(eq=False, hash=False, repr=True)
     """The number of times the emoji has been used to react."""
 
-    emoji: typing.Union[emojis_.UnicodeEmoji, emojis_.CustomEmoji] = attr.field(hash=True, repr=True)
+    emoji: typing.Union[emojis_.UnicodeEmoji, emojis_.CustomEmoji] = attrs.field(hash=True, repr=True)
     """The emoji used to react."""
 
-    is_me: bool = attr.field(eq=False, hash=False, repr=False)
+    is_me: bool = attrs.field(eq=False, hash=False, repr=False)
     """Whether the current user reacted using this emoji."""
 
     def __str__(self) -> str:
         return str(self.emoji)
 
 
-@attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=False, kw_only=True, weakref_slot=False)
 class MessageActivity:
     """Represents the activity of a rich presence-enabled message."""
 
-    type: typing.Union[MessageActivityType, int] = attr.field(repr=True)
+    type: typing.Union[MessageActivityType, int] = attrs.field(repr=True)
     """The type of message activity."""
 
-    party_id: typing.Optional[str] = attr.field(repr=True)
+    party_id: typing.Optional[str] = attrs.field(repr=True)
     """The party ID of the message activity."""
 
 
-@attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=False, kw_only=True, weakref_slot=False)
 class Mentions:
     """Description of mentions that exist in the message."""
 
     # We refer back to the containing message so that we can provide info about
     # entities that were not notified, and provide access to cached roles
     # through this mechanism.
-    _message: PartialMessage = attr.field(repr=False)
+    _message: PartialMessage = attrs.field(repr=False)
 
-    users: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, users_.User]] = attr.field()
+    users: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, users_.User]] = attrs.field()
     """Users who were notified by their mention in the message."""
 
-    role_ids: undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]] = attr.field()
+    role_ids: undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]] = attrs.field()
     """IDs of roles that were notified by their mention in the message."""
 
-    channels: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, channels_.PartialChannel]] = attr.field()
+    channels: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, channels_.PartialChannel]] = attrs.field()
     """Channel mentions that reference channels in the target crosspost's guild.
 
     If the message is not crossposted, this will always be empty.
     """
 
-    everyone: undefined.UndefinedOr[bool] = attr.field()
+    everyone: undefined.UndefinedOr[bool] = attrs.field()
     """Whether the message notifies using `@everyone` or `@here`."""
 
     @property
@@ -387,8 +387,8 @@ class Mentions:
         return results
 
 
-@attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=False, kw_only=True, weakref_slot=False)
 class MessageReference:
     """Represents information about a referenced message.
 
@@ -396,22 +396,22 @@ class MessageReference:
     message, pin add messages and replies.
     """
 
-    app: traits.RESTAware = attr.field(
-        repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
+    app: traits.RESTAware = attrs.field(
+        repr=False, eq=False, hash=False, metadata={attrs_extensions.SKIP_DEEP_COPY: True}
     )
     """The client application that models may use for procedures."""
 
-    id: typing.Optional[snowflakes.Snowflake] = attr.field(repr=True)
+    id: typing.Optional[snowflakes.Snowflake] = attrs.field(repr=True)
     """The ID of the original message.
 
     This will be `builtins.None` for channel follow add messages. This may
     point to a deleted message.
     """
 
-    channel_id: snowflakes.Snowflake = attr.field(repr=True)
+    channel_id: snowflakes.Snowflake = attrs.field(repr=True)
     """The ID of the channel that the original message originated from."""
 
-    guild_id: typing.Optional[snowflakes.Snowflake] = attr.field(repr=True)
+    guild_id: typing.Optional[snowflakes.Snowflake] = attrs.field(repr=True)
     """The ID of the guild that the message originated from.
 
     This will be `builtins.None` when the original message is not from
@@ -419,15 +419,15 @@ class MessageReference:
     """
 
 
-@attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class MessageApplication(guilds.PartialApplication):
     """The representation of an application used in messages."""
 
-    cover_image_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    cover_image_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """The CDN's hash of this application's cover image, used on the store."""
 
-    primary_sku_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
+    primary_sku_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the primary "Game SKU" of a game that's sold on Discord."""
 
     @property
@@ -476,21 +476,21 @@ class MessageApplication(guilds.PartialApplication):
         )
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, repr=True, hash=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, repr=True, hash=True, weakref_slot=False)
 class MessageInteraction:
     """Representation of information provided for a message from an interaction."""
 
-    id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
+    id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
     """ID of the interaction this message was sent by."""
 
-    type: typing.Union[base_interactions.InteractionType, int] = attr.field(eq=False, repr=True)
+    type: typing.Union[base_interactions.InteractionType, int] = attrs.field(eq=False, repr=True)
     """The type of interaction this message was created by."""
 
-    name: str = attr.field(eq=False, repr=True)
+    name: str = attrs.field(eq=False, repr=True)
     """Name of the application command the interaction is tied to."""
 
-    user: users_.User = attr.field(eq=False, repr=True)
+    user: users_.User = attrs.field(eq=False, repr=True)
     """Object of the user who invoked this interaction."""
 
 
@@ -589,15 +589,15 @@ The following values are included in this:
 """
 
 
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class PartialComponent:
     """Base class for all component entities."""
 
-    type: typing.Union[ComponentType, int] = attr.field()
+    type: typing.Union[ComponentType, int] = attrs.field()
     """The type of component this is."""
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class ButtonComponent(PartialComponent):
     """Represents a message button component.
 
@@ -606,16 +606,16 @@ class ButtonComponent(PartialComponent):
         top-level container components such as `ActionRowComponent`.
     """
 
-    style: typing.Union[ButtonStyle, int] = attr.field(eq=False)
+    style: typing.Union[ButtonStyle, int] = attrs.field(eq=False)
     """The button's style."""
 
-    label: typing.Optional[str] = attr.field(eq=False)
+    label: typing.Optional[str] = attrs.field(eq=False)
     """Text label which appears on the button."""
 
-    emoji: typing.Optional[emojis_.Emoji] = attr.field(eq=False)
+    emoji: typing.Optional[emojis_.Emoji] = attrs.field(eq=False)
     """Custom or unicode emoji which appears on the button."""
 
-    custom_id: typing.Optional[str] = attr.field(hash=True)
+    custom_id: typing.Optional[str] = attrs.field(hash=True)
     """Developer defined identifier for this button (will be <= 100 characters).
 
     !!! note
@@ -627,34 +627,34 @@ class ButtonComponent(PartialComponent):
         * `ButtonStyle.DANGER`
     """
 
-    url: typing.Optional[str] = attr.field(eq=False)
+    url: typing.Optional[str] = attrs.field(eq=False)
     """Url for `ButtonStyle.LINK` style buttons."""
 
-    is_disabled: bool = attr.field(eq=False)
+    is_disabled: bool = attrs.field(eq=False)
     """Whether the button is disabled."""
 
 
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class SelectMenuOption:
     """Represents an option for a `SelectMenuComponent`."""
 
-    label: str = attr.field()
+    label: str = attrs.field()
     """User-facing name of the option, max 100 characters."""
 
-    value: str = attr.field()
+    value: str = attrs.field()
     """Dev-defined value of the option, max 100 characters."""
 
-    description: typing.Optional[str] = attr.field()
+    description: typing.Optional[str] = attrs.field()
     """Optional description of the option, max 100 characters."""
 
-    emoji: typing.Optional[emojis_.Emoji] = attr.field(eq=False)
+    emoji: typing.Optional[emojis_.Emoji] = attrs.field(eq=False)
     """Custom or unicode emoji which appears on the button."""
 
-    is_default: bool = attr.field()
+    is_default: bool = attrs.field()
     """Whether this option will be selected by default."""
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class SelectMenuComponent(PartialComponent):
     """Represents a message button component.
 
@@ -663,34 +663,34 @@ class SelectMenuComponent(PartialComponent):
         top-level container components such as `ActionRowComponent`.
     """
 
-    custom_id: str = attr.field(hash=True)
+    custom_id: str = attrs.field(hash=True)
     """Developer defined identifier for this menu (will be <= 100 characters)."""
 
-    options: typing.Sequence[SelectMenuOption] = attr.field(eq=False)
+    options: typing.Sequence[SelectMenuOption] = attrs.field(eq=False)
     """Sequence of up to 25 of the options set for this menu."""
 
-    placeholder: typing.Optional[str] = attr.field(eq=False)
+    placeholder: typing.Optional[str] = attrs.field(eq=False)
     """Custom placeholder text shown if nothing is selected, max 100 characters."""
 
-    min_values: int = attr.field(eq=False)
+    min_values: int = attrs.field(eq=False)
     """The minimum amount of options which must be chosen for this menu.
 
     This will be greater than or equal to 0 and will be less than or equal to
     `SelectMenuComponent.max_values`.
     """
 
-    max_values: int = attr.field(eq=False)
+    max_values: int = attrs.field(eq=False)
     """The minimum amount of options which can be chosen for this menu.
 
     This will be less than or equal to 25 and will be greater than or equal to
     `SelectMenuComponent.min_values`.
     """
 
-    is_disabled: bool = attr.field(eq=False)
+    is_disabled: bool = attrs.field(eq=False)
     """Whether the select menu is disabled."""
 
 
-@attr.define(weakref_slot=False)
+@attrs.define(weakref_slot=False)
 class ActionRowComponent(PartialComponent):
     """Represents a row of components attached to a message.
 
@@ -699,7 +699,7 @@ class ActionRowComponent(PartialComponent):
         another component.
     """
 
-    components: typing.Sequence[PartialComponent] = attr.field()
+    components: typing.Sequence[PartialComponent] = attrs.field()
     """Sequence of the components contained within this row."""
 
     @typing.overload
@@ -722,8 +722,8 @@ class ActionRowComponent(PartialComponent):
         return len(self.components)
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, repr=True, eq=False, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, repr=True, eq=False, weakref_slot=False)
 class PartialMessage(snowflakes.Unique):
     """A message representation containing partially populated information.
 
@@ -738,18 +738,18 @@ class PartialMessage(snowflakes.Unique):
         nullability.
     """
 
-    app: traits.RESTAware = attr.field(
-        repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
+    app: traits.RESTAware = attrs.field(
+        repr=False, eq=False, hash=False, metadata={attrs_extensions.SKIP_DEEP_COPY: True}
     )
     """The client application that models may use for procedures."""
 
-    id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
+    id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
     """The ID of this entity."""
 
-    channel_id: snowflakes.Snowflake = attr.field(hash=False, eq=False, repr=True)
+    channel_id: snowflakes.Snowflake = attrs.field(hash=False, eq=False, repr=True)
     """The ID of the channel that the message was sent in."""
 
-    guild_id: typing.Optional[snowflakes.Snowflake] = attr.field(hash=False, eq=False, repr=True)
+    guild_id: typing.Optional[snowflakes.Snowflake] = attrs.field(hash=False, eq=False, repr=True)
     """The ID of the guild that the message was sent in or `builtins.None` for messages out of guilds.
 
     !!! warning
@@ -757,14 +757,14 @@ class PartialMessage(snowflakes.Unique):
         This is a Discord limitation as stated here https://github.com/discord/discord-api-docs/issues/912
     """
 
-    author: undefined.UndefinedOr[users_.User] = attr.field(hash=False, eq=False, repr=True)
+    author: undefined.UndefinedOr[users_.User] = attrs.field(hash=False, eq=False, repr=True)
     """The author of this message.
 
     This will also be `hikari.undefined.UNDEFINED` in some cases such as when Discord
     updates a message with an embed URL preview or in messages fetched from the REST API.
     """
 
-    member: undefined.UndefinedNoneOr[guilds.Member] = attr.field(hash=False, eq=False, repr=False)
+    member: undefined.UndefinedNoneOr[guilds.Member] = attrs.field(hash=False, eq=False, repr=False)
     """The member for the author who created the message.
 
     If the message is not in a guild, this will be `builtins.None`.
@@ -777,23 +777,23 @@ class PartialMessage(snowflakes.Unique):
         This is a Discord limitation as stated here https://github.com/discord/discord-api-docs/issues/912
     """
 
-    content: undefined.UndefinedNoneOr[str] = attr.field(hash=False, eq=False, repr=False)
+    content: undefined.UndefinedNoneOr[str] = attrs.field(hash=False, eq=False, repr=False)
     """The content of the message."""
 
-    timestamp: undefined.UndefinedOr[datetime.datetime] = attr.field(hash=False, eq=False, repr=False)
+    timestamp: undefined.UndefinedOr[datetime.datetime] = attrs.field(hash=False, eq=False, repr=False)
     """The timestamp that the message was sent at."""
 
-    edited_timestamp: undefined.UndefinedNoneOr[datetime.datetime] = attr.field(hash=False, eq=False, repr=False)
+    edited_timestamp: undefined.UndefinedNoneOr[datetime.datetime] = attrs.field(hash=False, eq=False, repr=False)
     """The timestamp that the message was last edited at.
 
     Will be `builtins.None` if the message wasn't ever edited, or `undefined`
     if the info is not available.
     """
 
-    is_tts: undefined.UndefinedOr[bool] = attr.field(hash=False, eq=False, repr=False)
+    is_tts: undefined.UndefinedOr[bool] = attrs.field(hash=False, eq=False, repr=False)
     """Whether the message is a TTS message."""
 
-    mentions: Mentions = attr.field(hash=False, eq=False, repr=True)
+    mentions: Mentions = attrs.field(hash=False, eq=False, repr=True)
     """Description of who is mentioned in a message.
 
     !!! warning
@@ -803,25 +803,25 @@ class PartialMessage(snowflakes.Unique):
         This is a Discord limitation.
     """
 
-    attachments: undefined.UndefinedOr[typing.Sequence[Attachment]] = attr.field(hash=False, eq=False, repr=False)
+    attachments: undefined.UndefinedOr[typing.Sequence[Attachment]] = attrs.field(hash=False, eq=False, repr=False)
     """The message attachments."""
 
-    embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = attr.field(hash=False, eq=False, repr=False)
+    embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = attrs.field(hash=False, eq=False, repr=False)
     """The message embeds."""
 
-    reactions: undefined.UndefinedOr[typing.Sequence[Reaction]] = attr.field(hash=False, eq=False, repr=False)
+    reactions: undefined.UndefinedOr[typing.Sequence[Reaction]] = attrs.field(hash=False, eq=False, repr=False)
     """The message reactions."""
 
-    is_pinned: undefined.UndefinedOr[bool] = attr.field(hash=False, eq=False, repr=False)
+    is_pinned: undefined.UndefinedOr[bool] = attrs.field(hash=False, eq=False, repr=False)
     """Whether the message is pinned."""
 
-    webhook_id: undefined.UndefinedNoneOr[snowflakes.Snowflake] = attr.field(hash=False, eq=False, repr=False)
+    webhook_id: undefined.UndefinedNoneOr[snowflakes.Snowflake] = attrs.field(hash=False, eq=False, repr=False)
     """If the message was generated by a webhook, the webhook's ID."""
 
-    type: undefined.UndefinedOr[typing.Union[MessageType, int]] = attr.field(hash=False, eq=False, repr=False)
+    type: undefined.UndefinedOr[typing.Union[MessageType, int]] = attrs.field(hash=False, eq=False, repr=False)
     """The message type."""
 
-    activity: undefined.UndefinedNoneOr[MessageActivity] = attr.field(hash=False, eq=False, repr=False)
+    activity: undefined.UndefinedNoneOr[MessageActivity] = attrs.field(hash=False, eq=False, repr=False)
     """The message activity.
 
     !!! note
@@ -829,7 +829,7 @@ class PartialMessage(snowflakes.Unique):
         embeds.
     """
 
-    application: undefined.UndefinedNoneOr[MessageApplication] = attr.field(hash=False, eq=False, repr=False)
+    application: undefined.UndefinedNoneOr[MessageApplication] = attrs.field(hash=False, eq=False, repr=False)
     """The message application.
 
     !!! note
@@ -837,24 +837,24 @@ class PartialMessage(snowflakes.Unique):
         embeds.
     """
 
-    message_reference: undefined.UndefinedNoneOr[MessageReference] = attr.field(hash=False, eq=False, repr=False)
+    message_reference: undefined.UndefinedNoneOr[MessageReference] = attrs.field(hash=False, eq=False, repr=False)
     """The message reference data."""
 
-    flags: undefined.UndefinedOr[MessageFlag] = attr.field(hash=False, eq=False, repr=False)
+    flags: undefined.UndefinedOr[MessageFlag] = attrs.field(hash=False, eq=False, repr=False)
     """The message flags."""
 
-    stickers: undefined.UndefinedOr[typing.Sequence[stickers_.PartialSticker]] = attr.field(
+    stickers: undefined.UndefinedOr[typing.Sequence[stickers_.PartialSticker]] = attrs.field(
         hash=False, eq=False, repr=False
     )
     """The stickers sent with this message."""
 
-    nonce: undefined.UndefinedNoneOr[str] = attr.field(hash=False, eq=False, repr=False)
+    nonce: undefined.UndefinedNoneOr[str] = attrs.field(hash=False, eq=False, repr=False)
     """The message nonce.
 
     This is a string used for validating a message was sent.
     """
 
-    referenced_message: undefined.UndefinedNoneOr[Message] = attr.field(hash=False, eq=False, repr=False)
+    referenced_message: undefined.UndefinedNoneOr[Message] = attrs.field(hash=False, eq=False, repr=False)
     """The message that was replied to.
 
     If `type` is `MessageType.REPLY` and `hikari.undefined.UNDEFINED`, Discord's
@@ -862,17 +862,17 @@ class PartialMessage(snowflakes.Unique):
     `type` is `MessageType.REPLY` and `builtins.None`, the message was deleted.
     """
 
-    interaction: undefined.UndefinedNoneOr[MessageInteraction] = attr.field(hash=False, repr=False)
+    interaction: undefined.UndefinedNoneOr[MessageInteraction] = attrs.field(hash=False, repr=False)
     """Information about the interaction this message was created by."""
 
-    application_id: undefined.UndefinedNoneOr[snowflakes.Snowflake] = attr.field(hash=False, repr=False)
+    application_id: undefined.UndefinedNoneOr[snowflakes.Snowflake] = attrs.field(hash=False, repr=False)
     """ID of the application this message was sent by.
 
     !!! note
         This will only be provided for interaction messages.
     """
 
-    components: undefined.UndefinedOr[typing.Sequence[PartialComponent]] = attr.field(hash=False, repr=False)
+    components: undefined.UndefinedOr[typing.Sequence[PartialComponent]] = attrs.field(hash=False, repr=False)
     """Sequence of the components attached to this message."""
 
     def make_link(self, guild: typing.Optional[snowflakes.SnowflakeishOr[guilds.PartialGuild]]) -> str:
@@ -1536,14 +1536,14 @@ class PartialMessage(snowflakes.Unique):
             )
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False, auto_attribs=False)
+@attrs.define(hash=True, kw_only=True, weakref_slot=False, auto_attribs=False)
 class Message(PartialMessage):
     """Represents a message with all known details."""
 
     # These are purposely not auto attribs, but instead just specify a
     # tighter type bounds (i.e. none are allowed to be undefined.Undefined
     # in this model). We use this in cases where we know all information is
-    # present. DO NOT ADD attr.field TO ANY OF THESE, OR ENABLE auto_attribs
+    # present. DO NOT ADD attrs.field TO ANY OF THESE, OR ENABLE auto_attribs
     # IN THIS CLASS, the latter will mess up slotting or cause layout conflicts
     # and possibly result in large amounts of wasted memory if you get that far.
 

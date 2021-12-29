@@ -22,7 +22,7 @@
 import typing
 
 import aiohttp
-import attr
+import attrs
 import mock
 import multidict
 import pytest
@@ -32,9 +32,9 @@ from hikari import undefined
 from hikari.internal import data_binding
 
 
-@attr.define()
+@attrs.define()
 class MyUnique(snowflakes.Unique):
-    id: snowflakes.Snowflake = attr.field(converter=snowflakes.Snowflake)
+    id: snowflakes.Snowflake = attrs.field(converter=snowflakes.Snowflake)
 
 
 class TestURLEncodedFormBuilder:

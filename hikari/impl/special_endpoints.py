@@ -41,7 +41,7 @@ __all__: typing.List[str] = [
 import asyncio
 import typing
 
-import attr
+import attrs
 
 from hikari import channels
 from hikari import commands
@@ -54,7 +54,7 @@ from hikari import snowflakes
 from hikari import undefined
 from hikari.api import special_endpoints
 from hikari.interactions import base_interactions
-from hikari.internal import attr_extensions
+from hikari.internal import attrs_extensions
 from hikari.internal import data_binding
 from hikari.internal import mentions
 from hikari.internal import routes
@@ -175,8 +175,8 @@ class TypingIndicator(special_endpoints.TypingIndicator):
 
 
 # As a note, slotting allows us to override the settable properties while staying within the interface's spec.
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 class GuildBuilder(special_endpoints.GuildBuilder):
     """Result type of `hikari.api.rest.RESTClient.guild_builder`.
 
@@ -251,31 +251,31 @@ class GuildBuilder(special_endpoints.GuildBuilder):
     """
 
     # Required arguments.
-    _entity_factory: entity_factory_.EntityFactory = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    _executor: typing.Optional[concurrent.futures.Executor] = attr.field(
-        metadata={attr_extensions.SKIP_DEEP_COPY: True}
+    _entity_factory: entity_factory_.EntityFactory = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
+    _executor: typing.Optional[concurrent.futures.Executor] = attrs.field(
+        metadata={attrs_extensions.SKIP_DEEP_COPY: True}
     )
-    _name: str = attr.field()
+    _name: str = attrs.field()
     _request_call: typing.Callable[
         ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
-    ] = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    ] = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
 
     # Optional arguments.
-    default_message_notifications: undefined.UndefinedOr[guilds.GuildMessageNotificationsLevel] = attr.field(
+    default_message_notifications: undefined.UndefinedOr[guilds.GuildMessageNotificationsLevel] = attrs.field(
         default=undefined.UNDEFINED
     )
-    explicit_content_filter_level: undefined.UndefinedOr[guilds.GuildExplicitContentFilterLevel] = attr.field(
+    explicit_content_filter_level: undefined.UndefinedOr[guilds.GuildExplicitContentFilterLevel] = attrs.field(
         default=undefined.UNDEFINED
     )
-    icon: undefined.UndefinedOr[files.Resourceish] = attr.field(default=undefined.UNDEFINED)
-    verification_level: undefined.UndefinedOr[typing.Union[guilds.GuildVerificationLevel, int]] = attr.field(
+    icon: undefined.UndefinedOr[files.Resourceish] = attrs.field(default=undefined.UNDEFINED)
+    verification_level: undefined.UndefinedOr[typing.Union[guilds.GuildVerificationLevel, int]] = attrs.field(
         default=undefined.UNDEFINED
     )
 
     # Non-arguments
-    _channels: typing.MutableSequence[data_binding.JSONObject] = attr.field(factory=list, init=False)
-    _counter: int = attr.field(default=0, init=False)
-    _roles: typing.MutableSequence[data_binding.JSONObject] = attr.field(factory=list, init=False)
+    _channels: typing.MutableSequence[data_binding.JSONObject] = attrs.field(factory=list, init=False)
+    _counter: int = attrs.field(default=0, init=False)
+    _roles: typing.MutableSequence[data_binding.JSONObject] = attrs.field(factory=list, init=False)
 
     @property
     def name(self) -> str:
@@ -693,8 +693,8 @@ class AuditLogIterator(iterators.LazyIterator["audit_logs.AuditLog"]):
         return log
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=False, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=False, weakref_slot=False)
 class InteractionDeferredBuilder(special_endpoints.InteractionDeferredBuilder):
     """Standard implementation of `hikari.api.special_endpoints.InteractionDeferredBuilder`.
 
@@ -705,12 +705,12 @@ class InteractionDeferredBuilder(special_endpoints.InteractionDeferredBuilder):
     """
 
     # Required arguments.
-    _type: base_interactions.DeferredResponseTypesT = attr.field(
+    _type: base_interactions.DeferredResponseTypesT = attrs.field(
         converter=base_interactions.ResponseType,
-        validator=attr.validators.in_(base_interactions.DEFERRED_RESPONSE_TYPES),
+        validator=attrs.validators.in_(base_interactions.DEFERRED_RESPONSE_TYPES),
     )
 
-    _flags: typing.Union[undefined.UndefinedType, int, messages.MessageFlag] = attr.field(
+    _flags: typing.Union[undefined.UndefinedType, int, messages.MessageFlag] = attrs.field(
         default=undefined.UNDEFINED, kw_only=True
     )
 
@@ -735,8 +735,8 @@ class InteractionDeferredBuilder(special_endpoints.InteractionDeferredBuilder):
         return {"type": self._type}
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=False, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=False, weakref_slot=False)
 class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
     """Standard implementation of `hikari.api.special_endpoints.InteractionMessageBuilder`.
 
@@ -753,28 +753,28 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
     """
 
     # Required arguments.
-    _type: base_interactions.MessageResponseTypesT = attr.field(
+    _type: base_interactions.MessageResponseTypesT = attrs.field(
         converter=base_interactions.ResponseType,
-        validator=attr.validators.in_(base_interactions.MESSAGE_RESPONSE_TYPES),
+        validator=attrs.validators.in_(base_interactions.MESSAGE_RESPONSE_TYPES),
     )
 
     # Not-required arguments.
-    _content: undefined.UndefinedOr[str] = attr.field(default=undefined.UNDEFINED)
+    _content: undefined.UndefinedOr[str] = attrs.field(default=undefined.UNDEFINED)
 
     # Key-word only not-required arguments.
-    _flags: typing.Union[int, messages.MessageFlag, undefined.UndefinedType] = attr.field(
+    _flags: typing.Union[int, messages.MessageFlag, undefined.UndefinedType] = attrs.field(
         default=undefined.UNDEFINED, kw_only=True
     )
-    _is_tts: undefined.UndefinedOr[bool] = attr.field(default=undefined.UNDEFINED, kw_only=True)
-    _mentions_everyone: undefined.UndefinedOr[bool] = attr.field(default=undefined.UNDEFINED, kw_only=True)
+    _is_tts: undefined.UndefinedOr[bool] = attrs.field(default=undefined.UNDEFINED, kw_only=True)
+    _mentions_everyone: undefined.UndefinedOr[bool] = attrs.field(default=undefined.UNDEFINED, kw_only=True)
     _role_mentions: undefined.UndefinedOr[
         typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
-    ] = attr.field(default=undefined.UNDEFINED, kw_only=True)
+    ] = attrs.field(default=undefined.UNDEFINED, kw_only=True)
     _user_mentions: undefined.UndefinedOr[
         typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
-    ] = attr.field(default=undefined.UNDEFINED, kw_only=True)
-    _components: typing.List[special_endpoints.ComponentBuilder] = attr.field(factory=list, kw_only=True)
-    _embeds: typing.List[embeds_.Embed] = attr.field(factory=list, kw_only=True)
+    ] = attrs.field(default=undefined.UNDEFINED, kw_only=True)
+    _components: typing.List[special_endpoints.ComponentBuilder] = attrs.field(factory=list, kw_only=True)
+    _embeds: typing.List[embeds_.Embed] = attrs.field(factory=list, kw_only=True)
 
     @property
     def content(self) -> undefined.UndefinedOr[str]:
@@ -893,21 +893,21 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
         return {"type": self._type, "data": data}
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=False, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=False, weakref_slot=False)
 class CommandBuilder(special_endpoints.CommandBuilder):
     """Standard implementation of `hikari.api.special_endpoints.CommandBuilder`."""
 
     # Required arguments.
-    _name: str = attr.field()
-    _description: str = attr.field()
+    _name: str = attrs.field()
+    _description: str = attrs.field()
 
     # Key-word only not-required arguments.
-    _id: undefined.UndefinedOr[snowflakes.Snowflake] = attr.field(default=undefined.UNDEFINED, kw_only=True)
-    _default_permission: undefined.UndefinedOr[bool] = attr.field(default=undefined.UNDEFINED, kw_only=True)
+    _id: undefined.UndefinedOr[snowflakes.Snowflake] = attrs.field(default=undefined.UNDEFINED, kw_only=True)
+    _default_permission: undefined.UndefinedOr[bool] = attrs.field(default=undefined.UNDEFINED, kw_only=True)
 
     # Non-arguments.
-    _options: typing.List[commands.CommandOption] = attr.field(factory=list)
+    _options: typing.List[commands.CommandOption] = attrs.field(factory=list)
 
     @property
     def description(self) -> str:
@@ -977,20 +977,20 @@ def _build_emoji(
     return undefined.UNDEFINED, undefined.UNDEFINED
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 class _ButtonBuilder(special_endpoints.ButtonBuilder[_ContainerProtoT]):
-    _container: _ContainerProtoT = attr.field()
-    _style: typing.Union[int, messages.ButtonStyle] = attr.field()
-    _custom_id: undefined.UndefinedOr[str] = attr.field(default=undefined.UNDEFINED)
-    _url: undefined.UndefinedOr[str] = attr.field(default=undefined.UNDEFINED)
-    _emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType] = attr.field(
+    _container: _ContainerProtoT = attrs.field()
+    _style: typing.Union[int, messages.ButtonStyle] = attrs.field()
+    _custom_id: undefined.UndefinedOr[str] = attrs.field(default=undefined.UNDEFINED)
+    _url: undefined.UndefinedOr[str] = attrs.field(default=undefined.UNDEFINED)
+    _emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType] = attrs.field(
         default=undefined.UNDEFINED
     )
-    _emoji_id: undefined.UndefinedOr[str] = attr.field(default=undefined.UNDEFINED)
-    _emoji_name: undefined.UndefinedOr[str] = attr.field(default=undefined.UNDEFINED)
-    _label: undefined.UndefinedOr[str] = attr.field(default=undefined.UNDEFINED)
-    _is_disabled: bool = attr.field(default=False)
+    _emoji_id: undefined.UndefinedOr[str] = attrs.field(default=undefined.UNDEFINED)
+    _emoji_name: undefined.UndefinedOr[str] = attrs.field(default=undefined.UNDEFINED)
+    _label: undefined.UndefinedOr[str] = attrs.field(default=undefined.UNDEFINED)
+    _is_disabled: bool = attrs.field(default=False)
 
     @property
     def style(self) -> typing.Union[int, messages.ButtonStyle]:
@@ -1049,45 +1049,45 @@ class _ButtonBuilder(special_endpoints.ButtonBuilder[_ContainerProtoT]):
         return data
 
 
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class LinkButtonBuilder(_ButtonBuilder[_ContainerProtoT], special_endpoints.LinkButtonBuilder[_ContainerProtoT]):
     """Builder class for link buttons."""
 
-    _url: str = attr.field()
+    _url: str = attrs.field()
 
     @property
     def url(self) -> str:
         return self._url
 
 
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class InteractiveButtonBuilder(
     _ButtonBuilder[_ContainerProtoT], special_endpoints.InteractiveButtonBuilder[_ContainerProtoT]
 ):
     """Builder class for interactive buttons."""
 
-    _custom_id: str = attr.field()
+    _custom_id: str = attrs.field()
 
     @property
     def custom_id(self) -> str:
         return self._custom_id
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 class _SelectOptionBuilder(special_endpoints.SelectOptionBuilder["_SelectMenuBuilderT"]):
     """Builder class for select menu options."""
 
-    _menu: _SelectMenuBuilderT = attr.field()
-    _label: str = attr.field()
-    _value: str = attr.field()
-    _description: undefined.UndefinedOr[str] = attr.field(default=undefined.UNDEFINED)
-    _emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType] = attr.field(
+    _menu: _SelectMenuBuilderT = attrs.field()
+    _label: str = attrs.field()
+    _value: str = attrs.field()
+    _description: undefined.UndefinedOr[str] = attrs.field(default=undefined.UNDEFINED)
+    _emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType] = attrs.field(
         default=undefined.UNDEFINED
     )
-    _emoji_id: undefined.UndefinedOr[str] = attr.field(default=undefined.UNDEFINED)
-    _emoji_name: undefined.UndefinedOr[str] = attr.field(default=undefined.UNDEFINED)
-    _is_default: bool = attr.field(default=False)
+    _emoji_id: undefined.UndefinedOr[str] = attrs.field(default=undefined.UNDEFINED)
+    _emoji_name: undefined.UndefinedOr[str] = attrs.field(default=undefined.UNDEFINED)
+    _is_default: bool = attrs.field(default=False)
 
     @property
     def label(self) -> str:
@@ -1147,19 +1147,19 @@ class _SelectOptionBuilder(special_endpoints.SelectOptionBuilder["_SelectMenuBui
         return data
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 class SelectMenuBuilder(special_endpoints.SelectMenuBuilder[_ContainerProtoT]):
     """Builder class for select menus."""
 
-    _container: _ContainerProtoT = attr.field()
-    _custom_id: str = attr.field()
+    _container: _ContainerProtoT = attrs.field()
+    _custom_id: str = attrs.field()
     # Any has to be used here as we can't access Self type in this context
-    _options: typing.List[special_endpoints.SelectOptionBuilder[typing.Any]] = attr.field(factory=list)
-    _placeholder: undefined.UndefinedOr[str] = attr.field(default=undefined.UNDEFINED)
-    _min_values: int = attr.field(default=0)
-    _max_values: int = attr.field(default=1)
-    _is_disabled: bool = attr.field(default=False)
+    _options: typing.List[special_endpoints.SelectOptionBuilder[typing.Any]] = attrs.field(factory=list)
+    _placeholder: undefined.UndefinedOr[str] = attrs.field(default=undefined.UNDEFINED)
+    _min_values: int = attrs.field(default=0)
+    _max_values: int = attrs.field(default=1)
+    _is_disabled: bool = attrs.field(default=False)
 
     @property
     def custom_id(self) -> str:
@@ -1231,12 +1231,12 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder[_ContainerProtoT]):
         return data
 
 
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class ActionRowBuilder(special_endpoints.ActionRowBuilder):
     """Standard implementation of `hikari.api.special_endpoints.ActionRowBuilder`."""
 
-    _components: typing.List[special_endpoints.ComponentBuilder] = attr.field(factory=list)
-    _stored_type: typing.Optional[messages.ComponentType] = attr.field(default=None)
+    _components: typing.List[special_endpoints.ComponentBuilder] = attrs.field(factory=list)
+    _stored_type: typing.Optional[messages.ComponentType] = attrs.field(default=None)
 
     @property
     def components(self) -> typing.Sequence[special_endpoints.ComponentBuilder]:

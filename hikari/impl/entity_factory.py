@@ -30,7 +30,7 @@ import datetime
 import logging
 import typing
 
-import attr
+import attrs
 
 from hikari import applications as application_models
 from hikari import audit_logs as audit_log_models
@@ -59,7 +59,7 @@ from hikari.api import entity_factory
 from hikari.interactions import base_interactions
 from hikari.interactions import command_interactions
 from hikari.interactions import component_interactions
-from hikari.internal import attr_extensions
+from hikari.internal import attrs_extensions
 from hikari.internal import data_binding
 from hikari.internal import time
 
@@ -95,88 +95,88 @@ def _deserialize_max_age(seconds: int) -> typing.Optional[datetime.timedelta]:
     return datetime.timedelta(seconds=seconds) if seconds > 0 else None
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, repr=False, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, repr=False, weakref_slot=False)
 class _GuildChannelFields:
-    id: snowflakes.Snowflake = attr.field()
-    name: typing.Optional[str] = attr.field()
-    type: typing.Union[channel_models.ChannelType, int] = attr.field()
-    guild_id: snowflakes.Snowflake = attr.field()
-    position: int = attr.field()
-    permission_overwrites: typing.Dict[snowflakes.Snowflake, channel_models.PermissionOverwrite] = attr.field()
-    is_nsfw: typing.Optional[bool] = attr.field()
-    parent_id: typing.Optional[snowflakes.Snowflake] = attr.field()
+    id: snowflakes.Snowflake = attrs.field()
+    name: typing.Optional[str] = attrs.field()
+    type: typing.Union[channel_models.ChannelType, int] = attrs.field()
+    guild_id: snowflakes.Snowflake = attrs.field()
+    position: int = attrs.field()
+    permission_overwrites: typing.Dict[snowflakes.Snowflake, channel_models.PermissionOverwrite] = attrs.field()
+    is_nsfw: typing.Optional[bool] = attrs.field()
+    parent_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, repr=False, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, repr=False, weakref_slot=False)
 class _IntegrationFields:
-    id: snowflakes.Snowflake = attr.field()
-    name: str = attr.field()
-    type: typing.Union[guild_models.IntegrationType, str] = attr.field()
-    account: guild_models.IntegrationAccount = attr.field()
+    id: snowflakes.Snowflake = attrs.field()
+    name: str = attrs.field()
+    type: typing.Union[guild_models.IntegrationType, str] = attrs.field()
+    account: guild_models.IntegrationAccount = attrs.field()
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, repr=False, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, repr=False, weakref_slot=False)
 class _GuildFields:
-    id: snowflakes.Snowflake = attr.field()
-    name: str = attr.field()
-    icon_hash: str = attr.field()
-    features: typing.List[typing.Union[guild_models.GuildFeature, str]] = attr.field()
-    splash_hash: typing.Optional[str] = attr.field()
-    discovery_splash_hash: typing.Optional[str] = attr.field()
-    owner_id: snowflakes.Snowflake = attr.field()
-    afk_channel_id: typing.Optional[snowflakes.Snowflake] = attr.field()
-    afk_timeout: datetime.timedelta = attr.field()
-    verification_level: typing.Union[guild_models.GuildVerificationLevel, int] = attr.field()
-    default_message_notifications: typing.Union[guild_models.GuildMessageNotificationsLevel, int] = attr.field()
-    explicit_content_filter: typing.Union[guild_models.GuildVerificationLevel, int] = attr.field()
-    mfa_level: typing.Union[guild_models.GuildMFALevel, int] = attr.field()
-    application_id: typing.Optional[snowflakes.Snowflake] = attr.field()
-    widget_channel_id: typing.Optional[snowflakes.Snowflake] = attr.field()
-    system_channel_id: typing.Optional[snowflakes.Snowflake] = attr.field()
-    is_widget_enabled: typing.Optional[bool] = attr.field()
-    system_channel_flags: guild_models.GuildSystemChannelFlag = attr.field()
-    rules_channel_id: typing.Optional[snowflakes.Snowflake] = attr.field()
-    max_video_channel_users: typing.Optional[int] = attr.field()
-    vanity_url_code: typing.Optional[str] = attr.field()
-    description: typing.Optional[str] = attr.field()
-    banner_hash: typing.Optional[str] = attr.field()
-    premium_tier: typing.Union[guild_models.GuildPremiumTier, int] = attr.field()
-    premium_subscription_count: typing.Optional[int] = attr.field()
-    preferred_locale: str = attr.field()
-    public_updates_channel_id: typing.Optional[snowflakes.Snowflake] = attr.field()
-    nsfw_level: guild_models.GuildNSFWLevel = attr.field()
+    id: snowflakes.Snowflake = attrs.field()
+    name: str = attrs.field()
+    icon_hash: str = attrs.field()
+    features: typing.List[typing.Union[guild_models.GuildFeature, str]] = attrs.field()
+    splash_hash: typing.Optional[str] = attrs.field()
+    discovery_splash_hash: typing.Optional[str] = attrs.field()
+    owner_id: snowflakes.Snowflake = attrs.field()
+    afk_channel_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
+    afk_timeout: datetime.timedelta = attrs.field()
+    verification_level: typing.Union[guild_models.GuildVerificationLevel, int] = attrs.field()
+    default_message_notifications: typing.Union[guild_models.GuildMessageNotificationsLevel, int] = attrs.field()
+    explicit_content_filter: typing.Union[guild_models.GuildVerificationLevel, int] = attrs.field()
+    mfa_level: typing.Union[guild_models.GuildMFALevel, int] = attrs.field()
+    application_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
+    widget_channel_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
+    system_channel_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
+    is_widget_enabled: typing.Optional[bool] = attrs.field()
+    system_channel_flags: guild_models.GuildSystemChannelFlag = attrs.field()
+    rules_channel_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
+    max_video_channel_users: typing.Optional[int] = attrs.field()
+    vanity_url_code: typing.Optional[str] = attrs.field()
+    description: typing.Optional[str] = attrs.field()
+    banner_hash: typing.Optional[str] = attrs.field()
+    premium_tier: typing.Union[guild_models.GuildPremiumTier, int] = attrs.field()
+    premium_subscription_count: typing.Optional[int] = attrs.field()
+    preferred_locale: str = attrs.field()
+    public_updates_channel_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
+    nsfw_level: guild_models.GuildNSFWLevel = attrs.field()
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, repr=False, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, repr=False, weakref_slot=False)
 class _InviteFields:
-    code: str = attr.field()
-    guild: typing.Optional[invite_models.InviteGuild] = attr.field()
-    guild_id: typing.Optional[snowflakes.Snowflake] = attr.field()
-    channel: typing.Optional[channel_models.PartialChannel] = attr.field()
-    channel_id: snowflakes.Snowflake = attr.field()
-    inviter: typing.Optional[user_models.User] = attr.field()
-    target_user: typing.Optional[user_models.User] = attr.field()
-    target_application: typing.Optional[application_models.InviteApplication] = attr.field()
-    target_type: typing.Union[invite_models.TargetType, int, None] = attr.field()
-    approximate_active_member_count: typing.Optional[int] = attr.field()
-    approximate_member_count: typing.Optional[int] = attr.field()
+    code: str = attrs.field()
+    guild: typing.Optional[invite_models.InviteGuild] = attrs.field()
+    guild_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
+    channel: typing.Optional[channel_models.PartialChannel] = attrs.field()
+    channel_id: snowflakes.Snowflake = attrs.field()
+    inviter: typing.Optional[user_models.User] = attrs.field()
+    target_user: typing.Optional[user_models.User] = attrs.field()
+    target_application: typing.Optional[application_models.InviteApplication] = attrs.field()
+    target_type: typing.Union[invite_models.TargetType, int, None] = attrs.field()
+    approximate_active_member_count: typing.Optional[int] = attrs.field()
+    approximate_member_count: typing.Optional[int] = attrs.field()
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, repr=False, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, repr=False, weakref_slot=False)
 class _UserFields:
-    id: snowflakes.Snowflake = attr.field()
-    discriminator: str = attr.field()
-    username: str = attr.field()
-    avatar_hash: str = attr.field()
-    banner_hash: typing.Optional[str] = attr.field()
-    accent_color: typing.Optional[color_models.Color] = attr.field()
-    is_bot: bool = attr.field()
-    is_system: bool = attr.field()
+    id: snowflakes.Snowflake = attrs.field()
+    discriminator: str = attrs.field()
+    username: str = attrs.field()
+    avatar_hash: str = attrs.field()
+    banner_hash: typing.Optional[str] = attrs.field()
+    accent_color: typing.Optional[color_models.Color] = attrs.field()
+    is_bot: bool = attrs.field()
+    is_system: bool = attrs.field()
 
 
 class EntityFactoryImpl(entity_factory.EntityFactory):

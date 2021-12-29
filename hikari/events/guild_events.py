@@ -46,13 +46,13 @@ __all__: typing.List[str] = [
 import abc
 import typing
 
-import attr
+import attrs
 
 from hikari import intents
 from hikari import traits
 from hikari.events import base_events
 from hikari.events import shard_events
-from hikari.internal import attr_extensions
+from hikari.internal import attrs_extensions
 
 if typing.TYPE_CHECKING:
     from hikari import channels as channels_
@@ -133,8 +133,8 @@ class GuildVisibilityEvent(GuildEvent, abc.ABC):
     __slots__: typing.Sequence[str] = ()
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILDS)
 class GuildAvailableEvent(GuildVisibilityEvent):
     """Event fired when a guild becomes available.
@@ -147,10 +147,10 @@ class GuildAvailableEvent(GuildVisibilityEvent):
         event models.
     """
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    guild: guilds.GatewayGuild = attr.field()
+    guild: guilds.GatewayGuild = attrs.field()
     """Guild that just became available.
 
     Returns
@@ -159,7 +159,7 @@ class GuildAvailableEvent(GuildVisibilityEvent):
         The guild that relates to this event.
     """
 
-    emojis: typing.Mapping[snowflakes.Snowflake, emojis_.KnownCustomEmoji] = attr.field(repr=False)
+    emojis: typing.Mapping[snowflakes.Snowflake, emojis_.KnownCustomEmoji] = attrs.field(repr=False)
     """Mapping of emoji IDs to the emojis in the guild.
 
     Returns
@@ -168,7 +168,7 @@ class GuildAvailableEvent(GuildVisibilityEvent):
         The emojis in the guild.
     """
 
-    roles: typing.Mapping[snowflakes.Snowflake, guilds.Role] = attr.field(repr=False)
+    roles: typing.Mapping[snowflakes.Snowflake, guilds.Role] = attrs.field(repr=False)
     """Mapping of role IDs to the roles in the guild.
 
     Returns
@@ -177,7 +177,7 @@ class GuildAvailableEvent(GuildVisibilityEvent):
         The roles in the guild.
     """
 
-    channels: typing.Mapping[snowflakes.Snowflake, channels_.GuildChannel] = attr.field(repr=False)
+    channels: typing.Mapping[snowflakes.Snowflake, channels_.GuildChannel] = attrs.field(repr=False)
     """Mapping of channel IDs to the channels in the guild.
 
     Returns
@@ -186,7 +186,7 @@ class GuildAvailableEvent(GuildVisibilityEvent):
         The channels in the guild.
     """
 
-    members: typing.Mapping[snowflakes.Snowflake, guilds.Member] = attr.field(repr=False)
+    members: typing.Mapping[snowflakes.Snowflake, guilds.Member] = attrs.field(repr=False)
     """Mapping of user IDs to the members in the guild.
 
     Returns
@@ -195,7 +195,7 @@ class GuildAvailableEvent(GuildVisibilityEvent):
         The members in the guild.
     """
 
-    presences: typing.Mapping[snowflakes.Snowflake, presences_.MemberPresence] = attr.field(repr=False)
+    presences: typing.Mapping[snowflakes.Snowflake, presences_.MemberPresence] = attrs.field(repr=False)
     """Mapping of user IDs to the presences for the guild.
 
     Returns
@@ -204,7 +204,7 @@ class GuildAvailableEvent(GuildVisibilityEvent):
         The member presences in the guild.
     """
 
-    voice_states: typing.Mapping[snowflakes.Snowflake, voices.VoiceState] = attr.field(repr=False)
+    voice_states: typing.Mapping[snowflakes.Snowflake, voices.VoiceState] = attrs.field(repr=False)
     """Mapping of user IDs to the voice states active in this guild.
 
     Returns
@@ -213,7 +213,7 @@ class GuildAvailableEvent(GuildVisibilityEvent):
         The voice states active in the guild.
     """
 
-    chunk_nonce: typing.Optional[str] = attr.field(repr=False, default=None)
+    chunk_nonce: typing.Optional[str] = attrs.field(repr=False, default=None)
     """Nonce used to request the member chunks for this guild.
 
     This will be `builtins.None` if no chunks were requested.
@@ -238,8 +238,8 @@ class GuildAvailableEvent(GuildVisibilityEvent):
         return self.guild.id
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILDS)
 class GuildJoinEvent(GuildVisibilityEvent):
     """Event fired when the bot joins a new guild.
@@ -250,31 +250,31 @@ class GuildJoinEvent(GuildVisibilityEvent):
         event models.
     """
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    guild: guilds.GatewayGuild = attr.field()
+    guild: guilds.GatewayGuild = attrs.field()
     """The guild the bot just joined."""
 
-    emojis: typing.Mapping[snowflakes.Snowflake, emojis_.KnownCustomEmoji] = attr.field(repr=False)
+    emojis: typing.Mapping[snowflakes.Snowflake, emojis_.KnownCustomEmoji] = attrs.field(repr=False)
     """Mapping of emoji IDs to the emojis in the guild."""
 
-    roles: typing.Mapping[snowflakes.Snowflake, guilds.Role] = attr.field(repr=False)
+    roles: typing.Mapping[snowflakes.Snowflake, guilds.Role] = attrs.field(repr=False)
     """Mapping of role IDs to the roles in the guild."""
 
-    channels: typing.Mapping[snowflakes.Snowflake, channels_.GuildChannel] = attr.field(repr=False)
+    channels: typing.Mapping[snowflakes.Snowflake, channels_.GuildChannel] = attrs.field(repr=False)
     """Mapping of channel IDs to the channels in the guild."""
 
-    members: typing.Mapping[snowflakes.Snowflake, guilds.Member] = attr.field(repr=False)
+    members: typing.Mapping[snowflakes.Snowflake, guilds.Member] = attrs.field(repr=False)
     """Mapping of user IDs to the members in the guild."""
 
-    presences: typing.Mapping[snowflakes.Snowflake, presences_.MemberPresence] = attr.field(repr=False)
+    presences: typing.Mapping[snowflakes.Snowflake, presences_.MemberPresence] = attrs.field(repr=False)
     """Mapping of user IDs to the presences for the guild."""
 
-    voice_states: typing.Mapping[snowflakes.Snowflake, voices.VoiceState] = attr.field(repr=False)
+    voice_states: typing.Mapping[snowflakes.Snowflake, voices.VoiceState] = attrs.field(repr=False)
     """Mapping of user IDs to the voice states active in this guild."""
 
-    chunk_nonce: typing.Optional[str] = attr.field(repr=False, default=None)
+    chunk_nonce: typing.Optional[str] = attrs.field(repr=False, default=None)
     """Nonce used to request the member chunks for this guild.
 
     This will be `builtins.None` if no chunks were requested.
@@ -294,8 +294,8 @@ class GuildJoinEvent(GuildVisibilityEvent):
         return self.guild.id
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILDS)
 class GuildLeaveEvent(GuildVisibilityEvent):
     """Event fired when the bot is banned/kicked/leaves a guild.
@@ -303,16 +303,16 @@ class GuildLeaveEvent(GuildVisibilityEvent):
     This will also fire if the guild was deleted.
     """
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    guild_id: snowflakes.Snowflake = attr.field()
+    guild_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from GuildEvent>>.
 
-    old_guild: typing.Optional[guilds.GatewayGuild] = attr.field()
+    old_guild: typing.Optional[guilds.GatewayGuild] = attrs.field()
     """The old guild object.
 
     This will be `builtins.None` if the guild missing from the cache.
@@ -324,38 +324,38 @@ class GuildLeaveEvent(GuildVisibilityEvent):
             ...
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILDS)
 class GuildUnavailableEvent(GuildVisibilityEvent):
     """Event fired when a guild becomes unavailable because of an outage."""
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    guild_id: snowflakes.Snowflake = attr.field()
+    guild_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from GuildEvent>>.
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILDS)
 class GuildUpdateEvent(GuildEvent):
     """Event fired when an existing guild is updated."""
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    old_guild: typing.Optional[guilds.GatewayGuild] = attr.field()
+    old_guild: typing.Optional[guilds.GatewayGuild] = attrs.field()
     """The old guild object.
 
     This will be `builtins.None` if the guild missing from the cache.
     """
 
-    guild: guilds.GatewayGuild = attr.field()
+    guild: guilds.GatewayGuild = attrs.field()
     """Guild that was just updated.
 
     Returns
@@ -364,7 +364,7 @@ class GuildUpdateEvent(GuildEvent):
         The guild that relates to this event.
     """
 
-    emojis: typing.Mapping[snowflakes.Snowflake, emojis_.KnownCustomEmoji] = attr.field(repr=False)
+    emojis: typing.Mapping[snowflakes.Snowflake, emojis_.KnownCustomEmoji] = attrs.field(repr=False)
     """Mapping of emoji IDs to the emojis in the guild.
 
     Returns
@@ -373,7 +373,7 @@ class GuildUpdateEvent(GuildEvent):
         The emojis in the guild.
     """
 
-    roles: typing.Mapping[snowflakes.Snowflake, guilds.Role] = attr.field(repr=False)
+    roles: typing.Mapping[snowflakes.Snowflake, guilds.Role] = attrs.field(repr=False)
     """Mapping of role IDs to the roles in the guild.
 
     Returns
@@ -426,19 +426,19 @@ class BanEvent(GuildEvent, abc.ABC):
         return await self.app.rest.fetch_user(self.user)
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_BANS)
 class BanCreateEvent(BanEvent):
     """Event that is fired when a user is banned from a guild."""
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    guild_id: snowflakes.Snowflake = attr.field()
+    guild_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from GuildEvent>>.
 
-    user: users.User = attr.field()
+    user: users.User = attrs.field()
     # <<inherited docstring from BanEvent>>.
 
     @property
@@ -466,44 +466,44 @@ class BanCreateEvent(BanEvent):
         return await self.app.rest.fetch_ban(self.guild_id, self.user)
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_BANS)
 class BanDeleteEvent(BanEvent):
     """Event that is fired when a user is unbanned from a guild."""
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    guild_id: snowflakes.Snowflake = attr.field()
+    guild_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from GuildEvent>>.
 
-    user: users.User = attr.field()
+    user: users.User = attrs.field()
     # <<inherited docstring from BanEvent>>.
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_EMOJIS)
 class EmojisUpdateEvent(GuildEvent):
     """Event that is fired when the emojis in a guild are updated."""
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    guild_id: snowflakes.Snowflake = attr.field()
+    guild_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from GuildEvent>>.
 
-    old_emojis: typing.Optional[typing.Sequence[emojis_.KnownCustomEmoji]] = attr.field()
+    old_emojis: typing.Optional[typing.Sequence[emojis_.KnownCustomEmoji]] = attrs.field()
     """Sequence of all old emojis in this guild.
 
     This will be `builtins.None` if it's missing from the cache.
     """
 
-    emojis: typing.Sequence[emojis_.KnownCustomEmoji] = attr.field()
+    emojis: typing.Sequence[emojis_.KnownCustomEmoji] = attrs.field()
     """Sequence of all emojis in this guild.
 
     Returns
@@ -570,19 +570,19 @@ class IntegrationEvent(GuildEvent, abc.ABC):
         return await self.app.rest.fetch_integrations(self.guild_id)
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_INTEGRATIONS)
 class IntegrationCreateEvent(IntegrationEvent):
     """Event that is fired when an integration is created in a guild."""
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    integration: guilds.Integration = attr.field()
+    integration: guilds.Integration = attrs.field()
     """Integration that was created."""
 
     @property
@@ -601,41 +601,41 @@ class IntegrationCreateEvent(IntegrationEvent):
         return self.integration.id
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_INTEGRATIONS)
 class IntegrationDeleteEvent(IntegrationEvent):
     """Event that is fired when an integration is deleted in a guild."""
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    application_id: typing.Optional[snowflakes.Snowflake] = attr.field()
+    application_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
     # <<inherited docstring from IntegrationEvent>>.
 
-    guild_id: snowflakes.Snowflake = attr.field()
+    guild_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from ShardEvent>>.
 
-    id: snowflakes.Snowflake = attr.field()
+    id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from IntegrationEvent>>
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_INTEGRATIONS)
 class IntegrationUpdateEvent(IntegrationEvent):
     """Event that is fired when an integration is updated in a guild."""
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    integration: guilds.Integration = attr.field()
+    integration: guilds.Integration = attrs.field()
     """Integration that was updated."""
 
     @property
@@ -654,8 +654,8 @@ class IntegrationUpdateEvent(IntegrationEvent):
         return self.integration.id
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_PRESENCES)
 class PresenceUpdateEvent(shard_events.ShardEvent):
     """Event fired when a user in a guild updates their presence in a guild.
@@ -671,16 +671,16 @@ class PresenceUpdateEvent(shard_events.ShardEvent):
     shards that saw the presence update.
     """
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    old_presence: typing.Optional[presences_.MemberPresence] = attr.field()
+    old_presence: typing.Optional[presences_.MemberPresence] = attrs.field()
     """The old member presence object.
 
     This will be `builtins.None` if the member presence missing from the cache.
     """
 
-    presence: presences_.MemberPresence = attr.field()
+    presence: presences_.MemberPresence = attrs.field()
     """Member presence.
 
     Returns
@@ -689,7 +689,7 @@ class PresenceUpdateEvent(shard_events.ShardEvent):
         Presence for the user in this guild.
     """
 
-    user: typing.Optional[users.PartialUser] = attr.field()
+    user: typing.Optional[users.PartialUser] = attrs.field()
     """User that was updated.
 
     This is a partial user object that only contains the fields that were

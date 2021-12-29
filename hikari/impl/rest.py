@@ -44,7 +44,7 @@ import sys
 import typing
 
 import aiohttp
-import attr
+import attrs
 
 from hikari import _about as about
 from hikari import applications
@@ -422,7 +422,7 @@ class RESTApp(traits.ExecutorAware):
         return rest_client
 
 
-@attr.define()
+@attrs.define()
 class _LiveAttributes:
     """Fields which are only present within `RESTClientImpl` while it's "alive".
 
@@ -430,13 +430,13 @@ class _LiveAttributes:
         This must be started within an active asyncio event loop.
     """
 
-    buckets: buckets_.RESTBucketManager = attr.field()
-    client_session: aiohttp.ClientSession = attr.field()
-    closed_event: asyncio.Event = attr.field()
+    buckets: buckets_.RESTBucketManager = attrs.field()
+    client_session: aiohttp.ClientSession = attrs.field()
+    closed_event: asyncio.Event = attrs.field()
     # We've been told in DAPI that this is per token.
-    global_rate_limit: rate_limits.ManualRateLimiter = attr.field()
-    tcp_connector: aiohttp.TCPConnector = attr.field()
-    is_closing: bool = attr.field(default=False, init=False)
+    global_rate_limit: rate_limits.ManualRateLimiter = attrs.field()
+    tcp_connector: aiohttp.TCPConnector = attrs.field()
+    is_closing: bool = attrs.field(default=False, init=False)
 
     @classmethod
     def build(
@@ -486,7 +486,7 @@ class _LiveAttributes:
         return self
 
 
-@attr.define(auto_exc=True, repr=False, weakref_slot=False)
+@attrs.define(auto_exc=True, repr=False, weakref_slot=False)
 class _RetryRequest(RuntimeError):
     ...
 

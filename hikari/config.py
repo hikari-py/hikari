@@ -37,10 +37,10 @@ import base64
 import ssl as ssl_
 import typing
 
-import attr
+import attrs
 import yarl
 
-from hikari.internal import attr_extensions
+from hikari.internal import attrs_extensions
 from hikari.internal import data_binding
 from hikari.internal import enums
 
@@ -60,12 +60,12 @@ def _ssl_factory(value: typing.Union[bool, ssl_.SSLContext]) -> ssl_.SSLContext:
     return ssl
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, repr=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, repr=True, weakref_slot=False)
 class BasicAuthHeader:
     """An object that can be set as a producer for a basic auth header."""
 
-    username: str = attr.field(validator=attr.validators.instance_of(str))
+    username: str = attrs.field(validator=attrs.validators.instance_of(str))
     """Username for the header.
 
     Returns
@@ -74,7 +74,7 @@ class BasicAuthHeader:
         The username to use. This must not contain `":"`.
     """
 
-    password: str = attr.field(repr=False, validator=attr.validators.instance_of(str))
+    password: str = attrs.field(repr=False, validator=attrs.validators.instance_of(str))
     """Password to use.
 
     Returns
@@ -83,7 +83,7 @@ class BasicAuthHeader:
         The password to use.
     """
 
-    charset: str = attr.field(default="utf-8", validator=attr.validators.instance_of(str))
+    charset: str = attrs.field(default="utf-8", validator=attrs.validators.instance_of(str))
     """Encoding to use for the username and password.
 
     Default is `"utf-8"`, but you may choose to use something else,
@@ -113,12 +113,12 @@ class BasicAuthHeader:
         return self.header
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 class ProxySettings:
     """Settings for configuring an HTTP-based proxy."""
 
-    auth: typing.Any = attr.field(default=None)
+    auth: typing.Any = attrs.field(default=None)
     """Authentication header value to use.
 
     When cast to a `builtins.str`, this should provide the full value
@@ -138,10 +138,10 @@ class ProxySettings:
         to disable.
     """
 
-    headers: typing.Optional[data_binding.Headers] = attr.field(default=None)
+    headers: typing.Optional[data_binding.Headers] = attrs.field(default=None)
     """Additional headers to use for requests via a proxy, if required."""
 
-    url: typing.Union[None, str, yarl.URL] = attr.field(default=None)
+    url: typing.Union[None, str, yarl.URL] = attrs.field(default=None)
     """Proxy URL to use.
 
     Defaults to `builtins.None` which disables the use of an explicit proxy.
@@ -153,11 +153,13 @@ class ProxySettings:
     """
 
     @url.validator
-    def _(self, _: attr.Attribute[typing.Union[None, str, yarl.URL]], value: typing.Union[None, str, yarl.URL]) -> None:
+    def _(
+        self, _: attrs.Attribute[typing.Union[None, str, yarl.URL]], value: typing.Union[None, str, yarl.URL]
+    ) -> None:
         if value is not None and not isinstance(value, (str, yarl.URL)):
             raise ValueError("ProxySettings.url must be None, a str, or a yarl.URL instance")
 
-    trust_env: bool = attr.field(default=False, validator=attr.validators.instance_of(bool))
+    trust_env: bool = attrs.field(default=False, validator=attrs.validators.instance_of(bool))
     """Toggle whether to look for a `netrc` file or environment variables.
 
     If `builtins.True`, and no `url` is given on this object, then
@@ -200,12 +202,12 @@ class ProxySettings:
         return {**self.headers, _PROXY_AUTHENTICATION_HEADER: self.auth}
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 class HTTPTimeoutSettings:
     """Settings to control HTTP request timeouts."""
 
-    acquire_and_connect: typing.Optional[float] = attr.field(default=None)
+    acquire_and_connect: typing.Optional[float] = attrs.field(default=None)
     """Timeout for `request_socket_connect` PLUS connection acquisition.
 
     By default, this has no timeout allocated.
@@ -216,7 +218,7 @@ class HTTPTimeoutSettings:
         The timeout, or `builtins.None` to disable it.
     """
 
-    request_socket_connect: typing.Optional[float] = attr.field(default=None)
+    request_socket_connect: typing.Optional[float] = attrs.field(default=None)
     """Timeout for connecting a socket.
 
     By default, this has no timeout allocated.
@@ -227,7 +229,7 @@ class HTTPTimeoutSettings:
         The timeout, or `builtins.None` to disable it.
     """
 
-    request_socket_read: typing.Optional[float] = attr.field(default=None)
+    request_socket_read: typing.Optional[float] = attrs.field(default=None)
     """Timeout for reading a socket.
 
     By default, this has no timeout allocated.
@@ -238,7 +240,7 @@ class HTTPTimeoutSettings:
         The timeout, or `builtins.None` to disable it.
     """
 
-    total: typing.Optional[float] = attr.field(default=30.0)
+    total: typing.Optional[float] = attrs.field(default=30.0)
     """Total timeout for entire request.
 
     By default, this has a 30 second timeout allocated.
@@ -253,19 +255,19 @@ class HTTPTimeoutSettings:
     @request_socket_connect.validator
     @request_socket_read.validator
     @total.validator
-    def _(self, attrib: attr.Attribute[typing.Optional[float]], value: typing.Optional[float]) -> None:
+    def _(self, attrib: attrs.Attribute[typing.Optional[float]], value: typing.Optional[float]) -> None:
         # This error won't occur until some time in the future where it will be annoying to
         # try and determine the root cause, so validate it NOW.
         if value is not None and (not isinstance(value, (float, int)) or value <= 0):
             raise ValueError(f"HTTPTimeoutSettings.{attrib.name} must be None, or a POSITIVE float/int")
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 class HTTPSettings:
     """Settings to control HTTP clients."""
 
-    enable_cleanup_closed: bool = attr.field(default=True, validator=attr.validators.instance_of(bool))
+    enable_cleanup_closed: bool = attrs.field(default=True, validator=attrs.validators.instance_of(bool))
     """Toggle whether to clean up closed transports.
 
     This defaults to `builtins.True` to combat various protocol and asyncio
@@ -280,7 +282,7 @@ class HTTPSettings:
         it.
     """
 
-    force_close_transports: bool = attr.field(default=True, validator=attr.validators.instance_of(bool))
+    force_close_transports: bool = attrs.field(default=True, validator=attrs.validators.instance_of(bool))
     """Toggle whether to force close transports on shutdown.
 
     This defaults to `builtins.True` to combat various protocol and asyncio
@@ -295,7 +297,7 @@ class HTTPSettings:
         it.
     """
 
-    max_redirects: typing.Optional[int] = attr.field(default=10)
+    max_redirects: typing.Optional[int] = attrs.field(default=10)
     """Behavior for handling redirect HTTP responses.
 
     If a `builtins.int`, allow following redirects from `3xx` HTTP responses
@@ -324,16 +326,16 @@ class HTTPSettings:
     """
 
     @max_redirects.validator
-    def _(self, _: attr.Attribute[typing.Optional[int]], value: typing.Optional[int]) -> None:
+    def _(self, _: attrs.Attribute[typing.Optional[int]], value: typing.Optional[int]) -> None:
         # This error won't occur until some time in the future where it will be annoying to
         # try and determine the root cause, so validate it NOW.
         if value is not None and (not isinstance(value, int) or value <= 0):
             raise ValueError("http_settings.max_redirects must be None or a POSITIVE integer")
 
-    ssl: ssl_.SSLContext = attr.field(
+    ssl: ssl_.SSLContext = attrs.field(
         factory=lambda: _ssl_factory(True),
         converter=_ssl_factory,
-        validator=attr.validators.instance_of(ssl_.SSLContext),
+        validator=attrs.validators.instance_of(ssl_.SSLContext),
     )
     """SSL context to use.
 
@@ -372,8 +374,8 @@ class HTTPSettings:
         The SSL context to use for this application.
     """
 
-    timeouts: HTTPTimeoutSettings = attr.field(
-        factory=HTTPTimeoutSettings, validator=attr.validators.instance_of(HTTPTimeoutSettings)
+    timeouts: HTTPTimeoutSettings = attrs.field(
+        factory=HTTPTimeoutSettings, validator=attrs.validators.instance_of(HTTPTimeoutSettings)
     )
     """Settings to control HTTP request timeouts.
 
@@ -438,18 +440,18 @@ class CacheComponents(enums.Flag):
     """Fully enables the cache."""
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 class CacheSettings:
     """Settings to control the cache."""
 
-    components: CacheComponents = attr.field(default=CacheComponents.ALL)
+    components: CacheComponents = attrs.field(default=CacheComponents.ALL)
     """The cache components to use.
 
     Defaults to `CacheComponents.ALL`.
     """
 
-    max_messages: int = attr.field(default=300)
+    max_messages: int = attrs.field(default=300)
     """The maximum number of messages to store in the cache at once.
 
     This will have no effect if the messages cache is not enabled.
@@ -457,7 +459,7 @@ class CacheSettings:
     Defaults to `300`.
     """
 
-    max_dm_channel_ids: int = attr.field(default=50)
+    max_dm_channel_ids: int = attrs.field(default=50)
     """The maximum number of channel IDs to store in the cache at once.
 
     This will have no effect if the channel IDs cache is not enabled.

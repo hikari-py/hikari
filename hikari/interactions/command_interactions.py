@@ -34,7 +34,7 @@ __all__: typing.List[str] = [
 
 import typing
 
-import attr
+import attrs
 
 from hikari import channels
 from hikari import commands
@@ -42,7 +42,7 @@ from hikari import snowflakes
 from hikari import traits
 from hikari import undefined
 from hikari.interactions import base_interactions
-from hikari.internal import attr_extensions
+from hikari.internal import attrs_extensions
 
 if typing.TYPE_CHECKING:
     from hikari import guilds
@@ -74,45 +74,45 @@ The following types are valid for this:
 """
 
 
-@attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class InteractionChannel(channels.PartialChannel):
     """Represents partial channels returned as resolved entities on interactions."""
 
-    permissions: permissions_.Permissions = attr.field(eq=False, hash=False, repr=True)
+    permissions: permissions_.Permissions = attrs.field(eq=False, hash=False, repr=True)
     """Permissions the command's executor has in this channel."""
 
 
-@attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=False, kw_only=True, weakref_slot=False)
 class ResolvedOptionData:
     """Represents the resolved objects of entities referenced in a command's options."""
 
-    users: typing.Mapping[snowflakes.Snowflake, users_.User] = attr.field(repr=False)
+    users: typing.Mapping[snowflakes.Snowflake, users_.User] = attrs.field(repr=False)
     """Mapping of snowflake IDs to the resolved option user objects."""
 
-    members: typing.Mapping[snowflakes.Snowflake, base_interactions.InteractionMember] = attr.field(repr=False)
+    members: typing.Mapping[snowflakes.Snowflake, base_interactions.InteractionMember] = attrs.field(repr=False)
     """Mapping of snowflake IDs to the resolved option member objects."""
 
-    roles: typing.Mapping[snowflakes.Snowflake, guilds.Role] = attr.field(repr=False)
+    roles: typing.Mapping[snowflakes.Snowflake, guilds.Role] = attrs.field(repr=False)
     """Mapping of snowflake IDs to the resolved option role objects."""
 
-    channels: typing.Mapping[snowflakes.Snowflake, InteractionChannel] = attr.field(repr=False)
+    channels: typing.Mapping[snowflakes.Snowflake, InteractionChannel] = attrs.field(repr=False)
     """Mapping of snowflake iDs to the resolved option partial channel objects."""
 
 
-@attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=False, kw_only=True, weakref_slot=False)
 class CommandInteractionOption:
     """Represents the options passed for a command interaction."""
 
-    name: str = attr.field(repr=True)
+    name: str = attrs.field(repr=True)
     """Name of this option."""
 
-    type: typing.Union[commands.OptionType, int] = attr.field(repr=True)
+    type: typing.Union[commands.OptionType, int] = attrs.field(repr=True)
     """Type of this option."""
 
-    value: typing.Union[snowflakes.Snowflake, str, int, bool, None] = attr.field(repr=True)
+    value: typing.Union[snowflakes.Snowflake, str, int, bool, None] = attrs.field(repr=True)
     """Value provided for this option.
 
     Either `CommandInteractionOption.value` or `CommandInteractionOption.options`
@@ -121,7 +121,7 @@ class CommandInteractionOption:
     subcommand or group.
     """
 
-    options: typing.Optional[typing.Sequence[CommandInteractionOption]] = attr.field(repr=True)
+    options: typing.Optional[typing.Sequence[CommandInteractionOption]] = attrs.field(repr=True)
     """Options provided for this option.
 
     Either `CommandInteractionOption.value` or `CommandInteractionOption.options`
@@ -131,21 +131,21 @@ class CommandInteractionOption:
     """
 
 
-@attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class CommandInteraction(base_interactions.MessageResponseMixin[CommandResponseTypesT]):
     """Represents a command interaction on Discord."""
 
-    channel_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
+    channel_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
     """ID of the channel this command interaction event was triggered in."""
 
-    guild_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=True)
+    guild_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
     """ID of the guild this command interaction event was triggered in.
 
     This will be `builtins.None` for command interactions triggered in DMs.
     """
 
-    member: typing.Optional[base_interactions.InteractionMember] = attr.field(eq=False, hash=False, repr=True)
+    member: typing.Optional[base_interactions.InteractionMember] = attrs.field(eq=False, hash=False, repr=True)
     """The member who triggered this command interaction.
 
     This will be `builtins.None` for command interactions triggered in DMs.
@@ -155,19 +155,19 @@ class CommandInteraction(base_interactions.MessageResponseMixin[CommandResponseT
         contains the member's permissions in the current channel.
     """
 
-    user: users_.User = attr.field(eq=False, hash=False, repr=True)
+    user: users_.User = attrs.field(eq=False, hash=False, repr=True)
     """The user who triggered this command interaction."""
 
-    command_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
+    command_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
     """ID of the command being invoked."""
 
-    command_name: str = attr.field(eq=False, hash=False, repr=True)
+    command_name: str = attrs.field(eq=False, hash=False, repr=True)
     """Name of the command being invoked."""
 
-    options: typing.Optional[typing.Sequence[CommandInteractionOption]] = attr.field(eq=False, hash=False, repr=True)
+    options: typing.Optional[typing.Sequence[CommandInteractionOption]] = attrs.field(eq=False, hash=False, repr=True)
     """Parameter values provided by the user invoking this command."""
 
-    resolved: typing.Optional[ResolvedOptionData] = attr.field(eq=False, hash=False, repr=False)
+    resolved: typing.Optional[ResolvedOptionData] = attrs.field(eq=False, hash=False, repr=False)
     """Mappings of the objects resolved for the provided command options."""
 
     def build_response(self) -> special_endpoints.InteractionMessageBuilder:

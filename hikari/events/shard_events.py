@@ -38,10 +38,10 @@ __all__: typing.List[str] = [
 import abc
 import typing
 
-import attr
+import attrs
 
 from hikari.events import base_events
-from hikari.internal import attr_extensions
+from hikari.internal import attrs_extensions
 from hikari.internal import collections
 
 if typing.TYPE_CHECKING:
@@ -71,8 +71,8 @@ class ShardEvent(base_events.Event, abc.ABC):
         """
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 class ShardPayloadEvent(ShardEvent):
     """Event fired for most shard events with their raw payload.
 
@@ -81,16 +81,16 @@ class ShardPayloadEvent(ShardEvent):
         Discord and not artificial events like the `ShardStateEvent` events.
     """
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.
 
-    name: str = attr.field()
+    name: str = attrs.field()
     """Name of the received event."""
 
-    payload: typing.Mapping[str, typing.Any] = attr.field()
+    payload: typing.Mapping[str, typing.Any] = attrs.field()
     """The raw payload for this event."""
 
 
@@ -103,39 +103,39 @@ class ShardStateEvent(ShardEvent, abc.ABC):
     __slots__: typing.Sequence[str] = ()
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 class ShardConnectedEvent(ShardStateEvent):
     """Event fired when a shard connects."""
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 class ShardDisconnectedEvent(ShardStateEvent):
     """Event fired when a shard disconnects."""
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 class ShardReadyEvent(ShardStateEvent):
     """Event fired when a shard declares it is ready."""
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.
 
-    actual_gateway_version: int = attr.field(repr=True)
+    actual_gateway_version: int = attrs.field(repr=True)
     """Actual gateway version being used.
 
     Returns
@@ -144,7 +144,7 @@ class ShardReadyEvent(ShardStateEvent):
         The actual gateway version we are actively using for this protocol.
     """
 
-    session_id: str = attr.field(repr=True)
+    session_id: str = attrs.field(repr=True)
     """ID for this session.
 
     Returns
@@ -153,7 +153,7 @@ class ShardReadyEvent(ShardStateEvent):
         The session ID for this gateway session.
     """
 
-    my_user: users.OwnUser = attr.field(repr=True)
+    my_user: users.OwnUser = attrs.field(repr=True)
     """User for the current bot account this connection is authenticated with.
 
     Returns
@@ -162,7 +162,7 @@ class ShardReadyEvent(ShardStateEvent):
         This bot's user.
     """
 
-    unavailable_guilds: typing.Sequence[snowflakes.Snowflake] = attr.field(repr=False)
+    unavailable_guilds: typing.Sequence[snowflakes.Snowflake] = attrs.field(repr=False)
     """Sequence of the IDs for all guilds this bot is currently in.
 
     All guilds will start off "unavailable" and should become available after
@@ -174,7 +174,7 @@ class ShardReadyEvent(ShardStateEvent):
         All guild IDs that the bot is in for this shard.
     """
 
-    application_id: snowflakes.Snowflake = attr.field(repr=True)
+    application_id: snowflakes.Snowflake = attrs.field(repr=True)
     """ID of the application this ready event is for.
 
     Returns
@@ -183,7 +183,7 @@ class ShardReadyEvent(ShardStateEvent):
         The current application's ID.
     """
 
-    application_flags: applications.ApplicationFlags = attr.field(repr=True)
+    application_flags: applications.ApplicationFlags = attrs.field(repr=True)
     """Flags of the application this ready event is for.
 
     Returns
@@ -198,33 +198,33 @@ class ShardReadyEvent(ShardStateEvent):
         return self.my_user.app
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 class ShardResumedEvent(ShardStateEvent):
     """Event fired when a shard resumes an existing session."""
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 class MemberChunkEvent(ShardEvent, typing.Sequence["guilds.Member"]):
     """Event fired when a member chunk payload is received on a gateway shard."""
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.
 
-    guild_id: snowflakes.Snowflake = attr.field(repr=True)
+    guild_id: snowflakes.Snowflake = attrs.field(repr=True)
     # <<docstring inherited from ShardEvent>>.
 
-    members: typing.Mapping[snowflakes.Snowflake, guilds.Member] = attr.field(repr=False)
+    members: typing.Mapping[snowflakes.Snowflake, guilds.Member] = attrs.field(repr=False)
     """Mapping of user IDs to the objects of the members in this chunk.
 
     Returns
@@ -233,7 +233,7 @@ class MemberChunkEvent(ShardEvent, typing.Sequence["guilds.Member"]):
         Mapping of user IDs to corresponding member objects.
     """
 
-    chunk_index: int = attr.field(repr=True)
+    chunk_index: int = attrs.field(repr=True)
     """Zero-indexed position of this within the queued up chunks for this request.
 
     Returns
@@ -242,7 +242,7 @@ class MemberChunkEvent(ShardEvent, typing.Sequence["guilds.Member"]):
         The sequence index for this chunk.
     """
 
-    chunk_count: int = attr.field(repr=True)
+    chunk_count: int = attrs.field(repr=True)
     """Total number of expected chunks for the request this is associated with.
 
     Returns
@@ -251,7 +251,7 @@ class MemberChunkEvent(ShardEvent, typing.Sequence["guilds.Member"]):
         Total number of chunks to be expected.
     """
 
-    not_found: typing.Sequence[snowflakes.Snowflake] = attr.field(repr=True)
+    not_found: typing.Sequence[snowflakes.Snowflake] = attrs.field(repr=True)
     """Sequence of the snowflakes that were not found while making this request.
 
     This is only applicable when user IDs are specified while making the
@@ -263,7 +263,7 @@ class MemberChunkEvent(ShardEvent, typing.Sequence["guilds.Member"]):
         Sequence of user IDs that were not found.
     """
 
-    presences: typing.Mapping[snowflakes.Snowflake, presences_.MemberPresence] = attr.field(repr=False)
+    presences: typing.Mapping[snowflakes.Snowflake, presences_.MemberPresence] = attrs.field(repr=False)
     """Mapping of user IDs to found member presence objects.
 
     This will be empty if no presences are found or `include_presences` is not passed as
@@ -275,7 +275,7 @@ class MemberChunkEvent(ShardEvent, typing.Sequence["guilds.Member"]):
         Mapping of user IDs to corresponding presences.
     """
 
-    nonce: typing.Optional[str] = attr.field(repr=True)
+    nonce: typing.Optional[str] = attrs.field(repr=True)
     """String nonce used to identify the request member chunks are associated with.
 
     This is the nonce value passed while requesting member chunks.

@@ -27,7 +27,7 @@ __all__: typing.List[str] = ["ComponentInteraction", "COMPONENT_RESPONSE_TYPES",
 
 import typing
 
-import attr
+import attrs
 
 from hikari import channels
 from hikari import traits
@@ -81,14 +81,14 @@ The following types are valid for this:
 """
 
 
-@attr.define(hash=True, weakref_slot=False)
+@attrs.define(hash=True, weakref_slot=False)
 class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentResponseTypesT]):
     """Represents a component interaction on Discord."""
 
-    channel_id: snowflakes.Snowflake = attr.field(eq=False)
+    channel_id: snowflakes.Snowflake = attrs.field(eq=False)
     """ID of the channel this interaction was triggered in."""
 
-    component_type: typing.Union[messages.ComponentType, int] = attr.field(eq=False)
+    component_type: typing.Union[messages.ComponentType, int] = attrs.field(eq=False)
     """The type of component which triggers this interaction.
 
     !!! note
@@ -96,21 +96,21 @@ class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentRespo
         interactions.
     """
 
-    custom_id: str = attr.field(eq=False)
+    custom_id: str = attrs.field(eq=False)
     """Developer defined ID of the component which triggered this interaction."""
 
-    values: typing.Sequence[str] = attr.field(eq=False)
+    values: typing.Sequence[str] = attrs.field(eq=False)
     """Sequence of the values which were selected for a select menu component."""
 
-    guild_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False)
+    guild_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False)
     """ID of the guild this interaction was triggered in.
 
     This will be `builtins.None` for command interactions triggered in DMs.
     """
-    message: messages.Message = attr.field(eq=False, repr=False)
+    message: messages.Message = attrs.field(eq=False, repr=False)
     """Object of the message the components for this interaction are attached to."""
 
-    member: typing.Optional[base_interactions.InteractionMember] = attr.field(eq=False, hash=False, repr=True)
+    member: typing.Optional[base_interactions.InteractionMember] = attrs.field(eq=False, hash=False, repr=True)
     """The member who triggered this interaction.
 
     This will be `builtins.None` for interactions triggered in DMs.
@@ -120,7 +120,7 @@ class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentRespo
         contains the member's permissions in the current channel.
     """
 
-    user: users.User = attr.field(eq=False, hash=False, repr=True)
+    user: users.User = attrs.field(eq=False, hash=False, repr=True)
     """The user who triggered this interaction."""
 
     def build_response(self, type_: _ImmediateTypesT, /) -> special_endpoints.InteractionMessageBuilder:
