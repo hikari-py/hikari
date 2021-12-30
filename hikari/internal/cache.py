@@ -412,6 +412,7 @@ class MemberData(BaseData[guilds.Member]):
     is_deaf: undefined.UndefinedOr[bool] = attr.field()
     is_mute: undefined.UndefinedOr[bool] = attr.field()
     is_pending: undefined.UndefinedOr[bool] = attr.field()
+    raw_communication_disabled_until: typing.Optional[datetime.datetime] = attr.field()
     # meta-attribute
     has_been_deleted: bool = attr.field(default=False)
 
@@ -429,6 +430,7 @@ class MemberData(BaseData[guilds.Member]):
             is_mute=member.is_mute,
             is_pending=member.is_pending,
             user=user or RefCell(copy.copy(member.user)),
+            raw_communication_disabled_until=member.raw_communication_disabled_until,
             # role_ids is a special case as it may be mutable so we want to ensure it's immutable when cached.
             role_ids=tuple(member.role_ids),
         )
@@ -444,6 +446,7 @@ class MemberData(BaseData[guilds.Member]):
             is_deaf=self.is_deaf,
             is_mute=self.is_mute,
             is_pending=self.is_pending,
+            raw_communication_disabled_until=self.raw_communication_disabled_until,
             user=self.user.copy(),
         )
 

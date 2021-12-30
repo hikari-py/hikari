@@ -4953,6 +4953,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         voice_channel: undefined.UndefinedNoneOr[
             snowflakes.SnowflakeishOr[channels_.GuildVoiceChannel]
         ] = undefined.UNDEFINED,
+        communication_disabled_until: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.Member:
         """Edit a guild member.
@@ -4997,6 +4998,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             !!! note
                 If the member is not in a voice channel, this will
                 take no effect.
+        communication_disabled_until : hikari.undefined.UndefinedNoneOr[datetime.datetime]
+            If provided, the datetime when the timeout (disable communication)
+            of the member expires, up to 28 days in the future, or `builtins.None`
+            to remove the timeout from the member.
+
+            Requires the `MODERATE_MEMBERS` permission.
         reason : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.

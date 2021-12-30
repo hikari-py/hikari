@@ -68,6 +68,7 @@ from hikari import users
 from hikari.internal import attr_extensions
 from hikari.internal import enums
 from hikari.internal import routes
+from hikari.internal import time
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -79,7 +80,6 @@ if typing.TYPE_CHECKING:
     from hikari import permissions as permissions_
     from hikari import presences as presences_
     from hikari import voices as voices_
-    from hikari.internal import time
 
 
 @typing.final
@@ -366,6 +366,17 @@ class Member(users.User):
     Will be `builtins.None` if the member is not a premium user.
     """
 
+    raw_communication_disabled_until: typing.Optional[datetime.datetime] = attr.field(repr=False)
+    """The datetime when this member's timeout will expire.
+
+     Will be `builtins.None` if the member is not timed out.
+
+     !!! note
+        The datetime might be in the past, so it is recommended to use
+        `communication_disabled_until` method to check if the member is timed
+        out at the time of the call.
+     """
+
     role_ids: typing.Sequence[snowflakes.Snowflake] = attr.field(repr=False)
     """A sequence of the IDs of the member's current roles."""
 
@@ -486,6 +497,23 @@ class Member(users.User):
             The mention string to use.
         """
         return f"<@!{self.id}>" if self.nickname is not None else self.user.mention
+
+    def communication_disabled_until(self) -> typing.Optional[datetime.datetime]:
+        """Return when the timeout for this member ends.
+
+        Unlike `raw_communictation_disabled_until`, this will always be
+        `builtins.None` if the member is not currently timed out.
+
+        !!! note
+            The output of this function can depend based on when
+            the function is called.
+        """
+        if (
+            self.raw_communication_disabled_until is not None
+            and self.raw_communication_disabled_until > time.utc_datetime()
+        ):
+            return self.raw_communication_disabled_until
+        return None
 
     def get_presence(self) -> typing.Optional[presences_.MemberPresence]:
         """Get the cached presence for this member, if known.
@@ -879,6 +907,7 @@ class Member(users.User):
         voice_channel: undefined.UndefinedNoneOr[
             snowflakes.SnowflakeishOr[channels_.GuildVoiceChannel]
         ] = undefined.UNDEFINED,
+        communication_disabled_until: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> Member:
         """Edit the member.
@@ -914,6 +943,12 @@ class Member(users.User):
             !!! note
                 If the member is not in a voice channel, this will
                 take no effect.
+        communication_disabled_until : hikari.undefined.UndefinedNoneOr[datetime.datetime]
+            If provided, the datetime when the timeout (disable communication)
+            of the member expires, up to 28 days in the future, or `builtins.None`
+            to remove the timeout from the member.
+
+            Requires the `MODERATE_MEMBERS` permission.
         reason : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -955,6 +990,7 @@ class Member(users.User):
             mute=mute,
             deaf=deaf,
             voice_channel=voice_channel,
+            communication_disabled_until=communication_disabled_until,
             reason=reason,
         )
 
