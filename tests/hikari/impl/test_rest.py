@@ -3452,8 +3452,16 @@ class TestRESTClientImplAsync:
 
     async def test_edit_member(self, rest_client):
         expected_route = routes.PATCH_GUILD_MEMBER.compile(guild=123, user=456)
-        expected_json = {"nick": "test", "roles": ["654", "321"], "mute": True, "deaf": False, "channel_id": "987"}
+        expected_json = {
+            "nick": "test",
+            "roles": ["654", "321"],
+            "mute": True,
+            "deaf": False,
+            "channel_id": "987",
+            "communication_disabled_until": "2021-10-18T07:18:11.554023+00:00",
+        }
         rest_client._request = mock.AsyncMock(return_value={"id": "789"})
+        mock_timestamp = datetime.datetime(2021, 10, 18, 7, 18, 11, 554023, tzinfo=datetime.timezone.utc)
 
         result = await rest_client.edit_member(
             StubModel(123),
@@ -3463,6 +3471,7 @@ class TestRESTClientImplAsync:
             mute=True,
             deaf=False,
             voice_channel=StubModel(987),
+            communication_disabled_until=mock_timestamp,
             reason="because i can",
         )
         assert result is rest_client._entity_factory.deserialize_member.return_value
@@ -3492,11 +3501,25 @@ class TestRESTClientImplAsync:
         rest_client._entity_factory.deserialize_member.assert_called_once_with(
             rest_client._request.return_value, guild_id=123
         )
-        rest_client._request.assert_awaited_once_with(
-            expected_route,
-            json=expected_json,
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="because i can")
+
+    async def test_edit_member_when_communication_disabled_until_is_None(self, rest_client):
+        expected_route = routes.PATCH_GUILD_MEMBER.compile(guild=123, user=456)
+        expected_json = {"communication_disabled_until": None}
+        rest_client._request = mock.AsyncMock(return_value={"id": "789"})
+
+        result = await rest_client.edit_member(
+            StubModel(123),
+            StubModel(456),
+            communication_disabled_until=None,
             reason="because i can",
         )
+        assert result is rest_client._entity_factory.deserialize_member.return_value
+
+        rest_client._entity_factory.deserialize_member.assert_called_once_with(
+            rest_client._request.return_value, guild_id=123
+        )
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="because i can")
 
     async def test_edit_member_without_optionals(self, rest_client):
         expected_route = routes.PATCH_GUILD_MEMBER.compile(guild=123, user=456)

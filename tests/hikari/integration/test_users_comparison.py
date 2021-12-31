@@ -81,6 +81,7 @@ def make_guild_member(user_id, username):
         is_deaf=False,
         is_mute=False,
         is_pending=False,
+        raw_communication_disabled_until=None,
     )
 
 

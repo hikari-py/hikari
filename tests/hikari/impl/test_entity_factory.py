@@ -1886,6 +1886,7 @@ class TestEntityFactoryImpl:
             "mute": True,
             "pending": False,
             "user": user_payload,
+            "communication_disabled_until": "2021-10-18T06:26:56.936000+00:00",
         }
 
     def test_deserialize_member(self, entity_factory_impl, mock_app, member_payload, user_payload):
@@ -1899,6 +1900,9 @@ class TestEntityFactoryImpl:
         assert member.role_ids == [11111, 22222, 33333, 44444, 76543325]
         assert member.joined_at == datetime.datetime(2015, 4, 26, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc)
         assert member.premium_since == datetime.datetime(2019, 5, 17, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc)
+        assert member.raw_communication_disabled_until == datetime.datetime(
+            2021, 10, 18, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc
+        )
         assert member.is_deaf is False
         assert member.is_mute is True
         assert member.is_pending is False
@@ -1936,6 +1940,7 @@ class TestEntityFactoryImpl:
                 "pending": False,
                 "user": user_payload,
                 "guild_id": "123123453234",
+                "communication_disabled_until": None,
             }
         )
         assert member.nickname is None
@@ -2883,6 +2888,7 @@ class TestEntityFactoryImpl:
             "avatar": "oestrogen",
             "permissions": "17179869183",
             "premium_since": "2020-10-01T23:06:10.431000+00:00",
+            "communication_disabled_until": "2021-10-18T23:06:10.431000+00:00",
             "roles": [
                 "582345963851743243",
                 "582689893965365248",
@@ -2902,6 +2908,9 @@ class TestEntityFactoryImpl:
         assert member.is_mute is undefined.UNDEFINED
         assert member.is_pending is False
         assert member.premium_since == datetime.datetime(2020, 10, 1, 23, 6, 10, 431000, tzinfo=datetime.timezone.utc)
+        assert member.raw_communication_disabled_until == datetime.datetime(
+            2021, 10, 18, 23, 6, 10, 431000, tzinfo=datetime.timezone.utc
+        )
         assert member.role_ids == [
             582345963851743243,
             582689893965365248,
@@ -2938,11 +2947,13 @@ class TestEntityFactoryImpl:
     ):
         del interaction_member_payload["premium_since"]
         del interaction_member_payload["avatar"]
+        del interaction_member_payload["communication_disabled_until"]
 
         member = entity_factory_impl._deserialize_interaction_member(interaction_member_payload, guild_id=43123123)
 
         assert member.guild_avatar_hash is None
         assert member.premium_since is None
+        assert member.raw_communication_disabled_until is None
 
     def test__deserialize_interaction_member_with_passed_user(
         self, entity_factory_impl, interaction_member_payload, user_payload

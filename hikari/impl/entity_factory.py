@@ -1177,6 +1177,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             time.iso8601_datetime_string_to_datetime(raw_premium_since) if raw_premium_since is not None else None
         )
 
+        if raw_communication_disabled_until := payload.get("communication_disabled_until"):
+            communication_disabled_until = time.iso8601_datetime_string_to_datetime(raw_communication_disabled_until)
+        else:
+            communication_disabled_until = None
+
         return guild_models.Member(
             user=user,
             guild_id=guild_id,
@@ -1188,6 +1193,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             is_deaf=payload.get("deaf", undefined.UNDEFINED),
             is_mute=payload.get("mute", undefined.UNDEFINED),
             is_pending=payload.get("pending", undefined.UNDEFINED),
+            raw_communication_disabled_until=communication_disabled_until,
         )
 
     def deserialize_role(
@@ -1790,6 +1796,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if (raw_premium_since := payload.get("premium_since")) is not None:
             premium_since = time.iso8601_datetime_string_to_datetime(raw_premium_since)
 
+        if raw_disabled_until := payload.get("communication_disabled_until"):
+            disabled_until = time.iso8601_datetime_string_to_datetime(raw_disabled_until)
+        else:
+            disabled_until = None
+
         # TODO: deduplicate member unmarshalling logic
         return base_interactions.InteractionMember(
             user=user,
@@ -1803,6 +1814,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             is_mute=payload.get("mute", undefined.UNDEFINED),
             is_pending=payload.get("pending", undefined.UNDEFINED),
             permissions=permission_models.Permissions(int(payload["permissions"])),
+            raw_communication_disabled_until=disabled_until,
         )
 
     def deserialize_command_interaction(

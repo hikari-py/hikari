@@ -2706,6 +2706,7 @@ class RESTClientImpl(rest_api.RESTClient):
         voice_channel: undefined.UndefinedNoneOr[
             snowflakes.SnowflakeishOr[channels_.GuildVoiceChannel]
         ] = undefined.UNDEFINED,
+        communication_disabled_until: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.Member:
         route = routes.PATCH_GUILD_MEMBER.compile(guild=guild, user=user)
@@ -2717,8 +2718,13 @@ class RESTClientImpl(rest_api.RESTClient):
 
         if voice_channel is None:
             body.put("channel_id", None)
-        elif voice_channel is not undefined.UNDEFINED:
+        else:
             body.put_snowflake("channel_id", voice_channel)
+
+        if isinstance(communication_disabled_until, datetime.datetime):
+            body.put("communication_disabled_until", communication_disabled_until.isoformat())
+        else:
+            body.put("communication_disabled_until", communication_disabled_until)
 
         response = await self._request(route, json=body, reason=reason)
         assert isinstance(response, dict)
