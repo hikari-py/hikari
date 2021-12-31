@@ -139,8 +139,8 @@ class CommandOption:
         This will be inclusively between 1-100 characters in length.
     """
 
-    is_required: bool = attr.field(repr=False)
-    """Whether this command """
+    is_required: bool = attr.field(default=False, repr=False)
+    """Whether this command option is required."""
 
     choices: typing.Optional[typing.Sequence[CommandChoice]] = attr.field(default=None, repr=False)
     """A sequence of up to (and including) 25 choices for this command.
