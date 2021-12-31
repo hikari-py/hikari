@@ -68,7 +68,7 @@ if typing.TYPE_CHECKING:
 
 
 def _generate_weak_listener(
-    reference: weakref.WeakMethod,
+    reference: weakref.WeakMethod[typing.Any],
 ) -> typing.Callable[[event_manager_.EventT], typing.Coroutine[typing.Any, typing.Any, None]]:
     async def call_weak_method(event: event_manager_.EventT) -> None:
         method = reference()
@@ -104,6 +104,8 @@ class EventStream(event_manager_.EventStream[event_manager_.EventT]):
         "_registered_listener",
         "_timeout",
     )
+
+    __weakref__: typing.Optional[weakref.ref[EventStream[event_manager_.EventT]]]
 
     def __init__(
         self,
@@ -233,7 +235,7 @@ class EventStream(event_manager_.EventStream[event_manager_.EventT]):
             # listener with a weakref then try to close this on deletion. While this may lead to their consoles being
             # spammed, this is a small price to pay as it'll be way more obvious what's wrong than if we just left them
             # with a vague ominous memory leak.
-            reference = weakref.WeakMethod(self._listener)  # type: ignore[arg-type]
+            reference = weakref.WeakMethod(self._listener)
             listener = _generate_weak_listener(reference)
             self._registered_listener = listener
             self._event_manager.subscribe(self._event_type, listener)

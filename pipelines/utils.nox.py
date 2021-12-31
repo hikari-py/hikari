@@ -39,7 +39,7 @@ TRASH = [
 ]
 
 
-@nox.session(reuse_venv=False)
+@nox.session(reuse_venv=False, venv_backend="none")
 def purge(_: nox.Session) -> None:
     """Delete any nox-generated files."""
     for trash in TRASH:

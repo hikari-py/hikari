@@ -349,6 +349,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             rpc_origins=payload.get("rpc_origins"),
             summary=payload["summary"] or None,
             public_key=bytes.fromhex(payload["verify_key"]),
+            flags=application_models.ApplicationFlags(payload["flags"]),
             icon_hash=payload.get("icon"),
             team=team,
             guild_id=snowflakes.Snowflake(payload["guild_id"]) if "guild_id" in payload else None,
@@ -1178,6 +1179,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             time.iso8601_datetime_string_to_datetime(raw_premium_since) if raw_premium_since is not None else None
         )
 
+        if raw_communication_disabled_until := payload.get("communication_disabled_until"):
+            communication_disabled_until = time.iso8601_datetime_string_to_datetime(raw_communication_disabled_until)
+        else:
+            communication_disabled_until = None
+
         return guild_models.Member(
             user=user,
             guild_id=guild_id,
@@ -1189,6 +1195,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             is_deaf=payload.get("deaf", undefined.UNDEFINED),
             is_mute=payload.get("mute", undefined.UNDEFINED),
             is_pending=payload.get("pending", undefined.UNDEFINED),
+            raw_communication_disabled_until=communication_disabled_until,
         )
 
     def deserialize_role(
@@ -1693,6 +1700,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             options=suboptions,
             channel_types=channel_types,
             autocomplete=payload.get("autocomplete", False),
+            min_value=payload.get("min_value"),
+            max_value=payload.get("max_value"),
         )
 
     def deserialize_command(
@@ -1792,6 +1801,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if (raw_premium_since := payload.get("premium_since")) is not None:
             premium_since = time.iso8601_datetime_string_to_datetime(raw_premium_since)
 
+        if raw_disabled_until := payload.get("communication_disabled_until"):
+            disabled_until = time.iso8601_datetime_string_to_datetime(raw_disabled_until)
+        else:
+            disabled_until = None
+
         # TODO: deduplicate member unmarshalling logic
         return base_interactions.InteractionMember(
             user=user,
@@ -1805,6 +1819,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             is_mute=payload.get("mute", undefined.UNDEFINED),
             is_pending=payload.get("pending", undefined.UNDEFINED),
             permissions=permission_models.Permissions(int(payload["permissions"])),
+            raw_communication_disabled_until=disabled_until,
         )
 
     def _deserialize_command_interaction(
@@ -1938,6 +1953,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         if option.autocomplete:
             payload["autocomplete"] = True
+
+        if option.min_value is not None:
+            payload["min_value"] = option.min_value
+        if option.max_value is not None:
+            payload["max_value"] = option.max_value
 
         return payload
 
@@ -2172,10 +2192,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if "guild_id" in payload:
             guild_id = snowflakes.Snowflake(payload["guild_id"])
 
+            # Webhook messages will never have a member attached to them
             if member_pl := payload.get("member"):
-                assert author is not None, "received message with a member object without a user object"
+                assert author is not undefined.UNDEFINED, "received message with a member object without a user object"
                 member = self.deserialize_member(member_pl, user=author, guild_id=guild_id)
-            else:
+            elif author is not undefined.UNDEFINED:
                 member = undefined.UNDEFINED
 
         timestamp: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED
@@ -2312,14 +2333,12 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         author = self.deserialize_user(payload["author"])
 
         guild_id: typing.Optional[snowflakes.Snowflake] = None
-        member: undefined.UndefinedNoneOr[guild_models.Member] = None
+        member: typing.Optional[guild_models.Member] = None
         if "guild_id" in payload:
             guild_id = snowflakes.Snowflake(payload["guild_id"])
 
             if member_pl := payload.get("member"):
                 member = self.deserialize_member(member_pl, user=author, guild_id=guild_id)
-            else:
-                member = undefined.UNDEFINED
 
         edited_timestamp: typing.Optional[datetime.datetime] = None
         if (raw_edited_timestamp := payload["edited_timestamp"]) is not None:
@@ -2342,12 +2361,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if "message_reference" in payload:
             message_reference = self._deserialize_message_reference(payload["message_reference"])
 
-        referenced_message: undefined.UndefinedNoneOr[message_models.Message] = undefined.UNDEFINED
-        if "referenced_message" in payload:
-            if (referenced_message_payload := payload["referenced_message"]) is not None:
-                referenced_message = self.deserialize_message(referenced_message_payload)
-            else:
-                referenced_message = None
+        referenced_message: typing.Optional[message_models.Message] = None
+        if referenced_message_payload := payload.get("referenced_message"):
+            referenced_message = self.deserialize_message(referenced_message_payload)
 
         application: typing.Optional[message_models.MessageApplication] = None
         if "application" in payload:

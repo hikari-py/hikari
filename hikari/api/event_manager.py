@@ -38,6 +38,7 @@ if typing.TYPE_CHECKING:
     from hikari.events import base_events
     from hikari.internal import data_binding
 
+    _T = typing.TypeVar("_T")
     EventT_co = typing.TypeVar("EventT_co", bound=base_events.Event, covariant=True)
     EventT_inv = typing.TypeVar("EventT_inv", bound=base_events.Event)
     PredicateT = typing.Callable[[EventT_co], bool]
@@ -108,6 +109,41 @@ class EventStream(iterators.LazyIterator[EventT], abc.ABC):
         !!! note
             `with streamer` may be used as a short-cut for opening and
             closing a stream.
+        """
+
+    @abc.abstractmethod
+    def filter(
+        self: _T,
+        *predicates: typing.Union[typing.Tuple[str, typing.Any], typing.Callable[[EventT], bool]],
+        **attrs: typing.Any,
+    ) -> _T:
+        """Filter the items by one or more conditions.
+
+        Each condition is treated as a predicate, being called with each item
+        that this iterator would return when it is requested.
+
+        All conditions must evaluate to `builtins.True` for the item to be
+        returned. If this is not met, then the item is discarded and ignored,
+        the next matching item will be returned instead, if there is one.
+
+        Parameters
+        ----------
+        *predicates : typing.Union[typing.Callable[[ValueT], builtins.bool], typing.Tuple[builtins.str, typing.Any]]
+            Predicates to invoke. These are functions that take a value and
+            return `builtins.True` if it is of interest, or `builtins.False`
+            otherwise. These may instead include 2-`builtins.tuple` objects
+            consisting of a `builtins.str` attribute name (nested attributes
+            are referred to using the `.` operator), and values to compare for
+            equality. This allows you to specify conditions such as
+            `members.filter(("user.bot", True))`.
+        **attrs : typing.Any
+            Alternative to passing 2-tuples. Cannot specify nested attributes
+            using this method.
+
+        Returns
+        -------
+        EventStream[ValueT]
+            The current stream with the new filter applied.
         """
 
     @abc.abstractmethod

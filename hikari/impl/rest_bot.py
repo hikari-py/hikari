@@ -461,7 +461,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         if coroutine_tracking_depth is not None:
             try:
                 # Provisionally defined in CPython, may be removed without notice.
-                sys.set_coroutine_origin_tracking_depth(coroutine_tracking_depth)  # type: ignore[attr-defined]
+                sys.set_coroutine_origin_tracking_depth(coroutine_tracking_depth)
             except AttributeError:
                 _LOGGER.log(ux.TRACE, "cannot set coroutine tracking depth for sys, no functionality exists for this")
 

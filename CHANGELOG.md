@@ -22,7 +22,7 @@ Deprecation
 -----------
 
 - `edit_my_nick` rest method. ([#827](https://github.com/hikari-py/hikari/issues/827))
-- EventStream is now a sync context menu not async. ([#864](https://github.com/hikari-py/hikari/issues/864))
+- EventStream is now a sync context manager, not async. ([#864](https://github.com/hikari-py/hikari/issues/864))
 
 
 Features

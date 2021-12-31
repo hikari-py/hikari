@@ -23,11 +23,11 @@ import asyncio
 import contextlib
 import datetime
 import http
+import re
 import warnings
 
 import mock
 import pytest
-import regex
 
 from hikari import applications
 from hikari import audit_logs
@@ -1003,14 +1003,32 @@ class TestRESTClientImpl:
                 guild=guild,
             )
 
-    def test_kick_member(self, rest_client):
-        assert rest_client.kick_member == rest_client.kick_user
+    def test_kick_member(self, rest_client: rest.RESTClientImpl):
+        mock_kick_user = mock.Mock()
+        rest_client.kick_user = mock_kick_user
 
-    def test_ban_member(self, rest_client):
-        assert rest_client.ban_member == rest_client.ban_user
+        result = rest_client.kick_member(123, 5423, reason="oewkwkwk")
 
-    def test_unban_member(self, rest_client):
-        assert rest_client.unban_member == rest_client.unban_user
+        assert result is mock_kick_user.return_value
+        mock_kick_user.assert_called_once_with(123, 5423, reason="oewkwkwk")
+
+    def test_ban_member(self, rest_client: rest.RESTClientImpl):
+        mock_ban_user = mock.Mock()
+        rest_client.ban_user = mock_ban_user
+
+        result = rest_client.ban_member(43123, 54123, delete_message_days=6, reason="wowowowo")
+
+        assert result is mock_ban_user.return_value
+        mock_ban_user.assert_called_once_with(43123, 54123, delete_message_days=6, reason="wowowowo")
+
+    def test_unban_member(self, rest_client: rest.RESTClientImpl):
+        mock_unban_user = mock.Mock()
+        rest_client.unban_user = mock_unban_user
+
+        reason = rest_client.unban_member(123, 321, reason="ayaya")
+
+        assert reason is mock_unban_user.return_value
+        mock_unban_user.assert_called_once_with(123, 321, reason="ayaya")
 
     def test_command_builder(self, rest_client):
         result = rest_client.command_builder("a name", "very very good")
@@ -1903,7 +1921,7 @@ class TestRESTClientImplAsync:
             f"'{singular_arg}' (singular) instead?"
         )
 
-        with pytest.raises(TypeError, match=regex.escape(expected_error_message)):
+        with pytest.raises(TypeError, match=re.escape(expected_error_message)):
             await rest_client._create_message(None, {}, **kwargs)
 
     @pytest.mark.skip("TODO")
@@ -2025,7 +2043,7 @@ class TestRESTClientImplAsync:
             f"'{singular_arg}' (singular) instead?"
         )
 
-        with pytest.raises(TypeError, match=regex.escape(expected_error_message)):
+        with pytest.raises(TypeError, match=re.escape(expected_error_message)):
             await rest_client._edit_message(None, {}, **kwargs)
 
     @pytest.mark.skip("TODO")
@@ -3434,8 +3452,16 @@ class TestRESTClientImplAsync:
 
     async def test_edit_member(self, rest_client):
         expected_route = routes.PATCH_GUILD_MEMBER.compile(guild=123, user=456)
-        expected_json = {"nick": "test", "roles": ["654", "321"], "mute": True, "deaf": False, "channel_id": "987"}
+        expected_json = {
+            "nick": "test",
+            "roles": ["654", "321"],
+            "mute": True,
+            "deaf": False,
+            "channel_id": "987",
+            "communication_disabled_until": "2021-10-18T07:18:11.554023+00:00",
+        }
         rest_client._request = mock.AsyncMock(return_value={"id": "789"})
+        mock_timestamp = datetime.datetime(2021, 10, 18, 7, 18, 11, 554023, tzinfo=datetime.timezone.utc)
 
         result = await rest_client.edit_member(
             StubModel(123),
@@ -3445,6 +3471,7 @@ class TestRESTClientImplAsync:
             mute=True,
             deaf=False,
             voice_channel=StubModel(987),
+            communication_disabled_until=mock_timestamp,
             reason="because i can",
         )
         assert result is rest_client._entity_factory.deserialize_member.return_value
@@ -3474,11 +3501,25 @@ class TestRESTClientImplAsync:
         rest_client._entity_factory.deserialize_member.assert_called_once_with(
             rest_client._request.return_value, guild_id=123
         )
-        rest_client._request.assert_awaited_once_with(
-            expected_route,
-            json=expected_json,
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="because i can")
+
+    async def test_edit_member_when_communication_disabled_until_is_None(self, rest_client):
+        expected_route = routes.PATCH_GUILD_MEMBER.compile(guild=123, user=456)
+        expected_json = {"communication_disabled_until": None}
+        rest_client._request = mock.AsyncMock(return_value={"id": "789"})
+
+        result = await rest_client.edit_member(
+            StubModel(123),
+            StubModel(456),
+            communication_disabled_until=None,
             reason="because i can",
         )
+        assert result is rest_client._entity_factory.deserialize_member.return_value
+
+        rest_client._entity_factory.deserialize_member.assert_called_once_with(
+            rest_client._request.return_value, guild_id=123
+        )
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="because i can")
 
     async def test_edit_member_without_optionals(self, rest_client):
         expected_route = routes.PATCH_GUILD_MEMBER.compile(guild=123, user=456)
@@ -3678,7 +3719,7 @@ class TestRESTClientImplAsync:
             await rest_client.create_role(StubModel(123), icon="icon.png", unicode_emoji="\N{OK HAND SIGN}")
 
     async def test_reposition_roles(self, rest_client):
-        expected_route = routes.POST_GUILD_ROLES.compile(guild=123)
+        expected_route = routes.PATCH_GUILD_ROLES.compile(guild=123)
         expected_json = [{"id": "456", "position": 1}, {"id": "789", "position": 2}]
         rest_client._request = mock.AsyncMock()
 

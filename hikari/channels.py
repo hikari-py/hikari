@@ -1351,7 +1351,10 @@ The following types are in this:
 * `GuildNewsChannel`
 """
 
-WebhookChannelTypes = (GuildTextChannel, GuildNewsChannel)
+WebhookChannelTypes: typing.Tuple[typing.Type[GuildTextChannel], typing.Type[GuildNewsChannel]] = (
+    GuildTextChannel,
+    GuildNewsChannel,
+)
 """Tuple of the channel types which are valid for `WebhookChannelT`.
 
 This includes:

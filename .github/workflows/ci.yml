@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@v2.4.0
 
       - name: Setup python
-        uses: actions/setup-python@v2.3.0
+        uses: actions/setup-python@v2.3.1
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -60,7 +60,7 @@ jobs:
         uses: actions/checkout@v2.4.0
 
       - name: Setup python
-        uses: actions/setup-python@v2.3.0
+        uses: actions/setup-python@v2.3.1
         with:
           python-version: 3.8
 
@@ -71,7 +71,7 @@ jobs:
 
       - name: Combine coverage
         run: |
-          pip install coverage
+          pip install -r dev-requirements.txt
           coverage combine
           coverage xml -i
 
@@ -90,7 +90,7 @@ jobs:
         uses: actions/checkout@v2.4.0
 
       - name: Setup python
-        uses: actions/setup-python@v2.3.0
+        uses: actions/setup-python@v2.3.1
         with:
           python-version: 3.8
 
@@ -107,7 +107,7 @@ jobs:
       - name: Linting
         if: always()
         run: |
-          nox -s safety mypy flake8 codespell check-trailing-whitespaces
+          nox -s safety mypy verify-types flake8 codespell check-trailing-whitespaces
 
   twemoji:
     runs-on: ubuntu-latest
@@ -117,7 +117,7 @@ jobs:
         uses: actions/checkout@v2.4.0
 
       - name: Setup python
-        uses: actions/setup-python@v2.3.0
+        uses: actions/setup-python@v2.3.1
         with:
           python-version: 3.8
 
@@ -134,12 +134,12 @@ jobs:
         uses: actions/checkout@v2.4.0
 
       - name: Setup python
-        uses: actions/setup-python@v2.3.0
+        uses: actions/setup-python@v2.3.1
         with:
           python-version: 3.8
 
       - name: Setup node
-        uses: actions/setup-node@v2.4.1
+        uses: actions/setup-node@v2.5.1
 
       - name: Build pages
         run: |

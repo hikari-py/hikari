@@ -202,6 +202,7 @@ class TestEntityFactoryImpl:
             "owner": owner_payload,
             "summary": "not a blank string",
             "verify_key": "698c5d0859abb686be1f8a19e0e7634d8471e33817650f9fb29076de227bca90",
+            "flags": 65536,
             "team": {
                 "icon": "hashtag",
                 "id": "202020202",
@@ -237,6 +238,7 @@ class TestEntityFactoryImpl:
             application.public_key
             == b'i\x8c]\x08Y\xab\xb6\x86\xbe\x1f\x8a\x19\xe0\xe7cM\x84q\xe38\x17e\x0f\x9f\xb2\x90v\xde"{\xca\x90'
         )
+        assert application.flags == application_models.ApplicationFlags.VERIFICATION_PENDING_GUILD_LIMIT
         assert application.privacy_policy_url == "hahaha://hahaha"
         assert application.terms_of_service_url == "haha2:2h2h2h2"
         assert application.icon_hash == "iwiwiwiwiw"
@@ -271,6 +273,7 @@ class TestEntityFactoryImpl:
                 "bot_public": True,
                 "bot_require_code_grant": False,
                 "verify_key": "1232313223",
+                "flags": 0,
                 "owner": owner_payload,
             }
         )
@@ -298,6 +301,7 @@ class TestEntityFactoryImpl:
                 "bot_public": True,
                 "bot_require_code_grant": False,
                 "verify_key": "1232313223",
+                "flags": 0,
             }
         )
 
@@ -1882,6 +1886,7 @@ class TestEntityFactoryImpl:
             "mute": True,
             "pending": False,
             "user": user_payload,
+            "communication_disabled_until": "2021-10-18T06:26:56.936000+00:00",
         }
 
     def test_deserialize_member(self, entity_factory_impl, mock_app, member_payload, user_payload):
@@ -1895,6 +1900,9 @@ class TestEntityFactoryImpl:
         assert member.role_ids == [11111, 22222, 33333, 44444, 76543325]
         assert member.joined_at == datetime.datetime(2015, 4, 26, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc)
         assert member.premium_since == datetime.datetime(2019, 5, 17, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc)
+        assert member.raw_communication_disabled_until == datetime.datetime(
+            2021, 10, 18, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc
+        )
         assert member.is_deaf is False
         assert member.is_mute is True
         assert member.is_pending is False
@@ -1932,6 +1940,7 @@ class TestEntityFactoryImpl:
                 "pending": False,
                 "user": user_payload,
                 "guild_id": "123123453234",
+                "communication_disabled_until": None,
             }
         )
         assert member.nickname is None
@@ -2719,6 +2728,8 @@ class TestEntityFactoryImpl:
                     "description": "42",
                     "channel_types": [0, 1, 2],
                     "required": True,
+                    "min_value": 0,
+                    "max_value": 10,
                     "options": [
                         {
                             "type": 6,
@@ -2758,6 +2769,8 @@ class TestEntityFactoryImpl:
             channel_models.ChannelType.DM,
             channel_models.ChannelType.GUILD_VOICE,
         ]
+        assert option.min_value == 0
+        assert option.max_value == 10
 
         assert len(option.options) == 1
         suboption = option.options[0]
@@ -2875,6 +2888,7 @@ class TestEntityFactoryImpl:
             "avatar": "oestrogen",
             "permissions": "17179869183",
             "premium_since": "2020-10-01T23:06:10.431000+00:00",
+            "communication_disabled_until": "2021-10-18T23:06:10.431000+00:00",
             "roles": [
                 "582345963851743243",
                 "582689893965365248",
@@ -2894,6 +2908,9 @@ class TestEntityFactoryImpl:
         assert member.is_mute is undefined.UNDEFINED
         assert member.is_pending is False
         assert member.premium_since == datetime.datetime(2020, 10, 1, 23, 6, 10, 431000, tzinfo=datetime.timezone.utc)
+        assert member.raw_communication_disabled_until == datetime.datetime(
+            2021, 10, 18, 23, 6, 10, 431000, tzinfo=datetime.timezone.utc
+        )
         assert member.role_ids == [
             582345963851743243,
             582689893965365248,
@@ -2930,11 +2947,13 @@ class TestEntityFactoryImpl:
     ):
         del interaction_member_payload["premium_since"]
         del interaction_member_payload["avatar"]
+        del interaction_member_payload["communication_disabled_until"]
 
         member = entity_factory_impl._deserialize_interaction_member(interaction_member_payload, guild_id=43123123)
 
         assert member.guild_avatar_hash is None
         assert member.premium_since is None
+        assert member.raw_communication_disabled_until is None
 
     def test__deserialize_interaction_member_with_passed_user(
         self, entity_factory_impl, interaction_member_payload, user_payload
@@ -3141,6 +3160,27 @@ class TestEntityFactoryImpl:
             "description": "go away",
             "required": True,
             "channel_types": [13, 0, 100],
+        }
+
+    def test_serialize_command_option_with_min_and_max_value(self, entity_factory_impl):
+        option = commands.CommandOption(
+            type=commands.OptionType.FLOAT,
+            name="a name",
+            description="go away",
+            is_required=True,
+            min_value=1.2,
+            max_value=9.999,
+        )
+
+        result = entity_factory_impl.serialize_command_option(option)
+
+        assert result == {
+            "type": 10,
+            "name": "a name",
+            "description": "go away",
+            "required": True,
+            "min_value": 1.2,
+            "max_value": 9.999,
         }
 
     def test_serialize_command_option_with_choices(self, entity_factory_impl):
@@ -4087,6 +4127,13 @@ class TestEntityFactoryImpl:
         assert partial_message.interaction is undefined.UNDEFINED
         assert partial_message.components is undefined.UNDEFINED
 
+    def test_deserialize_partial_message_with_guild_id_but_no_author(self, entity_factory_impl):
+        partial_message = entity_factory_impl.deserialize_partial_message(
+            {"id": 123, "channel_id": 456, "guild_id": 987}
+        )
+
+        assert partial_message.member is None
+
     def test_deserialize_partial_message_deserializes_old_stickers_field(self, entity_factory_impl, message_payload):
         message_payload["stickers"] = message_payload["sticker_items"]
         del message_payload["sticker_items"]
@@ -4299,7 +4346,7 @@ class TestEntityFactoryImpl:
         assert message.activity is None
         assert message.application is None
         assert message.message_reference is None
-        assert message.referenced_message is undefined.UNDEFINED
+        assert message.referenced_message is None
         assert message.stickers == []
         assert message.nonce is None
         assert message.application_id is None
@@ -4318,7 +4365,7 @@ class TestEntityFactoryImpl:
         assert message.application.cover_image_hash is None
         assert message.application.icon_hash is None
         assert message.referenced_message is None
-        assert message.member is undefined.UNDEFINED
+        assert message.member is None
 
     def test_deserialize_message_deserializes_old_stickers_field(self, entity_factory_impl, message_payload):
         message_payload["stickers"] = message_payload["sticker_items"]

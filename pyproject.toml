@@ -18,16 +18,68 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-
 [build-system]
 requires = ["wheel", "setuptools"]
 build-backend = "setuptools.build_meta"
-
 
 [tool.black]
 line-length = 120
 include = ".*pyi?$"
 target-version = ["py38"]
+
+[tool.coverage.run]
+concurrency = ["multiprocessing"]
+parallel = true
+branch = true
+timid = false
+source = ["hikari"]
+omit = [
+    "hikari/__main__.py",
+    "hikari/cli.py",
+]
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+skip_covered = false
+sort = "cover"
+exclude_lines = [
+    "\\#\\s*pragma: no cover",
+    "^\\s*raise AssertionError\b",
+    "^\\s*raise NotImplementedError\b",
+    "^\\s*return NotImplemented\b",
+    "^\\s*raise$",
+    "^\\s*pass$",
+    "^if __name__ == ['\"]__main__['\"]:$",
+    "^\\s*\\.\\.\\.$",
+    "^\\s*@abc.abstractmethod$",
+    "^\\s*if typing.TYPE_CHECKING:$",
+    # Whatever is in inside `if not typing.TYPE_CHECKING:` is expected to be tested, but the branch will always run, making
+    # coverage think that its only partial
+    "^\\s*if not typing.TYPE_CHECKING:$",
+]
+
+[tool.pyright]
+include = ["examples", "hikari"]
+pythonVersion = "3.8"
+typeCheckingMode = "strict"
+
+[tool.pytest.ini_options]
+[pytest]
+xfail_strict = true
+norecursedirs = [
+    "docs",
+    "*.egg-info",
+    ".git",
+    "tasks",
+    ".nox",
+    ".pytest_cache",
+    ".venv",
+    "venv",
+    "public",
+    "ci",
+]
+filterwarnings = ["ignore:.*\"@coroutine\" decorator is deprecated.*:DeprecationWarning"]
 
 [tool.towncrier]
 package = "hikari"

@@ -71,7 +71,7 @@ class AttrGetter(typing.Generic[InputValueT, ReturnValueT]):
     __slots__: typing.Sequence[str] = ("pipeline", "invert_all")
 
     def __init__(self, attr_name: str) -> None:
-        self.invert_all = False
+        self.invert_all: bool = False
 
         if attr_name.startswith("!."):
             attr_name = attr_name[2:]

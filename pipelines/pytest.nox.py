@@ -27,14 +27,14 @@ from pipelines import nox
 
 RUN_FLAGS = [
     "-c",
-    config.PYTEST_INI,
+    config.PYPROJECT_TOML,
     "--showlocals",
 ]
 COVERAGE_FLAGS = [
     "--cov",
     config.MAIN_PACKAGE,
     "--cov-config",
-    config.COVERAGE_INI,
+    config.PYPROJECT_TOML,
     "--cov-report",
     "term",
     "--cov-report",

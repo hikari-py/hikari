@@ -551,6 +551,9 @@ class Application(guilds.PartialApplication):
     rpc_origins: typing.Optional[typing.Sequence[str]] = attr.field(eq=False, hash=False, repr=False)
     """A collection of this application's RPC origin URLs, if RPC is enabled."""
 
+    flags: ApplicationFlags = attr.field(eq=False, hash=False, repr=False)
+    """The flags for this application."""
+
     public_key: bytes = attr.field(eq=False, hash=False, repr=False)
     """The key used for verifying interaction and GameSDK payload signatures."""
 

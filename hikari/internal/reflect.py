@@ -34,7 +34,7 @@ import typing
 if typing.TYPE_CHECKING:
     _T = typing.TypeVar("_T")
 
-EMPTY: typing.Final[inspect.Parameter.empty] = inspect.Parameter.empty
+EMPTY: typing.Final[typing.Any] = inspect.Parameter.empty
 """A singleton that empty annotations will be set to in `resolve_signature`."""
 
 
@@ -43,7 +43,7 @@ def resolve_signature(func: typing.Callable[..., typing.Any]) -> inspect.Signatu
 
     Parameters
     ----------
-    func : typing.Callable[[...], ...]
+    func : typing.Callable[..., typing.Any]
         The function to get the resolved annotations from.
 
     !!! warning

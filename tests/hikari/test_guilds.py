@@ -33,6 +33,7 @@ from hikari import undefined
 from hikari import urls
 from hikari.impl import bot
 from hikari.internal import routes
+from hikari.internal import time
 from tests.hikari import hikari_test_helpers
 
 
@@ -227,6 +228,7 @@ class TestMember:
                 snowflakes.Snowflake(1234),
             ],
             user=mock_user,
+            raw_communication_disabled_until=None,
         )
 
     def test_str_operator(self, model, mock_user):
@@ -271,6 +273,24 @@ class TestMember:
     def test_guild_avatar_url_property(self, model):
         with mock.patch.object(guilds.Member, "make_guild_avatar_url") as make_guild_avatar_url:
             assert model.guild_avatar_url is make_guild_avatar_url.return_value
+
+    def test_communication_disabled_until(self, model):
+        model.raw_communication_disabled_until = datetime.datetime(2021, 11, 22)
+
+        with mock.patch.object(time, "utc_datetime", return_value=datetime.datetime(2021, 10, 18)):
+            assert model.communication_disabled_until() == datetime.datetime(2021, 11, 22)
+
+    def test_communication_disabled_until_when_raw_communication_disabled_until_is_None(self, model):
+        model.raw_communication_disabled_until = None
+
+        with mock.patch.object(time, "utc_datetime", return_value=datetime.datetime(2021, 10, 18)):
+            assert model.communication_disabled_until() is None
+
+    def test_comminucation_disabled_until_when_raw_communication_disabled_until_is_in_the_past(self, model):
+        model.raw_communication_disabled_until = datetime.datetime(2021, 10, 18)
+
+        with mock.patch.object(time, "utc_datetime", return_value=datetime.datetime(2021, 11, 22)):
+            assert model.communication_disabled_until() is None
 
     def test_make_avatar_url(self, model, mock_user):
         result = model.make_avatar_url(ext="png", size=4096)
@@ -397,8 +417,15 @@ class TestMember:
     @pytest.mark.asyncio()
     async def test_edit(self, model):
         model.app.rest.edit_member = mock.AsyncMock()
+        disabled_until = datetime.datetime(2021, 11, 17)
         edit = await model.edit(
-            nick="Imposter", roles=[123, 432, 345], mute=False, deaf=True, voice_channel=4321245, reason="I'm God"
+            nick="Imposter",
+            roles=[123, 432, 345],
+            mute=False,
+            deaf=True,
+            voice_channel=4321245,
+            communication_disabled_until=disabled_until,
+            reason="I'm God",
         )
 
         model.app.rest.edit_member.assert_awaited_once_with(
@@ -409,6 +436,7 @@ class TestMember:
             mute=False,
             deaf=True,
             voice_channel=4321245,
+            communication_disabled_until=disabled_until,
             reason="I'm God",
         )
 

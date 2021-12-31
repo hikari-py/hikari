@@ -26,6 +26,7 @@ from __future__ import annotations
 __all__: typing.List[str] = ["init_logging", "print_banner", "supports_color", "HikariVersion", "check_for_updates"]
 
 import importlib.resources
+import logging
 import logging.config
 import os
 import platform
@@ -272,6 +273,9 @@ class HikariVersion:
     """Hikari strict version."""
 
     __slots__: typing.Sequence[str] = ("version", "prerelease", "_cmp")
+
+    version: typing.Tuple[int, int, int]
+    prerelease: typing.Optional[typing.Tuple[str, int]]
 
     def __init__(self, vstring: str) -> None:
         match = _VERSION_REGEX.match(vstring)
