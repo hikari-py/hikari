@@ -935,12 +935,10 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
 class CommandBuilder(special_endpoints.CommandBuilder):
     """Standard implementation of `hikari.api.special_endpoints.CommandBuilder`."""
 
-    # Required arguments.
     _name: str = attr.field()
-    _description: str = attr.field()
+    _description: undefined.UndefinedOr[str] = attr.field(default=undefined.UNDEFINED)
 
-    # Key-word only not-required arguments.
-    _type: commands.CommandType = attr.field(default=commands.CommandType.CHAT_INPUT, kw_only=True)
+    _type: undefined.UndefinedOr[commands.CommandType] = attr.field(default=undefined.UNDEFINED, kw_only=True)
     _id: undefined.UndefinedOr[snowflakes.Snowflake] = attr.field(default=undefined.UNDEFINED, kw_only=True)
     _default_permission: undefined.UndefinedOr[bool] = attr.field(default=undefined.UNDEFINED, kw_only=True)
 
@@ -948,7 +946,7 @@ class CommandBuilder(special_endpoints.CommandBuilder):
     _options: typing.List[commands.CommandOption] = attr.field(factory=list)
 
     @property
-    def description(self) -> str:
+    def description(self) -> undefined.UndefinedOr[str]:
         return self._description
 
     @property
@@ -956,7 +954,7 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         return self._id
 
     @property
-    def type(self) -> commands.CommandType:
+    def type(self) -> undefined.UndefinedOr[commands.CommandType]:
         return self._type
 
     @property
@@ -990,8 +988,8 @@ class CommandBuilder(special_endpoints.CommandBuilder):
     def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObject:
         data = data_binding.JSONObjectBuilder()
         data["name"] = self._name
-        data["description"] = self._description
-        data["type"] = self._type.value
+        data.put("description", self._description)
+        data.put("type", self._type)
         data.put_array("options", self._options, conversion=entity_factory.serialize_command_option)
         data.put_snowflake("id", self._id)
         data.put("default_permission", self._default_permission)

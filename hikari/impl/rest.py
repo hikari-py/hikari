@@ -3189,7 +3189,9 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_template(response)
 
-    def command_builder(self, name: str, description: str, /) -> special_endpoints.CommandBuilder:
+    def command_builder(
+        self, name: str, description: undefined.UndefinedOr[str] = undefined.UNDEFINED, /
+    ) -> special_endpoints.CommandBuilder:
         return special_endpoints_impl.CommandBuilder(name=name, description=description)
 
     async def fetch_application_command(

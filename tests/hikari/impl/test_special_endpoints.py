@@ -227,6 +227,7 @@ class TestCommandBuilder:
         mock_option = object()
         builder = (
             special_endpoints.CommandBuilder("we are number", "one")
+            .set_type(commands.CommandType.CHAT_INPUT)
             .add_option(mock_option)
             .set_id(3412312)
             .set_default_permission(False)
@@ -249,7 +250,7 @@ class TestCommandBuilder:
 
         result = builder.build(mock.Mock())
 
-        assert result == {"name": "we are numberr", "description": "oner", "type": 1, "options": []}
+        assert result == {"name": "we are numberr", "description": "oner", "options": []}
 
 
 @pytest.mark.parametrize("emoji", ["UNICORN", emojis.UnicodeEmoji("UNICORN")])

@@ -934,7 +934,7 @@ class CommandBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def description(self) -> str:
+    def description(self) -> undefined.UndefinedOr[str]:
         """Return the description to set for this command.
 
         !!! warning
@@ -948,7 +948,7 @@ class CommandBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def type(self) -> commands.CommandType:
+    def type(self) -> undefined.UndefinedOr[commands.CommandType]:
         """The type of this command
 
         Returns
