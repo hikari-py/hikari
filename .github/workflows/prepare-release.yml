@@ -51,9 +51,3 @@ jobs:
             Release preparation triggered by @${{ github.event.sender.login }}.
 
             Once the pull request is merged, you can trigger a PyPI release by creating a GitHub release for \`${{ github.event.inputs.version }}\` in the repository.
-
-      - name: Enable auto-merge for the pull request
-        uses: alexwilson/enable-github-automerge-action@1.0.0
-        with:
-          github-token: ${{ steps.generate_token.outputs.token }}
-          merge-method: "SQUASH"
