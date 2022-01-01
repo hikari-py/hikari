@@ -75,9 +75,9 @@ _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.bot")
 
 
 async def _gather(coros: typing.Iterator[typing.Awaitable[typing.Any]]) -> None:
-    # Calling asyncio outside of a running event loop isn't safe and will lead
-    # to RuntimeErrors in later versions of python, so this call is kept within
-    # a coroutine function.
+    # Calling asyncio.gather outside of a running event loop isn't safe and
+    # will lead to RuntimeErrors in later versions of python, so this call is
+    # kept within a coroutine function.
     await asyncio.gather(*coros)
 
 
