@@ -125,6 +125,32 @@ def _destroy_loop(loop: asyncio.AbstractEventLoop) -> None:
     # Closed loops cannot be re-used so it should also be un-set.
     asyncio.set_event_loop(None)
 
+
+@staticmethod
+def _validate_activity(activity: undefined.UndefinedNoneOr[presences.Activity]) -> None:
+    # This seems to cause confusion for a lot of people, so lets add some warnings into the mix.
+
+    if activity is undefined.UNDEFINED or activity is None:
+        return
+
+    # If you ever change where this is called from, make sure to check the stacklevels are correct
+    # or the code preview in the warning will be wrong...
+    if activity.type is presences.ActivityType.CUSTOM:
+        warnings.warn(
+            "The CUSTOM activity type is not supported by bots at the time of writing, and may therefore not have "
+            "any effect if used.",
+            category=errors.HikariWarning,
+            stacklevel=3,
+        )
+    elif activity.type is presences.ActivityType.STREAMING and activity.url is None:
+        warnings.warn(
+            "The STREAMING activity type requires a 'url' parameter pointing to a valid Twitch or YouTube video "
+            "URL to be specified on the activity for the presence update to have any effect.",
+            category=errors.HikariWarning,
+            stacklevel=3,
+        )
+
+
 class GatewayBot(traits.GatewayBotAware):
     """Basic auto-sharding bot implementation.
 
@@ -934,7 +960,7 @@ class GatewayBot(traits.GatewayBotAware):
         if shard_ids is not None and shard_count is None:
             raise TypeError("'shard_ids' must be passed with 'shard_count'")
 
-        self._validate_activity(activity)
+        _validate_activity(activity)
 
         # Dispatch the update checker, the sharding requirements checker, and dispatch
         # the starting event together to save a little time on startup.
@@ -1255,7 +1281,7 @@ class GatewayBot(traits.GatewayBotAware):
         afk: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> None:
         self._check_if_alive()
-        self._validate_activity(activity)
+        _validate_activity(activity)
 
         coros = [
             s.update_presence(status=status, activity=activity, idle_since=idle_since, afk=afk)
@@ -1341,27 +1367,3 @@ class GatewayBot(traits.GatewayBotAware):
             return new_shard
 
         raise errors.GatewayError(f"shard {shard_id} shut down immediately when starting")
-
-    @staticmethod
-    def _validate_activity(activity: undefined.UndefinedNoneOr[presences.Activity]) -> None:
-        # This seems to cause confusion for a lot of people, so lets add some warnings into the mix.
-
-        if activity is undefined.UNDEFINED or activity is None:
-            return
-
-        # If you ever change where this is called from, make sure to check the stacklevels are correct
-        # or the code preview in the warning will be wrong...
-        if activity.type is presences.ActivityType.CUSTOM:
-            warnings.warn(
-                "The CUSTOM activity type is not supported by bots at the time of writing, and may therefore not have "
-                "any effect if used.",
-                category=errors.HikariWarning,
-                stacklevel=3,
-            )
-        elif activity.type is presences.ActivityType.STREAMING and activity.url is None:
-            warnings.warn(
-                "The STREAMING activity type requires a 'url' parameter pointing to a valid Twitch or YouTube video "
-                "URL to be specified on the activity for the presence update to have any effect.",
-                category=errors.HikariWarning,
-                stacklevel=3,
-            )

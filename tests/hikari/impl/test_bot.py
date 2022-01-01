@@ -46,6 +46,51 @@ from hikari.internal import aio
 from hikari.internal import ux
 
 
+@pytest.mark.parametrize("activity", [undefined.UNDEFINED, None])
+def test_validate_activity_when_no_activity(self, activity):
+    with mock.patch.object(warnings, "warn") as warn:
+        bot_impl._validate_activity(activity)
+
+    warn.assert_not_called()
+
+
+def test_validate_activity_when_type_is_custom(self):
+    activity = presences.Activity(name="test", type=presences.ActivityType.CUSTOM)
+
+    with mock.patch.object(warnings, "warn") as warn:
+        bot_impl._validate_activity(activity)
+
+    warn.assert_called_once_with(
+        "The CUSTOM activity type is not supported by bots at the time of writing, and may therefore not have "
+        "any effect if used.",
+        category=errors.HikariWarning,
+        stacklevel=3,
+    )
+
+
+def test_validate_activity_when_type_is_streaming_but_no_url(self):
+    activity = presences.Activity(name="test", url=None, type=presences.ActivityType.STREAMING)
+
+    with mock.patch.object(warnings, "warn") as warn:
+        bot_impl._validate_activity(activity)
+
+    warn.assert_called_once_with(
+        "The STREAMING activity type requires a 'url' parameter pointing to a valid Twitch or YouTube video "
+        "URL to be specified on the activity for the presence update to have any effect.",
+        category=errors.HikariWarning,
+        stacklevel=3,
+    )
+
+
+def test_validate_activity_when_no_warning(self):
+    activity = presences.Activity(name="test", type=presences.ActivityType.PLAYING)
+
+    with mock.patch.object(warnings, "warn") as warn:
+        bot_impl._validate_activity(activity)
+
+    warn.assert_not_called()
+
+
 class TestGatewayBot:
     @pytest.fixture()
     def cache(self):
@@ -575,7 +620,7 @@ class TestGatewayBot:
         stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "start", new=mock.Mock()))
         stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "join", new=mock.Mock()))
         stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "_close", new=mock.Mock()))
-        destroy_loop = stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "_destroy_loop"))
+        destroy_loop = stack.enter_context(mock.patch.object(bot_impl, "_destroy_loop"))
         loop = stack.enter_context(mock.patch.object(aio, "get_or_make_loop")).return_value
 
         with stack:
@@ -726,7 +771,7 @@ class TestGatewayBot:
 
         with mock.patch.object(bot_impl.GatewayBot, "_check_if_alive") as check_if_alive:
             with mock.patch.object(aio, "all_of") as all_of:
-                with mock.patch.object(bot_impl.GatewayBot, "_validate_activity") as validate_activity:
+                with mock.patch.object(bot_impl, "_validate_activity") as validate_activity:
                     await bot.update_presence(status=status, activity=activity, idle_since=idle_since, afk=afk)
 
         check_if_alive.assert_called_once_with()
@@ -857,44 +902,3 @@ class TestGatewayBot:
                         url="https://some.website",
                         closing_event=bot._closing_event,
                     )
-
-    @pytest.mark.parametrize("activity", [undefined.UNDEFINED, None])
-    def test_validate_activity_when_no_activity(self, bot, activity):
-        with mock.patch.object(warnings, "warn") as warn:
-            bot._validate_activity(activity)
-
-        warn.assert_not_called()
-
-    def test_validate_activity_when_type_is_custom(self, bot):
-        activity = presences.Activity(name="test", type=presences.ActivityType.CUSTOM)
-
-        with mock.patch.object(warnings, "warn") as warn:
-            bot._validate_activity(activity)
-
-        warn.assert_called_once_with(
-            "The CUSTOM activity type is not supported by bots at the time of writing, and may therefore not have "
-            "any effect if used.",
-            category=errors.HikariWarning,
-            stacklevel=3,
-        )
-
-    def test_validate_activity_when_type_is_streaming_but_no_url(self, bot):
-        activity = presences.Activity(name="test", url=None, type=presences.ActivityType.STREAMING)
-
-        with mock.patch.object(warnings, "warn") as warn:
-            bot._validate_activity(activity)
-
-        warn.assert_called_once_with(
-            "The STREAMING activity type requires a 'url' parameter pointing to a valid Twitch or YouTube video "
-            "URL to be specified on the activity for the presence update to have any effect.",
-            category=errors.HikariWarning,
-            stacklevel=3,
-        )
-
-    def test_validate_activity_when_no_warning(self, bot):
-        activity = presences.Activity(name="test", type=presences.ActivityType.PLAYING)
-
-        with mock.patch.object(warnings, "warn") as warn:
-            bot._validate_activity(activity)
-
-        warn.assert_not_called()
