@@ -1560,7 +1560,15 @@ class CacheImpl(cache.MutableCache):
 
         referenced_message: typing.Optional[cache_utility.RefCell[cache_utility.MessageData]] = None
         if message.referenced_message:
-            referenced_message = self._set_message(message.referenced_message)
+            if referenced_message := self._message_entries.get(
+                message.referenced_message.id
+            ) or self._referenced_messages.get(message.referenced_message.id):
+                # treat referenced messages as partial
+                # so it shouldn't replace the full message if cached.
+                referenced_message.object.update(message.referenced_message)
+                message.referenced_message = self._build_message(referenced_message)
+            else:
+                referenced_message = self._set_message(message.referenced_message)
 
         # Only increment ref counts if this wasn't previously cached.
         if message.id not in self._referenced_messages and message.id not in self._message_entries:
