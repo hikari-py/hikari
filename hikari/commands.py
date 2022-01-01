@@ -168,14 +168,14 @@ class CommandOption:
     """The minimum value permitted (inclusive).
 
     This will be `builtins.int` if the type of the option is `hikari.commands.OptionType.INTEGER`
-    and `builtins.float` if the type is `hikari.commands.OptionType.NUMBER`.
+    and `builtins.float` if the type is `hikari.commands.OptionType.FLOAT`.
     """
 
     max_value: typing.Union[int, float, None] = attr.field(default=None, repr=False)
     """The maximum value permitted (inclusive).
 
     This will be `builtins.int` if the type of the option is `hikari.commands.OptionType.INTEGER`
-    and `builtins.float` if the type is `hikari.commands.OptionType.NUMBER`.
+    and `builtins.float` if the type is `hikari.commands.OptionType.FLOAT`.
     """
 
 
