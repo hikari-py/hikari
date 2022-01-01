@@ -31,8 +31,6 @@ import typing
 if typing.TYPE_CHECKING:
     from hikari.api import special_endpoints
     from hikari.interactions import base_interactions
-    from hikari.interactions import command_interactions
-    from hikari.interactions import component_interactions
 
     _InteractionT_co = typing.TypeVar("_InteractionT_co", bound=base_interactions.PartialInteraction, covariant=True)
     _ResponseT_co = typing.TypeVar("_ResponseT_co", bound=special_endpoints.InteractionResponseBuilder, covariant=True)

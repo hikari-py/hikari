@@ -103,7 +103,7 @@ class ResolvedOptionData:
     channels: typing.Mapping[snowflakes.Snowflake, InteractionChannel] = attr.field(repr=False)
     """Mapping of snowflake iDs to the resolved option partial channel objects."""
 
-    messages: typing.Mapping[snowflakes.Snowflake, messages.PartialMessage]
+    messages: typing.Mapping[snowflakes.Snowflake, messages.Message]
     """Mapping of snowflake iDs to the resolved option partial message objects."""
 
 
@@ -421,8 +421,7 @@ class AutocompleteInteraction(BaseCommandInteraction):
         return self.app.rest.interaction_autocomplete_builder()
 
     async def create_response(self, choices: typing.Sequence[commands.CommandChoice]) -> None:
-        """Create a response for this autocomplete interaction"""
-
+        """Create a response for this autocomplete interaction."""
         await self.app.rest.create_interaction_response(
             self.id,
             self.token,

@@ -51,7 +51,7 @@ if typing.TYPE_CHECKING:
 
 @typing.final
 class CommandType(int, enums.Enum):
-    """The type of a command"""
+    """The type of a command."""
 
     CHAT_INPUT = 1
     """A text-based command."""
@@ -191,7 +191,7 @@ class Command(snowflakes.Unique):
     # <<inherited docstring from Unique>>.
 
     type: CommandType = attr.field(default=CommandType.CHAT_INPUT, hash=True, repr=True)
-    """The type of a command"""
+    """The type of a command."""
 
     application_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
     """ID of the application this command belongs to."""

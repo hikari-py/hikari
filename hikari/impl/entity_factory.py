@@ -1897,7 +1897,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 messages=messages,
             )
 
-        target_id: typing.Optional[Snowflake] = None
+        target_id: typing.Optional[snowflakes.Snowflake] = None
         if raw_target_id := data_payload.get("target_id"):
             target_id = snowflakes.Snowflake(raw_target_id)
 

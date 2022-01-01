@@ -636,11 +636,11 @@ class InteractionAutocompleteBuilder(InteractionResponseBuilder, abc.ABC):
     @property
     @abc.abstractmethod
     def choices(self) -> typing.Sequence[commands.CommandChoice]:
-        """Return autocomplete choices"""
+        """Return autocomplete choices."""
 
     @abc.abstractmethod
     def set_choices(self: _T, choices: typing.Sequence[commands.CommandChoice], /) -> _T:
-        """Set autocomplete choices
+        """Set autocomplete choices.
 
         Returns
         -------
@@ -949,12 +949,12 @@ class CommandBuilder(abc.ABC):
     @property
     @abc.abstractmethod
     def type(self) -> undefined.UndefinedOr[commands.CommandType]:
-        """The type of this command
+        """Return the type of this command.
 
         Returns
         -------
         hikari.commands.CommandType
-            The type of this command
+            The type of this command.
         """
 
     @property

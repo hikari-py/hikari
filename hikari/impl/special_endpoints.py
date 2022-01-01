@@ -715,7 +715,7 @@ class InteractionAutocompleteBuilder(special_endpoints.InteractionAutocompleteBu
     def set_choices(
         self: _InteractionAutocompleteBuilderT, choices: typing.Sequence[commands.CommandChoice], /
     ) -> _InteractionAutocompleteBuilderT:
-        """Set autocomplete choices
+        """Set autocomplete choices.
 
         Returns
         -------

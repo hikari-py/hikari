@@ -50,8 +50,6 @@ if typing.TYPE_CHECKING:
     from hikari.api import rest as rest_api
     from hikari.api import special_endpoints
     from hikari.interactions import base_interactions
-    from hikari.interactions import command_interactions
-    from hikari.interactions import component_interactions
 
     _InteractionT_co = typing.TypeVar("_InteractionT_co", bound=base_interactions.PartialInteraction, covariant=True)
     _MessageResponseBuilderT = typing.Union[
