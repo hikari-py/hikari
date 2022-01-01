@@ -74,6 +74,82 @@ if typing.TYPE_CHECKING:
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.bot")
 
 
+async def _gather(coros: typing.Iterator[typing.Awaitable[typing.Any]]) -> None:
+    # Calling asyncio.gather outside of a running event loop isn't safe and
+    # will lead to RuntimeErrors in later versions of python, so this call is
+    # kept within a coroutine function.
+    await asyncio.gather(*coros)
+
+
+def _destroy_loop(loop: asyncio.AbstractEventLoop) -> None:
+    async def murder(future: asyncio.Future[typing.Any]) -> None:
+        # These include _GatheringFuture which must be awaited if the children
+        # throw an asyncio.CancelledError, otherwise it will spam logs with warnings
+        # about exceptions not being retrieved before GC.
+        try:
+            _LOGGER.log(ux.TRACE, "killing %s", future)
+            future.cancel()
+            await future
+        except asyncio.CancelledError:
+            pass
+        except Exception as ex:
+            loop.call_exception_handler(
+                {
+                    "message": "Future raised unexpected exception after requesting cancellation",
+                    "exception": ex,
+                    "future": future,
+                }
+            )
+
+    remaining_tasks = [t for t in asyncio.all_tasks(loop) if not t.done()]
+
+    if remaining_tasks:
+        _LOGGER.debug("terminating %s remaining tasks forcefully", len(remaining_tasks))
+        loop.run_until_complete(_gather((murder(task) for task in remaining_tasks)))
+    else:
+        _LOGGER.debug("No remaining tasks exist, good job!")
+
+    if sys.version_info >= (3, 9):
+        _LOGGER.debug("shutting down default executor")
+        try:
+            # This seems to raise a NotImplementedError when running with uvloop.
+            loop.run_until_complete(loop.shutdown_default_executor())
+        except NotImplementedError:
+            pass
+
+    _LOGGER.debug("shutting down asyncgens")
+    loop.run_until_complete(loop.shutdown_asyncgens())
+
+    _LOGGER.debug("closing event loop")
+    loop.close()
+    # Closed loops cannot be re-used so it should also be un-set.
+    asyncio.set_event_loop(None)
+
+
+def _validate_activity(activity: undefined.UndefinedNoneOr[presences.Activity]) -> None:
+    # This seems to cause confusion for a lot of people, so lets add some warnings into the mix.
+
+    if activity is undefined.UNDEFINED or activity is None:
+        return
+
+    # If you ever change where this is called from, make sure to check the stacklevels are correct
+    # or the code preview in the warning will be wrong...
+    if activity.type is presences.ActivityType.CUSTOM:
+        warnings.warn(
+            "The CUSTOM activity type is not supported by bots at the time of writing, and may therefore not have "
+            "any effect if used.",
+            category=errors.HikariWarning,
+            stacklevel=3,
+        )
+    elif activity.type is presences.ActivityType.STREAMING and activity.url is None:
+        warnings.warn(
+            "The STREAMING activity type requires a 'url' parameter pointing to a valid Twitch or YouTube video "
+            "URL to be specified on the activity for the presence update to have any effect.",
+            category=errors.HikariWarning,
+            stacklevel=3,
+        )
+
+
 class GatewayBot(traits.GatewayBotAware):
     """Basic auto-sharding bot implementation.
 
@@ -811,7 +887,7 @@ class GatewayBot(traits.GatewayBotAware):
                             pass
 
                 if close_loop:
-                    self._destroy_loop(loop)
+                    _destroy_loop(loop)
 
                 _LOGGER.info("successfully terminated")
 
@@ -883,7 +959,7 @@ class GatewayBot(traits.GatewayBotAware):
         if shard_ids is not None and shard_count is None:
             raise TypeError("'shard_ids' must be passed with 'shard_count'")
 
-        self._validate_activity(activity)
+        _validate_activity(activity)
 
         # Dispatch the update checker, the sharding requirements checker, and dispatch
         # the starting event together to save a little time on startup.
@@ -1204,7 +1280,7 @@ class GatewayBot(traits.GatewayBotAware):
         afk: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> None:
         self._check_if_alive()
-        self._validate_activity(activity)
+        _validate_activity(activity)
 
         coros = [
             s.update_presence(status=status, activity=activity, idle_since=idle_since, afk=afk)
@@ -1290,72 +1366,3 @@ class GatewayBot(traits.GatewayBotAware):
             return new_shard
 
         raise errors.GatewayError(f"shard {shard_id} shut down immediately when starting")
-
-    @staticmethod
-    def _destroy_loop(loop: asyncio.AbstractEventLoop) -> None:
-        async def murder(future: asyncio.Future[typing.Any]) -> None:
-            # These include _GatheringFuture which must be awaited if the children
-            # throw an asyncio.CancelledError, otherwise it will spam logs with warnings
-            # about exceptions not being retrieved before GC.
-            try:
-                _LOGGER.log(ux.TRACE, "killing %s", future)
-                future.cancel()
-                await future
-            except asyncio.CancelledError:
-                pass
-            except Exception as ex:
-                loop.call_exception_handler(
-                    {
-                        "message": "Future raised unexpected exception after requesting cancellation",
-                        "exception": ex,
-                        "future": future,
-                    }
-                )
-
-        remaining_tasks = [t for t in asyncio.all_tasks(loop) if not t.done()]
-
-        if remaining_tasks:
-            _LOGGER.debug("terminating %s remaining tasks forcefully", len(remaining_tasks))
-            loop.run_until_complete(asyncio.gather(*(murder(task) for task in remaining_tasks)))
-        else:
-            _LOGGER.debug("No remaining tasks exist, good job!")
-
-        if sys.version_info >= (3, 9):
-            _LOGGER.debug("shutting down default executor")
-            try:
-                # This seems to raise a NotImplementedError when running with uvloop.
-                loop.run_until_complete(loop.shutdown_default_executor())
-            except NotImplementedError:
-                pass
-
-        _LOGGER.debug("shutting down asyncgens")
-        loop.run_until_complete(loop.shutdown_asyncgens())
-
-        _LOGGER.debug("closing event loop")
-        loop.close()
-        # Closed loops cannot be re-used so it should also be un-set.
-        asyncio.set_event_loop(None)
-
-    @staticmethod
-    def _validate_activity(activity: undefined.UndefinedNoneOr[presences.Activity]) -> None:
-        # This seems to cause confusion for a lot of people, so lets add some warnings into the mix.
-
-        if activity is undefined.UNDEFINED or activity is None:
-            return
-
-        # If you ever change where this is called from, make sure to check the stacklevels are correct
-        # or the code preview in the warning will be wrong...
-        if activity.type is presences.ActivityType.CUSTOM:
-            warnings.warn(
-                "The CUSTOM activity type is not supported by bots at the time of writing, and may therefore not have "
-                "any effect if used.",
-                category=errors.HikariWarning,
-                stacklevel=3,
-            )
-        elif activity.type is presences.ActivityType.STREAMING and activity.url is None:
-            warnings.warn(
-                "The STREAMING activity type requires a 'url' parameter pointing to a valid Twitch or YouTube video "
-                "URL to be specified on the activity for the presence update to have any effect.",
-                category=errors.HikariWarning,
-                stacklevel=3,
-            )
