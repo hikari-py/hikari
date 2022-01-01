@@ -126,7 +126,6 @@ def _destroy_loop(loop: asyncio.AbstractEventLoop) -> None:
     asyncio.set_event_loop(None)
 
 
-@staticmethod
 def _validate_activity(activity: undefined.UndefinedNoneOr[presences.Activity]) -> None:
     # This seems to cause confusion for a lot of people, so lets add some warnings into the mix.
 
