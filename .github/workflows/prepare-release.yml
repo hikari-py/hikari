@@ -55,4 +55,5 @@ jobs:
       - name: Enable auto-merge for the pull request
         uses: alexwilson/enable-github-automerge-action@1.0.0
         with:
-          github_token: ${{ steps.generate_token.outputs.token }}
+          github-token: ${{ steps.generate_token.outputs.token }}
+          merge-method: "SQUASH"
