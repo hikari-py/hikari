@@ -74,6 +74,10 @@ if typing.TYPE_CHECKING:
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.bot")
 
 
+async def _gather(coros: typing.Iterator[typing.Awaitable[typing.Any]]) -> None:
+    await asyncio.gather(*coros)
+
+
 class GatewayBot(traits.GatewayBotAware):
     """Basic auto-sharding bot implementation.
 
@@ -1316,7 +1320,7 @@ class GatewayBot(traits.GatewayBotAware):
 
         if remaining_tasks:
             _LOGGER.debug("terminating %s remaining tasks forcefully", len(remaining_tasks))
-            loop.run_until_complete(asyncio.gather(*(murder(task) for task in remaining_tasks)))
+            loop.run_until_complete(_gather((murder(task) for task in remaining_tasks)))
         else:
             _LOGGER.debug("No remaining tasks exist, good job!")
 
