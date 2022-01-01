@@ -40,7 +40,6 @@ import attr
 
 from hikari import channels
 from hikari import commands
-from hikari import messages
 from hikari import snowflakes
 from hikari import traits
 from hikari import undefined
@@ -49,6 +48,7 @@ from hikari.internal import attr_extensions
 
 if typing.TYPE_CHECKING:
     from hikari import guilds
+    from hikari import messages as messages_
     from hikari import permissions as permissions_
     from hikari import users as users_
     from hikari.api import special_endpoints
@@ -103,7 +103,7 @@ class ResolvedOptionData:
     channels: typing.Mapping[snowflakes.Snowflake, InteractionChannel] = attr.field(repr=False)
     """Mapping of snowflake iDs to the resolved option partial channel objects."""
 
-    messages: typing.Mapping[snowflakes.Snowflake, messages.Message]
+    messages: typing.Mapping[snowflakes.Snowflake, messages_.Message]
     """Mapping of snowflake iDs to the resolved option partial message objects."""
 
 
