@@ -47,14 +47,14 @@ from hikari.internal import ux
 
 
 @pytest.mark.parametrize("activity", [undefined.UNDEFINED, None])
-def test_validate_activity_when_no_activity(self, activity):
+def test_validate_activity_when_no_activity(activity):
     with mock.patch.object(warnings, "warn") as warn:
         bot_impl._validate_activity(activity)
 
     warn.assert_not_called()
 
 
-def test_validate_activity_when_type_is_custom(self):
+def test_validate_activity_when_type_is_custom():
     activity = presences.Activity(name="test", type=presences.ActivityType.CUSTOM)
 
     with mock.patch.object(warnings, "warn") as warn:
@@ -68,7 +68,7 @@ def test_validate_activity_when_type_is_custom(self):
     )
 
 
-def test_validate_activity_when_type_is_streaming_but_no_url(self):
+def test_validate_activity_when_type_is_streaming_but_no_url():
     activity = presences.Activity(name="test", url=None, type=presences.ActivityType.STREAMING)
 
     with mock.patch.object(warnings, "warn") as warn:
@@ -82,7 +82,7 @@ def test_validate_activity_when_type_is_streaming_but_no_url(self):
     )
 
 
-def test_validate_activity_when_no_warning(self):
+def test_validate_activity_when_no_warning():
     activity = presences.Activity(name="test", type=presences.ActivityType.PLAYING)
 
     with mock.patch.object(warnings, "warn") as warn:
