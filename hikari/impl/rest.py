@@ -3232,9 +3232,10 @@ class RESTClientImpl(rest_api.RESTClient):
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         name: str,
-        description: str,
-        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         *,
+        type: undefined.UndefinedOr[commands.CommandType] = undefined.UNDEFINED,
+        description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
         default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.Command:
@@ -3247,6 +3248,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
         body.put("description", description)
+        body.put("type", type)
         body.put_array("options", options, conversion=self._entity_factory.serialize_command_option)
         body.put("default_permission", default_permission)
 

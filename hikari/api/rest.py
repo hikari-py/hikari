@@ -6730,9 +6730,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         name: str,
-        description: str,
-        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         *,
+        type: undefined.UndefinedOr[commands.CommandType] = undefined.UNDEFINED,
+        description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
         default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.Command:
