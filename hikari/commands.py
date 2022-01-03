@@ -208,6 +208,7 @@ class BaseCommand(snowflakes.Unique, abc.ABC):
         lowercase.
     """
 
+
     default_permission: bool = attr.field(eq=False, hash=False, repr=True)
     """Whether the command is enabled by default when added to a guild.
 
@@ -443,8 +444,10 @@ class BaseCommand(snowflakes.Unique, abc.ABC):
 class Command(BaseCommand):
     """Represents a slash command on Discord."""
 
-    description: str = attr.field(eq=False, hash=False, repr=False)
+    description: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
     """The command's description.
+    
+    None if this command is not a slash command.
 
     !!! note
         This will be inclusively between 1-100 characters in length.

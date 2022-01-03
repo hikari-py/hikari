@@ -1730,7 +1730,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             type=commands.CommandType(payload["type"]),
             application_id=snowflakes.Snowflake(payload["application_id"]),
             name=payload["name"],
-            description=payload["description"],
+            description=payload.get("description"),
             options=options,
             default_permission=payload.get("default_permission", True),
             guild_id=guild_id,
