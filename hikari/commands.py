@@ -204,8 +204,10 @@ class Command(snowflakes.Unique):
         lowercase.
     """
 
-    description: str = attr.field(eq=False, hash=False, repr=False)
+    description: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
     """The command's description.
+    
+    None if this command is not a slash command.
 
     !!! note
         This will be inclusively between 1-100 characters in length.
