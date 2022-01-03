@@ -27,6 +27,7 @@ __all__: typing.List[str] = [
     "AutocompleteInteraction",
     "BaseCommandInteraction",
     "CommandInteractionOption",
+    "AutocompleteInteractionOption",
     "CommandInteraction",
     "COMMAND_RESPONSE_TYPES",
     "CommandResponseTypesT",
@@ -136,6 +137,12 @@ class CommandInteractionOption:
     subcommand or group.
     """
 
+
+@attr_extensions.with_copy
+@attr.define(hash=False, kw_only=True, weakref_slot=False)
+class AutocompleteInteractionOption(CommandInteractionOption):
+    """Represents the options passed for a command autocomplete interaction."""
+
     is_focused: bool = attr.field(default=False, repr=False)
     """Whether this option is the currently focused option for autocomplete."""
 
@@ -179,14 +186,8 @@ class BaseCommandInteraction(base_interactions.PartialInteraction):
     command_type: commands.CommandType = attr.field(eq=False, hash=False, repr=True)
     """The type of the command."""
 
-    options: typing.Optional[typing.Sequence[CommandInteractionOption]] = attr.field(eq=False, hash=False, repr=True)
-    """Parameter values provided by the user invoking this command."""
-
     resolved: typing.Optional[ResolvedOptionData] = attr.field(eq=False, hash=False, repr=False)
     """Mappings of the objects resolved for the provided command options."""
-
-    target_id: typing.Optional[snowflakes.Snowflake] = attr.field(default=None, eq=False, hash=False, repr=True)
-    """The target of the command. Only available if the command is a context menu command."""
 
     async def fetch_channel(self) -> channels.TextableChannel:
         """Fetch the guild channel this was triggered in.
@@ -335,6 +336,12 @@ class BaseCommandInteraction(base_interactions.PartialInteraction):
 class CommandInteraction(BaseCommandInteraction, base_interactions.MessageResponseMixin[CommandResponseTypesT]):
     """Represents a command interaction on Discord."""
 
+    options: typing.Optional[typing.Sequence[CommandInteractionOption]] = attr.field(eq=False, hash=False, repr=True)
+    """Parameter values provided by the user invoking this command."""
+
+    target_id: typing.Optional[snowflakes.Snowflake] = attr.field(default=None, eq=False, hash=False, repr=True)
+    """The target of the command. Only available if the command is a context menu command."""
+
     def build_response(self) -> special_endpoints.InteractionMessageBuilder:
         """Get a message response builder for use in the REST server flow.
 
@@ -388,6 +395,11 @@ class CommandInteraction(BaseCommandInteraction, base_interactions.MessageRespon
 class AutocompleteInteraction(BaseCommandInteraction):
     """Represents an autocomplete interaction on Discord."""
 
+    options: typing.Optional[typing.Sequence[AutocompleteInteractionOption]] = attr.field(
+        eq=False, hash=False, repr=True
+    )
+    """Parameter values provided by the user invoking this command."""
+
     def build_response(self) -> special_endpoints.InteractionAutocompleteBuilder:
         """Get a message response builder for use in the REST server flow.
 
@@ -405,9 +417,9 @@ class AutocompleteInteraction(BaseCommandInteraction):
                 .build_response()
                 .set_choices(
                     [
-                        OptionChoice(name="foo", value=1),
-                        OptionChoice(name="bar", value=2),
-                        OptionChoice(name="baz", value=3),
+                        OptionChoice(name="foo", value="a"),
+                        OptionChoice(name="bar", value="b"),
+                        OptionChoice(name="baz", value="c"),
                     ]
                 )
             )

@@ -4153,7 +4153,11 @@ class TestRESTClientImplAsync:
         mock_option = object()
 
         result = await rest_client.create_application_command(
-            StubModel(4332123), "okokok", "not ok anymore", StubModel(653452134), options=[mock_option]
+            application=StubModel(4332123),
+            guild=StubModel(653452134),
+            name="okokok",
+            description="not ok anymore",
+            options=[mock_option],
         )
 
         assert result is rest_client._entity_factory.deserialize_command.return_value
@@ -4174,7 +4178,11 @@ class TestRESTClientImplAsync:
         expected_route = routes.POST_APPLICATION_COMMAND.compile(application=4332123)
         rest_client._request = mock.AsyncMock(return_value={"id": "29393939"})
 
-        result = await rest_client.create_application_command(StubModel(4332123), "okokok", "not ok anymore")
+        result = await rest_client.create_application_command(
+            StubModel(4332123),
+            name="okokok",
+            description="not ok anymore",
+        )
 
         assert result is rest_client._entity_factory.deserialize_command.return_value
         rest_client._entity_factory.deserialize_command.assert_called_once_with(

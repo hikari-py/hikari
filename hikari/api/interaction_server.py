@@ -37,7 +37,6 @@ if typing.TYPE_CHECKING:
     _MessageResponseBuilderT = typing.Union[
         special_endpoints.InteractionDeferredBuilder,
         special_endpoints.InteractionMessageBuilder,
-        special_endpoints.InteractionAutocompleteBuilder,
     ]
 
 

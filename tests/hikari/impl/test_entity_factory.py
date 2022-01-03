@@ -2718,6 +2718,7 @@ class TestEntityFactoryImpl:
             "id": "1231231231",
             "application_id": "12354123",
             "guild_id": "49949494",
+            "type": 1,
             "name": "good name",
             "description": "very good description",
             "default_permission": False,
@@ -2796,6 +2797,7 @@ class TestEntityFactoryImpl:
         payload = {
             "id": "1231231231",
             "application_id": "12354123",
+            "type": 1,
             "name": "good name",
             "description": "very good description",
             "options": [],
@@ -2811,6 +2813,7 @@ class TestEntityFactoryImpl:
             "id": "1231231231",
             "application_id": "12354123",
             "guild_id": "49949494",
+            "type": 1,
             "name": "good name",
             "description": "very good description",
             "options": [],
@@ -2985,7 +2988,7 @@ class TestEntityFactoryImpl:
                         "name": "an option",
                         "type": 1,
                         "options": [
-                            {"name": "go ice", "type": 4, "value": "42", "focused": True},
+                            {"name": "go ice", "type": 4, "value": "42"},
                             {"name": "go fire", "type": 6, "value": 123123123},
                         ],
                     },
@@ -3057,7 +3060,6 @@ class TestEntityFactoryImpl:
         assert sub_option1.value == "42"
         assert sub_option1.type is commands.OptionType.INTEGER
         assert sub_option1.options is None
-        assert sub_option1.is_focused is True
         assert isinstance(sub_option1, command_interactions.CommandInteractionOption)
         sub_option2 = option.options[1]
         assert sub_option2.name == "go fire"
@@ -3065,7 +3067,6 @@ class TestEntityFactoryImpl:
         assert isinstance(sub_option2.value, snowflakes.Snowflake)
         assert sub_option2.type is commands.OptionType.USER
         assert sub_option2.options is None
-        assert sub_option2.is_focused is False
         assert isinstance(sub_option2, command_interactions.CommandInteractionOption)
         assert isinstance(option, command_interactions.CommandInteractionOption)
 
