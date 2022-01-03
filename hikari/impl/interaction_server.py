@@ -501,6 +501,12 @@ class InteractionServer(interaction_server.InteractionServer):
     ]:
         ...
 
+    @typing.overload
+    def get_listener(
+        self, interaction_type: typing.Type[_InteractionT_co], /
+    ) -> typing.Optional[interaction_server.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]]:
+        ...
+
     def get_listener(
         self, interaction_type: typing.Type[_InteractionT_co], /
     ) -> typing.Optional[interaction_server.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]]:
@@ -525,6 +531,19 @@ class InteractionServer(interaction_server.InteractionServer):
         interaction_type: typing.Type[component_interactions.ComponentInteraction],
         listener: typing.Optional[
             interaction_server.ListenerT[component_interactions.ComponentInteraction, _MessageResponseBuilderT]
+        ],
+        /,
+        *,
+        replace: bool = False,
+    ) -> None:
+        ...
+
+    @typing.overload
+    def set_listener(
+        self,
+        interaction_type: typing.Type[_InteractionT_co],
+        listener: typing.Optional[
+            interaction_server.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]
         ],
         /,
         *,
