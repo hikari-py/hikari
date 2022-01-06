@@ -1326,15 +1326,27 @@ class ActionRowBuilder(special_endpoints.ActionRowBuilder):
     @typing.overload
     def add_button(
         self: _ActionRowBuilderT,
-        style: typing.Union[typing.Literal[messages.ButtonStyle.LINK], typing.Literal[5]],
+        style: typing.Literal[messages.ButtonStyle.LINK, 5],
         url: str,
         /,
     ) -> special_endpoints.LinkButtonBuilder[_ActionRowBuilderT]:
         ...
 
+    @typing.overload
     def add_button(
         self: _ActionRowBuilderT, style: typing.Union[int, messages.ButtonStyle], url_or_custom_id: str, /
-    ) -> special_endpoints.ButtonBuilder[_ActionRowBuilderT]:
+    ) -> typing.Union[
+        special_endpoints.LinkButtonBuilder[_ActionRowBuilderT],
+        special_endpoints.InteractiveButtonBuilder[_ActionRowBuilderT],
+    ]:
+        ...
+
+    def add_button(
+        self: _ActionRowBuilderT, style: typing.Union[int, messages.ButtonStyle], url_or_custom_id: str, /
+    ) -> typing.Union[
+        special_endpoints.LinkButtonBuilder[_ActionRowBuilderT],
+        special_endpoints.InteractiveButtonBuilder[_ActionRowBuilderT],
+    ]:
         self._assert_can_add_type(messages.ComponentType.BUTTON)
         if style in messages.InteractiveButtonTypes:
             return InteractiveButtonBuilder(container=self, style=style, custom_id=url_or_custom_id)
