@@ -1031,9 +1031,9 @@ class TestRESTClientImpl:
         mock_unban_user.assert_called_once_with(123, 321, reason="ayaya")
 
     def test_command_builder(self, rest_client):
-        result = rest_client.command_builder("a name", "very very good")
+        result = rest_client.command_builder(1, "a name", description="very very good")
 
-        assert isinstance(result, special_endpoints.CommandBuilder)
+        assert isinstance(result, special_endpoints.SlashCommandBuilder)
         assert result.name == "a name"
         assert result.description == "very very good"
 
@@ -4155,6 +4155,7 @@ class TestRESTClientImplAsync:
         result = await rest_client.create_application_command(
             application=StubModel(4332123),
             guild=StubModel(653452134),
+            type=1,
             name="okokok",
             description="not ok anymore",
             options=[mock_option],
@@ -4168,6 +4169,7 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(
             expected_route,
             json={
+                "type": 1,
                 "name": "okokok",
                 "description": "not ok anymore",
                 "options": [rest_client._entity_factory.serialize_command_option.return_value],
@@ -4180,6 +4182,7 @@ class TestRESTClientImplAsync:
 
         result = await rest_client.create_application_command(
             StubModel(4332123),
+            type=1,
             name="okokok",
             description="not ok anymore",
         )
@@ -4189,7 +4192,7 @@ class TestRESTClientImplAsync:
             rest_client._request.return_value, guild_id=None
         )
         rest_client._request.assert_awaited_once_with(
-            expected_route, json={"name": "okokok", "description": "not ok anymore"}
+            expected_route, json={"type": 1, "name": "okokok", "description": "not ok anymore"}
         )
 
     async def test_set_application_commands_with_guild(self, rest_client):

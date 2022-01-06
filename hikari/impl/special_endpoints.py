@@ -29,6 +29,8 @@ from __future__ import annotations
 __all__: typing.List[str] = [
     "ActionRowBuilder",
     "CommandBuilder",
+    "SlashCommandBuilder",
+    "ContextMenuCommandBuilder",
     "TypingIndicator",
     "GuildBuilder",
     "InteractionAutocompleteBuilder",
@@ -77,6 +79,8 @@ if typing.TYPE_CHECKING:
 
     _T = typing.TypeVar("_T")
     _CommandBuilderT = typing.TypeVar("_CommandBuilderT", bound="CommandBuilder")
+    _SlashCommandBuilderT = typing.TypeVar("_SlashCommandBuilderT", bound="SlashCommandBuilder")
+    _ContextMenuCommandBuilderT = typing.TypeVar("_ContextMenuCommandBuilderT", bound="ContextMenuCommandBuilder")
     _InteractionMessageBuilderT = typing.TypeVar("_InteractionMessageBuilderT", bound="InteractionMessageBuilder")
     _InteractionDeferredBuilderT = typing.TypeVar("_InteractionDeferredBuilderT", bound="InteractionDeferredBuilder")
     _InteractionAutocompleteBuilderT = typing.TypeVar(
@@ -935,15 +939,16 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
 class CommandBuilder(special_endpoints.CommandBuilder):
     """Standard implementation of `hikari.api.special_endpoints.CommandBuilder`."""
 
+    _type: undefined.UndefinedOr[commands.CommandType] = attr.field()
     _name: str = attr.field()
-    _description: undefined.UndefinedOr[str] = attr.field(default=undefined.UNDEFINED)
 
-    _type: undefined.UndefinedOr[commands.CommandType] = attr.field(default=undefined.UNDEFINED, kw_only=True)
+    _description: undefined.UndefinedOr[str] = attr.field(default=undefined.UNDEFINED, kw_only=True)
     _id: undefined.UndefinedOr[snowflakes.Snowflake] = attr.field(default=undefined.UNDEFINED, kw_only=True)
     _default_permission: undefined.UndefinedOr[bool] = attr.field(default=undefined.UNDEFINED, kw_only=True)
 
-    # Non-arguments.
-    _options: typing.List[commands.CommandOption] = attr.field(factory=list)
+    _options: undefined.UndefinedOr[typing.List[commands.CommandOption]] = attr.field(
+        default=undefined.UNDEFINED, kw_only=True
+    )
 
     @property
     def description(self) -> undefined.UndefinedOr[str]:
@@ -962,16 +967,8 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         return self._default_permission
 
     @property
-    def options(self) -> typing.Sequence[commands.CommandOption]:
-        return self._options.copy()
-
-    @property
     def name(self) -> str:
         return self._name
-
-    def add_option(self: _CommandBuilderT, option: commands.CommandOption) -> _CommandBuilderT:
-        self._options.append(option)
-        return self
 
     def set_id(self: _CommandBuilderT, id_: undefined.UndefinedOr[snowflakes.Snowflakeish], /) -> _CommandBuilderT:
         self._id = snowflakes.Snowflake(id_) if id_ is not undefined.UNDEFINED else undefined.UNDEFINED
@@ -994,6 +991,27 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         data.put_snowflake("id", self._id)
         data.put("default_permission", self._default_permission)
         return data
+
+
+@attr.define(kw_only=False, weakref_slot=False)
+class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder):
+    """Builder class for slash commands."""
+
+    _description: str = attr.field()
+    _options: typing.List[commands.CommandOption] = attr.field(factory=list, kw_only=True)
+
+    def add_option(self: _SlashCommandBuilderT, option: commands.CommandOption) -> _SlashCommandBuilderT:
+        self._options.append(option)
+        return self
+
+    @property
+    def options(self) -> typing.Sequence[commands.CommandOption]:
+        return self._options.copy()
+
+
+@attr.define(kw_only=False, weakref_slot=False)
+class ContextMenuCommandBuilder(CommandBuilder, special_endpoints.ContextMenuCommandBuilder):
+    """Builder class for context menu commands."""
 
 
 def _build_emoji(

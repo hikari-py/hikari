@@ -247,12 +247,12 @@ class BaseCommandInteraction(base_interactions.PartialInteraction):
 
         return None
 
-    async def fetch_command(self) -> commands.Command:
+    async def fetch_command(self) -> commands.PartialCommand:
         """Fetch the command which triggered this interaction.
 
         Returns
         -------
-        hikari.commands.Command
+        hikari.commands.PartialCommand
             Object of this interaction's command.
 
         Raises

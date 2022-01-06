@@ -26,9 +26,9 @@ from __future__ import annotations
 import abc
 
 __all__: typing.List[str] = [
-    "BaseCommand",
+    "PartialCommand",
     "ContextMenuCommand",
-    "Command",
+    "SlashCommand",
     "CommandChoice",
     "CommandOption",
     "CommandPermission",
@@ -52,12 +52,14 @@ if typing.TYPE_CHECKING:
     from hikari import channels
     from hikari import guilds
 
+    _CommandT = typing.TypeVar("_CommandT", bound="PartialCommand")
+
 
 @typing.final
 class CommandType(int, enums.Enum):
     """The type of a command."""
 
-    CHAT_INPUT = 1
+    SLASH = 1
     """A text-based command."""
 
     USER = 2
@@ -185,7 +187,7 @@ class CommandOption:
 
 @attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
-class BaseCommand(snowflakes.Unique, abc.ABC):
+class PartialCommand(snowflakes.Unique, abc.ABC):
     """Represents any application command on Discord."""
 
     app: traits.RESTAware = attr.field(eq=False, hash=False, repr=False)
@@ -194,7 +196,7 @@ class BaseCommand(snowflakes.Unique, abc.ABC):
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
     # <<inherited docstring from Unique>>.
 
-    type: CommandType = attr.field(default=CommandType.CHAT_INPUT, hash=True, repr=True)
+    type: CommandType = attr.field(default=CommandType.SLASH, hash=True, repr=True)
     """The type of a command."""
 
     application_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
@@ -207,7 +209,6 @@ class BaseCommand(snowflakes.Unique, abc.ABC):
         This will match the regex `^[\w-]{1,32}$` in Unicode mode and will be
         lowercase.
     """
-
 
     default_permission: bool = attr.field(eq=False, hash=False, repr=True)
     """Whether the command is enabled by default when added to a guild.
@@ -225,12 +226,12 @@ class BaseCommand(snowflakes.Unique, abc.ABC):
     version: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
     """Auto-incrementing version identifier updated during substantial record changes."""
 
-    async def fetch_self(self) -> Command:
+    async def fetch_self(self: _CommandT) -> _CommandT:
         """Fetch an up-to-date version of this command object.
 
         Returns
         -------
-        Command
+        BaseCommand
             Object of the fetched command.
 
         Raises
@@ -255,17 +256,18 @@ class BaseCommand(snowflakes.Unique, abc.ABC):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
-        return await self.app.rest.fetch_application_command(
+        command = await self.app.rest.fetch_application_command(
             self.application_id, self.id, undefined.UNDEFINED if self.guild_id is None else self.guild_id
         )
+        return typing.cast("_CommandT", command)
 
     async def edit(
-        self,
+        self: _CommandT,
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         options: undefined.UndefinedOr[typing.Sequence[CommandOption]] = undefined.UNDEFINED,
-    ) -> Command:
+    ) -> _CommandT:
         """Edit this command.
 
         Other Parameters
@@ -313,7 +315,7 @@ class BaseCommand(snowflakes.Unique, abc.ABC):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
-        return await self.app.rest.edit_application_command(
+        command = await self.app.rest.edit_application_command(
             self.application_id,
             self.id,
             undefined.UNDEFINED if self.guild_id is None else self.guild_id,
@@ -321,6 +323,7 @@ class BaseCommand(snowflakes.Unique, abc.ABC):
             description=description,
             options=options,
         )
+        return typing.cast("_CommandT", command)
 
     async def delete(self) -> None:
         """Delete this command.
@@ -441,12 +444,12 @@ class BaseCommand(snowflakes.Unique, abc.ABC):
 
 @attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
-class Command(BaseCommand):
+class SlashCommand(PartialCommand):
     """Represents a slash command on Discord."""
 
-    description: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    description: str = attr.field(eq=False, hash=False, repr=False)
     """The command's description.
-    
+
     None if this command is not a slash command.
 
     !!! note
@@ -459,7 +462,7 @@ class Command(BaseCommand):
 
 @attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
-class ContextMenuCommand(BaseCommand):
+class ContextMenuCommand(PartialCommand):
     """Represents a slash command on Discord."""
 
 

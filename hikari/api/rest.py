@@ -6602,9 +6602,29 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If an internal error occurs on Discord while handling the request.
         """
 
+    @typing.overload
     @abc.abstractmethod
     def command_builder(
-        self, name: str, description: undefined.UndefinedOr[str] = undefined.UNDEFINED, /
+        self,
+        type: typing.Literal[commands.CommandType.SLASH],
+        name: str,
+        *,
+        description: str,
+    ) -> special_endpoints.SlashCommandBuilder:
+        ...
+
+    @typing.overload
+    @abc.abstractmethod
+    def command_builder(
+        self,
+        type: typing.Literal[commands.CommandType.USER, commands.CommandType.MESSAGE],
+        name: str,
+    ) -> special_endpoints.ContextMenuCommandBuilder:
+        ...
+
+    @abc.abstractmethod
+    def command_builder(
+        self, type: commands.CommandType, name: str, **kwargs: typing.Any
     ) -> special_endpoints.CommandBuilder:
         r"""Create a command builder for use in `RESTClient.set_application_commands`.
 
@@ -6627,16 +6647,16 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def fetch_application_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        command: snowflakes.SnowflakeishOr[commands.Command],
+        command: snowflakes.SnowflakeishOr[commands.PartialCommand],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
-    ) -> commands.Command:
+    ) -> commands.PartialCommand:
         """Fetch a command set for an application.
 
         Parameters
         ----------
         application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to fetch a command for.
-        command: hikari.snowflakes.SnowflakeishOr[hikari.commands.Command]
+        command: hikari.snowflakes.SnowflakeishOr[hikari.commands.PartialCommand]
             Object or ID of the command to fetch.
 
         Other Parameters
@@ -6648,7 +6668,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        hikari.commands.Command
+        hikari.commands.PartialCommand
             Object of the fetched command.
 
         Raises
@@ -6679,7 +6699,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
-    ) -> typing.Sequence[commands.Command]:
+    ) -> typing.Sequence[commands.PartialCommand]:
         """Fetch the commands set for an application.
 
         Parameters
@@ -6697,7 +6717,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        typing.Sequence[hikari.commands.Command]
+        typing.Sequence[hikari.commands.PartialCommand]
             A sequence of the commands declared for the provided application.
             This will exclusively either contain the commands set for a specific
             guild if `guild` is provided or the global commands if not.
@@ -6725,18 +6745,46 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If an internal error occurs on Discord while handling the request.
         """
 
+    @typing.overload
     @abc.abstractmethod
     async def create_application_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        type: typing.Literal[commands.CommandType.SLASH],
+        name: str,
+        description: str,
+        *,
+        options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
+        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+        default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+    ) -> commands.PartialCommand:
+        ...
+
+    @typing.overload
+    @abc.abstractmethod
+    async def create_application_command(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        type: typing.Literal[commands.CommandType.USER, commands.CommandType.MESSAGE],
         name: str,
         *,
-        type: undefined.UndefinedOr[commands.CommandType] = undefined.UNDEFINED,
-        description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
-        options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
         default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-    ) -> commands.Command:
+    ) -> commands.PartialCommand:
+        ...
+
+    @abc.abstractmethod
+    async def create_application_command(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        type: commands.CommandType,
+        name: str,
+        description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        *,
+        options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
+        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+        default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+    ) -> commands.PartialCommand:
         r"""Create an application command.
 
         Parameters
@@ -6766,7 +6814,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        hikari.commands.Command
+        hikari.commands.PartialCommand
             Object of the created command.
 
         Raises
@@ -6800,7 +6848,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         commands: typing.Sequence[special_endpoints.CommandBuilder],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
-    ) -> typing.Sequence[commands.Command]:
+    ) -> typing.Sequence[commands.PartialCommand]:
         """Set the commands for an application.
 
         !!! warning
@@ -6824,7 +6872,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        typing.Sequence[hikari.commands.Command]
+        typing.Sequence[hikari.commands.PartialCommand]
             A sequence of the set command objects.
 
         Raises
@@ -6856,20 +6904,20 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def edit_application_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        command: snowflakes.SnowflakeishOr[commands.Command],
+        command: snowflakes.SnowflakeishOr[commands.PartialCommand],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
-    ) -> commands.Command:
+    ) -> commands.PartialCommand:
         """Edit a registered application command.
 
         Parameters
         ----------
         application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to edit a command for.
-        command : hikari.snowflakes.SnowflakeishOr[hikari.commands.Command]
+        command : hikari.snowflakes.SnowflakeishOr[hikari.commands.PartialCommand]
             Object or ID of the command to modify.
 
         Other Parameters
@@ -6890,7 +6938,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        hikari.commands.Command
+        hikari.commands.PartialCommand
             The edited command object.
 
         Raises
@@ -6922,7 +6970,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def delete_application_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        command: snowflakes.SnowflakeishOr[commands.Command],
+        command: snowflakes.SnowflakeishOr[commands.PartialCommand],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
     ) -> None:
         """Delete a registered application command.
@@ -6931,7 +6979,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------
         application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to delete a command for.
-        command : hikari.snowflakes.SnowflakeishOr[hikari.commands.Command]
+        command : hikari.snowflakes.SnowflakeishOr[hikari.commands.PartialCommand]
             Object or ID of the command to delete.
 
         Other Parameters
@@ -7012,7 +7060,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        command: snowflakes.SnowflakeishOr[commands.Command],
+        command: snowflakes.SnowflakeishOr[commands.PartialCommand],
     ) -> commands.GuildCommandPermissions:
         """Fetch the permissions registered for a specific command in a guild.
 
@@ -7022,7 +7070,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Object or ID of the application to fetch the command permissions for.
         guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
             Object or ID of the guild to fetch the command permissions for.
-        command: hikari.snowflakes.SnowflakeishOr[hikari.commands.Command]
+        command: hikari.snowflakes.SnowflakeishOr[hikari.commands.PartialCommand]
             Objecr or ID of the command to fetch the command permissions for.
 
         Returns
@@ -7059,7 +7107,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         permissions: typing.Mapping[
-            snowflakes.SnowflakeishOr[commands.Command], typing.Sequence[commands.CommandPermission]
+            snowflakes.SnowflakeishOr[commands.PartialCommand], typing.Sequence[commands.CommandPermission]
         ],
     ) -> typing.Sequence[commands.GuildCommandPermissions]:
         """Set permissions in a guild for multiple commands.
@@ -7074,7 +7122,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Object or ID of the application to set the command permissions for.
         guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
             Object or ID of the guild to set the command permissions for.
-        permissions : typing.Mapping[hikari.snowflakes.SnowflakeishOr[hikari.commands.Command], typing.Sequence[hikari.commands.CommandPermission]]
+        permissions : typing.Mapping[hikari.snowflakes.SnowflakeishOr[hikari.commands.PartialCommand], typing.Sequence[hikari.commands.CommandPermission]]
             Mapping of objects and/or IDs of commands to sequences of the commands
             to set for the specified guild.
 
@@ -7114,7 +7162,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        command: snowflakes.SnowflakeishOr[commands.Command],
+        command: snowflakes.SnowflakeishOr[commands.PartialCommand],
         permissions: typing.Sequence[commands.CommandPermission],
     ) -> commands.GuildCommandPermissions:
         """Set permissions for a specific command.
@@ -7128,7 +7176,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Object or ID of the application to set the command permissions for.
         guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
             Object or ID of the guild to set the command permissions for.
-        command : hikari.snowflakes.SnowflakeishOr[hikari.commands.Command]
+        command : hikari.snowflakes.SnowflakeishOr[hikari.commands.PartialCommand]
             Object or ID of the command to set the permissions for.
         permissions : typing.Sequence[hikari.commands.CommandPermission]
             Sequence of up to 10 of the permission objects to set.

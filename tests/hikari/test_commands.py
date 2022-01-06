@@ -36,7 +36,7 @@ def mock_app():
 class TestCommand:
     @pytest.fixture()
     def mock_command(self, mock_app):
-        return commands.Command(
+        return commands.SlashCommand(
             app=mock_app,
             id=snowflakes.Snowflake(34123123),
             application_id=snowflakes.Snowflake(65234123),

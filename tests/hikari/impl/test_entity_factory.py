@@ -2791,7 +2791,7 @@ class TestEntityFactoryImpl:
 
         assert isinstance(suboption, commands.CommandOption)
         assert isinstance(option, commands.CommandOption)
-        assert isinstance(command, commands.Command)
+        assert isinstance(command, commands.SlashCommand)
 
     def test_deserialize_command_with_passed_through_guild_id(self, entity_factory_impl):
         payload = {
@@ -2824,7 +2824,7 @@ class TestEntityFactoryImpl:
 
         assert command.options is None
         assert command.default_permission is True
-        assert isinstance(command, commands.Command)
+        assert isinstance(command, commands.SlashCommand)
 
     @pytest.fixture()
     def guild_command_permissions_payload(self):

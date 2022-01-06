@@ -64,7 +64,7 @@ from hikari.internal import data_binding
 from hikari.internal import time
 
 _ValueT = typing.TypeVar("_ValueT")
-CommandInteractionT = typing.TypeVar("CommandInteractionT", bound="command_interactions.BaseCommandInteraction")
+_CommandInteractionT = typing.TypeVar("_CommandInteractionT", bound="command_interactions.BaseCommandInteraction")
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.entity_factory")
 
 _interaction_option_type_mapping: typing.Dict[int, typing.Callable[[typing.Any], typing.Any]] = {
@@ -254,7 +254,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             audit_log_models.AuditLogEventType.MEMBER_MOVE: self._deserialize_member_move_entry_info,
         }
         self._command_mapping = {
-            commands.CommandType.CHAT_INPUT: self._deserialize_command,
+            commands.CommandType.SLASH: self._deserialize_slash_command,
             commands.CommandType.USER: self._deserialize_context_menu_command,
             commands.CommandType.MESSAGE: self._deserialize_context_menu_command,
         }
@@ -1710,12 +1710,12 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             max_value=payload.get("max_value"),
         )
 
-    def _deserialize_command(
+    def _deserialize_slash_command(
         self,
         payload: data_binding.JSONObject,
         *,
         guild_id: undefined.UndefinedNoneOr[snowflakes.Snowflake] = undefined.UNDEFINED,
-    ) -> commands.Command:
+    ) -> commands.SlashCommand:
         if guild_id is undefined.UNDEFINED:
             raw_guild_id = payload["guild_id"]
             guild_id = snowflakes.Snowflake(raw_guild_id) if raw_guild_id is not None else None
@@ -1724,13 +1724,13 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_options := payload.get("options"):
             options = [self._deserialize_command_option(option) for option in raw_options]
 
-        return commands.Command(
+        return commands.SlashCommand(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
             type=commands.CommandType(payload["type"]),
             application_id=snowflakes.Snowflake(payload["application_id"]),
             name=payload["name"],
-            description=payload.get("description"),
+            description=payload["description"],
             options=options,
             default_permission=payload.get("default_permission", True),
             guild_id=guild_id,
@@ -1763,7 +1763,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         payload: data_binding.JSONObject,
         *,
         guild_id: undefined.UndefinedNoneOr[snowflakes.Snowflake] = undefined.UNDEFINED,
-    ) -> commands.Command:
+    ) -> commands.PartialCommand:
         command_type = commands.CommandType(payload["type"])
 
         if deserialize := self._command_mapping.get(command_type):
@@ -1983,7 +1983,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             version=payload["version"],
             command_id=snowflakes.Snowflake(data_payload["id"]),
             command_name=data_payload["name"],
-            command_type=commands.CommandType(data_payload.get("type", commands.CommandType.CHAT_INPUT)),
+            command_type=commands.CommandType(data_payload.get("type", commands.CommandType.SLASH)),
             options=options,
             resolved=resolved,
             target_id=target_id,
@@ -2030,7 +2030,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             version=payload["version"],
             command_id=snowflakes.Snowflake(data_payload["id"]),
             command_name=data_payload["name"],
-            command_type=commands.CommandType(data_payload.get("type", commands.CommandType.CHAT_INPUT)),
+            command_type=commands.CommandType(data_payload.get("type", commands.CommandType.SLASH)),
             options=options,
             resolved=resolved,
         )
