@@ -999,21 +999,6 @@ class CommandBuilder(abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_type(self: _T, type: typing.Union[int, commands.CommandType], /) -> _T:
-        """Set the command type of this command.
-
-        Parameters
-        ----------
-        type : Union[int, hikari.commands.CommandType]
-            The command type to set for this command.
-
-        Returns
-        -------
-        CommandBuilder
-            Object of this command builder.
-        """
-
-    @abc.abstractmethod
     def set_default_permission(self: _T, state: undefined.UndefinedOr[bool], /) -> _T:
         """Whether this command should be enabled by default (without any permissions).
 

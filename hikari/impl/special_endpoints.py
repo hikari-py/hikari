@@ -974,10 +974,6 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         self._id = snowflakes.Snowflake(id_) if id_ is not undefined.UNDEFINED else undefined.UNDEFINED
         return self
 
-    def set_type(self: _CommandBuilderT, type: typing.Union[int, commands.CommandType], /) -> _CommandBuilderT:
-        self._type = commands.CommandType(type)
-        return self
-
     def set_default_permission(self: _CommandBuilderT, state: undefined.UndefinedOr[bool], /) -> _CommandBuilderT:
         self._default_permission = state
         return self
