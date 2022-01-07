@@ -22,7 +22,8 @@
 import mock
 import pytest
 
-from hikari import channels, commands
+from hikari import channels
+from hikari import commands
 from hikari import snowflakes
 from hikari import traits
 from hikari.interactions import base_interactions
@@ -89,6 +90,7 @@ class TestCommandInteraction:
 
         assert mock_command_interaction.get_channel() is None
 
+
 class TestAutocompleteInteraction:
     @pytest.fixture()
     def mock_autocomplete_interaction(self, mock_app):
@@ -109,11 +111,11 @@ class TestAutocompleteInteraction:
             options=[],
             resolved=None,
         )
-    
+
     @pytest.fixture()
     def mock_command_choices(self):
         return [commands.CommandChoice(name="a", value="b"), commands.CommandChoice(name="foo", value="bar")]
-    
+
     def test_build_response(self, mock_autocomplete_interaction, mock_app, mock_command_choices):
         mock_app.rest.interaction_autocomplete_builder = mock.Mock()
         builder = mock_autocomplete_interaction.build_response(mock_command_choices)
@@ -121,14 +123,17 @@ class TestAutocompleteInteraction:
         assert builder is mock_app.rest.interaction_autocomplete_builder.return_value
         mock_app.rest.interaction_autocomplete_builder.assert_called_once_with(mock_command_choices)
 
-    
     @pytest.mark.asyncio()
-    async def test_create_response(self, mock_autocomplete_interaction: command_interactions.AutocompleteInteraction, mock_app, mock_command_choices):
+    async def test_create_response(
+        self,
+        mock_autocomplete_interaction: command_interactions.AutocompleteInteraction,
+        mock_app,
+        mock_command_choices,
+    ):
         await mock_autocomplete_interaction.create_response(mock_command_choices)
 
-        mock_app.rest.create_interaction_response.assert_awaited_once_with(
+        mock_app.rest.create_autocomplete_response.assert_awaited_once_with(
             2312312,
             "httptptptptptptptp",
-            base_interactions.ResponseType.AUTOCOMPLETE,
-            choices=mock_command_choices,
+            mock_command_choices,
         )

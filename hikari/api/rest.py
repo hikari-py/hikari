@@ -7230,7 +7230,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    def interaction_autocomplete_builder(self, choices: typing.Sequence[commands.CommandChoice]) -> special_endpoints.InteractionAutocompleteBuilder:
+    def interaction_autocomplete_builder(
+        self, choices: typing.Sequence[commands.CommandChoice]
+    ) -> special_endpoints.InteractionAutocompleteBuilder:
         """Create a builder for an autocomplete interaction response.
 
         Returns
@@ -7318,7 +7320,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         role_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
-        choices: undefined.UndefinedOr[typing.Sequence[commands.CommandChoice]] = undefined.UNDEFINED,
     ) -> None:
         """Create the initial response for a interaction.
 
@@ -7609,6 +7610,49 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
+
+    @abc.abstractmethod
+    async def create_autocomplete_response(
+        self,
+        interaction: snowflakes.SnowflakeishOr[base_interactions.PartialInteraction],
+        token: str,
+        choices: typing.Sequence[commands.CommandChoice],
+    ) -> None:
+        """Create the initial response for an autocomplete interaction.
+
+        Parameters
+        ----------
+        interaction : hikari.snowflakes.SnowflakeishOr[hikari.interactions.base_interactions.PartialInteraction]
+            Object or ID of the interaction this response is for.
+        token : builtins.str
+            The command interaction's token.
+
+        Other Parameters
+        ----------------
+        choices : typing.Sequence[commands.CommandChoice]
+            The autocomplete choices themselves.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the interaction is not found or if the interaction's initial
+            response has already been created.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """  # noqa: E501 - Line too long
 
     @abc.abstractmethod
     def build_action_row(self) -> special_endpoints.ActionRowBuilder:

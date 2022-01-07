@@ -400,7 +400,9 @@ class AutocompleteInteraction(BaseCommandInteraction):
     )
     """Parameter values provided by the user invoking this command."""
 
-    def build_response(self, choices: typing.Sequence[commands.CommandChoice]) -> special_endpoints.InteractionAutocompleteBuilder:
+    def build_response(
+        self, choices: typing.Sequence[commands.CommandChoice]
+    ) -> special_endpoints.InteractionAutocompleteBuilder:
         """Get a message response builder for use in the REST server flow.
 
         !!! note
@@ -433,9 +435,8 @@ class AutocompleteInteraction(BaseCommandInteraction):
 
     async def create_response(self, choices: typing.Sequence[commands.CommandChoice]) -> None:
         """Create a response for this autocomplete interaction."""
-        await self.app.rest.create_interaction_response(
+        await self.app.rest.create_autocomplete_response(
             self.id,
             self.token,
-            base_interactions.ResponseType.AUTOCOMPLETE,
-            choices=choices,
+            choices,
         )

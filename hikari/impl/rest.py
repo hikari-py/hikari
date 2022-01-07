@@ -3436,7 +3436,9 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> special_endpoints.InteractionDeferredBuilder:
         return special_endpoints_impl.InteractionDeferredBuilder(type=type_)
 
-    def interaction_autocomplete_builder(self, choices: typing.Sequence[commands.CommandChoice]) -> special_endpoints.InteractionAutocompleteBuilder:
+    def interaction_autocomplete_builder(
+        self, choices: typing.Sequence[commands.CommandChoice]
+    ) -> special_endpoints.InteractionAutocompleteBuilder:
         return special_endpoints_impl.InteractionAutocompleteBuilder(choices)
 
     def interaction_message_builder(
@@ -3472,7 +3474,6 @@ class RESTClientImpl(rest_api.RESTClient):
         role_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
-        choices: undefined.UndefinedOr[typing.Sequence[commands.CommandChoice]] = undefined.UNDEFINED,
     ) -> None:
         if not undefined.any_undefined(component, components):
             raise ValueError("You may only specify one of 'component' or 'components', not both")
@@ -3535,9 +3536,6 @@ class RESTClientImpl(rest_api.RESTClient):
 
             data.put("embeds", embed_payloads)
 
-        if choices is not undefined.UNDEFINED:
-            data.put("choices", [{"name": choice.name, "value": choice.value} for choice in choices])
-
         body.put("data", data)
         await self._request(route, json=body, no_auth=True)
 
@@ -3588,6 +3586,23 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> None:
         route = routes.DELETE_INTERACTION_RESPONSE.compile(webhook=application, token=token)
         await self._request(route, no_auth=True)
+
+    async def create_autocomplete_response(
+        self,
+        interaction: snowflakes.SnowflakeishOr[base_interactions.PartialInteraction],
+        token: str,
+        choices: typing.Sequence[commands.CommandChoice],
+    ) -> None:
+        route = routes.POST_INTERACTION_RESPONSE.compile(interaction=interaction, token=token)
+
+        body = data_binding.JSONObjectBuilder()
+        body.put("type", base_interactions.ResponseType.AUTOCOMPLETE)
+
+        data = data_binding.JSONObjectBuilder()
+        data.put("choices", [{"name": choice.name, "value": choice.value} for choice in choices])
+
+        body.put("data", data)
+        await self._request(route, json=body, no_auth=True)
 
     def build_action_row(self) -> special_endpoints.ActionRowBuilder:
         return special_endpoints_impl.ActionRowBuilder()

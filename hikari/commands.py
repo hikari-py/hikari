@@ -448,7 +448,7 @@ class SlashCommand(PartialCommand):
     """Represents a slash command on Discord."""
 
     if typing.TYPE_CHECKING:
-        type: typing.Literal[CommandType.SLASH]
+        type: typing.Literal[CommandType.SLASH]  # noqa: A001
 
     description: str = attr.field(eq=False, hash=False, repr=False)
     """The command's description.
@@ -469,7 +469,7 @@ class ContextMenuCommand(PartialCommand):
     """Represents a slash command on Discord."""
 
     if typing.TYPE_CHECKING:
-        type: typing.Literal[CommandType.USER, CommandType.MESSAGE]
+        type: typing.Literal[CommandType.USER, CommandType.MESSAGE]  # noqa: A001
 
 
 class CommandPermissionType(int, enums.Enum):
