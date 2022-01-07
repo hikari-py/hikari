@@ -69,6 +69,7 @@ from hikari.impl import buckets as buckets_
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import rate_limits
 from hikari.impl import special_endpoints as special_endpoints_impl
+from hikari.interactions import base_interactions
 from hikari.internal import data_binding
 from hikari.internal import deprecation
 from hikari.internal import mentions
@@ -92,7 +93,6 @@ if typing.TYPE_CHECKING:
     from hikari.api import cache as cache_api
     from hikari.api import entity_factory as entity_factory_
     from hikari.api import special_endpoints
-    from hikari.interactions import base_interactions
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.rest")
 
