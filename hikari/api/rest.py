@@ -6608,7 +6608,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         type: typing.Literal[commands.CommandType.SLASH],
         name: str,
-        *,
         description: str,
     ) -> special_endpoints.SlashCommandBuilder:
         ...
@@ -6624,7 +6623,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     def command_builder(
-        self, type: commands.CommandType, name: str, **kwargs: typing.Any
+        self,
+        type: commands.CommandType,
+        name: str,
+        *args: typing.Any,
+        **kwargs: typing.Any,
     ) -> special_endpoints.CommandBuilder:
         r"""Create a command builder for use in `RESTClient.set_application_commands`.
 
@@ -6757,7 +6760,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-    ) -> commands.PartialCommand:
+    ) -> commands.SlashCommand:
         ...
 
     @typing.overload
@@ -6770,7 +6773,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-    ) -> commands.PartialCommand:
+    ) -> commands.ContextMenuCommand:
         ...
 
     @abc.abstractmethod

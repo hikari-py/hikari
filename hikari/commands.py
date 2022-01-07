@@ -447,6 +447,9 @@ class PartialCommand(snowflakes.Unique, abc.ABC):
 class SlashCommand(PartialCommand):
     """Represents a slash command on Discord."""
 
+    if typing.TYPE_CHECKING:
+        type: typing.Literal[CommandType.SLASH]
+
     description: str = attr.field(eq=False, hash=False, repr=False)
     """The command's description.
 
@@ -464,6 +467,9 @@ class SlashCommand(PartialCommand):
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
 class ContextMenuCommand(PartialCommand):
     """Represents a slash command on Discord."""
+
+    if typing.TYPE_CHECKING:
+        type: typing.Literal[CommandType.USER, CommandType.MESSAGE]
 
 
 class CommandPermissionType(int, enums.Enum):
