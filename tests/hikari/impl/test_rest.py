@@ -4446,3 +4446,16 @@ class TestRESTClientImplAsync:
         await rest_client.delete_interaction_response(StubModel(1235431), "go homo now")
 
         rest_client._request.assert_awaited_once_with(expected_route, no_auth=True)
+
+    async def test_create_autocomplete_response(self, rest_client):
+        expected_route = routes.POST_INTERACTION_RESPONSE.compile(interaction=1235431, token="dissssnake")
+        rest_client._request = mock.AsyncMock()
+
+        choices = [commands.CommandChoice(name="a", value="b"), commands.CommandChoice(name="foo", value="bar")]
+        await rest_client.create_autocomplete_response(StubModel(1235431), "dissssnake", choices)
+
+        rest_client._request.assert_awaited_once_with(
+            expected_route,
+            json={"type": 8, "data": {"choices": [{"name": "a", "value": "b"}, {"name": "foo", "value": "bar"}]}},
+            no_auth=True,
+        )
