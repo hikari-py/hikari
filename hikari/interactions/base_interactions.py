@@ -123,7 +123,7 @@ class ResponseType(int, enums.Enum):
 
     This is valid for the following interaction types:
 
-    * `InteractionType.APPLICATION_COMMAND`
+    * `InteractionType.AUTOCOMPLETE`
     """
 
 

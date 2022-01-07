@@ -3436,8 +3436,8 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> special_endpoints.InteractionDeferredBuilder:
         return special_endpoints_impl.InteractionDeferredBuilder(type=type_)
 
-    def interaction_autocomplete_builder(self) -> special_endpoints.InteractionAutocompleteBuilder:
-        return special_endpoints_impl.InteractionAutocompleteBuilder()
+    def interaction_autocomplete_builder(self, choices: typing.Sequence[commands.CommandChoice]) -> special_endpoints.InteractionAutocompleteBuilder:
+        return special_endpoints_impl.InteractionAutocompleteBuilder(choices)
 
     def interaction_message_builder(
         self, type_: typing.Union[base_interactions.ResponseType, int], /

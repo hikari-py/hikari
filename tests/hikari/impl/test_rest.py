@@ -33,6 +33,7 @@ from hikari import applications
 from hikari import audit_logs
 from hikari import channels
 from hikari import colors
+from hikari import commands
 from hikari import config
 from hikari import emojis
 from hikari import errors
@@ -1032,10 +1033,17 @@ class TestRESTClientImpl:
 
     def test_command_builder(self, rest_client):
         result = rest_client.command_builder(1, "a name", description="very very good")
-
         assert isinstance(result, special_endpoints.SlashCommandBuilder)
         assert result.name == "a name"
         assert result.description == "very very good"
+        
+        result = rest_client.command_builder(2, "a name")
+        assert isinstance(result, special_endpoints.ContextMenuCommandBuilder)
+        assert result.name == "a name"
+        assert result.description is undefined.UNDEFINED
+        
+        with pytest.raises(TypeError):
+            never = rest_client.command_builder(1, "a name")
 
     def test_build_action_row(self, rest_client):
         with mock.patch.object(special_endpoints, "ActionRowBuilder") as action_row_builder:
@@ -4350,6 +4358,15 @@ class TestRESTClientImplAsync:
 
         assert result.type == 5
         assert isinstance(result, special_endpoints.InteractionDeferredBuilder)
+    
+    def test_interaction_autocomplete_builder(self, rest_client):
+        result = rest_client.interaction_autocomplete_builder([commands.CommandChoice(name="name", value="value"),commands.CommandChoice(name="a", value="b"),])
+        
+        assert result.type == 8
+        assert isinstance(result, special_endpoints.InteractionAutocompleteBuilder)
+        
+        raw = result.build(mock.Mock())
+        assert raw["data"] == {"choices": [{"name": "name", "value": "value"}, {"name": "a", "value": "b"}]}
 
     def test_interaction_message_builder(self, rest_client):
         result = rest_client.interaction_message_builder(4)

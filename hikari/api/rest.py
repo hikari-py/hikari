@@ -7230,7 +7230,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    def interaction_autocomplete_builder(self) -> special_endpoints.InteractionAutocompleteBuilder:
+    def interaction_autocomplete_builder(self, choices: typing.Sequence[commands.CommandChoice]) -> special_endpoints.InteractionAutocompleteBuilder:
         """Create a builder for an autocomplete interaction response.
 
         Returns

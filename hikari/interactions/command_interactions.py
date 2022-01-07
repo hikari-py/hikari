@@ -183,7 +183,7 @@ class BaseCommandInteraction(base_interactions.PartialInteraction):
     command_name: str = attr.field(eq=False, hash=False, repr=True)
     """Name of the command being invoked."""
 
-    command_type: commands.CommandType = attr.field(eq=False, hash=False, repr=True)
+    command_type: typing.Union[commands.CommandType, int] = attr.field(eq=False, hash=False, repr=True)
     """The type of the command."""
 
     resolved: typing.Optional[ResolvedOptionData] = attr.field(eq=False, hash=False, repr=False)
@@ -400,7 +400,7 @@ class AutocompleteInteraction(BaseCommandInteraction):
     )
     """Parameter values provided by the user invoking this command."""
 
-    def build_response(self) -> special_endpoints.InteractionAutocompleteBuilder:
+    def build_response(self, choices: typing.Sequence[commands.CommandChoice]) -> special_endpoints.InteractionAutocompleteBuilder:
         """Get a message response builder for use in the REST server flow.
 
         !!! note
@@ -414,8 +414,7 @@ class AutocompleteInteraction(BaseCommandInteraction):
         async def handle_autocomplete_interaction(interaction: AutocompleteInteraction) -> InteractionAutocompleteBuilder:
             return (
                 interaction
-                .build_response()
-                .set_choices(
+                .build_response(
                     [
                         OptionChoice(name="foo", value="a"),
                         OptionChoice(name="bar", value="b"),
@@ -430,7 +429,7 @@ class AutocompleteInteraction(BaseCommandInteraction):
         hikari.api.special_endpoints.InteractionAutocompleteBuilder
             Interaction autocomplete response builder object.
         """
-        return self.app.rest.interaction_autocomplete_builder()
+        return self.app.rest.interaction_autocomplete_builder(choices)
 
     async def create_response(self, choices: typing.Sequence[commands.CommandChoice]) -> None:
         """Create a response for this autocomplete interaction."""
