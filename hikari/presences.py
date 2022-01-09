@@ -186,8 +186,6 @@ class ActivityFlag(enums.Flag):
     """An activity that's embedded into a voice channel."""
 
 
-
-
 # TODO: add strict type checking to gateway for this type in an invariant way.
 @attr_extensions.with_copy
 @attr.define(hash=False, kw_only=True, weakref_slot=False)
