@@ -1,0 +1,1 @@
+Add new message content related application flags.
