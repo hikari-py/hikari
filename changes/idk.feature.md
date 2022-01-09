@@ -1,0 +1,1 @@
+Add the BOT_HTTP_INTERACTIONS user flag.

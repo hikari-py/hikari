@@ -98,6 +98,9 @@ class UserFlag(enums.Flag):
     DISCORD_CERTIFIED_MODERATOR = 1 << 18
     """Discord Certified Moderator."""
 
+    BOT_HTTP_INTERACTIONS = 1 << 19
+    """Bot uses only HTTP interactions and is shown in the member list."""
+
 
 @typing.final
 class PremiumType(int, enums.Enum):
