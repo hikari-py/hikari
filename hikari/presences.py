@@ -177,10 +177,10 @@ class ActivityFlag(enums.Flag):
     """Play"""
 
     PARTY_PRIVACY_FRIENDS = 1 << 6
-    """Party privacy: friends-only"""
+    """Party privacy: friends only"""
 
     PARTY_PRIVACY_VOICE_CHANNEL = 1 << 7
-    """Party prvacy: Voice channel-only"""
+    """Party prvacy: voice channel only"""
 
     EMBEDDED = 1 << 8
     """An activity that's embedded into a voice channel."""
