@@ -2610,6 +2610,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             if "assets" in activity_payload:
                 assets_payload = activity_payload["assets"]
                 assets = presence_models.ActivityAssets(
+                    application_id=application_id,
                     large_image=assets_payload.get("large_image"),
                     large_text=assets_payload.get("large_text"),
                     small_image=assets_payload.get("small_image"),

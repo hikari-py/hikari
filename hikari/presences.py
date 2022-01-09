@@ -42,9 +42,12 @@ import typing
 
 import attr
 
+from hikari import files
 from hikari import snowflakes
+from hikari import urls
 from hikari.internal import attr_extensions
 from hikari.internal import enums
+from hikari.internal import routes
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -118,10 +121,20 @@ class ActivityParty:
     """Maximum size of this party, if applicable."""
 
 
+_DYNAMIC_URLS = {
+    "mp": "https://media.discordapp.net/{}",
+    "spotify": "https://i.scdn.co/image/{}",
+    "twitch": "https://static-cdn.jtvnw.net/previews-ttv/live_user_{}.png",
+    "youtube": "https://i.ytimg.com/vi/{}/hqdefault_live.jpg",
+}
+
+
 @attr_extensions.with_copy
 @attr.define(hash=False, kw_only=True, weakref_slot=False)
 class ActivityAssets:
     """Used to represent possible assets for an activity."""
+
+    _application_id: typing.Optional[snowflakes.Snowflake] = attr.field(repr=False)
 
     large_image: typing.Optional[str] = attr.field(repr=False)
     """The ID of the asset's large image, if set."""
@@ -134,6 +147,117 @@ class ActivityAssets:
 
     small_text: typing.Optional[str] = attr.field(repr=True)
     """The text that'll appear when hovering over the small image, if set."""
+
+    def _make_asset_url(self, asset: typing.Optional[str], ext: str, size: int) -> typing.Optional[files.URL]:
+        if asset is None:
+            return None
+
+        try:
+            resource, identifier = asset.split(":", 1)
+            return files.URL(url=_DYNAMIC_URLS[resource].format(identifier))
+
+        except KeyError:
+            raise RuntimeError("Unknown asset type") from None
+
+        except ValueError:
+            assert self._application_id is not None
+            return routes.CDN_APPLICATION_ASSET.compile_to_file(
+                urls.CDN_URL,
+                application_id=self._application_id,
+                asset=asset,
+                size=size,
+                file_format=ext,
+            )
+
+    @property
+    def large_image_url(self) -> typing.Optional[files.URL]:
+        """Large image asset URL, if there is one.
+
+        Returns
+        -------
+        typing.Optional[hikari.files.URL]
+            The URL, or `builtins.None` if no large image asset exists.
+
+        Raises
+        ------
+        builtins.RuntimeError
+            If `ActivityAssets.large_image` points towards an unknown asset type.
+        """
+        return self.make_large_image_url()
+
+    def make_large_image_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the large image asset URL for this application.
+
+        .. note:
+            `ext` and `size` are ignored for images hosted outside of Discord
+            or on Discord's media proxy.
+
+        Parameters
+        ----------
+        ext : builtins.str
+            The extension to use for this URL, defaults to `png`.
+            Supports `png`, `jpeg`, `jpg` and `webp`.
+        size : builtins.int
+            The size to set for the URL, defaults to `4096`.
+            Can be any power of two between 16 and 4096.
+
+        Returns
+        -------
+        typing.Optional[hikari.files.URL]
+            The URL, or `builtins.None` if no icon exists.
+
+        Raises
+        ------
+        builtins.ValueError
+            If the size is not an integer power of 2 between 16 and 4096
+            (inclusive).
+        builtins.RuntimeError
+            If `ActivityAssets.large_image` points towards an unknown asset type.
+        """
+        return self._make_asset_url(self.large_image, ext, size)
+
+    @property
+    def small_image_url(self) -> typing.Optional[files.URL]:
+        """Small image asset URL, if there is one.
+
+        Returns
+        -------
+        typing.Optional[hikari.files.URL]
+            The URL, or `builtins.None` if no small image asset exists.
+
+        Raises
+        ------
+        builtins.RuntimeError
+            If `ActivityAssets.small_image` points towards an unknown asset type.
+        """
+        return self.make_small_image_url()
+
+    def make_small_image_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the small image asset URL for this application.
+
+        Parameters
+        ----------
+        ext : builtins.str
+            The extension to use for this URL, defaults to `png`.
+            Supports `png`, `jpeg`, `jpg` and `webp`.
+        size : builtins.int
+            The size to set for the URL, defaults to `4096`.
+            Can be any power of two between 16 and 4096.
+
+        Returns
+        -------
+        typing.Optional[hikari.files.URL]
+            The URL, or `builtins.None` if no icon exists.
+
+        Raises
+        ------
+        builtins.ValueError
+            If the size is not an integer power of 2 between 16 and 4096
+            (inclusive).
+        builtins.RuntimeError
+            If `ActivityAssets.small_image` points towards an unknown asset type.
+        """
+        return self._make_asset_url(self.small_image, ext, size)
 
 
 @attr_extensions.with_copy
