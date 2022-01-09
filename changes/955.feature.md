@@ -1,0 +1,1 @@
+Added support for GET /users/@me/guilds/{guild}/member
