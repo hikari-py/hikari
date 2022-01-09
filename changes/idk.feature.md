@@ -1,1 +1,0 @@
-Add the SUPPRESS_USER_JOIN_REPLIES system channel flag flag.
