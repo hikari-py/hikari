@@ -99,7 +99,7 @@ class UserFlag(enums.Flag):
     """Discord Certified Moderator."""
 
     BOT_HTTP_INTERACTIONS = 1 << 19
-    """Bot uses only HTTP interactions and is shown in the member list."""
+    """Bot uses only HTTP interactions and is shown in the active member list."""
 
 
 @typing.final
