@@ -226,6 +226,9 @@ class GuildSystemChannelFlag(enums.Flag):
     SUPPRESS_GUILD_REMINDER = 1 << 2
     """Suppress displaying messages with guild setup tips."""
 
+    SUPPRESS_USER_JOIN_REPLIES = 1 << 3
+    """Suppress displaying a reply button on join notifications."""
+
 
 @typing.final
 class GuildVerificationLevel(int, enums.Enum):
