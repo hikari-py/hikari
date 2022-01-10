@@ -624,7 +624,6 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
     ) -> None:
         ...
 
-    @typing.overload
     def set_listener(
         self,
         interaction_type: typing.Type[_InteractionT_co],
@@ -635,16 +634,4 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         *,
         replace: bool = False,
     ) -> None:
-        ...
-
-    def set_listener(
-        self,
-        interaction_type: typing.Type[_InteractionT_co],
-        listener: typing.Optional[
-            interaction_server_.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]
-        ],
-        /,
-        *,
-        replace: bool = False,
-    ) -> None:
-        self._server.set_listener(interaction_type, listener, replace=replace)
+        self._server.set_listener(interaction_type, listener, replace=replace)  # type: ignore

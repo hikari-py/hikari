@@ -195,18 +195,6 @@ class InteractionServer(abc.ABC):
     ) -> None:
         ...
 
-    @typing.overload
-    @abc.abstractmethod
-    def set_listener(
-        self,
-        interaction_type: typing.Type[_InteractionT_co],
-        listener: typing.Optional[ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]],
-        /,
-        *,
-        replace: bool = False,
-    ) -> None:
-        ...
-
     @abc.abstractmethod
     def set_listener(
         self,
