@@ -438,6 +438,7 @@ GET_USER: typing.Final[Route] = Route(GET, "/users/{user}")
 # @me
 POST_MY_CHANNELS: typing.Final[Route] = Route(POST, "/users/@me/channels")
 GET_MY_CONNECTIONS: typing.Final[Route] = Route(GET, "/users/@me/connections")  # OAuth2 only
+GET_MY_GUILD_MEMBER: typing.Final[Route] = Route(GET, "/users/@me/guilds/{guild}/member")  # OAuth2 only
 DELETE_MY_GUILD: typing.Final[Route] = Route(DELETE, "/users/@me/guilds/{guild}")
 
 GET_MY_GUILDS: typing.Final[Route] = Route(GET, "/users/@me/guilds")

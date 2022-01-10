@@ -221,6 +221,9 @@ class OAuth2Scope(str, enums.Enum):
     This is used during authorization code grants.
     """
 
+    GUILDS_MEMBERS_READ = "guilds.members.read"
+    """Used to read the current user's guild members."""
+
 
 @typing.final
 class ConnectionVisibility(int, enums.Enum):
