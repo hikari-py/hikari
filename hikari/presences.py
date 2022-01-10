@@ -176,6 +176,15 @@ class ActivityFlag(enums.Flag):
     PLAY = 1 << 5
     """Play"""
 
+    PARTY_PRIVACY_FRIENDS = 1 << 6
+    """Party privacy: friends only."""
+
+    PARTY_PRIVACY_VOICE_CHANNEL = 1 << 7
+    """Party prvacy: voice channel only."""
+
+    EMBEDDED = 1 << 8
+    """An activity that's embedded into a voice channel."""
+
 
 # TODO: add strict type checking to gateway for this type in an invariant way.
 @attr_extensions.with_copy
