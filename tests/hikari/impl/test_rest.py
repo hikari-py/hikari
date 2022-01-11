@@ -1085,6 +1085,22 @@ class TestRESTClientImplAsync:
         assert live_attributes.still_alive.call_count == 3
 
     @hikari_test_helpers.timeout()
+    async def test__request_url_encodes_reason_header(self, rest_client, exit_exception, live_attributes):
+        route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
+        mock_session = mock.AsyncMock(request=mock.AsyncMock(side_effect=exit_exception))
+        live_attributes.buckets.is_started = True
+        live_attributes.client_session = mock_session
+
+        with pytest.raises(exit_exception):
+            await rest_client._request(route, reason="光のenergyが　大地に降りそそぐ")
+
+        _, kwargs = mock_session.request.call_args_list[0]
+        assert kwargs["headers"][rest._X_AUDIT_LOG_REASON_HEADER] == (
+            "%E5%85%89%E3%81%AEenergy%E3%81%8C%E3%80%80%E5%A4%"
+            "A7%E5%9C%B0%E3%81%AB%E9%99%8D%E3%82%8A%E3%81%9D%E3%81%9D%E3%81%90"
+        )
+
+    @hikari_test_helpers.timeout()
     async def test__request_with_strategy_token(self, rest_client, exit_exception, live_attributes):
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         mock_session = mock.AsyncMock(request=mock.AsyncMock(side_effect=exit_exception))
