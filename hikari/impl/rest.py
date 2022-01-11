@@ -707,7 +707,7 @@ class RESTClientImpl(rest_api.RESTClient):
                 token = await self._token.acquire(self)
                 headers[_AUTHORIZATION_HEADER] = token
 
-        # As per the docs, UTF-8 characters are only supported here if its url-encoded.
+        # As per the docs, UTF-8 characters are only supported here if it's url-encoded.
         headers.put(_X_AUDIT_LOG_REASON_HEADER, reason, conversion=urllib.parse.quote)
 
         url = compiled_route.create_url(self._rest_url)
