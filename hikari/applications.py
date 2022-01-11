@@ -89,10 +89,10 @@ class ApplicationFlags(enums.Flag):
     EMBEDDED = 1 << 17
     """Denotes that the application has functionality that's specially embedded in Discord's client."""
 
-    GATEWAY_MESSAGE_CONTENT = 1 << 18
-    """Denotes that the application has the GATEWAY_MESSAGE_CONTENT intent enabled in it's dashboard."""
+    MESSAGE_CONTENT = 1 << 18
+    """Denotes that the application has message content intent enabled in it's dashboard."""
 
-    GATEWAY_MESSAGE_CONTENT_LIMITED = 1 << 19
+    MESSAGE_CONTENT_LIMITED = 1 << 19
     """Denotes that the application has message content access while pending verification."""
 
 
