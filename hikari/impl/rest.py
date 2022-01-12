@@ -2678,6 +2678,12 @@ class RESTClientImpl(rest_api.RESTClient):
             entity_factory=self._entity_factory, request_call=self._request, guild=guild
         )
 
+    async def fetch_my_member(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> guilds.Member:
+        route = routes.GET_MY_GUILD_MEMBER.compile(guild=guild)
+        response = await self._request(route)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_member(response, guild_id=snowflakes.Snowflake(guild))
+
     async def search_members(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],

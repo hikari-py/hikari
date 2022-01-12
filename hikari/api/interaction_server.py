@@ -31,6 +31,9 @@ import typing
 if typing.TYPE_CHECKING:
     from hikari.api import special_endpoints
     from hikari.interactions import base_interactions
+    from hikari.interactions import command_interactions
+    from hikari.interactions import component_interactions
+    
 
     _InteractionT_co = typing.TypeVar("_InteractionT_co", bound=base_interactions.PartialInteraction, covariant=True)
     _ResponseT_co = typing.TypeVar("_ResponseT_co", bound=special_endpoints.InteractionResponseBuilder, covariant=True)
@@ -130,10 +133,46 @@ class InteractionServer(abc.ABC):
             Instructions on how the REST server calling this should respond to
             the interaction request.
         """
+    
+    
+    @typing.overload
+    @abc.abstractmethod
+    def get_listener(
+        self, interaction_type: typing.Type[command_interactions.CommandInteraction], /
+    ) -> typing.Optional[
+        ListenerT[command_interactions.CommandInteraction, _MessageResponseBuilderT]
+    ]:
+        ...
+
+    @typing.overload
+    @abc.abstractmethod
+    def get_listener(
+        self, interaction_type: typing.Type[component_interactions.ComponentInteraction], /
+    ) -> typing.Optional[
+        ListenerT[component_interactions.ComponentInteraction, _MessageResponseBuilderT]
+    ]:
+        ...
+    
+    
+    @typing.overload
+    @abc.abstractmethod
+    def get_listener(
+        self, interaction_type: typing.Type[command_interactions.AutocompleteInteraction], /
+    ) -> typing.Optional[
+        ListenerT[command_interactions.AutocompleteInteraction, special_endpoints.InteractionAutocompleteBuilder]
+    ]:
+        ...
+
+    @typing.overload
+    @abc.abstractmethod
+    def get_listener(
+        self, interaction_type: typing.Type[_InteractionT_co], / # type: ignore
+    ) -> typing.Optional[ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]]:
+        ...
 
     @abc.abstractmethod
     def get_listener(
-        self, interaction_type: typing.Type[_InteractionT_co], /
+        self, interaction_type: typing.Type[_InteractionT_co], / # type: ignore
     ) -> typing.Optional[ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]]:
         """Get the listener registered for an interaction.
 
@@ -149,10 +188,53 @@ class InteractionServer(abc.ABC):
             else `builtins.None`.
         """  # noqa E501 - Line too long
 
+
+    @typing.overload
     @abc.abstractmethod
     def set_listener(
         self,
-        interaction_type: typing.Type[_InteractionT_co],
+        interaction_type: typing.Type[command_interactions.CommandInteraction],
+        listener: typing.Optional[
+            ListenerT[command_interactions.CommandInteraction, _MessageResponseBuilderT]
+        ],
+        /,
+        *,
+        replace: bool = False,
+    ) -> None:
+        ...
+
+    @typing.overload
+    @abc.abstractmethod
+    def set_listener(
+        self,
+        interaction_type: typing.Type[component_interactions.ComponentInteraction],
+        listener: typing.Optional[
+            ListenerT[component_interactions.ComponentInteraction, _MessageResponseBuilderT]
+        ],
+        /,
+        *,
+        replace: bool = False,
+    ) -> None:
+        ...
+    
+    
+    @typing.overload
+    @abc.abstractmethod
+    def set_listener(
+        self,
+        interaction_type: typing.Type[command_interactions.AutocompleteInteraction],
+        listener: typing.Optional[
+            ListenerT[command_interactions.AutocompleteInteraction, special_endpoints.InteractionAutocompleteBuilder]
+        ],
+        /,
+        *,
+        replace: bool = False,
+    ) -> None:
+        ...
+    @abc.abstractmethod
+    def set_listener(
+        self,
+        interaction_type: typing.Type[_InteractionT_co], # type: ignore
         listener: typing.Optional[ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]],
         /,
         *,

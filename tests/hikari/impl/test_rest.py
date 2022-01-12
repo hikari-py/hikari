@@ -3446,6 +3446,18 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route)
         rest_client._entity_factory.deserialize_member.assert_called_once_with({"id": "789"}, guild_id=123)
 
+    async def test_fetch_my_member(self, rest_client) -> guilds.Member:
+        expected_route = routes.GET_MY_GUILD_MEMBER.compile(guild=45123)
+        rest_client._request = mock.AsyncMock(return_value={"id": "595995"})
+
+        result = await rest_client.fetch_my_member(StubModel(45123))
+
+        assert result is rest_client._entity_factory.deserialize_member.return_value
+        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._entity_factory.deserialize_member.assert_called_once_with(
+            rest_client._request.return_value, guild_id=45123
+        )
+
     async def test_search_members(self, rest_client):
         member = StubModel(645234123)
         expected_route = routes.GET_GUILD_MEMBERS_SEARCH.compile(guild=645234123)
