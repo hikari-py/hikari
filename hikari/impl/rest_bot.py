@@ -571,7 +571,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
             shutdown_timeout=shutdown_timeout,
             ssl_context=ssl_context,
         )
-    
+
     @typing.overload
     def get_listener(
         self, interaction_type: typing.Type[command_interactions.CommandInteraction], /
@@ -587,24 +587,25 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         interaction_server_.ListenerT[component_interactions.ComponentInteraction, _MessageResponseBuilderT]
     ]:
         ...
-    
-    
+
     @typing.overload
     def get_listener(
         self, interaction_type: typing.Type[command_interactions.AutocompleteInteraction], /
     ) -> typing.Optional[
-        interaction_server_.ListenerT[command_interactions.AutocompleteInteraction, special_endpoints.InteractionAutocompleteBuilder]
+        interaction_server_.ListenerT[
+            command_interactions.AutocompleteInteraction, special_endpoints.InteractionAutocompleteBuilder
+        ]
     ]:
         ...
 
     @typing.overload
     def get_listener(
-        self, interaction_type: typing.Type[_InteractionT_co], / # type: ignore
+        self, interaction_type: typing.Type[_InteractionT_co], /
     ) -> typing.Optional[interaction_server_.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]]:
         ...
 
     def get_listener(
-        self, interaction_type: typing.Type[_InteractionT_co], / # type: ignore
+        self, interaction_type: typing.Type[_InteractionT_co], /
     ) -> typing.Optional[interaction_server_.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]]:
         return self._server.get_listener(interaction_type)
 
@@ -633,23 +634,25 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         replace: bool = False,
     ) -> None:
         ...
-    
-    
+
     @typing.overload
     def set_listener(
         self,
         interaction_type: typing.Type[command_interactions.AutocompleteInteraction],
         listener: typing.Optional[
-            interaction_server_.ListenerT[command_interactions.AutocompleteInteraction, special_endpoints.InteractionAutocompleteBuilder]
+            interaction_server_.ListenerT[
+                command_interactions.AutocompleteInteraction, special_endpoints.InteractionAutocompleteBuilder
+            ]
         ],
         /,
         *,
         replace: bool = False,
     ) -> None:
         ...
+
     def set_listener(
         self,
-        interaction_type: typing.Type[_InteractionT_co], # type: ignore
+        interaction_type: typing.Type[_InteractionT_co],
         listener: typing.Optional[
             interaction_server_.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]
         ],

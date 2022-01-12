@@ -36,9 +36,9 @@ from hikari import applications
 from hikari import errors
 from hikari.api import interaction_server
 from hikari.api import special_endpoints
+from hikari.interactions import base_interactions
 from hikari.interactions import command_interactions
 from hikari.interactions import component_interactions
-from hikari.interactions import base_interactions
 from hikari.internal import data_binding
 from hikari.internal import ed25519
 
@@ -486,7 +486,6 @@ class InteractionServer(interaction_server.InteractionServer):
             _LOGGER.info("Starting site on %s", site.name)
             await site.start()
 
-
     @typing.overload
     def get_listener(
         self, interaction_type: typing.Type[command_interactions.CommandInteraction], /
@@ -502,24 +501,25 @@ class InteractionServer(interaction_server.InteractionServer):
         interaction_server.ListenerT[component_interactions.ComponentInteraction, _MessageResponseBuilderT]
     ]:
         ...
-    
-    
+
     @typing.overload
     def get_listener(
         self, interaction_type: typing.Type[command_interactions.AutocompleteInteraction], /
     ) -> typing.Optional[
-        interaction_server.ListenerT[command_interactions.AutocompleteInteraction, special_endpoints.InteractionAutocompleteBuilder]
+        interaction_server.ListenerT[
+            command_interactions.AutocompleteInteraction, special_endpoints.InteractionAutocompleteBuilder
+        ]
     ]:
         ...
 
     @typing.overload
     def get_listener(
-        self, interaction_type: typing.Type[_InteractionT_co], / # type: ignore
+        self, interaction_type: typing.Type[_InteractionT_co], /
     ) -> typing.Optional[interaction_server.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]]:
         ...
 
     def get_listener(
-        self, interaction_type: typing.Type[_InteractionT_co], / # type: ignore
+        self, interaction_type: typing.Type[_InteractionT_co], /
     ) -> typing.Optional[interaction_server.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]]:
         return self._listeners.get(interaction_type)
 
@@ -548,14 +548,15 @@ class InteractionServer(interaction_server.InteractionServer):
         replace: bool = False,
     ) -> None:
         ...
-    
-    
+
     @typing.overload
     def set_listener(
         self,
         interaction_type: typing.Type[command_interactions.AutocompleteInteraction],
         listener: typing.Optional[
-            interaction_server.ListenerT[command_interactions.AutocompleteInteraction, special_endpoints.InteractionAutocompleteBuilder]
+            interaction_server.ListenerT[
+                command_interactions.AutocompleteInteraction, special_endpoints.InteractionAutocompleteBuilder
+            ]
         ],
         /,
         *,
@@ -565,7 +566,7 @@ class InteractionServer(interaction_server.InteractionServer):
 
     def set_listener(
         self,
-        interaction_type: typing.Type[_InteractionT_co], # type: ignore
+        interaction_type: typing.Type[_InteractionT_co],
         listener: typing.Optional[
             interaction_server.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]
         ],
