@@ -2864,6 +2864,8 @@ class TestEntityFactoryImpl:
             "type": 1,
             "version": 1,
             "application_id": "1",
+            "locale": "es-ES",
+            "guild_locale": "en-US",
         }
 
     def test_deserialize_partial_interaction(self, mock_app, entity_factory_impl, partial_interaction_payload):
@@ -2875,6 +2877,8 @@ class TestEntityFactoryImpl:
         assert interaction.type == 1
         assert interaction.version == 1
         assert interaction.application_id == 1
+        assert interaction.locale == "es-ES"
+        assert interaction.guild_locale == "en-US"
         assert type(interaction) is base_interactions.PartialInteraction
 
     @pytest.fixture()
@@ -3004,6 +3008,8 @@ class TestEntityFactoryImpl:
             "channel_id": "49949494",
             "member": interaction_member_payload,
             "token": "moe cat girls",
+            "locale": "es-ES",
+            "guild_locale": "en-US",
             "version": 69420,
             "application_id": "76234234",
         }
@@ -3031,6 +3037,8 @@ class TestEntityFactoryImpl:
         assert interaction.version == 69420
         assert interaction.channel_id == 49949494
         assert interaction.guild_id == 43123123
+        assert interaction.locale == "es-ES"
+        assert interaction.guild_locale == "en-US"
 
         # InteractionMember
         assert interaction.member == entity_factory_impl._deserialize_interaction_member(
@@ -3243,6 +3251,8 @@ class TestEntityFactoryImpl:
             "data": {"custom_id": "click_one", "component_type": 2, "values": ["1", "2", "67"]},
             "channel_id": "345626669114982999",
             "application_id": "290926444748734465",
+            "locale": "es-ES",
+            "guild_locale": "en-US",
         }
 
     def test_deserialize_component_interaction(
@@ -3266,6 +3276,8 @@ class TestEntityFactoryImpl:
         )
         assert interaction.user is interaction.member.user
         assert interaction.values == ["1", "2", "67"]
+        assert interaction.locale == "es-ES"
+        assert interaction.guild_locale == "en-US"
         assert isinstance(interaction, component_interactions.ComponentInteraction)
 
     def test_deserialize_component_interaction_with_undefined_fields(
@@ -3282,6 +3294,7 @@ class TestEntityFactoryImpl:
                 "data": {"custom_id": "click_one", "component_type": 2},
                 "channel_id": "345626669114982999",
                 "application_id": "290926444748734465",
+                "locale": "es-ES",
             }
         )
 
@@ -3289,6 +3302,7 @@ class TestEntityFactoryImpl:
         assert interaction.member is None
         assert interaction.user == entity_factory_impl.deserialize_user(user_payload)
         assert interaction.values == ()
+        assert interaction.guild_locale is None
         assert isinstance(interaction, component_interactions.ComponentInteraction)
 
     ##################

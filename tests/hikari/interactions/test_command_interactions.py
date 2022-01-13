@@ -52,6 +52,8 @@ class TestCommandInteraction:
             command_name="OKOKOK",
             options=[],
             resolved=None,
+            locale="es-ES",
+            guild_locale="en-US",
         )
 
     def test_build_response(self, mock_command_interaction, mock_app):

@@ -344,7 +344,7 @@ class TestInteractionServer:
         mock_verifier = mock.Mock(return_value=True)
         mock_interaction_server._verify = mock_verifier
         mock_entity_factory.deserialize_interaction.return_value = base_interactions.PartialInteraction(
-            app=None, id=123, application_id=541324, type=2, token="ok", version=1
+            app=None, id=123, application_id=541324, type=2, token="ok", locale="es-ES", guild_locale="en-US", version=1
         )
         mock_builder = mock.Mock(build=mock.Mock(return_value={"ok": "No boomer"}))
         mock_listener = mock.AsyncMock(return_value=mock_builder)
@@ -451,7 +451,7 @@ class TestInteractionServer:
         mock_interaction_server._verify = mock.Mock(return_value=True)
         mock_exception = TypeError("OK")
         mock_entity_factory.deserialize_interaction.return_value = base_interactions.PartialInteraction(
-            app=None, id=123, application_id=541324, type=2, token="ok", version=1
+            app=None, id=123, application_id=541324, type=2, token="ok", locale="es-ES", guild_locale="en-US", version=1
         )
         mock_interaction_server.set_listener(
             base_interactions.PartialInteraction, mock.Mock(side_effect=mock_exception)
@@ -473,7 +473,7 @@ class TestInteractionServer:
         mock_interaction_server._verify = mock.Mock(return_value=True)
         mock_exception = TypeError("OK")
         mock_entity_factory.deserialize_interaction.return_value = base_interactions.PartialInteraction(
-            app=None, id=123, application_id=541324, type=2, token="ok", version=1
+            app=None, id=123, application_id=541324, type=2, token="ok", locale="es-ES", guild_locale="en-US", version=1
         )
         mock_builder = mock.Mock(build=mock.Mock(side_effect=mock_exception))
         mock_interaction_server.set_listener(
@@ -497,7 +497,7 @@ class TestInteractionServer:
         mock_exception = TypeError("OK")
         mock_interaction_server._dumps = mock.Mock(side_effect=mock_exception)
         mock_entity_factory.deserialize_interaction.return_value = base_interactions.PartialInteraction(
-            app=None, id=123, application_id=541324, type=2, token="ok", version=1
+            app=None, id=123, application_id=541324, type=2, token="ok", locale="es-ES", guild_locale="en-US", version=1
         )
         mock_builder = mock.Mock(build=mock.Mock())
         mock_interaction_server.set_listener(
