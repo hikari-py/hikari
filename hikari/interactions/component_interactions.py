@@ -105,13 +105,13 @@ class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentRespo
     guild_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False)
     """ID of the guild this interaction was triggered in.
 
-    This will be `builtins.None` for command interactions triggered in DMs.
+    This will be `builtins.None` for component interactions triggered in DMs.
     """
 
     guild_locale: typing.Optional[str] = attr.field(eq=False, hash=False, repr=True)
-    """The preferred language of the guild this interaction was triggered in.
+    """The preferred language of the guild this component interaction was triggered in.
 
-    This will be `builtins.None` for interactions triggered in DMs.
+    This will be `builtins.None` for component interactions triggered in DMs.
     """
 
     message: messages.Message = attr.field(eq=False, repr=False)
@@ -131,7 +131,7 @@ class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentRespo
     """The user who triggered this interaction."""
 
     locale: str = attr.field(eq=False, hash=False, repr=True)
-    """The selected language of the user who triggered this interaction."""
+    """The selected language of the user who triggered this component interaction."""
 
     def build_response(self, type_: _ImmediateTypesT, /) -> special_endpoints.InteractionMessageBuilder:
         """Get a message response builder for use in the REST server flow.
