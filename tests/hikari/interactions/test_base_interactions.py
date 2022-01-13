@@ -43,8 +43,6 @@ class TestPartialInteraction:
             type=base_interactions.InteractionType.APPLICATION_COMMAND,
             token="399393939doodsodso",
             version=3122312,
-            locale="es-ES",
-            guild_locale="en-US",
         )
 
     def test_webhook_id_property(self, mock_partial_interaction):
@@ -61,8 +59,6 @@ class TestMessageResponseMixin:
             type=base_interactions.InteractionType.APPLICATION_COMMAND,
             token="399393939doodsodso",
             version=3122312,
-            locale="es-ES",
-            guild_locale="en-US",
         )
 
     @pytest.mark.asyncio()

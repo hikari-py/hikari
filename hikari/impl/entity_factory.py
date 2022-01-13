@@ -1756,8 +1756,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             token=payload["token"],
             version=payload["version"],
             application_id=snowflakes.Snowflake(payload["application_id"]),
-            locale=payload["locale"],
-            guild_locale=payload.get("guild_locale"),
         )
 
     def _deserialize_interaction_command_option(

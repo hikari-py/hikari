@@ -107,6 +107,13 @@ class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentRespo
 
     This will be `builtins.None` for command interactions triggered in DMs.
     """
+
+    guild_locale: typing.Optional[str] = attr.field(eq=False, hash=False, repr=True)
+    """The preferred language of the guild this interaction was triggered in.
+
+    This will be `builtins.None` for interactions triggered in DMs.
+    """
+
     message: messages.Message = attr.field(eq=False, repr=False)
     """Object of the message the components for this interaction are attached to."""
 
@@ -122,6 +129,9 @@ class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentRespo
 
     user: users.User = attr.field(eq=False, hash=False, repr=True)
     """The user who triggered this interaction."""
+
+    locale: str = attr.field(eq=False, hash=False, repr=True)
+    """The selected language of the user who triggered this interaction."""
 
     def build_response(self, type_: _ImmediateTypesT, /) -> special_endpoints.InteractionMessageBuilder:
         """Get a message response builder for use in the REST server flow.

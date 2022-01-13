@@ -183,15 +183,6 @@ class PartialInteraction(snowflakes.Unique, webhooks.ExecutableWebhook):
     version: int = attr.field(eq=False, repr=True)
     """Version of the interaction system this interaction is under."""
 
-    locale: str = attr.field(eq=False, repr=True)
-    """The selected language of the user who triggered this interaction."""
-
-    guild_locale: typing.Optional[str] = attr.field(eq=False, repr=True)
-    """The preferred language of the guild this interaction was triggered in.
-    
-    This will be `builtins.None` for interactions triggered in DMs.
-    """
-
     @property
     def webhook_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from ExecutableWebhook>>.

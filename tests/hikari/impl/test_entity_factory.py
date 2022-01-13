@@ -2864,8 +2864,6 @@ class TestEntityFactoryImpl:
             "type": 1,
             "version": 1,
             "application_id": "1",
-            "locale": "es-ES",
-            "guild_locale": "en-US",
         }
 
     def test_deserialize_partial_interaction(self, mock_app, entity_factory_impl, partial_interaction_payload):
@@ -2877,8 +2875,6 @@ class TestEntityFactoryImpl:
         assert interaction.type == 1
         assert interaction.version == 1
         assert interaction.application_id == 1
-        assert interaction.locale == "es-ES"
-        assert interaction.guild_locale == "en-US"
         assert type(interaction) is base_interactions.PartialInteraction
 
     @pytest.fixture()
