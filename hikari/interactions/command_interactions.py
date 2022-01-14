@@ -149,6 +149,10 @@ class CommandInteraction(base_interactions.MessageResponseMixin[CommandResponseT
     """The preferred language of the guild this command interaction was triggered in.
 
     This will be `builtins.None` for command interactions triggered in DMs.
+
+    !!! note
+        This value can usually only be changed if `GuildFeature.COMMUNITY` is in `Guild.features` 
+        for the guild and will otherwise default to `en-US`.
     """
 
     member: typing.Optional[base_interactions.InteractionMember] = attr.field(eq=False, hash=False, repr=True)

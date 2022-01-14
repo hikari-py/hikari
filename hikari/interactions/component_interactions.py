@@ -112,6 +112,10 @@ class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentRespo
     """The preferred language of the guild this component interaction was triggered in.
 
     This will be `builtins.None` for component interactions triggered in DMs.
+
+    !!! note
+        This value can usually only be changed if `GuildFeature.COMMUNITY` is in `Guild.features` 
+        for the guild and will otherwise default to `en-US`.
     """
 
     message: messages.Message = attr.field(eq=False, repr=False)
