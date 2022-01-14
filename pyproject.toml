@@ -62,7 +62,7 @@ exclude_lines = [
 [tool.pyright]
 include = ["examples", "hikari"]
 pythonVersion = "3.8"
-typeCheckingMode = "basic"
+typeCheckingMode = "strict"
 
 [tool.pytest.ini_options]
 [pytest]

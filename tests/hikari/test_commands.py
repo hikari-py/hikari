@@ -26,6 +26,7 @@ from hikari import commands
 from hikari import snowflakes
 from hikari import traits
 from hikari import undefined
+from tests.hikari import hikari_test_helpers
 
 
 @pytest.fixture()
@@ -36,7 +37,8 @@ def mock_app():
 class TestCommand:
     @pytest.fixture()
     def mock_command(self, mock_app):
-        return commands.SlashCommand(
+        return hikari_test_helpers.mock_class_namespace(
+            commands.SlashCommand,
             app=mock_app,
             id=snowflakes.Snowflake(34123123),
             application_id=snowflakes.Snowflake(65234123),

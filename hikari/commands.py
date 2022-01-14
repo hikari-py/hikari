@@ -196,7 +196,7 @@ class PartialCommand(snowflakes.Unique, abc.ABC):
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
     # <<inherited docstring from Unique>>.
 
-    type: CommandType = attr.field(default=CommandType.SLASH, hash=True, repr=True)
+    type: CommandType = attr.field(hash=True, repr=True)
     """The type of a command."""
 
     application_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
@@ -226,7 +226,7 @@ class PartialCommand(snowflakes.Unique, abc.ABC):
     version: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
     """Auto-incrementing version identifier updated during substantial record changes."""
 
-    async def fetch_self(self: _CommandT) -> _CommandT:
+    async def fetch_self(self) -> PartialCommand:
         """Fetch an up-to-date version of this command object.
 
         Returns
@@ -259,15 +259,15 @@ class PartialCommand(snowflakes.Unique, abc.ABC):
         command = await self.app.rest.fetch_application_command(
             self.application_id, self.id, undefined.UNDEFINED if self.guild_id is None else self.guild_id
         )
-        return typing.cast("_CommandT", command)
+        return command
 
     async def edit(
-        self: _CommandT,
+        self,
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         options: undefined.UndefinedOr[typing.Sequence[CommandOption]] = undefined.UNDEFINED,
-    ) -> _CommandT:
+    ) -> PartialCommand:
         """Edit this command.
 
         Other Parameters
@@ -323,7 +323,7 @@ class PartialCommand(snowflakes.Unique, abc.ABC):
             description=description,
             options=options,
         )
-        return typing.cast("_CommandT", command)
+        return command
 
     async def delete(self) -> None:
         """Delete this command.
@@ -447,8 +447,7 @@ class PartialCommand(snowflakes.Unique, abc.ABC):
 class SlashCommand(PartialCommand):
     """Represents a slash command on Discord."""
 
-    if typing.TYPE_CHECKING:
-        type: typing.Literal[CommandType.SLASH]  # noqa: A001
+    type: typing.Literal[CommandType.SLASH] = attr.field(hash=True, repr=True)
 
     description: str = attr.field(eq=False, hash=False, repr=False)
     """The command's description.
@@ -468,8 +467,7 @@ class SlashCommand(PartialCommand):
 class ContextMenuCommand(PartialCommand):
     """Represents a slash command on Discord."""
 
-    if typing.TYPE_CHECKING:
-        type: typing.Literal[CommandType.USER, CommandType.MESSAGE]  # noqa: A001
+    type: typing.Literal[CommandType.USER, CommandType.MESSAGE] = attr.field(hash=True, repr=True)
 
 
 class CommandPermissionType(int, enums.Enum):

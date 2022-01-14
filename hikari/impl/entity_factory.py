@@ -64,7 +64,6 @@ from hikari.internal import data_binding
 from hikari.internal import time
 
 _ValueT = typing.TypeVar("_ValueT")
-_CommandInteractionT = typing.TypeVar("_CommandInteractionT", bound="command_interactions.BaseCommandInteraction")
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.entity_factory")
 
 _interaction_option_type_mapping: typing.Dict[int, typing.Callable[[typing.Any], typing.Any]] = {

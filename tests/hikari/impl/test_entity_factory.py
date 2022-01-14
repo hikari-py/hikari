@@ -3093,7 +3093,6 @@ class TestEntityFactoryImpl:
             41771983423143936: entity_factory_impl.deserialize_role(guild_role_payload, guild_id=43123123)
         }
         assert interaction.resolved.users == {115590097100865541: entity_factory_impl.deserialize_user(user_payload)}
-
         assert interaction.resolved.messages == {123: entity_factory_impl.deserialize_message(message_payload)}
 
         assert isinstance(interaction.resolved, command_interactions.ResolvedOptionData)

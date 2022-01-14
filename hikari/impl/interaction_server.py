@@ -37,8 +37,6 @@ from hikari import errors
 from hikari.api import interaction_server
 from hikari.api import special_endpoints
 from hikari.interactions import base_interactions
-from hikari.interactions import command_interactions
-from hikari.interactions import component_interactions
 from hikari.internal import data_binding
 from hikari.internal import ed25519
 
@@ -50,6 +48,8 @@ if typing.TYPE_CHECKING:
 
     from hikari.api import entity_factory as entity_factory_api
     from hikari.api import rest as rest_api
+    from hikari.interactions import command_interactions
+    from hikari.interactions import component_interactions
 
     _InteractionT_co = typing.TypeVar("_InteractionT_co", bound=base_interactions.PartialInteraction, covariant=True)
     _ResponseT_co = typing.TypeVar("_ResponseT_co", bound=special_endpoints.InteractionResponseBuilder, covariant=True)
