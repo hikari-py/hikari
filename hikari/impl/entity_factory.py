@@ -2033,6 +2033,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             command_type=commands.CommandType(data_payload.get("type", commands.CommandType.SLASH)),
             options=options,
             resolved=resolved,
+            locale=payload["locale"],
+            guild_locale=payload.get("guild_locale"),
         )
 
     def deserialize_interaction(self, payload: data_binding.JSONObject) -> base_interactions.PartialInteraction:
@@ -2106,6 +2108,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             custom_id=data_payload["custom_id"],
             component_type=message_models.ComponentType(data_payload["component_type"]),
             message=self.deserialize_message(payload["message"]),
+            locale=payload["locale"],
+            guild_locale=payload.get("guild_locale"),
         )
 
     ##################

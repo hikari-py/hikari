@@ -42,6 +42,7 @@ import os
 import platform
 import sys
 import typing
+import urllib.parse
 
 import aiohttp
 import attr
@@ -706,7 +707,8 @@ class RESTClientImpl(rest_api.RESTClient):
                 token = await self._token.acquire(self)
                 headers[_AUTHORIZATION_HEADER] = token
 
-        headers.put(_X_AUDIT_LOG_REASON_HEADER, reason)
+        # As per the docs, UTF-8 characters are only supported here if it's url-encoded.
+        headers.put(_X_AUDIT_LOG_REASON_HEADER, reason, conversion=urllib.parse.quote)
 
         url = compiled_route.create_url(self._rest_url)
 

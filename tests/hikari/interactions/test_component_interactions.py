@@ -53,6 +53,8 @@ class TestComponentInteraction:
             values=(),
             custom_id="OKOKOK",
             message=object(),
+            locale="es-ES",
+            guild_locale="en-US",
         )
 
     def test_build_response(self, mock_component_interaction, mock_app):
