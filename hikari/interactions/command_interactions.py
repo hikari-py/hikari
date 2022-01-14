@@ -145,6 +145,16 @@ class CommandInteraction(base_interactions.MessageResponseMixin[CommandResponseT
     This will be `builtins.None` for command interactions triggered in DMs.
     """
 
+    guild_locale: typing.Optional[str] = attr.field(eq=False, hash=False, repr=True)
+    """The preferred language of the guild this command interaction was triggered in.
+
+    This will be `builtins.None` for command interactions triggered in DMs.
+
+    !!! note
+        This value can usually only be changed if `COMMUNITY` is in `hikari.guilds.Guild.features`
+        for the guild and will otherwise default to `en-US`.
+    """
+
     member: typing.Optional[base_interactions.InteractionMember] = attr.field(eq=False, hash=False, repr=True)
     """The member who triggered this command interaction.
 
@@ -157,6 +167,9 @@ class CommandInteraction(base_interactions.MessageResponseMixin[CommandResponseT
 
     user: users_.User = attr.field(eq=False, hash=False, repr=True)
     """The user who triggered this command interaction."""
+
+    locale: str = attr.field(eq=False, hash=False, repr=True)
+    """The selected language of the user who triggered this command interaction."""
 
     command_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
     """ID of the command being invoked."""

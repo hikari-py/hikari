@@ -105,8 +105,19 @@ class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentRespo
     guild_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False)
     """ID of the guild this interaction was triggered in.
 
-    This will be `builtins.None` for command interactions triggered in DMs.
+    This will be `builtins.None` for component interactions triggered in DMs.
     """
+
+    guild_locale: typing.Optional[str] = attr.field(eq=False, hash=False, repr=True)
+    """The preferred language of the guild this component interaction was triggered in.
+
+    This will be `builtins.None` for component interactions triggered in DMs.
+
+    !!! note
+        This value can usually only be changed if `COMMUNITY` is in `hikari.guilds.Guild.features`
+        for the guild and will otherwise default to `en-US`.
+    """
+
     message: messages.Message = attr.field(eq=False, repr=False)
     """Object of the message the components for this interaction are attached to."""
 
@@ -122,6 +133,9 @@ class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentRespo
 
     user: users.User = attr.field(eq=False, hash=False, repr=True)
     """The user who triggered this interaction."""
+
+    locale: str = attr.field(eq=False, hash=False, repr=True)
+    """The selected language of the user who triggered this component interaction."""
 
     def build_response(self, type_: _ImmediateTypesT, /) -> special_endpoints.InteractionMessageBuilder:
         """Get a message response builder for use in the REST server flow.
