@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -31,7 +31,7 @@ import typing
 __author__: typing.Final[str] = "Nekokatt"
 __maintainer__: typing.Final[str] = "davfsa"
 __ci__: typing.Final[str] = "https://github.com/hikari-py/hikari/actions"
-__copyright__: typing.Final[str] = "© 2021 davfsa"
+__copyright__: typing.Final[str] = "© 2021-present davfsa"
 __coverage__: typing.Final[str] = "https://codeclimate.com/github/hikari-py/hikari"
 __discord_invite__: typing.Final[str] = "https://discord.gg/Jx4cNGG"
 __docs__: typing.Final[str] = "https://hikari-py.dev/hikari"
