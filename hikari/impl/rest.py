@@ -3200,7 +3200,7 @@ class RESTClientImpl(rest_api.RESTClient):
     @typing.overload
     def command_builder(
         self,
-        type: typing.Literal[commands.CommandType.SLASH],
+        type: typing.Literal[commands.CommandType.SLASH, 1],
         name: str,
         description: str,
     ) -> special_endpoints.SlashCommandBuilder:
@@ -3209,22 +3209,40 @@ class RESTClientImpl(rest_api.RESTClient):
     @typing.overload
     def command_builder(
         self,
-        type: typing.Literal[commands.CommandType.USER, commands.CommandType.MESSAGE],
+        type: typing.Literal[commands.CommandType.USER, commands.CommandType.MESSAGE, 2, 3],
         name: str,
     ) -> special_endpoints.ContextMenuCommandBuilder:
         ...
 
     def command_builder(
-        self, type: commands.CommandType, name: str, description: undefined.UndefinedOr[str] = undefined.UNDEFINED
+        self,
+        type: typing.Union[commands.CommandType, int],
+        name: str,
+        description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> special_endpoints.CommandBuilder:
-        if type == commands.CommandType.SLASH:
+        type_ = commands.CommandType(type)
+        if type_ == commands.CommandType.SLASH:
             if description is undefined.UNDEFINED:
                 raise TypeError("command_builder requires a description for slash commands")
 
-            return special_endpoints_impl.SlashCommandBuilder(type, name, description)
+            return special_endpoints_impl.SlashCommandBuilder(type_, name, description)
 
         else:
-            return special_endpoints_impl.ContextMenuCommandBuilder(type, name)
+            return special_endpoints_impl.ContextMenuCommandBuilder(type_, name)
+
+    def slash_command_builder(self, name: str, description: str) -> special_endpoints.SlashCommandBuilder:
+        return special_endpoints_impl.SlashCommandBuilder(
+            commands.CommandType.SLASH,
+            name,
+            description,
+        )
+
+    def context_menu_command_builder(
+        self,
+        type: typing.Literal[commands.CommandType.USER, commands.CommandType.MESSAGE],
+        name: str,
+    ) -> special_endpoints.ContextMenuCommandBuilder:
+        return special_endpoints_impl.ContextMenuCommandBuilder(type, name)
 
     async def fetch_application_command(
         self,
@@ -3264,12 +3282,12 @@ class RESTClientImpl(rest_api.RESTClient):
     async def create_application_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        type: typing.Literal[commands.CommandType.SLASH],
+        type: typing.Literal[commands.CommandType.SLASH, 1],
         name: str,
         description: str,
         *,
-        options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+        options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
         default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.SlashCommand:
         ...
@@ -3278,7 +3296,7 @@ class RESTClientImpl(rest_api.RESTClient):
     async def create_application_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        type: typing.Literal[commands.CommandType.USER, commands.CommandType.MESSAGE],
+        type: typing.Literal[commands.CommandType.USER, commands.CommandType.MESSAGE, 2, 3],
         name: str,
         *,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
@@ -3289,12 +3307,12 @@ class RESTClientImpl(rest_api.RESTClient):
     async def create_application_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        type: commands.CommandType,
+        type: typing.Union[commands.CommandType, int],
         name: str,
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         *,
-        options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+        options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
         default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.PartialCommand:
         if guild is undefined.UNDEFINED:
@@ -3314,6 +3332,43 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_command(
             response, guild_id=snowflakes.Snowflake(guild) if guild is not undefined.UNDEFINED else None
+        )
+
+    async def create_slash_command(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        name: str,
+        description: str,
+        *,
+        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+        options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
+        default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+    ) -> commands.SlashCommand:
+        return await self.create_application_command(
+            application=application,
+            type=commands.CommandType.SLASH,
+            name=name,
+            description=description,
+            guild=guild,
+            options=options,
+            default_permission=default_permission,
+        )
+
+    async def create_context_menu_command(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        type: typing.Literal[commands.CommandType.USER, commands.CommandType.MESSAGE, 2, 3],
+        name: str,
+        *,
+        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+        default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+    ) -> commands.ContextMenuCommand:
+        return await self.create_application_command(
+            application=application,
+            type=type,
+            name=name,
+            guild=guild,
+            default_permission=default_permission,
         )
 
     async def set_application_commands(
