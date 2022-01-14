@@ -114,7 +114,7 @@ class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentRespo
     This will be `builtins.None` for component interactions triggered in DMs.
 
     !!! note
-        This value can usually only be changed if `GuildFeature.COMMUNITY` is in `Guild.features` 
+        This value can usually only be changed if `COMMUNITY` is in `hikari.guilds.Guild.features`
         for the guild and will otherwise default to `en-US`.
     """
 

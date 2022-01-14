@@ -151,7 +151,7 @@ class CommandInteraction(base_interactions.MessageResponseMixin[CommandResponseT
     This will be `builtins.None` for command interactions triggered in DMs.
 
     !!! note
-        This value can usually only be changed if `GuildFeature.COMMUNITY` is in `Guild.features` 
+        This value can usually only be changed if `COMMUNITY` is in `hikari.guilds.Guild.features`
         for the guild and will otherwise default to `en-US`.
     """
 
