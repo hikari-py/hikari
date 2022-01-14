@@ -102,6 +102,8 @@ class TestAutocompleteInteraction:
             type=base_interactions.InteractionType.APPLICATION_COMMAND,
             channel_id=snowflakes.Snowflake(3123123),
             guild_id=snowflakes.Snowflake(5412231),
+            guild_locale="en-US",
+            locale="en-US",
             member=object(),
             user=object(),
             token="httptptptptptptptp",

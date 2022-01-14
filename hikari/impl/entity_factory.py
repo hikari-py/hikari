@@ -1975,6 +1975,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             id=snowflakes.Snowflake(payload["id"]),
             type=base_interactions.InteractionType(payload["type"]),
             guild_id=guild_id,
+            guild_locale=payload.get("guild_locale", "en-US"),
+            locale=payload["locale"],
             channel_id=snowflakes.Snowflake(payload["channel_id"]),
             member=member,
             user=user,

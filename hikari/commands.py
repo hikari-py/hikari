@@ -231,7 +231,7 @@ class PartialCommand(snowflakes.Unique, abc.ABC):
 
         Returns
         -------
-        BaseCommand
+        PartialCommand
             Object of the fetched command.
 
         Raises
@@ -288,7 +288,7 @@ class PartialCommand(snowflakes.Unique, abc.ABC):
 
         Returns
         -------
-        Command
+        PartialCommand
             The edited command object.
 
         Raises
