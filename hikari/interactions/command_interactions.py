@@ -143,8 +143,12 @@ class CommandInteractionOption:
 class AutocompleteInteractionOption(CommandInteractionOption):
     """Represents the options passed for a command autocomplete interaction."""
 
-    is_focused: bool = attr.field(default=False, repr=False)
-    """Whether this option is the currently focused option for autocomplete."""
+    is_focused: bool = attr.field(default=False, repr=True)
+    """Whether this option is the currently focused option for autocomplete.
+
+    Focused options are not guaranteed to be parsed so the value may be a string
+    even if the option type says otherwise.
+    """
 
 
 @attr_extensions.with_copy

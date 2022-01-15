@@ -3239,10 +3239,10 @@ class RESTClientImpl(rest_api.RESTClient):
 
     def context_menu_command_builder(
         self,
-        type: typing.Literal[commands.CommandType.USER, commands.CommandType.MESSAGE],
+        type: typing.Union[commands.CommandType, int],
         name: str,
     ) -> special_endpoints.ContextMenuCommandBuilder:
-        return special_endpoints_impl.ContextMenuCommandBuilder(type, name)
+        return special_endpoints_impl.ContextMenuCommandBuilder(commands.CommandType(type), name)
 
     async def fetch_application_command(
         self,

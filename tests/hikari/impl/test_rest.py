@@ -1037,13 +1037,24 @@ class TestRESTClientImpl:
         assert result.name == "a name"
         assert result.description == "very very good"
 
+    def test_command_builder_with_context_menu(self, rest_client):
         result = rest_client.command_builder(2, "a name")
         assert isinstance(result, special_endpoints.ContextMenuCommandBuilder)
         assert result.name == "a name"
-        assert result.description is undefined.UNDEFINED
+        assert result.type == commands.CommandType.USER
 
+    def test_command_builder_without_description(self, rest_client):
         with pytest.raises(TypeError):
             rest_client.command_builder(1, "a name")
+
+    def test_slash_command_builder(self, rest_client: rest.RESTClientImpl):
+        result = rest_client.slash_command_builder("a name", "a description")
+        assert isinstance(result, special_endpoints.SlashCommandBuilder)
+
+    def test_context_menu_command_command_builder(self, rest_client: rest.RESTClientImpl):
+        result = rest_client.context_menu_command_builder(3, "a name")
+        assert isinstance(result, special_endpoints.ContextMenuCommandBuilder)
+        assert result.type == commands.CommandType.MESSAGE
 
     def test_build_action_row(self, rest_client):
         with mock.patch.object(special_endpoints, "ActionRowBuilder") as action_row_builder:
@@ -4397,9 +4408,16 @@ class TestRESTClientImplAsync:
 
         assert result.type == 8
         assert isinstance(result, special_endpoints.InteractionAutocompleteBuilder)
+        assert len(result.choices) == 2
 
         raw = result.build(mock.Mock())
         assert raw["data"] == {"choices": [{"name": "name", "value": "value"}, {"name": "a", "value": "b"}]}
+
+    def test_interaction_autocomplete_builder_with_set_choices(self, rest_client):
+        result = rest_client.interaction_autocomplete_builder([commands.CommandChoice(name="name", value="value")])
+
+        result.set_choices([commands.CommandChoice(name="a", value="b")])
+        assert result.choices == [commands.CommandChoice(name="a", value="b")]
 
     def test_interaction_message_builder(self, rest_client):
         result = rest_client.interaction_message_builder(4)

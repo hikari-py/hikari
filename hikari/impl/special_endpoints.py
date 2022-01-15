@@ -951,10 +951,6 @@ class CommandBuilder(special_endpoints.CommandBuilder):
     )
 
     @property
-    def description(self) -> undefined.UndefinedOr[str]:
-        return self._description
-
-    @property
     def id(self) -> undefined.UndefinedOr[snowflakes.Snowflake]:
         return self._id
 
@@ -995,6 +991,10 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
 
     _description: str = attr.field()
     _options: typing.List[commands.CommandOption] = attr.field(factory=list, kw_only=True)
+
+    @property
+    def description(self) -> str:
+        return self._description
 
     def add_option(self: _SlashCommandBuilderT, option: commands.CommandOption) -> _SlashCommandBuilderT:
         self._options.append(option)

@@ -52,10 +52,7 @@ if typing.TYPE_CHECKING:
     from hikari import channels
     from hikari import guilds
 
-    _CommandT = typing.TypeVar("_CommandT", bound="PartialCommand")
 
-
-@typing.final
 class CommandType(int, enums.Enum):
     """The type of a command."""
 
@@ -447,8 +444,6 @@ class PartialCommand(snowflakes.Unique, abc.ABC):
 class SlashCommand(PartialCommand):
     """Represents a slash command on Discord."""
 
-    type: typing.Literal[CommandType.SLASH] = attr.field(hash=True, repr=True)
-
     description: str = attr.field(eq=False, hash=False, repr=False)
     """The command's description.
 
@@ -466,8 +461,6 @@ class SlashCommand(PartialCommand):
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
 class ContextMenuCommand(PartialCommand):
     """Represents a slash command on Discord."""
-
-    type: typing.Literal[CommandType.USER, CommandType.MESSAGE] = attr.field(hash=True, repr=True)
 
 
 class CommandPermissionType(int, enums.Enum):

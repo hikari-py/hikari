@@ -936,20 +936,6 @@ class CommandBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def description(self) -> undefined.UndefinedOr[str]:
-        """Return the description to set for this command.
-
-        !!! warning
-            This should be inclusively between 1-100 characters in length.
-
-        Returns
-        -------
-        builtins.str
-            The description to set for this command.
-        """
-
-    @property
-    @abc.abstractmethod
     def type(self) -> undefined.UndefinedOr[commands.CommandType]:
         """Return the type of this command.
 
@@ -1031,6 +1017,20 @@ class CommandBuilder(abc.ABC):
 
 class SlashCommandBuilder(CommandBuilder):
     """SlashCommandBuilder."""
+
+    @property
+    @abc.abstractmethod
+    def description(self) -> str:
+        """Return the description to set for this command.
+
+        !!! warning
+            This should be inclusively between 1-100 characters in length.
+
+        Returns
+        -------
+        builtins.str
+            The description to set for this command.
+        """
 
     @property
     @abc.abstractmethod

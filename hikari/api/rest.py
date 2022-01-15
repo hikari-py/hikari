@@ -6707,7 +6707,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     def context_menu_command_builder(
         self,
-        type: typing.Literal[commands.CommandType.USER, commands.CommandType.MESSAGE],
+        type: typing.Union[commands.CommandType, int],
         name: str,
     ) -> special_endpoints.ContextMenuCommandBuilder:
         r"""Create a command builder for use in `RESTClient.set_application_commands`.
