@@ -1204,6 +1204,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
 
+    @typing.overload
     async def _create_message(
         self,
         route: routes.CompiledRoute,
@@ -1223,7 +1224,55 @@ class RESTClientImpl(rest_api.RESTClient):
         mentions_reply: undefined.UndefinedOr[bool],
         user_mentions: undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]],
         role_mentions: undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]],
+        append_body_to_data_field: typing.Literal[True],
+    ) -> None:
+        ...
+
+    @typing.overload
+    async def _create_message(
+        self,
+        route: routes.CompiledRoute,
+        body: data_binding.JSONObjectBuilder,
+        query: typing.Optional[data_binding.StringMapBuilder] = None,
+        *,
+        no_auth: bool = False,
+        content: undefined.UndefinedOr[typing.Any],
+        attachment: undefined.UndefinedOr[files.Resourceish],
+        attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]],
+        component: undefined.UndefinedOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
+        components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
+        embed: undefined.UndefinedOr[embeds_.Embed],
+        embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]],
+        tts: undefined.UndefinedOr[bool],
+        mentions_everyone: undefined.UndefinedOr[bool],
+        mentions_reply: undefined.UndefinedOr[bool],
+        user_mentions: undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]],
+        role_mentions: undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]],
+        append_body_to_data_field: typing.Literal[False] = False,
     ) -> messages_.Message:
+        ...
+
+    async def _create_message(
+        self,
+        route: routes.CompiledRoute,
+        body: data_binding.JSONObjectBuilder,
+        query: typing.Optional[data_binding.StringMapBuilder] = None,
+        *,
+        no_auth: bool = False,
+        content: undefined.UndefinedOr[typing.Any],
+        attachment: undefined.UndefinedOr[files.Resourceish],
+        attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]],
+        component: undefined.UndefinedOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
+        components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
+        embed: undefined.UndefinedOr[embeds_.Embed],
+        embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]],
+        tts: undefined.UndefinedOr[bool],
+        mentions_everyone: undefined.UndefinedOr[bool],
+        mentions_reply: undefined.UndefinedOr[bool],
+        user_mentions: undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]],
+        role_mentions: undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]],
+        append_body_to_data_field: bool = False,
+    ) -> typing.Optional[messages_.Message]:
         if not undefined.any_undefined(attachment, attachments):
             raise ValueError("You may only specify one of 'attachment' or 'attachments', not both")
 
@@ -1273,11 +1322,17 @@ class RESTClientImpl(rest_api.RESTClient):
         if attachments is not undefined.UNDEFINED:
             final_attachments.extend([files.ensure_resource(a) for a in attachments])
 
+        if append_body_to_data_field:
+            payload = body.pop("data", data_binding.JSONObjectBuilder())
+        else:
+            payload = body
+        assert isinstance(payload, data_binding.JSONObjectBuilder)
+
         if component is not undefined.UNDEFINED:
-            body.put("components", [component.build()])
+            payload.put("components", [component.build()])
 
         elif components is not undefined.UNDEFINED:
-            body.put("components", [component.build() for component in components])
+            payload.put("components", [component.build() for component in components])
 
         serialized_embeds: undefined.UndefinedOr[data_binding.JSONArray] = undefined.UNDEFINED
 
@@ -1292,24 +1347,32 @@ class RESTClientImpl(rest_api.RESTClient):
                 final_attachments.extend(embed_attachments)
                 serialized_embeds.append(embed_payload)
 
-        body.put(
+        payload.put(
             "allowed_mentions",
             mentions.generate_allowed_mentions(mentions_everyone, mentions_reply, user_mentions, role_mentions),
         )
-        body.put("content", content, conversion=str)
-        body.put("tts", tts)
-        body.put("embeds", serialized_embeds)
+        payload.put("content", content, conversion=str)
+        payload.put("tts", tts)
+        payload.put("embeds", serialized_embeds)
+
+        if append_body_to_data_field:
+            body.put("data", payload)
+            payload = body
 
         if final_attachments:
             form = data_binding.URLEncodedFormBuilder(executor=self._executor)
-            form.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
+            form.add_field("payload_json", data_binding.dump_json(payload), content_type=_APPLICATION_JSON)
 
             for i, attachment in enumerate(final_attachments):
                 form.add_resource(f"file{i}", attachment)
 
             response = await self._request(route, form_builder=form, query=query, no_auth=no_auth)
         else:
-            response = await self._request(route, json=body, query=query, no_auth=no_auth)
+            response = await self._request(route, json=payload, query=query, no_auth=no_auth)
+
+        if append_body_to_data_field:
+            # This is an interaction initial response so do not expect a message
+            return None
 
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
@@ -3412,6 +3475,8 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         flags: typing.Union[int, messages_.MessageFlag, undefined.UndefinedType] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
+        attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
         component: undefined.UndefinedOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
         components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
@@ -3424,69 +3489,33 @@ class RESTClientImpl(rest_api.RESTClient):
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
     ) -> None:
-        if not undefined.any_undefined(component, components):
-            raise ValueError("You may only specify one of 'component' or 'components', not both")
-
-        if not undefined.any_undefined(embed, embeds):
-            raise ValueError("You may only specify one of 'embed' or 'embeds', not both")
-
-        if components is not undefined.UNDEFINED and not isinstance(components, typing.Collection):
-            raise TypeError(
-                "You passed a non-collection to 'components', but this expects a collection. Maybe you meant to "
-                "use 'component' (singular) instead?"
-            )
-
-        if embeds not in _NONE_OR_UNDEFINED and not isinstance(embeds, typing.Collection):
-            raise TypeError(
-                "You passed a non-collection to 'embeds', but this expects a collection. Maybe you meant to "
-                "use 'embed' (singular) instead?"
-            )
-
-        if undefined.all_undefined(embed, embeds) and isinstance(content, embeds_.Embed):
-            # Syntactic sugar, common mistake to accidentally send an embed
-            # as the content, so lets detect this and fix it for the user.
-            embed = content
-            content = undefined.UNDEFINED
-
         route = routes.POST_INTERACTION_RESPONSE.compile(interaction=interaction, token=token)
 
         body = data_binding.JSONObjectBuilder()
         body.put("type", response_type)
 
         data = data_binding.JSONObjectBuilder()
-        data.put("content", content, conversion=str)
         data.put("flags", flags)
-        data.put("tts", tts)
-        data.put(
-            "allowed_mentions",
-            mentions.generate_allowed_mentions(mentions_everyone, undefined.UNDEFINED, user_mentions, role_mentions),
-        )
-
-        if component is not undefined.UNDEFINED:
-            data.put("components", [component.build()])
-
-        elif components is not undefined.UNDEFINED:
-            data.put("components", [component.build() for component in components])
-
-        if embed is not undefined.UNDEFINED:
-            embed_payload, attachments = self._entity_factory.serialize_embed(embed)
-            if attachments:
-                raise ValueError("Cannot send an embed with attachments in a slash command's initial response")
-
-            data.put("embeds", [embed_payload])
-
-        elif embeds is not undefined.UNDEFINED:
-            embed_payloads: data_binding.JSONArray = []
-            for embed in embeds:
-                serialized_embed, attachments = self._entity_factory.serialize_embed(embed)
-                embed_payloads.append(serialized_embed)
-                if attachments:
-                    raise ValueError("Cannot send an embed with attachments in a slash command's initial response")
-
-            data.put("embeds", embed_payloads)
-
         body.put("data", data)
-        await self._request(route, json=body, no_auth=True)
+
+        await self._create_message(
+            route,
+            body,
+            no_auth=True,
+            content=content,
+            attachment=attachment,
+            attachments=attachments,
+            component=component,
+            components=components,
+            embed=embed,
+            embeds=embeds,
+            tts=tts,
+            mentions_everyone=mentions_everyone,
+            user_mentions=user_mentions,
+            role_mentions=role_mentions,
+            mentions_reply=undefined.UNDEFINED,
+            append_body_to_data_field=True,
+        )
 
     async def edit_interaction_response(
         self,
