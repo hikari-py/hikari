@@ -3135,7 +3135,7 @@ class TestEntityFactoryImpl:
         assert interaction.resolved.users == {}
 
     @pytest.fixture()
-    def autocomplete_interaction_payload(self, interaction_member_payload):
+    def autocomplete_interaction_payload(self, user_payload):
         return {
             "id": "3490190239012093",
             "type": 4,
@@ -3149,6 +3149,40 @@ class TestEntityFactoryImpl:
                     {"name": "go fire", "type": 3, "value": "typing...", "focused": True},
                 ],
                 "resolved": {},
+            },
+            "channel_id": "49949494",
+            "user": user_payload,
+            "token": "moe cat girls",
+            "locale": "es-ES",
+            "guild_locale": "en-US",
+            "version": 69420,
+            "application_id": "76234234",
+        }
+
+    @pytest.fixture()
+    def autocomplete_interaction_payload_with_optional(
+        self,
+        interaction_member_payload,
+        user_payload,
+    ):
+        return {
+            "id": "3490190239012093",
+            "type": 4,
+            "guild_id": "43123123",
+            "data": {
+                "id": "43123123",
+                "name": "okokokok",
+                "type": 1,
+                "options": [
+                    {"name": "go ice", "type": 6, "value": "115590097100865541"},
+                    {"name": "go fire", "type": 3, "value": "typing...", "focused": True},
+                    {"name": "stuff", "type": 1, "value": {"name": "stuff", "type": 3, "value": "none"}},
+                ],
+                "resolved": {
+                    "users": {
+                        "115590097100865541": user_payload,
+                    }
+                },
             },
             "channel_id": "49949494",
             "member": interaction_member_payload,
@@ -3182,6 +3216,18 @@ class TestEntityFactoryImpl:
         assert interaction.options[0].value == 42
         assert interaction.options[1].value == "typing..."
         assert interaction.options[1].is_focused
+
+    def test_deserialize_autocomplete_interaction_with_optional(
+        self,
+        entity_factory_impl,
+        mock_app,
+        autocomplete_interaction_payload_with_optional,
+    ):
+        interaction = entity_factory_impl.deserialize_autocomplete_interaction(
+            autocomplete_interaction_payload_with_optional
+        )
+
+        assert interaction
 
     def test_deserialize_interaction_returns_expected_type(
         self, entity_factory_impl, command_interaction_payload, component_interaction_payload

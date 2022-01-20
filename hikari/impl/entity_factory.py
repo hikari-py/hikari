@@ -1829,9 +1829,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_suboptions := payload.get("options"):
             suboptions = [self._deserialize_interaction_command_option(suboption) for suboption in raw_suboptions]
 
+        is_focused = payload.get("focused", False)
+
         option_type = commands.OptionType(payload["type"])
         value = payload.get("value")
-        if modifier := _interaction_option_type_mapping.get(option_type):
+        if is_focused and (modifier := _interaction_option_type_mapping.get(option_type)):
             value = modifier(value)
 
         return command_interactions.AutocompleteInteractionOption(
@@ -1839,7 +1841,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             type=option_type,
             value=value,
             options=suboptions,
-            is_focused=payload.get("focused", False),
+            is_focused=is_focused,
         )
 
     def _deserialize_interaction_member(
