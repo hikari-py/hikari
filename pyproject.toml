@@ -65,7 +65,7 @@ pythonVersion = "3.8"
 typeCheckingMode = "strict"
 
 [tool.pytest.ini_options]
-[pytest]
+asyncio_mode = "strict"
 xfail_strict = true
 norecursedirs = [
     "docs",
