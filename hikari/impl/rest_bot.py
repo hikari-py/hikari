@@ -67,17 +67,14 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
 
     Parameters
     ----------
-    token : typing.Union[builtins.str, builtins.None, hikari.api.rest.TokenStrategy]
-        The bot or bearer token. If no token is to be used,
-        this can be undefined.
-    token_type : typing.Union[builtins.str, hikari.applications.TokenType, builtins.None]
+    token : typing.Union[builtins.str, hikari.api.rest.TokenStrategy]
+        The bot or bearer token.
+    token_type : typing.Union[builtins.str, hikari.applications.TokenType]
         The type of token in use. This should only be passed when `builtins.str`
-        is passed for `token`, can be `"Bot"` or `"Bearer"` and will be
-        defaulted to `"Bearer"` in this situation.
+        is passed for `token`, can be `"Bot"` or `"Bearer"`.
 
-        This should be left as `builtins.None` when either
-        `hikari.api.rest.TokenStrategy` or `builtins.None` is passed for
-        `token`.
+        This should be left as `builtins.None` when `hikari.api.rest.TokenStrategy`
+        is passed for `token`.
 
     Other Parameters
     ----------------
@@ -379,7 +376,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         close_loop: bool = True,
         close_passed_executor: bool = False,
         coroutine_tracking_depth: typing.Optional[int] = None,
-        enable_signal_handlers: bool = True,
+        enable_signal_handlers: typing.Optional[bool] = None,
         host: typing.Optional[typing.Union[str, typing.Sequence[str]]] = None,
         path: typing.Optional[str] = None,
         port: typing.Optional[int] = None,
@@ -425,14 +422,16 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
             tracked with their call origin state. This allows you to determine
             where non-awaited coroutines may originate from, but generally you
             do not want to leave this enabled for performance reasons.
-        enable_signal_handlers : builtins.bool
-            Defaults to `builtins.True`. If on a __non-Windows__ OS with builtin
-            support for kernel-level POSIX signals, then setting this to
-            `builtins.True` will allow treating keyboard interrupts and other
-            OS signals to safely shut down the application as calls to
-            shut down the application properly rather than just killing the
-            process in a dirty state immediately. You should leave this disabled
-            unless you plan to implement your own signal handling yourself.
+        enable_signal_handlers : typing.Optional[builtins.bool]
+            Defaults to `builtins.True` if this is started in the main thread.
+
+            If on a __non-Windows__ OS with builtin support for kernel-level
+            POSIX signals, then setting this to `builtins.True` will allow
+            treating keyboard interrupts and other OS signals to safely shut
+            down the application as calls to shut down the application properly
+            rather than just killing the process in a dirty state immediately.
+            You should leave this enabled unless you plan to implement your own
+            signal handling yourself.
         host : typing.Optional[typing.Union[builtins.str, aiohttp.web.HostSequence]]
             TCP/IP host or a sequence of hosts for the HTTP server.
         port : typing.Optional[builtins.int]
@@ -497,7 +496,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         self,
         backlog: int = 128,
         check_for_updates: bool = True,
-        enable_signal_handlers: bool = True,
+        enable_signal_handlers: typing.Optional[bool] = None,
         host: typing.Optional[typing.Union[str, typing.Sequence[str]]] = None,
         port: typing.Optional[int] = None,
         path: typing.Optional[str] = None,
@@ -517,14 +516,16 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         check_for_updates : builtins.bool
             Defaults to `builtins.True`. If `builtins.True`, will check for
             newer versions of `hikari` on PyPI and notify if available.
-        enable_signal_handlers : builtins.bool
-            Defaults to `builtins.True`. If on a __non-Windows__ OS with builtin
-            support for kernel-level POSIX signals, then setting this to
-            `builtins.True` will allow treating keyboard interrupts and other
-            OS signals to safely shut down the application as calls to
-            shut down the application properly rather than just killing the
-            process in a dirty state immediately. You should leave this disabled
-            unless you plan to implement your own signal handling yourself.
+        enable_signal_handlers : typing.Optional[builtins.bool]
+            Defaults to `builtins.True` if this is started in the main thread.
+
+            If on a __non-Windows__ OS with builtin support for kernel-level
+            POSIX signals, then setting this to `builtins.True` will allow
+            treating keyboard interrupts and other OS signals to safely shut
+            down the application as calls to shut down the application properly
+            rather than just killing the process in a dirty state immediately.
+            You should leave this enabled unless you plan to implement your own
+            signal handling yourself.
         host : typing.Optional[typing.Union[builtins.str, aiohttp.web.HostSequence]]
             TCP/IP host or a sequence of hosts for the HTTP server.
         port : typing.Optional[builtins.int]
