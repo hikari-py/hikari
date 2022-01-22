@@ -435,9 +435,9 @@ class AutocompleteInteraction(BaseCommandInteraction):
                 interaction
                 .build_response(
                     [
-                        OptionChoice(name="foo", value="a"),
-                        OptionChoice(name="bar", value="b"),
-                        OptionChoice(name="baz", value="c"),
+                        CommandChoice(name="foo", value="a"),
+                        CommandChoice(name="bar", value="b"),
+                        CommandChoice(name="baz", value="c"),
                     ]
                 )
             )
