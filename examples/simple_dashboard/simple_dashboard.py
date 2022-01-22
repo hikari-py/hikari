@@ -58,7 +58,7 @@ rillrate.install()
 bot = Bot(token=os.environ["BOT_TOKEN"])
 
 
-values = [str(i) for i in list(range(0, 256 + 1, 32))]
+values = [str(i) for i in range(0, 256 + 1, 32)]
 
 selector = rr_prime.Selector(f"{PACKAGE}.{DASHBOARD}.{GROUP_CONFIG}.Selector", label="Choose!", options=values)
 slider = rr_prime.Slider(
