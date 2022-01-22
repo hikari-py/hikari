@@ -424,6 +424,10 @@ class Member(users.User):
     @property
     def default_avatar_url(self) -> files.URL:
         return self.user.default_avatar_url
+    
+    @property
+    def display_avatar_url(self) -> files.URL:
+        return self.guild_avatar_url or self.avatar_url or self.default_avatar_url
 
     @property
     def banner_hash(self) -> typing.Optional[str]:
