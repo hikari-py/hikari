@@ -31,6 +31,7 @@ from hikari import permissions
 from hikari import snowflakes
 from hikari import undefined
 from hikari import urls
+from hikari import users
 from hikari.impl import bot
 from hikari.internal import routes
 from hikari.internal import time
@@ -262,12 +263,13 @@ class TestMember:
         assert model.avatar_url is mock_user.avatar_url
 
     def test_display_avatar_url_when_guild_hash_is_None(self, model, mock_user):
-        model.guild_avatar_url = None
-        assert model.display_avatar_url is mock_user.display_avatar_url
+        with mock.patch.object(guilds.Member, "guild_avatar_url") as mock_guild_avatar_url:
+            assert model.display_avatar_url is mock_guild_avatar_url
 
     def test_display_guild_avatar_url_when_guild_hash_is_not_None(self, model, mock_user):
-        model.guild_avatar_url = object()
-        assert model.display_avatar_url is model.guild_avatar_url
+        with mock.patch.object(guilds.Member, "guild_avatar_url", new=None):
+            with mock.patch.object(users.User, "display_avatar_url") as mock_display_avatar_url:
+                assert model.display_avatar_url is mock_display_avatar_url
 
     def test_banner_hash_property(self, model, mock_user):
         assert model.banner_hash is mock_user.banner_hash
