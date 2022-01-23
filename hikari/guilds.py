@@ -424,7 +424,7 @@ class Member(users.User):
     @property
     def default_avatar_url(self) -> files.URL:
         return self.user.default_avatar_url
-    
+
     @property
     def display_avatar_url(self) -> files.URL:
         return self.guild_avatar_url or super().display_avatar_url

@@ -511,7 +511,7 @@ class User(PartialUser, abc.ABC):
             discriminator=int(self.discriminator) % 5,
             file_format="png",
         )
-    
+
     @property
     def display_avatar_url(self) -> files.URL:
         """Display avatar URL for this user."""
