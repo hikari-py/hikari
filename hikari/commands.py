@@ -125,9 +125,7 @@ class CommandOption:
     """
 
     is_required: typing.Optional[bool] = attr.field(repr=False)
-    """Whether this command is required. This will be `builtins.None` if the option type
-    is `SUB_COMMAND` or `SUB_COMMAND_GROUP`.
-    """
+    """Whether this command is required."""
 
     choices: typing.Optional[typing.Sequence[CommandChoice]] = attr.field(default=None, repr=False)
     """A sequence of up to (and including) 25 choices for this command.
