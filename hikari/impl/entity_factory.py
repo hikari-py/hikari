@@ -1693,7 +1693,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             type=commands.OptionType(payload["type"]),
             name=payload["name"],
             description=payload["description"],
-            is_required=payload.get("required", None),
+            is_required=payload.get("required", False),
             choices=choices,
             options=suboptions,
             channel_types=channel_types,
