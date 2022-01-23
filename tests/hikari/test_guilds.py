@@ -260,11 +260,11 @@ class TestMember:
 
     def test_avatar_url_property(self, model, mock_user):
         assert model.avatar_url is mock_user.avatar_url
-    
+
     def test_display_avatar_url_when_guild_hash_is_None(self, model, mock_user):
         model.guild_avatar_url = None
         assert model.display_avatar_url is mock_user.display_avatar_url
-    
+
     def test_display_guild_avatar_url_when_guild_hash_is_not_None(self, model, mock_user):
         model.guild_avatar_url = object()
         assert model.display_avatar_url is model.guild_avatar_url
