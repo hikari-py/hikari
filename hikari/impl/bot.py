@@ -315,6 +315,7 @@ class GatewayBot(traits.GatewayBotAware):
         allow_color: bool = True,
         banner: typing.Optional[str] = "hikari",
         executor: typing.Optional[concurrent.futures.Executor] = None,
+        cache: typing.Optional[cache_.MutableCache] = None,
         force_color: bool = False,
         cache_settings: typing.Optional[config.CacheSettings] = None,
         http_settings: typing.Optional[config.HTTPSettings] = None,
@@ -341,7 +342,7 @@ class GatewayBot(traits.GatewayBotAware):
 
         # Caching
         cache_settings = cache_settings if cache_settings is not None else config.CacheSettings()
-        self._cache = cache_impl.CacheImpl(self, cache_settings)
+        self._cache = cache or cache_impl.CacheImpl(self, cache_settings)
 
         # Entity creation
         self._entity_factory = entity_factory_impl.EntityFactoryImpl(self)
