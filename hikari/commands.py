@@ -184,7 +184,7 @@ class CommandOption:
 
 @attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
-class PartialCommand(snowflakes.Unique, abc.ABC):
+class PartialCommand(snowflakes.Unique):
     """Represents any application command on Discord."""
 
     app: traits.RESTAware = attr.field(eq=False, hash=False, repr=False)

@@ -3225,17 +3225,13 @@ class RESTClientImpl(rest_api.RESTClient):
             if description is undefined.UNDEFINED:
                 raise TypeError("command_builder requires a description for slash commands")
 
-            return special_endpoints_impl.SlashCommandBuilder(type_, name, description)
+            return special_endpoints_impl.SlashCommandBuilder(name, description)
 
         else:
             return special_endpoints_impl.ContextMenuCommandBuilder(type_, name)
 
     def slash_command_builder(self, name: str, description: str) -> special_endpoints.SlashCommandBuilder:
-        return special_endpoints_impl.SlashCommandBuilder(
-            commands.CommandType.SLASH,
-            name,
-            description,
-        )
+        return special_endpoints_impl.SlashCommandBuilder(name, description)
 
     def context_menu_command_builder(
         self,
