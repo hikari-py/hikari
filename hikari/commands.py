@@ -23,8 +23,6 @@
 """Models and enums used for application commands on Discord."""
 from __future__ import annotations
 
-import abc
-
 __all__: typing.List[str] = [
     "PartialCommand",
     "ContextMenuCommand",
