@@ -427,7 +427,7 @@ class Member(users.User):
 
     @property
     def display_avatar_url(self) -> files.URL:
-        return self.guild_avatar_url or super().display_avatar_url
+        return self.make_guild_avatar_url() or super().display_avatar_url
 
     @property
     def banner_hash(self) -> typing.Optional[str]:
