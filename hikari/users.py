@@ -515,7 +515,7 @@ class User(PartialUser, abc.ABC):
     @property
     def display_avatar_url(self) -> files.URL:
         """Display avatar URL for this user."""
-        return self.avatar_url or self.default_avatar_url
+        return self.make_avatar_url() or self.default_avatar_url
 
     @property
     @abc.abstractmethod
