@@ -689,10 +689,10 @@ class PartialUserImpl(PartialUser):
     is_bot: undefined.UndefinedOr[bool] = attr.field(eq=False, hash=False, repr=True)
     """Whether this user is a bot account."""
 
-    is_system: undefined.UndefinedOr[bool] = attr.field(eq=False, hash=False, repr=False)
+    is_system: undefined.UndefinedOr[bool] = attr.field(eq=False, hash=False, repr=True)
     """Whether this user is a system account."""
 
-    flags: undefined.UndefinedOr[UserFlag] = attr.field(eq=False, hash=False)
+    flags: undefined.UndefinedOr[UserFlag] = attr.field(eq=False, hash=False, repr=True)
     """Public flags for this user."""
 
     @property
@@ -724,35 +724,31 @@ class PartialUserImpl(PartialUser):
 class UserImpl(PartialUserImpl, User):
     """Concrete implementation of user information."""
 
-    # These are not attribs on purpose. The idea is to narrow the types of
-    # these fields without redefining them twice in the slots. This is
-    # compatible with MYPY, hence why I have done it like this...
-
-    discriminator: str
+    discriminator: str = attr.field(eq=False, hash=False, repr=True)
     """The user's discriminator."""
 
-    username: str
+    username: str = attr.field(eq=False, hash=False, repr=True)
     """The user's username."""
 
-    avatar_hash: typing.Optional[str]
+    avatar_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
     """The user's avatar hash, if they have one, otherwise `builtins.None`."""
 
-    banner_hash: typing.Optional[str]
+    banner_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
     """Banner hash of the user, if they have one, otherwise `builtins.None`"""
 
-    accent_color: typing.Optional[colors.Color]
+    accent_color: typing.Optional[colors.Color] = attr.field(eq=False, hash=False, repr=False)
     """The custom banner color for the user, if set.
 
     The official client will decide the default color if not set.
     """  # noqa: D401 - Imperative mood
 
-    is_bot: bool
+    is_bot: bool = attr.field(eq=False, hash=False, repr=True)
     """`builtins.True` if this user is a bot account, `builtins.False` otherwise."""
 
-    is_system: bool
+    is_system: bool = attr.field(eq=False, hash=False, repr=True)
     """`builtins.True` if this user is a system account, `builtins.False` otherwise."""
 
-    flags: UserFlag
+    flags: UserFlag = attr.field(eq=False, hash=False, repr=True)
     """The public flags for this user."""
 
 
