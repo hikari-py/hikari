@@ -3214,7 +3214,8 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> special_endpoints.ContextMenuCommandBuilder:
         ...
 
-    def command_builder(
+    @deprecation.deprecated("2.0.0.dev106", "slash_command_builder or context_menu_builder")
+    def command_builder(  # type: ignore[override]
         self,
         type: typing.Union[commands.CommandType, int],
         name: str,
@@ -3274,33 +3275,7 @@ class RESTClientImpl(rest_api.RESTClient):
         guild_id = snowflakes.Snowflake(guild) if guild is not undefined.UNDEFINED else None
         return [self._entity_factory.deserialize_command(command, guild_id=guild_id) for command in response]
 
-    @typing.overload
-    async def create_application_command(
-        self,
-        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        type: typing.Literal[commands.CommandType.SLASH, 1],
-        name: str,
-        description: str,
-        *,
-        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
-        options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
-        default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-    ) -> commands.SlashCommand:
-        ...
-
-    @typing.overload
-    async def create_application_command(
-        self,
-        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        type: typing.Literal[commands.CommandType.USER, commands.CommandType.MESSAGE, 2, 3],
-        name: str,
-        *,
-        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
-        default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-    ) -> commands.ContextMenuCommand:
-        ...
-
-    async def create_application_command(
+    async def _create_application_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         type: typing.Union[commands.CommandType, int],
@@ -3330,6 +3305,54 @@ class RESTClientImpl(rest_api.RESTClient):
             response, guild_id=snowflakes.Snowflake(guild) if guild is not undefined.UNDEFINED else None
         )
 
+    @typing.overload
+    async def create_application_command(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        type: typing.Literal[commands.CommandType.SLASH, 1],
+        name: str,
+        description: str,
+        *,
+        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+        options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
+        default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+    ) -> commands.SlashCommand:
+        ...
+
+    @typing.overload
+    async def create_application_command(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        type: typing.Literal[commands.CommandType.USER, commands.CommandType.MESSAGE, 2, 3],
+        name: str,
+        *,
+        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+        default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+    ) -> commands.ContextMenuCommand:
+        ...
+
+    @deprecation.deprecated("2.0.0.dev106", "create_slash_command or create_context_menu_command")
+    async def create_application_command(  # type: ignore[override]
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        type: typing.Union[commands.CommandType, int],
+        name: str,
+        description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        *,
+        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+        options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
+        default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+    ) -> commands.PartialCommand:
+        return await self._create_application_command(
+            application=application,
+            type=type,
+            name=name,
+            description=description,
+            guild=guild,
+            options=options,
+            default_permission=default_permission,
+        )
+
     async def create_slash_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
@@ -3340,7 +3363,7 @@ class RESTClientImpl(rest_api.RESTClient):
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
         default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.SlashCommand:
-        return await self.create_application_command(
+        command = await self._create_application_command(
             application=application,
             type=commands.CommandType.SLASH,
             name=name,
@@ -3349,6 +3372,7 @@ class RESTClientImpl(rest_api.RESTClient):
             options=options,
             default_permission=default_permission,
         )
+        return typing.cast(commands.SlashCommand, command)
 
     async def create_context_menu_command(
         self,
@@ -3359,13 +3383,14 @@ class RESTClientImpl(rest_api.RESTClient):
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.ContextMenuCommand:
-        return await self.create_application_command(
+        command = await self._create_application_command(
             application=application,
             type=type,
             name=name,
             guild=guild,
             default_permission=default_permission,
         )
+        return typing.cast(commands.ContextMenuCommand, command)
 
     async def set_application_commands(
         self,

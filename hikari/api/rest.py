@@ -6664,6 +6664,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> special_endpoints.CommandBuilder:
         r"""Create a command builder for use in `RESTClient.set_application_commands`.
 
+        .. deprecated:: 2.0.0.dev106
+            Use `RESTClient.slash_command_builder` or `RESTClient.context_menu_command_builder` instead.
+
         Parameters
         ----------
         type : commands.CommandType
@@ -6868,6 +6871,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.PartialCommand:
         r"""Create an application command.
+
+        .. deprecated:: 2.0.0.dev106
+            Use `RESTClient.create_slash_command` or `RESTClient.create_context_menu_command` instead.
 
         Parameters
         ----------

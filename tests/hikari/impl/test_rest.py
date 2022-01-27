@@ -1032,20 +1032,29 @@ class TestRESTClientImpl:
         mock_unban_user.assert_called_once_with(123, 321, reason="ayaya")
 
     def test_command_builder(self, rest_client):
-        result = rest_client.command_builder(1, "a name", description="very very good")
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=DeprecationWarning)
+            result = rest_client.command_builder(1, "a name", description="very very good")
+
         assert isinstance(result, special_endpoints.SlashCommandBuilder)
         assert result.name == "a name"
         assert result.description == "very very good"
 
     def test_command_builder_with_context_menu(self, rest_client):
-        result = rest_client.command_builder(2, "a name")
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=DeprecationWarning)
+            result = rest_client.command_builder(2, "a name")
+
         assert isinstance(result, special_endpoints.ContextMenuCommandBuilder)
         assert result.name == "a name"
         assert result.type == commands.CommandType.USER
 
     def test_command_builder_without_description(self, rest_client):
-        with pytest.raises(TypeError):
-            rest_client.command_builder(1, "a name")
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=DeprecationWarning)
+
+            with pytest.raises(TypeError):
+                rest_client.command_builder(1, "a name")
 
     def test_slash_command_builder(self, rest_client: rest.RESTClientImpl):
         result = rest_client.slash_command_builder("a name", "a description")
@@ -4199,14 +4208,16 @@ class TestRESTClientImplAsync:
         rest_client._request = mock.AsyncMock(return_value={"id": "29393939"})
         mock_option = object()
 
-        result = await rest_client.create_application_command(
-            application=StubModel(4332123),
-            guild=StubModel(653452134),
-            type=1,
-            name="okokok",
-            description="not ok anymore",
-            options=[mock_option],
-        )
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=DeprecationWarning)
+            result = await rest_client.create_application_command(
+                application=StubModel(4332123),
+                guild=StubModel(653452134),
+                type=1,
+                name="okokok",
+                description="not ok anymore",
+                options=[mock_option],
+            )
 
         assert result is rest_client._entity_factory.deserialize_command.return_value
         rest_client._entity_factory.serialize_command_option.assert_called_once_with(mock_option)
@@ -4227,12 +4238,14 @@ class TestRESTClientImplAsync:
         expected_route = routes.POST_APPLICATION_COMMAND.compile(application=4332123)
         rest_client._request = mock.AsyncMock(return_value={"id": "29393939"})
 
-        result = await rest_client.create_application_command(
-            StubModel(4332123),
-            type=1,
-            name="okokok",
-            description="not ok anymore",
-        )
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=DeprecationWarning)
+            result = await rest_client.create_application_command(
+                StubModel(4332123),
+                type=1,
+                name="okokok",
+                description="not ok anymore",
+            )
 
         assert result is rest_client._entity_factory.deserialize_command.return_value
         rest_client._entity_factory.deserialize_command.assert_called_once_with(
