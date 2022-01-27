@@ -1204,75 +1204,31 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
 
-    @typing.overload
-    async def _create_message(
+    def _build_message(
         self,
-        route: routes.CompiledRoute,
         body: data_binding.JSONObjectBuilder,
-        query: typing.Optional[data_binding.StringMapBuilder] = None,
         *,
-        no_auth: bool = False,
-        content: undefined.UndefinedOr[typing.Any],
-        attachment: undefined.UndefinedOr[files.Resourceish],
-        attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]],
-        component: undefined.UndefinedOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
-        components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
-        embed: undefined.UndefinedOr[embeds_.Embed],
-        embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]],
-        tts: undefined.UndefinedOr[bool],
-        mentions_everyone: undefined.UndefinedOr[bool],
-        mentions_reply: undefined.UndefinedOr[bool],
-        user_mentions: undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]],
-        role_mentions: undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]],
-        append_body_to_data_field: typing.Literal[True],
-    ) -> None:
-        ...
-
-    @typing.overload
-    async def _create_message(
-        self,
-        route: routes.CompiledRoute,
-        body: data_binding.JSONObjectBuilder,
-        query: typing.Optional[data_binding.StringMapBuilder] = None,
-        *,
-        no_auth: bool = False,
-        content: undefined.UndefinedOr[typing.Any],
-        attachment: undefined.UndefinedOr[files.Resourceish],
-        attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]],
-        component: undefined.UndefinedOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
-        components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
-        embed: undefined.UndefinedOr[embeds_.Embed],
-        embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]],
-        tts: undefined.UndefinedOr[bool],
-        mentions_everyone: undefined.UndefinedOr[bool],
-        mentions_reply: undefined.UndefinedOr[bool],
-        user_mentions: undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]],
-        role_mentions: undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]],
-        append_body_to_data_field: typing.Literal[False] = False,
-    ) -> messages_.Message:
-        ...
-
-    async def _create_message(
-        self,
-        route: routes.CompiledRoute,
-        body: data_binding.JSONObjectBuilder,
-        query: typing.Optional[data_binding.StringMapBuilder] = None,
-        *,
-        no_auth: bool = False,
-        content: undefined.UndefinedOr[typing.Any],
-        attachment: undefined.UndefinedOr[files.Resourceish],
-        attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]],
-        component: undefined.UndefinedOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
-        components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
-        embed: undefined.UndefinedOr[embeds_.Embed],
-        embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]],
-        tts: undefined.UndefinedOr[bool],
-        mentions_everyone: undefined.UndefinedOr[bool],
-        mentions_reply: undefined.UndefinedOr[bool],
-        user_mentions: undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]],
-        role_mentions: undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]],
-        append_body_to_data_field: bool = False,
-    ) -> typing.Optional[messages_.Message]:
+        content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
+        attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
+        attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
+        component: undefined.UndefinedNoneOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
+        components: undefined.UndefinedNoneOr[
+            typing.Sequence[special_endpoints.ComponentBuilder]
+        ] = undefined.UNDEFINED,
+        embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
+        embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        user_mentions: undefined.UndefinedOr[
+            typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
+        ] = undefined.UNDEFINED,
+        role_mentions: undefined.UndefinedOr[
+            typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
+        ] = undefined.UNDEFINED,
+        edit: bool = False,
+        replace_attachments: bool = False,
+    ) -> typing.Optional[data_binding.URLEncodedFormBuilder]:
         if not undefined.any_undefined(attachment, attachments):
             raise ValueError("You may only specify one of 'attachment' or 'attachments', not both")
 
@@ -1322,60 +1278,73 @@ class RESTClientImpl(rest_api.RESTClient):
         if attachments is not undefined.UNDEFINED:
             final_attachments.extend([files.ensure_resource(a) for a in attachments])
 
-        if append_body_to_data_field:
-            payload = body.pop("data", data_binding.JSONObjectBuilder())
-        else:
-            payload = body
-        assert isinstance(payload, data_binding.JSONObjectBuilder)
-
+        serialized_components: typing.Optional[typing.List[data_binding.JSONObject]] = None
         if component is not undefined.UNDEFINED:
-            payload.put("components", [component.build()])
+            if component is not None:
+                serialized_components = [component.build()]
+
+            body.put("components", serialized_components)
 
         elif components is not undefined.UNDEFINED:
-            payload.put("components", [component.build() for component in components])
+            if components is not None:
+                serialized_components = [component.build() for component in components]
+
+            body.put("components", serialized_components)
 
         serialized_embeds: undefined.UndefinedOr[data_binding.JSONArray] = undefined.UNDEFINED
-
+        update_embeds = False
         if embed is not undefined.UNDEFINED:
-            embed_payload, embed_attachments = self._entity_factory.serialize_embed(embed)
-            final_attachments.extend(embed_attachments)
-            serialized_embeds = [embed_payload]
-        elif embeds is not undefined.UNDEFINED:
-            serialized_embeds = []
-            for embed in embeds:
+            update_embeds = True
+            if embed is not None:
                 embed_payload, embed_attachments = self._entity_factory.serialize_embed(embed)
                 final_attachments.extend(embed_attachments)
-                serialized_embeds.append(embed_payload)
+                serialized_embeds = [embed_payload]
+        elif embeds is not undefined.UNDEFINED:
+            update_embeds = True
+            if embeds is not None:
+                serialized_embeds = []
+                for embed in embeds:
+                    embed_payload, embed_attachments = self._entity_factory.serialize_embed(embed)
+                    final_attachments.extend(embed_attachments)
+                    serialized_embeds.append(embed_payload)
 
-        payload.put(
-            "allowed_mentions",
-            mentions.generate_allowed_mentions(mentions_everyone, mentions_reply, user_mentions, role_mentions),
-        )
-        payload.put("content", content, conversion=str)
-        payload.put("tts", tts)
-        payload.put("embeds", serialized_embeds)
+        if edit:
+            # Special cases for message editing
+            if not undefined.all_undefined(mentions_everyone, mentions_reply, user_mentions, role_mentions):
+                # If specified we override the message's allowed mentions, else
+                # whatever the current value is will be used
+                body.put(
+                    "allowed_mentions",
+                    mentions.generate_allowed_mentions(mentions_everyone, mentions_reply, user_mentions, role_mentions),
+                )
+            if content is not None:
+                body.put("content", content, conversion=str)
+            else:
+                # None here means we want to remove the content from the message
+                body.put("content", None)
+            if replace_attachments:
+                # We are removing embeds and/or replacing them with new ones
+                body.put("attachments", None)
+        else:
+            body.put(
+                "allowed_mentions",
+                mentions.generate_allowed_mentions(mentions_everyone, mentions_reply, user_mentions, role_mentions),
+            )
+            body.put("content", content, conversion=str)
 
-        if append_body_to_data_field:
-            body.put("data", payload)
-            payload = body
+        body.put("tts", tts)
+
+        if update_embeds:
+            body.put("embeds", serialized_embeds)
 
         if final_attachments:
             form = data_binding.URLEncodedFormBuilder(executor=self._executor)
-            form.add_field("payload_json", data_binding.dump_json(payload), content_type=_APPLICATION_JSON)
 
             for i, attachment in enumerate(final_attachments):
                 form.add_resource(f"file{i}", attachment)
+            return form
 
-            response = await self._request(route, form_builder=form, query=query, no_auth=no_auth)
-        else:
-            response = await self._request(route, json=payload, query=query, no_auth=no_auth)
-
-        if append_body_to_data_field:
-            # This is an interaction initial response so do not expect a message
-            return None
-
-        assert isinstance(response, dict)
-        return self._entity_factory.deserialize_message(response)
+        return None
 
     async def create_message(
         self,
@@ -1404,8 +1373,8 @@ class RESTClientImpl(rest_api.RESTClient):
         body = data_binding.JSONObjectBuilder()
         body.put("nonce", nonce)
         body.put("message_reference", reply, conversion=lambda m: {"message_id": str(int(m))})
-        return await self._create_message(
-            route,
+
+        form = self._build_message(
             body,
             content=content,
             attachment=attachment,
@@ -1420,6 +1389,15 @@ class RESTClientImpl(rest_api.RESTClient):
             user_mentions=user_mentions,
             role_mentions=role_mentions,
         )
+
+        if form is not None:
+            form.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
+            response = await self._request(route, form_builder=form, no_auth=False)
+        else:
+            response = await self._request(route, json=body, no_auth=False)
+
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_message(response)
 
     async def crosspost_message(
         self,
@@ -1590,8 +1568,8 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.PATCH_CHANNEL_MESSAGE.compile(channel=channel, message=message)
         body = data_binding.JSONObjectBuilder()
         body.put("flags", flags)
-        return await self._edit_message(
-            route,
+
+        form = self._build_message(
             body,
             content=content,
             attachment=attachment,
@@ -1600,12 +1578,22 @@ class RESTClientImpl(rest_api.RESTClient):
             components=components,
             embed=embed,
             embeds=embeds,
-            replace_attachments=replace_attachments,
             mentions_everyone=mentions_everyone,
             mentions_reply=mentions_reply,
             user_mentions=user_mentions,
             role_mentions=role_mentions,
+            edit=True,
+            replace_attachments=replace_attachments,
         )
+
+        if form is not None:
+            form.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
+            response = await self._request(route, form_builder=form, no_auth=False)
+        else:
+            response = await self._request(route, json=body, no_auth=False)
+
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_message(response)
 
     async def delete_message(
         self,
@@ -1913,11 +1901,9 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("flags", flags)
         query = data_binding.StringMapBuilder()
         query.put("wait", True)
-        return await self._create_message(
-            route,
+
+        form = self._build_message(
             body,
-            query,
-            no_auth=True,
             content=content,
             attachment=attachment,
             attachments=attachments,
@@ -1929,8 +1915,16 @@ class RESTClientImpl(rest_api.RESTClient):
             mentions_everyone=mentions_everyone,
             user_mentions=user_mentions,
             role_mentions=role_mentions,
-            mentions_reply=undefined.UNDEFINED,
         )
+
+        if form is not None:
+            form.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
+            response = await self._request(route, form_builder=form, query=query, no_auth=True)
+        else:
+            response = await self._request(route, json=body, query=query, no_auth=True)
+
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_message(response)
 
     async def fetch_webhook_message(
         self,
@@ -1972,10 +1966,11 @@ class RESTClientImpl(rest_api.RESTClient):
         # int(ExecutableWebhook) isn't guaranteed to be valid nor the ID used to execute this entity as a webhook.
         webhook_id = webhook if isinstance(webhook, int) else webhook.webhook_id
         route = routes.PATCH_WEBHOOK_MESSAGE.compile(webhook=webhook_id, token=token, message=message)
-        return await self._edit_message(
-            route,
-            data_binding.JSONObjectBuilder(),
-            no_auth=True,
+
+        body = data_binding.JSONObjectBuilder()
+
+        form = self._build_message(
+            body,
             content=content,
             attachment=attachment,
             attachments=attachments,
@@ -1983,12 +1978,21 @@ class RESTClientImpl(rest_api.RESTClient):
             components=components,
             embed=embed,
             embeds=embeds,
-            replace_attachments=replace_attachments,
             mentions_everyone=mentions_everyone,
-            mentions_reply=undefined.UNDEFINED,
             user_mentions=user_mentions,
             role_mentions=role_mentions,
+            edit=True,
+            replace_attachments=replace_attachments,
         )
+
+        if form is not None:
+            form.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
+            response = await self._request(route, form_builder=form, no_auth=True)
+        else:
+            response = await self._request(route, json=body, no_auth=True)
+
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_message(response)
 
     async def delete_webhook_message(
         self,
@@ -3496,12 +3500,9 @@ class RESTClientImpl(rest_api.RESTClient):
 
         data = data_binding.JSONObjectBuilder()
         data.put("flags", flags)
-        body.put("data", data)
 
-        await self._create_message(
-            route,
-            body,
-            no_auth=True,
+        form = self._build_message(
+            data,
             content=content,
             attachment=attachment,
             attachments=attachments,
@@ -3513,9 +3514,14 @@ class RESTClientImpl(rest_api.RESTClient):
             mentions_everyone=mentions_everyone,
             user_mentions=user_mentions,
             role_mentions=role_mentions,
-            mentions_reply=undefined.UNDEFINED,
-            append_body_to_data_field=True,
         )
+        body.put("data", data)
+
+        if form is not None:
+            form.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
+            await self._request(route, form_builder=form, no_auth=True)
+        else:
+            await self._request(route, json=body, no_auth=True)
 
     async def edit_interaction_response(
         self,
@@ -3541,10 +3547,11 @@ class RESTClientImpl(rest_api.RESTClient):
         ] = undefined.UNDEFINED,
     ) -> messages_.Message:
         route = routes.PATCH_INTERACTION_RESPONSE.compile(webhook=application, token=token)
-        return await self._edit_message(
-            route,
-            data_binding.JSONObjectBuilder(),
-            no_auth=True,
+
+        body = data_binding.JSONObjectBuilder()
+
+        form = self._build_message(
+            body,
             content=content,
             attachment=attachment,
             attachments=attachments,
@@ -3552,12 +3559,21 @@ class RESTClientImpl(rest_api.RESTClient):
             components=components,
             embed=embed,
             embeds=embeds,
-            replace_attachments=replace_attachments,
             mentions_everyone=mentions_everyone,
             user_mentions=user_mentions,
             role_mentions=role_mentions,
-            mentions_reply=undefined.UNDEFINED,
+            edit=True,
+            replace_attachments=replace_attachments,
         )
+
+        if form is not None:
+            form.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
+            response = await self._request(route, form_builder=form, no_auth=True)
+        else:
+            response = await self._request(route, json=body, no_auth=True)
+
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_message(response)
 
     async def delete_interaction_response(
         self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], token: str
