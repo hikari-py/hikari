@@ -513,6 +513,11 @@ class User(PartialUser, abc.ABC):
         )
 
     @property
+    def display_avatar_url(self) -> files.URL:
+        """Display avatar URL for this user."""
+        return self.make_avatar_url() or self.default_avatar_url
+
+    @property
     @abc.abstractmethod
     def discriminator(self) -> str:
         """Discriminator for the user."""
