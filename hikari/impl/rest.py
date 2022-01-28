@@ -1320,7 +1320,7 @@ class RESTClientImpl(rest_api.RESTClient):
         else:
             body.put("content", None)
 
-        if edit and replace_attachments:
+        if replace_attachments:
             body.put("attachments", None)
 
         body.put("tts", tts)
