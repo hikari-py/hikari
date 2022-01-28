@@ -1204,9 +1204,8 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
 
-    def _build_message(
+    def _build_message_payload(  # noqa: C901
         self,
-        body: data_binding.JSONObjectBuilder,
         *,
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
@@ -1228,7 +1227,9 @@ class RESTClientImpl(rest_api.RESTClient):
         ] = undefined.UNDEFINED,
         edit: bool = False,
         replace_attachments: bool = False,
-    ) -> typing.Optional[data_binding.URLEncodedFormBuilder]:
+    ) -> typing.Tuple[data_binding.JSONObjectBuilder, typing.Optional[data_binding.URLEncodedFormBuilder]]:
+        body = data_binding.JSONObjectBuilder()
+
         if not undefined.any_undefined(attachment, attachments):
             raise ValueError("You may only specify one of 'attachment' or 'attachments', not both")
 
@@ -1308,29 +1309,24 @@ class RESTClientImpl(rest_api.RESTClient):
                     final_attachments.extend(embed_attachments)
                     serialized_embeds.append(embed_payload)
 
-        if edit:
-            # Special cases for message editing
-            if not undefined.all_undefined(mentions_everyone, mentions_reply, user_mentions, role_mentions):
-                # If specified we override the message's allowed mentions, else
-                # whatever the current value is will be used
-                body.put(
-                    "allowed_mentions",
-                    mentions.generate_allowed_mentions(mentions_everyone, mentions_reply, user_mentions, role_mentions),
-                )
-            if content is not None:
-                body.put("content", content, conversion=str)
-            else:
-                # None here means we want to remove the content from the message
-                body.put("content", None)
-            if replace_attachments:
-                # We are removing embeds and/or replacing them with new ones
-                body.put("attachments", None)
+        if edit and not undefined.all_undefined(mentions_everyone, mentions_reply, user_mentions, role_mentions):
+            body.put(
+                "allowed_mentions",
+                mentions.generate_allowed_mentions(mentions_everyone, mentions_reply, user_mentions, role_mentions),
+            )
         else:
             body.put(
                 "allowed_mentions",
                 mentions.generate_allowed_mentions(mentions_everyone, mentions_reply, user_mentions, role_mentions),
             )
+
+        if content is not None:
             body.put("content", content, conversion=str)
+        else:
+            body.put("content", None)
+
+        if edit and replace_attachments:
+            body.put("attachments", None)
 
         body.put("tts", tts)
 
@@ -1342,9 +1338,9 @@ class RESTClientImpl(rest_api.RESTClient):
 
             for i, attachment in enumerate(final_attachments):
                 form.add_resource(f"file{i}", attachment)
-            return form
+            return body, form
 
-        return None
+        return body, None
 
     async def create_message(
         self,
@@ -1370,12 +1366,7 @@ class RESTClientImpl(rest_api.RESTClient):
         ] = undefined.UNDEFINED,
     ) -> messages_.Message:
         route = routes.POST_CHANNEL_MESSAGES.compile(channel=channel)
-        body = data_binding.JSONObjectBuilder()
-        body.put("nonce", nonce)
-        body.put("message_reference", reply, conversion=lambda m: {"message_id": str(int(m))})
-
-        form = self._build_message(
-            body,
+        body, form = self._build_message_payload(
             content=content,
             attachment=attachment,
             attachments=attachments,
@@ -1389,6 +1380,8 @@ class RESTClientImpl(rest_api.RESTClient):
             user_mentions=user_mentions,
             role_mentions=role_mentions,
         )
+        body.put("nonce", nonce)
+        body.put("message_reference", reply, conversion=lambda m: {"message_id": str(int(m))})
 
         if form is not None:
             form.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
@@ -1407,135 +1400,6 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.POST_CHANNEL_CROSSPOST.compile(channel=channel, message=message)
 
         response = await self._request(route)
-
-        assert isinstance(response, dict)
-        return self._entity_factory.deserialize_message(response)
-
-    async def _edit_message(  # noqa: C901 - Function too complex
-        self,
-        route: routes.CompiledRoute,
-        body: data_binding.JSONObjectBuilder,
-        *,
-        no_auth: bool = False,
-        content: undefined.UndefinedOr[typing.Any],
-        attachment: undefined.UndefinedOr[files.Resourceish],
-        attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]],
-        component: undefined.UndefinedNoneOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
-        components: undefined.UndefinedNoneOr[
-            typing.Sequence[special_endpoints.ComponentBuilder]
-        ] = undefined.UNDEFINED,
-        embed: undefined.UndefinedNoneOr[embeds_.Embed],
-        embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]],
-        replace_attachments: bool,
-        mentions_everyone: undefined.UndefinedOr[bool],
-        mentions_reply: undefined.UndefinedOr[bool],
-        user_mentions: undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]],
-        role_mentions: undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]],
-    ) -> messages_.Message:
-        if not undefined.any_undefined(attachment, attachments):
-            raise ValueError("You may only specify one of 'attachment' or 'attachments', not both")
-
-        if not undefined.any_undefined(component, components):
-            raise ValueError("You may only specify one of 'component' or 'components', not both")
-
-        if not undefined.any_undefined(embed, embeds):
-            raise ValueError("You may only specify one of 'embed' or 'embeds', not both")
-
-        if attachments is not undefined.UNDEFINED and not isinstance(attachments, typing.Collection):
-            raise TypeError(
-                "You passed a non-collection to 'attachments', but this expects a collection. Maybe you meant to "
-                "use 'attachment' (singular) instead?"
-            )
-
-        if components is not undefined.UNDEFINED and not isinstance(components, typing.Collection):
-            raise TypeError(
-                "You passed a non-collection to 'components', but this expects a collection. Maybe you meant to "
-                "use 'component' (singular) instead?"
-            )
-
-        if embeds not in _NONE_OR_UNDEFINED and not isinstance(embeds, typing.Collection):
-            raise TypeError(
-                "You passed a non-collection to 'embeds', but this expects a collection. Maybe you meant to "
-                "use 'embed' (singular) instead?"
-            )
-
-        if not undefined.all_undefined(mentions_everyone, mentions_reply, user_mentions, role_mentions):
-            body.put(
-                "allowed_mentions",
-                mentions.generate_allowed_mentions(mentions_everyone, mentions_reply, user_mentions, role_mentions),
-            )
-
-        if embed is undefined.UNDEFINED and isinstance(content, embeds_.Embed):
-            # Syntactic sugar, common mistake to accidentally send an embed
-            # as the content, so lets detect this and fix it for the user.
-            embed = content
-            content = undefined.UNDEFINED
-        elif undefined.all_undefined(attachment, attachments) and isinstance(
-            content, (files.Resource, files.RAWISH_TYPES, os.PathLike)
-        ):
-            # Syntactic sugar, common mistake to accidentally send an attachment
-            # as the content, so lets detect this and fix it for the user. This
-            # will still then work with normal implicit embed attachments as
-            # we work this out later.
-            attachment = content
-            content = undefined.UNDEFINED
-
-        if content is not None:
-            body.put("content", content, conversion=str)
-        else:
-            body.put("content", None)
-
-        final_attachments: typing.List[files.Resource[files.AsyncReader]] = []
-        if attachment is not undefined.UNDEFINED:
-            final_attachments.append(files.ensure_resource(attachment))
-        if attachments is not undefined.UNDEFINED:
-            final_attachments.extend([files.ensure_resource(a) for a in attachments])
-
-        serialized_components: typing.Optional[typing.List[data_binding.JSONObject]] = None
-        if component is not undefined.UNDEFINED:
-            if component is not None:
-                serialized_components = [component.build()]
-
-            body.put("components", serialized_components)
-
-        elif components is not undefined.UNDEFINED:
-            if components is not None:
-                serialized_components = [component.build() for component in components]
-
-            body.put("components", serialized_components)
-
-        serialized_embeds: data_binding.JSONArray = []
-        update_embeds = False
-        if embed is not undefined.UNDEFINED:
-            update_embeds = True
-            if embed is not None:
-                embed_payload, embed_attachments = self._entity_factory.serialize_embed(embed)
-                serialized_embeds.append(embed_payload)
-                final_attachments.extend(embed_attachments)
-        elif embeds is not undefined.UNDEFINED:
-            update_embeds = True
-            if embeds is not None:
-                for embed in embeds:
-                    embed_payload, embed_attachments = self._entity_factory.serialize_embed(embed)
-                    serialized_embeds.append(embed_payload)
-                    final_attachments.extend(embed_attachments)
-
-        if update_embeds:
-            body.put("embeds", serialized_embeds)
-
-        if replace_attachments:
-            body.put("attachments", None)
-
-        if final_attachments:
-            form_builder = data_binding.URLEncodedFormBuilder(executor=self._executor)
-            form_builder.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
-
-            for i, attachment in enumerate(final_attachments):
-                form_builder.add_resource(f"file{i}", attachment)
-
-            response = await self._request(route, form_builder=form_builder, no_auth=no_auth)
-        else:
-            response = await self._request(route, json=body, no_auth=no_auth)
 
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
@@ -1566,11 +1430,7 @@ class RESTClientImpl(rest_api.RESTClient):
         flags: undefined.UndefinedOr[messages_.MessageFlag] = undefined.UNDEFINED,
     ) -> messages_.Message:
         route = routes.PATCH_CHANNEL_MESSAGE.compile(channel=channel, message=message)
-        body = data_binding.JSONObjectBuilder()
-        body.put("flags", flags)
-
-        form = self._build_message(
-            body,
+        body, form = self._build_message_payload(
             content=content,
             attachment=attachment,
             attachments=attachments,
@@ -1585,6 +1445,7 @@ class RESTClientImpl(rest_api.RESTClient):
             edit=True,
             replace_attachments=replace_attachments,
         )
+        body.put("flags", flags)
 
         if form is not None:
             form.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
@@ -1895,15 +1756,10 @@ class RESTClientImpl(rest_api.RESTClient):
         webhook_id = webhook if isinstance(webhook, int) else webhook.webhook_id
         route = routes.POST_WEBHOOK_WITH_TOKEN.compile(webhook=webhook_id, token=token)
 
-        body = data_binding.JSONObjectBuilder()
-        body.put("username", username)
-        body.put("avatar_url", avatar_url, conversion=str)
-        body.put("flags", flags)
         query = data_binding.StringMapBuilder()
         query.put("wait", True)
 
-        form = self._build_message(
-            body,
+        body, form = self._build_message_payload(
             content=content,
             attachment=attachment,
             attachments=attachments,
@@ -1916,6 +1772,9 @@ class RESTClientImpl(rest_api.RESTClient):
             user_mentions=user_mentions,
             role_mentions=role_mentions,
         )
+        body.put("username", username)
+        body.put("avatar_url", avatar_url, conversion=str)
+        body.put("flags", flags)
 
         if form is not None:
             form.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
@@ -1967,10 +1826,7 @@ class RESTClientImpl(rest_api.RESTClient):
         webhook_id = webhook if isinstance(webhook, int) else webhook.webhook_id
         route = routes.PATCH_WEBHOOK_MESSAGE.compile(webhook=webhook_id, token=token, message=message)
 
-        body = data_binding.JSONObjectBuilder()
-
-        form = self._build_message(
-            body,
+        body, form = self._build_message_payload(
             content=content,
             attachment=attachment,
             attachments=attachments,
@@ -3497,12 +3353,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         body = data_binding.JSONObjectBuilder()
         body.put("type", response_type)
-
-        data = data_binding.JSONObjectBuilder()
-        data.put("flags", flags)
-
-        form = self._build_message(
-            data,
+        data, form = self._build_message_payload(
             content=content,
             attachment=attachment,
             attachments=attachments,
@@ -3515,6 +3366,7 @@ class RESTClientImpl(rest_api.RESTClient):
             user_mentions=user_mentions,
             role_mentions=role_mentions,
         )
+        data.put("flags", flags)
         body.put("data", data)
 
         if form is not None:
@@ -3548,10 +3400,7 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> messages_.Message:
         route = routes.PATCH_INTERACTION_RESPONSE.compile(webhook=application, token=token)
 
-        body = data_binding.JSONObjectBuilder()
-
-        form = self._build_message(
-            body,
+        body, form = self._build_message_payload(
             content=content,
             attachment=attachment,
             attachments=attachments,
