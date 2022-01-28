@@ -656,6 +656,16 @@ class TestEventFactoryImpl:
         assert event.message_ids == {6523423, 345123}
         assert event.guild_id == 4394949
 
+    def test_deserialize_guild_message_delete_bulk_event_when_old_messages_is_none(
+        self, event_factory, mock_app, mock_shard
+    ):
+        mock_payload = {"ids": ["6523423", "345123"], "channel_id": "564123", "guild_id": "4394949"}
+
+        event = event_factory.deserialize_guild_message_delete_bulk_event(mock_shard, mock_payload)
+
+        assert isinstance(event, message_events.GuildBulkMessageDeleteEvent)
+        assert event.old_messages == {}
+
     ###################
     # REACTION EVENTS #
     ###################
