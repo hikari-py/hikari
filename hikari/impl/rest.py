@@ -1309,12 +1309,7 @@ class RESTClientImpl(rest_api.RESTClient):
                     final_attachments.extend(embed_attachments)
                     serialized_embeds.append(embed_payload)
 
-        if edit and not undefined.all_undefined(mentions_everyone, mentions_reply, user_mentions, role_mentions):
-            body.put(
-                "allowed_mentions",
-                mentions.generate_allowed_mentions(mentions_everyone, mentions_reply, user_mentions, role_mentions),
-            )
-        else:
+        if not edit or not undefined.all_undefined(mentions_everyone, mentions_reply, user_mentions, role_mentions):
             body.put(
                 "allowed_mentions",
                 mentions.generate_allowed_mentions(mentions_everyone, mentions_reply, user_mentions, role_mentions),
