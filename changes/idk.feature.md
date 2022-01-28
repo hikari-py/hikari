@@ -1,1 +1,0 @@
-old_x keyword arguments in the event factory now default to None.
