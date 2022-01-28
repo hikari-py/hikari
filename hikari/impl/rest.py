@@ -3197,39 +3197,9 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_template(response)
 
-    @typing.overload
-    def command_builder(
-        self,
-        type: typing.Literal[commands.CommandType.SLASH, 1],
-        name: str,
-        description: str,
-    ) -> special_endpoints.SlashCommandBuilder:
-        ...
-
-    @typing.overload
-    def command_builder(
-        self,
-        type: typing.Literal[commands.CommandType.USER, commands.CommandType.MESSAGE, 2, 3],
-        name: str,
-    ) -> special_endpoints.ContextMenuCommandBuilder:
-        ...
-
     @deprecation.deprecated("2.0.0.dev106", "slash_command_builder or context_menu_builder")
-    def command_builder(  # type: ignore[override]
-        self,
-        type: typing.Union[commands.CommandType, int],
-        name: str,
-        description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> special_endpoints.CommandBuilder:
-        type_ = commands.CommandType(type)
-        if type_ == commands.CommandType.SLASH:
-            if description is undefined.UNDEFINED:
-                raise TypeError("command_builder requires a description for slash commands")
-
-            return special_endpoints_impl.SlashCommandBuilder(name, description)
-
-        else:
-            return special_endpoints_impl.ContextMenuCommandBuilder(type_, name)
+    def command_builder(self, name: str, description: str) -> special_endpoints.SlashCommandBuilder:
+        return self.slash_command_builder(name, description)
 
     def slash_command_builder(self, name: str, description: str) -> special_endpoints.SlashCommandBuilder:
         return special_endpoints_impl.SlashCommandBuilder(name, description)
@@ -3305,47 +3275,19 @@ class RESTClientImpl(rest_api.RESTClient):
             response, guild_id=snowflakes.Snowflake(guild) if guild is not undefined.UNDEFINED else None
         )
 
-    @typing.overload
+    @deprecation.deprecated("2.0.0.dev106", "create_slash_command or create_context_menu_command")
     async def create_application_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        type: typing.Literal[commands.CommandType.SLASH, 1],
         name: str,
         description: str,
-        *,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+        *,
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
         default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.SlashCommand:
-        ...
-
-    @typing.overload
-    async def create_application_command(
-        self,
-        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        type: typing.Literal[commands.CommandType.USER, commands.CommandType.MESSAGE, 2, 3],
-        name: str,
-        *,
-        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
-        default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-    ) -> commands.ContextMenuCommand:
-        ...
-
-    @deprecation.deprecated("2.0.0.dev106", "create_slash_command or create_context_menu_command")
-    async def create_application_command(  # type: ignore[override]
-        self,
-        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        type: typing.Union[commands.CommandType, int],
-        name: str,
-        description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        *,
-        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
-        options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
-        default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-    ) -> commands.PartialCommand:
-        return await self._create_application_command(
+        return await self.create_slash_command(
             application=application,
-            type=type,
             name=name,
             description=description,
             guild=guild,

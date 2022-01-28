@@ -1031,30 +1031,14 @@ class TestRESTClientImpl:
         assert reason is mock_unban_user.return_value
         mock_unban_user.assert_called_once_with(123, 321, reason="ayaya")
 
-    def test_command_builder(self, rest_client):
+    def test_command_builder(self, rest_client: rest.RESTClientImpl):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=DeprecationWarning)
-            result = rest_client.command_builder(1, "a name", description="very very good")
+            result = rest_client.command_builder("a name", description="very very good")
 
         assert isinstance(result, special_endpoints.SlashCommandBuilder)
         assert result.name == "a name"
         assert result.description == "very very good"
-
-    def test_command_builder_with_context_menu(self, rest_client):
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", category=DeprecationWarning)
-            result = rest_client.command_builder(2, "a name")
-
-        assert isinstance(result, special_endpoints.ContextMenuCommandBuilder)
-        assert result.name == "a name"
-        assert result.type == commands.CommandType.USER
-
-    def test_command_builder_without_description(self, rest_client):
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", category=DeprecationWarning)
-
-            with pytest.raises(TypeError):
-                rest_client.command_builder(1, "a name")
 
     def test_slash_command_builder(self, rest_client: rest.RESTClientImpl):
         result = rest_client.slash_command_builder("a name", "a description")
@@ -4213,7 +4197,6 @@ class TestRESTClientImplAsync:
             result = await rest_client.create_application_command(
                 application=StubModel(4332123),
                 guild=StubModel(653452134),
-                type=1,
                 name="okokok",
                 description="not ok anymore",
                 options=[mock_option],
@@ -4242,7 +4225,6 @@ class TestRESTClientImplAsync:
             warnings.simplefilter("ignore", category=DeprecationWarning)
             result = await rest_client.create_application_command(
                 StubModel(4332123),
-                type=1,
                 name="okokok",
                 description="not ok anymore",
             )

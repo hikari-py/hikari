@@ -6636,32 +6636,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If an internal error occurs on Discord while handling the request.
         """
 
-    @typing.overload
     @abc.abstractmethod
-    def command_builder(
-        self,
-        type: typing.Literal[commands.CommandType.SLASH, 1],
-        name: str,
-        description: str,
-    ) -> special_endpoints.SlashCommandBuilder:
-        ...
-
-    @typing.overload
-    @abc.abstractmethod
-    def command_builder(
-        self,
-        type: typing.Literal[commands.CommandType.USER, commands.CommandType.MESSAGE, 2, 3],
-        name: str,
-    ) -> special_endpoints.ContextMenuCommandBuilder:
-        ...
-
-    @abc.abstractmethod
-    def command_builder(
-        self,
-        type: typing.Union[commands.CommandType, int],
-        name: str,
-        description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> special_endpoints.CommandBuilder:
+    def command_builder(self, name: str, description: str) -> special_endpoints.SlashCommandBuilder:
         r"""Create a command builder for use in `RESTClient.set_application_commands`.
 
         .. deprecated:: 2.0.0.dev106
@@ -6669,18 +6645,16 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        type : commands.CommandType
-            The commands's type.
         name : builtins.str
-            The command's name. If this is a slash command then
-            this should match the regex `^[\w-]{1,32}$` in Unicode mode and be lowercase.
+            The command's name. This should match the regex `^[\w-]{1,32}$` in
+            Unicode mode and be lowercase.
         description : builtins.str
-            The description to set for the command if this is a slash command.
+            The description to set for the command.
             This should be inclusively between 1-100 characters in length.
 
         Returns
         -------
-        hikari.api.special_endpoints.CommandBuilder
+        hikari.api.special_endpoints.SlashCommandBuilder
             The created command builder object.
         """
 
@@ -6830,46 +6804,17 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If an internal error occurs on Discord while handling the request.
         """
 
-    @typing.overload
     @abc.abstractmethod
     async def create_application_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        type: typing.Literal[commands.CommandType.SLASH, 1],
         name: str,
         description: str,
-        *,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+        *,
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
         default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.SlashCommand:
-        ...
-
-    @typing.overload
-    @abc.abstractmethod
-    async def create_application_command(
-        self,
-        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        type: typing.Literal[commands.CommandType.USER, commands.CommandType.MESSAGE, 2, 3],
-        name: str,
-        *,
-        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
-        default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-    ) -> commands.ContextMenuCommand:
-        ...
-
-    @abc.abstractmethod
-    async def create_application_command(
-        self,
-        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        type: typing.Union[commands.CommandType, int],
-        name: str,
-        description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        *,
-        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
-        options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
-        default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-    ) -> commands.PartialCommand:
         r"""Create an application command.
 
         .. deprecated:: 2.0.0.dev106
@@ -6879,21 +6824,19 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------
         application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to create a command for.
-        type : commands.CommandType
-            The commands's type.
         name : builtins.str
             The command's name. This should match the regex `^[\w-]{1,32}$` in
             Unicode mode and be lowercase.
         description : builtins.str
             The description to set for the command.
             This should be inclusively between 1-100 characters in length.
-
-        Other Parameters
-        ----------------
         guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             Object or ID of the specific guild this should be made for.
             If left as `hikari.undefined.UNDEFINED` then this call will create
             a global command rather than a guild specific one.
+
+        Other Parameters
+        ----------------
         options : hikari.undefined.UndefinedOr[typing.Sequence[hikari.commands.CommandOption]]
             A sequence of up to 10 options for this command.
         default_permission : hikari.undefined.UndefinedOr[builtins.bool]
@@ -6904,7 +6847,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        hikari.commands.PartialCommand
+        hikari.commands.SlashCommand
             Object of the created command.
 
         Raises
