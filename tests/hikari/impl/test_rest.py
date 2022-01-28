@@ -1004,7 +1004,7 @@ class TestRESTClientImpl:
                 guild=guild,
             )
 
-    def test_kick_member(self, rest_client: rest.RESTClientImpl):
+    def test_kick_member(self, rest_client):
         mock_kick_user = mock.Mock()
         rest_client.kick_user = mock_kick_user
 
@@ -1013,7 +1013,7 @@ class TestRESTClientImpl:
         assert result is mock_kick_user.return_value
         mock_kick_user.assert_called_once_with(123, 5423, reason="oewkwkwk")
 
-    def test_ban_member(self, rest_client: rest.RESTClientImpl):
+    def test_ban_member(self, rest_client):
         mock_ban_user = mock.Mock()
         rest_client.ban_user = mock_ban_user
 
@@ -1022,7 +1022,7 @@ class TestRESTClientImpl:
         assert result is mock_ban_user.return_value
         mock_ban_user.assert_called_once_with(43123, 54123, delete_message_days=6, reason="wowowowo")
 
-    def test_unban_member(self, rest_client: rest.RESTClientImpl):
+    def test_unban_member(self, rest_client):
         mock_unban_user = mock.Mock()
         rest_client.unban_user = mock_unban_user
 
@@ -1031,7 +1031,7 @@ class TestRESTClientImpl:
         assert reason is mock_unban_user.return_value
         mock_unban_user.assert_called_once_with(123, 321, reason="ayaya")
 
-    def test_command_builder(self, rest_client: rest.RESTClientImpl):
+    def test_command_builder(self, rest_client):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=DeprecationWarning)
             result = rest_client.command_builder("a name", description="very very good")
@@ -1040,11 +1040,11 @@ class TestRESTClientImpl:
         assert result.name == "a name"
         assert result.description == "very very good"
 
-    def test_slash_command_builder(self, rest_client: rest.RESTClientImpl):
+    def test_slash_command_builder(self, rest_client):
         result = rest_client.slash_command_builder("a name", "a description")
         assert isinstance(result, special_endpoints.SlashCommandBuilder)
 
-    def test_context_menu_command_command_builder(self, rest_client: rest.RESTClientImpl):
+    def test_context_menu_command_command_builder(self, rest_client):
         result = rest_client.context_menu_command_builder(3, "a name")
         assert isinstance(result, special_endpoints.ContextMenuCommandBuilder)
         assert result.type == commands.CommandType.MESSAGE
@@ -4251,7 +4251,7 @@ class TestRESTClientImplAsync:
             expected_route, json={"type": 1, "name": "okokok", "description": "not ok anymore"}
         )
 
-    async def test_create_context_menu_command(self, rest_client: rest.RESTClientImpl):
+    async def test_create_context_menu_command(self, rest_client):
         expected_route = routes.POST_APPLICATION_COMMAND.compile(application=4332123)
         rest_client._request = mock.AsyncMock(return_value={"id": "29393939"})
 
