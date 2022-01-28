@@ -245,11 +245,11 @@ class TestUser:
         )
 
     def test_display_avatar_url_when_avatar_url(self, obj):
-        with mock.patch.object(users.User, "avatar_url") as mock_avatar_url:
-            assert obj.display_avatar_url is mock_avatar_url
+        with mock.patch.object(users.User, "make_avatar_url") as mock_make_avatar_url:
+            assert obj.display_avatar_url is mock_make_avatar_url.return_value
 
     def test_display_avatar_url_when_no_avatar_url(self, obj):
-        with mock.patch.object(users.User, "avatar_url", new=None):
+        with mock.patch.object(users.User, "make_avatar_url", return_value=None):
             with mock.patch.object(users.User, "default_avatar_url") as mock_default_avatar_url:
                 assert obj.display_avatar_url is mock_default_avatar_url
 

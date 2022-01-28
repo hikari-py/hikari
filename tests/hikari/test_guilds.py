@@ -263,11 +263,11 @@ class TestMember:
         assert model.avatar_url is mock_user.avatar_url
 
     def test_display_avatar_url_when_guild_hash_is_None(self, model, mock_user):
-        with mock.patch.object(guilds.Member, "guild_avatar_url") as mock_guild_avatar_url:
-            assert model.display_avatar_url is mock_guild_avatar_url
+        with mock.patch.object(guilds.Member, "make_guild_avatar_url") as mock_make_guild_avatar_url:
+            assert model.display_avatar_url is mock_make_guild_avatar_url.return_value
 
     def test_display_guild_avatar_url_when_guild_hash_is_not_None(self, model, mock_user):
-        with mock.patch.object(guilds.Member, "guild_avatar_url", new=None):
+        with mock.patch.object(guilds.Member, "make_guild_avatar_url", return_value=None):
             with mock.patch.object(users.User, "display_avatar_url") as mock_display_avatar_url:
                 assert model.display_avatar_url is mock_display_avatar_url
 
