@@ -219,6 +219,7 @@ class ActivityAssets:
         """
         try:
             return self.make_small_image_url()
+
         except RuntimeError:
             return None
 
