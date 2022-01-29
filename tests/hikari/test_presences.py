@@ -33,9 +33,36 @@ def mock_app():
     return mock.Mock(spec_set=bot.GatewayBot)
 
 
-def test_Activity_str_operator():
-    activity = presences.Activity(name="something", type=presences.ActivityType(1))
-    assert str(activity) == "something"
+class TestActivityAssets:
+    def test_large_image_url_property(self):
+        raise NotImplementedError
+
+    def test_large_image_url_property_when_runtime_error(self):
+        raise NotImplementedError
+
+    def test_make_large_image_url(self):
+        raise NotImplementedError
+
+    def test_make_large_image_url_when_dynamic_url(self):
+        raise NotImplementedError
+
+    def test_small_image_url_property(self):
+        raise NotImplementedError
+
+    def test_small_image_url_property_when_runtime_error(self):
+        raise NotImplementedError
+
+    def test_make_small_image_url(self):
+        raise NotImplementedError
+
+    def test_make_small_image_url_when_dynamic_url(self):
+        raise NotImplementedError
+
+
+class TestActivity:
+    def test_str_operator(self):
+        activity = presences.Activity(name="something", type=presences.ActivityType(1))
+        assert str(activity) == "something"
 
 
 class TestMemberPresence:

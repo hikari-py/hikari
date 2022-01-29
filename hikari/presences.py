@@ -211,19 +211,16 @@ class ActivityAssets:
 
     @property
     def small_image_url(self) -> typing.Optional[files.URL]:
-        """Small image asset URL, if there is one.
+        """Small image asset URL.
 
-        Returns
-        -------
-        typing.Optional[hikari.files.URL]
-            The URL, or `builtins.None` if no small image asset exists.
-
-        Raises
-        ------
-        builtins.RuntimeError
-            If `ActivityAssets.small_image` points towards an unknown asset type.
+        !!! note
+            This will be `builtins.None` if no large image asset exists or if the
+            asset's dymamic URL (indicated by a `{name}:` prefix) is not known.
         """
-        return self.make_small_image_url()
+        try:
+            return self.make_small_image_url()
+        except RuntimeError:
+            return None
 
     def make_small_image_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the small image asset URL for this application.
