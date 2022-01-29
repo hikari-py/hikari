@@ -252,6 +252,9 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         if isinstance(public_key, str):
             public_key = bytes.fromhex(public_key)
 
+        if isinstance(token, str):
+            token = token.strip()
+
         # Beautification and logging
         ux.init_logging(logs, allow_color, force_color)
         self.print_banner(banner, allow_color, force_color)

@@ -404,8 +404,11 @@ class RESTApp(traits.ExecutorAware):
         provider = _RESTProvider(lambda: entity_factory, self._executor, lambda: rest_client)
         entity_factory = entity_factory_impl.EntityFactoryImpl(provider)
 
-        if token_type is None and isinstance(token, str):
-            token_type = applications.TokenType.BEARER
+        if isinstance(token, str):
+            token = token.strip()
+
+            if token_type is None:
+                token_type = applications.TokenType.BEARER
 
         rest_client = RESTClientImpl(
             cache=None,

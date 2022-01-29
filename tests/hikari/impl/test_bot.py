@@ -252,6 +252,18 @@ class TestGatewayBot:
         cache.assert_called_once_with(bot, cache_settings.return_value)
         cache_settings.assert_called_once_with()
 
+    def test_init_strips_token(self):
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(ux, "init_logging"))
+        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "print_banner"))
+
+        with stack:
+            bot = bot_impl.GatewayBot(
+                "\n\r token yeet \r\n", cache_settings=None, http_settings=None, proxy_settings=None
+            )
+
+        assert bot._token == "token yeet"
+
     def test_cache(self, bot, cache):
         assert bot.cache is cache
 

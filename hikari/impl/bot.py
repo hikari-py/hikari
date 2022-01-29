@@ -337,7 +337,7 @@ class GatewayBot(traits.GatewayBotAware):
         self._http_settings = http_settings if http_settings is not None else config.HTTPSettings()
         self._intents = intents
         self._proxy_settings = proxy_settings if proxy_settings is not None else config.ProxySettings()
-        self._token = token
+        self._token = token.strip()
 
         # Caching
         cache_settings = cache_settings if cache_settings is not None else config.CacheSettings()
