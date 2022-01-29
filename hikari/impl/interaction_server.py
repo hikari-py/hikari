@@ -46,7 +46,7 @@ if typing.TYPE_CHECKING:
     import aiohttp.typedefs
 
     # DO NOT MOVE THIS IMPORT OUT OF THE if typing.TYPE_CHECKING block
-    # This is only imported here for type-hints and otherwise needs to be in-line
+    # This is only imported here for type-hints and otherwise needs to be inline
     # imported as it's an optional dependency.
     from nacl import signing
 
@@ -169,7 +169,7 @@ class InteractionServer(interaction_server.InteractionServer):
         rest_client: rest_api.RESTClient,
         public_key: typing.Optional[bytes] = None,
     ) -> None:
-        # This is kept in-line as pynacl is an optional dependency.
+        # This is kept inline as pynacl is an optional dependency.
         try:
             from nacl import signing
 
@@ -207,7 +207,7 @@ class InteractionServer(interaction_server.InteractionServer):
         return self._server is not None
 
     async def _fetch_public_key(self) -> signing.VerifyKey:
-        # This is kept in-line as pynacl is an optional dependency.
+        # This is kept inline as pynacl is an optional dependency.
         from nacl import signing
 
         if self._application_fetch_lock is None:
