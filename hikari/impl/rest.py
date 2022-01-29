@@ -1218,7 +1218,7 @@ class RESTClientImpl(rest_api.RESTClient):
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         replace_attachments: bool = False,
-        flags: undefined.UndefinedOr[messages_.MessageFlag] = undefined.UNDEFINED,
+        flags: typing.Union[undefined.UndefinedType, int, messages_.MessageFlag] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -1420,7 +1420,7 @@ class RESTClientImpl(rest_api.RESTClient):
         role_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
-        flags: undefined.UndefinedOr[messages_.MessageFlag] = undefined.UNDEFINED,
+        flags: typing.Union[undefined.UndefinedType, int, messages_.MessageFlag] = undefined.UNDEFINED,
     ) -> messages_.Message:
         route = routes.PATCH_CHANNEL_MESSAGE.compile(channel=channel, message=message)
         body, form = self._build_message_payload(
