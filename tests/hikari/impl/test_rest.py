@@ -1926,7 +1926,6 @@ class TestRESTClientImplAsync:
 
     def test__build_message_payload_embed_content_syntactic_sugar(self, rest_client):
         embed = mock.Mock(embeds.Embed)
-        embed_attachment = object()
 
         stack = contextlib.ExitStack()
         generate_allowed_mentions = stack.enter_context(
