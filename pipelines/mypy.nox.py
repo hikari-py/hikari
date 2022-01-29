@@ -35,7 +35,16 @@ STUBGEN_GENERATE = [
 @nox.session(reuse_venv=True)
 def mypy(session: nox.Session) -> None:
     """Perform static type analysis on Python source code."""
-    session.install("-r", "requirements.txt", "-r", "speedup-requirements.txt", "-r", "dev-requirements.txt")
+    session.install(
+        "-r",
+        "requirements.txt",
+        "-r",
+        "speedup-requirements.txt",
+        "-r",
+        "server-requirements.txt",
+        "-r",
+        "dev-requirements.txt",
+    )
 
     _generate_stubs(session)
 

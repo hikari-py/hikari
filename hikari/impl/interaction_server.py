@@ -38,13 +38,17 @@ from hikari.api import interaction_server
 from hikari.api import special_endpoints
 from hikari.interactions import base_interactions
 from hikari.internal import data_binding
-from hikari.internal import ed25519
 
 if typing.TYPE_CHECKING:
     import socket as socket_
     import ssl
 
     import aiohttp.typedefs
+
+    # DO NOT MOVE THIS IMPORT OUT OF THE if typing.TYPE_CHECKING block
+    # This is only imported here for type-hints and otherwise needs to be in-line
+    # imported as it's an optional dependency.
+    from nacl import signing
 
     from hikari.api import entity_factory as entity_factory_api
     from hikari.api import rest as rest_api
@@ -165,6 +169,15 @@ class InteractionServer(interaction_server.InteractionServer):
         rest_client: rest_api.RESTClient,
         public_key: typing.Optional[bytes] = None,
     ) -> None:
+        # This is kept in-line as pynacl is an optional dependency.
+        try:
+            from nacl import signing
+
+        except ModuleNotFoundError as exc:
+            raise RuntimeError(
+                "You must install the optional `hikari[server]` dependencies to use the default interaction server."
+            ) from exc
+
         # Building asyncio.Lock when there isn't a running loop may lead to runtime errors.
         self._application_fetch_lock: typing.Optional[asyncio.Lock] = None
         # Building asyncio.Event when there isn't a running loop may lead to runtime errors.
@@ -176,7 +189,11 @@ class InteractionServer(interaction_server.InteractionServer):
         self._loads = loads
         self._rest_client = rest_client
         self._server: typing.Optional[aiohttp.web_runner.AppRunner] = None
-        self._verify = ed25519.build_ed25519_verifier(public_key) if public_key is not None else None
+
+        # if not isinstance(public_key, bytes) or len(public_key) != 32:
+        #     raise ValueError("public_key must be a 32-byte sequence.")
+
+        self._verify = signing.VerifyKey(public_key) if public_key is not None else None
 
     @property
     def is_alive(self) -> bool:
@@ -189,7 +206,10 @@ class InteractionServer(interaction_server.InteractionServer):
         """
         return self._server is not None
 
-    async def _fetch_public_key(self) -> ed25519.VerifierT:
+    async def _fetch_public_key(self) -> signing.VerifyKey:
+        # This is kept in-line as pynacl is an optional dependency.
+        from nacl import signing
+
         if self._application_fetch_lock is None:
             self._application_fetch_lock = asyncio.Lock()
 
@@ -204,7 +224,7 @@ class InteractionServer(interaction_server.InteractionServer):
             else:
                 application = (await self._rest_client.fetch_authorization()).application
 
-            self._verify = ed25519.build_ed25519_verifier(application.public_key)
+            self._verify = signing.VerifyKey(application.public_key)
             return self._verify
 
     async def aiohttp_hook(self, request: aiohttp.web.Request) -> aiohttp.web.Response:
@@ -322,7 +342,7 @@ class InteractionServer(interaction_server.InteractionServer):
         """
         verify = self._verify or await self._fetch_public_key()
 
-        if not verify(body, signature, timestamp):
+        if not verify.verify(timestamp + body, signature):
             _LOGGER.error("Received a request with an invalid signature")
             return _Response(_BAD_REQUEST_STATUS, b"Invalid request signature")
 

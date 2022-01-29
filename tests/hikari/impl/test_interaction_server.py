@@ -21,19 +21,59 @@
 # SOFTWARE.
 import asyncio
 import contextlib
+import typing
 
 import aiohttp.web
 import aiohttp.web_runner
 import mock
 import pytest
+from nacl import signing
 
 from hikari import errors
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import interaction_server as interaction_server_impl
 from hikari.impl import rest as rest_impl
 from hikari.interactions import base_interactions
-from hikari.internal import ed25519
 from tests.hikari import hikari_test_helpers
+
+
+@pytest.fixture()
+def valid_edd25519():
+    body = (
+        b'{"application_id":"658822586720976907","id":"838085779104202753","token":"aW50ZXJhY3Rpb246ODM4MDg1Nzc5MTA0MjA'
+        b"yNzUzOmd3MG5nSmpDck9UcWtWc3lsUERFbWx6MEt6bnVUb1Bjc0pNN2FCMVZ3TVJOeVdudUk5R2t4Q0EwSG1LWUVzQkMza0IyR2I3dEtRWHhn"
+        b'TlRTYmRxZlgzMFRvZW5CTmVIWDUyZ2Q1NEFmWllueXJhVjBCSVhlQzZyMVpxQloyT20y","type":1,"user":{"avatar":"b333580bd947'
+        b'4630226ff7b0a9696231","discriminator":"6127","id":"115590097100865541","public_flags":131072,"username":"Fast'
+        b'er Speeding"},"version":1}'
+    )
+    signature = (
+        b"\xb4*\x91w\xf8\xfa{\x8f\xdf\xc3%\xaa\x81nl\xdej\x9aS\xdeq\xe5\x97\xb8$\x8f\xc6\xd4?Y\x1c\x85+\xcf\x93\xc1\xd5"
+        b"\xea-\xfe-\x97s\xe04\xb6a:k\xbb\x12\xa4\xa0\x19\xb1P\xf6s\x8e\r'\xab\xbe\x07"
+    )
+    timestamp = b"1619885621"
+    return (body, signature, timestamp)
+
+
+@pytest.fixture()
+def invalid_ed25519():
+    body = (
+        b'{"application_id":"658822586720976907","id":"838085779104202754","token":"aW50ZXJhY3Rpb246ODM4MDg1Nzc5MTA0MjA'
+        b"yNzU0OmNhSk9QUU4wa1BKV21nTjFvSGhIbUp0QnQ1NjNGZFRtMlJVRlNjR0ttaDhtUGJrWUNvcmxYZnd2NTRLeUQ2c0hGS1YzTU03dFJ0V0s5"
+        b'RWRBY0ltZTRTS0NneFFSYW1BbDZxSkpnMkEwejlkTldXZUh2OGwzbnBrMzhscURIMXUz","type":1,"user":{"avatar":"b333580bd947'
+        b'4630226ff7b0a9696231","discriminator":"6127","id":"115590097100865541","public_flags":13'
+        b'1072,"username":"Faster Speeding"},"version":1}'
+    )
+    signature = (
+        b"\x0c4\xda!\xd9\xd5\x08<{a\x0c\xfa\xe6\xd2\x9e\xb3\xe0\x17r\x83\xa8\xb5\xda\xaa\x97\n\xb5\xe1\x92A|\x94\xbb"
+        b"\x8aGu\xdb\xd6\x19\xd5\x94\x98\x08\xb4\x1a\xfaF@\xbbx\xc9\xa3\x8f\x1f\x13\t\xd81\xa3:\xa9%p\x0c"
+    )
+    timestamp = b"1619885620"
+    return (body, signature, timestamp)
+
+
+@pytest.fixture()
+def public_key():
+    return b"\x12-\xdfX\xa8\x95\xd7\xe1\xb7o\xf5\xd0q\xb0\xaa\xc9\xb7v^*\xb5\x15\xe1\x1b\x7f\xca\xf9d\xdbT\x90\xc6"
 
 
 class Test_Response:
@@ -78,7 +118,7 @@ class TestInteractionServer:
     def mock_interaction_server(self, mock_entity_factory, mock_rest_client, mock_verifier):
         cls = hikari_test_helpers.mock_class_namespace(interaction_server_impl.InteractionServer, slots_=False)
         stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(ed25519, "build_ed25519_verifier", return_value=mock_verifier))
+        stack.enter_context(mock.patch.object(signing, "VerifyKey", return_value=mock_verifier))
         stack.enter_context(mock.patch.object(rest_impl, "RESTClientImpl", return_value=mock_rest_client))
 
         with stack:
@@ -90,7 +130,7 @@ class TestInteractionServer:
 
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(aiohttp.web, "Application"))
-        stack.enter_context(mock.patch.object(ed25519, "build_ed25519_verifier", return_value=mock_verifier))
+        stack.enter_context(mock.patch.object(signing, "build_ed25519_verifier", return_value=mock_verifier))
 
         with stack:
             result = interaction_server_impl.InteractionServer(
@@ -114,6 +154,19 @@ class TestInteractionServer:
             )
 
         assert result._verify is None
+
+    @pytest.mark.parametrize(
+        "key",
+        [
+            "okokokokokokokokokokokokokokokok",
+            b"NO",
+        ],
+    )
+    def test___init___with_invalid_public_key(self, key: typing.Union[str, bytes]):
+        with mock.patch.object(aiohttp.web, "Application"):
+            interaction_server_impl.InteractionServer(
+                dumps=object(), entity_factory=object(), loads=object(), rest_client=object(), public_key=key
+            )
 
     def test_is_alive_property_when_inactive(self, mock_interaction_server):
         assert mock_interaction_server.is_alive is False
