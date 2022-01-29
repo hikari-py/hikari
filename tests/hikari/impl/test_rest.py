@@ -34,6 +34,7 @@ from hikari import audit_logs
 from hikari import channels
 from hikari import colors
 from hikari import config
+from hikari import embeds
 from hikari import emojis
 from hikari import errors
 from hikari import files
@@ -52,6 +53,7 @@ from hikari.impl import rate_limits
 from hikari.impl import rest
 from hikari.impl import special_endpoints
 from hikari.internal import data_binding
+from hikari.internal import mentions
 from hikari.internal import net
 from hikari.internal import routes
 from hikari.internal import time
@@ -474,7 +476,7 @@ def rest_client(rest_client_class, live_attributes, mock_cache):
         token_type="tYpe",
         max_retries=0,
         rest_url="https://some.where/api/v3",
-        executor=mock.Mock(),
+        executor=object(),
         entity_factory=mock.Mock(),
     )
     obj._live_attributes = live_attributes
@@ -1882,78 +1884,299 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route)
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"id": "456"})
 
+    def test__build_message_payload_with_undefined_args(self, rest_client):
+        with mock.patch.object(
+            mentions, "generate_allowed_mentions", return_value={"allowed_mentions": 1}
+        ) as generate_allowed_mentions:
+            body, form = rest_client._build_message_payload()
+
+        assert body == {"allowed_mentions": {"allowed_mentions": 1}}
+        assert form is None
+
+        generate_allowed_mentions.assert_called_once_with(
+            undefined.UNDEFINED, undefined.UNDEFINED, undefined.UNDEFINED, undefined.UNDEFINED
+        )
+
+    @pytest.mark.parametrize("args", [("embeds", "components"), ("embed", "component")])
+    def test__build_message_payload_with_None_args(self, rest_client, args):
+        kwargs = {}
+        for arg in args:
+            kwargs[arg] = None
+
+        with mock.patch.object(
+            mentions, "generate_allowed_mentions", return_value={"allowed_mentions": 1}
+        ) as generate_allowed_mentions:
+            body, form = rest_client._build_message_payload(**kwargs)
+
+        assert body == {"embeds": [], "components": [], "allowed_mentions": {"allowed_mentions": 1}}
+        assert form is None
+
+        generate_allowed_mentions.assert_called_once_with(
+            undefined.UNDEFINED, undefined.UNDEFINED, undefined.UNDEFINED, undefined.UNDEFINED
+        )
+
+    def test__build_message_payload_with_edit_and_all_mentions_undefined(self, rest_client):
+        with mock.patch.object(mentions, "generate_allowed_mentions") as generate_allowed_mentions:
+            body, form = rest_client._build_message_payload(edit=True)
+
+        assert body == {}
+        assert form is None
+
+        generate_allowed_mentions.assert_not_called()
+
+    def test__build_message_payload_embed_content_syntactic_sugar(self, rest_client):
+        embed = mock.Mock(embeds.Embed)
+        embed_attachment = object()
+
+        stack = contextlib.ExitStack()
+        generate_allowed_mentions = stack.enter_context(
+            mock.patch.object(mentions, "generate_allowed_mentions", return_value={"allowed_mentions": 1})
+        )
+        rest_client._entity_factory.serialize_embed.return_value = ({"embed": 1}, [])
+
+        with stack:
+            body, form = rest_client._build_message_payload(content=embed)
+
+        # Returned
+        assert body == {"embeds": [{"embed": 1}], "allowed_mentions": {"allowed_mentions": 1}}
+        assert form is None
+
+        # Embeds
+        rest_client._entity_factory.serialize_embed.assert_called_once_with(embed)
+
+        # Generate allowed mentions
+        generate_allowed_mentions.assert_called_once_with(
+            undefined.UNDEFINED, undefined.UNDEFINED, undefined.UNDEFINED, undefined.UNDEFINED
+        )
+
+    def test__build_message_payload_attachment_content_syntactic_sugar(self, rest_client):
+        attachment = mock.Mock(files.Resource)
+        resource_attachment = object()
+
+        stack = contextlib.ExitStack()
+        ensure_resource = stack.enter_context(
+            mock.patch.object(files, "ensure_resource", return_value=resource_attachment)
+        )
+        generate_allowed_mentions = stack.enter_context(
+            mock.patch.object(mentions, "generate_allowed_mentions", return_value={"allowed_mentions": 1})
+        )
+        url_encoded_form = stack.enter_context(mock.patch.object(data_binding, "URLEncodedFormBuilder"))
+
+        with stack:
+            body, form = rest_client._build_message_payload(content=attachment)
+
+        # Returned
+        assert body == {"allowed_mentions": {"allowed_mentions": 1}}
+        assert form is url_encoded_form.return_value
+
+        # Attachments
+        ensure_resource.assert_called_once_with(attachment)
+
+        # Generate allowed mentions
+        generate_allowed_mentions.assert_called_once_with(
+            undefined.UNDEFINED, undefined.UNDEFINED, undefined.UNDEFINED, undefined.UNDEFINED
+        )
+
+        # Form builder
+        url_encoded_form.assert_called_once_with(executor=rest_client._executor)
+        url_encoded_form.return_value.add_resource.assert_called_once_with("file0", resource_attachment)
+
+    def test__build_message_payload_with_singular_args(self, rest_client):
+        attachment = object()
+        resource_attachment = object()
+        component = mock.Mock(build=mock.Mock(return_value={"component": 1}))
+        embed = object()
+        embed_attachment = object()
+        mentions_everyone = object()
+        mentions_reply = object()
+        user_mentions = object()
+        role_mentions = object()
+
+        stack = contextlib.ExitStack()
+        ensure_resource = stack.enter_context(
+            mock.patch.object(files, "ensure_resource", return_value=resource_attachment)
+        )
+        generate_allowed_mentions = stack.enter_context(
+            mock.patch.object(mentions, "generate_allowed_mentions", return_value={"allowed_mentions": 1})
+        )
+        url_encoded_form = stack.enter_context(mock.patch.object(data_binding, "URLEncodedFormBuilder"))
+        rest_client._entity_factory.serialize_embed.return_value = ({"embed": 1}, [embed_attachment])
+
+        with stack:
+            body, form = rest_client._build_message_payload(
+                content=987654321,
+                attachment=attachment,
+                component=component,
+                embed=embed,
+                replace_attachments=True,
+                flags=120,
+                tts=True,
+                mentions_everyone=mentions_everyone,
+                mentions_reply=mentions_reply,
+                user_mentions=user_mentions,
+                role_mentions=role_mentions,
+            )
+
+        # Returned
+        assert body == {
+            "content": "987654321",
+            "tts": True,
+            "flags": 120,
+            "embeds": [{"embed": 1}],
+            "components": [{"component": 1}],
+            "attachments": None,
+            "allowed_mentions": {"allowed_mentions": 1},
+        }
+        assert form is url_encoded_form.return_value
+
+        # Attachments
+        ensure_resource.assert_called_once_with(attachment)
+
+        # Embeds
+        rest_client._entity_factory.serialize_embed.assert_called_once_with(embed)
+
+        # Components
+        component.build.assert_called_once_with()
+
+        # Generate allowed mentions
+        generate_allowed_mentions.assert_called_once_with(
+            mentions_everyone, mentions_reply, user_mentions, role_mentions
+        )
+
+        # Form builder
+        url_encoded_form.assert_called_once_with(executor=rest_client._executor)
+        assert url_encoded_form.return_value.add_resource.call_count == 2
+        url_encoded_form.return_value.add_resource.assert_has_calls(
+            [mock.call("file0", resource_attachment), mock.call("file1", embed_attachment)]
+        )
+
+    def test__build_message_payload_with_plural_args(self, rest_client):
+        attachment1 = object()
+        attachment2 = object()
+        resource_attachment1 = object()
+        resource_attachment2 = object()
+        component1 = mock.Mock(build=mock.Mock(return_value={"component": 1}))
+        component2 = mock.Mock(build=mock.Mock(return_value={"component": 2}))
+        embed1 = object()
+        embed2 = object()
+        embed_attachment1 = object()
+        embed_attachment2 = object()
+        embed_attachment3 = object()
+        embed_attachment4 = object()
+        mentions_everyone = object()
+        mentions_reply = object()
+        user_mentions = object()
+        role_mentions = object()
+
+        stack = contextlib.ExitStack()
+        ensure_resource = stack.enter_context(
+            mock.patch.object(files, "ensure_resource", side_effect=[resource_attachment1, resource_attachment2])
+        )
+        generate_allowed_mentions = stack.enter_context(
+            mock.patch.object(mentions, "generate_allowed_mentions", return_value={"allowed_mentions": 1})
+        )
+        url_encoded_form = stack.enter_context(mock.patch.object(data_binding, "URLEncodedFormBuilder"))
+        rest_client._entity_factory.serialize_embed.side_effect = [
+            ({"embed": 1}, [embed_attachment1, embed_attachment2]),
+            ({"embed": 2}, [embed_attachment3, embed_attachment4]),
+        ]
+
+        with stack:
+            body, form = rest_client._build_message_payload(
+                content=987654321,
+                attachments=[attachment1, attachment2],
+                components=[component1, component2],
+                embeds=[embed1, embed2],
+                replace_attachments=True,
+                flags=120,
+                tts=True,
+                mentions_everyone=mentions_everyone,
+                mentions_reply=mentions_reply,
+                user_mentions=user_mentions,
+                role_mentions=role_mentions,
+            )
+
+        # Returned
+        assert body == {
+            "content": "987654321",
+            "tts": True,
+            "flags": 120,
+            "embeds": [{"embed": 1}, {"embed": 2}],
+            "components": [{"component": 1}, {"component": 2}],
+            "attachments": None,
+            "allowed_mentions": {"allowed_mentions": 1},
+        }
+        assert form is url_encoded_form.return_value
+
+        # Attachments
+        assert ensure_resource.call_count == 2
+        ensure_resource.assert_has_calls([mock.call(attachment1), mock.call(attachment2)])
+
+        # Embeds
+        assert rest_client._entity_factory.serialize_embed.call_count == 2
+        rest_client._entity_factory.serialize_embed.assert_has_calls([mock.call(embed1), mock.call(embed2)])
+
+        # Components
+        component1.build.assert_called_once_with()
+        component2.build.assert_called_once_with()
+
+        # Generate allowed mentions
+        generate_allowed_mentions.assert_called_once_with(
+            mentions_everyone, mentions_reply, user_mentions, role_mentions
+        )
+
+        # Form builder
+        url_encoded_form.assert_called_once_with(executor=rest_client._executor)
+        assert url_encoded_form.return_value.add_resource.call_count == 6
+        url_encoded_form.return_value.add_resource.assert_has_calls(
+            [
+                mock.call("file0", resource_attachment1),
+                mock.call("file1", resource_attachment2),
+                mock.call("file2", embed_attachment1),
+                mock.call("file3", embed_attachment2),
+                mock.call("file4", embed_attachment3),
+                mock.call("file5", embed_attachment4),
+            ]
+        )
+
     @pytest.mark.parametrize(
         ("singular_arg", "plural_arg"),
         [("attachment", "attachments"), ("component", "components"), ("embed", "embeds")],
     )
-    async def test__create_message_when_both_single_and_plural_args_passed(self, rest_client, singular_arg, plural_arg):
-        kwargs = {
-            "content": "testing",
-            "attachment": undefined.UNDEFINED,
-            "attachments": undefined.UNDEFINED,
-            "component": undefined.UNDEFINED,
-            "components": undefined.UNDEFINED,
-            "embed": undefined.UNDEFINED,
-            "embeds": undefined.UNDEFINED,
-            "tts": undefined.UNDEFINED,
-            "mentions_everyone": undefined.UNDEFINED,
-            "mentions_reply": undefined.UNDEFINED,
-            "user_mentions": undefined.UNDEFINED,
-            "role_mentions": undefined.UNDEFINED,
-            # Keys will be replaced
-            singular_arg: object(),
-            plural_arg: object(),
-        }
-
+    def test__build_message_payload_when_both_single_and_plural_args_passed(
+        self, rest_client, singular_arg, plural_arg
+    ):
         with pytest.raises(
             ValueError, match=rf"You may only specify one of '{singular_arg}' or '{plural_arg}', not both"
         ):
-            await rest_client._create_message(None, {}, **kwargs)
+            rest_client._build_message_payload(**{singular_arg: object(), plural_arg: object()})
 
     @pytest.mark.parametrize(
         ("singular_arg", "plural_arg"),
         [("attachment", "attachments"), ("component", "components"), ("embed", "embeds")],
     )
-    async def test__create_message_when_non_collection_passed_to_plural(self, rest_client, singular_arg, plural_arg):
-        kwargs = {
-            "content": "testing",
-            "attachment": undefined.UNDEFINED,
-            "attachments": undefined.UNDEFINED,
-            "component": undefined.UNDEFINED,
-            "components": undefined.UNDEFINED,
-            "embed": undefined.UNDEFINED,
-            "embeds": undefined.UNDEFINED,
-            "tts": undefined.UNDEFINED,
-            "mentions_everyone": undefined.UNDEFINED,
-            "mentions_reply": undefined.UNDEFINED,
-            "user_mentions": undefined.UNDEFINED,
-            "role_mentions": undefined.UNDEFINED,
-            # Keys will be replaced
-            plural_arg: object(),
-        }
-
+    def test__build_message_payload_when_non_collection_passed_to_plural(self, rest_client, singular_arg, plural_arg):
         expected_error_message = (
             f"You passed a non-collection to '{plural_arg}', but this expects a collection. Maybe you meant to use "
             f"'{singular_arg}' (singular) instead?"
         )
 
         with pytest.raises(TypeError, match=re.escape(expected_error_message)):
-            await rest_client._create_message(None, {}, **kwargs)
+            rest_client._build_message_payload(**{plural_arg: object()})
 
-    @pytest.mark.skip("TODO")
-    async def test__create_message(self, rest_client):
-        ...
-
-    async def test_create_message(self, rest_client):
-        mock_object = object()
+    async def test_create_message_when_form(self, rest_client):
         attachment_obj = object()
         attachment_obj2 = object()
         component_obj = object()
         component_obj2 = object()
         embed_obj = object()
         embed_obj2 = object()
+        mock_form = mock.Mock()
+        mock_body = data_binding.JSONObjectBuilder()
+        mock_body.put("testing", "ensure_in_test")
         expected_route = routes.POST_CHANNEL_MESSAGES.compile(channel=123456789)
-        rest_client._create_message = mock.AsyncMock(return_value=mock_object)
+        rest_client._build_message_payload = mock.Mock(return_value=(mock_body, mock_form))
+        rest_client._request = mock.AsyncMock(return_value={"message_id": 123})
 
         returned = await rest_client.create_message(
             StubModel(123456789),
@@ -1971,11 +2194,9 @@ class TestRESTClientImplAsync:
             nonce="noncing",
             reply=StubModel(987654321),
         )
-        assert returned is mock_object
+        assert returned is rest_client._entity_factory.deserialize_message.return_value
 
-        rest_client._create_message.assert_awaited_once_with(
-            expected_route,
-            {"nonce": "noncing", "message_reference": {"message_id": "987654321"}},
+        rest_client._build_message_payload.assert_called_once_with(
             content="new content",
             attachment=attachment_obj,
             attachments=[attachment_obj2],
@@ -1989,6 +2210,64 @@ class TestRESTClientImplAsync:
             user_mentions=[9876],
             role_mentions=[1234],
         )
+        mock_form.add_field.assert_called_once_with(
+            "payload_json",
+            '{"testing": "ensure_in_test", "nonce": "noncing", "message_reference": {"message_id": "987654321"}}',
+            content_type="application/json",
+        )
+        rest_client._request.assert_awaited_once_with(expected_route, form_builder=mock_form)
+        rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
+
+    async def test_create_message_when_no_form(self, rest_client):
+        attachment_obj = object()
+        attachment_obj2 = object()
+        component_obj = object()
+        component_obj2 = object()
+        embed_obj = object()
+        embed_obj2 = object()
+        mock_body = data_binding.JSONObjectBuilder()
+        mock_body.put("testing", "ensure_in_test")
+        expected_route = routes.POST_CHANNEL_MESSAGES.compile(channel=123456789)
+        rest_client._build_message_payload = mock.Mock(return_value=(mock_body, None))
+        rest_client._request = mock.AsyncMock(return_value={"message_id": 123})
+
+        returned = await rest_client.create_message(
+            StubModel(123456789),
+            content="new content",
+            attachment=attachment_obj,
+            attachments=[attachment_obj2],
+            component=component_obj,
+            components=[component_obj2],
+            embed=embed_obj,
+            embeds=[embed_obj2],
+            tts=True,
+            mentions_everyone=False,
+            user_mentions=[9876],
+            role_mentions=[1234],
+            nonce="noncing",
+            reply=StubModel(987654321),
+        )
+        assert returned is rest_client._entity_factory.deserialize_message.return_value
+
+        rest_client._build_message_payload.assert_called_once_with(
+            content="new content",
+            attachment=attachment_obj,
+            attachments=[attachment_obj2],
+            component=component_obj,
+            components=[component_obj2],
+            embed=embed_obj,
+            embeds=[embed_obj2],
+            tts=True,
+            mentions_everyone=False,
+            mentions_reply=undefined.UNDEFINED,
+            user_mentions=[9876],
+            role_mentions=[1234],
+        )
+        rest_client._request.assert_awaited_once_with(
+            expected_route,
+            json={"testing": "ensure_in_test", "nonce": "noncing", "message_reference": {"message_id": "987654321"}},
+        )
+        rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
 
     async def test_crosspost_message(self, rest_client):
         expected_route = routes.POST_CHANNEL_CROSSPOST.compile(channel=444432, message=12353234)
@@ -2004,78 +2283,19 @@ class TestRESTClientImplAsync:
         )
         rest_client._request.assert_awaited_once_with(expected_route)
 
-    @pytest.mark.parametrize(
-        ("singular_arg", "plural_arg"),
-        [("attachment", "attachments"), ("component", "components"), ("embed", "embeds")],
-    )
-    async def test__edit_message_when_both_single_and_plural_args_passed(self, rest_client, singular_arg, plural_arg):
-        kwargs = {
-            "content": "testing",
-            "attachment": undefined.UNDEFINED,
-            "attachments": undefined.UNDEFINED,
-            "component": undefined.UNDEFINED,
-            "components": undefined.UNDEFINED,
-            "embed": undefined.UNDEFINED,
-            "embeds": undefined.UNDEFINED,
-            "replace_attachments": True,
-            "mentions_everyone": undefined.UNDEFINED,
-            "mentions_reply": undefined.UNDEFINED,
-            "user_mentions": undefined.UNDEFINED,
-            "role_mentions": undefined.UNDEFINED,
-            # Keys will be replaced
-            singular_arg: object(),
-            plural_arg: object(),
-        }
-
-        with pytest.raises(
-            ValueError, match=rf"You may only specify one of '{singular_arg}' or '{plural_arg}', not both"
-        ):
-            await rest_client._edit_message(None, {}, **kwargs)
-
-    @pytest.mark.parametrize(
-        ("singular_arg", "plural_arg"),
-        [("attachment", "attachments"), ("component", "components"), ("embed", "embeds")],
-    )
-    async def test__edit_message_when_non_collection_passed_to_plural(self, rest_client, singular_arg, plural_arg):
-        kwargs = {
-            "content": "testing",
-            "attachment": undefined.UNDEFINED,
-            "attachments": undefined.UNDEFINED,
-            "component": undefined.UNDEFINED,
-            "components": undefined.UNDEFINED,
-            "embed": undefined.UNDEFINED,
-            "embeds": undefined.UNDEFINED,
-            "replace_attachments": True,
-            "mentions_everyone": undefined.UNDEFINED,
-            "mentions_reply": undefined.UNDEFINED,
-            "user_mentions": undefined.UNDEFINED,
-            "role_mentions": undefined.UNDEFINED,
-            # Keys will be replaced
-            plural_arg: object(),
-        }
-
-        expected_error_message = (
-            f"You passed a non-collection to '{plural_arg}', but this expects a collection. Maybe you meant to use "
-            f"'{singular_arg}' (singular) instead?"
-        )
-
-        with pytest.raises(TypeError, match=re.escape(expected_error_message)):
-            await rest_client._edit_message(None, {}, **kwargs)
-
-    @pytest.mark.skip("TODO")
-    async def test__edit_message(self, rest_client):
-        ...
-
-    async def test_edit_message(self, rest_client):
-        mock_object = object()
+    async def test_edit_message_when_form(self, rest_client):
         attachment_obj = object()
         attachment_obj2 = object()
         component_obj = object()
         component_obj2 = object()
         embed_obj = object()
         embed_obj2 = object()
+        mock_form = mock.Mock()
+        mock_body = data_binding.JSONObjectBuilder()
+        mock_body.put("testing", "ensure_in_test")
         expected_route = routes.PATCH_CHANNEL_MESSAGE.compile(channel=123456789, message=987654321)
-        rest_client._edit_message = mock.AsyncMock(return_value=mock_object)
+        rest_client._build_message_payload = mock.Mock(return_value=(mock_body, mock_form))
+        rest_client._request = mock.AsyncMock(return_value={"message_id": 123})
 
         returned = await rest_client.edit_message(
             StubModel(123456789),
@@ -2093,11 +2313,46 @@ class TestRESTClientImplAsync:
             role_mentions=[1234],
             flags=120,
         )
-        assert returned is mock_object
+        assert returned is rest_client._entity_factory.deserialize_message.return_value
 
-        rest_client._edit_message.assert_awaited_once_with(
-            expected_route,
-            {"flags": 120},
+        rest_client._build_message_payload.assert_called_once_with(
+            content="new content",
+            attachment=attachment_obj,
+            attachments=[attachment_obj2],
+            component=component_obj,
+            components=[component_obj2],
+            embed=embed_obj,
+            embeds=[embed_obj2],
+            flags=120,
+            replace_attachments=True,
+            mentions_everyone=False,
+            mentions_reply=undefined.UNDEFINED,
+            user_mentions=[9876],
+            role_mentions=[1234],
+            edit=True,
+        )
+        mock_form.add_field.assert_called_once_with(
+            "payload_json", '{"testing": "ensure_in_test"}', content_type="application/json"
+        )
+        rest_client._request.assert_awaited_once_with(expected_route, form_builder=mock_form)
+        rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
+
+    async def test_edit_message_when_no_form(self, rest_client):
+        attachment_obj = object()
+        attachment_obj2 = object()
+        component_obj = object()
+        component_obj2 = object()
+        embed_obj = object()
+        embed_obj2 = object()
+        mock_body = data_binding.JSONObjectBuilder()
+        mock_body.put("testing", "ensure_in_test")
+        expected_route = routes.PATCH_CHANNEL_MESSAGE.compile(channel=123456789, message=987654321)
+        rest_client._build_message_payload = mock.Mock(return_value=(mock_body, None))
+        rest_client._request = mock.AsyncMock(return_value={"message_id": 123})
+
+        returned = await rest_client.edit_message(
+            StubModel(123456789),
+            StubModel(987654321),
             content="new content",
             attachment=attachment_obj,
             attachments=[attachment_obj2],
@@ -2107,10 +2362,30 @@ class TestRESTClientImplAsync:
             embeds=[embed_obj2],
             replace_attachments=True,
             mentions_everyone=False,
+            user_mentions=[9876],
+            role_mentions=[1234],
+            flags=120,
+        )
+        assert returned is rest_client._entity_factory.deserialize_message.return_value
+
+        rest_client._build_message_payload.assert_called_once_with(
+            content="new content",
+            attachment=attachment_obj,
+            attachments=[attachment_obj2],
+            component=component_obj,
+            components=[component_obj2],
+            embed=embed_obj,
+            embeds=[embed_obj2],
+            flags=120,
+            replace_attachments=True,
+            mentions_everyone=False,
             mentions_reply=undefined.UNDEFINED,
             user_mentions=[9876],
             role_mentions=[1234],
+            edit=True,
         )
+        rest_client._request.assert_awaited_once_with(expected_route, json={"testing": "ensure_in_test"})
+        rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
 
     async def test_follow_channel(self, rest_client):
         expected_route = routes.POST_CHANNEL_FOLLOWERS.compile(channel=3333)
@@ -2428,22 +2703,25 @@ class TestRESTClientImplAsync:
             (432, "https://website.com/davfsa_logo"),
         ],
     )
-    async def test_execute_webhook(self, rest_client, webhook, avatar_url):
-        mock_object = object()
+    async def test_execute_webhook_when_form(self, rest_client, webhook, avatar_url):
         attachment_obj = object()
         attachment_obj2 = object()
         component_obj = object()
         component_obj2 = object()
         embed_obj = object()
         embed_obj2 = object()
+        mock_form = mock.Mock()
+        mock_body = data_binding.JSONObjectBuilder()
+        mock_body.put("testing", "ensure_in_test")
         expected_route = routes.POST_WEBHOOK_WITH_TOKEN.compile(webhook=432, token="hi, im a token")
-        rest_client._create_message = mock.AsyncMock(return_value=mock_object)
+        rest_client._build_message_payload = mock.Mock(return_value=(mock_body, mock_form))
+        rest_client._request = mock.AsyncMock(return_value={"message_id": 123})
 
         returned = await rest_client.execute_webhook(
-            webhook,
+            432,
             "hi, im a token",
             username="davfsa",
-            avatar_url=avatar_url,
+            avatar_url="https://website.com/davfsa_logo",
             content="new content",
             attachment=attachment_obj,
             attachments=[attachment_obj2],
@@ -2457,13 +2735,53 @@ class TestRESTClientImplAsync:
             role_mentions=[1234],
             flags=120,
         )
-        assert returned is mock_object
+        assert returned is rest_client._entity_factory.deserialize_message.return_value
 
-        rest_client._create_message.assert_awaited_once_with(
+        rest_client._build_message_payload.assert_called_once_with(
+            content="new content",
+            attachment=attachment_obj,
+            attachments=[attachment_obj2],
+            component=component_obj,
+            components=[component_obj2],
+            embed=embed_obj,
+            embeds=[embed_obj2],
+            tts=True,
+            flags=120,
+            mentions_everyone=False,
+            user_mentions=[9876],
+            role_mentions=[1234],
+        )
+        mock_form.add_field.assert_called_once_with(
+            "payload_json",
+            '{"testing": "ensure_in_test", "username": "davfsa", "avatar_url": "https://website.com/davfsa_logo"}',
+            content_type="application/json",
+        )
+        rest_client._request.assert_awaited_once_with(
             expected_route,
-            {"username": "davfsa", "avatar_url": "https://website.com/davfsa_logo", "flags": 120},
-            {"wait": "true"},
+            form_builder=mock_form,
+            query={"wait": "true"},
             no_auth=True,
+        )
+        rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
+
+    async def test_execute_webhook_when_no_form(self, rest_client):
+        attachment_obj = object()
+        attachment_obj2 = object()
+        component_obj = object()
+        component_obj2 = object()
+        embed_obj = object()
+        embed_obj2 = object()
+        mock_body = data_binding.JSONObjectBuilder()
+        mock_body.put("testing", "ensure_in_test")
+        expected_route = routes.POST_WEBHOOK_WITH_TOKEN.compile(webhook=432, token="hi, im a token")
+        rest_client._build_message_payload = mock.Mock(return_value=(mock_body, None))
+        rest_client._request = mock.AsyncMock(return_value={"message_id": 123})
+
+        returned = await rest_client.execute_webhook(
+            432,
+            "hi, im a token",
+            username="davfsa",
+            avatar_url="https://website.com/davfsa_logo",
             content="new content",
             attachment=attachment_obj,
             attachments=[attachment_obj2],
@@ -2473,10 +2791,33 @@ class TestRESTClientImplAsync:
             embeds=[embed_obj2],
             tts=True,
             mentions_everyone=False,
-            mentions_reply=undefined.UNDEFINED,
+            user_mentions=[9876],
+            role_mentions=[1234],
+            flags=120,
+        )
+        assert returned is rest_client._entity_factory.deserialize_message.return_value
+
+        rest_client._build_message_payload.assert_called_once_with(
+            content="new content",
+            attachment=attachment_obj,
+            attachments=[attachment_obj2],
+            component=component_obj,
+            components=[component_obj2],
+            embed=embed_obj,
+            embeds=[embed_obj2],
+            tts=True,
+            flags=120,
+            mentions_everyone=False,
             user_mentions=[9876],
             role_mentions=[1234],
         )
+        rest_client._request.assert_awaited_once_with(
+            expected_route,
+            json={"testing": "ensure_in_test", "username": "davfsa", "avatar_url": "https://website.com/davfsa_logo"},
+            query={"wait": "true"},
+            no_auth=True,
+        )
+        rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
 
     @pytest.mark.parametrize("webhook", [mock.Mock(webhooks.ExecutableWebhook, webhook_id=432), 432])
     async def test_fetch_webhook_message(self, rest_client, webhook):
@@ -2491,16 +2832,19 @@ class TestRESTClientImplAsync:
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"id": "456"})
 
     @pytest.mark.parametrize("webhook", [mock.Mock(webhooks.ExecutableWebhook, webhook_id=432), 432])
-    async def test_edit_webhook_message(self, rest_client, webhook):
-        mock_object = object()
+    async def test_edit_webhook_message_when_form(self, rest_client, webhook):
         attachment_obj = object()
         attachment_obj2 = object()
         component_obj = object()
         component_obj2 = object()
         embed_obj = object()
         embed_obj2 = object()
+        mock_form = mock.Mock()
+        mock_body = data_binding.JSONObjectBuilder()
+        mock_body.put("testing", "ensure_in_test")
         expected_route = routes.PATCH_WEBHOOK_MESSAGE.compile(webhook=432, token="hi, im a token", message=456)
-        rest_client._edit_message = mock.AsyncMock(return_value=mock_object)
+        rest_client._build_message_payload = mock.Mock(return_value=(mock_body, mock_form))
+        rest_client._request = mock.AsyncMock(return_value={"message_id": 123})
 
         returned = await rest_client.edit_webhook_message(
             webhook,
@@ -2518,12 +2862,9 @@ class TestRESTClientImplAsync:
             user_mentions=[9876],
             role_mentions=[1234],
         )
-        assert returned is mock_object
+        assert returned is rest_client._entity_factory.deserialize_message.return_value
 
-        rest_client._edit_message.assert_awaited_once_with(
-            expected_route,
-            {},
-            no_auth=True,
+        rest_client._build_message_payload.assert_called_once_with(
             content="new content",
             attachment=attachment_obj,
             attachments=[attachment_obj2],
@@ -2533,10 +2874,63 @@ class TestRESTClientImplAsync:
             embeds=[embed_obj2],
             replace_attachments=True,
             mentions_everyone=False,
-            mentions_reply=undefined.UNDEFINED,
+            user_mentions=[9876],
+            role_mentions=[1234],
+            edit=True,
+        )
+        mock_form.add_field.assert_called_once_with(
+            "payload_json", '{"testing": "ensure_in_test"}', content_type="application/json"
+        )
+        rest_client._request.assert_awaited_once_with(expected_route, form_builder=mock_form, no_auth=True)
+        rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
+
+    async def test_edit_webhook_message_when_no_form(self, rest_client):
+        attachment_obj = object()
+        attachment_obj2 = object()
+        component_obj = object()
+        component_obj2 = object()
+        embed_obj = object()
+        embed_obj2 = object()
+        mock_body = data_binding.JSONObjectBuilder()
+        mock_body.put("testing", "ensure_in_test")
+        expected_route = routes.PATCH_WEBHOOK_MESSAGE.compile(webhook=432, token="hi, im a token", message=456)
+        rest_client._build_message_payload = mock.Mock(return_value=(mock_body, None))
+        rest_client._request = mock.AsyncMock(return_value={"message_id": 123})
+
+        returned = await rest_client.edit_webhook_message(
+            432,
+            "hi, im a token",
+            StubModel(456),
+            content="new content",
+            attachment=attachment_obj,
+            attachments=[attachment_obj2],
+            component=component_obj,
+            components=[component_obj2],
+            embed=embed_obj,
+            embeds=[embed_obj2],
+            replace_attachments=True,
+            mentions_everyone=False,
             user_mentions=[9876],
             role_mentions=[1234],
         )
+        assert returned is rest_client._entity_factory.deserialize_message.return_value
+
+        rest_client._build_message_payload.assert_called_once_with(
+            content="new content",
+            attachment=attachment_obj,
+            attachments=[attachment_obj2],
+            component=component_obj,
+            components=[component_obj2],
+            embed=embed_obj,
+            embeds=[embed_obj2],
+            replace_attachments=True,
+            mentions_everyone=False,
+            user_mentions=[9876],
+            role_mentions=[1234],
+            edit=True,
+        )
+        rest_client._request.assert_awaited_once_with(expected_route, json={"testing": "ensure_in_test"}, no_auth=True)
+        rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
 
     @pytest.mark.parametrize("webhook", [mock.Mock(webhooks.ExecutableWebhook, webhook_id=123), 123])
     async def test_delete_webhook_message(self, rest_client, webhook):
@@ -3454,7 +3848,7 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route)
         rest_client._entity_factory.deserialize_member.assert_called_once_with({"id": "789"}, guild_id=123)
 
-    async def test_fetch_my_member(self, rest_client) -> guilds.Member:
+    async def test_fetch_my_member(self, rest_client):
         expected_route = routes.GET_MY_GUILD_MEMBER.compile(guild=45123)
         rest_client._request = mock.AsyncMock(return_value={"id": "595995"})
 
@@ -4384,24 +4778,123 @@ class TestRESTClientImplAsync:
         rest_client._entity_factory.deserialize_message.assert_called_once_with(rest_client._request.return_value)
         rest_client._request.assert_awaited_once_with(expected_route, no_auth=True)
 
-    @pytest.mark.skip("TODO")
-    async def test_create_interaction_response(self, rest_client):
-        ...
-
-    async def test_edit_interaction_response(self, rest_client):
-        mock_object = object()
+    async def test_create_interaction_response_when_form(self, rest_client):
         attachment_obj = object()
         attachment_obj2 = object()
         component_obj = object()
         component_obj2 = object()
         embed_obj = object()
         embed_obj2 = object()
-        expected_route = routes.PATCH_INTERACTION_RESPONSE.compile(webhook=432, token="hi, im a token")
-        rest_client._edit_message = mock.AsyncMock(return_value=mock_object)
+        mock_form = mock.Mock()
+        mock_body = data_binding.JSONObjectBuilder()
+        mock_body.put("testing", "ensure_in_test")
+        expected_route = routes.POST_INTERACTION_RESPONSE.compile(interaction=432, token="some token")
+        rest_client._build_message_payload = mock.Mock(return_value=(mock_body, mock_form))
+        rest_client._request = mock.AsyncMock()
+
+        await rest_client.create_interaction_response(
+            StubModel(432),
+            "some token",
+            1,
+            "some content",
+            attachment=attachment_obj,
+            attachments=[attachment_obj2],
+            component=component_obj,
+            components=[component_obj2],
+            embed=embed_obj,
+            embeds=[embed_obj2],
+            tts=True,
+            flags=120,
+            mentions_everyone=False,
+            user_mentions=[9876],
+            role_mentions=[1234],
+        )
+
+        rest_client._build_message_payload.assert_called_once_with(
+            content="some content",
+            attachment=attachment_obj,
+            attachments=[attachment_obj2],
+            component=component_obj,
+            components=[component_obj2],
+            embed=embed_obj,
+            embeds=[embed_obj2],
+            tts=True,
+            flags=120,
+            mentions_everyone=False,
+            user_mentions=[9876],
+            role_mentions=[1234],
+        )
+        mock_form.add_field.assert_called_once_with(
+            "payload_json", '{"type": 1, "data": {"testing": "ensure_in_test"}}', content_type="application/json"
+        )
+        rest_client._request.assert_awaited_once_with(expected_route, form_builder=mock_form, no_auth=True)
+
+    async def test_create_interaction_response_when_no_form(self, rest_client):
+        attachment_obj = object()
+        attachment_obj2 = object()
+        component_obj = object()
+        component_obj2 = object()
+        embed_obj = object()
+        embed_obj2 = object()
+        mock_body = data_binding.JSONObjectBuilder()
+        mock_body.put("testing", "ensure_in_test")
+        expected_route = routes.POST_INTERACTION_RESPONSE.compile(interaction=432, token="some token")
+        rest_client._build_message_payload = mock.Mock(return_value=(mock_body, None))
+        rest_client._request = mock.AsyncMock()
+
+        await rest_client.create_interaction_response(
+            StubModel(432),
+            "some token",
+            1,
+            "some content",
+            attachment=attachment_obj,
+            attachments=[attachment_obj2],
+            component=component_obj,
+            components=[component_obj2],
+            embed=embed_obj,
+            embeds=[embed_obj2],
+            tts=True,
+            flags=120,
+            mentions_everyone=False,
+            user_mentions=[9876],
+            role_mentions=[1234],
+        )
+
+        rest_client._build_message_payload.assert_called_once_with(
+            content="some content",
+            attachment=attachment_obj,
+            attachments=[attachment_obj2],
+            component=component_obj,
+            components=[component_obj2],
+            embed=embed_obj,
+            embeds=[embed_obj2],
+            tts=True,
+            flags=120,
+            mentions_everyone=False,
+            user_mentions=[9876],
+            role_mentions=[1234],
+        )
+        rest_client._request.assert_awaited_once_with(
+            expected_route, json={"type": 1, "data": {"testing": "ensure_in_test"}}, no_auth=True
+        )
+
+    async def test_edit_interaction_response_when_form(self, rest_client):
+        attachment_obj = object()
+        attachment_obj2 = object()
+        component_obj = object()
+        component_obj2 = object()
+        embed_obj = object()
+        embed_obj2 = object()
+        mock_form = mock.Mock()
+        mock_body = data_binding.JSONObjectBuilder()
+        mock_body.put("testing", "ensure_in_test")
+        expected_route = routes.PATCH_INTERACTION_RESPONSE.compile(webhook=432, token="some token")
+        rest_client._build_message_payload = mock.Mock(return_value=(mock_body, mock_form))
+        rest_client._request = mock.AsyncMock(return_value={"message_id": 123})
 
         returned = await rest_client.edit_interaction_response(
             StubModel(432),
-            "hi, im a token",
+            "some token",
             content="new content",
             attachment=attachment_obj,
             attachments=[attachment_obj2],
@@ -4414,12 +4907,9 @@ class TestRESTClientImplAsync:
             user_mentions=[9876],
             role_mentions=[1234],
         )
-        assert returned is mock_object
+        assert returned is rest_client._entity_factory.deserialize_message.return_value
 
-        rest_client._edit_message.assert_awaited_once_with(
-            expected_route,
-            {},
-            no_auth=True,
+        rest_client._build_message_payload.assert_called_once_with(
             content="new content",
             attachment=attachment_obj,
             attachments=[attachment_obj2],
@@ -4429,10 +4919,62 @@ class TestRESTClientImplAsync:
             embeds=[embed_obj2],
             replace_attachments=True,
             mentions_everyone=False,
-            mentions_reply=undefined.UNDEFINED,
+            user_mentions=[9876],
+            role_mentions=[1234],
+            edit=True,
+        )
+        mock_form.add_field.assert_called_once_with(
+            "payload_json", '{"testing": "ensure_in_test"}', content_type="application/json"
+        )
+        rest_client._request.assert_awaited_once_with(expected_route, form_builder=mock_form, no_auth=True)
+        rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
+
+    async def test_edit_interaction_response_when_no_form(self, rest_client):
+        attachment_obj = object()
+        attachment_obj2 = object()
+        component_obj = object()
+        component_obj2 = object()
+        embed_obj = object()
+        embed_obj2 = object()
+        mock_body = data_binding.JSONObjectBuilder()
+        mock_body.put("testing", "ensure_in_test")
+        expected_route = routes.PATCH_INTERACTION_RESPONSE.compile(webhook=432, token="some token")
+        rest_client._build_message_payload = mock.Mock(return_value=(mock_body, None))
+        rest_client._request = mock.AsyncMock(return_value={"message_id": 123})
+
+        returned = await rest_client.edit_interaction_response(
+            StubModel(432),
+            "some token",
+            content="new content",
+            attachment=attachment_obj,
+            attachments=[attachment_obj2],
+            component=component_obj,
+            components=[component_obj2],
+            embed=embed_obj,
+            embeds=[embed_obj2],
+            replace_attachments=True,
+            mentions_everyone=False,
             user_mentions=[9876],
             role_mentions=[1234],
         )
+        assert returned is rest_client._entity_factory.deserialize_message.return_value
+
+        rest_client._build_message_payload.assert_called_once_with(
+            content="new content",
+            attachment=attachment_obj,
+            attachments=[attachment_obj2],
+            component=component_obj,
+            components=[component_obj2],
+            embed=embed_obj,
+            embeds=[embed_obj2],
+            replace_attachments=True,
+            mentions_everyone=False,
+            user_mentions=[9876],
+            role_mentions=[1234],
+            edit=True,
+        )
+        rest_client._request.assert_awaited_once_with(expected_route, json={"testing": "ensure_in_test"}, no_auth=True)
+        rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
 
     async def test_delete_interaction_response(self, rest_client):
         expected_route = routes.DELETE_INTERACTION_RESPONSE.compile(webhook=1235431, token="go homo now")
