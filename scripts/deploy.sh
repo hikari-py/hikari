@@ -22,8 +22,7 @@
 set -e
 
 if [ $(ls -1 changes/*.*.md 2>/dev/null | wc -l) != 0 ]; then
-    echo "Cannot create release if CHANGELOG fragment files exist under 'changes/'!"
-    exit 1
+    echo "Cannot create release if CHANGELOG fragment files exist under 'changes/'!" && exit 1
 fi
 
 echo "Defined environment variables"
@@ -42,6 +41,15 @@ if [ -z "${TWINE_USERNAME}" ]; then echo '$TWINE_USERNAME environment variable i
 if [ -z ${TWINE_PASSWORD+x} ]; then echo '$TWINE_PASSWORD environment variable is missing' && exit 1; fi
 if [ -z "${TWINE_PASSWORD}" ]; then echo '$TWINE_PASSWORD environment variable is empty' && exit 1; fi
 
+regex='__version__: typing\.Final\[str\] = "([^"]*)"'
+if [[ $(cat hikari/_about.py) =~ $regex ]]; then
+  if [ "${BASH_REMATCH[1]}" != "${VERSION}" ]; then
+    echo "Variable '__version__' does not match the version this deploy is for!" && exit 1
+  fi
+else
+  echo "Variable '__version__' not found in about!" && exit 1
+fi
+
 echo "===== INSTALLING DEPENDENCIES ====="
 # Note: We install each of these separately due to issues with the new PIP resolver
 # https://github.com/pypa/pip/issues/9187
@@ -53,7 +61,7 @@ pip install -r requirements.txt
 
 echo "===== DEPLOYING TO PYPI ====="
 echo "-- Setting __git_sha1__ (ref: ${REF}) --"
-sed "s|^__git_sha1__.*|__git_sha1__: typing.Final[str] = \"${REF}\"|g" -i hikari/_about.py
+sed "/^__git__sha1__.*/, \${s||__git__sha1__: typing.Final[str] = \"${REF}\"|g; b}; $q1" -i hikari/_about.py || (echo "Variable '__git__sha1__' not found in about!" && exit 1)
 echo "=========================================================================="
 cat hikari/_about.py
 echo "=========================================================================="
@@ -85,7 +93,7 @@ git fetch origin
 git checkout -f master
 
 echo "-- Bumping to development version (${NEW_VERSION}) --"
-sed "s|^__version__.*|__version__: typing.Final[str] = \"${NEW_VERSION}\"|g" -i hikari/_about.py
+sed "/^__version__.*/, \${s||__version__: typing.Final[str] = \"${NEW_VERSION}\"|g; b}; $q1" -i hikari/_about.py || (echo "Variable '__version__' not found in about!" && exit 1)
 
 echo "-- Pushing to repository --"
 git commit -am "Bump to development version (${NEW_VERSION})"
