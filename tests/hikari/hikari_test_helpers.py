@@ -49,16 +49,11 @@ REASONABLE_QUICK_RESPONSE_TIME = 0.2
 # condition, and thus acceptable to terminate the test and fail it.
 REASONABLE_TIMEOUT_AFTER = 10
 
-_stubbed_classes = {}
-
-
-def _stub_init(self, kwargs: typing.Mapping[str, typing.Any]):
-    for attr, value in kwargs.items():
-        setattr(self, attr, value)
+_T = typing.TypeVar("_T")
 
 
 def mock_class_namespace(
-    klass,
+    klass: typing.Type[_T],
     /,
     *,
     init_: bool = True,
@@ -66,7 +61,7 @@ def mock_class_namespace(
     implement_abstract_methods_: bool = True,
     rename_impl_: bool = True,
     **namespace: typing.Any,
-):
+) -> typing.Type[_T]:
     """Get a version of a class with the provided namespace fields set as class attributes."""
     if slots_ or slots_ is None and hasattr(klass, "__slots__"):
         namespace["__slots__"] = ()
