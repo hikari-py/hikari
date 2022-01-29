@@ -45,9 +45,8 @@ if typing.TYPE_CHECKING:
 
     import aiohttp.typedefs
 
-    # DO NOT MOVE THIS IMPORT OUT OF THE if typing.TYPE_CHECKING block
-    # This is only imported here for type-hints and otherwise needs to be inline
-    # imported as it's an optional dependency.
+    # This is only imported here for internal type-hints and otherwise needs
+    # to be inline imported as it's an optional dependency.
     from nacl import signing
 
     from hikari.api import entity_factory as entity_factory_api
