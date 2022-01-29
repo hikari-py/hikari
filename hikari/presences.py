@@ -121,7 +121,7 @@ class ActivityParty:
     """Maximum size of this party, if applicable."""
 
 
-_DYNAMIC_URLS = {"mp": "https://media.discordapp.net/{}"}
+_DYNAMIC_URLS = {"mp": urls.MEDIA_PROXY_URL + "/{}"}
 
 
 @attr_extensions.with_copy

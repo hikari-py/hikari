@@ -39,3 +39,6 @@ OAUTH2_API_URL: typing.Final[str] = f"{REST_API_URL}/oauth2"
 
 CDN_URL: typing.Final[str] = "https://cdn.discordapp.com"
 """The CDN URL."""
+
+MEDIA_PROXY_URL: typing.Final[str] = "https://media.discordapp.net"
+"""The media proxy URL."""
