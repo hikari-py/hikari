@@ -121,12 +121,7 @@ class ActivityParty:
     """Maximum size of this party, if applicable."""
 
 
-_DYNAMIC_URLS = {
-    "mp": "https://media.discordapp.net/{}",
-    "spotify": "https://i.scdn.co/image/{}",
-    "twitch": "https://static-cdn.jtvnw.net/previews-ttv/live_user_{}.png",
-    "youtube": "https://i.ytimg.com/vi/{}/hqdefault_live.jpg",
-}
+_DYNAMIC_URLS = {"mp": "https://media.discordapp.net/{}"}
 
 
 @attr_extensions.with_copy
@@ -171,24 +166,22 @@ class ActivityAssets:
 
     @property
     def large_image_url(self) -> typing.Optional[files.URL]:
-        """Large image asset URL, if there is one.
+        """Large image asset URL.
 
-        Returns
-        -------
-        typing.Optional[hikari.files.URL]
-            The URL, or `builtins.None` if no large image asset exists.
-
-        Raises
-        ------
-        builtins.RuntimeError
-            If `ActivityAssets.large_image` points towards an unknown asset type.
+        !!! note
+            This will be `builtins.None` if no large image asset exists or if the
+            asset's dymamic URL (indicated by a `{name}:` prefix) is not known.
         """
-        return self.make_large_image_url()
+        try:
+            return self.make_large_image_url()
+
+        except RuntimeError:
+            return None
 
     def make_large_image_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the large image asset URL for this application.
 
-        .. note:
+        !!! note
             `ext` and `size` are ignored for images hosted outside of Discord
             or on Discord's media proxy.
 
