@@ -7469,6 +7469,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         flags: typing.Union[int, messages_.MessageFlag, undefined.UndefinedType] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
+        attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
         component: undefined.UndefinedOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
         components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
@@ -7510,6 +7512,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             no `embeds` kwarg is provided, then this will instead
             update the embed. This allows for simpler syntax when
             sending an embed alone.
+        attachment : hikari.undefined.UndefinedOr[hikari.files.Resourceish],
+            If provided, the message attachment. This can be a resource,
+            or string of a path on your computer or a URL.
+        attachments : hikari.undefined.UndefinedOr[typing.Sequence[hikari.files.Resourceish]],
+            If provided, the message attachments. These can be resources, or
+            strings consisting of paths on your computer or URLs.
         component : hikari.undefined.UndefinedOr[hikari.api.special_endpoints.ComponentBuilder]
             If provided, builder object of the component to include in this message.
         components : hikari.undefined.UndefinedOr[typing.Sequence[hikari.api.special_endpoints.ComponentBuilder]]
