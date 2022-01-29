@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -101,10 +101,10 @@ def remove_trailing_whitespaces_for_file(file: str, session: nox.Session, check_
             return False
 
         if check_only:
-            session.log("Trailing whitespaces found in", file)
+            session.log(f"Trailing whitespaces found in {file}")
             return True
 
-        session.log("Removing trailing whitespaces present in", file)
+        session.log(f"Removing trailing whitespaces present in {file}")
 
         with open(file, "wb") as fp:
             fp.writelines(new_lines)

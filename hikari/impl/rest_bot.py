@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -131,7 +131,8 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
 
         If a `typing.Dict[str, typing.Any]` equivalent, then this value is
         passed to `logging.config.dictConfig` to allow the user to provide a
-        specialized logging configuration of their choice.
+        specialized logging configuration of their choice. If any handlers are
+        defined in the dict, default handlers will not be setup.
 
         As a side note, you can always opt to leave this on the default value
         and then use an incremental `logging.config.dictConfig` that applies
@@ -458,7 +459,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         if coroutine_tracking_depth is not None:
             try:
                 # Provisionally defined in CPython, may be removed without notice.
-                sys.set_coroutine_origin_tracking_depth(coroutine_tracking_depth)  # type: ignore[attr-defined]
+                sys.set_coroutine_origin_tracking_depth(coroutine_tracking_depth)
             except AttributeError:
                 _LOGGER.log(ux.TRACE, "cannot set coroutine tracking depth for sys, no functionality exists for this")
 
@@ -586,10 +587,16 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
     ]:
         ...
 
+    @typing.overload
     def get_listener(
         self, interaction_type: typing.Type[_InteractionT_co], /
     ) -> typing.Optional[interaction_server_.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]]:
-        return self._server.get_listener(interaction_type)  # type: ignore[return-value, arg-type]
+        ...
+
+    def get_listener(
+        self, interaction_type: typing.Type[_InteractionT_co], /
+    ) -> typing.Optional[interaction_server_.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]]:
+        return self._server.get_listener(interaction_type)
 
     @typing.overload
     def set_listener(
@@ -627,4 +634,4 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         *,
         replace: bool = False,
     ) -> None:
-        self._server.set_listener(interaction_type, listener, replace=replace)  # type: ignore[arg-type]
+        self._server.set_listener(interaction_type, listener, replace=replace)  # type: ignore

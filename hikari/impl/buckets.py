@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -299,10 +299,10 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
             The `reset_at` epoch is expected to be a `time.monotonic_timestamp`
             monotonic epoch, rather than a `time.time` date-based epoch.
         """
-        self.remaining = remaining
-        self.limit = limit
-        self.reset_at = reset_at
-        self.period = max(0.0, self.reset_at - time.monotonic())
+        self.remaining: int = remaining
+        self.limit: int = limit
+        self.reset_at: float = reset_at
+        self.period: float = max(0.0, self.reset_at - time.monotonic())
 
     def drip(self) -> None:
         """Decrement the remaining count for this bucket.
@@ -332,7 +332,7 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
         if not self.is_unknown:
             raise RuntimeError("Cannot resolve known bucket")
 
-        self.name = real_bucket_hash
+        self.name: str = real_bucket_hash
 
 
 def _create_unknown_hash(route: routes.CompiledRoute) -> str:

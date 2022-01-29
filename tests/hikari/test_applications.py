@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -46,6 +46,15 @@ class TestTeamMember:
 
     def test_avatar_url_property(self, model):
         assert model.avatar_url is model.user.avatar_url
+
+    def test_banner_hash_property(self, model):
+        assert model.banner_hash is model.user.banner_hash
+
+    def test_banner_url_propert(self, model):
+        assert model.banner_url is model.user.banner_url
+
+    def test_accent_color_propert(self, model):
+        assert model.accent_color is model.user.accent_color
 
     def test_default_avatar_url_property(self, model):
         assert model.default_avatar_url is model.user.default_avatar_url

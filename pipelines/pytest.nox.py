@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -27,14 +27,14 @@ from pipelines import nox
 
 RUN_FLAGS = [
     "-c",
-    config.PYTEST_INI,
+    config.PYPROJECT_TOML,
     "--showlocals",
 ]
 COVERAGE_FLAGS = [
     "--cov",
     config.MAIN_PACKAGE,
     "--cov-config",
-    config.COVERAGE_INI,
+    config.PYPROJECT_TOML,
     "--cov-report",
     "term",
     "--cov-report",

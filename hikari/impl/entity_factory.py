@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -173,6 +173,8 @@ class _UserFields:
     discriminator: str = attr.field()
     username: str = attr.field()
     avatar_hash: str = attr.field()
+    banner_hash: typing.Optional[str] = attr.field()
+    accent_color: typing.Optional[color_models.Color] = attr.field()
     is_bot: bool = attr.field()
     is_system: bool = attr.field()
 
@@ -345,6 +347,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             rpc_origins=payload.get("rpc_origins"),
             summary=payload["summary"] or None,
             public_key=bytes.fromhex(payload["verify_key"]),
+            flags=application_models.ApplicationFlags(payload["flags"]),
             icon_hash=payload.get("icon"),
             team=team,
             guild_id=snowflakes.Snowflake(payload["guild_id"]) if "guild_id" in payload else None,
@@ -1174,16 +1177,23 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             time.iso8601_datetime_string_to_datetime(raw_premium_since) if raw_premium_since is not None else None
         )
 
+        if raw_communication_disabled_until := payload.get("communication_disabled_until"):
+            communication_disabled_until = time.iso8601_datetime_string_to_datetime(raw_communication_disabled_until)
+        else:
+            communication_disabled_until = None
+
         return guild_models.Member(
             user=user,
             guild_id=guild_id,
             role_ids=role_ids,
             joined_at=joined_at,
             nickname=payload.get("nick"),
+            guild_avatar_hash=payload.get("avatar"),
             premium_since=premium_since,
             is_deaf=payload.get("deaf", undefined.UNDEFINED),
             is_mute=payload.get("mute", undefined.UNDEFINED),
             is_pending=payload.get("pending", undefined.UNDEFINED),
+            raw_communication_disabled_until=communication_disabled_until,
         )
 
     def deserialize_role(
@@ -1204,6 +1214,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             if "premium_subscriber" in tags_payload:
                 is_premium_subscriber_role = True
 
+        emoji: typing.Optional[emoji_models.UnicodeEmoji] = None
+        if (raw_emoji := payload.get("unicode_emoji")) is not None:
+            emoji = emoji_models.UnicodeEmoji(raw_emoji)
+
         return guild_models.Role(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
@@ -1211,6 +1225,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=payload["name"],
             color=color_models.Color(payload["color"]),
             is_hoisted=payload["hoist"],
+            icon_hash=payload.get("icon"),
+            unicode_emoji=emoji,
             position=int(payload["position"]),
             permissions=permission_models.Permissions(int(payload["permissions"])),
             is_managed=payload["managed"],
@@ -1669,6 +1685,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_options := payload.get("options"):
             suboptions = [self._deserialize_command_option(option) for option in raw_options]
 
+        channel_types: typing.Optional[typing.Sequence[typing.Union[channel_models.ChannelType, int]]] = None
+        if raw_channel_types := payload.get("channel_types"):
+            channel_types = [channel_models.ChannelType(channel_type) for channel_type in raw_channel_types]
+
         return commands.CommandOption(
             type=commands.OptionType(payload["type"]),
             name=payload["name"],
@@ -1676,6 +1696,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             is_required=payload.get("required", False),
             choices=choices,
             options=suboptions,
+            channel_types=channel_types,
+            min_value=payload.get("min_value"),
+            max_value=payload.get("max_value"),
         )
 
     def deserialize_command(
@@ -1773,6 +1796,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if (raw_premium_since := payload.get("premium_since")) is not None:
             premium_since = time.iso8601_datetime_string_to_datetime(raw_premium_since)
 
+        if raw_disabled_until := payload.get("communication_disabled_until"):
+            disabled_until = time.iso8601_datetime_string_to_datetime(raw_disabled_until)
+        else:
+            disabled_until = None
+
         # TODO: deduplicate member unmarshalling logic
         return base_interactions.InteractionMember(
             user=user,
@@ -1780,11 +1808,13 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             role_ids=role_ids,
             joined_at=time.iso8601_datetime_string_to_datetime(payload["joined_at"]),
             premium_since=premium_since,
+            guild_avatar_hash=payload.get("avatar"),
             nickname=payload.get("nick"),
             is_deaf=payload.get("deaf", undefined.UNDEFINED),
             is_mute=payload.get("mute", undefined.UNDEFINED),
             is_pending=payload.get("pending", undefined.UNDEFINED),
             permissions=permission_models.Permissions(int(payload["permissions"])),
+            raw_communication_disabled_until=disabled_until,
         )
 
     def deserialize_command_interaction(
@@ -1870,6 +1900,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             command_name=data_payload["name"],
             options=options,
             resolved=resolved,
+            locale=payload["locale"],
+            guild_locale=payload.get("guild_locale"),
         )
 
     def deserialize_interaction(self, payload: data_binding.JSONObject) -> base_interactions.PartialInteraction:
@@ -1889,11 +1921,19 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             "required": option.is_required,
         }
 
+        if option.channel_types is not None:
+            payload["channel_types"] = option.channel_types
+
         if option.choices is not None:
             payload["choices"] = [{"name": choice.name, "value": choice.value} for choice in option.choices]
 
         if option.options is not None:
             payload["options"] = [self.serialize_command_option(suboption) for suboption in option.options]
+
+        if option.min_value is not None:
+            payload["min_value"] = option.min_value
+        if option.max_value is not None:
+            payload["max_value"] = option.max_value
 
         return payload
 
@@ -1932,6 +1972,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             custom_id=data_payload["custom_id"],
             component_type=message_models.ComponentType(data_payload["component_type"]),
             message=self.deserialize_message(payload["message"]),
+            locale=payload["locale"],
+            guild_locale=payload.get("guild_locale"),
         )
 
     ##################
@@ -2079,6 +2121,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             proxy_url=payload["proxy_url"],
             height=payload.get("height"),
             width=payload.get("width"),
+            is_ephemeral=payload.get("ephemeral", False),
         )
 
     def _deserialize_message_reaction(self, payload: data_binding.JSONObject) -> message_models.Reaction:
@@ -2122,10 +2165,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if "guild_id" in payload:
             guild_id = snowflakes.Snowflake(payload["guild_id"])
 
+            # Webhook messages will never have a member attached to them
             if member_pl := payload.get("member"):
-                assert author is not None, "received message with a member object without a user object"
+                assert author is not undefined.UNDEFINED, "received message with a member object without a user object"
                 member = self.deserialize_member(member_pl, user=author, guild_id=guild_id)
-            else:
+            elif author is not undefined.UNDEFINED:
                 member = undefined.UNDEFINED
 
         timestamp: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED
@@ -2262,14 +2306,12 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         author = self.deserialize_user(payload["author"])
 
         guild_id: typing.Optional[snowflakes.Snowflake] = None
-        member: undefined.UndefinedNoneOr[guild_models.Member] = None
+        member: typing.Optional[guild_models.Member] = None
         if "guild_id" in payload:
             guild_id = snowflakes.Snowflake(payload["guild_id"])
 
             if member_pl := payload.get("member"):
                 member = self.deserialize_member(member_pl, user=author, guild_id=guild_id)
-            else:
-                member = undefined.UNDEFINED
 
         edited_timestamp: typing.Optional[datetime.datetime] = None
         if (raw_edited_timestamp := payload["edited_timestamp"]) is not None:
@@ -2292,12 +2334,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if "message_reference" in payload:
             message_reference = self._deserialize_message_reference(payload["message_reference"])
 
-        referenced_message: undefined.UndefinedNoneOr[message_models.Message] = undefined.UNDEFINED
-        if "referenced_message" in payload:
-            if (referenced_message_payload := payload["referenced_message"]) is not None:
-                referenced_message = self.deserialize_message(referenced_message_payload)
-            else:
-                referenced_message = None
+        referenced_message: typing.Optional[message_models.Message] = None
+        if referenced_message_payload := payload.get("referenced_message"):
+            referenced_message = self.deserialize_message(referenced_message_payload)
 
         application: typing.Optional[message_models.MessageApplication] = None
         if "application" in payload:
@@ -2574,11 +2613,14 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
     @staticmethod
     def _set_user_attributes(payload: data_binding.JSONObject) -> _UserFields:
+        accent_color = payload.get("accent_color")
         return _UserFields(
             id=snowflakes.Snowflake(payload["id"]),
             discriminator=payload["discriminator"],
             username=payload["username"],
             avatar_hash=payload["avatar"],
+            banner_hash=payload.get("banner", None),
+            accent_color=color_models.Color(accent_color) if accent_color is not None else None,
             is_bot=payload.get("bot", False),
             is_system=payload.get("system", False),
         )
@@ -2594,6 +2636,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             discriminator=user_fields.discriminator,
             username=user_fields.username,
             avatar_hash=user_fields.avatar_hash,
+            banner_hash=user_fields.banner_hash,
+            accent_color=user_fields.accent_color,
             is_bot=user_fields.is_bot,
             is_system=user_fields.is_system,
             flags=flags,
@@ -2607,6 +2651,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             discriminator=user_fields.discriminator,
             username=user_fields.username,
             avatar_hash=user_fields.avatar_hash,
+            banner_hash=user_fields.banner_hash,
+            accent_color=user_fields.accent_color,
             is_bot=user_fields.is_bot,
             is_system=user_fields.is_system,
             is_mfa_enabled=payload["mfa_enabled"],

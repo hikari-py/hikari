@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -31,7 +31,7 @@ import typing
 if typing.TYPE_CHECKING:
     _T = typing.TypeVar("_T")
 
-_Protocol = NotImplemented
+_Protocol: FastProtocolChecking = NotImplemented
 _IGNORED_ATTRS = typing.EXCLUDED_ATTRIBUTES + ["__qualname__", "__slots__"]
 
 
@@ -42,6 +42,8 @@ def _check_if_ignored(name: str) -> bool:
 # This metaclass needs to subclass the same type as `typing.Protocol` to be
 # able to overwrite it
 class _FastProtocolChecking(type(typing.Protocol)):
+    _attributes_: typing.Tuple[str, ...]
+
     def __new__(
         cls: typing.Type[_T],
         cls_name: str,
@@ -110,7 +112,9 @@ class FastProtocolChecking(typing.Protocol, metaclass=_FastProtocolChecking):
 
     __slots__: typing.Sequence[str] = ()
 
-    def __init_subclass__(cls: _T, *args, **kwargs):
+    __subclasshook__: typing.Callable[[typing.Type[typing.Any]], bool]
+
+    def __init_subclass__(cls, *args: typing.Any, **kwargs: typing.Any) -> None:
         # typing sets their own subclasshook if its not there. We want to
         # overwrite that one, but not any that was already defined, so we check
         # this before typing does anything to it.
@@ -121,7 +125,7 @@ class FastProtocolChecking(typing.Protocol, metaclass=_FastProtocolChecking):
         if not should_overwrite:
             return
 
-        def _subclass_hook(other: type) -> bool:
+        def _subclass_hook(other: typing.Type[typing.Any]) -> bool:
             for i in cls._attributes_:
                 if i not in other.__dict__:
                     return NotImplemented

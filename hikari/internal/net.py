@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -48,7 +48,7 @@ async def generate_error_response(response: aiohttp.ClientResponse) -> errors.HT
     try:
         json_body = await response.json()
         args.append(json_body.get("message", ""))
-        args.append(errors.RESTErrorCode(json_body.get("code", 0)))
+        args.append(json_body.get("code", 0))
         raw_error_array: typing.Optional[data_binding.JSONObject] = json_body.get("errors")
     except aiohttp.ContentTypeError:
         raw_error_array = None

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -45,6 +45,7 @@ class TestAttachment:
             proxy_url="htt",
             size=543,
             url="htttt",
+            is_ephemeral=False,
         )
         assert str(attachment) == "super_cool_file.cool"
 

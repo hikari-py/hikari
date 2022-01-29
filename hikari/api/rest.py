@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -54,6 +54,7 @@ if typing.TYPE_CHECKING:
     from hikari import users
     from hikari import voices
     from hikari import webhooks
+    from hikari.api import entity_factory as entity_factory_
     from hikari.api import special_endpoints
     from hikari.interactions import base_interactions
     from hikari.internal import time
@@ -113,6 +114,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     def is_alive(self) -> bool:
         """Whether this component is alive."""
+
+    @property
+    @abc.abstractmethod
+    def entity_factory(self) -> entity_factory_.EntityFactory:
+        """Entity factory used by this REST client."""
 
     @property
     @abc.abstractmethod
@@ -592,8 +598,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def delete_permission_overwrite(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
-        target: snowflakes.SnowflakeishOr[
-            typing.Union[channels_.PermissionOverwrite, guilds.PartialRole, users.PartialUser, snowflakes.Snowflakeish]
+        target: typing.Union[
+            channels_.PermissionOverwrite, guilds.PartialRole, users.PartialUser, snowflakes.Snowflakeish
         ],
     ) -> None:
         """Delete a custom permission for an entity in a given guild channel.
@@ -2215,7 +2221,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
         username: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        avatar_url: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        avatar_url: typing.Union[undefined.UndefinedType, str, files.URL] = undefined.UNDEFINED,
         attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
         component: undefined.UndefinedOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
@@ -2261,7 +2267,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         username : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the username to override the webhook's username
             for this request.
-        avatar_url : hikari.undefined.UndefinedOr[builtins.str]
+        avatar_url : typing.Union[hikari.undefined.UndefinedType, builtins.str, hikari.files.URL]
             If provided, the url of an image to override the webhook's
             avatar with for this request.
         attachment : hikari.undefined.UndefinedOr[hikari.files.Resourceish],
@@ -4889,6 +4895,40 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
+    async def fetch_my_member(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> guilds.Member:
+        """Fetch the Oauth token's associated member in a guild.
+
+        !!! warning
+            This endpoint can only be used with a Bearer token. Using this
+            with a Bot token will result in a `hikari.errors.UnauthorizedError`.
+
+        Returns
+        -------
+        hikari.guilds.Member
+            The associated guild member.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
     async def search_members(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -4947,6 +4987,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         voice_channel: undefined.UndefinedNoneOr[
             snowflakes.SnowflakeishOr[channels_.GuildVoiceChannel]
         ] = undefined.UNDEFINED,
+        communication_disabled_until: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.Member:
         """Edit a guild member.
@@ -4991,6 +5032,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             !!! note
                 If the member is not in a voice channel, this will
                 take no effect.
+        communication_disabled_until : hikari.undefined.UndefinedNoneOr[datetime.datetime]
+            If provided, the datetime when the timeout (disable communication)
+            of the member expires, up to 28 days in the future, or `builtins.None`
+            to remove the timeout from the member.
+
+            Requires the `MODERATE_MEMBERS` permission.
         reason : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -5026,6 +5073,62 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
+    async def edit_my_member(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        *,
+        nickname: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> guilds.Member:
+        """Edit the current user's member in a guild.
+
+        Parameters
+        ----------
+        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+            The guild to edit the member in. This may be the object
+            or the ID of an existing guild.
+
+        Other Parameters
+        ----------------
+        nickname : hikari.undefined.UndefinedNoneOr[builtins.str]
+            If provided, the new nickname for the member. If
+            `builtins.None`, will remove the members nickname.
+
+            Requires the `CHANGE_NICKNAME` permission.
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Returns
+        -------
+        hikari.guilds.Member
+            Object of the member that was updated.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you are missing a permission to do an action.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
     async def edit_my_nick(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.Guild],
@@ -5034,6 +5137,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         """Edit the associated token's member nick.
+
+        .. deprecated:: 2.0.0.dev104
+            Use `RESTClient.edit_my_member`'s `nick` argument instead.
 
         Parameters
         ----------
@@ -5225,8 +5331,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If an internal error occurs on Discord while handling the request.
         """
 
-    kick_member = kick_user
-    """This is simply an alias for readability."""
+    @abc.abstractmethod
+    async def kick_member(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        *,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
+        """Alias of `RESTClient.kick_user`."""
 
     @abc.abstractmethod
     async def ban_user(
@@ -5282,8 +5395,16 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If an internal error occurs on Discord while handling the request.
         """
 
-    ban_member = ban_user
-    """This is simply an alias for readability."""
+    @abc.abstractmethod
+    async def ban_member(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        *,
+        delete_message_days: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
+        """Alias of `RESTClient.ban_user`."""
 
     @abc.abstractmethod
     async def unban_user(
@@ -5333,8 +5454,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If an internal error occurs on Discord while handling the request.
         """
 
-    unban_member = unban_user
-    """This is simply an alias for readability."""
+    @abc.abstractmethod
+    async def unban_member(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        *,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
+        """Alias of `RESTClient.unban_user`."""
 
     @abc.abstractmethod
     async def fetch_ban(
@@ -5472,6 +5600,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        icon: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
+        unicode_emoji: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         mentionable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.Role:
@@ -5498,6 +5628,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             An alias for `color`.
         hoist : hikari.undefined.UndefinedOr[builtins.bool]
             If provided, whether to hoist the role.
+        icon : hikari.undefined.UndefinedOr[hikari.files.Resourceish]
+            If provided, the role icon. Must be a 64x64 image under 256kb.
+        unicode_emoji : hikari.undefined.UndefinedOr[builtins.str]
+            If provided, the standard emoji to set as the role icon.
         mentionable : hikari.undefined.UndefinedOr[builtins.bool]
             If provided, whether to make the role mentionable.
         reason : hikari.undefined.UndefinedOr[builtins.str]
@@ -5512,7 +5646,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Raises
         ------
         builtins.TypeError
-            If both `color` and `colour` are specified.
+            If both `color` and `colour` are specified or if both `icon` and
+            `unicode_emoji` are specified.
         hikari.errors.BadRequestError
             If any of the fields that are passed have an invalid value.
         hikari.errors.ForbiddenError
@@ -5586,6 +5721,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        icon: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
+        unicode_emoji: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
         mentionable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.Role:
@@ -5612,6 +5749,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             An alias for `color`.
         hoist : hikari.undefined.UndefinedOr[builtins.bool]
             If provided, whether to hoist the role.
+        icon : hikari.undefined.UndefinedNoneOr[hikari.files.Resourceish]
+            If provided, the new role icon. Must be a 64x64 image
+            under 256kb.
+        unicode_emoji : hikari.undefined.UndefinedNoneOr[builtins.str]
+            If provided, the new unicode emoji to set as the role icon.
         mentionable : hikari.undefined.UndefinedOr[builtins.bool]
             If provided, whether to make the role mentionable.
         reason : hikari.undefined.UndefinedOr[builtins.str]
@@ -5626,7 +5768,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Raises
         ------
         builtins.TypeError
-            If both `color` and `colour` are specified.
+            If both `color` and `colour` are specified or if both `icon` and
+            `unicode_emoji` are specified.
         hikari.errors.BadRequestError
             If any of the fields that are passed have an invalid value.
         hikari.errors.ForbiddenError
@@ -6500,7 +6643,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Parameters
         ----------
         name : builtins.str
-            The command's name. This should match the regex `^[a-z0-9_-]{1,32}$`.
+            The command's name. This should match the regex `^[\w-]{1,32}$` in
+            Unicode mode and be lowercase.
         description : builtins.str
             The description to set for the command.
             This should be inclusively between 1-100 characters in length.
@@ -6631,7 +6775,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to create a command for.
         name : builtins.str
-            The command's name. This should match the regex `^[a-z0-9_-]{1,32}$`.
+            The command's name. This should match the regex `^[\w-]{1,32}$` in
+            Unicode mode and be lowercase.
         description : builtins.str
             The description to set for the command.
             This should be inclusively between 1-100 characters in length.

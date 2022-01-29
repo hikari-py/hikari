@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -165,6 +165,9 @@ class ManualRateLimiter(BurstRateLimiter):
 
     __slots__: typing.Sequence[str] = ()
 
+    throttle_task: typing.Optional[asyncio.Task[typing.Any]]
+    # <<inherited docstring from BurstRateLimiter>>.
+
     def __init__(self) -> None:
         super().__init__("global")
 
@@ -271,6 +274,9 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
     """
 
     __slots__: typing.Sequence[str] = ("reset_at", "remaining", "limit", "period")
+
+    throttle_task: typing.Optional[asyncio.Task[typing.Any]]
+    # <<inherited docstring from BurstRateLimiter>>.
 
     reset_at: float
     """The `time.monotonic_timestamp` that the limit window ends at."""

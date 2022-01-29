@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -654,6 +654,11 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    def components(self) -> typing.Sequence[ComponentBuilder]:
+        """Sequence of up to 5 component builders to send in this response."""
+
+    @property
+    @abc.abstractmethod
     def embeds(self) -> typing.Sequence[embeds_.Embed]:
         """Sequence of up to 10 of the embeds included in this response.
 
@@ -745,6 +750,21 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
             `builtins.False` or `hikari.undefined.UNDEFINED` to disallow any user
             mentions or `True` to allow all user mentions.
         """  # noqa: E501 - Line too long
+
+    @abc.abstractmethod
+    def add_component(self: _T, component: ComponentBuilder, /) -> _T:
+        """Add a component to this response.
+
+        Parameters
+        ----------
+        component : ComponentBuilder
+            The component builder to add to this response.
+
+        Returns
+        -------
+        InteractionMessageBuilder
+            Object of this builder.
+        """
 
     @abc.abstractmethod
     def add_embed(self: _T, embed: embeds_.Embed, /) -> _T:
@@ -881,7 +901,8 @@ class CommandBuilder(abc.ABC):
         r"""Name to set for this command.
 
         !!! warning
-            This should match the regex `^[a-z0-9_-]{1,32}$`.
+            This should match the regex `^[\w-]{1,32}$` in Unicode mode
+            and must be lowercase.
 
         Returns
         -------
@@ -1491,6 +1512,30 @@ class ActionRowBuilder(ComponentBuilder, abc.ABC):
             Sequence of the component builders registered within this action row.
         """
 
+    @abc.abstractmethod
+    def add_component(
+        self: _T,
+        component: ComponentBuilder,
+        /,
+    ) -> _T:
+        """Add a component to this action row builder.
+
+        !!! warning
+            It is generally better to use `ActionRowBuilder.add_button`
+            and `ActionRowBuilder.add_select_menu` to add your
+            component to the builder. Those methods utilize this one.
+
+        Parameters
+        ----------
+        component : ComponentBuilder
+            The component builder to add to the action row.
+
+        Returns
+        -------
+        ActionRowBuilder
+            The builder object to enable chained calls.
+        """
+
     @typing.overload
     @abc.abstractmethod
     def add_button(
@@ -1500,15 +1545,20 @@ class ActionRowBuilder(ComponentBuilder, abc.ABC):
 
     @typing.overload
     @abc.abstractmethod
+    def add_button(self: _T, style: typing.Literal[messages.ButtonStyle.LINK, 5], url: str, /) -> LinkButtonBuilder[_T]:
+        ...
+
+    @typing.overload
+    @abc.abstractmethod
     def add_button(
-        self: _T, style: typing.Union[typing.Literal[messages.ButtonStyle.LINK], typing.Literal[5]], url: str, /
-    ) -> LinkButtonBuilder[_T]:
+        self: _T, style: typing.Union[int, messages.ButtonStyle], url_or_custom_id: str, /
+    ) -> typing.Union[LinkButtonBuilder[_T], InteractiveButtonBuilder[_T]]:
         ...
 
     @abc.abstractmethod
     def add_button(
         self: _T, style: typing.Union[int, messages.ButtonStyle], url_or_custom_id: str, /
-    ) -> ButtonBuilder[_T]:
+    ) -> typing.Union[LinkButtonBuilder[_T], InteractiveButtonBuilder[_T]]:
         """Add a button component to this action row builder.
 
         Parameters
@@ -1524,7 +1574,7 @@ class ActionRowBuilder(ComponentBuilder, abc.ABC):
 
         Returns
         -------
-        ButtonBuilder[Self]
+        typing.Union[LinkButtonBuilder[Self], InteractiveButtonBuilder[Self]]
             Button builder object.
             `ButtonBuilder.add_to_container` should be called to finalise the
             button.

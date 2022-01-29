@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -67,9 +67,10 @@ class TestInitLogging:
         logging_basic_config.assert_not_called()
         colorlog_basic_config.assert_not_called()
 
-    def test_when_flavour_is_a_dict(self):
+    def test_when_flavour_is_a_dict_and_doesnt_define_handlers(self):
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(logging, "root", handlers=[]))
+        stack.enter_context(mock.patch.object(ux, "supports_color", return_value=False))
         logging_dict_config = stack.enter_context(mock.patch.object(logging.config, "dictConfig"))
         logging_basic_config = stack.enter_context(mock.patch.object(logging, "basicConfig"))
         colorlog_basic_config = stack.enter_context(mock.patch.object(colorlog, "basicConfig"))
@@ -78,6 +79,24 @@ class TestInitLogging:
             ux.init_logging({"hikari": {"level": "INFO"}}, True, False)
 
         logging_dict_config.assert_called_once_with({"hikari": {"level": "INFO"}})
+        logging_basic_config.assert_called_once_with(
+            level=None,
+            format="%(levelname)-1.1s %(asctime)23.23s %(name)s: %(message)s",
+            stream=sys.stderr,
+        )
+        colorlog_basic_config.assert_not_called()
+
+    def test_when_flavour_is_a_dict_and_defines_handlers(self):
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(logging, "root", handlers=[]))
+        logging_dict_config = stack.enter_context(mock.patch.object(logging.config, "dictConfig"))
+        logging_basic_config = stack.enter_context(mock.patch.object(logging, "basicConfig"))
+        colorlog_basic_config = stack.enter_context(mock.patch.object(colorlog, "basicConfig"))
+
+        with stack:
+            ux.init_logging({"hikari": {"level": "INFO"}, "handlers": {"some_handler": {}}}, True, False)
+
+        logging_dict_config.assert_called_once_with({"hikari": {"level": "INFO"}, "handlers": {"some_handler": {}}})
         logging_basic_config.assert_not_called()
         colorlog_basic_config.assert_not_called()
 

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -127,7 +127,7 @@ class TypingIndicator(special_endpoints.TypingIndicator):
 
     async def __aenter__(self) -> None:
         if self._task is not None:
-            raise TypeError("cannot enter a typing indicator context more than once.")
+            raise TypeError("Cannot enter a typing indicator context more than once")
         self._task = asyncio.create_task(self._keep_typing(), name=self._task_name)
 
     async def __aexit__(
@@ -773,13 +773,16 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
     _user_mentions: undefined.UndefinedOr[
         typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
     ] = attr.field(default=undefined.UNDEFINED, kw_only=True)
-
-    # Non-arguments.
-    _embeds: typing.List[embeds_.Embed] = attr.field(factory=list)
+    _components: typing.List[special_endpoints.ComponentBuilder] = attr.field(factory=list, kw_only=True)
+    _embeds: typing.List[embeds_.Embed] = attr.field(factory=list, kw_only=True)
 
     @property
     def content(self) -> undefined.UndefinedOr[str]:
         return self._content
+
+    @property
+    def components(self) -> typing.Sequence[special_endpoints.ComponentBuilder]:
+        return self._components.copy()
 
     @property
     def embeds(self) -> typing.Sequence[embeds_.Embed]:
@@ -813,6 +816,12 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
     ) -> undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]]:
         return self._user_mentions
 
+    def add_component(
+        self: _InteractionMessageBuilderT, component: special_endpoints.ComponentBuilder, /
+    ) -> _InteractionMessageBuilderT:
+        self._components.append(component)
+        return self
+
     def add_embed(self: _InteractionMessageBuilderT, embed: embeds_.Embed, /) -> _InteractionMessageBuilderT:
         self._embeds.append(embed)
         return self
@@ -820,7 +829,7 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
     def set_content(
         self: _InteractionMessageBuilderT, content: undefined.UndefinedOr[str], /
     ) -> _InteractionMessageBuilderT:
-        self._content = content
+        self._content = str(content) if content is not undefined.UNDEFINED else undefined.UNDEFINED
         return self
 
     def set_flags(
@@ -872,6 +881,7 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
 
             data["embeds"] = embeds
 
+        data.put_array("components", self._components, conversion=lambda component: component.build())
         data.put("flags", self.flags)
         data.put("tts", self.is_tts)
 
@@ -1234,7 +1244,9 @@ class ActionRowBuilder(special_endpoints.ActionRowBuilder):
 
     def _assert_can_add_type(self, type_: messages.ComponentType, /) -> None:
         if self._stored_type is not None and self._stored_type != type_:
-            raise ValueError(f"{type_} component type cannot be added to a container which already holds {type_}")
+            raise ValueError(
+                f"{type_} component type cannot be added to a container which already holds {self._stored_type}"
+            )
 
         self._stored_type = type_
 
@@ -1251,15 +1263,27 @@ class ActionRowBuilder(special_endpoints.ActionRowBuilder):
     @typing.overload
     def add_button(
         self: _ActionRowBuilderT,
-        style: typing.Union[typing.Literal[messages.ButtonStyle.LINK], typing.Literal[5]],
+        style: typing.Literal[messages.ButtonStyle.LINK, 5],
         url: str,
         /,
     ) -> special_endpoints.LinkButtonBuilder[_ActionRowBuilderT]:
         ...
 
+    @typing.overload
     def add_button(
         self: _ActionRowBuilderT, style: typing.Union[int, messages.ButtonStyle], url_or_custom_id: str, /
-    ) -> special_endpoints.ButtonBuilder[_ActionRowBuilderT]:
+    ) -> typing.Union[
+        special_endpoints.LinkButtonBuilder[_ActionRowBuilderT],
+        special_endpoints.InteractiveButtonBuilder[_ActionRowBuilderT],
+    ]:
+        ...
+
+    def add_button(
+        self: _ActionRowBuilderT, style: typing.Union[int, messages.ButtonStyle], url_or_custom_id: str, /
+    ) -> typing.Union[
+        special_endpoints.LinkButtonBuilder[_ActionRowBuilderT],
+        special_endpoints.InteractiveButtonBuilder[_ActionRowBuilderT],
+    ]:
         self._assert_can_add_type(messages.ComponentType.BUTTON)
         if style in messages.InteractiveButtonTypes:
             return InteractiveButtonBuilder(container=self, style=style, custom_id=url_or_custom_id)

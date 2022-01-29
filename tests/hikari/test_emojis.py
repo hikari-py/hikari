@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -60,8 +60,26 @@ class TestUnicodeEmoji:
     def test_codepoints_property(self, emoji):
         assert emoji.codepoints == [128076]
 
-    def test_filename_property(self, emoji):
-        assert emoji.filename == "1f44c.png"
+    @pytest.mark.parametrize(
+        ("codepoints", "expected_filename"),
+        [
+            # Normal tests
+            ([0x1F44C], "1f44c"),
+            ([0x1F44C, 0x1F44C, 0x1F44C, 0x1F44C], "1f44c-1f44c-1f44c-1f44c"),
+            # Outliers tests
+            # 1. Second codepoint is not 0xFE0F => Nothing
+            ([0xFE0F, 0x1F44C], "fe0f-1f44c"),
+            # 2. More than 4 codepoints => Nothing
+            ([0x1F44C, 0xFE0F, 0x1F44C, 0x1F44C, 0x1F44C], "1f44c-fe0f-1f44c-1f44c-1f44c"),
+            # 3. Third codepoint is 0x200D => Nothing
+            ([0x1F44C, 0xFE0F, 0x200D], "1f44c-fe0f-200d"),
+            # 4. None of above apply => Remove second codepoint
+            ([0x200D, 0xFE0F, 0x1F44C, 0x1F44C], "200d-1f44c-1f44c"),
+        ],
+    )
+    def test_filename_property(self, codepoints, expected_filename):
+        emoji = emojis.UnicodeEmoji.parse_codepoints(*codepoints)
+        assert emoji.filename == f"{expected_filename}.png"
 
     def test_url_property(self, emoji):
         assert emoji.url == "https://raw.githubusercontent.com/twitter/twemoji/master/assets/72x72/1f44c.png"

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -44,20 +44,14 @@ if typing.TYPE_CHECKING:
 _DEFERRED_TYPES: typing.AbstractSet[_DeferredTypesT] = frozenset(
     [base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE, base_interactions.ResponseType.DEFERRED_MESSAGE_UPDATE]
 )
-_DeferredTypesT = typing.Union[
-    typing.Literal[base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE],
-    typing.Literal[5],
-    typing.Literal[base_interactions.ResponseType.DEFERRED_MESSAGE_UPDATE],
-    typing.Literal[6],
+_DeferredTypesT = typing.Literal[
+    base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE, 5, base_interactions.ResponseType.DEFERRED_MESSAGE_UPDATE, 6
 ]
 _IMMEDIATE_TYPES: typing.AbstractSet[_ImmediateTypesT] = frozenset(
     [base_interactions.ResponseType.MESSAGE_CREATE, base_interactions.ResponseType.MESSAGE_UPDATE]
 )
-_ImmediateTypesT = typing.Union[
-    typing.Literal[base_interactions.ResponseType.MESSAGE_CREATE],
-    typing.Literal[4],
-    typing.Literal[base_interactions.ResponseType.MESSAGE_UPDATE],
-    typing.Literal[7],
+_ImmediateTypesT = typing.Literal[
+    base_interactions.ResponseType.MESSAGE_CREATE, 4, base_interactions.ResponseType.MESSAGE_UPDATE, 7
 ]
 
 
@@ -111,8 +105,19 @@ class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentRespo
     guild_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False)
     """ID of the guild this interaction was triggered in.
 
-    This will be `builtins.None` for command interactions triggered in DMs.
+    This will be `builtins.None` for component interactions triggered in DMs.
     """
+
+    guild_locale: typing.Optional[str] = attr.field(eq=False, hash=False, repr=True)
+    """The preferred language of the guild this component interaction was triggered in.
+
+    This will be `builtins.None` for component interactions triggered in DMs.
+
+    !!! note
+        This value can usually only be changed if `COMMUNITY` is in `hikari.guilds.Guild.features`
+        for the guild and will otherwise default to `en-US`.
+    """
+
     message: messages.Message = attr.field(eq=False, repr=False)
     """Object of the message the components for this interaction are attached to."""
 
@@ -128,6 +133,9 @@ class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentRespo
 
     user: users.User = attr.field(eq=False, hash=False, repr=True)
     """The user who triggered this interaction."""
+
+    locale: str = attr.field(eq=False, hash=False, repr=True)
+    """The selected language of the user who triggered this component interaction."""
 
     def build_response(self, type_: _ImmediateTypesT, /) -> special_endpoints.InteractionMessageBuilder:
         """Get a message response builder for use in the REST server flow.

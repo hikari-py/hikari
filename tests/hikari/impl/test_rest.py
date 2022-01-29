@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -23,10 +23,11 @@ import asyncio
 import contextlib
 import datetime
 import http
+import re
+import warnings
 
 import mock
 import pytest
-import regex
 
 from hikari import applications
 from hikari import audit_logs
@@ -663,6 +664,9 @@ class TestRESTClientImpl:
 
         assert rest_client.is_alive is expected_result
 
+    def test_entity_factory_property(self, rest_client):
+        assert rest_client.entity_factory is rest_client._entity_factory
+
     def test_http_settings_property(self, rest_client):
         mock_http_settings = object()
         rest_client._http_settings = mock_http_settings
@@ -999,14 +1003,32 @@ class TestRESTClientImpl:
                 guild=guild,
             )
 
-    def test_kick_member(self, rest_client):
-        assert rest_client.kick_member == rest_client.kick_user
+    def test_kick_member(self, rest_client: rest.RESTClientImpl):
+        mock_kick_user = mock.Mock()
+        rest_client.kick_user = mock_kick_user
 
-    def test_ban_member(self, rest_client):
-        assert rest_client.ban_member == rest_client.ban_user
+        result = rest_client.kick_member(123, 5423, reason="oewkwkwk")
 
-    def test_unban_member(self, rest_client):
-        assert rest_client.unban_member == rest_client.unban_user
+        assert result is mock_kick_user.return_value
+        mock_kick_user.assert_called_once_with(123, 5423, reason="oewkwkwk")
+
+    def test_ban_member(self, rest_client: rest.RESTClientImpl):
+        mock_ban_user = mock.Mock()
+        rest_client.ban_user = mock_ban_user
+
+        result = rest_client.ban_member(43123, 54123, delete_message_days=6, reason="wowowowo")
+
+        assert result is mock_ban_user.return_value
+        mock_ban_user.assert_called_once_with(43123, 54123, delete_message_days=6, reason="wowowowo")
+
+    def test_unban_member(self, rest_client: rest.RESTClientImpl):
+        mock_unban_user = mock.Mock()
+        rest_client.unban_user = mock_unban_user
+
+        reason = rest_client.unban_member(123, 321, reason="ayaya")
+
+        assert reason is mock_unban_user.return_value
+        mock_unban_user.assert_called_once_with(123, 321, reason="ayaya")
 
     def test_command_builder(self, rest_client):
         result = rest_client.command_builder("a name", "very very good")
@@ -1041,6 +1063,42 @@ class TestRESTClientImplAsync:
             rest_client.close.assert_not_called()
 
         rest_client.close.assert_awaited_once_with()
+
+    @hikari_test_helpers.timeout()
+    async def test__request_builds_form_when_passed(self, rest_client, exit_exception, live_attributes):
+        route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
+        mock_session = mock.AsyncMock(request=mock.AsyncMock(side_effect=exit_exception))
+        live_attributes.buckets.is_started = True
+        live_attributes.client_session = mock_session
+        rest_client._token = None
+        mock_form = mock.AsyncMock()
+        mock_stack = mock.AsyncMock()
+        mock_stack.__aenter__ = mock_stack
+
+        with mock.patch.object(contextlib, "AsyncExitStack", return_value=mock_stack) as exit_stack:
+            with pytest.raises(exit_exception):
+                await rest_client._request(route, form_builder=mock_form)
+
+        _, kwargs = mock_session.request.call_args_list[0]
+        mock_form.build.assert_awaited_once_with(exit_stack.return_value)
+        assert kwargs["data"] is mock_form.build.return_value
+        assert live_attributes.still_alive.call_count == 3
+
+    @hikari_test_helpers.timeout()
+    async def test__request_url_encodes_reason_header(self, rest_client, exit_exception, live_attributes):
+        route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
+        mock_session = mock.AsyncMock(request=mock.AsyncMock(side_effect=exit_exception))
+        live_attributes.buckets.is_started = True
+        live_attributes.client_session = mock_session
+
+        with pytest.raises(exit_exception):
+            await rest_client._request(route, reason="光のenergyが　大地に降りそそぐ")
+
+        _, kwargs = mock_session.request.call_args_list[0]
+        assert kwargs["headers"][rest._X_AUDIT_LOG_REASON_HEADER] == (
+            "%E5%85%89%E3%81%AEenergy%E3%81%8C%E3%80%80%E5%A4%"
+            "A7%E5%9C%B0%E3%81%AB%E9%99%8D%E3%82%8A%E3%81%9D%E3%81%9D%E3%81%90"
+        )
 
     @hikari_test_helpers.timeout()
     async def test__request_with_strategy_token(self, rest_client, exit_exception, live_attributes):
@@ -1686,6 +1744,8 @@ class TestRESTClientImplAsync:
                     id=456,
                     app=object(),
                     avatar_hash="",
+                    banner_hash="",
+                    accent_color=123456,
                     discriminator="",
                     flags=0,
                     username="",
@@ -1701,6 +1761,8 @@ class TestRESTClientImplAsync:
                     color=None,
                     guild_id=123,
                     is_hoisted=True,
+                    icon_hash="icon_hash",
+                    unicode_emoji=None,
                     is_managed=False,
                     name="",
                     is_mentionable=True,
@@ -1875,7 +1937,7 @@ class TestRESTClientImplAsync:
             f"'{singular_arg}' (singular) instead?"
         )
 
-        with pytest.raises(TypeError, match=regex.escape(expected_error_message)):
+        with pytest.raises(TypeError, match=re.escape(expected_error_message)):
             await rest_client._create_message(None, {}, **kwargs)
 
     @pytest.mark.skip("TODO")
@@ -1997,7 +2059,7 @@ class TestRESTClientImplAsync:
             f"'{singular_arg}' (singular) instead?"
         )
 
-        with pytest.raises(TypeError, match=regex.escape(expected_error_message)):
+        with pytest.raises(TypeError, match=re.escape(expected_error_message)):
             await rest_client._edit_message(None, {}, **kwargs)
 
     @pytest.mark.skip("TODO")
@@ -2081,10 +2143,54 @@ class TestRESTClientImplAsync:
 
         await rest_client.delete_messages(StubModel(123), *messages)
 
-        assert rest_client._request.await_args_list == [
-            mock.call(expected_route, json=expected_json1),
-            mock.call(expected_route, json=expected_json2),
-        ]
+        rest_client._request.assert_has_awaits(
+            [
+                mock.call(expected_route, json=expected_json1),
+                mock.call(expected_route, json=expected_json2),
+            ]
+        )
+
+    async def test_delete_messages_when_one_message_left_in_chunk_and_delete_message_raises_message_not_found(
+        self, rest_client
+    ):
+        channel = StubModel(123)
+        messages = [StubModel(i) for i in range(101)]
+        message = messages[-1]
+        expected_json = {"messages": [str(i) for i in range(100)]}
+
+        rest_client._request = mock.AsyncMock()
+        rest_client.delete_message = mock.AsyncMock(
+            side_effect=errors.NotFoundError(url="", headers={}, raw_body="", code=10008)
+        )
+
+        await rest_client.delete_messages(channel, *messages)
+
+        rest_client._request.assert_awaited_once_with(
+            routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel), json=expected_json
+        )
+        rest_client.delete_message.assert_awaited_once_with(channel, message)
+
+    async def test_delete_messages_when_one_message_left_in_chunk_and_delete_message_raises_channel_not_found(
+        self, rest_client
+    ):
+        channel = StubModel(123)
+        messages = [StubModel(i) for i in range(101)]
+        message = messages[-1]
+        expected_json = {"messages": [str(i) for i in range(100)]}
+
+        rest_client._request = mock.AsyncMock()
+        mock_not_found = errors.NotFoundError(url="", headers={}, raw_body="", code=10003)
+        rest_client.delete_message = mock.AsyncMock(side_effect=mock_not_found)
+
+        with pytest.raises(errors.BulkDeleteError) as exc_info:
+            await rest_client.delete_messages(channel, *messages)
+
+        assert exc_info.value.__cause__ is mock_not_found
+
+        rest_client._request.assert_awaited_once_with(
+            routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel), json=expected_json
+        )
+        rest_client.delete_message.assert_awaited_once_with(channel, message)
 
     async def test_delete_messages_when_one_message_left_in_chunk(self, rest_client):
         channel = StubModel(123)
@@ -2096,10 +2202,12 @@ class TestRESTClientImplAsync:
 
         await rest_client.delete_messages(channel, *messages)
 
-        assert rest_client._request.await_args_list == [
-            mock.call(routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel), json=expected_json),
-            mock.call(routes.DELETE_CHANNEL_MESSAGE.compile(channel=channel, message=message)),
-        ]
+        rest_client._request.assert_has_awaits(
+            [
+                mock.call(routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel), json=expected_json),
+                mock.call(routes.DELETE_CHANNEL_MESSAGE.compile(channel=channel, message=message)),
+            ]
+        )
 
     async def test_delete_messages_when_exception(self, rest_client):
         channel = StubModel(123)
@@ -2313,8 +2421,14 @@ class TestRESTClientImplAsync:
         await rest_client.delete_webhook(StubModel(123))
         rest_client._request.assert_awaited_once_with(expected_route, no_auth=False)
 
-    @pytest.mark.parametrize("webhook", [mock.Mock(webhooks.ExecutableWebhook, webhook_id=432), 432])
-    async def test_execute_webhook(self, rest_client, webhook):
+    @pytest.mark.parametrize(
+        ("webhook", "avatar_url"),
+        [
+            (mock.Mock(webhooks.ExecutableWebhook, webhook_id=432), files.URL("https://website.com/davfsa_logo")),
+            (432, "https://website.com/davfsa_logo"),
+        ],
+    )
+    async def test_execute_webhook(self, rest_client, webhook, avatar_url):
         mock_object = object()
         attachment_obj = object()
         attachment_obj2 = object()
@@ -2329,7 +2443,7 @@ class TestRESTClientImplAsync:
             webhook,
             "hi, im a token",
             username="davfsa",
-            avatar_url="https://website.com/davfsa_logo",
+            avatar_url=avatar_url,
             content="new content",
             attachment=attachment_obj,
             attachments=[attachment_obj2],
@@ -2607,14 +2721,14 @@ class TestRESTClientImplAsync:
         mock_url_encoded_form = mock.Mock()
         rest_client._request = mock.AsyncMock(return_value={"access_token": "43212123123123"})
 
-        with mock.patch.object(data_binding, "URLEncodedForm", return_value=mock_url_encoded_form):
+        with mock.patch.object(data_binding, "URLEncodedFormBuilder", return_value=mock_url_encoded_form):
             await rest_client.authorize_client_credentials_token(65234123, "4312312", scopes=["scope1", "scope2"])
 
         mock_url_encoded_form.add_field.assert_has_calls(
             [mock.call("grant_type", "client_credentials"), mock.call("scope", "scope1 scope2")]
         )
         rest_client._request.assert_awaited_once_with(
-            expected_route, form=mock_url_encoded_form, auth="Basic NjUyMzQxMjM6NDMxMjMxMg=="
+            expected_route, form_builder=mock_url_encoded_form, auth="Basic NjUyMzQxMjM6NDMxMjMxMg=="
         )
         rest_client._entity_factory.deserialize_partial_token.assert_called_once_with(rest_client._request.return_value)
 
@@ -2623,7 +2737,7 @@ class TestRESTClientImplAsync:
         mock_url_encoded_form = mock.Mock()
         rest_client._request = mock.AsyncMock(return_value={"access_token": 42})
 
-        with mock.patch.object(data_binding, "URLEncodedForm", return_value=mock_url_encoded_form):
+        with mock.patch.object(data_binding, "URLEncodedFormBuilder", return_value=mock_url_encoded_form):
             result = await rest_client.authorize_access_token(65234, "43123", "a.code", "htt:redirect//me")
 
         mock_url_encoded_form.add_field.assert_has_calls(
@@ -2638,7 +2752,7 @@ class TestRESTClientImplAsync:
             rest_client._request.return_value
         )
         rest_client._request.assert_awaited_once_with(
-            expected_route, form=mock_url_encoded_form, auth="Basic NjUyMzQ6NDMxMjM="
+            expected_route, form_builder=mock_url_encoded_form, auth="Basic NjUyMzQ6NDMxMjM="
         )
 
     async def test_authorize_access_token_with_scopes(self, rest_client):
@@ -2646,7 +2760,7 @@ class TestRESTClientImplAsync:
         mock_url_encoded_form = mock.Mock()
         rest_client._request = mock.AsyncMock(return_value={"access_token": 42})
 
-        with mock.patch.object(data_binding, "URLEncodedForm", return_value=mock_url_encoded_form):
+        with mock.patch.object(data_binding, "URLEncodedFormBuilder", return_value=mock_url_encoded_form):
             result = await rest_client.authorize_access_token(12343, "1235555", "a.codee", "htt:redirect//mee")
 
         mock_url_encoded_form.add_field.assert_has_calls(
@@ -2661,7 +2775,7 @@ class TestRESTClientImplAsync:
             rest_client._request.return_value
         )
         rest_client._request.assert_awaited_once_with(
-            expected_route, form=mock_url_encoded_form, auth="Basic MTIzNDM6MTIzNTU1NQ=="
+            expected_route, form_builder=mock_url_encoded_form, auth="Basic MTIzNDM6MTIzNTU1NQ=="
         )
 
     async def test_refresh_access_token_without_scopes(self, rest_client):
@@ -2669,7 +2783,7 @@ class TestRESTClientImplAsync:
         mock_url_encoded_form = mock.Mock()
         rest_client._request = mock.AsyncMock(return_value={"access_token": 42})
 
-        with mock.patch.object(data_binding, "URLEncodedForm", return_value=mock_url_encoded_form):
+        with mock.patch.object(data_binding, "URLEncodedFormBuilder", return_value=mock_url_encoded_form):
             result = await rest_client.refresh_access_token(454123, "123123", "a.codet")
 
         mock_url_encoded_form.add_field.assert_has_calls(
@@ -2683,7 +2797,7 @@ class TestRESTClientImplAsync:
             rest_client._request.return_value
         )
         rest_client._request.assert_awaited_once_with(
-            expected_route, form=mock_url_encoded_form, auth="Basic NDU0MTIzOjEyMzEyMw=="
+            expected_route, form_builder=mock_url_encoded_form, auth="Basic NDU0MTIzOjEyMzEyMw=="
         )
 
     async def test_refresh_access_token_with_scopes(self, rest_client):
@@ -2691,7 +2805,7 @@ class TestRESTClientImplAsync:
         mock_url_encoded_form = mock.Mock()
         rest_client._request = mock.AsyncMock(return_value={"access_token": 42})
 
-        with mock.patch.object(data_binding, "URLEncodedForm", return_value=mock_url_encoded_form):
+        with mock.patch.object(data_binding, "URLEncodedFormBuilder", return_value=mock_url_encoded_form):
             result = await rest_client.refresh_access_token(54123, "312312", "a.codett", scopes=["1", "3", "scope43"])
 
         mock_url_encoded_form.add_field.assert_has_calls(
@@ -2706,7 +2820,7 @@ class TestRESTClientImplAsync:
             rest_client._request.return_value
         )
         rest_client._request.assert_awaited_once_with(
-            expected_route, form=mock_url_encoded_form, auth="Basic NTQxMjM6MzEyMzEy"
+            expected_route, form_builder=mock_url_encoded_form, auth="Basic NTQxMjM6MzEyMzEy"
         )
 
     async def test_revoke_access_token(self, rest_client):
@@ -2714,12 +2828,12 @@ class TestRESTClientImplAsync:
         mock_url_encoded_form = mock.Mock()
         rest_client._request = mock.AsyncMock()
 
-        with mock.patch.object(data_binding, "URLEncodedForm", return_value=mock_url_encoded_form):
+        with mock.patch.object(data_binding, "URLEncodedFormBuilder", return_value=mock_url_encoded_form):
             await rest_client.revoke_access_token(54123, "123542", "not.a.token")
 
         mock_url_encoded_form.add_field.assert_called_once_with("token", "not.a.token")
         rest_client._request.assert_awaited_once_with(
-            expected_route, form=mock_url_encoded_form, auth="Basic NTQxMjM6MTIzNTQy"
+            expected_route, form_builder=mock_url_encoded_form, auth="Basic NTQxMjM6MTIzNTQy"
         )
 
     async def test_add_user_to_guild(self, rest_client):
@@ -3340,6 +3454,18 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route)
         rest_client._entity_factory.deserialize_member.assert_called_once_with({"id": "789"}, guild_id=123)
 
+    async def test_fetch_my_member(self, rest_client) -> guilds.Member:
+        expected_route = routes.GET_MY_GUILD_MEMBER.compile(guild=45123)
+        rest_client._request = mock.AsyncMock(return_value={"id": "595995"})
+
+        result = await rest_client.fetch_my_member(StubModel(45123))
+
+        assert result is rest_client._entity_factory.deserialize_member.return_value
+        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._entity_factory.deserialize_member.assert_called_once_with(
+            rest_client._request.return_value, guild_id=45123
+        )
+
     async def test_search_members(self, rest_client):
         member = StubModel(645234123)
         expected_route = routes.GET_GUILD_MEMBERS_SEARCH.compile(guild=645234123)
@@ -3354,8 +3480,16 @@ class TestRESTClientImplAsync:
 
     async def test_edit_member(self, rest_client):
         expected_route = routes.PATCH_GUILD_MEMBER.compile(guild=123, user=456)
-        expected_json = {"nick": "test", "roles": ["654", "321"], "mute": True, "deaf": False, "channel_id": "987"}
+        expected_json = {
+            "nick": "test",
+            "roles": ["654", "321"],
+            "mute": True,
+            "deaf": False,
+            "channel_id": "987",
+            "communication_disabled_until": "2021-10-18T07:18:11.554023+00:00",
+        }
         rest_client._request = mock.AsyncMock(return_value={"id": "789"})
+        mock_timestamp = datetime.datetime(2021, 10, 18, 7, 18, 11, 554023, tzinfo=datetime.timezone.utc)
 
         result = await rest_client.edit_member(
             StubModel(123),
@@ -3365,6 +3499,7 @@ class TestRESTClientImplAsync:
             mute=True,
             deaf=False,
             voice_channel=StubModel(987),
+            communication_disabled_until=mock_timestamp,
             reason="because i can",
         )
         assert result is rest_client._entity_factory.deserialize_member.return_value
@@ -3394,11 +3529,25 @@ class TestRESTClientImplAsync:
         rest_client._entity_factory.deserialize_member.assert_called_once_with(
             rest_client._request.return_value, guild_id=123
         )
-        rest_client._request.assert_awaited_once_with(
-            expected_route,
-            json=expected_json,
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="because i can")
+
+    async def test_edit_member_when_communication_disabled_until_is_None(self, rest_client):
+        expected_route = routes.PATCH_GUILD_MEMBER.compile(guild=123, user=456)
+        expected_json = {"communication_disabled_until": None}
+        rest_client._request = mock.AsyncMock(return_value={"id": "789"})
+
+        result = await rest_client.edit_member(
+            StubModel(123),
+            StubModel(456),
+            communication_disabled_until=None,
             reason="because i can",
         )
+        assert result is rest_client._entity_factory.deserialize_member.return_value
+
+        rest_client._entity_factory.deserialize_member.assert_called_once_with(
+            rest_client._request.return_value, guild_id=123
+        )
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="because i can")
 
     async def test_edit_member_without_optionals(self, rest_client):
         expected_route = routes.PATCH_GUILD_MEMBER.compile(guild=123, user=456)
@@ -3412,14 +3561,43 @@ class TestRESTClientImplAsync:
         )
         rest_client._request.assert_awaited_once_with(expected_route, json={}, reason=undefined.UNDEFINED)
 
+    async def test_my_edit_member(self, rest_client):
+        expected_route = routes.PATCH_MY_GUILD_MEMBER.compile(guild=123)
+        expected_json = {"nick": "test"}
+        rest_client._request = mock.AsyncMock(return_value={"id": "789"})
+
+        result = await rest_client.edit_my_member(StubModel(123), nickname="test", reason="because i can")
+        assert result is rest_client._entity_factory.deserialize_member.return_value
+
+        rest_client._entity_factory.deserialize_member.assert_called_once_with(
+            rest_client._request.return_value, guild_id=123
+        )
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="because i can")
+
+    async def test_edit_my_member_without_optionals(self, rest_client):
+        expected_route = routes.PATCH_MY_GUILD_MEMBER.compile(guild=123)
+        rest_client._request = mock.AsyncMock(return_value={"id": "789"})
+
+        result = await rest_client.edit_my_member(StubModel(123))
+        assert result is rest_client._entity_factory.deserialize_member.return_value
+
+        rest_client._entity_factory.deserialize_member.assert_called_once_with(
+            rest_client._request.return_value, guild_id=123
+        )
+        rest_client._request.assert_awaited_once_with(expected_route, json={}, reason=undefined.UNDEFINED)
+
     async def test_edit_my_nick(self, rest_client):
-        expected_route = routes.PATCH_MY_GUILD_NICKNAME.compile(guild=123)
-        expected_json = {"nick": "hikari is the best"}
+        rest_client.edit_my_member = mock.AsyncMock()
         rest_client._request = mock.AsyncMock()
 
-        await rest_client.edit_my_nick(StubModel(123), "hikari is the best", reason="because its true")
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=DeprecationWarning)
+            result = await rest_client.edit_my_nick(123, "hikari is the best", reason="because its true")
 
-        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="because its true")
+        assert result is None
+        rest_client.edit_my_member.assert_awaited_once_with(
+            123, nickname="hikari is the best", reason="because its true"
+        )
 
     async def test_add_role_to_member(self, rest_client):
         expected_route = routes.PUT_GUILD_MEMBER_ROLE.compile(guild=123, user=456, role=789)
@@ -3505,18 +3683,17 @@ class TestRESTClientImplAsync:
             [mock.call({"id": "456"}, guild_id=123), mock.call({"id": "789"}, guild_id=123)]
         )
 
-    async def test_create_role(self, rest_client):
-        role = StubModel(456)
+    async def test_create_role(self, rest_client, file_resource_patch):
         expected_route = routes.POST_GUILD_ROLES.compile(guild=123)
         expected_json = {
             "name": "admin",
             "permissions": 8,
             "color": colors.Color.from_int(12345),
             "hoist": True,
+            "icon": "some data",
             "mentionable": False,
         }
         rest_client._request = mock.AsyncMock(return_value={"id": "456"})
-        rest_client._entity_factory.deserialize_role = mock.Mock(return_value=role)
 
         returned = await rest_client.create_role(
             StubModel(123),
@@ -3524,10 +3701,11 @@ class TestRESTClientImplAsync:
             permissions=permissions.Permissions.ADMINISTRATOR,
             color=colors.Color.from_int(12345),
             hoist=True,
+            icon="icon.png",
             mentionable=False,
             reason="roles are cool",
         )
-        assert returned is role
+        assert returned is rest_client._entity_factory.deserialize_role.return_value
 
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="roles are cool")
         rest_client._entity_factory.deserialize_role.assert_called_once_with({"id": "456"}, guild_id=123)
@@ -3559,13 +3737,17 @@ class TestRESTClientImplAsync:
         rest_client._entity_factory.deserialize_role.assert_called_once_with({"id": "456"}, guild_id=123)
 
     async def test_create_role_when_color_and_colour_specified(self, rest_client):
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeError, match=r"Can not specify 'color' and 'colour' together."):
             await rest_client.create_role(
                 StubModel(123), color=colors.Color.from_int(12345), colour=colors.Color.from_int(12345)
             )
 
+    async def test_create_role_when_icon_unicode_emoji_specified(self, rest_client):
+        with pytest.raises(TypeError, match=r"Can not specify 'icon' and 'unicode_emoji' together."):
+            await rest_client.create_role(StubModel(123), icon="icon.png", unicode_emoji="\N{OK HAND SIGN}")
+
     async def test_reposition_roles(self, rest_client):
-        expected_route = routes.POST_GUILD_ROLES.compile(guild=123)
+        expected_route = routes.PATCH_GUILD_ROLES.compile(guild=123)
         expected_json = [{"id": "456", "position": 1}, {"id": "789", "position": 2}]
         rest_client._request = mock.AsyncMock()
 
@@ -3573,18 +3755,17 @@ class TestRESTClientImplAsync:
 
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
 
-    async def test_edit_role(self, rest_client):
-        role = StubModel(456)
+    async def test_edit_role(self, rest_client, file_resource_patch):
         expected_route = routes.PATCH_GUILD_ROLE.compile(guild=123, role=789)
         expected_json = {
             "name": "admin",
             "permissions": 8,
             "color": colors.Color.from_int(12345),
             "hoist": True,
+            "icon": "some data",
             "mentionable": False,
         }
         rest_client._request = mock.AsyncMock(return_value={"id": "456"})
-        rest_client._entity_factory.deserialize_role = mock.Mock(return_value=role)
 
         returned = await rest_client.edit_role(
             StubModel(123),
@@ -3593,18 +3774,25 @@ class TestRESTClientImplAsync:
             permissions=permissions.Permissions.ADMINISTRATOR,
             color=colors.Color.from_int(12345),
             hoist=True,
+            icon="icon.png",
             mentionable=False,
             reason="roles are cool",
         )
-        assert returned is role
+        assert returned is rest_client._entity_factory.deserialize_role.return_value
 
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="roles are cool")
         rest_client._entity_factory.deserialize_role.assert_called_once_with({"id": "456"}, guild_id=123)
 
     async def test_edit_role_when_color_and_colour_specified(self, rest_client):
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeError, match=r"Can not specify 'color' and 'colour' together."):
             await rest_client.edit_role(
                 StubModel(123), StubModel(456), color=colors.Color.from_int(12345), colour=colors.Color.from_int(12345)
+            )
+
+    async def test_edit_role_when_icon_and_unicode_emoji_specified(self, rest_client):
+        with pytest.raises(TypeError, match=r"Can not specify 'icon' and 'unicode_emoji' together."):
+            await rest_client.edit_role(
+                StubModel(123), StubModel(456), icon="icon.png", unicode_emoji="\N{OK HAND SIGN}"
             )
 
     async def test_delete_role(self, rest_client):

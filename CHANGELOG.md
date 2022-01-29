@@ -6,6 +6,121 @@ This file is updated every release with the use of `towncrier` from the fragment
 
 .. towncrier release notes start
 
+Hikari 2.0.0.dev105 (2022-01-01)
+================================
+
+Features
+--------
+
+- Add min_value and max_value to `CommandOption` ([#920](https://github.com/hikari-py/hikari/issues/920))
+- Add `flags` attribute to Application ([#939](https://github.com/hikari-py/hikari/issues/939))
+- Implement member timeouts
+   - Add `raw_communication_disabled_until` and `communication_disabled_until` to `Member`
+   - Add `MODERATE_MEMBERS` to `Permission`
+   - Add `communication_disabled_until` attribute to `edit_member` ([#940](https://github.com/hikari-py/hikari/issues/940))
+
+
+Bugfixes
+--------
+
+- Improved pyright compatibility and introduced pyright "type-completeness" checking. ([#916](https://github.com/hikari-py/hikari/issues/916))
+- Add EventStream.filter specialisation to the abc. ([#917](https://github.com/hikari-py/hikari/issues/917))
+- Update the app command name regex to account for more recently documented support for non-english characters on Discord's end. ([#918](https://github.com/hikari-py/hikari/issues/918))
+- Fix reposition_roles using the wrong route. ([#928](https://github.com/hikari-py/hikari/issues/928))
+- Fix `PartialSticker.image_url` not passing the hash as a string ([#930](https://github.com/hikari-py/hikari/issues/930))
+- Fixed the url being generated for role icons to not erroneously insert ".png" before the file extension ([#931](https://github.com/hikari-py/hikari/issues/931))
+- Fix some bugs in message deserialization
+    - Remove case for setting `member` and `referece_message` to `undefined.Undefined` in full message deserialization
+    - Don't set `message.member` to `undefined.UNDEFINED` on partial message deserialization if message was sent by a webhook ([#933](https://github.com/hikari-py/hikari/issues/933))
+
+
+Hikari 2.0.0.dev104 (2021-11-22)
+================================
+
+Breaking Changes
+----------------
+
+- Remove the redundant `ChannelCreateEvent`, `ChannelUpdateEvent` and `ChannelDeleteEvent` base classes.
+  `GuildChannelCreateEvent`, `GuildChannelUpdateEvent` and `GuildChannelDeleteEvent` should now be used. ([#862](https://github.com/hikari-py/hikari/issues/862))
+- Split bulk message delete from normal delete
+    - The new event is now `hikari.events.message_events.GuildBulkMessageDeleteEvent` ([#897](https://github.com/hikari-py/hikari/issues/897))
+
+
+Deprecation
+-----------
+
+- `edit_my_nick` rest method. ([#827](https://github.com/hikari-py/hikari/issues/827))
+- EventStream is now a sync context manager, not async. ([#864](https://github.com/hikari-py/hikari/issues/864))
+
+
+Features
+--------
+
+- User banners and accent colors to user models. ([#811](https://github.com/hikari-py/hikari/issues/811))
+- Add attachment "is_ephemeral" field ([#824](https://github.com/hikari-py/hikari/issues/824))
+- Guild member avatars ([#825](https://github.com/hikari-py/hikari/issues/825))
+- RESTClient `edit_my_member` method which currently only takes "nick". ([#827](https://github.com/hikari-py/hikari/issues/827))
+- Add role icons ([#838](https://github.com/hikari-py/hikari/issues/838))
+- RESTClient.entity_factory property ([#848](https://github.com/hikari-py/hikari/issues/848))
+- Added component support to InteractionMessageBuilder. ([#851](https://github.com/hikari-py/hikari/issues/851))
+- `EventStream.filter` now always returns `EventStream`. ([#864](https://github.com/hikari-py/hikari/issues/864))
+- Allow for passing a URL for avatar_url on execute_webhook. ([#889](https://github.com/hikari-py/hikari/issues/889))
+- Add `old_message` attribute to `hikari.events.message_events.MessageDelete` ([#897](https://github.com/hikari-py/hikari/issues/897))
+- Switch to more relaxed requirements. ([#906](https://github.com/hikari-py/hikari/issues/906))
+
+
+Bugfixes
+--------
+
+- Don't raise in bulk delete when message not found by delete single message endpoint ([#828](https://github.com/hikari-py/hikari/issues/828))
+- Setup basic handler if no handlers are defined in favour passed to `logging.config.dictConfig` ([#832](https://github.com/hikari-py/hikari/issues/832))
+- InteractionMessageBuilder and RESTClientImpl.create_interaction_response now cast content to str to be consistent with the other message create methods. ([#834](https://github.com/hikari-py/hikari/issues/834))
+- create_sticker method failing due to using an incorrect body. ([#858](https://github.com/hikari-py/hikari/issues/858))
+- Fix logic for asserting listeners to not error when using defaults for other arguments ([#911](https://github.com/hikari-py/hikari/issues/911))
+- Fix error message given by action row when a conflicted type is added. ([#912](https://github.com/hikari-py/hikari/issues/912))
+
+
+Hikari 2.0.0.dev103 (2021-10-06)
+================================
+
+Breaking Changes
+----------------
+
+- `USE_PUBLIC_THREADS` and `USE_PRIVATE_THREADS` permissions have been removed in favour of new threads permission
+  - New permissions are split into `CREATE_PUBLIC_THREADS`, `CREATE_PRIVATE_THREADS` and `SEND_MESSAGES_IN_THREADS` ([#799](https://github.com/hikari-py/hikari/issues/799))
+- `GuildAvailableEvent` will no longer fire when the bot joins new guilds
+  - Some `guild_create`-ish methods were renamed to `guild_available` ([#809](https://github.com/hikari-py/hikari/issues/809))
+- Remove `hikari.errors.RESTErrorCode` enum
+  - The message that is sent with the error code is the info that the enum contained ([#816](https://github.com/hikari-py/hikari/issues/816))
+- PermissionOverwrite doesn't inherit from Unique anymore and isn't hashable. Equality checks now consider all its fields. ([#820](https://github.com/hikari-py/hikari/issues/820))
+
+
+Features
+--------
+
+- Add new `START_EMBEDDED_ACTIVITIES` permission ([#798](https://github.com/hikari-py/hikari/issues/798))
+- Support new `channel_types` field in `CommandOption` ([#800](https://github.com/hikari-py/hikari/issues/800))
+- Add the `add_component` method to `hikari.api.special_endpoints.ActionRowBuilder` ([#804](https://github.com/hikari-py/hikari/issues/804))
+- Add `old_guild` attribute to `GuildLeaveEvent`. ([#806](https://github.com/hikari-py/hikari/issues/806))
+- Add `GuildJoinEvent` that will fire when the bot joins new guilds ([#809](https://github.com/hikari-py/hikari/issues/809))
+
+
+Bugfixes
+--------
+
+- Fix re-uploading forms with resources ([#787](https://github.com/hikari-py/hikari/issues/787))
+- Prevent double linking embed resources, which causes them to upload twice
+  - This was caused by attempting to move the resource from one embed to another ([#788](https://github.com/hikari-py/hikari/issues/788))
+- Fix `BulkDeleteError` returning incorrect values for `messages_skipped`
+  - This affected the `__str__` and `percentage_completion`, which also returned incorrect values ([#817](https://github.com/hikari-py/hikari/issues/817))
+
+
+Documentation Improvements
+--------------------------
+
+- Add docstrings to the remaining undocumented `GatewayBot` methods ([#804](https://github.com/hikari-py/hikari/issues/804))
+
+
 Hikari 2.0.0.dev102 (2021-09-19)
 ================================
 
@@ -48,7 +163,7 @@ Bugfixes
   - `is_webhook` will now return `undefined.UNDEFINED` if the information is not available
   - Fix logic in `is_human` to account for the changes in the typing
   - Set `PartialMessage.member` to `undefined.UNDEFINED` when Discord edit the message to display an embed/attachment ([#783](https://github.com/hikari-py/hikari/issues/783))
-- `CommandOption.value` will now be cast to a `Snowflake` for types 6-9 ([#785](https://github.com/hikari-py/hikari/issues/785))
+- `CommandInteractionOption.value` will now be cast to a `Snowflake` for types 6-9 ([#785](https://github.com/hikari-py/hikari/issues/785))
 
 
 Improved Documentation

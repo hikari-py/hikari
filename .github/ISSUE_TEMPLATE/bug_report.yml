@@ -1,0 +1,64 @@
+name: Bug report
+description: Found a bug? Let us know so we can fix it!
+labels: ["bug"]
+
+body:
+  - type: textarea
+    id: reproduction-steps
+    attributes:
+      label: Steps to reproduce
+      description: Steps to reproduce the bug. This can also be a code snippet. Steps to reproduce the bug. This can also be a code snippet. Make sure you have removed your bot token (if visible).
+      value: |
+        1.
+        2.
+        3.
+        4.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-result
+    attributes:
+      label: Expected result
+      description: What should have happened if the bug wasn't there? Make sure you have removed your bot token (if visible).
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual-result
+    attributes:
+      label: Actual result
+      description: What happened exactly? If you have a traceback, please provide all of it.
+    validations:
+      required: true
+
+  - type: textarea
+    id: system-info
+    attributes:
+      label: System info
+      description: Output of `python -m hikari`.
+      placeholder: |
+        hikari (2.0.0.dev103) [dc0f905a]
+        located at /home/username/my-bot/.venv/lib/python3.10/site-packages/hikari
+        CPython 3.10.0 GCC 10.2.1 20210110
+        Linux Skye 5.4.72-microsoft-standard-WSL2 #1 SMP Wed Oct 28 23:40:43 UTC 2020 x86_64
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: further-info
+    attributes:
+      label: Further info
+      description: Any further info or images go here.
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      description: Make sure to tick all the following boxes.
+      options:
+        - label: I have made sure to remove ANY sensitive information (bot token, passwords, credentials, personal details, etc.).
+          required: true
+        - label: I have searched the issue tracker and have made sure it's not a duplicate. If it is a follow up of another issue, I have specified it.
+          required: true

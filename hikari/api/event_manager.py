@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -38,6 +38,7 @@ if typing.TYPE_CHECKING:
     from hikari.events import base_events
     from hikari.internal import data_binding
 
+    _T = typing.TypeVar("_T")
     EventT_co = typing.TypeVar("EventT_co", bound=base_events.Event, covariant=True)
     EventT_inv = typing.TypeVar("EventT_inv", bound=base_events.Event)
     PredicateT = typing.Callable[[EventT_co], bool]
@@ -57,12 +58,12 @@ class EventStream(iterators.LazyIterator[EventT], abc.ABC):
 
     Examples
     --------
-    A streamer may either be started and closed using `async with` syntax
+    A streamer may either be started and closed using `with` syntax
     where `EventStream.open` and `EventStream.close` are implicitly called based on
     context.
 
     ```py
-    async with EventStream(app, EventType, timeout=50) as stream:
+    with EventStream(app, EventType, timeout=50) as stream:
         async for entry in stream:
             ...
     ```
@@ -89,33 +90,68 @@ class EventStream(iterators.LazyIterator[EventT], abc.ABC):
     __slots__: typing.Sequence[str] = ()
 
     @abc.abstractmethod
-    async def close(self) -> None:
+    def close(self) -> None:
         """Mark this streamer as closed to stop it from queueing and receiving events.
 
         If called on an already closed streamer then this will do nothing.
 
         !!! note
-            `async with streamer` may be used as a short-cut for opening and
+            `with streamer` may be used as a short-cut for opening and
             closing a streamer.
         """
 
     @abc.abstractmethod
-    async def open(self) -> None:
+    def open(self) -> None:
         """Mark this streamer as opened to let it start receiving and queueing events.
 
         If called on an already started streamer then this will do nothing.
 
         !!! note
-            `async with streamer` may be used as a short-cut for opening and
+            `with streamer` may be used as a short-cut for opening and
             closing a stream.
         """
 
     @abc.abstractmethod
-    async def __aenter__(self) -> EventStream[EventT]:
+    def filter(
+        self: _T,
+        *predicates: typing.Union[typing.Tuple[str, typing.Any], typing.Callable[[EventT], bool]],
+        **attrs: typing.Any,
+    ) -> _T:
+        """Filter the items by one or more conditions.
+
+        Each condition is treated as a predicate, being called with each item
+        that this iterator would return when it is requested.
+
+        All conditions must evaluate to `builtins.True` for the item to be
+        returned. If this is not met, then the item is discarded and ignored,
+        the next matching item will be returned instead, if there is one.
+
+        Parameters
+        ----------
+        *predicates : typing.Union[typing.Callable[[ValueT], builtins.bool], typing.Tuple[builtins.str, typing.Any]]
+            Predicates to invoke. These are functions that take a value and
+            return `builtins.True` if it is of interest, or `builtins.False`
+            otherwise. These may instead include 2-`builtins.tuple` objects
+            consisting of a `builtins.str` attribute name (nested attributes
+            are referred to using the `.` operator), and values to compare for
+            equality. This allows you to specify conditions such as
+            `members.filter(("user.bot", True))`.
+        **attrs : typing.Any
+            Alternative to passing 2-tuples. Cannot specify nested attributes
+            using this method.
+
+        Returns
+        -------
+        EventStream[ValueT]
+            The current stream with the new filter applied.
+        """
+
+    @abc.abstractmethod
+    def __enter__(self) -> EventStream[EventT]:
         raise NotImplementedError
 
     @abc.abstractmethod
-    async def __aexit__(
+    def __exit__(
         self,
         exc_type: typing.Optional[typing.Type[BaseException]],
         exc: typing.Optional[BaseException],
@@ -231,9 +267,11 @@ class EventManager(abc.ABC):
 
         See Also
         --------
-        Subscribe: `hikari.api.event_manager.EventManager.subscribe`
+        Listen: `hikari.api.event_manager.EventManager.listen`
         Stream: `hikari.api.event_manager.EventManager.stream`
-        Wait for: `hikari.api.event_manager.EventManager.wait_for`
+        Subscribe: `hikari.api.event_manager.EventManager.subscribe`
+        Unsubscribe: `hikari.api.event_manager.EventManager.unsubscribe`
+        Wait_for: `hikari.api.event_manager.EventManager.wait_for`
         """
 
     # Yes, this is not generic. The reason for this is MyPy complains about
@@ -271,9 +309,11 @@ class EventManager(abc.ABC):
 
         See Also
         --------
+        Dispatch: `hikari.api.event_manager.EventManager.dispatch`
         Listen: `hikari.api.event_manager.EventManager.listen`
         Stream: `hikari.api.event_manager.EventManager.stream`
-        Wait for: `hikari.api.event_manager.EventManager.wait_for`
+        Unsubscribe: `hikari.api.event_manager.EventManager.unsubscribe`
+        Wait_for: `hikari.api.event_manager.EventManager.wait_for`
         """
 
     # Yes, this is not generic. The reason for this is MyPy complains about
@@ -306,6 +346,14 @@ class EventManager(abc.ABC):
 
         bot.unsubscribe(MessageCreateEvent, on_message)
         ```
+
+        See Also
+        --------
+        Dispatch: `hikari.api.event_manager.EventManager.dispatch`
+        Listen: `hikari.api.event_manager.EventManager.listen`
+        Stream: `hikari.api.event_manager.EventManager.stream`
+        Subscribe: `hikari.api.event_manager.EventManager.subscribe`
+        Wait_for: `hikari.api.event_manager.EventManager.wait_for`
         """
 
     @abc.abstractmethod
@@ -373,7 +421,7 @@ class EventManager(abc.ABC):
         Stream: `hikari.api.event_manager.EventManager.stream`
         Subscribe: `hikari.api.event_manager.EventManager.subscribe`
         Unsubscribe: `hikari.api.event_manager.EventManager.unsubscribe`
-        Wait for: `hikari.api.event_manager.EventManager.wait_for`
+        Wait_for: `hikari.api.event_manager.EventManager.wait_for`
         """
 
     @abc.abstractmethod
@@ -404,33 +452,33 @@ class EventManager(abc.ABC):
         -------
         EventStream[hikari.events.base_events.Event]
             The async iterator to handle streamed events. This must be started
-            with `async with stream:` or `await stream.open()` before
+            with `with stream:` or `stream.open()` before
             asynchronously iterating over it.
 
         !!! warning
-            If you use `await stream.open()` to start the stream then you must
-            also close it with `await stream.close()` otherwise it may queue
+            If you use `stream.open()` to start the stream then you must
+            also close it with `stream.close()` otherwise it may queue
             events in memory indefinitely.
 
         Examples
         --------
 
         ```py
-        async with bot.stream(events.ReactionAddEvent, timeout=30).filter(("message_id", message.id)) as stream:
+        with bot.stream(events.ReactionAddEvent, timeout=30).filter(("message_id", message.id)) as stream:
             async for user_id in stream.map("user_id").limit(50):
                 ...
         ```
 
-        or using await `open()` and await `close()`
+        or using `open()` and `close()`
 
         ```py
         stream = bot.stream(events.ReactionAddEvent, timeout=30).filter(("message_id", message.id))
-        await stream.open()
+        stream.open()
 
         async for user_id in stream.map("user_id").limit(50)
             ...
 
-        await stream.close()
+        stream.close()
         ```
 
         See Also
@@ -439,7 +487,7 @@ class EventManager(abc.ABC):
         Listen: `hikari.api.event_manager.EventManager.listen`
         Subscribe: `hikari.api.event_manager.EventManager.subscribe`
         Unsubscribe: `hikari.api.event_manager.EventManager.unsubscribe`
-        Wait for: `hikari.api.event_manager.EventManager.wait_for`
+        Wait_for: `hikari.api.event_manager.EventManager.wait_for`
         """
 
     @abc.abstractmethod
@@ -486,8 +534,9 @@ class EventManager(abc.ABC):
 
         See Also
         --------
+        Dispatch: `hikari.api.event_manager.EventManager.dispatch`
         Listen: `hikari.api.event_manager.EventManager.listen`
         Stream: `hikari.api.event_manager.EventManager.stream`
         Subscribe: `hikari.api.event_manager.EventManager.subscribe`
-        Dispatch: `hikari.api.event_manager.EventManager.dispatch`
+        Unsubscribe: `hikari.api.event_manager.EventManager.unsubscribe`
         """

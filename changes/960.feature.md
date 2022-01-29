@@ -1,0 +1,1 @@
+Add new presence activity flags.

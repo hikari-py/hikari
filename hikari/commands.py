@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -44,6 +44,7 @@ from hikari.internal import attr_extensions
 from hikari.internal import enums
 
 if typing.TYPE_CHECKING:
+    from hikari import channels
     from hikari import guilds
 
 
@@ -112,7 +113,8 @@ class CommandOption:
     r"""The command option's name.
 
     !!! note
-        This will match the regex `^[a-z0-9_-]{1,32}$`.
+        This will match the regex `^[\w-]{1,32}$` in Unicode mode and will be
+        lowercase.
     """
 
     description: str = attr.field(repr=False)
@@ -136,6 +138,28 @@ class CommandOption:
     options: typing.Optional[typing.Sequence[CommandOption]] = attr.field(default=None, repr=False)
     """Sequence of up to (and including) 25 of the options for this command option."""
 
+    channel_types: typing.Optional[typing.Sequence[typing.Union[channels.ChannelType, int]]] = attr.field(
+        default=None, repr=False
+    )
+    """The channel types that this option will accept.
+
+    If `builtins.None`, then all channel types will be accepted.
+    """
+
+    min_value: typing.Union[int, float, None] = attr.field(default=None, repr=False)
+    """The minimum value permitted (inclusive).
+
+    This will be `builtins.int` if the type of the option is `hikari.commands.OptionType.INTEGER`
+    and `builtins.float` if the type is `hikari.commands.OptionType.FLOAT`.
+    """
+
+    max_value: typing.Union[int, float, None] = attr.field(default=None, repr=False)
+    """The maximum value permitted (inclusive).
+
+    This will be `builtins.int` if the type of the option is `hikari.commands.OptionType.INTEGER`
+    and `builtins.float` if the type is `hikari.commands.OptionType.FLOAT`.
+    """
+
 
 @attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
@@ -155,7 +179,8 @@ class Command(snowflakes.Unique):
     r"""The command's name.
 
     !!! note
-        This will match the regex `^[a-z0-9_-]{1,32}$`.
+        This will match the regex `^[\w-]{1,32}$` in Unicode mode and will be
+        lowercase.
     """
 
     description: str = attr.field(eq=False, hash=False, repr=False)

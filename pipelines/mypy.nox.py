@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -39,8 +39,8 @@ def mypy(session: nox.Session) -> None:
 
     _generate_stubs(session)
 
-    session.run("mypy", "-p", config.MAIN_PACKAGE, "--config", config.MYPY_INI)
-    session.run("mypy", "-p", config.EXAMPLE_SCRIPTS, "--config", config.MYPY_INI)
+    session.run("mypy", "-p", config.MAIN_PACKAGE, "--config", config.PYPROJECT_TOML)
+    session.run("mypy", "-p", config.EXAMPLE_SCRIPTS, "--config", config.PYPROJECT_TOML)
 
 
 @nox.session(reuse_venv=True)

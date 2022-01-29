@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -68,6 +68,7 @@ from hikari import users
 from hikari.internal import attr_extensions
 from hikari.internal import enums
 from hikari.internal import routes
+from hikari.internal import time
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -79,7 +80,6 @@ if typing.TYPE_CHECKING:
     from hikari import permissions as permissions_
     from hikari import presences as presences_
     from hikari import voices as voices_
-    from hikari.internal import time
 
 
 @typing.final
@@ -226,6 +226,9 @@ class GuildSystemChannelFlag(enums.Flag):
     SUPPRESS_GUILD_REMINDER = 1 << 2
     """Suppress displaying messages with guild setup tips."""
 
+    SUPPRESS_USER_JOIN_REPLIES = 1 << 3
+    """Suppress displaying a reply button on join notifications."""
+
 
 @typing.final
 class GuildVerificationLevel(int, enums.Enum):
@@ -366,6 +369,17 @@ class Member(users.User):
     Will be `builtins.None` if the member is not a premium user.
     """
 
+    raw_communication_disabled_until: typing.Optional[datetime.datetime] = attr.field(repr=False)
+    """The datetime when this member's timeout will expire.
+
+     Will be `builtins.None` if the member is not timed out.
+
+     !!! note
+        The datetime might be in the past, so it is recommended to use
+        `communication_disabled_until` method to check if the member is timed
+        out at the time of the call.
+     """
+
     role_ids: typing.Sequence[snowflakes.Snowflake] = attr.field(repr=False)
     """A sequence of the IDs of the member's current roles."""
 
@@ -377,6 +391,13 @@ class Member(users.User):
     # such as the ID of the user this member represents.
     user: users.User = attr.field(repr=True)
     """This member's corresponding user object."""
+
+    guild_avatar_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    """Hash of the member's guild avatar guild if set, else `builtins.None`.
+
+    !!! note
+        This takes precedence over `Member.avatar_hash`.
+    """
 
     @property
     def app(self) -> traits.RESTAware:
@@ -392,8 +413,33 @@ class Member(users.User):
         return self.user.avatar_url
 
     @property
+    def guild_avatar_url(self) -> typing.Optional[files.URL]:
+        """Guild Avatar URL for the user, if they have one set.
+
+        May be `builtins.None` if no guild avatar is set. In this case, you
+        should use `avatar_hash` or `default_avatar_url` instead.
+        """
+        return self.make_guild_avatar_url()
+
+    @property
     def default_avatar_url(self) -> files.URL:
         return self.user.default_avatar_url
+
+    @property
+    def display_avatar_url(self) -> files.URL:
+        return self.make_guild_avatar_url() or super().display_avatar_url
+
+    @property
+    def banner_hash(self) -> typing.Optional[str]:
+        return self.user.banner_hash
+
+    @property
+    def banner_url(self) -> typing.Optional[files.URL]:
+        return self.user.banner_url
+
+    @property
+    def accent_color(self) -> typing.Optional[colors.Color]:
+        return self.user.accent_color
 
     @property
     def discriminator(self) -> str:
@@ -459,6 +505,23 @@ class Member(users.User):
         """
         return f"<@!{self.id}>" if self.nickname is not None else self.user.mention
 
+    def communication_disabled_until(self) -> typing.Optional[datetime.datetime]:
+        """Return when the timeout for this member ends.
+
+        Unlike `raw_communictation_disabled_until`, this will always be
+        `builtins.None` if the member is not currently timed out.
+
+        !!! note
+            The output of this function can depend based on when
+            the function is called.
+        """
+        if (
+            self.raw_communication_disabled_until is not None
+            and self.raw_communication_disabled_until > time.utc_datetime()
+        ):
+            return self.raw_communication_disabled_until
+        return None
+
     def get_presence(self) -> typing.Optional[presences_.MemberPresence]:
         """Get the cached presence for this member, if known.
 
@@ -519,6 +582,58 @@ class Member(users.User):
 
     def make_avatar_url(self, *, ext: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
         return self.user.make_avatar_url(ext=ext, size=size)
+
+    def make_guild_avatar_url(
+        self, *, ext: typing.Optional[str] = None, size: int = 4096
+    ) -> typing.Optional[files.URL]:
+        """Generate the guild specific avatar url for this member, if set.
+
+        If no guild avatar is set, this returns `builtins.None`. You can then
+        use the `make_avatar_url` to get their global custom avatar or
+        `default_avatar_url` if they have no custom avatar set.
+
+        Parameters
+        ----------
+        ext : typing.Optional[builtins.str]
+            The ext to use for this URL, defaults to `png` or `gif`.
+            Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
+            animated). Will be ignored for default avatars which can only be
+            `png`.
+
+            If `builtins.None`, then the correct default extension is
+            determined based on whether the icon is animated or not.
+        size : builtins.int
+            The size to set for the URL, defaults to `4096`.
+            Can be any power of two between 16 and 4096.
+            Will be ignored for default avatars.
+
+        Returns
+        -------
+        typing.Optional[hikari.files.URL]
+            The URL to the avatar, or `builtins.None` if not present.
+
+        Raises
+        ------
+        builtins.ValueError
+            If `size` is not a power of two or not between 16 and 4096.
+        """
+        if self.guild_avatar_hash is None:
+            return None
+
+        if ext is None:
+            if self.guild_avatar_hash.startswith("a_"):
+                ext = "gif"
+            else:
+                ext = "png"
+
+        return routes.CDN_MEMBER_AVATAR.compile_to_file(
+            urls.CDN_URL,
+            guild_id=self.guild_id,
+            user_id=self.id,
+            hash=self.guild_avatar_hash,
+            size=size,
+            file_format=ext,
+        )
 
     async def fetch_self(self) -> Member:
         """Fetch an up-to-date view of this member from the API.
@@ -799,6 +914,7 @@ class Member(users.User):
         voice_channel: undefined.UndefinedNoneOr[
             snowflakes.SnowflakeishOr[channels_.GuildVoiceChannel]
         ] = undefined.UNDEFINED,
+        communication_disabled_until: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> Member:
         """Edit the member.
@@ -834,6 +950,12 @@ class Member(users.User):
             !!! note
                 If the member is not in a voice channel, this will
                 take no effect.
+        communication_disabled_until : hikari.undefined.UndefinedNoneOr[datetime.datetime]
+            If provided, the datetime when the timeout (disable communication)
+            of the member expires, up to 28 days in the future, or `builtins.None`
+            to remove the timeout from the member.
+
+            Requires the `MODERATE_MEMBERS` permission.
         reason : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -875,6 +997,7 @@ class Member(users.User):
             mute=mute,
             deaf=deaf,
             voice_channel=voice_channel,
+            communication_disabled_until=communication_disabled_until,
             reason=reason,
         )
 
@@ -938,6 +1061,12 @@ class Role(PartialRole):
     members will be hoisted under their highest role where this is set to `builtins.True`.
     """
 
+    icon_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    """Hash of the role's icon if set, else `builtins.None`."""
+
+    unicode_emoji: typing.Optional[emojis_.UnicodeEmoji] = attr.field(eq=False, hash=False, repr=False)
+    """Role's icon as an unicode emoji if set, else `builtins.None`."""
+
     is_managed: bool = attr.field(eq=False, hash=False, repr=False)
     """Whether this role is managed by an integration."""
 
@@ -976,6 +1105,52 @@ class Role(PartialRole):
     def colour(self) -> colours.Colour:
         """Alias for the `color` field."""
         return self.color
+
+    @property
+    def icon_url(self) -> typing.Optional[files.URL]:
+        """Role icon URL, if there is one.
+
+        Returns
+        -------
+        typing.Optional[hikari.files.URL]
+            The URL, or `builtins.None` if no icon exists.
+        """
+        return self.make_icon_url()
+
+    def make_icon_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the icon URL for this role, if set.
+
+        If no role icon is set, this returns `builtins.None`.
+
+        Parameters
+        ----------
+        ext : builtins.str
+            The extension to use for this URL, defaults to `png`.
+            Supports `png`, `jpeg`, `jpg` and `webp`.
+        size : builtins.int
+            The size to set for the URL, defaults to `4096`.
+            Can be any power of two between 16 and 4096.
+
+        Returns
+        -------
+        typing.Optional[hikari.files.URL]
+            The URL to the icon, or `builtins.None` if not present.
+
+        Raises
+        ------
+        builtins.ValueError
+            If `size` is not a power of two or not between 16 and 4096.
+        """
+        if self.icon_hash is None:
+            return None
+
+        return routes.CDN_ROLE_ICON.compile_to_file(
+            urls.CDN_URL,
+            role_id=self.id,
+            hash=self.icon_hash,
+            size=size,
+            file_format=ext,
+        )
 
 
 @typing.final
@@ -2931,7 +3106,7 @@ class Guild(PartialGuild):
     def get_emoji(
         self, emoji: snowflakes.SnowflakeishOr[emojis_.CustomEmoji]
     ) -> typing.Optional[emojis_.KnownCustomEmoji]:
-        """Get a cached role that belongs to the guild by it's ID or object.
+        """Get a cached emoji that belongs to the guild by it's ID or object.
 
         Parameters
         ----------

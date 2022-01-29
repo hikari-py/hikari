@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -264,14 +264,23 @@ class Permissions(enums.Flag):
         (or their owner's account in the case of bot users) and the guild owner.
     """
 
-    USE_PUBLIC_THREADS = 1 << 35
-    """Allows for creating and participating in threads."""
+    CREATE_PUBLIC_THREADS = 1 << 35
+    """Allows for creating threads."""
 
-    USE_PRIVATE_THREADS = 1 << 36
-    """Allows for creating and participating in private threads."""
+    CREATE_PRIVATE_THREADS = 1 << 36
+    """Allows for creating private threads."""
 
     USE_EXTERNAL_STICKERS = 1 << 37
     """Allows the usage of custom stickers from other servers."""
+
+    SEND_MESSAGES_IN_THREADS = 1 << 38
+    """Allows for sending messages in threads."""
+
+    START_EMBEDDED_ACTIVITIES = 1 << 39
+    """Allows for launching activities (applications with the `EMBEDDED` flag) in a voice channel."""
+
+    MODERATE_MEMBERS = 1 << 40
+    """Allows for timing out members."""
 
     @classmethod
     def all_permissions(cls) -> Permissions:

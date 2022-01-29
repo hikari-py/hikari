@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -31,7 +31,6 @@ import base64
 import random
 import typing
 
-from hikari import channels
 from hikari import errors
 from hikari import intents as intents_
 from hikari import presences
@@ -104,12 +103,9 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
 
     async def on_channel_create(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#channel-create for more info."""
-        event = self._event_factory.deserialize_channel_create_event(shard, payload)
+        event = self._event_factory.deserialize_guild_channel_create_event(shard, payload)
 
         if self._cache:
-            assert isinstance(
-                event.channel, channels.GuildChannel
-            ), "channel create events for DM channels are unexpected"
             self._cache.set_guild_channel(event.channel)
 
         await self.dispatch(event)
@@ -117,19 +113,16 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
     async def on_channel_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#channel-update for more info."""
         old = self._cache.get_guild_channel(snowflakes.Snowflake(payload["id"])) if self._cache else None
-        event = self._event_factory.deserialize_channel_update_event(shard, payload, old_channel=old)
+        event = self._event_factory.deserialize_guild_channel_update_event(shard, payload, old_channel=old)
 
         if self._cache:
-            assert isinstance(
-                event.channel, channels.GuildChannel
-            ), "channel update events for DM channels are unexpected"
             self._cache.update_guild_channel(event.channel)
 
         await self.dispatch(event)
 
     async def on_channel_delete(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#channel-delete for more info."""
-        event = self._event_factory.deserialize_channel_delete_event(shard, payload)
+        event = self._event_factory.deserialize_guild_channel_delete_event(shard, payload)
 
         if self._cache:
             self._cache.delete_guild_channel(event.channel.id)
@@ -143,7 +136,12 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
 
     async def on_guild_create(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-create for more info."""
-        event = self._event_factory.deserialize_guild_create_event(shard, payload)
+        event: typing.Union[guild_events.GuildAvailableEvent, guild_events.GuildJoinEvent]
+
+        if "unavailable" in payload:
+            event = self._event_factory.deserialize_guild_available_event(shard, payload)
+        else:
+            event = self._event_factory.deserialize_guild_join_event(shard, payload)
 
         if self._cache:
             self._cache.update_guild(event.guild)
@@ -218,18 +216,20 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
                 self._cache.set_guild_availability(event.guild_id, False)
 
         else:
-            event = self._event_factory.deserialize_guild_leave_event(shard, payload)
-
+            old: typing.Optional[guilds.GatewayGuild] = None
             if self._cache:
+                guild_id = snowflakes.Snowflake(payload["id"])
                 #  TODO: this doesn't work in all intent scenarios
-                self._cache.delete_guild(event.guild_id)
-                self._cache.clear_voice_states_for_guild(event.guild_id)
-                self._cache.clear_invites_for_guild(event.guild_id)
-                self._cache.clear_members_for_guild(event.guild_id)
-                self._cache.clear_presences_for_guild(event.guild_id)
-                self._cache.clear_guild_channels_for_guild(event.guild_id)
-                self._cache.clear_emojis_for_guild(event.guild_id)
-                self._cache.clear_roles_for_guild(event.guild_id)
+                old = self._cache.delete_guild(guild_id)
+                self._cache.clear_voice_states_for_guild(guild_id)
+                self._cache.clear_invites_for_guild(guild_id)
+                self._cache.clear_members_for_guild(guild_id)
+                self._cache.clear_presences_for_guild(guild_id)
+                self._cache.clear_guild_channels_for_guild(guild_id)
+                self._cache.clear_emojis_for_guild(guild_id)
+                self._cache.clear_roles_for_guild(guild_id)
+
+            event = self._event_factory.deserialize_guild_leave_event(shard, payload, old_guild=old)
 
         await self.dispatch(event)
 
@@ -389,22 +389,30 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
 
     async def on_message_delete(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#message-delete for more info."""
-        event = self._event_factory.deserialize_message_delete_event(shard, payload)
-
         if self._cache:
-            self._cache.delete_message(event.message_id)
+            message_id = snowflakes.Snowflake(payload["id"])
+            old_message = self._cache.delete_message(message_id)
+        else:
+            old_message = None
+
+        event = self._event_factory.deserialize_message_delete_event(shard, payload, old_message=old_message)
 
         await self.dispatch(event)
 
     async def on_message_delete_bulk(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#message-delete-bulk for more info."""
-        event = self._event_factory.deserialize_message_delete_bulk_event(shard, payload)
+        old_messages = {}
 
         if self._cache:
-            for message_id in event.message_ids:
-                self._cache.delete_message(message_id)
+            for message_id in payload["ids"]:
+                message_id = snowflakes.Snowflake(message_id)
 
-        await self.dispatch(event)
+                if message := self._cache.delete_message(message_id):
+                    old_messages[message_id] = message
+
+        await self.dispatch(
+            self._event_factory.deserialize_guild_message_delete_bulk_event(shard, payload, old_messages=old_messages)
+        )
 
     async def on_message_reaction_add(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject

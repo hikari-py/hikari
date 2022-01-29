@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -270,14 +270,14 @@ class Enum(metaclass=_EnumMeta):
     be able to be used as an `int` type outside these overridden definitions.
     """
 
-    _name_to_member_map_: typing.Final[typing.ClassVar[typing.Mapping[str, Enum]]]
-    _value_to_member_map_: typing.Final[typing.ClassVar[typing.Mapping[int, Enum]]]
-    _member_names_: typing.Final[typing.ClassVar[typing.Sequence[str]]]
-    __members__: typing.Final[typing.ClassVar[typing.Mapping[str, Enum]]]
-    __objtype__: typing.Final[typing.ClassVar[typing.Type[typing.Any]]]
-    __enumtype__: typing.Final[typing.ClassVar[typing.Type[Enum]]]
-    _name_: typing.Final[str]
-    _value_: typing.Final[typing.Any]
+    _name_to_member_map_: typing.ClassVar[typing.Mapping[str, Enum]]
+    _value_to_member_map_: typing.ClassVar[typing.Mapping[int, Enum]]
+    _member_names_: typing.ClassVar[typing.Sequence[str]]
+    __members__: typing.ClassVar[typing.Mapping[str, Enum]]
+    __objtype__: typing.ClassVar[typing.Type[typing.Any]]
+    __enumtype__: typing.ClassVar[typing.Type[Enum]]
+    _name_: str
+    _value_: typing.Any
 
     @property
     def name(self) -> str:
@@ -592,16 +592,16 @@ class Flag(metaclass=_FlagMeta):
         is possible
     """
 
-    _name_to_member_map_: typing.Final[typing.ClassVar[typing.Mapping[str, Flag]]]
-    _value_to_member_map_: typing.Final[typing.ClassVar[typing.Mapping[int, Flag]]]
-    _powers_of_2_to_member_map_: typing.Final[typing.ClassVar[typing.Mapping[int, Flag]]]
-    _temp_members_: typing.Final[typing.ClassVar[typing.Mapping[int, Flag]]]
-    _member_names_: typing.Final[typing.ClassVar[typing.Sequence[str]]]
-    __members__: typing.Final[typing.ClassVar[typing.Mapping[str, Flag]]]
-    __objtype__: typing.Final[typing.ClassVar[typing.Type[int]]]
-    __enumtype__: typing.Final[typing.ClassVar[typing.Type[Flag]]]
-    _name_: typing.Final[str]
-    _value_: typing.Final[int]
+    _name_to_member_map_: typing.ClassVar[typing.Mapping[str, Flag]]
+    _value_to_member_map_: typing.ClassVar[typing.Mapping[int, Flag]]
+    _powers_of_2_to_member_map_: typing.ClassVar[typing.Mapping[int, Flag]]
+    _temp_members_: typing.ClassVar[typing.Mapping[int, Flag]]
+    _member_names_: typing.ClassVar[typing.Sequence[str]]
+    __members__: typing.ClassVar[typing.Mapping[str, Flag]]
+    __objtype__: typing.ClassVar[typing.Type[int]]
+    __enumtype__: typing.ClassVar[typing.Type[Flag]]
+    _name_: typing.Optional[str]
+    _value_: int
 
     @property
     def name(self) -> str:

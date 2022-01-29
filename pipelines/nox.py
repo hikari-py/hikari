@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -32,11 +32,15 @@ from nox.sessions import Session
 from pipelines import config
 
 # Default sessions should be defined here
-_options.sessions = ["reformat-code", "pytest", "flake8", "mypy", "safety", "pages"]
+_options.sessions = ["reformat-code", "pytest", "flake8", "mypy", "verify-types", "safety", "pages"]
+
+_NoxCallbackSig = typing.Callable[[Session], None]
 
 
-def session(*, only_if=lambda: True, reuse_venv: bool = False, **kwargs):
-    def decorator(func: typing.Callable[[Session], None]):
+def session(
+    *, only_if: typing.Callable[[], bool] = lambda: True, reuse_venv: bool = False, **kwargs: typing.Any
+) -> typing.Callable[[_NoxCallbackSig], typing.Union[_NoxCallbackSig, Session]]:
+    def decorator(func: _NoxCallbackSig) -> typing.Union[_NoxCallbackSig, Session]:
         func.__name__ = func.__name__.replace("_", "-")
 
         return _session(reuse_venv=reuse_venv, **kwargs)(func) if only_if() else func
@@ -44,9 +48,9 @@ def session(*, only_if=lambda: True, reuse_venv: bool = False, **kwargs):
     return decorator
 
 
-def inherit_environment_vars(func):
+def inherit_environment_vars(func: _NoxCallbackSig) -> _NoxCallbackSig:
     @functools.wraps(func)
-    def logic(session):
+    def logic(session: Session) -> None:
         for n, v in os.environ.items():
             session.env[n] = v
         return func(session)
@@ -54,7 +58,7 @@ def inherit_environment_vars(func):
     return logic
 
 
-def shell(arg, *args):
+def shell(arg: str, *args: str) -> int:
     command = " ".join((arg, *args))
     print("nox > shell >", command)
     return subprocess.check_call(command, shell=True)

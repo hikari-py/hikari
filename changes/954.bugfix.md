@@ -1,0 +1,1 @@
+Fix deprecation warnings raised by usage of asyncio.gather outside of an active event loop in GatewayBot.run

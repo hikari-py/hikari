@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -41,6 +41,7 @@ from hikari.internal import routes
 
 if typing.TYPE_CHECKING:
     from hikari import channels
+    from hikari import colors
     from hikari import embeds as embeds_
     from hikari import files
     from hikari import guilds
@@ -97,6 +98,9 @@ class UserFlag(enums.Flag):
     DISCORD_CERTIFIED_MODERATOR = 1 << 18
     """Discord Certified Moderator."""
 
+    BOT_HTTP_INTERACTIONS = 1 << 19
+    """Bot uses only HTTP interactions and is shown in the active member list."""
+
 
 @typing.final
 class PremiumType(int, enums.Enum):
@@ -136,6 +140,26 @@ class PartialUser(snowflakes.Unique, abc.ABC):
     @abc.abstractmethod
     def avatar_hash(self) -> undefined.UndefinedNoneOr[str]:
         """Avatar hash for the user, if they have one, otherwise `builtins.None`."""
+
+    @property
+    @abc.abstractmethod
+    def banner_hash(self) -> undefined.UndefinedNoneOr[str]:
+        """Banner hash for the user, if they have one, otherwise `hikari.undefined.UNDEFINED`."""
+
+    @property
+    @abc.abstractmethod
+    def accent_color(self) -> undefined.UndefinedNoneOr[colors.Color]:
+        """The custom banner color for the user, if set else `builtins.None`.
+
+        Will be `hikari.undefined.UNDEFINED` if not known.
+
+        The official client will decide the default color if not set.
+        """  # noqa: D401 - Imperative mood
+
+    @property
+    def accent_colour(self) -> undefined.UndefinedNoneOr[colors.Color]:
+        """Alias for the `accent_color` field."""
+        return self.accent_color
 
     @property
     @abc.abstractmethod
@@ -441,6 +465,19 @@ class User(PartialUser, abc.ABC):
 
     @property
     @abc.abstractmethod
+    def accent_color(self) -> typing.Optional[colors.Color]:
+        """The custom banner color for the user, if set else `builtins.None`.
+
+        The official client will decide the default color if not set.
+        """  # noqa: D401 - Imperative mood
+
+    @property
+    def accent_colour(self) -> typing.Optional[colors.Color]:
+        """Alias for the `accent_color` field."""
+        return self.accent_color
+
+    @property
+    @abc.abstractmethod
     def avatar_hash(self) -> typing.Optional[str]:
         """Avatar hash for the user, if they have one, otherwise `builtins.None`."""
 
@@ -454,6 +491,19 @@ class User(PartialUser, abc.ABC):
         return self.make_avatar_url()
 
     @property
+    @abc.abstractmethod
+    def banner_hash(self) -> typing.Optional[str]:
+        """Banner hash for the user, if they have one, otherwise `hikari.undefined.UNDEFINED`."""
+
+    @property
+    def banner_url(self) -> typing.Optional[files.URL]:
+        """Banner URL for the user, if they have one set.
+
+        May be `builtins.None` if no custom banner is set.
+        """
+        return self.make_banner_url()
+
+    @property
     def default_avatar_url(self) -> files.URL:
         """Default avatar URL for this user."""  # noqa: D401 - Imperative mood
         return routes.CDN_DEFAULT_USER_AVATAR.compile_to_file(
@@ -461,6 +511,11 @@ class User(PartialUser, abc.ABC):
             discriminator=int(self.discriminator) % 5,
             file_format="png",
         )
+
+    @property
+    def display_avatar_url(self) -> files.URL:
+        """Display avatar URL for this user."""
+        return self.make_avatar_url() or self.default_avatar_url
 
     @property
     @abc.abstractmethod
@@ -555,6 +610,51 @@ class User(PartialUser, abc.ABC):
             file_format=ext,
         )
 
+    def make_banner_url(self, *, ext: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the banner URL for this user, if set.
+
+        If no custom banner is set, this returns `builtins.None`.
+
+        Parameters
+        ----------
+        ext : typing.Optional[builtins.str]
+            The ext to use for this URL, defaults to `png` or `gif`.
+            Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
+            animated).
+
+            If `builtins.None`, then the correct default extension is
+            determined based on whether the banner is animated or not.
+        size : builtins.int
+            The size to set for the URL, defaults to `4096`.
+            Can be any power of two between 16 and 4096.
+
+        Returns
+        -------
+        typing.Optional[hikari.files.URL]
+            The URL to the banner, or `builtins.None` if not present.
+
+        Raises
+        ------
+        builtins.ValueError
+            If `size` is not a power of two or not between 16 and 4096.
+        """
+        if self.banner_hash is None:
+            return None
+
+        if ext is None:
+            if self.banner_hash.startswith("a_"):
+                ext = "gif"
+            else:
+                ext = "png"
+
+        return routes.CDN_USER_BANNER.compile_to_file(
+            urls.CDN_URL,
+            user_id=self.id,
+            hash=self.banner_hash,
+            size=size,
+            file_format=ext,
+        )
+
 
 @attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
@@ -582,13 +682,22 @@ class PartialUserImpl(PartialUser):
     avatar_hash: undefined.UndefinedNoneOr[str] = attr.field(eq=False, hash=False, repr=False)
     """Avatar hash of the user, if a custom avatar is set."""
 
+    banner_hash: undefined.UndefinedNoneOr[str] = attr.field(eq=False, hash=False, repr=False)
+    """Banner hash of the user, if a custom banner is set."""
+
+    accent_color: undefined.UndefinedNoneOr[colors.Color] = attr.field(eq=False, hash=False, repr=False)
+    """The custom banner color for the user, if set.
+
+    The official client will decide the default color if not set.
+    """
+
     is_bot: undefined.UndefinedOr[bool] = attr.field(eq=False, hash=False, repr=True)
     """Whether this user is a bot account."""
 
-    is_system: undefined.UndefinedOr[bool] = attr.field(eq=False, hash=False, repr=False)
+    is_system: undefined.UndefinedOr[bool] = attr.field(eq=False, hash=False, repr=True)
     """Whether this user is a system account."""
 
-    flags: undefined.UndefinedOr[UserFlag] = attr.field(eq=False, hash=False)
+    flags: undefined.UndefinedOr[UserFlag] = attr.field(eq=False, hash=False, repr=True)
     """Public flags for this user."""
 
     @property
@@ -620,26 +729,31 @@ class PartialUserImpl(PartialUser):
 class UserImpl(PartialUserImpl, User):
     """Concrete implementation of user information."""
 
-    # These are not attribs on purpose. The idea is to narrow the types of
-    # these fields without redefining them twice in the slots. This is
-    # compatible with MYPY, hence why I have done it like this...
-
-    discriminator: str
+    discriminator: str = attr.field(eq=False, hash=False, repr=True)
     """The user's discriminator."""
 
-    username: str
+    username: str = attr.field(eq=False, hash=False, repr=True)
     """The user's username."""
 
-    avatar_hash: typing.Optional[str]
+    avatar_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
     """The user's avatar hash, if they have one, otherwise `builtins.None`."""
 
-    is_bot: bool
+    banner_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    """Banner hash of the user, if they have one, otherwise `builtins.None`"""
+
+    accent_color: typing.Optional[colors.Color] = attr.field(eq=False, hash=False, repr=False)
+    """The custom banner color for the user, if set.
+
+    The official client will decide the default color if not set.
+    """  # noqa: D401 - Imperative mood
+
+    is_bot: bool = attr.field(eq=False, hash=False, repr=True)
     """`builtins.True` if this user is a bot account, `builtins.False` otherwise."""
 
-    is_system: bool
+    is_system: bool = attr.field(eq=False, hash=False, repr=True)
     """`builtins.True` if this user is a system account, `builtins.False` otherwise."""
 
-    flags: UserFlag
+    flags: UserFlag = attr.field(eq=False, hash=False, repr=True)
     """The public flags for this user."""
 
 

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -71,7 +71,7 @@ class AttrGetter(typing.Generic[InputValueT, ReturnValueT]):
     __slots__: typing.Sequence[str] = ("pipeline", "invert_all")
 
     def __init__(self, attr_name: str) -> None:
-        self.invert_all = False
+        self.invert_all: bool = False
 
         if attr_name.startswith("!."):
             attr_name = attr_name[2:]

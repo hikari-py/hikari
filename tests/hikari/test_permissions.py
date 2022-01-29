@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -27,4 +27,4 @@ class TestPermissions:
         all_perms = permissions.Permissions.all_permissions()
 
         assert isinstance(all_perms, permissions.Permissions)
-        assert all_perms == 266287972351
+        assert all_perms == 2190433320959

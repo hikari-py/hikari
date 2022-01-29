@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -175,6 +175,15 @@ class ActivityFlag(enums.Flag):
 
     PLAY = 1 << 5
     """Play"""
+
+    PARTY_PRIVACY_FRIENDS = 1 << 6
+    """Party privacy: friends only."""
+
+    PARTY_PRIVACY_VOICE_CHANNEL = 1 << 7
+    """Party prvacy: voice channel only."""
+
+    EMBEDDED = 1 << 8
+    """An activity that's embedded into a voice channel."""
 
 
 # TODO: add strict type checking to gateway for this type in an invariant way.

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -57,7 +57,7 @@ import typing
 import urllib.parse
 import urllib.request
 
-import aiohttp.client
+import aiohttp
 import attr
 
 from hikari.internal import aio
@@ -569,7 +569,7 @@ class _WebReaderAsyncReaderContextManagerImpl(AsyncReaderContextManager[WebReade
         self._web_resource = web_resource
         self._head_only = head_only
         self._client_session: aiohttp.ClientSession = NotImplemented
-        self._client_response_ctx: typing.AsyncContextManager[aiohttp.client.ClientResponse] = NotImplemented
+        self._client_response_ctx: typing.AsyncContextManager[aiohttp.ClientResponse] = NotImplemented
 
     async def __aenter__(self) -> WebReader:
         client_session = aiohttp.ClientSession()
@@ -833,10 +833,10 @@ class MultiprocessingFileReader(FileReader):
         return {"path": self.path, "filename": self.filename}
 
     def __setstate__(self, state: typing.Dict[str, typing.Any]) -> None:
-        self.path = state["path"]
-        self.filename = state["filename"]
-        self.executor = None
-        self.mimetype = None
+        self.path: pathlib.Path = state["path"]
+        self.filename: str = state["filename"]
+        self.executor: typing.Optional[concurrent.futures.Executor] = None
+        self.mimetype: typing.Optional[str] = None
 
     def _read_all(self) -> bytes:
         with open(self.path, "rb") as fp:
@@ -961,7 +961,7 @@ class IteratorReader(AsyncReader):
         elif aio.is_async_iterator(self.data) or inspect.isasyncgen(self.data):
             try:
                 while True:
-                    yield self._assert_bytes(await self.data.__anext__())  # type: ignore[union-attr]
+                    yield self._assert_bytes(await self.data.__anext__())
             except StopAsyncIteration:
                 pass
 
@@ -975,7 +975,7 @@ class IteratorReader(AsyncReader):
         elif inspect.isgenerator(self.data):
             try:
                 while True:
-                    yield self._assert_bytes(self.data.send(None))  # type: ignore[union-attr]
+                    yield self._assert_bytes(self.data.send(None))
             except StopIteration:
                 pass
 

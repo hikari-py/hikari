@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -157,7 +157,7 @@ class PartialSticker(snowflakes.Unique):
         """
         ext = "json" if self.format_type is StickerFormatType.LOTTIE else "png"
 
-        return routes.CDN_STICKER.compile_to_file(urls.CDN_URL, hash=self.id, file_format=ext)
+        return routes.CDN_STICKER.compile_to_file(urls.CDN_URL, sticker_id=self.id, file_format=ext)
 
 
 @attr_extensions.with_copy

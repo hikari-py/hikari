@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -119,7 +119,7 @@ class ExecutableWebhook(abc.ABC):
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
         username: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        avatar_url: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        avatar_url: typing.Union[undefined.UndefinedType, str, files.URL] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         attachment: undefined.UndefinedOr[files_.Resourceish] = undefined.UNDEFINED,
         attachments: undefined.UndefinedOr[typing.Sequence[files_.Resourceish]] = undefined.UNDEFINED,
@@ -159,7 +159,7 @@ class ExecutableWebhook(abc.ABC):
         username : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the username to override the webhook's username
             for this request.
-        avatar_url : hikari.undefined.UndefinedOr[builtins.str]
+        avatar_url : typing.Union[hikari.undefined.UndefinedType, builtins.str, hikari.files.URL]
             If provided, the url of an image to override the webhook's
             avatar with for this request.
         tts : hikari.undefined.UndefinedOr[bool]

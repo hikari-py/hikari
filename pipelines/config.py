@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -35,10 +35,9 @@ LOGO_SOURCE = "logo.png"
 
 # Linting and test configs.
 FLAKE8_REPORT = "public/flake8"
-MYPY_INI = "mypy.ini"
-PYTEST_INI = "pytest.ini"
-COVERAGE_INI = "coverage.ini"
+PYPROJECT_TOML = "pyproject.toml"
 COVERAGE_HTML_PATH = _os.path.join(ARTIFACT_DIRECTORY, "coverage", "html")
+PYRIGHT_VERSION = "1.1.190"  # 2021-11-25 (UTC+0)
 
 # Reformatting paths
 

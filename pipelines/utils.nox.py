@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -39,7 +39,7 @@ TRASH = [
 ]
 
 
-@nox.session(reuse_venv=False)
+@nox.session(reuse_venv=False, venv_backend="none")
 def purge(_: nox.Session) -> None:
     """Delete any nox-generated files."""
     for trash in TRASH:

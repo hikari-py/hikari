@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -259,8 +259,8 @@ class PermissionOverwriteType(int, enums.Enum):
 
 
 @attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
-class PermissionOverwrite(snowflakes.Unique):
+@attr.define(kw_only=True, weakref_slot=False)
+class PermissionOverwrite:
     """Represents permission overwrites for a channel or role in a channel.
 
     You may sometimes need to make instances of this object to add/edit
@@ -286,29 +286,19 @@ class PermissionOverwrite(snowflakes.Unique):
     ```
     """
 
-    id: snowflakes.Snowflake = attr.field(
-        converter=snowflakes.Snowflake,
-        hash=True,
-        repr=True,
-    )
+    id: snowflakes.Snowflake = attr.field(converter=snowflakes.Snowflake, repr=True)
     """The ID of this entity."""
 
-    type: typing.Union[PermissionOverwriteType, int] = attr.field(
-        converter=PermissionOverwriteType, hash=True, repr=True
-    )
+    type: typing.Union[PermissionOverwriteType, int] = attr.field(converter=PermissionOverwriteType, repr=True)
     """The type of entity this overwrite targets."""
 
     allow: permissions.Permissions = attr.field(
-        converter=permissions.Permissions,
-        default=permissions.Permissions.NONE,
-        eq=False,
-        hash=False,
-        repr=False,
+        converter=permissions.Permissions, default=permissions.Permissions.NONE, repr=True
     )
     """The permissions this overwrite allows."""
 
     deny: permissions.Permissions = attr.field(
-        converter=permissions.Permissions, default=permissions.Permissions.NONE, eq=False, hash=False, repr=False
+        converter=permissions.Permissions, default=permissions.Permissions.NONE, repr=True
     )
     """The permissions this overwrite denies."""
 
@@ -1361,7 +1351,10 @@ The following types are in this:
 * `GuildNewsChannel`
 """
 
-WebhookChannelTypes = (GuildTextChannel, GuildNewsChannel)
+WebhookChannelTypes: typing.Tuple[typing.Type[GuildTextChannel], typing.Type[GuildNewsChannel]] = (
+    GuildTextChannel,
+    GuildNewsChannel,
+)
 """Tuple of the channel types which are valid for `WebhookChannelT`.
 
 This includes:

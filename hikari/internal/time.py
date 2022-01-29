@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -63,8 +63,6 @@ References
 * [Discord API documentation - Snowflakes](https://discord.com/developers/docs/reference#snowflakes)
 """
 
-_ISO_8601_FORMAT: typing.Final[str] = "%Y-%m-%dT%H:%M:%s"
-
 
 # Default to the standard lib parser, that isn't really ISO compliant but seems
 # to work for what we need.
@@ -102,7 +100,7 @@ try:
 except ImportError:
     fast_iso8601_datetime_string_to_datetime = None
 
-iso8601_datetime_string_to_datetime = (
+iso8601_datetime_string_to_datetime: typing.Callable[[str], datetime.datetime] = (
     fast_iso8601_datetime_string_to_datetime or slow_iso8601_datetime_string_to_datetime
 )
 

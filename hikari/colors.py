@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -427,7 +427,11 @@ class Color(int):
     # Partially chose to override these as the docstrings contain typos according to Sphinx.
     @classmethod
     def from_bytes(
-        cls, bytes_: typing.Union[typing.Iterable[int], typing.SupportsBytes], byteorder: str, *, signed: bool = True
+        cls,
+        bytes_: typing.Union[typing.Iterable[typing.SupportsIndex], typing.SupportsBytes],
+        byteorder: typing.Literal["little", "big"],
+        *,
+        signed: bool = True,
     ) -> Color:
         """Convert the bytes to a `Color`.
 
@@ -532,7 +536,13 @@ class Color(int):
 
         raise ValueError(f"Could not transform {value!r} into a {cls.__qualname__} object")
 
-    def to_bytes(self, length: int, byteorder: str, *, signed: bool = True) -> bytes:
+    def to_bytes(
+        self,
+        length: typing.SupportsIndex,
+        byteorder: typing.Literal["little", "big"],
+        *,
+        signed: bool = True,
+    ) -> bytes:
         """Convert the color code to bytes.
 
         Parameters

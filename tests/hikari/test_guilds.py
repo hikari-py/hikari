@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -31,8 +31,10 @@ from hikari import permissions
 from hikari import snowflakes
 from hikari import undefined
 from hikari import urls
+from hikari import users
 from hikari.impl import bot
 from hikari.internal import routes
+from hikari.internal import time
 from tests.hikari import hikari_test_helpers
 
 
@@ -135,6 +137,8 @@ class TestRole:
             color=colors.Color(0x1A2B3C),
             guild_id=snowflakes.Snowflake(112233),
             is_hoisted=False,
+            icon_hash="icon_hash",
+            unicode_emoji=None,
             is_managed=False,
             is_mentionable=True,
             permissions=permissions.Permissions.CONNECT,
@@ -146,6 +150,32 @@ class TestRole:
 
     def test_colour_property(self, model):
         assert model.colour == colors.Color(0x1A2B3C)
+
+    def test_icon_url_property(self, model):
+        with mock.patch.object(guilds.Role, "make_icon_url") as make_icon_url:
+            assert model.icon_url == make_icon_url.return_value
+
+            model.make_icon_url.assert_called_once_with()
+
+    def test_make_icon_url_when_hash_is_None(self, model):
+        model.icon_hash = None
+
+        with mock.patch.object(
+            routes, "CDN_ROLE_ICON", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert model.make_icon_url(ext="jpeg", size=1) is None
+
+        route.compile_to_file.assert_not_called()
+
+    def test_make_icon_url_when_hash_is_not_None(self, model):
+        with mock.patch.object(
+            routes, "CDN_ROLE_ICON", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert model.make_icon_url(ext="jpeg", size=1) == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL, role_id=979899100, hash="icon_hash", size=1, file_format="jpeg"
+        )
 
 
 class TestGuildWidget:
@@ -192,12 +222,14 @@ class TestMember:
             is_pending=False,
             joined_at=datetime.datetime.now().astimezone(),
             nickname="davb",
+            guild_avatar_hash="dab",
             premium_since=None,
             role_ids=[
                 snowflakes.Snowflake(456),
                 snowflakes.Snowflake(1234),
             ],
             user=mock_user,
+            raw_communication_disabled_until=None,
         )
 
     def test_str_operator(self, model, mock_user):
@@ -230,10 +262,105 @@ class TestMember:
     def test_avatar_url_property(self, model, mock_user):
         assert model.avatar_url is mock_user.avatar_url
 
+    def test_display_avatar_url_when_guild_hash_is_None(self, model, mock_user):
+        with mock.patch.object(guilds.Member, "make_guild_avatar_url") as mock_make_guild_avatar_url:
+            assert model.display_avatar_url is mock_make_guild_avatar_url.return_value
+
+    def test_display_guild_avatar_url_when_guild_hash_is_not_None(self, model, mock_user):
+        with mock.patch.object(guilds.Member, "make_guild_avatar_url", return_value=None):
+            with mock.patch.object(users.User, "display_avatar_url") as mock_display_avatar_url:
+                assert model.display_avatar_url is mock_display_avatar_url
+
+    def test_banner_hash_property(self, model, mock_user):
+        assert model.banner_hash is mock_user.banner_hash
+
+    def test_banner_url_property(self, model, mock_user):
+        assert model.banner_url is mock_user.banner_url
+
+    def test_accent_color_property(self, model, mock_user):
+        assert model.accent_color is mock_user.accent_color
+
+    def test_guild_avatar_url_property(self, model):
+        with mock.patch.object(guilds.Member, "make_guild_avatar_url") as make_guild_avatar_url:
+            assert model.guild_avatar_url is make_guild_avatar_url.return_value
+
+    def test_communication_disabled_until(self, model):
+        model.raw_communication_disabled_until = datetime.datetime(2021, 11, 22)
+
+        with mock.patch.object(time, "utc_datetime", return_value=datetime.datetime(2021, 10, 18)):
+            assert model.communication_disabled_until() == datetime.datetime(2021, 11, 22)
+
+    def test_communication_disabled_until_when_raw_communication_disabled_until_is_None(self, model):
+        model.raw_communication_disabled_until = None
+
+        with mock.patch.object(time, "utc_datetime", return_value=datetime.datetime(2021, 10, 18)):
+            assert model.communication_disabled_until() is None
+
+    def test_comminucation_disabled_until_when_raw_communication_disabled_until_is_in_the_past(self, model):
+        model.raw_communication_disabled_until = datetime.datetime(2021, 10, 18)
+
+        with mock.patch.object(time, "utc_datetime", return_value=datetime.datetime(2021, 11, 22)):
+            assert model.communication_disabled_until() is None
+
     def test_make_avatar_url(self, model, mock_user):
         result = model.make_avatar_url(ext="png", size=4096)
         mock_user.make_avatar_url.assert_called_once_with(ext="png", size=4096)
         assert result is mock_user.make_avatar_url.return_value
+
+    def test_make_guild_avatar_url_when_no_hash(self, model):
+        model.guild_avatar_hash = None
+        assert model.make_guild_avatar_url(ext="png", size=1024) is None
+
+    def test_make_guild_avatar_url_when_format_is_None_and_avatar_hash_is_for_gif(self, model):
+        model.guild_avatar_hash = "a_18dnf8dfbakfdh"
+
+        with mock.patch.object(
+            routes, "CDN_MEMBER_AVATAR", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert model.make_guild_avatar_url(ext=None, size=4096) == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL,
+            user_id=model.id,
+            guild_id=model.guild_id,
+            hash=model.guild_avatar_hash,
+            size=4096,
+            file_format="gif",
+        )
+
+    def test_make_guild_avatar_url_when_format_is_None_and_avatar_hash_is_not_for_gif(self, model):
+        model.guild_avatar_hash = "18dnf8dfbakfdh"
+
+        with mock.patch.object(
+            routes, "CDN_MEMBER_AVATAR", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert model.make_guild_avatar_url(ext=None, size=4096) == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL,
+            user_id=model.id,
+            guild_id=model.guild_id,
+            hash=model.guild_avatar_hash,
+            size=4096,
+            file_format="png",
+        )
+
+    def test_make_guild_avatar_url_with_all_args(self, model):
+        model.guild_avatar_hash = "18dnf8dfbakfdh"
+
+        with mock.patch.object(
+            routes, "CDN_MEMBER_AVATAR", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert model.make_guild_avatar_url(ext="url", size=4096) == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL,
+            guild_id=model.guild_id,
+            user_id=model.id,
+            hash=model.guild_avatar_hash,
+            size=4096,
+            file_format="url",
+        )
 
     @pytest.mark.asyncio()
     async def test_fetch_dm_channel(self, model):
@@ -300,8 +427,15 @@ class TestMember:
     @pytest.mark.asyncio()
     async def test_edit(self, model):
         model.app.rest.edit_member = mock.AsyncMock()
+        disabled_until = datetime.datetime(2021, 11, 17)
         edit = await model.edit(
-            nick="Imposter", roles=[123, 432, 345], mute=False, deaf=True, voice_channel=4321245, reason="I'm God"
+            nick="Imposter",
+            roles=[123, 432, 345],
+            mute=False,
+            deaf=True,
+            voice_channel=4321245,
+            communication_disabled_until=disabled_until,
+            reason="I'm God",
         )
 
         model.app.rest.edit_member.assert_awaited_once_with(
@@ -312,6 +446,7 @@ class TestMember:
             mute=False,
             deaf=True,
             voice_channel=4321245,
+            communication_disabled_until=disabled_until,
             reason="I'm God",
         )
 

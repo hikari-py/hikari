@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -100,6 +100,9 @@ class All(typing.Generic[ValueT]):
 
     __slots__: typing.Sequence[str] = ("conditions",)
 
+    conditions: typing.Collection[typing.Callable[[ValueT], bool]]
+    """Collection of the condition callbacks within this."""
+
     def __init__(self, conditions: typing.Collection[typing.Callable[[ValueT], bool]]) -> None:
         self.conditions = conditions
 
@@ -146,9 +149,9 @@ class AttrComparator(typing.Generic[ValueT]):
         expected_value: typing.Any,
         cast: typing.Optional[typing.Callable[[ValueT], typing.Any]] = None,
     ) -> None:
-        self.expected_value = expected_value
+        self.expected_value: typing.Any = expected_value
         self.attr_getter: spel.AttrGetter[ValueT, typing.Any] = spel.AttrGetter(attr_name)
-        self.cast = cast
+        self.cast: typing.Optional[typing.Callable[[ValueT], typing.Any]] = cast
 
     def __call__(self, item: ValueT) -> bool:
         real_item = self.cast(self.attr_getter(item)) if self.cast is not None else self.attr_getter(item)
@@ -296,7 +299,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
             `LazyIterator` that only emits values where all conditions are
             matched.
         """
-        conditions = self._map_predicates_and_attr_getters("filter", *predicates, **attrs)
+        conditions: All[ValueT] = self._map_predicates_and_attr_getters("filter", *predicates, **attrs)
         return _FilteredLazyIterator(self, conditions)
 
     def take_while(
@@ -886,7 +889,7 @@ class _ChunkedLazyIterator(typing.Generic[ValueT], LazyIterator[typing.Sequence[
         self._chunk_size = chunk_size
 
     async def __anext__(self) -> typing.Sequence[ValueT]:
-        chunk = []
+        chunk: typing.List[ValueT] = []
 
         async for item in self._iterator:
             chunk.append(item)

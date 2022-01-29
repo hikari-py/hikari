@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -36,6 +36,11 @@ class TestPartialUser:
     def obj(self):
         # ABC, so must be stubbed.
         return hikari_test_helpers.mock_class_namespace(users.PartialUser, slots_=False)()
+
+    def test_accent_colour_alias_property(self, obj):
+        obj.accent_color = object()
+
+        assert obj.accent_colour is obj.accent_color
 
     @pytest.mark.asyncio()
     async def test_fetch_self(self, obj):
@@ -178,15 +183,14 @@ class TestUser:
         # ABC, so must be stubbed.
         return hikari_test_helpers.mock_class_namespace(users.User, slots_=False)()
 
-    def test_avatar_url_when_hash(self, obj):
-        avatar = object()
+    def test_accent_colour_alias_property(self, obj):
+        obj.accent_color = object()
 
-        with mock.patch.object(users.User, "make_avatar_url", return_value=avatar):
-            assert obj.avatar_url is avatar
+        assert obj.accent_colour is obj.accent_color
 
-    def test_avatar_url_when_no_hash(self, obj):
-        with mock.patch.object(users.User, "make_avatar_url", return_value=None):
-            assert obj.avatar_url is None
+    def test_avatar_url_property(self, obj):
+        with mock.patch.object(users.User, "make_avatar_url") as make_avatar_url:
+            assert obj.avatar_url is make_avatar_url.return_value
 
     def test_make_avatar_url_when_no_hash(self, obj):
         obj.avatar_hash = None
@@ -240,6 +244,15 @@ class TestUser:
             file_format="url",
         )
 
+    def test_display_avatar_url_when_avatar_url(self, obj):
+        with mock.patch.object(users.User, "make_avatar_url") as mock_make_avatar_url:
+            assert obj.display_avatar_url is mock_make_avatar_url.return_value
+
+    def test_display_avatar_url_when_no_avatar_url(self, obj):
+        with mock.patch.object(users.User, "make_avatar_url", return_value=None):
+            with mock.patch.object(users.User, "default_avatar_url") as mock_default_avatar_url:
+                assert obj.display_avatar_url is mock_default_avatar_url
+
     def test_default_avatar(self, obj):
         obj.avatar_hash = "18dnf8dfbakfdh"
         obj.discriminator = "1234"
@@ -255,6 +268,66 @@ class TestUser:
             file_format="png",
         )
 
+    def test_banner_url_property(self, obj):
+        with mock.patch.object(users.User, "make_banner_url") as make_banner_url:
+            assert obj.banner_url is make_banner_url.return_value
+
+    def test_make_banner_url_when_no_hash(self, obj):
+        obj.banner_hash = None
+
+        with mock.patch.object(routes, "CDN_USER_BANNER") as route:
+            assert obj.make_banner_url(ext=None, size=4096) is None
+
+        route.compile_to_file.assert_not_called()
+
+    def test_make_banner_url_when_format_is_None_and_banner_hash_is_for_gif(self, obj):
+        obj.banner_hash = "a_18dnf8dfbakfdh"
+
+        with mock.patch.object(
+            routes, "CDN_USER_BANNER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert obj.make_banner_url(ext=None, size=4096) == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL,
+            user_id=obj.id,
+            hash="a_18dnf8dfbakfdh",
+            size=4096,
+            file_format="gif",
+        )
+
+    def test_make_banner_url_when_format_is_None_and_banner_hash_is_not_for_gif(self, obj):
+        obj.banner_hash = "18dnf8dfbakfdh"
+
+        with mock.patch.object(
+            routes, "CDN_USER_BANNER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert obj.make_banner_url(ext=None, size=4096) == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL,
+            user_id=obj.id,
+            hash=obj.banner_hash,
+            size=4096,
+            file_format="png",
+        )
+
+    def test_make_banner_url_with_all_args(self, obj):
+        obj.banner_hash = "18dnf8dfbakfdh"
+
+        with mock.patch.object(
+            routes, "CDN_USER_BANNER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert obj.make_banner_url(ext="url", size=4096) == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL,
+            user_id=obj.id,
+            hash=obj.banner_hash,
+            size=4096,
+            file_format="url",
+        )
+
 
 class TestPartialUserImpl:
     @pytest.fixture()
@@ -265,6 +338,8 @@ class TestPartialUserImpl:
             discriminator="8637",
             username="thomm.o",
             avatar_hash=None,
+            banner_hash=None,
+            accent_color=None,
             is_bot=False,
             is_system=False,
             flags=users.UserFlag.DISCORD_EMPLOYEE,
@@ -298,6 +373,8 @@ class TestOwnUser:
             discriminator="1234",
             username="foobar",
             avatar_hash="69420",
+            banner_hash="42069",
+            accent_color=123456,
             is_bot=False,
             is_system=False,
             flags=users.UserFlag.PARTNERED_SERVER_OWNER,

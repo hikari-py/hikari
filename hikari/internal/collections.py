@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -355,21 +355,21 @@ class SnowflakeSet(typing.MutableSet[snowflakes.Snowflake]):
     __slots__: typing.Sequence[str] = ("_ids",)
 
     def __init__(self, *ids: int) -> None:
-        self._ids = array.array(_LONG_LONG_UNSIGNED)
+        self._ids: array.array[int] = array.array(_LONG_LONG_UNSIGNED)
 
         if ids:
             self.add_all(ids)
 
-    def add(self, sf: int) -> None:
+    def add(self, value: int, /) -> None:
         """Add a snowflake to this set."""
         # Always append the first item, as we cannot compare with nothing.
-        index = bisect.bisect_left(self._ids, sf)
+        index = bisect.bisect_left(self._ids, value)
         if index == len(self._ids):
-            self._ids.append(sf)
-        elif self._ids[index] != sf:
-            self._ids.insert(index, sf)
+            self._ids.append(value)
+        elif self._ids[index] != value:
+            self._ids.insert(index, value)
 
-    def add_all(self, sfs: typing.Iterable[int]) -> None:
+    def add_all(self, sfs: typing.Iterable[int], /) -> None:
         """Add a collection of snowflakes to this set."""
         if not sfs:
             return
@@ -390,14 +390,14 @@ class SnowflakeSet(typing.MutableSet[snowflakes.Snowflake]):
         # Arrays lack a "clear" method.
         self._ids = array.array(_LONG_LONG_UNSIGNED)
 
-    def discard(self, sf: int) -> None:
+    def discard(self, value: int, /) -> None:
         """Remove a snowflake from this set if it's present."""
         if not self._ids:
             return
 
-        index = bisect.bisect_left(self._ids, sf)
+        index = bisect.bisect_left(self._ids, value)
 
-        if index < len(self) and self._ids[index] == sf:
+        if index < len(self) and self._ids[index] == value:
             del self._ids[index]
 
     def __contains__(self, value: typing.Any) -> bool:

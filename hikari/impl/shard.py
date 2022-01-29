@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -125,16 +125,15 @@ class _GatewayTransport(aiohttp.ClientWebSocketResponse):
 
     __slots__: typing.Sequence[str] = ("zlib", "logger", "log_filterer", "sent_close")
 
-    # Initialized from `connect'
-    zlib: _ZlibDecompressor
-    logger: logging.Logger
-    log_filterer: typing.Callable[[str], str]
-    sent_close: bool
-
     def __init__(self, *args: typing.Any, **kwargs: typing.Any) -> None:
         super().__init__(*args, **kwargs)
-        self.zlib = zlib.decompressobj()
+        self.zlib: _ZlibDecompressor = zlib.decompressobj()
         self.sent_close = False
+
+        # Initialized from `connect'
+        # These are type-hinted here instead of above to prevent MyPy from misinterpreting typing.Callable as a method
+        self.logger: logging.Logger
+        self.log_filterer: typing.Callable[[str], str]
 
     async def send_close(self, *, code: int = 1000, message: bytes = b"") -> bool:
         # aiohttp may close the socket by invoking close() internally. By giving
@@ -160,7 +159,7 @@ class _GatewayTransport(aiohttp.ClientWebSocketResponse):
     ) -> typing.Any:
         pl = await self._receive_and_check(timeout)
         if self.logger.isEnabledFor(ux.TRACE):
-            filtered = self.log_filterer(pl)  # type: ignore
+            filtered = self.log_filterer(pl)
             self.logger.log(ux.TRACE, "received payload with size %s\n    %s", len(pl), filtered)
         return loads(pl)
 
@@ -173,7 +172,7 @@ class _GatewayTransport(aiohttp.ClientWebSocketResponse):
     ) -> None:
         pl = dumps(data)
         if self.logger.isEnabledFor(ux.TRACE):
-            filtered = self.log_filterer(pl)  # type: ignore
+            filtered = self.log_filterer(pl)
             self.logger.log(ux.TRACE, "sending payload with size %s\n    %s", len(pl), filtered)
         await self.send_str(pl, compress)
 
@@ -262,17 +261,15 @@ class _GatewayTransport(aiohttp.ClientWebSocketResponse):
                     url=url,
                 )
             )
-
             assert isinstance(web_socket, cls)
+
+            web_socket.logger = logger
+            # We store this so we can remove it from debug logs
+            # which enables people to send logs in issues safely.
+            web_socket.log_filterer = log_filterer
 
             raised = False
             try:
-                web_socket.logger = logger
-                # We store this so we can remove it from debug logs
-                # which enables people to send me logs in issues safely.
-                # Also MyPy raises a false positive about this...
-                web_socket.log_filterer = log_filterer  # type: ignore
-
                 yield web_socket
             except errors.GatewayError:
                 raised = True

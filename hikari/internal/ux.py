@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -26,6 +26,7 @@ from __future__ import annotations
 __all__: typing.List[str] = ["init_logging", "print_banner", "supports_color", "HikariVersion", "check_for_updates"]
 
 import importlib.resources
+import logging
 import logging.config
 import os
 import platform
@@ -85,7 +86,8 @@ def init_logging(
         to `sys.stderr` using this configuration.
 
         If you pass a `builtins.dict`, it is treated as the mapping to pass to
-        `logging.config.dictConfig`.
+        `logging.config.dictConfig`. If the dict defines any handlers, default
+        handlers will not be setup.
     allow_color : builtins.bool
         If `builtins.False`, no colour is allowed. If `builtins.True`, the
         output device must be supported for this to return `builtins.True`.
@@ -112,11 +114,17 @@ def init_logging(
 
     if isinstance(flavor, dict):
         logging.config.dictConfig(flavor)
-        return
+
+        if flavor.get("handlers"):
+            # Handlers are defined => don't configure the default ones
+            return
+
+        flavor = None
 
     # Apparently this makes logging even more efficient!
     logging.logThreads = False
     logging.logProcesses = False
+
     if supports_color(allow_color, force_color):
         colorlog.basicConfig(
             level=flavor,
@@ -265,6 +273,9 @@ class HikariVersion:
     """Hikari strict version."""
 
     __slots__: typing.Sequence[str] = ("version", "prerelease", "_cmp")
+
+    version: typing.Tuple[int, int, int]
+    prerelease: typing.Optional[typing.Tuple[str, int]]
 
     def __init__(self, vstring: str) -> None:
         match = _VERSION_REGEX.match(vstring)

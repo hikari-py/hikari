@@ -1,6 +1,6 @@
 #!/bin/sh
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -21,7 +21,7 @@
 # SOFTWARE.
 set -e
 
-if [ $(ls -1 changes/*.*.md 2>/dev/null | wc -l) = 0]; then
+if [ $(ls -1 changes/*.*.md 2>/dev/null | wc -l) != 0 ]; then
     echo "Cannot create release if CHANGELOG fragment files exist under 'changes/'!"
     exit 1
 fi
@@ -53,7 +53,7 @@ pip install -r requirements.txt
 
 echo "===== DEPLOYING TO PYPI ====="
 echo "-- Setting __git_sha1__ (ref: ${REF}) --"
-sed "s|^__git_sha1__.*|__git_sha1__ = \"${REF}\"|g" -i hikari/_about.py
+sed "s|^__git_sha1__.*|__git_sha1__: typing.Final[str] = \"${REF}\"|g" -i hikari/_about.py
 echo "=========================================================================="
 cat hikari/_about.py
 echo "=========================================================================="
@@ -85,7 +85,7 @@ git fetch origin
 git checkout -f master
 
 echo "-- Bumping to development version (${NEW_VERSION}) --"
-sed "s|^__version__.*|__version__ = \"${NEW_VERSION}\"|g" -i hikari/_about.py
+sed "s|^__version__.*|__version__: typing.Final[str] = \"${NEW_VERSION}\"|g" -i hikari/_about.py
 
 echo "-- Pushing to repository --"
 git commit -am "Bump to development version (${NEW_VERSION})"

@@ -1,6 +1,6 @@
 #!/bin/sh
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -38,7 +38,7 @@ echo "-- Checkout branch --"
 git checkout -b "task/prepare-release-${VERSION}"
 
 echo "-- Bumping repository version to ${VERSION} --"
-sed "s|^__version__.*|__version__ = \"${VERSION}\"|g" -i hikari/_about.py
+sed "s|^__version__.*|__version__: typing.Final[str] = \"${VERSION}\"|g" -i hikari/_about.py
 
 echo "-- Running towncrier --"
 towncrier --yes

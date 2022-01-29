@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -60,6 +60,7 @@ from hikari.internal import routes
 if typing.TYPE_CHECKING:
     import datetime
 
+    from hikari import colors
     from hikari import files
     from hikari import permissions as permissions_
     from hikari import traits
@@ -87,6 +88,12 @@ class ApplicationFlags(enums.Flag):
 
     EMBEDDED = 1 << 17
     """Denotes that the application has functionality that's specially embedded in Discord's client."""
+
+    MESSAGE_CONTENT_INTENT = 1 << 18
+    """Denotes that the application has message content intent enabled in it's dashboard."""
+
+    MESSAGE_CONTENT_INTENT_LIMITED = 1 << 19
+    """Denotes that the application has message content access while pending verification."""
 
 
 @typing.final
@@ -220,6 +227,9 @@ class OAuth2Scope(str, enums.Enum):
     This is used during authorization code grants.
     """
 
+    GUILDS_MEMBERS_READ = "guilds.members.read"
+    """Used to read the current user's guild members."""
+
 
 @typing.final
 class ConnectionVisibility(int, enums.Enum):
@@ -334,6 +344,18 @@ class TeamMember(users.User):
     @property
     def default_avatar_url(self) -> files.URL:
         return self.user.default_avatar_url
+
+    @property
+    def banner_hash(self) -> typing.Optional[str]:
+        return self.user.banner_hash
+
+    @property
+    def banner_url(self) -> typing.Optional[files.URL]:
+        return self.user.banner_url
+
+    @property
+    def accent_color(self) -> typing.Optional[colors.Color]:
+        return self.user.accent_color
 
     @property
     def discriminator(self) -> str:
@@ -537,6 +559,9 @@ class Application(guilds.PartialApplication):
 
     rpc_origins: typing.Optional[typing.Sequence[str]] = attr.field(eq=False, hash=False, repr=False)
     """A collection of this application's RPC origin URLs, if RPC is enabled."""
+
+    flags: ApplicationFlags = attr.field(eq=False, hash=False, repr=False)
+    """The flags for this application."""
 
     public_key: bytes = attr.field(eq=False, hash=False, repr=False)
     """The key used for verifying interaction and GameSDK payload signatures."""

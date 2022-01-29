@@ -50,6 +50,8 @@ def make_user(user_id, username):
         discriminator="0001",
         username=username,
         avatar_hash=None,
+        banner_hash=None,
+        accent_color=None,
         is_bot=False,
         is_system=False,
         flags=users.UserFlag.NONE,
@@ -75,9 +77,11 @@ def make_guild_member(user_id, username):
         joined_at=datetime.datetime.now(),
         nickname=user.username,
         premium_since=None,
+        guild_avatar_hash="no",
         is_deaf=False,
         is_mute=False,
         is_pending=False,
+        raw_communication_disabled_until=None,
     )
 
 

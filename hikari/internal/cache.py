@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -405,12 +405,14 @@ class MemberData(BaseData[guilds.Member]):
     user: RefCell[users_.User] = attr.field()
     guild_id: snowflakes.Snowflake = attr.field()
     nickname: typing.Optional[str] = attr.field()
+    guild_avatar_hash: typing.Optional[str] = attr.field()
     role_ids: typing.Tuple[snowflakes.Snowflake, ...] = attr.field()
     joined_at: datetime.datetime = attr.field()
     premium_since: typing.Optional[datetime.datetime] = attr.field()
     is_deaf: undefined.UndefinedOr[bool] = attr.field()
     is_mute: undefined.UndefinedOr[bool] = attr.field()
     is_pending: undefined.UndefinedOr[bool] = attr.field()
+    raw_communication_disabled_until: typing.Optional[datetime.datetime] = attr.field()
     # meta-attribute
     has_been_deleted: bool = attr.field(default=False)
 
@@ -423,10 +425,12 @@ class MemberData(BaseData[guilds.Member]):
             nickname=member.nickname,
             joined_at=member.joined_at,
             premium_since=member.premium_since,
+            guild_avatar_hash=member.guild_avatar_hash,
             is_deaf=member.is_deaf,
             is_mute=member.is_mute,
             is_pending=member.is_pending,
             user=user or RefCell(copy.copy(member.user)),
+            raw_communication_disabled_until=member.raw_communication_disabled_until,
             # role_ids is a special case as it may be mutable so we want to ensure it's immutable when cached.
             role_ids=tuple(member.role_ids),
         )
@@ -437,10 +441,12 @@ class MemberData(BaseData[guilds.Member]):
             nickname=self.nickname,
             role_ids=self.role_ids,
             joined_at=self.joined_at,
+            guild_avatar_hash=self.guild_avatar_hash,
             premium_since=self.premium_since,
             is_deaf=self.is_deaf,
             is_mute=self.is_mute,
             is_pending=self.is_pending,
+            raw_communication_disabled_until=self.raw_communication_disabled_until,
             user=self.user.copy(),
         )
 

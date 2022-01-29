@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -202,6 +202,7 @@ class TestEntityFactoryImpl:
             "owner": owner_payload,
             "summary": "not a blank string",
             "verify_key": "698c5d0859abb686be1f8a19e0e7634d8471e33817650f9fb29076de227bca90",
+            "flags": 65536,
             "team": {
                 "icon": "hashtag",
                 "id": "202020202",
@@ -237,6 +238,7 @@ class TestEntityFactoryImpl:
             application.public_key
             == b'i\x8c]\x08Y\xab\xb6\x86\xbe\x1f\x8a\x19\xe0\xe7cM\x84q\xe38\x17e\x0f\x9f\xb2\x90v\xde"{\xca\x90'
         )
+        assert application.flags == application_models.ApplicationFlags.VERIFICATION_PENDING_GUILD_LIMIT
         assert application.privacy_policy_url == "hahaha://hahaha"
         assert application.terms_of_service_url == "haha2:2h2h2h2"
         assert application.icon_hash == "iwiwiwiwiw"
@@ -271,6 +273,7 @@ class TestEntityFactoryImpl:
                 "bot_public": True,
                 "bot_require_code_grant": False,
                 "verify_key": "1232313223",
+                "flags": 0,
                 "owner": owner_payload,
             }
         )
@@ -298,6 +301,7 @@ class TestEntityFactoryImpl:
                 "bot_public": True,
                 "bot_require_code_grant": False,
                 "verify_key": "1232313223",
+                "flags": 0,
             }
         )
 
@@ -1877,10 +1881,12 @@ class TestEntityFactoryImpl:
             "roles": ["11111", "22222", "33333", "44444"],
             "joined_at": "2015-04-26T06:26:56.936000+00:00",
             "premium_since": "2019-05-17T06:26:56.936000+00:00",
+            "avatar": "estrogen",
             "deaf": False,
             "mute": True,
             "pending": False,
             "user": user_payload,
+            "communication_disabled_until": "2021-10-18T06:26:56.936000+00:00",
         }
 
     def test_deserialize_member(self, entity_factory_impl, mock_app, member_payload, user_payload):
@@ -1888,11 +1894,15 @@ class TestEntityFactoryImpl:
         member = entity_factory_impl.deserialize_member(member_payload)
         assert member.app is mock_app
         assert member.guild_id == 76543325
+        assert member.guild_avatar_hash == "estrogen"
         assert member.user == entity_factory_impl.deserialize_user(user_payload)
         assert member.nickname == "foobarbaz"
         assert member.role_ids == [11111, 22222, 33333, 44444, 76543325]
         assert member.joined_at == datetime.datetime(2015, 4, 26, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc)
         assert member.premium_since == datetime.datetime(2019, 5, 17, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc)
+        assert member.raw_communication_disabled_until == datetime.datetime(
+            2021, 10, 18, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc
+        )
         assert member.is_deaf is False
         assert member.is_mute is True
         assert member.is_pending is False
@@ -1925,14 +1935,17 @@ class TestEntityFactoryImpl:
                 "joined_at": "2015-04-26T06:26:56.936000+00:00",
                 "premium_since": None,
                 "deaf": False,
+                "avatar": None,
                 "mute": True,
                 "pending": False,
                 "user": user_payload,
                 "guild_id": "123123453234",
+                "communication_disabled_until": None,
             }
         )
         assert member.nickname is None
         assert member.premium_since is None
+        assert member.guild_avatar_hash is None
         assert isinstance(member, guild_models.Member)
 
     def test_deserialize_member_with_undefined_fields(self, entity_factory_impl, user_payload):
@@ -1946,6 +1959,7 @@ class TestEntityFactoryImpl:
         )
         assert member.nickname is None
         assert member.premium_since is None
+        assert member.guild_avatar_hash is None
         assert member.is_deaf is undefined.UNDEFINED
         assert member.is_mute is undefined.UNDEFINED
         assert member.is_pending is undefined.UNDEFINED
@@ -1974,6 +1988,8 @@ class TestEntityFactoryImpl:
             "name": "WE DEM BOYZZ!!!!!!",
             "color": 3_447_003,
             "hoist": True,
+            "unicode_emoji": "\N{OK HAND SIGN}",
+            "icon": "abc123hash",
             "position": 0,
             "permissions": "66321471",
             "managed": False,
@@ -1991,6 +2007,9 @@ class TestEntityFactoryImpl:
         assert guild_role.id == 41771983423143936
         assert guild_role.guild_id == 76534453
         assert guild_role.name == "WE DEM BOYZZ!!!!!!"
+        assert guild_role.icon_hash == "abc123hash"
+        assert guild_role.unicode_emoji == emoji_models.UnicodeEmoji("\N{OK HAND SIGN}")
+        assert isinstance(guild_role.unicode_emoji, emoji_models.UnicodeEmoji)
         assert guild_role.color == color_models.Color(3_447_003)
         assert guild_role.is_hoisted is True
         assert guild_role.position == 0
@@ -2004,10 +2023,12 @@ class TestEntityFactoryImpl:
 
     def test_deserialize_role_with_missing_or_unset_fields(self, entity_factory_impl, guild_role_payload):
         guild_role_payload["tags"] = {}
+        guild_role_payload["unicode_emoji"] = None
         guild_role = entity_factory_impl.deserialize_role(guild_role_payload, guild_id=snowflakes.Snowflake(76534453))
         assert guild_role.bot_id is None
         assert guild_role.integration_id is None
         assert guild_role.is_premium_subscriber_role is False
+        assert guild_role.unicode_emoji is None
 
     def test_deserialize_role_with_no_tags(self, entity_factory_impl, guild_role_payload):
         del guild_role_payload["tags"]
@@ -2705,7 +2726,10 @@ class TestEntityFactoryImpl:
                     "type": 1,
                     "name": "a dumb name",
                     "description": "42",
+                    "channel_types": [0, 1, 2],
                     "required": True,
+                    "min_value": 0,
+                    "max_value": 10,
                     "options": [
                         {
                             "type": 6,
@@ -2740,14 +2764,22 @@ class TestEntityFactoryImpl:
         assert option.is_required is True
         assert option.description == "42"
         assert option.choices is None
-        assert len(option.options) == 1
+        assert option.channel_types == [
+            channel_models.ChannelType.GUILD_TEXT,
+            channel_models.ChannelType.DM,
+            channel_models.ChannelType.GUILD_VOICE,
+        ]
+        assert option.min_value == 0
+        assert option.max_value == 10
 
+        assert len(option.options) == 1
         suboption = option.options[0]
         assert suboption.type is commands.OptionType.USER
         assert suboption.name == "a name"
         assert suboption.description == "84"
         assert suboption.is_required is False
         assert suboption.options is None
+        assert suboption.channel_types is None
 
         # CommandChoice
         assert len(suboption.choices) == 1
@@ -2853,8 +2885,10 @@ class TestEntityFactoryImpl:
             "joined_at": "2020-09-27T22:58:10.282000+00:00",
             "nick": "Snab",
             "pending": False,
+            "avatar": "oestrogen",
             "permissions": "17179869183",
             "premium_since": "2020-10-01T23:06:10.431000+00:00",
+            "communication_disabled_until": "2021-10-18T23:06:10.431000+00:00",
             "roles": [
                 "582345963851743243",
                 "582689893965365248",
@@ -2868,11 +2902,15 @@ class TestEntityFactoryImpl:
         assert member.id == 115590097100865541
         assert member.joined_at == datetime.datetime(2020, 9, 27, 22, 58, 10, 282000, tzinfo=datetime.timezone.utc)
         assert member.nickname == "Snab"
+        assert member.guild_avatar_hash == "oestrogen"
         assert member.guild_id == 43123123
         assert member.is_deaf is undefined.UNDEFINED
         assert member.is_mute is undefined.UNDEFINED
         assert member.is_pending is False
         assert member.premium_since == datetime.datetime(2020, 10, 1, 23, 6, 10, 431000, tzinfo=datetime.timezone.utc)
+        assert member.raw_communication_disabled_until == datetime.datetime(
+            2021, 10, 18, 23, 6, 10, 431000, tzinfo=datetime.timezone.utc
+        )
         assert member.role_ids == [
             582345963851743243,
             582689893965365248,
@@ -2908,10 +2946,14 @@ class TestEntityFactoryImpl:
         self, entity_factory_impl, interaction_member_payload, user_payload
     ):
         del interaction_member_payload["premium_since"]
+        del interaction_member_payload["avatar"]
+        del interaction_member_payload["communication_disabled_until"]
 
         member = entity_factory_impl._deserialize_interaction_member(interaction_member_payload, guild_id=43123123)
 
+        assert member.guild_avatar_hash is None
         assert member.premium_since is None
+        assert member.raw_communication_disabled_until is None
 
     def test__deserialize_interaction_member_with_passed_user(
         self, entity_factory_impl, interaction_member_payload, user_payload
@@ -2962,6 +3004,8 @@ class TestEntityFactoryImpl:
             "channel_id": "49949494",
             "member": interaction_member_payload,
             "token": "moe cat girls",
+            "locale": "es-ES",
+            "guild_locale": "en-US",
             "version": 69420,
             "application_id": "76234234",
         }
@@ -2989,6 +3033,8 @@ class TestEntityFactoryImpl:
         assert interaction.version == 69420
         assert interaction.channel_id == 49949494
         assert interaction.guild_id == 43123123
+        assert interaction.locale == "es-ES"
+        assert interaction.guild_locale == "en-US"
 
         # InteractionMember
         assert interaction.member == entity_factory_impl._deserialize_interaction_member(
@@ -3091,6 +3137,46 @@ class TestEntityFactoryImpl:
         with pytest.raises(errors.UnrecognisedEntityError):
             entity_factory_impl.deserialize_interaction({"type": -999})
 
+    def test_serialize_command_option_with_channel_type(self, entity_factory_impl):
+        option = commands.CommandOption(
+            type=commands.OptionType.INTEGER,
+            name="a name",
+            description="go away",
+            is_required=True,
+            channel_types=[channel_models.ChannelType.GUILD_STAGE, channel_models.ChannelType.GUILD_TEXT, 100],
+        )
+
+        result = entity_factory_impl.serialize_command_option(option)
+
+        assert result == {
+            "type": 4,
+            "name": "a name",
+            "description": "go away",
+            "required": True,
+            "channel_types": [13, 0, 100],
+        }
+
+    def test_serialize_command_option_with_min_and_max_value(self, entity_factory_impl):
+        option = commands.CommandOption(
+            type=commands.OptionType.FLOAT,
+            name="a name",
+            description="go away",
+            is_required=True,
+            min_value=1.2,
+            max_value=9.999,
+        )
+
+        result = entity_factory_impl.serialize_command_option(option)
+
+        assert result == {
+            "type": 10,
+            "name": "a name",
+            "description": "go away",
+            "required": True,
+            "min_value": 1.2,
+            "max_value": 9.999,
+        }
+
     def test_serialize_command_option_with_choices(self, entity_factory_impl):
         option = commands.CommandOption(
             type=commands.OptionType.INTEGER,
@@ -3161,6 +3247,8 @@ class TestEntityFactoryImpl:
             "data": {"custom_id": "click_one", "component_type": 2, "values": ["1", "2", "67"]},
             "channel_id": "345626669114982999",
             "application_id": "290926444748734465",
+            "locale": "es-ES",
+            "guild_locale": "en-US",
         }
 
     def test_deserialize_component_interaction(
@@ -3184,6 +3272,8 @@ class TestEntityFactoryImpl:
         )
         assert interaction.user is interaction.member.user
         assert interaction.values == ["1", "2", "67"]
+        assert interaction.locale == "es-ES"
+        assert interaction.guild_locale == "en-US"
         assert isinstance(interaction, component_interactions.ComponentInteraction)
 
     def test_deserialize_component_interaction_with_undefined_fields(
@@ -3200,6 +3290,7 @@ class TestEntityFactoryImpl:
                 "data": {"custom_id": "click_one", "component_type": 2},
                 "channel_id": "345626669114982999",
                 "application_id": "290926444748734465",
+                "locale": "es-ES",
             }
         )
 
@@ -3207,6 +3298,7 @@ class TestEntityFactoryImpl:
         assert interaction.member is None
         assert interaction.user == entity_factory_impl.deserialize_user(user_payload)
         assert interaction.values == ()
+        assert interaction.guild_locale is None
         assert isinstance(interaction, component_interactions.ComponentInteraction)
 
     ##################
@@ -3827,6 +3919,7 @@ class TestEntityFactoryImpl:
                     "proxy_url": "https://media.somewhere.com/attachments/123/456/IMG.jpg",
                     "width": 1844,
                     "height": 2638,
+                    "ephemeral": True,
                 }
             ],
             "embeds": [embed_payload],
@@ -3896,6 +3989,7 @@ class TestEntityFactoryImpl:
         assert attachment.proxy_url == "https://media.somewhere.com/attachments/123/456/IMG.jpg"
         assert attachment.width == 1844
         assert attachment.height == 2638
+        assert attachment.is_ephemeral is True
         assert isinstance(attachment, message_models.Attachment)
 
         expected_embed = entity_factory_impl.deserialize_embed(embed_payload)
@@ -4014,6 +4108,13 @@ class TestEntityFactoryImpl:
         assert partial_message.interaction is undefined.UNDEFINED
         assert partial_message.components is undefined.UNDEFINED
 
+    def test_deserialize_partial_message_with_guild_id_but_no_author(self, entity_factory_impl):
+        partial_message = entity_factory_impl.deserialize_partial_message(
+            {"id": 123, "channel_id": 456, "guild_id": 987}
+        )
+
+        assert partial_message.member is None
+
     def test_deserialize_partial_message_deserializes_old_stickers_field(self, entity_factory_impl, message_payload):
         message_payload["stickers"] = message_payload["sticker_items"]
         del message_payload["sticker_items"]
@@ -4034,7 +4135,6 @@ class TestEntityFactoryImpl:
         message_payload,
         user_payload,
         member_payload,
-        partial_application_payload,
         custom_emoji_payload,
         embed_payload,
         referenced_message,
@@ -4070,6 +4170,7 @@ class TestEntityFactoryImpl:
         assert attachment.proxy_url == "https://media.somewhere.com/attachments/123/456/IMG.jpg"
         assert attachment.width == 1844
         assert attachment.height == 2638
+        assert attachment.is_ephemeral is True
         assert isinstance(attachment, message_models.Attachment)
 
         expected_embed = entity_factory_impl.deserialize_embed(embed_payload)
@@ -4131,6 +4232,60 @@ class TestEntityFactoryImpl:
 
         assert message.components == [entity_factory_impl.deserialize_component(action_row_payload)]
 
+    def test_deserialize_message_with_unset_sub_fields(self, entity_factory_impl, message_payload):
+        del message_payload["application"]["cover_image"]
+        del message_payload["application"]["primary_sku_id"]
+        del message_payload["attachments"][0]["content_type"]
+        del message_payload["attachments"][0]["height"]
+        del message_payload["attachments"][0]["width"]
+        del message_payload["attachments"][0]["ephemeral"]
+        del message_payload["activity"]["party_id"]
+        del message_payload["message_reference"]["message_id"]
+        del message_payload["message_reference"]["guild_id"]
+        del message_payload["mention_channels"]
+
+        message = entity_factory_impl.deserialize_message(message_payload)
+
+        assert message.mentions.channels == {}
+        # Attachment
+        assert len(message.attachments) == 1
+        attachment = message.attachments[0]
+        assert attachment.width is None
+        assert attachment.height is None
+        assert attachment.is_ephemeral is False
+        assert isinstance(attachment, message_models.Attachment)
+
+        # Activity
+        assert message.activity.party_id is None
+        assert isinstance(message.activity, message_models.MessageActivity)
+
+        # MessageApplication
+        assert message.application.cover_image_hash is None
+        assert message.application.primary_sku_id is None
+        assert isinstance(message.application, message_models.MessageApplication)
+
+        # MessageReference
+        assert message.message_reference.id is None
+        assert message.message_reference.guild_id is None
+        assert isinstance(message.message_reference, message_models.MessageReference)
+
+    def test_deserialize_message_with_null_sub_fields(self, entity_factory_impl, message_payload):
+        message_payload["attachments"][0]["height"] = None
+        message_payload["attachments"][0]["width"] = None
+        message_payload["application"]["icon"] = None
+        message = entity_factory_impl.deserialize_message(message_payload)
+
+        # Attachment
+        assert len(message.attachments) == 1
+        attachment = message.attachments[0]
+        assert attachment.width is None
+        assert attachment.height is None
+        assert isinstance(attachment, message_models.Attachment)
+
+        # MessageApplication
+        assert message.application.icon_hash is None
+        assert isinstance(message.application, message_models.MessageApplication)
+
     def test_deserialize_message_with_null_and_unset_fields(
         self,
         entity_factory_impl,
@@ -4172,7 +4327,7 @@ class TestEntityFactoryImpl:
         assert message.activity is None
         assert message.application is None
         assert message.message_reference is None
-        assert message.referenced_message is undefined.UNDEFINED
+        assert message.referenced_message is None
         assert message.stickers == []
         assert message.nonce is None
         assert message.application_id is None
@@ -4183,6 +4338,7 @@ class TestEntityFactoryImpl:
         message_payload["application"]["primary_sku_id"] = None
         message_payload["application"]["icon"] = None
         message_payload["referenced_message"] = None
+        del message_payload["member"]
         del message_payload["application"]["cover_image"]
 
         message = entity_factory_impl.deserialize_message(message_payload)
@@ -4190,6 +4346,7 @@ class TestEntityFactoryImpl:
         assert message.application.cover_image_hash is None
         assert message.application.icon_hash is None
         assert message.referenced_message is None
+        assert message.member is None
 
     def test_deserialize_message_deserializes_old_stickers_field(self, entity_factory_impl, message_payload):
         message_payload["stickers"] = message_payload["sticker_items"]
@@ -4591,6 +4748,8 @@ class TestEntityFactoryImpl:
             "id": "115590097100865541",
             "username": "nyaa",
             "avatar": "b3b24c6d7cbcdec129d5d537067061a8",
+            "banner": "a_221313e1e2edsncsncsmcndsc",
+            "accent_color": 231321,
             "discriminator": "6127",
             "bot": True,
             "system": True,
@@ -4603,6 +4762,8 @@ class TestEntityFactoryImpl:
         assert user.id == 115590097100865541
         assert user.username == "nyaa"
         assert user.avatar_hash == "b3b24c6d7cbcdec129d5d537067061a8"
+        assert user.banner_hash == "a_221313e1e2edsncsncsmcndsc"
+        assert user.accent_color == 231321
         assert user.discriminator == "6127"
         assert user.is_bot is True
         assert user.is_system is True
@@ -4618,6 +4779,8 @@ class TestEntityFactoryImpl:
                 "discriminator": "6127",
             }
         )
+        assert user.banner_hash is None
+        assert user.accent_color is None
         assert user.is_bot is False
         assert user.is_system is False
         assert user.flags == user_models.UserFlag.NONE
@@ -4628,6 +4791,8 @@ class TestEntityFactoryImpl:
             "id": "379953393319542784",
             "username": "qt pi",
             "avatar": "820d0e50543216e812ad94e6ab7",
+            "banner": "a_221313e1e2edsncsncsmcndsc",
+            "accent_color": 231321,
             "discriminator": "2880",
             "bot": True,
             "system": True,
@@ -4646,6 +4811,8 @@ class TestEntityFactoryImpl:
         assert my_user.id == 379953393319542784
         assert my_user.username == "qt pi"
         assert my_user.avatar_hash == "820d0e50543216e812ad94e6ab7"
+        assert my_user.banner_hash == "a_221313e1e2edsncsncsmcndsc"
+        assert my_user.accent_color == 231321
         assert my_user.discriminator == "2880"
         assert my_user.is_bot is True
         assert my_user.is_system is True
@@ -4672,6 +4839,8 @@ class TestEntityFactoryImpl:
             }
         )
         assert my_user.app is mock_app
+        assert my_user.banner_hash is None
+        assert my_user.accent_color is None
         assert my_user.is_bot is False
         assert my_user.is_system is False
         assert my_user.is_verified is None

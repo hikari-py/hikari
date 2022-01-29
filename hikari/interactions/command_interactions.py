@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -47,7 +47,7 @@ from hikari.internal import attr_extensions
 if typing.TYPE_CHECKING:
     from hikari import guilds
     from hikari import permissions as permissions_
-    from hikari import users
+    from hikari import users as users_
     from hikari.api import special_endpoints
 
 
@@ -62,11 +62,8 @@ This includes:
 * `hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE`
 """
 
-CommandResponseTypesT = typing.Union[
-    typing.Literal[base_interactions.ResponseType.MESSAGE_CREATE],
-    typing.Literal[4],
-    typing.Literal[base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE],
-    typing.Literal[5],
+CommandResponseTypesT = typing.Literal[
+    base_interactions.ResponseType.MESSAGE_CREATE, 4, base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE, 5
 ]
 """Type-hint of the response types which are valid for a command interaction.
 
@@ -91,7 +88,7 @@ class InteractionChannel(channels.PartialChannel):
 class ResolvedOptionData:
     """Represents the resolved objects of entities referenced in a command's options."""
 
-    users: typing.Mapping[snowflakes.Snowflake, users.User] = attr.field(repr=False)
+    users: typing.Mapping[snowflakes.Snowflake, users_.User] = attr.field(repr=False)
     """Mapping of snowflake IDs to the resolved option user objects."""
 
     members: typing.Mapping[snowflakes.Snowflake, base_interactions.InteractionMember] = attr.field(repr=False)
@@ -148,6 +145,16 @@ class CommandInteraction(base_interactions.MessageResponseMixin[CommandResponseT
     This will be `builtins.None` for command interactions triggered in DMs.
     """
 
+    guild_locale: typing.Optional[str] = attr.field(eq=False, hash=False, repr=True)
+    """The preferred language of the guild this command interaction was triggered in.
+
+    This will be `builtins.None` for command interactions triggered in DMs.
+
+    !!! note
+        This value can usually only be changed if `COMMUNITY` is in `hikari.guilds.Guild.features`
+        for the guild and will otherwise default to `en-US`.
+    """
+
     member: typing.Optional[base_interactions.InteractionMember] = attr.field(eq=False, hash=False, repr=True)
     """The member who triggered this command interaction.
 
@@ -158,8 +165,11 @@ class CommandInteraction(base_interactions.MessageResponseMixin[CommandResponseT
         contains the member's permissions in the current channel.
     """
 
-    user: users.User = attr.field(eq=False, hash=False, repr=True)
+    user: users_.User = attr.field(eq=False, hash=False, repr=True)
     """The user who triggered this command interaction."""
+
+    locale: str = attr.field(eq=False, hash=False, repr=True)
+    """The selected language of the user who triggered this command interaction."""
 
     command_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
     """ID of the command being invoked."""
