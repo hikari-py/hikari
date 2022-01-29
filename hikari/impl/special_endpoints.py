@@ -29,8 +29,11 @@ from __future__ import annotations
 __all__: typing.List[str] = [
     "ActionRowBuilder",
     "CommandBuilder",
+    "SlashCommandBuilder",
+    "ContextMenuCommandBuilder",
     "TypingIndicator",
     "GuildBuilder",
+    "InteractionAutocompleteBuilder",
     "InteractionDeferredBuilder",
     "InteractionMessageBuilder",
     "InteractiveButtonBuilder",
@@ -76,8 +79,13 @@ if typing.TYPE_CHECKING:
 
     _T = typing.TypeVar("_T")
     _CommandBuilderT = typing.TypeVar("_CommandBuilderT", bound="CommandBuilder")
+    _SlashCommandBuilderT = typing.TypeVar("_SlashCommandBuilderT", bound="SlashCommandBuilder")
+    _ContextMenuCommandBuilderT = typing.TypeVar("_ContextMenuCommandBuilderT", bound="ContextMenuCommandBuilder")
     _InteractionMessageBuilderT = typing.TypeVar("_InteractionMessageBuilderT", bound="InteractionMessageBuilder")
     _InteractionDeferredBuilderT = typing.TypeVar("_InteractionDeferredBuilderT", bound="InteractionDeferredBuilder")
+    _InteractionAutocompleteBuilderT = typing.TypeVar(
+        "_InteractionAutocompleteBuilderT", bound="InteractionAutocompleteBuilder"
+    )
     _ActionRowBuilderT = typing.TypeVar("_ActionRowBuilderT", bound="ActionRowBuilder")
     _ButtonBuilderT = typing.TypeVar("_ButtonBuilderT", bound="_ButtonBuilder[typing.Any]")
     _SelectOptionBuilderT = typing.TypeVar("_SelectOptionBuilderT", bound="_SelectOptionBuilder[typing.Any]")
@@ -695,6 +703,39 @@ class AuditLogIterator(iterators.LazyIterator["audit_logs.AuditLog"]):
 
 @attr_extensions.with_copy
 @attr.define(kw_only=False, weakref_slot=False)
+class InteractionAutocompleteBuilder(special_endpoints.InteractionAutocompleteBuilder):
+    """Standard implementation of `hikari.api.special_endpoints.InteractionAutocompleteBuilder`."""
+
+    _choices: typing.Sequence[commands.CommandChoice] = attr.field(factory=list)
+
+    @property
+    def type(self) -> typing.Literal[base_interactions.ResponseType.AUTOCOMPLETE]:
+        return base_interactions.ResponseType.AUTOCOMPLETE
+
+    @property
+    def choices(self) -> typing.Sequence[commands.CommandChoice]:
+        return self._choices
+
+    def set_choices(
+        self: _InteractionAutocompleteBuilderT, choices: typing.Sequence[commands.CommandChoice], /
+    ) -> _InteractionAutocompleteBuilderT:
+        """Set autocomplete choices.
+
+        Returns
+        -------
+        InteractionAutocompleteBuilder
+            Object of this builder.
+        """
+        self._choices = choices
+        return self
+
+    def build(self, _: entity_factory_.EntityFactory, /) -> data_binding.JSONObject:
+        data = {"choices": [{"name": choice.name, "value": choice.value} for choice in self._choices]}
+        return {"type": self.type, "data": data}
+
+
+@attr_extensions.with_copy
+@attr.define(kw_only=False, weakref_slot=False)
 class InteractionDeferredBuilder(special_endpoints.InteractionDeferredBuilder):
     """Standard implementation of `hikari.api.special_endpoints.InteractionDeferredBuilder`.
 
@@ -898,40 +939,32 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
 class CommandBuilder(special_endpoints.CommandBuilder):
     """Standard implementation of `hikari.api.special_endpoints.CommandBuilder`."""
 
-    # Required arguments.
+    _type: commands.CommandType = attr.field()
     _name: str = attr.field()
-    _description: str = attr.field()
 
-    # Key-word only not-required arguments.
+    _description: undefined.UndefinedOr[str] = attr.field(default=undefined.UNDEFINED, kw_only=True)
     _id: undefined.UndefinedOr[snowflakes.Snowflake] = attr.field(default=undefined.UNDEFINED, kw_only=True)
     _default_permission: undefined.UndefinedOr[bool] = attr.field(default=undefined.UNDEFINED, kw_only=True)
 
-    # Non-arguments.
-    _options: typing.List[commands.CommandOption] = attr.field(factory=list)
-
-    @property
-    def description(self) -> str:
-        return self._description
+    _options: undefined.UndefinedOr[typing.List[commands.CommandOption]] = attr.field(
+        default=undefined.UNDEFINED, kw_only=True
+    )
 
     @property
     def id(self) -> undefined.UndefinedOr[snowflakes.Snowflake]:
         return self._id
 
     @property
+    def type(self) -> undefined.UndefinedOr[commands.CommandType]:
+        return self._type
+
+    @property
     def default_permission(self) -> undefined.UndefinedOr[bool]:
         return self._default_permission
 
     @property
-    def options(self) -> typing.Sequence[commands.CommandOption]:
-        return self._options.copy()
-
-    @property
     def name(self) -> str:
         return self._name
-
-    def add_option(self: _CommandBuilderT, option: commands.CommandOption) -> _CommandBuilderT:
-        self._options.append(option)
-        return self
 
     def set_id(self: _CommandBuilderT, id_: undefined.UndefinedOr[snowflakes.Snowflakeish], /) -> _CommandBuilderT:
         self._id = snowflakes.Snowflake(id_) if id_ is not undefined.UNDEFINED else undefined.UNDEFINED
@@ -941,13 +974,50 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         self._default_permission = state
         return self
 
-    def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObject:
+    def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObjectBuilder:
         data = data_binding.JSONObjectBuilder()
         data["name"] = self._name
-        data["description"] = self._description
-        data.put_array("options", self._options, conversion=entity_factory.serialize_command_option)
         data.put_snowflake("id", self._id)
         data.put("default_permission", self._default_permission)
+        return data
+
+
+@attr.define(kw_only=False, weakref_slot=False)
+class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder):
+    """Builder class for slash commands."""
+
+    _description: str = attr.field()
+    _options: typing.List[commands.CommandOption] = attr.field(factory=list, kw_only=True)
+
+    _type: commands.CommandType = attr.field(default=commands.CommandType.SLASH, init=False)
+
+    @property
+    def description(self) -> str:
+        return self._description
+
+    def add_option(self: _SlashCommandBuilderT, option: commands.CommandOption) -> _SlashCommandBuilderT:
+        self._options.append(option)
+        return self
+
+    @property
+    def options(self) -> typing.Sequence[commands.CommandOption]:
+        return self._options.copy()
+
+    def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObjectBuilder:
+        data = super().build(entity_factory)
+        data["type"] = commands.CommandType.SLASH
+        data.put("description", self._description)
+        data.put_array("options", self._options, conversion=entity_factory.serialize_command_option)
+        return data
+
+
+@attr.define(kw_only=False, weakref_slot=False)
+class ContextMenuCommandBuilder(CommandBuilder, special_endpoints.ContextMenuCommandBuilder):
+    """Builder class for context menu commands."""
+
+    def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObjectBuilder:
+        data = super().build(entity_factory)
+        data["type"] = self._type
         return data
 
 

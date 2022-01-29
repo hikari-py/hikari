@@ -23,6 +23,7 @@
 import mock
 import pytest
 
+from hikari import commands
 from hikari import emojis
 from hikari import messages
 from hikari import snowflakes
@@ -185,19 +186,19 @@ class TestInteractionMessageBuilder:
             builder.build(mock_entity_factory)
 
 
-class TestCommandBuilder:
+class TestSlashCommandBuilder:
     def test_description_property(self):
-        builder = special_endpoints.CommandBuilder("ok", "NO")
+        builder = special_endpoints.SlashCommandBuilder("ok", "NO")
 
         assert builder.description == "NO"
 
     def test_name_property(self):
-        builder = special_endpoints.CommandBuilder("NOOOOO", "OKKKK")
+        builder = special_endpoints.SlashCommandBuilder("NOOOOO", "OKKKK")
 
         assert builder.name == "NOOOOO"
 
     def test_options_property(self):
-        builder = special_endpoints.CommandBuilder("OKSKDKSDK", "inmjfdsmjiooikjsa")
+        builder = special_endpoints.SlashCommandBuilder("OKSKDKSDK", "inmjfdsmjiooikjsa")
         mock_option = object()
 
         assert builder.options == []
@@ -207,12 +208,12 @@ class TestCommandBuilder:
         assert builder.options == [mock_option]
 
     def test_id_property(self):
-        builder = special_endpoints.CommandBuilder("OKSKDKSDK", "inmjfdsmjiooikjsa").set_id(3212123)
+        builder = special_endpoints.SlashCommandBuilder("OKSKDKSDK", "inmjfdsmjiooikjsa").set_id(3212123)
 
         assert builder.id == 3212123
 
     def test_default_permission(self):
-        builder = special_endpoints.CommandBuilder("oksksksk", "kfdkodfokfd").set_default_permission(True)
+        builder = special_endpoints.SlashCommandBuilder("oksksksk", "kfdkodfokfd").set_default_permission(True)
 
         assert builder.default_permission is True
 
@@ -220,7 +221,7 @@ class TestCommandBuilder:
         mock_entity_factory = mock.Mock()
         mock_option = object()
         builder = (
-            special_endpoints.CommandBuilder("we are number", "one")
+            special_endpoints.SlashCommandBuilder("we are number", "one")
             .add_option(mock_option)
             .set_id(3412312)
             .set_default_permission(False)
@@ -232,17 +233,43 @@ class TestCommandBuilder:
         assert result == {
             "name": "we are number",
             "description": "one",
+            "type": 1,
             "default_permission": False,
             "options": [mock_entity_factory.serialize_command_option.return_value],
             "id": "3412312",
         }
 
     def test_build_without_optional_data(self):
-        builder = special_endpoints.CommandBuilder("we are numberr", "oner")
+        builder = special_endpoints.SlashCommandBuilder("we are numberr", "oner")
 
         result = builder.build(mock.Mock())
 
-        assert result == {"name": "we are numberr", "description": "oner", "options": []}
+        assert result == {"type": 1, "name": "we are numberr", "description": "oner", "options": []}
+
+
+class TestContextMenuBuilder:
+    def test_build_with_optional_data(self):
+        builder = (
+            special_endpoints.ContextMenuCommandBuilder(commands.CommandType.USER, "we are number")
+            .set_id(3412312)
+            .set_default_permission(False)
+        )
+
+        result = builder.build(mock.Mock())
+
+        assert result == {
+            "name": "we are number",
+            "type": 2,
+            "default_permission": False,
+            "id": "3412312",
+        }
+
+    def test_build_without_optional_data(self):
+        builder = special_endpoints.ContextMenuCommandBuilder(commands.CommandType.MESSAGE, "nameeeee")
+
+        result = builder.build(mock.Mock())
+
+        assert result == {"type": 3, "name": "nameeeee"}
 
 
 @pytest.mark.parametrize("emoji", ["UNICORN", emojis.UnicodeEmoji("UNICORN")])

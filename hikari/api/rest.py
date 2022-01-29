@@ -6637,8 +6637,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    def command_builder(self, name: str, description: str, /) -> special_endpoints.CommandBuilder:
+    def command_builder(self, name: str, description: str) -> special_endpoints.SlashCommandBuilder:
         r"""Create a command builder for use in `RESTClient.set_application_commands`.
+
+        .. deprecated:: 2.0.0.dev106
+            Use `RESTClient.slash_command_builder` or `RESTClient.context_menu_command_builder` instead.
 
         Parameters
         ----------
@@ -6651,7 +6654,51 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        hikari.api.special_endpoints.CommandBuilder
+        hikari.api.special_endpoints.SlashCommandBuilder
+            The created command builder object.
+        """
+
+    @abc.abstractmethod
+    def slash_command_builder(
+        self,
+        name: str,
+        description: str,
+    ) -> special_endpoints.SlashCommandBuilder:
+        r"""Create a command builder for use in `RESTClient.set_application_commands`.
+
+        Parameters
+        ----------
+        name : builtins.str
+            The command's name. This should match the regex `^[\w-]{1,32}$` in
+            Unicode mode and be lowercase.
+        description : builtins.str
+            The description to set for the command if this is a slash command.
+            This should be inclusively between 1-100 characters in length.
+
+        Returns
+        -------
+        hikari.api.special_endpoints.SlashCommandBuilder
+            The created command builder object.
+        """
+
+    @abc.abstractmethod
+    def context_menu_command_builder(
+        self,
+        type: typing.Union[commands.CommandType, int],
+        name: str,
+    ) -> special_endpoints.ContextMenuCommandBuilder:
+        r"""Create a command builder for use in `RESTClient.set_application_commands`.
+
+        Parameters
+        ----------
+        type : commands.CommandType
+            The commands's type.
+        name : builtins.str
+            The command's name.
+
+        Returns
+        -------
+        hikari.api.special_endpoints.ContextMenuCommandBuilder
             The created command builder object.
         """
 
@@ -6659,16 +6706,16 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def fetch_application_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        command: snowflakes.SnowflakeishOr[commands.Command],
+        command: snowflakes.SnowflakeishOr[commands.PartialCommand],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
-    ) -> commands.Command:
+    ) -> commands.PartialCommand:
         """Fetch a command set for an application.
 
         Parameters
         ----------
         application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to fetch a command for.
-        command: hikari.snowflakes.SnowflakeishOr[hikari.commands.Command]
+        command: hikari.snowflakes.SnowflakeishOr[hikari.commands.PartialCommand]
             Object or ID of the command to fetch.
 
         Other Parameters
@@ -6680,7 +6727,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        hikari.commands.Command
+        hikari.commands.PartialCommand
             Object of the fetched command.
 
         Raises
@@ -6711,7 +6758,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
-    ) -> typing.Sequence[commands.Command]:
+    ) -> typing.Sequence[commands.PartialCommand]:
         """Fetch the commands set for an application.
 
         Parameters
@@ -6729,7 +6776,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        typing.Sequence[hikari.commands.Command]
+        typing.Sequence[hikari.commands.PartialCommand]
             A sequence of the commands declared for the provided application.
             This will exclusively either contain the commands set for a specific
             guild if `guild` is provided or the global commands if not.
@@ -6767,7 +6814,78 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
         default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-    ) -> commands.Command:
+    ) -> commands.SlashCommand:
+        r"""Create an application command.
+
+        .. deprecated:: 2.0.0.dev106
+            Use `RESTClient.create_slash_command` or `RESTClient.create_context_menu_command` instead.
+
+        Parameters
+        ----------
+        application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+            Object or ID of the application to create a command for.
+        name : builtins.str
+            The command's name. This should match the regex `^[\w-]{1,32}$` in
+            Unicode mode and be lowercase.
+        description : builtins.str
+            The description to set for the command.
+            This should be inclusively between 1-100 characters in length.
+        guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+            Object or ID of the specific guild this should be made for.
+            If left as `hikari.undefined.UNDEFINED` then this call will create
+            a global command rather than a guild specific one.
+
+        Other Parameters
+        ----------------
+        options : hikari.undefined.UndefinedOr[typing.Sequence[hikari.commands.CommandOption]]
+            A sequence of up to 10 options for this command.
+        default_permission : hikari.undefined.UndefinedOr[builtins.bool]
+            Whether this command should be enabled by default (without any
+            permissions) when added to a guild.
+
+            Defaults to `builtins.True`.
+
+        Returns
+        -------
+        hikari.commands.SlashCommand
+            Object of the created command.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you cannot access the provided application's commands.
+        hikari.errors.NotFoundError
+            If the provided application isn't found.
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def create_slash_command(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        name: str,
+        description: str,
+        *,
+        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+        options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
+        default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+    ) -> commands.SlashCommand:
         r"""Create an application command.
 
         Parameters
@@ -6797,7 +6915,69 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        hikari.commands.Command
+        hikari.commands.SlashCommand
+            Object of the created command.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you cannot access the provided application's commands.
+        hikari.errors.NotFoundError
+            If the provided application isn't found.
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def create_context_menu_command(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        type: typing.Literal[commands.CommandType.USER, commands.CommandType.MESSAGE, 2, 3],
+        name: str,
+        *,
+        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+        default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+    ) -> commands.ContextMenuCommand:
+        r"""Create an application command.
+
+        Parameters
+        ----------
+        application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+            Object or ID of the application to create a command for.
+        name : builtins.str
+            The command's name. This should match the regex `^[\w-]{1,32}$` in
+            Unicode mode and be lowercase.
+
+        Other Parameters
+        ----------------
+        guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+            Object or ID of the specific guild this should be made for.
+            If left as `hikari.undefined.UNDEFINED` then this call will create
+            a global command rather than a guild specific one.
+        default_permission : hikari.undefined.UndefinedOr[builtins.bool]
+            Whether this command should be enabled by default (without any
+            permissions) when added to a guild.
+
+            Defaults to `builtins.True`.
+
+        Returns
+        -------
+        hikari.commands.ContextMenuCommand
             Object of the created command.
 
         Raises
@@ -6831,7 +7011,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         commands: typing.Sequence[special_endpoints.CommandBuilder],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
-    ) -> typing.Sequence[commands.Command]:
+    ) -> typing.Sequence[commands.PartialCommand]:
         """Set the commands for an application.
 
         !!! warning
@@ -6855,7 +7035,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        typing.Sequence[hikari.commands.Command]
+        typing.Sequence[hikari.commands.PartialCommand]
             A sequence of the set command objects.
 
         Raises
@@ -6887,20 +7067,20 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def edit_application_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        command: snowflakes.SnowflakeishOr[commands.Command],
+        command: snowflakes.SnowflakeishOr[commands.PartialCommand],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
-    ) -> commands.Command:
+    ) -> commands.PartialCommand:
         """Edit a registered application command.
 
         Parameters
         ----------
         application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to edit a command for.
-        command : hikari.snowflakes.SnowflakeishOr[hikari.commands.Command]
+        command : hikari.snowflakes.SnowflakeishOr[hikari.commands.PartialCommand]
             Object or ID of the command to modify.
 
         Other Parameters
@@ -6921,7 +7101,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        hikari.commands.Command
+        hikari.commands.PartialCommand
             The edited command object.
 
         Raises
@@ -6953,7 +7133,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def delete_application_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        command: snowflakes.SnowflakeishOr[commands.Command],
+        command: snowflakes.SnowflakeishOr[commands.PartialCommand],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
     ) -> None:
         """Delete a registered application command.
@@ -6962,7 +7142,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------
         application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to delete a command for.
-        command : hikari.snowflakes.SnowflakeishOr[hikari.commands.Command]
+        command : hikari.snowflakes.SnowflakeishOr[hikari.commands.PartialCommand]
             Object or ID of the command to delete.
 
         Other Parameters
@@ -7043,7 +7223,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        command: snowflakes.SnowflakeishOr[commands.Command],
+        command: snowflakes.SnowflakeishOr[commands.PartialCommand],
     ) -> commands.GuildCommandPermissions:
         """Fetch the permissions registered for a specific command in a guild.
 
@@ -7053,7 +7233,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Object or ID of the application to fetch the command permissions for.
         guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
             Object or ID of the guild to fetch the command permissions for.
-        command: hikari.snowflakes.SnowflakeishOr[hikari.commands.Command]
+        command: hikari.snowflakes.SnowflakeishOr[hikari.commands.PartialCommand]
             Objecr or ID of the command to fetch the command permissions for.
 
         Returns
@@ -7090,7 +7270,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         permissions: typing.Mapping[
-            snowflakes.SnowflakeishOr[commands.Command], typing.Sequence[commands.CommandPermission]
+            snowflakes.SnowflakeishOr[commands.PartialCommand], typing.Sequence[commands.CommandPermission]
         ],
     ) -> typing.Sequence[commands.GuildCommandPermissions]:
         """Set permissions in a guild for multiple commands.
@@ -7105,7 +7285,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Object or ID of the application to set the command permissions for.
         guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
             Object or ID of the guild to set the command permissions for.
-        permissions : typing.Mapping[hikari.snowflakes.SnowflakeishOr[hikari.commands.Command], typing.Sequence[hikari.commands.CommandPermission]]
+        permissions : typing.Mapping[hikari.snowflakes.SnowflakeishOr[hikari.commands.PartialCommand], typing.Sequence[hikari.commands.CommandPermission]]
             Mapping of objects and/or IDs of commands to sequences of the commands
             to set for the specified guild.
 
@@ -7145,7 +7325,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        command: snowflakes.SnowflakeishOr[commands.Command],
+        command: snowflakes.SnowflakeishOr[commands.PartialCommand],
         permissions: typing.Sequence[commands.CommandPermission],
     ) -> commands.GuildCommandPermissions:
         """Set permissions for a specific command.
@@ -7159,7 +7339,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Object or ID of the application to set the command permissions for.
         guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
             Object or ID of the guild to set the command permissions for.
-        command : hikari.snowflakes.SnowflakeishOr[hikari.commands.Command]
+        command : hikari.snowflakes.SnowflakeishOr[hikari.commands.PartialCommand]
             Object or ID of the command to set the permissions for.
         permissions : typing.Sequence[hikari.commands.CommandPermission]
             Sequence of up to 10 of the permission objects to set.
@@ -7207,6 +7387,18 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         -------
         hikari.api.special_endpoints.InteractionDeferredBuilder
             The deferred message interaction response builder object.
+        """
+
+    @abc.abstractmethod
+    def interaction_autocomplete_builder(
+        self, choices: typing.Sequence[commands.CommandChoice]
+    ) -> special_endpoints.InteractionAutocompleteBuilder:
+        """Create a builder for an autocomplete interaction response.
+
+        Returns
+        -------
+        hikari.api.special_endpoints.InteractionAutocompleteBuilder
+            The autocomplete interaction response builder object.
         """
 
     @abc.abstractmethod
@@ -7578,6 +7770,49 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
+
+    @abc.abstractmethod
+    async def create_autocomplete_response(
+        self,
+        interaction: snowflakes.SnowflakeishOr[base_interactions.PartialInteraction],
+        token: str,
+        choices: typing.Sequence[commands.CommandChoice],
+    ) -> None:
+        """Create the initial response for an autocomplete interaction.
+
+        Parameters
+        ----------
+        interaction : hikari.snowflakes.SnowflakeishOr[hikari.interactions.base_interactions.PartialInteraction]
+            Object or ID of the interaction this response is for.
+        token : builtins.str
+            The command interaction's token.
+
+        Other Parameters
+        ----------------
+        choices : typing.Sequence[commands.CommandChoice]
+            The autocomplete choices themselves.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the interaction is not found or if the interaction's initial
+            response has already been created.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """  # noqa: E501 - Line too long
 
     @abc.abstractmethod
     def build_action_row(self) -> special_endpoints.ActionRowBuilder:

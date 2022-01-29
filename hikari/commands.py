@@ -24,11 +24,14 @@
 from __future__ import annotations
 
 __all__: typing.List[str] = [
-    "Command",
+    "PartialCommand",
+    "ContextMenuCommand",
+    "SlashCommand",
     "CommandChoice",
     "CommandOption",
     "CommandPermission",
     "CommandPermissionType",
+    "CommandType",
     "GuildCommandPermissions",
     "OptionType",
 ]
@@ -46,6 +49,19 @@ from hikari.internal import enums
 if typing.TYPE_CHECKING:
     from hikari import channels
     from hikari import guilds
+
+
+class CommandType(int, enums.Enum):
+    """The type of a command."""
+
+    SLASH = 1
+    """A text-based command."""
+
+    USER = 2
+    """A user-based command."""
+
+    MESSAGE = 3
+    """A message-based command."""
 
 
 @typing.final
@@ -124,8 +140,8 @@ class CommandOption:
         This will be inclusively between 1-100 characters in length.
     """
 
-    is_required: bool = attr.field(repr=False)
-    """Whether this command """
+    is_required: bool = attr.field(default=False, repr=False)
+    """Whether this command option is required."""
 
     choices: typing.Optional[typing.Sequence[CommandChoice]] = attr.field(default=None, repr=False)
     """A sequence of up to (and including) 25 choices for this command.
@@ -146,6 +162,9 @@ class CommandOption:
     If `builtins.None`, then all channel types will be accepted.
     """
 
+    autocomplete: bool = attr.field(default=False, repr=False)
+    """Whether this option has autocomplete."""
+
     min_value: typing.Union[int, float, None] = attr.field(default=None, repr=False)
     """The minimum value permitted (inclusive).
 
@@ -163,14 +182,17 @@ class CommandOption:
 
 @attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
-class Command(snowflakes.Unique):
-    """Represents an application command on Discord."""
+class PartialCommand(snowflakes.Unique):
+    """Represents any application command on Discord."""
 
     app: traits.RESTAware = attr.field(eq=False, hash=False, repr=False)
     """The client application that models may use for procedures."""
 
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
     # <<inherited docstring from Unique>>.
+
+    type: CommandType = attr.field(hash=True, repr=True)
+    """The type of a command."""
 
     application_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
     """ID of the application this command belongs to."""
@@ -182,16 +204,6 @@ class Command(snowflakes.Unique):
         This will match the regex `^[\w-]{1,32}$` in Unicode mode and will be
         lowercase.
     """
-
-    description: str = attr.field(eq=False, hash=False, repr=False)
-    """The command's description.
-
-    !!! note
-        This will be inclusively between 1-100 characters in length.
-    """
-
-    options: typing.Optional[typing.Sequence[CommandOption]] = attr.field(eq=False, hash=False, repr=False)
-    """Sequence of up to (and including) 25 of the options for this command."""
 
     default_permission: bool = attr.field(eq=False, hash=False, repr=True)
     """Whether the command is enabled by default when added to a guild.
@@ -209,12 +221,12 @@ class Command(snowflakes.Unique):
     version: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
     """Auto-incrementing version identifier updated during substantial record changes."""
 
-    async def fetch_self(self) -> Command:
+    async def fetch_self(self) -> PartialCommand:
         """Fetch an up-to-date version of this command object.
 
         Returns
         -------
-        Command
+        PartialCommand
             Object of the fetched command.
 
         Raises
@@ -239,9 +251,10 @@ class Command(snowflakes.Unique):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
-        return await self.app.rest.fetch_application_command(
+        command = await self.app.rest.fetch_application_command(
             self.application_id, self.id, undefined.UNDEFINED if self.guild_id is None else self.guild_id
         )
+        return command
 
     async def edit(
         self,
@@ -249,7 +262,7 @@ class Command(snowflakes.Unique):
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         options: undefined.UndefinedOr[typing.Sequence[CommandOption]] = undefined.UNDEFINED,
-    ) -> Command:
+    ) -> PartialCommand:
         """Edit this command.
 
         Other Parameters
@@ -270,7 +283,7 @@ class Command(snowflakes.Unique):
 
         Returns
         -------
-        Command
+        PartialCommand
             The edited command object.
 
         Raises
@@ -297,7 +310,7 @@ class Command(snowflakes.Unique):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
-        return await self.app.rest.edit_application_command(
+        command = await self.app.rest.edit_application_command(
             self.application_id,
             self.id,
             undefined.UNDEFINED if self.guild_id is None else self.guild_id,
@@ -305,6 +318,7 @@ class Command(snowflakes.Unique):
             description=description,
             options=options,
         )
+        return command
 
     async def delete(self) -> None:
         """Delete this command.
@@ -421,6 +435,30 @@ class Command(snowflakes.Unique):
         return await self.app.rest.set_application_command_permissions(
             application=self.application_id, command=self.id, guild=guild, permissions=permissions
         )
+
+
+@attr_extensions.with_copy
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
+class SlashCommand(PartialCommand):
+    """Represents a slash command on Discord."""
+
+    description: str = attr.field(eq=False, hash=False, repr=False)
+    """The command's description.
+
+    None if this command is not a slash command.
+
+    !!! note
+        This will be inclusively between 1-100 characters in length.
+    """
+
+    options: typing.Optional[typing.Sequence[CommandOption]] = attr.field(eq=False, hash=False, repr=False)
+    """Sequence of up to (and including) 25 of the options for this command."""
+
+
+@attr_extensions.with_copy
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
+class ContextMenuCommand(PartialCommand):
+    """Represents a slash command on Discord."""
 
 
 class CommandPermissionType(int, enums.Enum):

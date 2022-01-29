@@ -26,6 +26,7 @@ from hikari import commands
 from hikari import snowflakes
 from hikari import traits
 from hikari import undefined
+from tests.hikari import hikari_test_helpers
 
 
 @pytest.fixture()
@@ -33,18 +34,17 @@ def mock_app():
     return mock.Mock(traits.CacheAware, rest=mock.AsyncMock())
 
 
-class TestCommand:
+class TestPartialCommand:
     @pytest.fixture()
     def mock_command(self, mock_app):
-        return commands.Command(
+        return hikari_test_helpers.mock_class_namespace(commands.PartialCommand)(
             app=mock_app,
             id=snowflakes.Snowflake(34123123),
+            type=commands.CommandType.SLASH,
             application_id=snowflakes.Snowflake(65234123),
             name="Name",
-            description="very descript",
-            options=[],
-            guild_id=snowflakes.Snowflake(31231235),
             default_permission=False,
+            guild_id=snowflakes.Snowflake(31231235),
             version=snowflakes.Snowflake(43123123),
         )
 

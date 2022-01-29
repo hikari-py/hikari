@@ -2718,6 +2718,7 @@ class TestEntityFactoryImpl:
             "id": "1231231231",
             "application_id": "12354123",
             "guild_id": "49949494",
+            "type": 1,
             "name": "good name",
             "description": "very good description",
             "default_permission": False,
@@ -2790,12 +2791,13 @@ class TestEntityFactoryImpl:
 
         assert isinstance(suboption, commands.CommandOption)
         assert isinstance(option, commands.CommandOption)
-        assert isinstance(command, commands.Command)
+        assert isinstance(command, commands.SlashCommand)
 
     def test_deserialize_command_with_passed_through_guild_id(self, entity_factory_impl):
         payload = {
             "id": "1231231231",
             "application_id": "12354123",
+            "type": 1,
             "name": "good name",
             "description": "very good description",
             "options": [],
@@ -2811,6 +2813,7 @@ class TestEntityFactoryImpl:
             "id": "1231231231",
             "application_id": "12354123",
             "guild_id": "49949494",
+            "type": 1,
             "name": "good name",
             "description": "very good description",
             "options": [],
@@ -2821,7 +2824,7 @@ class TestEntityFactoryImpl:
 
         assert command.options is None
         assert command.default_permission is True
-        assert isinstance(command, commands.Command)
+        assert isinstance(command, commands.SlashCommand)
 
     @pytest.fixture()
     def guild_command_permissions_payload(self):
@@ -2966,7 +2969,9 @@ class TestEntityFactoryImpl:
         assert member.user is mock_user
 
     @pytest.fixture()
-    def command_interaction_payload(self, member_payload, user_payload, guild_role_payload, interaction_member_payload):
+    def command_interaction_payload(
+        self, member_payload, user_payload, guild_role_payload, interaction_member_payload, message_payload
+    ):
         member_payload = member_payload.copy()
         member_payload["permissions"] = "47"
         del member_payload["user"]
@@ -2977,6 +2982,7 @@ class TestEntityFactoryImpl:
             "data": {
                 "id": "43123123",
                 "name": "okokokok",
+                "type": 1,
                 "options": [
                     {
                         "name": "an option",
@@ -2999,6 +3005,7 @@ class TestEntityFactoryImpl:
                     "members": {"115590097100865541": member_payload},
                     "roles": {"41771983423143936": guild_role_payload},
                     "users": {"115590097100865541": user_payload},
+                    "messages": {"123": message_payload},
                 },
             },
             "channel_id": "49949494",
@@ -3019,6 +3026,7 @@ class TestEntityFactoryImpl:
         guild_role_payload,
         interaction_member_payload,
         member_payload,
+        message_payload,
     ):
         interaction = entity_factory_impl.deserialize_command_interaction(command_interaction_payload)
         member_payload = member_payload.copy()
@@ -3085,6 +3093,8 @@ class TestEntityFactoryImpl:
             41771983423143936: entity_factory_impl.deserialize_role(guild_role_payload, guild_id=43123123)
         }
         assert interaction.resolved.users == {115590097100865541: entity_factory_impl.deserialize_user(user_payload)}
+        assert interaction.resolved.messages == {123: entity_factory_impl.deserialize_message(message_payload)}
+
         assert isinstance(interaction.resolved, command_interactions.ResolvedOptionData)
 
         assert isinstance(interaction, command_interactions.CommandInteraction)
@@ -3123,6 +3133,101 @@ class TestEntityFactoryImpl:
         assert interaction.resolved.members == {}
         assert interaction.resolved.roles == {}
         assert interaction.resolved.users == {}
+
+    @pytest.fixture()
+    def autocomplete_interaction_payload(self, user_payload):
+        return {
+            "id": "3490190239012093",
+            "type": 4,
+            "guild_id": "43123123",
+            "data": {
+                "id": "43123123",
+                "name": "okokokok",
+                "type": 1,
+                "options": [
+                    {"name": "go ice", "type": 4, "value": 42},
+                    {"name": "go fire", "type": 3, "value": "typing...", "focused": True},
+                ],
+                "resolved": {},
+            },
+            "channel_id": "49949494",
+            "user": user_payload,
+            "token": "moe cat girls",
+            "locale": "es-ES",
+            "guild_locale": "en-US",
+            "version": 69420,
+            "application_id": "76234234",
+        }
+
+    @pytest.fixture()
+    def autocomplete_interaction_payload_with_optional(
+        self,
+        interaction_member_payload,
+        user_payload,
+    ):
+        return {
+            "id": "3490190239012093",
+            "type": 4,
+            "guild_id": "43123123",
+            "data": {
+                "id": "43123123",
+                "name": "okokokok",
+                "type": 1,
+                "options": [
+                    {"name": "go ice", "type": 6, "value": "115590097100865541"},
+                    {"name": "go fire", "type": 3, "value": "typing...", "focused": True},
+                    {"name": "stuff", "type": 1, "value": {"name": "stuff", "type": 3, "value": "none"}},
+                ],
+                "resolved": {
+                    "users": {
+                        "115590097100865541": user_payload,
+                    }
+                },
+            },
+            "channel_id": "49949494",
+            "member": interaction_member_payload,
+            "token": "moe cat girls",
+            "locale": "es-ES",
+            "guild_locale": "en-US",
+            "version": 69420,
+            "application_id": "76234234",
+        }
+
+    def test_deserialize_autocomplete_interaction(
+        self,
+        entity_factory_impl,
+        mock_app,
+        autocomplete_interaction_payload,
+    ):
+        interaction = entity_factory_impl.deserialize_autocomplete_interaction(autocomplete_interaction_payload)
+
+        assert interaction.app is mock_app
+        assert interaction.application_id == 76234234
+        assert interaction.id == 3490190239012093
+        assert interaction.type is base_interactions.InteractionType.AUTOCOMPLETE
+        assert interaction.token == "moe cat girls"
+        assert interaction.version == 69420
+        assert interaction.channel_id == 49949494
+        assert interaction.guild_id == 43123123
+        assert interaction.locale == "es-ES"
+        assert interaction.guild_locale == "en-US"
+
+        assert len(interaction.options) == 2
+        assert interaction.options[0].value == 42
+        assert interaction.options[1].value == "typing..."
+        assert interaction.options[1].is_focused
+
+    def test_deserialize_autocomplete_interaction_with_optional(
+        self,
+        entity_factory_impl,
+        mock_app,
+        autocomplete_interaction_payload_with_optional,
+    ):
+        interaction = entity_factory_impl.deserialize_autocomplete_interaction(
+            autocomplete_interaction_payload_with_optional
+        )
+
+        assert interaction
 
     def test_deserialize_interaction_returns_expected_type(
         self, entity_factory_impl, command_interaction_payload, component_interaction_payload
@@ -3233,6 +3338,99 @@ class TestEntityFactoryImpl:
                 }
             ],
         }
+
+    def test_serialize_command_option_with_autocomplete(self, entity_factory_impl):
+        option = commands.CommandOption(
+            type=commands.OptionType.STRING,
+            name="a name",
+            description="go away",
+            is_required=True,
+            autocomplete=True,
+        )
+
+        result = entity_factory_impl.serialize_command_option(option)
+
+        assert result == {
+            "type": 3,
+            "name": "a name",
+            "description": "go away",
+            "required": True,
+            "autocomplete": True,
+        }
+
+    @pytest.fixture()
+    def context_menu_command_interaction_payload(self, interaction_member_payload, user_payload):
+        return {
+            "id": "3490190239012093",
+            "type": 4,
+            "guild_id": "43123123",
+            "data": {
+                "id": "43123123",
+                "name": "okokokok",
+                "type": 2,
+                "target_id": "115590097100865541",
+                "resolved": {
+                    "users": {
+                        "115590097100865541": user_payload,
+                    }
+                },
+            },
+            "channel_id": "49949494",
+            "member": interaction_member_payload,
+            "token": "moe cat girls",
+            "locale": "es-ES",
+            "guild_locale": "en-US",
+            "version": 69420,
+            "application_id": "76234234",
+        }
+
+    def test_deserialize_context_menu_command_interaction(
+        self,
+        entity_factory_impl,
+        context_menu_command_interaction_payload,
+    ):
+        interaction = entity_factory_impl.deserialize_command_interaction(context_menu_command_interaction_payload)
+        assert isinstance(interaction, command_interactions.CommandInteraction)
+        assert interaction.target_id == 115590097100865541
+
+    @pytest.fixture()
+    def context_menu_command_payload(self):
+        return {
+            "id": "1231231231",
+            "application_id": "12354123",
+            "guild_id": "49949494",
+            "type": 2,
+            "name": "good name",
+            "default_permission": False,
+            "version": "123321123",
+        }
+
+    def test_deserialize_context_menu_command(
+        self,
+        entity_factory_impl,
+        context_menu_command_payload,
+    ):
+        command = entity_factory_impl.deserialize_command(context_menu_command_payload)
+        assert isinstance(command, commands.ContextMenuCommand)
+
+        assert command.id == 1231231231
+        assert command.application_id == 12354123
+        assert command.guild_id == 49949494
+        assert command.type == commands.CommandType.USER
+        assert command.name == "good name"
+        assert command.default_permission is False
+        assert command.version == 123321123
+
+    def test_unknown_command_type(
+        self,
+        entity_factory_impl,
+        command_payload,
+    ):
+        payload = command_payload.copy()
+        payload["type"] = 4
+
+        with pytest.raises(errors.UnrecognisedEntityError):
+            entity_factory_impl.deserialize_command(payload)
 
     @pytest.fixture()
     def component_interaction_payload(self, interaction_member_payload, message_payload):

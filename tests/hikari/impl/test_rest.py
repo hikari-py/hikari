@@ -33,6 +33,7 @@ from hikari import applications
 from hikari import audit_logs
 from hikari import channels
 from hikari import colors
+from hikari import commands
 from hikari import config
 from hikari import emojis
 from hikari import errors
@@ -1003,7 +1004,7 @@ class TestRESTClientImpl:
                 guild=guild,
             )
 
-    def test_kick_member(self, rest_client: rest.RESTClientImpl):
+    def test_kick_member(self, rest_client):
         mock_kick_user = mock.Mock()
         rest_client.kick_user = mock_kick_user
 
@@ -1012,7 +1013,7 @@ class TestRESTClientImpl:
         assert result is mock_kick_user.return_value
         mock_kick_user.assert_called_once_with(123, 5423, reason="oewkwkwk")
 
-    def test_ban_member(self, rest_client: rest.RESTClientImpl):
+    def test_ban_member(self, rest_client):
         mock_ban_user = mock.Mock()
         rest_client.ban_user = mock_ban_user
 
@@ -1021,7 +1022,7 @@ class TestRESTClientImpl:
         assert result is mock_ban_user.return_value
         mock_ban_user.assert_called_once_with(43123, 54123, delete_message_days=6, reason="wowowowo")
 
-    def test_unban_member(self, rest_client: rest.RESTClientImpl):
+    def test_unban_member(self, rest_client):
         mock_unban_user = mock.Mock()
         rest_client.unban_user = mock_unban_user
 
@@ -1031,11 +1032,22 @@ class TestRESTClientImpl:
         mock_unban_user.assert_called_once_with(123, 321, reason="ayaya")
 
     def test_command_builder(self, rest_client):
-        result = rest_client.command_builder("a name", "very very good")
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=DeprecationWarning)
+            result = rest_client.command_builder("a name", description="very very good")
 
-        assert isinstance(result, special_endpoints.CommandBuilder)
+        assert isinstance(result, special_endpoints.SlashCommandBuilder)
         assert result.name == "a name"
         assert result.description == "very very good"
+
+    def test_slash_command_builder(self, rest_client):
+        result = rest_client.slash_command_builder("a name", "a description")
+        assert isinstance(result, special_endpoints.SlashCommandBuilder)
+
+    def test_context_menu_command_command_builder(self, rest_client):
+        result = rest_client.context_menu_command_builder(3, "a name")
+        assert isinstance(result, special_endpoints.ContextMenuCommandBuilder)
+        assert result.type == commands.CommandType.MESSAGE
 
     def test_build_action_row(self, rest_client):
         with mock.patch.object(special_endpoints, "ActionRowBuilder") as action_row_builder:
@@ -4180,9 +4192,15 @@ class TestRESTClientImplAsync:
         rest_client._request = mock.AsyncMock(return_value={"id": "29393939"})
         mock_option = object()
 
-        result = await rest_client.create_application_command(
-            StubModel(4332123), "okokok", "not ok anymore", StubModel(653452134), options=[mock_option]
-        )
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=DeprecationWarning)
+            result = await rest_client.create_application_command(
+                application=StubModel(4332123),
+                guild=StubModel(653452134),
+                name="okokok",
+                description="not ok anymore",
+                options=[mock_option],
+            )
 
         assert result is rest_client._entity_factory.deserialize_command.return_value
         rest_client._entity_factory.serialize_command_option.assert_called_once_with(mock_option)
@@ -4192,6 +4210,7 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(
             expected_route,
             json={
+                "type": 1,
                 "name": "okokok",
                 "description": "not ok anymore",
                 "options": [rest_client._entity_factory.serialize_command_option.return_value],
@@ -4202,15 +4221,47 @@ class TestRESTClientImplAsync:
         expected_route = routes.POST_APPLICATION_COMMAND.compile(application=4332123)
         rest_client._request = mock.AsyncMock(return_value={"id": "29393939"})
 
-        result = await rest_client.create_application_command(StubModel(4332123), "okokok", "not ok anymore")
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=DeprecationWarning)
+            result = await rest_client.create_application_command(
+                StubModel(4332123),
+                name="okokok",
+                description="not ok anymore",
+            )
 
         assert result is rest_client._entity_factory.deserialize_command.return_value
         rest_client._entity_factory.deserialize_command.assert_called_once_with(
             rest_client._request.return_value, guild_id=None
         )
         rest_client._request.assert_awaited_once_with(
-            expected_route, json={"name": "okokok", "description": "not ok anymore"}
+            expected_route, json={"type": 1, "name": "okokok", "description": "not ok anymore"}
         )
+
+    async def test_create_slash_command(self, rest_client):
+        expected_route = routes.POST_APPLICATION_COMMAND.compile(application=4332123)
+        rest_client._request = mock.AsyncMock(return_value={"id": "29393939"})
+
+        result = await rest_client.create_slash_command(StubModel(4332123), "okokok", "not ok anymore")
+
+        assert result is rest_client._entity_factory.deserialize_command.return_value
+        rest_client._entity_factory.deserialize_command.assert_called_once_with(
+            rest_client._request.return_value, guild_id=None
+        )
+        rest_client._request.assert_awaited_once_with(
+            expected_route, json={"type": 1, "name": "okokok", "description": "not ok anymore"}
+        )
+
+    async def test_create_context_menu_command(self, rest_client):
+        expected_route = routes.POST_APPLICATION_COMMAND.compile(application=4332123)
+        rest_client._request = mock.AsyncMock(return_value={"id": "29393939"})
+
+        result = await rest_client.create_context_menu_command(StubModel(4332123), 2, "okokok")
+
+        assert result is rest_client._entity_factory.deserialize_command.return_value
+        rest_client._entity_factory.deserialize_command.assert_called_once_with(
+            rest_client._request.return_value, guild_id=None
+        )
+        rest_client._request.assert_awaited_once_with(expected_route, json={"type": 2, "name": "okokok"})
 
     async def test_set_application_commands_with_guild(self, rest_client):
         expected_route = routes.PUT_APPLICATION_GUILD_COMMANDS.compile(application=4321231, guild=6543234)
@@ -4368,6 +4419,27 @@ class TestRESTClientImplAsync:
         assert result.type == 5
         assert isinstance(result, special_endpoints.InteractionDeferredBuilder)
 
+    def test_interaction_autocomplete_builder(self, rest_client):
+        result = rest_client.interaction_autocomplete_builder(
+            [
+                commands.CommandChoice(name="name", value="value"),
+                commands.CommandChoice(name="a", value="b"),
+            ]
+        )
+
+        assert result.type == 8
+        assert isinstance(result, special_endpoints.InteractionAutocompleteBuilder)
+        assert len(result.choices) == 2
+
+        raw = result.build(mock.Mock())
+        assert raw["data"] == {"choices": [{"name": "name", "value": "value"}, {"name": "a", "value": "b"}]}
+
+    def test_interaction_autocomplete_builder_with_set_choices(self, rest_client):
+        result = rest_client.interaction_autocomplete_builder([commands.CommandChoice(name="name", value="value")])
+
+        result.set_choices([commands.CommandChoice(name="a", value="b")])
+        assert result.choices == [commands.CommandChoice(name="a", value="b")]
+
     def test_interaction_message_builder(self, rest_client):
         result = rest_client.interaction_message_builder(4)
 
@@ -4441,3 +4513,16 @@ class TestRESTClientImplAsync:
         await rest_client.delete_interaction_response(StubModel(1235431), "go homo now")
 
         rest_client._request.assert_awaited_once_with(expected_route, no_auth=True)
+
+    async def test_create_autocomplete_response(self, rest_client):
+        expected_route = routes.POST_INTERACTION_RESPONSE.compile(interaction=1235431, token="dissssnake")
+        rest_client._request = mock.AsyncMock()
+
+        choices = [commands.CommandChoice(name="a", value="b"), commands.CommandChoice(name="foo", value="bar")]
+        await rest_client.create_autocomplete_response(StubModel(1235431), "dissssnake", choices)
+
+        rest_client._request.assert_awaited_once_with(
+            expected_route,
+            json={"type": 8, "data": {"choices": [{"name": "a", "value": "b"}, {"name": "foo", "value": "bar"}]}},
+            no_auth=True,
+        )

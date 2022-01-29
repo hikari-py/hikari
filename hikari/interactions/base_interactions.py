@@ -71,6 +71,9 @@ class InteractionType(int, enums.Enum):
     MESSAGE_COMPONENT = 3
     """An interaction triggered by a user calling a message component."""
 
+    AUTOCOMPLETE = 4
+    """An interaction triggered by a user typing in a slash command option."""
+
 
 @typing.final
 class ResponseType(int, enums.Enum):
@@ -113,6 +116,14 @@ class ResponseType(int, enums.Enum):
     This is valid for the following interaction types:
 
     * `InteractionType.MESSAGE_COMPONENT`
+    """
+
+    AUTOCOMPLETE = 8
+    """Respond to an autocomplete interaction with suggested choices.
+
+    This is valid for the following interaction types:
+
+    * `InteractionType.AUTOCOMPLETE`
     """
 
 

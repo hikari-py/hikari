@@ -55,8 +55,7 @@ _ImmediateTypesT = typing.Literal[
 ]
 
 
-# This type ignore accounts for a regression introduced to MyPy in v0.900
-COMPONENT_RESPONSE_TYPES: typing.Final[typing.AbstractSet[ComponentResponseTypesT]] = frozenset(  # type: ignore[assignment]
+COMPONENT_RESPONSE_TYPES: typing.Final[typing.AbstractSet[ComponentResponseTypesT]] = frozenset(
     [*_DEFERRED_TYPES, *_IMMEDIATE_TYPES]
 )
 """Set of the response types which are valid for a component interaction.

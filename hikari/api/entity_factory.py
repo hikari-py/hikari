@@ -964,7 +964,7 @@ class EntityFactory(abc.ABC):
         payload: data_binding.JSONObject,
         *,
         guild_id: undefined.UndefinedNoneOr[snowflakes.Snowflake] = undefined.UNDEFINED,
-    ) -> commands.Command:
+    ) -> commands.PartialCommand:
         """Parse a raw payload from Discord into a command object.
 
         Parameters
@@ -980,7 +980,7 @@ class EntityFactory(abc.ABC):
 
         Returns
         -------
-        hikari.commands.Command
+        hikari.commands.PartialCommand
             The deserialized command object.
 
         Raises

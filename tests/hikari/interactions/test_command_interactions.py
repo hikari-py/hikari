@@ -23,6 +23,7 @@ import mock
 import pytest
 
 from hikari import channels
+from hikari import commands
 from hikari import snowflakes
 from hikari import traits
 from hikari.interactions import base_interactions
@@ -50,6 +51,7 @@ class TestCommandInteraction:
             application_id=snowflakes.Snowflake(43123),
             command_id=snowflakes.Snowflake(3123123),
             command_name="OKOKOK",
+            command_type=1,
             options=[],
             resolved=None,
             locale="es-ES",
@@ -89,3 +91,53 @@ class TestCommandInteraction:
         mock_command_interaction.app = mock.Mock(traits.RESTAware)
 
         assert mock_command_interaction.get_channel() is None
+
+
+class TestAutocompleteInteraction:
+    @pytest.fixture()
+    def mock_autocomplete_interaction(self, mock_app):
+        return command_interactions.AutocompleteInteraction(
+            app=mock_app,
+            id=snowflakes.Snowflake(2312312),
+            type=base_interactions.InteractionType.APPLICATION_COMMAND,
+            channel_id=snowflakes.Snowflake(3123123),
+            guild_id=snowflakes.Snowflake(5412231),
+            guild_locale="en-US",
+            locale="en-US",
+            member=object(),
+            user=object(),
+            token="httptptptptptptptp",
+            version=1,
+            application_id=snowflakes.Snowflake(43123),
+            command_id=snowflakes.Snowflake(3123123),
+            command_name="OKOKOK",
+            command_type=1,
+            options=[],
+            resolved=None,
+        )
+
+    @pytest.fixture()
+    def mock_command_choices(self):
+        return [commands.CommandChoice(name="a", value="b"), commands.CommandChoice(name="foo", value="bar")]
+
+    def test_build_response(self, mock_autocomplete_interaction, mock_app, mock_command_choices):
+        mock_app.rest.interaction_autocomplete_builder = mock.Mock()
+        builder = mock_autocomplete_interaction.build_response(mock_command_choices)
+
+        assert builder is mock_app.rest.interaction_autocomplete_builder.return_value
+        mock_app.rest.interaction_autocomplete_builder.assert_called_once_with(mock_command_choices)
+
+    @pytest.mark.asyncio()
+    async def test_create_response(
+        self,
+        mock_autocomplete_interaction: command_interactions.AutocompleteInteraction,
+        mock_app,
+        mock_command_choices,
+    ):
+        await mock_autocomplete_interaction.create_response(mock_command_choices)
+
+        mock_app.rest.create_autocomplete_response.assert_awaited_once_with(
+            2312312,
+            "httptptptptptptptp",
+            mock_command_choices,
+        )

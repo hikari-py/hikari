@@ -55,7 +55,8 @@ if typing.TYPE_CHECKING:
 
     _InteractionT_co = typing.TypeVar("_InteractionT_co", bound=base_interactions.PartialInteraction, covariant=True)
     _MessageResponseBuilderT = typing.Union[
-        special_endpoints.InteractionDeferredBuilder, special_endpoints.InteractionMessageBuilder
+        special_endpoints.InteractionDeferredBuilder,
+        special_endpoints.InteractionMessageBuilder,
     ]
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.rest_bot")
@@ -589,6 +590,16 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
 
     @typing.overload
     def get_listener(
+        self, interaction_type: typing.Type[command_interactions.AutocompleteInteraction], /
+    ) -> typing.Optional[
+        interaction_server_.ListenerT[
+            command_interactions.AutocompleteInteraction, special_endpoints.InteractionAutocompleteBuilder
+        ]
+    ]:
+        ...
+
+    @typing.overload
+    def get_listener(
         self, interaction_type: typing.Type[_InteractionT_co], /
     ) -> typing.Optional[interaction_server_.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]]:
         ...
@@ -617,6 +628,21 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         interaction_type: typing.Type[component_interactions.ComponentInteraction],
         listener: typing.Optional[
             interaction_server_.ListenerT[component_interactions.ComponentInteraction, _MessageResponseBuilderT]
+        ],
+        /,
+        *,
+        replace: bool = False,
+    ) -> None:
+        ...
+
+    @typing.overload
+    def set_listener(
+        self,
+        interaction_type: typing.Type[command_interactions.AutocompleteInteraction],
+        listener: typing.Optional[
+            interaction_server_.ListenerT[
+                command_interactions.AutocompleteInteraction, special_endpoints.InteractionAutocompleteBuilder
+            ]
         ],
         /,
         *,

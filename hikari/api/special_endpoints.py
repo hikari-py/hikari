@@ -27,9 +27,12 @@ __all__: typing.List[str] = [
     "ActionRowBuilder",
     "ButtonBuilder",
     "CommandBuilder",
+    "SlashCommandBuilder",
+    "ContextMenuCommandBuilder",
     "ComponentBuilder",
     "TypingIndicator",
     "GuildBuilder",
+    "InteractionAutocompleteBuilder",
     "InteractionDeferredBuilder",
     "InteractionResponseBuilder",
     "InteractionMessageBuilder",
@@ -627,6 +630,27 @@ class InteractionDeferredBuilder(InteractionResponseBuilder, abc.ABC):
         """
 
 
+class InteractionAutocompleteBuilder(InteractionResponseBuilder, abc.ABC):
+    """Interface of an autocomplete interaction response builder."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def choices(self) -> typing.Sequence[commands.CommandChoice]:
+        """Return autocomplete choices."""
+
+    @abc.abstractmethod
+    def set_choices(self: _T, choices: typing.Sequence[commands.CommandChoice], /) -> _T:
+        """Set autocomplete choices.
+
+        Returns
+        -------
+        InteractionAutocompleteBuilder
+            Object of this builder.
+        """
+
+
 class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
     """Interface of an interaction message response builder used within REST servers.
 
@@ -912,27 +936,13 @@ class CommandBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def description(self) -> str:
-        """Return the description to set for this command.
-
-        !!! warning
-            This should be inclusively between 1-100 characters in length.
+    def type(self) -> undefined.UndefinedOr[commands.CommandType]:
+        """Return the type of this command.
 
         Returns
         -------
-        builtins.str
-            The description to set for this command.
-        """
-
-    @property
-    @abc.abstractmethod
-    def options(self) -> typing.Sequence[commands.CommandOption]:
-        """Sequence of up to 25 of the options set for this command.
-
-        Returns
-        -------
-        typing.Sequence[hikari.commands.CommandOption]
-            A sequence of up to 25 of the options set for this command.
+        hikari.commands.CommandType
+            The type of this command.
         """
 
     @property
@@ -990,6 +1000,50 @@ class CommandBuilder(abc.ABC):
         """
 
     @abc.abstractmethod
+    def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObject:
+        """Build a JSON object from this builder.
+
+        Parameters
+        ----------
+        entity_factory : hikari.api.entity_factory.EntityFactory
+            The entity factory to use to serialize entities within this builder.
+
+        Returns
+        -------
+        hikari.internal.data_binding.JSONObject
+            The built json object representation of this builder.
+        """
+
+
+class SlashCommandBuilder(CommandBuilder):
+    """SlashCommandBuilder."""
+
+    @property
+    @abc.abstractmethod
+    def description(self) -> str:
+        """Return the description to set for this command.
+
+        !!! warning
+            This should be inclusively between 1-100 characters in length.
+
+        Returns
+        -------
+        builtins.str
+            The description to set for this command.
+        """
+
+    @property
+    @abc.abstractmethod
+    def options(self) -> typing.Sequence[commands.CommandOption]:
+        """Sequence of up to 25 of the options set for this command.
+
+        Returns
+        -------
+        typing.Sequence[hikari.commands.CommandOption]
+            A sequence of up to 25 of the options set for this command.
+        """
+
+    @abc.abstractmethod
     def add_option(self: _T, option: commands.CommandOption) -> _T:
         """Add an option to this command.
 
@@ -1007,20 +1061,9 @@ class CommandBuilder(abc.ABC):
             Object of this command builder.
         """
 
-    @abc.abstractmethod
-    def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObject:
-        """Build a JSON object from this builder.
 
-        Parameters
-        ----------
-        entity_factory : hikari.api.entity_factory.EntityFactory
-            The entity factory to use to serialize entities within this builder.
-
-        Returns
-        -------
-        hikari.internal.data_binding.JSONObject
-            The built json object representation of this builder.
-        """
+class ContextMenuCommandBuilder(CommandBuilder):
+    """ContextMenuCommandBuilder."""
 
 
 class ComponentBuilder(abc.ABC):
