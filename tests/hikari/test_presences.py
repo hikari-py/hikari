@@ -84,7 +84,7 @@ class TestActivityAssets:
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL,
             application_id=45123123,
-            asset="541sdfasdasd",
+            hash="541sdfasdasd",
             size=3121,
             file_format="fa",
         )
@@ -173,7 +173,7 @@ class TestActivityAssets:
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL,
             application_id=123321,
-            asset="aseqwsdas",
+            hash="aseqwsdas",
             size=123312,
             file_format="eat",
         )

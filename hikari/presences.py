@@ -159,7 +159,7 @@ class ActivityAssets:
             return routes.CDN_APPLICATION_ASSET.compile_to_file(
                 urls.CDN_URL,
                 application_id=self._application_id,
-                asset=asset,
+                hash=asset,
                 size=size,
                 file_format=ext,
             )
