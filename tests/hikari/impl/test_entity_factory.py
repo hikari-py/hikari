@@ -4634,6 +4634,7 @@ class TestEntityFactoryImpl:
         assert isinstance(activity.party, presence_models.ActivityParty)
         # ActivityAssets
         assert activity.assets is not None
+        assert activity.assets._application_id is activity.application_id
         assert activity.assets.large_image == "34234234234243"
         assert activity.assets.large_text == "LARGE TEXT"
         assert activity.assets.small_image == "3939393"
