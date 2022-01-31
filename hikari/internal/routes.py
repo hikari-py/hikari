@@ -548,6 +548,7 @@ CDN_ROLE_ICON: typing.Final[CDNRoute] = CDNRoute("/role-icons/{role_id}/{hash}",
 
 CDN_APPLICATION_ICON: typing.Final[CDNRoute] = CDNRoute("/app-icons/{application_id}/{hash}", {PNG, *JPEG_JPG, WEBP})
 CDN_APPLICATION_COVER: typing.Final[CDNRoute] = CDNRoute("/app-assets/{application_id}/{hash}", {PNG, *JPEG_JPG, WEBP})
+CDN_APPLICATION_ASSET: typing.Final[CDNRoute] = CDNRoute("/app-assets/{application_id}/{hash}", {PNG, *JPEG_JPG, WEBP})
 CDN_ACHIEVEMENT_ICON: typing.Final[CDNRoute] = CDNRoute(
     "/app-assets/{application_id}/achievements/{achievement_id}/icons/{hash}", {PNG, *JPEG_JPG, WEBP}
 )
