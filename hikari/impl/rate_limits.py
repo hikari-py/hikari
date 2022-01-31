@@ -499,7 +499,7 @@ class ExponentialBackOff:
     def __next__(self) -> float:
         """Get the next back off to sleep by."""
         try:
-            value = self.base ** self.increment
+            value = self.base**self.increment
 
             if value >= self.maximum:
                 value = self.maximum
