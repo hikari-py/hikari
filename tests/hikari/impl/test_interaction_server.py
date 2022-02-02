@@ -25,8 +25,13 @@ import contextlib
 import aiohttp.web
 import aiohttp.web_runner
 import mock
-import nacl.exceptions
-import nacl.signing
+try:
+    import nacl.exceptions
+    import nacl.signing
+    nacl_present = True
+except ModuleNotFoundError:
+    nacl_present = False
+
 import pytest
 
 from hikari import errors
