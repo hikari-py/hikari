@@ -40,8 +40,21 @@ from tests.hikari import hikari_test_helpers
 
 @pytest.fixture()
 def valid_edd25519():
-    body = b'{"application_id":"658822586720976907","channel_id":"938391701561679903","data":{"id":"870616445036421159","name":"ping","type":1},"guild_id":"561884984214814744","guild_locale":"en-GB","id":"938421734825140264","locale":"en-GB","member":{"avatar":null,"communication_disabled_until":null,"deaf":false,"is_pending":false,"joined_at":"2019-03-31T12:10:19.616000+00:00","mute":false,"nick":"Snab","pending":false,"permissions":"2199023255551","premium_since":null,"roles":["561885635074457600"],"user":{"avatar":"2549318b6a5f514a6c4a4379ed89a469","discriminator":"6127","id":"115590097100865541","public_flags":131072,"username":"Faster Speeding"}},"token":"aW50ZXJhY3Rpb246OTM4NDIxNzM0ODI1MTQwMjY0Ok1pR0t6dGt3T1Q4SkhHMnREQmJ2RXI4Vk5vaXZ0UzVMRTBqdVRLcmhnd1dYdEd6d2dlTUZGMlNQRkRybGZJaHVuWHZva2lKaWQzcjh1ZEt5NzJtVTFKNzdGOVREOWtoNE5BYnlCdGlGaEZDMDVMY3VhbkF1a0ZZMnhGeU9qOHY4","type":2,"version":1}'
-    signature = b"\x8c*\xb2\x9e\x05\x0cSgc\xc9}A\xbd\x02.'-[\xb0\xa9\xbegN\xd5Z\x12\xa6 \xc5\x0b!\xd8cB\x99\xf5W\x80\x07\xf2\x97\xba\x97\xcc\x17 L\xc53kG\xa0\x1c\x11\x8e|X\x05P\x81@.\xb5\x04"
+    body = (
+        b'{"application_id":"658822586720976907","channel_id":"938391701561679903","data":{"id":"870616445036421159","'
+        b'name":"ping","type":1},"guild_id":"561884984214814744","guild_locale":"en-GB","id":"938421734825140264","loc'
+        b'ale":"en-GB","member":{"avatar":null,"communication_disabled_until":null,"deaf":false,"is_pending":false,"jo'
+        b'ined_at":"2019-03-31T12:10:19.616000+00:00","mute":false,"nick":"Snab","pending":false,"permissions":"219902'
+        b'3255551","premium_since":null,"roles":["561885635074457600"],"user":{"avatar":"2549318b6a5f514a6c4a4379ed89a'
+        b'469","discriminator":"6127","id":"115590097100865541","public_flags":131072,"username":"Faster Speeding"}},"'
+        b'token":"aW50ZXJhY3Rpb246OTM4NDIxNzM0ODI1MTQwMjY0Ok1pR0t6dGt3T1Q4SkhHMnREQmJ2RXI4Vk5vaXZ0UzVMRTBqdVRLcmhnd1dY'
+        b"dEd6d2dlTUZGMlNQRkRybGZJaHVuWHZva2lKaWQzcjh1ZEt5NzJtVTFKNzdGOVREOWtoNE5BYnlCdGlGaEZDMDVMY3VhbkF1a0ZZMnhGeU9q"
+        b'OHY4","type":2,"version":1}'
+    )
+    signature = (
+        b"\x8c*\xb2\x9e\x05\x0cSgc\xc9}A\xbd\x02.'-[\xb0\xa9\xbegN\xd5Z\x12\xa6 \xc5\x0b!\xd8c"
+        b"B\x99\xf5W\x80\x07\xf2\x97\xba\x97\xcc\x17 L\xc53kG\xa0\x1c\x11\x8e|X\x05P\x81@.\xb5\x04"
+    )
     timestamp = b"1643807576"
     return (body, signature, timestamp)
 
