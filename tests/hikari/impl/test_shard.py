@@ -1012,7 +1012,7 @@ class TestGatewayShardImpl:
                 "large_threshold": 123,
                 "properties": {
                     "$os": "Potato PC ARM64",
-                    "$browser": "aiohttp v0.0.1",
+                    "$browser": "hikari (v1.0.0, aiohttp v0.0.1)",
                     "$device": "hikari v1.0.0",
                 },
                 "shard": [0, 1],
