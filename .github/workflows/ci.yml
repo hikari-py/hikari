@@ -38,7 +38,7 @@ jobs:
         run: |
           pip install nox
           nox -s pytest
-          nox -s pytest-speedups -- --cov-append
+          nox -s pytest-all-features -- --cov-append
 
           mv .coverage .coverage.${{ matrix.os }}.${{ matrix.python-version }}
 
