@@ -222,7 +222,7 @@ class TestInteractionServer:
                 public_key=None,
             )
 
-        assert result._nacl is None
+        assert result._public_key is None
 
     def test_is_alive_property_when_inactive(self, mock_interaction_server):
         assert mock_interaction_server.is_alive is False
