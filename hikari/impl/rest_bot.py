@@ -182,11 +182,13 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
 
     __slots__: typing.Sequence[str] = (
         "_close_event",
+        "_entity_factory",
         "_executor",
         "_http_settings",
         "_is_closing",
+        "_on_shutdown",
+        "_on_startup",
         "_proxy_settings",
-        "_entity_factory",
         "_rest",
         "_server",
     )
@@ -262,6 +264,8 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         self._executor = executor
         self._http_settings = http_settings if http_settings is not None else config_impl.HTTPSettings()
         self._is_closing = False
+        self._on_shutdown: typing.List[typing.Callable[[], typing.Coroutine[typing.Any, typing.Any, None]]] = []
+        self._on_startup: typing.List[typing.Callable[[], typing.Coroutine[typing.Any, typing.Any, None]]] = []
         self._proxy_settings = proxy_settings if proxy_settings is not None else config_impl.ProxySettings()
 
         # Entity creation
