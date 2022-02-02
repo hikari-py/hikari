@@ -45,8 +45,7 @@ if typing.TYPE_CHECKING:
 
     import aiohttp.typedefs
 
-    # This is only imported here for internal type-hints and otherwise needs
-    # to be inline imported as it's an optional dependency.
+    # This is kept inline as pynacl is an optional dependency.
     from nacl import signing
 
     from hikari.api import entity_factory as entity_factory_api
@@ -55,7 +54,6 @@ if typing.TYPE_CHECKING:
     from hikari.interactions import component_interactions
 
     _InteractionT_co = typing.TypeVar("_InteractionT_co", bound=base_interactions.PartialInteraction, covariant=True)
-    _ResponseT_co = typing.TypeVar("_ResponseT_co", bound=special_endpoints.InteractionResponseBuilder, covariant=True)
     _MessageResponseBuilderT = typing.Union[
         special_endpoints.InteractionDeferredBuilder,
         special_endpoints.InteractionMessageBuilder,
@@ -154,9 +152,10 @@ class InteractionServer(interaction_server.InteractionServer):
         "_is_closing",
         "_listeners",
         "_loads",
+        "_nacl",
+        "_public_key",
         "_rest_client",
         "_server",
-        "_verify",
     )
 
     def __init__(
@@ -170,7 +169,8 @@ class InteractionServer(interaction_server.InteractionServer):
     ) -> None:
         # This is kept inline as pynacl is an optional dependency.
         try:
-            from nacl import signing
+            import nacl.exceptions
+            import nacl.signing
 
         except ModuleNotFoundError as exc:
             raise RuntimeError(
@@ -186,13 +186,10 @@ class InteractionServer(interaction_server.InteractionServer):
         self._is_closing = False
         self._listeners: typing.Dict[typing.Type[base_interactions.PartialInteraction], typing.Any] = {}
         self._loads = loads
+        self._nacl = nacl
         self._rest_client = rest_client
         self._server: typing.Optional[aiohttp.web_runner.AppRunner] = None
-
-        # if not isinstance(public_key, bytes) or len(public_key) != 32:
-        #     raise ValueError("public_key must be a 32-byte sequence.")
-
-        self._verify = signing.VerifyKey(public_key) if public_key is not None else None
+        self._public_key = nacl.signing.VerifyKey(public_key) if public_key is not None else None
 
     @property
     def is_alive(self) -> bool:
@@ -206,16 +203,13 @@ class InteractionServer(interaction_server.InteractionServer):
         return self._server is not None
 
     async def _fetch_public_key(self) -> signing.VerifyKey:
-        # This is kept inline as pynacl is an optional dependency.
-        from nacl import signing
-
         if self._application_fetch_lock is None:
             self._application_fetch_lock = asyncio.Lock()
 
         application: typing.Union[applications.Application, applications.AuthorizationApplication]
         async with self._application_fetch_lock:
-            if self._verify:
-                return self._verify
+            if self._public_key:
+                return self._public_key
 
             if self._rest_client.token_type == applications.TokenType.BOT:
                 application = await self._rest_client.fetch_application()
@@ -223,8 +217,8 @@ class InteractionServer(interaction_server.InteractionServer):
             else:
                 application = (await self._rest_client.fetch_authorization()).application
 
-            self._verify = signing.VerifyKey(application.public_key)
-            return self._verify
+            self._public_key = self._nacl.signing.VerifyKey(application.public_key)
+            return self._public_key
 
     async def aiohttp_hook(self, request: aiohttp.web.Request) -> aiohttp.web.Response:
         """Handle an AIOHTTP interaction request.
@@ -339,9 +333,12 @@ class InteractionServer(interaction_server.InteractionServer):
             Instructions on how the REST server calling this should respond to
             the interaction request.
         """
-        verify = self._verify or await self._fetch_public_key()
+        public_key = self._public_key or await self._fetch_public_key()
 
-        if not verify.verify(timestamp + body, signature):
+        try:
+            public_key.verify(timestamp + body, signature)
+
+        except (self._nacl.exceptions.BadSignatureError, ValueError):
             _LOGGER.error("Received a request with an invalid signature")
             return _Response(_BAD_REQUEST_STATUS, b"Invalid request signature")
 
