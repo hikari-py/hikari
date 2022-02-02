@@ -40,19 +40,46 @@ from tests.hikari import hikari_test_helpers
 
 @pytest.fixture()
 def valid_edd25519():
-    body = (
-        b'{"application_id":"658822586720976907","id":"838085779104202753","token":"aW50ZXJhY3Rpb246ODM4MDg1Nzc5MTA0MjA'
-        b"yNzUzOmd3MG5nSmpDck9UcWtWc3lsUERFbWx6MEt6bnVUb1Bjc0pNN2FCMVZ3TVJOeVdudUk5R2t4Q0EwSG1LWUVzQkMza0IyR2I3dEtRWHhn"
-        b'TlRTYmRxZlgzMFRvZW5CTmVIWDUyZ2Q1NEFmWllueXJhVjBCSVhlQzZyMVpxQloyT20y","type":1,"user":{"avatar":"b333580bd947'
-        b'4630226ff7b0a9696231","discriminator":"6127","id":"115590097100865541","public_flags":131072,"username":"Fast'
-        b'er Speeding"},"version":1}'
-    )
-    signature = (
-        b"\xb4*\x91w\xf8\xfa{\x8f\xdf\xc3%\xaa\x81nl\xdej\x9aS\xdeq\xe5\x97\xb8$\x8f\xc6\xd4?Y\x1c\x85+\xcf\x93\xc1\xd5"
-        b"\xea-\xfe-\x97s\xe04\xb6a:k\xbb\x12\xa4\xa0\x19\xb1P\xf6s\x8e\r'\xab\xbe\x07"
-    )
-    timestamp = b"1619885621"
+    body = b'{"application_id":"658822586720976907","channel_id":"938391701561679903","data":{"id":"870616445036421159","name":"ping","type":1},"guild_id":"561884984214814744","guild_locale":"en-GB","id":"938421734825140264","locale":"en-GB","member":{"avatar":null,"communication_disabled_until":null,"deaf":false,"is_pending":false,"joined_at":"2019-03-31T12:10:19.616000+00:00","mute":false,"nick":"Snab","pending":false,"permissions":"2199023255551","premium_since":null,"roles":["561885635074457600"],"user":{"avatar":"2549318b6a5f514a6c4a4379ed89a469","discriminator":"6127","id":"115590097100865541","public_flags":131072,"username":"Faster Speeding"}},"token":"aW50ZXJhY3Rpb246OTM4NDIxNzM0ODI1MTQwMjY0Ok1pR0t6dGt3T1Q4SkhHMnREQmJ2RXI4Vk5vaXZ0UzVMRTBqdVRLcmhnd1dYdEd6d2dlTUZGMlNQRkRybGZJaHVuWHZva2lKaWQzcjh1ZEt5NzJtVTFKNzdGOVREOWtoNE5BYnlCdGlGaEZDMDVMY3VhbkF1a0ZZMnhGeU9qOHY4","type":2,"version":1}'
+    signature = b"\x8c*\xb2\x9e\x05\x0cSgc\xc9}A\xbd\x02.'-[\xb0\xa9\xbegN\xd5Z\x12\xa6 \xc5\x0b!\xd8cB\x99\xf5W\x80\x07\xf2\x97\xba\x97\xcc\x17 L\xc53kG\xa0\x1c\x11\x8e|X\x05P\x81@.\xb5\x04"
+    timestamp = b"1643807576"
     return (body, signature, timestamp)
+
+
+@pytest.fixture()
+def valid_payload():
+    return {
+        "application_id": "658822586720976907",
+        "channel_id": "938391701561679903",
+        "data": {"id": "870616445036421159", "name": "ping", "type": 1},
+        "guild_id": "561884984214814744",
+        "guild_locale": "en-GB",
+        "id": "938421734825140264",
+        "locale": "en-GB",
+        "member": {
+            "avatar": None,
+            "communication_disabled_until": None,
+            "deaf": False,
+            "is_pending": False,
+            "joined_at": "2019-03-31T12:10:19.616000+00:00",
+            "mute": False,
+            "nick": "Snab",
+            "pending": False,
+            "permissions": "2199023255551",
+            "premium_since": None,
+            "roles": ["561885635074457600"],
+            "user": {
+                "avatar": "2549318b6a5f514a6c4a4379ed89a469",
+                "discriminator": "6127",
+                "id": "115590097100865541",
+                "public_flags": 131072,
+                "username": "Faster Speeding",
+            },
+        },
+        "token": "aW50ZXJhY3Rpb246OTM4NDIxNzM0ODI1MTQwMjY0Ok1pR0t6dGt3T1Q4SkhHMnREQmJ2RXI4Vk5vaXZ0UzVMRTBqdVRLcmhnd1dYdEd6d2dlTUZGMlNQRkRybGZJaHVuWHZva2lKaWQzcjh1ZEt5NzJtVTFKNzdGOVREOWtoNE5BYnlCdGlGaEZDMDVMY3VhbkF1a0ZZMnhGeU9qOHY4",
+        "type": 2,
+        "version": 1,
+    }
 
 
 @pytest.fixture()
@@ -163,54 +190,62 @@ class TestInteractionServer:
 
         assert mock_interaction_server.is_alive is True
 
-    # @pytest.mark.asyncio()
-    # async def test___fetch_public_key_when_lock_is_None_gets_new_lock_and_doesnt_overwrite_existing_ones(
-    #     self, mock_interaction_server, mock_rest_client
-    # ):
-    #     mock_interaction_server._application_fetch_lock = None
+    @pytest.mark.asyncio()
+    async def test___fetch_public_key_when_lock_is_None_gets_new_lock_and_doesnt_overwrite_existing_ones(
+        self, mock_interaction_server, mock_rest_client
+    ):
+        mock_rest_client.token_type = "Bot"
+        mock_interaction_server._application_fetch_lock = None
+        mock_rest_client.fetch_application.return_value.public_key = (
+            b"e\xb9\xf8\xac]eH\xb1\xe1D\xafaW\xdd\x1c.\xc1s\xfd<\x82\t\xeaO\xd4w\xaf\xc4\x1b\xd0\x8f\xc5"
+        )
+        results = []
 
-    #     with mock.patch.object(asyncio, "Lock") as lock_class:
-    #         with mock.patch.object(ed25519, "build_ed25519_verifier"):
-    #             # Run some times to make sure it does not overwrite it
-    #             for _ in range(5):
-    #                 await mock_interaction_server._fetch_public_key()
+        with mock.patch.object(asyncio, "Lock") as lock_class:
+            # Run some times to make sure it does not overwrite it
+            for _ in range(5):
+                results.append(await mock_interaction_server._fetch_public_key())
 
-    #     assert mock_interaction_server._application_fetch_lock is lock_class.return_value
-    #     lock_class.assert_called_once_with()
-    #     lock_class.return_value.__aenter__.assert_has_awaits([mock.call() for _ in range(5)])
-    #     lock_class.return_value.__aexit__.assert_has_awaits([mock.call(None, None, None) for _ in range(5)])
+        assert results[0] == nacl.signing.VerifyKey(mock_rest_client.fetch_application.return_value.public_key)
+        assert all(result is results[0] for result in results)
+        assert mock_interaction_server._application_fetch_lock is lock_class.return_value
+        lock_class.assert_called_once_with()
+        lock_class.return_value.__aenter__.assert_has_awaits([mock.call() for _ in range(5)])
+        lock_class.return_value.__aexit__.assert_has_awaits([mock.call(None, None, None) for _ in range(5)])
 
-    # @pytest.mark.asyncio()
-    # async def test__fetch_public_key_with_bearer_token(self, mock_interaction_server, mock_rest_client):
-    #     mock_rest_client.token_type = "Bearer"
-    #     mock_interaction_server._application_fetch_lock = mock.AsyncMock()
+    @pytest.mark.asyncio()
+    async def test__fetch_public_key_with_bearer_token(self, mock_interaction_server, mock_rest_client):
+        mock_rest_client.token_type = "Bearer"
+        mock_interaction_server._application_fetch_lock = mock.AsyncMock()
+        mock_rest_client.fetch_authorization.return_value.application.public_key = (
+            b'\x81\xa9\xc0\xee"\xf0%\xd1CF\x82Uh\x16.>\x9b\xcf[\x1f\xa4\xfcsb\xc3\xf4x\xf9\xe0z\xad\xed'
+        )
 
-    #     with mock.patch.object(ed25519, "build_ed25519_verifier") as build_verifier:
-    #         assert await mock_interaction_server._fetch_public_key() is build_verifier.return_value
+        result = await mock_interaction_server._fetch_public_key()
 
-    #         build_verifier.assert_called_once_with(
-    #             mock_rest_client.fetch_authorization.return_value.application.public_key
-    #         )
+        assert result == nacl.signing.VerifyKey(
+            mock_rest_client.fetch_authorization.return_value.application.public_key
+        )
+        mock_rest_client.fetch_authorization.assert_awaited_once()
+        mock_rest_client.fetch_application.assert_not_called()
+        mock_interaction_server._application_fetch_lock.__aenter__.assert_awaited_once()
+        mock_interaction_server._application_fetch_lock.__aexit__.assert_awaited_once()
 
-    #     mock_rest_client.fetch_authorization.assert_awaited_once()
-    #     mock_rest_client.fetch_application.assert_not_called()
-    #     mock_interaction_server._application_fetch_lock.__aenter__.assert_awaited_once()
-    #     mock_interaction_server._application_fetch_lock.__aexit__.assert_awaited_once()
+    @pytest.mark.asyncio()
+    async def test__fetch_public_key_fetch_with_bot_token(self, mock_interaction_server, mock_rest_client):
+        mock_rest_client.token_type = "Bot"
+        mock_interaction_server._application_fetch_lock = mock.AsyncMock()
+        mock_rest_client.fetch_application.return_value.public_key = (
+            b"\xf3\xfd\xfc\x81\xfcU\x00\xe5;V\x15\xc6H\xab4Ip\x07\x1bR\xc2b9\x86\xa9\\e\xfa\xcbw\xd7\x0b"
+        )
 
-    # @pytest.mark.asyncio()
-    # async def test__fetch_public_key_fetch_with_bot_token(self, mock_interaction_server, mock_rest_client):
-    #     mock_rest_client.token_type = "Bot"
-    #     mock_interaction_server._application_fetch_lock = mock.AsyncMock()
+        result = await mock_interaction_server._fetch_public_key()
 
-    #     with mock.patch.object(ed25519, "build_ed25519_verifier") as build_verifier:
-    #         assert await mock_interaction_server._fetch_public_key() is build_verifier.return_value
-
-    #         build_verifier.assert_called_once_with(mock_rest_client.fetch_application.return_value.public_key)
-
-    #     mock_rest_client.fetch_authorization.assert_not_called()
-    #     mock_rest_client.fetch_application.assert_awaited_once()
-    #     mock_interaction_server._application_fetch_lock.__aenter__.assert_awaited_once()
-    #     mock_interaction_server._application_fetch_lock.__aexit__.assert_awaited_once()
+        assert result == nacl.signing.VerifyKey(mock_rest_client.fetch_application.return_value.public_key)
+        mock_rest_client.fetch_authorization.assert_not_called()
+        mock_rest_client.fetch_application.assert_awaited_once()
+        mock_interaction_server._application_fetch_lock.__aenter__.assert_awaited_once()
+        mock_interaction_server._application_fetch_lock.__aexit__.assert_awaited_once()
 
     @pytest.mark.asyncio()
     async def test__fetch_public_key_when_public_key_already_set(self, mock_interaction_server):
@@ -380,7 +415,9 @@ class TestInteractionServer:
             await mock_interaction_server.join()
 
     @pytest.mark.asyncio()
-    async def test_on_interaction(self, mock_interaction_server, mock_entity_factory, public_key, valid_edd25519):
+    async def test_on_interaction(
+        self, mock_interaction_server, mock_entity_factory, public_key, valid_edd25519, valid_payload
+    ):
         mock_interaction_server._public_key = nacl.signing.VerifyKey(public_key)
         mock_entity_factory.deserialize_interaction.return_value = base_interactions.PartialInteraction(
             app=None, id=123, application_id=541324, type=2, token="ok", version=1
@@ -393,22 +430,7 @@ class TestInteractionServer:
 
         mock_listener.assert_awaited_once_with(mock_entity_factory.deserialize_interaction.return_value)
         mock_builder.build.assert_called_once_with(mock_entity_factory)
-        mock_entity_factory.deserialize_interaction.assert_called_once_with(
-            {
-                "application_id": "658822586720976907",
-                "id": "838085779104202753",
-                "token": "aW50ZXJhY3Rpb246ODM4MDg1Nzc5MTA0MjAyNzUzOmd3MG5nSmpDck9UcWtWc3lsUERFbWx6MEt6bnVUb1Bjc0pNN2FCMVZ3TVJOeVdudUk5R2t4Q0EwSG1LWUVzQkMza0IyR2I3dEtRWHhnTlRTYmRxZlgzMFRvZW5CTmVIWDUyZ2Q1NEFmWllueXJhVjBCSVhlQzZyMVpxQloyT20y",
-                "type": 1,
-                "user": {
-                    "avatar": "b333580bd9474630226ff7b0a9696231",
-                    "discriminator": "6127",
-                    "id": "115590097100865541",
-                    "public_flags": 131072,
-                    "username": "Faster Speeding",
-                },
-                "version": 1,
-            }
-        )
+        mock_entity_factory.deserialize_interaction.assert_called_once_with(valid_payload)
         assert result.headers == {"Content-Type": "application/json; charset=UTF-8"}
         assert result.payload == b'{"ok": "No boomer"}'
         assert result.status_code == 200
@@ -424,7 +446,7 @@ class TestInteractionServer:
         result = await mock_interaction_server.on_interaction(b"body", b"signature", b"timestamp")
 
         mock_fetcher.assert_awaited_once()
-        mock_fetcher.return_value.verify.assert_called_once_with(b"body", b"s" * 64, b"timestamp")
+        mock_fetcher.return_value.verify.assert_called_once_with(b"timestampbody", b"signature")
         assert result.headers == {"Content-Type": "text/plain; charset=UTF-8"}
         assert result.payload == b"Invalid request signature"
         assert result.status_code == 400
