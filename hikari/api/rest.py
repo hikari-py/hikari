@@ -6638,10 +6638,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     def command_builder(self, name: str, description: str) -> special_endpoints.SlashCommandBuilder:
-        r"""Create a command builder for use in `RESTClient.set_application_commands`.
+        r"""Create a slash command builder for use in `RESTClient.set_application_commands`.
 
         .. deprecated:: 2.0.0.dev106
-            Use `RESTClient.slash_command_builder` or `RESTClient.context_menu_command_builder` instead.
+            Use `RESTClient.slash_command_builder` instead.
 
         Parameters
         ----------
@@ -6815,10 +6815,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
         default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.SlashCommand:
-        r"""Create an application command.
+        r"""Create an application slash command.
 
         .. deprecated:: 2.0.0.dev106
-            Use `RESTClient.create_slash_command` or `RESTClient.create_context_menu_command` instead.
+            Use `RESTClient.create_slash_command` instead.
 
         Parameters
         ----------
