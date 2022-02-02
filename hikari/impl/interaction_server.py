@@ -217,7 +217,6 @@ class InteractionServer(interaction_server.InteractionServer):
             else:
                 application = (await self._rest_client.fetch_authorization()).application
 
-            print(application.public_key)
             self._public_key = self._nacl.signing.VerifyKey(application.public_key)
             return self._public_key
 

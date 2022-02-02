@@ -21,7 +21,6 @@
 # SOFTWARE.
 import asyncio
 import contextlib
-import typing
 
 import aiohttp.web
 import aiohttp.web_runner
@@ -89,7 +88,11 @@ def valid_payload():
                 "username": "Faster Speeding",
             },
         },
-        "token": "aW50ZXJhY3Rpb246OTM4NDIxNzM0ODI1MTQwMjY0Ok1pR0t6dGt3T1Q4SkhHMnREQmJ2RXI4Vk5vaXZ0UzVMRTBqdVRLcmhnd1dYdEd6d2dlTUZGMlNQRkRybGZJaHVuWHZva2lKaWQzcjh1ZEt5NzJtVTFKNzdGOVREOWtoNE5BYnlCdGlGaEZDMDVMY3VhbkF1a0ZZMnhGeU9qOHY4",
+        "token": (
+            "aW50ZXJhY3Rpb246OTM4NDIxNzM0ODI1MTQwMjY0Ok1pR0t6dGt3T1Q4SkhHMnREQmJ2RXI"
+            "4Vk5vaXZ0UzVMRTBqdVRLcmhnd1dYdEd6d2dlTUZGMlNQRkRybGZJaHVuWHZva2lKaWQzc"
+            "jh1ZEt5NzJtVTFKNzdGOVREOWtoNE5BYnlCdGlGaEZDMDVMY3VhbkF1a0ZZMnhGeU9qOHY4"
+        ),
         "type": 2,
         "version": 1,
     }
