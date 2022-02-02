@@ -301,6 +301,14 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         return self._server
 
     @property
+    def on_shutdown(self) -> typing.Sequence[typing.Callable[[], typing.Coroutine[typing.Any, typing.Any, None]]]:
+        return self._on_shutdown.copy()
+
+    @property
+    def on_startup(self) -> typing.Sequence[typing.Callable[[], typing.Coroutine[typing.Any, typing.Any, None]]]:
+        return self._on_startup.copy()
+
+    @property
     def rest(self) -> rest_api.RESTClient:
         return self._rest
 
@@ -361,6 +369,26 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
             If `extra_args` contains a default $-substitution.
         """
         ux.print_banner(banner, allow_color, force_color, extra_args=extra_args)
+
+    def add_shutdown_callback(
+        self, callback: typing.Callable[[], typing.Coroutine[typing.Any, typing.Any, None]], /
+    ) -> None:
+        self._on_shutdown.append(callback)
+
+    def remove_shutdown_callback(
+        self, callback: typing.Callable[[], typing.Coroutine[typing.Any, typing.Any, None]], /
+    ) -> None:
+        self._on_shutdown.append(callback)
+
+    def add_startup_callback(
+        self, callback: typing.Callable[[], typing.Coroutine[typing.Any, typing.Any, None]], /
+    ) -> None:
+        self._on_startup.append(callback)
+
+    def remove_startup_callback(
+        self, callback: typing.Callable[[], typing.Coroutine[typing.Any, typing.Any, None]], /
+    ) -> None:
+        self._on_shutdown.append(callback)
 
     async def close(self) -> None:
         if not self._close_event:
@@ -587,18 +615,26 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
                 name="check for package updates",
             )
 
-        self._rest.start()
-        await self._server.start(
-            backlog=backlog,
-            host=host,
-            port=port,
-            path=path,
-            reuse_address=reuse_address,
-            reuse_port=reuse_port,
-            socket=socket,
-            shutdown_timeout=shutdown_timeout,
-            ssl_context=ssl_context,
-        )
+        try:
+            await asyncio.gather(*(callback() for callback in self._on_startup))
+
+            self._rest.start()
+            await self._server.start(
+                backlog=backlog,
+                enable_signal_handlers=enable_signal_handlers,
+                host=host,
+                port=port,
+                path=path,
+                reuse_address=reuse_address,
+                reuse_port=reuse_port,
+                socket=socket,
+                shutdown_timeout=shutdown_timeout,
+                ssl_context=ssl_context,
+            )
+
+        except Exception:
+            self._close_event = None
+            raise
 
     @typing.overload
     def get_listener(

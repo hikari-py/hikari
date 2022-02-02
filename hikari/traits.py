@@ -566,3 +566,71 @@ class RESTBotAware(InteractionServerAware, Runnable, fast_protocol.FastProtocolC
     """Structural supertype for a component that has all the RESTful components."""
 
     __slots__: typing.Sequence[str] = ()
+
+    @property
+    def on_shutdown(self) -> typing.Sequence[typing.Callable[[], typing.Coroutine[typing.Any, typing.Any, None]]]:
+        """Sequence of the bot's asynchronous shutdown callbacks."""
+        raise NotImplementedError
+
+    @property
+    def on_startup(self) -> typing.Sequence[typing.Callable[[], typing.Coroutine[typing.Any, typing.Any, None]]]:
+        """Sequence of the bot's asynchronous startup callbacks."""
+        raise NotImplementedError
+
+    def add_shutdown_callback(
+        self, callback: typing.Callable[[], typing.Coroutine[typing.Any, typing.Any, None]], /
+    ) -> None:
+        """Add an asynchronous callback to be called when the bot shuts down.
+
+        Parameters
+        ----------
+        callback : typing.Callable[[], typing.Coroutine[typing.Any, typing.Any, None]]
+            The asynchronous shutdown callback to add.
+        """
+        raise NotImplementedError
+
+    def remove_shutdown_callback(
+        self, callback: typing.Callable[[], typing.Coroutine[typing.Any, typing.Any, None]], /
+    ) -> None:
+        """Remove an asynchronous shutdown callback from the bot.
+
+        Parameters
+        ----------
+        callback : typing.Callable[[], typing.Coroutine[typing.Any, typing.Any, None]]
+            The shutdown callback to remove.
+
+        Raises
+        ------
+        ValueError
+            If the callback was not registered.
+        """
+        raise NotImplementedError
+
+    def add_startup_callback(
+        self, callback: typing.Callable[[], typing.Coroutine[typing.Any, typing.Any, None]], /
+    ) -> None:
+        """Add an asynchronous callback to be called when the bot starts up.
+
+        Parameters
+        ----------
+        callback : typing.Callable[[], typing.Coroutine[typing.Any, typing.Any, None]]
+            The asynchronous startup callback to add.
+        """
+        raise NotImplementedError
+
+    def remove_startup_callback(
+        self, callback: typing.Callable[[], typing.Coroutine[typing.Any, typing.Any, None]], /
+    ) -> None:
+        """Remove an asynchronous startup callback from the bot.
+
+        Parameters
+        ----------
+        callback : typing.Callable[[], typing.Coroutine[typing.Any, typing.Any, None]]
+            The asynchronous startup callback to remove.
+
+        Raises
+        ------
+        ValueError
+            If the callback was not registered.
+        """
+        raise NotImplementedError
