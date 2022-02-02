@@ -688,7 +688,7 @@ class GatewayShardImpl(shard.GatewayShard):
                 "large_threshold": self._large_threshold,
                 "properties": {
                     "$os": f"{platform.system()} {platform.architecture()[0]}",
-                    "$browser": f"aiohttp {aiohttp.__version__}",
+                    "$browser": f"hikari ({about.__version__}, aiohttp {aiohttp.__version__})",
                     "$device": f"hikari {about.__version__}",
                 },
                 "shard": [self._shard_id, self._shard_count],
