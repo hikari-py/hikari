@@ -25,9 +25,11 @@ import contextlib
 import aiohttp.web
 import aiohttp.web_runner
 import mock
+
 try:
     import nacl.exceptions
     import nacl.signing
+
     nacl_present = True
 except ModuleNotFoundError:
     nacl_present = False
@@ -150,6 +152,16 @@ class Test_Response:
         assert response.status_code == 201
 
 
+@pytest.mark.skipif(nacl_present, reason="PyNacl is present")
+def test_interaction_server_init_when_no_pynacl():
+    with pytest.raises(
+        RuntimeError,
+        match="You must install the optional `hikari[server]` dependencies to use the default interaction server.",
+    ):
+        interaction_server_impl.InteractionServer(entity_factory=mock.Mock(), rest_client=mock.Mock())
+
+
+@pytest.mark.skipif(not nacl_present, reason="PyNacl not present")
 class TestInteractionServer:
     @pytest.fixture()
     def mock_entity_factory(self):
@@ -167,7 +179,6 @@ class TestInteractionServer:
     def mock_interaction_server(self, mock_entity_factory, mock_rest_client, mock_verifier):
         cls = hikari_test_helpers.mock_class_namespace(interaction_server_impl.InteractionServer, slots_=False)
         stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(nacl.signing, "VerifyKey", return_value=mock_verifier))
         stack.enter_context(mock.patch.object(rest_impl, "RESTClientImpl", return_value=mock_rest_client))
 
         with stack:
@@ -186,22 +197,32 @@ class TestInteractionServer:
                 entity_factory=mock_entity_factory,
                 loads=mock_loads,
                 rest_client=mock_rest_client,
-                public_key=public_key,
+                public_key=None,
             )
 
         assert result._dumps is mock_dumps
         assert result._entity_factory is mock_entity_factory
         assert result._loads is mock_loads
         assert result._rest_client is mock_rest_client
-        assert result._public_key == nacl.signing.VerifyKey(public_key)
+        assert result._public_key is None
 
-    def test___init___without_public_key(self):
-        with mock.patch.object(aiohttp.web, "Application"):
+    def test___init___with_public_key(self, mock_rest_client, mock_entity_factory, public_key):
+        mock_dumps = object()
+        mock_loads = object()
+
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(aiohttp.web, "Application"))
+
+        with stack:
             result = interaction_server_impl.InteractionServer(
-                dumps=object(), entity_factory=object(), loads=object(), rest_client=object()
+                dumps=mock_dumps,
+                entity_factory=mock_entity_factory,
+                loads=mock_loads,
+                rest_client=mock_rest_client,
+                public_key=None,
             )
 
-        assert result._public_key is None
+        assert result._nacl is None
 
     def test_is_alive_property_when_inactive(self, mock_interaction_server):
         assert mock_interaction_server.is_alive is False
