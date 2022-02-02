@@ -21,6 +21,7 @@
 # SOFTWARE.
 import asyncio
 import contextlib
+import re
 
 import aiohttp.web
 import aiohttp.web_runner
@@ -156,7 +157,9 @@ class Test_Response:
 def test_interaction_server_init_when_no_pynacl():
     with pytest.raises(
         RuntimeError,
-        match="You must install the optional `hikari[server]` dependencies to use the default interaction server.",
+        match=re.escape(
+            "You must install the optional `hikari[server]` dependencies to use the default interaction server."
+        ),
     ):
         interaction_server_impl.InteractionServer(entity_factory=mock.Mock(), rest_client=mock.Mock())
 

@@ -176,6 +176,7 @@ class TestRESTBot:
         rest_client = stack.enter_context(mock.patch.object(rest_impl, "RESTClientImpl"))
         http_settings = stack.enter_context(mock.patch.object(config, "HTTPSettings"))
         proxy_settings = stack.enter_context(mock.patch.object(config, "ProxySettings"))
+        stack.enter_context(mock.patch.object(interaction_server_impl, "InteractionServer"))
 
         with stack:
             result = cls("\n\r sddsa tokenoken \n", "token_type")
@@ -201,6 +202,7 @@ class TestRESTBot:
         stack.enter_context(mock.patch.object(rest_impl, "RESTClientImpl"))
         stack.enter_context(mock.patch.object(config, "HTTPSettings"))
         stack.enter_context(mock.patch.object(config, "ProxySettings"))
+        stack.enter_context(mock.patch.object(interaction_server_impl, "InteractionServer"))
 
         with stack:
             result = cls("token", "token_type")
