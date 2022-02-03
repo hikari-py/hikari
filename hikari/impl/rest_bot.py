@@ -63,6 +63,14 @@ if typing.TYPE_CHECKING:
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.rest_bot")
 
 
+async def _wrap_callback(callback: typing.Callable[[], typing.Coroutine[typing.Any, typing.Any, None]]) -> None:
+    # While the callbacks are typed as returning None, we can't trust this
+    # to be the case and thus wrap it to ensure that only None will ever
+    # be returned.
+    # This helps while filtering for exceptions.
+    await callback()
+
+
 class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
     """Basic implementation of an interaction based REST-only bot.
 
@@ -378,7 +386,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
     def remove_shutdown_callback(
         self, callback: typing.Callable[[], typing.Coroutine[typing.Any, typing.Any, None]], /
     ) -> None:
-        self._on_shutdown.append(callback)
+        self._on_shutdown.remove(callback)
 
     def add_startup_callback(
         self, callback: typing.Callable[[], typing.Coroutine[typing.Any, typing.Any, None]], /
@@ -388,7 +396,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
     def remove_startup_callback(
         self, callback: typing.Callable[[], typing.Coroutine[typing.Any, typing.Any, None]], /
     ) -> None:
-        self._on_shutdown.append(callback)
+        self._on_startup.remove(callback)
 
     async def close(self) -> None:
         if not self._close_event:
@@ -615,26 +623,25 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
                 name="check for package updates",
             )
 
-        try:
-            await asyncio.gather(*(callback() for callback in self._on_startup))
-
-            self._rest.start()
-            await self._server.start(
-                backlog=backlog,
-                enable_signal_handlers=enable_signal_handlers,
-                host=host,
-                port=port,
-                path=path,
-                reuse_address=reuse_address,
-                reuse_port=reuse_port,
-                socket=socket,
-                shutdown_timeout=shutdown_timeout,
-                ssl_context=ssl_context,
-            )
-
-        except Exception:
+        results = await asyncio.gather(*map(_wrap_callback, self._on_startup), return_exceptions=True)
+        if results := list(filter(None, results)):  # This filters out non-errors
             self._close_event = None
-            raise
+            # This will always raise since errors isn't empty
+            errors.MultiError.raise_from("Startup callback(s) failed", results)
+
+        self._rest.start()
+        await self._server.start(
+            backlog=backlog,
+            enable_signal_handlers=enable_signal_handlers,
+            host=host,
+            port=port,
+            path=path,
+            reuse_address=reuse_address,
+            reuse_port=reuse_port,
+            socket=socket,
+            shutdown_timeout=shutdown_timeout,
+            ssl_context=ssl_context,
+        )
 
     @typing.overload
     def get_listener(

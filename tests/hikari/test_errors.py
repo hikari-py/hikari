@@ -31,6 +31,30 @@ from hikari import intents
 from hikari.internal import data_binding
 
 
+class TestMultiError:
+    def test_raise_from_when_no_errors(self):
+        errors.MultiError.raise_from("blah", [])
+
+    def test_raise_from_when_one_error(self):
+        mock_error = TypeError("Catgirls")
+
+        with pytest.raises(TypeError) as exc_info:
+            errors.MultiError.raise_from("blah", [mock_error])
+
+        assert exc_info.value is mock_error
+
+    def test_raise_from_when_multiple_errors(self):
+        mock_error_1 = ValueError("Catgirls")
+        mock_error_2 = TypeError("Catgirls")
+
+        with pytest.raises(errors.MultiError) as exc_info:
+            errors.MultiError.raise_from("meow", [mock_error_1, mock_error_2])
+
+        assert exc_info.value.__cause__ is mock_error_1
+        assert exc_info.value.message == "meow"
+        assert exc_info.value.errors == [mock_error_1, mock_error_2]
+
+
 class TestShardCloseCode:
     @pytest.mark.parametrize(("code", "expected"), [(1000, True), (1001, True), (4000, False), (4014, False)])
     def test_is_standard_property(self, code, expected):
