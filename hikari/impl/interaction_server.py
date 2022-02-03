@@ -38,7 +38,6 @@ from hikari.api import interaction_server
 from hikari.api import special_endpoints
 from hikari.interactions import base_interactions
 from hikari.internal import data_binding
-from hikari.internal import ed25519
 
 if typing.TYPE_CHECKING:
     import socket as socket_
@@ -46,13 +45,15 @@ if typing.TYPE_CHECKING:
 
     import aiohttp.typedefs
 
+    # This is kept inline as pynacl is an optional dependency.
+    from nacl import signing
+
     from hikari.api import entity_factory as entity_factory_api
     from hikari.api import rest as rest_api
     from hikari.interactions import command_interactions
     from hikari.interactions import component_interactions
 
     _InteractionT_co = typing.TypeVar("_InteractionT_co", bound=base_interactions.PartialInteraction, covariant=True)
-    _ResponseT_co = typing.TypeVar("_ResponseT_co", bound=special_endpoints.InteractionResponseBuilder, covariant=True)
     _MessageResponseBuilderT = typing.Union[
         special_endpoints.InteractionDeferredBuilder,
         special_endpoints.InteractionMessageBuilder,
@@ -151,9 +152,10 @@ class InteractionServer(interaction_server.InteractionServer):
         "_is_closing",
         "_listeners",
         "_loads",
+        "_nacl",
+        "_public_key",
         "_rest_client",
         "_server",
-        "_verify",
     )
 
     def __init__(
@@ -165,6 +167,16 @@ class InteractionServer(interaction_server.InteractionServer):
         rest_client: rest_api.RESTClient,
         public_key: typing.Optional[bytes] = None,
     ) -> None:
+        # This is kept inline as pynacl is an optional dependency.
+        try:
+            import nacl.exceptions
+            import nacl.signing
+
+        except ModuleNotFoundError as exc:
+            raise RuntimeError(
+                "You must install the optional `hikari[server]` dependencies to use the default interaction server."
+            ) from exc
+
         # Building asyncio.Lock when there isn't a running loop may lead to runtime errors.
         self._application_fetch_lock: typing.Optional[asyncio.Lock] = None
         # Building asyncio.Event when there isn't a running loop may lead to runtime errors.
@@ -174,9 +186,10 @@ class InteractionServer(interaction_server.InteractionServer):
         self._is_closing = False
         self._listeners: typing.Dict[typing.Type[base_interactions.PartialInteraction], typing.Any] = {}
         self._loads = loads
+        self._nacl = nacl
         self._rest_client = rest_client
         self._server: typing.Optional[aiohttp.web_runner.AppRunner] = None
-        self._verify = ed25519.build_ed25519_verifier(public_key) if public_key is not None else None
+        self._public_key = nacl.signing.VerifyKey(public_key) if public_key is not None else None
 
     @property
     def is_alive(self) -> bool:
@@ -189,14 +202,14 @@ class InteractionServer(interaction_server.InteractionServer):
         """
         return self._server is not None
 
-    async def _fetch_public_key(self) -> ed25519.VerifierT:
+    async def _fetch_public_key(self) -> signing.VerifyKey:
         if self._application_fetch_lock is None:
             self._application_fetch_lock = asyncio.Lock()
 
         application: typing.Union[applications.Application, applications.AuthorizationApplication]
         async with self._application_fetch_lock:
-            if self._verify:
-                return self._verify
+            if self._public_key:
+                return self._public_key
 
             if self._rest_client.token_type == applications.TokenType.BOT:
                 application = await self._rest_client.fetch_application()
@@ -204,8 +217,8 @@ class InteractionServer(interaction_server.InteractionServer):
             else:
                 application = (await self._rest_client.fetch_authorization()).application
 
-            self._verify = ed25519.build_ed25519_verifier(application.public_key)
-            return self._verify
+            self._public_key = self._nacl.signing.VerifyKey(application.public_key)
+            return self._public_key
 
     async def aiohttp_hook(self, request: aiohttp.web.Request) -> aiohttp.web.Response:
         """Handle an AIOHTTP interaction request.
@@ -320,9 +333,12 @@ class InteractionServer(interaction_server.InteractionServer):
             Instructions on how the REST server calling this should respond to
             the interaction request.
         """
-        verify = self._verify or await self._fetch_public_key()
+        public_key = self._public_key or await self._fetch_public_key()
 
-        if not verify(body, signature, timestamp):
+        try:
+            public_key.verify(timestamp + body, signature)
+
+        except (self._nacl.exceptions.BadSignatureError, ValueError):
             _LOGGER.error("Received a request with an invalid signature")
             return _Response(_BAD_REQUEST_STATUS, b"Invalid request signature")
 

@@ -130,6 +130,11 @@ py -3 -m pip install -U hikari
 
 ---
 
+## Optional Features
+
+* `hikari[server]` - Install dependencies required to enable Hikari's standard interaction server (RESTBot) functionality.
+* `hikari[speedups]` - Detailed in [`hikari[speedups]`](#hikarispeedups).
+
 ## Additional resources
 
 You may wish to use a command framework on top of Hikari so that you can start writing a bot quickly without
@@ -162,8 +167,8 @@ other internal settings in the interpreter.
 ### `hikari[speedups]`
 
 If you have a C compiler (Microsoft VC++ Redistributable 14.0 or newer, or a modern copy of GCC/G++, Clang, etc), you
-can install Hikari using `pip install -U hikari[speedups]`. This will install `aiodns`, `cchardet`, `Brotli`,
-`ciso8601` and `ed25519`, which will provide you with a small performance boost.
+can install Hikari using `pip install -U hikari[speedups]`. This will install `aiodns`, `cchardet`, `Brotli`, and
+`ciso8601` which will provide you with a small performance boost.
 
 ### `uvloop`
 

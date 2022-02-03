@@ -56,12 +56,21 @@ def pytest(session: nox.Session) -> None:
 
 
 @nox.session(reuse_venv=True)
-def pytest_speedups(session: nox.Session) -> None:
+def pytest_all_features(session: nox.Session) -> None:
     """Run unit tests and measure code coverage, using speedup modules.
 
     Coverage can be disabled with the `--skip-coverage` flag.
     """
-    session.install("-r", "requirements.txt", "-r", "speedup-requirements.txt", "-r", "dev-requirements.txt")
+    session.install(
+        "-r",
+        "requirements.txt",
+        "-r",
+        "server-requirements.txt",
+        "-r",
+        "speedup-requirements.txt",
+        "-r",
+        "dev-requirements.txt",
+    )
     _pytest(session, "-OO")
 
 
