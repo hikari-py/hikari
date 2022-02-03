@@ -1,7 +1,5 @@
 graft hikari
 include LICENSE
-include requirements.txt
-include speedup-requirements.txt
 include setup.py
 include README.md
 include pyproject.toml
