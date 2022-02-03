@@ -6,6 +6,53 @@ This file is updated every release with the use of `towncrier` from the fragment
 
 .. towncrier release notes start
 
+Hikari 2.0.0.dev106 (2022-02-03)
+================================
+
+Breaking Changes
+----------------
+
+- Running the standard interaction server implementation now requires a `hikari[server]` install.
+
+  This matches a switch over to PyNacl for the cryptographic payload validation. ([#986](https://github.com/hikari-py/hikari/issues/986))
+
+
+Deprecation
+-----------
+
+- Deprecated `RESTClient.command_builder` and `RESTClient.create_application_command`.
+
+  You should switch to `RESTClient.slash_command_builder`and `RESTClient.create_slash_command` respectively. ([#924](https://github.com/hikari-py/hikari/issues/924))
+
+
+Features
+--------
+
+- Add context menu commands and command autocomplete. ([#924](https://github.com/hikari-py/hikari/issues/924))
+- Added support for GET /users/@me/guilds/{guild}/member. ([#955](https://github.com/hikari-py/hikari/issues/955))
+- Add the `SUPPRESS_USER_JOIN_REPLIES` system channel flag. ([#957](https://github.com/hikari-py/hikari/issues/957))
+- Add new message content intent related application flags. ([#958](https://github.com/hikari-py/hikari/issues/958))
+- Add the `BOT_HTTP_INTERACTIONS` user flag. ([#959](https://github.com/hikari-py/hikari/issues/959))
+- Add new presence activity flags. ([#960](https://github.com/hikari-py/hikari/issues/960))
+- Add URL methods and properties for rich presence assets. ([#961](https://github.com/hikari-py/hikari/issues/961))
+- Add `locale` and `guild_locale` properties to interactions. ([#962](https://github.com/hikari-py/hikari/issues/962))
+- Add ability to send attachments in an interaction initial response. ([#971](https://github.com/hikari-py/hikari/issues/971))
+- Add `display_avatar_url` property to `hikari.Member` and `hikari.User`. ([#975](https://github.com/hikari-py/hikari/issues/975))
+- old_x keyword arguments in the event factory now default to `None`. ([#984](https://github.com/hikari-py/hikari/issues/984))
+- Strip tokens in the standard bot impls and RESTApp.
+
+  This helps avoids a common mistake with trailing new-lines which leads to confusing errors on request. ([#989](https://github.com/hikari-py/hikari/issues/989))
+
+
+Bugfixes
+--------
+
+- Relaxed typing of methods with union entry specific specialisations through overloads. ([#876](https://github.com/hikari-py/hikari/issues/876))
+- Fix deprecation warnings raised by usage of `asyncio.gather` outside of an active event loop in `GatewayBot.run`. ([#954](https://github.com/hikari-py/hikari/issues/954))
+- UTF-8 characters are now properly handled for audit-log reasons in REST requests. ([#963](https://github.com/hikari-py/hikari/issues/963))
+- Fix magic methods for `UserImpl` and its subclasses. ([#982](https://github.com/hikari-py/hikari/issues/982))
+
+
 Hikari 2.0.0.dev105 (2022-01-01)
 ================================
 
