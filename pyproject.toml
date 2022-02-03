@@ -28,7 +28,6 @@ include = ".*pyi?$"
 target-version = ["py38"]
 
 [tool.coverage.run]
-concurrency = ["multiprocessing"]
 parallel = true
 branch = true
 timid = false
@@ -44,10 +43,10 @@ show_missing = true
 skip_covered = false
 sort = "cover"
 exclude_lines = [
-    "\\#\\s*pragma: no cover",
-    "^\\s*raise AssertionError\b",
-    "^\\s*raise NotImplementedError\b",
-    "^\\s*return NotImplemented\b",
+    "\\#\\s*pragma: no cover$",
+    "^\\s*raise AssertionError$",
+    "^\\s*raise NotImplementedError$",
+    "^\\s*return NotImplemented$",
     "^\\s*raise$",
     "^\\s*pass$",
     "^if __name__ == ['\"]__main__['\"]:$",

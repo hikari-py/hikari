@@ -41,7 +41,6 @@ COVERAGE_FLAGS = [
     f"html:{config.COVERAGE_HTML_PATH}",
     "--cov-report",
     "xml",
-    "--cov-branch",
 ]
 
 
@@ -79,12 +78,6 @@ def _pytest(session: nox.Session, *py_flags: str) -> None:
         session.posargs.remove("--skip-coverage")
         flags = RUN_FLAGS
     else:
-        try:
-            os.remove(".coverage")
-        except:
-            # Ignore errors
-            pass
-
         flags = [*RUN_FLAGS, *COVERAGE_FLAGS]
 
     session.run("python", *py_flags, "-m", "pytest", *flags, *session.posargs, config.TEST_PACKAGE)
