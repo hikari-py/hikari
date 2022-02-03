@@ -3116,7 +3116,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_template(response)
 
-    @deprecation.deprecated("2.0.0.dev106", "slash_command_builder or context_menu_builder")
+    @deprecation.deprecated("2.0.0.dev106", "slash_command_builder")
     def command_builder(self, name: str, description: str) -> special_endpoints.SlashCommandBuilder:
         return self.slash_command_builder(name, description)
 
@@ -3194,7 +3194,7 @@ class RESTClientImpl(rest_api.RESTClient):
             response, guild_id=snowflakes.Snowflake(guild) if guild is not undefined.UNDEFINED else None
         )
 
-    @deprecation.deprecated("2.0.0.dev106", "create_slash_command or create_context_menu_command")
+    @deprecation.deprecated("2.0.0.dev106", "create_slash_command")
     async def create_application_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
