@@ -525,6 +525,17 @@ class ComponentType(int, enums.Enum):
         as `ComponentType.ACTION_ROW`.
     """
 
+    TEXT_INPUT = 4
+    """A text input component
+
+    !! note
+        This component may only be used in modals.
+
+    !!! note
+        This cannot be top-level and must be within a container component such
+        as `ComponentType.ACTION_ROW`.
+    """
+
 
 @typing.final
 class ButtonStyle(int, enums.Enum):

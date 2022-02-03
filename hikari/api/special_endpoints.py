@@ -40,6 +40,7 @@ __all__: typing.List[str] = [
     "LinkButtonBuilder",
     "SelectMenuBuilder",
     "SelectOptionBuilder",
+    "TextInputBuilder",
 ]
 
 import abc
@@ -1548,6 +1549,13 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
             The parent container component builder.
         """
 
+
+class TextInputBuilder(ComponentBuilder, abc.ABC):
+    """Builder class for text inputs components."""
+    
+    __slots__: typing.Sequence[str] = ()
+    
+    # TODO(modal): add abstract 
 
 class ActionRowBuilder(ComponentBuilder, abc.ABC):
     """Builder class for action row components."""

@@ -7822,6 +7822,34 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If an internal error occurs on Discord while handling the request.
         """  # noqa: E501 - Line too long
 
+    async def create_modal_response(
+        self,
+        interaction: snowflakes.SnowflakeishOr[base_interactions.PartialInteraction],
+        token: str,
+        *,
+        title: str,
+        custom_id: str,
+        components: typing.Sequence[special_endpoints.ComponentBuilder],
+    ) -> None:
+        """Create a response by sending a modal.
+
+        Parameters
+        ----------
+        interaction : hikari.snowflakes.SnowflakeishOr[hikari.interactions.base_interactions.PartialInteraction]
+            Object or ID of the interaction this response is for.
+        token : builtins.str
+            The command interaction's token.
+
+        Other Parameters
+        ----------------
+        title : str
+            The title that will show up in the modal.
+        custom_id : str
+            Developer set custom ID used for identifying interactions with this modal.
+        components : typing.Sequence[special_endpoints.ComponentBuilder]
+            The components to display in the modal.
+        """
+
     @abc.abstractmethod
     def build_action_row(self) -> special_endpoints.ActionRowBuilder:
         """Build an action row message component for use in message create and REST calls.

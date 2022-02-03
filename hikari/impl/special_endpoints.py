@@ -39,6 +39,7 @@ __all__: typing.List[str] = [
     "InteractiveButtonBuilder",
     "LinkButtonBuilder",
     "SelectMenuBuilder",
+    "TextInputBuilder",
 ]
 
 import asyncio
@@ -1294,6 +1295,76 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder[_ContainerProtoT]):
         data.put("max_values", self._max_values)
         data.put("disabled", self._is_disabled)
         return data
+
+class TextInputBuilder(special_endpoints.TextInputBuilder):
+    """Standard implementation of `hikari.api.special_endpoints.TextInputBuilder`."""
+    
+    # TODO(modal): actually define TextStyleType somewhere (where?)
+    _style: TextStyleType = attr.field()
+    _custom_id: str = attr.field()
+    _label: str = attr.field()
+
+    _placeholder: undefined.UndefinedOr[str] = attr.field(default=undefined.UNDEFINED)
+    _value: undefined.UndefinedOr[str] = attr.field(default=undefined.UNDEFINED)
+    _required: undefined.UndefinedOr[bool] = attr.field(default=undefined.UNDEFINED)
+    _min_length: undefined.UndefinedOr[int] = attr.field(default=undefined.UNDEFINED)
+    _max_length: undefined.UndefinedOr[int] = attr.field(default=undefined.UNDEFINED)
+    
+    @property
+    def style(self) -> TextStyleType:
+        return self._style
+    
+    @property
+    def custom_id(self) -> str:
+        return self._custom_id
+    
+    
+    @property
+    def label(self) -> str:
+        return self._label
+    
+    @property
+    def placeholder(self) -> undefined.UndefinedOr[str]:
+        return self._placeholder
+
+    
+    @property
+    def value(self) -> undefined.UndefinedOr[str]:
+        return self._value
+
+    
+    @property
+    def required(self) -> undefined.UndefinedOr[bool]:
+        return self._required
+
+    
+    @property
+    def min_length(self) -> undefined.UndefinedOr[int]:
+        return self._min_length
+
+    
+    @property
+    def max_length(self) -> undefined.UndefinedOr[int]:
+        return self._max_length
+    
+    # TODO(modal): setters
+    
+    def build(self) -> data_binding.JSONObject:
+        data = data_binding.JSONObjectBuilder()
+
+        data["type"] = messages.ComponentType.TEXT_INPUT
+        data["style"] = self._style
+        data["custom_id"] = self._custom_id
+        data["label"] = self._label
+        data.put("placeholder", self._placeholder)
+        data.put("value", self._value)
+        data.put("required", self._required)
+        data.put("min_length", self._min_length)
+        data.put("max_length", self._max_length)
+        
+        return data
+
+
 
 
 @attr.define(kw_only=True, weakref_slot=False)

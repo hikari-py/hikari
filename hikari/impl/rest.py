@@ -3528,5 +3528,28 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("data", data)
         await self._request(route, json=body, no_auth=True)
 
+    async def create_modal_response(
+        self,
+        interaction: snowflakes.SnowflakeishOr[base_interactions.PartialInteraction],
+        token: str,
+        *,
+        title: str,
+        custom_id: str,
+        components: typing.Sequence[special_endpoints.ComponentBuilder],
+    ) -> None:
+        route = routes.POST_INTERACTION_RESPONSE.compile(interaction=interaction, token=token)
+        
+        body = data_binding.JSONObjectBuilder()
+        body.put("type", base_interactions.ResponseType.MODAL)
+        
+        data = data_binding.JSONObjectBuilder()
+        data.put("title", title)
+        data.put("custom_id", custom_id)
+        data.put("components", [component.build() for component in components])
+        
+        body.put("data", data)
+        
+        await self._request(route, json=body, no_auth=True)
+
     def build_action_row(self) -> special_endpoints.ActionRowBuilder:
         return special_endpoints_impl.ActionRowBuilder()

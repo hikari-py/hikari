@@ -74,6 +74,9 @@ class InteractionType(int, enums.Enum):
     AUTOCOMPLETE = 4
     """An interaction triggered by a user typing in a slash command option."""
 
+    MODAL_SUBMIT = 5
+    """An interaction triggered by a user submitting a modal."""
+
 
 @typing.final
 class ResponseType(int, enums.Enum):
@@ -124,6 +127,14 @@ class ResponseType(int, enums.Enum):
     This is valid for the following interaction types:
 
     * `InteractionType.AUTOCOMPLETE`
+    """
+
+    MODAL = 9
+    """An immediate interaction response with instructions to display a modal.
+
+    This is valid for the following interaction types:
+
+    * `InteractionType.MODAL_SUBMIT`
     """
 
 
@@ -372,6 +383,38 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
             mentions_everyone=mentions_everyone,
             user_mentions=user_mentions,
             role_mentions=role_mentions,
+        )
+
+    async def create_modal_response(
+        self,
+        title: str,
+        custom_id: str,
+        components: typing.Sequence[special_endpoints.ComponentBuilder],
+    ) -> None:
+        """Create a response by sending a modal.
+
+        Parameters
+        ----------
+        interaction : hikari.snowflakes.SnowflakeishOr[hikari.interactions.base_interactions.PartialInteraction]
+            Object or ID of the interaction this response is for.
+        token : builtins.str
+            The command interaction's token.
+
+        Other Parameters
+        ----------------
+        title : str
+            The title that will show up in the modal.
+        custom_id : str
+            Developer set custom ID used for identifying interactions with this modal.
+        components : typing.Sequence[special_endpoints.ComponentBuilder]
+            The components to display in the modal.
+        """
+        await self.app.rest.create_modal_response(
+            self.id,
+            self.token,
+            title=title,
+            custom_id=custom_id,
+            components=components,
         )
 
     async def edit_initial_response(
