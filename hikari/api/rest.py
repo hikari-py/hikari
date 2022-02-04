@@ -7419,6 +7419,31 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
+    def interaction_modal_builder(
+        self,
+        title: str,
+        custom_id: str,
+        *,
+        components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
+    ) -> special_endpoints.InteractionModalBuilder:
+        """Create a builder for a modal interaction response.
+
+        Parameters
+        ----------
+        title : builtins.
+            The title that will show up in the modal.
+        custom_id : builtins.
+            Developer set custom ID used for identifying interactions with this modal.
+        components : hikari.undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]]
+            Sequence of component builders to send in this modal.
+
+        Returns
+        -------
+        hikari.api.special_endpoints.InteractionMessageBuilder
+            The interaction message response builder object.
+        """
+
+    @abc.abstractmethod
     async def fetch_interaction_response(
         self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], token: str
     ) -> messages_.Message:
@@ -7847,7 +7872,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         custom_id : str
             Developer set custom ID used for identifying interactions with this modal.
         components : typing.Sequence[special_endpoints.ComponentBuilder]
-            The components to display in the modal.
+            Sequence of component builders to send in this modal.
         """
 
     @abc.abstractmethod

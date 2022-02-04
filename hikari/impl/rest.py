@@ -3399,6 +3399,19 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> special_endpoints.InteractionMessageBuilder:
         return special_endpoints_impl.InteractionMessageBuilder(type=type_)
 
+    def interaction_modal_builder(
+        self,
+        title: str,
+        custom_id: str,
+        *,
+        components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
+    ) -> special_endpoints.InteractionModalBuilder:
+        return special_endpoints_impl.InteractionModalBuilder(
+            title=title,
+            custom_id=custom_id,
+            components=components,
+        )
+
     async def fetch_interaction_response(
         self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], token: str
     ) -> messages_.Message:
@@ -3545,7 +3558,7 @@ class RESTClientImpl(rest_api.RESTClient):
         data = data_binding.JSONObjectBuilder()
         data.put("title", title)
         data.put("custom_id", custom_id)
-        data.put("components", [component.build() for component in components])
+        data.put_array("components", components, conversion=lambda component: component.build())
 
         body.put("data", data)
 

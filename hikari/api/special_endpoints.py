@@ -41,6 +41,7 @@ __all__: typing.List[str] = [
     "SelectMenuBuilder",
     "SelectOptionBuilder",
     "TextInputBuilder",
+    "InteractionModalBuilder",
 ]
 
 import abc
@@ -915,6 +916,107 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
         InteractionMessageBuilder
             Object of this builder.
         """  # noqa: E501 - Line too long
+
+
+class InteractionModalBuilder(InteractionResponseBuilder, abc.ABC):
+    """Interface of an interaction modal response builder used within REST servers.
+
+    This can be returned by the listener registered to
+    `hikari.api.interaction_server.InteractionServer` as a response to the interaction
+    create.
+    """
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def type(self) -> typing.Literal[base_interactions.ResponseType.MODAL]:
+        """Return the type of this response.
+
+        Returns
+        -------
+        hikari.interactions.base_interactions.MessageResponseTypesT
+            The type of response this is.
+        """
+
+    @property
+    @abc.abstractmethod
+    def title(self) -> str:
+        """Return the title that will show up in the modal.
+
+        Returns
+        -------
+        builtins.str
+            The title that will show up in the modal.
+        """
+
+    @property
+    @abc.abstractmethod
+    def custom_id(self) -> str:
+        """Return the developer set custom ID used for identifying interactions with this modal.
+
+        Returns
+        -------
+        builtins.str
+            Developer set custom ID used for identifying interactions with this modal.
+        """
+
+    @property
+    @abc.abstractmethod
+    def components(self) -> undefined.UndefinedOr[typing.Sequence[ComponentBuilder]]:
+        """Return the sequence of component builders to send in this modal.
+
+        Returns
+        ------
+        hikari.undefined.UndefinedOr[typing.Sequence[hikari.api.special_endpoints.ComponentBuilder]]
+            sequence of component builders to send in this modal.
+        """
+
+    @abc.abstractmethod
+    def set_title(self: _T, title: str, /) -> _T:
+        """Set the title that will show up in the modal.
+
+        Parameters
+        ----------
+        title : builtins.str
+            The title that will show up in the modal.
+
+        Returns
+        -------
+        InteractionModalBuilder
+            Object of this builder.
+
+        """
+
+    @abc.abstractmethod
+    def set_custom_id(self: _T, custom_id: str, /) -> _T:
+        """Set the developer set custom ID used for identifying interactions with this modal.
+
+        Parameters
+        ----------
+        custom_id : builtins.str
+            The developer set custom ID used for identifying interactions with this modal.
+
+        Returns
+        -------
+        InteractionModalBuilder
+            Object of this builder.
+        """
+
+    @abc.abstractmethod
+    def add_component(self: _T, component: ComponentBuilder, /) -> _T:
+        """Add a component to this modal.
+
+        Parameters
+        ----------
+        component : ComponentBuilder
+            The component builder to add to this modal.
+
+        Returns
+        -------
+        InteractionModalBuilder
+            Object of this builder.
+        """
 
 
 class CommandBuilder(abc.ABC):

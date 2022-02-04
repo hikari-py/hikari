@@ -422,6 +422,31 @@ class CommandInteraction(BaseCommandInteraction, base_interactions.MessageRespon
         """
         return self.app.rest.interaction_deferred_builder(base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE)
 
+    def build_modal_response(
+        self,
+        title: str,
+        custom_id: str,
+        *,
+        components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
+    ) -> special_endpoints.InteractionModalBuilder:
+        """Create a builder for a modal interaction response.
+
+        Parameters
+        ----------
+        title : builtins.str
+            The title that will show up in the modal.
+        custom_id : builtins.str
+            Developer set custom ID used for identifying interactions with this modal.
+        components : hikari.undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]]
+            Sequence of component builders to send in this modal.
+
+        Returns
+        -------
+        hikari.api.special_endpoints.InteractionMessageBuilder
+            The interaction message response builder object.
+        """
+        return self.app.rest.interaction_modal_builder(title=title, custom_id=custom_id, components=components)
+
 
 @attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)

@@ -40,6 +40,7 @@ __all__: typing.List[str] = [
     "LinkButtonBuilder",
     "SelectMenuBuilder",
     "TextInputBuilder",
+    "InteractionModalBuilder",
 ]
 
 import asyncio
@@ -86,6 +87,7 @@ if typing.TYPE_CHECKING:
     _InteractionAutocompleteBuilderT = typing.TypeVar(
         "_InteractionAutocompleteBuilderT", bound="InteractionAutocompleteBuilder"
     )
+    _InteractionModalBuilderT = typing.TypeVar("_InteractionModalBuilderT", bound="InteractionModalBuilder")
     _ActionRowBuilderT = typing.TypeVar("_ActionRowBuilderT", bound="ActionRowBuilder")
     _ButtonBuilderT = typing.TypeVar("_ButtonBuilderT", bound="_ButtonBuilder[typing.Any]")
     _SelectOptionBuilderT = typing.TypeVar("_SelectOptionBuilderT", bound="_SelectOptionBuilder[typing.Any]")
@@ -935,6 +937,54 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
         return {"type": self._type, "data": data}
 
 
+@attr.define(kw_only=False, weakref_slot=False)
+class InteractionModalBuilder(special_endpoints.InteractionModalBuilder):
+    """Standard implementation of `hikari.api.special_endpoints.InteractionModalBuilder`."""
+
+    _title: str = attr.field()
+    _custom_id: str = attr.field()
+    _components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = attr.field()
+
+    @property
+    def type(self) -> typing.Literal[base_interactions.ResponseType.MODAL]:
+        return base_interactions.ResponseType.MODAL
+
+    @property
+    def title(self) -> str:
+        return self._title
+
+    @property
+    def custom_id(self) -> str:
+        return self._custom_id
+
+    @property
+    def components(self) -> undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]]:
+        return self._components
+
+    def set_title(self: _InteractionModalBuilderT, title: str, /) -> _InteractionModalBuilderT:
+        self._title = title
+        return self
+
+    def set_custom_id(self: _InteractionModalBuilderT, custom_id: str, /) -> _InteractionModalBuilderT:
+        self._custom_id = custom_id
+        return self
+
+    def add_component(
+        self: _InteractionModalBuilderT, component: special_endpoints.ComponentBuilder, /
+    ) -> _InteractionModalBuilderT:
+        self._component = component
+        return self
+
+    def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObject:
+        data = data_binding.JSONObjectBuilder()
+        data.put("title", self._title)
+        data.put("custom_id", self._custom_id)
+        data.put_array("components", self._components, conversion=lambda component: component.build())
+
+        return {"type": self.type, "data": data}
+
+
+@attr_extensions.with_copy
 @attr.define(kw_only=False, weakref_slot=False)
 class CommandBuilder(special_endpoints.CommandBuilder):
     """Standard implementation of `hikari.api.special_endpoints.CommandBuilder`."""

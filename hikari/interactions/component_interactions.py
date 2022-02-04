@@ -31,6 +31,7 @@ import attr
 
 from hikari import channels
 from hikari import traits
+from hikari import undefined
 from hikari.interactions import base_interactions
 
 if typing.TYPE_CHECKING:
@@ -208,6 +209,31 @@ class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentRespo
             raise ValueError("Invalid type passed for a deferred response")
 
         return self.app.rest.interaction_deferred_builder(type_)
+
+    def build_modal_response(
+        self,
+        title: str,
+        custom_id: str,
+        *,
+        components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
+    ) -> special_endpoints.InteractionModalBuilder:
+        """Create a builder for a modal interaction response.
+
+        Parameters
+        ----------
+        title : builtins.str
+            The title that will show up in the modal.
+        custom_id : builtins.str
+            Developer set custom ID used for identifying interactions with this modal.
+        components : hikari.undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]]
+            Sequence of component builders to send in this modal.
+
+        Returns
+        -------
+        hikari.api.special_endpoints.InteractionMessageBuilder
+            The interaction message response builder object.
+        """
+        return self.app.rest.interaction_modal_builder(title=title, custom_id=custom_id, components=components)
 
     async def fetch_channel(self) -> channels.TextableChannel:
         """Fetch the channel this interaction occurred in.
