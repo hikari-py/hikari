@@ -967,7 +967,7 @@ class InteractionModalBuilder(InteractionResponseBuilder, abc.ABC):
         """Return the sequence of component builders to send in this modal.
 
         Returns
-        ------
+        -------
         hikari.undefined.UndefinedOr[typing.Sequence[hikari.api.special_endpoints.ComponentBuilder]]
             sequence of component builders to send in this modal.
         """

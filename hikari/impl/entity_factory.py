@@ -2073,6 +2073,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             except errors.UnrecognisedEntityError:
                 pass
 
+        message: typing.Optional[message_models.Message] = None
+        if message_payload := payload.get("message"):
+            message = self.deserialize_message(message_payload)
+
         return modal_interactions.ModalInteraction(
             app=self._app,
             application_id=snowflakes.Snowflake(payload["application_id"]),
@@ -2088,6 +2092,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             version=payload["version"],
             custom_id=data_payload["custom_id"],
             components=components,
+            message=message,
         )
 
     def deserialize_interaction(self, payload: data_binding.JSONObject) -> base_interactions.PartialInteraction:
@@ -2273,7 +2278,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
     def deserialize_text_input(self, payload: data_binding.JSONObject) -> modal_interactions.ModalInteractionTextInput:
         return modal_interactions.ModalInteractionTextInput(
-            type=message_models.ComponentType(payload["type"]), custom_id=payload["custom_id"], value=payload["value"]
+            type=message_models.ComponentType(payload["type"]),
+            custom_id=payload["custom_id"],
+            value=payload["value"],
         )
 
     def deserialize_component(self, payload: data_binding.JSONObject) -> message_models.PartialComponent:

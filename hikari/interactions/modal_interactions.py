@@ -84,6 +84,9 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
     channel_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
     """ID of the channel this modal interaction event was triggered in."""
 
+    custom_id: str = attr.field(eq=False, hash=False, repr=True)
+    """The custom id of the modal."""
+
     guild_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=True)
     """ID of the guild this modal interaction event was triggered in.
 
@@ -98,6 +101,12 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
     !!! note
         This value can usually only be changed if `COMMUNITY` is in `hikari.guilds.Guild.features`
         for the guild and will otherwise default to `en-US`.
+    """
+
+    message: typing.Optional[messages.Message] = attr.field(eq=False, repr=False)
+    """The message whose component triggered the modal.
+
+    This will be None if the modal was a response to a command.
     """
 
     member: typing.Optional[base_interactions.InteractionMember] = attr.field(eq=False, hash=False, repr=True)
@@ -115,9 +124,6 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
 
     locale: str = attr.field(eq=False, hash=False, repr=True)
     """The selected language of the user who triggered this Modal interaction."""
-
-    custom_id: str = attr.field(eq=False, hash=False, repr=True)
-    """The custom id of the modal."""
 
     components: typing.Sequence[ModalInteractionActionRow] = attr.field(eq=False, hash=False, repr=True)
     """Components in the modal."""

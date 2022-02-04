@@ -50,6 +50,7 @@ from hikari.impl import entity_factory
 from hikari.interactions import base_interactions
 from hikari.interactions import command_interactions
 from hikari.interactions import component_interactions
+from hikari.interactions import modal_interactions
 
 
 def test__with_int_cast():
@@ -3513,6 +3514,62 @@ class TestEntityFactoryImpl:
         assert interaction.values == ()
         assert interaction.guild_locale is None
         assert isinstance(interaction, component_interactions.ComponentInteraction)
+
+    @pytest.fixture()
+    def modal_interaction_payload(self, interaction_member_payload, message_payload):
+        # taken from ddocs
+        return {
+            "version": 1,
+            "type": 5,
+            "token": "unique_interaction_token",
+            "message": message_payload,
+            "member": interaction_member_payload,
+            "id": "846462639134605312",
+            "guild_id": "290926798626357999",
+            "data": {
+                "custom_id": "modaltest",
+                "components": [
+                    {"type": 1, "components": [{"value": "Wumpus", "type": 4, "custom_id": "name"}]},
+                    {"type": 1, "components": [{"value": "Longer Text", "type": 4, "custom_id": "about"}]},
+                ],
+            },
+            "channel_id": "345626669114982999",
+            "application_id": "290926444748734465",
+            "locale": "en-US",
+            "guild_locale": "es-ES",
+        }
+
+    def test_deserialize_modal_interaction(
+        self,
+        entity_factory_impl,
+        mock_app,
+        modal_interaction_payload,
+        interaction_member_payload,
+        message_payload,
+    ):
+        interaction = entity_factory_impl.deserialize_modal_interaction(modal_interaction_payload)
+        assert interaction.app is mock_app
+        assert interaction.id == 846462639134605312
+        assert interaction.application_id == 290926444748734465
+        assert interaction.type is base_interactions.InteractionType.MODAL_SUBMIT
+        assert interaction.token == "unique_interaction_token"
+        assert interaction.version == 1
+        assert interaction.channel_id == 345626669114982999
+        assert interaction.guild_id == 290926798626357999
+        assert interaction.message == entity_factory_impl.deserialize_message(message_payload)
+        assert interaction.member == entity_factory_impl._deserialize_interaction_member(
+            interaction_member_payload, guild_id=290926798626357999
+        )
+        assert interaction.user is interaction.member.user
+        assert isinstance(interaction, modal_interactions.ModalInteraction)
+
+        short_action_row = interaction.components[0]
+        assert isinstance(short_action_row, message_models.ActionRowComponent)
+        short_text_input = short_action_row.components[0]
+        assert isinstance(short_text_input, modal_interactions.ModalInteractionTextInput)
+        assert short_text_input.value == "Wumpus"
+        assert short_text_input.type == message_models.ComponentType.TEXT_INPUT
+        assert short_text_input.custom_id == "name"
 
     ##################
     # STICKER MODELS #
