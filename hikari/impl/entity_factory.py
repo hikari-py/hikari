@@ -1825,9 +1825,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         self,
         payload: data_binding.JSONObject,
     ) -> command_interactions.AutocompleteInteractionOption:
-        suboptions: typing.Optional[typing.List[command_interactions.CommandInteractionOption]] = None
+        suboptions: typing.Optional[typing.List[command_interactions.AutocompleteInteractionOption]] = None
         if raw_suboptions := payload.get("options"):
-            suboptions = [self._deserialize_interaction_command_option(suboption) for suboption in raw_suboptions]
+            suboptions = [self._deserialize_autocomplete_interaction_option(suboption) for suboption in raw_suboptions]
 
         is_focused = payload.get("focused", False)
 
