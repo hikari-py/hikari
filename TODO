@@ -8,6 +8,14 @@
 [ ] text input
     [x] interaction model
     [ ] response builder
+        [x] builder classes
+        [ ] helper methods
 [x] factory
     [x] modal
     [x] text input
+[ ] tests
+    [ ] modal interaction response
+        [ ] rest
+        [ ] helper methods
+    [ ] modal interaction event
+        [ ] entity factory

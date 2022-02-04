@@ -90,6 +90,7 @@ if typing.TYPE_CHECKING:
     _ButtonBuilderT = typing.TypeVar("_ButtonBuilderT", bound="_ButtonBuilder[typing.Any]")
     _SelectOptionBuilderT = typing.TypeVar("_SelectOptionBuilderT", bound="_SelectOptionBuilder[typing.Any]")
     _SelectMenuBuilderT = typing.TypeVar("_SelectMenuBuilderT", bound="SelectMenuBuilder[typing.Any]")
+    _TextInputBuilderT = typing.TypeVar("_TextInputBuilderT", bound="TextInputBuilder[typing.Any]")
 
     # Hack around used to avoid recursive generic types leading to type checker issues in builders
     class _ContainerProto(typing.Protocol):
@@ -1296,59 +1297,91 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder[_ContainerProtoT]):
         data.put("disabled", self._is_disabled)
         return data
 
-class TextInputBuilder(special_endpoints.TextInputBuilder):
+
+@attr_extensions.with_copy
+@attr.define(kw_only=True, weakref_slot=False)
+class TextInputBuilder(special_endpoints.TextInputBuilder[_ContainerProtoT]):
     """Standard implementation of `hikari.api.special_endpoints.TextInputBuilder`."""
-    
-    # TODO(modal): actually define TextStyleType somewhere (where?)
-    _style: TextStyleType = attr.field()
+
+    _container: _ContainerProtoT = attr.field()
+    _style: messages.TextInputStyle = attr.field()
     _custom_id: str = attr.field()
     _label: str = attr.field()
 
-    _placeholder: undefined.UndefinedOr[str] = attr.field(default=undefined.UNDEFINED)
-    _value: undefined.UndefinedOr[str] = attr.field(default=undefined.UNDEFINED)
-    _required: undefined.UndefinedOr[bool] = attr.field(default=undefined.UNDEFINED)
-    _min_length: undefined.UndefinedOr[int] = attr.field(default=undefined.UNDEFINED)
-    _max_length: undefined.UndefinedOr[int] = attr.field(default=undefined.UNDEFINED)
-    
+    _placeholder: undefined.UndefinedOr[str] = attr.field(default=undefined.UNDEFINED, kw_only=True)
+    _value: undefined.UndefinedOr[str] = attr.field(default=undefined.UNDEFINED, kw_only=True)
+    _required: undefined.UndefinedOr[bool] = attr.field(default=undefined.UNDEFINED, kw_only=True)
+    _min_length: undefined.UndefinedOr[int] = attr.field(default=undefined.UNDEFINED, kw_only=True)
+    _max_length: undefined.UndefinedOr[int] = attr.field(default=undefined.UNDEFINED, kw_only=True)
+
     @property
-    def style(self) -> TextStyleType:
+    def style(self) -> messages.TextInputStyle:
         return self._style
-    
+
     @property
     def custom_id(self) -> str:
         return self._custom_id
-    
-    
+
     @property
     def label(self) -> str:
         return self._label
-    
+
     @property
     def placeholder(self) -> undefined.UndefinedOr[str]:
         return self._placeholder
 
-    
     @property
     def value(self) -> undefined.UndefinedOr[str]:
         return self._value
 
-    
     @property
     def required(self) -> undefined.UndefinedOr[bool]:
         return self._required
 
-    
     @property
     def min_length(self) -> undefined.UndefinedOr[int]:
         return self._min_length
 
-    
     @property
     def max_length(self) -> undefined.UndefinedOr[int]:
         return self._max_length
-    
-    # TODO(modal): setters
-    
+
+    def set_style(self: _TextInputBuilderT, style: typing.Union[messages.TextInputStyle, int], /) -> _TextInputBuilderT:
+        self._style = messages.TextInputStyle(style)
+        return self
+
+    def set_custom_id(self: _TextInputBuilderT, custom_id: str, /) -> _TextInputBuilderT:
+        self._custom_id = custom_id
+        return self
+
+    def set_label(self: _TextInputBuilderT, label: str, /) -> _TextInputBuilderT:
+        self._label = label
+        return self
+
+    def set_placeholder(self: _TextInputBuilderT, placeholder: str, /) -> _TextInputBuilderT:
+        self._placeholder = placeholder
+        return self
+
+    def set_value(self: _TextInputBuilderT, value: str, /) -> _TextInputBuilderT:
+        self._value = value
+        return self
+
+    def set_required(self: _TextInputBuilderT, required: bool, /) -> _TextInputBuilderT:
+        self._required = required
+        return self
+
+    def set_min_length(self: _TextInputBuilderT, min_length: int, /) -> _TextInputBuilderT:
+        self._min_length = min_length
+        return self
+
+    def set_max_length(self: _TextInputBuilderT, max_length: int, /) -> _TextInputBuilderT:
+        self._max_length = max_length
+        return self
+
+    def add_to_container(self) -> _ContainerProtoT:
+        self._container.add_component(self)
+        return self._container
+
     def build(self) -> data_binding.JSONObject:
         data = data_binding.JSONObjectBuilder()
 
@@ -1361,10 +1394,8 @@ class TextInputBuilder(special_endpoints.TextInputBuilder):
         data.put("required", self._required)
         data.put("min_length", self._min_length)
         data.put("max_length", self._max_length)
-        
+
         return data
-
-
 
 
 @attr.define(kw_only=True, weakref_slot=False)
@@ -1431,6 +1462,15 @@ class ActionRowBuilder(special_endpoints.ActionRowBuilder):
     ) -> special_endpoints.SelectMenuBuilder[_ActionRowBuilderT]:
         self._assert_can_add_type(messages.ComponentType.SELECT_MENU)
         return SelectMenuBuilder(container=self, custom_id=custom_id)
+
+    def add_text_input(
+        self: _ActionRowBuilderT,
+        style: typing.Union[messages.TextInputStyle, int],
+        custom_id: str,
+        label: str,
+    ) -> special_endpoints.TextInputBuilder[_ActionRowBuilderT]:
+        self._assert_can_add_type(messages.ComponentType.TEXT_INPUT)
+        return TextInputBuilder(container=self, style=messages.TextInputStyle(style), custom_id=custom_id, label=label)
 
     def build(self) -> data_binding.JSONObject:
         return {

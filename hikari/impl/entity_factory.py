@@ -2047,14 +2047,14 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             locale=payload["locale"],
             guild_locale=payload.get("guild_locale"),
         )
-    
+
     def deserialize_modal_interaction(self, payload: data_binding.JSONObject) -> modal_interactions.ModalInteraction:
         data_payload = payload["data"]
 
         guild_id: typing.Optional[snowflakes.Snowflake] = None
         if raw_guild_id := payload.get("guild_id"):
             guild_id = snowflakes.Snowflake(raw_guild_id)
-        
+
         member: typing.Optional[base_interactions.InteractionMember]
         if member_payload := payload.get("member"):
             assert guild_id is not None
@@ -2065,8 +2065,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         else:
             member = None
             user = self.deserialize_user(payload["user"])
-            
-        components: typing.List[message_models.PartialComponent] = []
+
+        components: typing.List[typing.Any] = []
         for component_payload in data_payload["components"]:
             try:
                 components.append(self.deserialize_component(component_payload))
@@ -2270,12 +2270,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             max_values=payload.get("max_values", 1),
             is_disabled=payload.get("disabled", False),
         )
-    
+
     def deserialize_text_input(self, payload: data_binding.JSONObject) -> modal_interactions.ModalInteractionTextInput:
         return modal_interactions.ModalInteractionTextInput(
-            type=message_models.ComponentType(payload["type"]),
-            custom_id=payload["custom_id"],
-            value=payload["value"]
+            type=message_models.ComponentType(payload["type"]), custom_id=payload["custom_id"], value=payload["value"]
         )
 
     def deserialize_component(self, payload: data_binding.JSONObject) -> message_models.PartialComponent:

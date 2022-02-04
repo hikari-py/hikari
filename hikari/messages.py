@@ -39,6 +39,7 @@ __all__: typing.List[str] = [
     "ActionRowComponent",
     "ButtonComponent",
     "ButtonStyle",
+    "TextInputStyle",
     "SelectMenuOption",
     "SelectMenuComponent",
     "InteractiveButtonTypes",
@@ -598,6 +599,15 @@ The following values are included in this:
 * `ButtonStyle.SUCCESS`
 * `ButtonStyle.DANGER`
 """
+
+
+class TextInputStyle(int, enums.Enum):
+    """A text input style."""
+
+    SHORT = 1
+    """Intended for short single-line text."""
+    PARAGRAPH = 2
+    """Intended for much longer inputs."""
 
 
 @attr.define(kw_only=True, weakref_slot=False)

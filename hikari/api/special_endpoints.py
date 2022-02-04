@@ -1550,12 +1550,233 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
         """
 
 
-class TextInputBuilder(ComponentBuilder, abc.ABC):
+class TextInputBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
     """Builder class for text inputs components."""
-    
+
     __slots__: typing.Sequence[str] = ()
-    
-    # TODO(modal): add abstract 
+
+    @property
+    @abc.abstractmethod
+    def style(self) -> messages.TextInputStyle:
+        """Style to use for the text input.
+
+        Returns
+        -------
+        builtins.str
+            Style to use for the text input.
+        """
+
+    @property
+    @abc.abstractmethod
+    def custom_id(self) -> str:
+        """Developer set custom ID used for identifying this text input.
+
+        !!! note
+            This custom_id is never used in component interaction events.
+            It is meant to be used purely for resolving components modal interactions.
+
+        Returns
+        -------
+        builtins.str
+            Developer set custom ID used for identifying this text input.
+        """
+
+    @property
+    @abc.abstractmethod
+    def label(self) -> str:
+        """Label above this text input.
+
+        Returns
+        -------
+        builtins.str
+            Label above this text input.
+        """
+
+    @property
+    @abc.abstractmethod
+    def placeholder(self) -> undefined.UndefinedOr[str]:
+        """Return the placeholder text that will disappear when the user types anything.
+
+        Returns
+        -------
+        hikari.undefined.UndefinedOr[builtins.str]
+            Placeholder text that will disappear when the user types anything.
+        """
+
+    @property
+    @abc.abstractmethod
+    def value(self) -> undefined.UndefinedOr[str]:
+        """Pre-filled text that will be sent if the user does not write anything.
+
+        Returns
+        -------
+        hikari.undefined.UndefinedOr[builtins.str]
+            Pre-filled text that will be sent if the user does not write anything.
+        """
+
+    @property
+    @abc.abstractmethod
+    def required(self) -> undefined.UndefinedOr[bool]:
+        """Whether this text input is required to be filled-in.
+
+        Returns
+        -------
+        hikari.undefined.UndefinedOr[builtins.bool]
+            Whether this text input is required to be filled-in.
+        """
+
+    @property
+    @abc.abstractmethod
+    def min_length(self) -> undefined.UndefinedOr[int]:
+        """Return the minimum length the text should have.
+
+        Returns
+        -------
+        hikari.undefined.UndefinedOr[builtins.int]
+            The minimum length the text should have.
+        """
+
+    @property
+    @abc.abstractmethod
+    def max_length(self) -> undefined.UndefinedOr[int]:
+        """Return the maxmimum length the text should have.
+
+        Returns
+        -------
+        hikari.undefined.UndefinedOr[builtins.int]
+            The maxmimum length the text should have.
+        """
+
+    @abc.abstractmethod
+    def set_style(self: _T, style: typing.Union[messages.TextInputStyle, int], /) -> _T:
+        """Set the style to use for the text input.
+
+        Parameters
+        ----------
+        style : typing.Union[hikari.messages.TextInputStyle, int]
+            Style to use for the text input.
+
+        Returns
+        -------
+        TextInputBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_custom_id(self: _T, custom_id: str, /) -> _T:
+        """Set the developer set custom ID used for identifying this text input.
+
+        Parameters
+        ----------
+        custom_id : builtins.str
+            Developer set custom ID used for identifying this text input.
+
+        Returns
+        -------
+        TextInputBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_label(self: _T, label: str, /) -> _T:
+        """Set the label above this text input.
+
+        Parameters
+        ----------
+        label : builtins.str
+            Label above this text input.
+
+        Returns
+        -------
+        TextInputBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_placeholder(self: _T, placeholder: str, /) -> _T:
+        """Return the placeholder text that will disappear when the user types anything.
+
+        Parameters
+        ----------
+        placeholder : builtins.str:
+            Placeholder text that will disappear when the user types anything.
+
+        Returns
+        -------
+        TextInputBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_value(self: _T, value: str, /) -> _T:
+        """Pre-filled text that will be sent if the user does not write anything.
+
+        Parameters
+        ----------
+        value : builtins.str
+            Pre-filled text that will be sent if the user does not write anything.
+
+        Returns
+        -------
+        TextInputBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_required(self: _T, required: bool, /) -> _T:
+        """Set whether this text input is required to be filled-in.
+
+        Parameters
+        ----------
+        required : builtins.bool
+            Whether this text input is required to be filled-in.
+
+        Returns
+        -------
+        TextInputBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_min_length(self: _T, min_length: int, /) -> _T:
+        """Set the minimum length the text should have.
+
+        Parameters
+        ----------
+        min_length : builtins.int
+            The minimum length the text should have.
+
+        Returns
+        -------
+        TextInputBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_max_length(self: _T, max_length: int, /) -> _T:
+        """Set the maxmimum length the text should have.
+
+        Parameters
+        ----------
+        max_length : builtins.int
+            The maxmimum length the text should have.
+
+        Returns
+        -------
+        TextInputBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def add_to_container(self) -> _ContainerT:
+        """Finalise this builder by adding it to its parent container component.
+
+        Returns
+        -------
+        _ContainerT
+            The parent container component builder.
+        """
+
 
 class ActionRowBuilder(ComponentBuilder, abc.ABC):
     """Builder class for action row components."""
@@ -1638,7 +1859,7 @@ class ActionRowBuilder(ComponentBuilder, abc.ABC):
         typing.Union[LinkButtonBuilder[Self], InteractiveButtonBuilder[Self]]
             Button builder object.
             `ButtonBuilder.add_to_container` should be called to finalise the
-            button.
+            component.
         """
 
     @abc.abstractmethod
@@ -1656,5 +1877,31 @@ class ActionRowBuilder(ComponentBuilder, abc.ABC):
         SelectMenuBuilder[Self]
             Select menu builder object.
             `SelectMenuBuilder.add_to_container` should be called to finalise the
-            button.
+            component.
+        """
+
+    @abc.abstractmethod
+    def add_text_input(
+        self: _T,
+        style: typing.Union[messages.TextInputStyle, int],
+        custom_id: str,
+        label: str,
+    ) -> TextInputBuilder[_T]:
+        """Add a text input component to this action row builder.
+
+        Parameters
+        ----------
+        style : typing.Union[hikari.messages.TextInputStyle, int]
+            Style to use for the text input.
+        custom_id : builtins.str
+            Developer set custom ID used for identifying this text input.
+        label : builtins.str
+            Label above this text input.
+
+        Returns
+        -------
+        TextInputBuilder[Self]
+            Text input builder object.
+            `TextInputBuilder.add_to_container` should be called to finalise the
+            component.
         """

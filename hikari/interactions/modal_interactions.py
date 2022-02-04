@@ -24,7 +24,12 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["ModalResponseTypesT", "ModalInteraction", "ModalInteractionTextInput", "ModalInteraction"]
+__all__: typing.List[str] = [
+    "ModalResponseTypesT",
+    "ModalInteraction",
+    "ModalInteractionTextInput",
+    "ModalInteraction",
+]
 
 import typing
 
@@ -53,13 +58,22 @@ The following types are valid for this:
 
 @attr.define(kw_only=True, weakref_slot=False)
 class ModalInteractionTextInput(messages.PartialComponent):
-    """A text input component in a modal interaction"""
+    """A text input component in a modal interaction."""
 
     custom_id: str = attr.field(repr=True)
     """Developer set custom ID used for identifying interactions with this modal."""
+
     value: str = attr.field(repr=True)
     """Value provided for this text input."""
-    
+
+
+class ModalInteractionActionRow(typing.Protocol):
+    """An action row with only partial text inputs.
+
+    Meant purely for use with ModalInteraction.
+    """
+
+    components: typing.List[ModalInteractionTextInput]
 
 
 @attr_extensions.with_copy
@@ -105,7 +119,7 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
     custom_id: str = attr.field(eq=False, hash=False, repr=True)
     """The custom id of the modal."""
 
-    components: typing.Sequence[messages.PartialComponent] = attr.field(eq=False, hash=False, repr=True)
+    components: typing.Sequence[ModalInteractionActionRow] = attr.field(eq=False, hash=False, repr=True)
     """Components in the modal."""
 
     def build_response(self) -> special_endpoints.InteractionMessageBuilder:
