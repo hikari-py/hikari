@@ -167,9 +167,7 @@ class TestEventStream:
     @pytest.mark.asyncio()
     @hikari_test_helpers.timeout()
     async def test___anext___times_out(self):
-        streamer = event_manager_base.EventStream(
-            mock.Mock(), event_type=base_events.Event, timeout=hikari_test_helpers.REASONABLE_QUICK_RESPONSE_TIME
-        )
+        streamer = event_manager_base.EventStream(mock.Mock(), event_type=base_events.Event, timeout=0.001)
 
         with streamer:
             with pytest.raises(LookupError):
@@ -179,18 +177,22 @@ class TestEventStream:
     @hikari_test_helpers.timeout()
     async def test___anext___waits_for_next_event(self):
         mock_event = object()
-        streamer = event_manager_base.EventStream(
-            mock.Mock(), event_type=base_events.Event, timeout=hikari_test_helpers.REASONABLE_QUICK_RESPONSE_TIME * 3
-        )
+        streamer = event_manager_base.EventStream(mock.Mock(), event_type=base_events.Event, timeout=None)
 
-        async def add_event():
-            await asyncio.sleep(hikari_test_helpers.REASONABLE_SLEEP_TIME)
-            await streamer._listener(mock_event)
-
-        asyncio.create_task(add_event())
+        async def quickly_run_task(task):
+            try:
+                await asyncio.wait_for(asyncio.shield(task), timeout=0.01)
+            except asyncio.TimeoutError:
+                pass
 
         with streamer:
-            assert await streamer.next() is mock_event
+            next_task = asyncio.create_task(streamer.next())
+            await quickly_run_task(next_task)
+            assert not next_task.done()
+            await streamer._listener(mock_event)
+            await quickly_run_task(next_task)
+            assert next_task.done()
+            assert next_task.result() is mock_event
 
     @pytest.mark.asyncio()
     @hikari_test_helpers.timeout()
@@ -289,7 +291,7 @@ class TestEventStream:
     @pytest.mark.asyncio()
     async def test_filter(self):
         stream = hikari_test_helpers.mock_class_namespace(event_manager_base.EventStream)(
-            event_manager=mock.Mock(), event_type=base_events.Event, timeout=1
+            event_manager=mock.Mock(), event_type=base_events.Event, timeout=0.001
         )
         stream._filters = iterators.All(())
         first_pass = mock.Mock(attr=True)
@@ -312,7 +314,7 @@ class TestEventStream:
     @pytest.mark.asyncio()
     async def test_filter_handles_calls_while_active(self):
         stream = hikari_test_helpers.mock_class_namespace(event_manager_base.EventStream)(
-            event_manager=mock.Mock(), event_type=base_events.Event, timeout=1
+            event_manager=mock.Mock(), event_type=base_events.Event, timeout=0.001
         )
         stream._filters = iterators.All(())
         first_pass = mock.Mock(attr=True)

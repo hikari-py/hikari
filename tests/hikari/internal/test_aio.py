@@ -39,7 +39,8 @@ class CoroutineStub:
 
     def __await__(self):
         self.awaited = True
-        return hikari_test_helpers.idle().__await__()
+        # asyncio.sleep(0) is a special case that will just quickly return without doing anything special
+        return asyncio.sleep(0)
 
     def __repr__(self):
         args = ", ".join(map(repr, self.args))
@@ -311,23 +312,29 @@ class TestAllOf:
         f2 = event_loop.create_future()
         f3 = event_loop.create_future()
 
+        async def quickly_run_task(task):
+            try:
+                await asyncio.wait_for(asyncio.shield(task), timeout=0.01)
+            except asyncio.TimeoutError:
+                pass
+
         waiter = event_loop.create_task(aio.all_of(f1, f2, f3))
-        await hikari_test_helpers.idle(0.1)
+        await quickly_run_task(waiter)
         assert not waiter.cancelled()
         assert not waiter.done()
 
         f1.set_result(1)
-        await hikari_test_helpers.idle(0.1)
+        await quickly_run_task(waiter)
         assert not waiter.cancelled()
         assert not waiter.done()
 
         f2.set_result(2)
-        await hikari_test_helpers.idle(0.1)
+        await quickly_run_task(waiter)
         assert not waiter.cancelled()
         assert not waiter.done()
 
         f3.set_result(3)
-        await hikari_test_helpers.idle(0.1)
+        await quickly_run_task(waiter)
         assert not waiter.cancelled()
         assert waiter.done()
 
@@ -340,8 +347,6 @@ class TestAllOf:
         f3 = event_loop.create_future()
 
         waiter = event_loop.create_task(aio.all_of(f1, f2, f3))
-        # Wait a little bit and ensure asyncio doesn't kill it for some reason
-        await asyncio.sleep(0.25)
         assert not waiter.cancelled()
         assert not waiter.done()
 
@@ -360,7 +365,7 @@ class TestAllOf:
         f2 = event_loop.create_future()
         f3 = event_loop.create_future()
 
-        waiter = event_loop.create_task(aio.all_of(f1, f2, f3, timeout=0.1))
+        waiter = event_loop.create_task(aio.all_of(f1, f2, f3, timeout=0.01))
         with pytest.raises(asyncio.TimeoutError):
             await waiter
         assert not waiter.cancelled(), "future was forcefully cancelled?"
@@ -375,9 +380,10 @@ class TestAllOf:
         f3 = event_loop.create_future()
 
         waiter = event_loop.create_task(aio.all_of(f1, f2, f3))
-        event_loop.call_later(0.01, lambda *_: waiter.cancel())
+        event_loop.call_later(0.001, lambda *_: waiter.cancel())
         with pytest.raises(asyncio.CancelledError):
             await waiter
+
         assert waiter.cancelled(), "future was forcefully cancelled?"
         assert waiter.done(), "asyncio.CancelledError not raised?"
 

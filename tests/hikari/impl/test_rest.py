@@ -213,21 +213,26 @@ class TestClientCredentialsStrategy:
         assert new_token == "Bearer okokok.fofofo.ddd"  # noqa S105: Possible Hardcoded password
 
     async def test_acquire_uses_newly_cached_token_after_acquiring_lock(self):
-        token = "abc.abc.abc"  # noqa S105: Possible Hardcoded password
+        class MockLock:
+            def __init__(self, strategy):
+                self._strategy = strategy
+
+            async def __aenter__(self):
+                self._strategy._token = "abc.abc.abc"
+                return self
+
+            async def __aexit__(self, exc_type, exc_val, exc_tb):
+                return
+
         mock_rest = mock.AsyncMock()
         strategy = rest.ClientCredentialsStrategy(client=65123, client_secret="12354")
+        strategy._lock = MockLock(strategy)
+        strategy._token = None
+        strategy._expire_at = time.monotonic() + 500
 
-        async def hold_strategy():
-            async with strategy._lock:
-                await asyncio.sleep(hikari_test_helpers.REASONABLE_SLEEP_TIME)
-                strategy._token = token
-                strategy._expire_at = time.monotonic() + 600
-
-        asyncio.create_task(hold_strategy())
-        await asyncio.sleep(hikari_test_helpers.REASONABLE_SLEEP_TIME // 1000)
         result = await strategy.acquire(mock_rest)
 
-        assert result == token
+        assert result == "abc.abc.abc"
 
         mock_rest.authorize_client_credentials_token.assert_not_called()
 
