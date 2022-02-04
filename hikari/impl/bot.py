@@ -687,7 +687,7 @@ class GatewayBot(traits.GatewayBotAware):
         close_passed_executor: bool = False,
         close_loop: bool = True,
         coroutine_tracking_depth: typing.Optional[int] = None,
-        enable_signal_handlers: bool = True,
+        enable_signal_handlers: typing.Optional[bool] = None,
         idle_since: typing.Optional[datetime.datetime] = None,
         ignore_session_start_limit: bool = False,
         large_threshold: int = 250,
@@ -735,14 +735,16 @@ class GatewayBot(traits.GatewayBotAware):
             tracked with their call origin state. This allows you to determine
             where non-awaited coroutines may originate from, but generally you
             do not want to leave this enabled for performance reasons.
-        enable_signal_handlers : builtins.bool
-            Defaults to `builtins.True`. If on a __non-Windows__ OS with builtin
-            support for kernel-level POSIX signals, then setting this to
-            `builtins.True` will allow treating keyboard interrupts and other
-            OS signals to safely shut down the application as calls to
-            shut down the application properly rather than just killing the
-            process in a dirty state immediately. You should leave this disabled
-            unless you plan to implement your own signal handling yourself.
+        enable_signal_handlers : typing.Optional[builtins.bool]
+            Defaults to `builtins.True` if this is started in the main thread.
+
+            If on a __non-Windows__ OS with builtin support for kernel-level
+            POSIX signals, then setting this to `builtins.True` will allow
+            treating keyboard interrupts and other OS signals to safely shut
+            down the application as calls to shut down the application properly
+            rather than just killing the process in a dirty state immediately.
+            You should leave this enabled unless you plan to implement your own
+            signal handling yourself.
         idle_since : typing.Optional[datetime.datetime]
             The `datetime.datetime` the user should be marked as being idle
             since, or `builtins.None` (default) to not show this.
@@ -842,6 +844,11 @@ class GatewayBot(traits.GatewayBotAware):
                 )
 
             asyncio.run_coroutine_threadsafe(self._set_close_flag(signame, signum), loop)
+
+        if enable_signal_handlers is None:
+            # Signal handlers can only be registered on the main thread so we
+            # only default to True if this is the case.
+            enable_signal_handlers = threading.current_thread() is threading.main_thread()
 
         if enable_signal_handlers:
             for sig in signals:

@@ -22,6 +22,7 @@
 import asyncio
 import contextlib
 import re
+import threading
 
 import aiohttp.web
 import aiohttp.web_runner
@@ -728,6 +729,37 @@ class TestInteractionServer:
             )
             aiohttp.web_runner.AppRunner.assert_called_once_with(
                 aiohttp.web.Application.return_value, handle_signals=True, access_log=interaction_server_impl._LOGGER
+            )
+            aiohttp.web_runner.AppRunner.return_value.setup.assert_awaited_once()
+            aiohttp.web.TCPSite.assert_called_once_with(
+                aiohttp.web_runner.AppRunner.return_value,
+                port=None,
+                shutdown_timeout=60.0,
+                ssl_context=mock_context,
+                backlog=128,
+                reuse_address=None,
+                reuse_port=None,
+            )
+            aiohttp.web.TCPSite.return_value.start.assert_awaited_once()
+
+    @pytest.mark.asyncio()
+    async def test_start_with_default_behaviour_and_not_main_thread(self, mock_interaction_server):
+        mock_context = object()
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(aiohttp.web, "TCPSite", return_value=mock.AsyncMock()))
+        stack.enter_context(mock.patch.object(aiohttp.web_runner, "AppRunner", return_value=mock.AsyncMock()))
+        stack.enter_context(mock.patch.object(aiohttp.web, "Application"))
+        stack.enter_context(mock.patch.object(threading, "current_thread"))
+
+        with stack:
+            await mock_interaction_server.start(ssl_context=mock_context)
+
+            aiohttp.web.Application.assert_called_once_with()
+            aiohttp.web.Application.return_value.add_routes.assert_called_once_with(
+                [aiohttp.web.post("/", mock_interaction_server.aiohttp_hook)]
+            )
+            aiohttp.web_runner.AppRunner.assert_called_once_with(
+                aiohttp.web.Application.return_value, handle_signals=False, access_log=interaction_server_impl._LOGGER
             )
             aiohttp.web_runner.AppRunner.return_value.setup.assert_awaited_once()
             aiohttp.web.TCPSite.assert_called_once_with(

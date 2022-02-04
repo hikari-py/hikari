@@ -27,6 +27,7 @@ __all__: typing.List[str] = ["InteractionServer"]
 
 import asyncio
 import logging
+import threading
 import typing
 
 import aiohttp.web
@@ -393,7 +394,7 @@ class InteractionServer(interaction_server.InteractionServer):
     async def start(
         self,
         backlog: int = 128,
-        enable_signal_handlers: bool = True,
+        enable_signal_handlers: typing.Optional[bool] = None,
         host: typing.Optional[typing.Union[str, typing.Sequence[str]]] = None,
         port: typing.Optional[int] = None,
         path: typing.Optional[str] = None,
@@ -410,14 +411,16 @@ class InteractionServer(interaction_server.InteractionServer):
         backlog : builtins.int
             The number of unaccepted connections that the system will allow before
             refusing new connections.
-        enable_signal_handlers : builtins.bool
-            Defaults to `builtins.True`. If on a __non-Windows__ OS with builtin
-            support for kernel-level POSIX signals, then setting this to
-            `builtins.True` will allow treating keyboard interrupts and other
-            OS signals to safely shut down the application as calls to
-            shut down the application properly rather than just killing the
-            process in a dirty state immediately. You should leave this disabled
-            unless you plan to implement your own signal handling yourself.
+        enable_signal_handlers : typing.Optional[builtins.bool]
+            Defaults to `builtins.True` if this is started in the main thread.
+
+            If on a __non-Windows__ OS with builtin support for kernel-level
+            POSIX signals, then setting this to `builtins.True` will allow
+            treating keyboard interrupts and other OS signals to safely shut
+            down the application as calls to shut down the application properly
+            rather than just killing the process in a dirty state immediately.
+            You should leave this enabled unless you plan to implement your own
+            signal handling yourself.
         host : typing.Optional[typing.Union[builtins.str, aiohttp.web.HostSequence]]
             TCP/IP host or a sequence of hosts for the HTTP server.
         port : typing.Optional[builtins.int]
@@ -444,6 +447,9 @@ class InteractionServer(interaction_server.InteractionServer):
         """
         if self._server:
             raise errors.ComponentStateConflictError("Cannot start an already active interaction server")
+
+        if enable_signal_handlers is None:
+            enable_signal_handlers = threading.current_thread() is threading.main_thread()
 
         self._close_event = asyncio.Event()
         self._is_closing = False
