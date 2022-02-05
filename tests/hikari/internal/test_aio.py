@@ -365,7 +365,7 @@ class TestAllOf:
         f2 = event_loop.create_future()
         f3 = event_loop.create_future()
 
-        waiter = event_loop.create_task(aio.all_of(f1, f2, f3, timeout=0.01))
+        waiter = event_loop.create_task(aio.all_of(f1, f2, f3, timeout=0.001))
         with pytest.raises(asyncio.TimeoutError):
             await waiter
         assert not waiter.cancelled(), "future was forcefully cancelled?"
