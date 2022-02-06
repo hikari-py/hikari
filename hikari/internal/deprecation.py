@@ -31,6 +31,9 @@ import inspect
 import typing
 import warnings
 
+from hikari import _about as hikari_about
+from hikari.internal import ux
+
 if typing.TYPE_CHECKING:
     T = typing.TypeVar("T", bound=typing.Callable[..., typing.Any])
 
@@ -71,18 +74,27 @@ def warn_deprecated(obj: typing.Any, additional_information: str, /, *, stack_le
     )
 
 
-def deprecated(version: str, additional_information: str) -> typing.Callable[[T], T]:
+def deprecated(deprecated_version: str, removal_version: str, additional_information: str) -> typing.Callable[[T], T]:
     """Mark a function or object as being deprecated.
 
     Parameters
     ----------
-    version: typing.Any
+    deprecated_version: str
         The version this function or object is deprecated in.
+    removal_version: str
+        The version this function or object will be removed in.
     additional_information: str
         Additional information on the deprecation for the user.
     """
 
     def decorator(obj: T) -> T:
+        # No, this will not cause issues.
+        # Thanks to CI and our deploy pipeline, we will be able to catch these and remove them before deployment
+        if ux.HikariVersion(hikari_about.__version__) >= ux.HikariVersion(removal_version):
+            raise DeprecationWarning(
+                f"'{obj.__module__}.{obj.__qualname__}' is passed its removal version ({removal_version})"
+            )
+
         old_doc = inspect.getdoc(obj)
 
         # If the docstring is inherited we can assume that the deprecation warning was already added there
@@ -90,7 +102,9 @@ def deprecated(version: str, additional_information: str) -> typing.Callable[[T]
             first_line_end = old_doc.index("\n")
             obj.__doc__ = (
                 old_doc[:first_line_end]
-                + f"\n\n.. deprecated:: {version}\n    {additional_information}"
+                + f"\n\n.. deprecated:: {deprecated_version}\n"
+                + f"    Will be removed in *{removal_version}*.\n"
+                + f"    {additional_information}\n"
                 + old_doc[first_line_end:]
             )
 

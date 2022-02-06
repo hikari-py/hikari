@@ -60,7 +60,7 @@ class All(typing.Generic[ValueT]):
     For example...
 
     ```py
-    if w(foo) and x(foo) andy(foo) and z(foo):
+    if w(foo) and x(foo) and y(foo) and z(foo):
         ...
     ```
     is equivalent to
@@ -440,27 +440,29 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
 
         Examples
         --------
-            >>> async for i, item in paginated_results.enumerate():
-            ...    print(i, item)
-            (0, foo)
-            (1, bar)
-            (2, baz)
-            (3, bork)
-            (4, qux)
+        ```py
+        >>> async for i, item in paginated_results.enumerate():
+        ...    print(i, item)
+        (0, foo)
+        (1, bar)
+        (2, baz)
+        (3, bork)
+        (4, qux)
 
-            >>> async for i, item in paginated_results.enumerate(start=9):
-            ...    print(i, item)
-            (9, foo)
-            (10, bar)
-            (11, baz)
-            (12, bork)
-            (13, qux)
+        >>> async for i, item in paginated_results.enumerate(start=9):
+        ...    print(i, item)
+        (9, foo)
+        (10, bar)
+        (11, baz)
+        (12, bork)
+        (13, qux)
 
-            >>> async for i, item in paginated_results.enumerate(start=9).limit(3):
-            ...    print(i, item)
-            (9, foo)
-            (10, bar)
-            (11, baz)
+        >>> async for i, item in paginated_results.enumerate(start=9).limit(3):
+        ...    print(i, item)
+        (9, foo)
+        (10, bar)
+        (11, baz)
+        ```
 
         Returns
         -------
@@ -480,8 +482,10 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
 
         Examples
         --------
-            >>> async for item in paginated_results.limit(3):
-            ...     print(item)
+        ```py
+        >>> async for item in paginated_results.limit(3):
+        ...     print(item)
+        ```
 
         Returns
         -------
@@ -528,13 +532,13 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
     async def last(self) -> ValueT:
         """Return the last element of this iterator only.
 
+        .. note::
+            This method will consume the whole iterator if run.
+
         Returns
         -------
         ValueT
             The last result.
-
-        .. note::
-            This method will consume the whole iterator if run.
 
         Raises
         ------
@@ -639,17 +643,6 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
     def awaiting(self, window_size: int = 10) -> LazyIterator[ValueT]:
         """Await each item concurrently in a fixed size window.
 
-        Parameters
-        ----------
-        window_size : int
-            The window size of how many tasks to await at once. You can set this
-            to `0` to await everything at once, but see the below warning.
-
-        Returns
-        -------
-        LazyIterator[ValueT]
-            The new lazy iterator to return.
-
         .. warning::
             Setting a large window size, or setting it to 0 to await everything
             is a dangerous thing to do if you are making API calls. Some
@@ -661,12 +654,21 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
             This call assumes that the iterator contains awaitable values as
             input. MyPy cannot detect this nicely, so any cast is forced
             internally.
-
             If the item is not awaitable, you will receive a
             `TypeError` instead.
-
             You have been warned. You cannot escape the ways of the duck type
             young grasshopper.
+
+        Parameters
+        ----------
+        window_size : int
+            The window size of how many tasks to await at once. You can set this
+            to `0` to await everything at once, but see the below warning.
+
+        Returns
+        -------
+        LazyIterator[ValueT]
+            The new lazy iterator to return.
         """
         # Not type safe. Can I make this type safe?
         return _AwaitingLazyIterator(typing.cast("LazyIterator[typing.Awaitable[ValueT]]", self), window_size)

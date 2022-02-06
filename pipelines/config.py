@@ -34,7 +34,7 @@ ROOT_INDEX_SOURCE = "index.html"
 LOGO_SOURCE = "logo.png"
 
 # Linting and test configs.
-FLAKE8_REPORT = "public/flake8"
+FLAKE8_REPORT = _os.path.join(ARTIFACT_DIRECTORY, "flake8")
 PYPROJECT_TOML = "pyproject.toml"
 COVERAGE_HTML_PATH = _os.path.join(ARTIFACT_DIRECTORY, "coverage", "html")
 

@@ -193,24 +193,25 @@ class ManualRateLimiter(BurstRateLimiter):
         Iterates repeatedly while the queue is not empty, adhering to any
         rate limits that occur in the mean time.
 
+        Notes
+        -----
+        This will invoke `ManualRateLimiter.unlock_later` as a scheduled
+        task in the future (it will not await it to finish).
+
+        When the `ManualRateLimiter.unlock_later` coroutine function
+        completes, it should be expected to set the `throttle_task` to
+        `None`. This means you can check if throttling is occurring
+        by checking if `throttle_task` is not `None`.
+
+        If this is invoked while another throttle is in progress, that one
+        is cancelled and a new one is started. This enables new rate limits
+        to override existing ones.
+
         Parameters
         ----------
         retry_after : float
             How long to sleep for before unlocking and releasing any futures
             in the queue.
-
-        .. note::
-            This will invoke `ManualRateLimiter.unlock_later` as a scheduled
-            task in the future (it will not await it to finish).
-
-            When the `ManualRateLimiter.unlock_later` coroutine function
-            completes, it should be expected to set the `throttle_task` to
-            `None`. This means you can check if throttling is occurring
-            by checking if `throttle_task` is not `None`.
-
-            If this is invoked while another throttle is in progress, that one
-            is cancelled and a new one is started. This enables new rate limits
-            to override existing ones.
         """
         if self.throttle_task is not None:
             self.throttle_task.cancel()
@@ -221,20 +222,21 @@ class ManualRateLimiter(BurstRateLimiter):
     async def unlock_later(self, retry_after: float) -> None:
         """Sleeps for a while, then removes the lock.
 
+        Notes
+        -----
+        You should not need to invoke this directly. Call
+        `ManualRateLimiter.throttle` instead.
+
+        When the `ManualRateLimiter.unlock_later` coroutine function
+        completes, it should be expected to set the `throttle_task` to
+        `None`. This means you can check if throttling is occurring
+        by checking if `throttle_task` is not `None`.
+
         Parameters
         ----------
         retry_after : float
             How long to sleep for before unlocking and releasing any futures
             in the queue.
-
-        .. note::
-            You should not need to invoke this directly. Call
-            `ManualRateLimiter.throttle` instead.
-
-            When the `ManualRateLimiter.unlock_later` coroutine function
-            completes, it should be expected to set the `throttle_task` to
-            `None`. This means you can check if throttling is occurring
-            by checking if `throttle_task` is not `None`.
         """
         _LOGGER.warning("you are being globally rate limited for %ss", retry_after)
         await asyncio.sleep(retry_after)
@@ -326,17 +328,17 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
     def get_time_until_reset(self, now: float) -> float:
         """Determine how long until the current rate limit is reset.
 
-        Parameters
-        ----------
-        now : float
-            The monotonic `time.monotonic_timestamp` timestamp.
-
         .. warning::
             Invoking this method will update the internal state if we were
             previously rate limited, but at the given time are no longer under
             that limit. This makes it imperative that you only pass the current
             timestamp to this function, and not past or future timestamps. The
             effects of doing the latter are undefined behaviour.
+
+        Parameters
+        ----------
+        now : float
+            The monotonic `time.monotonic_timestamp` timestamp.
 
         Returns
         -------
@@ -351,6 +353,13 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
     def is_rate_limited(self, now: float) -> bool:
         """Determine if we are under a rate limit at the given time.
 
+        .. warning::
+            Invoking this method will update the internal state if we were
+            previously rate limited, but at the given time are no longer under
+            that limit. This makes it imperative that you only pass the current
+            timestamp to this function, and not past or future timestamps. The
+            effects of doing the latter are undefined behaviour.
+
         Parameters
         ----------
         now : float
@@ -361,13 +370,6 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
         bool
             `True` if we are being rate limited, or `False` if
             we are not.
-
-        .. warning::
-            Invoking this method will update the internal state if we were
-            previously rate limited, but at the given time are no longer under
-            that limit. This makes it imperative that you only pass the current
-            timestamp to this function, and not past or future timestamps. The
-            effects of doing the latter are undefined behaviour.
         """
         if self.reset_at <= now:
             self.remaining = self.limit
@@ -416,14 +418,12 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
 class ExponentialBackOff:
     r"""Implementation of an asyncio-compatible exponential back-off algorithm with random jitter.
 
-    .. math::
+    $t_{backoff} = b^{i} +  m \cdot \mathrm{rand}()$
 
-        t_{backoff} = b^{i} +  m \cdot \mathrm{rand}()
-
-    Such that \(t_{backoff}\) is the backoff time, \(b\) is the base,
-    \(i\) is the increment that increases by 1 for each invocation, and
-    \(m\) is the jitter multiplier. \(\mathrm{rand}()\) returns a value in
-    the range \([0,1]\).
+    Such that $\(t_{backoff}\)$ is the backoff time, $\(b\)$ is the base,
+    $\(i\)$ is the increment that increases by 1 for each invocation, and
+    $\(m\)$ is the jitter multiplier. $\(\mathrm{rand}()\)$ returns a value in
+    the range $\([0,1]\)$.
 
     Parameters
     ----------

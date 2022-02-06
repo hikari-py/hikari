@@ -74,13 +74,7 @@ class InviteCode(abc.ABC):
     @property
     @abc.abstractmethod
     def code(self) -> str:
-        """Return the code for this invite.
-
-        Returns
-        -------
-        str
-            The invite code that can be appended to a URL.
-        """
+        """Code for this invite."""
 
     def __str__(self) -> str:
         return f"https://discord.gg/{self.code}"
@@ -341,11 +335,7 @@ class InviteWithMetadata(Invite):
     def uses_left(self) -> typing.Optional[int]:
         """Return the number of uses left for this invite.
 
-        Returns
-        -------
-        typing.Optional[int]
-            The number of uses left for this invite. This will be `None`
-            if the invite has unlimited uses.
+        This will be `None` if the invite has unlimited uses.
         """
         if self.max_uses:
             return self.max_uses - self.uses

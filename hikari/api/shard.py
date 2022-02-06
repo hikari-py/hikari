@@ -73,58 +73,31 @@ class GatewayShard(abc.ABC):
     @property
     @abc.abstractmethod
     def heartbeat_latency(self) -> float:
-        """Return the shard's most recent heartbeat latency.
+        """Shard's most recent heartbeat latency.
 
-        Returns
-        -------
-        float
-            Heartbeat latency measured in seconds. If the information is
-            not yet available, then this will be `float('nan')` instead.
+        If the information is not yet available, then this will be
+        `float('nan')` instead.
         """
 
     @property
     @abc.abstractmethod
     def id(self) -> int:
-        """Return the shard ID for this shard.
-
-        Returns
-        -------
-        int
-            The integer 0-based shard ID.
-        """
+        """0-based shard ID for this shard."""
 
     @property
     @abc.abstractmethod
     def intents(self) -> intents_.Intents:
-        """Return the intents set on this shard.
-
-        Returns
-        -------
-        hikari.intents.Intents
-            The intents being used on this shard.
-        """
+        """Intents set on this shard."""
 
     @property
     @abc.abstractmethod
     def is_alive(self) -> bool:
-        """Return `True` if the shard is alive and connected.
-
-        Returns
-        -------
-        bool
-            `True` if connected, or `False` if not.
-        """
+        """Whether the shard is alive and connected."""
 
     @property
     @abc.abstractmethod
     def shard_count(self) -> int:
-        """Return the total number of shards expected in the entire application.
-
-        Returns
-        -------
-        int
-            A number of shards greater than or equal to 1.
-        """
+        """Return the total number of shards expected in the entire application."""
 
     @abc.abstractmethod
     async def get_user_id(self) -> snowflakes.Snowflake:
@@ -226,6 +199,10 @@ class GatewayShard(abc.ABC):
     ) -> None:
         """Request for a guild chunk.
 
+        .. note::
+            To request the full list of members, set `query` to `""` (empty
+            string) and `limit` to `0`.
+
         Parameters
         ----------
         guild: hikari.guilds.Guild
@@ -243,10 +220,6 @@ class GatewayShard(abc.ABC):
             If provided, the users to request for.
         nonce: hikari.undefined.UndefinedOr[str]
             If provided, the nonce to be sent with guild chunks.
-
-        .. note::
-            To request the full list of members, set `query` to `""` (empty
-            string) and `limit` to `0`.
 
         Raises
         ------

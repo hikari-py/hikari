@@ -33,6 +33,7 @@ __all__: typing.Sequence[str] = (
     "load_json",
     "JSONDecodeError",
     "JSONObjectBuilder",
+    "StringMapBuilder",
     "URLEncodedFormBuilder",
 )
 
@@ -189,6 +190,12 @@ class StringMapBuilder(multidict.MultiDict[str]):
     ) -> None:
         """Add a key and value to the string map.
 
+        .. note::
+            The value will always be cast to a `str` before inserting it.
+            `True` will be translated to `"true"`, `False` will be
+            translated to `"false"`, and `None` will be translated to
+            `"null"`.
+
         Parameters
         ----------
         key : str
@@ -200,13 +207,6 @@ class StringMapBuilder(multidict.MultiDict[str]):
         ----------------
         conversion : typing.Optional[typing.Callable[[typing.Any], typing.Any]]
             An optional conversion to perform.
-
-        .. note::
-            The value will always be cast to a `str` before inserting it.
-
-            `True` will be translated to `"true"`, `False`
-            ill be translated to `"false"`, and `None` will be
-            translated to `"null"`.
         """
         if value is not undefined.UNDEFINED:
             if conversion is not None:

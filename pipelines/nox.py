@@ -38,12 +38,12 @@ _NoxCallbackSig = typing.Callable[[Session], None]
 
 
 def session(
-    *, only_if: typing.Callable[[], bool] = lambda: True, reuse_venv: bool = False, **kwargs: typing.Any
+    *, reuse_venv: bool = False, **kwargs: typing.Any
 ) -> typing.Callable[[_NoxCallbackSig], typing.Union[_NoxCallbackSig, Session]]:
     def decorator(func: _NoxCallbackSig) -> typing.Union[_NoxCallbackSig, Session]:
         func.__name__ = func.__name__.replace("_", "-")
 
-        return _session(reuse_venv=reuse_venv, **kwargs)(func) if only_if() else func
+        return _session(reuse_venv=reuse_venv, **kwargs)(func)
 
     return decorator
 
@@ -62,7 +62,3 @@ def shell(arg: str, *args: str) -> int:
     command = " ".join((arg, *args))
     print("nox > shell >", command)
     return subprocess.check_call(command, shell=True)
-
-
-if not os.path.isdir(config.ARTIFACT_DIRECTORY):
-    os.mkdir(config.ARTIFACT_DIRECTORY)

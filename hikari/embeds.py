@@ -71,24 +71,12 @@ class EmbedResource(files.Resource[AsyncReaderT]):
     @property
     @typing.final
     def url(self) -> str:
-        """URL of this embed resource.
-
-        Returns
-        -------
-        typing.Optional[str]
-            The URL of this embed resource.
-        """
+        """URL of this embed resource."""
         return self.resource.url
 
     @property
     def filename(self) -> str:
-        """File name of this embed resource.
-
-        Returns
-        -------
-        typing.Optional[str]
-            The file name of this embed resource.
-        """
+        """File name of this embed resource."""
         return self.resource.filename
 
     def stream(
@@ -129,27 +117,13 @@ class EmbedResourceWithProxy(EmbedResource[AsyncReaderT]):
     @property
     @typing.final
     def proxy_url(self) -> typing.Optional[str]:
-        """Proxied URL of this embed resource if applicable.
-
-        Returns
-        -------
-        typing.Optional[str]
-            The proxied URL of this embed resource if applicable, else
-            `None`.
-        """
+        """Proxied URL of this embed resource if applicable, else `None`."""
         return self.proxy_resource.url if self.proxy_resource else None
 
     @property
     @typing.final
     def proxy_filename(self) -> typing.Optional[str]:
-        """File name of the proxied version of this embed resource if applicable.
-
-        Returns
-        -------
-        typing.Optional[str]
-            The file name of the proxied version of this embed resource if
-            applicable, else `None`.
-        """
+        """File name of the proxied version of this embed resource if applicable, else `None`."""
         return self.proxy_resource.filename if self.proxy_resource else None
 
 
@@ -269,7 +243,7 @@ class EmbedField:
     def is_inline(self) -> bool:
         """Return `True` if the field should display inline.
 
-        Defaults to False.
+        Defaults to `False`.
         """
         return self._inline
 
@@ -303,9 +277,6 @@ class Embed:
         "_fields",
     )
 
-    # Don't document this.
-    __pdoc__: typing.ClassVar[typing.Mapping[str, typing.Any]] = {"from_received_embed": False}
-
     @classmethod
     def from_received_embed(
         cls,
@@ -325,7 +296,8 @@ class Embed:
     ) -> Embed:
         """Generate an embed from the given attributes.
 
-        You should never call this.
+        .. warning::
+            **This function is for internal use only!**
         """
         # Create an empty instance without the overhead of invoking the regular
         # constructor.
@@ -387,11 +359,6 @@ class Embed:
         """Return the title of the embed.
 
         This will be `None` if not set.
-
-        Returns
-        -------
-        typing.Optional[str]
-            The title of the embed.
         """
         return self._title
 
@@ -404,11 +371,6 @@ class Embed:
         """Return the description of the embed.
 
         This will be `None` if not set.
-
-        Returns
-        -------
-        typing.Optional[str]
-            The description of the embed.
         """
         return self._description
 
@@ -421,11 +383,6 @@ class Embed:
         """Return the URL of the embed title.
 
         This will be `None` if not set.
-
-        Returns
-        -------
-        typing.Optional[str]
-            The URL of the embed title
         """
         return self._url
 
@@ -438,11 +395,6 @@ class Embed:
         """Return the colour of the embed.
 
         This will be `None` if not set.
-
-        Returns
-        -------
-        typing.Optional[hikari.colors.Color]
-            The colour that is set.
         """
         return self._color
 
@@ -455,15 +407,7 @@ class Embed:
     # Alias.
     @property
     def colour(self) -> typing.Optional[colors.Color]:
-        """Return the colour of the embed. This is an alias of `Embed.color`.
-
-        This will be `None` if not set.
-
-        Returns
-        -------
-        typing.Optional[hikari.colors.Color]
-            The colour that is set.
-        """
+        """Alias of `color`."""
         return self._color
 
     # Alias.
@@ -478,11 +422,6 @@ class Embed:
         """Return the timestamp of the embed.
 
         This will be `None` if not set.
-
-        Returns
-        -------
-        typing.Optional[datetime.datetime]
-            The timestamp set on the embed.
 
         .. warning::
             Setting a non-timezone-aware datetime will result in a warning
@@ -598,9 +537,6 @@ class Embed:
         """Return the footer of the embed.
 
         Will be `None` if not set.
-
-        typing.Optional[EmbedFooter]
-            The footer of the embed.
         """
         return self._footer
 
@@ -609,9 +545,6 @@ class Embed:
         """Return the image set in the embed.
 
         Will be `None` if not set.
-
-        typing.Optional[EmbedImage]
-            The image of the embed.
 
         .. note::
             Use `set_image` to update this value.
@@ -624,9 +557,6 @@ class Embed:
 
         Will be `None` if not set.
 
-        typing.Optional[EmbedImage]
-            The thumbnail of the embed.
-
         .. note::
             Use `set_thumbnail` to update this value.
         """
@@ -637,11 +567,6 @@ class Embed:
         """Return the video to show in the embed.
 
         Will be `None` if not set.
-
-        Returns
-        -------
-        typing.Optional[EmbedVideo]
-            The video of the embed.
 
         .. note::
             This object cannot be set by bots or webhooks while sending an embed
@@ -657,11 +582,6 @@ class Embed:
 
         Will be `None` if not set.
 
-        Returns
-        -------
-        typing.Optional[EmbedProvider]
-            The provider of the embed.
-
         .. note::
             This object cannot be set by bots or webhooks while sending an embed
             and will be ignored during serialization. Expect this to be
@@ -675,11 +595,6 @@ class Embed:
         """Return the author to show in the embed.
 
         Will be `None` if not set.
-
-        Returns
-        -------
-        typing.Optional[EmbedAuthor]
-            The author of the embed.
 
         .. note::
             Use `set_author` to update this value.

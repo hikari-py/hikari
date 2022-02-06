@@ -53,13 +53,7 @@ class OwnUserUpdateEvent(shard_events.ShardEvent):
     """
 
     user: users.OwnUser = attr.field()
-    """This application user.
-
-    Returns
-    -------
-    hikari.users.OwnUser
-        This application user.
-    """
+    """This application user."""
 
     @property
     def app(self) -> traits.RESTAware:

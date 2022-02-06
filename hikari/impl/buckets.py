@@ -293,6 +293,10 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
     def update_rate_limit(self, remaining: int, limit: int, reset_at: float) -> None:
         """Update the rate limit information.
 
+        .. note::
+            The `reset_at` epoch is expected to be a `time.monotonic_timestamp`
+            monotonic epoch, rather than a `time.time` date-based epoch.
+
         Parameters
         ----------
         remaining : int
@@ -301,10 +305,6 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
             The total calls allowed in this time window.
         reset_at : float
             The epoch at which to reset the limit.
-
-        .. note::
-            The `reset_at` epoch is expected to be a `time.monotonic_timestamp`
-            monotonic epoch, rather than a `time.time` date-based epoch.
         """
         self.remaining: int = remaining
         self.limit: int = limit
@@ -438,13 +438,18 @@ class RESTBucketManager:
 
     # Ignore docstring not starting in an imperative mood
     async def gc(self, poll_period: float, expire_after: float) -> None:
-        """The garbage collector loop.
+        """Run the garbage collector loop.
 
         This is designed to run in the background and manage removing unused
         route references from the rate-limiter collection to save memory.
 
         This will run forever until `RESTBucketManager.closed_event` is set.
         This will invoke `RESTBucketManager.do_gc_pass` periodically.
+
+        .. warning::
+            You generally have no need to invoke this directly. Use
+            `RESTBucketManager.start` and `RESTBucketManager.close` to control
+            this instead.
 
         Parameters
         ----------
@@ -456,12 +461,7 @@ class RESTBucketManager:
             longer, but may produce more effective ratelimiting logic as a
             result. Using `0` will make the bucket get garbage collected as soon
             as the rate limit has reset.
-
-        .. warning::
-            You generally have no need to invoke this directly. Use
-            `RESTBucketManager.start` and `RESTBucketManager.close` to control
-            this instead.
-        """  # noqa: D401 - Imperative mood
+        """
         # Prevent filling memory increasingly until we run out by removing dead buckets every 20s
         # Allocations are somewhat cheap if we only do them every so-many seconds, after all.
         _LOGGER.log(ux.TRACE, "rate limit garbage collector started")
@@ -483,6 +483,11 @@ class RESTBucketManager:
         If the removed routes are used again in the future, they will be
         re-cached automatically.
 
+        .. warning::
+            You generally have no need to invoke this directly. Use
+            `RESTBucketManager.start` and `RESTBucketManager.close` to control
+            this instead.
+
         Parameters
         ----------
         expire_after : float
@@ -490,11 +495,6 @@ class RESTBucketManager:
             remove it. Defaults to `reset_at` + 20 seconds. Higher values will
             retain unneeded ratelimit info for longer, but may produce more
             effective ratelimiting logic as a result.
-
-        .. warning::
-            You generally have no need to invoke this directly. Use
-            `RESTBucketManager.start` and `RESTBucketManager.close` to control
-            this instead.
         """
         buckets_to_purge = []
 
@@ -531,6 +531,11 @@ class RESTBucketManager:
     def acquire(self, compiled_route: routes.CompiledRoute) -> RESTBucket:
         """Acquire a bucket for the given route.
 
+        .. note::
+            You MUST keep the context manager of the bucket acquired during the
+            full duration of the request. From making the request until calling
+            `update_rate_limits`.
+
         Parameters
         ----------
         compiled_route : hikari.internal.routes.CompiledRoute
@@ -540,11 +545,6 @@ class RESTBucketManager:
         -------
         hikari.impl.RESTBucket
             The bucket for this route.
-
-        .. note::
-            You MUST keep the context manager of the bucket acquired during the
-            full duration of the request. From making the request until calling
-            `update_rate_limits`.
         """
         try:
             bucket_hash = self.routes_to_hashes[compiled_route.route]

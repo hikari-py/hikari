@@ -2459,6 +2459,10 @@ class PartialGuild(snowflakes.Unique):
         .. note::
             This method can also be used for deleting guild categories as well.
 
+        .. note::
+            For Public servers, the set 'Rules' or 'Guidelines' channels and the
+            'Public Server Updates' channel cannot be deleted.
+
         Parameters
         ----------
         channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildChannel]
@@ -2491,10 +2495,6 @@ class PartialGuild(snowflakes.Unique):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-
-        .. note::
-            For Public servers, the set 'Rules' or 'Guidelines' channels and the
-            'Public Server Updates' channel cannot be deleted.
         """
         deleted_channel = await self.app.rest.delete_channel(channel)
         assert isinstance(deleted_channel, channels_.GuildChannel)

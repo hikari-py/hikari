@@ -755,11 +755,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> special_endpoints.TypingIndicator:
         """Trigger typing in a text channel.
 
-        Notes
-        -----
-        The result of this call can be awaited to trigger typing once, or
-        can be used as an async context manager to continually type until the
-        context manager is left. Any errors documented below will happen then.
+        .. note::
+            The result of this call can be awaited to trigger typing once, or
+            can be used as an async context manager to continually type until the
+            context manager is left. Any errors documented below will happen then.
 
         Examples
         --------
@@ -2946,7 +2945,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If an internal error occurs on Discord while handling the request.
         """
 
-    # THIS IS AN OAUTH2 FLOW BUT CAN BE USED BY BOTS ALSO
+    # THIS IS AN OAUTH2 FLOW BUT CAN ALSO BE USED BY BOTS
     @abc.abstractmethod
     async def fetch_application(self) -> applications.Application:
         """Fetch the token's associated application.
@@ -3382,7 +3381,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Other Parameters
         ----------------
         before : hikari.undefined.UndefinedOr[hikari.snowflakes.SearchableSnowflakeishOr[hikari.snowflakes.Unique]]
-            If provided, filter to only actions after this snowflake. If you provide
+            If provided, filter to only actions before this snowflake. If you provide
             a datetime object, it will be transformed into a snowflake. This
             may be any other Discord entity that has an ID. In this case, the
             date the object was first created will be used.
@@ -4097,6 +4096,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def fetch_guild_preview(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> guilds.GuildPreview:
         """Fetch a guild preview.
 
+        .. note::
+            This will only work for guilds you are a part of or are public.
+
         Parameters
         ----------
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
@@ -4107,9 +4109,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         -------
         hikari.guilds.GuildPreview
             The requested guild preview.
-
-        .. note::
-            This will only work for guilds you are a part of or are public.
 
         Raises
         ------
@@ -4879,6 +4878,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> typing.Sequence[guilds.Member]:
         """Search the members in a guild by nickname and username.
 
+        .. note::
+            Unlike `RESTClient.fetch_members` this endpoint isn't paginated and
+            therefore will return all the members in one go rather than needing
+            to be asynchronously iterated over.
+
         Parameters
         ----------
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
@@ -4910,11 +4914,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-
-        .. note::
-            Unlike `RESTClient.fetch_members` this endpoint isn't paginated and
-            therefore will return all the members in one go rather than needing
-            to be asynchronously iterated over.
         """
 
     @abc.abstractmethod
@@ -4941,9 +4940,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             The guild to edit. This may be the object
             or the ID of an existing guild.
-        user : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
-            The guild to edit. This may be the object
-            or the ID of an existing guild.
+        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
+            The user to edit. This may be the object
+            or the ID of an existing user.
 
         Other Parameters
         ----------------
@@ -5074,8 +5073,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If an internal error occurs on Discord while handling the request.
         """
 
-    @deprecation.deprecated("2.0.0.dev104", "Use `edit_my_member`'s `nick` argument instead.")
     @abc.abstractmethod
+    @deprecation.deprecated("2.0.0.dev104", "2.0.0.dev110", "Use `edit_my_member`'s `nick` argument instead.")
     async def edit_my_nick(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.Guild],
@@ -5283,7 +5282,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
-        """Alias of `RESTClient.kick_user`."""
+        """Alias of `kick_user`."""
 
     @abc.abstractmethod
     async def ban_user(
@@ -5348,7 +5347,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         delete_message_days: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
-        """Alias of `RESTClient.ban_user`."""
+        """Alias of `ban_user`."""
 
     @abc.abstractmethod
     async def unban_user(
@@ -5406,7 +5405,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
-        """Alias of `RESTClient.unban_user`."""
+        """Alias of `unban_user`."""
 
     @abc.abstractmethod
     async def fetch_ban(
@@ -6316,6 +6315,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> guilds.RESTGuild:
         """Make a guild from a template.
 
+        .. note::
+            This endpoint can only be used by bots in less than 10 guilds.
+
         Parameters
         ----------
         template : typing.Union[str, hikari.templates.Template]
@@ -6333,9 +6335,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         -------
         hikari.guilds.RESTGuild
             Object of the created guild.
-
-        .. note::
-            This endpoint can only be used by bots in less than 10 guilds.
 
         Raises
         ------
@@ -6577,11 +6576,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
+    @deprecation.deprecated("2.0.0.dev106", "2.0.0.dev110", "Use `slash_command_builder` instead.")
     def command_builder(self, name: str, description: str) -> special_endpoints.SlashCommandBuilder:
         r"""Create a slash command builder for use in `RESTClient.set_application_commands`.
-
-        .. deprecated:: 2.0.0.dev106
-            Use `RESTClient.slash_command_builder` instead.
 
         Parameters
         ----------
@@ -6745,6 +6742,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
+    @deprecation.deprecated("2.0.0.dev106", "2.0.0.dev110", "Use `create_slash_command` instead.")
     async def create_application_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
@@ -6756,9 +6754,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.SlashCommand:
         r"""Create an application slash command.
-
-        .. deprecated:: 2.0.0.dev106
-            Use `RESTClient.create_slash_command` instead.
 
         Parameters
         ----------

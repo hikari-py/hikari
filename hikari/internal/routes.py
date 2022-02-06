@@ -192,10 +192,7 @@ class CDNRoute:
     """Template string for this endpoint."""
 
     valid_formats: typing.AbstractSet[str] = attr.field(
-        converter=_cdn_valid_formats_converter,
-        eq=False,
-        hash=False,
-        repr=False,
+        converter=_cdn_valid_formats_converter, eq=False, hash=False, repr=False
     )
     """Valid file formats for this endpoint."""
 

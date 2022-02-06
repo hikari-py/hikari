@@ -1,0 +1,991 @@
+:root {
+    --pdoc-background: #212529;
+    --text: #f7f7f7;
+    --muted: #9d9d9d;
+    --link: #DB61D9 ;
+    --link-hover: #3989ff;
+    --code: #333;
+    --accent: #343434;
+    --accent2: #555;
+    --nav-hover: rgba(0, 0, 0, 0.1);
+    --def: #ff79c6;
+    --name: #61aeee;
+    --annotation: #DE4F91;
+}
+
+/* Colors of overall document */
+body {
+    background-color: var(--pdoc-background);
+}
+
+/* Responsive Layout */
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow-wrap: break-word;
+    scroll-behavior: smooth;
+
+    font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+@media (max-width: 1079px) {
+    :root {
+        --sidebar-width: 27rem;
+    }
+
+    html {
+        font-size: .8rem;
+    }
+
+    main, header {
+        padding: 2rem 3vw 0 1.5rem;
+    }
+
+    /* Prevent scrolling and interacting with the body when sidebar is open */
+    html:not(.sidebar-hidden) body {
+        overflow: hidden !important;
+    }
+    html:not(.sidebar-hidden) main {
+        pointer-events: none !important;
+    }
+
+    .sidebar-hidden nav {
+        transform: translateX(calc(0px - var(--sidebar-width)));
+    }
+
+    nav {
+        transition: transform 0.2s;
+    }
+
+    .sidebar-toggle {
+        position: fixed;
+        top: 0;
+        bottom: calc(100% - 6rem);
+        left: var(--sidebar-width);
+
+        border-left: 10px solid grey;
+        border-top: 5px solid rgba(0, 0, 0, 0);
+        border-bottom: 5px solid rgba(0, 0, 0, 0);
+    }
+}
+
+@media (min-width: 1080px) {
+    :root {
+        --sidebar-width: clamp(12.5rem, 37vw, 28rem);
+    }
+
+    main, header {
+        padding: 3rem 4rem 3rem calc(var(--sidebar-width) + 3rem);
+    }
+}
+
+@media print {
+    :root {
+        --sidebar-width: 0;
+    }
+
+    nav {
+        display: none !important;
+    }
+
+    .sidebar-toggle {
+        display: none !important;
+    }
+
+    details {
+        display: none !important;
+    }
+}
+
+/* Nav */
+nav {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    height: 100vh;
+    width: var(--sidebar-width);
+
+    z-index: 1;
+}
+
+.sidebar {
+    height: 100vh;
+    overflow: auto;
+
+    padding: .5rem 1.5rem 1rem 1rem;
+
+    background-color: var(--accent);
+    border-right: 1px solid var(--accent2);
+    scrollbar-color: var(--accent2) transparent; /* Scrollbar color on Firefox */
+}
+
+::-webkit-scrollbar {
+    width: 10px;
+    background: var(--accent) transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    -webkit-border-radius: 1ex;
+    background: var(--accent2);
+}
+
+.sidebar input[type=search] {
+    display: block;
+    outline-offset: 0;
+    width: 102%;
+}
+
+.sidebar ul {
+    list-style: none;
+    padding-left: 1rem;
+}
+
+.sidebar li {
+    display: block;
+    margin: 0;
+    padding: .2rem 0 .2rem .5rem;
+    transition: all 100ms;
+}
+
+.sidebar > ul > li {
+    padding-left: 0;
+}
+
+.sidebar li:hover {
+    background-color: var(--nav-hover);
+}
+
+.sidebar a:hover {
+    color: var(--text);
+}
+
+.sidebar a {
+    display: block;
+}
+
+.sidebar a.function, .sidebar a.variable {
+    color: #bd93f9;
+}
+
+.sidebar > h2:first-of-type {
+    margin-top: 1rem;
+}
+
+.sidebar .class:before {
+    content: "class ";
+    color: var(--muted);
+}
+
+.sidebar .function:after {
+    content: "()";
+    color: var(--muted);
+}
+
+.sidebar .sidebar-buttons {
+    display: flex;
+    width: 103%;
+    margin-bottom: .5rem;
+    align-items: center;
+}
+
+.sidebar .sidebar-buttons .push {
+    margin-left: auto;
+}
+
+.svg-button > svg {
+    width: 1.7rem;
+    margin: 0 .3rem;
+    cursor: pointer;
+}
+
+.version-selector {
+    background-color: var(--accent);
+    color: var(--text);
+    border: hidden;
+}
+
+.version-selector:disabled {
+    -webkit-appearance: none;
+    text-indent: 5%;
+}
+
+.version-warning {
+    background-color: rgb(82, 0, 0);
+    padding: 1rem 1rem 1rem 1rem;
+    margin-right: 3rem;
+    text-align: center;
+}
+
+.version-warning:empty {
+    display: none;
+}
+
+.version-warning a {
+    color: rgb(129, 217, 255);
+}
+
+.version-warning a:hover {
+    color: rgb(0, 178, 255);
+}
+
+/* Back to top button */
+.back-to-top {
+    text-decoration: none;
+
+    display: none;
+    position: fixed;
+    top: 5rem;
+    padding: 0.5rem 0.75rem 0.5rem 0.5rem;
+    border-radius: 1rem;
+    font-size: 0.8125rem;
+
+    background: var(--pdoc-background);
+    box-shadow: 0 0.2rem 0.5rem rgba(0, 0, 0, 0.05), #708090 0 0 1px 0;
+
+    z-index: 1;
+
+    margin-left: 30%;
+}
+
+.back-to-top span {
+    margin-left: 0.25rem;
+}
+
+.back-to-top svg {
+    height: 1rem;
+    width: 1rem;
+    fill: var(--pdoc-background);
+    display: inline-block;
+}
+
+/* General styling */
+nav, main {
+    color: var(--text);
+    /* enforce some styling even if bootstrap reboot is not included */
+    box-sizing: border-box;
+    line-height: 1.5;
+    /* override background from pygments */
+    background: none;
+}
+
+h1, h2, h3 {
+    font-weight: 300;
+    margin: .3em 0;
+    padding: .2em 0;
+}
+
+a {
+    text-decoration: none;
+    color: var(--link);
+}
+
+a:hover {
+    color: var(--link-hover);
+}
+
+blockquote {
+    margin-left: 2rem;
+}
+
+p {
+    font-weight: 300;
+    margin-bottom: .7rem;
+}
+
+pre {
+    background-color: var(--code);
+    border-top: 1px solid var(--accent2);
+    border-bottom: 1px solid var(--accent2);
+    margin-bottom: 1em;
+    padding: .5rem 0 .5rem .5rem;
+    overflow-x: auto;
+}
+
+code {
+    color: var(--text);
+    padding: .2em .4em;
+    margin: 0;
+    font-size: 85%;
+    background-color: var(--code);
+    border-radius: 6px;
+}
+
+a > code {
+    color: inherit;
+}
+
+pre > code {
+    display: inline-block;
+    font-size: inherit;
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+/* Page Heading */
+.modulename {
+    color: var(--annotation);
+    font-weight: bold;
+}
+
+.modulename a {
+    color: var(--link);
+    transition: 100ms all;
+}
+
+.modulename a:hover {
+    filter: brightness(80%);
+}
+
+/* View Source */
+details {
+    --shift: -2.4rem;
+    text-align: right;
+    margin-top: var(--shift);
+    margin-bottom: calc(0px - var(--shift));
+    clear: both;
+    /*
+     stay on top of .attr even if it is filtered, see
+     https://stackoverflow.com/questions/25764404/why-does-stacking-order-change-on-webkit-filter-hover
+     */
+    filter: opacity(1);
+}
+
+details:not([open]) {
+    height: 0;
+    overflow: visible;
+}
+
+details > summary {
+    font-size: .75rem;
+    cursor: pointer;
+    color: var(--muted);
+    border-width: 0;
+    padding: 0 1rem;
+    /* Firefox hides the arrow if we specify inline-block,
+       see https://bugzilla.mozilla.org/show_bug.cgi?id=1270163.
+       Chrome on the other hand does not support the two-property syntax yet,
+       so the last statement is ignored. See https://crbug.com/995106. */
+    display: inline-block;
+    display: inline list-item;
+    user-select: none;
+}
+
+details > summary:focus {
+    outline: 0;
+}
+
+details > div {
+    margin-top: calc(0px - var(--shift) / 2);
+    text-align: left;
+}
+
+/* Docstrings */
+.docstring {
+    margin: 0 0 2rem 2rem;
+}
+
+.docstring pre {
+    margin-left: 1em;
+    margin-right: 1em;
+}
+
+.docstring li {
+    margin-bottom: 15px;
+}
+
+.docstring li:last-child {
+    margin-bottom: 0;
+}
+
+/* Class name */
+span.name {
+    color: #61aeee;
+}
+
+/* Inherited class name */
+span.base {
+    color: #8be9fd;
+}
+
+/* Highlight focused element */
+h1:target,
+h2:target,
+h3:target,
+h4:target,
+h5:target,
+h6:target {
+    background-color: var(--accent2);
+    box-shadow: -1rem 0 0 0 var(--accent2);
+}
+
+
+/* Function docs params name. i.e.
+
+Parameters / Returns / Raises
+----------
+name : type
+    A parameter
+*/
+li strong {
+    color: var(--def);
+}
+
+b, strong {
+    font-weight: bold;
+}
+
+/* colors for .. warning:: and .. note:: */
+em {
+    color: orange;
+}
+
+/*
+Something
+---------
+*/
+
+h6 {
+    padding-top: 1rem;
+    font-size: 1.7rem;
+    color: white;
+}
+
+/*
+Notes
+-----
+*/
+
+h6#notes {
+    color: orange;
+}
+
+/*
+Raises
+------
+*/
+
+h6#raises {
+    color: #ff6666;
+}
+
+/* Decorator color */
+div.decorator {
+    color: #61aeee;
+}
+
+div:target > .attr,
+section:target > .attr,
+dd:target > a {
+    background-color: var(--accent2);
+}
+
+/* Before inherited members colors, i.e., "Exception" */
+.inherited dt,
+.inherited dt::before {
+    color: #61aeee;
+}
+
+.attr:hover {
+    filter: contrast(0.95);
+}
+
+/* Header link */
+.headerlink {
+    position: absolute;
+    margin-left: -2.5rem;
+    line-height: 1.4rem;
+    font-size: 1.5rem;
+    font-weight: normal;
+    transition: all 100ms ease-in-out;
+    opacity: 0;
+}
+
+*:hover > .headerlink,
+*:target > .attr > .headerlink {
+    opacity: 1;
+}
+
+/* Attributes */
+.attr {
+    display: block;
+    color: var(--text);
+    margin: 2rem 0 .5rem 1rem;
+    /*
+    lots of padding on the right to accommodate the view source button.
+    This is not ideal, but probably good enough for now.
+    */
+    padding: .4rem 5rem .4rem 1rem;
+    background-color: var(--accent);
+}
+
+.attr:first-of-type {
+    margin-left: 0;
+}
+
+.member_divisor {
+    margin-left: 3rem;
+}
+
+.member_divisor > h5 {
+    margin-left: -1rem;
+    font-size: 1.5rem;
+    color: darkgray;
+}
+
+.member_divisor .attr:first-of-type {
+    margin-top: 0;
+}
+
+.name {
+    color: var(--name);
+    font-weight: bold;
+}
+
+.def {
+    color: var(--def);
+    font-weight: bold;
+}
+
+.signature {
+    white-space: pre-wrap;
+}
+
+.annotation {
+    color: var(--annotation);
+}
+
+/* Inherited Members */
+.inherited {
+    margin-left: 4rem;
+}
+
+.inherited div {
+    margin-left: 2rem;
+}
+
+.inherited dt {
+    font-weight: 700;
+}
+
+.inherited dt, .inherited dd {
+    display: inline;
+    margin-left: 0;
+    margin-bottom: .5rem;
+}
+
+.inherited dd:not(:last-child):after {
+    content: ", ";
+}
+
+.inherited .class:before {
+    content: "class ";
+}
+
+.inherited .function a:after {
+    content: "()";
+}
+
+/* Search results */
+.search-result .docstring {
+    overflow: auto;
+    max-height: 25vh;
+}
+
+.search-result.focused > .attr {
+    background-color: var(--accent2);
+}
+
+.attribution-padding {
+    margin-top: 2rem;
+}
+
+.attribution {
+    display: block;
+    color: dimgrey;
+}
+
+/***********************/
+/* Syntax highlighting */
+/***********************/
+
+/* Comment */
+.c {
+    color: #6a7aaa;
+}
+
+/* Error */
+.err {
+    color: #ff5555;
+    background-color: #1e0010;
+}
+
+/* Keyword */
+.k {
+    color: #ff79c6;
+}
+
+/* Literal */
+.l {
+    color: #ae81ff;
+}
+
+/* Name */
+.n {
+    color: #f8f8f2;
+}
+
+/* Operator */
+.o {
+    color: #ff79c6;
+}
+
+/* Punctuation */
+.p {
+    color: #f8f8f2;
+}
+
+/* Comment.Hashbang */
+.ch {
+    color: #6a7aaa;
+}
+
+/* Comment.Multiline */
+.cm {
+    color: #6a7aaa;
+}
+
+/* Comment.Preproc */
+.cp {
+    color: #6a7aaa;
+}
+
+/* Comment.PreprocFile */
+.cpf {
+    color: #6a7aaa;
+}
+
+/* Comment.Single */
+.c1 {
+    color: #6a7aaa;
+}
+
+/* Comment.Special */
+.cs {
+    color: #6a7aaa;
+}
+
+/* Generic.Deleted */
+.gd {
+    color: #6a7aaa;
+}
+
+/* Generic.Emph */
+.ge {
+    font-style: italic;
+}
+
+/* Generic.Inserted */
+.gi {
+    color: #a6e22e;
+}
+
+/* Generic.Output */
+.go {
+    color: #ff79c6;
+}
+
+/* Generic.Prompt */
+.gp {
+    color: #f92672;
+    font-weight: bold;
+}
+
+/* Generic.Strong */
+.gs {
+    font-weight: bold;
+}
+
+/* Generic.Subheading */
+.gu {
+    color: #75715e;
+}
+
+/* Keyword.Constant */
+.kc {
+    color: #ff79c6;
+}
+
+/* Keyword.Declaration */
+.kd {
+    color: #bd93f9;
+}
+
+/* Keyword.Namespace */
+.kn {
+    color: #ff79c6;
+}
+
+/* Keyword.Pseudo */
+.kp {
+    color: #bd93f9;
+}
+
+/* Keyword.Reserved */
+
+.kr {
+    color: #ff79c6;
+}
+
+/* Keyword.Type */
+
+.kt {
+    color: #ff79c6;
+}
+
+/* Literal.Date */
+
+.ld {
+    color: #e6db74;
+}
+
+/* Literal.Number */
+
+.m {
+    color: #ae81ff;
+}
+
+/* Literal.String */
+
+.s {
+    color: #e6db74;
+}
+
+/* Name.Attribute */
+
+.na {
+    color: #a6e22e;
+}
+
+/* Name.Builtin */
+
+.nb {
+    color: #8be9fd;
+}
+
+/* Name.Class */
+
+.nc {
+    color: #e6c07b;
+}
+
+/* Name.Constant */
+
+.no {
+    color: #ff79c6;
+}
+
+/* Name.Entity */
+
+.ni {
+    color: #ff79c6;
+}
+
+/* Name.Exception */
+
+.ne {
+    color: #8be9fd;
+}
+
+/* Name.Function */
+
+.nf {
+    color: #61aeee;
+}
+
+/* Name.Label */
+
+.nl {
+    color: #f8f8f2;
+}
+
+/* Name.Namespace */
+
+.nn {
+    color: #f8f8f2;
+}
+
+/* Name.Other */
+
+.nx {
+    color: #a6e22e;
+}
+
+/* Name.Property */
+
+.py {
+    color: #f8f8f2;
+}
+
+/* Name.Tag */
+
+.nt {
+    color: #f92672;
+}
+
+/* Name.Variable */
+
+.nv {
+    color: #f8f8f2;
+}
+
+/* Operator.Word */
+
+.ow {
+    color: #ff79c6;
+}
+
+/* Text.Whitespace */
+
+.w {
+    color: #f8f8f2;
+}
+
+/* Literal.Number.Bin */
+
+.mb {
+    color: #ae81ff;
+}
+
+/* Literal.Number.Float */
+
+.mf {
+    color: #ae81ff;
+}
+
+/* Literal.Number.Hex */
+.mh {
+    color: #ae81ff;
+}
+
+/* Literal.Number.Integer */
+.mi {
+    color: #ae81ff;
+}
+
+/* Literal.Number.Oct */
+.mo {
+    color: #ae81ff;
+}
+
+/* Literal.String.Affix */
+.sa {
+    color: #ff79c6;
+}
+
+/* Literal.String.Backtick */
+.sb {
+    color: #e6db74;
+}
+
+/* Literal.String.Char */
+.sc {
+    color: #e6db74;
+}
+
+/* Literal.String.Delimiter */
+.dl {
+    color: #e6db74;
+}
+
+/* Literal.String.Doc */
+.sd {
+    color: #6272a4;
+}
+
+/* Literal.String.Double */
+.s2 {
+    color: #e6db74;
+}
+
+/* Literal.String.Escape */
+.se {
+    color: #ae81ff;
+}
+
+/* Literal.String.Heredoc */
+.sh {
+    color: #e6db74;
+}
+
+/* Literal.String.Interpol. AKA f-strings */
+.si {
+    color: #bd93f9;
+}
+
+/* Literal.String.Other */
+.sx {
+    color: #e6db74;
+}
+
+/* Literal.String.Regex */
+.sr {
+    color: #e6db74;
+}
+
+/* Literal.String.Single */
+.s1 {
+    color: #e6db74;
+}
+
+/* Literal.String.Symbol */
+
+.ss {
+    color: #e6db74;
+}
+
+/* Name.Builtin.Pseudo */
+.bp {
+    color: #bd93f9;
+}
+
+/* Name.Function.Magic */
+.fm {
+    color: #bd93f9;
+}
+
+/* Name.Variable.Class */
+.vc {
+    color: #bd93f9;
+}
+
+/* Name.Variable.Global */
+.vg {
+    color: #f8f8f2;
+}
+
+/* Name.Variable.Instance */
+.vi {
+    color: #ffffff;
+}
+
+/* Name.Variable.Magic */
+.vm {
+    color: #bd93f9;
+}
+
+/* Literal.Number.Integer.Long */
+.il {
+    color: #ae81ff;
+}
+
+/* Decorator module i.e., @typing.? */
+.nd {
+    color: #61aeee;
+}
+
+/* False, True literals */
+.kc {
+    color: #bd93f9;
+}

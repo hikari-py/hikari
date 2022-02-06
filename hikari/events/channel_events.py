@@ -75,13 +75,7 @@ class ChannelEvent(shard_events.ShardEvent, abc.ABC):
     @property
     @abc.abstractmethod
     def channel_id(self) -> snowflakes.Snowflake:
-        """ID of the channel the event relates to.
-
-        Returns
-        -------
-        hikari.snowflakes.Snowflake
-            The ID of the channel this event relates to.
-        """
+        """ID of the channel the event relates to."""
 
     @abc.abstractmethod
     async def fetch_channel(self) -> channels.PartialChannel:
@@ -131,13 +125,7 @@ class GuildChannelEvent(ChannelEvent, abc.ABC):
     @property
     @abc.abstractmethod
     def guild_id(self) -> snowflakes.Snowflake:
-        """ID of the guild that this event relates to.
-
-        Returns
-        -------
-        hikari.snowflakes.Snowflake
-            The ID of the guild that relates to this event.
-        """
+        """ID of the guild that this event relates to."""
 
     def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
         """Get the cached guild that this event relates to, if known.
@@ -300,13 +288,7 @@ class GuildChannelCreateEvent(GuildChannelEvent):
     # <<inherited docstring from ShardEvent>>.
 
     channel: channels.GuildChannel = attr.field(repr=True)
-    """Guild channel that this event represents.
-
-    Returns
-    -------
-    hikari.channels.GuildChannel
-        The guild channel that was created.
-    """
+    """Guild channel that this event represents."""
 
     @property
     def app(self) -> traits.RESTAware:
@@ -340,13 +322,7 @@ class GuildChannelUpdateEvent(GuildChannelEvent):
     """
 
     channel: channels.GuildChannel = attr.field(repr=True)
-    """Guild channel that this event represents.
-
-    Returns
-    -------
-    hikari.channels.GuildChannel
-        The guild channel that was updated.
-    """
+    """Guild channel that this event represents."""
 
     @property
     def app(self) -> traits.RESTAware:
@@ -374,13 +350,7 @@ class GuildChannelDeleteEvent(GuildChannelEvent):
     # <<inherited docstring from ShardEvent>>.
 
     channel: channels.GuildChannel = attr.field(repr=True)
-    """Guild channel that this event represents.
-
-    Returns
-    -------
-    hikari.channels.GuildChannel
-        The guild channel that was deleted.
-    """
+    """Guild channel that this event represents."""
 
     @property
     def app(self) -> traits.RESTAware:
@@ -416,12 +386,6 @@ class PinsUpdateEvent(ChannelEvent, abc.ABC):
 
         Will be `None` if nothing is pinned or the information is
         unavailable.
-
-        Returns
-        -------
-        typing.Optional[datetime.datetime]
-            The datetime of the most recent pinned message in the channel,
-            or `None` if no pins are available.
         """
 
     @abc.abstractmethod
@@ -580,13 +544,7 @@ class InviteEvent(GuildChannelEvent, abc.ABC):
     @property
     @abc.abstractmethod
     def code(self) -> str:
-        """Code that is used in the URL for the invite.
-
-        Returns
-        -------
-        str
-            The invite code.
-        """
+        """Code that is used in the URL for the invite."""
 
     async def fetch_invite(self) -> invites.Invite:
         """Perform an API call to retrieve an up-to-date image of this invite.
@@ -629,13 +587,7 @@ class InviteCreateEvent(InviteEvent):
     # <<inherited docstring from ShardEvent>>.
 
     invite: invites.InviteWithMetadata = attr.field()
-    """Invite that was created.
-
-    Returns
-    -------
-    hikari.invites.InviteWithMetadata
-        The created invite object.
-    """
+    """Invite that was created."""
 
     @property
     def app(self) -> traits.RESTAware:

@@ -44,7 +44,7 @@ if typing.TYPE_CHECKING:
 @attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
 class StartingEvent(base_events.Event):
-    """Event that is triggered before the application connects to discord.
+    """Event that is triggered before the application connects to Discord.
 
     This will only fire once per `bot.run` / `bot.start`, so is suitable for
     opening database connections and other resources that need to be
@@ -122,7 +122,7 @@ class StoppedEvent(base_events.Event):
         terminate the process before a callback can occur.
 
     If you want to do something when the application is preparing to shut down,
-    but _before_ any connection to discord is closed, you should consider using
+    but _before_ any connection to Discord is closed, you should consider using
     `StoppingEvent` instead.
     """
 

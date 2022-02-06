@@ -171,7 +171,7 @@ def ensure_resource(url_or_resource: Resourceish, /) -> Resource[AsyncReader]:
     Parameters
     ----------
     url_or_resource : Resourceish
-        The item to convert. Ff a `Resource` is passed, it is
+        The item to convert. If a `Resource` is passed, it is
         simply returned again. Anything else is converted to a `Resource` first.
 
     Returns
@@ -633,15 +633,12 @@ class WebResource(Resource[WebReader], abc.ABC):
     The logic for identifying this resource is left to each implementation
     to define.
 
-    .. note::
-        For a usable concrete implementation, use `URL` instead.
+    For a usable concrete implementation, use `URL` instead.
 
         Some components may choose to not upload this resource directly and
         instead simply refer to the URL as needed. The main place this will
-        occur is within embeds.
-
-        If you need to re-upload the resource, you should download it into
-        a `bytes` and pass that instead in these cases.
+        occur is within embeds. If you need to re-upload the resource, you
+        should download it into a `bytes` and pass that instead in these cases.
     """
 
     __slots__: typing.Sequence[str] = ()

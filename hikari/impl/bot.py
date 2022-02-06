@@ -203,6 +203,7 @@ class GatewayBot(traits.GatewayBotAware):
         will __force__ colour to be used in console-based output. Specifying a
         `"CLICOLOR_FORCE"` environment variable with a non-`"0"` value will
         override this setting.
+
         This will take precedence over `allow_color` if both are specified.
     cache_settings : typing.Optional[hikari.impl.config.CacheSettings]
         Optional cache settings. If unspecified, will use the defaults.

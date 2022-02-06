@@ -80,24 +80,12 @@ class ExecutableWebhook(abc.ABC):
     @property
     @abc.abstractmethod
     def app(self) -> traits.RESTAware:
-        """Client application that models may use for procedures.
-
-        Returns
-        -------
-        hikari.traits.RESTAware
-            The client application that models may use for procedures.
-        """
+        """Client application that models may use for procedures."""
 
     @property
     @abc.abstractmethod
     def webhook_id(self) -> snowflakes.Snowflake:
-        """ID used to execute this entity as a webhook.
-
-        Returns
-        -------
-        hikari.snowflakes.Snowflake
-            The ID used to execute this entity as a webhook.
-        """
+        """ID used to execute this entity as a webhook."""
 
     @property
     @abc.abstractmethod
@@ -107,11 +95,6 @@ class ExecutableWebhook(abc.ABC):
         .. note::
             If this is `None` then the methods provided by `ExecutableWebhook`
             will always raise a `ValueError`.
-
-        Returns
-        -------
-        typing.Optional[str]
-            The token for the webhook if known, else `None`.
         """
 
     async def execute(
@@ -138,6 +121,14 @@ class ExecutableWebhook(abc.ABC):
     ) -> messages_.Message:
         """Execute the webhook to create a message.
 
+        .. warning::
+            At the time of writing, `username` and `avatar_url` are ignored for
+            interaction webhooks.
+
+            Additionally, flags this can only be set for interaction webhooks
+            and the only settable flag is EPHEMERAL; this field is just
+            ignored for non-interaction webhooks.
+
         Parameters
         ----------
         content : hikari.undefined.UndefinedOr[typing.Any]
@@ -159,7 +150,7 @@ class ExecutableWebhook(abc.ABC):
         username : hikari.undefined.UndefinedOr[str]
             If provided, the username to override the webhook's username
             for this request.
-        avatar_url : typing.Union[hikari.undefined.UndefinedType, str, hikari.files.URL]
+        avatar_url : typing.Union[hikari.undefined.UndefinedType, hikari.files.URL, str]
             If provided, the url of an image to override the webhook's
             avatar with for this request.
         tts : hikari.undefined.UndefinedOr[bool]
@@ -199,15 +190,6 @@ class ExecutableWebhook(abc.ABC):
         flags : typing.Union[hikari.undefined.UndefinedType, int, hikari.messages.MessageFlag]
             The flags to set for this webhook message.
 
-            .. warning::
-                As of writing this can only be set for interaction webhooks
-                and the only settable flag is EPHEMERAL; this field is just
-                ignored for non-interaction webhooks.
-
-        .. warning::
-            As of writing, `username` and `avatar_url` are ignored for
-            interaction webhooks.
-
         Returns
         -------
         hikari.messages.Message
@@ -231,7 +213,8 @@ class ExecutableWebhook(abc.ABC):
             objects/entities are passed for `role_mentions` or `user_mentions or
             if `token` is not available.
         TypeError
-            If both `attachment` and `attachments` are specified.
+            If both `attachment` and `attachments`, `component` and `components`
+            or `embed` and `embeds` are specified.
         """  # noqa: E501 - Line too long
         if not self.token:
             raise ValueError("Cannot send a message using a webhook where we don't know the token")
@@ -320,6 +303,21 @@ class ExecutableWebhook(abc.ABC):
     ) -> messages_.Message:
         """Edit a message sent by a webhook.
 
+        .. note::
+            Mentioning everyone, roles, or users in message edits currently
+            will not send a push notification showing a new mention to people
+            on Discord. It will still highlight in their chat as if they
+            were mentioned, however.
+
+        .. warning::
+            If you specify a text `content`, `mentions_everyone`,
+            `mentions_reply`, `user_mentions`, and `role_mentions` will default
+            to `False` as the message will be re-parsed for mentions. This will
+            also occur if only one of the four are specified
+
+            This is a limitation of Discord's design. If in doubt, specify all
+            four of them each time.
+
         Parameters
         ----------
         message : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
@@ -402,28 +400,6 @@ class ExecutableWebhook(abc.ABC):
             `hikari.snowflakes.Snowflake`, or
             `hikari.guilds.PartialRole` derivatives to enforce mentioning
             specific roles.
-
-        .. note::
-            Mentioning everyone, roles, or users in message edits currently
-            will not send a push notification showing a new mention to people
-            on Discord. It will still highlight in their chat as if they
-            were mentioned, however.
-
-        .. warning::
-            If you specify a non-embed `content`, `mentions_everyone`,
-            `mentions_reply`, `user_mentions`, and `role_mentions` will default
-            to `False` as the message will be re-parsed for mentions.
-
-            This is a limitation of Discord's design. If in doubt, specify all
-            three of them each time.
-
-        .. warning::
-            If you specify one of `mentions_everyone`, `mentions_reply`,
-            `user_mentions`, or `role_mentions`, then all others will default to
-            `False`, even if they were enabled previously.
-
-            This is a limitation of Discord's design. If in doubt, specify all
-            three of them each time.
 
         Returns
         -------
@@ -558,16 +534,10 @@ class PartialWebhook(snowflakes.Unique):
 
         Example
         -------
-
         ```py
         >>> some_webhook.mention
         '<@123456789123456789>'
         ```
-
-        Returns
-        -------
-        str
-            The mention string to use.
         """
         return f"<@{self.id}>"
 
@@ -582,11 +552,7 @@ class PartialWebhook(snowflakes.Unique):
 
     @property
     def default_avatar_url(self) -> files_.URL:
-        """Avatar URL for the user, if they have one set.
-
-        May be `None` if no custom avatar is set. In this case, you
-        should use `default_avatar_url` instead.
-        """
+        """Default avatar URL for the user."""  # noqa: D401 - Imperative mood
         return routes.CDN_DEFAULT_USER_AVATAR.compile_to_file(
             urls.CDN_URL,
             discriminator=0,
@@ -764,7 +730,7 @@ class IncomingWebhook(PartialWebhook, ExecutableWebhook):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
+        """
         token: undefined.UndefinedOr[str] = undefined.UNDEFINED
         if use_token:
             if self.token is None:
@@ -966,7 +932,7 @@ class ChannelFollowerWebhook(PartialWebhook):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
+        """
         webhook = await self.app.rest.edit_webhook(
             self.id,
             name=name,

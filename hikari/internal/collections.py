@@ -266,7 +266,7 @@ class SnowflakeSet(typing.MutableSet[snowflakes.Snowflake]):
     __slots__: typing.Sequence[str] = ("_ids",)
 
     def __init__(self, *ids: int) -> None:
-        self._ids: array.array[int] = array.array(_LONG_LONG_UNSIGNED)
+        self._ids: typing.MutableSequence[int] = array.array(_LONG_LONG_UNSIGNED)
 
         if ids:
             self.add_all(ids)

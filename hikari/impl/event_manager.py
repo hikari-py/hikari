@@ -607,6 +607,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
     async def on_presence_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See <https://discord.com/developers/docs/topics/gateway#presence-update> for more info."""
         old: typing.Optional[presences_.MemberPresence] = None
+
         if self._cache:
             old = self._cache.get_presence(
                 snowflakes.Snowflake(payload["guild_id"]), snowflakes.Snowflake(payload["user"]["id"])

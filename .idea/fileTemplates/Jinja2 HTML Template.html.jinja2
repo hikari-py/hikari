@@ -20,26 +20,15 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 #}
-{# Purely developer only page. This won't be in the final documentation #}
+
 <!doctype html>
 <html lang="en">
 <head>
-    {% set url = root_module_name + ".html" %}
-    {# Nobody likes to be blinded for no reason #}
-    <style>
-        html {
-            background-color: #212529;
-        }
-    </style>
-    <meta charset="utf-8"/>
-    <meta name="robots" content="noindex">
-    <meta http-equiv="refresh" content="1;url={{ url }}"/>
-    <link rel="canonical" href="{{ url }}"/>
-    <script type="text/javascript">window.location.href = "{{ url }}"</script>
-    <title>Redirecting&hellip;</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}{% endblock %}</title>
+    {% block head %}{% endblock %}
+    {% block style %}{% endblock %}
 </head>
-<body>
-    <h1>Redirecting&hellip;</h1>
-    <a href="{{ url }}">Click here if you are not redirected.</a>
-</body>
+<body>{% block body %}{% endblock %}</body>
 </html>

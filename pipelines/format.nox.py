@@ -45,7 +45,7 @@ def reformat_code(session: nox.Session) -> None:
     session.run("codespell", "--ignore-words-list", ignore_words_list_flag, "-w", *config.FULL_REFORMATTING_PATHS)
 
 
-@nox.session(reuse_venv=True)
+@nox.session(reuse_venv=True, venv_backend="none")
 def check_trailing_whitespaces(session: nox.Session) -> None:
     """Check for trailing whitespaces in the project."""
     remove_trailing_whitespaces(session, check_only=True)

@@ -28,19 +28,40 @@ from pipelines import config
 from pipelines import nox
 
 
-def copy_from_in(src: str, dest: str) -> None:
-    for parent, _, files in os.walk(src):
-        sub_parent = os.path.relpath(parent, src)
+@nox.session(reuse_venv=True)
+def pdoc(session: nox.Session) -> None:
+    """Generate documentation using pdoc."""
+    if not os.path.exists(config.ARTIFACT_DIRECTORY):
+        os.mkdir(config.ARTIFACT_DIRECTORY)
 
-        for file in files:
-            sub_src = os.path.join(parent, file)
-            sub_dest = os.path.normpath(os.path.join(dest, sub_parent, file))
-            print(sub_src, "->", sub_dest)
-            shutil.copy(sub_src, sub_dest)
+    path = os.path.join(config.ARTIFACT_DIRECTORY, "docs")
+    _pdoc(session, ("-o", path))
+
+    # Replace index.html with hikari.html
+    os.replace(os.path.join(path, "hikari.html"), os.path.join(path, "index.html"))
+
+
+@nox.session(reuse_venv=True)
+def pdoc_int(session: nox.Session) -> None:
+    """Run pdoc in interactive mode."""
+    if not os.path.exists(config.ARTIFACT_DIRECTORY):
+        os.mkdir(config.ARTIFACT_DIRECTORY)
+
+    _pdoc(session, ("-n",))
 
 
 def _pdoc(session: nox.Session, extra_arguments: typing.Sequence[str] = ()):
-    session.install("-r", "requirements.txt", "-r", "dev-requirements.txt")
+    # We need to install everything so that typehints link correctly
+    session.install(
+        "-r",
+        "requirements.txt",
+        "-r",
+        "dev-requirements.txt",
+        "-r",
+        "server-requirements.txt",
+        "-r",
+        "speedup-requirements.txt",
+    )
 
     session.run(
         "python",
@@ -53,21 +74,3 @@ def _pdoc(session: nox.Session, extra_arguments: typing.Sequence[str] = ()):
         *extra_arguments,
         *session.posargs,
     )
-
-
-@nox.session(reuse_venv=True)
-def pdoc(session: nox.Session) -> None:
-    """Generate documentation using pdoc."""
-    if not os.path.exists(config.ARTIFACT_DIRECTORY):
-        os.mkdir(config.ARTIFACT_DIRECTORY)
-
-    _pdoc(session, ("-o", os.path.join(config.ARTIFACT_DIRECTORY, "docs")))
-
-
-@nox.session(reuse_venv=True)
-def pdoc_int(session: nox.Session) -> None:
-    """Run pdoc in interactive mode."""
-    if not os.path.exists(config.ARTIFACT_DIRECTORY):
-        os.mkdir(config.ARTIFACT_DIRECTORY)
-
-    _pdoc(session, ("-n",))

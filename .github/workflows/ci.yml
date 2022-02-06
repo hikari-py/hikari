@@ -16,7 +16,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Setup python
@@ -56,7 +56,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Setup python
@@ -86,7 +86,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Setup python
@@ -113,7 +113,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Setup python
@@ -126,11 +126,11 @@ jobs:
           pip install nox
           nox -s twemoji-test
 
-  pages:
+  docs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Setup python
@@ -141,24 +141,48 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v3
 
-      - name: Build pages
+      - name: Build documentation
         run: |
           pip install nox
           nox -s pdoc
 
       - name: Upload artifacts
-        if: github.event_name != 'release'
+        if: github.event.event_name == 'pull_request'
         uses: actions/upload-artifact@v2
         with:
-          name: pages
-          path: public
+          name: docs
+          path: public/docs
           retention-days: 2
           if-no-files-found: error
 
-  # Allows us to add this as a required check in Github branch rules, as all the
-  # other jobs are subject to change
+  deploy-master-docs:
+    if: github.event.event_name == 'push' && endsWith(github.ref, 'master')
+    needs: [docs]
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2.4.0
+
+      - name: Setup python
+        uses: actions/setup-python@v2.3.2
+        with:
+          python-version: 3.8
+
+      - name: Update master docs
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+          REPO_SLUG: ${{ github.repository }}
+          DOCUMENTATION_REPO_SLUG: hikari-py/hikari-docs
+        run: |
+          pip install nox
+          bash scripts/deploy-master-pages.sh
+
+  # Allows us to add this as a required check in Github branch rules, as all the other jobs are subject to change
   ci-done:
-    needs: [upload-coverage, linting, twemoji, pages]
+    # All new need jobs need to also be added to "env" with the prefix "RESULT_"
+    needs: [upload-coverage, linting, twemoji, docs]
     if: always()
 
     runs-on: ubuntu-latest
@@ -166,11 +190,10 @@ jobs:
     steps:
       - name: Mark status based on past job status
         env:
-          # All new need jobs need to be added here with the prefix "RESULT_"
           RESULT_UPLOAD_COVERAGE: ${{ needs.upload-coverage.result }}
           RESULT_LINTING: ${{ needs.linting.result }}
           RESULT_TWEMOJI: ${{ needs.twemoji.result }}
-          RESULT_PAGES: ${{ needs.pages.result }}
+          RESULT_DOCS: ${{ needs.docs.result }}
         run: |
           if [ "$(env | grep 'RESULT_')" = "$(env | grep "RESULT_" | grep '=success')" ]; then
             exit 0

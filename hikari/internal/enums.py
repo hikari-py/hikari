@@ -101,6 +101,7 @@ _Enum = NotImplemented
 
 class _EnumMeta(type):
     def __call__(cls, value: typing.Any) -> typing.Any:
+        """Cast a value to the enum, returning the raw value that was passed if value not found."""
         try:
             return cls._value_to_member_map_[value]
         except KeyError:
@@ -322,6 +323,7 @@ def _name_resolver(members: typing.Dict[int, _Flag], value: int) -> typing.Gener
 
 class _FlagMeta(type):
     def __call__(cls, value: int = 0) -> typing.Any:
+        """Cast a value to the flag enum, returning the raw value that was passed if values not found."""
         # We want to handle value invariantly to avoid issues brought in by different behaviours from sub-classed ints
         # and floats. This also ensures that .__int__ only returns an invariant int.
         value = int(value)
@@ -465,12 +467,10 @@ class Flag(metaclass=_FlagMeta):
     like a `set` as well.
 
     .. warning::
-        Despite wrapping `int` values, conceptually this does not
-        behave as if it were a subclass of `int`.
-
-        Some semantics such as subtype checking and instance checking may
-        differ. It is recommended to compare these values using the
-        `==` operator rather than the `is` operator for safety reasons.
+        It is important to keep in mind that some semantics such as subtype
+        checking and instance checking may differ. It is recommended to compare
+        these values using the `==` operator rather than the `is` operator for
+        safety reasons.
 
         Especially where pseudo-members created from combinations are cached,
         results of using of `is` may not be deterministic. This is a side
@@ -478,6 +478,9 @@ class Flag(metaclass=_FlagMeta):
 
         Failing to observe this __will__ result in unexpected behaviour
         occurring in your application!
+
+        Also important to note is that despite wrapping `int` values,
+        conceptually this does not behave as if it were a subclass of `int`.
 
     Special Members on the class
     ----------------------------

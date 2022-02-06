@@ -23,6 +23,7 @@ async-timeout==4.0.2  # Used for timeouts in some test cases.
 
 pdoc==10.0.4
 sphobjinv==2.2.2
+minify-html==0.8
 
 #################
 # TYPE CHECKING #

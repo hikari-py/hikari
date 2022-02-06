@@ -51,24 +51,12 @@ class RoleEvent(shard_events.ShardEvent, abc.ABC):
     @property
     @abc.abstractmethod
     def guild_id(self) -> snowflakes.Snowflake:
-        """ID of the guild that this event relates to.
-
-        Returns
-        -------
-        hikari.snowflakes.Snowflake
-            The ID of the guild that relates to this event.
-        """
+        """ID of the guild that this event relates to."""
 
     @property
     @abc.abstractmethod
     def role_id(self) -> snowflakes.Snowflake:
-        """ID of the role that this event relates to.
-
-        Returns
-        -------
-        hikari.snowflakes.Snowflake
-            The ID of the role that relates to this event.
-        """
+        """ID of the role that this event relates to."""
 
 
 @attr_extensions.with_copy
@@ -81,13 +69,7 @@ class RoleCreateEvent(RoleEvent):
     # <<inherited docstring from ShardEvent>>.
 
     role: guilds.Role = attr.field()
-    """Role that was created.
-
-    Returns
-    -------
-    hikari.guilds.Role
-        The created role.
-    """
+    """Role that was created."""
 
     @property
     def app(self) -> traits.RESTAware:
@@ -121,13 +103,7 @@ class RoleUpdateEvent(RoleEvent):
     """
 
     role: guilds.Role = attr.field()
-    """Role that was updated.
-
-    Returns
-    -------
-    hikari.guilds.Role
-        The created role.
-    """
+    """Role that was updated."""
 
     @property
     def app(self) -> traits.RESTAware:
