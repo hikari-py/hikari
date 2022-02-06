@@ -69,7 +69,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
     ----------
     token : typing.Union[str, hikari.api.rest.TokenStrategy]
         The bot or bearer token.
-    token_type : typing.Union[str, hikari.applications.TokenType]
+    token_type : typing.Union[str, hikari.applications.TokenType, None]
         The type of token in use. This should only be passed when `str`
         is passed for `token`, can be `"Bot"` or `"Bearer"`.
 
@@ -110,7 +110,9 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         will __force__ colour to be used in console-based output. Specifying a
         `"CLICOLOR_FORCE"` environment variable with a non-`"0"` value will
         override this setting.
-    http_settings : typing.Optional[hikari.config.impl.HTTPSettings]
+
+        This will take precedence over `allow_color` if both are specified.
+    http_settings : typing.Optional[hikari.config.HTTPSettings]
         Optional custom HTTP configuration settings to use. Allows you to
         customise functionality such as whether SSL-verification is enabled,
         what timeouts `aiohttp` should expect to use for requests, and behavior
@@ -168,9 +170,6 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         overridden if you are attempting to point to an unofficial endpoint, or
         if you are attempting to mock/stub the Discord API for any reason.
         Generally you do not want to change this.
-
-    .. note::
-        `force_color` will always take precedence over `allow_color`.
 
     Raises
     ------
@@ -344,8 +343,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
             terminal device may not support it. Setting the `"CLICOLOR_FORCE"`
             environment variable to a non-`"0"` string will override this.
 
-        .. note::
-            `force_color` will always take precedence over `allow_color`.
+            This will take precedence over `allow_color` if both are specified.
         extra_args : typing.Optional[typing.Dict[str, str]]
             If provided, extra $-substitutions to use when printing the banner.
             Default substitutions can not be overwritten.
@@ -521,6 +519,10 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
     ) -> None:
         """Start the bot and wait for the internal server to startup then return.
 
+        .. note::
+            For more information on the other parameters such as defaults see
+            AIOHTTP's documentation.
+
         Other Parameters
         ----------------
         backlog : int
@@ -558,10 +560,6 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
             disconnecting all open client sockets. This defaults to 60 seconds.
         ssl_context : typing.Optional[ssl.SSLContext]
             SSL context for HTTPS servers.
-
-        .. note::
-            For more information on the other parameters such as defaults see
-            AIOHTTP's documentation.
         """
         if self.is_alive:
             raise errors.ComponentStateConflictError("Cannot start an already active interaction server")

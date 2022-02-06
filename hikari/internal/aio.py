@@ -114,6 +114,10 @@ async def first_completed(
     If the first awaitable raises an exception, then that exception will be
     propagated.
 
+    .. note::
+        If more than one awaitable is completed before entering this call, then
+        the first future is always returned.
+
     Parameters
     ----------
     *aws : typing.Awaitable[typing.Any]
@@ -121,10 +125,6 @@ async def first_completed(
     timeout : typing.Optional[float]
         Optional timeout to wait for, or `None` to not use one.
         If the timeout is reached, all awaitables are cancelled immediately.
-
-    .. note::
-        If more than one awaitable is completed before entering this call, then
-        the first future is always returned.
     """
     fs = list(map(asyncio.ensure_future, aws))
     iterator = asyncio.as_completed(fs, timeout=timeout)

@@ -35,7 +35,9 @@ if typing.TYPE_CHECKING:
     from hikari import guilds
     from hikari import snowflakes
 
-_VoiceConnectionT = typing.TypeVar("_VoiceConnectionT", bound="VoiceConnection")
+    _T = typing.TypeVar("_T")
+
+    _VoiceConnectionT = typing.TypeVar("_VoiceConnectionT", bound="VoiceConnection")
 
 
 class VoiceComponent(abc.ABC):
@@ -135,9 +137,6 @@ class VoiceConnection(abc.ABC):
 
     __slots__: typing.Sequence[str] = ()
 
-    if typing.TYPE_CHECKING:
-        _T = typing.TypeVar("_T")
-
     @classmethod
     @abc.abstractmethod
     async def initialize(
@@ -193,22 +192,22 @@ class VoiceConnection(abc.ABC):
     @property
     @abc.abstractmethod
     def channel_id(self) -> snowflakes.Snowflake:
-        """Return the ID of the voice channel this voice connection is in."""
+        """ID of the voice channel this voice connection is in."""
 
     @property
     @abc.abstractmethod
     def guild_id(self) -> snowflakes.Snowflake:
-        """Return the ID of the guild this voice connection is in."""
+        """ID of the guild this voice connection is in."""
 
     @property
     @abc.abstractmethod
     def is_alive(self) -> bool:
-        """Return `True` if the connection is alive."""
+        """Whether the connection is alive."""
 
     @property
     @abc.abstractmethod
     def shard_id(self) -> int:
-        """Return the ID of the shard that requested the connection."""
+        """ID of the shard that requested the connection."""
 
     @property
     @abc.abstractmethod

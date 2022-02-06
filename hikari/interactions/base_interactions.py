@@ -397,6 +397,21 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
     ) -> messages.Message:
         """Edit the initial response of this command interaction.
 
+        .. note::
+            Mentioning everyone, roles, or users in message edits currently
+            will not send a push notification showing a new mention to people
+            on Discord. It will still highlight in their chat as if they
+            were mentioned, however.
+
+        .. warning::
+            If you specify a text `content`, `mentions_everyone`,
+            `mentions_reply`, `user_mentions`, and `role_mentions` will default
+            to `False` as the message will be re-parsed for mentions. This will
+            also occur if only one of the four are specified
+
+            This is a limitation of Discord's design. If in doubt, specify all
+            four of them each time.
+
         Other Parameters
         ----------------
         content : hikari.undefined.UndefinedNoneOr[typing.Any]
@@ -472,20 +487,6 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
             `hikari.snowflakes.Snowflake`, or
             `hikari.guilds.PartialRole` derivatives to enforce mentioning
             specific roles.
-
-        .. note::
-            Mentioning everyone, roles, or users in message edits currently
-            will not send a push notification showing a new mention to people
-            on Discord. It will still highlight in their chat as if they
-            were mentioned, however.
-
-        .. warning::
-            If you specify one of `mentions_everyone`, `user_mentions`, or
-            `role_mentions`, then all others will default to `False`,
-            even if they were enabled previously.
-
-            This is a limitation of Discord's design. If in doubt, specify all three of
-            them each time.
 
         Returns
         -------

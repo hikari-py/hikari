@@ -288,7 +288,7 @@ class BadRequestError(ClientHTTPResponseError):
     """Dict of top level field names to field specific error paths.
 
     For more information, this error format is loosely defined at
-    https://discord.com/developers/docs/reference#error-messages and is commonly
+    <https://discord.com/developers/docs/reference#error-messages> and is commonly
     returned for 50035 errors.
     """
 
@@ -415,15 +415,10 @@ class RateLimitTooLongError(HTTPError):
     # only.
     @property
     def remaining(self) -> typing.Literal[0]:
-        """The number of requests remaining in this window.
+        """Remaining requests in this window.
 
         This will always be `0` symbolically.
-
-        Returns
-        -------
-        int
-            The number of requests remaining. Always `0`.
-        """  # noqa: D401 - Imperative mood
+        """
         return 0
 
     def __str__(self) -> str:
@@ -463,13 +458,7 @@ class BulkDeleteError(HikariError):
 
     @property
     def percentage_completion(self) -> float:
-        """Return the percentage completion of the bulk delete before it failed.
-
-        Returns
-        -------
-        float
-            A percentage completion between 0 and 100 inclusive.
-        """
+        """Return the percentage completion of the bulk delete before it failed."""
         deleted = len(self.messages_deleted)
         total = deleted + len(self.messages_skipped)
         return 100 * deleted / total

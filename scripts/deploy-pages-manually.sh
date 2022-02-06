@@ -1,3 +1,4 @@
+#!/bin/sh
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -18,21 +19,26 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+posix_read() {
+    prompt="${1}"
+    var_name="${2}"
+    printf "%s: " "${prompt}"
+    read -r "${var_name?}"
+    export "${var_name?}"
+    return ${?}
+}
 
-curl \
-  -X POST \
-  -H "Content-Type: application/json" \
-  "${DEPLOY_WEBHOOK_URL}" \
-  -d '{
-        "username": "Github Actions",
-        "embeds": [
-          {
-            "title": "'"${VERSION} has been deployed to PyPI"'",
-            "color": 6697881,
-            "description": "'"Install it now by executing: \`\`\`pip install hikari==${VERSION}\`\`\`\\nDocumentation can be found at https://docs.hikari-py.dev/${VERSION}"'",
-            "footer": {
-              "text": "'"SHA: ${REF}"'"
-            }
-          }
-        ]
-    }'
+posix_read "Tag ('master' for master documentation)" VERSION
+posix_read "GitHub deploy token (must have permissions to push to the documentation repository)" GITHUB_TOKEN
+posix_read "Repository slug (e.g. hikari-py/hikari)" REPO_SLUG
+posix_read "Documentation repository slug (e.g. hikari-py/hikari-docs)" DOCUMENTATION_REPO_SLUG
+
+if [ "${VERSION}" != "master" ]; then
+  git checkout "${VERSION}"
+  export REF=$(git rev-parse HEAD)
+  echo "Detected REF to be ${REF}"
+else
+  export REF="MASTER"
+fi
+
+bash scripts/deploy-pages.sh

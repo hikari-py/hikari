@@ -178,7 +178,11 @@ class UnicodeEmoji(str, Emoji):
 
         Example
         -------
-        <https://github.com/twitter/twemoji/raw/master/assets/72x72/1f004.png>
+        ```py
+        >>> emoji = hikari.UnicodeEmoji("\N{OK HAND SIGN}")
+        >>> emoji.url
+        'https://raw.githubusercontent.com/twitter/twemoji/master/assets/72x72/1f44c.png'
+        ```
         """
         return _TWEMOJI_PNG_BASE_URL + self.filename
 
@@ -256,7 +260,7 @@ class CustomEmoji(snowflakes.Unique, Emoji):
         will not be correct.
 
         This will not be changed as stated here:
-        https://github.com/discord/discord-api-docs/issues/1614#issuecomment-628548913
+        <https://github.com/discord/discord-api-docs/issues/1614#issuecomment-628548913>
     """
 
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)

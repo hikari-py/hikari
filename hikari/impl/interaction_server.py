@@ -233,13 +233,7 @@ class InteractionServer(interaction_server.InteractionServer):
 
     @property
     def is_alive(self) -> bool:
-        """Whether this interaction server is active.
-
-        Returns
-        -------
-        bool
-            Whether this interaction server is active
-        """
+        """Whether this interaction server is active."""
         return self._server is not None
 
     async def _fetch_public_key(self) -> signing.VerifyKey:
@@ -469,6 +463,10 @@ class InteractionServer(interaction_server.InteractionServer):
     ) -> None:
         """Start the bot and wait for the internal server to startup then return.
 
+        .. note::
+            For more information on the other parameters such as defaults see
+            AIOHTTP's documentation.
+
         Other Parameters
         ----------------
         backlog : int
@@ -503,10 +501,6 @@ class InteractionServer(interaction_server.InteractionServer):
             disconnecting all open client sockets. This defaults to 60 seconds.
         ssl_context : typing.Optional[ssl.SSLContext]
             SSL context for HTTPS servers.
-
-        .. note::
-            For more information on the other parameters such as defaults see
-            AIOHTTP's documentation.
         """
         if self._server:
             raise errors.ComponentStateConflictError("Cannot start an already active interaction server")

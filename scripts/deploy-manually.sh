@@ -30,15 +30,14 @@ posix_read() {
 
 posix_read "Twine username" TWINE_USERNAME
 posix_read "Twine password" TWINE_PASSWORD
-posix_read "GitHub deploy token" GITHUB_TOKEN
+posix_read "GitHub deploy token (must have permissions to push to the documentation repository)" GITHUB_TOKEN
 posix_read "Discord deployment webhook URL" DEPLOY_WEBHOOK_URL
 posix_read "Tag" VERSION
-posix_read "Repo slug (e.g. hikari-py/hikari)" GITHUB_REPO_SLUG
+posix_read "Repository slug (e.g. hikari-py/hikari)" REPO_SLUG
+posix_read "Documentation repository slug (e.g. hikari-py/hikari-docs)" DOCUMENTATION_REPO_SLUG
 
-git checkout "${GITHUB_TAG}"
+git checkout "${VERSION}"
 export REF=$(git rev-parse HEAD)
 echo "Detected REF to be ${REF}"
 
-set -x
-rm public -Rf || true
 bash scripts/deploy.sh

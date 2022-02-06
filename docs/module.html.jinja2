@@ -1,56 +1,91 @@
-{# This file expands on pdoc's module template #}
-{% extends "default/module.html.jinja2" %}
+{#
+Copyright (c) 2020 Nekokatt
+Copyright (c) 2021-present davfsa
 
-{# ##### #}
-{# Theme #}
-{# ##### #}
-{% block style %}
-    {% filter minify_css %}
-        <style>{% include 'resources/bootstrap-reboot.min.css' %}</style>
-        <style>{% include 'syntax-highlighting.css' %}</style>
-        <style>{% include 'main.css' %}</style>
-    {% endfilter %}
-{% endblock %}
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-{# ######################## #}
-{# Better inherited section #}
-{# ######################## #}
-{% macro inherited(cls) %}
-{% for base, members in cls.inherited_members.items() %}
-{% set m = None %}{# workaround for https://github.com/pallets/jinja/issues/1427 #}
-{% set member_html %}
-{% for m in members if is_public(m) | trim %}
-    <dd id="{{ m.qualname }}" class="{{ m.type }}">
-        {{- m.taken_from | link(text=m.name.replace("__init__",base[1])) -}}
-    </dd>
-{% endfor %}
-{% endset %}
-{# we may not have any public members, in which case we don't want to print anything. #}
-{% if member_html %}
-    <div><dt>{{ base | link }}:</dt>
-        {{ member_html }}
-    </div>
-{% endif %}
-{% endfor %}
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+#}
+{# ---- MACRO DEFINITIONS BEGIN ---- #}
+{% macro bases(cls) %}
+    {%- if cls.bases -%}
+        <wbr>(
+        {%- for base in cls.bases -%}
+            <span class="base">{{ base[:2] | link(text=base[2]) }}</span>
+            {%- if loop.nextitem %}, {% endif %}
+        {%- endfor -%}
+        )
+    {%- endif -%}
 {% endmacro %}
-
-
-{# #################### #}
-{# Remove default value #}
-{# #################### #}
+{% macro annotation(var) %}
+    {%- if var.annotation_str -%}
+        <span class="annotation">{{ var.annotation_str | escape | linkify }}</span>
+    {%- endif -%}
+{% endmacro %}
+{% macro decorators(doc) %}
+    {% for d in doc.decorators if not d.startswith("@_") %}
+        <div class="decorator">{{ d }}</div>
+    {% endfor %}
+{% endmacro %}
+{% macro headerlink(doc) -%}
+    <a class="headerlink" href="#{{ doc.qualname }}">#&nbsp&nbsp</a>
+{% endmacro %}
+{% macro function(fn) -%}
+    <div class="attr function">{{ headerlink(fn) }}
+        {{ decorators(fn) }}
+        <span class="def">{{ fn.funcdef }}&nbsp</span>
+        {#- no space -#}
+        <span class="name">{{ fn.name }}</span>
+        {#- no space -#}
+        {% autoescape false %}
+            {# Extreemly hacky solution, but it makes it work nicely with minify_html #}
+            <span class="signature">{{ fn.signature | escape | replace("\n", "<br>") | replace("<br> ", "<br>&nbsp&nbsp") | linkify }}:</span>
+        {% endautoescape %}
+    </div>
+{% endmacro %}
 {% macro variable(var) %}
     <div class="attr variable">{{ headerlink(var) }}
         <span class="name">{{ var.name }}</span>{{ annotation(var) }}
     </div>
 {% endmacro %}
-
-{# ######### #}
-{# Inventory #}
-{# ######### #}
-{% macro member(doc) %}
-    {{ add_to_inventory(doc) }}
+{% macro submodule(mod) %}
+    <div class="attr module">{{ headerlink(mod) }}<span class="name">{{ mod.taken_from | link }}</span></div>
+{% endmacro %}
+{% macro class(cls) %}
+    <div class="attr class">
+        {{ headerlink(cls) }}
+        {{ decorators(cls) }}
+        <span class="def">class&nbsp</span>
+        {#- no space -#}
+        <span class="name">{{ cls.qualname }}</span>
+        {{- bases(cls) -}}:
+    </div>
+{% endmacro %}
+{% macro member(doc, should_add_to_inventory = true) %}
+    {% if add_to_inventory is defined and should_add_to_inventory %}
+        {{ add_to_inventory(doc) }}
+    {% endif %}
     {% if doc.type == "class" %}
         {{ class(doc) }}
+        {% if add_to_inventory is defined and should_add_to_inventory %}
+            {% for m in doc.members.values() %}
+                {{ add_to_inventory(m) }}
+            {% endfor %}
+        {% endif %}
     {% elif doc.type == "function" %}
         {{ function(doc) }}
     {% elif doc.type == "module" %}
@@ -58,95 +93,265 @@
     {% else %}
         {{ variable(doc) }}
     {% endif %}
-    {% if doc.type != "variable" %}
-        {{ view_source(doc) }}
-    {% endif %}
+    {{ view_source(doc) }}
     {{ docstring(doc) }}
 {% endmacro %}
-
-{# ############## #}
-{# Better sidebar #}
-{# ############## #}
-{% block nav %}
-{{ add_to_inventory(module) if module.name != "" }}
-<nav class="pdoc">
-    <div id="sidebar" class="sidebar">
-        <div class="sidebar-buttons">
-            <span>Hikari {{ __hikari_version__ }}</span>
-            <div class="push"></div>
-            <a href="{{ "../" * module.modulename.count(".") }}index.html" title="Home" class="svg-button">{% include "assets/home.svg" %}</a>
-            <a href="https://discord.gg/Jx4cNGG" title="Discord" class="svg-button">{% include "assets/discord.svg" %}</a>
-            <a href="https://pypi.org/project/hikari" title="PyPI" class="svg-button">{% include "assets/crates.svg" %}</a>
+{% macro docstring(var) %}
+    {% if var.docstring %}
+        <div class="docstring">{{ var.docstring | to_markdown | to_html | linkify(namespace=var.qualname) }}</div>
+    {% endif %}
+{% endmacro %}
+{% macro nav_members(members) %}
+    <ul class="memberlist">
+        {% for m in members | sort() if is_public(m) | trim %}
+            <li>
+                {% if m.type == "class" %}
+                    <a class="class" href="#{{ m.qualname }}">{{ m.qualname }}</a>
+                    {% if m.members %}
+                        {{ nav_members(m.members.values()) | indent(12) }}
+                    {% endif %}
+                {% elif m.type == "module" %}
+                    <a class="module" href="#{{ m.name }}">{{ m.name }}</a>
+                {% else %}
+                    <a class="{{ m.type }}" href="#{{ m.qualname }}">{{ m.name }}</a>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+{% endmacro %}
+{% macro is_public(doc) %}
+    {#
+    This macro is a bit unconventional in that its output is not rendered, but treated as a boolean:
+    Returning no text is interpreted as false, returning any other text is iterpreted as true.
+    Implementing this as a macro makes it very easy to override with a custom template..
+    #}
+    {% if not doc.name.startswith("_") %}
+        {# members not starting with an underscore are considered public by default #}
+        true
+    {% elif doc.name == "__init__" %}
+        {# the constructor is our special case which we also treat as public #}
+        true
+    {% elif doc.name == "__doc__" %}
+        {# Sometimes we have __doc__ in __all__, which we want to exclude for pdoc's purposes. #}
+        {# https://github.com/mitmproxy/pdoc/issues/235 #}
+    {% elif doc.qualname is in (module.obj.__all__ or []) %}
+        {# members starting with an underscore are still public if mentioned in __all__ #}
+        true
+    {% endif %}
+{% endmacro %}
+{% macro view_source(doc) %}
+    {% if show_source and doc.source %}
+        <details>
+            <summary>View Source</summary>
+            {{ doc.source | highlight }}
+        </details>
+    {% endif %}
+{% endmacro %}
+{% macro module_name() %}
+    <h1 class="modulename">
+        {% set parts = module.modulename.split(".") %}
+        {% for part in parts %}
+            {%- set fullname = ".".join(parts[:loop.index]) -%}
+            {%- if fullname in all_modules and fullname != module.modulename -%}
+                <a href="./{{ "../" * loop.revindex0 }}{{ "index" if loop.index0 == 0 else part }}.html">{{ part }}</a>
+            {%- else -%}
+                {{ part }}
+            {%- endif -%}
+            {%- if loop.nextitem -%}
+                <wbr>.
+            {%- endif -%}
+        {% endfor %}
+    </h1>
+{% endmacro %}
+{# ---- MACRO DEFINITIONS END ---- #}
+<!doctype html>
+<html lang="en" class="sidebar-hidden">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ module.modulename }} API documentation | {{ __hikari_version__ }}</title>
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://www.hikari-py.dev/logo.png">
+    <meta property="og:title" content="{{ module.modulename }} API documentation | {{ __hikari_version__ }}">
+    <meta property="og:description" content="A Discord Bot framework for modern Python and asyncio built on good intentions">
+    <meta property="theme-color" content="#ff029a">
+    <link rel="shortcut icon" type="image/png" href="https://www.hikari-py.dev/logo.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap-reboot.css" integrity="sha512-MiwRA9Okl+Pah06DKec2BuhcKl6RnH8dFrlmosZPAvUuHAx2grCGHC35eXHrQwSIsDOPvwRteRZzRwFU6Qoj7w==" crossorigin="anonymous" referrerpolicy="no-referrer"/>
+    {% include "math.html.jinja2" %}
+    <style>{% include 'style.css' %}</style>
+</head>
+<body>
+    <nav class="pdoc">
+        <div id="sidebar" class="sidebar">
+            <div class="sidebar-buttons">
+                <label>Hikari (<select class="version-selector" id="version-selector" disabled><option>{{ __hikari_version__ }}</option></select>)</label>
+                <div class="push"></div>
+                <a href="{{ "../" * module.modulename.count(".") }}index.html" class="svg-button">{% include "assets/home.svg" %}</a>
+                <a href="https://discord.gg/Jx4cNGG" class="svg-button">{% include "assets/discord.svg" %}</a>
+                <a href="https://github.com/hikari-py/hikari" class="svg-button">{% include "assets/github.svg" %}</a>
+                <a href="https://pypi.org/project/hikari" class="svg-button">{% include "assets/crates.svg" %}</a>
+            </div>
+            {% if search and all_modules|length > 1 %}
+                {# we set a pattern here so that we can use the :valid CSS selector #}
+                <input type="search" placeholder="Search..." role="searchbox" title="Search the documentation" pattern=".+">
+            {% endif %}
+            {% set index = module.docstring | to_markdown | to_html | attr("toc_html") %}
+            {% if index %}
+                <h2>Contents</h2>
+                {{ index | safe }}
+            {% endif %}
+            {% if module.submodules %}
+                <h2>Submodules</h2>
+                <ul>
+                    {% for submodule in module.submodules %}
+                        <li>{{ submodule.taken_from | link }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+            {% if module.members %}
+                <h2>API Documentation</h2>
+                {{ nav_members(module.members.values()) }}
+            {% endif %}
+            <div class="attribution-padding"></div>
+            <p class="attribution">built with pdoc {{ __version__ }}</p>
+            <p class="attribution">generated on {{ utcnow() }}</p>
         </div>
-
-        {% if search and all_modules|length > 1 %}
-            {# we set a pattern here so that we can use the :valid CSS selector #}
-            <input type="search" placeholder="Search..." role="searchbox" title="Search the documentation" pattern=".+">
+        <div class="sidebar-toggle" id="sidebar-toggle"></div>
+    </nav>
+    <main>
+        <a href="#" class="back-to-top" id="back-to-top">
+            {% include "assets/up.svg" %}
+            <span>Back to top</span>
+        </a>
+        <div class="version-warning" id="version-warning"></div>
+        {% if add_to_inventory is defined %}
+            {{ add_to_inventory(module) }}
         {% endif %}
+        <section>
+            {{ module_name() }}
+            {{ docstring(module) }}
+            {{ view_source(module) }}
+        </section>
+        {% for m in module.flattened_own_members | sort() if is_public(m) | trim %}
+            <section id="{{ m.qualname or m.name }}">
+                {{ member(m) }}
+                {% if m.type == "class" %}
+                    {% set vars = [] %}
+                    {% set functions = [] %}
+                    {% for m in m.members.values() | sort() if m.type != "class" and is_public(m) | trim %}
+                        {% if m.type == "function" %}
+                            {{ functions.append(m) or "" }}
+                        {% else %}
+                            {{ vars.append(m) or "" }}
+                        {% endif %}
+                    {% endfor %}
+                    {% if vars %}
+                        <section class="member_divisor">
+                            <h5>Variables and properties</h5>
+                            {% for m in m.members.values() | sort() if m.type not in ("class", "function") and is_public(m) | trim %}
+                                <div id="{{ m.qualname }}">
+                                    {{ member(m, false) }}
+                                </div>
+                            {% endfor %}
+                        </section>
+                    {% endif %}
+                    {% if functions %}
+                        <section class="member_divisor">
+                            <h5>Methods</h5>
+                            {% for m in m.members.values() | sort() if m.type == "function" and is_public(m) | trim %}
+                                <div id="{{ m.qualname }}">
+                                    {{ member(m, false) }}
+                                </div>
+                            {% endfor %}
+                        </section>
+                    {% endif %}
+                {% endif %}
+            </section>
+        {% endfor %}
+    </main>
+    {# These shoul only load on release builds #}
+    {% if __hikari_version__ != "head" %}
+        <script src="{{ "../" * (module.modulename.count(".") + 1) }}version_switcher.js"></script>
+    {% endif %}
+    <script>
+        "use strict";
 
-        {% set index = module.docstring | to_markdown | to_html | attr("toc_html") %}
-        {% if index %}
-            <h2>Contents</h2>
-            {{ index | safe }}
-        {% endif %}
+        /*
+        ###############
+        #   SIDEBAR   #
+        ###############
+        */
 
-        {% if module.submodules %}
-            <h2>Submodules</h2>
-            <ul>
-                {% for submodule in module.submodules %}
-                    <li>{{ submodule.taken_from | link }}</li>
-                {% endfor %}
-            </ul>
-        {% endif %}
+        const html = document.querySelector("html");
+        const sidebarToggle = document.getElementById("sidebar-toggle");
 
-        {% if module.members %}
-            <h2>API Documentation</h2>
-            {{ nav_members(module.members.values()) }}
-        {% endif %}
-    </div>
-
-    <div class="sidebar-toggle" id="sidebar-toggle"></div>
-</nav>
-
-<script>
-    "use strict";
-    const sidebarToggle = document.getElementById("sidebar-toggle");
-
-    // Button control
-    sidebarToggle.addEventListener('click', function () {
-        if (html.classList.contains("sidebar-hidden")) {
-            html.classList.remove("sidebar-hidden");
-        } else {
-            html.classList.add("sidebar-hidden");
-        }
-    });
-
-    // Swipe controls
-    let firstContact = null;
-
-    document.addEventListener('touchstart', function (e) {
-        firstContact = {
-            x: e.touches[0].clientX,
-            time: Date.now()
-        };
-    }, { passive: true });
-
-    document.addEventListener('touchmove', function (e) {
-        if (!firstContact)
-            return;
-        let curX = e.touches[0].clientX;
-        let xDiff = curX - firstContact.x;
-        let tDiff = Date.now() - firstContact.time;
-        if (tDiff < 300 && Math.abs(xDiff) >= 100) {
-            if (xDiff >= 0 && firstContact.x < Math.min(document.body.clientWidth * 0.25, 300)) {
+        // Button control
+        sidebarToggle.addEventListener('click', function () {
+            if (html.classList.contains("sidebar-hidden")) {
                 html.classList.remove("sidebar-hidden");
-                firstContact = null;
-            }
-            else if (xDiff < 0 && curX < 150) {
+            } else {
                 html.classList.add("sidebar-hidden");
-                firstContact = null;
             }
-        }
-    }, { passive: true });
-</script>
-{% endblock %}
+        });
+
+        // Swipe controls
+        let firstContact = null;
+        document.addEventListener("touchstart", function (e) {
+            firstContact = {
+                x: e.touches[0].clientX,
+                time: Date.now()
+            };
+        }, { passive: true });
+
+        document.addEventListener("touchmove", function (e) {
+            if (!firstContact)
+                return;
+            let curX = e.touches[0].clientX;
+            let xDiff = curX - firstContact.x;
+            let tDiff = Date.now() - firstContact.time;
+            if (tDiff < 300 && Math.abs(xDiff) >= 100) {
+                if (xDiff >= 0 && firstContact.x < Math.min(document.body.clientWidth, 450)) {
+                    html.classList.remove("sidebar-hidden");
+                    firstContact = null;
+                }
+                else if (xDiff < 0 && curX < 250) {
+                    html.classList.add("sidebar-hidden");
+                    firstContact = null;
+                }
+            }
+        }, { passive: true });
+
+        /*
+        #####################
+        #   SCROLL TO TOP   #
+        #####################
+        */
+
+        const minOffset = 64;
+        const backToTop = document.getElementById("back-to-top");
+        let lastScrollTop = window.scrollY || document.documentElement.scrollTop;
+
+        document.addEventListener("scroll", function () {
+            let positionY = window.scrollY;
+
+            if (positionY < minOffset) {
+                backToTop.style.display = "none";
+            } else {
+                if (positionY < lastScrollTop) {
+                    backToTop.style.display = "block";
+                    document.documentElement.classList.add("show-back-to-top");
+                } else if (positionY > lastScrollTop) {
+                    backToTop.style.display = "none";
+                }
+            }
+            lastScrollTop = positionY;
+        }, { passive: true });
+    </script>
+    {% if mtime %}
+        {% include "livereload.html.jinja2" %}
+    {% endif %}
+    {% if search and all_modules|length > 1 %}
+        {% include "search.html.jinja2" %}
+    {% endif %}
+</body>
+</html>

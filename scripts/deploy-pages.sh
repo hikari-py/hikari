@@ -18,15 +18,52 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-rm public -Rf || true
+set -e
+
+echo "Defined environment variables"
+env | grep -oP "^[^=]+" | sort
+
+if [ -z ${VERSION+x} ]; then echo '$VERSION environment variable is missing' && exit 1; fi
+if [ -z "${VERSION}" ]; then echo '$VERSION environment variable is empty' && exit 1; fi
+if [ -z ${REF+x} ]; then echo '$REF environment variable is missing' && exit 1; fi
+if [ -z "${REF}" ]; then echo '$REF environment variable is empty' && exit 1; fi
+if [ -z ${GITHUB_TOKEN+x} ]; then echo '$GITHUB_TOKEN environment variable is missing' && exit 1; fi
+if [ -z "${GITHUB_TOKEN}" ]; then echo '$GITHUB_TOKEN environment variable is empty' && exit 1; fi
+if [ -z ${REPO_SLUG+x} ]; then echo '$REPO_SLUG environment variable is missing' && exit 1; fi
+if [ -z "${REPO_SLUG}" ]; then echo '$REPO_SLUG environment variable is empty' && exit 1; fi
+if [ -z ${DOCUMENTATION_REPO_SLUG+x} ]; then echo '$DOCUMENTATION_REPO_SLUG environment variable is missing' && exit 1; fi
+if [ -z "${DOCUMENTATION_REPO_SLUG}" ]; then echo '$DOCUMENTATION_REPO_SLUG environment variable is empty' && exit 1; fi
+
+if [ "${VERSION}" != "master" ]; then
+  regex='__version__: typing\.Final\[str\] = "([^"]*)"'
+  if [[ $(cat hikari/_about.py) =~ $regex ]]; then
+    if [ "${BASH_REMATCH[1]}" != "${VERSION}" ]; then
+      echo "Variable '__version__' does not match the version this deploy is for! [__version__='${BASH_REMATCH[1]}'; VERSION='${VERSION}']" && exit 1
+    fi
+  else
+    echo "Variable '__version__' not found in about!" && exit 1
+  fi
+fi
+
+rm -rf public
 mkdir public
-nox --sessions pages
-cd public || exit 1
 
+echo "-- Setting __git_sha1__ to '${REF}' --"
+sed "/^__git_sha1__.*/, \${s||__git_sha1__: typing.Final[str] = \"${REF}\"|g; b}; \$q1" -i hikari/_about.py || (echo "Variable '__git_sha1__' not found in about!" && exit 1)
+
+nox -s pdoc
+cd public/docs || exit 1
+
+# We do it here before we create the empty repository
+if [ "${REF}" == "MASTER" ]; then
+  REF="$(git rev-parse HEAD)"
+fi
+
+echo "===== DEPLOYING PAGES ====="
 git init
-git remote add origin "https://git:${GITHUB_TOKEN}@github.com/${GITHUB_REPO_SLUG}"
+git remote add origin "https://git:${GITHUB_TOKEN}@github.com/${DOCUMENTATION_REPO_SLUG}"
 
-git checkout -B gh-pages
+git checkout -B "release/${VERSION}"
 git add -Av .
-git commit -am "Deployed documentation for ${VERSION}"
-git push origin gh-pages --force
+git commit -am "Documentation for ${VERSION} [https://github.com/${REPO_SLUG}/commit/${REF}]"
+git push -u origin "release/${VERSION}" -f

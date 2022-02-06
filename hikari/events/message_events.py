@@ -69,24 +69,12 @@ class MessageEvent(shard_events.ShardEvent, abc.ABC):
     @property
     @abc.abstractmethod
     def channel_id(self) -> snowflakes.Snowflake:
-        """ID of the channel that this event concerns.
-
-        Returns
-        -------
-        hikari.snowflakes.Snowflake
-            The ID of the channel that this event concerns.
-        """
+        """ID of the channel that this event concerns."""
 
     @property
     @abc.abstractmethod
     def message_id(self) -> snowflakes.Snowflake:
-        """ID of the message that this event concerns.
-
-        Returns
-        -------
-        hikari.snowflakes.Snowflake
-            The ID of the message that this event concerns.
-        """
+        """ID of the message that this event concerns."""
 
 
 @base_events.requires_intents(intents.Intents.DM_MESSAGES, intents.Intents.GUILD_MESSAGES)
@@ -102,24 +90,12 @@ class MessageCreateEvent(MessageEvent, abc.ABC):
 
     @property
     def author(self) -> users.User:
-        """User that sent the message.
-
-        Returns
-        -------
-        hikari.users.User
-            The user that sent the message.
-        """
+        """User that sent the message."""
         return self.message.author
 
     @property
     def author_id(self) -> snowflakes.Snowflake:
-        """ID of the author of the message this event concerns.
-
-        Returns
-        -------
-        hikari.snowflakes.Snowflake
-            The ID of the author.
-        """
+        """ID of the author of the message this event concerns."""
         return self.author.id
 
     @property
@@ -131,81 +107,41 @@ class MessageCreateEvent(MessageEvent, abc.ABC):
     def content(self) -> typing.Optional[str]:
         """Content of the message.
 
-        Returns
-        -------
-        typing.Optional[str]
-            The content of the message, if present. This may be `None`
-            or an empty string (or any falsy value) if no content is present
-            (e.g. if only an embed was sent).
+        The content of the message, if present. This will be `None`
+        if no content is present (e.g. if only an embed was sent).
         """
         return self.message.content
 
     @property
     def embeds(self) -> typing.Sequence[embeds_.Embed]:
-        """Sequence of embeds in the message.
-
-        Returns
-        -------
-        typing.Sequence[hikari.embeds.Embed]
-            The embeds in the message.
-        """
+        """Sequence of embeds in the message."""
         return self.message.embeds
 
     @property
     def is_bot(self) -> bool:
-        """Return `True` if the message is from a bot.
-
-        Returns
-        -------
-        bool
-            `True` if from a bot, or `False` otherwise.
-        """
+        """Return `True` if the message is from a bot."""
         return self.message.author.is_bot
 
     @property
     def is_human(self) -> bool:
-        """Return `True` if the message was created by a human.
-
-        Returns
-        -------
-        bool
-            `True` if from a human user, or `False` otherwise.
-        """
+        """Return `True` if the message was created by a human."""
         # Not second-guessing some weird edge case will occur in the future with this,
         # so I am being safe rather than sorry.
         return not self.message.author.is_bot and self.message.webhook_id is None
 
     @property
     def is_webhook(self) -> bool:
-        """Return `True` if the message was created by a webhook.
-
-        Returns
-        -------
-        bool
-            `True` if from a webhook, or `False` otherwise.
-        """
+        """Return `True` if the message was created by a webhook."""
         return self.message.webhook_id is not None
 
     @property
     @abc.abstractmethod
     def message(self) -> messages.Message:
-        """Message that was sent in the event.
-
-        Returns
-        -------
-        hikari.messages.Message
-            The message object that was sent with this event.
-        """
+        """Message that was sent in the event."""
 
     @property
     def message_id(self) -> snowflakes.Snowflake:
-        """ID of the message that this event concerns.
-
-        Returns
-        -------
-        hikari.snowflakes.Snowflake
-            The ID of the message that this event concerns.
-        """
+        """ID of the message that this event concerns."""
         return self.message.id
 
 
@@ -226,36 +162,17 @@ class GuildMessageCreateEvent(MessageCreateEvent):
 
     @property
     def author(self) -> users.User:
-        """User object of the user that sent the message.
-
-        Returns
-        -------
-        hikari.users.User
-            The user object of the user that sent the message.
-        """
+        """User object of the user that sent the message."""
         return self.message.author
 
     @property
     def member(self) -> typing.Optional[guilds.Member]:
-        """Member object of the user that sent the message.
-
-        Returns
-        -------
-        typing.Optional[hikari.guilds.Member]
-            The member object of the user that sent the message or
-            `None` if sent by a webhook.
-        """
+        """Member object of the user that sent the message."""
         return self.message.member
 
     @property
     def guild_id(self) -> snowflakes.Snowflake:
-        """ID of the guild that this event occurred in.
-
-        Returns
-        -------
-        hikari.snowflakes.Snowflake
-            The ID of the guild that this event occurred in.
-        """
+        """ID of the guild that this event occurred in."""
         guild_id = self.message.guild_id
         # Always present on guild events
         assert isinstance(guild_id, snowflakes.Snowflake), "no guild_id attribute set"
@@ -371,13 +288,11 @@ class MessageUpdateEvent(MessageEvent, abc.ABC):
     def content(self) -> undefined.UndefinedNoneOr[str]:
         """Content of the message.
 
-        Returns
-        -------
-        hikari.undefined.UndefinedNoneOr[str]
-            The content of the message, if present. This may be `None`
-            or an empty string (or any falsy value) if no content is present
-            (e.g. if only an embed was sent). If not part of the update, then
-            this will be `hikari.undefined.UNDEFINED` instead.
+        The content of the message, if present. This may be `None`
+        if no content is present (e.g. if only an embed was sent).
+
+        If not part of the update, then this will be
+        `hikari.undefined.UNDEFINED` instead.
         """
         return self.message.content
 
@@ -385,26 +300,18 @@ class MessageUpdateEvent(MessageEvent, abc.ABC):
     def embeds(self) -> undefined.UndefinedOr[typing.Sequence[embeds_.Embed]]:
         """Sequence of embeds in the message.
 
-        Returns
-        -------
-        hikari.undefined.UndefinedOr[typing.Sequence[hikari.embeds.Embed]]
-            The embeds in the message. If the embeds were not changed in this
-            event, then this may instead be `hikari.undefined.UNDEFINED`.
+        If the embeds were not changed in this event, then this may instead be
+        `hikari.undefined.UNDEFINED`.
         """
         return self.message.embeds
 
     @property
     def is_bot(self) -> undefined.UndefinedOr[bool]:
-        """Return `True` if the message is from a bot.
+        """Whether the message is from a bot.
 
-        Returns
-        -------
-        typing.Optional[bool]
-            `True` if from a bot, or `False` otherwise.
-
-            If the author is not known, due to the update event being caused
-            by Discord adding an embed preview to accompany a URL, then this
-            will return `hikari.undefined.UNDEFINED` instead.
+        If the author is not known, due to the update event being caused
+        by Discord adding an embed preview to accompany a URL, then this
+        will return `hikari.undefined.UNDEFINED` instead.
         """
         if (author := self.message.author) is not undefined.UNDEFINED:
             return author.is_bot
@@ -413,16 +320,11 @@ class MessageUpdateEvent(MessageEvent, abc.ABC):
 
     @property
     def is_human(self) -> undefined.UndefinedOr[bool]:
-        """Return `True` if the message was created by a human.
+        """Whether the message was created by a human.
 
-        Returns
-        -------
-        typing.Optional[bool]
-            `True` if from a human user, or `False` otherwise.
-
-            If the author is not known, due to the update event being caused
-            by Discord adding an embed preview to accompany a URL, then this
-            may return `hikari.undefined.UNDEFINED` instead.
+        If the author is not known, due to the update event being caused
+        by Discord adding an embed preview to accompany a URL, then this
+        may return `hikari.undefined.UNDEFINED` instead.
         """
         # Not second-guessing some weird edge case will occur in the future with this,
         # so I am being safe rather than sorry.
@@ -436,12 +338,11 @@ class MessageUpdateEvent(MessageEvent, abc.ABC):
 
     @property
     def is_webhook(self) -> undefined.UndefinedOr[bool]:
-        """Return `True` if the message was created by a webhook.
+        """Whether the message was created by a webhook.
 
-        Returns
-        -------
-        bool
-            `True` if from a webhook, or `False` otherwise.
+        If the author is not known, due to the update event being caused
+        by Discord adding an embed preview to accompany a URL, then this
+        may return `hikari.undefined.UNDEFINED` instead.
         """
         if (webhook_id := self.message.webhook_id) is not undefined.UNDEFINED:
             return webhook_id is not None
@@ -451,23 +352,11 @@ class MessageUpdateEvent(MessageEvent, abc.ABC):
     @property
     @abc.abstractmethod
     def message(self) -> messages.PartialMessage:
-        """Partial message that was sent in the event.
-
-        Returns
-        -------
-        hikari.messages.PartialMessage
-            The partial message object that was sent with this event.
-        """
+        """Partial message that was sent in the event."""
 
     @property
     def message_id(self) -> snowflakes.Snowflake:
-        """ID of the message that this event concerns.
-
-        Returns
-        -------
-        hikari.snowflakes.Snowflake
-            The ID of the message that this event concerns.
-        """
+        """ID of the message that this event concerns."""
         return self.message.id
 
 
@@ -520,13 +409,7 @@ class GuildMessageUpdateEvent(MessageUpdateEvent):
 
     @property
     def guild_id(self) -> snowflakes.Snowflake:
-        """ID of the guild that this event occurred in.
-
-        Returns
-        -------
-        hikari.snowflakes.Snowflake
-            The ID of the guild that this event occurred in.
-        """
+        """ID of the guild that this event occurred in."""
         guild_id = self.message.guild_id
         # Always present on guild events
         assert isinstance(guild_id, snowflakes.Snowflake), f"expected guild_id, got {guild_id}"

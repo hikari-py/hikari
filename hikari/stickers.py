@@ -72,7 +72,7 @@ class StickerFormatType(int, enums.Enum):
     LOTTIE = 3
     """A lottie sticker.
 
-    More information can be found here: https://airbnb.io/lottie/
+    More information can be found here: <https://airbnb.io/lottie/>
     """
 
 

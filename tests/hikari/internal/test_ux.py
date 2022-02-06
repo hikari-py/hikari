@@ -589,10 +589,10 @@ class TestCheckForUpdates:
     async def test_check_for_updates(self, v, http_settings, proxy_settings):
         data = {
             "releases": {
-                "0.1.0": [{"yanked": False}],
+                v: [{"yanked": False}, {"yanked": True}],
                 "1.0.0": [{"yanked": False}],
                 "1.0.0.dev1": [{"yanked": False}],
-                v: [{"yanked": False}, {"yanked": True}],
+                "0.1.0": [{"yanked": False}],
                 "1.0.2": [{"yanked": True}],
             }
         }

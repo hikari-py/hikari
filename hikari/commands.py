@@ -270,10 +270,6 @@ class PartialCommand(snowflakes.Unique):
 
         Other Parameters
         ----------------
-        guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
-            Object or ID of the guild to edit a command for if this is a guild
-            specific command. Leave this as `hikari.undefined.UNDEFINED` to delete
-            a global command.
         name : hikari.undefined.UndefinedOr[str]
             The name to set for the command. Leave as `hikari.undefined.UNDEFINED`
             to not change.

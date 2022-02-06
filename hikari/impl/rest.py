@@ -121,7 +121,7 @@ class ClientCredentialsStrategy(rest_api.TokenStrategy):
 
     Parameters
     ----------
-    client: typing.Optional[snowflakes.SnowflakeishOr[guilds.PartialApplication]]
+    client: typing.Optional[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]]
         Object or ID of the application this client credentials strategy should
         authorize as.
     client_secret : typing.Optional[str]
@@ -257,10 +257,6 @@ class RESTApp(traits.ExecutorAware):
     This comprises of a shared TCP connector connection pool, and can have
     `RESTClientImpl` instances for specific credentials acquired
     from it.
-
-    .. note::
-        This event loop will be bound to a connector when the first call
-        to `acquire` is made.
 
     Parameters
     ----------
@@ -2671,7 +2667,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_member(response, guild_id=snowflakes.Snowflake(guild))
 
-    @deprecation.deprecated("2.0.0.dev104", "Use `edit_my_member`'s `nick` argument instead.")
+    @deprecation.deprecated("2.0.0.dev104", "2.0.0.dev110", "Use `edit_my_member`'s `nick` argument instead.")
     async def edit_my_nick(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.Guild],
@@ -3115,7 +3111,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_template(response)
 
-    @deprecation.deprecated("2.0.0.dev106", "slash_command_builder")
+    @deprecation.deprecated("2.0.0.dev106", "2.0.0.dev110", "Use `slash_command_builder` instead.")
     def command_builder(self, name: str, description: str) -> special_endpoints.SlashCommandBuilder:
         return self.slash_command_builder(name, description)
 
@@ -3191,7 +3187,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return response
 
-    @deprecation.deprecated("2.0.0.dev106", "create_slash_command")
+    @deprecation.deprecated("2.0.0.dev106", "2.0.0.dev110", "Use `create_slash_command` instead.")
     async def create_application_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],

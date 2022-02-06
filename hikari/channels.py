@@ -333,6 +333,10 @@ class PartialChannel(snowflakes.Unique):
     async def delete(self) -> PartialChannel:
         """Delete a channel in a guild, or close a DM.
 
+        .. note::
+            For Public servers, the set 'Rules' or 'Guidelines' channels and the
+            'Public Server Updates' channel cannot be deleted.
+
         Returns
         -------
         hikari.channels.PartialChannel
@@ -359,10 +363,6 @@ class PartialChannel(snowflakes.Unique):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-
-        .. note::
-            For Public servers, the set 'Rules' or 'Guidelines' channels and the
-            'Public Server Updates' channel cannot be deleted.
         """
         return await self.app.rest.delete_channel(self.id)
 

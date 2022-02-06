@@ -92,8 +92,7 @@ class Response(typing.Protocol):
     def status_code(self) -> int:
         """Status code that should be used to respond.
 
-        For more information see
-        <https://developer.mozilla.org/en-US/docs/Web/HTTP/Status>.
+        For more information see <https://developer.mozilla.org/en-US/docs/Web/HTTP/Status>.
         """
         raise NotImplementedError
 

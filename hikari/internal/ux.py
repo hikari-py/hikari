@@ -162,14 +162,14 @@ def print_banner(
     documentation. Users can override this by placing a `banner.txt' in some
     package and referencing it in this call.
 
+    .. note::
+        The `banner.txt` must be in the root folder of the package.
+
     Parameters
     ----------
     package : typing.Optional[str]
         The package to find the `banner.txt` in, or `None` if no
         banner should be shown.
-
-        .. note::
-            The `banner.txt` must be in the root folder of the package.
     allow_color : bool
         If `False`, no colour is allowed. If `True`, the
         output device must be supported for this to return `True`.
@@ -320,6 +320,9 @@ class HikariVersion:
     def __repr__(self) -> str:
         return f"HikariVersion('{str(self)}')"
 
+    def __hash__(self) -> int:
+        return id(self)
+
     def __eq__(self, other: typing.Any) -> bool:
         return self._compare(other, lambda s, o: s == o)
 
@@ -370,22 +373,21 @@ async def check_for_updates(http_settings: config.HTTPSettings, proxy_settings: 
 
         this_version = HikariVersion(about.__version__)
         is_dev = this_version.prerelease is not None
-        newer_releases: typing.List[HikariVersion] = []
+        newest_version: typing.Optional[HikariVersion] = None
 
         for release_string, artifacts in data["releases"].items():
             if not all(artifact["yanked"] for artifact in artifacts):
                 v = HikariVersion(release_string)
-                if v.prerelease is not None and not is_dev:
-                    # Don't encourage the user to upgrade from a stable to a dev release...
+                if (v.prerelease is not None and not is_dev) or v <= this_version:
+                    # Don't encourage the user to upgrade from a stable to a dev release, nor a lower version...
                     continue
 
-                if v == this_version:
+                if newest_version is not None and newest_version > v:
                     continue
 
-                if v > this_version:
-                    newer_releases.append(v)
-        if newer_releases:
-            newest = max(newer_releases)
-            _LOGGER.info("A newer version of hikari is available, consider upgrading to %s", newest)
+                newest_version = v
+
+        if newest_version:
+            _LOGGER.info("A newer version of hikari is available, consider upgrading to %s", newest_version)
     except Exception as ex:
         _LOGGER.debug("Failed to fetch hikari version details", exc_info=ex)

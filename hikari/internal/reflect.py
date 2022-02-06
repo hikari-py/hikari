@@ -41,15 +41,15 @@ EMPTY: typing.Final[typing.Any] = inspect.Parameter.empty
 def resolve_signature(func: typing.Callable[..., typing.Any]) -> inspect.Signature:
     """Get the `inspect.Signature` of `func` with resolved forward annotations.
 
-    Parameters
-    ----------
-    func : typing.Callable[..., typing.Any]
-        The function to get the resolved annotations from.
-
     .. warning::
         This will use `eval` to resolve string type-hints and forward
         references. This has a slight performance overhead, so attempt to cache
         this info as much as possible.
+
+    Parameters
+    ----------
+    func : typing.Callable[..., typing.Any]
+        The function to get the resolved annotations from.
 
     Returns
     -------

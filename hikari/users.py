@@ -516,7 +516,7 @@ class User(PartialUser, abc.ABC):
     @property
     @abc.abstractmethod
     def is_bot(self) -> bool:
-        """Whether user is a bot account."""
+        """Whether this user is a bot account."""
 
     @property
     @abc.abstractmethod

@@ -234,7 +234,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         The first role must always be the `@everyone` role.
 
     .. note::
-        If you call `add_role`, the default roles provided by discord will
+        If you call `add_role`, the default roles provided by Discord will
         be created. This also applies to the `add_` functions for
         text channels/voice channels/categories.
 
@@ -630,8 +630,8 @@ class MemberIterator(iterators.BufferedLazyIterator["guilds.Member"]):
         self._route = routes.GET_GUILD_MEMBERS.compile(guild=guild)
         self._request_call = request_call
         self._entity_factory = entity_factory
-        # This starts at the default provided by discord instead of the max snowflake
-        # because that caused discord to take about 2 seconds more to return the first response.
+        # This starts at the default provided by Discord instead of the max snowflake
+        # because that caused Discord to take about 2 seconds more to return the first response.
         self._first_id = undefined.UNDEFINED
 
     async def _next_chunk(self) -> typing.Optional[typing.Generator[guilds.Member, typing.Any, None]]:

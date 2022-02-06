@@ -76,13 +76,7 @@ class GuildEvent(shard_events.ShardEvent, abc.ABC):
     @property
     @abc.abstractmethod
     def guild_id(self) -> snowflakes.Snowflake:
-        """ID of the guild that this event relates to.
-
-        Returns
-        -------
-        hikari.snowflakes.Snowflake
-            The ID of the guild that relates to this event.
-        """
+        """ID of the guild that this event relates to."""
 
     async def fetch_guild(self) -> guilds.RESTGuild:
         """Perform an API call to get the guild that this event relates to.
@@ -151,67 +145,25 @@ class GuildAvailableEvent(GuildVisibilityEvent):
     # <<inherited docstring from ShardEvent>>.
 
     guild: guilds.GatewayGuild = attr.field()
-    """Guild that just became available.
-
-    Returns
-    -------
-    hikari.guilds.Guild
-        The guild that relates to this event.
-    """
+    """Guild that just became available."""
 
     emojis: typing.Mapping[snowflakes.Snowflake, emojis_.KnownCustomEmoji] = attr.field(repr=False)
-    """Mapping of emoji IDs to the emojis in the guild.
-
-    Returns
-    -------
-    typing.Mapping[hikari.snowflakes.Snowflake, hikari.emojis.KnownCustomEmoji]
-        The emojis in the guild.
-    """
+    """Mapping of emoji IDs to the emojis in the guild."""
 
     roles: typing.Mapping[snowflakes.Snowflake, guilds.Role] = attr.field(repr=False)
-    """Mapping of role IDs to the roles in the guild.
-
-    Returns
-    -------
-    typing.Mapping[hikari.snowflakes.Snowflake, hikari.guilds.Role]
-        The roles in the guild.
-    """
+    """Mapping of role IDs to the roles in the guild."""
 
     channels: typing.Mapping[snowflakes.Snowflake, channels_.GuildChannel] = attr.field(repr=False)
-    """Mapping of channel IDs to the channels in the guild.
-
-    Returns
-    -------
-    typing.Mapping[hikari.snowflakes.Snowflake, hikari.channels.GuildChannel]
-        The channels in the guild.
-    """
+    """Mapping of channel IDs to the channels in the guild."""
 
     members: typing.Mapping[snowflakes.Snowflake, guilds.Member] = attr.field(repr=False)
-    """Mapping of user IDs to the members in the guild.
-
-    Returns
-    -------
-    typing.Mapping[hikari.snowflakes.Snowflake, hikari.guilds.Member]
-        The members in the guild.
-    """
+    """Mapping of user IDs to the members in the guild."""
 
     presences: typing.Mapping[snowflakes.Snowflake, presences_.MemberPresence] = attr.field(repr=False)
-    """Mapping of user IDs to the presences for the guild.
-
-    Returns
-    -------
-    typing.Mapping[hikari.snowflakes.Snowflake, hikari.presences.MemberPresence]
-        The member presences in the guild.
-    """
+    """Mapping of user IDs to the presences for the guild."""
 
     voice_states: typing.Mapping[snowflakes.Snowflake, voices.VoiceState] = attr.field(repr=False)
-    """Mapping of user IDs to the voice states active in this guild.
-
-    Returns
-    -------
-    typing.Mapping[hikari.snowflakes.Snowflake, hikari.voices.VoiceState]
-        The voice states active in the guild.
-    """
+    """Mapping of user IDs to the voice states active in this guild."""
 
     chunk_nonce: typing.Optional[str] = attr.field(repr=False, default=None)
     """Nonce used to request the member chunks for this guild.
@@ -220,11 +172,6 @@ class GuildAvailableEvent(GuildVisibilityEvent):
 
     .. note::
         This is a synthetic field.
-
-    Returns
-    -------
-    typing.Optional[str]
-        The nonce used to request the member chunks.
     """
 
     @property
@@ -356,31 +303,13 @@ class GuildUpdateEvent(GuildEvent):
     """
 
     guild: guilds.GatewayGuild = attr.field()
-    """Guild that was just updated.
-
-    Returns
-    -------
-    hikari.guilds.Guild
-        The guild that relates to this event.
-    """
+    """Guild that was just updated."""
 
     emojis: typing.Mapping[snowflakes.Snowflake, emojis_.KnownCustomEmoji] = attr.field(repr=False)
-    """Mapping of emoji IDs to the emojis in the guild.
-
-    Returns
-    -------
-    typing.Mapping[hikari.snowflakes.Snowflake, hikari.emojis.KnownCustomEmoji]
-        The emojis in the guild.
-    """
+    """Mapping of emoji IDs to the emojis in the guild."""
 
     roles: typing.Mapping[snowflakes.Snowflake, guilds.Role] = attr.field(repr=False)
-    """Mapping of role IDs to the roles in the guild.
-
-    Returns
-    -------
-    typing.Mapping[hikari.snowflakes.Snowflake, hikari.guilds.Role]
-        The roles in the guild.
-    """
+    """Mapping of role IDs to the roles in the guild."""
 
     @property
     def app(self) -> traits.RESTAware:
@@ -407,13 +336,12 @@ class BanEvent(GuildEvent, abc.ABC):
     @property
     @abc.abstractmethod
     def user(self) -> users.User:
-        """User that this ban event affects.
+        """User that this ban event affects."""
 
-        Returns
-        -------
-        hikari.users.User
-            The user that this event concerns.
-        """
+    @property
+    def user_id(self) -> snowflakes.Snowflake:
+        """User ID of the user that got banned."""
+        return self.user.id
 
     async def fetch_user(self) -> users.User:
         """Perform an API call to fetch the user this ban event affects.
@@ -440,17 +368,6 @@ class BanCreateEvent(BanEvent):
 
     user: users.User = attr.field()
     # <<inherited docstring from BanEvent>>.
-
-    @property
-    def user_id(self) -> snowflakes.Snowflake:
-        """User ID of the user that got banned.
-
-        Returns
-        -------
-        hikari.snowflakes.Snowflake
-            ID of the user the event concerns.
-        """
-        return self.user.id
 
     async def fetch_ban(self) -> guilds.GuildBan:
         """Perform an API call to fetch the details about this ban.
@@ -504,13 +421,7 @@ class EmojisUpdateEvent(GuildEvent):
     """
 
     emojis: typing.Sequence[emojis_.KnownCustomEmoji] = attr.field()
-    """Sequence of all emojis in this guild.
-
-    Returns
-    -------
-    typing.Sequence[emojis_.KnownCustomEmoji]
-        All emojis in the guild.
-    """
+    """Sequence of all emojis in this guild."""
 
     async def fetch_emojis(self) -> typing.Sequence[emojis_.KnownCustomEmoji]:
         """Perform an API call to retrieve an up-to-date view of the emojis.
@@ -532,24 +443,12 @@ class IntegrationEvent(GuildEvent, abc.ABC):
     @property
     @abc.abstractmethod
     def application_id(self) -> typing.Optional[snowflakes.Snowflake]:
-        """ID of Discord bot application this integration is connected to.
-
-        Returns
-        -------
-        typing.Optional[hikari.snowflakes.Snowflake]
-            The ID of Discord bot application this integration is connected to.
-        """
+        """ID of Discord bot application this integration is connected to."""
 
     @property
     @abc.abstractmethod
     def id(self) -> snowflakes.Snowflake:
-        """ID of the integration.
-
-        Returns
-        -------
-        hikari.snowflakes.Snowflake
-            The ID of the integration.
-        """
+        """ID of the integration."""
 
     async def fetch_integrations(self) -> typing.Sequence[guilds.Integration]:
         """Perform an API call to fetch some number of guild integrations.
@@ -559,7 +458,7 @@ class IntegrationEvent(GuildEvent, abc.ABC):
             behaviour appears to be that only the first 50 integrations actually
             get returned. Discord have made it clear that they are not willing
             to fix this in
-            https://github.com/discord/discord-api-docs/issues/1990.
+            <https://github.com/discord/discord-api-docs/issues/1990>.
 
         Returns
         -------
@@ -681,13 +580,7 @@ class PresenceUpdateEvent(shard_events.ShardEvent):
     """
 
     presence: presences_.MemberPresence = attr.field()
-    """Member presence.
-
-    Returns
-    -------
-    hikari.presences.MemberPresence
-        Presence for the user in this guild.
-    """
+    """Member presence."""
 
     user: typing.Optional[users.PartialUser] = attr.field()
     """User that was updated.
@@ -698,11 +591,6 @@ class PresenceUpdateEvent(shard_events.ShardEvent):
     Will be `None` if the user itself did not change.
     This is always the case if the user only updated their member
     representation and did not change their user profile directly.
-
-    Returns
-    -------
-    typing.Optional[hikari.users.PartialUser]
-        The partial user containing the updated fields.
     """
 
     @property
@@ -712,24 +600,12 @@ class PresenceUpdateEvent(shard_events.ShardEvent):
 
     @property
     def user_id(self) -> snowflakes.Snowflake:
-        """User ID of the user that updated their presence.
-
-        Returns
-        -------
-        hikari.snowflakes.Snowflake
-            ID of the user the event concerns.
-        """
+        """User ID of the user that updated their presence."""
         return self.presence.user_id
 
     @property
     def guild_id(self) -> snowflakes.Snowflake:
-        """Guild ID that the presence was updated in.
-
-        Returns
-        -------
-        hikari.snowflakes.Snowflake
-            ID of the guild the event occurred in.
-        """
+        """Guild ID that the presence was updated in."""
         return self.presence.guild_id
 
     def get_user(self) -> typing.Optional[users.User]:

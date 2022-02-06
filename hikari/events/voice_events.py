@@ -51,13 +51,7 @@ class VoiceEvent(shard_events.ShardEvent, abc.ABC):
     @property
     @abc.abstractmethod
     def guild_id(self) -> snowflakes.Snowflake:
-        """ID of the guild this event is for.
-
-        Returns
-        -------
-        hikari.snowflakes.Snowflake
-            The guild ID of the guild this event relates to.
-        """
+        """ID of the guild this event is for."""
 
 
 @base_events.requires_intents(intents.Intents.GUILD_VOICE_STATES)
@@ -82,13 +76,7 @@ class VoiceStateUpdateEvent(VoiceEvent):
     """
 
     state: voices.VoiceState = attr.field(repr=True)
-    """Voice state that this update contained.
-
-    Returns
-    -------
-    hikari.voices.VoiceState
-        The voice state that was updated.
-    """
+    """Voice state that this update contained."""
 
     @property
     def app(self) -> traits.RESTAware:
@@ -120,13 +108,7 @@ class VoiceServerUpdateEvent(VoiceEvent):
     # <<inherited docstring from VoiceEvent>>
 
     token: str = attr.field(repr=False)
-    """Token that should be used to authenticate with the voice gateway.
-
-    Returns
-    -------
-    str
-        The token to use to authenticate with the voice gateway.
-    """
+    """Token that should be used to authenticate with the voice gateway."""
 
     raw_endpoint: typing.Optional[str] = attr.field(repr=True)
     """Raw endpoint URI that Discord sent.
@@ -138,12 +120,6 @@ class VoiceServerUpdateEvent(VoiceEvent):
     .. warning::
         This will not contain the scheme to use. Use the `endpoint` property
         to get a representation that has this prepended.
-
-    Returns
-    -------
-    str
-        A scheme-less endpoint URI for the endpoint to use for a new voice
-        websocket.
     """
 
     @property
@@ -153,11 +129,6 @@ class VoiceServerUpdateEvent(VoiceEvent):
         If this is `None`, it means that the server has been deallocated
         and you have to disconnect. You will later receive a new event specifying
         what endpoint to connect to.
-
-        Returns
-        -------
-        typing.Optional[str]
-            If not `None`, the URI to use to connect to the voice gateway.
         """
         if self.raw_endpoint is None:
             return None

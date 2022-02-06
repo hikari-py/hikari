@@ -74,24 +74,12 @@ class NetworkSettingsAware(fast_protocol.FastProtocolChecking, typing.Protocol):
 
     @property
     def http_settings(self) -> config.HTTPSettings:
-        """Return the HTTP settings in use by this component.
-
-        Returns
-        -------
-        hikari.impl.config.HTTPSettings
-            The HTTP settings in use.
-        """
+        """HTTP settings in use by this component."""
         raise NotImplementedError
 
     @property
     def proxy_settings(self) -> config.ProxySettings:
-        """Return the proxy settings in use by this component.
-
-        Returns
-        -------
-        hikari.impl.config.ProxySettings
-            The proxy settings in use.
-        """
+        """Proxy settings in use by this component."""
         raise NotImplementedError
 
 
@@ -106,13 +94,7 @@ class EventManagerAware(fast_protocol.FastProtocolChecking, typing.Protocol):
 
     @property
     def event_manager(self) -> event_manager_.EventManager:
-        """Return the event manager for this object.
-
-        Returns
-        -------
-        hikari.api.event_manager.EventManager
-            The event manager component.
-        """
+        """Event manager for this object."""
         raise NotImplementedError
 
 
@@ -127,13 +109,7 @@ class EntityFactoryAware(fast_protocol.FastProtocolChecking, typing.Protocol):
 
     @property
     def entity_factory(self) -> entity_factory_.EntityFactory:
-        """Return the entity factory implementation for this object.
-
-        Returns
-        -------
-        hikari.api.entity_factory.EntityFactory
-            The entity factory component.
-        """
+        """Entity factory implementation for this object."""
         raise NotImplementedError
 
 
@@ -150,16 +126,10 @@ class ExecutorAware(fast_protocol.FastProtocolChecking, typing.Protocol):
 
     @property
     def executor(self) -> typing.Optional[futures.Executor]:
-        """Return the executor to use for blocking operations.
+        """Executor to use for blocking operations.
 
         This may return `None` if the default `asyncio` thread pool
         should be used instead.
-
-        Returns
-        -------
-        typing.Optional[concurrent.futures.Executor]
-            The executor to use, or `None` to use the `asyncio` default
-            instead.
         """
         raise NotImplementedError
 
@@ -175,13 +145,7 @@ class EventFactoryAware(fast_protocol.FastProtocolChecking, typing.Protocol):
 
     @property
     def event_factory(self) -> event_factory_.EventFactory:
-        """Return the event factory component.
-
-        Returns
-        -------
-        hikari.api.event_factory.EventFactory
-            The event factory component.
-        """
+        """Event factory component."""
         raise NotImplementedError
 
 
@@ -193,13 +157,7 @@ class IntentsAware(fast_protocol.FastProtocolChecking, typing.Protocol):
 
     @property
     def intents(self) -> intents_.Intents:
-        """Return the intents registered for the application.
-
-        Returns
-        -------
-        hikari.intents.Intents
-            The intents registered on this application.
-        """
+        """Intents registered for the application."""
         raise NotImplementedError
 
 
@@ -216,13 +174,7 @@ class RESTAware(
 
     @property
     def rest(self) -> rest_.RESTClient:
-        """Return the REST client to use for HTTP requests.
-
-        Returns
-        -------
-        hikari.api.rest.RESTClient
-            The REST client to use.
-        """
+        """REST client to use for HTTP requests."""
         raise NotImplementedError
 
 
@@ -238,13 +190,7 @@ class VoiceAware(fast_protocol.FastProtocolChecking, typing.Protocol):
 
     @property
     def voice(self) -> voice_.VoiceComponent:
-        """Return the voice connection manager component for this application.
-
-        Returns
-        -------
-        hikari.api.voice.VoiceComponent
-            The voice component for the application.
-        """
+        """Voice connection manager component for this application."""
         raise NotImplementedError
 
 
@@ -267,61 +213,38 @@ class ShardAware(
 
     @property
     def heartbeat_latencies(self) -> typing.Mapping[int, float]:
-        """Return a mapping of shard ID to heartbeat latency.
+        """Mapping of shard ID to heartbeat latency.
 
         Any shards that are not yet started will be `float('nan')`.
-
-        Returns
-        -------
-        typing.Mapping[int, float]
-            Each shard ID mapped to the corresponding heartbeat latency.
-            Each latency is measured in seconds.
-        """
+        """  # noqa: D401 - Imperative mood
         raise NotImplementedError
 
     @property
     def heartbeat_latency(self) -> float:
-        """Return the average heartbeat latency of all started shards.
+        """Average heartbeat latency of all started shards.
 
         If no shards are started, this will return `float('nan')`.
-
-        Returns
-        -------
-        float
-            The average heartbeat latency of all started shards, or
-            `float('nan')` if no shards are started. This is measured
-            in seconds.
-        """
+        """  # noqa: D401 - Imperative mood
         raise NotImplementedError
 
     @property
     def shards(self) -> typing.Mapping[int, gateway_shard.GatewayShard]:
-        """Return a mapping of shards in this application instance.
+        """Mapping of shards in this application instance.
 
         Each shard ID is mapped to the corresponding shard instance.
 
         If the application has not started, it is acceptable to assume the
         result of this call will be an empty mapping.
-
-        Returns
-        -------
-        typing.Mapping[int, hikari.api.shard.GatewayShard]
-            The shard mapping.
-        """
+        """  # noqa: D401 - Imperative mood
         raise NotImplementedError
 
     @property
     def shard_count(self) -> int:
-        """Return the number of shards in the total application.
+        """Number of shards in the total application.
 
         This may not be the same as the size of `shards`. If the application
         is auto-sharded, this may be `0` until the shards are started.
-
-        Returns
-        -------
-        int
-            The number of shards in the total application.
-        """
+        """  # noqa: D401 - Imperative mood
         raise NotImplementedError
 
     def get_me(self) -> typing.Optional[users_.OwnUser]:
@@ -354,6 +277,18 @@ class ShardAware(
         retained. This means you do not have to track the global presence
         in your code.
 
+        .. note::
+            This will only send the update payloads to shards that are alive.
+            Any shards that are not alive will cache the new presence for
+            when they do start.
+
+        .. note::
+            If you want to set presences per shard, access the shard you wish
+            to update (e.g. by using `GatewayBot.shards`), and call
+            `hikari.api.shard.GatewayShard.update_presence` on that shard.
+            This method is simply a facade to make performing this in bulk
+            simpler.
+
         Other Parameters
         ----------------
         idle_since : hikari.undefined.UndefinedNoneOr[datetime.datetime]
@@ -368,19 +303,6 @@ class ShardAware(
             changed.
         status : hikari.undefined.UndefinedOr[hikari.presences.Status]
             The web status to show. If undefined, this will not be changed.
-
-        .. note::
-            This will only send the update payloads to shards that are alive.
-            Any shards that are not alive will cache the new presence for
-            when they do start.
-
-        .. note::
-            If you want to set presences per shard, access the shard you wish
-            to update (e.g. by using `GatewayBot.shards`), and call
-            `hikari.api.shard.GatewayShard.update_presence` on that shard.
-
-            This method is simply a facade to make performing this in bulk
-            simpler.
         """
         raise NotImplementedError
 
@@ -428,6 +350,10 @@ class ShardAware(
     ) -> None:
         """Request for a guild chunk.
 
+        .. note::
+            To request the full list of members, set `query` to `""` (empty
+            string) and `limit` to `0`.
+
         Parameters
         ----------
         guild: hikari.guilds.Guild
@@ -445,10 +371,6 @@ class ShardAware(
             If provided, the users to request for.
         nonce: hikari.undefined.UndefinedOr[str]
             If provided, the nonce to be sent with guild chunks.
-
-        .. note::
-            To request the full list of members, set `query` to `""` (empty
-            string) and `limit` to `0`.
 
         Raises
         ------
@@ -472,13 +394,7 @@ class InteractionServerAware(RESTAware, EntityFactoryAware, fast_protocol.FastPr
 
     @property
     def interaction_server(self) -> interaction_server_.InteractionServer:
-        """Interaction server this app is bound to.
-
-        Returns
-        -------
-        hikari.api.interaction_server.InteractionServer
-            The interaction server this app is bound to.
-        """
+        """Interaction server this app is bound to."""
         raise NotImplementedError
 
 
@@ -493,13 +409,7 @@ class CacheAware(fast_protocol.FastProtocolChecking, typing.Protocol):
 
     @property
     def cache(self) -> cache_.Cache:
-        """Return the immutable cache implementation for this object.
-
-        Returns
-        -------
-        hikari.api.cache.Cache
-            The cache component for this object.
-        """
+        """Immutable cache implementation for this object."""
         raise NotImplementedError
 
 
@@ -511,16 +421,11 @@ class Runnable(fast_protocol.FastProtocolChecking, typing.Protocol):
 
     @property
     def is_alive(self) -> bool:
-        """Check whether the application is running or not.
+        """Whether the application is running or not.
 
         This is useful as some functions might raise
         `hikari.errors.ComponentStateConflictError` if this is
         `False`.
-
-        Returns
-        -------
-        bool
-            Whether the bot is running or not.
         """
         raise NotImplementedError
 
@@ -602,7 +507,7 @@ class GatewayBotAware(
         afk : bool
             The initial AFK state to display in the bot user presence, or
             `False` (default) to not show any.
-        close_executor : bool
+        close_passed_executor : bool
             Defaults to `False`. If `True`, any custom
             `concurrent.futures.Executor` passed to the constructor will be
             shut down when the application terminates. This does not affect the

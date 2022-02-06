@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v3
         with:
           token: ${{ secrets.PAT_TOKEN }}
@@ -25,7 +25,7 @@ jobs:
           git config --global user.email "90276125+hikari-bot[bot]@users.noreply.github.com"
 
       - name: Temporarily disable "include administrators" branch protection
-        uses: benjefferies/branch-protection-bot@master
+        uses: benjefferies/branch-protection-bot@1.0.7
         with:
           access_token: ${{ secrets.PAT_TOKEN }}
           enforce_admins: false
@@ -35,14 +35,15 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
           VERSION: ${{ github.event.release.tag_name }}
           REF: ${{ github.sha }}
-          GITHUB_REPO_SLUG: ${{ github.repository }}
+          REPO_SLUG: ${{ github.repository }}
+          DOCUMENTATION_REPO_SLUG: hikari-py/hikari-docs
           DEPLOY_WEBHOOK_URL: ${{ secrets.DEPLOY_WEBHOOK_URL }}
           TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
         run: bash scripts/deploy.sh
 
       - name: Re-enable "include administrators" branch protection
-        uses: benjefferies/branch-protection-bot@master
+        uses: benjefferies/branch-protection-bot@1.0.7
         if: always()
         with:
           access_token: ${{ secrets.PAT_TOKEN }}

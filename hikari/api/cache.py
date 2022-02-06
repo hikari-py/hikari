@@ -66,7 +66,7 @@ class CacheView(typing.Mapping[_KeyT, _ValueT], abc.ABC):
 
     @abc.abstractmethod
     def get_item_at(self, index: typing.Union[slice, int], /) -> typing.Union[_ValueT, typing.Sequence[_ValueT]]:
-        ...
+        """Get an item at a specific position or slice."""
 
     @abc.abstractmethod
     def iterator(self) -> iterators.LazyIterator[_ValueT]:
@@ -749,14 +749,14 @@ class MutableCache(Cache, abc.ABC):
     ) -> CacheView[snowflakes.Snowflake, emojis.KnownCustomEmoji]:
         """Remove the known custom emoji objects cached for a specific guild.
 
+        .. note::
+            This will skip emojis that are being kept alive by a reference
+            on a presence entry.
+
         Parameters
         ----------
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             Object or ID of the guild to remove the cached emoji objects for.
-
-        .. note::
-            This will skip emojis that are being kept alive by a reference
-            on a presence entry.
 
         Returns
         -------
@@ -771,14 +771,14 @@ class MutableCache(Cache, abc.ABC):
     ) -> typing.Optional[emojis.KnownCustomEmoji]:
         """Remove a known custom emoji from the cache.
 
+        .. note::
+            This will not delete emojis that are being kept alive by a reference
+            on a presence entry.
+
         Parameters
         ----------
         emoji : hikari.snowflakes.SnowflakeishOr[hikari.emojis.CustomEmoji]
             Object or ID of the emoji to remove from the cache.
-
-        .. note::
-            This will not delete emojis that are being kept alive by a reference
-            on a presence entry.
 
         Returns
         -------
@@ -1120,14 +1120,14 @@ class MutableCache(Cache, abc.ABC):
     ) -> CacheView[snowflakes.Snowflake, guilds.Member]:
         """Remove the members for a specific guild from the cache.
 
+        .. note::
+            This will skip members that are being referenced by other entries in
+            the cache; a matching voice state will keep a member entry alive.
+
         Parameters
         ----------
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             Object or ID of the guild to remove cached members for.
-
-        .. note::
-            This will skip members that are being referenced by other entries in
-            the cache; a matching voice state will keep a member entry alive.
 
         Returns
         -------
@@ -1145,17 +1145,17 @@ class MutableCache(Cache, abc.ABC):
     ) -> typing.Optional[guilds.Member]:
         """Remove a member object from the cache.
 
+        .. note::
+            You cannot delete a member entry that's being referenced by other
+            entries in the cache; a matching voice state will keep a member
+            entry alive.
+
         Parameters
         ----------
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             Object or ID of the guild to remove a member from the cache for.
         user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
             Object or ID of the user to remove a member from the cache for.
-
-        .. note::
-            You cannot delete a member entry that's being referenced by other
-            entries in the cache; a matching voice state will keep a member
-            entry alive.
 
         Returns
         -------
