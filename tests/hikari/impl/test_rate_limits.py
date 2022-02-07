@@ -21,11 +21,8 @@
 # SOFTWARE.
 import asyncio
 import contextlib
-import logging
 import math
-import statistics
 import sys
-import threading
 import time
 
 import mock
@@ -301,106 +298,52 @@ class TestWindowedBurstRateLimiter:
 
     @pytest.mark.asyncio()
     async def test_throttle_consumes_queue(self, event_loop):
-        with rate_limits.WindowedBurstRateLimiter(__name__, 0.01, 1) as rl:
-            rl.queue = [event_loop.create_future() for _ in range(15)]
-            old_queue = list(rl.queue)
-            await rl.throttle()
+        with mock.patch.object(asyncio, "sleep"):
+            with rate_limits.WindowedBurstRateLimiter(__name__, 0.001, 1) as rl:
+                rl.queue = [event_loop.create_future() for _ in range(15)]
+                old_queue = list(rl.queue)
+                await rl.throttle()
 
         assert len(rl.queue) == 0
         for i, future in enumerate(old_queue):
             assert future.done(), f"future {i} was incomplete!"
 
     @pytest.mark.asyncio()
-    @hikari_test_helpers.timeout(20)
-    @hikari_test_helpers.retry(5)
     async def test_throttle_when_limited_sleeps_then_bursts_repeatedly(self, event_loop):
-        # Schedule concurrently but do not break our timeout.
-        # We should retry a few times, as CI runners may run too slowly if
-        # under load. As much as we try, this will always be time-relative,
-        # which is not a good test, but too much mocking is needed to obfuscate
-        # out that detail.
-        # TODO: find a better way of doing this?
-        await event_loop.run_in_executor(None, self._run_test_throttle_logic)
+        window = 5
+        sleep_count = 0
+        futures = [event_loop.create_future() for _ in range(20)]
 
-    def _run_test_throttle_logic(self):
-        threads = [
-            threading.Thread(
-                target=self._run_test_throttle_logic_on_this_thread,
-            )
-            for _ in range(20)
-        ]
+        async def mock_sleep(t):
+            nonlocal sleep_count
 
-        for thread in threads:
-            thread.start()
+            for i, future in enumerate(futures):
+                if i >= (window * sleep_count):
+                    assert not future.done(), f"future {i} was complete, expected it to be incomplete!"
+                else:
+                    assert future.done(), f"future {i} was incomplete, expected it to be completed!"
 
-        for thread in threads:
-            thread.join()
+            sleep_count += 1
 
-    def _run_test_throttle_logic_on_this_thread(self):
-        event_loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(event_loop)
-        try:
-            event_loop.run_until_complete(self._run_test_throttle_logic_on_loop(event_loop))
-        finally:
-            event_loop.close()
+        stack = contextlib.ExitStack()
+        rl = stack.enter_context(rate_limits.WindowedBurstRateLimiter(__name__, 0, window))
+        stack.enter_context(mock.patch.object(asyncio, "sleep", new=mock_sleep))
 
-    @staticmethod
-    async def _run_test_throttle_logic_on_loop(event_loop):
-        limit = 2
-        period = 1.5
-        total_requests = int(period * limit * 2)
-        max_distance_within_window = 0.05
-        completion_times = []
-        logger = logging.getLogger(__name__)
-
-        def create_task(i):
-            logger.info("making task %s", i)
-            future = event_loop.create_future()
-            future.add_done_callback(lambda _: completion_times.append(time.perf_counter()))
-            return future
-
-        with rate_limits.WindowedBurstRateLimiter(__name__, period, limit) as rl:
-            futures = [create_task(i) for i in range(total_requests)]
+        with stack:
             rl.queue = list(futures)
             rl.reset_at = time.perf_counter()
-            logger.info("throttling back")
             await rl.throttle()
             # die if we take too long...
-            logger.info("waiting for stuff to finish")
-            await asyncio.wait(futures, timeout=period * limit + period)
+            await asyncio.wait(futures, timeout=3)
 
-        assert (
-            len(completion_times) == total_requests
-        ), f"expected {total_requests} completions but got {len(completion_times)}"
-
-        # E203 - Whitespace before ":". Black reformats it
-        windows = [completion_times[i : i + limit] for i in range(0, total_requests, limit)]  # noqa: E203
-
-        for i, window in enumerate(windows):
-            logger.info("window %s %s", i, window)
-            mode = statistics.mode(window)
-            for j, element in enumerate(window):
-                assert math.isclose(element, mode, abs_tol=max_distance_within_window), (
-                    f"not close! windows[{i}][{j}], future {i * len(window) + j}, "
-                    f"val {element}, mode {mode}, max diff {max_distance_within_window}"
-                )
-
-        assert len(windows) >= 3, "not enough windows to sample correctly"
-        assert len(windows[0]) > 1, "not enough datapoints per window to sample correctly"
-
-        for i in range(1, len(windows)):
-            previous_last = windows[i - 1][-1]
-            next_first = windows[i][0]
-            logger.info("intra-window index=%s value=%s versus index=%s value=%s", i - 1, previous_last, i, next_first)
-
-            assert math.isclose(next_first - previous_last, period, abs_tol=max_distance_within_window), (
-                f"distance between windows is not acceptable! {i - 1}={previous_last} {i}={next_first}, "
-                f"max diff = {max_distance_within_window}"
-            )
+        assert sleep_count == 4
+        assert len(rl.queue) == 0
+        for i, future in enumerate(futures):
+            assert future.done(), f"future {i} was incomplete!"
 
     @pytest.mark.asyncio()
     async def test_throttle_resets_throttle_task(self, event_loop):
-        with rate_limits.WindowedBurstRateLimiter(__name__, 0.01, 1) as rl:
+        with rate_limits.WindowedBurstRateLimiter(__name__, 0.001, 1) as rl:
             rl.queue = [event_loop.create_future() for _ in range(15)]
             rl.throttle_task = None
             await rl.throttle()

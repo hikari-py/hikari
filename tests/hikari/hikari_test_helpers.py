@@ -150,10 +150,6 @@ def skip_on_system(os_name: str):
     return decorator
 
 
-async def idle(for_=REASONABLE_SLEEP_TIME, /):
-    await asyncio.sleep(for_)
-
-
 @contextlib.contextmanager
 def ensure_occurs_quickly():
     with async_timeout.timeout(REASONABLE_QUICK_RESPONSE_TIME):

@@ -151,8 +151,6 @@ class TestRESTBucketManager:
         with buckets.RESTBucketManager(max_rate_limit=float("inf")) as mgr:
             assert mgr.gc_task is None
             mgr.start()
-            mgr.start()
-            mgr.start()
             assert mgr.gc_task is not None
 
     @pytest.mark.asyncio()
@@ -165,36 +163,38 @@ class TestRESTBucketManager:
             close.assert_called()
 
     @pytest.mark.asyncio()
-    async def test_gc_polls_until_closed_event_set(self):
-        # This is shit, but it is good shit.
+    async def test_gc_polls_until_closed_event_set(self, event_loop):
         with buckets.RESTBucketManager(max_rate_limit=float("inf")) as mgr:
-            mgr.start(0.01)
-            assert mgr.gc_task is not None
-            assert not mgr.gc_task.done()
-            await hikari_test_helpers.idle()
-            assert mgr.gc_task is not None
-            assert not mgr.gc_task.done()
-            await hikari_test_helpers.idle()
+            # Start the gc and initial assertions
+            task = event_loop.create_task(mgr.gc(0.001, float("inf")))
+            assert not task.done()
+
+            # [First poll] event not set => shouldn't complete the task
+            await asyncio.sleep(0.001)
+            assert not task.done()
+
+            # [Second poll] event not set during poll => shouldn't complete the task
+            await asyncio.sleep(0.001)
             mgr.closed_event.set()
-            assert mgr.gc_task is not None
-            assert not mgr.gc_task.done()
-            task = mgr.gc_task
-            await hikari_test_helpers.idle()
-            assert mgr.gc_task is None
+            assert not task.done()
+
+            # [Third poll] event set => should complete the task
+            await asyncio.sleep(0.001)
             assert task.done()
 
     @pytest.mark.asyncio()
     async def test_gc_calls_do_pass(self):
+        class ExitError(Exception):
+            ...
+
         with hikari_test_helpers.mock_class_namespace(buckets.RESTBucketManager, slots_=False)(
             max_rate_limit=float("inf")
         ) as mgr:
-            mgr.do_gc_pass = mock.Mock()
-            mgr.start(0.01, 33)
-            try:
-                await hikari_test_helpers.idle()
-                mgr.do_gc_pass.assert_called_with(33)
-            finally:
-                mgr.gc_task.cancel()
+            mgr.do_gc_pass = mock.Mock(side_effect=ExitError)
+            with pytest.raises(ExitError):
+                await mgr.gc(0.001, 33)
+
+            mgr.do_gc_pass.assert_called_with(33)
 
     @pytest.mark.asyncio()
     async def test_do_gc_pass_any_buckets_that_are_empty_but_still_rate_limited_are_kept_alive(self):
