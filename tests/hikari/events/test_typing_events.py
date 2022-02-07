@@ -28,7 +28,6 @@ from hikari.events import typing_events
 from tests.hikari import hikari_test_helpers
 
 
-@pytest.mark.asyncio()
 class TestTypingEvent:
     @pytest.fixture()
     def event(self):
@@ -42,7 +41,7 @@ class TestTypingEvent:
 
         return cls()
 
-    async def test_get_user_when_no_cache(self, event):
+    def test_get_user_when_no_cache(self, event):
         event = hikari_test_helpers.mock_class_namespace(typing_events.TypingEvent, app=None)()
 
         assert event.get_user() is None
@@ -50,14 +49,13 @@ class TestTypingEvent:
     def test_get_user(self, event):
         assert event.get_user() is event.app.cache.get_user.return_value
 
-    async def test_trigger_typing(self, event):
+    def test_trigger_typing(self, event):
         event.app.rest.trigger_typing = mock.Mock()
         result = event.trigger_typing()
         event.app.rest.trigger_typing.assert_called_once_with(123)
         assert result is event.app.rest.trigger_typing.return_value
 
 
-@pytest.mark.asyncio()
 class TestGuildTypingEvent:
     @pytest.fixture()
     def event(self):
@@ -87,6 +85,7 @@ class TestGuildTypingEvent:
         assert result is event.app.cache.get_guild_channel.return_value
         event.app.cache.get_guild_channel.assert_called_once_with(123)
 
+    @pytest.mark.asyncio()
     async def test_get_guild_when_no_cache(self):
         event = hikari_test_helpers.mock_class_namespace(typing_events.GuildTypingEvent, app=None, init_=False)()
 
@@ -111,6 +110,7 @@ class TestGuildTypingEvent:
         assert event.user_id == event.member.id
         assert event.user_id == 456
 
+    @pytest.mark.asyncio()
     @pytest.mark.parametrize("guild_channel_impl", [channels.GuildNewsChannel, channels.GuildTextChannel])
     async def test_fetch_channel(self, event, guild_channel_impl):
         event.app.rest.fetch_channel = mock.AsyncMock(return_value=mock.Mock(spec_set=guild_channel_impl))
@@ -118,16 +118,19 @@ class TestGuildTypingEvent:
 
         event.app.rest.fetch_channel.assert_awaited_once_with(123)
 
+    @pytest.mark.asyncio()
     async def test_fetch_guild(self, event):
         await event.fetch_guild()
 
         event.app.rest.fetch_guild.assert_awaited_once_with(789)
 
+    @pytest.mark.asyncio()
     async def test_fetch_guild_preview(self, event):
         await event.fetch_guild_preview()
 
         event.app.rest.fetch_guild_preview.assert_awaited_once_with(789)
 
+    @pytest.mark.asyncio()
     async def test_fetch_member(self, event):
         await event.fetch_member()
 
