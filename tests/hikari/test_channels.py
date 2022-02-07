@@ -192,7 +192,6 @@ class TestGroupDMChannel:
         assert model.make_icon_url() is None
 
 
-@pytest.mark.asyncio()
 class TestTextChannel:
     @pytest.fixture()
     def model(self, mock_app):
@@ -203,6 +202,7 @@ class TestTextChannel:
             type=channels.ChannelType.GUILD_TEXT,
         )
 
+    @pytest.mark.asyncio()
     async def test_fetch_history(self, model):
         model.app.rest.fetch_messages = mock.AsyncMock()
 
@@ -219,6 +219,7 @@ class TestTextChannel:
             around=datetime.datetime(2020, 4, 1, 0, 30, 0),
         )
 
+    @pytest.mark.asyncio()
     async def test_fetch_message(self, model):
         model.app.rest.fetch_message = mock.AsyncMock()
 
@@ -226,6 +227,7 @@ class TestTextChannel:
 
         model.app.rest.fetch_message.assert_awaited_once_with(12345679, 133742069)
 
+    @pytest.mark.asyncio()
     async def test_fetch_pins(self, model):
         model.app.rest.fetch_pins = mock.AsyncMock()
 
@@ -233,6 +235,7 @@ class TestTextChannel:
 
         model.app.rest.fetch_pins.assert_awaited_once_with(12345679)
 
+    @pytest.mark.asyncio()
     async def test_pin_message(self, model):
         model.app.rest.pin_message = mock.AsyncMock()
 
@@ -240,6 +243,7 @@ class TestTextChannel:
 
         model.app.rest.pin_message.assert_awaited_once_with(12345679, 77790)
 
+    @pytest.mark.asyncio()
     async def test_unpin_message(self, model):
         model.app.rest.unpin_message = mock.AsyncMock()
 
@@ -247,6 +251,7 @@ class TestTextChannel:
 
         model.app.rest.unpin_message.assert_awaited_once_with(12345679, 77790)
 
+    @pytest.mark.asyncio()
     async def test_delete_messages(self, model):
         model.app.rest.delete_messages = mock.AsyncMock()
 
@@ -254,6 +259,7 @@ class TestTextChannel:
 
         model.app.rest.delete_messages.assert_awaited_once_with(12345679, [77790, 88890, 1800], 1337)
 
+    @pytest.mark.asyncio()
     async def test_send(self, model):
         model.app.rest.create_message = mock.AsyncMock()
         mock_attachment = object()

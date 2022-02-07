@@ -78,7 +78,7 @@ norecursedirs = [
     "public",
     "ci",
 ]
-filterwarnings = ["ignore:.*\"@coroutine\" decorator is deprecated.*:DeprecationWarning"]
+filterwarnings = ["ignore:.*assertions not in test modules or plugins will be ignored because assert statements are not executed by the underlying Python interpreter.*:pytest.PytestConfigWarning"]
 
 [tool.towncrier]
 package = "hikari"
