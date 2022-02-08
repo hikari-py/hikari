@@ -934,7 +934,6 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
         return {"type": self._type, "data": data}
 
 
-@attr_extensions.with_copy
 @attr.define(kw_only=False, weakref_slot=False)
 class CommandBuilder(special_endpoints.CommandBuilder):
     """Standard implementation of `hikari.api.special_endpoints.CommandBuilder`."""
@@ -973,6 +972,7 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         return data
 
 
+@attr_extensions.with_copy
 @attr.define(kw_only=False, weakref_slot=False)
 class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder):
     """Builder class for slash commands."""
@@ -1003,6 +1003,7 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
         return data
 
 
+@attr_extensions.with_copy
 @attr.define(kw_only=False, weakref_slot=False)
 class ContextMenuCommandBuilder(CommandBuilder, special_endpoints.ContextMenuCommandBuilder):
     """Builder class for context menu commands."""
