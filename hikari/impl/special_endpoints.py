@@ -934,29 +934,18 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
         return {"type": self._type, "data": data}
 
 
-@attr_extensions.with_copy
 @attr.define(kw_only=False, weakref_slot=False)
 class CommandBuilder(special_endpoints.CommandBuilder):
     """Standard implementation of `hikari.api.special_endpoints.CommandBuilder`."""
 
-    _type: commands.CommandType = attr.field()
     _name: str = attr.field()
 
-    _description: undefined.UndefinedOr[str] = attr.field(default=undefined.UNDEFINED, kw_only=True)
     _id: undefined.UndefinedOr[snowflakes.Snowflake] = attr.field(default=undefined.UNDEFINED, kw_only=True)
     _default_permission: undefined.UndefinedOr[bool] = attr.field(default=undefined.UNDEFINED, kw_only=True)
-
-    _options: undefined.UndefinedOr[typing.List[commands.CommandOption]] = attr.field(
-        default=undefined.UNDEFINED, kw_only=True
-    )
 
     @property
     def id(self) -> undefined.UndefinedOr[snowflakes.Snowflake]:
         return self._id
-
-    @property
-    def type(self) -> undefined.UndefinedOr[commands.CommandType]:
-        return self._type
 
     @property
     def default_permission(self) -> undefined.UndefinedOr[bool]:
@@ -977,11 +966,13 @@ class CommandBuilder(special_endpoints.CommandBuilder):
     def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObjectBuilder:
         data = data_binding.JSONObjectBuilder()
         data["name"] = self._name
+        data["type"] = self.type
         data.put_snowflake("id", self._id)
         data.put("default_permission", self._default_permission)
         return data
 
 
+@attr_extensions.with_copy
 @attr.define(kw_only=False, weakref_slot=False)
 class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder):
     """Builder class for slash commands."""
@@ -989,11 +980,13 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
     _description: str = attr.field()
     _options: typing.List[commands.CommandOption] = attr.field(factory=list, kw_only=True)
 
-    _type: commands.CommandType = attr.field(default=commands.CommandType.SLASH, init=False)
-
     @property
     def description(self) -> str:
         return self._description
+
+    @property
+    def type(self) -> commands.CommandType:
+        return commands.CommandType.SLASH
 
     def add_option(self: _SlashCommandBuilderT, option: commands.CommandOption) -> _SlashCommandBuilderT:
         self._options.append(option)
@@ -1005,20 +998,23 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
 
     def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObjectBuilder:
         data = super().build(entity_factory)
-        data["type"] = commands.CommandType.SLASH
         data.put("description", self._description)
         data.put_array("options", self._options, conversion=entity_factory.serialize_command_option)
         return data
 
 
+@attr_extensions.with_copy
 @attr.define(kw_only=False, weakref_slot=False)
 class ContextMenuCommandBuilder(CommandBuilder, special_endpoints.ContextMenuCommandBuilder):
     """Builder class for context menu commands."""
 
-    def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObjectBuilder:
-        data = super().build(entity_factory)
-        data["type"] = self._type
-        return data
+    _type: commands.CommandType = attr.field()
+    # name is re-declared here to ensure type is before it in the initializer's args.
+    _name: str = attr.field()
+
+    @property
+    def type(self) -> commands.CommandType:
+        return self._type
 
 
 def _build_emoji(
