@@ -3204,6 +3204,7 @@ class TestEntityFactoryImpl:
         assert sub_option1.value == 123312
         assert sub_option1.type is commands.OptionType.INTEGER
         assert sub_option1.options is None
+        assert sub_option1.is_focused is False
         assert isinstance(sub_option1, command_interactions.CommandInteractionOption)
 
         sub_option2 = option.options[1]
@@ -3211,6 +3212,7 @@ class TestEntityFactoryImpl:
         assert sub_option2.value == "ea"
         assert sub_option2.type is commands.OptionType.STRING
         assert sub_option2.options is None
+        assert sub_option2.is_focused is True
         assert isinstance(sub_option2, command_interactions.AutocompleteInteractionOption)
         assert isinstance(option, command_interactions.AutocompleteInteractionOption)
 
