@@ -936,7 +936,7 @@ class CommandBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def type(self) -> undefined.UndefinedOr[commands.CommandType]:
+    def type(self) -> commands.CommandType:
         """Return the type of this command.
 
         Returns

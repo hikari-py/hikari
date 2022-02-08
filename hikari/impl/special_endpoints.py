@@ -939,7 +939,6 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
 class CommandBuilder(special_endpoints.CommandBuilder):
     """Standard implementation of `hikari.api.special_endpoints.CommandBuilder`."""
 
-    _type: commands.CommandType = attr.field()
     _name: str = attr.field()
 
     _id: undefined.UndefinedOr[snowflakes.Snowflake] = attr.field(default=undefined.UNDEFINED, kw_only=True)
@@ -948,10 +947,6 @@ class CommandBuilder(special_endpoints.CommandBuilder):
     @property
     def id(self) -> undefined.UndefinedOr[snowflakes.Snowflake]:
         return self._id
-
-    @property
-    def type(self) -> undefined.UndefinedOr[commands.CommandType]:
-        return self._type
 
     @property
     def default_permission(self) -> undefined.UndefinedOr[bool]:
@@ -972,7 +967,7 @@ class CommandBuilder(special_endpoints.CommandBuilder):
     def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObjectBuilder:
         data = data_binding.JSONObjectBuilder()
         data["name"] = self._name
-        data["type"] = self._type
+        data["type"] = self.type
         data.put_snowflake("id", self._id)
         data.put("default_permission", self._default_permission)
         return data
@@ -985,11 +980,13 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
     _description: str = attr.field()
     _options: typing.List[commands.CommandOption] = attr.field(factory=list, kw_only=True)
 
-    _type: commands.CommandType = attr.field(default=commands.CommandType.SLASH, init=False)
-
     @property
     def description(self) -> str:
         return self._description
+
+    @property
+    def type(self) -> commands.CommandType:
+        return commands.CommandType.SLASH
 
     def add_option(self: _SlashCommandBuilderT, option: commands.CommandOption) -> _SlashCommandBuilderT:
         self._options.append(option)
@@ -1009,6 +1006,14 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
 @attr.define(kw_only=False, weakref_slot=False)
 class ContextMenuCommandBuilder(CommandBuilder, special_endpoints.ContextMenuCommandBuilder):
     """Builder class for context menu commands."""
+
+    _type: commands.CommandType = attr.field()
+    # name is re-declared here to ensure type is before it in the initializer's args.
+    _name: str = attr.field()
+
+    @property
+    def type(self) -> commands.CommandType:
+        return self._type
 
 
 def _build_emoji(
