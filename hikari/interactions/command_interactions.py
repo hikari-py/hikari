@@ -425,9 +425,7 @@ class CommandInteraction(BaseCommandInteraction, base_interactions.MessageRespon
 class AutocompleteInteraction(BaseCommandInteraction):
     """Represents an autocomplete interaction on Discord."""
 
-    options: typing.Optional[typing.Sequence[AutocompleteInteractionOption]] = attr.field(
-        eq=False, hash=False, repr=True
-    )
+    options: typing.Sequence[AutocompleteInteractionOption] = attr.field(eq=False, hash=False, repr=True)
     """Parameter values provided by the user invoking this command."""
 
     def build_response(
