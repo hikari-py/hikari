@@ -128,6 +128,7 @@ class CommandInteractionOption:
     subcommand or group.
     """
 
+    # TODO: use typing.Self here
     options: typing.Optional[typing.Sequence[CommandInteractionOption]] = attr.field(repr=True)
     """Options provided for this option.
 
@@ -148,6 +149,18 @@ class AutocompleteInteractionOption(CommandInteractionOption):
 
     Focused options are not guaranteed to be parsed so the value may be a string
     even if the option type says otherwise.
+    """
+
+    options: typing.Optional[typing.Sequence[AutocompleteInteractionOption]] = attr.field(repr=True)
+    """Options provided for this option.
+
+    Either `AutocompleteInteractionOption.value` or `AutocompleteInteractionOption.options`
+    will be provided with `value` being provided when an option is provided as a
+    parameter with a value and `options` being provided when an option donates a
+    subcommand or group.
+
+    `AutocompleteInteractionOption.is_focused` will be `True` for the value being
+    autocompleted.
     """
 
 
@@ -412,9 +425,7 @@ class CommandInteraction(BaseCommandInteraction, base_interactions.MessageRespon
 class AutocompleteInteraction(BaseCommandInteraction):
     """Represents an autocomplete interaction on Discord."""
 
-    options: typing.Optional[typing.Sequence[AutocompleteInteractionOption]] = attr.field(
-        eq=False, hash=False, repr=True
-    )
+    options: typing.Sequence[AutocompleteInteractionOption] = attr.field(eq=False, hash=False, repr=True)
     """Parameter values provided by the user invoking this command."""
 
     def build_response(
