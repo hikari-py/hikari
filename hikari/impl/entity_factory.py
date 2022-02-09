@@ -1932,7 +1932,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             messages = {}
 
         if raw_attachments := payload.get("attachments"):
-            print(raw_attachments)
             attachments = {a.id: a for a in map(self._deserialize_message_attachment, raw_attachments.values())}
 
         else:
