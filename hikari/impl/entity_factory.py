@@ -1931,12 +1931,20 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         else:
             messages = {}
 
+        if raw_attachments := payload.get("attachments"):
+            print(raw_attachments)
+            attachments = {a.id: a for a in map(self._deserialize_message_attachment, raw_attachments.values())}
+
+        else:
+            attachments = {}
+
         return command_interactions.ResolvedOptionData(
+            attachments=attachments,
             channels=channels,
             members=members,
-            users=users,
-            roles=roles,
             messages=messages,
+            roles=roles,
+            users=users,
         )
 
     def deserialize_command_interaction(

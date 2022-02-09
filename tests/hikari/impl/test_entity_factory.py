@@ -2970,6 +2970,7 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl,
         interaction_resolved_data_payload,
+        attachment_payload,
         user_payload,
         guild_role_payload,
         interaction_member_payload,
@@ -2979,7 +2980,6 @@ class TestEntityFactoryImpl:
             interaction_resolved_data_payload, guild_id=123321
         )
 
-        # ResolvedOptionData
         assert len(resolved.channels) == 1
         channel = resolved.channels[695382395666300958]
         assert channel.type is channel_models.ChannelType.GUILD_TEXT
@@ -2993,6 +2993,9 @@ class TestEntityFactoryImpl:
             interaction_member_payload, guild_id=123321, user=entity_factory_impl.deserialize_user(user_payload)
         )
 
+        assert resolved.attachments == {
+            690922406474154014: entity_factory_impl._deserialize_message_attachment(attachment_payload)
+        }
         assert resolved.roles == {
             41771983423143936: entity_factory_impl.deserialize_role(guild_role_payload, guild_id=123321)
         }
@@ -3004,6 +3007,7 @@ class TestEntityFactoryImpl:
     def test__deserialize_resolved_option_data_with_empty_resolved_resources(self, entity_factory_impl):
         resolved = entity_factory_impl._deserialize_resolved_option_data({})
 
+        assert resolved.attachments == {}
         assert resolved.channels == {}
         assert resolved.members == {}
         assert resolved.roles == {}
@@ -3012,9 +3016,10 @@ class TestEntityFactoryImpl:
 
     @pytest.fixture()
     def interaction_resolved_data_payload(
-        self, interaction_member_payload, guild_role_payload, user_payload, message_payload
+        self, interaction_member_payload, attachment_payload, guild_role_payload, user_payload, message_payload
     ):
         return {
+            "attachments": {"690922406474154014": attachment_payload},
             "channels": {
                 "695382395666300958": {
                     "id": "695382395666300958",
@@ -4088,6 +4093,20 @@ class TestEntityFactoryImpl:
         }
 
     @pytest.fixture()
+    def attachment_payload(self):
+        return {
+            "id": "690922406474154014",
+            "filename": "IMG.jpg",
+            "content_type": "image/png",
+            "size": 660521,
+            "url": "https://somewhere.com/attachments/123/456/IMG.jpg",
+            "proxy_url": "https://media.somewhere.com/attachments/123/456/IMG.jpg",
+            "width": 1844,
+            "height": 2638,
+            "ephemeral": True,
+        }
+
+    @pytest.fixture()
     def message_payload(
         self,
         user_payload,
@@ -4098,6 +4117,7 @@ class TestEntityFactoryImpl:
         referenced_message,
         action_row_payload,
         partial_sticker_payload,
+        attachment_payload,
     ):
         member_payload = member_payload.copy()
         del member_payload["user"]
@@ -4117,19 +4137,7 @@ class TestEntityFactoryImpl:
             ],
             "mention_roles": ["987"],
             "mention_channels": [{"id": "456", "guild_id": "678", "type": 1, "name": "hikari-testing"}],
-            "attachments": [
-                {
-                    "id": "690922406474154014",
-                    "filename": "IMG.jpg",
-                    "content_type": "image/png",
-                    "size": 660521,
-                    "url": "https://somewhere.com/attachments/123/456/IMG.jpg",
-                    "proxy_url": "https://media.somewhere.com/attachments/123/456/IMG.jpg",
-                    "width": 1844,
-                    "height": 2638,
-                    "ephemeral": True,
-                }
-            ],
+            "attachments": [attachment_payload],
             "embeds": [embed_payload],
             "reactions": [{"emoji": custom_emoji_payload, "count": 100, "me": True}],
             "pinned": True,
@@ -4151,6 +4159,51 @@ class TestEntityFactoryImpl:
             "components": [action_row_payload, {"type": 1000000000}],
         }
 
+    def test__deserialize_message_attachment(self, entity_factory_impl, attachment_payload):
+        attachment = entity_factory_impl._deserialize_message_attachment(attachment_payload)
+
+        assert attachment.id == 690922406474154014
+        assert attachment.filename == "IMG.jpg"
+        assert attachment.size == 660521
+        assert attachment.media_type == "image/png"
+        assert attachment.url == "https://somewhere.com/attachments/123/456/IMG.jpg"
+        assert attachment.proxy_url == "https://media.somewhere.com/attachments/123/456/IMG.jpg"
+        assert attachment.width == 1844
+        assert attachment.height == 2638
+        assert attachment.is_ephemeral is True
+        assert isinstance(attachment, message_models.Attachment)
+
+    def test__deserialize_message_attachment_with_null_fields(
+        self,
+        entity_factory_impl,
+        attachment_payload,
+    ):
+        attachment_payload["height"] = None
+        attachment_payload["width"] = None
+
+        attachment = entity_factory_impl._deserialize_message_attachment(attachment_payload)
+
+        assert attachment.height is None
+        assert attachment.width is None
+        assert isinstance(attachment, message_models.Attachment)
+
+    def test__deserialize_message_attachment_with_unset_fields(
+        self,
+        entity_factory_impl,
+        attachment_payload,
+    ):
+        del attachment_payload["content_type"]
+        del attachment_payload["height"]
+        del attachment_payload["width"]
+        del attachment_payload["ephemeral"]
+
+        attachment = entity_factory_impl._deserialize_message_attachment(attachment_payload)
+
+        assert attachment.media_type is None
+        assert attachment.height is None
+        assert attachment.width is None
+        assert attachment.is_ephemeral is False
+
     def test_deserialize_partial_message(
         self,
         entity_factory_impl,
@@ -4163,6 +4216,7 @@ class TestEntityFactoryImpl:
         embed_payload,
         referenced_message,
         action_row_payload,
+        attachment_payload,
     ):
         partial_message = entity_factory_impl.deserialize_partial_message(message_payload)
 
@@ -4186,19 +4240,7 @@ class TestEntityFactoryImpl:
         assert partial_message.mentions.user_ids == [5678]
         assert partial_message.mentions.role_ids == [987]
         assert partial_message.mentions.channels_ids == [456]
-        # Attachment
-        assert len(partial_message.attachments) == 1
-        attachment = partial_message.attachments[0]
-        assert attachment.id == 690922406474154014
-        assert attachment.filename == "IMG.jpg"
-        assert attachment.size == 660521
-        assert attachment.media_type == "image/png"
-        assert attachment.url == "https://somewhere.com/attachments/123/456/IMG.jpg"
-        assert attachment.proxy_url == "https://media.somewhere.com/attachments/123/456/IMG.jpg"
-        assert attachment.width == 1844
-        assert attachment.height == 2638
-        assert attachment.is_ephemeral is True
-        assert isinstance(attachment, message_models.Attachment)
+        assert partial_message.attachments == [entity_factory_impl._deserialize_message_attachment(attachment_payload)]
 
         expected_embed = entity_factory_impl.deserialize_embed(embed_payload)
         assert partial_message.embeds == [expected_embed]
@@ -4443,10 +4485,6 @@ class TestEntityFactoryImpl:
     def test_deserialize_message_with_unset_sub_fields(self, entity_factory_impl, message_payload):
         del message_payload["application"]["cover_image"]
         del message_payload["application"]["primary_sku_id"]
-        del message_payload["attachments"][0]["content_type"]
-        del message_payload["attachments"][0]["height"]
-        del message_payload["attachments"][0]["width"]
-        del message_payload["attachments"][0]["ephemeral"]
         del message_payload["activity"]["party_id"]
         del message_payload["message_reference"]["message_id"]
         del message_payload["message_reference"]["guild_id"]
@@ -4455,13 +4493,6 @@ class TestEntityFactoryImpl:
         message = entity_factory_impl.deserialize_message(message_payload)
 
         assert message.mentions.channels == {}
-        # Attachment
-        assert len(message.attachments) == 1
-        attachment = message.attachments[0]
-        assert attachment.width is None
-        assert attachment.height is None
-        assert attachment.is_ephemeral is False
-        assert isinstance(attachment, message_models.Attachment)
 
         # Activity
         assert message.activity.party_id is None
@@ -4478,17 +4509,8 @@ class TestEntityFactoryImpl:
         assert isinstance(message.message_reference, message_models.MessageReference)
 
     def test_deserialize_message_with_null_sub_fields(self, entity_factory_impl, message_payload):
-        message_payload["attachments"][0]["height"] = None
-        message_payload["attachments"][0]["width"] = None
         message_payload["application"]["icon"] = None
         message = entity_factory_impl.deserialize_message(message_payload)
-
-        # Attachment
-        assert len(message.attachments) == 1
-        attachment = message.attachments[0]
-        assert attachment.width is None
-        assert attachment.height is None
-        assert isinstance(attachment, message_models.Attachment)
 
         # MessageApplication
         assert message.application.icon_hash is None

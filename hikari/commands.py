@@ -104,6 +104,9 @@ class OptionType(int, enums.Enum):
     This is range limited between -2^53 and 2^53.
     """
 
+    ATTACHMENT = 11
+    """Denotes a command option where the value will be an attachment."""
+
 
 @attr_extensions.with_copy
 @attr.define(hash=False, kw_only=True, weakref_slot=False)
