@@ -1,0 +1,1 @@
+Added attachment command option type support.

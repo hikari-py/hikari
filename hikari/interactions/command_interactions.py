@@ -92,20 +92,23 @@ class InteractionChannel(channels.PartialChannel):
 class ResolvedOptionData:
     """Represents the resolved objects of entities referenced in a command's options."""
 
-    users: typing.Mapping[snowflakes.Snowflake, users_.User] = attr.field(repr=False)
-    """Mapping of snowflake IDs to the resolved option user objects."""
+    attachments: typing.Mapping[snowflakes.Snowflake, messages_.Attachment] = attr.field(repr=False)
+    """Mapping of snowflake IDs to the attachment objects."""
+
+    channels: typing.Mapping[snowflakes.Snowflake, InteractionChannel] = attr.field(repr=False)
+    """Mapping of snowflake IDs to the resolved option partial channel objects."""
 
     members: typing.Mapping[snowflakes.Snowflake, base_interactions.InteractionMember] = attr.field(repr=False)
     """Mapping of snowflake IDs to the resolved option member objects."""
 
+    messages: typing.Mapping[snowflakes.Snowflake, messages_.Message]
+    """Mapping of snowflake IDs to the resolved option partial message objects."""
+
     roles: typing.Mapping[snowflakes.Snowflake, guilds.Role] = attr.field(repr=False)
     """Mapping of snowflake IDs to the resolved option role objects."""
 
-    channels: typing.Mapping[snowflakes.Snowflake, InteractionChannel] = attr.field(repr=False)
-    """Mapping of snowflake iDs to the resolved option partial channel objects."""
-
-    messages: typing.Mapping[snowflakes.Snowflake, messages_.Message]
-    """Mapping of snowflake iDs to the resolved option partial message objects."""
+    users: typing.Mapping[snowflakes.Snowflake, users_.User] = attr.field(repr=False)
+    """Mapping of snowflake IDs to the resolved option user objects."""
 
 
 @attr_extensions.with_copy
