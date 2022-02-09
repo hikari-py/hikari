@@ -984,7 +984,6 @@ class InteractionModalBuilder(special_endpoints.InteractionModalBuilder):
         return {"type": self.type, "data": data}
 
 
-@attr_extensions.with_copy
 @attr.define(kw_only=False, weakref_slot=False)
 class CommandBuilder(special_endpoints.CommandBuilder):
     """Standard implementation of `hikari.api.special_endpoints.CommandBuilder`."""
