@@ -1026,7 +1026,7 @@ class CommandBuilder(abc.ABC):
         *,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
     ) -> commands.PartialCommand:
-        """Create this REST command through a REST call.
+        """Create this command through a REST call.
 
         Parameters
         ----------
@@ -1106,7 +1106,7 @@ class SlashCommandBuilder(CommandBuilder):
         *,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
     ) -> commands.SlashCommand:
-        """Create this REST command through a REST call.
+        """Create this command through a REST call.
 
         This is a shorthand for calling `hikari.api.rest.RESTClient.create_slash_command`
         with the builder's information.
@@ -1146,7 +1146,7 @@ class ContextMenuCommandBuilder(CommandBuilder):
         *,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
     ) -> commands.ContextMenuCommand:
-        """Create this REST command through a REST call.
+        """Create this command through a REST call.
 
         This is a shorthand for calling
         `hikari.api.rest.RESTClient.create_context_menu_command`
