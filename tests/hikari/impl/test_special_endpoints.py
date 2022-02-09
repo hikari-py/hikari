@@ -246,6 +246,45 @@ class TestSlashCommandBuilder:
 
         assert result == {"type": 1, "name": "we are numberr", "description": "oner", "options": []}
 
+    @pytest.mark.asyncio()
+    async def test_create(self):
+        builder = (
+            special_endpoints.SlashCommandBuilder("we are number", "one")
+            .add_option(mock.Mock())
+            .set_id(3412312)
+            .set_default_permission(False)
+        )
+        mock_rest = mock.AsyncMock()
+
+        result = await builder.create(mock_rest, 123431123)
+
+        assert result is mock_rest.create_slash_command.return_value
+        mock_rest.create_slash_command.assert_awaited_once_with(
+            123431123,
+            builder.name,
+            builder.description,
+            guild=undefined.UNDEFINED,
+            default_permission=builder.default_permission,
+            options=builder.options,
+        )
+
+    @pytest.mark.asyncio()
+    async def test_create_with_guild(self):
+        builder = special_endpoints.SlashCommandBuilder("we are number", "one")
+        mock_rest = mock.AsyncMock()
+
+        result = await builder.create(mock_rest, 54455445, guild=54123123321)
+
+        assert result is mock_rest.create_slash_command.return_value
+        mock_rest.create_slash_command.assert_awaited_once_with(
+            54455445,
+            builder.name,
+            builder.description,
+            guild=54123123321,
+            default_permission=builder.default_permission,
+            options=builder.options,
+        )
+
 
 class TestContextMenuBuilder:
     def test_build_with_optional_data(self):
@@ -270,6 +309,42 @@ class TestContextMenuBuilder:
         result = builder.build(mock.Mock())
 
         assert result == {"type": 3, "name": "nameeeee"}
+
+    @pytest.mark.asyncio()
+    async def test_create(self):
+        builder = (
+            special_endpoints.ContextMenuCommandBuilder(commands.CommandType.USER, "we are number")
+            .set_id(3412312)
+            .set_default_permission(False)
+        )
+        mock_rest = mock.AsyncMock()
+
+        result = await builder.create(mock_rest, 123321)
+
+        assert result is mock_rest.create_context_menu_command.return_value
+        mock_rest.create_context_menu_command.assert_awaited_once_with(
+            123321,
+            builder.type,
+            builder.name,
+            guild=undefined.UNDEFINED,
+            default_permission=builder.default_permission,
+        )
+
+    @pytest.mark.asyncio()
+    async def test_create_with_guild(self):
+        builder = special_endpoints.ContextMenuCommandBuilder(commands.CommandType.MESSAGE, "we are number")
+        mock_rest = mock.AsyncMock()
+
+        result = await builder.create(mock_rest, 4444444, guild=765234123)
+
+        assert result is mock_rest.create_context_menu_command.return_value
+        mock_rest.create_context_menu_command.assert_awaited_once_with(
+            4444444,
+            builder.type,
+            builder.name,
+            guild=765234123,
+            default_permission=builder.default_permission,
+        )
 
 
 @pytest.mark.parametrize("emoji", ["UNICORN", emojis.UnicodeEmoji("UNICORN")])

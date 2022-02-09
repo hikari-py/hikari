@@ -6947,7 +6947,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def create_context_menu_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        type: typing.Literal[commands.CommandType.USER, commands.CommandType.MESSAGE, 2, 3],
+        type: typing.Union[commands.CommandType, int],
         name: str,
         *,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
@@ -6959,6 +6959,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------
         application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to create a command for.
+        type : typing.Union[hikari.commands.CommandType, builtins.int]
+            The type of menu command to make.
+
+            Only USER and MESSAGE are valid here.
         name : builtins.str
             The command's name. This should match the regex `^[\w-]{1,32}$` in
             Unicode mode and be lowercase.
