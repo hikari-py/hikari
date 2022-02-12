@@ -61,7 +61,7 @@ pip install -r requirements.txt
 
 echo "===== DEPLOYING TO PYPI ====="
 echo "-- Setting __git_sha1__ (ref: ${REF}) --"
-sed "/^__git__sha1__.*/, \${s||__git__sha1__: typing.Final[str] = \"${REF}\"|g; b}; $q1" -i hikari/_about.py || (echo "Variable '__git__sha1__' not found in about!" && exit 1)
+sed "/^__git_sha1__.*/, \${s||__git_sha1__: typing.Final[str] = \"${REF}\"|g; b}; \$q1" -i hikari/_about.py || (echo "Variable '__git_sha1__' not found in about!" && exit 1)
 echo "=========================================================================="
 cat hikari/_about.py
 echo "=========================================================================="
@@ -93,7 +93,7 @@ git fetch origin
 git checkout -f master
 
 echo "-- Bumping to development version (${NEW_VERSION}) --"
-sed "/^__version__.*/, \${s||__version__: typing.Final[str] = \"${NEW_VERSION}\"|g; b}; $q1" -i hikari/_about.py || (echo "Variable '__version__' not found in about!" && exit 1)
+sed "/^__version__.*/, \${s||__version__: typing.Final[str] = \"${NEW_VERSION}\"|g; b}; \$q1" -i hikari/_about.py || (echo "Variable '__version__' not found in about!" && exit 1)
 
 echo "-- Pushing to repository --"
 git commit -am "Bump to development version (${NEW_VERSION})"

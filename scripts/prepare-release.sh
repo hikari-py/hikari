@@ -38,7 +38,7 @@ echo "-- Checkout branch --"
 git checkout -b "task/prepare-release-${VERSION}"
 
 echo "-- Bumping repository version to ${VERSION} --"
-sed "/^__version__.*/, \${s||__version__: typing.Final[str] = \"${VERSION}\"|g; b}; $q1" -i hikari/_about.py || (echo "Variable '__version__' not found in about!" && exit 1)
+sed "/^__version__.*/, \${s||__version__: typing.Final[str] = \"${VERSION}\"|g; b}; \$q1" -i hikari/_about.py || (echo "Variable '__version__' not found in about!" && exit 1)
 
 echo "-- Running towncrier --"
 towncrier --yes
