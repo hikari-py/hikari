@@ -23,6 +23,7 @@ import asyncio
 import contextlib
 import datetime
 import platform
+import re
 
 import aiohttp
 import mock
@@ -35,7 +36,6 @@ from hikari import intents
 from hikari import presences
 from hikari import undefined
 from hikari.impl import shard
-from hikari.internal import aio
 from hikari.internal import time
 from tests.hikari import client_session_stub
 from tests.hikari import hikari_test_helpers
@@ -94,7 +94,7 @@ class TestGatewayTransport:
 
         with mock.patch.object(aiohttp.ClientWebSocketResponse, "close", new=mock.Mock()) as close:
             with mock.patch.object(asyncio, "wait_for", return_value=mock.AsyncMock()) as wait_for:
-                assert await transport_impl.send_close(code=1234, message=b"some message") is wait_for.return_value
+                await transport_impl.send_close(code=1234, message=b"some message")
 
         wait_for.assert_awaited_once_with(close.return_value, timeout=5)
         close.assert_called_once_with(code=1234, message=b"some message")
@@ -104,9 +104,18 @@ class TestGatewayTransport:
         transport_impl.sent_close = False
 
         with mock.patch.object(aiohttp.ClientWebSocketResponse, "close", side_effect=asyncio.TimeoutError) as close:
-            assert await transport_impl.send_close(code=1234, message=b"some message") is False
+            await transport_impl.send_close(code=1234, message=b"some message")
 
         close.assert_called_once_with(code=1234, message=b"some message")
+
+    @pytest.mark.asyncio()
+    async def test_send_close_when_already_sent(self, transport_impl):
+        transport_impl.sent_close = True
+
+        with mock.patch.object(aiohttp.ClientWebSocketResponse, "close", side_effect=asyncio.TimeoutError) as close:
+            await transport_impl.send_close(code=1234, message=b"some message")
+
+        close.assert_not_called()
 
     @pytest.mark.asyncio()
     @pytest.mark.parametrize("trace", [True, False])
@@ -468,9 +477,21 @@ class TestGatewayTransport:
         mock_websocket.assert_used_once()
 
     @pytest.mark.asyncio()
-    async def test_connect_when_error_connecting(self, http_settings, proxy_settings):
+    @pytest.mark.parametrize(
+        ("error", "reason"),
+        [
+            (
+                aiohttp.WSServerHandshakeError(status=123, message="some error", request_info=None, history=None),
+                "WSServerHandshakeError(None, None, status=123, message='some error')",
+            ),
+            (aiohttp.ClientOSError("some error"), "some error"),
+            (aiohttp.ClientConnectionError("some error"), "some error"),
+            (asyncio.TimeoutError("some error"), "Timeout exceeded"),
+        ],
+    )
+    async def test_connect_when_expected_error_connecting(self, http_settings, proxy_settings, error, reason):
         mock_client_session = hikari_test_helpers.AsyncContextManagerMock()
-        mock_client_session.ws_connect = mock.MagicMock(side_effect=aiohttp.ClientConnectionError("some error"))
+        mock_client_session.ws_connect = mock.MagicMock(side_effect=error)
 
         stack = contextlib.ExitStack()
         sleep = stack.enter_context(mock.patch.object(asyncio, "sleep"))
@@ -478,7 +499,7 @@ class TestGatewayTransport:
         stack.enter_context(mock.patch.object(aiohttp, "TCPConnector"))
         stack.enter_context(mock.patch.object(aiohttp, "ClientTimeout"))
         stack.enter_context(
-            pytest.raises(errors.GatewayConnectionError, match=r"Failed to connect to server: 'some error'")
+            pytest.raises(errors.GatewayConnectionError, match=re.escape(f"Failed to connect to server: {reason!r}"))
         )
         logger = mock.Mock()
         log_filterer = mock.Mock()
@@ -497,65 +518,16 @@ class TestGatewayTransport:
         mock_client_session.assert_used_once()
 
     @pytest.mark.asyncio()
-    async def test_connect_when_handshake_error_with_unknown_reason(self, http_settings, proxy_settings):
+    async def test_connect_when_unexpected_error_connecting(self, http_settings, proxy_settings):
         mock_client_session = hikari_test_helpers.AsyncContextManagerMock()
-        mock_client_session.ws_connect = mock.MagicMock(
-            side_effect=aiohttp.WSServerHandshakeError(
-                status=123, message="some error", request_info=None, history=None
-            )
-        )
+        mock_client_session.ws_connect = mock.MagicMock(side_effect=RuntimeError("in tests"))
 
         stack = contextlib.ExitStack()
         sleep = stack.enter_context(mock.patch.object(asyncio, "sleep"))
         stack.enter_context(mock.patch.object(aiohttp, "ClientSession", return_value=mock_client_session))
         stack.enter_context(mock.patch.object(aiohttp, "TCPConnector"))
         stack.enter_context(mock.patch.object(aiohttp, "ClientTimeout"))
-        stack.enter_context(
-            pytest.raises(
-                errors.GatewayConnectionError,
-                match=(
-                    r'Failed to connect to server: "WSServerHandshakeError\(None, None, status=123, message=\'some error\'\)"'
-                ),
-            )
-        )
-        logger = mock.Mock()
-        log_filterer = mock.Mock()
-
-        with stack:
-            async with shard._GatewayTransport.connect(
-                http_settings=http_settings,
-                proxy_settings=proxy_settings,
-                logger=logger,
-                url="https://some.url",
-                log_filterer=log_filterer,
-            ):
-                pass
-
-        sleep.assert_awaited_once_with(0.25)
-        mock_client_session.assert_used_once()
-
-    @pytest.mark.asyncio()
-    async def test_connect_when_handshake_error_with_known_reason(self, http_settings, proxy_settings):
-        mock_client_session = hikari_test_helpers.AsyncContextManagerMock()
-        mock_client_session.ws_connect = mock.MagicMock(
-            side_effect=aiohttp.WSServerHandshakeError(
-                status=500, message="some error", request_info=None, history=None
-            )
-        )
-
-        stack = contextlib.ExitStack()
-        sleep = stack.enter_context(mock.patch.object(asyncio, "sleep"))
-        stack.enter_context(mock.patch.object(aiohttp, "ClientSession", return_value=mock_client_session))
-        stack.enter_context(mock.patch.object(aiohttp, "TCPConnector"))
-        stack.enter_context(mock.patch.object(aiohttp, "ClientTimeout"))
-        stack.enter_context(
-            pytest.raises(
-                errors.GatewayConnectionError,
-                match=(
-                    r'Failed to connect to server: "WSServerHandshakeError\(None, None, status=500, message=\'some error\'\)"'
-                ),
-            )
-        )
+        stack.enter_context(pytest.raises(RuntimeError, match="in tests"))
         logger = mock.Mock()
         log_filterer = mock.Mock()
 
@@ -643,19 +615,12 @@ class TestGatewayShardImpl:
         client._intents = mock_intents
         assert client.intents is mock_intents
 
-    def test_is_alive_property(self, client):
-        client._run_task = None
-        assert client.is_alive is False
-
-    @pytest.mark.asyncio()
-    async def test_is_alive_property_with_active_future(self, client):
-        client._run_task = asyncio.get_running_loop().create_future()
-        assert client.is_alive is True
-
-    @pytest.mark.asyncio()
-    async def test_is_alive_property_with_finished_future(self, client):
-        client._run_task = aio.completed_future()
-        assert client.is_alive is False
+    @pytest.mark.parametrize(
+        ("ws", "expected"), [(None, False), (mock.Mock(sent_close=True), False), (mock.Mock(sent_close=False), True)]
+    )
+    def test_is_alive_property(self, client, ws, expected):
+        client._ws = ws
+        assert client.is_alive is expected
 
     def test_shard_count_property(self, client):
         client._shard_count = 69

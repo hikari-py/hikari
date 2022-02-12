@@ -135,21 +135,22 @@ class _GatewayTransport(aiohttp.ClientWebSocketResponse):
         self.logger: logging.Logger
         self.log_filterer: typing.Callable[[str], str]
 
-    async def send_close(self, *, code: int = 1000, message: bytes = b"") -> bool:
+    async def send_close(self, *, code: int = 1000, message: bytes = b"") -> None:
         # aiohttp may close the socket by invoking close() internally. By giving
         # a different name, we can ensure aiohttp won't invoke this method.
         # We can then guarantee any call to this method was made by us, as
         # opposed to, for example, Windows injecting a spurious EOF when
         # something disconnects, which makes aiohttp just shut down as if we
         # did it.
-        if not self.sent_close:
-            self.sent_close = True
-            self.logger.debug("sending close frame with code %s and message %s", int(code), message)
-            try:
-                return await asyncio.wait_for(super().close(code=code, message=message), timeout=5)
-            except asyncio.TimeoutError:
-                self.logger.debug("failed to send close frame in time, probably connection issues")
-        return False
+        if self.sent_close:
+            return
+
+        self.sent_close = True
+        self.logger.debug("sending close frame with code %s and message %s", int(code), message)
+        try:
+            await asyncio.wait_for(super().close(code=code, message=message), timeout=5)
+        except asyncio.TimeoutError:
+            self.logger.debug("failed to send close frame in time, probably connection issues")
 
     async def receive_json(
         self,
@@ -296,17 +297,23 @@ class _GatewayTransport(aiohttp.ClientWebSocketResponse):
                         message=b"client is shutting down",
                     )
 
-        except (aiohttp.ClientOSError, aiohttp.ClientConnectionError, aiohttp.WSServerHandshakeError) as ex:
+        except (
+            aiohttp.ClientOSError,
+            aiohttp.ClientConnectionError,
+            aiohttp.WSServerHandshakeError,
+            asyncio.TimeoutError,
+        ) as ex:
             # Windows will sometimes raise an aiohttp.ClientOSError
             # If we cannot do DNS lookup, this will fail with a ClientConnectionError
-            # usually.
+            # usually, but it might also fail with asyncio.TimeoutError if its gets stuck in a weird way
             #
-            # aiohttp.WSServerHandshakeError has a really bad str, so we use the repr instead.
+            # aiohttp.WSServerHandshakeError has a really bad str, so we use the repr instead
             if isinstance(ex, aiohttp.WSServerHandshakeError):
                 reason = repr(ex)
+            elif isinstance(ex, asyncio.TimeoutError):
+                reason = "Timeout exceeded"
             else:
                 reason = str(ex)
-
             raise errors.GatewayConnectionError(reason) from None
 
         finally:
@@ -495,7 +502,7 @@ class GatewayShardImpl(shard.GatewayShard):
 
     @property
     def is_alive(self) -> bool:
-        return self._run_task is not None and not self._run_task.done()
+        return self._ws is not None and not self._ws.sent_close
 
     @property
     def shard_count(self) -> int:
