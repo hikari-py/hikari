@@ -69,10 +69,10 @@ def generate_allowed_mentions(
     parsed_mentions: typing.List[str] = []
     allowed_mentions: typing.Dict[str, typing.Any] = {"parse": parsed_mentions}
 
-    if mentions_everyone is True:
+    if mentions_everyone:
         parsed_mentions.append("everyone")
 
-    if mentions_reply is True:
+    if mentions_reply:
         allowed_mentions["replied_user"] = True
 
     if user_mentions is True:

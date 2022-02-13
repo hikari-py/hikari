@@ -210,9 +210,9 @@ class StringMapBuilder(multidict.MultiDict[str]):
             if conversion is not None:
                 value = conversion(value)
 
-            if value is True:
+            if value:
                 value = "true"
-            elif value is False:
+            elif value is False:  # The most optimal option in this case.
                 value = "false"
             elif value is None:
                 value = "null"
