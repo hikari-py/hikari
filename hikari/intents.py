@@ -296,8 +296,7 @@ class Intents(enums.Flag):
     MESSAGE_CONTENT = 1 << 15
     """Receive message content for all messages.
 
-    DM's to the bot and messages that mention it will still show the
-    content regardless of this intent.
+    DM's to the bot and messages that mention it are exempt from this.
 
     !!! warning
         This intent is privileged, and requires enabling/whitelisting to use.
