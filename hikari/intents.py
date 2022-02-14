@@ -288,9 +288,18 @@ class Intents(enums.Flag):
     """
 
     DM_MESSAGE_TYPING = 1 << 14
-    """Subscribes to the following events
+    """Subscribes to the following events:
 
     * `TYPING_START` (in private message channels (non-guild bound) only)
+    """
+    MESSAGE_CONTENT = 1 << 15
+    """Receive message content for all messages.
+
+    DM's to the bot and messages that mention it will still show the
+    content regardless of this intent.
+
+    !!! warning
+        This intent is privileged, and requires enabling/whitelisting to use.
     """
 
     # Annoyingly, enums hide classmethods and staticmethods from __dir__ in
