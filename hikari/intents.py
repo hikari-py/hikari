@@ -355,7 +355,7 @@ class Intents(enums.Flag):
     ALL_UNPRIVILEGED = ALL_GUILDS_UNPRIVILEGED | ALL_DMS
     """All unprivileged intents."""
 
-    ALL_PRIVILEGED = ALL_GUILDS_PRIVILEGED
+    ALL_PRIVILEGED = ALL_GUILDS_PRIVILEGED | MESSAGE_CONTENT
     """All privileged intents.
 
     !!! warning
