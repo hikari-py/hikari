@@ -292,6 +292,7 @@ class Intents(enums.Flag):
 
     * `TYPING_START` (in private message channels (non-guild bound) only)
     """
+
     MESSAGE_CONTENT = 1 << 15
     """Receive message content for all messages.
 
