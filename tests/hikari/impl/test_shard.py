@@ -1071,7 +1071,7 @@ class TestGatewayShardImplAsync:
                     "$device": "hikari v1.0.0",
                 },
                 "shard": [0, 1],
-                "intents": 32767,
+                "intents": 65535,
                 "presence": {"presence": "payload"},
             },
         }
