@@ -127,19 +127,19 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
     """The user who triggered this modal interaction."""
 
     locale: str = attr.field(eq=False, hash=False, repr=True)
-    """The selected language of the user who triggered this Modal interaction."""
+    """The selected language of the user who triggered this modal interaction."""
 
     components: typing.Sequence[ModalInteractionActionRow] = attr.field(eq=False, hash=False, repr=True)
     """Components in the modal."""
 
     async def fetch_channel(self) -> channels.TextableChannel:
-        """Fetch the guild channel this was triggered in.
+        """Fetch the guild channel this interaction was triggered in.
 
         Returns
         -------
         hikari.channels.TextableChannel
-            The requested partial channel derived object of the channel this was
-            triggered in.
+            The requested partial channel derived object of the channel this
+            interaction was triggered in.
 
         Raises
         ------
@@ -171,7 +171,7 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
         return channel
 
     def get_channel(self) -> typing.Optional[channels.TextableGuildChannel]:
-        """Get the guild channel this was triggered in from the cache.
+        """Get the guild channel this interaction was triggered in from the cache.
 
         !!! note
             This will always return `builtins.None` for interactions triggered
@@ -227,7 +227,7 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
         return await self.app.rest.fetch_guild(self.guild_id)
 
     def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
-        """Get the object of this interaction's guild guild from the cache.
+        """Get the object of the guild this interaction was triggered in from the cache.
 
         Returns
         -------
@@ -280,7 +280,7 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
         Returns
         -------
         typing.Optional[hikari.messages.Message]
-            The object of the message found in the cache or `builtins.None`.
+            The object of the message if found or `builtins.None`.
         """
         if self.message is None:
             return None

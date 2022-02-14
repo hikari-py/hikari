@@ -969,7 +969,7 @@ class InteractionModalBuilder(InteractionResponseBuilder, abc.ABC):
         Returns
         -------
         hikari.undefined.UndefinedOr[typing.Sequence[hikari.api.special_endpoints.ComponentBuilder]]
-            sequence of component builders to send in this modal.
+            A sequence of component builders to send in this modal.
         """
 
     @abc.abstractmethod
@@ -985,7 +985,6 @@ class InteractionModalBuilder(InteractionResponseBuilder, abc.ABC):
         -------
         InteractionModalBuilder
             Object of this builder.
-
         """
 
     @abc.abstractmethod
@@ -1697,12 +1696,12 @@ class TextInputBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
     @property
     @abc.abstractmethod
     def placeholder(self) -> undefined.UndefinedOr[str]:
-        """Return the placeholder text that will disappear when the user types anything.
+        """Return the placeholder text for when the text input is empty.
 
         Returns
         -------
         hikari.undefined.UndefinedOr[builtins.str]
-            Placeholder text that will disappear when the user types anything.
+            Placeholder text for when the text input is empty.
         """
 
     @property
@@ -1796,7 +1795,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
 
     @abc.abstractmethod
     def set_placeholder(self: _T, placeholder: str, /) -> _T:
-        """Return the placeholder text that will disappear when the user types anything.
+        """Set the placeholder text for when the text input is empty.
 
         Parameters
         ----------

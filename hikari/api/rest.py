@@ -7430,17 +7430,17 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        title : builtins.
+        title : builtins.str
             The title that will show up in the modal.
-        custom_id : builtins.
+        custom_id : builtins.str
             Developer set custom ID used for identifying interactions with this modal.
         components : hikari.undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]]
             Sequence of component builders to send in this modal.
 
         Returns
         -------
-        hikari.api.special_endpoints.InteractionMessageBuilder
-            The interaction message response builder object.
+        hikari.api.special_endpoints.InteractionModalBuilder
+            The interaction modal response builder object.
         """
 
     @abc.abstractmethod
@@ -7872,7 +7872,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         custom_id : str
             Developer set custom ID used for identifying interactions with this modal.
         components : typing.Sequence[special_endpoints.ComponentBuilder]
-            Sequence of component builders to send in this modal.
+            A sequence of component builders to send in this modal.
         """
 
     @abc.abstractmethod

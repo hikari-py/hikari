@@ -230,8 +230,8 @@ class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentRespo
 
         Returns
         -------
-        hikari.api.special_endpoints.InteractionMessageBuilder
-            The interaction message response builder object.
+        hikari.api.special_endpoints.InteractionModalBuilder
+            The interaction modal response builder object.
         """
         return self.app.rest.interaction_modal_builder(title=title, custom_id=custom_id, components=components)
 
