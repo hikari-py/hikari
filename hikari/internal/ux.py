@@ -22,7 +22,6 @@
 # SOFTWARE.
 """User-experience extensions and utilities."""
 from __future__ import annotations
-from ast import arg
 
 __all__: typing.List[str] = ["init_logging", "print_banner", "supports_color", "HikariVersion", "check_for_updates"]
 
