@@ -17,8 +17,8 @@ bot = hikari.GatewayBot(token=os.environ["BOT_TOKEN"])
 
 
 @bot.listen()
-async def on_interaction(event: hikari.InteractionCreateEvent) -> None:
-    """Listen for messages being created."""
+async def handle_interactions(event: hikari.InteractionCreateEvent) -> None:
+    """Listen for slash commands being executed."""
     if not isinstance(event.interaction, hikari.CommandInteraction):
         # only listen to command interactions, no others!
         return
@@ -34,6 +34,28 @@ async def on_interaction(event: hikari.InteractionCreateEvent) -> None:
             hikari.ResponseType.MESSAGE_CREATE,
             "Hello, this is an example bot written in hikari!",
         )
+
+
+@bot.listen()
+async def register_commands(event: hikari.StartedEvent) -> None:
+    """Register ping and info commands."""
+    # replace with the guild id you want the commands to be in
+    # by default commands will be global, but may take up to an hour to register
+    guild_id = hikari.UNDEFINED
+
+    me = bot.get_me()
+    assert me is not None, "Bot hasn't been started yet"
+
+    commands = [
+        bot.rest.slash_command_builder("ping", "Get the bot's latency."),
+        bot.rest.slash_command_builder("info", "Learn something about the bot."),
+    ]
+
+    await bot.rest.set_application_commands(
+        application=me.id,
+        commands=commands,
+        guild=guild_id,
+    )
 
 
 bot.run()
