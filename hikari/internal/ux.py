@@ -22,6 +22,7 @@
 # SOFTWARE.
 """User-experience extensions and utilities."""
 from __future__ import annotations
+from ast import arg
 
 __all__: typing.List[str] = ["init_logging", "print_banner", "supports_color", "HikariVersion", "check_for_updates"]
 
@@ -148,7 +149,12 @@ _UNCONDITIONAL_ANSI_FLAGS: typing.Final[typing.FrozenSet[str]] = frozenset(("PYC
 """Set of env variables which always indicate that ANSI flags should be included."""
 
 
-def print_banner(package: typing.Optional[str], allow_color: bool, force_color: bool) -> None:
+def print_banner(
+    package: typing.Optional[str],
+    allow_color: bool,
+    force_color: bool,
+    extra_args: typing.Optional[typing.Dict[str, str]] = None,
+) -> None:
     """Print a banner of choice to `sys.stdout`.
 
     Inspired by Spring Boot, we display an ASCII logo on startup. This is styled
@@ -172,6 +178,8 @@ def print_banner(package: typing.Optional[str], allow_color: bool, force_color: 
         If `builtins.True`, return `builtins.True` always, otherwise only
         return `builtins.True` if the device supports colour output and the
         `allow_color` flag is not `builtins.False`.
+    extra_args: typing.Optional[typing.Dict[builtins.str, builtins.str]]
+        If provided, extra $-substitutions to use when printing the banner.
     """
     if package is None:
         return
@@ -197,6 +205,9 @@ def print_banner(package: typing.Optional[str], allow_color: bool, force_color: 
         # Platform specific stuff I might remove later.
         "system_description": " ".join(filtered_system_bits),
     }
+
+    if extra_args:
+        args.update(extra_args)
 
     if supports_color(allow_color, force_color):
         args.update(colorlog.escape_codes.escape_codes)

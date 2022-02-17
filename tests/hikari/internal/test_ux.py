@@ -250,6 +250,43 @@ class TestPrintBanner:
         abspath.assert_called_once_with(dirname())
         supports_color.assert_called_once_with(True, False)
 
+    def test_use_extra_args(self, mock_args):
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(colorlog.escape_codes, "escape_codes", new={}))
+        read_text = stack.enter_context(mock.patch.object(importlib.resources, "read_text"))
+        template = stack.enter_context(mock.patch.object(string, "Template"))
+        write = stack.enter_context(mock.patch.object(sys.stdout, "write"))
+        stack.enter_context(mock.patch.object(os.path, "abspath", return_value="some path"))
+
+        extra_args = {
+            "extra_argument_1": "one",
+            "extra_argument_2": "two",
+        }
+
+        with stack:
+            ux.print_banner("hikari", True, False, extra_args=extra_args)
+
+        args = {
+            # Hikari stuff.
+            "hikari_version": "2.2.2",
+            "hikari_git_sha1": "12345678",
+            "hikari_copyright": "© 2020 Nekokatt",
+            "hikari_license": "MIT",
+            "hikari_install_location": "some path",
+            "hikari_documentation_url": "https://nekokatt.github.io/hikari/docs",
+            "hikari_discord_invite": "https://discord.gg/Jx4cNGG",
+            "hikari_source_url": "https://nekokatt.github.io/hikari",
+            "python_implementation": "CPython",
+            "python_version": "4.0.0",
+            "system_description": "Machine Potato 1.0.0",
+        }
+
+        args.update(extra_args)
+
+        template.assert_called_once_with(read_text())
+        template().safe_substitute.assert_called_once_with(args)
+        write.assert_called_once_with(template().safe_substitute())
+
 
 class TestSupportsColor:
     def test_when_not_allow_color(self):
