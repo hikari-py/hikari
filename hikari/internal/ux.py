@@ -179,6 +179,7 @@ def print_banner(
         `allow_color` flag is not `builtins.False`.
     extra_args: typing.Optional[typing.Dict[builtins.str, builtins.str]]
         If provided, extra $-substitutions to use when printing the banner.
+        Default substitutions can not be overwritten.
     """
     if package is None:
         return
@@ -206,6 +207,9 @@ def print_banner(
     }
 
     if extra_args:
+        for key in extra_args:
+            if key in args:
+                raise ValueError(f"Cannot overwrite $-substitution `{key}`. Please use a different key.")
         args.update(extra_args)
 
     if supports_color(allow_color, force_color):

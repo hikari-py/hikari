@@ -287,6 +287,24 @@ class TestPrintBanner:
         template().safe_substitute.assert_called_once_with(args)
         write.assert_called_once_with(template().safe_substitute())
 
+    def test_overwrite_args_raises_error(self, mock_args):
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(colorlog.escape_codes, "escape_codes", new={}))
+        stack.enter_context(mock.patch.object(importlib.resources, "read_text"))
+        stack.enter_context(mock.patch.object(string, "Template"))
+        stack.enter_context(mock.patch.object(sys.stdout, "write"))
+        stack.enter_context(mock.patch.object(os.path, "abspath", return_value="some path"))
+
+        extra_args = {
+            "hikari_version": "overwrite",
+        }
+
+        with stack:
+            with pytest.raises(
+                ValueError, match=r"Cannot overwrite \$-substitution `hikari_version`. Please use a different key."
+            ):
+                ux.print_banner("hikari", True, False, extra_args=extra_args)
+
 
 class TestSupportsColor:
     def test_when_not_allow_color(self):
