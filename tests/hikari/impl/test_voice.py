@@ -297,7 +297,6 @@ class TestVoiceComponentImpl:
                     predicate=voice_client._init_server_update_predicate.return_value,
                 ),
             ],
-            any_order=False,
         )
         mock_app.cache.get_me.assert_called_once_with()
         voice_client._init_state_update_predicate.assert_called_once_with(123, mock_app.cache.get_me.return_value.id)

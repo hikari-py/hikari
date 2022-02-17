@@ -3334,8 +3334,7 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route)
         assert rest_client._entity_factory.deserialize_voice_region.call_count == 2
         rest_client._entity_factory.deserialize_voice_region.assert_has_calls(
-            [mock.call({"id": "123"}), mock.call({"id": "456"})],
-            any_order=False,
+            [mock.call({"id": "123"}), mock.call({"id": "456"})]
         )
 
     async def test_fetch_user(self, rest_client):

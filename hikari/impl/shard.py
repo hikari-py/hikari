@@ -509,6 +509,7 @@ class GatewayShardImpl(shard.GatewayShard):
         return self._shard_count
 
     async def close(self) -> None:
+        self._check_if_alive()
         if not self._closing_event.is_set():
             try:
                 if self._ws is not None:
@@ -538,7 +539,7 @@ class GatewayShardImpl(shard.GatewayShard):
         return self._ws
 
     async def join(self) -> None:
-        """Wait for this shard to close, if running."""
+        self._check_if_alive()
         await self._closed_event.wait()
 
     async def _send_json(

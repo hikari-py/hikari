@@ -789,6 +789,7 @@ class TestGatewayShardImpl:
 @pytest.mark.asyncio()
 class TestGatewayShardImplAsync:
     async def test_close_when_closing_event_set(self, client):
+        client._check_if_alive = mock.Mock()
         client._closing_event = mock.Mock(is_set=mock.Mock(return_value=True))
         client._closed_event = mock.Mock(wait=mock.AsyncMock())
         client._send_close = mock.Mock()
@@ -804,6 +805,7 @@ class TestGatewayShardImplAsync:
         client._closed_event.wait.assert_awaited_once_with()
 
     async def test_close_when_closing_event_not_set(self, client):
+        client._check_if_alive = mock.Mock()
         client._closing_event = mock.Mock(is_set=mock.Mock(return_value=False))
         client._closed_event = mock.Mock(wait=mock.AsyncMock())
         client._ws = mock.Mock(send_close=mock.AsyncMock())
@@ -821,6 +823,7 @@ class TestGatewayShardImplAsync:
         client._closed_event.wait.assert_awaited_once_with()
 
     async def test_close_when_closing_event_not_set_and_ws_is_None(self, client):
+        client._check_if_alive = mock.Mock()
         client._closing_event = mock.Mock(is_set=mock.Mock(return_value=False))
         client._closed_event = mock.Mock(wait=mock.AsyncMock())
         client._ws = None
@@ -846,6 +849,7 @@ class TestGatewayShardImplAsync:
         assert await client.get_user_id() == 123
 
     async def test_join(self, client):
+        client._check_if_alive = mock.Mock()
         client._closed_event = mock.Mock(wait=mock.AsyncMock())
 
         await client.join()

@@ -439,7 +439,6 @@ class GatewayBot(traits.GatewayBotAware):
         return self._cache.get_me()
 
     async def close(self) -> None:
-        """Kill the application by shutting all components down."""
         self._check_if_alive()
         await self._close()
 
@@ -455,6 +454,7 @@ class GatewayBot(traits.GatewayBotAware):
         self._closed_event = asyncio.Event()
         self._closing_event.set()
         self._closing_event = None
+        dispatch_events = self._is_alive
 
         loop = asyncio.get_running_loop()
 
@@ -472,7 +472,8 @@ class GatewayBot(traits.GatewayBotAware):
                     }
                 )
 
-        await self._event_manager.dispatch(self._event_factory.deserialize_stopping_event())
+        if dispatch_events:
+            await self._event_manager.dispatch(self._event_factory.deserialize_stopping_event())
 
         _LOGGER.log(ux.TRACE, "StoppingEvent dispatch completed, now beginning termination")
 
@@ -490,7 +491,9 @@ class GatewayBot(traits.GatewayBotAware):
         self._shards.clear()
         self._is_alive = False
 
-        await self._event_manager.dispatch(self._event_factory.deserialize_stopped_event())
+        if dispatch_events:
+            await self._event_manager.dispatch(self._event_factory.deserialize_stopped_event())
+
         self._closed_event.set()
         self._closed_event = None
 
@@ -968,9 +971,11 @@ class GatewayBot(traits.GatewayBotAware):
 
         _validate_activity(activity)
 
-        # Dispatch the update checker, the sharding requirements checker, and dispatch
-        # the starting event together to save a little time on startup.
         start_time = time.monotonic()
+        self._rest.start()
+        self._voice.start()
+        self._closing_event = asyncio.Event()
+        self._is_alive = True
 
         if check_for_updates:
             asyncio.create_task(
@@ -978,9 +983,8 @@ class GatewayBot(traits.GatewayBotAware):
                 name="check for package updates",
             )
 
-        self._rest.start()
-        await self._event_manager.dispatch(self._event_factory.deserialize_starting_event())
         requirements = await self._rest.fetch_gateway_bot_info()
+        await self._event_manager.dispatch(self._event_factory.deserialize_starting_event())
 
         if shard_count is None:
             shard_count = requirements.shard_count
@@ -1000,10 +1004,6 @@ class GatewayBot(traits.GatewayBotAware):
             )
             raise errors.GatewayError("Attempted to start more sessions than were allowed in the given time-window")
 
-        self._is_alive = True
-        # This needs to be started before shards.
-        self._voice.start()
-        self._closing_event = asyncio.Event()
         _LOGGER.info(
             "you can start %s session%s before the next window which starts at %s; planning to start %s session%s... ",
             requirements.session_start_limit.remaining,
