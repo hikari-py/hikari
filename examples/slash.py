@@ -34,7 +34,12 @@ async def handle_interactions(event: hikari.InteractionCreateEvent) -> None:
             hikari.ResponseType.MESSAGE_CREATE,
             "Hello, this is an example bot written in hikari!",
         )
-
+    elif event.interaction.command_name == "ephemeral":
+        await event.interaction.create_initial_response(
+            hikari.ResponseType.MESSAGE_CREATE,
+            "Only you can see this, keep it a secret :)",
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
 
 @bot.listen()
 async def register_commands(event: hikari.StartedEvent) -> None:
@@ -43,8 +48,7 @@ async def register_commands(event: hikari.StartedEvent) -> None:
     # by default commands will be global, but may take up to an hour to register
     guild_id = hikari.UNDEFINED
 
-    me = bot.get_me()
-    assert me is not None, "Bot hasn't been started yet"
+    application = await bot.rest.fetch_application()
 
     commands = [
         bot.rest.slash_command_builder("ping", "Get the bot's latency."),
@@ -52,7 +56,7 @@ async def register_commands(event: hikari.StartedEvent) -> None:
     ]
 
     await bot.rest.set_application_commands(
-        application=me.id,
+        application=application.id,
         commands=commands,
         guild=guild_id,
     )
