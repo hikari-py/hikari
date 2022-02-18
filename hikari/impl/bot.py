@@ -649,7 +649,12 @@ class GatewayBot(traits.GatewayBotAware):
         return self._event_manager.listen(event_type)
 
     @staticmethod
-    def print_banner(banner: typing.Optional[str], allow_color: bool, force_color: bool) -> None:
+    def print_banner(
+        banner: typing.Optional[str],
+        allow_color: bool,
+        force_color: bool,
+        extra_args: typing.Optional[typing.Dict[str, str]] = None,
+    ) -> None:
         """Print the banner.
 
         This allows library vendors to override this behaviour, or choose to
@@ -674,8 +679,11 @@ class GatewayBot(traits.GatewayBotAware):
 
         !!! note
             `force_color` will always take precedence over `allow_color`.
+        extra_args : typing.Optional[typing.Dict[builtins.str, builtins.str]]
+            If provided, extra $-substitutions to use when printing the banner.
+            Default substitutions can not be overwritten.
         """
-        ux.print_banner(banner, allow_color, force_color)
+        ux.print_banner(banner, allow_color, force_color, extra_args=extra_args)
 
     def run(
         self,

@@ -177,7 +177,7 @@ def print_banner(
         If `builtins.True`, return `builtins.True` always, otherwise only
         return `builtins.True` if the device supports colour output and the
         `allow_color` flag is not `builtins.False`.
-    extra_args: typing.Optional[typing.Dict[builtins.str, builtins.str]]
+    extra_args : typing.Optional[typing.Dict[builtins.str, builtins.str]]
         If provided, extra $-substitutions to use when printing the banner.
         Default substitutions can not be overwritten.
     """

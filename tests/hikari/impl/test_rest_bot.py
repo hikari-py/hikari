@@ -232,9 +232,9 @@ class TestRESTBot:
 
     def test_print_banner(self, mock_rest_bot):
         with mock.patch.object(ux, "print_banner") as print_banner:
-            mock_rest_bot.print_banner("okokok", True, False)
+            mock_rest_bot.print_banner("okokok", True, False, {"test_key": "test_value"})
 
-            print_banner.assert_called_once_with("okokok", True, False)
+            print_banner.assert_called_once_with("okokok", True, False, extra_args={"test_key": "test_value"})
 
     @pytest.mark.asyncio()
     async def test_close(self, mock_rest_bot, mock_interaction_server, mock_rest_client):

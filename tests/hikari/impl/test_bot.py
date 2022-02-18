@@ -528,9 +528,9 @@ class TestGatewayBot:
 
     def test_print_banner(self, bot):
         with mock.patch.object(ux, "print_banner") as print_banner:
-            bot.print_banner("testing", False, True)
+            bot.print_banner("testing", False, True, extra_args={"test_key": "test_value"})
 
-        print_banner.assert_called_once_with("testing", False, True)
+        print_banner.assert_called_once_with("testing", False, True, extra_args={"test_key": "test_value"})
 
     def test_run_when_already_running(self, bot):
         bot._is_alive = True
