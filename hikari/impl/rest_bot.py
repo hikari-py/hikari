@@ -349,6 +349,11 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         extra_args : typing.Optional[typing.Dict[builtins.str, builtins.str]]
             If provided, extra $-substitutions to use when printing the banner.
             Default substitutions can not be overwritten.
+
+        Raises
+        ------
+        builtins.ValueError
+            Default $-substitution was overridden.
         """
         ux.print_banner(banner, allow_color, force_color, extra_args=extra_args)
 

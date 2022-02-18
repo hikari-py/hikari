@@ -95,6 +95,11 @@ def init_logging(
         If `builtins.True`, return `builtins.True` always, otherwise only
         return `builtins.True` if the device supports colour output and the
         `allow_color` flag is not `builtins.False`.
+
+    Raises
+    ------
+    builtins.ValueError
+        Default $-substitution was overridden.
     """
     # One observation that has been repeatedly made from seeing beginners writing
     # bots in Python is that most people seem to have no idea what logging is or
