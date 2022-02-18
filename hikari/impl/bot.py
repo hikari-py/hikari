@@ -686,7 +686,7 @@ class GatewayBot(traits.GatewayBotAware):
         Raises
         ------
         builtins.ValueError
-            Default $-substitution was overridden.
+            If `extra_args` contains a default $-substitution.
         """
         ux.print_banner(banner, allow_color, force_color, extra_args=extra_args)
 

@@ -99,7 +99,7 @@ def init_logging(
     Raises
     ------
     builtins.ValueError
-        Default $-substitution was overridden.
+        If `extra_args` contains a default $-substitution.
     """
     # One observation that has been repeatedly made from seeing beginners writing
     # bots in Python is that most people seem to have no idea what logging is or
