@@ -95,11 +95,6 @@ def init_logging(
         If `builtins.True`, return `builtins.True` always, otherwise only
         return `builtins.True` if the device supports colour output and the
         `allow_color` flag is not `builtins.False`.
-
-    Raises
-    ------
-    builtins.ValueError
-        If `extra_args` contains a default $-substitution.
     """
     # One observation that has been repeatedly made from seeing beginners writing
     # bots in Python is that most people seem to have no idea what logging is or
@@ -185,6 +180,11 @@ def print_banner(
     extra_args : typing.Optional[typing.Dict[builtins.str, builtins.str]]
         If provided, extra $-substitutions to use when printing the banner.
         Default substitutions can not be overwritten.
+
+    Raises
+    ------
+    builtins.ValueError
+        If `extra_args` contains a default $-substitution.
     """
     if package is None:
         return
