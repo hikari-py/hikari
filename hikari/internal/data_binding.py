@@ -49,7 +49,7 @@ if typing.TYPE_CHECKING:
     import concurrent
     import contextlib
 
-    T = typing.TypeVar("T", covariant=True)
+    T_co = typing.TypeVar("T_co", covariant=True)
 
 Headers = typing.Mapping[str, str]
 """Type hint for HTTP headers."""
@@ -170,10 +170,10 @@ class StringMapBuilder(multidict.MultiDict[str]):
     def put(
         self,
         key: str,
-        value: undefined.UndefinedOr[T],
+        value: undefined.UndefinedOr[T_co],
         /,
         *,
-        conversion: typing.Callable[[T], Stringish],
+        conversion: typing.Callable[[T_co], Stringish],
     ) -> None:
         ...
 
@@ -255,10 +255,10 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
     def put(
         self,
         key: str,
-        value: undefined.UndefinedNoneOr[T],
+        value: undefined.UndefinedNoneOr[T_co],
         /,
         *,
-        conversion: typing.Callable[[T], JSONish],
+        conversion: typing.Callable[[T_co], JSONish],
     ) -> None:
         ...
 
@@ -309,10 +309,10 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
     def put_array(
         self,
         key: str,
-        values: undefined.UndefinedOr[typing.Iterable[T]],
+        values: undefined.UndefinedOr[typing.Iterable[T_co]],
         /,
         *,
-        conversion: typing.Callable[[T], JSONish],
+        conversion: typing.Callable[[T_co], JSONish],
     ) -> None:
         ...
 
@@ -334,7 +334,7 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
         ----------
         key : builtins.str
             The key to give the element.
-        values : hikari.undefined.UndefinedOr[typing.Iterable[T]]
+        values : hikari.undefined.UndefinedOr[typing.Iterable[T_co]]
             The JSON types to put. This may be an iterable of non-JSON types if
             a conversion is also specified. This may alternatively be undefined.
             In the latter case, nothing is performed.
