@@ -415,7 +415,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         close_loop : builtins.bool
             Defaults to `builtins.True`. If `builtins.True`, then once the bot
             enters a state where all components have shut down permanently
-            during application shutdown, then all asyngens and background tasks
+            during application shutdown, then all asyncgens and background tasks
             will be destroyed, and the event loop will be shut down.
 
             This will wait until all `hikari`-owned `aiohttp` connectors have

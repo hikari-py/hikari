@@ -135,7 +135,7 @@ class EventStream(event_manager_.EventStream[event_manager_.EventT]):
             # This is sync only.
             warnings.warn(
                 "Using EventStream as an async context manager has been deprecated since 2.0.0.dev104. "
-                "Please use it as a sycnrhonous context manager (e.g. with bot.stream(...)) instead.",
+                "Please use it as a synchronous context manager (e.g. with bot.stream(...)) instead.",
                 category=DeprecationWarning,
                 stacklevel=2,
             )

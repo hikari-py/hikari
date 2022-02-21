@@ -46,7 +46,7 @@ ListenerT = typing.Callable[["_InteractionT_co"], typing.Awaitable["_ResponseT_c
 """Type hint of a Interaction server's listener callback.
 
 This should be an async callback which takes in one positional argument which
-subclases `hikari.interactions.base_interactions.PartialInteraction` and may return an
+subclasses `hikari.interactions.base_interactions.PartialInteraction` and may return an
 instance of the relevant `hikari.api.special_endpoints.InteractionResponseBuilder`
 subclass for the provided interaction type which will instruct the server on how
 to respond.

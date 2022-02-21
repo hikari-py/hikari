@@ -250,7 +250,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
     Rate limiter for rate limits that last fixed periods of time with a
     fixed number of times it can be used in that time frame.
 
-    To use this, you should call WindowedBurstRateLimiter.aquire` and await the
+    To use this, you should call WindowedBurstRateLimiter.acquire` and await the
     result immediately before performing your rate-limited task.
 
     If the rate limit has been hit, acquiring time will return an incomplete

@@ -170,7 +170,7 @@ class ActivityAssets:
 
         !!! note
             This will be `builtins.None` if no large image asset exists or if the
-            asset's dymamic URL (indicated by a `{name}:` prefix) is not known.
+            asset's dynamic URL (indicated by a `{name}:` prefix) is not known.
         """
         try:
             return self.make_large_image_url()
@@ -215,7 +215,7 @@ class ActivityAssets:
 
         !!! note
             This will be `builtins.None` if no large image asset exists or if the
-            asset's dymamic URL (indicated by a `{name}:` prefix) is not known.
+            asset's dynamic URL (indicated by a `{name}:` prefix) is not known.
         """
         try:
             return self.make_small_image_url()
@@ -295,7 +295,7 @@ class ActivityFlag(enums.Flag):
     """Party privacy: friends only."""
 
     PARTY_PRIVACY_VOICE_CHANNEL = 1 << 7
-    """Party prvacy: voice channel only."""
+    """Party privacy: voice channel only."""
 
     EMBEDDED = 1 << 8
     """An activity that's embedded into a voice channel."""
