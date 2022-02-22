@@ -603,6 +603,96 @@ class TestSelectMenuBuilder:
         }
 
 
+class TestTextInput:
+    @pytest.fixture()
+    def text_input(self):
+        return special_endpoints.TextInputBuilder(
+            container=mock.Mock(),
+            style=messages.TextInputStyle.SHORT,
+            custom_id="o2o2o2",
+            label="label",
+        )
+
+    def test_set_style(self, text_input):
+        assert text_input.set_style(messages.TextInputStyle.PARAGRAPH) is text_input
+        assert text_input.style == messages.TextInputStyle.PARAGRAPH
+
+    def test_set_custom_id(self, text_input):
+        assert text_input.set_custom_id("custooom") is text_input
+        assert text_input.custom_id == "custooom"
+
+    def test_set_label(self, text_input):
+        assert text_input.set_label("labeeeel") is text_input
+        assert text_input.label == "labeeeel"
+
+    def test_set_placeholder(self, text_input):
+        assert text_input.set_placeholder("place") is text_input
+        assert text_input.placeholder == "place"
+
+    def test_set_required(self, text_input):
+        assert text_input.set_required(True) is text_input
+        assert text_input.required is True
+
+    def test_set_placeholder(self, text_input):
+        assert text_input.set_value("valueeeee") is text_input
+        assert text_input.value == "valueeeee"
+
+    def test_set_min_length_(self, text_input):
+        assert text_input.set_min_length(10) is text_input
+        assert text_input.min_length == 10
+
+    def test_set_max_length(self, text_input):
+        assert text_input.set_max_length(250) is text_input
+        assert text_input.max_length == 250
+
+    def test_add_to_container(self, text_input):
+        assert text_input.add_to_container() is text_input._container
+        text_input._container.add_component.assert_called_once_with(text_input)
+
+    def test_build(self):
+        result = special_endpoints.TextInputBuilder(
+            container=object(),
+            style=messages.TextInputStyle.SHORT,
+            custom_id="o2o2o2",
+            label="label",
+        ).build()
+
+        assert result == {
+            "type": messages.ComponentType.TEXT_INPUT,
+            "style": 1,
+            "custom_id": "o2o2o2",
+            "label": "label",
+        }
+
+    def test_build_partial(self):
+        result = (
+            special_endpoints.TextInputBuilder(
+                container=object(),
+                style=messages.TextInputStyle.SHORT,
+                custom_id="o2o2o2",
+                label="label",
+            )
+            .set_placeholder("placeholder")
+            .set_value("value")
+            .set_required(False)
+            .set_min_length(10)
+            .set_max_length(250)
+            .build()
+        )
+
+        assert result == {
+            "type": messages.ComponentType.TEXT_INPUT,
+            "style": 1,
+            "custom_id": "o2o2o2",
+            "label": "label",
+            "placeholder": "placeholder",
+            "value": "value",
+            "required": False,
+            "min_length": 10,
+            "max_length": 250,
+        }
+
+
 class TestActionRowBuilder:
     def test_components_property(self):
         mock_component = object()
@@ -628,6 +718,14 @@ class TestActionRowBuilder:
     def test_add_select_menu(self):
         row = special_endpoints.ActionRowBuilder()
         menu = row.add_select_menu("hihihi")
+
+        menu.add_to_container()
+
+        assert row.components == [menu]
+
+    def test_add_text_input(self):
+        row = special_endpoints.ActionRowBuilder()
+        menu = row.add_text_input(1, "hihihi", "label")
 
         menu.add_to_container()
 
