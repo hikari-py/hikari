@@ -633,7 +633,7 @@ class TestTextInput:
         assert text_input.set_required(True) is text_input
         assert text_input.required is True
 
-    def test_set_placeholder(self, text_input):
+    def test_set_value(self, text_input):
         assert text_input.set_value("valueeeee") is text_input
         assert text_input.value == "valueeeee"
 
