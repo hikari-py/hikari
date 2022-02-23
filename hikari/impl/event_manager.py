@@ -175,7 +175,14 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
 
     async def on_thread_create(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#thread-create for more info."""
-        await self.dispatch(self._event_factory.deserialize_guild_thread_create_event(shard, payload))
+        event: typing.Union[channel_events.GuildThreadAccessEvent, channel_events.GuildThreadCreateEvent]
+        if "newly_created" in payload:
+            event = self._event_factory.deserialize_guild_thread_create_event(shard, payload)
+
+        else:
+            event = self._event_factory.deserialize_guild_thread_access_event(shard, payload)
+
+        await self.dispatch(event)
 
     async def on_thread_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#thread-update for more info."""

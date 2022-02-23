@@ -1069,11 +1069,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         payload: data_binding.JSONObject,
         *,
         thread_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+        user_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> channel_models.ThreadMember:
-        user_id = payload.get("user_id")
         return channel_models.ThreadMember(
             thread_id=thread_id or snowflakes.Snowflake(payload["id"]),
-            user_id=snowflakes.Snowflake(user_id) if user_id is not None else None,
+            user_id=user_id or snowflakes.Snowflake(payload["user_id"]),
             joined_at=time.iso8601_datetime_string_to_datetime(payload["join_timestamp"]),
             flags=int(payload["flags"]),
         )
@@ -1084,10 +1084,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         *,
         guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
         member: undefined.UndefinedNoneOr[channel_models.ThreadMember] = undefined.UNDEFINED,
+        user_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> channel_models.GuildThreadChannel:
         channel_type = channel_models.ChannelType(payload["type"])
         if deserialize := self._thread_channel_type_mapping.get(channel_type):
-            return deserialize(payload, guild_id=guild_id, member=member)
+            return deserialize(payload, guild_id=guild_id, member=member, user_id=user_id)
 
         _LOGGER.debug(f"Unrecognised thread channel type {channel_type}")
         raise errors.UnrecognisedEntityError(f"Unrecognised thread channel type {channel_type}")
@@ -1098,6 +1099,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         *,
         guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
         member: undefined.UndefinedNoneOr[channel_models.ThreadMember] = undefined.UNDEFINED,
+        user_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> channel_models.GuildNewsThread:
         channel_fields = self._set_guild_channel_attributes(payload, guild_id=guild_id)
         last_message_id: typing.Optional[snowflakes.Snowflake] = None
@@ -1111,7 +1113,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         metadata = payload["thread_metadata"]
         actual_member = member if member is not undefined.UNDEFINED else None
         if member_payload := payload.get("member"):
-            actual_member = self.deserialize_thread_member(member_payload, thread_id=channel_fields.id)
+            actual_member = self.deserialize_thread_member(member_payload, thread_id=channel_fields.id, user_id=user_id)
+
+        thread_created_at: typing.Optional[datetime.datetime] = None
+        if raw_thread_created_at := payload.get("create_timestamp"):
+            thread_created_at = time.iso8601_datetime_string_to_datetime(raw_thread_created_at)
 
         assert channel_fields.parent_id is not None
         return channel_models.GuildNewsThread(
@@ -1129,10 +1135,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             approximate_message_count=int(payload["member_count"]),
             is_archived=metadata["archived"],
             auto_archive_duration=datetime.timedelta(seconds=metadata["auto_archive_duration"]),
-            last_archived_at=time.iso8601_datetime_string_to_datetime(metadata["archive_timestamp"]),
+            archive_timestamp=time.iso8601_datetime_string_to_datetime(metadata["archive_timestamp"]),
             is_locked=metadata["locked"],
             member=actual_member,
             owner_id=snowflakes.Snowflake(payload["owner_id"]),
+            thread_created_at=thread_created_at,
         )
 
     def deserialize_guild_public_tbread(
@@ -1141,6 +1148,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         *,
         guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
         member: undefined.UndefinedNoneOr[channel_models.ThreadMember] = undefined.UNDEFINED,
+        user_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> channel_models.GuildPublicThread:
         channel_fields = self._set_guild_channel_attributes(payload, guild_id=guild_id)
         last_message_id: typing.Optional[snowflakes.Snowflake] = None
@@ -1154,7 +1162,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         metadata = payload["thread_metadata"]
         actual_member = member if member is not undefined.UNDEFINED else None
         if member_payload := payload.get("member"):
-            actual_member = self.deserialize_thread_member(member_payload, thread_id=channel_fields.id)
+            actual_member = self.deserialize_thread_member(member_payload, thread_id=channel_fields.id, user_id=user_id)
+
+        thread_created_at: typing.Optional[datetime.datetime] = None
+        if raw_thread_created_at := payload.get("create_timestamp"):
+            thread_created_at = time.iso8601_datetime_string_to_datetime(raw_thread_created_at)
 
         assert channel_fields.parent_id is not None
         return channel_models.GuildPublicThread(
@@ -1172,10 +1184,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             approximate_message_count=int(payload["member_count"]),
             is_archived=metadata["archived"],
             auto_archive_duration=datetime.timedelta(seconds=metadata["auto_archive_duration"]),
-            last_archived_at=time.iso8601_datetime_string_to_datetime(metadata["archive_timestamp"]),
+            archive_timestamp=time.iso8601_datetime_string_to_datetime(metadata["archive_timestamp"]),
             is_locked=metadata["locked"],
             member=actual_member,
             owner_id=snowflakes.Snowflake(payload["owner_id"]),
+            thread_created_at=thread_created_at,
         )
 
     def deserialize_guild_private_thread(
@@ -1184,6 +1197,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         *,
         guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
         member: undefined.UndefinedNoneOr[channel_models.ThreadMember] = undefined.UNDEFINED,
+        user_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> channel_models.GuildPrivateThread:
         channel_fields = self._set_guild_channel_attributes(payload, guild_id=guild_id)
         last_message_id: typing.Optional[snowflakes.Snowflake] = None
@@ -1197,7 +1211,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         metadata = payload["thread_metadata"]
         actual_member = member if member is not undefined.UNDEFINED else None
         if member_payload := payload.get("member"):
-            actual_member = self.deserialize_thread_member(member_payload, thread_id=channel_fields.id)
+            actual_member = self.deserialize_thread_member(member_payload, thread_id=channel_fields.id, user_id=user_id)
+
+        thread_created_at: typing.Optional[datetime.datetime] = None
+        if raw_thread_created_at := payload.get("create_timestamp"):
+            thread_created_at = time.iso8601_datetime_string_to_datetime(raw_thread_created_at)
 
         assert channel_fields.parent_id is not None
         return channel_models.GuildPrivateThread(
@@ -1215,11 +1233,12 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             approximate_message_count=int(payload["member_count"]),
             is_archived=metadata["archived"],
             auto_archive_duration=datetime.timedelta(seconds=metadata["auto_archive_duration"]),
-            last_archived_at=time.iso8601_datetime_string_to_datetime(metadata["archive_timestamp"]),
+            archive_timestamp=time.iso8601_datetime_string_to_datetime(metadata["archive_timestamp"]),
             is_locked=metadata["locked"],
             member=actual_member,
             owner_id=snowflakes.Snowflake(payload["owner_id"]),
             is_invitable=metadata["invitable"],
+            thread_created_at=thread_created_at,
         )
 
     def deserialize_channel(

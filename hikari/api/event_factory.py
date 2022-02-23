@@ -195,6 +195,25 @@ class EventFactory(abc.ABC):
         """
 
     @abc.abstractmethod
+    def deserialize_guild_thread_access_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> channel_events.GuildThreadAccessEvent:
+        """Parse a raw payload from Discord into a guild thread access event object.
+
+        Parameters
+        ----------
+        shard : hikari.api.shard.GatewayShard
+            The shard that emitted this event.
+        payload : hikari.internal.data_binding.JSONObject
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.channel_events.GuildThreadAccessEvent
+            The parsed guild thread create event object.
+        """
+
+    @abc.abstractmethod
     def deserialize_guild_thread_update_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> channel_events.GuildThreadUpdateEvent:

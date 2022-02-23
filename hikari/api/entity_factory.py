@@ -1091,13 +1091,17 @@ class EntityFactory(abc.ABC):
         """
 
     @abc.abstractmethod
-    def deserialize_gateway_guild(self, payload: data_binding.JSONObject) -> GatewayGuildDefinition:
+    def deserialize_gateway_guild(
+        self, payload: data_binding.JSONObject, *, user_id: snowflakes.Snowflake
+    ) -> GatewayGuildDefinition:
         """Parse a raw payload from Discord into a guild object.
 
         Parameters
         ----------
         payload : hikari.internal.data_binding.JSONObject
             The JSON payload to deserialize.
+        user_id : hikari.snowflakes.Snowflake
+            The current user's ID.
 
         Returns
         -------

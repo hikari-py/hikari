@@ -1410,8 +1410,7 @@ class ThreadMember:
     thread_id: snowflakes.Snowflake = attr.field(eq=True, repr=True)
     """ID of the thread this member is in."""
 
-    # TODO: can we infer the actual value for this in guild create from context?
-    user_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=True, repr=True)
+    user_id: snowflakes.Snowflake = attr.field(eq=True, repr=True)
     """The member's user ID.
 
     !!! note
@@ -1484,13 +1483,12 @@ class GuildThreadChannel(TextableGuildChannel):
     As of writing this may be one of 60, 1_440, 4_320 or 10_080 minutes.
     """
 
-    # TODO: does this count when it was last unarchived?
-    last_archived_at: datetime.datetime = attr.field(eq=False, hash=False, repr=True)
-    """When the thread was last archived.
+    archive_timestamp: datetime.datetime = attr.field(eq=False, hash=False, repr=True)
+    """When the thread's archived state was last changed.
 
     !!! note
         If the thread has never been archived then this will be the thread's
-        creation date.
+        creation date and this will be changed when a thread is unarchived.
     """
 
     is_locked: bool = attr.field(eq=False, hash=False, repr=True)
@@ -1504,14 +1502,21 @@ class GuildThreadChannel(TextableGuildChannel):
     """Thread member object for the current user, if they are in the thread.
 
     !!! note
-        This is only returned by some endpoints
-    """  # TODO: WHICH ENDPOINTS?!?!?!?!?!??!?!?!??!?!?!?!?
+        This is only returned by some endpoints and on private thread
+        access events.
+    """
 
     owner_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
     """ID of the user who created this thread."""
 
     parent_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
     """Id of this thread's textable parent channel."""
+
+    thread_created_at: typing.Optional[datetime.datetime] = attr.field(eq=False, hash=False, repr=True)
+    """When the thread was created.
+
+    Will be `None` for threads created before 2020-01-09.
+    """
 
 
 class GuildNewsThread(GuildThreadChannel):
