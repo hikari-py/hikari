@@ -296,7 +296,7 @@ class TestMember:
         with mock.patch.object(time, "utc_datetime", return_value=datetime.datetime(2021, 10, 18)):
             assert model.communication_disabled_until() is None
 
-    def test_comminucation_disabled_until_when_raw_communication_disabled_until_is_in_the_past(self, model):
+    def test_communication_disabled_until_when_raw_communication_disabled_until_is_in_the_past(self, model):
         model.raw_communication_disabled_until = datetime.datetime(2021, 10, 18)
 
         with mock.patch.object(time, "utc_datetime", return_value=datetime.datetime(2021, 11, 22)):
