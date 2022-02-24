@@ -508,7 +508,7 @@ class Member(users.User):
     def communication_disabled_until(self) -> typing.Optional[datetime.datetime]:
         """Return when the timeout for this member ends.
 
-        Unlike `raw_communictation_disabled_until`, this will always be
+        Unlike `raw_communication_disabled_until`, this will always be
         `builtins.None` if the member is not currently timed out.
 
         !!! note
@@ -3334,7 +3334,7 @@ class Guild(PartialGuild):
         Returns
         -------
         typing.Optional[hikari.channels.GuildTextChannel]
-            The channel where discord sents relevant updates to moderators and admins.
+            The channel where discord sends relevant updates to moderators and admins.
 
         Raises
         ------

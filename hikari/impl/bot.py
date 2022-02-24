@@ -572,7 +572,7 @@ class GatewayBot(traits.GatewayBotAware):
         Listen: `hikari.impl.bot.GatewayBot.listen`
         Stream: `hikari.impl.bot.GatewayBot.stream`
         Subscribe: `hikari.impl.bot.GatewayBot.subscribe`
-        Unubscribe: `hikari.impl.bot.GatewayBot.unsubscribe`
+        Unsubscribe: `hikari.impl.bot.GatewayBot.unsubscribe`
         Wait_for: `hikari.impl.bot.GatewayBot.wait_for`
         """
         return self._event_manager.dispatch(event)
@@ -643,7 +643,7 @@ class GatewayBot(traits.GatewayBotAware):
         Dispatch: `hikari.impl.bot.GatewayBot.dispatch`
         Stream: `hikari.impl.bot.GatewayBot.stream`
         Subscribe: `hikari.impl.bot.GatewayBot.subscribe`
-        Unubscribe: `hikari.impl.bot.GatewayBot.unsubscribe`
+        Unsubscribe: `hikari.impl.bot.GatewayBot.unsubscribe`
         Wait_for: `hikari.impl.bot.GatewayBot.wait_for`
         """
         return self._event_manager.listen(event_type)
@@ -735,7 +735,7 @@ class GatewayBot(traits.GatewayBotAware):
         close_loop : builtins.bool
             Defaults to `builtins.True`. If `builtins.True`, then once the bot
             enters a state where all components have shut down permanently
-            during application shutdown, then all asyngens and background tasks
+            during application shutdown, then all asyncgens and background tasks
             will be destroyed, and the event loop will be shut down.
 
             This will wait until all `hikari`-owned `aiohttp` connectors have
@@ -1152,7 +1152,7 @@ class GatewayBot(traits.GatewayBotAware):
         Dispatch: `hikari.impl.bot.GatewayBot.dispatch`
         Listen: `hikari.impl.bot.GatewayBot.listen`
         Subscribe: `hikari.impl.bot.GatewayBot.subscribe`
-        Unubscribe: `hikari.impl.bot.GatewayBot.unsubscribe`
+        Unsubscribe: `hikari.impl.bot.GatewayBot.unsubscribe`
         Wait_for: `hikari.impl.bot.GatewayBot.wait_for`
         """
         self._check_if_alive()
@@ -1191,7 +1191,7 @@ class GatewayBot(traits.GatewayBotAware):
         Dispatch: `hikari.impl.bot.GatewayBot.dispatch`
         Listen: `hikari.impl.bot.GatewayBot.listen`
         Stream: `hikari.impl.bot.GatewayBot.stream`
-        Unubscribe: `hikari.impl.bot.GatewayBot.unsubscribe`
+        Unsubscribe: `hikari.impl.bot.GatewayBot.unsubscribe`
         Wait_for: `hikari.impl.bot.GatewayBot.wait_for`
         """
         self._event_manager.subscribe(event_type, callback)
@@ -1279,7 +1279,7 @@ class GatewayBot(traits.GatewayBotAware):
         Listen: `hikari.impl.bot.GatewayBot.listen`
         Stream: `hikari.impl.bot.GatewayBot.stream`
         Subscribe: `hikari.impl.bot.GatewayBot.subscribe`
-        Unubscribe: `hikari.impl.bot.GatewayBot.unsubscribe`
+        Unsubscribe: `hikari.impl.bot.GatewayBot.unsubscribe`
         """
         self._check_if_alive()
         return await self._event_manager.wait_for(event_type, timeout=timeout, predicate=predicate)

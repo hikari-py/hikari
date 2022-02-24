@@ -272,7 +272,7 @@ class TestRESTBucketManager:
     async def test_acquire_route_when_not_in_routes_to_real_hashes_doesnt_cache_route(self):
         with buckets.RESTBucketManager(max_rate_limit=float("inf")) as mgr:
             route = mock.Mock()
-            route.create_real_bucket_hash = mock.Mock(wraps=lambda intial_hash: intial_hash + ";bobs")
+            route.create_real_bucket_hash = mock.Mock(wraps=lambda initial_hash: initial_hash + ";bobs")
 
             mgr.acquire(route)
 
@@ -296,7 +296,7 @@ class TestRESTBucketManager:
 
             bucket = mock.Mock(reset_at=time.perf_counter() + 999999999999999999999999999)
             with mock.patch.object(buckets, "RESTBucket", return_value=bucket):
-                route.create_real_bucket_hash = mock.Mock(wraps=lambda intial_hash: intial_hash + ";bobs")
+                route.create_real_bucket_hash = mock.Mock(wraps=lambda initial_hash: initial_hash + ";bobs")
 
                 assert mgr.acquire(route) is bucket
 
@@ -315,7 +315,7 @@ class TestRESTBucketManager:
     async def test_update_rate_limits_if_wrong_bucket_hash_reroutes_route(self):
         with buckets.RESTBucketManager(max_rate_limit=float("inf")) as mgr:
             route = mock.Mock()
-            route.create_real_bucket_hash = mock.Mock(wraps=lambda intial_hash: intial_hash + ";bobs")
+            route.create_real_bucket_hash = mock.Mock(wraps=lambda initial_hash: initial_hash + ";bobs")
             mgr.routes_to_hashes[route.route] = "123"
 
             with mock.patch.object(hikari_date, "monotonic", return_value=27):
@@ -330,7 +330,7 @@ class TestRESTBucketManager:
     async def test_update_rate_limits_if_unknown_bucket_hash_reroutes_route(self):
         with buckets.RESTBucketManager(max_rate_limit=float("inf")) as mgr:
             route = mock.Mock()
-            route.create_real_bucket_hash = mock.Mock(wraps=lambda intial_hash: intial_hash + ";bobs")
+            route.create_real_bucket_hash = mock.Mock(wraps=lambda initial_hash: initial_hash + ";bobs")
             mgr.routes_to_hashes[route.route] = "123"
             bucket = mock.Mock()
             mgr.real_hashes_to_buckets["UNKNOWN;bobs"] = bucket
@@ -349,7 +349,7 @@ class TestRESTBucketManager:
     async def test_update_rate_limits_if_right_bucket_hash_does_nothing_to_hash(self):
         with buckets.RESTBucketManager(max_rate_limit=float("inf")) as mgr:
             route = mock.Mock()
-            route.create_real_bucket_hash = mock.Mock(wraps=lambda intial_hash: intial_hash + ";bobs")
+            route.create_real_bucket_hash = mock.Mock(wraps=lambda initial_hash: initial_hash + ";bobs")
             mgr.routes_to_hashes[route.route] = "123"
             bucket = mock.Mock(reset_at=time.perf_counter() + 999999999999999999999999999)
             mgr.real_hashes_to_buckets["123;bobs"] = bucket
@@ -365,7 +365,7 @@ class TestRESTBucketManager:
     async def test_update_rate_limits_updates_params(self):
         with buckets.RESTBucketManager(max_rate_limit=float("inf")) as mgr:
             route = mock.Mock()
-            route.create_real_bucket_hash = mock.Mock(wraps=lambda intial_hash: intial_hash + ";bobs")
+            route.create_real_bucket_hash = mock.Mock(wraps=lambda initial_hash: initial_hash + ";bobs")
             mgr.routes_to_hashes[route.route] = "123"
             bucket = mock.Mock(reset_at=time.perf_counter() + 999999999999999999999999999)
             mgr.real_hashes_to_buckets["123;bobs"] = bucket

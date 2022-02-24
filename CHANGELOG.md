@@ -77,7 +77,7 @@ Bugfixes
 - Fix `PartialSticker.image_url` not passing the hash as a string ([#930](https://github.com/hikari-py/hikari/issues/930))
 - Fixed the url being generated for role icons to not erroneously insert ".png" before the file extension ([#931](https://github.com/hikari-py/hikari/issues/931))
 - Fix some bugs in message deserialization
-    - Remove case for setting `member` and `referece_message` to `undefined.Undefined` in full message deserialization
+    - Remove case for setting `member` and `reference_message` to `undefined.Undefined` in full message deserialization
     - Don't set `message.member` to `undefined.UNDEFINED` on partial message deserialization if message was sent by a webhook ([#933](https://github.com/hikari-py/hikari/issues/933))
 
 

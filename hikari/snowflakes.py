@@ -218,7 +218,7 @@ use of intents).
 
 The valid types for this type hint are:
 
-- `buitlins.int`
+- `builtins.int`
 - `Snowflake`
 """
 
@@ -235,7 +235,7 @@ use of intents).
 
 The valid types for this type hint are:
 
-- `buitlins.int`
+- `builtins.int`
 - `Snowflake`
 - `datetime.datetime`
 """

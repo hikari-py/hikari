@@ -8,7 +8,7 @@ on:
         required: true
 
 jobs:
-  prepare-relese:
+  prepare-release:
     runs-on: ubuntu-latest
 
     steps:
