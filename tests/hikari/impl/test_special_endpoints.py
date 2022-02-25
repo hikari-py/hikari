@@ -608,7 +608,6 @@ class TestTextInput:
     def text_input(self):
         return special_endpoints.TextInputBuilder(
             container=mock.Mock(),
-            style=messages.TextInputStyle.SHORT,
             custom_id="o2o2o2",
             label="label",
         )
@@ -652,7 +651,6 @@ class TestTextInput:
     def test_build(self):
         result = special_endpoints.TextInputBuilder(
             container=object(),
-            style=messages.TextInputStyle.SHORT,
             custom_id="o2o2o2",
             label="label",
         ).build()
@@ -668,7 +666,6 @@ class TestTextInput:
         result = (
             special_endpoints.TextInputBuilder(
                 container=object(),
-                style=messages.TextInputStyle.SHORT,
                 custom_id="o2o2o2",
                 label="label",
             )
@@ -725,7 +722,7 @@ class TestActionRowBuilder:
 
     def test_add_text_input(self):
         row = special_endpoints.ActionRowBuilder()
-        menu = row.add_text_input(1, "hihihi", "label")
+        menu = row.add_text_input("hihihi", "label")
 
         menu.add_to_container()
 

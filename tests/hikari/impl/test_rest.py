@@ -1381,7 +1381,7 @@ class TestRESTClientImpl:
 
     def test_interaction_modal_builder(self, rest_client):
         result = rest_client.interaction_modal_builder("title", "custom")
-        result.add_component(special_endpoints.ActionRowBuilder().add_text_input(1, "idd", "labell").add_to_container())
+        result.add_component(special_endpoints.ActionRowBuilder().add_text_input("idd", "labell").add_to_container())
 
         assert result.type == 9
         assert isinstance(result, special_endpoints.InteractionModalBuilder)

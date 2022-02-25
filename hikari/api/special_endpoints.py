@@ -1658,17 +1658,6 @@ class TextInputBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
 
     @property
     @abc.abstractmethod
-    def style(self) -> messages.TextInputStyle:
-        """Style to use for the text input.
-
-        Returns
-        -------
-        builtins.str
-            Style to use for the text input.
-        """
-
-    @property
-    @abc.abstractmethod
     def custom_id(self) -> str:
         """Developer set custom ID used for identifying this text input.
 
@@ -1691,6 +1680,17 @@ class TextInputBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
         -------
         builtins.str
             Label above this text input.
+        """
+
+    @property
+    @abc.abstractmethod
+    def style(self) -> messages.TextInputStyle:
+        """Style to use for the text input.
+
+        Returns
+        -------
+        builtins.str
+            Style to use for the text input.
         """
 
     @property
@@ -1984,7 +1984,6 @@ class ActionRowBuilder(ComponentBuilder, abc.ABC):
     @abc.abstractmethod
     def add_text_input(
         self: _T,
-        style: typing.Union[messages.TextInputStyle, int],
         custom_id: str,
         label: str,
     ) -> TextInputBuilder[_T]:
@@ -1992,8 +1991,6 @@ class ActionRowBuilder(ComponentBuilder, abc.ABC):
 
         Parameters
         ----------
-        style : typing.Union[hikari.messages.TextInputStyle, int]
-            Style to use for the text input.
         custom_id : builtins.str
             Developer set custom ID used for identifying this text input.
         label : builtins.str

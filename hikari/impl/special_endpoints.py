@@ -1353,19 +1353,15 @@ class TextInputBuilder(special_endpoints.TextInputBuilder[_ContainerProtoT]):
     """Standard implementation of `hikari.api.special_endpoints.TextInputBuilder`."""
 
     _container: _ContainerProtoT = attr.field()
-    _style: messages.TextInputStyle = attr.field()
     _custom_id: str = attr.field()
     _label: str = attr.field()
 
+    _style: messages.TextInputStyle = attr.field(default=messages.TextInputStyle.SHORT)
     _placeholder: undefined.UndefinedOr[str] = attr.field(default=undefined.UNDEFINED, kw_only=True)
     _value: undefined.UndefinedOr[str] = attr.field(default=undefined.UNDEFINED, kw_only=True)
     _required: undefined.UndefinedOr[bool] = attr.field(default=undefined.UNDEFINED, kw_only=True)
     _min_length: undefined.UndefinedOr[int] = attr.field(default=undefined.UNDEFINED, kw_only=True)
     _max_length: undefined.UndefinedOr[int] = attr.field(default=undefined.UNDEFINED, kw_only=True)
-
-    @property
-    def style(self) -> messages.TextInputStyle:
-        return self._style
 
     @property
     def custom_id(self) -> str:
@@ -1374,6 +1370,10 @@ class TextInputBuilder(special_endpoints.TextInputBuilder[_ContainerProtoT]):
     @property
     def label(self) -> str:
         return self._label
+
+    @property
+    def style(self) -> messages.TextInputStyle:
+        return self._style
 
     @property
     def placeholder(self) -> undefined.UndefinedOr[str]:
@@ -1514,12 +1514,11 @@ class ActionRowBuilder(special_endpoints.ActionRowBuilder):
 
     def add_text_input(
         self: _ActionRowBuilderT,
-        style: typing.Union[messages.TextInputStyle, int],
         custom_id: str,
         label: str,
     ) -> special_endpoints.TextInputBuilder[_ActionRowBuilderT]:
         self._assert_can_add_type(messages.ComponentType.TEXT_INPUT)
-        return TextInputBuilder(container=self, style=messages.TextInputStyle(style), custom_id=custom_id, label=label)
+        return TextInputBuilder(container=self, custom_id=custom_id, label=label)
 
     def build(self) -> data_binding.JSONObject:
         return {
