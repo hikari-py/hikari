@@ -20,7 +20,6 @@ development.
 
 Python 3.8, 3.9 and 3.10 are currently supported.
 
-
 ## Installation
 
 Install Hikari from PyPI with the following command:
