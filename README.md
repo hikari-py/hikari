@@ -20,6 +20,19 @@ development.
 
 Python 3.8, 3.9 and 3.10 are currently supported.
 
+
+## Installation
+
+Install Hikari from PyPI with the following command:
+
+```bash
+python -m pip install -U hikari
+# Windows users may need to run this instead...
+py -3 -m pip install -U hikari
+```
+
+----
+
 ## Bots
 
 ```py
@@ -114,18 +127,6 @@ async def print_my_user(token):
         print(my_user)
 
 asyncio.run(print_my_user("user token here"))
-```
-
-----
-
-## Installation
-
-Install Hikari from PyPI with the following command:
-
-```bash
-python -m pip install -U hikari
-# Windows users may need to run this instead...
-py -3 -m pip install -U hikari
 ```
 
 ---
