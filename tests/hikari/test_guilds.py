@@ -469,6 +469,26 @@ class TestMember:
         model.nickname = None
         assert model.mention == mock_user.mention
 
+    def test_get_guild(self, model):
+        guild = mock.Mock(id=456)
+        model.user.app.cache.get_guild.side_effect = [guild]
+
+        assert model.get_guild() == guild
+
+        model.user.app.cache.get_guild.assert_has_calls([mock.call(456)])
+
+    def test_get_guild_when_guild_not_in_cache(self, model):
+        model.user.app.cache.get_guild.side_effect = [None]
+
+        assert model.get_guild() is None
+
+        model.user.app.cache.get_guild.assert_has_calls([mock.call(456)])
+
+    def test_get_guild_when_no_cache_trait(self, model):
+        model.user.app = object()
+
+        assert model.get_guild() is None
+
     def test_get_roles(self, model):
         role1 = mock.Mock(id=321, position=2)
         role2 = mock.Mock(id=654, position=1)
