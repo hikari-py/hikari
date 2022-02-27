@@ -2942,7 +2942,7 @@ class TestEntityFactoryImpl:
         guild_role_payload,
         voice_state_payload,
     ):
-        guild_definition = entity_factory_impl.deserialize_gateway_guild(gateway_guild_payload)
+        guild_definition = entity_factory_impl.deserialize_gateway_guild(gateway_guild_payload, user_id=43123)
         guild = guild_definition.guild()
         assert guild.app is mock_app
         assert guild.id == 265828729970753537
@@ -3054,7 +3054,8 @@ class TestEntityFactoryImpl:
                 "vanity_url_code": "loool",
                 "verification_level": 4,
                 "nsfw_level": 0,
-            }
+            },
+            user_id=65123,
         )
         guild = guild_definition.guild()
         assert guild.joined_at is None
@@ -3120,7 +3121,8 @@ class TestEntityFactoryImpl:
                 "widget_channel_id": None,
                 "widget_enabled": True,
                 "nsfw_level": 0,
-            }
+            },
+            user_id=1343123,
         )
         guild = guild_definition.guild()
         assert guild.icon_hash is None
@@ -3139,7 +3141,7 @@ class TestEntityFactoryImpl:
 
     def test_deserialize_gateway_guild_ignores_unrecognised_channels(self, entity_factory_impl, gateway_guild_payload):
         gateway_guild_payload["channels"] = [{"id": 123, "type": 1000}]
-        guild_definition = entity_factory_impl.deserialize_gateway_guild(gateway_guild_payload)
+        guild_definition = entity_factory_impl.deserialize_gateway_guild(gateway_guild_payload, user_id=123321)
 
         assert guild_definition.channels() == {}
 

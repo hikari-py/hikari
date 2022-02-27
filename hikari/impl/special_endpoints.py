@@ -108,6 +108,17 @@ if typing.TYPE_CHECKING:
         ) -> typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]:
             ...
 
+    class _ThreadDeserailzeSig(typing.Protocol["_GuildThreadChannelT"]):
+        def __call__(
+            self,
+            payload: data_binding.JSONObject,
+            /,
+            *,
+            guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+            member: undefined.UndefinedNoneOr[channels.ThreadMember] = undefined.UNDEFINED,
+        ) -> _GuildThreadChannelT:
+            raise NotImplementedError
+
     # Hack around used to avoid recursive generic types leading to type checker issues in builders
     class _ContainerProto(typing.Protocol):
         def add_component(self: _T, component: special_endpoints.ComponentBuilder, /) -> _T:
@@ -116,18 +127,6 @@ if typing.TYPE_CHECKING:
 
 _ContainerProtoT = typing.TypeVar("_ContainerProtoT", bound="_ContainerProto")
 _GuildThreadChannelT = typing.TypeVar("_GuildThreadChannelT", bound=channels.GuildThreadChannel, covariant=True)
-
-
-class _ThreadDeserailzeSig(typing.Protocol[_GuildThreadChannelT]):
-    def __call__(
-        self,
-        payload: data_binding.JSONObject,
-        /,
-        *,
-        guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
-        member: undefined.UndefinedNoneOr[channels.ThreadMember] = undefined.UNDEFINED,
-    ) -> _GuildThreadChannelT:
-        raise NotImplementedError
 
 
 @typing.final

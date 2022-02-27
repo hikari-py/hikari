@@ -794,6 +794,8 @@ class WebhookUpdateEvent(GuildChannelEvent):
 class GuildThreadEvent(shard_events.ShardEvent, abc.ABC):
     """Event base for any event that is related to a guild thread."""
 
+    __slots__: typing.Sequence[str] = ()
+
     @property
     @abc.abstractmethod
     def guild_id(self) -> snowflakes.Snowflake:
@@ -942,7 +944,7 @@ class OwnThreadMemberUpdateEvent(GuildThreadEvent):
 @attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
 class ThreadMembersUpdateEvent(GuildThreadEvent):
-    """Event fired when other thread members are updated"""
+    """Event fired when other thread members are updated."""
 
     app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
@@ -973,6 +975,7 @@ class ThreadMembersUpdateEvent(GuildThreadEvent):
 @attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
 class ThreadListSyncEvent(shard_events.ShardEvent):
+    """Event fired to sync threads when the bot gains access to one or more channels."""
 
     app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
