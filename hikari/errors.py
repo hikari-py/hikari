@@ -66,8 +66,9 @@ if typing.TYPE_CHECKING:
     from hikari.internal import routes
 
 
+# The standard exceptions are all unsloted so slotting here would be a waste of time.
 @attr_extensions.with_copy
-@attr.define(auto_exc=True, repr=False, init=False, weakref_slot=False)
+@attr.define(auto_exc=True, repr=False, init=False, slots=False)
 class HikariError(RuntimeError):
     """Base for an error raised by this API.
 
@@ -78,8 +79,9 @@ class HikariError(RuntimeError):
     """
 
 
+# The standard warnings are all unsloted so slotting here would be a waste of time.
 @attr_extensions.with_copy
-@attr.define(auto_exc=True, repr=False, init=False, weakref_slot=False)
+@attr.define(auto_exc=True, repr=False, init=False, slots=False)
 class HikariWarning(RuntimeWarning):
     """Base for a warning raised by this API.
 
@@ -90,7 +92,7 @@ class HikariWarning(RuntimeWarning):
     """
 
 
-@attr.define(auto_exc=True, repr=False, weakref_slot=False)
+@attr.define(auto_exc=True, repr=False, slots=False)
 class HikariInterrupt(KeyboardInterrupt, HikariError):
     """Exception raised when a kill signal is handled internally."""
 
@@ -101,7 +103,7 @@ class HikariInterrupt(KeyboardInterrupt, HikariError):
     """The signal name that was raised."""
 
 
-@attr.define(auto_exc=True, repr=False, weakref_slot=False)
+@attr.define(auto_exc=True, repr=False, slots=False)
 class ComponentStateConflictError(HikariError):
     """Exception thrown when an action cannot be executed in the component's current state.
 
@@ -116,7 +118,7 @@ class ComponentStateConflictError(HikariError):
         return self.reason
 
 
-@attr.define(auto_exc=True, repr=False, weakref_slot=False)
+@attr.define(auto_exc=True, repr=False, slots=False)
 class UnrecognisedEntityError(HikariError):
     """An exception thrown when an unrecognised entity is found."""
 
@@ -127,7 +129,7 @@ class UnrecognisedEntityError(HikariError):
         return self.reason
 
 
-@attr.define(auto_exc=True, repr=False, weakref_slot=False)
+@attr.define(auto_exc=True, repr=False, slots=False)
 class GatewayError(HikariError):
     """A base exception type for anything that can be thrown by the Gateway."""
 
@@ -171,7 +173,7 @@ class ShardCloseCode(int, enums.Enum):
         return (self.value // 1000) == 1
 
 
-@attr.define(auto_exc=True, repr=False, weakref_slot=False)
+@attr.define(auto_exc=True, repr=False, slots=False)
 class GatewayConnectionError(GatewayError):
     """An exception thrown if a connection issue occurs."""
 
@@ -179,7 +181,7 @@ class GatewayConnectionError(GatewayError):
         return f"Failed to connect to server: {self.reason!r}"
 
 
-@attr.define(auto_exc=True, repr=False, weakref_slot=False)
+@attr.define(auto_exc=True, repr=False, slots=False)
 class GatewayServerClosedConnectionError(GatewayError):
     """An exception raised when the server closes the connection."""
 
@@ -214,7 +216,7 @@ class GatewayServerClosedConnectionError(GatewayError):
         return f"Server closed connection with code {self.code} ({self.reason})"
 
 
-@attr.define(auto_exc=True, repr=False, weakref_slot=False)
+@attr.define(auto_exc=True, repr=False, slots=False)
 class HTTPError(HikariError):
     """Base exception raised if an HTTP error occurs while making a request."""
 
@@ -222,7 +224,7 @@ class HTTPError(HikariError):
     """The error message."""
 
 
-@attr.define(auto_exc=True, repr=False, weakref_slot=False)
+@attr.define(auto_exc=True, repr=False, slots=False)
 class HTTPResponseError(HTTPError):
     """Base exception for an erroneous HTTP response."""
 
@@ -266,7 +268,7 @@ class HTTPResponseError(HTTPError):
         return f"{name_value}:{code_str} '{body[:200]}{'...' if chomped else ''}' for {self.url}"
 
 
-@attr.define(auto_exc=True, repr=False, weakref_slot=False)
+@attr.define(auto_exc=True, repr=False, slots=False)
 class ClientHTTPResponseError(HTTPResponseError):
     """Base exception for an erroneous HTTP response that is a client error.
 
@@ -275,7 +277,7 @@ class ClientHTTPResponseError(HTTPResponseError):
     """
 
 
-@attr.define(auto_exc=True, repr=False, weakref_slot=False)
+@attr.define(auto_exc=True, repr=False, slots=False)
 class BadRequestError(ClientHTTPResponseError):
     """Raised when you send an invalid request somehow."""
 
@@ -304,7 +306,7 @@ class BadRequestError(ClientHTTPResponseError):
         return value
 
 
-@attr.define(auto_exc=True, repr=False, weakref_slot=False)
+@attr.define(auto_exc=True, repr=False, slots=False)
 class UnauthorizedError(ClientHTTPResponseError):
     """Raised when you are not authorized to access a specific resource."""
 
@@ -312,7 +314,7 @@ class UnauthorizedError(ClientHTTPResponseError):
     """The HTTP status code for the response."""
 
 
-@attr.define(auto_exc=True, repr=False, weakref_slot=False)
+@attr.define(auto_exc=True, repr=False, slots=False)
 class ForbiddenError(ClientHTTPResponseError):
     """Raised when you are not allowed to access a specific resource.
 
@@ -325,7 +327,7 @@ class ForbiddenError(ClientHTTPResponseError):
     """The HTTP status code for the response."""
 
 
-@attr.define(auto_exc=True, repr=False, weakref_slot=False)
+@attr.define(auto_exc=True, repr=False, slots=False)
 class NotFoundError(ClientHTTPResponseError):
     """Raised when something is not found."""
 
@@ -333,7 +335,7 @@ class NotFoundError(ClientHTTPResponseError):
     """The HTTP status code for the response."""
 
 
-@attr.define(auto_exc=True, kw_only=True, repr=False, weakref_slot=False)
+@attr.define(auto_exc=True, kw_only=True, repr=False, slots=False)
 class RateLimitedError(ClientHTTPResponseError):
     """Raised when a non-global rate limit that cannot be handled occurs.
 
@@ -367,7 +369,7 @@ class RateLimitedError(ClientHTTPResponseError):
         return f"You are being rate-limited for {self.retry_after:,} seconds on route {self.route}. Please slow down!"
 
 
-@attr.define(auto_exc=True, kw_only=True, repr=False, weakref_slot=False)
+@attr.define(auto_exc=True, kw_only=True, repr=False, slots=False)
 class RateLimitTooLongError(HTTPError):
     """Internal error raised if the wait for a rate limit is too long.
 
@@ -428,7 +430,7 @@ class RateLimitTooLongError(HTTPError):
         return self.message
 
 
-@attr.define(auto_exc=True, repr=False, weakref_slot=False)
+@attr.define(auto_exc=True, repr=False, slots=False)
 class InternalServerError(HTTPResponseError):
     """Base exception for an erroneous HTTP response that is a server error.
 
@@ -437,7 +439,7 @@ class InternalServerError(HTTPResponseError):
     """
 
 
-@attr.define(auto_exc=True, repr=False, init=False, weakref_slot=False)
+@attr.define(auto_exc=True, repr=False, init=False, slots=False)
 class MissingIntentWarning(HikariWarning):
     """Warning raised when subscribing to an event that cannot be fired.
 
@@ -445,7 +447,7 @@ class MissingIntentWarning(HikariWarning):
     """
 
 
-@attr.define(auto_exc=True, repr=False, weakref_slot=False)
+@attr.define(auto_exc=True, repr=False, slots=False)
 class BulkDeleteError(HikariError):
     """Exception raised when a bulk delete fails midway through a call.
 
@@ -478,12 +480,12 @@ class BulkDeleteError(HikariError):
         return f"Error encountered when bulk deleting messages ({deleted}/{total} messages deleted)"
 
 
-@attr.define(auto_exc=True, repr=False, init=False, weakref_slot=False)
+@attr.define(auto_exc=True, repr=False, init=False, slots=False)
 class VoiceError(HikariError):
     """Error raised when a problem occurs with the voice subsystem."""
 
 
-@attr.define(auto_exc=True, repr=False, weakref_slot=False)
+@attr.define(auto_exc=True, repr=False, slots=False)
 class MissingIntentError(HikariError, ValueError):
     """Error raised when you try to perform an action without an intent.
 

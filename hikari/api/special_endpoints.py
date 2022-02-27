@@ -552,6 +552,8 @@ class GuildBuilder(abc.ABC):
 class InteractionResponseBuilder(abc.ABC):
     """Base class for all interaction response builders used in the interaction server."""
 
+    __slots__: typing.Sequence[str] = ()
+
     @property
     @abc.abstractmethod
     def type(self) -> typing.Union[int, base_interactions.ResponseType]:
@@ -1018,6 +1020,8 @@ class CommandBuilder(abc.ABC):
 class SlashCommandBuilder(CommandBuilder):
     """SlashCommandBuilder."""
 
+    __slots__: typing.Sequence[str] = ()
+
     @property
     @abc.abstractmethod
     def description(self) -> str:
@@ -1064,6 +1068,8 @@ class SlashCommandBuilder(CommandBuilder):
 
 class ContextMenuCommandBuilder(CommandBuilder):
     """ContextMenuCommandBuilder."""
+
+    __slots__: typing.Sequence[str] = ()
 
 
 class ComponentBuilder(abc.ABC):
@@ -1205,6 +1211,8 @@ class ButtonBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
 class LinkButtonBuilder(ButtonBuilder[_ContainerT], abc.ABC):
     """Builder interface for link buttons."""
 
+    __slots__: typing.Sequence[str] = ()
+
     @property
     @abc.abstractmethod
     def url(self) -> str:
@@ -1219,6 +1227,8 @@ class LinkButtonBuilder(ButtonBuilder[_ContainerT], abc.ABC):
 
 class InteractiveButtonBuilder(ButtonBuilder[_ContainerT], abc.ABC):
     """Builder interface for interactive buttons."""
+
+    __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod
