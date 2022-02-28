@@ -208,7 +208,7 @@ class EventFactoryImpl(event_factory.EventFactory):
                         presence_payload, guild_id=guild_id
                     )
 
-        if raw_removed_members := payload.get("removed_members"):
+        if raw_removed_members := payload.get("removed_member_ids"):
             removed_member_ids = [snowflakes.Snowflake(m) for m in raw_removed_members]
 
         else:
@@ -234,19 +234,17 @@ class EventFactoryImpl(event_factory.EventFactory):
         if raw_channel_ids := payload.get("channel_ids"):
             channel_ids = [snowflakes.Snowflake(x) for x in raw_channel_ids]
 
+        members = {m.thread_id: m for m in map(self._app.entity_factory.deserialize_thread_member, payload["members"])}
         threads: typing.Dict[snowflakes.Snowflake, channel_models.GuildThreadChannel] = {}
         for thread_payload in payload["threads"]:
-            thread = self._app.entity_factory.deserialize_guild_thread(thread_payload, guild_id=guild_id)
+            thread_id = snowflakes.Snowflake(thread_payload["id"])
+            thread = self._app.entity_factory.deserialize_guild_thread(
+                thread_payload, guild_id=guild_id, member=members.get(thread_id)
+            )
             threads[thread.id] = thread
 
-        members = {m.user_id: m for m in map(self._app.entity_factory.deserialize_thread_member, payload["members"])}
         return channel_events.ThreadListSyncEvent(
-            app=self._app,
-            shard=shard,
-            guild_id=guild_id,
-            channel_ids=channel_ids,
-            threads=threads,
-            members=members,
+            app=self._app, shard=shard, guild_id=guild_id, channel_ids=channel_ids, threads=threads
         )
 
     def deserialize_webhook_update_event(
@@ -315,9 +313,7 @@ class EventFactoryImpl(event_factory.EventFactory):
     ################
 
     def deserialize_guild_available_event(
-        self,
-        shard: gateway_shard.GatewayShard,
-        payload: data_binding.JSONObject,
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> guild_events.GuildAvailableEvent:
         guild_information = self._app.entity_factory.deserialize_gateway_guild(payload)
         return guild_events.GuildAvailableEvent(
@@ -333,9 +329,7 @@ class EventFactoryImpl(event_factory.EventFactory):
         )
 
     def deserialize_guild_join_event(
-        self,
-        shard: gateway_shard.GatewayShard,
-        payload: data_binding.JSONObject,
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> guild_events.GuildJoinEvent:
         guild_information = self._app.entity_factory.deserialize_gateway_guild(payload, user_id=shard.user_id())
         return guild_events.GuildJoinEvent(
@@ -354,6 +348,7 @@ class EventFactoryImpl(event_factory.EventFactory):
         self,
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
+        *,
         old_guild: typing.Optional[guild_models.GatewayGuild] = None,
     ) -> guild_events.GuildUpdateEvent:
         guild_information = self._app.entity_factory.deserialize_gateway_guild(payload, user_id=shard.user_id())

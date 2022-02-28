@@ -876,15 +876,31 @@ class GuildThreadIterator(iterators.BufferedLazyIterator[_GuildThreadChannelT]):
             return None
 
         self._has_more = response["has_more"]
-        members = {
-            member.thread_id: member
-            for member in map(self._entity_factory.deserialize_thread_member, response["members"])
-        }
-        next_before = snowflakes.Snowflake(min(thread["id"] for thread in threads))
-        self._next_before = next_before.created_at.isoformat() if self._before_is_timestamp else str(next_before)
+        members = {int(member["id"]): member for member in response["members"]}
+        if self._before_is_timestamp:
+            self._next_before = min(
+                time.iso8601_datetime_string_to_datetime(t["thread_metadata"]["archive_timestamp"]) for t in threads
+            ).isoformat()
+
+        else:
+            self._next_before = str(min(int(thread["id"]) for thread in threads))
+
         return (
-            self._deserialize(payload, member=members.get(snowflakes.Snowflake(payload["id"]))) for payload in threads
+            self._deserialize(
+                payload,
+                member=_maybe_cast(self._entity_factory.deserialize_thread_member, members.get(int(payload["id"]))),
+            )
+            for payload in threads
         )
+
+
+def _maybe_cast(
+    callback: typing.Callable[[data_binding.JSONObject], _T], data: typing.Optional[data_binding.JSONObject]
+) -> typing.Optional[_T]:
+    if data:
+        return callback(data)
+
+    return None
 
 
 @attr_extensions.with_copy

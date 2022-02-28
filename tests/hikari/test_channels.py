@@ -226,7 +226,7 @@ class TestTextChannel:
     async def test_fetch_message(self, model):
         model.app.rest.fetch_message = mock.AsyncMock()
 
-        assert await model.fetch_message(133742069) == model.app.rest.fetch_message.return_value
+        assert await model.fetch_message(133742069) is model.app.rest.fetch_message.return_value
 
         model.app.rest.fetch_message.assert_awaited_once_with(12345679, 133742069)
 
@@ -242,7 +242,7 @@ class TestTextChannel:
     async def test_pin_message(self, model):
         model.app.rest.pin_message = mock.AsyncMock()
 
-        assert await model.pin_message(77790) == model.app.rest.pin_message.return_value
+        assert await model.pin_message(77790) is model.app.rest.pin_message.return_value
 
         model.app.rest.pin_message.assert_awaited_once_with(12345679, 77790)
 
@@ -250,7 +250,7 @@ class TestTextChannel:
     async def test_unpin_message(self, model):
         model.app.rest.unpin_message = mock.AsyncMock()
 
-        assert await model.unpin_message(77790) == model.app.rest.unpin_message.return_value
+        assert await model.unpin_message(77790) is model.app.rest.unpin_message.return_value
 
         model.app.rest.unpin_message.assert_awaited_once_with(12345679, 77790)
 
@@ -340,19 +340,22 @@ class TestGuildChannel:
     async def test_fetch_guild(self, model):
         model.app.rest.fetch_guild = mock.AsyncMock()
 
-        assert await model.fetch_guild() == model.app.rest.fetch_guild.return_value
+        assert await model.fetch_guild() is model.app.rest.fetch_guild.return_value
 
         model.app.rest.fetch_guild.assert_awaited_once_with(123456789)
 
     @pytest.mark.asyncio()
-    async def test_edit(self, model):
+    async def test_edit(self, model):  # TODO: Why isn't this testing all the fields
         model.app.rest.edit_channel = mock.AsyncMock()
 
-        assert (
-            await model.edit(name="Supa fast boike", bitrate=420, reason="left right")
-            == model.app.rest.edit_channel.return_value
+        result = await model.edit(
+            name="Supa fast boike",
+            bitrate=420,
+            reason="left right",
+            default_auto_archive_duration=123312,
         )
 
+        assert result is model.app.rest.edit_channel.return_value
         model.app.rest.edit_channel.assert_awaited_once_with(
             69420,
             name="Supa fast boike",
@@ -366,6 +369,7 @@ class TestGuildChannel:
             region=undefined.UNDEFINED,
             permission_overwrites=undefined.UNDEFINED,
             parent_category=undefined.UNDEFINED,
+            default_auto_archive_duration=123312,
             reason="left right",
         )
 

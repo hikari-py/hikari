@@ -494,7 +494,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         }
         self._thread_channel_type_mapping = {
             channel_models.ChannelType.GUILD_NEWS_THREAD: self.deserilaize_guild_news_thread,
-            channel_models.ChannelType.GUILD_PUBLIC_THREAD: self.deserialize_guild_public_tbread,
+            channel_models.ChannelType.GUILD_PUBLIC_THREAD: self.deserialize_guild_public_thread,
             channel_models.ChannelType.GUILD_PRIVATE_THREAD: self.deserialize_guild_private_thread,
         }
         self._interaction_type_mapping: typing.Dict[
@@ -1116,7 +1116,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             actual_member = self.deserialize_thread_member(member_payload, thread_id=channel_fields.id, user_id=user_id)
 
         thread_created_at: typing.Optional[datetime.datetime] = None
-        if raw_thread_created_at := payload.get("create_timestamp"):
+        if raw_thread_created_at := metadata.get("create_timestamp"):
             thread_created_at = time.iso8601_datetime_string_to_datetime(raw_thread_created_at)
 
         assert channel_fields.parent_id is not None
@@ -1131,10 +1131,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             last_message_id=last_message_id,
             last_pin_timestamp=last_pin_timestamp,
             rate_limit_per_user=datetime.timedelta(seconds=payload.get("rate_limit_per_user", 0)),
-            approximate_member_count=int(payload["message_count"]),
-            approximate_message_count=int(payload["member_count"]),
+            approximate_member_count=int(payload["member_count"]),
+            approximate_message_count=int(payload["message_count"]),
             is_archived=metadata["archived"],
-            auto_archive_duration=datetime.timedelta(seconds=metadata["auto_archive_duration"]),
+            auto_archive_duration=datetime.timedelta(minutes=metadata["auto_archive_duration"]),
             archive_timestamp=time.iso8601_datetime_string_to_datetime(metadata["archive_timestamp"]),
             is_locked=metadata["locked"],
             member=actual_member,
@@ -1142,7 +1142,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             thread_created_at=thread_created_at,
         )
 
-    def deserialize_guild_public_tbread(
+    def deserialize_guild_public_thread(
         self,
         payload: data_binding.JSONObject,
         *,
@@ -1165,7 +1165,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             actual_member = self.deserialize_thread_member(member_payload, thread_id=channel_fields.id, user_id=user_id)
 
         thread_created_at: typing.Optional[datetime.datetime] = None
-        if raw_thread_created_at := payload.get("create_timestamp"):
+        if raw_thread_created_at := metadata.get("create_timestamp"):
             thread_created_at = time.iso8601_datetime_string_to_datetime(raw_thread_created_at)
 
         assert channel_fields.parent_id is not None
@@ -1180,10 +1180,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             last_message_id=last_message_id,
             last_pin_timestamp=last_pin_timestamp,
             rate_limit_per_user=datetime.timedelta(seconds=payload.get("rate_limit_per_user", 0)),
-            approximate_member_count=int(payload["message_count"]),
-            approximate_message_count=int(payload["member_count"]),
+            approximate_member_count=int(payload["member_count"]),
+            approximate_message_count=int(payload["message_count"]),
             is_archived=metadata["archived"],
-            auto_archive_duration=datetime.timedelta(seconds=metadata["auto_archive_duration"]),
+            auto_archive_duration=datetime.timedelta(minutes=metadata["auto_archive_duration"]),
             archive_timestamp=time.iso8601_datetime_string_to_datetime(metadata["archive_timestamp"]),
             is_locked=metadata["locked"],
             member=actual_member,
@@ -1214,7 +1214,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             actual_member = self.deserialize_thread_member(member_payload, thread_id=channel_fields.id, user_id=user_id)
 
         thread_created_at: typing.Optional[datetime.datetime] = None
-        if raw_thread_created_at := payload.get("create_timestamp"):
+        if raw_thread_created_at := metadata.get("create_timestamp"):
             thread_created_at = time.iso8601_datetime_string_to_datetime(raw_thread_created_at)
 
         assert channel_fields.parent_id is not None
@@ -1229,10 +1229,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             last_message_id=last_message_id,
             last_pin_timestamp=last_pin_timestamp,
             rate_limit_per_user=datetime.timedelta(seconds=payload.get("rate_limit_per_user", 0)),
-            approximate_member_count=int(payload["message_count"]),
-            approximate_message_count=int(payload["member_count"]),
+            approximate_member_count=int(payload["member_count"]),
+            approximate_message_count=int(payload["message_count"]),
             is_archived=metadata["archived"],
-            auto_archive_duration=datetime.timedelta(seconds=metadata["auto_archive_duration"]),
+            auto_archive_duration=datetime.timedelta(minutes=metadata["auto_archive_duration"]),
             archive_timestamp=time.iso8601_datetime_string_to_datetime(metadata["archive_timestamp"]),
             is_locked=metadata["locked"],
             member=actual_member,

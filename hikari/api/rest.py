@@ -4830,13 +4830,14 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         # While there is a "default archive duration" setting this doesn't seem to effect this context
         # since it always defaults to 1440 minutes if auto_archive_duration is left undefined.
         auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = datetime.timedelta(minutes=60),
+        rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> typing.Union[channels_.GuildPublicThread, channels_.GuildNewsThread]:
         """Create a public or news thread on a message in a guild channel.
 
-        !!! warning
-            Public threads can only be made in guild text channels
-            and news threads can only be made in guild news channels.
+        !!! note
+            This call may create a public or news thread dependent on the
+            target channel's type and cannot create private threads.
 
         Parameters
         ----------
@@ -4855,6 +4856,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             This should be either 60, 1440, 4320 or 10080 seconds and, as of
             writing, ignores the parent channel's set default_auto_archive_duration
             when passed as `hikari.undefined.UNDEFINED`.
+        rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
+            If provided, the amount of seconds a user has to wait
+            before being able to send another message in the channel.
+            Maximum 21600 seconds.
 
         Returns
         -------
@@ -4889,23 +4894,26 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def create_thread(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
-        type: typing.Union[channels_.ChannelType, int],  # TODO: more specific type?
+        type: typing.Union[channels_.ChannelType, int],
         name: str,
         *,
         # While there is a "default archive duration" setting this doesn't seem to effect this context
         # since it always defaults to 1440 minutes if auto_archive_duration is left undefined.
         auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = datetime.timedelta(minutes=60),
+        invitable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> channels_.GuildPrivateThread:
-        """Create a private thread in a guild channel.
+    ) -> channels_.GuildThreadChannel:
+        """Create a thread in a guild channel.
 
         !!! warning
-            Private threads can only be made in guild text channels.
+            Private and public threads can only be made in guild text channels,
+            and news threads can only be made in guild news channels,
 
         Parameters
         ----------
         channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.PermissibleGuildChannel]
-            Object or ID of the guild news or text channel to create a private thread in.
+            Object or ID of the guild news or text channel to create a thread in.
         name : str
             Name of the thread channel.
 
@@ -4917,11 +4925,19 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             This should be either 60, 1440, 4320 or 10080 seconds and, as of
             writing, ignores the parent channel's set default_auto_archive_duration
             when passed as `hikari.undefined.UNDEFINED`.
+        invitable : undefined.UndefinedOr[bool]
+            If provided, whether non-moderators should be able to add other non-moderators to the thread.
+
+            This only applies to private threads.
+        rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
+            If provided, the amount of seconds a user has to wait
+            before being able to send another message in the channel.
+            Maximum 21600 seconds.
 
         Returns
         -------
-        hikari.channels.GuildPrivateThread
-            The created private thread channel.
+        hikari.channels.GuildThreadChannel
+            The created thread channel.
 
         Raises
         ------
@@ -4988,9 +5004,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
         *,
-        before: undefined.UndefinedOr[
-            snowflakes.SearchableSnowflakeishOr[channels_.GuildThreadChannel]
-        ] = undefined.UNDEFINED,
+        before: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[typing.Union[channels_.GuildNewsThread, channels_.GuildPublicThread]]:
         raise NotImplementedError
 
@@ -4999,9 +5013,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
         *,
-        before: undefined.UndefinedOr[
-            snowflakes.SearchableSnowflakeishOr[channels_.GuildThreadChannel]
-        ] = undefined.UNDEFINED,
+        before: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[channels_.GuildPrivateThread]:
         raise NotImplementedError
 

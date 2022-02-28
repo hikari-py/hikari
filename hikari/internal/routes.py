@@ -314,7 +314,6 @@ GET_JOINED_PRIVATE_ARCHIVED_THREADS: typing.Final[Route] = Route(
     GET, "/channels/{channel}/users/@me/threads/archived/private"
 )
 
-
 POST_CHANNEL_FOLLOWERS: typing.Final[Route] = Route(POST, "/channels/{channel}/followers")
 
 GET_CHANNEL_INVITES: typing.Final[Route] = Route(GET, "/channels/{channel}/invites")

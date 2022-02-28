@@ -1021,7 +1021,7 @@ class GuildChannel(PartialChannel):
         """
         return await self.app.rest.fetch_guild(self.guild_id)
 
-    async def edit(
+    async def edit(  # TODO: split this up between the different channel types
         self,
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -1035,6 +1035,7 @@ class GuildChannel(PartialChannel):
         region: undefined.UndefinedOr[typing.Union[voices.VoiceRegion, str]] = undefined.UNDEFINED,
         permission_overwrites: undefined.UndefinedOr[typing.Sequence[PermissionOverwrite]] = undefined.UNDEFINED,
         parent_category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[GuildCategory]] = undefined.UNDEFINED,
+        default_auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> PartialChannel:
         """Edit the text channel.
@@ -1066,6 +1067,12 @@ class GuildChannel(PartialChannel):
             If provided, the new permission overwrites for the channel.
         parent_category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
             If provided, the new guild category for the channel.
+        default_auto_archive_duration : hikari.undefined.UndefinedOr[hikari.time.Intervalish]
+            If provided, the auto archive duration Discord's end user client
+            should default to when creating threads in this channel.
+
+            This should be either 60, 1440, 4320 or 10080 seconds and, as of
+            writing.
         reason : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -1112,6 +1119,7 @@ class GuildChannel(PartialChannel):
             region=region,
             permission_overwrites=permission_overwrites,
             parent_category=parent_category,
+            default_auto_archive_duration=default_auto_archive_duration,
             reason=reason,
         )
 
@@ -1369,7 +1377,7 @@ class GuildStageChannel(PermissibleGuildChannel):
     region: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
     """ID of the voice region for this stage channel.
 
-    If set to `builtins.None` then this is set to F"auto" mode where the used
+    If set to `builtins.None` then this is set to "auto" mode where the used
     region will be decided based on the first person who connects to it when
     it's empty.
     """

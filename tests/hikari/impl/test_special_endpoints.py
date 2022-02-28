@@ -434,6 +434,230 @@ class TestScheduledEventUserIterator:
         mock_request.assert_awaited_once_with(compiled_route=expected_route, query=query)
 
 
+@pytest.mark.asyncio()
+class TestGuildThreadIterator:
+    async def test__next_chunk(self):
+        mock_payload_1 = {"id": "9494949", "thread_metadata": {"archive_timestamp": "2022-02-21T11:33:09.220087+00:00"}}
+        mock_payload_2 = {"id": "6576234", "thread_metadata": {"archive_timestamp": "2022-02-10T11:33:09.220087+00:00"}}
+        mock_payload_3 = {
+            "id": "1236524143",
+            "thread_metadata": {"archive_timestamp": "2022-02-28T11:33:09.220087+00:00"},
+        }
+        mock_thread_1 = mock.Mock(id=9494949)
+        mock_thread_2 = mock.Mock(id=6576234)
+        mock_thread_3 = mock.Mock(id=1236524143)
+        mock_member_payload_1 = {"id": "9494949", "user_id": "4884844"}
+        mock_member_payload_2 = {"id": "6576234", "user_id": "9030920932908"}
+        mock_member_payload_3 = {"id": "1236524143", "user_id": "9549494934"}
+        mock_member_1 = mock.Mock(thread_id=9494949)
+        mock_member_2 = mock.Mock(thread_id=6576234)
+        mock_member_3 = mock.Mock(thread_id=1236524143)
+        mock_deserialize = mock.Mock(side_effect=[mock_thread_1, mock_thread_2, mock_thread_3])
+        mock_entity_factory = mock.Mock()
+        mock_entity_factory.deserialize_thread_member.side_effect = [mock_member_1, mock_member_2, mock_member_3]
+        mock_request = mock.AsyncMock(
+            return_value={
+                "threads": [mock_payload_1, mock_payload_2, mock_payload_3],
+                "members": [mock_member_payload_3, mock_member_payload_1, mock_member_payload_2],
+                "has_more": False,
+            }
+        )
+        mock_route = mock.Mock()
+        thread_iterator = special_endpoints.GuildThreadIterator(
+            mock_deserialize,
+            mock_entity_factory,
+            mock_request,
+            mock_route,
+            "eatmyshinymetal",
+            before_is_timestamp=True,
+        )
+
+        result = await thread_iterator._next_chunk()
+
+        assert result
+        assert thread_iterator._has_more is False
+        assert thread_iterator._next_before == "2022-02-10T11:33:09.220087+00:00"
+        mock_request.assert_awaited_once_with(
+            compiled_route=mock_route, query={"limit": "100", "before": "eatmyshinymetal"}
+        )
+        mock_deserialize.assert_not_called()
+        mock_entity_factory.deserialize_thread_member.assert_not_called()
+
+        results = list(result)
+
+        assert results == [mock_thread_1, mock_thread_2, mock_thread_3]
+        mock_entity_factory.deserialize_thread_member.assert_has_calls(
+            [mock.call(mock_member_payload_1), mock.call(mock_member_payload_2), mock.call(mock_member_payload_3)]
+        )
+        mock_deserialize.assert_has_calls(
+            [
+                mock.call(mock_payload_1, member=mock_member_1),
+                mock.call(mock_payload_2, member=mock_member_2),
+                mock.call(mock_payload_3, member=mock_member_3),
+            ]
+        )
+
+    async def test__next_chunk_when_before_is_timestamp_and_undefined(self):
+        mock_payload_1 = {"id": "9494949", "thread_metadata": {"archive_timestamp": "2022-02-21T11:33:09.220087+00:00"}}
+        mock_payload_2 = {"id": "6576234", "thread_metadata": {"archive_timestamp": "2022-02-08T11:33:09.220087+00:00"}}
+        mock_payload_3 = {
+            "id": "1236524143",
+            "thread_metadata": {"archive_timestamp": "2022-02-28T11:33:09.220087+00:00"},
+        }
+        mock_member_payload_1 = {"id": "9494949", "user_id": "4884844"}
+        mock_member_payload_2 = {"id": "6576234", "user_id": "9030920932908"}
+        mock_member_payload_3 = {"id": "1236524143", "user_id": "9549494934"}
+        mock_deserialize = mock.Mock()
+        mock_entity_factory = mock.Mock()
+        mock_request = mock.AsyncMock(
+            return_value={
+                "threads": [mock_payload_1, mock_payload_2, mock_payload_3],
+                "members": [mock_member_payload_3, mock_member_payload_1, mock_member_payload_2],
+                "has_more": True,
+            }
+        )
+        mock_route = mock.Mock()
+        thread_iterator = special_endpoints.GuildThreadIterator(
+            mock_deserialize,
+            mock_entity_factory,
+            mock_request,
+            mock_route,
+            undefined.UNDEFINED,
+            before_is_timestamp=True,
+        )
+
+        result = await thread_iterator._next_chunk()
+
+        assert result
+        assert thread_iterator._has_more is True
+        assert thread_iterator._next_before == "2022-02-08T11:33:09.220087+00:00"
+        mock_request.assert_awaited_once_with(compiled_route=mock_route, query={"limit": "100"})
+        mock_deserialize.assert_not_called()
+        mock_entity_factory.deserialize_thread_member.assert_not_called()
+
+    async def test__next_chunk_when_before_is_id(self):
+        mock_payload_1 = {"id": "9494949", "thread_metadata": {"archive_timestamp": "2022-02-21T11:33:09.220087+00:00"}}
+        mock_payload_2 = {"id": "323232", "thread_metadata": {"archive_timestamp": "2022-02-10T11:33:09.220087+00:00"}}
+        mock_payload_3 = {
+            "id": "1236524143",
+            "thread_metadata": {"archive_timestamp": "2022-02-28T11:33:09.220087+00:00"},
+        }
+        mock_member_payload_1 = {"id": "9494949", "user_id": "4884844"}
+        mock_member_payload_2 = {"id": "323232", "user_id": "9030920932908"}
+        mock_member_payload_3 = {"id": "1236524143", "user_id": "9549494934"}
+        mock_deserialize = mock.Mock()
+        mock_entity_factory = mock.Mock()
+        mock_request = mock.AsyncMock(
+            return_value={
+                "threads": [mock_payload_1, mock_payload_2, mock_payload_3],
+                "members": [mock_member_payload_3, mock_member_payload_1, mock_member_payload_2],
+                "has_more": False,
+            }
+        )
+        mock_route = mock.Mock()
+        thread_iterator = special_endpoints.GuildThreadIterator(
+            mock_deserialize,
+            mock_entity_factory,
+            mock_request,
+            mock_route,
+            "3451231231231",
+            before_is_timestamp=False,
+        )
+
+        result = await thread_iterator._next_chunk()
+
+        assert result
+        assert thread_iterator._has_more is False
+        assert thread_iterator._next_before == "323232"
+        mock_request.assert_awaited_once_with(
+            compiled_route=mock_route, query={"limit": "100", "before": "3451231231231"}
+        )
+        mock_deserialize.assert_not_called()
+        mock_entity_factory.deserialize_thread_member.assert_not_called()
+
+    async def test__next_chunk_when_before_is_id_and_undefined(self):
+        mock_payload_1 = {"id": "9494949", "thread_metadata": {"archive_timestamp": "2022-02-21T11:33:09.220087+00:00"}}
+        mock_payload_2 = {"id": "6576234", "thread_metadata": {"archive_timestamp": "2022-02-08T11:33:09.220087+00:00"}}
+        mock_payload_3 = {
+            "id": "1236524143",
+            "thread_metadata": {"archive_timestamp": "2022-02-28T11:33:09.220087+00:00"},
+        }
+        mock_member_payload_1 = {"id": "9494949", "user_id": "4884844"}
+        mock_member_payload_2 = {"id": "6576234", "user_id": "9030920932908"}
+        mock_member_payload_3 = {"id": "1236524143", "user_id": "9549494934"}
+        mock_deserialize = mock.Mock()
+        mock_entity_factory = mock.Mock()
+        mock_request = mock.AsyncMock(
+            return_value={
+                "threads": [mock_payload_1, mock_payload_2, mock_payload_3],
+                "members": [mock_member_payload_3, mock_member_payload_1, mock_member_payload_2],
+                "has_more": True,
+            }
+        )
+        mock_route = mock.Mock()
+        thread_iterator = special_endpoints.GuildThreadIterator(
+            mock_deserialize,
+            mock_entity_factory,
+            mock_request,
+            mock_route,
+            undefined.UNDEFINED,
+            before_is_timestamp=False,
+        )
+
+        result = await thread_iterator._next_chunk()
+
+        assert result
+        assert thread_iterator._has_more is True
+        assert thread_iterator._next_before == "6576234"
+        mock_request.assert_awaited_once_with(compiled_route=mock_route, query={"limit": "100"})
+        mock_deserialize.assert_not_called()
+        mock_entity_factory.deserialize_thread_member.assert_not_called()
+
+    async def test__next_chunk_when_finished(self):
+        mock_deserialize = mock.Mock()
+        mock_entity_factory = mock.Mock()
+        mock_request = mock.AsyncMock()
+        thread_iterator = special_endpoints.GuildThreadIterator(
+            mock_deserialize,
+            mock_entity_factory,
+            mock_request,
+            mock.Mock(),
+            undefined.UNDEFINED,
+            before_is_timestamp=False,
+        )
+        thread_iterator._has_more = False
+
+        result = await thread_iterator._next_chunk()
+
+        assert result is None
+        mock_deserialize.assert_not_called()
+        mock_entity_factory.deserialize_thread_member.assert_not_called()
+        mock_request.assert_not_called()
+
+    async def test__next_chunk_when_request_returns_an_empty_resource(self):
+        mock_deserialize = mock.Mock()
+        mock_entity_factory = mock.Mock()
+        mock_request = mock.AsyncMock(return_value={"threads": [], "members": [], "has_more": False})
+        mock_route = mock.Mock()
+        thread_iterator = special_endpoints.GuildThreadIterator(
+            mock_deserialize,
+            mock_entity_factory,
+            mock_request,
+            mock_route,
+            undefined.UNDEFINED,
+            before_is_timestamp=False,
+        )
+        thread_iterator._has_more = True
+
+        result = await thread_iterator._next_chunk()
+
+        assert result is None
+        assert thread_iterator._has_more is False
+        mock_deserialize.assert_not_called()
+        mock_entity_factory.deserialize_thread_member.assert_not_called()
+        mock_request.assert_awaited_once_with(compiled_route=mock_route, query={"limit": "100"})
+
+
 class TestInteractionDeferredBuilder:
     def test_type_property(self):
         builder = special_endpoints.InteractionDeferredBuilder(5)

@@ -634,7 +634,7 @@ class EntityFactory(abc.ABC):
         """
 
     @abc.abstractmethod
-    def deserialize_guild_public_tbread(
+    def deserialize_guild_public_thread(
         self,
         payload: data_binding.JSONObject,
         *,

@@ -989,5 +989,3 @@ class ThreadListSyncEvent(shard_events.ShardEvent):
     channel_ids: typing.Optional[typing.Sequence[snowflakes.Snowflake]] = attr.field()
 
     threads: typing.Mapping[snowflakes.Snowflake, channels.GuildThreadChannel] = attr.field()
-
-    members: typing.Mapping[snowflakes.Snowflake, channels.ThreadMember] = attr.field()
