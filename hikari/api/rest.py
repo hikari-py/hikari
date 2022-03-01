@@ -3413,7 +3413,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
         event_type: undefined.UndefinedOr[typing.Union[audit_logs.AuditLogEventType, int]] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[audit_logs.AuditLog]:
-        """Fetch the guild's audit log.
+        """Fetch pages of the guild's audit log.
 
         Parameters
         ----------
