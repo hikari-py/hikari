@@ -1150,10 +1150,14 @@ class TestEntityFactoryImpl:
         application_webhook_payload,
         follower_webhook_payload,
         partial_integration_payload,
+        guild_public_thread_payload,
+        guild_private_thread_payload,
+        guild_news_thread_payload,
     ):
         return {
             "audit_log_entries": [audit_log_entry_payload],
             "integrations": [partial_integration_payload],
+            "threads": [guild_public_thread_payload, guild_private_thread_payload, guild_news_thread_payload],
             "users": [user_payload],
             "webhooks": [incoming_webhook_payload, application_webhook_payload, follower_webhook_payload],
         }
@@ -1168,6 +1172,9 @@ class TestEntityFactoryImpl:
         application_webhook_payload,
         follower_webhook_payload,
         partial_integration_payload,
+        guild_public_thread_payload,
+        guild_private_thread_payload,
+        guild_news_thread_payload,
     ):
         audit_log = entity_factory_impl.deserialize_audit_log(audit_log_payload)
 
@@ -1201,6 +1208,11 @@ class TestEntityFactoryImpl:
 
         assert audit_log.integrations == {
             4949494949: entity_factory_impl.deserialize_partial_integration(partial_integration_payload)
+        }
+        assert audit_log.threads == {
+            947643783913308301: entity_factory_impl.deserialize_guild_public_thread(guild_public_thread_payload),
+            947690637610844210: entity_factory_impl.deserialize_guild_private_thread(guild_private_thread_payload),
+            946900871160164393: entity_factory_impl.deserilaize_guild_news_thread(guild_news_thread_payload),
         }
         assert audit_log.users == {115590097100865541: entity_factory_impl.deserialize_user(user_payload)}
         assert audit_log.webhooks == {
@@ -1275,6 +1287,7 @@ class TestEntityFactoryImpl:
         audit_log = entity_factory_impl.deserialize_audit_log(
             {
                 "webhooks": [incoming_webhook_payload, {"type": -99999}, application_webhook_payload],
+                "threads": [],
                 "users": [],
                 "audit_log_entries": [],
                 "integrations": [],
@@ -1284,6 +1297,27 @@ class TestEntityFactoryImpl:
         assert audit_log.webhooks == {
             223704706495545344: entity_factory_impl.deserialize_incoming_webhook(incoming_webhook_payload),
             658822586720976555: entity_factory_impl.deserialize_application_webhook(application_webhook_payload),
+        }
+
+    def test_deserialize_audit_log_skips_unknown_thread_type(
+        self,
+        entity_factory_impl,
+        guild_public_thread_payload,
+        guild_private_thread_payload,
+    ):
+        audit_log = entity_factory_impl.deserialize_audit_log(
+            {
+                "webhooks": {},
+                "threads": [guild_public_thread_payload, {"type": -99998}, guild_private_thread_payload],
+                "users": [],
+                "audit_log_entries": [],
+                "integrations": [],
+            }
+        )
+
+        assert audit_log.threads == {
+            947643783913308301: entity_factory_impl.deserialize_guild_public_thread(guild_public_thread_payload),
+            947690637610844210: entity_factory_impl.deserialize_guild_private_thread(guild_private_thread_payload),
         }
 
     ##################

@@ -149,7 +149,7 @@ class GatewayShard(abc.ABC):
 
         Raises
         ------
-        builtins.RuntimeError
+        hikari.errors.ComponentStateConflictError
             If the shard hasn't connected fully yet.
         """
 

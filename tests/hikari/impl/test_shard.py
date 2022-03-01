@@ -704,7 +704,7 @@ class TestGatewayShardImplAsync:
     async def test_user_id_when_user_id_is_None(self, client):
         client._handshake_completed = mock.Mock(wait=mock.AsyncMock())
         client._user_id = None
-        with pytest.raises(RuntimeError, match="User ID not known yet"):
+        with pytest.raises(errors.ComponentStateConflictError, match="User ID not known yet"):
             assert client.user_id()
 
     async def test_user_id_when_user_id_is_not_None(self, client):

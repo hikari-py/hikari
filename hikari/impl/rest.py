@@ -2830,6 +2830,16 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.DELETE_THREAD_MEMBER.compile(channel=channel, user=user)
         await self._request(route)
 
+    async def fetch_thread_member(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildThreadChannel],
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
+    ) -> channels_.ThreadMember:
+        route = routes.GET_THREAD_MEMBER.compile(channel=channel, user=user)
+        response = await self._request(route)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_thread_member(response)
+
     async def fetch_thread_members(
         self, channel: snowflakes.SnowflakeishOr[channels_.GuildThreadChannel]
     ) -> typing.Sequence[channels_.ThreadMember]:

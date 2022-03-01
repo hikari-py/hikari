@@ -4988,6 +4988,14 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
+    async def fetch_thread_member(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildThreadChannel],
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
+    ) -> channels_.ThreadMember:
+        ...
+
+    @abc.abstractmethod
     async def fetch_thread_members(
         self, channel: snowflakes.SnowflakeishOr[channels_.GuildThreadChannel]
     ) -> typing.Sequence[channels_.ThreadMember]:

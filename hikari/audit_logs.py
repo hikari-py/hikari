@@ -95,9 +95,12 @@ class AuditLogChangeKey(str, enums.Enum):
     POSITION = "position"
     TOPIC = "topic"
     BITRATE = "bitrate"
+    DEFAULT_AUTO_ARCHIVE_DURATION = "default_auto_archive_duration"
     PERMISSION_OVERWRITES = "permission_overwrites"
     NSFW = "nsfw"
     APPLICATION_ID = "application_id"
+    ARCHIVED = "archived"
+    AUTO_ARCHIVE_DURATION = "auto_archive_duration"
     PERMISSIONS = "permissions"
     USER_LIMIT = "user_limit"
     COLOR = "color"
@@ -118,6 +121,8 @@ class AuditLogChangeKey(str, enums.Enum):
     NICK = "nick"
     AVATAR_HASH = "avatar_hash"
     ID = "id"
+    INVITABLE = "invitable"
+    LOCKED = "locked"
     TYPE = "type"
     ENABLE_EMOTICONS = "enable_emoticons"
     EXPIRE_BEHAVIOR = "expire_behavior"
@@ -499,6 +504,9 @@ class AuditLog(typing.Sequence[AuditLogEntry]):
 
     integrations: typing.Mapping[snowflakes.Snowflake, guilds.PartialIntegration] = attr.field(repr=False)
     """A mapping of the partial objects of integrations found in this audit log."""
+
+    threads: typing.Mapping[snowflakes.Snowflake, channels.GuildThreadChannel] = attr.field(repr=False)
+    """A mapping of the objects of threads found in this audit log."""
 
     users: typing.Mapping[snowflakes.Snowflake, users_.User] = attr.field(repr=False)
     """A mapping of the objects of users found in this audit log."""

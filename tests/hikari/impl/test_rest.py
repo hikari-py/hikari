@@ -4435,6 +4435,15 @@ class TestRESTClientImplAsync:
 
         rest_client._request.assert_awaited_once_with(routes.DELETE_THREAD_MEMBER.compile(channel=669, user=421))
 
+    async def test_fetch_thread_member(self, rest_client: rest.RESTClientImpl):
+        rest_client._request = mock.AsyncMock(return_value={"id": "9239292", "user_id": "949494"})
+
+        result = await rest_client.fetch_thread_member(StubModel(55445454), StubModel(45454454))
+
+        assert result is rest_client.entity_factory.deserialize_thread_member.return_value
+        rest_client.entity_factory.deserialize_thread_member.assert_called_once_with(rest_client._request.return_value)
+        rest_client._request.assert_awaited_once_with(routes.GET_THREAD_MEMBER.compile(channel=55445454, user=45454454))
+
     async def test_fetch_thread_members(self, rest_client: rest.RESTClientImpl):
         mock_payload_1 = mock.Mock()
         mock_payload_2 = mock.Mock()

@@ -432,6 +432,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             audit_log_models.AuditLogChangeKey.WIDGET_CHANNEL_ID: snowflakes.Snowflake,
             audit_log_models.AuditLogChangeKey.POSITION: int,
             audit_log_models.AuditLogChangeKey.BITRATE: int,
+            audit_log_models.AuditLogChangeKey.DEFAULT_AUTO_ARCHIVE_DURATION: lambda v: datetime.timedelta(minutes=v),
+            audit_log_models.AuditLogChangeKey.AUTO_ARCHIVE_DURATION: lambda v: datetime.timedelta(minutes=v),
             audit_log_models.AuditLogChangeKey.APPLICATION_ID: snowflakes.Snowflake,
             audit_log_models.AuditLogChangeKey.PERMISSIONS: _with_int_cast(permission_models.Permissions),
             audit_log_models.AuditLogChangeKey.COLOR: color_models.Color,
@@ -784,6 +786,16 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         }
         users = {snowflakes.Snowflake(user["id"]): self.deserialize_user(user) for user in payload["users"]}
 
+        threads: typing.Dict[snowflakes.Snowflake, channel_models.GuildThreadChannel] = {}
+        for thread_payload in payload["threads"]:
+            try:
+                thread = self.deserialize_guild_thread(thread_payload)
+
+            except errors.UnrecognisedEntityError:
+                continue
+
+            threads[thread.id] = thread
+
         webhooks: typing.Dict[snowflakes.Snowflake, webhook_models.PartialWebhook] = {}
         for webhook_payload in payload["webhooks"]:
             try:
@@ -794,7 +806,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
             webhooks[webhook.id] = webhook
 
-        return audit_log_models.AuditLog(entries=entries, integrations=integrations, users=users, webhooks=webhooks)
+        return audit_log_models.AuditLog(
+            entries=entries, integrations=integrations, threads=threads, users=users, webhooks=webhooks
+        )
 
     ##################
     # CHANNEL MODELS #
