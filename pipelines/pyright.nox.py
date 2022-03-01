@@ -31,6 +31,5 @@ def verify_types(session: nox.Session) -> None:
     session.install("-r", "dev-requirements.txt")
     session.install(".")
     # session.env["PYRIGHT_PYTHON_GLOBAL_NODE"] = "off"
-    session.env["PYRIGHT_PYTHON_FORCE_VERSION"] = config.PYRIGHT_VERSION
     session.run("python", "-m", "pyright", "--version")
     session.run("python", "-m", "pyright", "--verifytypes", config.MAIN_PACKAGE, "--ignoreexternal")
