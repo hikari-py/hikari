@@ -48,7 +48,7 @@ isort==5.10.1
 # Linting #
 ###########
 
-slotscheck==0.12.1
+slotscheck==0.14.0
 
 ##################
 # SPELL CHECKING #
