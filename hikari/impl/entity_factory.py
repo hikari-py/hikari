@@ -64,7 +64,12 @@ from hikari.internal import attr_extensions
 from hikari.internal import data_binding
 from hikari.internal import time
 
-_ValueT = typing.TypeVar("_ValueT")
+if typing.TYPE_CHECKING:
+    ValueT = typing.TypeVar("ValueT")
+    EntityT = typing.TypeVar("EntityT")
+    UndefinedNoneSnowflakeMapping = undefined.UndefinedNoneOr[typing.Mapping[snowflakes.Snowflake, EntityT]]
+
+
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.entity_factory")
 
 _interaction_option_type_mapping: typing.Dict[int, typing.Callable[[typing.Any], typing.Any]] = {
@@ -76,7 +81,7 @@ _interaction_option_type_mapping: typing.Dict[int, typing.Callable[[typing.Any],
 }
 
 
-def _with_int_cast(cast: typing.Callable[[int], _ValueT]) -> typing.Callable[[typing.Any], _ValueT]:
+def _with_int_cast(cast: typing.Callable[[int], ValueT]) -> typing.Callable[[typing.Any], ValueT]:
     """Wrap a cast to ensure the value passed to it will first be cast to int."""
     return lambda value: cast(int(value))
 
@@ -189,61 +194,58 @@ class _GatewayGuildDefinition(entity_factory.GatewayGuildDefinition):
     id: snowflakes.Snowflake = attr.field()
     _payload: data_binding.JSONObject = attr.field()
     _entity_factory: EntityFactoryImpl = attr.field()
-    _channels: typing.Optional[typing.Mapping[snowflakes.Snowflake, channel_models.GuildChannel]] = attr.field(
-        default=None, init=False
+    # These will get deserialized as needed
+    _channels: UndefinedNoneSnowflakeMapping[channel_models.GuildChannel] = attr.field(
+        init=False, default=undefined.UNDEFINED
     )
-    _emojis: typing.Optional[typing.Mapping[snowflakes.Snowflake, emoji_models.KnownCustomEmoji]] = attr.field(
-        default=None, init=False
+    _guild: undefined.UndefinedOr[guild_models.GatewayGuild] = attr.field(init=False, default=undefined.UNDEFINED)
+    _emojis: undefined.UndefinedOr[typing.Mapping[emoji_models.KnownCustomEmoji]] = attr.field(
+        init=False, default=undefined.UNDEFINED
     )
-    _guild: typing.Optional[guild_models.GatewayGuild] = attr.field(default=None)
-    _members: typing.Optional[typing.Mapping[snowflakes.Snowflake, guild_models.Member]] = attr.field(
-        default=None, init=False
+    _members: UndefinedNoneSnowflakeMapping[guild_models.Member] = attr.field(init=False, default=undefined.UNDEFINED)
+    _presences: UndefinedNoneSnowflakeMapping[presence_models.MemberPresence] = attr.field(
+        init=False, default=undefined.UNDEFINED
     )
-    _presences: typing.Optional[typing.Mapping[snowflakes.Snowflake, presence_models.MemberPresence]] = attr.field(
-        default=None, init=False
+    _roles: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, guild_models.Role]] = attr.field(
+        init=False, default=undefined.UNDEFINED
     )
-    _roles: typing.Optional[typing.Mapping[snowflakes.Snowflake, guild_models.Role]] = attr.field(
-        default=None, init=False
-    )
-    _voice_states: typing.Optional[typing.Mapping[snowflakes.Snowflake, voice_models.VoiceState]] = attr.field(
-        default=None, init=False
+    _voice_states: UndefinedNoneSnowflakeMapping[voice_models.VoiceState] = attr.field(
+        init=False, default=undefined.UNDEFINED
     )
 
-    def channels(self) -> typing.Mapping[snowflakes.Snowflake, channel_models.GuildChannel]:
-        if self._channels is None:
-            self._channels = {}
+    def channels(self) -> typing.Optional[typing.Mapping[snowflakes.Snowflake, channel_models.GuildChannel]]:
+        if self._channels is undefined.UNDEFINED:
+            if "channels" in self._payload:
+                self._channels = {}
 
-            for channel_payload in self._payload["channels"]:
-                try:
-                    channel = self._entity_factory.deserialize_channel(channel_payload, guild_id=self.id)
-                except errors.UnrecognisedEntityError:
-                    # Ignore the channel, this has already been logged
-                    continue
+                for channel_payload in self._payload["channels"]:
+                    try:
+                        channel = self._entity_factory.deserialize_channel(channel_payload, guild_id=self.id)
+                    except errors.UnrecognisedEntityError:
+                        # Ignore the channel, this has already been logged
+                        continue
 
-                assert isinstance(channel, channel_models.GuildChannel)
-                self._channels[channel.id] = channel
+                    assert isinstance(channel, channel_models.GuildChannel)
+                    self._channels[channel.id] = channel
+
+            else:
+                self._channels = None
 
         return self._channels
 
     def emojis(self) -> typing.Mapping[snowflakes.Snowflake, emoji_models.KnownCustomEmoji]:
-        if self._emojis is None:
-            deserialize = self._entity_factory.deserialize_known_custom_emoji
+        if self._emojis is undefined.UNDEFINED:
             self._emojis = {
-                snowflakes.Snowflake(emoji["id"]): deserialize(emoji, guild_id=self.id)
-                for emoji in self._payload["emojis"]
+                snowflakes.Snowflake(e["id"]): self._entity_factory.deserialize_known_custom_emoji(e, guild_id=self.id)
+                for e in self._payload["emojis"]
             }
 
         return self._emojis
 
     def guild(self) -> guild_models.GatewayGuild:
-        if self._guild is None:
+        if self._guild is undefined.UNDEFINED:
             payload = self._payload
             guild_fields = self._entity_factory.set_guild_attributes(payload)
-            is_large = payload.get("large")
-            joined_at = (
-                time.iso8601_datetime_string_to_datetime(payload["joined_at"]) if "joined_at" in payload else None
-            )
-            member_count = int(payload["member_count"]) if "member_count" in payload else None
             self._guild = guild_models.GatewayGuild(
                 app=self._entity_factory.app,
                 id=guild_fields.id,
@@ -274,53 +276,75 @@ class _GatewayGuildDefinition(entity_factory.GatewayGuildDefinition):
                 preferred_locale=guild_fields.preferred_locale,
                 public_updates_channel_id=guild_fields.public_updates_channel_id,
                 nsfw_level=guild_fields.nsfw_level,
-                is_large=is_large,
-                joined_at=joined_at,
-                member_count=member_count,
+                is_large=payload.get("large"),
+                joined_at=(
+                    time.iso8601_datetime_string_to_datetime(payload["joined_at"]) if "joined_at" in payload else None
+                ),
+                member_count=int(payload["member_count"]) if "member_count" in payload else None,
             )
 
         return self._guild
 
-    def members(self) -> typing.Mapping[snowflakes.Snowflake, guild_models.Member]:
-        if self._members is None:
-            self._members = {}
+    def members(self) -> typing.Optional[typing.Mapping[snowflakes.Snowflake, guild_models.Member]]:
+        if self._members is undefined.UNDEFINED:
+            if "members" in self._payload:
+                self._members = {
+                    snowflakes.Snowflake(m["user"]["id"]): self._entity_factory.deserialize_member(m, guild_id=self.id)
+                    for m in self._payload["members"]
+                }
 
             for member_payload in self._payload["members"]:
                 member = self._entity_factory.deserialize_member(member_payload, guild_id=self.id)
                 self._members[member.user.id] = member
+            else:
+                self._members = None
 
         return self._members
 
-    def presences(self) -> typing.Mapping[snowflakes.Snowflake, presence_models.MemberPresence]:
-        if self._presences is None:
-            self._presences = {}
+    def presences(self) -> typing.Optional[typing.Mapping[snowflakes.Snowflake, presence_models.MemberPresence]]:
+        if self._presences is undefined.UNDEFINED:
+            if "presences" in self._payload:
+                self._presences = {
+                    snowflakes.Snowflake(p["user"]["id"]): self._entity_factory.deserialize_member_presence(
+                        p, guild_id=self.id
+                    )
+                    for p in self._payload["presences"]
+                }
 
             for presence_payload in self._payload["presences"]:
                 presence = self._entity_factory.deserialize_member_presence(presence_payload, guild_id=self.id)
                 self._presences[presence.user_id] = presence
+            else:
+                self._presences = None
 
         return self._presences
 
     def roles(self) -> typing.Mapping[snowflakes.Snowflake, guild_models.Role]:
         if self._roles is None:
-            self._roles = {
-                snowflakes.Snowflake(role["id"]): self._entity_factory.deserialize_role(role, guild_id=self.id)
-                for role in self._payload["roles"]
-            }
+            if self._roles is undefined.UNDEFINED:
+                self._roles = {
+                    snowflakes.Snowflake(r["id"]): self._entity_factory.deserialize_role(r, guild_id=self.id)
+                    for r in self._payload["roles"]
+                }
 
         return self._roles
 
-    def voice_states(self) -> typing.Mapping[snowflakes.Snowflake, voice_models.VoiceState]:
-        if self._voice_states is None:
-            members = self.members()
-            self._voice_states = {}
+    def voice_states(self) -> typing.Optional[typing.Mapping[snowflakes.Snowflake, voice_models.VoiceState]]:
+        if self._voice_states is undefined.UNDEFINED:
+            if "voice_states" in self._payload:
+                members = self.members()
+                assert members is not None, "voice_states present but not members?"
+                self._voice_states = {}
 
-            for voice_state_payload in self._payload["voice_states"]:
-                member = members[snowflakes.Snowflake(voice_state_payload["user_id"])]
-                voice_state = self._entity_factory.deserialize_voice_state(
-                    voice_state_payload, guild_id=self.id, member=member
-                )
-                self._voice_states[voice_state.user_id] = voice_state
+                for voice_state_payload in self._payload["voice_states"]:
+                    member = members[snowflakes.Snowflake(voice_state_payload["user_id"])]
+                    voice_state = self._entity_factory.deserialize_voice_state(
+                        voice_state_payload, guild_id=self.id, member=member
+                    )
+                    self._voice_states[voice_state.user_id] = voice_state
+
+            else:
+                self._voice_states = None
 
         return self._voice_states
 
