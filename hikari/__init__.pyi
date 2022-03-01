@@ -4,7 +4,11 @@
 from typing import Any
 
 from hikari import api as api
+from hikari import applications as applications
+from hikari import files as files
 from hikari import impl as impl
+from hikari import snowflakes as snowflakes
+from hikari import undefined as undefined
 from hikari._about import __author__ as __author__
 from hikari._about import __ci__ as __ci__
 from hikari._about import __copyright__ as __copyright__
