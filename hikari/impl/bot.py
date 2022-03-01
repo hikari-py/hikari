@@ -1135,7 +1135,7 @@ class GatewayBot(traits.GatewayBotAware):
                 ...
         ```
 
-        or using await `open()` and await `close()`
+        or using `open()` and `close()`
 
         ```py
         stream = bot.stream(events.ReactionAddEvent, timeout=30).filter(("message_id", message.id))
