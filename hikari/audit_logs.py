@@ -487,7 +487,7 @@ class AuditLogEntry(snowflakes.Unique):
 @attr_extensions.with_copy
 @attr.define(hash=False, kw_only=True, repr=False, weakref_slot=False)
 class AuditLog(typing.Sequence[AuditLogEntry]):
-    """Represents a guilds audit log."""
+    """Represents a guilds audit log's page."""
 
     entries: typing.Mapping[snowflakes.Snowflake, AuditLogEntry] = attr.field(repr=False)
     """A mapping of snowflake IDs to the audit log's entries."""
