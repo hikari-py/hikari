@@ -37,7 +37,6 @@ LOGO_SOURCE = "logo.png"
 FLAKE8_REPORT = "public/flake8"
 PYPROJECT_TOML = "pyproject.toml"
 COVERAGE_HTML_PATH = _os.path.join(ARTIFACT_DIRECTORY, "coverage", "html")
-PYRIGHT_VERSION = "1.1.190"  # 2021-11-25 (UTC+0)
 
 # Reformatting paths
 

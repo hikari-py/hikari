@@ -1080,9 +1080,7 @@ class GuildChannel(PartialChannel):
 
     async def remove_overwrite(
         self,
-        target: snowflakes.SnowflakeishOr[
-            typing.Union[PermissionOverwrite, guilds.PartialRole, users.PartialUser, snowflakes.Snowflakeish]
-        ],
+        target: typing.Union[PermissionOverwrite, guilds.PartialRole, users.PartialUser, snowflakes.Snowflakeish],
     ) -> None:
         """Delete a custom permission for an entity in a given guild channel.
 
