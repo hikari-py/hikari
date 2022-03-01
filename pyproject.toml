@@ -132,3 +132,14 @@ warn_unused_ignores = true
 [[tool.mypy.overrides]]
 module = 'rillrate.*'
 ignore_missing_imports = true
+
+[tool.slotscheck]
+strict-imports = true
+require-superclass = true
+require-subclass = true
+exclude-classes = """
+(
+    ^hikari\\.internal\\.enums:(Enum|Flag|_EnumMeta|_FlagMeta)$
+    |^hikari\\.files:MultiprocessingFileReader$
+)
+"""

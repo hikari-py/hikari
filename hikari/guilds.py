@@ -508,7 +508,7 @@ class Member(users.User):
     def communication_disabled_until(self) -> typing.Optional[datetime.datetime]:
         """Return when the timeout for this member ends.
 
-        Unlike `raw_communictation_disabled_until`, this will always be
+        Unlike `raw_communication_disabled_until`, this will always be
         `builtins.None` if the member is not currently timed out.
 
         !!! note
@@ -521,6 +521,19 @@ class Member(users.User):
         ):
             return self.raw_communication_disabled_until
         return None
+
+    def get_guild(self) -> typing.Optional[Guild]:
+        """Return the guild associated with this member.
+
+        Returns
+        -------
+        typing.Optional[hikari.guilds.Guild]
+            `builtins.None` if the the guild is not cached.
+        """
+        if not isinstance(self.user.app, traits.CacheAware):
+            return None
+
+        return self.user.app.cache.get_guild(self.guild_id)
 
     def get_presence(self) -> typing.Optional[presences_.MemberPresence]:
         """Get the cached presence for this member, if known.
@@ -3334,7 +3347,7 @@ class Guild(PartialGuild):
         Returns
         -------
         typing.Optional[hikari.channels.GuildTextChannel]
-            The channel where discord sents relevant updates to moderators and admins.
+            The channel where discord sends relevant updates to moderators and admins.
 
         Raises
         ------

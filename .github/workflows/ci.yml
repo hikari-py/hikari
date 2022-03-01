@@ -7,7 +7,7 @@ on:
 jobs:
   test:
     strategy:
-      # Allows for matrix sub-jobs to fail without canceling the rest
+      # Allows for matrix sub-jobs to fail without cancelling the rest
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
@@ -107,7 +107,7 @@ jobs:
       - name: Linting
         if: always()
         run: |
-          nox -s safety mypy verify-types flake8 codespell check-trailing-whitespaces
+          nox -s safety mypy verify-types flake8 slotscheck codespell check-trailing-whitespaces
 
   twemoji:
     runs-on: ubuntu-latest
@@ -139,7 +139,7 @@ jobs:
           python-version: 3.8
 
       - name: Setup node
-        uses: actions/setup-node@v2.5.1
+        uses: actions/setup-node@v3
 
       - name: Build pages
         run: |

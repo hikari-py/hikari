@@ -316,7 +316,12 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         return self._executor
 
     @staticmethod
-    def print_banner(banner: typing.Optional[str], allow_color: bool, force_color: bool) -> None:
+    def print_banner(
+        banner: typing.Optional[str],
+        allow_color: bool,
+        force_color: bool,
+        extra_args: typing.Optional[typing.Dict[str, str]] = None,
+    ) -> None:
         """Print the banner.
 
         This allows library vendors to override this behaviour, or choose to
@@ -341,8 +346,16 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
 
         !!! note
             `force_color` will always take precedence over `allow_color`.
+        extra_args : typing.Optional[typing.Dict[builtins.str, builtins.str]]
+            If provided, extra $-substitutions to use when printing the banner.
+            Default substitutions can not be overwritten.
+
+        Raises
+        ------
+        builtins.ValueError
+            If `extra_args` contains a default $-substitution.
         """
-        ux.print_banner(banner, allow_color, force_color)
+        ux.print_banner(banner, allow_color, force_color, extra_args=extra_args)
 
     async def close(self) -> None:
         if not self._close_event:
@@ -402,7 +415,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         close_loop : builtins.bool
             Defaults to `builtins.True`. If `builtins.True`, then once the bot
             enters a state where all components have shut down permanently
-            during application shutdown, then all asyngens and background tasks
+            during application shutdown, then all asyncgens and background tasks
             will be destroyed, and the event loop will be shut down.
 
             This will wait until all `hikari`-owned `aiohttp` connectors have

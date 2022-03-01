@@ -296,7 +296,7 @@ class TestMember:
         with mock.patch.object(time, "utc_datetime", return_value=datetime.datetime(2021, 10, 18)):
             assert model.communication_disabled_until() is None
 
-    def test_comminucation_disabled_until_when_raw_communication_disabled_until_is_in_the_past(self, model):
+    def test_communication_disabled_until_when_raw_communication_disabled_until_is_in_the_past(self, model):
         model.raw_communication_disabled_until = datetime.datetime(2021, 10, 18)
 
         with mock.patch.object(time, "utc_datetime", return_value=datetime.datetime(2021, 11, 22)):
@@ -468,6 +468,26 @@ class TestMember:
     def test_mention_property_when_no_nickname(self, model, mock_user):
         model.nickname = None
         assert model.mention == mock_user.mention
+
+    def test_get_guild(self, model):
+        guild = mock.Mock(id=456)
+        model.user.app.cache.get_guild.side_effect = [guild]
+
+        assert model.get_guild() == guild
+
+        model.user.app.cache.get_guild.assert_has_calls([mock.call(456)])
+
+    def test_get_guild_when_guild_not_in_cache(self, model):
+        model.user.app.cache.get_guild.side_effect = [None]
+
+        assert model.get_guild() is None
+
+        model.user.app.cache.get_guild.assert_has_calls([mock.call(456)])
+
+    def test_get_guild_when_no_cache_trait(self, model):
+        model.user.app = object()
+
+        assert model.get_guild() is None
 
     def test_get_roles(self, model):
         role1 = mock.Mock(id=321, position=2)

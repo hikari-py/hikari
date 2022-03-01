@@ -1988,7 +1988,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Other Parameters
         ----------------
         token : hikari.undefined.UndefinedOr[builtins.str]
-            If provided, the webhoook token that will be used to fetch
+            If provided, the webhook token that will be used to fetch
             the webhook instead of the token the client was initialized with.
 
         Returns
@@ -2125,7 +2125,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Other Parameters
         ----------------
         token : hikari.undefined.UndefinedOr[builtins.str]
-            If provided, the webhoook token that will be used to edit
+            If provided, the webhook token that will be used to edit
             the webhook instead of the token the client was initialized with.
         name : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the new webhook name.
@@ -2185,7 +2185,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Other Parameters
         ----------------
         token : hikari.undefined.UndefinedOr[builtins.str]
-            If provided, the webhoook token that will be used to delete
+            If provided, the webhook token that will be used to delete
             the webhook instead of the token the client was initialized with.
 
         Raises
@@ -2196,7 +2196,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
-            If the webhoook is not found.
+            If the webhook is not found.
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
@@ -2885,7 +2885,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Other Parameters
         ----------------
         newest_first : builtins.bool
-            Whether to fetch the newest first or the olders first.
+            Whether to fetch the newest first or the oldest first.
             Defaults to `builtins.False`.
         start_at : hikari.undefined.UndefinedOr[hikari.snowflakes.SearchableSnowflakeishOr[hikari.guilds.PartialGuild]]
             If provided, will start at this snowflake. If you provide
@@ -7234,7 +7234,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
             Object or ID of the guild to fetch the command permissions for.
         command: hikari.snowflakes.SnowflakeishOr[hikari.commands.PartialCommand]
-            Objecr or ID of the command to fetch the command permissions for.
+            Object or ID of the command to fetch the command permissions for.
 
         Returns
         -------

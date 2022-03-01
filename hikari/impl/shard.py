@@ -112,6 +112,7 @@ if typing.TYPE_CHECKING:
     _ZlibDecompressor = zlib._Decompress
 
 
+# aiohttp.ClientWebSocketResponse isn't slotted
 @typing.final
 class _GatewayTransport(aiohttp.ClientWebSocketResponse):
     """Internal component to handle lower-level communication logic.
@@ -122,8 +123,6 @@ class _GatewayTransport(aiohttp.ClientWebSocketResponse):
 
     Payload logging is also performed here.
     """
-
-    __slots__: typing.Sequence[str] = ("zlib", "logger", "log_filterer", "sent_close")
 
     def __init__(self, *args: typing.Any, **kwargs: typing.Any) -> None:
         super().__init__(*args, **kwargs)

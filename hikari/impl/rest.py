@@ -490,7 +490,8 @@ class _LiveAttributes:
         return self
 
 
-@attr.define(auto_exc=True, repr=False, weakref_slot=False)
+# The standard exceptions are all unsloted so slotting here would be a waste of time.
+@attr.define(auto_exc=True, repr=False, slots=False)
 class _RetryRequest(RuntimeError):
     ...
 

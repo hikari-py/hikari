@@ -80,7 +80,6 @@ if typing.TYPE_CHECKING:
     _T = typing.TypeVar("_T")
     _CommandBuilderT = typing.TypeVar("_CommandBuilderT", bound="CommandBuilder")
     _SlashCommandBuilderT = typing.TypeVar("_SlashCommandBuilderT", bound="SlashCommandBuilder")
-    _ContextMenuCommandBuilderT = typing.TypeVar("_ContextMenuCommandBuilderT", bound="ContextMenuCommandBuilder")
     _InteractionMessageBuilderT = typing.TypeVar("_InteractionMessageBuilderT", bound="InteractionMessageBuilder")
     _InteractionDeferredBuilderT = typing.TypeVar("_InteractionDeferredBuilderT", bound="InteractionDeferredBuilder")
     _InteractionAutocompleteBuilderT = typing.TypeVar(

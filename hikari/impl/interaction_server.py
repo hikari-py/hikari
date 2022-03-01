@@ -235,7 +235,7 @@ class InteractionServer(interaction_server.InteractionServer):
 
         Returns
         -------
-        aiohtttp.web.Response
+        aiohttp.web.Response
             The aiohttp response.
         """
         if request.content_type.lower() != _JSON_CONTENT_TYPE:
