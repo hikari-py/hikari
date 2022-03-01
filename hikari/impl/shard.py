@@ -823,7 +823,7 @@ class GatewayShardImpl(shard.GatewayShard):
                         return
 
                 except errors.GatewayConnectionError as ex:
-                    self._logger.error(
+                    self._logger.warning(
                         "failed to communicate with server, reason was: %r. Will retry shortly", ex.reason
                     )
 
