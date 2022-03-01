@@ -31,7 +31,11 @@ from __future__ import annotations
 import os as _os
 
 from hikari import api
+from hikari import applications
+from hikari import files
 from hikari import impl
+from hikari import snowflakes
+from hikari import undefined
 from hikari._about import __author__
 from hikari._about import __ci__
 from hikari._about import __copyright__
