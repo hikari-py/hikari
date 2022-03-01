@@ -2891,7 +2891,7 @@ class TestEntityFactoryImpl:
         voice_state_payload,
     ):
         guild_definition = entity_factory_impl.deserialize_gateway_guild(gateway_guild_payload)
-        guild = guild_definition.guild
+        guild = guild_definition.guild()
         assert guild.app is mock_app
         assert guild.id == 265828729970753537
         assert guild.name == "L33t guild"
@@ -2931,22 +2931,22 @@ class TestEntityFactoryImpl:
         assert guild.public_updates_channel_id == 33333333
         assert guild.nsfw_level == guild_models.GuildNSFWLevel.DEFAULT
 
-        assert guild_definition.roles == {
+        assert guild_definition.roles() == {
             41771983423143936: entity_factory_impl.deserialize_role(
                 guild_role_payload, guild_id=snowflakes.Snowflake(265828729970753537)
             )
         }
-        assert guild_definition.emojis == {
+        assert guild_definition.emojis() == {
             12345: entity_factory_impl.deserialize_known_custom_emoji(
                 known_custom_emoji_payload, guild_id=snowflakes.Snowflake(265828729970753537)
             )
         }
-        assert guild_definition.members == {
+        assert guild_definition.members() == {
             115590097100865541: entity_factory_impl.deserialize_member(
                 member_payload, guild_id=snowflakes.Snowflake(265828729970753537)
             )
         }
-        assert guild_definition.channels == {
+        assert guild_definition.channels() == {
             123: entity_factory_impl.deserialize_guild_text_channel(
                 guild_text_channel_payload, guild_id=snowflakes.Snowflake(265828729970753537)
             ),
@@ -2957,12 +2957,12 @@ class TestEntityFactoryImpl:
                 guild_news_channel_payload, guild_id=snowflakes.Snowflake(265828729970753537)
             ),
         }
-        assert guild_definition.presences == {
+        assert guild_definition.presences() == {
             115590097100865541: entity_factory_impl.deserialize_member_presence(
                 member_presence_payload, guild_id=snowflakes.Snowflake(265828729970753537)
             )
         }
-        assert guild_definition.voice_states == {
+        assert guild_definition.voice_states() == {
             115590097100865541: entity_factory_impl.deserialize_voice_state(
                 voice_state_payload,
                 guild_id=snowflakes.Snowflake(265828729970753537),
@@ -3004,7 +3004,7 @@ class TestEntityFactoryImpl:
                 "nsfw_level": 0,
             }
         )
-        guild = guild_definition.guild
+        guild = guild_definition.guild()
         assert guild.joined_at is None
         assert guild.is_large is None
         assert guild.max_video_channel_users is None
@@ -3012,10 +3012,10 @@ class TestEntityFactoryImpl:
         assert guild.premium_subscription_count is None
         assert guild.widget_channel_id is None
         assert guild.is_widget_enabled is None
-        assert guild_definition.channels is None
-        assert guild_definition.members is None
-        assert guild_definition.presences is None
-        assert guild_definition.voice_states is None
+        assert guild_definition.channels() is None
+        assert guild_definition.members() is None
+        assert guild_definition.presences() is None
+        assert guild_definition.voice_states() is None
 
     def test_deserialize_gateway_guild_with_null_fields(self, entity_factory_impl):
         guild_definition = entity_factory_impl.deserialize_gateway_guild(
@@ -3065,7 +3065,7 @@ class TestEntityFactoryImpl:
                 "nsfw_level": 0,
             }
         )
-        guild = guild_definition.guild
+        guild = guild_definition.guild()
         assert guild.icon_hash is None
         assert guild.splash_hash is None
         assert guild.discovery_splash_hash is None
@@ -3084,7 +3084,7 @@ class TestEntityFactoryImpl:
         gateway_guild_payload["channels"] = [{"id": 123, "type": 1000}]
         guild_definition = entity_factory_impl.deserialize_gateway_guild(gateway_guild_payload)
 
-        assert guild_definition.channels == {}
+        assert guild_definition.channels() == {}
 
     ######################
     # INTERACTION MODELS #

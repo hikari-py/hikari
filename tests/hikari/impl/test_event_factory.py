@@ -235,15 +235,16 @@ class TestEventFactoryImpl:
         event = event_factory.deserialize_guild_join_event(mock_shard, mock_payload)
 
         mock_app.entity_factory.deserialize_gateway_guild.assert_called_once_with(mock_payload)
+        mock_gateway_guild = mock_app.entity_factory.deserialize_gateway_guild.return_value
         assert isinstance(event, guild_events.GuildJoinEvent)
         assert event.shard is mock_shard
-        assert event.guild is mock_app.entity_factory.deserialize_gateway_guild.return_value.guild
-        assert event.emojis is mock_app.entity_factory.deserialize_gateway_guild.return_value.emojis
-        assert event.roles is mock_app.entity_factory.deserialize_gateway_guild.return_value.roles
-        assert event.channels is mock_app.entity_factory.deserialize_gateway_guild.return_value.channels
-        assert event.members is mock_app.entity_factory.deserialize_gateway_guild.return_value.members
-        assert event.presences is mock_app.entity_factory.deserialize_gateway_guild.return_value.presences
-        assert event.voice_states is mock_app.entity_factory.deserialize_gateway_guild.return_value.voice_states
+        assert event.guild is mock_gateway_guild.guild.return_value
+        assert event.emojis is mock_gateway_guild.emojis.return_value
+        assert event.roles is mock_gateway_guild.roles.return_value
+        assert event.channels is mock_gateway_guild.channels.return_value
+        assert event.members is mock_gateway_guild.members.return_value
+        assert event.presences is mock_gateway_guild.presences.return_value
+        assert event.voice_states is mock_gateway_guild.voice_states.return_value
 
     def test_deserialize_guild_update_event(self, event_factory, mock_app, mock_shard):
         mock_payload = mock.Mock(app=mock_app)
