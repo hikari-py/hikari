@@ -20,6 +20,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import base64
+import concurrent.futures
+import pathlib
+import random
+import tempfile
+
+import mock
 import pytest
 
 from hikari import files
@@ -41,3 +48,41 @@ class TestAsyncReaderContextManager:
             reader().__exit__(None, None, None)
         except AttributeError as exc:
             pytest.fail(exc)
+
+
+class Test_FileAsyncReaderContextManagerImpl:
+    @pytest.mark.asyncio()
+    async def test_context_manager(self):
+        mock_reader = mock.Mock(executor=concurrent.futures.ThreadPoolExecutor())
+        context_manager = files._FileAsyncReaderContextManagerImpl(mock_reader)
+
+        with tempfile.TemporaryFile() as file:
+            mock_reader.path = pathlib.Path(file.name)
+
+            async with context_manager as reader:
+                assert reader is mock_reader
+
+    @pytest.mark.asyncio()
+    async def test_context_manager_for_unknown_file(self):
+        mock_reader = mock.Mock(executor=concurrent.futures.ThreadPoolExecutor())
+        context_manager = files._FileAsyncReaderContextManagerImpl(mock_reader)
+
+        mock_reader.path = pathlib.Path(
+            base64.urlsafe_b64encode(random.getrandbits(512).to_bytes(64, "little")).decode()
+        )
+
+        with pytest.raises(FileNotFoundError):
+            async with context_manager:
+                ...
+
+    @pytest.mark.asyncio()
+    async def test_test_context_manager_when_target_is_dir(self):
+        mock_reader = mock.Mock(executor=concurrent.futures.ThreadPoolExecutor())
+        context_manager = files._FileAsyncReaderContextManagerImpl(mock_reader)
+
+        with tempfile.TemporaryDirectory() as name:
+            mock_reader.path = pathlib.Path(name)
+
+            with pytest.raises(IsADirectoryError):
+                async with context_manager:
+                    ...

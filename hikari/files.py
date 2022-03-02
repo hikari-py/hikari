@@ -777,7 +777,12 @@ _FileReaderT = typing.TypeVar("_FileReaderT", bound=FileReader)
 def _stat(path: pathlib.Path) -> os.stat_result:
     # While paths will be implicitly resolved, we still need to explicitly
     # call expanduser to deal with a ~ base.
-    return path.expanduser().stat()
+    try:
+        path = path.expanduser()
+    except RuntimeError:
+        pass  # A home directory couldn't be resolved, so we'll just use the path as-is.
+
+    return path.stat()
 
 
 @attr.define(weakref_slot=False)
@@ -809,7 +814,12 @@ class _FileAsyncReaderContextManagerImpl(AsyncReaderContextManager[_FileReaderT]
 def _open_file(path: pathlib.Path) -> typing.BinaryIO:
     # While paths will be implicitly resolved, we still need to explicitly
     # call expanduser to deal with a ~ base.
-    return path.expanduser().open("rb")
+    try:
+        path = path.expanduser()
+    except RuntimeError:
+        pass  # A home directory couldn't be resolved, so we'll just use the path as-is.
+
+    return path.open("rb")
 
 
 @attr.define(weakref_slot=False)
@@ -838,7 +848,14 @@ class ThreadedFileReader(FileReader):
 
 
 def _read_all(path: pathlib.Path) -> bytes:
-    with path.expanduser().open("rb") as fp:
+    # While paths will be implicitly resolved, we still need to explicitly
+    # call expanduser to deal with a ~ base.
+    try:
+        path = path.expanduser()
+    except RuntimeError:
+        pass  # A home directory couldn't be resolved, so we'll just use the path as-is.
+
+    with path.open("rb") as fp:
         return fp.read()
 
 
