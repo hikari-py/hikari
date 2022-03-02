@@ -17,7 +17,7 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3
 
       - name: Setup python
         uses: actions/setup-python@v3
@@ -57,7 +57,7 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3
 
       - name: Setup python
         uses: actions/setup-python@v3
@@ -87,7 +87,7 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3
 
       - name: Setup python
         uses: actions/setup-python@v3
@@ -114,7 +114,7 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3
 
       - name: Setup python
         uses: actions/setup-python@v3
@@ -131,7 +131,7 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3
 
       - name: Setup python
         uses: actions/setup-python@v3
