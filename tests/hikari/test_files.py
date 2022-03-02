@@ -22,6 +22,7 @@
 
 import base64
 import concurrent.futures
+import contextlib
 import pathlib
 import random
 import tempfile
@@ -65,6 +66,25 @@ class Test_FileAsyncReaderContextManagerImpl:
 
             async with context_manager as reader:
                 assert reader is mock_reader
+
+    @pytest.mark.asyncio()
+    async def test_context_manager_when_expandname_raises_runtime_error(self):
+        # We can't mock patch stuff in other processes easily (if at all) so
+        # for this test we only run it threaded.
+        mock_reader = mock.Mock(executor=concurrent.futures.ThreadPoolExecutor())
+        context_manager = files._FileAsyncReaderContextManagerImpl(mock_reader)
+
+        stack = contextlib.ExitStack()
+        file = stack.enter_context(tempfile.NamedTemporaryFile())
+        expandname = stack.enter_context(mock.patch.object(pathlib.Path, "expanduser", side_effect=RuntimeError))
+
+        with file:
+            mock_reader.path = pathlib.Path(file.name)
+
+            async with context_manager as reader:
+                assert reader is mock_reader
+
+        expandname.assert_called_once_with()
 
     @pytest.mark.parametrize(
         "executor", [concurrent.futures.ThreadPoolExecutor, concurrent.futures.ProcessPoolExecutor]
