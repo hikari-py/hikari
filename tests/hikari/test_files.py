@@ -56,7 +56,7 @@ class Test_FileAsyncReaderContextManagerImpl:
         mock_reader = mock.Mock(executor=concurrent.futures.ThreadPoolExecutor())
         context_manager = files._FileAsyncReaderContextManagerImpl(mock_reader)
 
-        with tempfile.TemporaryFile() as file:
+        with tempfile.NamedTemporaryFile() as file:
             mock_reader.path = pathlib.Path(file.name)
 
             async with context_manager as reader:
@@ -71,7 +71,7 @@ class Test_FileAsyncReaderContextManagerImpl:
             base64.urlsafe_b64encode(random.getrandbits(512).to_bytes(64, "little")).decode()
         )
 
-        with pytest.raises(FileNotFoundError):
+        with pytest.raises(FileNotFoundError):  # noqa:  PT012 - raises block should contain a single statement
             async with context_manager:
                 ...
 
@@ -83,6 +83,6 @@ class Test_FileAsyncReaderContextManagerImpl:
         with tempfile.TemporaryDirectory() as name:
             mock_reader.path = pathlib.Path(name)
 
-            with pytest.raises(IsADirectoryError):
+            with pytest.raises(IsADirectoryError):  # noqa:  PT012 - raises block should contain a single statement
                 async with context_manager:
                     ...
