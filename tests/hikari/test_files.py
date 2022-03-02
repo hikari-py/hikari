@@ -25,6 +25,7 @@ import concurrent.futures
 import pathlib
 import random
 import tempfile
+import typing
 
 import mock
 import pytest
@@ -51,9 +52,12 @@ class TestAsyncReaderContextManager:
 
 
 class Test_FileAsyncReaderContextManagerImpl:
+    @pytest.mark.parametrize(
+        "executor", [concurrent.futures.ThreadPoolExecutor, concurrent.futures.ProcessPoolExecutor]
+    )
     @pytest.mark.asyncio()
-    async def test_context_manager(self):
-        mock_reader = mock.Mock(executor=concurrent.futures.ThreadPoolExecutor())
+    async def test_context_manager(self, executor: typing.Callable[[], concurrent.futures.Executor]):
+        mock_reader = mock.Mock(executor=executor())
         context_manager = files._FileAsyncReaderContextManagerImpl(mock_reader)
 
         with tempfile.NamedTemporaryFile() as file:
@@ -62,9 +66,12 @@ class Test_FileAsyncReaderContextManagerImpl:
             async with context_manager as reader:
                 assert reader is mock_reader
 
+    @pytest.mark.parametrize(
+        "executor", [concurrent.futures.ThreadPoolExecutor, concurrent.futures.ProcessPoolExecutor]
+    )
     @pytest.mark.asyncio()
-    async def test_context_manager_for_unknown_file(self):
-        mock_reader = mock.Mock(executor=concurrent.futures.ThreadPoolExecutor())
+    async def test_context_manager_for_unknown_file(self, executor: typing.Callable[[], concurrent.futures.Executor]):
+        mock_reader = mock.Mock(executor=executor())
         context_manager = files._FileAsyncReaderContextManagerImpl(mock_reader)
 
         mock_reader.path = pathlib.Path(
@@ -75,9 +82,14 @@ class Test_FileAsyncReaderContextManagerImpl:
             async with context_manager:
                 ...
 
+    @pytest.mark.parametrize(
+        "executor", [concurrent.futures.ThreadPoolExecutor, concurrent.futures.ProcessPoolExecutor]
+    )
     @pytest.mark.asyncio()
-    async def test_test_context_manager_when_target_is_dir(self):
-        mock_reader = mock.Mock(executor=concurrent.futures.ThreadPoolExecutor())
+    async def test_test_context_manager_when_target_is_dir(
+        self, executor: typing.Callable[[], concurrent.futures.Executor]
+    ):
+        mock_reader = mock.Mock(executor=executor())
         context_manager = files._FileAsyncReaderContextManagerImpl(mock_reader)
 
         with tempfile.TemporaryDirectory() as name:
