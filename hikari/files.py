@@ -771,9 +771,6 @@ class FileReader(AsyncReader, abc.ABC):
     """The path to the resource to read."""
 
 
-_FileReaderT = typing.TypeVar("_FileReaderT", bound=FileReader)
-
-
 def _stat(path: pathlib.Path) -> os.stat_result:
     # While paths will be implicitly resolved, we still need to explicitly
     # call expanduser to deal with a ~ base.
@@ -787,10 +784,10 @@ def _stat(path: pathlib.Path) -> os.stat_result:
 
 @attr.define(weakref_slot=False)
 @typing.final
-class _FileAsyncReaderContextManagerImpl(AsyncReaderContextManager[_FileReaderT]):
-    impl: _FileReaderT = attr.field()
+class _FileAsyncReaderContextManagerImpl(AsyncReaderContextManager[FileReader]):
+    impl: FileReader = attr.field()
 
-    async def __aenter__(self) -> _FileReaderT:
+    async def __aenter__(self) -> FileReader:
         loop = asyncio.get_running_loop()
 
         # Will raise FileNotFoundError if the file doesn't exist (unlike is_dir),
