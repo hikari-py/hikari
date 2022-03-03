@@ -991,3 +991,26 @@ class Embed:
             else:
                 return True
         return False
+
+    def total_length(self) -> int:
+        """Get the total character count of the embed.
+
+        Returns
+        -------
+        builtins.int
+            The total character count of this embed, including title, description,
+            fields, footer, and author combined.
+        """
+        total = len(self._title or "") + len(self._description or "")
+
+        if self._fields:
+            for field in self._fields:
+                total += len(field.name) + len(field.value)
+
+        if self._footer and self._footer.text:
+            total += len(self._footer.text)
+
+        if self._author and self._author.name:
+            total += len(self._author.name)
+
+        return total
