@@ -307,22 +307,21 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
         Calling this function will cause it to block until you are not longer
         being rate limited.
         """
-        loop = asyncio.get_running_loop()
-        future = loop.create_future()
-
         # If we are rate limited, delegate invoking this to the throttler and spin it up
         # if it hasn't started. Likewise, if the throttle task is still running, we should
         # delegate releasing the future to the throttler task so that we still process
         # first-come-first-serve
         if self.throttle_task is not None or self.is_rate_limited(time.monotonic()):
+            loop = asyncio.get_running_loop()
+            future = loop.create_future()
+
             self.queue.append(future)
             if self.throttle_task is None:
                 self.throttle_task = loop.create_task(self.throttle())
+
+            await future
         else:
             self.drip()
-            future.set_result(None)
-
-        await future
 
     def get_time_until_reset(self, now: float) -> float:
         """Determine how long until the current rate limit is reset.

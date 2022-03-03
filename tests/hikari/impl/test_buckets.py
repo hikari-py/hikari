@@ -20,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 import asyncio
+import contextlib
 import time
 
 import mock
@@ -44,19 +45,26 @@ class TestRESTBucket:
 
     @pytest.mark.asyncio()
     async def test_async_context_manager(self, compiled_route):
-        with mock.patch.object(asyncio, "Lock") as lock:
-            lock.return_value.acquire = mock.AsyncMock()
-            with mock.patch.object(buckets.RESTBucket, "acquire", new=mock.AsyncMock()) as acquire:
+        with mock.patch.object(buckets.RESTBucket, "acquire", new=mock.AsyncMock()) as acquire:
+            with mock.patch.object(buckets.RESTBucket, "release") as release:
                 async with buckets.RESTBucket("spaghetti", compiled_route, float("inf")):
                     acquire.assert_awaited_once_with()
-                    lock.return_value.release.assert_not_called()
+                    release.assert_not_called()
 
-                lock.return_value.release.assert_called_once_with()
+            release.assert_called_once_with()
 
     @pytest.mark.parametrize("name", ["spaghetti", buckets.UNKNOWN_HASH])
     def test_is_unknown(self, name, compiled_route):
         with buckets.RESTBucket(name, compiled_route, float("inf")) as rl:
             assert rl.is_unknown is (name == buckets.UNKNOWN_HASH)
+
+    def test_release(self, compiled_route):
+        with buckets.RESTBucket(__name__, compiled_route, float("inf")) as rl:
+            rl._lock = mock.Mock()
+
+            rl.release()
+
+            rl._lock.release.assert_called_once_with()
 
     def test_update_rate_limit(self, compiled_route):
         with buckets.RESTBucket(__name__, compiled_route, float("inf")) as rl:
@@ -73,13 +81,6 @@ class TestRESTBucket:
             assert rl.reset_at == 27
             assert rl.period == 27 - 4.20
 
-    @pytest.mark.parametrize("name", ["spaghetti", buckets.UNKNOWN_HASH])
-    def test_drip(self, name, compiled_route):
-        with buckets.RESTBucket(name, compiled_route, float("inf")) as rl:
-            rl.remaining = 1
-            rl.drip()
-            assert rl.remaining == 0 if name != buckets.UNKNOWN_HASH else 1
-
     @pytest.mark.asyncio()
     async def test_acquire_when_unknown_bucket(self, compiled_route):
         with buckets.RESTBucket(buckets.UNKNOWN_HASH, compiled_route, float("inf")) as rl:
@@ -92,11 +93,18 @@ class TestRESTBucket:
 
     @pytest.mark.asyncio()
     async def test_acquire_when_too_long_ratelimit(self, compiled_route):
-        with buckets.RESTBucket("spaghetti", compiled_route, 60) as rl:
-            rl.reset_at = time.perf_counter() + 999999999999999999999999999
-            with mock.patch.object(buckets.RESTBucket, "is_rate_limited", return_value=True):
-                with pytest.raises(errors.RateLimitTooLongError):
-                    await rl.acquire()
+        stack = contextlib.ExitStack()
+        rl = stack.enter_context(buckets.RESTBucket("spaghetti", compiled_route, 60))
+        rl._lock = mock.Mock(acquire=mock.AsyncMock())
+        rl.reset_at = time.perf_counter() + 999999999999999999999999999
+        stack.enter_context(mock.patch.object(buckets.RESTBucket, "is_rate_limited", return_value=True))
+        stack.enter_context(pytest.raises(errors.RateLimitTooLongError))
+
+        with stack:
+            await rl.acquire()
+
+        rl._lock.acquire.assert_awaited_once_with()
+        rl._lock.release.assert_called_once_with()
 
     @pytest.mark.asyncio()
     async def test_acquire(self, compiled_route):

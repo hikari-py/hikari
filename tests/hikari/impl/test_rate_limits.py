@@ -210,13 +210,12 @@ class TestWindowedBurstRateLimiter:
         ratelimiter.drip = mock.Mock()
         ratelimiter.throttle_task = None
         ratelimiter.is_rate_limited = mock.Mock(return_value=False)
-        future = MockFuture()
-        event_loop.create_future = mock.Mock(return_value=future)
+        event_loop.create_future = mock.Mock()
 
         await ratelimiter.acquire()
 
         ratelimiter.drip.assert_called_once_with()
-        future.set_result.assert_called_once_with(None)
+        event_loop.create_future.assert_not_called()
 
     @pytest.mark.asyncio()
     async def test_no_drip_if_throttle_task_is_not_None(self, ratelimiter, event_loop):

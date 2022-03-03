@@ -721,6 +721,7 @@ class RESTClientImpl(rest_api.RESTClient):
         retry_count = 0
 
         stack = contextlib.AsyncExitStack()
+        trace_logging_enabled = _LOGGER.isEnabledFor(ux.TRACE)
         while True:
             try:
                 uuid = time.uuid()
@@ -733,7 +734,7 @@ class RESTClientImpl(rest_api.RESTClient):
                     if not no_auth:
                         await live_attributes.still_alive().global_rate_limit.acquire()
 
-                    if _LOGGER.isEnabledFor(ux.TRACE):
+                    if trace_logging_enabled:
                         _LOGGER.log(
                             ux.TRACE,
                             "%s %s %s\n%s",
@@ -758,7 +759,7 @@ class RESTClientImpl(rest_api.RESTClient):
                         proxy_headers=self._proxy_settings.all_headers,
                     )
 
-                    if _LOGGER.isEnabledFor(ux.TRACE):
+                    if trace_logging_enabled:
                         time_taken = (time.monotonic() - start) * 1_000
                         _LOGGER.log(
                             ux.TRACE,
@@ -1331,11 +1332,11 @@ class RESTClientImpl(rest_api.RESTClient):
             )
 
         if final_attachments:
-            form = data_binding.URLEncodedFormBuilder(executor=self._executor)
+            form_builder = data_binding.URLEncodedFormBuilder(executor=self._executor)
 
             for i, attachment in enumerate(final_attachments):
-                form.add_resource(f"file{i}", attachment)
-            return body, form
+                form_builder.add_resource(f"file{i}", attachment)
+            return body, form_builder
 
         return body, None
 
@@ -1363,7 +1364,7 @@ class RESTClientImpl(rest_api.RESTClient):
         ] = undefined.UNDEFINED,
     ) -> messages_.Message:
         route = routes.POST_CHANNEL_MESSAGES.compile(channel=channel)
-        body, form = self._build_message_payload(
+        body, form_builder = self._build_message_payload(
             content=content,
             attachment=attachment,
             attachments=attachments,
@@ -1380,9 +1381,9 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("nonce", nonce)
         body.put("message_reference", reply, conversion=lambda m: {"message_id": str(int(m))})
 
-        if form is not None:
-            form.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
-            response = await self._request(route, form_builder=form)
+        if form_builder is not None:
+            form_builder.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
+            response = await self._request(route, form_builder=form_builder)
         else:
             response = await self._request(route, json=body)
 
@@ -1427,7 +1428,7 @@ class RESTClientImpl(rest_api.RESTClient):
         flags: typing.Union[undefined.UndefinedType, int, messages_.MessageFlag] = undefined.UNDEFINED,
     ) -> messages_.Message:
         route = routes.PATCH_CHANNEL_MESSAGE.compile(channel=channel, message=message)
-        body, form = self._build_message_payload(
+        body, form_builder = self._build_message_payload(
             content=content,
             attachment=attachment,
             attachments=attachments,
@@ -1444,9 +1445,9 @@ class RESTClientImpl(rest_api.RESTClient):
             edit=True,
         )
 
-        if form is not None:
-            form.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
-            response = await self._request(route, form_builder=form)
+        if form_builder is not None:
+            form_builder.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
+            response = await self._request(route, form_builder=form_builder)
         else:
             response = await self._request(route, json=body)
 
@@ -1756,7 +1757,7 @@ class RESTClientImpl(rest_api.RESTClient):
         query = data_binding.StringMapBuilder()
         query.put("wait", True)
 
-        body, form = self._build_message_payload(
+        body, form_builder = self._build_message_payload(
             content=content,
             attachment=attachment,
             attachments=attachments,
@@ -1773,9 +1774,9 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("username", username)
         body.put("avatar_url", avatar_url, conversion=str)
 
-        if form is not None:
-            form.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
-            response = await self._request(route, form_builder=form, query=query, no_auth=True)
+        if form_builder is not None:
+            form_builder.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
+            response = await self._request(route, form_builder=form_builder, query=query, no_auth=True)
         else:
             response = await self._request(route, json=body, query=query, no_auth=True)
 
@@ -1823,7 +1824,7 @@ class RESTClientImpl(rest_api.RESTClient):
         webhook_id = webhook if isinstance(webhook, int) else webhook.webhook_id
         route = routes.PATCH_WEBHOOK_MESSAGE.compile(webhook=webhook_id, token=token, message=message)
 
-        body, form = self._build_message_payload(
+        body, form_builder = self._build_message_payload(
             content=content,
             attachment=attachment,
             attachments=attachments,
@@ -1838,9 +1839,9 @@ class RESTClientImpl(rest_api.RESTClient):
             edit=True,
         )
 
-        if form is not None:
-            form.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
-            response = await self._request(route, form_builder=form, no_auth=True)
+        if form_builder is not None:
+            form_builder.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
+            response = await self._request(route, form_builder=form_builder, no_auth=True)
         else:
             response = await self._request(route, json=body, no_auth=True)
 
@@ -1982,11 +1983,13 @@ class RESTClientImpl(rest_api.RESTClient):
         scopes: typing.Sequence[typing.Union[applications.OAuth2Scope, str]],
     ) -> applications.PartialOAuth2Token:
         route = routes.POST_TOKEN.compile()
-        form = data_binding.URLEncodedFormBuilder()
-        form.add_field("grant_type", "client_credentials")
-        form.add_field("scope", " ".join(scopes))
+        form_builder = data_binding.URLEncodedFormBuilder()
+        form_builder.add_field("grant_type", "client_credentials")
+        form_builder.add_field("scope", " ".join(scopes))
 
-        response = await self._request(route, form_builder=form, auth=self._gen_oauth2_token(client, client_secret))
+        response = await self._request(
+            route, form_builder=form_builder, auth=self._gen_oauth2_token(client, client_secret)
+        )
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_partial_token(response)
 
@@ -1998,12 +2001,14 @@ class RESTClientImpl(rest_api.RESTClient):
         redirect_uri: str,
     ) -> applications.OAuth2AuthorizationToken:
         route = routes.POST_TOKEN.compile()
-        form = data_binding.URLEncodedFormBuilder()
-        form.add_field("grant_type", "authorization_code")
-        form.add_field("code", code)
-        form.add_field("redirect_uri", redirect_uri)
+        form_builder = data_binding.URLEncodedFormBuilder()
+        form_builder.add_field("grant_type", "authorization_code")
+        form_builder.add_field("code", code)
+        form_builder.add_field("redirect_uri", redirect_uri)
 
-        response = await self._request(route, form_builder=form, auth=self._gen_oauth2_token(client, client_secret))
+        response = await self._request(
+            route, form_builder=form_builder, auth=self._gen_oauth2_token(client, client_secret)
+        )
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_authorization_token(response)
 
@@ -2018,14 +2023,16 @@ class RESTClientImpl(rest_api.RESTClient):
         ] = undefined.UNDEFINED,
     ) -> applications.OAuth2AuthorizationToken:
         route = routes.POST_TOKEN.compile()
-        form = data_binding.URLEncodedFormBuilder()
-        form.add_field("grant_type", "refresh_token")
-        form.add_field("refresh_token", refresh_token)
+        form_builder = data_binding.URLEncodedFormBuilder()
+        form_builder.add_field("grant_type", "refresh_token")
+        form_builder.add_field("refresh_token", refresh_token)
 
         if scopes is not undefined.UNDEFINED:
-            form.add_field("scope", " ".join(scopes))
+            form_builder.add_field("scope", " ".join(scopes))
 
-        response = await self._request(route, form_builder=form, auth=self._gen_oauth2_token(client, client_secret))
+        response = await self._request(
+            route, form_builder=form_builder, auth=self._gen_oauth2_token(client, client_secret)
+        )
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_authorization_token(response)
 
@@ -2036,9 +2043,9 @@ class RESTClientImpl(rest_api.RESTClient):
         token: typing.Union[str, applications.PartialOAuth2Token],
     ) -> None:
         route = routes.POST_TOKEN_REVOKE.compile()
-        form = data_binding.URLEncodedFormBuilder()
-        form.add_field("token", str(token))
-        await self._request(route, form_builder=form, auth=self._gen_oauth2_token(client, client_secret))
+        form_builder = data_binding.URLEncodedFormBuilder()
+        form_builder.add_field("token", str(token))
+        await self._request(route, form_builder=form_builder, auth=self._gen_oauth2_token(client, client_secret))
 
     async def add_user_to_guild(
         self,
@@ -3474,7 +3481,7 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> messages_.Message:
         route = routes.PATCH_INTERACTION_RESPONSE.compile(webhook=application, token=token)
 
-        body, form = self._build_message_payload(
+        body, form_builder = self._build_message_payload(
             content=content,
             attachment=attachment,
             attachments=attachments,
@@ -3489,9 +3496,9 @@ class RESTClientImpl(rest_api.RESTClient):
             edit=True,
         )
 
-        if form is not None:
-            form.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
-            response = await self._request(route, form_builder=form, no_auth=True)
+        if form_builder is not None:
+            form_builder.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
+            response = await self._request(route, form_builder=form_builder, no_auth=True)
         else:
             response = await self._request(route, json=body, no_auth=True)
 
