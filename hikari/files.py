@@ -53,6 +53,7 @@ import io
 import mimetypes
 import os
 import pathlib
+import stat
 import typing
 import urllib.parse
 import urllib.request
@@ -394,7 +395,7 @@ class AsyncReaderContextManager(abc.ABC, typing.Generic[ReaderImplT]):
 
 @attr.define(weakref_slot=False)
 @typing.final
-class _NoOpAsyncReaderContextManagerImpl(typing.Generic[ReaderImplT], AsyncReaderContextManager[ReaderImplT]):
+class _NoOpAsyncReaderContextManagerImpl(AsyncReaderContextManager[ReaderImplT]):
     impl: ReaderImplT = attr.field()
 
     async def __aenter__(self) -> ReaderImplT:
@@ -498,6 +499,8 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
         -------
         AsyncReaderContextManager[AsyncReader]
             An async iterable of bytes to stream.
+
+            This will error on enter if the target resource doesn't exist.
         """
 
     def __str__(self) -> str:
@@ -768,6 +771,54 @@ class FileReader(AsyncReader, abc.ABC):
     """The path to the resource to read."""
 
 
+def _stat(path: pathlib.Path) -> os.stat_result:
+    # While paths will be implicitly resolved, we still need to explicitly
+    # call expanduser to deal with a ~ base.
+    try:
+        path = path.expanduser()
+    except RuntimeError:
+        pass  # A home directory couldn't be resolved, so we'll just use the path as-is.
+
+    return path.stat()
+
+
+@attr.define(weakref_slot=False)
+@typing.final
+class _FileAsyncReaderContextManagerImpl(AsyncReaderContextManager[FileReader]):
+    impl: FileReader = attr.field()
+
+    async def __aenter__(self) -> FileReader:
+        loop = asyncio.get_running_loop()
+
+        # Will raise FileNotFoundError if the file doesn't exist (unlike is_dir),
+        # which is what we want here.
+        file_stats = await loop.run_in_executor(self.impl.executor, _stat, self.impl.path)
+
+        if stat.S_ISDIR(file_stats.st_mode):
+            raise IsADirectoryError(self.impl.path)
+
+        return self.impl
+
+    async def __aexit__(
+        self,
+        exc_type: typing.Optional[typing.Type[BaseException]],
+        exc: typing.Optional[BaseException],
+        exc_tb: typing.Optional[types.TracebackType],
+    ) -> None:
+        pass
+
+
+def _open_file(path: pathlib.Path) -> typing.BinaryIO:
+    # While paths will be implicitly resolved, we still need to explicitly
+    # call expanduser to deal with a ~ base.
+    try:
+        path = path.expanduser()
+    except RuntimeError:
+        pass  # A home directory couldn't be resolved, so we'll just use the path as-is.
+
+    return path.open("rb")
+
+
 @attr.define(weakref_slot=False)
 class ThreadedFileReader(FileReader):
     """Asynchronous file reader that reads a resource from local storage.
@@ -780,40 +831,29 @@ class ThreadedFileReader(FileReader):
     async def __aiter__(self) -> typing.AsyncGenerator[typing.Any, bytes]:
         loop = asyncio.get_running_loop()
 
-        path = self.path
-        if isinstance(path, pathlib.Path):
-            path = await loop.run_in_executor(self.executor, self._expand, self.path)
-
-        fp = await loop.run_in_executor(self.executor, self._open, path)
+        fp = await loop.run_in_executor(self.executor, _open_file, self.path)
 
         try:
             while True:
-                chunk = await loop.run_in_executor(self.executor, self._read_chunk, fp, _MAGIC)
+                chunk = await loop.run_in_executor(self.executor, fp.read, _MAGIC)
                 yield chunk
                 if len(chunk) < _MAGIC:
                     break
 
         finally:
-            await loop.run_in_executor(self.executor, self._close, fp)
+            await loop.run_in_executor(self.executor, fp.close)
 
-    @staticmethod
-    def _expand(path: pathlib.Path) -> pathlib.Path:
-        # .expanduser is Platform dependent. Will expand stuff like ~ to /home/<user> on posix.
-        # .resolve will follow symlinks and what-have-we to translate stuff like `..` to proper paths.
-        return path.expanduser().resolve()
 
-    @staticmethod
-    @typing.final
-    def _read_chunk(fp: typing.IO[bytes], n: int = 10_000) -> bytes:
-        return fp.read(n)
+def _read_all(path: pathlib.Path) -> bytes:
+    # While paths will be implicitly resolved, we still need to explicitly
+    # call expanduser to deal with a ~ base.
+    try:
+        path = path.expanduser()
+    except RuntimeError:
+        pass  # A home directory couldn't be resolved, so we'll just use the path as-is.
 
-    @staticmethod
-    def _open(path: Pathish) -> typing.IO[bytes]:
-        return open(path, "rb")
-
-    @staticmethod
-    def _close(fp: typing.IO[bytes]) -> None:
-        fp.close()
+    with path.open("rb") as fp:
+        return fp.read()
 
 
 @attr.define(slots=False, weakref_slot=False)  # Do not slot (pickle)
@@ -827,7 +867,7 @@ class MultiprocessingFileReader(FileReader):
     """
 
     async def __aiter__(self) -> typing.AsyncGenerator[typing.Any, bytes]:
-        yield await asyncio.get_running_loop().run_in_executor(self.executor, self._read_all)
+        yield await asyncio.get_running_loop().run_in_executor(self.executor, _read_all, self.path)
 
     def __getstate__(self) -> typing.Dict[str, typing.Any]:
         return {"path": self.path, "filename": self.filename}
@@ -837,10 +877,6 @@ class MultiprocessingFileReader(FileReader):
         self.filename: str = state["filename"]
         self.executor: typing.Optional[concurrent.futures.Executor] = None
         self.mimetype: typing.Optional[str] = None
-
-    def _read_all(self) -> bytes:
-        with open(self.path, "rb") as fp:
-            return fp.read()
 
 
 class File(Resource[FileReader]):
@@ -921,7 +957,7 @@ class File(Resource[FileReader]):
         # so this is safe enough to do.:
         is_threaded = executor is None or isinstance(executor, concurrent.futures.ThreadPoolExecutor)
         impl = ThreadedFileReader if is_threaded else MultiprocessingFileReader
-        return _NoOpAsyncReaderContextManagerImpl(impl(self.filename, None, executor, self.path))
+        return _FileAsyncReaderContextManagerImpl(impl(self.filename, None, executor, self.path))
 
 
 ########################################################################
