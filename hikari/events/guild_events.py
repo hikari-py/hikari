@@ -283,13 +283,7 @@ class GuildJoinEvent(GuildVisibilityEvent):
     """Mapping of channel IDs to the channels in the guild."""
 
     threads: typing.Mapping[snowflakes.Snowflake, channels_.GuildThreadChannel] = attr.field(repr=False)
-    """Mapping of channel IDs to the threads in the guild.
-
-    Returns
-    -------
-    typing.Mapping[hikari.snowflakes.Snowflake, hikari.channels.GuildThreadChannel]
-        The threads in the guild.
-    """
+    """Mapping of channel IDs to the threads in the guild."""
 
     members: typing.Mapping[snowflakes.Snowflake, guilds.Member] = attr.field(repr=False)
     """Mapping of user IDs to the members in the guild."""

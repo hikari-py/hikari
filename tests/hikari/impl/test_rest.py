@@ -4341,11 +4341,25 @@ class TestRESTClientImplAsync:
 
     async def test_create_message_thread_without_optionals(self, rest_client: rest.RESTClientImpl):
         expected_route = routes.POST_MESSAGE_THREADS.compile(channel=123432, message=595959)
-        expected_payload = {"name": "Sass alert!!!", "auto_archive_duration": 60}
+        expected_payload = {"name": "Sass alert!!!", "auto_archive_duration": 1440}
         rest_client._request = mock.AsyncMock(return_value={"id": "54123123", "name": "dlksksldalksad"})
         rest_client._entity_factory.deserialize_guild_thread.return_value = mock.Mock(channels.GuildNewsThread)
 
         result = await rest_client.create_message_thread(StubModel(123432), StubModel(595959), "Sass alert!!!")
+
+        assert result is rest_client._entity_factory.deserialize_guild_thread.return_value
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_payload, reason=undefined.UNDEFINED)
+        rest_client._entity_factory.deserialize_guild_thread.assert_called_once_with(rest_client._request.return_value)
+
+    async def test_create_message_thread_with_all_undefined(self, rest_client: rest.RESTClientImpl):
+        expected_route = routes.POST_MESSAGE_THREADS.compile(channel=123432, message=595959)
+        expected_payload = {"name": "Sass alert!!!"}
+        rest_client._request = mock.AsyncMock(return_value={"id": "54123123", "name": "dlksksldalksad"})
+        rest_client._entity_factory.deserialize_guild_thread.return_value = mock.Mock(channels.GuildNewsThread)
+
+        result = await rest_client.create_message_thread(
+            StubModel(123432), StubModel(595959), "Sass alert!!!", auto_archive_duration=undefined.UNDEFINED
+        )
 
         assert result is rest_client._entity_factory.deserialize_guild_thread.return_value
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_payload, reason=undefined.UNDEFINED)
@@ -4391,7 +4405,7 @@ class TestRESTClientImplAsync:
         expected_route = routes.POST_CHANNEL_THREADS.compile(channel=321123)
         expected_payload = {
             "name": "Something something send help, they're keeping the catgirls locked up at <REDACTED>",
-            "auto_archive_duration": 60,
+            "auto_archive_duration": 1440,
             "type": 12,
         }
         rest_client._request = mock.AsyncMock(return_value={"id": "54123123", "name": "dlksksldalksad"})
@@ -4400,6 +4414,25 @@ class TestRESTClientImplAsync:
             StubModel(321123),
             channels.ChannelType.GUILD_PRIVATE_THREAD,
             "Something something send help, they're keeping the catgirls locked up at <REDACTED>",
+        )
+
+        assert result is rest_client._entity_factory.deserialize_guild_thread.return_value
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_payload, reason=undefined.UNDEFINED)
+        rest_client._entity_factory.deserialize_guild_thread.assert_called_once_with(rest_client._request.return_value)
+
+    async def test_create_thread_with_all_undefined(self, rest_client: rest.RESTClientImpl):
+        expected_route = routes.POST_CHANNEL_THREADS.compile(channel=321123)
+        expected_payload = {
+            "name": "Something something send help, they're keeping the catgirls locked up at <REDACTED>",
+            "type": 12,
+        }
+        rest_client._request = mock.AsyncMock(return_value={"id": "54123123", "name": "dlksksldalksad"})
+
+        result = await rest_client.create_thread(
+            StubModel(321123),
+            channels.ChannelType.GUILD_PRIVATE_THREAD,
+            "Something something send help, they're keeping the catgirls locked up at <REDACTED>",
+            auto_archive_duration=undefined.UNDEFINED,
         )
 
         assert result is rest_client._entity_factory.deserialize_guild_thread.return_value
