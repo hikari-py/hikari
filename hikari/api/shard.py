@@ -141,11 +141,11 @@ class GatewayShard(abc.ABC):
 
     @abc.abstractmethod
     async def close(self) -> None:
-        """Close the websocket if it is connected, otherwise do nothing."""
+        """Close the websocket if it is connected."""
 
     @abc.abstractmethod
     async def join(self) -> None:
-        """Wait indefinitely until the websocket closes permanently.
+        """Wait indefinitely until the websocket closes.
 
         This can be placed in a task and cancelled without affecting the
         websocket runtime itself.

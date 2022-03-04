@@ -372,7 +372,8 @@ class TestGatewayBot:
         assert bot._is_alive is True
 
     @pytest.mark.asyncio()
-    async def test__close(self, bot, event_manager, event_factory, rest, voice, cache):
+    @pytest.mark.parametrize("is_alive", [True, False])
+    async def test__close(self, bot, event_manager, event_factory, rest, voice, cache, is_alive):
         def null_call(arg):
             return arg
 
@@ -409,7 +410,7 @@ class TestGatewayBot:
         voice.close = AwaitableMock()
         bot._closing_event = closing_event = mock.Mock(is_set=mock.Mock(return_value=False))
         bot._closed_event = None
-        bot._is_alive = True
+        bot._is_alive = is_alive
         error = RuntimeError()
         shard0 = mock.Mock(id=0, close=AwaitableMock())
         shard1 = mock.Mock(id=1, close=AwaitableMock(error))
@@ -435,7 +436,6 @@ class TestGatewayBot:
                 mock.call(shard1.close()),
                 mock.call(shard2.close()),
             ],
-            any_order=False,
         )
 
         rest.close.assert_awaited_once()
@@ -458,14 +458,16 @@ class TestGatewayBot:
         assert bot._shards == {}
         cache.clear.assert_called_once_with()
 
-        # Dispatching events in the right order
-        event_manager.dispatch.assert_has_calls(
-            [
-                mock.call(event_factory.deserialize_stopping_event.return_value),
-                mock.call(event_factory.deserialize_stopped_event.return_value),
-            ],
-            any_order=False,
-        )
+        if is_alive:
+            # Dispatching events in the right order
+            event_manager.dispatch.assert_has_calls(
+                [
+                    mock.call(event_factory.deserialize_stopping_event.return_value),
+                    mock.call(event_factory.deserialize_stopped_event.return_value),
+                ],
+            )
+        else:
+            event_manager.dispatch.assert_not_called()
 
     def test_dispatch(self, bot, event_manager):
         event = object()
