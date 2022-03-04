@@ -191,12 +191,17 @@ class Intents(enums.Flag):
     * `CHANNEL_UPDATE`
     * `CHANNEL_DELETE`
     * `CHANNEL_PINS_UPDATE`
-    * THREAD_CREATE
-    * THREAD_UPDATE
-    * THREAD_DELETE
-    * THREAD_LIST_SYNC
-    * THREAD_MEMBER_UPDATE
-    """  # TODO: THREAD_MEMBERS_UPDATE ?
+    * `THREAD_CREATE`
+    * `THREAD_UPDATE`
+    * `THREAD_DELETE`
+    * `THREAD_LIST_SYNC`
+    * `THREAD_MEMBER_UPDATE`
+    * `THREAD_MEMBERS_UPDATE`
+
+    !!! note
+        Both `GUILDS` and `GUILD_MEMBERS` are required to receive
+        `THREAD_MEMBERS_UPDATE`.
+    """
 
     GUILD_MEMBERS = 1 << 1
     """Subscribes to the following events:
@@ -204,10 +209,15 @@ class Intents(enums.Flag):
     * `GUILD_MEMBER_ADD`
     * `GUILD_MEMBER_UPDATE`
     * `GUILD_MEMBER_REMOVE`
+    * `THREAD_MEMBERS_UPDATE`
+
+    !!! note
+        Both `GUILDS` and `GUILD_MEMBERS` are required to receive
+        `THREAD_MEMBERS_UPDATE`.
 
     !!! warning
         This intent is privileged, and requires enabling/whitelisting to use.
-    """  # TODO: THREAD_MEMBERS_UPDATE ?
+    """
 
     GUILD_BANS = 1 << 2
     """Subscribes to the following events:
@@ -255,7 +265,8 @@ class Intents(enums.Flag):
     * `PRESENCE_UPDATE`
 
     !!! warning
-        This intent is privileged, and requires enabling/whitelisting to use."""
+        This intent is privileged, and requires enabling/whitelisting to use.
+    """
 
     GUILD_MESSAGES = 1 << 9
     """Subscribes to the following events:

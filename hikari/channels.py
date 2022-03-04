@@ -1021,7 +1021,7 @@ class GuildChannel(PartialChannel):
         """
         return await self.app.rest.fetch_guild(self.guild_id)
 
-    async def edit(  # TODO: split this up between the different channel types
+    async def edit(
         self,
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,

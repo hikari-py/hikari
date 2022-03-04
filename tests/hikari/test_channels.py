@@ -28,7 +28,6 @@ from hikari import channels
 from hikari import files
 from hikari import permissions
 from hikari import snowflakes
-from hikari import undefined
 from hikari import users
 from hikari import webhooks
 from tests.hikari import hikari_test_helpers
@@ -353,22 +352,31 @@ class TestGuildChannel:
             bitrate=420,
             reason="left right",
             default_auto_archive_duration=123312,
+            position=4423,
+            topic="hi",
+            nsfw=True,
+            video_quality_mode=channels.VideoQualityMode.AUTO,
+            user_limit=123321,
+            rate_limit_per_user=54123123,
+            region="us-west",
+            parent_category=341123123123,
+            permission_overwrites={123: "123"},
         )
 
         assert result is model.app.rest.edit_channel.return_value
         model.app.rest.edit_channel.assert_awaited_once_with(
             69420,
             name="Supa fast boike",
-            position=undefined.UNDEFINED,
-            topic=undefined.UNDEFINED,
-            nsfw=undefined.UNDEFINED,
+            position=4423,
+            topic="hi",
+            nsfw=True,
             bitrate=420,
-            video_quality_mode=undefined.UNDEFINED,
-            user_limit=undefined.UNDEFINED,
-            rate_limit_per_user=undefined.UNDEFINED,
-            region=undefined.UNDEFINED,
-            permission_overwrites=undefined.UNDEFINED,
-            parent_category=undefined.UNDEFINED,
+            video_quality_mode=channels.VideoQualityMode.AUTO,
+            user_limit=123321,
+            rate_limit_per_user=54123123,
+            region="us-west",
+            permission_overwrites={123: "123"},
+            parent_category=341123123123,
             default_auto_archive_duration=123312,
             reason="left right",
         )

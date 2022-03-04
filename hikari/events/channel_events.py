@@ -195,7 +195,7 @@ class GuildChannelEvent(ChannelEvent, abc.ABC):
         """
         return await self.app.rest.fetch_guild(self.guild_id)
 
-    def get_channel(self) -> typing.Optional[channels.GuildChannel]:  # TODO: be more specific about type on subclasses
+    def get_channel(self) -> typing.Optional[channels.GuildChannel]:
         """Get the cached channel that this event relates to, if known.
 
         If not, return `builtins.None`.
@@ -211,7 +211,7 @@ class GuildChannelEvent(ChannelEvent, abc.ABC):
 
         return self.app.cache.get_guild_channel(self.channel_id)
 
-    async def fetch_channel(self) -> channels.GuildChannel:  # TODO: be more specific about type on subclasses
+    async def fetch_channel(self) -> channels.GuildChannel:
         """Perform an API call to fetch the details about this channel.
 
         !!! note
@@ -220,8 +220,8 @@ class GuildChannelEvent(ChannelEvent, abc.ABC):
 
         Returns
         -------
-        hikari.channels.PermissibleGuildChannel
-            A derivative of `hikari.channels.PermissibleGuildChannel`. The
+        hikari.channels.GuildChannel
+            A derivative of `hikari.channels.GuildChannel`. The
             actual type will vary depending on the type of channel this event
             concerns.
 
@@ -524,7 +524,7 @@ class GuildPinsUpdateEvent(PinsUpdateEvent, GuildChannelEvent):
             If an internal error occurs on Discord while handling the request.
         """
         channel = await self.app.rest.fetch_channel(self.channel_id)
-        assert isinstance(channel, channels.GuildTextChannel)
+        assert isinstance(channel, channels.TextableGuildChannel)
         return channel
 
 
@@ -790,7 +790,7 @@ class WebhookUpdateEvent(GuildChannelEvent):
         return await self.app.rest.fetch_guild_webhooks(self.guild_id)
 
 
-@base_events.requires_intents(intents.Intents.GUILDS, intents.Intents.GUILD_MEMBERS)
+@base_events.requires_intents(intents.Intents.GUILDS, intents.Intents.GUILDS | intents.Intents.GUILD_MEMBERS)
 class GuildThreadEvent(shard_events.ShardEvent, abc.ABC):
     """Event base for any event that is related to a guild thread."""
 
@@ -806,12 +806,52 @@ class GuildThreadEvent(shard_events.ShardEvent, abc.ABC):
     def thread_id(self) -> snowflakes.Snowflake:
         """ID of the thread this event is for."""
 
+    async def fetch_channel(self) -> channels.GuildThreadChannel:
+        """Perform an API call to fetch the details about this thread.
+
+        !!! note
+            For `GuildThreadDeleteEvent` events, this will always raise
+            an exception, since the channel will have already been removed.
+
+        Returns
+        -------
+        hikari.channels.GuildThreadChannel
+            A derivative of `hikari.channels.GuildThreadChannel`. The
+            actual type will vary depending on the type of channel this event
+            concerns.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you are missing the `READ_MESSAGES` permission in the channel.
+        hikari.errors.NotFoundError
+            If the channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        channel = await self.app.rest.fetch_channel(self.thread_id)
+        assert isinstance(channel, channels.GuildThreadChannel)
+        return channel
+
 
 @base_events.requires_intents(intents.Intents.GUILDS)
 @attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
 class GuildThreadAccessEvent(GuildThreadEvent):
-    """Event fired when you're given access to an existing thread."""
+    """Event fired when you're given access to an existing private thread."""
 
     shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
@@ -839,7 +879,11 @@ class GuildThreadAccessEvent(GuildThreadEvent):
 @attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
 class GuildThreadCreateEvent(GuildThreadEvent):
-    """Event fired when a new thread is created."""
+    """Event fired when a new thread is created.
+
+    This event is fired when you create a private thread or anybody creates
+    a public thread in a channel you can access.
+    """
 
     shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
@@ -940,7 +984,7 @@ class OwnThreadMemberUpdateEvent(GuildThreadEvent):
         return self.member.thread_id
 
 
-@base_events.requires_intents(intents.Intents.GUILDS, intents.Intents.GUILD_MEMBERS)
+@base_events.requires_intents(intents.Intents.GUILDS | intents.Intents.GUILD_MEMBERS)
 @attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
 class ThreadMembersUpdateEvent(GuildThreadEvent):
@@ -966,9 +1010,16 @@ class ThreadMembersUpdateEvent(GuildThreadEvent):
     """
 
     added_members: typing.Mapping[snowflakes.Snowflake, channels.ThreadMember] = attr.field()
+    """Mapping of IDs to objects of the members that were added to the thread."""
+
     removed_member_ids: typing.Sequence[snowflakes.Snowflake] = attr.field()
+    """Sequence of IDs of users that were removed from the thread."""
+
     guild_members: typing.Mapping[snowflakes.Snowflake, guilds.Member] = attr.field()
+    """Mapping of IDs to guild member objects of the added thread members."""
+
     guild_presences: typing.Mapping[snowflakes.Snowflake, presences.MemberPresence] = attr.field()
+    """Mapping of IDs to guild presence objects of the added members."""
 
 
 @base_events.requires_intents(intents.Intents.GUILDS)
@@ -987,5 +1038,14 @@ class ThreadListSyncEvent(shard_events.ShardEvent):
     # <<inherited docstring from GuildThreadEvent>>.
 
     channel_ids: typing.Optional[typing.Sequence[snowflakes.Snowflake]] = attr.field()
+    """IDs of the text channels threads are being synced for.
+
+    If this is `builtins.None` then threads are being synced for all text
+    channels in the guild.
+
+    This may contain channels that have no active threads as well to allow for
+    clearing stale data.
+    """
 
     threads: typing.Mapping[snowflakes.Snowflake, channels.GuildThreadChannel] = attr.field()
+    """Mapping of IDs to objects of the active threads in the given channels."""
