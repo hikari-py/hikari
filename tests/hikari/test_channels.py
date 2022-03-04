@@ -344,7 +344,7 @@ class TestGuildChannel:
         model.app.rest.fetch_guild.assert_awaited_once_with(123456789)
 
     @pytest.mark.asyncio()
-    async def test_edit(self, model):  # TODO: Why isn't this testing all the fields
+    async def test_edit(self, model):
         model.app.rest.edit_channel = mock.AsyncMock()
 
         result = await model.edit(

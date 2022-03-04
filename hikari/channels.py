@@ -1310,6 +1310,10 @@ class GuildTextChannel(PermissibleGuildChannel, TextableGuildChannel):
     """
 
     default_auto_archive_duration: datetime.timedelta = attr.field(eq=False, hash=False, repr=False)
+    """The auto archive duration Discord's client defaults to for threads in this channel.
+
+    This may be be either 1 hour, 1 day, 3 days or 1 week.
+    """
 
 
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
@@ -1336,6 +1340,10 @@ class GuildNewsChannel(PermissibleGuildChannel, TextableGuildChannel):
     """
 
     default_auto_archive_duration: datetime.timedelta = attr.field(eq=False, hash=False, repr=False)
+    """The auto archive duration Discord's client defaults to for threads in this channel.
+
+    This may be be either 1 hour, 1 day, 3 days or 1 week.
+    """
 
 
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
@@ -1492,7 +1500,7 @@ class GuildThreadChannel(TextableGuildChannel):
     auto_archive_duration: datetime.timedelta = attr.field(eq=False, hash=False, repr=True)
     """How long the thread will be left inactive before being automatically archived.
 
-    As of writing this may be one of 60, 1_440, 4_320 or 10_080 minutes.
+    As of writing this may either 1 hour, 1 day, 3 days or 1 week.
     """
 
     archive_timestamp: datetime.datetime = attr.field(eq=False, hash=False, repr=True)
