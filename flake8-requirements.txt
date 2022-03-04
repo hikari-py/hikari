@@ -3,7 +3,7 @@ flake8==4.0.1
 # Plugins
 # Ref: https://github.com/DmytroLitvinov/awesome-flake8-extensions
 
-bandit==1.7.2                           # temporariry freeze to bandit due to incompatibility with flake8-bandit
+bandit==1.7.4                           # temporariry freeze to bandit due to incompatibility with flake8-bandit
 flake8-bandit~=2.1.2                    # runs bandit
 flake8-black==0.3.2                     # runs black
 flake8-broken-line==0.4.0               # forbey "\" linebreaks
