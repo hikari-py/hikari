@@ -6,6 +6,37 @@ This file is updated every release with the use of `towncrier` from the fragment
 
 .. towncrier release notes start
 
+Hikari 2.0.0.dev107 (2022-03-04)
+================================
+
+Features
+--------
+
+- Added a `total_length` function to `hikari.embeds.Embed`
+  - Takes into account the character length of the embed's title, description, fields (all field names and values), footer, and author combined.
+  - Useful for determining if the embed exceeds Discord's 6000 character limit. ([#796](https://github.com/hikari-py/hikari/issues/796))
+- Added attachment command option type support. ([#1015](https://github.com/hikari-py/hikari/issues/1015))
+- Add MESSAGE_CONTENT intent. ([#1021](https://github.com/hikari-py/hikari/issues/1021))
+- Custom substitutions can now be used in `hikari.internal.ux.print_banner`. ([#1022](https://github.com/hikari-py/hikari/issues/1022))
+- `get_guild()` is now available on `hikari.Member`. ([#1025](https://github.com/hikari-py/hikari/issues/1025))
+- The notorious "failed to communicate with server" log message is now a warning rather than an error. ([#1041](https://github.com/hikari-py/hikari/issues/1041))
+- `hikari.applications`, `hikari.files`, `hikari.snowflakes` and `hikari.undefined` are now all explicitly exported by `hikari.__init__`, allowing pyright to see them without a direct import. ([#1042](https://github.com/hikari-py/hikari/issues/1042))
+
+
+Bugfixes
+--------
+
+- Fix bucket lock not being released on errors while being acquired, which locked the bucket infinitely ([#841](https://github.com/hikari-py/hikari/issues/841))
+- `enable_signal_handlers` now only defaults to `True` when the run/start method is called in the main thread.
+  This avoids these functions from always raising when being run in a threaded environment as only the main thread can register signal handlers. ([#998](https://github.com/hikari-py/hikari/issues/998))
+- Sub-command options are now properly deserialized in the autocomplete flow to `AutocompleteInteractionOption` instead of `CommandInteractionOption`. ([#1012](https://github.com/hikari-py/hikari/issues/1012))
+- Attempt to reconnect on a gateway `TimeoutError`. ([#1014](https://github.com/hikari-py/hikari/issues/1014))
+- Properly close `GatewayBot` when not fully started. ([#1023](https://github.com/hikari-py/hikari/issues/1023))
+- The async context manager returned by `File.stream` now errors on enter if the target file doesn't exist to improve error handling when a file that doesn't exist is sent as an attachment.
+
+  The multiprocessing file reader strategy now expands user relative (`~`) links (like the threaded strategy). ([#1046](https://github.com/hikari-py/hikari/issues/1046))
+
+
 Hikari 2.0.0.dev106 (2022-02-03)
 ================================
 
