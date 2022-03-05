@@ -1437,15 +1437,21 @@ class EntityFactory(abc.ABC):
     ##########################
 
     @abc.abstractmethod
-    def deserialize_external_event(self, payload: data_binding.JSONObject) -> scheduled_events_models.ExternalEvent:
+    def deserialize_scheduled_external_event(
+        self, payload: data_binding.JSONObject
+    ) -> scheduled_events_models.ScheduledExternalEvent:
         ...
 
     @abc.abstractmethod
-    def deserialize_stage_event(self, payload: data_binding.JSONObject) -> scheduled_events_models.StageEvent:
+    def deserialize_scheduled_stage_event(
+        self, payload: data_binding.JSONObject
+    ) -> scheduled_events_models.ScheduledStageEvent:
         ...
 
     @abc.abstractmethod
-    def deserialize_voice_event(self, payload: data_binding.JSONObject) -> scheduled_events_models.VoiceEvent:
+    def deserialize_scheduled_voice_event(
+        self, payload: data_binding.JSONObject
+    ) -> scheduled_events_models.ScheduledVoiceEvent:
         ...
 
     @abc.abstractmethod

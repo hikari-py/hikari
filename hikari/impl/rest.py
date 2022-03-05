@@ -3605,7 +3605,7 @@ class RESTClientImpl(rest_api.RESTClient):
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         privacy_level: scheduled_events.EventPiracyLevel = scheduled_events.EventPiracyLevel.GUILD_ONLY,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> scheduled_events.ExternalEvent:
+    ) -> scheduled_events.ScheduledExternalEvent:
         route = routes.POST_GUILD_SCHEDULED_EVENT.compile(guild=guild)
         response = await self._create_or_edit_scheduled_stage(
             route,
@@ -3619,7 +3619,7 @@ class RESTClientImpl(rest_api.RESTClient):
             privacy_level=privacy_level,
             reason=reason,
         )
-        return self._entity_factory.deserialize_external_event(response)
+        return self._entity_factory.deserialize_scheduled_external_event(response)
 
     async def create_stage_event(
         self,
@@ -3634,7 +3634,7 @@ class RESTClientImpl(rest_api.RESTClient):
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         privacy_level: scheduled_events.EventPiracyLevel = scheduled_events.EventPiracyLevel.GUILD_ONLY,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> scheduled_events.StageEvent:
+    ) -> scheduled_events.ScheduledStageEvent:
         route = routes.POST_GUILD_SCHEDULED_EVENT.compile(guild=guild)
         response = await self._create_or_edit_scheduled_stage(
             route,
@@ -3648,7 +3648,7 @@ class RESTClientImpl(rest_api.RESTClient):
             privacy_level=privacy_level,
             reason=reason,
         )
-        return self._entity_factory.deserialize_stage_event(response)
+        return self._entity_factory.deserialize_scheduled_stage_event(response)
 
     async def create_voice_event(
         self,
@@ -3663,7 +3663,7 @@ class RESTClientImpl(rest_api.RESTClient):
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         privacy_level: scheduled_events.EventPiracyLevel = scheduled_events.EventPiracyLevel.GUILD_ONLY,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> scheduled_events.VoiceEvent:
+    ) -> scheduled_events.ScheduledVoiceEvent:
         route = routes.POST_GUILD_SCHEDULED_EVENT.compile(guild=guild)
         response = await self._create_or_edit_scheduled_stage(
             route,
@@ -3677,7 +3677,7 @@ class RESTClientImpl(rest_api.RESTClient):
             privacy_level=privacy_level,
             reason=reason,
         )
-        return self._entity_factory.deserialize_voice_event(response)
+        return self._entity_factory.deserialize_scheduled_voice_event(response)
 
     async def edit_scheduled_event(
         self,

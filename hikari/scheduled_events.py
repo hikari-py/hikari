@@ -28,9 +28,9 @@ __all__: typing.Sequence[str] = [
     "ScheduledEventType",
     "ScheduledEventStatus",
     "ScheduledEvent",
-    "ExternalEvent",
-    "StageEvent",
-    "VoiceEvent",
+    "ScheduledExternalEvent",
+    "ScheduledStageEvent",
+    "ScheduledVoiceEvent",
     "ScheduledEventUser",
 ]
 
@@ -135,20 +135,20 @@ class ScheduledEvent(snowflakes.Unique):
 
 @attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
-class ExternalEvent(ScheduledEvent):
+class ScheduledExternalEvent(ScheduledEvent):
     location: str = attr.field(hash=False, repr=False)
 
 
 @attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
-class StageEvent(ScheduledEvent):
+class ScheduledStageEvent(ScheduledEvent):
     channel_id: snowflakes.Snowflake = attr.field(hash=False, repr=False)
     end_time: datetime.datetime = attr.field(hash=False, repr=False)
 
 
 @attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
-class VoiceEvent(ScheduledEvent):
+class ScheduledVoiceEvent(ScheduledEvent):
     channel_id: snowflakes.Snowflake = attr.field(hash=False, repr=False)
 
 

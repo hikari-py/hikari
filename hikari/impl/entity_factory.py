@@ -284,9 +284,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             base_interactions.InteractionType.AUTOCOMPLETE: self.deserialize_autocomplete_interaction,
         }
         self._scheduled_event_type_mapping = {
-            scheduled_events_models.ScheduledEventType.STAGE_INSTANCE: self.deserialize_stage_event,
-            scheduled_events_models.ScheduledEventType.VOICE: self.deserialize_voice_event,
-            scheduled_events_models.ScheduledEventType.EXTERNAL: self.deserialize_external_event,
+            scheduled_events_models.ScheduledEventType.STAGE_INSTANCE: self.deserialize_scheduled_stage_event,
+            scheduled_events_models.ScheduledEventType.VOICE: self.deserialize_scheduled_voice_event,
+            scheduled_events_models.ScheduledEventType.EXTERNAL: self.deserialize_scheduled_external_event,
         }
         self._webhook_type_mapping = {
             webhook_models.WebhookType.INCOMING: self.deserialize_incoming_webhook,
@@ -2694,7 +2694,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     # SCHEDULED EVENT MODELS #
     ##########################
 
-    def deserialize_external_event(self, payload: data_binding.JSONObject) -> scheduled_events_models.ExternalEvent:
+    def deserialize_scheduled_external_event(
+        self, payload: data_binding.JSONObject
+    ) -> scheduled_events_models.ScheduledExternalEvent:
         creator: typing.Optional[user_models.User] = None
         if raw_creator := payload.get("creator"):
             creator = self.deserialize_user(raw_creator)
@@ -2703,7 +2705,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_end_time := payload.get("scheduled_end_time"):
             time.unix_epoch_to_datetime(raw_end_time)
 
-        return scheduled_events_models.ExternalEvent(
+        return scheduled_events_models.ScheduledExternalEvent(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
             guild_id=snowflakes.Snowflake(payload["guild_id"]),
@@ -2720,12 +2722,14 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             location=payload["entity_metadata"]["location"],
         )
 
-    def deserialize_stage_event(self, payload: data_binding.JSONObject) -> scheduled_events_models.StageEvent:
+    def deserialize_scheduled_stage_event(
+        self, payload: data_binding.JSONObject
+    ) -> scheduled_events_models.ScheduledStageEvent:
         creator: typing.Optional[user_models.User] = None
         if raw_creator := payload.get("creator"):
             creator = self.deserialize_user(raw_creator)
 
-        return scheduled_events_models.StageEvent(
+        return scheduled_events_models.ScheduledStageEvent(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
             guild_id=snowflakes.Snowflake(payload["guild_id"]),
@@ -2742,12 +2746,14 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             channel_id=snowflakes.Snowflake(payload["channel_id"]),
         )
 
-    def deserialize_voice_event(self, payload: data_binding.JSONObject) -> scheduled_events_models.VoiceEvent:
+    def deserialize_scheduled_voice_event(
+        self, payload: data_binding.JSONObject
+    ) -> scheduled_events_models.ScheduledVoiceEvent:
         creator: typing.Optional[user_models.User] = None
         if raw_creator := payload.get("creator"):
             creator = self.deserialize_user(raw_creator)
 
-        return scheduled_events_models.VoiceEvent(
+        return scheduled_events_models.ScheduledVoiceEvent(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
             guild_id=snowflakes.Snowflake(payload["guild_id"]),

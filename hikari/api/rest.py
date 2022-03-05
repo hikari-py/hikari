@@ -7862,7 +7862,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         privacy_level: scheduled_events.EventPiracyLevel = scheduled_events.EventPiracyLevel.GUILD_ONLY,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> scheduled_events.StageEvent:
+    ) -> scheduled_events.ScheduledStageEvent:
         ...
 
     @abc.abstractmethod
@@ -7879,7 +7879,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         privacy_level: scheduled_events.EventPiracyLevel = scheduled_events.EventPiracyLevel.GUILD_ONLY,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> scheduled_events.VoiceEvent:
+    ) -> scheduled_events.ScheduledVoiceEvent:
         ...
 
     @abc.abstractmethod
@@ -7896,7 +7896,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         privacy_level: scheduled_events.EventPiracyLevel = scheduled_events.EventPiracyLevel.GUILD_ONLY,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> scheduled_events.ExternalEvent:
+    ) -> scheduled_events.ScheduledExternalEvent:
         ...
 
     @abc.abstractmethod
