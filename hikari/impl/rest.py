@@ -3659,7 +3659,7 @@ class RESTClientImpl(rest_api.RESTClient):
         start_time: datetime.datetime,
         *,
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        end_time: undefined.UndefinedOr[datetime.datetime],
+        end_time: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         privacy_level: scheduled_events.EventPiracyLevel = scheduled_events.EventPiracyLevel.GUILD_ONLY,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -3731,5 +3731,17 @@ class RESTClientImpl(rest_api.RESTClient):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         event: snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent],
         /,
+        *,
+        newest_first: bool = False,
+        start_at: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[scheduled_events.ScheduledEventUser]:
-        ...
+        if start_at is undefined.UNDEFINED:
+            start_at = snowflakes.Snowflake.max() if newest_first else snowflakes.Snowflake.min()
+        elif isinstance(start_at, datetime.datetime):
+            start_at = snowflakes.Snowflake.from_datetime(start_at)
+        else:
+            start_at = int(start_at)
+
+        return special_endpoints_impl.ScheduledEventIterator(
+            self._entity_factory, self._request, newest_first, str(start_at), guild, event
+        )

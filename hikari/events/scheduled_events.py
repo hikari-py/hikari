@@ -76,6 +76,7 @@ class ScheduledEventCreateEvent(ScheduledEventEvent):
 
     @property
     def event_id(self) -> snowflakes.Snowflake:
+        # <<inherited docstring from ScheduledEventEvent>>.
         return self.event.id
 
 
@@ -95,6 +96,7 @@ class ScheduledEventDeleteEvent(ScheduledEventEvent):
 
     @property
     def event_id(self) -> snowflakes.Snowflake:
+        # <<inherited docstring from ScheduledEventEvent>>.
         return self.event.id
 
 
@@ -114,6 +116,7 @@ class ScheduledEventUpdateEvent(ScheduledEventEvent):
 
     @property
     def event_id(self) -> snowflakes.Snowflake:
+        # <<inherited docstring from ScheduledEventEvent>>.
         return self.event.id
 
 
@@ -128,7 +131,9 @@ class ScheduledEventUserAddEvent(ScheduledEventEvent):
     # <<inherited docstring from ShardEvent>>.
 
     event_id: snowflakes.Snowflake = attr.field()
+
     user_id: snowflakes.Snowflake = attr.field()
+
     guild_id: snowflakes.Snowflake = attr.field()
 
 
@@ -143,5 +148,7 @@ class ScheduledEventUserRemoveEvent(ScheduledEventEvent):
     # <<inherited docstring from ShardEvent>>.
 
     event_id: snowflakes.Snowflake = attr.field()
+
     user_id: snowflakes.Snowflake = attr.field()
+
     guild_id: snowflakes.Snowflake = attr.field()

@@ -1460,7 +1460,10 @@ class EntityFactory(abc.ABC):
 
     @abc.abstractmethod
     def deserialize_scheduled_event_user(
-        self, payload: data_binding.JSONObject
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> scheduled_events_models.ScheduledEventUser:
         ...
 

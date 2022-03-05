@@ -2701,18 +2701,14 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_creator := payload.get("creator"):
             creator = self.deserialize_user(raw_creator)
 
-        end_time: typing.Optional[datetime.datetime] = None
-        if raw_end_time := payload.get("scheduled_end_time"):
-            time.unix_epoch_to_datetime(raw_end_time)
-
         return scheduled_events_models.ScheduledExternalEvent(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
             guild_id=snowflakes.Snowflake(payload["guild_id"]),
             name=payload["name"],
             description=payload.get("description"),
-            start_time=time.unix_epoch_to_datetime(payload["scheduled_start_time"]),
-            end_time=end_time,
+            start_time=time.iso8601_datetime_string_to_datetime(payload["scheduled_start_time"]),
+            end_time=time.iso8601_datetime_string_to_datetime(payload["scheduled_end_time"]),
             privacy_level=scheduled_events_models.EventPiracyLevel(payload["privacy_level"]),
             status=scheduled_events_models.ScheduledEventStatus(payload["status"]),
             entity_type=scheduled_events_models.ScheduledEventType(payload["entity_type"]),
@@ -2729,14 +2725,18 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_creator := payload.get("creator"):
             creator = self.deserialize_user(raw_creator)
 
+        end_time: typing.Optional[datetime.datetime] = None
+        if raw_end_time := payload.get("scheduled_end_time"):
+            time.iso8601_datetime_string_to_datetime(raw_end_time)
+
         return scheduled_events_models.ScheduledStageEvent(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
             guild_id=snowflakes.Snowflake(payload["guild_id"]),
             name=payload["name"],
             description=payload.get("description"),
-            start_time=time.unix_epoch_to_datetime(payload["scheduled_start_time"]),
-            end_time=time.unix_epoch_to_datetime(payload["scheduled_end_time"]),
+            start_time=time.iso8601_datetime_string_to_datetime(payload["scheduled_start_time"]),
+            end_time=end_time,
             privacy_level=scheduled_events_models.EventPiracyLevel(payload["privacy_level"]),
             status=scheduled_events_models.ScheduledEventStatus(payload["status"]),
             entity_type=scheduled_events_models.ScheduledEventType(payload["entity_type"]),
@@ -2753,14 +2753,18 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_creator := payload.get("creator"):
             creator = self.deserialize_user(raw_creator)
 
+        end_time: typing.Optional[datetime.datetime] = None
+        if raw_end_time := payload.get("scheduled_end_time"):
+            time.iso8601_datetime_string_to_datetime(raw_end_time)
+
         return scheduled_events_models.ScheduledVoiceEvent(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
             guild_id=snowflakes.Snowflake(payload["guild_id"]),
             name=payload["name"],
             description=payload.get("description"),
-            start_time=time.unix_epoch_to_datetime(payload["scheduled_start_time"]),
-            end_time=time.unix_epoch_to_datetime(payload["scheduled_end_time"]),
+            start_time=time.iso8601_datetime_string_to_datetime(payload["scheduled_start_time"]),
+            end_time=end_time,
             privacy_level=scheduled_events_models.EventPiracyLevel(payload["privacy_level"]),
             status=scheduled_events_models.ScheduledEventStatus(payload["status"]),
             entity_type=scheduled_events_models.ScheduledEventType(payload["entity_type"]),
@@ -2771,7 +2775,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     def deserialize_scheduled_event(self, payload: data_binding.JSONObject) -> scheduled_events_models.ScheduledEvent:
-        event_type = scheduled_events_models.ScheduledEventType(payload["type"])
+        event_type = scheduled_events_models.ScheduledEventType(payload["entity_type"])
 
         if converter := self._scheduled_event_type_mapping.get(event_type):
             return converter(payload)
@@ -2780,12 +2784,21 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         raise errors.UnrecognisedEntityError(f"Unrecognised scheduled event type {event_type}")
 
     def deserialize_scheduled_event_user(
-        self, payload: data_binding.JSONObject
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> scheduled_events_models.ScheduledEventUser:
+        user = self.deserialize_user(payload["user"])
+
+        member: typing.Optional[guild_models.Member] = None
+        if raw_member := payload.get("member"):
+            member = self.deserialize_member(raw_member, user=user, guild_id=guild_id)
+
         return scheduled_events_models.ScheduledEventUser(
             event_id=snowflakes.Snowflake(payload["guild_scheduled_event_id"]),
-            user=self.deserialize_user(payload["user"]),
-            member=self.deserialize_member(payload["member"]),
+            user=user,
+            member=member,
         )
 
     ###################

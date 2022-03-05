@@ -74,6 +74,9 @@ class ScheduledEventStatus(int, enums.Enum):
 @attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
 class ScheduledEvent(snowflakes.Unique):
+    # entity_id is ignored right now due to always being null
+    # creator_id is ignored as it just dupes creator.id
+
     app: traits.RESTAware = attr.field(
         repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
     )
@@ -88,10 +91,9 @@ class ScheduledEvent(snowflakes.Unique):
     privacy_level: EventPiracyLevel = attr.field(hash=False, repr=False)
     status: ScheduledEventStatus = attr.field(hash=False, repr=True)
     entity_type: ScheduledEventType = attr.field(hash=False, repr=True)
-    # entity_id is ignored right now due to always being null
     creator: typing.Optional[users.User] = attr.field(hash=False, repr=False)
     user_count: typing.Optional[int] = attr.field(hash=False, repr=False)
-    # TODO: is user_count omitted from gateway events?
+    # user_count is None on gateway events and when creating/editing an event
     image_hash: typing.Optional[str] = attr.field(hash=False, repr=False)
 
     @property
@@ -137,13 +139,13 @@ class ScheduledEvent(snowflakes.Unique):
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
 class ScheduledExternalEvent(ScheduledEvent):
     location: str = attr.field(hash=False, repr=False)
+    end_time: datetime.datetime = attr.field(hash=False, repr=False)
 
 
 @attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
 class ScheduledStageEvent(ScheduledEvent):
     channel_id: snowflakes.Snowflake = attr.field(hash=False, repr=False)
-    end_time: datetime.datetime = attr.field(hash=False, repr=False)
 
 
 @attr_extensions.with_copy

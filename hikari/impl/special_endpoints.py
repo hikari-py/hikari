@@ -73,6 +73,7 @@ if typing.TYPE_CHECKING:
     from hikari import embeds as embeds_
     from hikari import guilds
     from hikari import permissions as permissions_
+    from hikari import scheduled_events
     from hikari import users
     from hikari import voices
     from hikari.api import entity_factory as entity_factory_
@@ -646,6 +647,62 @@ class MemberIterator(iterators.BufferedLazyIterator["guilds.Member"]):
         self._first_id = chunk[-1]["user"]["id"]
 
         return (self._entity_factory.deserialize_member(m, guild_id=self._guild_id) for m in chunk)
+
+
+# We use an explicit forward reference for this, since this breaks potential
+# circular import issues (once the file has executed, using those resources is
+# not an issue for us).
+class ScheduledEventIterator(iterators.BufferedLazyIterator["scheduled_events.ScheduledEventUser"]):
+    """Implementation of an iterator for retrieving guilds you are in."""
+
+    __slots__: typing.Sequence[str] = (
+        "_entity_factory",
+        "_first_id",
+        "_guild_id",
+        "_newest_first",
+        "_request_call",
+        "_route",
+    )
+
+    def __init__(
+        self,
+        entity_factory: entity_factory_.EntityFactory,
+        request_call: typing.Callable[
+            ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
+        ],
+        newest_first: bool,
+        first_id: str,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        event: snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent],
+    ) -> None:
+        super().__init__()
+        self._entity_factory = entity_factory
+        self._first_id = first_id
+        self._guild_id = snowflakes.Snowflake(guild)
+        self._newest_first = newest_first
+        self._request_call = request_call
+        self._route = routes.GET_GUILD_SCHEDULED_EVENT_USERS.compile(guild=guild, scheduled_event=event)
+
+    async def _next_chunk(
+        self,
+    ) -> typing.Optional[typing.Generator[scheduled_events.ScheduledEventUser, typing.Any, None]]:
+        query = data_binding.StringMapBuilder()
+        query.put("before" if self._newest_first else "after", self._first_id)
+        query.put("limit", 100)
+        query.put("with_member", True)
+
+        chunk = await self._request_call(compiled_route=self._route, query=query)
+        assert isinstance(chunk, list)
+
+        if not chunk:
+            return None
+
+        if self._newest_first:
+            # These are always returned in ascending order by `.user.id`.
+            chunk.reverse()
+
+        self._first_id = chunk[-1]["user"]["id"]
+        return (self._entity_factory.deserialize_scheduled_event_user(u, guild_id=self._guild_id) for u in chunk)
 
 
 # We use an explicit forward reference for this, since this breaks potential
