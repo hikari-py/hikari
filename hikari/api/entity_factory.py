@@ -45,6 +45,7 @@ if typing.TYPE_CHECKING:
     from hikari import invites as invite_models
     from hikari import messages as message_models
     from hikari import presences as presence_models
+    from hikari import scheduled_events as scheduled_events_models
     from hikari import sessions as gateway_models
     from hikari import snowflakes
     from hikari import stickers as sticker_models
@@ -959,6 +960,72 @@ class EntityFactory(abc.ABC):
     ######################
 
     @abc.abstractmethod
+    def deserialize_slash_command(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: undefined.UndefinedNoneOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+    ) -> commands.SlashCommand:
+        """Parse a raw payload from Discord into a slash command object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Other Parameters
+        ----------------
+        guild_id : hikari.undefined.UndefinedNoneOr[hikari.snowflakes.Snowflake]
+            The ID of the guild this command belongs to. If this is specified
+            then this will be prioritised over `"guild_id"` in the payload.
+
+        Returns
+        -------
+        hikari.commands.SlashCommand
+            The deserialized slash command object.
+
+        Raises
+        ------
+        builtins.KeyError
+            If `guild_id` is left as `hikari.undefined.UNDEFINED` when
+            `"guild_id"` is not present in the passed payload for the payload of
+            the integration.
+        """
+
+    @abc.abstractmethod
+    def deserialize_context_menu_command(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: undefined.UndefinedNoneOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+    ) -> commands.ContextMenuCommand:
+        """Parse a raw payload from Discord into a context menu command object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Other Parameters
+        ----------------
+        guild_id : hikari.undefined.UndefinedNoneOr[hikari.snowflakes.Snowflake]
+            The ID of the guild this command belongs to. If this is specified
+            then this will be prioritised over `"guild_id"` in the payload.
+
+        Returns
+        -------
+        hikari.commands.ContextMenuCommand
+            The deserialized context menu command object.
+
+        Raises
+        ------
+        builtins.KeyError
+            If `guild_id` is left as `hikari.undefined.UNDEFINED` when
+            `"guild_id"` is not present in the passed payload for the payload of
+            the integration.
+        """
+
+    @abc.abstractmethod
     def deserialize_command(
         self,
         payload: data_binding.JSONObject,
@@ -1364,6 +1431,32 @@ class EntityFactory(abc.ABC):
 
             If this is raised, no guild ID info was provided anywhere.
         """
+
+    ##########################
+    # SCHEDULED EVENT MODELS #
+    ##########################
+
+    @abc.abstractmethod
+    def deserialize_external_event(self, payload: data_binding.JSONObject) -> scheduled_events_models.ExternalEvent:
+        ...
+
+    @abc.abstractmethod
+    def deserialize_stage_event(self, payload: data_binding.JSONObject) -> scheduled_events_models.StageEvent:
+        ...
+
+    @abc.abstractmethod
+    def deserialize_voice_event(self, payload: data_binding.JSONObject) -> scheduled_events_models.VoiceEvent:
+        ...
+
+    @abc.abstractmethod
+    def deserialize_scheduled_event(self, payload: data_binding.JSONObject) -> scheduled_events_models.ScheduledEvent:
+        ...
+
+    @abc.abstractmethod
+    def deserialize_scheduled_event_user(
+        self, payload: data_binding.JSONObject
+    ) -> scheduled_events_models.ScheduledEventUser:
+        ...
 
     ###################
     # TEMPLATE MODELS #

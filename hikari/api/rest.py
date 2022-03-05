@@ -28,6 +28,7 @@ __all__: typing.List[str] = ["RESTClient", "TokenStrategy"]
 import abc
 import typing
 
+from hikari import scheduled_events
 from hikari import traits
 from hikari import undefined
 
@@ -7831,3 +7832,110 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.api.special_endpoints.ActionRowBuilder
             The initialised action row builder.
         """
+
+    @abc.abstractmethod
+    async def fetch_scheduled_event(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        event: snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent],
+        /,
+    ) -> scheduled_events.ScheduledEvent:
+        ...
+
+    @abc.abstractmethod
+    async def fetch_scheduled_events(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
+    ) -> typing.Sequence[scheduled_events.ScheduledEvent]:
+        ...
+
+    @abc.abstractmethod
+    async def create_stage_event(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        channel: snowflakes.SnowflakeishOr[channels_.PartialChannel],
+        name: str,
+        /,
+        start_time: datetime.datetime,
+        *,
+        description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        end_time: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
+        image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
+        privacy_level: scheduled_events.EventPiracyLevel = scheduled_events.EventPiracyLevel.GUILD_ONLY,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> scheduled_events.StageEvent:
+        ...
+
+    @abc.abstractmethod
+    async def create_voice_event(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        channel: snowflakes.SnowflakeishOr[channels_.PartialChannel],
+        name: str,
+        /,
+        start_time: datetime.datetime,
+        *,
+        description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        end_time: undefined.UndefinedOr[datetime.datetime],
+        image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
+        privacy_level: scheduled_events.EventPiracyLevel = scheduled_events.EventPiracyLevel.GUILD_ONLY,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> scheduled_events.VoiceEvent:
+        ...
+
+    @abc.abstractmethod
+    async def create_external_event(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        name: str,
+        /,
+        location: str,
+        start_time: datetime.datetime,
+        end_time: datetime.datetime,
+        *,
+        description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
+        privacy_level: scheduled_events.EventPiracyLevel = scheduled_events.EventPiracyLevel.GUILD_ONLY,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> scheduled_events.ExternalEvent:
+        ...
+
+    @abc.abstractmethod
+    async def edit_scheduled_event(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        event: snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent],
+        /,
+        *,
+        channel: undefined.UndefinedNoneOr[snowflakes.SnowflakeishOr[channels_.PartialChannel]] = undefined.UNDEFINED,
+        description: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
+        entity_type: undefined.UndefinedOr[
+            typing.Union[int, scheduled_events.ScheduledEventType]
+        ] = undefined.UNDEFINED,
+        image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
+        location: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        privacy_level: undefined.UndefinedOr[scheduled_events.EventPiracyLevel] = undefined.UNDEFINED,
+        start_time: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
+        end_time: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
+        status: undefined.UndefinedOr[typing.Union[int, scheduled_events.ScheduledEventStatus]] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> scheduled_events.ScheduledEvent:
+        ...
+
+    @abc.abstractmethod
+    async def delete_scheduled_event(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        event: snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent],
+        /,
+    ) -> None:
+        ...
+
+    @abc.abstractmethod
+    def fetch_scheduled_event_users(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        event: snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent],
+        /,
+    ) -> iterators.LazyIterator[scheduled_events.ScheduledEventUser]:
+        ...

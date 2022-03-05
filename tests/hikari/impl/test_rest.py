@@ -3668,13 +3668,12 @@ class TestRESTClientImplAsync:
             [mock.call({"id": "456"}), mock.call({"id": "789"})]
         )
 
-    async def test_create_guild_text_channel(self, rest_client):
+    async def test_create_guild_text_channel(self, rest_client: rest.RESTClientImpl):
         guild = StubModel(123)
-        channel = mock.Mock(channels.GuildTextChannel)
         category_channel = StubModel(789)
         overwrite1 = StubModel(987)
         overwrite2 = StubModel(654)
-        rest_client._create_guild_channel = mock.AsyncMock(return_value=channel)
+        rest_client._create_guild_channel = mock.AsyncMock()
 
         returned = await rest_client.create_guild_text_channel(
             guild,
@@ -3687,7 +3686,7 @@ class TestRESTClientImplAsync:
             category=category_channel,
             reason="because we need one",
         )
-        assert returned is channel
+        assert returned is rest_client._entity_factory.deserialize_guild_text_channel.return_value
 
         rest_client._create_guild_channel.assert_awaited_once_with(
             guild,
@@ -3701,14 +3700,16 @@ class TestRESTClientImplAsync:
             category=category_channel,
             reason="because we need one",
         )
+        rest_client._entity_factory.deserialize_guild_text_channel.assert_called_once_with(
+            rest_client._create_guild_channel.return_value
+        )
 
-    async def test_create_guild_news_channel(self, rest_client):
+    async def test_create_guild_news_channel(self, rest_client: rest.RESTClientImpl):
         guild = StubModel(123)
-        channel = mock.Mock(spec_set=channels.GuildNewsChannel)
         category_channel = StubModel(789)
         overwrite1 = StubModel(987)
         overwrite2 = StubModel(654)
-        rest_client._create_guild_channel = mock.AsyncMock(return_value=channel)
+        rest_client._create_guild_channel = mock.AsyncMock()
 
         returned = await rest_client.create_guild_news_channel(
             guild,
@@ -3721,7 +3722,7 @@ class TestRESTClientImplAsync:
             category=category_channel,
             reason="because we need one",
         )
-        assert returned is channel
+        assert returned is rest_client._entity_factory.deserialize_guild_news_channel.return_value
 
         rest_client._create_guild_channel.assert_awaited_once_with(
             guild,
@@ -3735,14 +3736,16 @@ class TestRESTClientImplAsync:
             category=category_channel,
             reason="because we need one",
         )
+        rest_client._entity_factory.deserialize_guild_news_channel.assert_called_once_with(
+            rest_client._create_guild_channel.return_value
+        )
 
-    async def test_create_guild_voice_channel(self, rest_client):
+    async def test_create_guild_voice_channel(self, rest_client: rest.RESTClientImpl):
         guild = StubModel(123)
-        channel = mock.Mock(channels.GuildVoiceChannel)
         category_channel = StubModel(789)
         overwrite1 = StubModel(987)
         overwrite2 = StubModel(654)
-        rest_client._create_guild_channel = mock.AsyncMock(return_value=channel)
+        rest_client._create_guild_channel = mock.AsyncMock()
 
         returned = await rest_client.create_guild_voice_channel(
             guild,
@@ -3756,7 +3759,7 @@ class TestRESTClientImplAsync:
             region="ok boomer",
             reason="because we need one",
         )
-        assert returned is channel
+        assert returned is rest_client._entity_factory.deserialize_guild_voice_channel.return_value
 
         rest_client._create_guild_channel.assert_awaited_once_with(
             guild,
@@ -3771,14 +3774,16 @@ class TestRESTClientImplAsync:
             category=category_channel,
             reason="because we need one",
         )
+        rest_client._entity_factory.deserialize_guild_voice_channel.assert_called_once_with(
+            rest_client._create_guild_channel.return_value
+        )
 
-    async def test_create_guild_stage_channel(self, rest_client):
+    async def test_create_guild_stage_channel(self, rest_client: rest.RESTClientImpl):
         guild = StubModel(123)
-        channel = mock.Mock(channels.GuildStageChannel)
         category_channel = StubModel(789)
         overwrite1 = StubModel(987)
         overwrite2 = StubModel(654)
-        rest_client._create_guild_channel = mock.AsyncMock(return_value=channel)
+        rest_client._create_guild_channel = mock.AsyncMock()
 
         returned = await rest_client.create_guild_stage_channel(
             guild,
@@ -3791,7 +3796,7 @@ class TestRESTClientImplAsync:
             region="Doge Moon",
             reason="When doge == 1$",
         )
-        assert returned is channel
+        assert returned is rest_client._entity_factory.deserialize_guild_stage_channel.return_value
 
         rest_client._create_guild_channel.assert_awaited_once_with(
             guild,
@@ -3805,13 +3810,15 @@ class TestRESTClientImplAsync:
             category=category_channel,
             reason="When doge == 1$",
         )
+        rest_client._entity_factory.deserialize_guild_stage_channel.assert_called_once_with(
+            rest_client._create_guild_channel.return_value
+        )
 
-    async def test_create_guild_category(self, rest_client):
+    async def test_create_guild_category(self, rest_client: rest.RESTClientImpl):
         guild = StubModel(123)
-        category = mock.Mock(spec_set=channels.GuildCategory)
         overwrite1 = StubModel(987)
         overwrite2 = StubModel(654)
-        rest_client._create_guild_channel = mock.AsyncMock(return_value=category)
+        rest_client._create_guild_channel = mock.AsyncMock()
 
         returned = await rest_client.create_guild_category(
             guild,
@@ -3820,7 +3827,7 @@ class TestRESTClientImplAsync:
             permission_overwrites=[overwrite1, overwrite2],
             reason="because we need one",
         )
-        assert returned is category
+        assert returned is rest_client._entity_factory.deserialize_guild_category.return_value
 
         rest_client._create_guild_channel.assert_awaited_once_with(
             guild,
@@ -3830,9 +3837,11 @@ class TestRESTClientImplAsync:
             permission_overwrites=[overwrite1, overwrite2],
             reason="because we need one",
         )
+        rest_client._entity_factory.deserialize_guild_category.assert_called_once_with(
+            rest_client._create_guild_channel.return_value
+        )
 
     async def test__create_guild_channel(self, rest_client):
-        channel = mock.Mock(spec_set=channels.GuildChannel)
         overwrite1 = StubModel(987)
         overwrite2 = StubModel(654)
         expected_route = routes.POST_GUILD_CHANNELS.compile(guild=123)
@@ -3850,7 +3859,6 @@ class TestRESTClientImplAsync:
             "permission_overwrites": [{"id": "987"}, {"id": "654"}],
         }
         rest_client._request = mock.AsyncMock(return_value={"id": "456"})
-        rest_client._entity_factory.deserialize_channel = mock.Mock(return_value=channel)
         rest_client._entity_factory.serialize_permission_overwrite = mock.Mock(
             side_effect=[{"id": "987"}, {"id": "654"}]
         )
@@ -3870,12 +3878,11 @@ class TestRESTClientImplAsync:
             category=StubModel(321),
             reason="we have got the power",
         )
-        assert returned is channel
+        assert returned is rest_client._request.return_value
 
         rest_client._request.assert_awaited_once_with(
             expected_route, json=expected_json, reason="we have got the power"
         )
-        rest_client._entity_factory.deserialize_channel.assert_called_once_with({"id": "456"})
         assert rest_client._entity_factory.serialize_permission_overwrite.call_count == 2
         rest_client._entity_factory.serialize_permission_overwrite.assert_has_calls(
             [mock.call(overwrite1), mock.call(overwrite2)]
@@ -4622,7 +4629,7 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route)
         rest_client._entity_factory.deserialize_command.assert_called_once_with({"id": "34512312"}, guild_id=None)
 
-    async def test_create_application_command_with_optionals(self, rest_client):
+    async def test_create_application_command_with_optionals(self, rest_client: rest.RESTClientImpl):
         expected_route = routes.POST_APPLICATION_GUILD_COMMAND.compile(application=4332123, guild=653452134)
         rest_client._request = mock.AsyncMock(return_value={"id": "29393939"})
         mock_option = object()
@@ -4637,9 +4644,9 @@ class TestRESTClientImplAsync:
                 options=[mock_option],
             )
 
-        assert result is rest_client._entity_factory.deserialize_command.return_value
+        assert result is rest_client._entity_factory.deserialize_slash_command.return_value
         rest_client._entity_factory.serialize_command_option.assert_called_once_with(mock_option)
-        rest_client._entity_factory.deserialize_command.assert_called_once_with(
+        rest_client._entity_factory.deserialize_slash_command.assert_called_once_with(
             rest_client._request.return_value, guild_id=653452134
         )
         rest_client._request.assert_awaited_once_with(
@@ -4652,7 +4659,7 @@ class TestRESTClientImplAsync:
             },
         )
 
-    async def test_create_application_command_without_optionals(self, rest_client):
+    async def test_create_application_command_without_optionals(self, rest_client: rest.RESTClientImpl):
         expected_route = routes.POST_APPLICATION_COMMAND.compile(application=4332123)
         rest_client._request = mock.AsyncMock(return_value={"id": "29393939"})
 
@@ -4664,36 +4671,36 @@ class TestRESTClientImplAsync:
                 description="not ok anymore",
             )
 
-        assert result is rest_client._entity_factory.deserialize_command.return_value
-        rest_client._entity_factory.deserialize_command.assert_called_once_with(
+        assert result is rest_client._entity_factory.deserialize_slash_command.return_value
+        rest_client._entity_factory.deserialize_slash_command.assert_called_once_with(
             rest_client._request.return_value, guild_id=None
         )
         rest_client._request.assert_awaited_once_with(
             expected_route, json={"type": 1, "name": "okokok", "description": "not ok anymore"}
         )
 
-    async def test_create_slash_command(self, rest_client):
+    async def test_create_slash_command(self, rest_client: rest.RESTClientImpl):
         expected_route = routes.POST_APPLICATION_COMMAND.compile(application=4332123)
         rest_client._request = mock.AsyncMock(return_value={"id": "29393939"})
 
         result = await rest_client.create_slash_command(StubModel(4332123), "okokok", "not ok anymore")
 
-        assert result is rest_client._entity_factory.deserialize_command.return_value
-        rest_client._entity_factory.deserialize_command.assert_called_once_with(
+        assert result is rest_client._entity_factory.deserialize_slash_command.return_value
+        rest_client._entity_factory.deserialize_slash_command.assert_called_once_with(
             rest_client._request.return_value, guild_id=None
         )
         rest_client._request.assert_awaited_once_with(
             expected_route, json={"type": 1, "name": "okokok", "description": "not ok anymore"}
         )
 
-    async def test_create_context_menu_command(self, rest_client):
+    async def test_create_context_menu_command(self, rest_client: rest.RESTClientImpl):
         expected_route = routes.POST_APPLICATION_COMMAND.compile(application=4332123)
         rest_client._request = mock.AsyncMock(return_value={"id": "29393939"})
 
         result = await rest_client.create_context_menu_command(StubModel(4332123), 2, "okokok")
 
-        assert result is rest_client._entity_factory.deserialize_command.return_value
-        rest_client._entity_factory.deserialize_command.assert_called_once_with(
+        assert result is rest_client._entity_factory.deserialize_context_menu_command.return_value
+        rest_client._entity_factory.deserialize_context_menu_command.assert_called_once_with(
             rest_client._request.return_value, guild_id=None
         )
         rest_client._request.assert_awaited_once_with(expected_route, json={"type": 2, "name": "okokok"})

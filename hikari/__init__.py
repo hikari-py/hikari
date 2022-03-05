@@ -90,6 +90,7 @@ from hikari.iterators import *
 from hikari.messages import *
 from hikari.permissions import *
 from hikari.presences import *
+from hikari.scheduled_events import *
 from hikari.sessions import *
 from hikari.snowflakes import SearchableSnowflakeish
 from hikari.snowflakes import SearchableSnowflakeishOr

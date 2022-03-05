@@ -60,6 +60,7 @@ from hikari import files
 from hikari import guilds
 from hikari import iterators
 from hikari import permissions as permissions_
+from hikari import scheduled_events
 from hikari import snowflakes
 from hikari import traits
 from hikari import undefined
@@ -2407,7 +2408,7 @@ class RESTClientImpl(rest_api.RESTClient):
         category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.GuildTextChannel:
-        channel = await self._create_guild_channel(
+        response = await self._create_guild_channel(
             guild,
             name,
             channels_.ChannelType.GUILD_TEXT,
@@ -2419,8 +2420,7 @@ class RESTClientImpl(rest_api.RESTClient):
             category=category,
             reason=reason,
         )
-        assert isinstance(channel, channels_.GuildTextChannel)
-        return channel
+        return self._entity_factory.deserialize_guild_text_channel(response)
 
     async def create_guild_news_channel(
         self,
@@ -2437,7 +2437,7 @@ class RESTClientImpl(rest_api.RESTClient):
         category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.GuildNewsChannel:
-        channel = await self._create_guild_channel(
+        response = await self._create_guild_channel(
             guild,
             name,
             channels_.ChannelType.GUILD_NEWS,
@@ -2449,8 +2449,7 @@ class RESTClientImpl(rest_api.RESTClient):
             category=category,
             reason=reason,
         )
-        assert isinstance(channel, channels_.GuildNewsChannel)
-        return channel
+        return self._entity_factory.deserialize_guild_news_channel(response)
 
     async def create_guild_voice_channel(
         self,
@@ -2468,7 +2467,7 @@ class RESTClientImpl(rest_api.RESTClient):
         category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.GuildVoiceChannel:
-        channel = await self._create_guild_channel(
+        response = await self._create_guild_channel(
             guild,
             name,
             channels_.ChannelType.GUILD_VOICE,
@@ -2481,8 +2480,7 @@ class RESTClientImpl(rest_api.RESTClient):
             category=category,
             reason=reason,
         )
-        assert isinstance(channel, channels_.GuildVoiceChannel)
-        return channel
+        return self._entity_factory.deserialize_guild_voice_channel(response)
 
     async def create_guild_stage_channel(
         self,
@@ -2499,7 +2497,7 @@ class RESTClientImpl(rest_api.RESTClient):
         category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.GuildStageChannel:
-        channel = await self._create_guild_channel(
+        response = await self._create_guild_channel(
             guild,
             name,
             channels_.ChannelType.GUILD_STAGE,
@@ -2511,8 +2509,7 @@ class RESTClientImpl(rest_api.RESTClient):
             category=category,
             reason=reason,
         )
-        assert isinstance(channel, channels_.GuildStageChannel)
-        return channel
+        return self._entity_factory.deserialize_guild_stage_channel(response)
 
     async def create_guild_category(
         self,
@@ -2525,7 +2522,7 @@ class RESTClientImpl(rest_api.RESTClient):
         ] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.GuildCategory:
-        channel = await self._create_guild_channel(
+        response = await self._create_guild_channel(
             guild,
             name,
             channels_.ChannelType.GUILD_CATEGORY,
@@ -2533,8 +2530,7 @@ class RESTClientImpl(rest_api.RESTClient):
             permission_overwrites=permission_overwrites,
             reason=reason,
         )
-        assert isinstance(channel, channels_.GuildCategory)
-        return channel
+        return self._entity_factory.deserialize_guild_category(response)
 
     async def _create_guild_channel(
         self,
@@ -2555,7 +2551,7 @@ class RESTClientImpl(rest_api.RESTClient):
         region: undefined.UndefinedOr[typing.Union[voices.VoiceRegion, str]] = undefined.UNDEFINED,
         category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> channels_.GuildChannel:
+    ) -> data_binding.JSONObject:
         route = routes.POST_GUILD_CHANNELS.compile(guild=guild)
         body = data_binding.JSONObjectBuilder()
         body.put("type", type_)
@@ -2577,9 +2573,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         response = await self._request(route, json=body, reason=reason)
         assert isinstance(response, dict)
-        channel = self._entity_factory.deserialize_channel(response)
-        assert isinstance(channel, channels_.GuildChannel)
-        return channel
+        return response
 
     async def reposition_channels(
         self,
@@ -3182,7 +3176,7 @@ class RESTClientImpl(rest_api.RESTClient):
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
         default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-    ) -> commands.PartialCommand:
+    ) -> data_binding.JSONObject:
         if guild is undefined.UNDEFINED:
             route = routes.POST_APPLICATION_COMMAND.compile(application=application)
 
@@ -3198,9 +3192,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         response = await self._request(route, json=body)
         assert isinstance(response, dict)
-        return self._entity_factory.deserialize_command(
-            response, guild_id=snowflakes.Snowflake(guild) if guild is not undefined.UNDEFINED else None
-        )
+        return response
 
     @deprecation.deprecated("2.0.0.dev106", "create_slash_command")
     async def create_application_command(
@@ -3232,7 +3224,7 @@ class RESTClientImpl(rest_api.RESTClient):
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
         default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.SlashCommand:
-        command = await self._create_application_command(
+        response = await self._create_application_command(
             application=application,
             type=commands.CommandType.SLASH,
             name=name,
@@ -3241,7 +3233,9 @@ class RESTClientImpl(rest_api.RESTClient):
             options=options,
             default_permission=default_permission,
         )
-        return typing.cast(commands.SlashCommand, command)
+        return self._entity_factory.deserialize_slash_command(
+            response, guild_id=snowflakes.Snowflake(guild) if guild is not undefined.UNDEFINED else None
+        )
 
     async def create_context_menu_command(
         self,
@@ -3252,14 +3246,16 @@ class RESTClientImpl(rest_api.RESTClient):
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.ContextMenuCommand:
-        command = await self._create_application_command(
+        response = await self._create_application_command(
             application=application,
             type=type,
             name=name,
             guild=guild,
             default_permission=default_permission,
         )
-        return typing.cast(commands.ContextMenuCommand, command)
+        return self._entity_factory.deserialize_context_menu_command(
+            response, guild_id=snowflakes.Snowflake(guild) if guild is not undefined.UNDEFINED else None
+        )
 
     async def set_application_commands(
         self,
@@ -3530,3 +3526,210 @@ class RESTClientImpl(rest_api.RESTClient):
 
     def build_action_row(self) -> special_endpoints.ActionRowBuilder:
         return special_endpoints_impl.ActionRowBuilder()
+
+    async def fetch_scheduled_event(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        event: snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent],
+        /,
+    ) -> scheduled_events.ScheduledEvent:
+        route = routes.GET_GUILD_SCHEDULED_EVENT.compile(guild=guild, scheduled_event=event)
+        query = data_binding.StringMapBuilder()
+        query.put("with_user_count", True)
+
+        response = await self._request(route, query=query)
+
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_scheduled_event(response)
+
+    async def fetch_scheduled_events(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
+    ) -> typing.Sequence[scheduled_events.ScheduledEvent]:
+        route = routes.GET_GUILD_SCHEDULED_EVENTS.compile(guild=guild)
+        query = data_binding.StringMapBuilder()
+        query.put("with_user_count", True)
+
+        response = await self._request(route, query=query)
+
+        assert isinstance(response, list)
+        return [self._entity_factory.deserialize_scheduled_event(event) for event in response]
+
+    async def _create_or_edit_scheduled_stage(
+        self,
+        route: routes.CompiledRoute,
+        entity_type: undefined.UndefinedNoneOr[typing.Union[int, scheduled_events.ScheduledEventType]],
+        name: undefined.UndefinedOr[str],
+        *,
+        channel: undefined.UndefinedNoneOr[snowflakes.SnowflakeishOr[channels_.PartialChannel]] = undefined.UNDEFINED,
+        location: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        start_time: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
+        description: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
+        end_time: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
+        image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
+        privacy_level: undefined.UndefinedOr[scheduled_events.EventPiracyLevel] = undefined.UNDEFINED,
+        status: undefined.UndefinedOr[typing.Union[int, scheduled_events.ScheduledEventStatus]] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> data_binding.JSONObject:
+        body = data_binding.JSONObjectBuilder()
+        body.put_snowflake("channel_id", channel)
+        body.put("name", name)
+        body.put("privacy_level", privacy_level)
+        body.put("scheduled_start_time", start_time, conversion=datetime.datetime.isoformat)
+        body.put("scheduled_end_time", end_time, conversion=datetime.datetime.isoformat)
+        body.put("description", description)
+        body.put("entity_type", entity_type)
+        body.put("status", status)
+
+        if image is not undefined.UNDEFINED:
+            image_resource = files.ensure_resource(image)
+            async with image_resource.stream(executor=self._executor) as stream:
+                body.put("image", await stream.data_uri())
+
+        if location is not undefined.UNDEFINED:
+            body["entity_metadata"] = {"location": location}
+
+        response = await self._request(route, json=body, reason=reason)
+        assert isinstance(response, dict)
+        return response
+
+    async def create_external_event(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        name: str,
+        /,
+        location: str,
+        start_time: datetime.datetime,
+        end_time: datetime.datetime,
+        *,
+        description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
+        privacy_level: scheduled_events.EventPiracyLevel = scheduled_events.EventPiracyLevel.GUILD_ONLY,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> scheduled_events.ExternalEvent:
+        route = routes.POST_GUILD_SCHEDULED_EVENT.compile(guild=guild)
+        response = await self._create_or_edit_scheduled_stage(
+            route,
+            scheduled_events.ScheduledEventType.EXTERNAL,
+            name,
+            location=location,
+            start_time=start_time,
+            description=description,
+            end_time=end_time,
+            image=image,
+            privacy_level=privacy_level,
+            reason=reason,
+        )
+        return self._entity_factory.deserialize_external_event(response)
+
+    async def create_stage_event(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        channel: snowflakes.SnowflakeishOr[channels_.PartialChannel],
+        name: str,
+        /,
+        start_time: datetime.datetime,
+        *,
+        description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        end_time: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
+        image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
+        privacy_level: scheduled_events.EventPiracyLevel = scheduled_events.EventPiracyLevel.GUILD_ONLY,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> scheduled_events.StageEvent:
+        route = routes.POST_GUILD_SCHEDULED_EVENT.compile(guild=guild)
+        response = await self._create_or_edit_scheduled_stage(
+            route,
+            scheduled_events.ScheduledEventType.STAGE_INSTANCE,
+            name,
+            channel=channel,
+            start_time=start_time,
+            description=description,
+            end_time=end_time,
+            image=image,
+            privacy_level=privacy_level,
+            reason=reason,
+        )
+        return self._entity_factory.deserialize_stage_event(response)
+
+    async def create_voice_event(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        channel: snowflakes.SnowflakeishOr[channels_.PartialChannel],
+        name: str,
+        /,
+        start_time: datetime.datetime,
+        *,
+        description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        end_time: undefined.UndefinedOr[datetime.datetime],
+        image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
+        privacy_level: scheduled_events.EventPiracyLevel = scheduled_events.EventPiracyLevel.GUILD_ONLY,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> scheduled_events.VoiceEvent:
+        route = routes.POST_GUILD_SCHEDULED_EVENT.compile(guild=guild)
+        response = await self._create_or_edit_scheduled_stage(
+            route,
+            scheduled_events.ScheduledEventType.VOICE,
+            name,
+            channel=channel,
+            start_time=start_time,
+            description=description,
+            end_time=end_time,
+            image=image,
+            privacy_level=privacy_level,
+            reason=reason,
+        )
+        return self._entity_factory.deserialize_voice_event(response)
+
+    async def edit_scheduled_event(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        event: snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent],
+        /,
+        *,
+        channel: undefined.UndefinedNoneOr[snowflakes.SnowflakeishOr[channels_.PartialChannel]] = undefined.UNDEFINED,
+        description: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
+        entity_type: undefined.UndefinedOr[
+            typing.Union[int, scheduled_events.ScheduledEventType]
+        ] = undefined.UNDEFINED,
+        image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
+        location: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        privacy_level: undefined.UndefinedOr[scheduled_events.EventPiracyLevel] = undefined.UNDEFINED,
+        start_time: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
+        end_time: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
+        status: undefined.UndefinedOr[typing.Union[int, scheduled_events.ScheduledEventStatus]] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> scheduled_events.ScheduledEvent:
+        route = routes.PATCH_GUILD_SCHEDULED_EVENT.compile(guild=guild, scheduled_event=event)
+        response = await self._create_or_edit_scheduled_stage(
+            route,
+            entity_type,
+            name,
+            channel=channel,
+            start_time=start_time,
+            description=description,
+            end_time=end_time,
+            image=image,
+            location=location,
+            privacy_level=privacy_level,
+            status=status,
+            reason=reason,
+        )
+        return self._entity_factory.deserialize_scheduled_event(response)
+
+    async def delete_scheduled_event(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        event: snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent],
+        /,
+    ) -> None:
+        route = routes.DELETE_GUILD_SCHEDULED_EVENT.compile(guild=guild, scheduled_event=event)
+
+        await self._request(route)
+
+    def fetch_scheduled_event_users(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        event: snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent],
+        /,
+    ) -> iterators.LazyIterator[scheduled_events.ScheduledEventUser]:
+        ...
