@@ -972,7 +972,6 @@ class InteractionModalBuilder(special_endpoints.InteractionModalBuilder):
     def add_component(
         self: _InteractionModalBuilderT, component: special_endpoints.ComponentBuilder, /
     ) -> _InteractionModalBuilderT:
-        self._component = component
         return self
 
     def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObject:

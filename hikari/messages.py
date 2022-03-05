@@ -530,11 +530,7 @@ class ComponentType(int, enums.Enum):
     """A text input component
 
     !! note
-        This component may only be used in modals.
-
-    !!! note
-        This cannot be top-level and must be within a container component such
-        as `ComponentType.ACTION_ROW`.
+        This component may only be used inside a modal container.
     """
 
 
@@ -606,6 +602,7 @@ class TextInputStyle(int, enums.Enum):
 
     SHORT = 1
     """Intended for short single-line text."""
+
     PARAGRAPH = 2
     """Intended for much longer inputs."""
 

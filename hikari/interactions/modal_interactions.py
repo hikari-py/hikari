@@ -27,7 +27,7 @@ from __future__ import annotations
 __all__: typing.List[str] = [
     "ModalResponseTypesT",
     "ModalInteraction",
-    "ModalInteractionTextInput",
+    "PartialTextInput",
     "ModalInteraction",
 ]
 
@@ -60,7 +60,7 @@ The following types are valid for this:
 
 
 @attr.define(kw_only=True, weakref_slot=False)
-class ModalInteractionTextInput(messages.PartialComponent):
+class PartialTextInput(messages.PartialComponent):
     """A text input component in a modal interaction."""
 
     custom_id: str = attr.field(repr=True)
@@ -76,8 +76,13 @@ class ModalInteractionActionRow(typing.Protocol):
     Meant purely for use with ModalInteraction.
     """
 
+    __slots__ = ()
+
     type: typing.Literal[messages.ComponentType.ACTION_ROW]
-    components: typing.List[ModalInteractionTextInput]
+    """The type of component this is."""
+
+    components: typing.List[PartialTextInput]
+    """Sequence of the components contained within this row."""
 
 
 @attr_extensions.with_copy

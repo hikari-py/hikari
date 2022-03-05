@@ -55,6 +55,7 @@ if typing.TYPE_CHECKING:
     from hikari.interactions import base_interactions
     from hikari.interactions import command_interactions
     from hikari.interactions import component_interactions
+    from hikari.interactions import modal_interactions
     from hikari.internal import data_binding
 
 
@@ -1056,6 +1057,21 @@ class EntityFactory(abc.ABC):
         """
 
     @abc.abstractmethod
+    def deserialize_modal_interaction(self, payload: data_binding.JSONObject) -> modal_interactions.ModalInteraction:
+        """Parse a raw payload from Discord into a modal interaction object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.interactions.modal_interactions.ModalInteraction
+            The deserialized modal interaction object.
+        """
+
+    @abc.abstractmethod
     def deserialize_interaction(self, payload: data_binding.JSONObject) -> base_interactions.PartialInteraction:
         """Parse a raw payload from Discord into a interaction object.
 
@@ -1272,6 +1288,21 @@ class EntityFactory(abc.ABC):
         -------
         hikari.messages.SelectMenuComponent
             The deserialized button component.
+        """
+
+    @abc.abstractmethod
+    def deserialize_text_input(self, payload: data_binding.JSONObject) -> modal_interactions.PartialTextInput:
+        """Parse a raw payload from Discord into a text input component object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.interactions.modal_interactions.PartialTextInput
+            The deserialized text input component.
         """
 
     @abc.abstractmethod

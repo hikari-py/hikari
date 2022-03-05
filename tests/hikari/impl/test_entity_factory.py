@@ -3566,7 +3566,7 @@ class TestEntityFactoryImpl:
         short_action_row = interaction.components[0]
         assert isinstance(short_action_row, message_models.ActionRowComponent)
         short_text_input = short_action_row.components[0]
-        assert isinstance(short_text_input, modal_interactions.ModalInteractionTextInput)
+        assert isinstance(short_text_input, modal_interactions.PartialTextInput)
         assert short_text_input.value == "Wumpus"
         assert short_text_input.type == message_models.ComponentType.TEXT_INPUT
         assert short_text_input.custom_id == "name"

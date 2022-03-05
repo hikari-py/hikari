@@ -57,7 +57,7 @@ class TestModalInteraction:
             guild_locale="en-US",
             components=special_endpoints.ActionRowBuilder(
                 components=[
-                    modal_interactions.ModalInteractionTextInput(
+                    modal_interactions.PartialTextInput(
                         type=messages.ComponentType.TEXT_INPUT, custom_id="le id", value="le value"
                     )
                 ],
