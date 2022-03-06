@@ -1014,6 +1014,109 @@ class Member(users.User):
             reason=reason,
         )
 
+    async def timeout(
+        self,
+        communication_disabled_until: datetime.datetime,
+        *,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> Member:
+        """Puts the Member in timeout.
+
+        Parameters
+        ----------
+        communication_disabled_until : datetime.datetime
+            the datetime when the timeout (disable communication)
+            of the member expires, up to 28 days in the future.
+
+            Requires the `MODERATE_MEMBERS` permission.
+
+        Other Parameters
+        ----------------
+        reason : hikari.undefined.UndefinedOr[builtins.str]
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Returns
+        -------
+        hikari.guilds.Member
+            Object of the member that was updated.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you are missing a permission to do an action.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild or the user are not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        await self.edit(
+            communication_disabled_until=communication_disabled_until,
+            reason=reason
+        )
+
+    async def untimeout(
+        self,
+        *,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> Member:
+        """Takes the Member out of timeout.
+
+        Other Parameters
+        ----------------
+        reason : hikari.undefined.UndefinedOr[builtins.str]
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Returns
+        -------
+        hikari.guilds.Member
+            Object of the member that was updated.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you are missing a permission to do an action.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild or the user are not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        await self.edit(
+            communication_disabled_until=None,
+            reason=reason
+        )
+
     def __str__(self) -> str:
         return str(self.user)
 
