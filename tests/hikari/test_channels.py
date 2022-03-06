@@ -388,6 +388,26 @@ class TestGuildChannel:
             333,
         )
 
+    def test_get_guild(self, model):
+        guild = mock.Mock(id=123456789)
+        model.app.cache.get_guild.side_effect = [guild]
+
+        assert model.get_guild() == guild
+
+        model.app.cache.get_guild.assert_called_once_with(123456789)
+
+    def test_get_guild_when_guild_not_in_cache(self, model):
+        model.app.cache.get_guild.side_effect = [None]
+
+        assert model.get_guild() is None
+
+        model.app.cache.get_guild.assert_called_once_with(123456789)
+
+    def test_get_guild_when_no_cache_trait(self, model):
+        model.app = object()
+
+        assert model.get_guild() is None
+
     @pytest.mark.asyncio()
     async def test_fetch_guild(self, model):
         model.app.rest.fetch_guild = mock.AsyncMock()
