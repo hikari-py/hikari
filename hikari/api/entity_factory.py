@@ -1440,23 +1440,67 @@ class EntityFactory(abc.ABC):
     def deserialize_scheduled_external_event(
         self, payload: data_binding.JSONObject
     ) -> scheduled_events_models.ScheduledExternalEvent:
-        ...
+        """Parse a raw payload from Discord into a scheduled external event object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.scheduled_events.ScheduledExternalEvent
+            The deserialized scheduled external event object.
+        """
 
     @abc.abstractmethod
     def deserialize_scheduled_stage_event(
         self, payload: data_binding.JSONObject
     ) -> scheduled_events_models.ScheduledStageEvent:
-        ...
+        """Parse a raw payload from Discord into a scheduled stage event object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.scheduled_events.ScheduledStageEvent
+            The deserialized scheduled stage event object.
+        """
 
     @abc.abstractmethod
     def deserialize_scheduled_voice_event(
         self, payload: data_binding.JSONObject
     ) -> scheduled_events_models.ScheduledVoiceEvent:
-        ...
+        """Parse a raw payload from Discord into a scheduled voice event object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.scheduled_events.ScheduledVoiceEvent
+            The deserialized scheduled voice event object.
+        """
 
     @abc.abstractmethod
     def deserialize_scheduled_event(self, payload: data_binding.JSONObject) -> scheduled_events_models.ScheduledEvent:
-        ...
+        """Parse a raw payload from Discord into a scheduled event object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.scheduled_events.ScheduledEvent
+            The deserialized scheduled event object.
+        """
 
     @abc.abstractmethod
     def deserialize_scheduled_event_user(
@@ -1465,7 +1509,24 @@ class EntityFactory(abc.ABC):
         *,
         guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> scheduled_events_models.ScheduledEventUser:
-        ...
+        """Parse a raw payload from Discord into a scheduled event user object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Other Parameters
+        ----------------
+        guild_id : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
+            The ID of the guild the user belongs to. If this is specified
+            then it is prioritised over `guild_id` in the payload.
+
+        Returns
+        -------
+        hikari.scheduled_events.ScheduledEventUser
+            The deserialized scheduled event user object.
+        """
 
     ###################
     # TEMPLATE MODELS #

@@ -3564,9 +3564,11 @@ class RESTClientImpl(rest_api.RESTClient):
         location: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         start_time: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
         description: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
-        end_time: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
+        end_time: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
-        privacy_level: undefined.UndefinedOr[scheduled_events.EventPiracyLevel] = undefined.UNDEFINED,
+        privacy_level: undefined.UndefinedOr[
+            typing.Union[int, scheduled_events.EventPiracyLevel]
+        ] = undefined.UNDEFINED,
         status: undefined.UndefinedOr[typing.Union[int, scheduled_events.ScheduledEventStatus]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> data_binding.JSONObject:
@@ -3603,7 +3605,9 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
-        privacy_level: scheduled_events.EventPiracyLevel = scheduled_events.EventPiracyLevel.GUILD_ONLY,
+        privacy_level: typing.Union[
+            int, scheduled_events.EventPiracyLevel
+        ] = scheduled_events.EventPiracyLevel.GUILD_ONLY,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> scheduled_events.ScheduledExternalEvent:
         route = routes.POST_GUILD_SCHEDULED_EVENT.compile(guild=guild)
@@ -3632,7 +3636,9 @@ class RESTClientImpl(rest_api.RESTClient):
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         end_time: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
-        privacy_level: scheduled_events.EventPiracyLevel = scheduled_events.EventPiracyLevel.GUILD_ONLY,
+        privacy_level: typing.Union[
+            int, scheduled_events.EventPiracyLevel
+        ] = scheduled_events.EventPiracyLevel.GUILD_ONLY,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> scheduled_events.ScheduledStageEvent:
         route = routes.POST_GUILD_SCHEDULED_EVENT.compile(guild=guild)
@@ -3661,7 +3667,9 @@ class RESTClientImpl(rest_api.RESTClient):
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         end_time: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
-        privacy_level: scheduled_events.EventPiracyLevel = scheduled_events.EventPiracyLevel.GUILD_ONLY,
+        privacy_level: typing.Union[
+            int, scheduled_events.EventPiracyLevel
+        ] = scheduled_events.EventPiracyLevel.GUILD_ONLY,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> scheduled_events.ScheduledVoiceEvent:
         route = routes.POST_GUILD_SCHEDULED_EVENT.compile(guild=guild)
@@ -3693,13 +3701,23 @@ class RESTClientImpl(rest_api.RESTClient):
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         location: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        privacy_level: undefined.UndefinedOr[scheduled_events.EventPiracyLevel] = undefined.UNDEFINED,
+        privacy_level: undefined.UndefinedOr[
+            typing.Union[int, scheduled_events.EventPiracyLevel]
+        ] = undefined.UNDEFINED,
         start_time: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
-        end_time: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
+        end_time: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
         status: undefined.UndefinedOr[typing.Union[int, scheduled_events.ScheduledEventStatus]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> scheduled_events.ScheduledEvent:
         route = routes.PATCH_GUILD_SCHEDULED_EVENT.compile(guild=guild, scheduled_event=event)
+
+        if entity_type is not undefined.UNDEFINED:
+            entity_type = scheduled_events.ScheduledEventType(entity_type)
+
+            # Yes this does have to be explicitly set to None when changing to EXTERNAL
+            if entity_type is scheduled_events.ScheduledEventType.EXTERNAL and channel is undefined.UNDEFINED:
+                channel = None
+
         response = await self._create_or_edit_scheduled_stage(
             route,
             entity_type,
@@ -3742,6 +3760,6 @@ class RESTClientImpl(rest_api.RESTClient):
         else:
             start_at = int(start_at)
 
-        return special_endpoints_impl.ScheduledEventIterator(
+        return special_endpoints_impl.ScheduledEventUserIterator(
             self._entity_factory, self._request, newest_first, str(start_at), guild, event
         )

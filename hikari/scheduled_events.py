@@ -54,26 +54,49 @@ if typing.TYPE_CHECKING:
 
 
 class EventPiracyLevel(int, enums.Enum):
+    """Enum of the possible scheduled event piracy levels."""
+
     GUILD_ONLY = 2
+    """The scheduled event is only available to guild members."""
 
 
 class ScheduledEventType(int, enums.Enum):
+    """Enum of the scheduled event types."""
+
     STAGE_INSTANCE = 1
+    """A scheduled stage instance."""
+
     VOICE = 2
+    """A scheculed voice chat event."""
+
     EXTERNAL = 3
+    """A scheduled event which takes part outside of Discord."""
 
 
 class ScheduledEventStatus(int, enums.Enum):
+    """Enum of the scheduled event statuses."""
+
     SCHEDULED = 1
+    """Indicates that the scheduled event hasn't occurred yet."""
+
     ACTIVE = 2
+    """Indicates an eventis on-going."""
+
     COMPLETED = 3
+    """Indicates an event has finished."""
+
     CANCELED = 4
+    """Indicates an event has been canceled."""
+
     CANCELLED = CANCELED
+    """Alias of `ScheduledEventStatus.CANCELED`."""
 
 
 @attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
 class ScheduledEvent(snowflakes.Unique):
+    """Base class for scheduled events."""
+
     # entity_id is ignored right now due to always being null
     # creator_id is ignored as it just dupes creator.id
 
@@ -83,18 +106,50 @@ class ScheduledEvent(snowflakes.Unique):
     """The client application that models may use for procedures."""
 
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
+    """ID of the scheduled event."""
+
     guild_id: snowflakes.Snowflake = attr.field(hash=False, repr=True)
+    """ID of the guild this scheduled event belongs to."""
+
     name: str = attr.field(hash=False, repr=True)
+    """Name of the scheduled event."""
+
     description: typing.Optional[str] = attr.field(hash=False, repr=False)
+    """Description of the scheduled event."""
+
     start_time: datetime.datetime = attr.field(hash=False, repr=False)
+    """When the event is scheduled to start."""
+
     end_time: typing.Optional[datetime.datetime] = attr.field(hash=False, repr=False)
+    """When the event is scheduled to end, if set."""
+
     privacy_level: EventPiracyLevel = attr.field(hash=False, repr=False)
+    """Privacy level of the scheduled event.
+
+    This restricts who can view and join the scheduled event.
+    """
+
     status: ScheduledEventStatus = attr.field(hash=False, repr=True)
+    """Status of the scheduled event."""
+
     entity_type: ScheduledEventType = attr.field(hash=False, repr=True)
+    """The type of entity this scheduled event is associated with."""
+
     creator: typing.Optional[users.User] = attr.field(hash=False, repr=False)
+    """The user who created the scheduled event.
+
+    This will only be set for event created after 2021-10-25.
+    """
+
     user_count: typing.Optional[int] = attr.field(hash=False, repr=False)
-    # user_count is None on gateway events and when creating/editing an event
+    """The number of users that have subscribed to the event.
+
+    This will be `builtins.None` on gateway events when creating and
+    editing a scheduled event.
+    """
+
     image_hash: typing.Optional[str] = attr.field(hash=False, repr=False)
+    """Hash of the image used for the scheduled event, if set."""
 
     @property
     def image_url(self) -> typing.Optional[files.URL]:
@@ -138,25 +193,48 @@ class ScheduledEvent(snowflakes.Unique):
 @attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
 class ScheduledExternalEvent(ScheduledEvent):
+    """A scheduled event that takes part outside of Discord."""
+
     location: str = attr.field(hash=False, repr=False)
+    """The location of the scheduled event.
+
+    !!! note
+        There is no strict format for this field, and it will likely be a user
+        friendly string.
+    """
+
     end_time: datetime.datetime = attr.field(hash=False, repr=False)
+    """When the event is scheduled to end."""
 
 
 @attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
 class ScheduledStageEvent(ScheduledEvent):
+    """A scheduled event that takes part in a stage channel."""
+
     channel_id: snowflakes.Snowflake = attr.field(hash=False, repr=False)
+    """ID of the stage channel this event is scheduled in."""
 
 
 @attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
 class ScheduledVoiceEvent(ScheduledEvent):
+    """A scheduled event that takes part in a voice channel."""
+
     channel_id: snowflakes.Snowflake = attr.field(hash=False, repr=False)
+    """ID of the voice channel this scheduled event is in."""
 
 
 @attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
 class ScheduledEventUser:
+    """A user who is subscribed to a scheduled event."""
+
     event_id: snowflakes.Snowflake = attr.field(hash=False, repr=True)
+    """ID of the scheduled event they're subscribed to."""
+
     user: users.User = attr.field(hash=True, repr=True)
+    """Object representing the user."""
+
     member: typing.Optional[guilds.Member] = attr.field(hash=False, repr=False)
+    """Their guild member object if they're in the event's guild."""

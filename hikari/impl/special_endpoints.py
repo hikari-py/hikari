@@ -652,8 +652,8 @@ class MemberIterator(iterators.BufferedLazyIterator["guilds.Member"]):
 # We use an explicit forward reference for this, since this breaks potential
 # circular import issues (once the file has executed, using those resources is
 # not an issue for us).
-class ScheduledEventIterator(iterators.BufferedLazyIterator["scheduled_events.ScheduledEventUser"]):
-    """Implementation of an iterator for retrieving guilds you are in."""
+class ScheduledEventUserIterator(iterators.BufferedLazyIterator["scheduled_events.ScheduledEventUser"]):
+    """Implementation of an iterator for retrieving the users subscribed to a scheduled event."""
 
     __slots__: typing.Sequence[str] = (
         "_entity_factory",

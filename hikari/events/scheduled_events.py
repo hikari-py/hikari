@@ -51,23 +51,27 @@ if typing.TYPE_CHECKING:
 
 @base_events.requires_intents(intents.Intents.GUILD_SCHEDULED_EVENTS)
 class ScheduledEventEvent(shard_events.ShardEvent, abc.ABC):
+    """Event bassed for any scheduled event related events."""
 
     __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod
     def event_id(self) -> snowflakes.Snowflake:
-        ...
+        """ID of the scheduled event."""
 
 
 @attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intents.GUILD_MESSAGE_REACTIONS)
+@base_events.requires_intents(intents.Intents.GUILD_SCHEDULED_EVENTS)
 class ScheduledEventCreateEvent(ScheduledEventEvent):
+    """Event fired when a guild scheduled event is created."""
+
     shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     event: scheduled_events.ScheduledEvent = attr.field()
+    """The scheduled event that was created."""
 
     @property
     def app(self) -> traits.RESTAware:
@@ -82,12 +86,15 @@ class ScheduledEventCreateEvent(ScheduledEventEvent):
 
 @attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intents.GUILD_MESSAGE_REACTIONS)
+@base_events.requires_intents(intents.Intents.GUILD_SCHEDULED_EVENTS)
 class ScheduledEventDeleteEvent(ScheduledEventEvent):
+    """Event fired when a guild scheduled event is deleted."""
+
     shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     event: scheduled_events.ScheduledEvent = attr.field()
+    """The scheduled event that was deleted."""
 
     @property
     def app(self) -> traits.RESTAware:
@@ -102,12 +109,15 @@ class ScheduledEventDeleteEvent(ScheduledEventEvent):
 
 @attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intents.GUILD_MESSAGE_REACTIONS)
+@base_events.requires_intents(intents.Intents.GUILD_SCHEDULED_EVENTS)
 class ScheduledEventUpdateEvent(ScheduledEventEvent):
+    """Event fired when a guild scheduled event is updated."""
+
     shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     event: scheduled_events.ScheduledEvent = attr.field()
+    """The scheduled event that was updated."""
 
     @property
     def app(self) -> traits.RESTAware:
@@ -122,8 +132,10 @@ class ScheduledEventUpdateEvent(ScheduledEventEvent):
 
 @attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intents.GUILD_MESSAGE_REACTIONS)
+@base_events.requires_intents(intents.Intents.GUILD_SCHEDULED_EVENTS)
 class ScheduledEventUserAddEvent(ScheduledEventEvent):
+    """Event fired when a user subscribes to a guild scheduled event."""
+
     app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
@@ -131,16 +143,21 @@ class ScheduledEventUserAddEvent(ScheduledEventEvent):
     # <<inherited docstring from ShardEvent>>.
 
     event_id: snowflakes.Snowflake = attr.field()
+    """ID of the scheduled event that the user was added to."""
 
     user_id: snowflakes.Snowflake = attr.field()
+    """ID of the user that was added to the scheduled event."""
 
     guild_id: snowflakes.Snowflake = attr.field()
+    """ID of the guild that the scheduled event belongs to."""
 
 
 @attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intents.GUILD_MESSAGE_REACTIONS)
+@base_events.requires_intents(intents.Intents.GUILD_SCHEDULED_EVENTS)
 class ScheduledEventUserRemoveEvent(ScheduledEventEvent):
+    """Event fired when a user unsubscribes from a guild scheduled event."""
+
     app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
@@ -148,7 +165,10 @@ class ScheduledEventUserRemoveEvent(ScheduledEventEvent):
     # <<inherited docstring from ShardEvent>>.
 
     event_id: snowflakes.Snowflake = attr.field()
+    """ID of the scheduled event that the user was removed from."""
 
     user_id: snowflakes.Snowflake = attr.field()
+    """ID of the user that was removed from the scheduled event."""
 
     guild_id: snowflakes.Snowflake = attr.field()
+    """ID of the guild that the scheduled event belongs to."""
