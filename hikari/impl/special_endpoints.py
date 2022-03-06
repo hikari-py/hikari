@@ -600,6 +600,9 @@ class OwnGuildIterator(iterators.BufferedLazyIterator["applications.OwnGuild"]):
         if not chunk:
             return None
 
+        if self._newest_first:
+            chunk.reverse()
+
         self._first_id = chunk[-1]["id"]
         return (self._entity_factory.deserialize_own_guild(g) for g in chunk)
 
