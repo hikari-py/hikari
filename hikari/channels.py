@@ -980,7 +980,7 @@ class GuildChannel(PartialChannel):
         Returns
         -------
         typing.Optional[hikari.guilds.Guild]
-            `builtins.None` if the guild is not cached.
+            The linked guild object or `builtins.None` if it's not cached.
         """
         if not isinstance(self.app, traits.CacheAware):
             return None
