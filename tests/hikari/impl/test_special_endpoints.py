@@ -301,11 +301,7 @@ class TestScheduledEventUserIterator:
         assert result == []
         mock_entity_factory.deserialize_scheduled_event_user.assert_not_called()
         query = {"limit": "100", "with_member": "true", "before" if newest_first else "after": "54234123123"}
-        if newest_first:
-            mock_request.assert_awaited_once_with(compiled_route=expected_route, query=query)
-
-        else:
-            mock_request.assert_awaited_once_with(compiled_route=expected_route, query=query)
+        mock_request.assert_awaited_once_with(compiled_route=expected_route, query=query)
 
 
 class TestInteractionDeferredBuilder:
