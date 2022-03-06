@@ -2714,7 +2714,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             entity_type=scheduled_events_models.ScheduledEventType(payload["entity_type"]),
             creator=creator,
             user_count=payload.get("user_count"),
-            image_hash=payload["image"],
+            image_hash=payload.get("image"),
             location=payload["entity_metadata"]["location"],
         )
 
@@ -2727,7 +2727,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         end_time: typing.Optional[datetime.datetime] = None
         if raw_end_time := payload.get("scheduled_end_time"):
-            time.iso8601_datetime_string_to_datetime(raw_end_time)
+            end_time = time.iso8601_datetime_string_to_datetime(raw_end_time)
 
         return scheduled_events_models.ScheduledStageEvent(
             app=self._app,
@@ -2742,7 +2742,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             entity_type=scheduled_events_models.ScheduledEventType(payload["entity_type"]),
             creator=creator,
             user_count=payload.get("user_count"),
-            image_hash=payload["image"],
+            image_hash=payload.get("image"),
             channel_id=snowflakes.Snowflake(payload["channel_id"]),
         )
 
@@ -2755,7 +2755,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         end_time: typing.Optional[datetime.datetime] = None
         if raw_end_time := payload.get("scheduled_end_time"):
-            time.iso8601_datetime_string_to_datetime(raw_end_time)
+            end_time = time.iso8601_datetime_string_to_datetime(raw_end_time)
 
         return scheduled_events_models.ScheduledVoiceEvent(
             app=self._app,
@@ -2770,7 +2770,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             entity_type=scheduled_events_models.ScheduledEventType(payload["entity_type"]),
             creator=creator,
             user_count=payload.get("user_count"),
-            image_hash=payload["image"],
+            image_hash=payload.get("image"),
             channel_id=snowflakes.Snowflake(payload["channel_id"]),
         )
 

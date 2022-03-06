@@ -5,8 +5,10 @@ from typing import Any
 
 from hikari import api as api
 from hikari import applications as applications
+from hikari import events as events
 from hikari import files as files
 from hikari import impl as impl
+from hikari import interactions as interactions
 from hikari import snowflakes as snowflakes
 from hikari import undefined as undefined
 from hikari._about import __author__ as __author__
@@ -43,7 +45,20 @@ from hikari.config import *
 from hikari.embeds import *
 from hikari.emojis import *
 from hikari.errors import *
-from hikari.events import *
+from hikari.events.base_events import *
+from hikari.events.channel_events import *
+from hikari.events.guild_events import *
+from hikari.events.interaction_events import *
+from hikari.events.lifetime_events import *
+from hikari.events.member_events import *
+from hikari.events.message_events import *
+from hikari.events.reaction_events import *
+from hikari.events.role_events import *
+from hikari.events.scheduled_events import *
+from hikari.events.shard_events import *
+from hikari.events.typing_events import *
+from hikari.events.user_events import *
+from hikari.events.voice_events import *
 from hikari.files import URL as URL
 from hikari.files import Bytes as Bytes
 from hikari.files import File as File
@@ -57,7 +72,9 @@ from hikari.impl import GatewayBot as GatewayBot
 from hikari.impl import RESTApp as RESTApp
 from hikari.impl import RESTBot as RESTBot
 from hikari.intents import *
-from hikari.interactions import *
+from hikari.interactions.base_interactions import *
+from hikari.interactions.command_interactions import *
+from hikari.interactions.component_interactions import *
 from hikari.invites import *
 from hikari.iterators import *
 from hikari.messages import *

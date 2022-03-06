@@ -7952,7 +7952,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        description : hikari.undefined.UndefinedNoneOr[str]
+        description : hikari.undefined.UndefinedOr[str]
             The event's description.
         end_time : hikari.undefined.UndefinedOr[datetime.datetime]
             When the event should be scheduled to end.
@@ -8031,7 +8031,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        description : hikari.undefined.UndefinedNoneOr[str]
+        description : hikari.undefined.UndefinedOr[str]
             The event's description.
         end_time : hikari.undefined.UndefinedOr[datetime.datetime]
             When the event should be scheduled to end.
@@ -8112,7 +8112,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        description : hikari.undefined.UndefinedNoneOr[str]
+        description : hikari.undefined.UndefinedOr[str]
             The event's description.
         image : hikari.undefined.UndefinedOr[hikari.files.Resourceish]
             The event's display image.
@@ -8188,7 +8188,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        channel : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.PartialChannel]]
+        channel : hikari.undefined.UndefinedNoneOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.PartialChannel]]
             The channel a `VOICE` or `STAGE` event should be associated with.
         description : hikari.undefined.UndefinedNoneOr[str]
             The event's description.
@@ -8208,7 +8208,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             This effects who can view and subscribe to the event.
         start_time : hikari.undefined.UndefinedOr[datetime.datetime]
             When the event should be scheduled to start.
-        end_time : hikari.undefined.UndefinedOr[datetime.datetime]
+        end_time : hikari.undefined.UndefinedNoneOr[datetime.datetime]
             When the event should be scheduled to end.
 
             This can only be set to `None` for `STAGE` and `VOICE` events.
