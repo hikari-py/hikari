@@ -30,6 +30,7 @@ from hikari import snowflakes
 from hikari import undefined
 from hikari.impl import special_endpoints
 from hikari.interactions import base_interactions
+from hikari.internal import routes
 from tests.hikari import hikari_test_helpers
 
 
@@ -48,6 +49,119 @@ class TestTypingIndicator:
             typing_indicator().__exit__(None, None, None)
         except AttributeError as exc:
             pytest.fail(exc)
+
+
+class TestOwnGuildIterator:
+    @pytest.mark.asyncio()
+    async def test_aiter(self):
+        mock_payload_1 = {"id": "123321123123"}
+        mock_payload_2 = {"id": "123321123666"}
+        mock_payload_3 = {"id": "123321124123"}
+        mock_payload_4 = {"id": "123321124567"}
+        mock_payload_5 = {"id": "12332112432234"}
+        mock_result_1 = mock.Mock()
+        mock_result_2 = mock.Mock()
+        mock_result_3 = mock.Mock()
+        mock_result_4 = mock.Mock()
+        mock_result_5 = mock.Mock()
+        expected_route = routes.GET_MY_GUILDS.compile()
+        mock_entity_factory = mock.Mock()
+        mock_entity_factory.deserialize_own_guild.side_effect = [
+            mock_result_1,
+            mock_result_2,
+            mock_result_3,
+            mock_result_4,
+            mock_result_5,
+        ]
+        mock_request = mock.AsyncMock(
+            side_effect=[[mock_payload_1, mock_payload_2, mock_payload_3], [mock_payload_4, mock_payload_5], []]
+        )
+        iterator = special_endpoints.OwnGuildIterator(mock_entity_factory, mock_request, False, first_id="123321")
+
+        result = await iterator
+
+        assert result == [mock_result_1, mock_result_2, mock_result_3, mock_result_4, mock_result_5]
+        mock_entity_factory.deserialize_own_guild.assert_has_calls(
+            [
+                mock.call(mock_payload_1),
+                mock.call(mock_payload_2),
+                mock.call(mock_payload_3),
+                mock.call(mock_payload_4),
+                mock.call(mock_payload_5),
+            ]
+        )
+        mock_request.assert_has_awaits(
+            [
+                mock.call(compiled_route=expected_route, query={"after": "123321"}),
+                mock.call(compiled_route=expected_route, query={"after": "123321124123"}),
+                mock.call(compiled_route=expected_route, query={"after": "12332112432234"}),
+            ]
+        )
+
+    @pytest.mark.asyncio()
+    async def test_aiter_when_newest_first(self):
+        mock_payload_1 = {"id": "1213321123123"}
+        mock_payload_2 = {"id": "1213321123666"}
+        mock_payload_3 = {"id": "1213321124123"}
+        mock_payload_4 = {"id": "1213321124567"}
+        mock_payload_5 = {"id": "121332112432234"}
+        mock_result_1 = mock.Mock()
+        mock_result_2 = mock.Mock()
+        mock_result_3 = mock.Mock()
+        mock_result_4 = mock.Mock()
+        mock_result_5 = mock.Mock()
+        expected_route = routes.GET_MY_GUILDS.compile()
+        mock_entity_factory = mock.Mock()
+        mock_entity_factory.deserialize_own_guild.side_effect = [
+            mock_result_1,
+            mock_result_2,
+            mock_result_3,
+            mock_result_4,
+            mock_result_5,
+        ]
+        mock_request = mock.AsyncMock(
+            side_effect=[[mock_payload_3, mock_payload_4, mock_payload_5], [mock_payload_1, mock_payload_2], []]
+        )
+        iterator = special_endpoints.OwnGuildIterator(
+            mock_entity_factory, mock_request, True, first_id="55555555555555555"
+        )
+
+        result = await iterator
+
+        assert result == [mock_result_1, mock_result_2, mock_result_3, mock_result_4, mock_result_5]
+        mock_entity_factory.deserialize_own_guild.assert_has_calls(
+            [
+                mock.call(mock_payload_5),
+                mock.call(mock_payload_4),
+                mock.call(mock_payload_3),
+                mock.call(mock_payload_2),
+                mock.call(mock_payload_1),
+            ]
+        )
+        mock_request.assert_has_awaits(
+            [
+                mock.call(compiled_route=expected_route, query={"before": "55555555555555555"}),
+                mock.call(compiled_route=expected_route, query={"before": "1213321124123"}),
+                mock.call(compiled_route=expected_route, query={"before": "1213321123123"}),
+            ]
+        )
+
+    @pytest.mark.parametrize("newest_first", [True, False])
+    @pytest.mark.asyncio()
+    async def test_aiter_when_empty_chunk(self, newest_first: bool):
+        expected_route = routes.GET_MY_GUILDS.compile()
+        mock_entity_factory = mock.Mock()
+        mock_request = mock.AsyncMock(return_value=[])
+        iterator = special_endpoints.OwnGuildIterator(
+            mock_entity_factory, mock_request, newest_first, first_id="123321"
+        )
+
+        result = await iterator
+
+        assert result == []
+        mock_entity_factory.deserialize_own_guild.assert_not_called()
+        query = {"before" if newest_first else "after": "123321"}
+        mock_request.assert_awaited_once_with(compiled_route=expected_route, query=query)
 
 
 class TestInteractionDeferredBuilder:
