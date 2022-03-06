@@ -3567,7 +3567,7 @@ class RESTClientImpl(rest_api.RESTClient):
         end_time: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         privacy_level: undefined.UndefinedOr[
-            typing.Union[int, scheduled_events.EventPiracyLevel]
+            typing.Union[int, scheduled_events.EventPrivacyLevel]
         ] = undefined.UNDEFINED,
         status: undefined.UndefinedOr[typing.Union[int, scheduled_events.ScheduledEventStatus]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -3606,8 +3606,8 @@ class RESTClientImpl(rest_api.RESTClient):
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         privacy_level: typing.Union[
-            int, scheduled_events.EventPiracyLevel
-        ] = scheduled_events.EventPiracyLevel.GUILD_ONLY,
+            int, scheduled_events.EventPrivacyLevel
+        ] = scheduled_events.EventPrivacyLevel.GUILD_ONLY,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> scheduled_events.ScheduledExternalEvent:
         route = routes.POST_GUILD_SCHEDULED_EVENT.compile(guild=guild)
@@ -3637,8 +3637,8 @@ class RESTClientImpl(rest_api.RESTClient):
         end_time: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         privacy_level: typing.Union[
-            int, scheduled_events.EventPiracyLevel
-        ] = scheduled_events.EventPiracyLevel.GUILD_ONLY,
+            int, scheduled_events.EventPrivacyLevel
+        ] = scheduled_events.EventPrivacyLevel.GUILD_ONLY,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> scheduled_events.ScheduledStageEvent:
         route = routes.POST_GUILD_SCHEDULED_EVENT.compile(guild=guild)
@@ -3668,8 +3668,8 @@ class RESTClientImpl(rest_api.RESTClient):
         end_time: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         privacy_level: typing.Union[
-            int, scheduled_events.EventPiracyLevel
-        ] = scheduled_events.EventPiracyLevel.GUILD_ONLY,
+            int, scheduled_events.EventPrivacyLevel
+        ] = scheduled_events.EventPrivacyLevel.GUILD_ONLY,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> scheduled_events.ScheduledVoiceEvent:
         route = routes.POST_GUILD_SCHEDULED_EVENT.compile(guild=guild)
@@ -3702,7 +3702,7 @@ class RESTClientImpl(rest_api.RESTClient):
         location: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         privacy_level: undefined.UndefinedOr[
-            typing.Union[int, scheduled_events.EventPiracyLevel]
+            typing.Union[int, scheduled_events.EventPrivacyLevel]
         ] = undefined.UNDEFINED,
         start_time: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
         end_time: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,

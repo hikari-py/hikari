@@ -24,7 +24,7 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = [
-    "EventPiracyLevel",
+    "EventPrivacyLevel",
     "ScheduledEventType",
     "ScheduledEventStatus",
     "ScheduledEvent",
@@ -53,8 +53,8 @@ if typing.TYPE_CHECKING:
     from hikari import users
 
 
-class EventPiracyLevel(int, enums.Enum):
-    """Enum of the possible scheduled event piracy levels."""
+class EventPrivacyLevel(int, enums.Enum):
+    """Enum of the possible scheduled event privacy levels."""
 
     GUILD_ONLY = 2
     """The scheduled event is only available to guild members."""
@@ -123,7 +123,7 @@ class ScheduledEvent(snowflakes.Unique):
     end_time: typing.Optional[datetime.datetime] = attr.field(hash=False, repr=False)
     """When the event is scheduled to end, if set."""
 
-    privacy_level: EventPiracyLevel = attr.field(hash=False, repr=False)
+    privacy_level: EventPrivacyLevel = attr.field(hash=False, repr=False)
     """Privacy level of the scheduled event.
 
     This restricts who can view and join the scheduled event.
@@ -154,9 +154,9 @@ class ScheduledEvent(snowflakes.Unique):
     @property
     def image_url(self) -> typing.Optional[files.URL]:
         """Cover image for this scheduled event, if set."""
-        return self.make_icon_url()
+        return self.make_image_url()
 
-    def make_icon_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+    def make_image_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the cover image for this scheduled event, if set.
 
         Parameters
@@ -193,7 +193,7 @@ class ScheduledEvent(snowflakes.Unique):
 @attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
 class ScheduledExternalEvent(ScheduledEvent):
-    """A scheduled event that takes part outside of Discord."""
+    """A scheduled event that takes place outside of Discord."""
 
     location: str = attr.field(hash=False, repr=False)
     """The location of the scheduled event.
@@ -210,7 +210,7 @@ class ScheduledExternalEvent(ScheduledEvent):
 @attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
 class ScheduledStageEvent(ScheduledEvent):
-    """A scheduled event that takes part in a stage channel."""
+    """A scheduled event that takes place in a stage channel."""
 
     channel_id: snowflakes.Snowflake = attr.field(hash=False, repr=False)
     """ID of the stage channel this event is scheduled in."""
@@ -219,7 +219,7 @@ class ScheduledStageEvent(ScheduledEvent):
 @attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
 class ScheduledVoiceEvent(ScheduledEvent):
-    """A scheduled event that takes part in a voice channel."""
+    """A scheduled event that takes place in a voice channel."""
 
     channel_id: snowflakes.Snowflake = attr.field(hash=False, repr=False)
     """ID of the voice channel this scheduled event is in."""

@@ -7933,8 +7933,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         end_time: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         privacy_level: typing.Union[
-            int, scheduled_events.EventPiracyLevel
-        ] = scheduled_events.EventPiracyLevel.GUILD_ONLY,
+            int, scheduled_events.EventPrivacyLevel
+        ] = scheduled_events.EventPrivacyLevel.GUILD_ONLY,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> scheduled_events.ScheduledStageEvent:
         """Create a scheduled stage event.
@@ -7958,7 +7958,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             When the event should be scheduled to end.
         image : hikari.undefined.UndefinedOr[hikari.files.Resourceish]
             The event's display image.
-        privacy_level : hikari.undefined.UndefinedOr[hikari.scheduled_events.EventPiracyLevel]
+        privacy_level : hikari.undefined.UndefinedOr[hikari.scheduled_events.EventPrivacyLevel]
             The event's privacy level.
 
             This effects who can view and subscribe to the event.
@@ -8012,8 +8012,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         end_time: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         privacy_level: typing.Union[
-            int, scheduled_events.EventPiracyLevel
-        ] = scheduled_events.EventPiracyLevel.GUILD_ONLY,
+            int, scheduled_events.EventPrivacyLevel
+        ] = scheduled_events.EventPrivacyLevel.GUILD_ONLY,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> scheduled_events.ScheduledVoiceEvent:
         """Create a scheduled voice event.
@@ -8037,7 +8037,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             When the event should be scheduled to end.
         image : hikari.undefined.UndefinedOr[hikari.files.Resourceish]
             The event's display image.
-        privacy_level : hikari.undefined.UndefinedOr[hikari.scheduled_events.EventPiracyLevel]
+        privacy_level : hikari.undefined.UndefinedOr[hikari.scheduled_events.EventPrivacyLevel]
             The event's privacy level.
 
             This effects who can view and subscribe to the event.
@@ -8091,8 +8091,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         privacy_level: typing.Union[
-            int, scheduled_events.EventPiracyLevel
-        ] = scheduled_events.EventPiracyLevel.GUILD_ONLY,
+            int, scheduled_events.EventPrivacyLevel
+        ] = scheduled_events.EventPrivacyLevel.GUILD_ONLY,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> scheduled_events.ScheduledExternalEvent:
         """Create a scheduled external event.
@@ -8116,7 +8116,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The event's description.
         image : hikari.undefined.UndefinedOr[hikari.files.Resourceish]
             The event's display image.
-        privacy_level : hikari.undefined.UndefinedOr[hikari.scheduled_events.EventPiracyLevel]
+        privacy_level : hikari.undefined.UndefinedOr[hikari.scheduled_events.EventPrivacyLevel]
             The event's privacy level.
 
             This effects who can view and subscribe to the event.
@@ -8170,7 +8170,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         location: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         privacy_level: undefined.UndefinedOr[
-            typing.Union[int, scheduled_events.EventPiracyLevel]
+            typing.Union[int, scheduled_events.EventPrivacyLevel]
         ] = undefined.UNDEFINED,
         start_time: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
         end_time: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
@@ -8202,7 +8202,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Must be passed when changing an event to `EXTERNAL`.
         name : hikari.undefined.UndefinedOr[str]
             The event's name.
-        privacy_level : hikari.undefined.UndefinedOr[hikari.scheduled_events.EventPiracyLevel]
+        privacy_level : hikari.undefined.UndefinedOr[hikari.scheduled_events.EventPrivacyLevel]
             The event's privacy level.
 
             This effects who can view and subscribe to the event.
