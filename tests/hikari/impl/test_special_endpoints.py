@@ -166,7 +166,7 @@ class TestOwnGuildIterator:
 
 class TestScheduledEventUserIterator:
     @pytest.mark.asyncio()
-    async def test__next_chunk(self):
+    async def test_aiter(self):
         expected_route = routes.GET_GUILD_SCHEDULED_EVENT_USERS.compile(guild=54123, scheduled_event=564123)
         mock_entity_factory = mock.Mock()
         mock_payload_1 = {"user": {"id": "45234"}}
@@ -223,7 +223,7 @@ class TestScheduledEventUserIterator:
         )
 
     @pytest.mark.asyncio()
-    async def test__next_chunk_when_newest_first(self):
+    async def test_aiter_when_newest_first(self):
         expected_route = routes.GET_GUILD_SCHEDULED_EVENT_USERS.compile(guild=54123, scheduled_event=564123)
         mock_entity_factory = mock.Mock()
         mock_payload_1 = {"user": {"id": "432234"}}
@@ -283,7 +283,7 @@ class TestScheduledEventUserIterator:
 
     @pytest.mark.parametrize("newest_first", [True, False])
     @pytest.mark.asyncio()
-    async def test__next_chunk_when_empty_chunk(self, newest_first: bool):
+    async def test_aiter_when_empty_chunk(self, newest_first: bool):
         expected_route = routes.GET_GUILD_SCHEDULED_EVENT_USERS.compile(guild=543123, scheduled_event=541234)
         mock_entity_factory = mock.Mock()
         mock_request = mock.AsyncMock(return_value=[])
