@@ -528,7 +528,7 @@ class Member(users.User):
         Returns
         -------
         typing.Optional[hikari.guilds.Guild]
-            `builtins.None` if the the guild is not cached.
+            The linked guild object or `builtins.None` if it's not cached.
         """
         if not isinstance(self.user.app, traits.CacheAware):
             return None
