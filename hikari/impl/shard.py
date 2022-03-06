@@ -177,53 +177,60 @@ class _GatewayTransport(aiohttp.ClientWebSocketResponse):
         await self.send_str(pl, compress)
 
     async def _receive_and_check(self, timeout: typing.Optional[float], /) -> str:
-        buff = bytearray()
+        message = await self.receive(timeout)
+
+        if message.type == aiohttp.WSMsgType.TEXT:
+            assert isinstance(message.data, str)
+            return message.data
+
+        if message.type == aiohttp.WSMsgType.BINARY:
+            return await self._receive_and_check_complete_zlib_package(message.data, timeout)
+
+        if message.type == aiohttp.WSMsgType.CLOSE:
+            close_code = int(message.data)
+            reason = message.extra
+            self.logger.error("connection closed with code %s (%s)", close_code, reason)
+
+            can_reconnect = close_code < 4000 or close_code in (
+                errors.ShardCloseCode.UNKNOWN_ERROR,
+                errors.ShardCloseCode.DECODE_ERROR,
+                errors.ShardCloseCode.INVALID_SEQ,
+                errors.ShardCloseCode.SESSION_TIMEOUT,
+                errors.ShardCloseCode.RATE_LIMITED,
+            )
+
+            raise errors.GatewayServerClosedConnectionError(reason, close_code, can_reconnect)
+
+        if message.type == aiohttp.WSMsgType.CLOSING or message.type == aiohttp.WSMsgType.CLOSED:
+            # May be caused by the server shutting us down.
+            # May be caused by Windows injecting an EOF if something disconnects, as some
+            # network drivers appear to do this.
+            raise errors.GatewayConnectionError("Socket has closed")
+
+        # Assume exception for now.
+        ex = self.exception()
+        self.logger.warning(
+            "encountered unexpected error: %s",
+            ex,
+            exc_info=ex if self.logger.isEnabledFor(logging.DEBUG) else None,
+        )
+        raise errors.GatewayError("Unexpected websocket exception from gateway") from ex
+
+    async def _receive_and_check_complete_zlib_package(
+        self, initial_data: bytes, timeout: typing.Optional[float], /
+    ) -> str:
+        buff = bytearray(initial_data)
 
         while True:
             message = await self.receive(timeout)
 
-            if message.type == aiohttp.WSMsgType.CLOSE:
-                close_code = int(message.data)
-                reason = message.extra
-                self.logger.error("connection closed with code %s (%s)", close_code, reason)
-
-                can_reconnect = close_code < 4000 or close_code in (
-                    errors.ShardCloseCode.UNKNOWN_ERROR,
-                    errors.ShardCloseCode.DECODE_ERROR,
-                    errors.ShardCloseCode.INVALID_SEQ,
-                    errors.ShardCloseCode.SESSION_TIMEOUT,
-                    errors.ShardCloseCode.RATE_LIMITED,
-                )
-
-                raise errors.GatewayServerClosedConnectionError(reason, close_code, can_reconnect)
-
-            elif message.type == aiohttp.WSMsgType.CLOSING or message.type == aiohttp.WSMsgType.CLOSED:
-                # May be caused by the server shutting us down.
-                # May be caused by Windows injecting an EOF if something disconnects, as some
-                # network drivers appear to do this.
-                raise errors.GatewayConnectionError("Socket has closed")
-
-            elif len(buff) != 0 and message.type != aiohttp.WSMsgType.BINARY:
+            if message.type != aiohttp.WSMsgType.BINARY:
                 raise errors.GatewayError(f"Unexpected message type received {message.type.name}, expected BINARY")
 
-            elif message.type == aiohttp.WSMsgType.BINARY:
-                buff.extend(message.data)
+            buff.extend(message.data)
 
-                if buff.endswith(b"\x00\x00\xff\xff"):
-                    return self.zlib.decompress(buff).decode("utf-8")
-
-            elif message.type == aiohttp.WSMsgType.TEXT:
-                return message.data  # type: ignore
-
-            else:
-                # Assume exception for now.
-                ex = self.exception()
-                self.logger.warning(
-                    "encountered unexpected error: %s",
-                    ex,
-                    exc_info=ex if self.logger.isEnabledFor(logging.DEBUG) else None,
-                )
-                raise errors.GatewayError("Unexpected websocket exception from gateway") from ex
+            if buff.endswith(b"\x00\x00\xff\xff"):
+                return self.zlib.decompress(buff).decode("utf-8")
 
     @classmethod
     @contextlib.asynccontextmanager
