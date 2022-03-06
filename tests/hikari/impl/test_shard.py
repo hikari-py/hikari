@@ -206,27 +206,17 @@ class TestGatewayTransport:
 
     @pytest.mark.asyncio()
     async def test__receive_and_check_when_message_type_is_BINARY(self, transport_impl):
-        response1 = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"some")
-        response2 = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"data")
-        response3 = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"\x00\x00\xff\xff")
-        transport_impl.receive = mock.AsyncMock(side_effect=[response1, response2, response3])
-        transport_impl.zlib = mock.Mock(decompress=mock.Mock(return_value=b"utf-8 encoded bytes"))
+        response = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"some initial data")
+        transport_impl.receive = mock.AsyncMock(return_value=response)
+        transport_impl._receive_and_check_complete_zlib_package = mock.AsyncMock()
 
-        assert await transport_impl._receive_and_check(10) == "utf-8 encoded bytes"
-
-        transport_impl.receive.assert_awaited_with(10)
-        transport_impl.zlib.decompress.assert_called_once_with(bytearray(b"somedata\x00\x00\xff\xff"))
-
-    @pytest.mark.asyncio()
-    async def test__receive_and_check_when_buff_but_next_is_not_BINARY(self, transport_impl):
-        response1 = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"some")
-        response2 = StubResponse(type=aiohttp.WSMsgType.TEXT)
-        transport_impl.receive = mock.AsyncMock(side_effect=[response1, response2])
-
-        with pytest.raises(errors.GatewayError, match="Unexpected message type received TEXT, expected BINARY"):
+        assert (
             await transport_impl._receive_and_check(10)
+            == transport_impl._receive_and_check_complete_zlib_package.return_value
+        )
 
-        transport_impl.receive.assert_awaited_with(10)
+        transport_impl.receive.assert_awaited_once_with(10)
+        transport_impl._receive_and_check_complete_zlib_package.assert_awaited_once_with(b"some initial data", 10)
 
     @pytest.mark.asyncio()
     async def test__receive_and_check_when_message_type_is_TEXT(self, transport_impl):
@@ -247,6 +237,32 @@ class TestGatewayTransport:
             await transport_impl._receive_and_check(10)
 
         transport_impl.receive.assert_awaited_once_with(10)
+
+    @pytest.mark.asyncio()
+    async def test__receive_and_check_complete_zlib_package_when_not_BINARY(self, transport_impl):
+        response = StubResponse(type=aiohttp.WSMsgType.TEXT, data="not binary")
+        transport_impl.receive = mock.AsyncMock(return_value=response)
+
+        with pytest.raises(errors.GatewayError, match="Unexpected message type received TEXT, expected BINARY"):
+            await transport_impl._receive_and_check_complete_zlib_package(b"some", 10)
+
+        transport_impl.receive.assert_awaited_with(10)
+
+    @pytest.mark.asyncio()
+    async def test__receive_and_check_complete_zlib_package(self, transport_impl):
+        response1 = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"more")
+        response2 = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"data")
+        response3 = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"\x00\x00\xff\xff")
+        transport_impl.receive = mock.AsyncMock(side_effect=[response1, response2, response3])
+        transport_impl.zlib = mock.Mock(decompress=mock.Mock(return_value=b"decoded utf-8 encoded bytes"))
+
+        assert (
+            await transport_impl._receive_and_check_complete_zlib_package(b"some", 10) == "decoded utf-8 encoded bytes"
+        )
+
+        assert transport_impl.receive.call_count == 3
+        transport_impl.receive.assert_has_awaits([mock.call(10), mock.call(10), mock.call(10)])
+        transport_impl.zlib.decompress.assert_called_once_with(bytearray(b"somemoredata\x00\x00\xff\xff"))
 
     @pytest.mark.asyncio()
     async def test_connect_yields_websocket(self, http_settings, proxy_settings):
