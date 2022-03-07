@@ -23,9 +23,7 @@
 """Events fired for interaction related changes."""
 from __future__ import annotations
 
-__all__: typing.List[str] = [
-    "InteractionCreateEvent",
-]
+__all__: typing.List[str] = ["InteractionCreateEvent"]
 
 import typing
 
