@@ -98,6 +98,18 @@ _TOTAL_RATELIMIT: typing.Final[typing.Tuple[float, int]] = (60.0, 120)
 _CHUNKING_RATELIMIT: typing.Final[typing.Tuple[float, int]] = (60.0, 60)
 # Supported gateway version
 _VERSION: int = 8
+# Used to identify the end of a ZLIB payload
+_ZLIB_SUFFIX: typing.Final[bytes] = b"\x00\x00\xff\xff"
+# Close codes which don't invalidate the current session.
+_RECONNECTABLE_CLOSE_CODES = frozenset(
+    (
+        errors.ShardCloseCode.UNKNOWN_ERROR,
+        errors.ShardCloseCode.DECODE_ERROR,
+        errors.ShardCloseCode.INVALID_SEQ,
+        errors.ShardCloseCode.SESSION_TIMEOUT,
+        errors.ShardCloseCode.RATE_LIMITED,
+    )
+)
 
 
 def _log_filterer(token: str) -> typing.Callable[[str], str]:
@@ -110,17 +122,6 @@ def _log_filterer(token: str) -> typing.Callable[[str], str]:
 if typing.TYPE_CHECKING:
     # noinspection PyProtectedMember,PyUnresolvedReferences
     _ZlibDecompressor = zlib._Decompress
-
-
-_RECONNECTABLE_CLOSE_CODES = frozenset(
-    (
-        errors.ShardCloseCode.UNKNOWN_ERROR,
-        errors.ShardCloseCode.DECODE_ERROR,
-        errors.ShardCloseCode.INVALID_SEQ,
-        errors.ShardCloseCode.SESSION_TIMEOUT,
-        errors.ShardCloseCode.RATE_LIMITED,
-    )
-)
 
 
 # aiohttp.ClientWebSocketResponse isn't slotted
@@ -195,7 +196,7 @@ class _GatewayTransport(aiohttp.ClientWebSocketResponse):
             return message.data
 
         if message.type == aiohttp.WSMsgType.BINARY:
-            if message.data.endswith(b"\x00\x00\xff\xff"):
+            if message.data.endswith(_ZLIB_SUFFIX):
                 return self.zlib.decompress(message.data).decode("utf-8")
 
             return await self._receive_and_check_complete_zlib_package(message.data, timeout)
@@ -227,7 +228,7 @@ class _GatewayTransport(aiohttp.ClientWebSocketResponse):
     ) -> str:
         buff = bytearray(initial_data)
 
-        while not buff.endswith(b"\x00\x00\xff\xff"):
+        while not buff.endswith(_ZLIB_SUFFIX):
             message = await self.receive(timeout)
 
             if message.type == aiohttp.WSMsgType.BINARY:
