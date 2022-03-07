@@ -79,6 +79,7 @@ norecursedirs = [
     "ci",
 ]
 filterwarnings = ["ignore:.*assertions not in test modules or plugins will be ignored because assert statements are not executed by the underlying Python interpreter.*:pytest.PytestConfigWarning"]
+required_plugins = ["pytest-asyncio"]
 
 [tool.towncrier]
 package = "hikari"
