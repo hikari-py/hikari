@@ -197,9 +197,9 @@ class TestGatewayTransport:
             await transport_impl._handle_other_message(stub_response)
 
     @pytest.mark.asyncio()
-    async def test__receive_and_check_when_message_type_is_unknown(self, transport_impl):
+    async def test__handle_other_message_when_message_type_is_unknown(self, transport_impl):
         stub_response = mock.AsyncMock(return_value=StubResponse(type=aiohttp.WSMsgType.ERROR))
-        transport_impl.exception = mock.Mock(return_value=Exception)
+        transport_impl.exception = mock.Mock(return_value=Exception("some error"))
 
         with pytest.raises(errors.GatewayError, match="Unexpected websocket exception from gateway") as exc_info:
             await transport_impl._handle_other_message(stub_response)
@@ -243,11 +243,11 @@ class TestGatewayTransport:
 
     @pytest.mark.asyncio()
     async def test__receive_and_check_when_message_type_is_unknown(self, transport_impl):
-        mock_exception = Exception("aye")
+        mock_exception = errors.GatewayError("aye")
         transport_impl.receive = mock.AsyncMock(return_value=StubResponse(type=aiohttp.WSMsgType.ERROR))
         transport_impl._handle_other_message = mock.Mock(side_effect=mock_exception)
 
-        with pytest.raises(Exception) as exc_info:
+        with pytest.raises(errors.GatewayError) as exc_info:
             await transport_impl._receive_and_check(10)
 
         assert exc_info.value is mock_exception
@@ -258,7 +258,6 @@ class TestGatewayTransport:
     async def test__receive_and_check_complete_zlib_package_when_TEXT(self, transport_impl):
         response = StubResponse(type=aiohttp.WSMsgType.TEXT, data="not binary")
         transport_impl.receive = mock.AsyncMock(return_value=response)
-        transport_impl._exception = None
 
         with pytest.raises(errors.GatewayError, match="Unexpected message type received TEXT, expected BINARY"):
             await transport_impl._receive_and_check_complete_zlib_package(b"some", 10)
@@ -267,12 +266,12 @@ class TestGatewayTransport:
 
     @pytest.mark.asyncio()
     async def test__receive_and_check_complete_zlib_package_for_unexpected_message_type(self, transport_impl):
-        mock_exception = Exception("aye")
+        mock_exception = errors.GatewayError("aye")
         response = StubResponse(type=aiohttp.WSMsgType.CLOSE)
         transport_impl.receive = mock.AsyncMock(return_value=response)
         transport_impl._handle_other_message = mock.Mock(side_effect=mock_exception)
 
-        with pytest.raises(Exception) as exc_info:
+        with pytest.raises(errors.GatewayError) as exc_info:
             await transport_impl._receive_and_check_complete_zlib_package(b"some", 10)
 
         assert exc_info.value is mock_exception
