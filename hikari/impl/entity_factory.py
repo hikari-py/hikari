@@ -72,6 +72,7 @@ _interaction_option_type_mapping: typing.Dict[int, typing.Callable[[typing.Any],
     commands.OptionType.CHANNEL: snowflakes.Snowflake,
     commands.OptionType.ROLE: snowflakes.Snowflake,
     commands.OptionType.MENTIONABLE: snowflakes.Snowflake,
+    commands.OptionType.ATTACHMENT: snowflakes.Snowflake,
 }
 
 
