@@ -219,6 +219,19 @@ class TestGatewayTransport:
         transport_impl._receive_and_check_complete_zlib_package.assert_awaited_once_with(b"some initial data", 10)
 
     @pytest.mark.asyncio()
+    async def test__receive_and_check_when_message_type_is_BINARY_and_the_full_payload(self, transport_impl):
+        response = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"some initial data\x00\x00\xff\xff")
+        transport_impl.receive = mock.AsyncMock(return_value=response)
+        transport_impl._receive_and_check_complete_zlib_package = mock.AsyncMock()
+        transport_impl.zlib = mock.Mock(decompress=mock.Mock(return_value=b"aaaaaaaaaaaaaaaaaa"))
+
+        assert await transport_impl._receive_and_check(10) == "aaaaaaaaaaaaaaaaaa"
+
+        transport_impl.receive.assert_awaited_once_with(10)
+        transport_impl._receive_and_check_complete_zlib_package.assert_not_called()
+        transport_impl.zlib.decompress.assert_called_once_with(response.data)
+
+    @pytest.mark.asyncio()
     async def test__receive_and_check_when_message_type_is_TEXT(self, transport_impl):
         transport_impl.receive = mock.AsyncMock(
             return_value=StubResponse(type=aiohttp.WSMsgType.TEXT, data="some text")
