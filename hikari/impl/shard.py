@@ -188,19 +188,7 @@ class _GatewayTransport(aiohttp.ClientWebSocketResponse):
             self.logger.log(ux.TRACE, "sending payload with size %s\n    %s", len(pl), filtered)
         await self.send_str(pl, compress)
 
-    async def _receive_and_check(self, timeout: typing.Optional[float], /) -> str:
-        message = await self.receive(timeout)
-
-        if message.type == aiohttp.WSMsgType.TEXT:
-            assert isinstance(message.data, str)
-            return message.data
-
-        if message.type == aiohttp.WSMsgType.BINARY:
-            if message.data.endswith(_ZLIB_SUFFIX):
-                return self.zlib.decompress(message.data).decode("utf-8")
-
-            return await self._receive_and_check_complete_zlib_package(message.data, timeout)
-
+    def _handle_other_message(self, message: aiohttp.WSMessage, /) -> typing.NoReturn:
         if message.type == aiohttp.WSMsgType.CLOSE:
             close_code = int(message.data)
             reason = message.extra
@@ -223,6 +211,21 @@ class _GatewayTransport(aiohttp.ClientWebSocketResponse):
         )
         raise errors.GatewayError("Unexpected websocket exception from gateway") from ex
 
+    async def _receive_and_check(self, timeout: typing.Optional[float], /) -> str:
+        message = await self.receive(timeout)
+
+        if message.type == aiohttp.WSMsgType.TEXT:
+            assert isinstance(message.data, str)
+            return message.data
+
+        if message.type == aiohttp.WSMsgType.BINARY:
+            if message.data.endswith(_ZLIB_SUFFIX):
+                return self.zlib.decompress(message.data).decode("utf-8")
+
+            return await self._receive_and_check_complete_zlib_package(message.data, timeout)
+
+        self._handle_other_message(message)
+
     async def _receive_and_check_complete_zlib_package(
         self, initial_data: bytes, timeout: typing.Optional[float], /
     ) -> str:
@@ -235,9 +238,10 @@ class _GatewayTransport(aiohttp.ClientWebSocketResponse):
                 buff.extend(message.data)
                 continue
 
-            raise errors.GatewayError(
-                f"Unexpected message type received {message.type.name}, expected BINARY"
-            ) from self.exception()
+            if message.type == aiohttp.WSMsgType.TEXT:
+                raise errors.GatewayError("Unexpected message type received TEXT, expected BINARY")
+
+            self._handle_other_message(message)
 
         return self.zlib.decompress(buff).decode("utf-8")
 
