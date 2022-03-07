@@ -101,7 +101,7 @@ _VERSION: int = 8
 # Used to identify the end of a ZLIB payload
 _ZLIB_SUFFIX: typing.Final[bytes] = b"\x00\x00\xff\xff"
 # Close codes which don't invalidate the current session.
-_RECONNECTABLE_CLOSE_CODES: typing.Final[frozenset[errors.ShardCloseCode]] = frozenset(
+_RECONNECTABLE_CLOSE_CODES: typing.Final[typing.Frozenset[errors.ShardCloseCode]] = frozenset(
     (
         errors.ShardCloseCode.UNKNOWN_ERROR,
         errors.ShardCloseCode.DECODE_ERROR,
