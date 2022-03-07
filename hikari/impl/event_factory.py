@@ -46,6 +46,7 @@ from hikari.events import member_events
 from hikari.events import message_events
 from hikari.events import reaction_events
 from hikari.events import role_events
+from hikari.events import scheduled_events
 from hikari.events import shard_events
 from hikari.events import typing_events
 from hikari.events import user_events
@@ -448,6 +449,66 @@ class EventFactoryImpl(event_factory.EventFactory):
             guild_id=snowflakes.Snowflake(payload["guild_id"]),
             role_id=snowflakes.Snowflake(payload["role_id"]),
             old_role=old_role,
+        )
+
+    ##########################
+    # SCHEDULED EVENT EVENTS #
+    ##########################
+
+    def deserialize_scheduled_event_create_event(
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+    ) -> scheduled_events.ScheduledEventCreateEvent:
+        return scheduled_events.ScheduledEventCreateEvent(
+            shard=shard,
+            event=self._app.entity_factory.deserialize_scheduled_event(payload),
+        )
+
+    def deserialize_scheduled_event_update_event(
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+    ) -> scheduled_events.ScheduledEventUpdateEvent:
+        return scheduled_events.ScheduledEventUpdateEvent(
+            shard=shard,
+            event=self._app.entity_factory.deserialize_scheduled_event(payload),
+        )
+
+    def deserialize_scheduled_event_delete_event(
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+    ) -> scheduled_events.ScheduledEventDeleteEvent:
+        return scheduled_events.ScheduledEventDeleteEvent(
+            shard=shard,
+            event=self._app.entity_factory.deserialize_scheduled_event(payload),
+        )
+
+    def deserialize_scheduled_event_user_add_event(
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+    ) -> scheduled_events.ScheduledEventUserAddEvent:
+        return scheduled_events.ScheduledEventUserAddEvent(
+            app=self._app,
+            shard=shard,
+            event_id=snowflakes.Snowflake(payload["guild_scheduled_event_id"]),
+            user_id=snowflakes.Snowflake(payload["user_id"]),
+            guild_id=snowflakes.Snowflake(payload["guild_id"]),
+        )
+
+    def deserialize_scheduled_event_user_remove_event(
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+    ) -> scheduled_events.ScheduledEventUserRemoveEvent:
+        return scheduled_events.ScheduledEventUserRemoveEvent(
+            app=self._app,
+            shard=shard,
+            event_id=snowflakes.Snowflake(payload["guild_scheduled_event_id"]),
+            user_id=snowflakes.Snowflake(payload["user_id"]),
+            guild_id=snowflakes.Snowflake(payload["guild_id"]),
         )
 
     ###################

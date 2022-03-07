@@ -48,6 +48,7 @@ if typing.TYPE_CHECKING:
     from hikari.events import message_events
     from hikari.events import reaction_events
     from hikari.events import role_events
+    from hikari.events import scheduled_events
     from hikari.events import shard_events
     from hikari.events import typing_events
     from hikari.events import user_events
@@ -687,6 +688,115 @@ class EventFactory(abc.ABC):
         -------
         hikari.events.role_events.RoleDeleteEvent
             The parsed guild role delete event object.
+        """
+
+    ##########################
+    # SCHEDULED EVENT EVENTS #
+    ##########################
+
+    @abc.abstractmethod
+    def deserialize_scheduled_event_create_event(
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+    ) -> scheduled_events.ScheduledEventCreateEvent:
+        """Parse a raw payload from Discord into a scheduled event create event object.
+
+        Parameters
+        ----------
+        shard : hikari.api.shard.GatewayShard
+            The shard that emitted this event.
+        payload : hikari.internal.data_binding.JSONObject
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.scheduled_events.ScheduledEventCreateEvent
+            The parsed scheduled event create event object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_scheduled_event_update_event(
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+    ) -> scheduled_events.ScheduledEventUpdateEvent:
+        """Parse a raw payload from Discord into a scheduled event update event object.
+
+        Parameters
+        ----------
+        shard : hikari.api.shard.GatewayShard
+            The shard that emitted this event.
+        payload : hikari.internal.data_binding.JSONObject
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.scheduled_events.ScheduledEventUpdateEvent
+            The parsed scheduled event update event object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_scheduled_event_delete_event(
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+    ) -> scheduled_events.ScheduledEventDeleteEvent:
+        """Parse a raw payload from Discord into a scheduled event delete event object.
+
+        Parameters
+        ----------
+        shard : hikari.api.shard.GatewayShard
+            The shard that emitted this event.
+        payload : hikari.internal.data_binding.JSONObject
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.scheduled_events.ScheduledEventDeleteEvent
+            The parsed scheduled event delete event object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_scheduled_event_user_add_event(
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+    ) -> scheduled_events.ScheduledEventUserAddEvent:
+        """Parse a raw payload from Discord into a scheduled event user add event object.
+
+        Parameters
+        ----------
+        shard : hikari.api.shard.GatewayShard
+            The shard that emitted this event.
+        payload : hikari.internal.data_binding.JSONObject
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.scheduled_events.ScheduledEventUserAddEvent
+            The parsed scheduled event user add event object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_scheduled_event_user_remove_event(
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+    ) -> scheduled_events.ScheduledEventUserRemoveEvent:
+        """Parse a raw payload from Discord into a scheduled event user remove event object.
+
+        Parameters
+        ----------
+        shard : hikari.api.shard.GatewayShard
+            The shard that emitted this event.
+        payload : hikari.internal.data_binding.JSONObject
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.scheduled_events.ScheduledEventUserRemoveEvent
+            The parsed scheduled event user remove event object.
         """
 
     ###################

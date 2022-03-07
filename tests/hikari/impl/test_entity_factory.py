@@ -20,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 import datetime
+import typing
 
 import mock
 import pytest
@@ -38,6 +39,7 @@ from hikari import invites as invite_models
 from hikari import messages as message_models
 from hikari import permissions as permission_models
 from hikari import presences as presence_models
+from hikari import scheduled_events as scheduled_event_models
 from hikari import sessions as gateway_models
 from hikari import snowflakes
 from hikari import stickers as sticker_models
@@ -4834,6 +4836,296 @@ class TestEntityFactoryImpl:
         assert activity.secrets.join is None
         assert activity.secrets.spectate is None
         assert activity.secrets.match is None
+
+    ##########################
+    # SCHEDULED EVENT MODELS #
+    ##########################
+
+    @pytest.fixture()
+    def scheduled_external_event_payload(
+        self, user_payload: typing.Dict[str, typing.Any]
+    ) -> typing.Dict[str, typing.Any]:
+        return {
+            "id": "9497609168686982223",
+            "guild_id": "1525593721265219296",
+            "channel_id": None,
+            "creator_id": "1155900971002865541",
+            "name": "bleep",
+            "description": "bloop",
+            "image": "dsaasdasd",
+            "scheduled_start_time": "2022-03-05T21:15:00.654000+00:00",
+            "scheduled_end_time": "2022-03-05T23:15:00.654000+00:00",
+            "privacy_level": 2,
+            "status": 3,
+            "entity_type": 3,
+            "entity_id": None,
+            "entity_metadata": {"location": "bleep"},
+            "sku_ids": [],
+            "creator": user_payload,
+            "user_count": 2,
+        }
+
+    def test_deserialize_scheduled_external_event(
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        mock_app: mock.Mock,
+        scheduled_external_event_payload: typing.Dict[str, typing.Any],
+        user_payload: typing.Dict[str, typing.Any],
+    ):
+        event = entity_factory_impl.deserialize_scheduled_external_event(scheduled_external_event_payload)
+        assert event.app is mock_app
+        assert event.id == 9497609168686982223
+        assert event.guild_id == 1525593721265219296
+        assert event.name == "bleep"
+        assert event.description == "bloop"
+        assert event.start_time == datetime.datetime(2022, 3, 5, 21, 15, 0, 654000, tzinfo=datetime.timezone.utc)
+        assert event.end_time == datetime.datetime(2022, 3, 5, 23, 15, 0, 654000, tzinfo=datetime.timezone.utc)
+        assert event.privacy_level is scheduled_event_models.EventPrivacyLevel.GUILD_ONLY
+        assert event.status is scheduled_event_models.ScheduledEventStatus.COMPLETED
+        assert event.entity_type is scheduled_event_models.ScheduledEventType.EXTERNAL
+        assert event.location == "bleep"
+        assert event.creator == entity_factory_impl.deserialize_user(user_payload)
+        assert event.user_count == 2
+        assert event.image_hash == "dsaasdasd"
+        assert isinstance(event, scheduled_event_models.ScheduledExternalEvent)
+
+    def test_deserialize_scheduled_external_event_with_null_fields(
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        mock_app: mock.Mock,
+        scheduled_external_event_payload: typing.Dict[str, typing.Any],
+    ):
+        scheduled_external_event_payload["description"] = None
+        scheduled_external_event_payload["image"] = None
+
+    def test_deserialize_scheduled_external_event_with_undefined_fields(
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        mock_app: mock.Mock,
+        scheduled_external_event_payload: typing.Dict[str, typing.Any],
+    ):
+        del scheduled_external_event_payload["creator"]
+        del scheduled_external_event_payload["description"]
+        del scheduled_external_event_payload["image"]
+        del scheduled_external_event_payload["user_count"]
+
+    @pytest.fixture()
+    def scheduled_stage_event_payload(self, user_payload: typing.Dict[str, typing.Any]) -> typing.Dict[str, typing.Any]:
+        return {
+            "id": "9497014470822052443",
+            "guild_id": "1525593721265192962",
+            "channel_id": "9492384510463386001",
+            "creator_id": "1155900971008655414",
+            "name": "dasd",
+            "description": "weqwe",
+            "image": "ooooooooggaaaaa",
+            "scheduled_start_time": "2022-03-05T18:15:00.904000+00:00",
+            "scheduled_end_time": "2022-06-05T18:15:00.904000+00:00",
+            "privacy_level": 2,
+            "status": 2,
+            "entity_type": 1,
+            "entity_id": None,
+            "entity_metadata": {"speaker_ids": []},
+            "sku_ids": [],
+            "creator": user_payload,
+            "user_count": 3,
+        }
+
+    def test_deserialize_scheduled_stage_event(
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        mock_app: mock.Mock,
+        scheduled_stage_event_payload: typing.Dict[str, typing.Any],
+        user_payload: typing.Dict[str, typing.Any],
+    ):
+        event = entity_factory_impl.deserialize_scheduled_stage_event(scheduled_stage_event_payload)
+
+        assert event.app is mock_app
+        assert event.id == 9497014470822052443
+        assert event.guild_id == 1525593721265192962
+        assert event.channel_id == 9492384510463386001
+        assert event.name == "dasd"
+        assert event.description == "weqwe"
+        assert event.start_time == datetime.datetime(2022, 3, 5, 18, 15, 0, 904000, tzinfo=datetime.timezone.utc)
+        assert event.end_time == datetime.datetime(2022, 6, 5, 18, 15, 0, 904000, tzinfo=datetime.timezone.utc)
+        assert event.privacy_level is scheduled_event_models.EventPrivacyLevel.GUILD_ONLY
+        assert event.status is scheduled_event_models.ScheduledEventStatus.ACTIVE
+        assert event.entity_type is scheduled_event_models.ScheduledEventType.STAGE_INSTANCE
+        assert event.creator == entity_factory_impl.deserialize_user(user_payload)
+        assert event.user_count == 3
+        assert event.image_hash == "ooooooooggaaaaa"
+        assert isinstance(event, scheduled_event_models.ScheduledStageEvent)
+
+    def test_deserialize_scheduled_stage_event_with_null_fields(
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        mock_app: mock.Mock,
+        scheduled_stage_event_payload: typing.Dict[str, typing.Any],
+    ):
+        scheduled_stage_event_payload["description"] = None
+        scheduled_stage_event_payload["image"] = None
+        scheduled_stage_event_payload["scheduled_end_time"] = None
+
+        event = entity_factory_impl.deserialize_scheduled_stage_event(scheduled_stage_event_payload)
+
+        assert event.description is None
+        assert event.image_hash is None
+        assert event.end_time is None
+
+    def test_deserialize_scheduled_stage_event_with_undefined_fields(
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        mock_app: mock.Mock,
+        scheduled_stage_event_payload: typing.Dict[str, typing.Any],
+    ):
+        del scheduled_stage_event_payload["creator"]
+        del scheduled_stage_event_payload["description"]
+        del scheduled_stage_event_payload["image"]
+        del scheduled_stage_event_payload["user_count"]
+
+        event = entity_factory_impl.deserialize_scheduled_stage_event(scheduled_stage_event_payload)
+
+        assert event.creator is None
+        assert event.description is None
+        assert event.image_hash is None
+        assert event.user_count is None
+
+    @pytest.fixture()
+    def scheduled_voice_event_payload(self, user_payload: typing.Dict[str, typing.Any]) -> typing.Dict[str, typing.Any]:
+        return {
+            "id": "949760834287063133",
+            "guild_id": "152559372126519296",
+            "channel_id": "152559372126519297",
+            "creator_id": "115590097100865541",
+            "name": "meep",
+            "description": "beeee",
+            "image": "eeeeeeeeeeeeeeeeeee",
+            "scheduled_start_time": "2022-03-05T21:00:00.662000+00:00",
+            "scheduled_end_time": "2023-03-05T21:00:00.662000+00:00",
+            "privacy_level": 2,
+            "status": 1,
+            "entity_type": 2,
+            "entity_id": None,
+            "entity_metadata": None,
+            "sku_ids": [],
+            "creator": user_payload,
+            "user_count": 1,
+        }
+
+    def test_deserialize_scheduled_voice_event(
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        mock_app: mock.Mock,
+        scheduled_voice_event_payload: typing.Dict[str, typing.Any],
+        user_payload: typing.Dict[str, typing.Any],
+    ):
+        event = entity_factory_impl.deserialize_scheduled_voice_event(scheduled_voice_event_payload)
+
+        assert event.app is mock_app
+        assert event.id == 949760834287063133
+        assert event.guild_id == 152559372126519296
+        assert event.channel_id == 152559372126519297
+        assert event.name == "meep"
+        assert event.description == "beeee"
+        assert event.start_time == datetime.datetime(2022, 3, 5, 21, 0, 0, 662000, tzinfo=datetime.timezone.utc)
+        assert event.end_time == datetime.datetime(2023, 3, 5, 21, 0, 0, 662000, tzinfo=datetime.timezone.utc)
+        assert event.privacy_level is scheduled_event_models.EventPrivacyLevel.GUILD_ONLY
+        assert event.status is scheduled_event_models.ScheduledEventStatus.SCHEDULED
+        assert event.entity_type is scheduled_event_models.ScheduledEventType.VOICE
+        assert event.creator == entity_factory_impl.deserialize_user(user_payload)
+        assert event.user_count == 1
+        assert event.image_hash == "eeeeeeeeeeeeeeeeeee"
+        assert isinstance(event, scheduled_event_models.ScheduledVoiceEvent)
+
+    def test_deserialize_scheduled_voice_event_with_null_fields(
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        mock_app: mock.Mock,
+        scheduled_voice_event_payload: typing.Dict[str, typing.Any],
+    ):
+        scheduled_voice_event_payload["description"] = None
+        scheduled_voice_event_payload["image"] = None
+        scheduled_voice_event_payload["scheduled_end_time"] = None
+
+        event = entity_factory_impl.deserialize_scheduled_voice_event(scheduled_voice_event_payload)
+
+        assert event.description is None
+        assert event.image_hash is None
+        assert event.end_time is None
+
+    def test_deserialize_scheduled_voice_event_with_undefined_fields(
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        mock_app: mock.Mock,
+        scheduled_voice_event_payload: typing.Dict[str, typing.Any],
+    ):
+        del scheduled_voice_event_payload["creator"]
+        del scheduled_voice_event_payload["description"]
+        del scheduled_voice_event_payload["image"]
+        del scheduled_voice_event_payload["user_count"]
+
+        event = entity_factory_impl.deserialize_scheduled_voice_event(scheduled_voice_event_payload)
+
+        assert event.creator is None
+        assert event.description is None
+        assert event.image_hash is None
+        assert event.user_count is None
+
+    def test_deserialize_scheduled_event_returns_right_type(
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        scheduled_external_event_payload: typing.Dict[str, typing.Any],
+        scheduled_stage_event_payload: typing.Dict[str, typing.Any],
+        scheduled_voice_event_payload: typing.Dict[str, typing.Any],
+    ):
+        for (cls, payload) in [
+            (scheduled_event_models.ScheduledExternalEvent, scheduled_external_event_payload),
+            (scheduled_event_models.ScheduledStageEvent, scheduled_stage_event_payload),
+            (scheduled_event_models.ScheduledVoiceEvent, scheduled_voice_event_payload),
+        ]:
+            result = entity_factory_impl.deserialize_scheduled_event(payload)
+
+            assert isinstance(result, cls)
+
+    @pytest.fixture()
+    def scheduled_event_user_payload(
+        self,
+        user_payload: typing.Dict[str, typing.Any],
+        member_payload: typing.Dict[str, typing.Any],
+    ) -> typing.Dict[str, typing.Any]:
+        member_payload = member_payload.copy()
+        del member_payload["user"]
+        return {"guild_scheduled_event_id": "49494949499494", "user": user_payload, "member": member_payload}
+
+    def test_deserialize_scheduled_event_user(
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        scheduled_event_user_payload: typing.Dict[str, typing.Any],
+        user_payload: typing.Dict[str, typing.Any],
+        member_payload: typing.Dict[str, typing.Any],
+    ):
+        del member_payload["user"]
+        user = entity_factory_impl.deserialize_scheduled_event_user(scheduled_event_user_payload, guild_id=123321)
+
+        assert user.event_id == 49494949499494
+        assert user.user == entity_factory_impl.deserialize_user(user_payload)
+        assert user.member == entity_factory_impl.deserialize_member(
+            member_payload, user=entity_factory_impl.deserialize_user(user_payload), guild_id=123321
+        )
+        assert isinstance(user, scheduled_event_models.ScheduledEventUser)
+
+    def test_deserialize_scheduled_event_user_when_no_member(
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        scheduled_event_user_payload: typing.Dict[str, typing.Any],
+        user_payload: typing.Dict[str, typing.Any],
+    ):
+        del scheduled_event_user_payload["member"]
+
+        event = entity_factory_impl.deserialize_scheduled_event_user(scheduled_event_user_payload, guild_id=123321)
+
+        assert event.member is None
+        assert event.user == entity_factory_impl.deserialize_user(user_payload)
 
     ###################
     # TEMPLATE MODELS #

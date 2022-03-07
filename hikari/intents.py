@@ -302,6 +302,16 @@ class Intents(enums.Flag):
         This intent is privileged, and requires enabling/whitelisting to use.
     """
 
+    GUILD_SCHEDULED_EVENTS = 1 << 16
+    """Subscribes to the following events:
+
+    * `GUILD_SCHEDULED_EVENT_CREATE`
+    * `GUILD_SCHEDULED_EVENT_UPDATE`
+    * `GUILD_SCHEDULED_EVENT_DELETE`
+    * `GUILD_SCHEDULED_EVENT_USER_ADD`
+    * `GUILD_SCHEDULED_EVENT_USER_REMOVE`
+    """
+
     # Annoyingly, enums hide classmethods and staticmethods from __dir__ in
     # EnumMeta which means if I make methods to generate these, then stuff
     # will not be documented by pdoc. Alas, my dream of being smart with
@@ -318,6 +328,7 @@ class Intents(enums.Flag):
         | GUILD_MESSAGES
         | GUILD_MESSAGE_REACTIONS
         | GUILD_MESSAGE_TYPING
+        | GUILD_SCHEDULED_EVENTS
     )
     """All unprivileged guild-related intents."""
 

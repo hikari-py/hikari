@@ -32,7 +32,8 @@ from hikari import channels
 from hikari import errors
 from hikari import intents
 from hikari import presences
-from hikari.impl import event_manager
+from hikari.api import event_factory as event_factory_
+from hikari.impl import event_manager as event_manager_
 from hikari.internal import time
 from tests.hikari import hikari_test_helpers
 
@@ -49,7 +50,7 @@ def test_fixed_size_nonce():
     encode.return_value.decode = mock.Mock(return_value="nonce")
 
     with stack:
-        assert event_manager._fixed_size_nonce() == "nonce"
+        assert event_manager_._fixed_size_nonce() == "nonce"
 
     monotonic.assert_called_once_with()
     monotonic.return_value.to_bytes.assert_called_once_with(8, "big")
@@ -70,7 +71,7 @@ def shard():
 async def test__request_guild_members(shard):
     shard.request_guild_members = mock.AsyncMock()
 
-    await event_manager._request_guild_members(shard, 123, include_presences=True, nonce="okokok")
+    await event_manager_._request_guild_members(shard, 123, include_presences=True, nonce="okokok")
 
     shard.request_guild_members.assert_awaited_once_with(123, include_presences=True, nonce="okokok")
 
@@ -79,7 +80,7 @@ async def test__request_guild_members(shard):
 async def test__request_guild_members_handles_state_conflict_error(shard):
     shard.request_guild_members = mock.AsyncMock(side_effect=errors.ComponentStateConflictError(reason="OK"))
 
-    await event_manager._request_guild_members(shard, 123, include_presences=True, nonce="okokok")
+    await event_manager_._request_guild_members(shard, 123, include_presences=True, nonce="okokok")
 
     shard.request_guild_members.assert_awaited_once_with(123, include_presences=True, nonce="okokok")
 
@@ -91,7 +92,7 @@ class TestEventManagerImpl:
 
     @pytest.fixture()
     def event_manager(self, event_factory):
-        obj = hikari_test_helpers.mock_class_namespace(event_manager.EventManagerImpl, slots_=False)(
+        obj = hikari_test_helpers.mock_class_namespace(event_manager_.EventManagerImpl, slots_=False)(
             event_factory, intents.Intents.ALL, cache=mock.Mock()
         )
 
@@ -100,7 +101,7 @@ class TestEventManagerImpl:
 
     @pytest.fixture()
     def stateless_event_manager(self, event_factory):
-        obj = hikari_test_helpers.mock_class_namespace(event_manager.EventManagerImpl, slots_=False)(
+        obj = hikari_test_helpers.mock_class_namespace(event_manager_.EventManagerImpl, slots_=False)(
             event_factory, intents.Intents.ALL, cache=None
         )
 
@@ -1187,3 +1188,83 @@ class TestEventManagerImpl:
 
         event_factory.deserialize_interaction_create_event.assert_called_once_with(shard, payload)
         event_manager.dispatch.assert_awaited_once_with(event_factory.deserialize_interaction_create_event.return_value)
+
+    @pytest.mark.asyncio()
+    async def test_on_guild_scheduled_event_create(
+        self,
+        event_manager: event_manager_.EventManagerImpl,
+        shard: mock.Mock,
+        event_factory: event_factory_.EventFactory,
+    ):
+        mock_payload = mock.Mock()
+
+        await event_manager.on_guild_scheduled_event_create(shard, mock_payload)
+
+        event_factory.deserialize_scheduled_event_create_event.assert_called_once_with(shard, mock_payload)
+        event_manager.dispatch.assert_awaited_once_with(
+            event_factory.deserialize_scheduled_event_create_event.return_value
+        )
+
+    @pytest.mark.asyncio()
+    async def test_on_guild_scheduled_event_delete(
+        self,
+        event_manager: event_manager_.EventManagerImpl,
+        shard: mock.Mock,
+        event_factory: event_factory_.EventFactory,
+    ):
+        mock_payload = mock.Mock()
+
+        await event_manager.on_guild_scheduled_event_delete(shard, mock_payload)
+
+        event_factory.deserialize_scheduled_event_delete_event.assert_called_once_with(shard, mock_payload)
+        event_manager.dispatch.assert_awaited_once_with(
+            event_factory.deserialize_scheduled_event_delete_event.return_value
+        )
+
+    @pytest.mark.asyncio()
+    async def test_on_guild_scheduled_event_update(
+        self,
+        event_manager: event_manager_.EventManagerImpl,
+        shard: mock.Mock,
+        event_factory: event_factory_.EventFactory,
+    ):
+        mock_payload = mock.Mock()
+
+        await event_manager.on_guild_scheduled_event_update(shard, mock_payload)
+
+        event_factory.deserialize_scheduled_event_update_event.assert_called_once_with(shard, mock_payload)
+        event_manager.dispatch.assert_awaited_once_with(
+            event_factory.deserialize_scheduled_event_update_event.return_value
+        )
+
+    @pytest.mark.asyncio()
+    async def test_on_guild_scheduled_event_user_add(
+        self,
+        event_manager: event_manager_.EventManagerImpl,
+        shard: mock.Mock,
+        event_factory: event_factory_.EventFactory,
+    ):
+        mock_payload = mock.Mock()
+
+        await event_manager.on_guild_scheduled_event_user_add(shard, mock_payload)
+
+        event_factory.deserialize_scheduled_event_user_add_event.assert_called_once_with(shard, mock_payload)
+        event_manager.dispatch.assert_awaited_once_with(
+            event_factory.deserialize_scheduled_event_user_add_event.return_value
+        )
+
+    @pytest.mark.asyncio()
+    async def test_on_guild_scheduled_event_user_remove(
+        self,
+        event_manager: event_manager_.EventManagerImpl,
+        shard: mock.Mock,
+        event_factory: event_factory_.EventFactory,
+    ):
+        mock_payload = mock.Mock()
+
+        await event_manager.on_guild_scheduled_event_user_remove(shard, mock_payload)
+
+        event_factory.deserialize_scheduled_event_user_remove_event.assert_called_once_with(shard, mock_payload)
+        event_manager.dispatch.assert_awaited_once_with(
+            event_factory.deserialize_scheduled_event_user_remove_event.return_value
+        )

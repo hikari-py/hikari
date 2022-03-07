@@ -291,10 +291,10 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
         if value is undefined.UNDEFINED:
             return
 
-        if conversion is not None:
-            self[key] = conversion(value)
-        else:
+        if conversion is None or value is None:
             self[key] = value
+        else:
+            self[key] = conversion(value)
 
     @typing.overload
     def put_array(
