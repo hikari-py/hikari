@@ -112,6 +112,17 @@ if typing.TYPE_CHECKING:
     _ZlibDecompressor = zlib._Decompress
 
 
+_RECONNECTABLE_CLOSE_CODES = frozenset(
+    (
+        errors.ShardCloseCode.UNKNOWN_ERROR,
+        errors.ShardCloseCode.DECODE_ERROR,
+        errors.ShardCloseCode.INVALID_SEQ,
+        errors.ShardCloseCode.SESSION_TIMEOUT,
+        errors.ShardCloseCode.RATE_LIMITED,
+    )
+)
+
+
 # aiohttp.ClientWebSocketResponse isn't slotted
 @typing.final
 class _GatewayTransport(aiohttp.ClientWebSocketResponse):
@@ -184,21 +195,16 @@ class _GatewayTransport(aiohttp.ClientWebSocketResponse):
             return message.data
 
         if message.type == aiohttp.WSMsgType.BINARY:
+            if message.data.endswith(b"\x00\x00\xff\xff"):
+                return self.zlib.decompress(message.data).decode("utf-8")
+
             return await self._receive_and_check_complete_zlib_package(message.data, timeout)
 
         if message.type == aiohttp.WSMsgType.CLOSE:
             close_code = int(message.data)
             reason = message.extra
             self.logger.error("connection closed with code %s (%s)", close_code, reason)
-
-            can_reconnect = close_code < 4000 or close_code in (
-                errors.ShardCloseCode.UNKNOWN_ERROR,
-                errors.ShardCloseCode.DECODE_ERROR,
-                errors.ShardCloseCode.INVALID_SEQ,
-                errors.ShardCloseCode.SESSION_TIMEOUT,
-                errors.ShardCloseCode.RATE_LIMITED,
-            )
-
+            can_reconnect = close_code < 4000 or close_code in _RECONNECTABLE_CLOSE_CODES
             raise errors.GatewayServerClosedConnectionError(reason, close_code, can_reconnect)
 
         if message.type == aiohttp.WSMsgType.CLOSING or message.type == aiohttp.WSMsgType.CLOSED:
@@ -221,16 +227,18 @@ class _GatewayTransport(aiohttp.ClientWebSocketResponse):
     ) -> str:
         buff = bytearray(initial_data)
 
-        while True:
+        while not buff.endswith(b"\x00\x00\xff\xff"):
             message = await self.receive(timeout)
 
-            if message.type != aiohttp.WSMsgType.BINARY:
-                raise errors.GatewayError(f"Unexpected message type received {message.type.name}, expected BINARY")
+            if message.type == aiohttp.WSMsgType.BINARY:
+                buff.extend(message.data)
+                continue
 
-            buff.extend(message.data)
+            raise errors.GatewayError(
+                f"Unexpected message type received {message.type.name}, expected BINARY"
+            ) from self.exception()
 
-            if buff.endswith(b"\x00\x00\xff\xff"):
-                return self.zlib.decompress(buff).decode("utf-8")
+        return self.zlib.decompress(buff).decode("utf-8")
 
     @classmethod
     @contextlib.asynccontextmanager

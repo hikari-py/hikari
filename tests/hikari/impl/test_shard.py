@@ -242,6 +242,7 @@ class TestGatewayTransport:
     async def test__receive_and_check_complete_zlib_package_when_not_BINARY(self, transport_impl):
         response = StubResponse(type=aiohttp.WSMsgType.TEXT, data="not binary")
         transport_impl.receive = mock.AsyncMock(return_value=response)
+        transport_impl._exception = None
 
         with pytest.raises(errors.GatewayError, match="Unexpected message type received TEXT, expected BINARY"):
             await transport_impl._receive_and_check_complete_zlib_package(b"some", 10)
