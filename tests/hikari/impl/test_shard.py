@@ -30,11 +30,11 @@ import mock
 import pytest
 
 from hikari import _about
-from hikari import config
 from hikari import errors
 from hikari import intents
 from hikari import presences
 from hikari import undefined
+from hikari.impl import config
 from hikari.impl import shard
 from hikari.internal import time
 from tests.hikari import client_session_stub

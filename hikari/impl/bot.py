@@ -39,7 +39,6 @@ import typing
 import warnings
 
 from hikari import applications
-from hikari import config
 from hikari import errors
 from hikari import intents as intents_
 from hikari import presences
@@ -47,6 +46,7 @@ from hikari import snowflakes
 from hikari import traits
 from hikari import undefined
 from hikari.impl import cache as cache_impl
+from hikari.impl import config
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import event_factory as event_factory_impl
 from hikari.impl import event_manager as event_manager_impl
@@ -195,9 +195,9 @@ class GatewayBot(traits.GatewayBotAware):
         will __force__ colour to be used in console-based output. Specifying a
         `"CLICOLOR_FORCE"` environment variable with a non-`"0"` value will
         override this setting.
-    cache_settings : typing.Optional[hikari.config.CacheSettings]
+    cache_settings : typing.Optional[hikari.impl.config.CacheSettings]
         Optional cache settings. If unspecified, will use the defaults.
-    http_settings : typing.Optional[hikari.config.HTTPSettings]
+    http_settings : typing.Optional[hikari.impl.config.HTTPSettings]
         Optional custom HTTP configuration settings to use. Allows you to
         customise functionality such as whether SSL-verification is enabled,
         what timeouts `aiohttp` should expect to use for requests, and behavior
@@ -246,7 +246,7 @@ class GatewayBot(traits.GatewayBotAware):
     max_retries : typing.Optional[builtins.int]
         Maximum number of times a request will be retried if
         it fails with a `5xx` status. Defaults to 3 if set to `builtins.None`.
-    proxy_settings : typing.Optional[config.ProxySettings]
+    proxy_settings : typing.Optional[hikari.impl.config.ProxySettings]
         Custom proxy settings to use with network-layer logic
         in your application to get through an HTTP-proxy.
     rest_url : typing.Optional[builtins.str]

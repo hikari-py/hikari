@@ -30,10 +30,10 @@ import logging
 import sys
 import typing
 
-from hikari import config
 from hikari import errors
 from hikari import traits
 from hikari.api import interaction_server as interaction_server_
+from hikari.impl import config
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import interaction_server as interaction_server_impl
 from hikari.impl import rest as rest_impl

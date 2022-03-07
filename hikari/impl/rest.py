@@ -52,7 +52,6 @@ from hikari import applications
 from hikari import channels as channels_
 from hikari import colors
 from hikari import commands
-from hikari import config
 from hikari import embeds as embeds_
 from hikari import emojis
 from hikari import errors
@@ -68,6 +67,7 @@ from hikari import urls
 from hikari import users
 from hikari.api import rest as rest_api
 from hikari.impl import buckets as buckets_
+from hikari.impl import config
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import rate_limits
 from hikari.impl import special_endpoints as special_endpoints_impl
@@ -232,7 +232,7 @@ class _RESTProvider(traits.RESTAware):
         self,
         entity_factory: typing.Callable[[], entity_factory_.EntityFactory],
         executor: typing.Optional[concurrent.futures.Executor],
-        rest: typing.Callable[[], rest_api.RESTClient],
+        rest: typing.Callable[[], RESTClientImpl],
     ) -> None:
         self._entity_factory = entity_factory
         self._executor = executor
@@ -275,7 +275,7 @@ class RESTApp(traits.ExecutorAware):
         The executor to use for blocking file IO operations. If `builtins.None`
         is passed, then the default `concurrent.futures.ThreadPoolExecutor` for
         the `asyncio.AbstractEventLoop` will be used instead.
-    http_settings : typing.Optional[hikari.config.HTTPSettings]
+    http_settings : typing.Optional[hikari.impl.config.HTTPSettings]
         HTTP settings to use. Sane defaults are used if this is
         `builtins.None`.
     max_rate_limit : builtins.float
@@ -290,7 +290,7 @@ class RESTApp(traits.ExecutorAware):
     max_retries : typing.Optional[builtins.int]
         Maximum number of times a request will be retried if
         it fails with a `5xx` status. Defaults to 3 if set to `builtins.None`.
-    proxy_settings : typing.Optional[hikari.config.ProxySettings]
+    proxy_settings : typing.Optional[hikari.impl.config.ProxySettings]
         Proxy settings to use. If `builtins.None` then no proxy configuration
         will be used.
     url : typing.Optional[builtins.str]

@@ -32,7 +32,7 @@ import mock
 import pytest
 
 from hikari import _about
-from hikari import config
+from hikari.impl import config
 from hikari.internal import net
 from hikari.internal import ux
 from tests.hikari import hikari_test_helpers

@@ -34,7 +34,7 @@ import aiohttp
 from hikari import errors
 
 if typing.TYPE_CHECKING:
-    from hikari import config
+    from hikari.impl import config
     from hikari.internal import data_binding
 
 

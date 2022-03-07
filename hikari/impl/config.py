@@ -24,25 +24,17 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = [
-    "BasicAuthHeader",
-    "ProxySettings",
-    "HTTPTimeoutSettings",
-    "HTTPSettings",
-    "CacheComponents",
-    "CacheSettings",
-]
+__all__: typing.List[str] = ["BasicAuthHeader", "ProxySettings", "HTTPTimeoutSettings", "HTTPSettings", "CacheSettings"]
 
 import base64
 import ssl as ssl_
 import typing
 
 import attr
-import yarl
 
+from hikari.api import config
 from hikari.internal import attr_extensions
 from hikari.internal import data_binding
-from hikari.internal import enums
 
 _BASICAUTH_TOKEN_PREFIX: typing.Final[str] = "Basic"  # nosec
 _PROXY_AUTHENTICATION_HEADER: typing.Final[str] = "Proxy-Authentication"
@@ -115,7 +107,7 @@ class BasicAuthHeader:
 
 @attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
-class ProxySettings:
+class ProxySettings(config.ProxySettings):
     """Settings for configuring an HTTP-based proxy."""
 
     auth: typing.Any = attr.field(default=None)
@@ -141,21 +133,16 @@ class ProxySettings:
     headers: typing.Optional[data_binding.Headers] = attr.field(default=None)
     """Additional headers to use for requests via a proxy, if required."""
 
-    url: typing.Union[None, str, yarl.URL] = attr.field(default=None)
+    url: typing.Union[None, str] = attr.field(default=None)
     """Proxy URL to use.
 
     Defaults to `builtins.None` which disables the use of an explicit proxy.
 
     Returns
     -------
-    typing.Union[builtins.None, builtins.str, yarl.URL]
+    typing.Union[builtins.None, builtins.str]
         The proxy URL to use, or `builtins.None` to disable it.
     """
-
-    @url.validator
-    def _(self, _: attr.Attribute[typing.Union[None, str, yarl.URL]], value: typing.Union[None, str, yarl.URL]) -> None:
-        if value is not None and not isinstance(value, (str, yarl.URL)):
-            raise ValueError("ProxySettings.url must be None, a str, or a yarl.URL instance")
 
     trust_env: bool = attr.field(default=False, validator=attr.validators.instance_of(bool))
     """Toggle whether to look for a `netrc` file or environment variables.
@@ -262,7 +249,7 @@ class HTTPTimeoutSettings:
 
 @attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
-class HTTPSettings:
+class HTTPSettings(config.HTTPSettings):
     """Settings to control HTTP clients."""
 
     enable_cleanup_closed: bool = attr.field(default=True, validator=attr.validators.instance_of(bool))
@@ -387,63 +374,12 @@ class HTTPSettings:
     """
 
 
-class CacheComponents(enums.Flag):
-    """Flags to control the cache components."""
-
-    NONE = 0
-    """Disables the cache."""
-
-    GUILDS = 1 << 0
-    """Enables the guild cache."""
-
-    GUILD_CHANNELS = 1 << 1
-    """Enables the guild channels cache."""
-
-    MEMBERS = 1 << 2
-    """Enables the members cache."""
-
-    ROLES = 1 << 3
-    """Enables the roles cache."""
-
-    INVITES = 1 << 4
-    """Enables the invites cache."""
-
-    EMOJIS = 1 << 5
-    """Enables the emojis cache."""
-
-    PRESENCES = 1 << 6
-    """Enables the presences cache."""
-
-    VOICE_STATES = 1 << 7
-    """Enables the voice states cache."""
-
-    MESSAGES = 1 << 8
-    """Enables the messages cache."""
-
-    DM_CHANNEL_IDS = 1 << 10
-    """Enables the DM channel IDs cache."""
-
-    ALL = (
-        GUILDS
-        | GUILD_CHANNELS
-        | MEMBERS
-        | ROLES
-        | INVITES
-        | EMOJIS
-        | PRESENCES
-        | VOICE_STATES
-        | MESSAGES
-        | DM_CHANNEL_IDS
-    )
-    """Fully enables the cache."""
-
-
 @attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
-class CacheSettings:
+class CacheSettings(config.CacheSettings):
     """Settings to control the cache."""
 
-    components: CacheComponents = attr.field(default=CacheComponents.ALL)
+    components: config.CacheComponents = attr.field(default=config.CacheComponents.ALL)
     """The cache components to use.
 
     Defaults to `CacheComponents.ALL`.
