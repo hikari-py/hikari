@@ -23,11 +23,7 @@
 """Events fired when users begin typing in channels."""
 from __future__ import annotations
 
-__all__: typing.List[str] = [
-    "TypingEvent",
-    "GuildTypingEvent",
-    "DMTypingEvent",
-]
+__all__: typing.List[str] = ["TypingEvent", "GuildTypingEvent", "DMTypingEvent"]
 
 import abc
 import typing
