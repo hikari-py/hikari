@@ -3939,14 +3939,14 @@ class TestEntityFactoryImpl:
     def action_row_payload(self, button_payload):
         return {"type": 1, "components": [button_payload]}
 
-    def test_deserialize_action_row(self, entity_factory_impl, action_row_payload, button_payload):
-        action_row = entity_factory_impl.deserialize_action_row(action_row_payload)
+    def test__deserialize_action_row(self, entity_factory_impl, action_row_payload, button_payload):
+        action_row = entity_factory_impl._deserialize_action_row(action_row_payload)
 
         assert action_row.type is message_models.ComponentType.ACTION_ROW
-        assert action_row.components == [entity_factory_impl.deserialize_component(button_payload)]
+        assert action_row.components == [entity_factory_impl._deserialize_component(button_payload)]
 
-    def test_deserialize_action_row_handles_unknown_component_type(self, entity_factory_impl):
-        action_row = entity_factory_impl.deserialize_action_row(
+    def test__deserialize_action_row_handles_unknown_component_type(self, entity_factory_impl):
+        action_row = entity_factory_impl._deserialize_action_row(
             {"type": 1, "components": [{"type": "9494949"}, {"type": "9239292"}]}
         )
 
@@ -3964,8 +3964,8 @@ class TestEntityFactoryImpl:
             "disabled": True,
         }
 
-    def test_deserialize_deserialize_button(self, entity_factory_impl, button_payload, custom_emoji_payload):
-        button = entity_factory_impl.deserialize_button(button_payload)
+    def test_deserialize__deserialize_button(self, entity_factory_impl, button_payload, custom_emoji_payload):
+        button = entity_factory_impl._deserialize_button(button_payload)
 
         assert button.type is message_models.ComponentType.BUTTON
         assert button.style is message_models.ButtonStyle.PRIMARY
@@ -3975,10 +3975,10 @@ class TestEntityFactoryImpl:
         assert button.is_disabled is True
         assert button.url == "okokok"
 
-    def test_deserialize_deserialize_button_with_unset_fields(
+    def test_deserialize__deserialize_button_with_unset_fields(
         self, entity_factory_impl, button_payload, custom_emoji_payload
     ):
-        button = entity_factory_impl.deserialize_button({"type": 2, "style": 5})
+        button = entity_factory_impl._deserialize_button({"type": 2, "style": 5})
 
         assert button.type is message_models.ComponentType.BUTTON
         assert button.style is message_models.ButtonStyle.LINK
@@ -4008,8 +4008,8 @@ class TestEntityFactoryImpl:
             "disabled": True,
         }
 
-    def test_deserialize_select_menu(self, entity_factory_impl, select_menu_payload, custom_emoji_payload):
-        menu = entity_factory_impl.deserialize_select_menu(select_menu_payload)
+    def test__deserialize_select_menu(self, entity_factory_impl, select_menu_payload, custom_emoji_payload):
+        menu = entity_factory_impl._deserialize_select_menu(select_menu_payload)
 
         assert menu.type is message_models.ComponentType.SELECT_MENU
         assert menu.custom_id == "Not an ID"
@@ -4029,8 +4029,8 @@ class TestEntityFactoryImpl:
         assert menu.max_values == 420
         assert menu.is_disabled is True
 
-    def test_deserialize_select_menu_partial(self, entity_factory_impl):
-        menu = entity_factory_impl.deserialize_select_menu(
+    def test__deserialize_select_menu_partial(self, entity_factory_impl):
+        menu = entity_factory_impl._deserialize_select_menu(
             {
                 "type": 3,
                 "custom_id": "Not an ID",
@@ -4050,17 +4050,17 @@ class TestEntityFactoryImpl:
         assert menu.max_values == 1
         assert menu.is_disabled is False
 
-    def test_deserialize_component(self, entity_factory_impl, action_row_payload, button_payload, select_menu_payload):
+    def test__deserialize_component(self, entity_factory_impl, action_row_payload, button_payload, select_menu_payload):
         for expected_type, payload in [
             (message_models.ActionRowComponent, action_row_payload),
             (message_models.ButtonComponent, button_payload),
             (message_models.SelectMenuComponent, select_menu_payload),
         ]:
-            assert type(entity_factory_impl.deserialize_component(payload)) is expected_type
+            assert type(entity_factory_impl._deserialize_component(payload)) is expected_type
 
-    def test_deserialize_component_handles_unknown_type(self, entity_factory_impl):
+    def test__deserialize_component_handles_unknown_type(self, entity_factory_impl):
         with pytest.raises(errors.UnrecognisedEntityError):
-            entity_factory_impl.deserialize_component({"type": -9434994})
+            entity_factory_impl._deserialize_component({"type": -9434994})
 
     @pytest.fixture()
     def partial_application_payload(self):
@@ -4300,7 +4300,7 @@ class TestEntityFactoryImpl:
         assert partial_message.interaction.user == entity_factory_impl.deserialize_user(user_payload)
         assert isinstance(partial_message.interaction, message_models.MessageInteraction)
 
-        assert partial_message.components == [entity_factory_impl.deserialize_component(action_row_payload)]
+        assert partial_message.components == [entity_factory_impl._deserialize_component(action_row_payload)]
 
     def test_deserialize_partial_message_with_partial_fields(self, entity_factory_impl, message_payload):
         message_payload["content"] = ""
@@ -4482,7 +4482,7 @@ class TestEntityFactoryImpl:
         assert message.interaction.user == entity_factory_impl.deserialize_user(user_payload)
         assert isinstance(message.interaction, message_models.MessageInteraction)
 
-        assert message.components == [entity_factory_impl.deserialize_component(action_row_payload)]
+        assert message.components == [entity_factory_impl._deserialize_component(action_row_payload)]
 
     def test_deserialize_message_with_unset_sub_fields(self, entity_factory_impl, message_payload):
         del message_payload["application"]["cover_image"]

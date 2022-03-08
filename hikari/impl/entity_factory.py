@@ -261,9 +261,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             commands.CommandType.MESSAGE: self.deserialize_context_menu_command,
         }
         self._component_type_mapping = {
-            message_models.ComponentType.ACTION_ROW: self.deserialize_action_row,
-            message_models.ComponentType.BUTTON: self.deserialize_button,
-            message_models.ComponentType.SELECT_MENU: self.deserialize_select_menu,
+            message_models.ComponentType.ACTION_ROW: self._deserialize_action_row,
+            message_models.ComponentType.BUTTON: self._deserialize_button,
+            message_models.ComponentType.SELECT_MENU: self._deserialize_select_menu,
         }
         self._dm_channel_type_mapping = {
             channel_models.ChannelType.DM: self.deserialize_dm,
@@ -2181,12 +2181,12 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     # MESSAGE MODELS #
     ##################
 
-    def deserialize_action_row(self, payload: data_binding.JSONObject) -> message_models.ActionRowComponent:
+    def _deserialize_action_row(self, payload: data_binding.JSONObject) -> message_models.ActionRowComponent:
         components: typing.List[message_models.PartialComponent] = []
 
         for component_payload in payload["components"]:
             try:
-                components.append(self.deserialize_component(component_payload))
+                components.append(self._deserialize_component(component_payload))
 
             except errors.UnrecognisedEntityError:
                 pass
@@ -2195,7 +2195,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             type=message_models.ComponentType(payload["type"]), components=components
         )
 
-    def deserialize_button(self, payload: data_binding.JSONObject) -> message_models.ButtonComponent:
+    def _deserialize_button(self, payload: data_binding.JSONObject) -> message_models.ButtonComponent:
         emoji_payload = payload.get("emoji")
         return message_models.ButtonComponent(
             type=message_models.ComponentType(payload["type"]),
@@ -2207,7 +2207,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             is_disabled=payload.get("disabled", False),
         )
 
-    def deserialize_select_menu(self, payload: data_binding.JSONObject) -> message_models.SelectMenuComponent:
+    def _deserialize_select_menu(self, payload: data_binding.JSONObject) -> message_models.SelectMenuComponent:
         options: typing.List[message_models.SelectMenuOption] = []
         for option_payload in payload["options"]:
             emoji = None
@@ -2234,7 +2234,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             is_disabled=payload.get("disabled", False),
         )
 
-    def deserialize_component(self, payload: data_binding.JSONObject) -> message_models.PartialComponent:
+    def _deserialize_component(self, payload: data_binding.JSONObject) -> message_models.PartialComponent:
         component_type = message_models.ComponentType(payload["type"])
 
         if deserialize := self._component_type_mapping.get(component_type):
@@ -2390,7 +2390,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             components = []
             for component_payload in component_payloads:
                 try:
-                    components.append(self.deserialize_component(component_payload))
+                    components.append(self._deserialize_component(component_payload))
 
                 except errors.UnrecognisedEntityError:
                     pass
@@ -2509,7 +2509,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if component_payloads := payload.get("components"):
             for component_payload in component_payloads:
                 try:
-                    components.append(self.deserialize_component(component_payload))
+                    components.append(self._deserialize_component(component_payload))
 
                 except errors.UnrecognisedEntityError:
                     pass
