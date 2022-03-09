@@ -354,6 +354,7 @@ class TestGatewayTransport:
             proxy=proxy_settings.url,
             proxy_headers=proxy_settings.headers,
             url="https://some.url",
+            autoclose=False,
         )
         mock_client_session.assert_used_once()
         mock_websocket.assert_used_once()
