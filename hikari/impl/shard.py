@@ -98,6 +98,18 @@ _TOTAL_RATELIMIT: typing.Final[typing.Tuple[float, int]] = (60.0, 120)
 _CHUNKING_RATELIMIT: typing.Final[typing.Tuple[float, int]] = (60.0, 60)
 # Supported gateway version
 _VERSION: int = 8
+# Used to identify the end of a ZLIB payload
+_ZLIB_SUFFIX: typing.Final[bytes] = b"\x00\x00\xff\xff"
+# Close codes which don't invalidate the current session.
+_RECONNECTABLE_CLOSE_CODES: typing.FrozenSet[errors.ShardCloseCode] = frozenset(
+    (
+        errors.ShardCloseCode.UNKNOWN_ERROR,
+        errors.ShardCloseCode.DECODE_ERROR,
+        errors.ShardCloseCode.INVALID_SEQ,
+        errors.ShardCloseCode.SESSION_TIMEOUT,
+        errors.ShardCloseCode.RATE_LIMITED,
+    )
+)
 
 
 def _log_filterer(token: str) -> typing.Callable[[str], str]:
@@ -176,29 +188,12 @@ class _GatewayTransport(aiohttp.ClientWebSocketResponse):
             self.logger.log(ux.TRACE, "sending payload with size %s\n    %s", len(pl), filtered)
         await self.send_str(pl, compress)
 
-    async def _receive_and_check(self, timeout: typing.Optional[float], /) -> str:
-        message = await self.receive(timeout)
-
-        if message.type == aiohttp.WSMsgType.TEXT:
-            assert isinstance(message.data, str)
-            return message.data
-
-        if message.type == aiohttp.WSMsgType.BINARY:
-            return await self._receive_and_check_complete_zlib_package(message.data, timeout)
-
+    def _handle_other_message(self, message: aiohttp.WSMessage, /) -> typing.NoReturn:
         if message.type == aiohttp.WSMsgType.CLOSE:
             close_code = int(message.data)
             reason = message.extra
             self.logger.error("connection closed with code %s (%s)", close_code, reason)
-
-            can_reconnect = close_code < 4000 or close_code in (
-                errors.ShardCloseCode.UNKNOWN_ERROR,
-                errors.ShardCloseCode.DECODE_ERROR,
-                errors.ShardCloseCode.INVALID_SEQ,
-                errors.ShardCloseCode.SESSION_TIMEOUT,
-                errors.ShardCloseCode.RATE_LIMITED,
-            )
-
+            can_reconnect = close_code < 4000 or close_code in _RECONNECTABLE_CLOSE_CODES
             raise errors.GatewayServerClosedConnectionError(reason, close_code, can_reconnect)
 
         if message.type == aiohttp.WSMsgType.CLOSING or message.type == aiohttp.WSMsgType.CLOSED:
@@ -216,21 +211,39 @@ class _GatewayTransport(aiohttp.ClientWebSocketResponse):
         )
         raise errors.GatewayError("Unexpected websocket exception from gateway") from ex
 
+    async def _receive_and_check(self, timeout: typing.Optional[float], /) -> str:
+        message = await self.receive(timeout)
+
+        if message.type == aiohttp.WSMsgType.TEXT:
+            assert isinstance(message.data, str)
+            return message.data
+
+        if message.type == aiohttp.WSMsgType.BINARY:
+            if message.data.endswith(_ZLIB_SUFFIX):
+                return self.zlib.decompress(message.data).decode("utf-8")
+
+            return await self._receive_and_check_complete_zlib_package(message.data, timeout)
+
+        self._handle_other_message(message)
+
     async def _receive_and_check_complete_zlib_package(
         self, initial_data: bytes, timeout: typing.Optional[float], /
     ) -> str:
         buff = bytearray(initial_data)
 
-        while True:
+        while not buff.endswith(_ZLIB_SUFFIX):
             message = await self.receive(timeout)
 
-            if message.type != aiohttp.WSMsgType.BINARY:
-                raise errors.GatewayError(f"Unexpected message type received {message.type.name}, expected BINARY")
+            if message.type == aiohttp.WSMsgType.BINARY:
+                buff.extend(message.data)
+                continue
 
-            buff.extend(message.data)
+            if message.type == aiohttp.WSMsgType.TEXT:
+                raise errors.GatewayError("Unexpected message type received TEXT, expected BINARY")
 
-            if buff.endswith(b"\x00\x00\xff\xff"):
-                return self.zlib.decompress(buff).decode("utf-8")
+            self._handle_other_message(message)
+
+        return self.zlib.decompress(buff).decode("utf-8")
 
     @classmethod
     @contextlib.asynccontextmanager
