@@ -26,6 +26,7 @@ import os
 import platform
 import string
 import sys
+import time
 
 import colorlog
 import mock
@@ -175,6 +176,7 @@ class TestPrintBanner:
         stack.enter_context(
             mock.patch.object(colorlog.escape_codes, "escape_codes", new={"red": 0, "green": 1, "blue": 2})
         )
+        stack.enter_context(mock.patch.object(time, "sleep"))
         supports_color = stack.enter_context(mock.patch.object(ux, "supports_color", return_value=True))
         read_text = stack.enter_context(mock.patch.object(importlib.resources, "read_text"))
         template = stack.enter_context(mock.patch.object(string, "Template"))
@@ -215,6 +217,7 @@ class TestPrintBanner:
         stack.enter_context(
             mock.patch.object(colorlog.escape_codes, "escape_codes", new={"red": 0, "green": 1, "blue": 2})
         )
+        stack.enter_context(mock.patch.object(time, "sleep"))
         supports_color = stack.enter_context(mock.patch.object(ux, "supports_color", return_value=False))
         read_text = stack.enter_context(mock.patch.object(importlib.resources, "read_text"))
         template = stack.enter_context(mock.patch.object(string, "Template"))
@@ -253,6 +256,7 @@ class TestPrintBanner:
     def test_use_extra_args(self, mock_args):
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(colorlog.escape_codes, "escape_codes", new={}))
+        stack.enter_context(mock.patch.object(time, "sleep"))
         read_text = stack.enter_context(mock.patch.object(importlib.resources, "read_text"))
         template = stack.enter_context(mock.patch.object(string, "Template"))
         write = stack.enter_context(mock.patch.object(sys.stdout, "write"))
@@ -289,6 +293,7 @@ class TestPrintBanner:
 
     def test_overwrite_args_raises_error(self, mock_args):
         stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(time, "sleep"))
         stack.enter_context(mock.patch.object(colorlog.escape_codes, "escape_codes", new={}))
         stack.enter_context(mock.patch.object(importlib.resources, "read_text"))
         stack.enter_context(mock.patch.object(string, "Template"))
