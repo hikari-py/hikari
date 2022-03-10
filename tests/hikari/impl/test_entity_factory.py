@@ -1212,7 +1212,7 @@ class TestEntityFactoryImpl:
         assert audit_log.threads == {
             947643783913308301: entity_factory_impl.deserialize_guild_public_thread(guild_public_thread_payload),
             947690637610844210: entity_factory_impl.deserialize_guild_private_thread(guild_private_thread_payload),
-            946900871160164393: entity_factory_impl.deserilaize_guild_news_thread(guild_news_thread_payload),
+            946900871160164393: entity_factory_impl.deserialize_guild_news_thread(guild_news_thread_payload),
         }
         assert audit_log.users == {115590097100865541: entity_factory_impl.deserialize_user(user_payload)}
         assert audit_log.webhooks == {
@@ -1895,14 +1895,14 @@ class TestEntityFactoryImpl:
             "member": thread_member_payload,
         }
 
-    def test_deserilaize_guild_news_thread(
+    def test_deserialize_guild_news_thread(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
         guild_news_thread_payload: typing.Dict[str, typing.Any],
         thread_member_payload: typing.Dict[str, typing.Any],
     ):
-        thread = entity_factory_impl.deserilaize_guild_news_thread(guild_news_thread_payload)
+        thread = entity_factory_impl.deserialize_guild_news_thread(guild_news_thread_payload)
 
         assert thread.id == 946900871160164393
         assert thread.app is mock_app
@@ -1929,18 +1929,18 @@ class TestEntityFactoryImpl:
         )
         assert isinstance(thread, channel_models.GuildNewsThread)
 
-    def test_deserilaize_guild_news_thread_when_null_fields(
+    def test_deserialize_guild_news_thread_when_null_fields(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         guild_news_thread_payload: typing.Dict[str, typing.Any],
     ):
         guild_news_thread_payload["last_message_id"] = None
 
-        thread = entity_factory_impl.deserilaize_guild_news_thread(guild_news_thread_payload)
+        thread = entity_factory_impl.deserialize_guild_news_thread(guild_news_thread_payload)
 
         assert thread.last_message_id is None
 
-    def test_deserilaize_guild_news_thread_when_unset_fields(
+    def test_deserialize_guild_news_thread_when_unset_fields(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         guild_news_thread_payload: typing.Dict[str, typing.Any],
@@ -1950,7 +1950,7 @@ class TestEntityFactoryImpl:
         del guild_news_thread_payload["member"]
         del guild_news_thread_payload["thread_metadata"]["create_timestamp"]
 
-        thread = entity_factory_impl.deserilaize_guild_news_thread(
+        thread = entity_factory_impl.deserialize_guild_news_thread(
             guild_news_thread_payload, guild_id=snowflakes.Snowflake(4512333123)
         )
 
@@ -1959,7 +1959,7 @@ class TestEntityFactoryImpl:
         assert thread.last_message_id is None
         assert thread.thread_created_at is None
 
-    def test_deserilaize_guild_news_thread_when_passed_through_member(
+    def test_deserialize_guild_news_thread_when_passed_through_member(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         guild_news_thread_payload: typing.Dict[str, typing.Any],
@@ -1967,18 +1967,18 @@ class TestEntityFactoryImpl:
         del guild_news_thread_payload["member"]
         mock_member = mock.Mock()
 
-        thread = entity_factory_impl.deserilaize_guild_news_thread(guild_news_thread_payload, member=mock_member)
+        thread = entity_factory_impl.deserialize_guild_news_thread(guild_news_thread_payload, member=mock_member)
 
         assert thread.member is mock_member
 
-    def test_deserilaize_guild_news_thread_when_passed_through_user_id(
+    def test_deserialize_guild_news_thread_when_passed_through_user_id(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         guild_news_thread_payload: typing.Dict[str, typing.Any],
     ):
         del guild_news_thread_payload["member"]["user_id"]
 
-        thread = entity_factory_impl.deserilaize_guild_news_thread(
+        thread = entity_factory_impl.deserialize_guild_news_thread(
             guild_news_thread_payload, user_id=snowflakes.Snowflake(763423454)
         )
 

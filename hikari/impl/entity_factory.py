@@ -495,7 +495,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             channel_models.ChannelType.GUILD_STAGE: self.deserialize_guild_stage_channel,
         }
         self._thread_channel_type_mapping = {
-            channel_models.ChannelType.GUILD_NEWS_THREAD: self.deserilaize_guild_news_thread,
+            channel_models.ChannelType.GUILD_NEWS_THREAD: self.deserialize_guild_news_thread,
             channel_models.ChannelType.GUILD_PUBLIC_THREAD: self.deserialize_guild_public_thread,
             channel_models.ChannelType.GUILD_PRIVATE_THREAD: self.deserialize_guild_private_thread,
         }
@@ -1107,7 +1107,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         _LOGGER.debug(f"Unrecognised thread channel type {channel_type}")
         raise errors.UnrecognisedEntityError(f"Unrecognised thread channel type {channel_type}")
 
-    def deserilaize_guild_news_thread(
+    def deserialize_guild_news_thread(
         self,
         payload: data_binding.JSONObject,
         *,

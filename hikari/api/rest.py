@@ -2285,7 +2285,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------------
         thread : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildThreadChannel]]
             If provided then the message will be created in the target thread
-            within the webhook's channel, otherwise it it will be created in
+            within the webhook's channel, otherwise it will be created in
             the webhook's target channel.
 
             This is required when trying to create a thread message.
@@ -2442,7 +2442,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------------
         thread : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildThreadChannel]]
             If provided then the message will be fetched from the target thread
-            within the webhook's channel, otherwise it it will be fetched from
+            within the webhook's channel, otherwise it will be fetched from
             the webhook's target channel.
 
             This is required when trying to fetch a thread message.
@@ -2532,7 +2532,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------------
         thread : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildThreadChannel]]
             If provided then the message will be edited in the target thread
-            within the webhook's channel, otherwise it it will be edited in
+            within the webhook's channel, otherwise it will be edited in
             the webhook's target channel.
 
             This is required when trying to edit a thread message.
@@ -2683,7 +2683,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------------
         thread : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildThreadChannel]]
             If provided then the message will be deleted from the target thread
-            within the webhook's channel, otherwise it it will be deleted from
+            within the webhook's channel, otherwise it will be deleted from
             the webhook's target channel.
 
             This is required when trying to delete a thread message.
@@ -4913,7 +4913,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         !!! warning
             Private and public threads can only be made in guild text channels,
-            and news threads can only be made in guild news channels,
+            and news threads can only be made in guild news channels.
 
         Parameters
         ----------
