@@ -4260,7 +4260,6 @@ class TestRESTClientImplAsync:
 
     @pytest.mark.parametrize("default_auto_archive_duration", [12322, datetime.timedelta(seconds=12322), 12322.0])
     async def test__create_guild_channel(self, rest_client, default_auto_archive_duration):
-        channel = mock.Mock(spec_set=channels.GuildChannel)
         overwrite1 = StubModel(987)
         overwrite2 = StubModel(654)
         expected_route = routes.POST_GUILD_CHANNELS.compile(guild=123)
