@@ -140,7 +140,8 @@ class Test_Response:
     def test_defaults_to_text_content_type(self):
         response = interaction_server_impl._Response(status_code=200, payload=b"hi there")
 
-        assert response.headers == {"Content-Type": "text/plain; charset=UTF-8"}
+        assert response.content_type == "text/plain; charset=UTF-8"
+        assert response.headers is None
         assert response.payload == b"hi there"
         assert response.status_code == 200
 
@@ -149,7 +150,8 @@ class Test_Response:
             status_code=201, payload=b'{"ok": "no"}', content_type="application/json"
         )
 
-        assert response.headers == {"Content-Type": "application/json"}
+        assert response.content_type == "application/json"
+        assert response.headers is None
         assert response.payload == b'{"ok": "no"}'
         assert response.status_code == 201
 

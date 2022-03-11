@@ -877,25 +877,29 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
     _user_mentions: undefined.UndefinedOr[
         typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
     ] = attr.field(default=undefined.UNDEFINED, kw_only=True)
-    _attachments: typing.List[files.Resourceish] = attr.field(factory=list, kw_only=True)
-    _components: typing.List[special_endpoints.ComponentBuilder] = attr.field(factory=list, kw_only=True)
-    _embeds: typing.List[embeds_.Embed] = attr.field(factory=list, kw_only=True)
+    _attachments: undefined.UndefinedOr[typing.List[files.Resourceish]] = attr.field(
+        default=undefined.UNDEFINED, kw_only=True
+    )
+    _components: undefined.UndefinedOr[typing.List[special_endpoints.ComponentBuilder]] = attr.field(
+        default=undefined.UNDEFINED, kw_only=True
+    )
+    _embeds: undefined.UndefinedOr[typing.List[embeds_.Embed]] = attr.field(default=undefined.UNDEFINED, kw_only=True)
 
     @property
-    def attachments(self) -> typing.Sequence[files.Resourceish]:
-        return self._attachments.copy()
+    def attachments(self) -> undefined.UndefinedOr[typing.Sequence[files.Resourceish]]:
+        return self._attachments.copy() if self._attachments is not undefined.UNDEFINED else undefined.UNDEFINED
 
     @property
     def content(self) -> undefined.UndefinedOr[str]:
         return self._content
 
     @property
-    def components(self) -> typing.Sequence[special_endpoints.ComponentBuilder]:
-        return self._components.copy()
+    def components(self) -> undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]]:
+        return self._components.copy() if self._components is not undefined.UNDEFINED else undefined.UNDEFINED
 
     @property
-    def embeds(self) -> typing.Sequence[embeds_.Embed]:
-        return self._embeds.copy()
+    def embeds(self) -> undefined.UndefinedOr[typing.Sequence[embeds_.Embed]]:
+        return self._embeds.copy() if self._embeds is not undefined.UNDEFINED else undefined.UNDEFINED
 
     @property
     def flags(self) -> typing.Union[undefined.UndefinedType, int, messages.MessageFlag]:
@@ -925,13 +929,28 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
     ) -> undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]]:
         return self._user_mentions
 
+    def add_attachment(
+        self: _InteractionMessageBuilderT, attachment: files.Resourceish, /
+    ) -> _InteractionMessageBuilderT:
+        if self._attachments is undefined.UNDEFINED:
+            self._attachments = []
+
+        self._attachments.append(attachment)
+        return self
+
     def add_component(
         self: _InteractionMessageBuilderT, component: special_endpoints.ComponentBuilder, /
     ) -> _InteractionMessageBuilderT:
+        if self._components is undefined.UNDEFINED:
+            self._components = []
+
         self._components.append(component)
         return self
 
     def add_embed(self: _InteractionMessageBuilderT, embed: embeds_.Embed, /) -> _InteractionMessageBuilderT:
+        if self._embeds is undefined.UNDEFINED:
+            self._embeds = []
+
         self._embeds.append(embed)
         return self
 
@@ -982,9 +1001,14 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
     ) -> typing.Tuple[data_binding.JSONObject, typing.Sequence[files.Resource[files.AsyncReader]]]:
         data = data_binding.JSONObjectBuilder()
         data.put("content", self.content)
-        final_attachments = [files.ensure_resource(attachment) for attachment in self._attachments]
 
-        if self._embeds:
+        if self._attachments:
+            final_attachments = [files.ensure_resource(attachment) for attachment in self._attachments]
+
+        else:
+            final_attachments = []
+
+        if self._embeds is not undefined.UNDEFINED:
             embeds: typing.List[data_binding.JSONObject] = []
             for embed, attachments in map(entity_factory.serialize_embed, self._embeds):
                 if attachments:
@@ -998,7 +1022,10 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
         data.put("flags", self.flags)
         data.put("tts", self.is_tts)
 
-        if not undefined.all_undefined(self.mentions_everyone, self.user_mentions, self.role_mentions):
+        if (
+            not undefined.all_undefined(self.mentions_everyone, self.user_mentions, self.role_mentions)
+            or self.type is base_interactions.ResponseType.MESSAGE_CREATE
+        ):
             data["allowed_mentions"] = mentions.generate_allowed_mentions(
                 self.mentions_everyone, undefined.UNDEFINED, self.user_mentions, self.role_mentions
             )

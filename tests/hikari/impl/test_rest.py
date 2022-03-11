@@ -1365,7 +1365,8 @@ class TestRESTClientImpl:
         assert isinstance(result, special_endpoints.InteractionAutocompleteBuilder)
         assert len(result.choices) == 2
 
-        raw = result.build(mock.Mock())
+        raw, files = result.build(mock.Mock())
+        assert files == ()
         assert raw["data"] == {"choices": [{"name": "name", "value": "value"}, {"name": "a", "value": "b"}]}
 
     def test_interaction_autocomplete_builder_with_set_choices(self, rest_client):

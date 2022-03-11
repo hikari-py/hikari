@@ -683,24 +683,18 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def attachments(self) -> typing.Sequence[files.Resourceish]:
+    def attachments(self) -> undefined.UndefinedOr[typing.Sequence[files.Resourceish]]:
         """Sequence of up to 10 attachments to send with the message."""
 
     @property
     @abc.abstractmethod
-    def components(self) -> typing.Sequence[ComponentBuilder]:
+    def components(self) -> undefined.UndefinedOr[typing.Sequence[ComponentBuilder]]:
         """Sequence of up to 5 component builders to send in this response."""
 
     @property
     @abc.abstractmethod
-    def embeds(self) -> typing.Sequence[embeds_.Embed]:
-        """Sequence of up to 10 of the embeds included in this response.
-
-        Returns
-        -------
-        typing.Sequence[hikari.embeds.Embed]
-            A sequence of up to 10 of the embeds included in this response.
-        """
+    def embeds(self) -> undefined.UndefinedOr[typing.Sequence[embeds_.Embed]]:
+        """Sequence of up to 10 of the embeds included in this response."""
 
     # Settable fields
 
@@ -784,6 +778,21 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
             `builtins.False` or `hikari.undefined.UNDEFINED` to disallow any user
             mentions or `True` to allow all user mentions.
         """  # noqa: E501 - Line too long
+
+    @abc.abstractmethod
+    def add_attachment(self: _T, attachment: files.Resourceish, /) -> _T:
+        """Add an attachment to this response.
+
+        Parameters
+        ----------
+        attachment : hikari.files.Resourceish
+            The attachment to add.
+
+        Returns
+        -------
+        InteractionMessageBuilder
+            Object of this builder.
+        """
 
     @abc.abstractmethod
     def add_component(self: _T, component: ComponentBuilder, /) -> _T:
