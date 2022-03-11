@@ -566,7 +566,9 @@ class InteractionResponseBuilder(abc.ABC):
         """
 
     @abc.abstractmethod
-    def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObject:
+    def build(
+        self, entity_factory: entity_factory_.EntityFactory, /
+    ) -> typing.Tuple[data_binding.JSONObject, typing.Sequence[files.Resource[files.AsyncReader]]]:
         """Build a JSON object from this builder.
 
         Parameters
@@ -576,8 +578,9 @@ class InteractionResponseBuilder(abc.ABC):
 
         Returns
         -------
-        hikari.internal.data_binding.JSONObject
-            The built json object representation of this builder.
+        typing.Tuple[hikari.internal.data_binding.JSONObject, typing.Sequence[files.Resource[Files.AsyncReader]]
+            A tuple of the built json object representation of this builder and
+            a sequence of up to 10 files to send with the response.
         """
 
 
@@ -677,6 +680,11 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
         """
 
     # Extendable fields
+
+    @property
+    @abc.abstractmethod
+    def attachments(self) -> typing.Sequence[files.Resourceish]:
+        """Sequence of up to 10 attachments to send with the message."""
 
     @property
     @abc.abstractmethod

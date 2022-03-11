@@ -30,6 +30,7 @@ import logging
 import threading
 import typing
 
+import aiohttp
 import aiohttp.web
 import aiohttp.web_runner
 
@@ -41,14 +42,17 @@ from hikari.interactions import base_interactions
 from hikari.internal import data_binding
 
 if typing.TYPE_CHECKING:
+    import concurrent.futures
     import socket as socket_
     import ssl
 
+    import aiohttp.abc
     import aiohttp.typedefs
 
     # This is kept inline as pynacl is an optional dependency.
     from nacl import signing
 
+    from hikari import files as files_
     from hikari.api import entity_factory as entity_factory_api
     from hikari.api import rest as rest_api
     from hikari.interactions import command_interactions
@@ -81,6 +85,7 @@ _X_SIGNATURE_ED25519_HEADER: typing.Final[str] = "X-Signature-Ed25519"
 _X_SIGNATURE_TIMESTAMP_HEADER: typing.Final[str] = "X-Signature-Timestamp"
 _CONTENT_TYPE_KEY: typing.Final[str] = "Content-Type"
 _USER_AGENT_KEY: typing.Final[str] = "User-Agent"
+_APPLICATION_OCTET_STREAM: typing.Final[str] = "application/octet-stream"
 _JSON_CONTENT_TYPE: typing.Final[str] = "application/json"
 _JSON_TYPE_WITH_CHARSET: typing.Final[str] = f"{_JSON_CONTENT_TYPE}; charset={_UTF_8_CHARSET}"
 _TEXT_CONTENT_TYPE: typing.Final[str] = "text/plain"
@@ -88,7 +93,7 @@ _TEXT_TYPE_WITH_CHARSET: typing.Final[str] = f"{_TEXT_CONTENT_TYPE}; charset={_U
 
 
 class _Response:
-    __slots__: typing.Sequence[str] = ("_headers", "_payload", "_status_code")
+    __slots__: typing.Sequence[str] = ("_content_type", "_files", "_headers", "_payload", "_status_code")
 
     def __init__(
         self,
@@ -96,16 +101,27 @@ class _Response:
         payload: typing.Optional[bytes] = None,
         *,
         content_type: typing.Optional[str] = None,
+        files: typing.Sequence[files_.Resource[files_.AsyncReader]] = (),
     ) -> None:
-        self._headers = None
-        if payload or content_type:
-            self._headers = {_CONTENT_TYPE_KEY: content_type or _TEXT_TYPE_WITH_CHARSET}
+        if payload and not content_type:
+            content_type = _TEXT_TYPE_WITH_CHARSET
 
+        self._content_type = content_type
+        self._files = files
+        self._headers = None
         self._payload = payload
         self._status_code = status_code
 
     @property
-    def headers(self) -> typing.Optional[typing.Mapping[str, str]]:
+    def content_type(self) -> typing.Optional[str]:
+        return self._content_type
+
+    @property
+    def files(self) -> typing.Sequence[files_.Resource[files_.AsyncReader]]:
+        return self._files
+
+    @property
+    def headers(self) -> typing.Optional[typing.MutableMapping[str, str]]:
         return self._headers
 
     @property
@@ -121,6 +137,27 @@ class _Response:
 _PONG_RESPONSE: typing.Final[_Response] = _Response(
     _OK_STATUS, data_binding.dump_json({"type": _PONG_RESPONSE_TYPE}).encode(), content_type=_JSON_TYPE_WITH_CHARSET
 )
+
+
+class _Payload(aiohttp.Payload):
+    _value: files_.Resource[files_.AsyncReader]
+
+    def __init__(
+        self,
+        value: files_.Resource[files_.AsyncReader],
+        content_type: str,
+        /,
+        *,
+        executor: typing.Optional[concurrent.futures.Executor] = None,
+        headers: typing.Optional[typing.Dict[str, str]] = None,
+    ) -> None:
+        super().__init__(value=value, headers=headers, content_type=content_type)
+        self._executor = executor
+
+    async def write(self, writer: aiohttp.abc.AbstractStreamWriter) -> None:
+        async with self._value.stream(executor=self._executor) as data:
+            async for chunk in data:
+                await writer.write(chunk)
 
 
 class InteractionServer(interaction_server.InteractionServer):
@@ -150,6 +187,7 @@ class InteractionServer(interaction_server.InteractionServer):
         "_close_event",
         "_dumps",
         "_entity_factory",
+        "_executor",
         "_is_closing",
         "_listeners",
         "_loads",
@@ -164,6 +202,7 @@ class InteractionServer(interaction_server.InteractionServer):
         *,
         dumps: aiohttp.typedefs.JSONEncoder = data_binding.dump_json,
         entity_factory: entity_factory_api.EntityFactory,
+        executor: typing.Optional[concurrent.futures.Executor] = None,
         loads: aiohttp.typedefs.JSONDecoder = data_binding.load_json,
         rest_client: rest_api.RESTClient,
         public_key: typing.Optional[bytes] = None,
@@ -184,6 +223,7 @@ class InteractionServer(interaction_server.InteractionServer):
         self._close_event: typing.Optional[asyncio.Event] = None
         self._dumps = dumps
         self._entity_factory = entity_factory
+        self._executor = executor
         self._is_closing = False
         self._listeners: typing.Dict[typing.Type[base_interactions.PartialInteraction], typing.Any] = {}
         self._loads = loads
@@ -284,7 +324,30 @@ class InteractionServer(interaction_server.InteractionServer):
             )
 
         response = await self.on_interaction(body=body, signature=signature_header, timestamp=timestamp_header)
-        return aiohttp.web.Response(status=response.status_code, headers=response.headers, body=response.payload)
+
+        if response.files:
+            multipart = aiohttp.MultipartWriter(subtype="form-data")
+            if response.payload:
+                body_payload = aiohttp.BytesPayload(response.payload, content_type=response.content_type)
+                body_payload.set_content_disposition("form-data", name="payload_json")
+                multipart.append_payload(body_payload)
+
+            for index, file_ in enumerate(response.files):
+                async with file_.stream(head_only=True) as stream:
+                    mimetype = stream.mimetype or _APPLICATION_OCTET_STREAM
+
+                payload = _Payload(file_, mimetype, executor=self._executor)
+                payload.set_content_disposition("form-data", name=f"files[{index}]", filename=file_.filename)
+                multipart.append_payload(payload)
+
+            return aiohttp.web.Response(status=response.status_code, headers=response.headers, body=multipart)
+
+        headers = response.headers
+        if response.content_type:
+            headers = headers or {}
+            headers[_CONTENT_TYPE_KEY] = response.content_type
+
+        return aiohttp.web.Response(status=response.status_code, headers=headers, body=response.payload)
 
     async def close(self) -> None:
         """Gracefully close the server and any open connections."""
@@ -376,7 +439,8 @@ class InteractionServer(interaction_server.InteractionServer):
             _LOGGER.debug("Dispatching interaction %s", interaction.id)
             try:
                 result = await listener(interaction)
-                payload = self._dumps(result.build(self._entity_factory))
+                raw_payload, files = result.build(self._entity_factory)
+                payload = self._dumps(raw_payload)
 
             except Exception as exc:
                 asyncio.get_running_loop().call_exception_handler(
@@ -384,7 +448,7 @@ class InteractionServer(interaction_server.InteractionServer):
                 )
                 return _Response(_INTERNAL_SERVER_ERROR_STATUS, b"Exception occurred during interaction dispatch")
 
-            return _Response(_OK_STATUS, payload.encode(), content_type=_JSON_TYPE_WITH_CHARSET)
+            return _Response(_OK_STATUS, payload.encode(), files=files, content_type=_JSON_TYPE_WITH_CHARSET)
 
         _LOGGER.debug(
             "Ignoring interaction %s of type %s without registered listener", interaction.id, interaction.type

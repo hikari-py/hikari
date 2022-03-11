@@ -788,9 +788,11 @@ class InteractionAutocompleteBuilder(special_endpoints.InteractionAutocompleteBu
         self._choices = choices
         return self
 
-    def build(self, _: entity_factory_.EntityFactory, /) -> data_binding.JSONObject:
+    def build(
+        self, _: entity_factory_.EntityFactory, /
+    ) -> typing.Tuple[data_binding.JSONObject, typing.Sequence[files.Resource[files.AsyncReader]]]:
         data = {"choices": [{"name": choice.name, "value": choice.value} for choice in self._choices]}
-        return {"type": self.type, "data": data}
+        return {"type": self.type, "data": data}, ()
 
 
 @attr_extensions.with_copy
@@ -828,11 +830,13 @@ class InteractionDeferredBuilder(special_endpoints.InteractionDeferredBuilder):
         self._flags = flags
         return self
 
-    def build(self, _: entity_factory_.EntityFactory, /) -> data_binding.JSONObject:
+    def build(
+        self, _: entity_factory_.EntityFactory, /
+    ) -> typing.Tuple[data_binding.JSONObject, typing.Sequence[files.Resource[files.AsyncReader]]]:
         if self._flags is not undefined.UNDEFINED:
-            return {"type": self._type, "data": {"flags": self._flags}}
+            return {"type": self._type, "data": {"flags": self._flags}}, ()
 
-        return {"type": self._type}
+        return {"type": self._type}, ()
 
 
 @attr_extensions.with_copy
@@ -873,8 +877,13 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
     _user_mentions: undefined.UndefinedOr[
         typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
     ] = attr.field(default=undefined.UNDEFINED, kw_only=True)
+    _attachments: typing.List[files.Resourceish] = attr.field(factory=list, kw_only=True)
     _components: typing.List[special_endpoints.ComponentBuilder] = attr.field(factory=list, kw_only=True)
     _embeds: typing.List[embeds_.Embed] = attr.field(factory=list, kw_only=True)
+
+    @property
+    def attachments(self) -> typing.Sequence[files.Resourceish]:
+        return self._attachments.copy()
 
     @property
     def content(self) -> undefined.UndefinedOr[str]:
@@ -968,14 +977,18 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
         self._user_mentions = user_mentions
         return self
 
-    def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObject:
+    def build(
+        self, entity_factory: entity_factory_.EntityFactory, /
+    ) -> typing.Tuple[data_binding.JSONObject, typing.Sequence[files.Resource[files.AsyncReader]]]:
         data = data_binding.JSONObjectBuilder()
         data.put("content", self.content)
+        final_attachments = [files.ensure_resource(attachment) for attachment in self._attachments]
+
         if self._embeds:
             embeds: typing.List[data_binding.JSONObject] = []
             for embed, attachments in map(entity_factory.serialize_embed, self._embeds):
                 if attachments:
-                    raise ValueError("Cannot send an embed with attachments in a slash command's initial response")
+                    final_attachments.extend(attachments)
 
                 embeds.append(embed)
 
@@ -990,7 +1003,7 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
                 self.mentions_everyone, undefined.UNDEFINED, self.user_mentions, self.role_mentions
             )
 
-        return {"type": self._type, "data": data}
+        return {"type": self._type, "data": data}, final_attachments
 
 
 @attr.define(kw_only=False, weakref_slot=False)
