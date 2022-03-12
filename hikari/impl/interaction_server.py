@@ -93,7 +93,7 @@ _TEXT_TYPE_WITH_CHARSET: typing.Final[str] = f"{_TEXT_CONTENT_TYPE}; charset={_U
 
 
 class _Response:
-    __slots__: typing.Sequence[str] = ("_content_type", "_files", "_headers", "_payload", "_status_code")
+    __slots__: typing.Sequence[str] = ("_content_type", "_files", "_payload", "_status_code")
 
     def __init__(
         self,
@@ -108,7 +108,6 @@ class _Response:
 
         self._content_type = content_type
         self._files = files
-        self._headers = None
         self._payload = payload
         self._status_code = status_code
 
@@ -122,7 +121,7 @@ class _Response:
 
     @property
     def headers(self) -> typing.Optional[typing.MutableMapping[str, str]]:
-        return self._headers
+        return None
 
     @property
     def payload(self) -> typing.Optional[bytes]:
