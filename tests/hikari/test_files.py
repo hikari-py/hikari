@@ -22,11 +22,9 @@
 
 import base64
 import concurrent.futures
-import contextlib
 import pathlib
 import random
 import tempfile
-import typing
 
 import mock
 import pytest

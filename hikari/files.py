@@ -852,7 +852,6 @@ class _MultiProcessingFileReaderContextManagerImpl(AsyncReaderContextManager[Fil
     async def __aenter__(self) -> MultiprocessingFileReader:
         loop = asyncio.get_running_loop()
 
-        # TODO: isn't running this operation in a process pool unnecessary overhead
         path = await loop.run_in_executor(self.executor, _stat, self.path)
         return MultiprocessingFileReader(self.filename, None, self.executor, path)
 
