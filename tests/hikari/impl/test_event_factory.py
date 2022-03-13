@@ -37,6 +37,7 @@ from hikari.events import member_events
 from hikari.events import message_events
 from hikari.events import reaction_events
 from hikari.events import role_events
+from hikari.events import scheduled_events
 from hikari.events import shard_events
 from hikari.events import typing_events
 from hikari.events import user_events
@@ -536,6 +537,72 @@ class TestEventFactoryImpl:
         assert event.guild_id == 432123
         assert event.role_id == 848484
         assert event.old_role is mock_old_role
+
+    ##########################
+    # SCHEDULED EVENT EVENTS #
+    ##########################
+
+    def test_deserialize_scheduled_event_create_event(
+        self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: mock.Mock
+    ):
+        mock_payload = mock.Mock()
+
+        event = event_factory.deserialize_scheduled_event_create_event(mock_shard, mock_payload)
+
+        assert event.shard is mock_shard
+        assert event.event is mock_app.entity_factory.deserialize_scheduled_event.return_value
+        assert isinstance(event, scheduled_events.ScheduledEventCreateEvent)
+        mock_app.entity_factory.deserialize_scheduled_event.assert_called_once_with(mock_payload)
+
+    def test_deserialize_scheduled_event_update_event(
+        self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: mock.Mock
+    ):
+        mock_payload = mock.Mock()
+
+        event = event_factory.deserialize_scheduled_event_update_event(mock_shard, mock_payload)
+
+        assert event.shard is mock_shard
+        assert event.event is mock_app.entity_factory.deserialize_scheduled_event.return_value
+        assert isinstance(event, scheduled_events.ScheduledEventUpdateEvent)
+        mock_app.entity_factory.deserialize_scheduled_event.assert_called_once_with(mock_payload)
+
+    def test_deserialize_scheduled_event_delete_event(
+        self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: mock.Mock
+    ):
+        mock_payload = mock.Mock()
+
+        event = event_factory.deserialize_scheduled_event_delete_event(mock_shard, mock_payload)
+
+        assert event.shard is mock_shard
+        assert event.event is mock_app.entity_factory.deserialize_scheduled_event.return_value
+        assert isinstance(event, scheduled_events.ScheduledEventDeleteEvent)
+        mock_app.entity_factory.deserialize_scheduled_event.assert_called_once_with(mock_payload)
+
+    def test_deserialize_scheduled_event_user_add_event(
+        self, event_factory: event_factory_.EventFactoryImpl, mock_app: mock.Mock, mock_shard: mock.Mock
+    ):
+        mock_payload = {"guild_id": "494949", "user_id": "123123123", "guild_scheduled_event_id": "49494944"}
+
+        event = event_factory.deserialize_scheduled_event_user_add_event(mock_shard, mock_payload)
+
+        assert event.shard is mock_shard
+        assert event.guild_id == 494949
+        assert event.user_id == 123123123
+        assert event.event_id == 49494944
+        assert isinstance(event, scheduled_events.ScheduledEventUserAddEvent)
+
+    def test_deserialize_scheduled_event_user_remove_event(
+        self, event_factory: event_factory_.EventFactoryImpl, mock_app: mock.Mock, mock_shard: mock.Mock
+    ):
+        mock_payload = {"guild_id": "3244321", "user_id": "56423", "guild_scheduled_event_id": "1234312"}
+
+        event = event_factory.deserialize_scheduled_event_user_remove_event(mock_shard, mock_payload)
+
+        assert event.shard is mock_shard
+        assert event.guild_id == 3244321
+        assert event.user_id == 56423
+        assert event.event_id == 1234312
+        assert isinstance(event, scheduled_events.ScheduledEventUserRemoveEvent)
 
     ###################
     # LIFETIME EVENTS #

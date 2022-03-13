@@ -37,6 +37,7 @@ __all__: typing.List[str] = [
     "PinsUpdateEvent",
     "GuildPinsUpdateEvent",
     "DMPinsUpdateEvent",
+    "InviteEvent",
     "InviteCreateEvent",
     "InviteDeleteEvent",
     "WebhookUpdateEvent",

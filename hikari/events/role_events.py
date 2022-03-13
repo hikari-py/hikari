@@ -23,12 +23,7 @@
 """Events pertaining to manipulation of roles within guilds."""
 from __future__ import annotations
 
-__all__: typing.List[str] = [
-    "RoleEvent",
-    "RoleCreateEvent",
-    "RoleUpdateEvent",
-    "RoleDeleteEvent",
-]
+__all__: typing.List[str] = ["RoleEvent", "RoleCreateEvent", "RoleUpdateEvent", "RoleDeleteEvent"]
 
 import abc
 import typing

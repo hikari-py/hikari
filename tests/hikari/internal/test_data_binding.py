@@ -190,6 +190,20 @@ class TestJSONObjectBuilder:
         builder.put("bar", m, conversion=convert)
         convert.assert_called_once_with(m)
 
+    def test_put_undefined_and_conversion(self):
+        mock_convert = mock.Mock()
+        builder = data_binding.JSONObjectBuilder()
+        builder.put("foo", undefined.UNDEFINED, conversion=mock_convert)
+        assert builder == {}
+        mock_convert.assert_not_called()
+
+    def test_put_none_and_conversion(self):
+        mock_convert = mock.Mock()
+        builder = data_binding.JSONObjectBuilder()
+        builder.put("foo", None, conversion=mock_convert)
+        assert builder == {"foo": None}
+        mock_convert.assert_not_called()
+
     def test_put_array_undefined(self):
         builder = data_binding.JSONObjectBuilder()
         builder.put_array("dd", undefined.UNDEFINED)

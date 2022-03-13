@@ -369,6 +369,15 @@ DELETE_GUILD_EMOJI: typing.Final[Route] = Route(DELETE, "/guilds/{guild}/emojis/
 GET_GUILD_EMOJIS: typing.Final[Route] = Route(GET, "/guilds/{guild}/emojis")
 POST_GUILD_EMOJIS: typing.Final[Route] = Route(POST, "/guilds/{guild}/emojis")
 
+GET_GUILD_SCHEDULED_EVENT: typing.Final[Route] = Route(GET, "/guilds/{guild}/scheduled-events/{scheduled_event}")
+GET_GUILD_SCHEDULED_EVENTS: typing.Final[Route] = Route(GET, "/guilds/{guild}/scheduled-events")
+GET_GUILD_SCHEDULED_EVENT_USERS: typing.Final[Route] = Route(
+    GET, "/guilds/{guild}/scheduled-events/{scheduled_event}/users"
+)
+POST_GUILD_SCHEDULED_EVENT: typing.Final[Route] = Route(POST, "/guilds/{guild}/scheduled-events")
+PATCH_GUILD_SCHEDULED_EVENT: typing.Final[Route] = Route(PATCH, "/guilds/{guild}/scheduled-events/{scheduled_event}")
+DELETE_GUILD_SCHEDULED_EVENT: typing.Final[Route] = Route(DELETE, "/guilds/{guild}/scheduled-events/{scheduled_event}")
+
 GET_GUILD_STICKER: typing.Final[Route] = Route(GET, "/guilds/{guild}/stickers/{sticker}")
 PATCH_GUILD_STICKER: typing.Final[Route] = Route(PATCH, "/guilds/{guild}/stickers/{sticker}")
 DELETE_GUILD_STICKER: typing.Final[Route] = Route(DELETE, "/guilds/{guild}/stickers/{sticker}")
@@ -562,3 +571,5 @@ CDN_STICKER: typing.Final[CDNRoute] = CDNRoute("/stickers/{sticker_id}", {PNG, L
 CDN_STICKER_PACK_BANNER: typing.Final[CDNRoute] = CDNRoute(
     "/app-assets/710982414301790216/store/{hash}", {PNG, *JPEG_JPG, WEBP}
 )
+
+SCHEDULED_EVENT_COVER: typing.Final[CDNRoute] = CDNRoute("/guilds/{scheduled_event_id}/{hash}", {PNG, *JPEG_JPG, WEBP})

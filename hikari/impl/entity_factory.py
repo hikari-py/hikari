@@ -46,6 +46,7 @@ from hikari import invites as invite_models
 from hikari import messages as message_models
 from hikari import permissions as permission_models
 from hikari import presences as presence_models
+from hikari import scheduled_events as scheduled_events_models
 from hikari import sessions as gateway_models
 from hikari import snowflakes
 from hikari import stickers as sticker_models
@@ -72,6 +73,7 @@ _interaction_option_type_mapping: typing.Dict[int, typing.Callable[[typing.Any],
     commands.OptionType.CHANNEL: snowflakes.Snowflake,
     commands.OptionType.ROLE: snowflakes.Snowflake,
     commands.OptionType.MENTIONABLE: snowflakes.Snowflake,
+    commands.OptionType.ATTACHMENT: snowflakes.Snowflake,
 }
 
 
@@ -195,6 +197,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         "_dm_channel_type_mapping",
         "_guild_channel_type_mapping",
         "_interaction_type_mapping",
+        "_scheduled_event_type_mapping",
         "_webhook_type_mapping",
     )
 
@@ -254,15 +257,15 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             audit_log_models.AuditLogEventType.MEMBER_MOVE: self._deserialize_member_move_entry_info,
         }
         self._command_mapping = {
-            commands.CommandType.SLASH: self._deserialize_slash_command,
-            commands.CommandType.USER: self._deserialize_context_menu_command,
-            commands.CommandType.MESSAGE: self._deserialize_context_menu_command,
+            commands.CommandType.SLASH: self.deserialize_slash_command,
+            commands.CommandType.USER: self.deserialize_context_menu_command,
+            commands.CommandType.MESSAGE: self.deserialize_context_menu_command,
         }
         self._component_type_mapping = {
-            message_models.ComponentType.ACTION_ROW: self.deserialize_action_row,
-            message_models.ComponentType.BUTTON: self.deserialize_button,
-            message_models.ComponentType.SELECT_MENU: self.deserialize_select_menu,
-            message_models.ComponentType.TEXT_INPUT: self.deserialize_text_input,
+            message_models.ComponentType.ACTION_ROW: self._deserialize_action_row,
+            message_models.ComponentType.BUTTON: self._deserialize_button,
+            message_models.ComponentType.SELECT_MENU: self._deserialize_select_menu,
+            message_models.ComponentType.TEXT_INPUT: self._deserialize_text_input,
         }
         self._dm_channel_type_mapping = {
             channel_models.ChannelType.DM: self.deserialize_dm,
@@ -283,6 +286,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             base_interactions.InteractionType.MESSAGE_COMPONENT: self.deserialize_component_interaction,
             base_interactions.InteractionType.AUTOCOMPLETE: self.deserialize_autocomplete_interaction,
             base_interactions.InteractionType.MODAL_SUBMIT: self.deserialize_modal_interaction,
+        }
+        self._scheduled_event_type_mapping = {
+            scheduled_events_models.ScheduledEventType.STAGE_INSTANCE: self.deserialize_scheduled_stage_event,
+            scheduled_events_models.ScheduledEventType.VOICE: self.deserialize_scheduled_voice_event,
+            scheduled_events_models.ScheduledEventType.EXTERNAL: self.deserialize_scheduled_external_event,
         }
         self._webhook_type_mapping = {
             webhook_models.WebhookType.INCOMING: self.deserialize_incoming_webhook,
@@ -1712,7 +1720,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             max_value=payload.get("max_value"),
         )
 
-    def _deserialize_slash_command(
+    def deserialize_slash_command(
         self,
         payload: data_binding.JSONObject,
         *,
@@ -1739,7 +1747,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             version=snowflakes.Snowflake(payload["version"]),
         )
 
-    def _deserialize_context_menu_command(
+    def deserialize_context_menu_command(
         self,
         payload: data_binding.JSONObject,
         *,
@@ -2069,7 +2077,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         components: typing.List[typing.Any] = []
         for component_payload in data_payload["components"]:
             try:
-                components.append(self.deserialize_component(component_payload))
+                components.append(self._deserialize_component(component_payload))
             except errors.UnrecognisedEntityError:
                 pass
 
@@ -2223,12 +2231,12 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     # MESSAGE MODELS #
     ##################
 
-    def deserialize_action_row(self, payload: data_binding.JSONObject) -> message_models.ActionRowComponent:
+    def _deserialize_action_row(self, payload: data_binding.JSONObject) -> message_models.ActionRowComponent:
         components: typing.List[message_models.PartialComponent] = []
 
         for component_payload in payload["components"]:
             try:
-                components.append(self.deserialize_component(component_payload))
+                components.append(self._deserialize_component(component_payload))
 
             except errors.UnrecognisedEntityError:
                 pass
@@ -2237,7 +2245,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             type=message_models.ComponentType(payload["type"]), components=components
         )
 
-    def deserialize_button(self, payload: data_binding.JSONObject) -> message_models.ButtonComponent:
+    def _deserialize_button(self, payload: data_binding.JSONObject) -> message_models.ButtonComponent:
         emoji_payload = payload.get("emoji")
         return message_models.ButtonComponent(
             type=message_models.ComponentType(payload["type"]),
@@ -2249,7 +2257,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             is_disabled=payload.get("disabled", False),
         )
 
-    def deserialize_select_menu(self, payload: data_binding.JSONObject) -> message_models.SelectMenuComponent:
+    def _deserialize_select_menu(self, payload: data_binding.JSONObject) -> message_models.SelectMenuComponent:
         options: typing.List[message_models.SelectMenuOption] = []
         for option_payload in payload["options"]:
             emoji = None
@@ -2276,14 +2284,14 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             is_disabled=payload.get("disabled", False),
         )
 
-    def deserialize_text_input(self, payload: data_binding.JSONObject) -> modal_interactions.PartialTextInput:
+    def _deserialize_text_input(self, payload: data_binding.JSONObject) -> modal_interactions.PartialTextInput:
         return modal_interactions.PartialTextInput(
             type=message_models.ComponentType(payload["type"]),
             custom_id=payload["custom_id"],
             value=payload["value"],
         )
 
-    def deserialize_component(self, payload: data_binding.JSONObject) -> message_models.PartialComponent:
+    def _deserialize_component(self, payload: data_binding.JSONObject) -> message_models.PartialComponent:
         component_type = message_models.ComponentType(payload["type"])
 
         if deserialize := self._component_type_mapping.get(component_type):
@@ -2439,7 +2447,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             components = []
             for component_payload in component_payloads:
                 try:
-                    components.append(self.deserialize_component(component_payload))
+                    components.append(self._deserialize_component(component_payload))
 
                 except errors.UnrecognisedEntityError:
                     pass
@@ -2558,7 +2566,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if component_payloads := payload.get("components"):
             for component_payload in component_payloads:
                 try:
-                    components.append(self.deserialize_component(component_payload))
+                    components.append(self._deserialize_component(component_payload))
 
                 except errors.UnrecognisedEntityError:
                     pass
@@ -2738,6 +2746,117 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             visible_status=presence_models.Status(payload["status"]),
             activities=activities,
             client_status=client_status,
+        )
+
+    ##########################
+    # SCHEDULED EVENT MODELS #
+    ##########################
+
+    def deserialize_scheduled_external_event(
+        self, payload: data_binding.JSONObject
+    ) -> scheduled_events_models.ScheduledExternalEvent:
+        creator: typing.Optional[user_models.User] = None
+        if raw_creator := payload.get("creator"):
+            creator = self.deserialize_user(raw_creator)
+
+        return scheduled_events_models.ScheduledExternalEvent(
+            app=self._app,
+            id=snowflakes.Snowflake(payload["id"]),
+            guild_id=snowflakes.Snowflake(payload["guild_id"]),
+            name=payload["name"],
+            description=payload.get("description"),
+            start_time=time.iso8601_datetime_string_to_datetime(payload["scheduled_start_time"]),
+            end_time=time.iso8601_datetime_string_to_datetime(payload["scheduled_end_time"]),
+            privacy_level=scheduled_events_models.EventPrivacyLevel(payload["privacy_level"]),
+            status=scheduled_events_models.ScheduledEventStatus(payload["status"]),
+            entity_type=scheduled_events_models.ScheduledEventType(payload["entity_type"]),
+            creator=creator,
+            user_count=payload.get("user_count"),
+            image_hash=payload.get("image"),
+            location=payload["entity_metadata"]["location"],
+        )
+
+    def deserialize_scheduled_stage_event(
+        self, payload: data_binding.JSONObject
+    ) -> scheduled_events_models.ScheduledStageEvent:
+        creator: typing.Optional[user_models.User] = None
+        if raw_creator := payload.get("creator"):
+            creator = self.deserialize_user(raw_creator)
+
+        end_time: typing.Optional[datetime.datetime] = None
+        if raw_end_time := payload.get("scheduled_end_time"):
+            end_time = time.iso8601_datetime_string_to_datetime(raw_end_time)
+
+        return scheduled_events_models.ScheduledStageEvent(
+            app=self._app,
+            id=snowflakes.Snowflake(payload["id"]),
+            guild_id=snowflakes.Snowflake(payload["guild_id"]),
+            name=payload["name"],
+            description=payload.get("description"),
+            start_time=time.iso8601_datetime_string_to_datetime(payload["scheduled_start_time"]),
+            end_time=end_time,
+            privacy_level=scheduled_events_models.EventPrivacyLevel(payload["privacy_level"]),
+            status=scheduled_events_models.ScheduledEventStatus(payload["status"]),
+            entity_type=scheduled_events_models.ScheduledEventType(payload["entity_type"]),
+            creator=creator,
+            user_count=payload.get("user_count"),
+            image_hash=payload.get("image"),
+            channel_id=snowflakes.Snowflake(payload["channel_id"]),
+        )
+
+    def deserialize_scheduled_voice_event(
+        self, payload: data_binding.JSONObject
+    ) -> scheduled_events_models.ScheduledVoiceEvent:
+        creator: typing.Optional[user_models.User] = None
+        if raw_creator := payload.get("creator"):
+            creator = self.deserialize_user(raw_creator)
+
+        end_time: typing.Optional[datetime.datetime] = None
+        if raw_end_time := payload.get("scheduled_end_time"):
+            end_time = time.iso8601_datetime_string_to_datetime(raw_end_time)
+
+        return scheduled_events_models.ScheduledVoiceEvent(
+            app=self._app,
+            id=snowflakes.Snowflake(payload["id"]),
+            guild_id=snowflakes.Snowflake(payload["guild_id"]),
+            name=payload["name"],
+            description=payload.get("description"),
+            start_time=time.iso8601_datetime_string_to_datetime(payload["scheduled_start_time"]),
+            end_time=end_time,
+            privacy_level=scheduled_events_models.EventPrivacyLevel(payload["privacy_level"]),
+            status=scheduled_events_models.ScheduledEventStatus(payload["status"]),
+            entity_type=scheduled_events_models.ScheduledEventType(payload["entity_type"]),
+            creator=creator,
+            user_count=payload.get("user_count"),
+            image_hash=payload.get("image"),
+            channel_id=snowflakes.Snowflake(payload["channel_id"]),
+        )
+
+    def deserialize_scheduled_event(self, payload: data_binding.JSONObject) -> scheduled_events_models.ScheduledEvent:
+        event_type = scheduled_events_models.ScheduledEventType(payload["entity_type"])
+
+        if converter := self._scheduled_event_type_mapping.get(event_type):
+            return converter(payload)
+
+        _LOGGER.debug(f"Unrecognised scheduled event type {event_type}")
+        raise errors.UnrecognisedEntityError(f"Unrecognised scheduled event type {event_type}")
+
+    def deserialize_scheduled_event_user(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+    ) -> scheduled_events_models.ScheduledEventUser:
+        user = self.deserialize_user(payload["user"])
+
+        member: typing.Optional[guild_models.Member] = None
+        if raw_member := payload.get("member"):
+            member = self.deserialize_member(raw_member, user=user, guild_id=guild_id)
+
+        return scheduled_events_models.ScheduledEventUser(
+            event_id=snowflakes.Snowflake(payload["guild_scheduled_event_id"]),
+            user=user,
+            member=member,
         )
 
     ###################
