@@ -272,7 +272,6 @@ class TestTextChannel:
 
         await model.send(
             content="test content",
-            nonce="abc123",
             tts=True,
             attachment=mock_attachment,
             attachments=mock_attachments,
@@ -290,7 +289,6 @@ class TestTextChannel:
         model.app.rest.create_message.assert_awaited_once_with(
             channel=12345679,
             content="test content",
-            nonce="abc123",
             tts=True,
             attachment=mock_attachment,
             attachments=mock_attachments,
