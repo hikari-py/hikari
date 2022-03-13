@@ -48,6 +48,7 @@ import abc
 import asyncio
 import base64
 import concurrent.futures
+import errno
 import inspect
 import io
 import mimetypes
@@ -771,7 +772,7 @@ class FileReader(AsyncReader, abc.ABC):
     """The path to the resource to read."""
 
 
-def _stat(path: pathlib.Path) -> os.stat_result:
+def _stat(path: pathlib.Path) -> pathlib.Path:
     # While paths will be implicitly resolved, we still need to explicitly
     # call expanduser to deal with a ~ base.
     try:
@@ -779,25 +780,30 @@ def _stat(path: pathlib.Path) -> os.stat_result:
     except RuntimeError:
         pass  # A home directory couldn't be resolved, so we'll just use the path as-is.
 
-    return path.stat()
+    # path.stat() will raise FileNotFoundError if the file doesn't exist
+    # (unlike is_dir) which is what we want here.
+    if stat.S_ISDIR(path.stat().st_mode):
+        raise IsADirectoryError(errno.EISDIR, "Cannot open the path specified as it is a directory", str(path))
+
+    return path
 
 
 @attr.define(weakref_slot=False)
 @typing.final
-class _FileAsyncReaderContextManagerImpl(AsyncReaderContextManager[FileReader]):
-    impl: FileReader = attr.field()
+class _ThreadedFileReaderContextManagerImpl(AsyncReaderContextManager[FileReader]):
+    executor: typing.Optional[concurrent.futures.ThreadPoolExecutor] = attr.field()
+    file: typing.Optional[typing.BinaryIO] = attr.field(default=None, init=False)
+    filename: str = attr.field()
+    path: pathlib.Path = attr.field()
 
-    async def __aenter__(self) -> FileReader:
+    async def __aenter__(self) -> ThreadedFileReader:
+        if self.file:
+            raise RuntimeError("File is already open")
+
         loop = asyncio.get_running_loop()
-
-        # Will raise FileNotFoundError if the file doesn't exist (unlike is_dir),
-        # which is what we want here.
-        file_stats = await loop.run_in_executor(self.impl.executor, _stat, self.impl.path)
-
-        if stat.S_ISDIR(file_stats.st_mode):
-            raise IsADirectoryError(self.impl.path)
-
-        return self.impl
+        self.path = await loop.run_in_executor(self.executor, _stat, self.path)
+        self.file = typing.cast(io.BufferedReader, await loop.run_in_executor(self.executor, self.path.open, "rb"))
+        return ThreadedFileReader(self.filename, None, self.executor, self.path, self.file)
 
     async def __aexit__(
         self,
@@ -805,18 +811,13 @@ class _FileAsyncReaderContextManagerImpl(AsyncReaderContextManager[FileReader]):
         exc: typing.Optional[BaseException],
         exc_tb: typing.Optional[types.TracebackType],
     ) -> None:
-        pass
+        if not self.file:
+            raise RuntimeError("File isn't open")
 
-
-def _open_file(path: pathlib.Path) -> typing.BinaryIO:
-    # While paths will be implicitly resolved, we still need to explicitly
-    # call expanduser to deal with a ~ base.
-    try:
-        path = path.expanduser()
-    except RuntimeError:
-        pass  # A home directory couldn't be resolved, so we'll just use the path as-is.
-
-    return path.open("rb")
+        loop = asyncio.get_running_loop()
+        file = self.file
+        self.file = None
+        await loop.run_in_executor(self.executor, file.close)
 
 
 @attr.define(weakref_slot=False)
@@ -828,32 +829,44 @@ class ThreadedFileReader(FileReader):
     do not need to be pickled to be communicated.
     """
 
+    _pointer: typing.BinaryIO = attr.field()
+
     async def __aiter__(self) -> typing.AsyncGenerator[typing.Any, bytes]:
         loop = asyncio.get_running_loop()
 
-        fp = await loop.run_in_executor(self.executor, _open_file, self.path)
+        while True:
+            chunk = await loop.run_in_executor(self.executor, self._pointer.read, _MAGIC)
+            yield chunk
+            if len(chunk) < _MAGIC:
+                break
 
-        try:
-            while True:
-                chunk = await loop.run_in_executor(self.executor, fp.read, _MAGIC)
-                yield chunk
-                if len(chunk) < _MAGIC:
-                    break
 
-        finally:
-            await loop.run_in_executor(self.executor, fp.close)
+@attr.define(weakref_slot=False)
+@typing.final
+class _MultiProcessingFileReaderContextManagerImpl(AsyncReaderContextManager[FileReader]):
+    executor: concurrent.futures.ProcessPoolExecutor = attr.field()
+    file: typing.Optional[typing.BinaryIO] = attr.field(default=None, init=False)
+    filename: str = attr.field()
+    path: pathlib.Path = attr.field()
+
+    async def __aenter__(self) -> MultiprocessingFileReader:
+        loop = asyncio.get_running_loop()
+
+        path = await loop.run_in_executor(self.executor, _stat, self.path)
+        return MultiprocessingFileReader(self.filename, None, self.executor, path)
+
+    async def __aexit__(
+        self,
+        exc_type: typing.Optional[typing.Type[BaseException]],
+        exc: typing.Optional[BaseException],
+        exc_tb: typing.Optional[types.TracebackType],
+    ) -> None:
+        pass
 
 
 def _read_all(path: pathlib.Path) -> bytes:
-    # While paths will be implicitly resolved, we still need to explicitly
-    # call expanduser to deal with a ~ base.
-    try:
-        path = path.expanduser()
-    except RuntimeError:
-        pass  # A home directory couldn't be resolved, so we'll just use the path as-is.
-
-    with path.open("rb") as fp:
-        return fp.read()
+    with path.open("rb") as file:
+        return file.read()
 
 
 @attr.define(slots=False, weakref_slot=False)  # Do not slot (pickle)
@@ -952,12 +965,23 @@ class File(Resource[FileReader]):
         AsyncReaderContextManager[FileReader]
             An async context manager that when entered, produces the
             data stream.
+
+        Raises
+        ------
+        IsADirectoryError
+            If the file's path leads to a directory.
+        FileNotFoundError
+            If the file doesn't exist.
         """
         # asyncio forces the default executor when this is None to always be a thread pool executor anyway,
         # so this is safe enough to do.:
-        is_threaded = executor is None or isinstance(executor, concurrent.futures.ThreadPoolExecutor)
-        impl = ThreadedFileReader if is_threaded else MultiprocessingFileReader
-        return _FileAsyncReaderContextManagerImpl(impl(self.filename, None, executor, self.path))
+        if executor is None or isinstance(executor, concurrent.futures.ThreadPoolExecutor):
+            return _ThreadedFileReaderContextManagerImpl(executor, self.filename, self.path)
+
+        if not isinstance(executor, concurrent.futures.ProcessPoolExecutor):
+            raise TypeError("The executor must be a ProcessPoolExecutor, ThreadPoolExecutor, or `builtins.None`.")
+
+        return _MultiProcessingFileReaderContextManagerImpl(executor, self.filename, self.path)
 
 
 ########################################################################
