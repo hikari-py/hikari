@@ -1011,9 +1011,7 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
         if self._embeds is not undefined.UNDEFINED:
             embeds: typing.List[data_binding.JSONObject] = []
             for embed, attachments in map(entity_factory.serialize_embed, self._embeds):
-                if attachments:
-                    final_attachments.extend(attachments)
-
+                final_attachments.extend(attachments)
                 embeds.append(embed)
 
             data["embeds"] = embeds
