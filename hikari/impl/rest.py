@@ -66,8 +66,8 @@ from hikari import undefined
 from hikari import urls
 from hikari import users
 from hikari.api import rest as rest_api
-from hikari.impl import buckets as buckets_
-from hikari.impl import config
+from hikari.impl import buckets as buckets_impl
+from hikari.impl import config as config_impl
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import rate_limits
 from hikari.impl import special_endpoints as special_endpoints_impl
@@ -251,11 +251,11 @@ class _RESTProvider(traits.RESTAware):
         return self._rest()
 
     @property
-    def http_settings(self) -> config.HTTPSettings:
+    def http_settings(self) -> config_impl.HTTPSettings:
         return self._rest().http_settings
 
     @property
-    def proxy_settings(self) -> config.ProxySettings:
+    def proxy_settings(self) -> config_impl.ProxySettings:
         return self._rest().proxy_settings
 
 
@@ -315,14 +315,14 @@ class RESTApp(traits.ExecutorAware):
         self,
         *,
         executor: typing.Optional[concurrent.futures.Executor] = None,
-        http_settings: typing.Optional[config.HTTPSettings] = None,
+        http_settings: typing.Optional[config_impl.HTTPSettings] = None,
         max_rate_limit: float = 300,
         max_retries: int = 3,
-        proxy_settings: typing.Optional[config.ProxySettings] = None,
+        proxy_settings: typing.Optional[config_impl.ProxySettings] = None,
         url: typing.Optional[str] = None,
     ) -> None:
-        self._http_settings = config.HTTPSettings() if http_settings is None else http_settings
-        self._proxy_settings = config.ProxySettings() if proxy_settings is None else proxy_settings
+        self._http_settings = config_impl.HTTPSettings() if http_settings is None else http_settings
+        self._proxy_settings = config_impl.ProxySettings() if proxy_settings is None else proxy_settings
         self._executor = executor
         self._max_rate_limit = max_rate_limit
         self._max_retries = max_retries
@@ -333,11 +333,11 @@ class RESTApp(traits.ExecutorAware):
         return self._executor
 
     @property
-    def http_settings(self) -> config.HTTPSettings:
+    def http_settings(self) -> config_impl.HTTPSettings:
         return self._http_settings
 
     @property
-    def proxy_settings(self) -> config.ProxySettings:
+    def proxy_settings(self) -> config_impl.ProxySettings:
         return self._proxy_settings
 
     @typing.overload
@@ -435,7 +435,7 @@ class _LiveAttributes:
         This must be started within an active asyncio event loop.
     """
 
-    buckets: buckets_.RESTBucketManager = attr.field()
+    buckets: buckets_impl.RESTBucketManager = attr.field()
     client_session: aiohttp.ClientSession = attr.field()
     closed_event: asyncio.Event = attr.field()
     # We've been told in DAPI that this is per token.
@@ -445,7 +445,7 @@ class _LiveAttributes:
 
     @classmethod
     def build(
-        cls, max_rate_limit: float, http_settings: config.HTTPSettings, proxy_settings: config.ProxySettings
+        cls, max_rate_limit: float, http_settings: config_impl.HTTPSettings, proxy_settings: config_impl.ProxySettings
     ) -> _LiveAttributes:
         """Build a live attributes object.
 
@@ -468,7 +468,7 @@ class _LiveAttributes:
         )
         _LOGGER.log(ux.TRACE, "acquired new aiohttp client session")
         return _LiveAttributes(
-            buckets=buckets_.RESTBucketManager(max_rate_limit),
+            buckets=buckets_impl.RESTBucketManager(max_rate_limit),
             client_session=client_session,
             closed_event=asyncio.Event(),
             global_rate_limit=rate_limits.ManualRateLimiter(),
@@ -563,10 +563,10 @@ class RESTClientImpl(rest_api.RESTClient):
         cache: typing.Optional[cache_api.MutableCache],
         entity_factory: entity_factory_.EntityFactory,
         executor: typing.Optional[concurrent.futures.Executor],
-        http_settings: config.HTTPSettings,
+        http_settings: config_impl.HTTPSettings,
         max_rate_limit: float,
         max_retries: int = 3,
-        proxy_settings: config.ProxySettings,
+        proxy_settings: config_impl.ProxySettings,
         token: typing.Union[str, None, rest_api.TokenStrategy],
         token_type: typing.Union[applications.TokenType, str, None],
         rest_url: typing.Optional[str],
@@ -608,11 +608,11 @@ class RESTClientImpl(rest_api.RESTClient):
         return self._live_attributes is not None
 
     @property
-    def http_settings(self) -> config.HTTPSettings:
+    def http_settings(self) -> config_impl.HTTPSettings:
         return self._http_settings
 
     @property
-    def proxy_settings(self) -> config.ProxySettings:
+    def proxy_settings(self) -> config_impl.ProxySettings:
         return self._proxy_settings
 
     @property

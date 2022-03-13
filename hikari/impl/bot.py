@@ -46,7 +46,7 @@ from hikari import snowflakes
 from hikari import traits
 from hikari import undefined
 from hikari.impl import cache as cache_impl
-from hikari.impl import config
+from hikari.impl import config as config_impl
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import event_factory as event_factory_impl
 from hikari.impl import event_manager as event_manager_impl
@@ -316,13 +316,13 @@ class GatewayBot(traits.GatewayBotAware):
         banner: typing.Optional[str] = "hikari",
         executor: typing.Optional[concurrent.futures.Executor] = None,
         force_color: bool = False,
-        cache_settings: typing.Optional[config.CacheSettings] = None,
-        http_settings: typing.Optional[config.HTTPSettings] = None,
+        cache_settings: typing.Optional[config_impl.CacheSettings] = None,
+        http_settings: typing.Optional[config_impl.HTTPSettings] = None,
         intents: intents_.Intents = intents_.Intents.ALL_UNPRIVILEGED,
         logs: typing.Union[None, int, str, typing.Dict[str, typing.Any]] = "INFO",
         max_rate_limit: float = 300,
         max_retries: int = 3,
-        proxy_settings: typing.Optional[config.ProxySettings] = None,
+        proxy_settings: typing.Optional[config_impl.ProxySettings] = None,
         rest_url: typing.Optional[str] = None,
     ) -> None:
         # Beautification and logging
@@ -334,13 +334,13 @@ class GatewayBot(traits.GatewayBotAware):
         self._closed_event: typing.Optional[asyncio.Event] = None
         self._is_alive = False
         self._executor = executor
-        self._http_settings = http_settings if http_settings is not None else config.HTTPSettings()
+        self._http_settings = http_settings if http_settings is not None else config_impl.HTTPSettings()
         self._intents = intents
-        self._proxy_settings = proxy_settings if proxy_settings is not None else config.ProxySettings()
+        self._proxy_settings = proxy_settings if proxy_settings is not None else config_impl.ProxySettings()
         self._token = token.strip()
 
         # Caching
-        cache_settings = cache_settings if cache_settings is not None else config.CacheSettings()
+        cache_settings = cache_settings if cache_settings is not None else config_impl.CacheSettings()
         self._cache = cache_impl.CacheImpl(self, cache_settings)
 
         # Entity creation
@@ -404,7 +404,7 @@ class GatewayBot(traits.GatewayBotAware):
         return sum(latencies) / len(latencies) if latencies else float("nan")
 
     @property
-    def http_settings(self) -> config.HTTPSettings:
+    def http_settings(self) -> config_impl.HTTPSettings:
         return self._http_settings
 
     @property
@@ -412,7 +412,7 @@ class GatewayBot(traits.GatewayBotAware):
         return self._intents
 
     @property
-    def proxy_settings(self) -> config.ProxySettings:
+    def proxy_settings(self) -> config_impl.ProxySettings:
         return self._proxy_settings
 
     @property
