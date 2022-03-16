@@ -43,7 +43,7 @@ from hikari import _about as about
 from hikari.internal import net
 
 if typing.TYPE_CHECKING:
-    from hikari import config
+    from hikari.impl import config
 
     CmpTuple = typing.Tuple[int, int, int, typing.Union[int, float]]
 

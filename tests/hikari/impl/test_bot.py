@@ -29,13 +29,13 @@ import mock
 import pytest
 
 from hikari import applications
-from hikari import config
 from hikari import errors
 from hikari import presences
 from hikari import snowflakes
 from hikari import undefined
 from hikari.impl import bot as bot_impl
 from hikari.impl import cache as cache_impl
+from hikari.impl import config
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import event_factory as event_factory_impl
 from hikari.impl import event_manager as event_manager_impl

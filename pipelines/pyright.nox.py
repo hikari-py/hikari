@@ -30,6 +30,4 @@ def verify_types(session: nox.Session) -> None:
     """Verify the "type completeness" of types exported by the library using Pyright."""
     session.install("-r", "dev-requirements.txt")
     session.install(".")
-    # session.env["PYRIGHT_PYTHON_GLOBAL_NODE"] = "off"
-    session.run("python", "-m", "pyright", "--version")
     session.run("python", "-m", "pyright", "--verifytypes", config.MAIN_PACKAGE, "--ignoreexternal")

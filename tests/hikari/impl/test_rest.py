@@ -34,7 +34,6 @@ from hikari import audit_logs
 from hikari import channels
 from hikari import colors
 from hikari import commands
-from hikari import config
 from hikari import embeds
 from hikari import emojis
 from hikari import errors
@@ -50,6 +49,7 @@ from hikari import users
 from hikari import webhooks
 from hikari.api import rest as rest_api
 from hikari.impl import buckets
+from hikari.impl import config
 from hikari.impl import entity_factory
 from hikari.impl import rate_limits
 from hikari.impl import rest

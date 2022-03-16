@@ -30,10 +30,10 @@ import logging
 import sys
 import typing
 
-from hikari import config
 from hikari import errors
 from hikari import traits
 from hikari.api import interaction_server as interaction_server_
+from hikari.impl import config as config_impl
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import interaction_server as interaction_server_impl
 from hikari.impl import rest as rest_impl
@@ -200,11 +200,11 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         banner: typing.Optional[str] = "hikari",
         executor: typing.Optional[concurrent.futures.Executor] = None,
         force_color: bool = False,
-        http_settings: typing.Optional[config.HTTPSettings] = None,
+        http_settings: typing.Optional[config_impl.HTTPSettings] = None,
         logs: typing.Union[None, int, str, typing.Dict[str, typing.Any]] = "INFO",
         max_rate_limit: float = 300.0,
         max_retries: int = 3,
-        proxy_settings: typing.Optional[config.ProxySettings] = None,
+        proxy_settings: typing.Optional[config_impl.ProxySettings] = None,
         rest_url: typing.Optional[str] = None,
     ) -> None:
         ...
@@ -220,11 +220,11 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         banner: typing.Optional[str] = "hikari",
         executor: typing.Optional[concurrent.futures.Executor] = None,
         force_color: bool = False,
-        http_settings: typing.Optional[config.HTTPSettings] = None,
+        http_settings: typing.Optional[config_impl.HTTPSettings] = None,
         logs: typing.Union[None, int, str, typing.Dict[str, typing.Any]] = "INFO",
         max_rate_limit: float = 300.0,
         max_retries: int = 3,
-        proxy_settings: typing.Optional[config.ProxySettings] = None,
+        proxy_settings: typing.Optional[config_impl.ProxySettings] = None,
         rest_url: typing.Optional[str] = None,
     ) -> None:
         ...
@@ -239,11 +239,11 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         banner: typing.Optional[str] = "hikari",
         executor: typing.Optional[concurrent.futures.Executor] = None,
         force_color: bool = False,
-        http_settings: typing.Optional[config.HTTPSettings] = None,
+        http_settings: typing.Optional[config_impl.HTTPSettings] = None,
         logs: typing.Union[None, int, str, typing.Dict[str, typing.Any]] = "INFO",
         max_rate_limit: float = 300.0,
         max_retries: int = 3,
-        proxy_settings: typing.Optional[config.ProxySettings] = None,
+        proxy_settings: typing.Optional[config_impl.ProxySettings] = None,
         rest_url: typing.Optional[str] = None,
     ) -> None:
         if isinstance(public_key, str):
@@ -259,9 +259,9 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         # Settings and state
         self._close_event: typing.Optional[asyncio.Event] = None
         self._executor = executor
-        self._http_settings = http_settings if http_settings is not None else config.HTTPSettings()
+        self._http_settings = http_settings if http_settings is not None else config_impl.HTTPSettings()
         self._is_closing = False
-        self._proxy_settings = proxy_settings if proxy_settings is not None else config.ProxySettings()
+        self._proxy_settings = proxy_settings if proxy_settings is not None else config_impl.ProxySettings()
 
         # Entity creation
         self._entity_factory = entity_factory_impl.EntityFactoryImpl(self)
@@ -304,11 +304,11 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         return self._entity_factory
 
     @property
-    def http_settings(self) -> config.HTTPSettings:
+    def http_settings(self) -> config_impl.HTTPSettings:
         return self._http_settings
 
     @property
-    def proxy_settings(self) -> config.ProxySettings:
+    def proxy_settings(self) -> config_impl.ProxySettings:
         return self._proxy_settings
 
     @property

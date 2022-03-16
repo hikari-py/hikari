@@ -57,11 +57,11 @@ if typing.TYPE_CHECKING:
     import aiohttp.typedefs
 
     from hikari import channels
-    from hikari import config
     from hikari import guilds
     from hikari import users as users_
     from hikari.api import event_factory as event_factory_
     from hikari.api import event_manager as event_manager_
+    from hikari.impl import config
 
 # Important attributes
 _D: typing.Final[str] = sys.intern("d")
@@ -386,9 +386,9 @@ class GatewayShardImpl(shard.GatewayShard):
         The shard ID.
     shard_count : builtins.int
         The shard count.
-    http_settings : hikari.config.HTTPSettings
+    http_settings : hikari.impl.config.HTTPSettings
         The HTTP-related settings to use while negotiating a websocket.
-    proxy_settings : hikari.config.ProxySettings
+    proxy_settings : hikari.impl.config.ProxySettings
         The proxy settings to use while negotiating a websocket.
     data_format : builtins.str
         Data format to use for inbound data. Only supported format is
