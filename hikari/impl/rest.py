@@ -1353,7 +1353,6 @@ class RESTClientImpl(rest_api.RESTClient):
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         reply: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -1379,7 +1378,6 @@ class RESTClientImpl(rest_api.RESTClient):
             user_mentions=user_mentions,
             role_mentions=role_mentions,
         )
-        body.put("nonce", nonce)
         body.put("message_reference", reply, conversion=lambda m: {"message_id": str(int(m))})
 
         if form_builder is not None:

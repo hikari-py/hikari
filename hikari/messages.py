@@ -1133,7 +1133,6 @@ class PartialMessage(snowflakes.Unique):
         components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
-        nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reply: typing.Union[
             undefined.UndefinedType, snowflakes.SnowflakeishOr[PartialMessage], bool
@@ -1184,9 +1183,6 @@ class PartialMessage(snowflakes.Unique):
             If provided, the message embeds.
         tts : hikari.undefined.UndefinedOr[builtins.bool]
             If provided, whether the message will be TTS (Text To Speech).
-        nonce : hikari.undefined.UndefinedOr[builtins.str]
-            If provided, a nonce that can be used for optimistic message
-            sending.
         reply : typing.Union[hikari.undefined.UndefinedType, hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage], builtins.bool]
             If provided and `builtins.True`, reply to this message.
             If provided and not `builtins.bool`, the message to reply to.
@@ -1282,7 +1278,6 @@ class PartialMessage(snowflakes.Unique):
             components=components,
             embed=embed,
             embeds=embeds,
-            nonce=nonce,
             tts=tts,
             reply=reply,
             mentions_everyone=mentions_everyone,

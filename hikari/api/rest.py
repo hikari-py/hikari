@@ -1082,7 +1082,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         reply: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -1133,12 +1132,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         tts : hikari.undefined.UndefinedOr[builtins.bool]
             If provided, whether the message will be read out by a screen
             reader using Discord's TTS (text-to-speech) system.
-        nonce : hikari.undefined.UndefinedOr[builtins.str]
-            An arbitrary identifier to associate with the message. This
-            can be used to identify it later in received events. If provided,
-            this must be less than 32 bytes. If not provided, then
-            a null value is placed on the message instead. All users can
-            see this value.
         reply : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]]
             If provided, the message to reply to.
         mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
