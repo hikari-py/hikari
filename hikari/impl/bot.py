@@ -207,7 +207,7 @@ class GatewayBot(traits.GatewayBotAware):
         to change which intents your application will use on the gateway. This
         can be used to control and change the types of events you will receive.
     disable_member_chunks: builtins.bool
-        Defaults to `buildints.False`. If `builtins.True`, then no member chunks
+        Defaults to `builtins.False`. If `builtins.True`, then no member chunks
         will be requested automatically, even if the members intent is enabled.
     logs : typing.Union[builtins.None, LoggerLevel, typing.Dict[str, typing.Any]]
         Defaults to `"INFO"`.
