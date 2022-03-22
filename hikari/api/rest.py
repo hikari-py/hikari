@@ -3335,9 +3335,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def fetch_voice_regions(self) -> typing.Sequence[voices.VoiceRegion]:
         """Fetch available voice regions.
 
-        !!! note
-            This endpoint doesn't return VIP voice regions.
-
         Returns
         -------
         typing.Sequence[hikari.voices.VoiceRegion]
@@ -5954,10 +5951,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
     ) -> typing.Sequence[voices.VoiceRegion]:
         """Fetch the available voice regions for a guild.
-
-        !!! note
-            Unlike `RESTClient.fetch_voice_regions`, this will
-            return the VIP regions if the guild has access to them.
 
         Parameters
         ----------
