@@ -29,7 +29,7 @@ sphobjinv==2.2.1
 #################
 
 mypy==0.941
-pyright==1.1.231
+pyright==1.1.232
 
 #######################
 # DEPENDENCY CHECKING #
