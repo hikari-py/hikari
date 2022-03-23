@@ -35,6 +35,7 @@ from hikari.interactions import base_interactions
 
 if typing.TYPE_CHECKING:
     from hikari import guilds
+    from hikari import locales
     from hikari import messages
     from hikari import snowflakes
     from hikari import users
@@ -107,7 +108,7 @@ class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentRespo
     This will be `builtins.None` for component interactions triggered in DMs.
     """
 
-    guild_locale: typing.Optional[str] = attr.field(eq=False, hash=False, repr=True)
+    guild_locale: typing.Optional[typing.Union[str, locales.Locale]] = attr.field(eq=False, hash=False, repr=True)
     """The preferred language of the guild this component interaction was triggered in.
 
     This will be `builtins.None` for component interactions triggered in DMs.
@@ -133,7 +134,7 @@ class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentRespo
     user: users.User = attr.field(eq=False, hash=False, repr=True)
     """The user who triggered this interaction."""
 
-    locale: str = attr.field(eq=False, hash=False, repr=True)
+    locale: typing.Union[str, locales.Locale] = attr.field(eq=False, hash=False, repr=True)
     """The selected language of the user who triggered this component interaction."""
 
     def build_response(self, type_: _ImmediateTypesT, /) -> special_endpoints.InteractionMessageBuilder:

@@ -76,6 +76,7 @@ from hikari.interactions.command_interactions import *
 from hikari.interactions.component_interactions import *
 from hikari.invites import *
 from hikari.iterators import *
+from hikari.locales import Locale
 from hikari.messages import *
 from hikari.permissions import *
 from hikari.presences import *

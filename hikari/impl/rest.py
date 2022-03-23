@@ -58,6 +58,7 @@ from hikari import errors
 from hikari import files
 from hikari import guilds
 from hikari import iterators
+from hikari import locales
 from hikari import permissions as permissions_
 from hikari import scheduled_events
 from hikari import snowflakes
@@ -2325,7 +2326,7 @@ class RESTClientImpl(rest_api.RESTClient):
         public_updates_channel: undefined.UndefinedNoneOr[
             snowflakes.SnowflakeishOr[channels_.GuildTextChannel]
         ] = undefined.UNDEFINED,
-        preferred_locale: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        preferred_locale: undefined.UndefinedOr[typing.Union[str, locales.Locale]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.RESTGuild:
         route = routes.PATCH_GUILD.compile(guild=guild)

@@ -45,6 +45,7 @@ if typing.TYPE_CHECKING:
     from hikari import embeds as embeds_
     from hikari import files
     from hikari import guilds
+    from hikari import locales
     from hikari import messages
     from hikari.api import special_endpoints
 
@@ -756,7 +757,7 @@ class OwnUser(UserImpl):
     is_mfa_enabled: bool = attr.field(eq=False, hash=False, repr=False)
     """Whether the user's account has multi-factor authentication enabled."""
 
-    locale: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    locale: typing.Optional[typing.Union[str, locales.Locale]] = attr.field(eq=False, hash=False, repr=False)
     """The user's set language. This is not provided by the `READY` event."""
 
     is_verified: typing.Optional[bool] = attr.field(eq=False, hash=False, repr=False)

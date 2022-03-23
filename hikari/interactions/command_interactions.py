@@ -49,6 +49,7 @@ from hikari.internal import attr_extensions
 
 if typing.TYPE_CHECKING:
     from hikari import guilds
+    from hikari import locales
     from hikari import messages as messages_
     from hikari import permissions as permissions_
     from hikari import users as users_
@@ -184,7 +185,7 @@ class BaseCommandInteraction(base_interactions.PartialInteraction):
     This will be `builtins.None` for command interactions triggered in DMs.
     """
 
-    guild_locale: typing.Optional[str] = attr.field(eq=False, hash=False, repr=True)
+    guild_locale: typing.Optional[typing.Union[str, locales.Locale]] = attr.field(eq=False, hash=False, repr=True)
     """The preferred language of the guild this command interaction was triggered in.
 
     This will be `builtins.None` for command interactions triggered in DMs.
@@ -207,7 +208,7 @@ class BaseCommandInteraction(base_interactions.PartialInteraction):
     user: users_.User = attr.field(eq=False, hash=False, repr=True)
     """The user who triggered this command interaction."""
 
-    locale: str = attr.field(eq=False, hash=False, repr=True)
+    locale: typing.Union[str, locales.Locale] = attr.field(eq=False, hash=False, repr=True)
     """The selected language of the user who triggered this command interaction."""
 
     command_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
