@@ -167,7 +167,7 @@ class GuildFeature(str, enums.Enum):
     MONETIZATION_ENABLED = "MONETIZATION_ENABLED"
     """Guild has enabled monetization."""
 
-    MORE_STICKERS = "MONETIZATION_ENABLED"
+    MORE_STICKERS = "MORE_STICKERS"
     """Guild has an increased custom stickers slots."""
 
 
