@@ -20,12 +20,10 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Enum of Discord locales."""
+"""Enum of Discord accepted locales."""
 from __future__ import annotations
 
-__all__ = [
-    "Locale",
-]
+__all__ = ["Locale"]
 
 import typing
 
@@ -37,91 +35,91 @@ class Locale(str, enums.Enum):
     """Possible user/guild locales."""
 
     DA = "da"
-    """Language is Danish (da)"""
+    """Danish"""
 
     DE = "de"
-    """Language is German (de)"""
+    """German"""
 
     EN_GB = "en-GB"
-    """Language is English, UK (en-GB)"""
+    """English, UK"""
 
     EN_US = "en-US"
-    """Language is English, US (en-US)"""
+    """English, US"""
 
     ES_ES = "es-ES"
-    """Language is Spanish (es-ES)"""
+    """Spanish"""
 
     FR = "fr"
-    """Language is French (fr)"""
+    """French"""
 
     HR = "hr"
-    """Language is Croatian (hr)"""
+    """Croatian"""
 
     IT = "it"
-    """Language is Italian (it)"""
+    """Italian"""
 
     LT = "lt"
-    """Language is Lithuanian (lt)"""
+    """Lithuanian"""
 
     HU = "hu"
-    """Language is Hungarian (hu)"""
+    """Hungarian"""
 
     NL = "nl"
-    """Language is Dutch (nl)"""
+    """Dutch"""
 
     NO = "no"
-    """Language is Norwegian (no)"""
+    """Norwegian"""
 
     OL = "pl"
-    """Language is Polish (pl)"""
+    """Polish"""
 
     PT_BR = "pt-BR"
-    """Language is Portuguese, Bralizian (pt-BR)"""
+    """Portuguese, Bralizian"""
 
     RO = "ro"
-    """Language is Romian (ro)"""
+    """Romian"""
 
     FI = "fi"
-    """Language is Finnish (fi)"""
+    """Finnish"""
 
     SV_SE = "sv-SE"
-    """Language is Swedish (sv-SE)"""
+    """Swedish"""
 
     VI = "vi"
-    """Language is Vietnamese (vi)"""
+    """Vietnamese"""
 
     TR = "tr"
-    """Language is Turkish (tr)"""
+    """Turkish"""
 
     CS = "cs"
-    """Language is Czech (cs)"""
+    """Czech"""
 
     EL = "el"
-    """Language is Greek (el)"""
+    """Greek"""
 
     BG = "bg"
-    """Language is Bulgarian (bg)"""
+    """Bulgarian"""
 
     RU = "ru"
-    """Language is Russian (ru)"""
+    """Russian"""
 
     UK = "uk"
-    """Language is Ukrainian (uk)"""
+    """Ukrainian"""
 
     HI = "hi"
-    """Language is Hindi (hi)"""
+    """Hindi"""
 
     TH = "th"
-    """Language is Thai (th)"""
+    """Thai"""
 
     ZH_CN = "zh-CN"
-    """Language is Chinese, China (zh-CN)"""
+    """Chinese, China"""
 
     JA = "ja"
-    """Language is Japanese (ja)"""
+    """Japanese"""
 
     ZH_TW = "zh-TW"
-    """Language is Chinese, Taiwan (zh-TW)"""
+    """Chinese, Taiwan"""
 
     KO = "ko"
-    """Language is Korean (ko)"""
+    """Korean"""
