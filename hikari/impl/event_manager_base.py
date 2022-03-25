@@ -500,31 +500,36 @@ class EventManagerBase(event_manager_.EventManager):
     def listen(
         self,
         event_type: typing.Optional[typing.Type[event_manager_.EventT_co]] = None,
+        *event_types: typing.Type[event_manager_.EventT_co],
     ) -> typing.Callable[
         [event_manager_.CallbackT[event_manager_.EventT_co]], event_manager_.CallbackT[event_manager_.EventT_co]
     ]:
         def decorator(
             callback: event_manager_.CallbackT[event_manager_.EventT_co],
         ) -> event_manager_.CallbackT[event_manager_.EventT_co]:
-            nonlocal event_type
-
             # Avoid resolving forward references in the function's signature if
             # event_type was explicitly provided as this may lead to errors.
             if event_type is not None:
                 _assert_is_listener(iter(inspect.signature(callback).parameters.values()))
+                resolved_types = (event_type, *event_types)
 
             else:
                 signature = reflect.resolve_signature(callback)
                 params = signature.parameters.values()
                 _assert_is_listener(iter(params))
                 event_param = next(iter(params))
+                annotation = event_param.annotation
 
-                if event_param.annotation is event_param.empty:
+                if annotation is event_param.empty:
                     raise TypeError("Must provide the event type in the @listen decorator or as a type hint!")
 
-                event_type = event_param.annotation
+                # If annotation is not a Union, get_args will return an empty tuple
+                # so just return a tuple with the annotation
+                resolved_types = typing.get_args(annotation) or (annotation,)
 
-            self.subscribe(event_type, callback, _nested=1)
+            for resolved_type in resolved_types:
+                self.subscribe(resolved_type, callback, _nested=1)
+
             return callback
 
         return decorator

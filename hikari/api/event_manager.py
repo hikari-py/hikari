@@ -394,6 +394,7 @@ class EventManager(abc.ABC):
     def listen(
         self,
         event_type: typing.Optional[typing.Type[EventT_co]] = None,
+        *event_types: typing.Type[EventT_co],
     ) -> typing.Callable[[CallbackT[EventT_co]], CallbackT[EventT_co]]:
         """Generate a decorator to subscribe a callback to an event type.
 
@@ -407,6 +408,9 @@ class EventManager(abc.ABC):
             instead from the type hints on the function signature.
 
             `T` must be a subclass of `hikari.events.base_events.Event`.
+
+        *event_types : typing.Type[T]
+            The additional event types to subscribe to.
 
         Returns
         -------
