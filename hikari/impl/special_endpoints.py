@@ -33,7 +33,6 @@ __all__: typing.Sequence[str] = (
     "ContextMenuCommandBuilder",
     "TypingIndicator",
     "GuildBuilder",
-    "GuildThreadIterator",
     "InteractionAutocompleteBuilder",
     "InteractionDeferredBuilder",
     "InteractionMessageBuilder",
