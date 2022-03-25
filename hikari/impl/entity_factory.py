@@ -2974,7 +2974,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         return voice_models.VoiceRegion(
             id=payload["id"],
             name=payload["name"],
-            is_vip=payload["vip"],
             is_optimal_location=payload["optimal"],
             is_deprecated=payload["deprecated"],
             is_custom=payload["custom"],

@@ -5476,13 +5476,12 @@ class TestEntityFactoryImpl:
 
     @pytest.fixture()
     def voice_region_payload(self):
-        return {"id": "london", "name": "LONDON", "vip": True, "optimal": False, "deprecated": True, "custom": False}
+        return {"id": "london", "name": "LONDON", "optimal": False, "deprecated": True, "custom": False}
 
     def test_deserialize_voice_region(self, entity_factory_impl, voice_region_payload):
         voice_region = entity_factory_impl.deserialize_voice_region(voice_region_payload)
         assert voice_region.id == "london"
         assert voice_region.name == "LONDON"
-        assert voice_region.is_vip is True
         assert voice_region.is_optimal_location is False
         assert voice_region.is_deprecated is True
         assert voice_region.is_custom is False
