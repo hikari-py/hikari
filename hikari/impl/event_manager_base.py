@@ -24,21 +24,28 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["EventManagerBase", "EventStream"]
+__all__: typing.List[str] = ["filtered", "EventManagerBase", "EventStream"]
 
 import asyncio
 import inspect
+import itertools
 import logging
 import typing
 import warnings
 import weakref
 
+import attr
+
 from hikari import errors
 from hikari import iterators
+from hikari.api import config
 from hikari.api import event_manager as event_manager_
 from hikari.events import base_events
+from hikari.events import shard_events
 from hikari.internal import aio
+from hikari.internal import fast_protocol
 from hikari.internal import reflect
+from hikari.internal import ux
 
 if typing.TYPE_CHECKING:
     import types
@@ -48,23 +55,42 @@ if typing.TYPE_CHECKING:
     from hikari.api import shard as gateway_shard
     from hikari.internal import data_binding
 
-_LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.event_manager")
-
-if typing.TYPE_CHECKING:
     ConsumerT = typing.Callable[
         [gateway_shard.GatewayShard, data_binding.JSONObject], typing.Coroutine[typing.Any, typing.Any, None]
     ]
-    ListenerMapT = typing.MutableMapping[
+    ListenerMapT = typing.Dict[
         typing.Type[event_manager_.EventT_co],
-        typing.MutableSequence[event_manager_.CallbackT[event_manager_.EventT_co]],
+        typing.List[event_manager_.CallbackT[event_manager_.EventT_co]],
     ]
     WaiterT = typing.Tuple[
-        event_manager_.PredicateT[event_manager_.EventT_co], asyncio.Future[event_manager_.EventT_co]
+        typing.Optional[event_manager_.PredicateT[event_manager_.EventT_co]], asyncio.Future[event_manager_.EventT_co]
     ]
-    WaiterMapT = typing.MutableMapping[
-        typing.Type[event_manager_.EventT_co], typing.MutableSet[WaiterT[event_manager_.EventT_co]]
+    WaiterMapT = typing.Dict[typing.Type[event_manager_.EventT_co], typing.Set[WaiterT[event_manager_.EventT_co]]]
+
+    EventManagerBaseT = typing.TypeVar("EventManagerBaseT", bound="EventManagerBase")
+    UnboundMethodT = typing.Callable[
+        [EventManagerBaseT, gateway_shard.GatewayShard, data_binding.JSONObject],
+        typing.Coroutine[typing.Any, typing.Any, None],
     ]
     _EventStreamT = typing.TypeVar("_EventStreamT", bound="EventStream[typing.Any]")
+
+_LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.event_manager")
+
+
+@typing.runtime_checkable
+class _FilteredMethodT(fast_protocol.FastProtocolChecking, typing.Protocol):
+    __slots__: typing.Sequence[str] = ()
+
+    async def __call__(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject, /) -> None:
+        raise NotImplementedError
+
+    @property
+    def __cache_components__(self) -> config.CacheComponents:
+        raise NotImplementedError
+
+    @property
+    def __events_bitmask__(self) -> int:
+        raise NotImplementedError
 
 
 def _generate_weak_listener(
@@ -242,16 +268,74 @@ class EventStream(event_manager_.EventStream[event_manager_.EventT]):
             self._active = True
 
 
-def _default_predicate(_: event_manager_.EventT_inv) -> bool:
-    return True
-
-
 def _assert_is_listener(parameters: typing.Iterator[inspect.Parameter], /) -> None:
     if next(parameters, None) is None:
         raise TypeError("Event listener must have one positional argument for the event object.")
 
     if any(param.default is inspect.Parameter.empty for param in parameters):
         raise TypeError("Only the first argument for a listener can be required, the event argument.")
+
+
+def filtered(
+    event_types: typing.Union[typing.Type[base_events.Event], typing.Sequence[typing.Type[base_events.Event]]],
+    cache_components: config.CacheComponents = config.CacheComponents.NONE,
+    /,
+) -> typing.Callable[[UnboundMethodT[EventManagerBaseT]], UnboundMethodT[EventManagerBaseT]]:
+    """Add metadata to a consumer method to indicate when it should be unmarshalled and dispatched.
+
+    Parameters
+    ----------
+    event_types
+        Types of the events this raw consumer method may dispatch.
+        This may either be a singular type of a sequence of types.
+
+    Other Parameters
+    ----------------
+    cache_components : hikari.api.config.CacheComponents
+        Bitfield of the cache components this event may make altering calls to.
+        This defaults to `hikari.api.config.CacheComponents.NONE`.
+    """
+    if isinstance(event_types, typing.Sequence):
+        # dict.fromkeys is used to remove any duplicate entries here
+        event_types = tuple(dict.fromkeys(itertools.chain.from_iterable(e.dispatches() for e in event_types)))
+
+    else:
+        event_types = event_types.dispatches()
+
+    bitmask = 0
+    for event_type in event_types:
+        bitmask |= event_type.bitmask()
+
+    # https://github.com/python/mypy/issues/2087
+    def decorator(method: UnboundMethodT[EventManagerBaseT], /) -> UnboundMethodT[EventManagerBaseT]:
+        method.__cache_components__ = cache_components  # type: ignore[attr-defined]
+        method.__events_bitmask__ = bitmask  # type: ignore[attr-defined]
+        assert isinstance(method, _FilteredMethodT), "Incorrect attribute(s) set for a filtered method"
+        return method  # type: ignore[unreachable]
+
+    return decorator
+
+
+@attr.define(weakref_slot=False)
+class _Consumer:
+    callback: ConsumerT = attr.field(hash=True)
+    """The callback function for this consumer."""
+
+    events_bitmask: int = attr.field()
+    """The registered events bitmask."""
+
+    is_caching: bool = attr.field()
+    """Cached value of whether or not this consumer is making cache calls in the current env."""
+
+    listener_group_count: int = attr.field(init=False, default=0)
+    """The number of listener groups registered to this consumer."""
+
+    waiter_group_count: int = attr.field(init=False, default=0)
+    """The number of waiters groups registered to this consumer."""
+
+    @property
+    def is_enabled(self) -> bool:
+        return self.is_caching or self.listener_group_count > 0 or self.waiter_group_count > 0
 
 
 class EventManagerBase(event_manager_.EventManager):
@@ -261,10 +345,22 @@ class EventManagerBase(event_manager_.EventManager):
     is the raw event name being dispatched in lower-case.
     """
 
-    __slots__: typing.Sequence[str] = ("_event_factory", "_intents", "_listeners", "_consumers", "_waiters")
+    __slots__: typing.Sequence[str] = (
+        "_consumers",
+        "_event_factory",
+        "_intents",
+        "_listeners",
+        "_waiters",
+    )
 
-    def __init__(self, event_factory: event_factory_.EventFactory, intents: intents_.Intents) -> None:
-        self._consumers: typing.Dict[str, ConsumerT] = {}
+    def __init__(
+        self,
+        event_factory: event_factory_.EventFactory,
+        intents: intents_.Intents,
+        *,
+        cache_components: config.CacheComponents = config.CacheComponents.NONE,
+    ) -> None:
+        self._consumers: typing.Dict[str, _Consumer] = {}
         self._event_factory = event_factory
         self._intents = intents
         self._listeners: ListenerMapT[base_events.Event] = {}
@@ -272,15 +368,46 @@ class EventManagerBase(event_manager_.EventManager):
 
         for name, member in inspect.getmembers(self):
             if name.startswith("on_"):
-                self._consumers[name[3:]] = member
+                event_name = name[3:]
+                if isinstance(member, _FilteredMethodT):
+                    caching = (member.__cache_components__ & cache_components) != 0
+
+                    self._consumers[event_name] = _Consumer(member, member.__events_bitmask__, caching)
+
+                else:
+                    self._consumers[event_name] = _Consumer(member, -1, cache_components != cache_components.NONE)
+
+    def _increment_listener_group_count(
+        self, event_type: typing.Type[base_events.Event], count: typing.Literal[-1, 1]
+    ) -> None:
+        event_bitmask = event_type.bitmask()
+        for consumer in self._consumers.values():
+            if (consumer.events_bitmask & event_bitmask) == event_bitmask:
+                consumer.listener_group_count += count
+
+    def _increment_waiter_group_count(
+        self, event_type: typing.Type[base_events.Event], count: typing.Literal[-1, 1]
+    ) -> None:
+        event_bitmask = event_type.bitmask()
+        for consumer in self._consumers.values():
+            if (consumer.events_bitmask & event_bitmask) == event_bitmask:
+                consumer.waiter_group_count += count
+
+    def _enabled_for_event(self, event_type: typing.Type[base_events.Event], /) -> bool:
+        for cls in event_type.dispatches():
+            if cls in self._listeners or cls in self._waiters:
+                return True
+
+        return False
 
     def consume_raw_event(
         self, event_name: str, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> None:
-        payload_event = self._event_factory.deserialize_shard_payload_event(shard, payload, name=event_name)
-        self.dispatch(payload_event)
-        callback = self._consumers[event_name.casefold()]
-        asyncio.create_task(self._handle_dispatch(callback, shard, payload), name=f"dispatch {event_name}")
+        if self._enabled_for_event(shard_events.ShardPayloadEvent):
+            payload_event = self._event_factory.deserialize_shard_payload_event(shard, payload, name=event_name)
+            self.dispatch(payload_event)
+        consumer = self._consumers[event_name.lower()]
+        asyncio.create_task(self._handle_dispatch(consumer, shard, payload), name=f"dispatch {event_name}")
 
     def subscribe(
         self,
@@ -289,7 +416,7 @@ class EventManagerBase(event_manager_.EventManager):
         *,
         _nested: int = 0,
     ) -> None:
-        if not issubclass(event_type, base_events.Event):
+        if not inspect.isclass(event_type) or not issubclass(event_type, base_events.Event):
             raise TypeError("Cannot subscribe to a non-Event type")
 
         if not inspect.iscoroutinefunction(callback):
@@ -299,9 +426,6 @@ class EventManagerBase(event_manager_.EventManager):
         # warning is triggered.
         self._check_intents(event_type, _nested)
 
-        if event_type not in self._listeners:
-            self._listeners[event_type] = []
-
         _LOGGER.debug(
             "subscribing callback 'async def %s%s' to event-type %s.%s",
             getattr(callback, "__name__", "<anon>"),
@@ -310,7 +434,11 @@ class EventManagerBase(event_manager_.EventManager):
             event_type.__qualname__,
         )
 
-        self._listeners[event_type].append(callback)  # type: ignore[arg-type]
+        try:
+            self._listeners[event_type].append(callback)  # type: ignore[arg-type]
+        except KeyError:
+            self._listeners[event_type] = [callback]  # type: ignore[list-item]
+            self._increment_listener_group_count(event_type, 1)
 
     def _check_intents(self, event_type: typing.Type[event_manager_.EventT_co], nested: int) -> None:
         # Collection of combined bitfield combinations of intents that
@@ -340,23 +468,23 @@ class EventManagerBase(event_manager_.EventManager):
     ) -> typing.Collection[event_manager_.CallbackT[event_manager_.EventT_co]]:
         if polymorphic:
             listeners: typing.List[event_manager_.CallbackT[event_manager_.EventT_co]] = []
-            for subscribed_event_type, subscribed_listeners in self._listeners.items():
-                if issubclass(subscribed_event_type, event_type):
-                    listeners += subscribed_listeners
-            return listeners
-        else:
-            items = self._listeners.get(event_type)
-            if items is not None:
-                return items[:]
+            for event in event_type.dispatches():
+                if subscribed_listeners := self._listeners.get(event):
+                    listeners.extend(subscribed_listeners)
 
-            return []
+            return listeners
+
+        if items := self._listeners.get(event_type):
+            return items.copy()
+
+        return []
 
     def unsubscribe(
         self,
         event_type: typing.Type[event_manager_.EventT_co],
         callback: event_manager_.CallbackT[event_manager_.EventT_co],
     ) -> None:
-        if event_type in self._listeners:
+        if listeners := self._listeners.get(event_type):
             _LOGGER.debug(
                 "unsubscribing callback %s%s from event-type %s.%s",
                 getattr(callback, "__name__", "<anon>"),
@@ -364,9 +492,10 @@ class EventManagerBase(event_manager_.EventManager):
                 event_type.__module__,
                 event_type.__qualname__,
             )
-            self._listeners[event_type].remove(callback)  # type: ignore[arg-type]
-            if not self._listeners[event_type]:
+            listeners.remove(callback)  # type: ignore[arg-type]
+            if not listeners:
                 del self._listeners[event_type]
+                self._increment_listener_group_count(event_type, -1)
 
     def listen(
         self,
@@ -404,16 +533,11 @@ class EventManagerBase(event_manager_.EventManager):
         if not isinstance(event, base_events.Event):
             raise TypeError(f"Events must be subclasses of {base_events.Event.__name__}, not {type(event).__name__}")
 
-        # We only need to iterate through the MRO until we hit Event, as
-        # anything after that is random garbage we don't care about, as they do
-        # not describe event types. This improves efficiency as well.
-        mro = type(event).mro()
-
         tasks: typing.List[typing.Coroutine[None, typing.Any, None]] = []
 
-        for cls in mro[: mro.index(base_events.Event) + 1]:
-            if cls in self._listeners:
-                for callback in self._listeners[cls]:
+        for cls in event.dispatches():
+            if listeners := self._listeners.get(cls):
+                for callback in listeners:
                     tasks.append(self._invoke_callback(callback, event))
 
             if cls not in self._waiters:
@@ -424,8 +548,7 @@ class EventManagerBase(event_manager_.EventManager):
                 predicate, future = waiter
                 if not future.done():
                     try:
-                        result = predicate(event)
-                        if not result:
+                        if predicate and not predicate(event):
                             continue
                     except Exception as ex:
                         future.set_exception(ex)
@@ -433,6 +556,10 @@ class EventManagerBase(event_manager_.EventManager):
                         future.set_result(event)
 
                 waiter_set.remove(waiter)
+
+            if not waiter_set:
+                del self._waiters[cls]
+                self._increment_waiter_group_count(cls, -1)
 
         return asyncio.gather(*tasks) if tasks else aio.completed_future()
 
@@ -453,10 +580,6 @@ class EventManagerBase(event_manager_.EventManager):
         timeout: typing.Union[float, int, None],
         predicate: typing.Optional[event_manager_.PredicateT[event_manager_.EventT_co]] = None,
     ) -> event_manager_.EventT_co:
-
-        if predicate is None:
-            predicate = _default_predicate
-
         self._check_intents(event_type, 1)
 
         future: asyncio.Future[event_manager_.EventT_co] = asyncio.get_running_loop().create_future()
@@ -466,6 +589,7 @@ class EventManagerBase(event_manager_.EventManager):
         except KeyError:
             waiter_set = set()
             self._waiters[event_type] = waiter_set
+            self._increment_waiter_group_count(event_type, 1)
 
         pair = (predicate, future)
 
@@ -474,16 +598,27 @@ class EventManagerBase(event_manager_.EventManager):
             return await asyncio.wait_for(future, timeout=timeout)
         except asyncio.TimeoutError:
             waiter_set.remove(pair)  # type: ignore[arg-type]
+            if not waiter_set:
+                del self._waiters[event_type]
+                self._increment_waiter_group_count(event_type, -1)
+
             raise
 
-    @staticmethod
     async def _handle_dispatch(
-        callback: ConsumerT,
+        self,
+        consumer: _Consumer,
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
     ) -> None:
+        if not consumer.is_enabled:
+            name = consumer.callback.__name__
+            _LOGGER.log(
+                ux.TRACE, "Skipping raw dispatch for %s due to lack of any registered listeners or cache need", name
+            )
+            return
+
         try:
-            await callback(shard, payload)
+            await consumer.callback(shard, payload)
         except asyncio.CancelledError:
             # Skip cancelled errors, likely caused by the event loop being shut down.
             pass

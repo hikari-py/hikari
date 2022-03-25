@@ -40,6 +40,7 @@ if typing.TYPE_CHECKING:
     from hikari import snowflakes
     from hikari import users
     from hikari import voices
+    from hikari.api import config
 
 _KeyT = typing.TypeVar("_KeyT", bound=typing.Hashable)
 _ValueT = typing.TypeVar("_ValueT")
@@ -87,6 +88,11 @@ class Cache(abc.ABC):
     """
 
     __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def settings(self) -> config.CacheSettings:
+        """Get the configured settings for this cache."""
 
     @abc.abstractmethod
     def get_dm_channel_id(

@@ -67,6 +67,9 @@ class CacheComponents(enums.Flag):
     MESSAGES = 1 << 8
     """Enables the messages cache."""
 
+    ME = 1 << 9
+    """Enables the me cache."""
+
     DM_CHANNEL_IDS = 1 << 10
     """Enables the DM channel IDs cache."""
 
@@ -80,6 +83,7 @@ class CacheComponents(enums.Flag):
         | PRESENCES
         | VOICE_STATES
         | MESSAGES
+        | ME
         | DM_CHANNEL_IDS
     )
     """Fully enables the cache."""
