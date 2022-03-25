@@ -1993,7 +1993,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             id=snowflakes.Snowflake(payload["id"]),
             type=base_interactions.InteractionType(payload["type"]),
             guild_id=guild_id,
-            guild_locale=locales.Locale(payload.get("guild_locale", "en-US")),
+            guild_locale=locales.Locale(payload["guild_locale"]) if "guild_locale" in payload else None,
             locale=locales.Locale(payload["locale"]),
             channel_id=snowflakes.Snowflake(payload["channel_id"]),
             member=member,
@@ -2051,7 +2051,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             options=options,
             resolved=resolved,
             locale=locales.Locale(payload["locale"]),
-            guild_locale=locales.Locale(payload.get("guild_locale")),
+            guild_locale=locales.Locale(payload["guild_locale"]) if "guild_locale" in payload else None,
         )
 
     def deserialize_interaction(self, payload: data_binding.JSONObject) -> base_interactions.PartialInteraction:
@@ -2126,7 +2126,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             component_type=message_models.ComponentType(data_payload["component_type"]),
             message=self.deserialize_message(payload["message"]),
             locale=locales.Locale(payload["locale"]),
-            guild_locale=locales.Locale(payload.get("guild_locale")),
+            guild_locale=locales.Locale(payload["guild_locale"]) if "guild_locale" in payload else None,
         )
 
     ##################
@@ -2921,7 +2921,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             is_bot=user_fields.is_bot,
             is_system=user_fields.is_system,
             is_mfa_enabled=payload["mfa_enabled"],
-            locale=locales.Locale(payload["locale"]),
+            locale=locales.Locale(payload["locale"]) if "locale" in payload else None,
             is_verified=payload.get("verified"),
             email=payload.get("email"),
             flags=user_models.UserFlag(payload["flags"]),
