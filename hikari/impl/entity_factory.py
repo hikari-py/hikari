@@ -2285,8 +2285,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             is_disabled=payload.get("disabled", False),
         )
 
-    def _deserialize_text_input(self, payload: data_binding.JSONObject) -> modal_interactions.PartialTextInput:
-        return modal_interactions.PartialTextInput(
+    def _deserialize_text_input(self, payload: data_binding.JSONObject) -> modal_interactions.InteractionTextInput:
+        return modal_interactions.InteractionTextInput(
             type=message_models.ComponentType(payload["type"]),
             custom_id=payload["custom_id"],
             value=payload["value"],

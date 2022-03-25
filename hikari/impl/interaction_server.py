@@ -56,12 +56,12 @@ if typing.TYPE_CHECKING:
     from hikari.interactions import modal_interactions
 
     _InteractionT_co = typing.TypeVar("_InteractionT_co", bound=base_interactions.PartialInteraction, covariant=True)
-    _ModalMessageResponseBuilderT = typing.Union[
+    _MessageResponseBuilderT = typing.Union[
         special_endpoints.InteractionDeferredBuilder,
         special_endpoints.InteractionMessageBuilder,
     ]
-    _MessageResponseBuilderT = typing.Union[
-        _ModalMessageResponseBuilderT,
+    _ModalResponseBuilderT = typing.Union[
+        _MessageResponseBuilderT,
         special_endpoints.InteractionModalBuilder,
     ]
 
@@ -516,16 +516,14 @@ class InteractionServer(interaction_server.InteractionServer):
     @typing.overload
     def get_listener(
         self, interaction_type: typing.Type[command_interactions.CommandInteraction], /
-    ) -> typing.Optional[
-        interaction_server.ListenerT[command_interactions.CommandInteraction, _MessageResponseBuilderT]
-    ]:
+    ) -> typing.Optional[interaction_server.ListenerT[command_interactions.CommandInteraction, _ModalResponseBuilderT]]:
         ...
 
     @typing.overload
     def get_listener(
         self, interaction_type: typing.Type[component_interactions.ComponentInteraction], /
     ) -> typing.Optional[
-        interaction_server.ListenerT[component_interactions.ComponentInteraction, _MessageResponseBuilderT]
+        interaction_server.ListenerT[component_interactions.ComponentInteraction, _ModalResponseBuilderT]
     ]:
         ...
 
@@ -542,9 +540,7 @@ class InteractionServer(interaction_server.InteractionServer):
     @typing.overload
     def get_listener(
         self, interaction_type: typing.Type[modal_interactions.ModalInteraction], /
-    ) -> typing.Optional[
-        interaction_server.ListenerT[modal_interactions.ModalInteraction, _ModalMessageResponseBuilderT]
-    ]:
+    ) -> typing.Optional[interaction_server.ListenerT[modal_interactions.ModalInteraction, _MessageResponseBuilderT]]:
         ...
 
     @typing.overload
@@ -563,7 +559,7 @@ class InteractionServer(interaction_server.InteractionServer):
         self,
         interaction_type: typing.Type[command_interactions.CommandInteraction],
         listener: typing.Optional[
-            interaction_server.ListenerT[command_interactions.CommandInteraction, _MessageResponseBuilderT]
+            interaction_server.ListenerT[command_interactions.CommandInteraction, _ModalResponseBuilderT]
         ],
         /,
         *,
@@ -576,7 +572,7 @@ class InteractionServer(interaction_server.InteractionServer):
         self,
         interaction_type: typing.Type[component_interactions.ComponentInteraction],
         listener: typing.Optional[
-            interaction_server.ListenerT[component_interactions.ComponentInteraction, _MessageResponseBuilderT]
+            interaction_server.ListenerT[component_interactions.ComponentInteraction, _ModalResponseBuilderT]
         ],
         /,
         *,
@@ -604,7 +600,7 @@ class InteractionServer(interaction_server.InteractionServer):
         self,
         interaction_type: typing.Type[modal_interactions.ModalInteraction],
         listener: typing.Optional[
-            interaction_server.ListenerT[modal_interactions.ModalInteraction, _ModalMessageResponseBuilderT]
+            interaction_server.ListenerT[modal_interactions.ModalInteraction, _MessageResponseBuilderT]
         ],
         /,
         *,

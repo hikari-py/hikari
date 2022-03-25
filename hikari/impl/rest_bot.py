@@ -55,12 +55,12 @@ if typing.TYPE_CHECKING:
     from hikari.interactions import modal_interactions
 
     _InteractionT_co = typing.TypeVar("_InteractionT_co", bound=base_interactions.PartialInteraction, covariant=True)
-    _ModalMessageResponseBuilderT = typing.Union[
+    _MessageResponseBuilderT = typing.Union[
         special_endpoints.InteractionDeferredBuilder,
         special_endpoints.InteractionMessageBuilder,
     ]
-    _MessageResponseBuilderT = typing.Union[
-        _ModalMessageResponseBuilderT,
+    _ModalResponseBuilderT = typing.Union[
+        _MessageResponseBuilderT,
         special_endpoints.InteractionModalBuilder,
     ]
 
@@ -598,7 +598,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
     def get_listener(
         self, interaction_type: typing.Type[command_interactions.CommandInteraction], /
     ) -> typing.Optional[
-        interaction_server_.ListenerT[command_interactions.CommandInteraction, _MessageResponseBuilderT]
+        interaction_server_.ListenerT[command_interactions.CommandInteraction, _ModalResponseBuilderT]
     ]:
         ...
 
@@ -606,7 +606,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
     def get_listener(
         self, interaction_type: typing.Type[component_interactions.ComponentInteraction], /
     ) -> typing.Optional[
-        interaction_server_.ListenerT[component_interactions.ComponentInteraction, _MessageResponseBuilderT]
+        interaction_server_.ListenerT[component_interactions.ComponentInteraction, _ModalResponseBuilderT]
     ]:
         ...
 
@@ -623,9 +623,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
     @typing.overload
     def get_listener(
         self, interaction_type: typing.Type[modal_interactions.ModalInteraction], /
-    ) -> typing.Optional[
-        interaction_server_.ListenerT[modal_interactions.ModalInteraction, _ModalMessageResponseBuilderT]
-    ]:
+    ) -> typing.Optional[interaction_server_.ListenerT[modal_interactions.ModalInteraction, _MessageResponseBuilderT]]:
         ...
 
     @typing.overload
@@ -644,7 +642,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         self,
         interaction_type: typing.Type[command_interactions.CommandInteraction],
         listener: typing.Optional[
-            interaction_server_.ListenerT[command_interactions.CommandInteraction, _MessageResponseBuilderT]
+            interaction_server_.ListenerT[command_interactions.CommandInteraction, _ModalResponseBuilderT]
         ],
         /,
         *,
@@ -657,7 +655,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         self,
         interaction_type: typing.Type[component_interactions.ComponentInteraction],
         listener: typing.Optional[
-            interaction_server_.ListenerT[component_interactions.ComponentInteraction, _MessageResponseBuilderT]
+            interaction_server_.ListenerT[component_interactions.ComponentInteraction, _ModalResponseBuilderT]
         ],
         /,
         *,
@@ -685,7 +683,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         self,
         interaction_type: typing.Type[modal_interactions.ModalInteraction],
         listener: typing.Optional[
-            interaction_server_.ListenerT[modal_interactions.ModalInteraction, _ModalMessageResponseBuilderT]
+            interaction_server_.ListenerT[modal_interactions.ModalInteraction, _MessageResponseBuilderT]
         ],
         /,
         *,
