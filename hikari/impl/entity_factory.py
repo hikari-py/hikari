@@ -2921,7 +2921,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             is_bot=user_fields.is_bot,
             is_system=user_fields.is_system,
             is_mfa_enabled=payload["mfa_enabled"],
-            locale=locales.Locale(payload["locale"]),
+            locale=locales.Locale(payload.get("locale")),
             is_verified=payload.get("verified"),
             email=payload.get("email"),
             flags=user_models.UserFlag(payload["flags"]),
