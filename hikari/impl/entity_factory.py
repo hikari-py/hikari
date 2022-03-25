@@ -157,6 +157,57 @@ class _GuildFields:
     public_updates_channel_id: typing.Optional[snowflakes.Snowflake] = attr.field()
     nsfw_level: guild_models.GuildNSFWLevel = attr.field()
 
+    @classmethod
+    def from_payload(cls, payload: data_binding.JSONObject) -> _GuildFields:
+        afk_channel_id = payload["afk_channel_id"]
+        default_message_notifications = guild_models.GuildMessageNotificationsLevel(
+            payload["default_message_notifications"]
+        )
+        application_id = payload["application_id"]
+        widget_channel_id = payload.get("widget_channel_id")
+        system_channel_id = payload["system_channel_id"]
+        rules_channel_id = payload["rules_channel_id"]
+        max_video_channel_users = (
+            int(payload["max_video_channel_users"]) if "max_video_channel_users" in payload else None
+        )
+        public_updates_channel_id = payload["public_updates_channel_id"]
+        public_updates_channel_id = (
+            snowflakes.Snowflake(public_updates_channel_id) if public_updates_channel_id is not None else None
+        )
+        return _GuildFields(
+            id=snowflakes.Snowflake(payload["id"]),
+            name=payload["name"],
+            icon_hash=payload["icon"],
+            features=[guild_models.GuildFeature(feature) for feature in payload["features"]],
+            splash_hash=payload["splash"],
+            # This is documented as always being present, but we have found old guilds where this is
+            # not present. Quicker to just assume the documentation is wrong at this point than try
+            # to contest whether this is right or not with Discord.
+            discovery_splash_hash=payload.get("discovery_splash"),
+            owner_id=snowflakes.Snowflake(payload["owner_id"]),
+            afk_channel_id=snowflakes.Snowflake(afk_channel_id) if afk_channel_id is not None else None,
+            afk_timeout=datetime.timedelta(seconds=payload["afk_timeout"]),
+            verification_level=guild_models.GuildVerificationLevel(payload["verification_level"]),
+            default_message_notifications=default_message_notifications,
+            explicit_content_filter=guild_models.GuildExplicitContentFilterLevel(payload["explicit_content_filter"]),
+            mfa_level=guild_models.GuildMFALevel(payload["mfa_level"]),
+            application_id=snowflakes.Snowflake(application_id) if application_id is not None else None,
+            widget_channel_id=snowflakes.Snowflake(widget_channel_id) if widget_channel_id is not None else None,
+            system_channel_id=snowflakes.Snowflake(system_channel_id) if system_channel_id is not None else None,
+            is_widget_enabled=payload.get("widget_enabled"),
+            system_channel_flags=guild_models.GuildSystemChannelFlag(payload["system_channel_flags"]),
+            rules_channel_id=snowflakes.Snowflake(rules_channel_id) if rules_channel_id is not None else None,
+            max_video_channel_users=max_video_channel_users,
+            vanity_url_code=payload["vanity_url_code"],
+            description=payload["description"],
+            banner_hash=payload["banner"],
+            premium_tier=guild_models.GuildPremiumTier(payload["premium_tier"]),
+            premium_subscription_count=payload.get("premium_subscription_count"),
+            preferred_locale=locales.Locale(payload["preferred_locale"]),
+            public_updates_channel_id=public_updates_channel_id,
+            nsfw_level=guild_models.GuildNSFWLevel(payload["nsfw_level"]),
+        )
+
 
 @attr_extensions.with_copy
 @attr.define(kw_only=True, repr=False, weakref_slot=False)
@@ -241,7 +292,7 @@ class _GatewayGuildDefinition(entity_factory.GatewayGuildDefinition):
     def guild(self) -> guild_models.GatewayGuild:
         if self._guild is undefined.UNDEFINED:
             payload = self._payload
-            guild_fields = self._entity_factory.set_guild_attributes(payload)
+            guild_fields = _GuildFields.from_payload(payload)
             self._guild = guild_models.GatewayGuild(
                 app=self._entity_factory.app,
                 id=guild_fields.id,
@@ -1514,58 +1565,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             description=payload["description"],
         )
 
-    def set_guild_attributes(self, payload: data_binding.JSONObject) -> _GuildFields:
-        afk_channel_id = payload["afk_channel_id"]
-        default_message_notifications = guild_models.GuildMessageNotificationsLevel(
-            payload["default_message_notifications"]
-        )
-        application_id = payload["application_id"]
-        widget_channel_id = payload.get("widget_channel_id")
-        system_channel_id = payload["system_channel_id"]
-        rules_channel_id = payload["rules_channel_id"]
-        max_video_channel_users = (
-            int(payload["max_video_channel_users"]) if "max_video_channel_users" in payload else None
-        )
-        public_updates_channel_id = payload["public_updates_channel_id"]
-        public_updates_channel_id = (
-            snowflakes.Snowflake(public_updates_channel_id) if public_updates_channel_id is not None else None
-        )
-        return _GuildFields(
-            id=snowflakes.Snowflake(payload["id"]),
-            name=payload["name"],
-            icon_hash=payload["icon"],
-            features=[guild_models.GuildFeature(feature) for feature in payload["features"]],
-            splash_hash=payload["splash"],
-            # This is documented as always being present, but we have found old guilds where this is
-            # not present. Quicker to just assume the documentation is wrong at this point than try
-            # to contest whether this is right or not with Discord.
-            discovery_splash_hash=payload.get("discovery_splash"),
-            owner_id=snowflakes.Snowflake(payload["owner_id"]),
-            afk_channel_id=snowflakes.Snowflake(afk_channel_id) if afk_channel_id is not None else None,
-            afk_timeout=datetime.timedelta(seconds=payload["afk_timeout"]),
-            verification_level=guild_models.GuildVerificationLevel(payload["verification_level"]),
-            default_message_notifications=default_message_notifications,
-            explicit_content_filter=guild_models.GuildExplicitContentFilterLevel(payload["explicit_content_filter"]),
-            mfa_level=guild_models.GuildMFALevel(payload["mfa_level"]),
-            application_id=snowflakes.Snowflake(application_id) if application_id is not None else None,
-            widget_channel_id=snowflakes.Snowflake(widget_channel_id) if widget_channel_id is not None else None,
-            system_channel_id=snowflakes.Snowflake(system_channel_id) if system_channel_id is not None else None,
-            is_widget_enabled=payload.get("widget_enabled"),
-            system_channel_flags=guild_models.GuildSystemChannelFlag(payload["system_channel_flags"]),
-            rules_channel_id=snowflakes.Snowflake(rules_channel_id) if rules_channel_id is not None else None,
-            max_video_channel_users=max_video_channel_users,
-            vanity_url_code=payload["vanity_url_code"],
-            description=payload["description"],
-            banner_hash=payload["banner"],
-            premium_tier=guild_models.GuildPremiumTier(payload["premium_tier"]),
-            premium_subscription_count=payload.get("premium_subscription_count"),
-            preferred_locale=locales.Locale(payload["preferred_locale"]),
-            public_updates_channel_id=public_updates_channel_id,
-            nsfw_level=guild_models.GuildNSFWLevel(payload["nsfw_level"]),
-        )
-
     def deserialize_rest_guild(self, payload: data_binding.JSONObject) -> guild_models.RESTGuild:
-        guild_fields = self.set_guild_attributes(payload)
+        guild_fields = _GuildFields.from_payload(payload)
 
         approximate_member_count: typing.Optional[int] = None
         if "approximate_member_count" in payload:
