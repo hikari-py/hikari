@@ -39,10 +39,12 @@ from hikari import presences as presences_
 from hikari import snowflakes
 from hikari.events import channel_events
 from hikari.events import guild_events
+from hikari.events import interaction_events
 from hikari.events import member_events
 from hikari.events import message_events
 from hikari.events import reaction_events
 from hikari.events import role_events
+from hikari.events import scheduled_events
 from hikari.events import shard_events
 from hikari.events import typing_events
 from hikari.events import user_events
@@ -664,34 +666,40 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         """See https://discord.com/developers/docs/topics/gateway#webhooks-update for more info."""
         await self.dispatch(self._event_factory.deserialize_webhook_update_event(shard, payload))
 
+    @event_manager_base.filtered(interaction_events.InteractionCreateEvent)
     async def on_interaction_create(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#interaction-create for more info."""
         await self.dispatch(self._event_factory.deserialize_interaction_create_event(shard, payload))
 
+    @event_manager_base.filtered(scheduled_events.ScheduledEventCreateEvent)
     async def on_guild_scheduled_event_create(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-scheduled-event-create for more info."""
         await self.dispatch(self._event_factory.deserialize_scheduled_event_create_event(shard, payload))
 
+    @event_manager_base.filtered(scheduled_events.ScheduledEventDeleteEvent)
     async def on_guild_scheduled_event_delete(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-scheduled-event-delete for more info."""
         await self.dispatch(self._event_factory.deserialize_scheduled_event_delete_event(shard, payload))
 
+    @event_manager_base.filtered(scheduled_events.ScheduledEventUpdateEvent)
     async def on_guild_scheduled_event_update(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-scheduled-event-update for more info."""
         await self.dispatch(self._event_factory.deserialize_scheduled_event_update_event(shard, payload))
 
+    @event_manager_base.filtered(scheduled_events.ScheduledEventUserAddEvent)
     async def on_guild_scheduled_event_user_add(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-scheduled-event-user-add for more info."""
         await self.dispatch(self._event_factory.deserialize_scheduled_event_user_add_event(shard, payload))
 
+    @event_manager_base.filtered(scheduled_events.ScheduledEventUserRemoveEvent)
     async def on_guild_scheduled_event_user_remove(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> None:
