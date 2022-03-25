@@ -865,8 +865,10 @@ class TestEventManagerBase:
         assert subscribe.call_count == 2
         resolve_signature.assert_not_called()
         subscribe.assert_has_calls(
-            subscribe(member_events.MemberCreateEvent, test, _nested=1),
-            subscribe(member_events.MemberDeleteEvent, test, _nested=1),
+            [
+                mock.call(member_events.MemberCreateEvent, test, _nested=1),
+                mock.call(member_events.MemberDeleteEvent, test, _nested=1),
+            ]
         )
 
     def test_listen_when_param_provided_in_typehint(self, event_manager):

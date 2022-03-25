@@ -408,7 +408,6 @@ class EventManager(abc.ABC):
             instead from the type hints on the function signature.
 
             `T` must be a subclass of `hikari.events.base_events.Event`.
-
         *event_types : typing.Type[T]
             The additional event types to subscribe to.
 
