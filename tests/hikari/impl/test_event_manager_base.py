@@ -29,10 +29,10 @@ import weakref
 import mock
 import pytest
 
-from hikari import config
 from hikari import errors
 from hikari import intents
 from hikari import iterators
+from hikari.api import config
 from hikari.events import base_events
 from hikari.events import member_events
 from hikari.events import shard_events

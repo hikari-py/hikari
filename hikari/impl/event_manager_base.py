@@ -36,9 +36,9 @@ import weakref
 
 import attr
 
-from hikari import config
 from hikari import errors
 from hikari import iterators
+from hikari.api import config
 from hikari.api import event_manager as event_manager_
 from hikari.events import base_events
 from hikari.events import shard_events
@@ -291,9 +291,9 @@ def filtered(
 
     Other Parameters
     ----------------
-    cache_components : hikari.config.CacheComponents
+    cache_components : hikari.api.config.CacheComponents
         Bitfield of the cache components this event may make altering calls to.
-        This defaults to `hikari.config.CacheComponents.NONE`.
+        This defaults to `hikari.api.config.CacheComponents.NONE`.
     """
     if isinstance(event_types, typing.Sequence):
         # dict.fromkeys is used to remove any duplicate entries here

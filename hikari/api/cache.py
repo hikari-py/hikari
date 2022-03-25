@@ -32,7 +32,6 @@ from hikari import iterators
 
 if typing.TYPE_CHECKING:
     from hikari import channels
-    from hikari import config
     from hikari import emojis
     from hikari import guilds
     from hikari import invites
@@ -41,6 +40,7 @@ if typing.TYPE_CHECKING:
     from hikari import snowflakes
     from hikari import users
     from hikari import voices
+    from hikari.api import config
 
 _KeyT = typing.TypeVar("_KeyT", bound=typing.Hashable)
 _ValueT = typing.TypeVar("_ValueT")
