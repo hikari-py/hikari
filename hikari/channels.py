@@ -40,7 +40,6 @@ __all__: typing.List[str] = [
     "GuildChannel",
     "GuildTextChannel",
     "GuildNewsChannel",
-    "GuildStoreChannel",
     "GuildVoiceChannel",
     "GuildStageChannel",
     "WebhookChannelT",
@@ -96,9 +95,6 @@ class ChannelType(int, enums.Enum):
 
     GUILD_NEWS = 5
     """A channel that can be followed and can crosspost."""
-
-    GUILD_STORE = 6
-    """A channel that show's a game's store page."""
 
     GUILD_STAGE = 13
     """A few to many voice channel for hosting events."""
@@ -1288,16 +1284,6 @@ class GuildNewsChannel(TextableGuildChannel):
     !!! note
         This may be `builtins.None` in several cases; Discord does not document what
         these cases are. Trust no one!
-    """
-
-
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
-class GuildStoreChannel(GuildChannel):
-    """Represents a store channel.
-
-    These were originally used to sell games when Discord had a game store. This
-    was scrapped at the end of 2019, so these may disappear from the platform
-    eventually.
     """
 
 
