@@ -36,6 +36,7 @@ from hikari.interactions import base_interactions
 
 if typing.TYPE_CHECKING:
     from hikari import guilds
+    from hikari import locales
     from hikari import messages
     from hikari import snowflakes
     from hikari import users
@@ -82,7 +83,10 @@ The following types are valid for this:
 
 
 @attr.define(hash=True, weakref_slot=False)
-class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentResponseTypesT]):
+class ComponentInteraction(
+    base_interactions.MessageResponseMixin[ComponentResponseTypesT],
+    base_interactions.ModalResponseMixin,
+):
     """Represents a component interaction on Discord."""
 
     channel_id: snowflakes.Snowflake = attr.field(eq=False)
@@ -108,7 +112,7 @@ class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentRespo
     This will be `builtins.None` for component interactions triggered in DMs.
     """
 
-    guild_locale: typing.Optional[str] = attr.field(eq=False, hash=False, repr=True)
+    guild_locale: typing.Optional[typing.Union[str, locales.Locale]] = attr.field(eq=False, hash=False, repr=True)
     """The preferred language of the guild this component interaction was triggered in.
 
     This will be `builtins.None` for component interactions triggered in DMs.
@@ -134,7 +138,7 @@ class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentRespo
     user: users.User = attr.field(eq=False, hash=False, repr=True)
     """The user who triggered this interaction."""
 
-    locale: str = attr.field(eq=False, hash=False, repr=True)
+    locale: typing.Union[str, locales.Locale] = attr.field(eq=False, hash=False, repr=True)
     """The selected language of the user who triggered this component interaction."""
 
     def build_response(self, type_: _ImmediateTypesT, /) -> special_endpoints.InteractionMessageBuilder:
@@ -209,31 +213,6 @@ class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentRespo
             raise ValueError("Invalid type passed for a deferred response")
 
         return self.app.rest.interaction_deferred_builder(type_)
-
-    def build_modal_response(
-        self,
-        title: str,
-        custom_id: str,
-        *,
-        components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
-    ) -> special_endpoints.InteractionModalBuilder:
-        """Create a builder for a modal interaction response.
-
-        Parameters
-        ----------
-        title : builtins.str
-            The title that will show up in the modal.
-        custom_id : builtins.str
-            Developer set custom ID used for identifying interactions with this modal.
-        components : hikari.undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]]
-            Sequence of component builders to send in this modal.
-
-        Returns
-        -------
-        hikari.api.special_endpoints.InteractionModalBuilder
-            The interaction modal response builder object.
-        """
-        return self.app.rest.interaction_modal_builder(title=title, custom_id=custom_id, components=components)
 
     async def fetch_channel(self) -> channels.TextableChannel:
         """Fetch the channel this interaction occurred in.

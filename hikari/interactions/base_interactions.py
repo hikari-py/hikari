@@ -32,6 +32,7 @@ __all__: typing.List[str] = [
     "MESSAGE_RESPONSE_TYPES",
     "MessageResponseTypesT",
     "PartialInteraction",
+    "ModalResponseMixin",
     "ResponseType",
 ]
 
@@ -385,38 +386,6 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
             role_mentions=role_mentions,
         )
 
-    async def create_modal_response(
-        self,
-        title: str,
-        custom_id: str,
-        components: typing.Sequence[special_endpoints.ComponentBuilder],
-    ) -> None:
-        """Create a response by sending a modal.
-
-        Parameters
-        ----------
-        interaction : hikari.snowflakes.SnowflakeishOr[hikari.interactions.base_interactions.PartialInteraction]
-            Object or ID of the interaction this response is for.
-        token : builtins.str
-            The command interaction's token.
-
-        Other Parameters
-        ----------------
-        title : str
-            The title that will show up in the modal.
-        custom_id : str
-            Developer set custom ID used for identifying interactions with this modal.
-        components : typing.Sequence[special_endpoints.ComponentBuilder]
-            The components to display in the modal.
-        """
-        await self.app.rest.create_modal_response(
-            self.id,
-            self.token,
-            title=title,
-            custom_id=custom_id,
-            components=components,
-        )
-
     async def edit_initial_response(
         self,
         content: undefined.UndefinedNoneOr[typing.Any] = undefined.UNDEFINED,
@@ -606,6 +575,69 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
             If an internal error occurs on Discord while handling the request.
         """
         await self.app.rest.delete_interaction_response(self.application_id, self.token)
+
+
+class ModalResponseMixin(PartialInteraction):
+    """Mixin' class for all interaction types which can be responded to with a message."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    async def create_modal_response(
+        self,
+        title: str,
+        custom_id: str,
+        components: typing.Sequence[special_endpoints.ComponentBuilder],
+    ) -> None:
+        """Create a response by sending a modal.
+
+        Parameters
+        ----------
+        interaction : hikari.snowflakes.SnowflakeishOr[hikari.interactions.base_interactions.PartialInteraction]
+            Object or ID of the interaction this response is for.
+        token : builtins.str
+            The command interaction's token.
+
+        Other Parameters
+        ----------------
+        title : str
+            The title that will show up in the modal.
+        custom_id : str
+            Developer set custom ID used for identifying interactions with this modal.
+        components : typing.Sequence[special_endpoints.ComponentBuilder]
+            The components to display in the modal.
+        """
+        await self.app.rest.create_modal_response(
+            self.id,
+            self.token,
+            title=title,
+            custom_id=custom_id,
+            components=components,
+        )
+
+    def build_modal_response(
+        self,
+        title: str,
+        custom_id: str,
+        *,
+        components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
+    ) -> special_endpoints.InteractionModalBuilder:
+        """Create a builder for a modal interaction response.
+
+        Parameters
+        ----------
+        title : builtins.str
+            The title that will show up in the modal.
+        custom_id : builtins.str
+            Developer set custom ID used for identifying interactions with this modal.
+        components : hikari.undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]]
+            Sequence of component builders to send in this modal.
+
+        Returns
+        -------
+        hikari.api.special_endpoints.InteractionModalBuilder
+            The interaction modal response builder object.
+        """
+        return self.app.rest.interaction_modal_builder(title=title, custom_id=custom_id, components=components)
 
 
 @attr.define(hash=True, kw_only=True, weakref_slot=False)

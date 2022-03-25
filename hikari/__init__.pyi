@@ -41,7 +41,6 @@ from hikari.channels import *
 from hikari.colors import *
 from hikari.colours import *
 from hikari.commands import *
-from hikari.config import *
 from hikari.embeds import *
 from hikari.emojis import *
 from hikari.errors import *
@@ -78,6 +77,7 @@ from hikari.interactions.component_interactions import *
 from hikari.interactions.modal_interactions import *
 from hikari.invites import *
 from hikari.iterators import *
+from hikari.locales import *
 from hikari.messages import *
 from hikari.permissions import *
 from hikari.presences import *

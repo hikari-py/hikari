@@ -49,6 +49,7 @@ from hikari.internal import attr_extensions
 
 if typing.TYPE_CHECKING:
     from hikari import guilds
+    from hikari import locales
     from hikari import messages as messages_
     from hikari import permissions as permissions_
     from hikari import users as users_
@@ -184,7 +185,7 @@ class BaseCommandInteraction(base_interactions.PartialInteraction):
     This will be `builtins.None` for command interactions triggered in DMs.
     """
 
-    guild_locale: typing.Optional[str] = attr.field(eq=False, hash=False, repr=True)
+    guild_locale: typing.Optional[typing.Union[str, locales.Locale]] = attr.field(eq=False, hash=False, repr=True)
     """The preferred language of the guild this command interaction was triggered in.
 
     This will be `builtins.None` for command interactions triggered in DMs.
@@ -207,7 +208,7 @@ class BaseCommandInteraction(base_interactions.PartialInteraction):
     user: users_.User = attr.field(eq=False, hash=False, repr=True)
     """The user who triggered this command interaction."""
 
-    locale: str = attr.field(eq=False, hash=False, repr=True)
+    locale: typing.Union[str, locales.Locale] = attr.field(eq=False, hash=False, repr=True)
     """The selected language of the user who triggered this command interaction."""
 
     command_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
@@ -366,7 +367,11 @@ class BaseCommandInteraction(base_interactions.PartialInteraction):
 
 @attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
-class CommandInteraction(BaseCommandInteraction, base_interactions.MessageResponseMixin[CommandResponseTypesT]):
+class CommandInteraction(
+    BaseCommandInteraction,
+    base_interactions.MessageResponseMixin[CommandResponseTypesT],
+    base_interactions.ModalResponseMixin,
+):
     """Represents a command interaction on Discord."""
 
     options: typing.Optional[typing.Sequence[CommandInteractionOption]] = attr.field(eq=False, hash=False, repr=True)
@@ -421,31 +426,6 @@ class CommandInteraction(BaseCommandInteraction, base_interactions.MessageRespon
             Deferred interaction message response builder object.
         """
         return self.app.rest.interaction_deferred_builder(base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE)
-
-    def build_modal_response(
-        self,
-        title: str,
-        custom_id: str,
-        *,
-        components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
-    ) -> special_endpoints.InteractionModalBuilder:
-        """Create a builder for a modal interaction response.
-
-        Parameters
-        ----------
-        title : builtins.str
-            The title that will show up in the modal.
-        custom_id : builtins.str
-            Developer set custom ID used for identifying interactions with this modal.
-        components : hikari.undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]]
-            Sequence of component builders to send in this modal.
-
-        Returns
-        -------
-        hikari.api.special_endpoints.InteractionModalBuilder
-            The interaction modal response builder object.
-        """
-        return self.app.rest.interaction_modal_builder(title=title, custom_id=custom_id, components=components)
 
 
 @attr_extensions.with_copy

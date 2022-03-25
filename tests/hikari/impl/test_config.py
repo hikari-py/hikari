@@ -23,9 +23,8 @@
 import ssl
 
 import pytest
-import yarl
 
-from hikari import config as config_
+from hikari.impl import config as config_
 
 
 class TestSSLFactory:
@@ -101,14 +100,6 @@ class TestHTTPSettings:
 
 
 class TestProxySettings:
-    def test_url_validator_when_not_None_nor_str_nor_yarl_url(self):
-        with pytest.raises(ValueError, match=r"ProxySettings.url must be None, a str, or a yarl.URL instance"):
-            config_.ProxySettings(headers=None, auth=None, url=object())
-
-    @pytest.mark.parametrize("value", ["somewhere.com", None, yarl.URL("somewhere.com")])
-    def test_url_validator(self, value):
-        config_.ProxySettings(headers=None, auth=None, url=value)
-
     def test_all_headers_when_headers_and_auth_are_None(self):
         config = config_.ProxySettings(headers=None, auth=None)
         assert config.all_headers is None

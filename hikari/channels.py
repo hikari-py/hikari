@@ -481,7 +481,6 @@ class TextableChannel(PartialChannel):
         components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
-        nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reply: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages.PartialMessage]] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -530,9 +529,6 @@ class TextableChannel(PartialChannel):
             If provided, the message embeds.
         tts : hikari.undefined.UndefinedOr[builtins.bool]
             If provided, whether the message will be TTS (Text To Speech).
-        nonce : hikari.undefined.UndefinedOr[builtins.str]
-            If provided, a nonce that can be used for optimistic message
-            sending.
         reply : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]]
             If provided, the message to reply to.
         mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
@@ -622,7 +618,6 @@ class TextableChannel(PartialChannel):
             components=components,
             embed=embed,
             embeds=embeds,
-            nonce=nonce,
             tts=tts,
             reply=reply,
             mentions_everyone=mentions_everyone,

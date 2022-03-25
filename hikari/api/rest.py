@@ -46,6 +46,7 @@ if typing.TYPE_CHECKING:
     from hikari import guilds
     from hikari import invites
     from hikari import iterators
+    from hikari import locales
     from hikari import messages as messages_
     from hikari import permissions as permissions_
     from hikari import sessions
@@ -1082,7 +1083,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         reply: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -1133,12 +1133,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         tts : hikari.undefined.UndefinedOr[builtins.bool]
             If provided, whether the message will be read out by a screen
             reader using Discord's TTS (text-to-speech) system.
-        nonce : hikari.undefined.UndefinedOr[builtins.str]
-            An arbitrary identifier to associate with the message. This
-            can be used to identify it later in received events. If provided,
-            this must be less than 32 bytes. If not provided, then
-            a null value is placed on the message instead. All users can
-            see this value.
         reply : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]]
             If provided, the message to reply to.
         mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
@@ -3342,9 +3336,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def fetch_voice_regions(self) -> typing.Sequence[voices.VoiceRegion]:
         """Fetch available voice regions.
 
-        !!! note
-            This endpoint doesn't return VIP voice regions.
-
         Returns
         -------
         typing.Sequence[hikari.voices.VoiceRegion]
@@ -4216,7 +4207,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         public_updates_channel: undefined.UndefinedNoneOr[
             snowflakes.SnowflakeishOr[channels_.GuildTextChannel]
         ] = undefined.UNDEFINED,
-        preferred_locale: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        preferred_locale: undefined.UndefinedOr[typing.Union[str, locales.Locale]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.RESTGuild:
         """Edit a guild.
@@ -5961,10 +5952,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
     ) -> typing.Sequence[voices.VoiceRegion]:
         """Fetch the available voice regions for a guild.
-
-        !!! note
-            Unlike `RESTClient.fetch_voice_regions`, this will
-            return the VIP regions if the guild has access to them.
 
         Parameters
         ----------

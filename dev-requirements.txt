@@ -6,7 +6,7 @@
 mock==4.0.3
 
 # Py.test stuff.
-pytest==7.0.1
+pytest==7.1.1
 pytest-asyncio==0.18.2
 pytest-cov==3.0.0
 pytest-randomly==3.11.0
@@ -22,14 +22,14 @@ async-timeout==4.0.2  # Used for timeouts in some test cases.
 #################
 
 pdoc3==0.10.0
-sphobjinv==2.2.1
+sphobjinv==2.2.2
 
 #################
 # TYPE CHECKING #
 #################
 
-mypy==0.931
-pyright==1.1.228
+mypy==0.941
+pyright==1.1.231
 
 #######################
 # DEPENDENCY CHECKING #

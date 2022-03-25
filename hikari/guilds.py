@@ -77,6 +77,7 @@ if typing.TYPE_CHECKING:
     from hikari import colours
     from hikari import emojis as emojis_
     from hikari import files
+    from hikari import locales
     from hikari import permissions as permissions_
     from hikari import presences as presences_
     from hikari import voices as voices_
@@ -167,7 +168,7 @@ class GuildFeature(str, enums.Enum):
     MONETIZATION_ENABLED = "MONETIZATION_ENABLED"
     """Guild has enabled monetization."""
 
-    MORE_STICKERS = "MONETIZATION_ENABLED"
+    MORE_STICKERS = "MORE_STICKERS"
     """Guild has an increased custom stickers slots."""
 
 
@@ -1656,7 +1657,7 @@ class PartialGuild(snowflakes.Unique):
         public_updates_channel: undefined.UndefinedNoneOr[
             snowflakes.SnowflakeishOr[channels_.GuildTextChannel]
         ] = undefined.UNDEFINED,
-        preferred_locale: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        preferred_locale: undefined.UndefinedOr[typing.Union[str, locales.Locale]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> RESTGuild:
         """Edits the guild.
@@ -2758,7 +2759,7 @@ class Guild(PartialGuild):
     owner_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
     """The ID of the owner of this guild."""
 
-    preferred_locale: str = attr.field(eq=False, hash=False, repr=False)
+    preferred_locale: typing.Union[str, locales.Locale] = attr.field(eq=False, hash=False, repr=False)
     """The preferred locale to use for this guild.
 
     This can only be change if `GuildFeature.COMMUNITY` is in `Guild.features`

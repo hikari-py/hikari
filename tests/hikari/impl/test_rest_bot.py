@@ -27,8 +27,8 @@ import sys
 import mock
 import pytest
 
-from hikari import config
 from hikari import errors
+from hikari.impl import config
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import interaction_server as interaction_server_impl
 from hikari.impl import rest as rest_impl

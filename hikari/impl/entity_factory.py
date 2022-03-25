@@ -43,6 +43,7 @@ from hikari import errors
 from hikari import files
 from hikari import guilds as guild_models
 from hikari import invites as invite_models
+from hikari import locales
 from hikari import messages as message_models
 from hikari import permissions as permission_models
 from hikari import presences as presence_models
@@ -148,7 +149,7 @@ class _GuildFields:
     banner_hash: typing.Optional[str] = attr.field()
     premium_tier: typing.Union[guild_models.GuildPremiumTier, int] = attr.field()
     premium_subscription_count: typing.Optional[int] = attr.field()
-    preferred_locale: str = attr.field()
+    preferred_locale: typing.Union[str, locales.Locale] = attr.field()
     public_updates_channel_id: typing.Optional[snowflakes.Snowflake] = attr.field()
     nsfw_level: guild_models.GuildNSFWLevel = attr.field()
 
@@ -1404,7 +1405,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             banner_hash=payload["banner"],
             premium_tier=guild_models.GuildPremiumTier(payload["premium_tier"]),
             premium_subscription_count=payload.get("premium_subscription_count"),
-            preferred_locale=payload["preferred_locale"],
+            preferred_locale=locales.Locale(payload["preferred_locale"]),
             public_updates_channel_id=public_updates_channel_id,
             nsfw_level=guild_models.GuildNSFWLevel(payload["nsfw_level"]),
         )
@@ -1995,8 +1996,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             id=snowflakes.Snowflake(payload["id"]),
             type=base_interactions.InteractionType(payload["type"]),
             guild_id=guild_id,
-            guild_locale=payload.get("guild_locale", "en-US"),
-            locale=payload["locale"],
+            guild_locale=locales.Locale(payload.get("guild_locale", "en-US")),
+            locale=locales.Locale(payload["locale"]),
             channel_id=snowflakes.Snowflake(payload["channel_id"]),
             member=member,
             user=user,
@@ -2052,8 +2053,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             command_type=commands.CommandType(data_payload.get("type", commands.CommandType.SLASH)),
             options=options,
             resolved=resolved,
-            locale=payload["locale"],
-            guild_locale=payload.get("guild_locale"),
+            locale=locales.Locale(payload["locale"]),
+            guild_locale=locales.Locale(payload.get("guild_locale")),
         )
 
     def deserialize_modal_interaction(self, payload: data_binding.JSONObject) -> modal_interactions.ModalInteraction:
@@ -2174,8 +2175,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             custom_id=data_payload["custom_id"],
             component_type=message_models.ComponentType(data_payload["component_type"]),
             message=self.deserialize_message(payload["message"]),
-            locale=payload["locale"],
-            guild_locale=payload.get("guild_locale"),
+            locale=locales.Locale(payload["locale"]),
+            guild_locale=locales.Locale(payload.get("guild_locale")),
         )
 
     ##################
@@ -2907,7 +2908,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             verification_level=guild_models.GuildVerificationLevel(source_guild_payload["verification_level"]),
             default_message_notifications=default_message_notifications,
             explicit_content_filter=explicit_content_filter,
-            preferred_locale=source_guild_payload["preferred_locale"],
+            preferred_locale=locales.Locale(source_guild_payload["preferred_locale"]),
             afk_timeout=datetime.timedelta(seconds=source_guild_payload["afk_timeout"]),
             roles=roles,
             channels=channels,
@@ -2977,7 +2978,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             is_bot=user_fields.is_bot,
             is_system=user_fields.is_system,
             is_mfa_enabled=payload["mfa_enabled"],
-            locale=payload.get("locale"),
+            locale=locales.Locale(payload["locale"]),
             is_verified=payload.get("verified"),
             email=payload.get("email"),
             flags=user_models.UserFlag(payload["flags"]),
@@ -3030,7 +3031,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         return voice_models.VoiceRegion(
             id=payload["id"],
             name=payload["name"],
-            is_vip=payload["vip"],
             is_optimal_location=payload["optimal"],
             is_deprecated=payload["deprecated"],
             is_custom=payload["custom"],

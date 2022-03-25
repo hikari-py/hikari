@@ -51,12 +51,12 @@ if typing.TYPE_CHECKING:
     from concurrent import futures
 
     from hikari import channels
-    from hikari import config
     from hikari import guilds
     from hikari import intents as intents_
     from hikari import snowflakes
     from hikari import users as users_
     from hikari.api import cache as cache_
+    from hikari.api import config
     from hikari.api import entity_factory as entity_factory_
     from hikari.api import event_factory as event_factory_
     from hikari.api import event_manager as event_manager_

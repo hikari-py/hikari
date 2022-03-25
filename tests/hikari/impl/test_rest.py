@@ -34,7 +34,6 @@ from hikari import audit_logs
 from hikari import channels
 from hikari import colors
 from hikari import commands
-from hikari import config
 from hikari import embeds
 from hikari import emojis
 from hikari import errors
@@ -50,6 +49,7 @@ from hikari import users
 from hikari import webhooks
 from hikari.api import rest as rest_api
 from hikari.impl import buckets
+from hikari.impl import config
 from hikari.impl import entity_factory
 from hikari.impl import rate_limits
 from hikari.impl import rest
@@ -2314,7 +2314,6 @@ class TestRESTClientImplAsync:
             mentions_everyone=False,
             user_mentions=[9876],
             role_mentions=[1234],
-            nonce="noncing",
             reply=StubModel(987654321),
         )
         assert returned is rest_client._entity_factory.deserialize_message.return_value
@@ -2335,7 +2334,7 @@ class TestRESTClientImplAsync:
         )
         mock_form.add_field.assert_called_once_with(
             "payload_json",
-            '{"testing": "ensure_in_test", "nonce": "noncing", "message_reference": {"message_id": "987654321"}}',
+            '{"testing": "ensure_in_test", "message_reference": {"message_id": "987654321"}}',
             content_type="application/json",
         )
         rest_client._request.assert_awaited_once_with(expected_route, form_builder=mock_form)
@@ -2367,7 +2366,6 @@ class TestRESTClientImplAsync:
             mentions_everyone=False,
             user_mentions=[9876],
             role_mentions=[1234],
-            nonce="noncing",
             reply=StubModel(987654321),
         )
         assert returned is rest_client._entity_factory.deserialize_message.return_value
@@ -2388,7 +2386,7 @@ class TestRESTClientImplAsync:
         )
         rest_client._request.assert_awaited_once_with(
             expected_route,
-            json={"testing": "ensure_in_test", "nonce": "noncing", "message_reference": {"message_id": "987654321"}},
+            json={"testing": "ensure_in_test", "message_reference": {"message_id": "987654321"}},
         )
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
 
