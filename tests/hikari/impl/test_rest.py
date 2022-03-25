@@ -4049,7 +4049,6 @@ class TestRESTClientImplAsync:
         expected_route = routes.PATCH_GUILD_MEMBER.compile(guild=123, user=456)
         expected_json = {"nick": "eeeeeestrogen"}
         rest_client._request = mock.AsyncMock(return_value={"id": "789"})
-        mock_timestamp = datetime.datetime(2021, 10, 18, 7, 18, 11, 554023, tzinfo=datetime.timezone.utc)
 
         with pytest.warns(
             DeprecationWarning,
