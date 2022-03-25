@@ -43,6 +43,7 @@ MAJOR_PARAM_COMBOS: typing.Mapping[typing.FrozenSet[str], typing.Callable[[typin
     frozenset(("channel",)): lambda d: d["channel"],
     frozenset(("guild",)): lambda d: d["guild"],
     frozenset(("webhook", "token")): lambda d: d["webhook"] + ":" + d["token"],
+    frozenset(("webhook",)): lambda d: d["webhook"],
 }
 
 
