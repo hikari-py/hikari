@@ -66,6 +66,7 @@ from hikari import undefined
 from hikari import urls
 from hikari import users
 from hikari.internal import attr_extensions
+from hikari.internal import deprecation
 from hikari.internal import enums
 from hikari.internal import routes
 from hikari.internal import time
@@ -921,6 +922,7 @@ class Member(users.User):
     async def edit(
         self,
         *,
+        nickname: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
         nick: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
         roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[PartialRole]] = undefined.UNDEFINED,
         mute: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -935,11 +937,13 @@ class Member(users.User):
 
         Other Parameters
         ----------------
-        nick : hikari.undefined.UndefinedNoneOr[builtins.str]
+        nickname : hikari.undefined.UndefinedNoneOr[builtins.str]
             If provided, the new nick for the member. If `builtins.None`,
             will remove the members nick.
 
             Requires the `MANAGE_NICKNAMES` permission.
+        nick : hikari.undefined.UndefinedNoneOr[builtins.str]
+            Deprecated alias for `nickname`.
         roles : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole]]
             If provided, the new roles for the member.
 
@@ -1003,10 +1007,14 @@ class Member(users.User):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
+        if nick is not undefined.UNDEFINED:
+            deprecation.warn_deprecated("nick", alternative="nickname")
+            nickname = nick
+
         return await self.user.app.rest.edit_member(
             self.guild_id,
             self.user.id,
-            nick=nick,
+            nickname=nickname,
             roles=roles,
             mute=mute,
             deaf=deaf,

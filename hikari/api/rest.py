@@ -3253,6 +3253,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         *,
+        nickname: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         nick: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
         mute: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -3279,10 +3280,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        nick : hikari.undefined.UndefinedOr[builtins.str]
+        nickname : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the nick to add to the user when he joins the guild.
 
             Requires the `MANAGE_NICKNAMES` permission on the guild.
+        nick : hikari.undefined.UndefinedOr[builtins.str]
+            Deprecated alias for `nickname`.
         roles : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole]]
             If provided, the roles to add to the user when he joins the guild.
             This may be a collection objects or IDs of existing roles.
@@ -4972,6 +4975,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         *,
+        nickname: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
         nick: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
         roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
         mute: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -4995,11 +4999,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        nick : hikari.undefined.UndefinedNoneOr[builtins.str]
+        nickname : hikari.undefined.UndefinedNoneOr[builtins.str]
             If provided, the new nick for the member. If `builtins.None`,
             will remove the members nick.
 
             Requires the `MANAGE_NICKNAMES` permission.
+        nick : hikari.undefined.UndefinedOr[builtins.str]
+            Deprecated alias for `nickname`.
         roles : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole]]
             If provided, the new roles for the member.
 

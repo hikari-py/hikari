@@ -429,7 +429,7 @@ class TestMember:
         model.app.rest.edit_member = mock.AsyncMock()
         disabled_until = datetime.datetime(2021, 11, 17)
         edit = await model.edit(
-            nick="Imposter",
+            nickname="Imposter",
             roles=[123, 432, 345],
             mute=False,
             deaf=True,
@@ -441,7 +441,7 @@ class TestMember:
         model.app.rest.edit_member.assert_awaited_once_with(
             456,
             123,
-            nick="Imposter",
+            nickname="Imposter",
             roles=[123, 432, 345],
             mute=False,
             deaf=True,
@@ -450,6 +450,29 @@ class TestMember:
             reason="I'm God",
         )
 
+        assert edit == model.app.rest.edit_member.return_value
+
+    @pytest.mark.asyncio()
+    async def test_edit_when_deprecated_nick_field(self, model):
+        model.app.rest.edit_member = mock.AsyncMock()
+
+        with pytest.warns(
+            DeprecationWarning,
+            match="'nick' is deprecated and will be removed in a following version. You can use 'nickname' instead.",
+        ):
+            edit = await model.edit(nick="meow")
+
+        model.app.rest.edit_member.assert_awaited_once_with(
+            456,
+            123,
+            nickname="meow",
+            roles=undefined.UNDEFINED,
+            mute=undefined.UNDEFINED,
+            deaf=undefined.UNDEFINED,
+            voice_channel=undefined.UNDEFINED,
+            communication_disabled_until=undefined.UNDEFINED,
+            reason=undefined.UNDEFINED,
+        )
         assert edit == model.app.rest.edit_member.return_value
 
     def test_default_avatar_url_property(self, model, mock_user):
