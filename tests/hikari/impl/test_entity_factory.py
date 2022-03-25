@@ -36,6 +36,7 @@ from hikari import errors
 from hikari import files
 from hikari import guilds as guild_models
 from hikari import invites as invite_models
+from hikari import locales
 from hikari import messages as message_models
 from hikari import permissions as permission_models
 from hikari import presences as presence_models
@@ -2340,6 +2341,7 @@ class TestEntityFactoryImpl:
         assert guild.premium_tier == guild_models.GuildPremiumTier.TIER_2
         assert guild.premium_subscription_count == 1
         assert guild.preferred_locale == "en-GB"
+        assert guild.preferred_locale is locales.Locale.EN_GB
         assert guild.public_updates_channel_id == 33333333
         assert guild.approximate_member_count == 15
         assert guild.approximate_active_member_count == 7
@@ -2550,6 +2552,7 @@ class TestEntityFactoryImpl:
         assert guild.premium_tier == guild_models.GuildPremiumTier.TIER_2
         assert guild.premium_subscription_count == 1
         assert guild.preferred_locale == "en-GB"
+        assert guild.preferred_locale is locales.Locale.EN_GB
         assert guild.public_updates_channel_id == 33333333
         assert guild.nsfw_level == guild_models.GuildNSFWLevel.DEFAULT
 
@@ -3085,7 +3088,9 @@ class TestEntityFactoryImpl:
         assert interaction.channel_id == 49949494
         assert interaction.guild_id == 43123123
         assert interaction.locale == "es-ES"
+        assert interaction.locale is locales.Locale.ES_ES
         assert interaction.guild_locale == "en-US"
+        assert interaction.guild_locale is locales.Locale.EN_US
         assert interaction.member == entity_factory_impl._deserialize_interaction_member(
             interaction_member_payload, guild_id=43123123
         )
@@ -3193,7 +3198,9 @@ class TestEntityFactoryImpl:
         assert interaction.channel_id == 49949494
         assert interaction.guild_id == 43123123
         assert interaction.locale == "es-ES"
+        assert interaction.locale is locales.Locale.ES_ES
         assert interaction.guild_locale == "en-US"
+        assert interaction.guild_locale is locales.Locale.EN_US
         assert interaction.resolved == entity_factory_impl._deserialize_resolved_option_data(
             interaction_resolved_data_payload, guild_id=43123123
         )
@@ -3488,7 +3495,9 @@ class TestEntityFactoryImpl:
         assert interaction.user is interaction.member.user
         assert interaction.values == ["1", "2", "67"]
         assert interaction.locale == "es-ES"
+        assert interaction.locale is locales.Locale.ES_ES
         assert interaction.guild_locale == "en-US"
+        assert interaction.guild_locale is locales.Locale.EN_US
         assert isinstance(interaction, component_interactions.ComponentInteraction)
 
     def test_deserialize_component_interaction_with_undefined_fields(
@@ -5195,6 +5204,7 @@ class TestEntityFactoryImpl:
         )
         assert template.source_guild.explicit_content_filter is guild_models.GuildExplicitContentFilterLevel.ALL_MEMBERS
         assert template.source_guild.preferred_locale == "en-GB"
+        assert template.source_guild.preferred_locale is locales.Locale.EN_GB
         assert template.source_guild.afk_timeout == datetime.timedelta(seconds=3600)
 
         # TemplateRole
@@ -5341,6 +5351,7 @@ class TestEntityFactoryImpl:
         assert my_user.is_system is True
         assert my_user.is_mfa_enabled is True
         assert my_user.locale == "en-US"
+        assert my_user.locale is locales.Locale.EN_US
         assert my_user.is_verified is True
         assert my_user.email == "blahblah@blah.blah"
         assert my_user.flags == user_models.UserFlag.PARTNERED_SERVER_OWNER | user_models.UserFlag.DISCORD_EMPLOYEE

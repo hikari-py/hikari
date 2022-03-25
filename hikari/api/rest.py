@@ -46,6 +46,7 @@ if typing.TYPE_CHECKING:
     from hikari import guilds
     from hikari import invites
     from hikari import iterators
+    from hikari import locales
     from hikari import messages as messages_
     from hikari import permissions as permissions_
     from hikari import sessions
@@ -4209,7 +4210,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         public_updates_channel: undefined.UndefinedNoneOr[
             snowflakes.SnowflakeishOr[channels_.GuildTextChannel]
         ] = undefined.UNDEFINED,
-        preferred_locale: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        preferred_locale: undefined.UndefinedOr[typing.Union[str, locales.Locale]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.RESTGuild:
         """Edit a guild.

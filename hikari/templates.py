@@ -38,6 +38,7 @@ if typing.TYPE_CHECKING:
 
     from hikari import channels as channels_
     from hikari import colors
+    from hikari import locales
     from hikari import permissions as permissions_
     from hikari import snowflakes
     from hikari import users
@@ -91,7 +92,7 @@ class TemplateGuild(guilds.PartialGuild):
     )
     """The setting for the explicit content filter in this guild."""
 
-    preferred_locale: str = attr.field(eq=False, hash=False, repr=False)
+    preferred_locale: typing.Union[str, locales.Locale] = attr.field(eq=False, hash=False, repr=False)
     """The preferred locale to use for this guild.
 
     This can only be change if `GuildFeature.COMMUNITY` is in `Guild.features`
