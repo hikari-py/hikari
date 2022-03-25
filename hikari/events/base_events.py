@@ -51,6 +51,8 @@ if typing.TYPE_CHECKING:
 REQUIRED_INTENTS_ATTR: typing.Final[str] = "___requiresintents___"
 NO_RECURSIVE_THROW_ATTR: typing.Final[str] = "___norecursivethrow___"
 
+_id_counter = 1  # We start at 1 since Event is 0
+
 
 class Event(abc.ABC):
     """Base event type that all Hikari events should subclass."""
@@ -58,6 +60,7 @@ class Event(abc.ABC):
     __slots__: typing.Sequence[str] = ()
 
     __dispatches: typing.ClassVar[typing.Tuple[typing.Type[Event], ...]]
+    __bitmask: typing.ClassVar[int]
 
     def __init_subclass__(cls) -> None:
         super().__init_subclass__()
@@ -68,11 +71,16 @@ class Event(abc.ABC):
             Event.__dispatches
         except AttributeError:
             Event.__dispatches = (Event,)
+            Event.__bitmask = 1 << 0
+
+        global _id_counter
 
         mro = cls.mro()
         # We don't have to explicitly include Event here as issubclass(Event, Event) returns True.
         # Non-event classes should be ignored.
-        cls.__dispatches = tuple(cls for cls in mro if issubclass(cls, Event))
+        cls.__dispatches = tuple(sub_cls for sub_cls in mro if issubclass(sub_cls, Event))
+        cls.__bitmask = 1 << _id_counter
+        _id_counter += 1
 
     @property
     @abc.abstractmethod
@@ -89,6 +97,11 @@ class Event(abc.ABC):
     def dispatches(cls) -> typing.Sequence[typing.Type[Event]]:
         """Sequence of the event classes this event is dispatched as."""
         return cls.__dispatches
+
+    @classmethod
+    def bitmask(cls) -> int:
+        """Bitmask for this event."""
+        return cls.__bitmask
 
 
 def get_required_intents_for(event_type: typing.Type[Event]) -> typing.Collection[intents.Intents]:

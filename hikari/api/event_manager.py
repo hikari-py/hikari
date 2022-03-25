@@ -372,8 +372,8 @@ class EventManager(abc.ABC):
             The event type to look for.
             `T` must be a subclass of `hikari.events.base_events.Event`.
         polymorphic : builtins.bool
-            If `builtins.True`, this will also return the listeners of the
-            subclasses of the given event type. If `builtins.False`, then
+            If `builtins.True`, this will also return the listeners for all the
+            event types `event_type` will dispatch. If `builtins.False`, then
             only listeners for this class specifically are returned. The
             default is `builtins.True`.
 
