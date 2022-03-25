@@ -578,7 +578,7 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
 
 
 class ModalResponseMixin(PartialInteraction):
-    """Mixin' class for all interaction types which can be responded to with a message."""
+    """Mixin' class for all interaction types which can be responded to with a modal."""
 
     __slots__: typing.Sequence[str] = ()
 

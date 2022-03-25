@@ -1003,7 +1003,7 @@ class InteractionModalBuilder(special_endpoints.InteractionModalBuilder):
 
     _title: str = attr.field()
     _custom_id: str = attr.field()
-    _components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = attr.field()
+    _components: typing.List[special_endpoints.ComponentBuilder] = attr.field(factory=list)
 
     @property
     def type(self) -> typing.Literal[base_interactions.ResponseType.MODAL]:
@@ -1018,7 +1018,7 @@ class InteractionModalBuilder(special_endpoints.InteractionModalBuilder):
         return self._custom_id
 
     @property
-    def components(self) -> undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]]:
+    def components(self) -> typing.Sequence[special_endpoints.ComponentBuilder]:
         return self._components
 
     def set_title(self: _InteractionModalBuilderT, title: str, /) -> _InteractionModalBuilderT:
@@ -1032,6 +1032,7 @@ class InteractionModalBuilder(special_endpoints.InteractionModalBuilder):
     def add_component(
         self: _InteractionModalBuilderT, component: special_endpoints.ComponentBuilder, /
     ) -> _InteractionModalBuilderT:
+        self._components.append(component)
         return self
 
     def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObject:

@@ -3401,6 +3401,11 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
     ) -> special_endpoints.InteractionModalBuilder:
+        if components is undefined.UNDEFINED:
+            components = []
+        else:
+            components = list(components)
+
         return special_endpoints_impl.InteractionModalBuilder(
             title=title,
             custom_id=custom_id,

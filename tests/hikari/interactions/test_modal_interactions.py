@@ -147,6 +147,13 @@ class TestModalInteraction:
 
         stub_interaction.fetch_message.assert_awaited_once_with(3421)
 
+    @pytest.mark.asyncio()
+    async def test_fetch_parent_message_when_none(self):
+        stub_interaction = hikari_test_helpers.mock_class_namespace(modal_interactions.ModalInteraction, init_=False)()
+        stub_interaction.message = None
+
+        assert await stub_interaction.fetch_parent_message() is None
+
     def test_get_parent_message(self, mock_modal_interaction, mock_app):
         mock_modal_interaction.message = mock.Mock(id=321655)
 
@@ -160,3 +167,8 @@ class TestModalInteraction:
         assert mock_modal_interaction.get_parent_message() is None
 
         mock_app.cache.get_message.assert_not_called()
+
+    def test_get_parent_message_when_none(self, mock_modal_interaction, mock_app):
+        mock_modal_interaction.message = None
+
+        assert mock_modal_interaction.get_parent_message() is None

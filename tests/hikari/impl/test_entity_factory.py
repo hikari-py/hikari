@@ -3582,6 +3582,28 @@ class TestEntityFactoryImpl:
         assert short_text_input.type == message_models.ComponentType.TEXT_INPUT
         assert short_text_input.custom_id == "name"
 
+    def test_deserialize_modal_interaction_with_user(
+        self,
+        entity_factory_impl,
+        modal_interaction_payload,
+        user_payload,
+    ):
+        modal_interaction_payload["member"] = None
+        modal_interaction_payload["user"] = user_payload
+
+        interaction = entity_factory_impl.deserialize_modal_interaction(modal_interaction_payload)
+        assert interaction.user.id == 115590097100865541
+
+    def test_deserialize_modal_interaction_with_unrecognized_component(
+        self,
+        entity_factory_impl,
+        modal_interaction_payload,
+    ):
+        modal_interaction_payload["data"]["components"] = [{"type": 0}]
+
+        interaction = entity_factory_impl.deserialize_modal_interaction(modal_interaction_payload)
+        assert len(interaction.components) == 0
+
     ##################
     # STICKER MODELS #
     ##################

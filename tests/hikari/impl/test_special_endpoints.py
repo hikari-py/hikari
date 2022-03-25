@@ -440,6 +440,37 @@ class TestInteractionMessageBuilder:
             builder.build(mock_entity_factory)
 
 
+class TestInteractionModalBuilder:
+    def test_type_property(self):
+        builder = special_endpoints.InteractionModalBuilder("title", "custom_id")
+        assert builder.type == 9
+
+    def test_title_property(self):
+        builder = special_endpoints.InteractionModalBuilder("title", "custom_id").set_title("title2")
+        assert builder.title == "title2"
+
+    def test_custom_id_property(self):
+        builder = special_endpoints.InteractionModalBuilder("title", "custom_id").set_custom_id("better_custom_id")
+        assert builder.custom_id == "better_custom_id"
+
+    def test_components_property(self):
+        component = mock.Mock()
+        builder = special_endpoints.InteractionModalBuilder("title", "custom_id").add_component(component)
+        assert builder.components == [component]
+
+    def test_build(self):
+        component = mock.Mock()
+        builder = special_endpoints.InteractionModalBuilder("title", "custom_id").add_component(component)
+        assert builder.build(mock.Mock()) == {
+            "type": 9,
+            "data": {
+                "title": "title",
+                "custom_id": "custom_id",
+                "components": [component.build.return_value],
+            },
+        }
+
+
 class TestSlashCommandBuilder:
     def test_description_property(self):
         builder = special_endpoints.SlashCommandBuilder("ok", "NO")

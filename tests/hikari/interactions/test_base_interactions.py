@@ -224,3 +224,14 @@ class TestModalResponseMixin:
             custom_id="custom_id",
             components=[],
         )
+
+    def test_build_response(self, mock_modal_response_mixin, mock_app):
+        mock_app.rest.interaction_modal_builder = mock.Mock()
+        builder = mock_modal_response_mixin.build_modal_response("title", "custom_id", components=[])
+
+        assert builder is mock_app.rest.interaction_modal_builder.return_value
+        mock_app.rest.interaction_modal_builder.assert_called_once_with(
+            title="title",
+            custom_id="custom_id",
+            components=[],
+        )
