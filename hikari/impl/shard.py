@@ -279,6 +279,8 @@ class _GatewayTransport(aiohttp.ClientWebSocketResponse):
                     proxy=proxy_settings.url,
                     proxy_headers=proxy_settings.headers,
                     url=url,
+                    # We manage these ourselves
+                    autoclose=False,
                 )
             )
             assert isinstance(web_socket, cls)
