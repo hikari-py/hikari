@@ -2222,10 +2222,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     def _deserialize_message_application(self, payload: data_binding.JSONObject) -> message_models.MessageApplication:
-        primary_sku_id: typing.Optional[snowflakes.Snowflake] = None
-        if (raw_primary_sku_id := payload.get("primary_sku_id")) is not None:
-            primary_sku_id = snowflakes.Snowflake(raw_primary_sku_id)
-
         return message_models.MessageApplication(
             id=snowflakes.Snowflake(payload["id"]),
             name=payload["name"],

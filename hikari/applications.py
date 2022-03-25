@@ -494,7 +494,7 @@ class InviteApplication(guilds.PartialApplication):
 
     @property
     def cover_image_url(self) -> typing.Optional[files.URL]:
-        """The default rich presence cover image URL for this application, if set.
+        """Rich presence cover image URL for this application, if set.
 
         Returns
         -------
@@ -583,7 +583,7 @@ class Application(guilds.PartialApplication):
 
     @property
     def cover_image_url(self) -> typing.Optional[files.URL]:
-        """The default rich presence cover image URL for this application, if set.
+        """Rich presence cover image URL for this application, if set.
 
         Returns
         -------
