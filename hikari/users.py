@@ -758,7 +758,10 @@ class OwnUser(UserImpl):
     """Whether the user's account has multi-factor authentication enabled."""
 
     locale: typing.Optional[typing.Union[str, locales.Locale]] = attr.field(eq=False, hash=False, repr=False)
-    """The user's set language. This is not provided by the `READY` event."""
+    """The user's set locale.
+
+    This is not provided in the `READY` event.
+    """
 
     is_verified: typing.Optional[bool] = attr.field(eq=False, hash=False, repr=False)
     """Whether the email for this user's account has been verified.
