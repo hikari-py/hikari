@@ -202,7 +202,7 @@ class TestMessageResponseMixin:
 
 
 class TestModalResponseMixin:
-    @pytest.fixture
+    @pytest.fixture()
     def mock_modal_response_mixin(self, mock_app):
         return base_interactions.ModalResponseMixin(
             app=mock_app,

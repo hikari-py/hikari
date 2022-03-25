@@ -31,7 +31,6 @@ import attr
 
 from hikari import channels
 from hikari import traits
-from hikari import undefined
 from hikari.interactions import base_interactions
 
 if typing.TYPE_CHECKING:
