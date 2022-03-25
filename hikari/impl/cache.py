@@ -769,14 +769,14 @@ class CacheImpl(cache.MutableCache):
         return copy.copy(self._me)
 
     def set_me(self, user: users.OwnUser, /) -> None:
-        if self._is_cache_enabled_for(config.CacheComponents.ME):
+        if self._is_cache_enabled_for(config_api.CacheComponents.ME):
             _LOGGER.debug("setting my user to %s", user)
             self._me = copy.copy(user)
 
     def update_me(
         self, user: users.OwnUser, /
     ) -> typing.Tuple[typing.Optional[users.OwnUser], typing.Optional[users.OwnUser]]:
-        if not self._is_cache_enabled_for(config.CacheComponents.ME):
+        if not self._is_cache_enabled_for(config_api.CacheComponents.ME):
             return None, None
 
         cached_user = self.get_me()

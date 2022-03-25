@@ -32,11 +32,11 @@ import logging
 import random
 import typing
 
-from hikari import config
 from hikari import errors
 from hikari import intents as intents_
 from hikari import presences as presences_
 from hikari import snowflakes
+from hikari.api import config
 from hikari.events import channel_events
 from hikari.events import guild_events
 from hikari.events import interaction_events

@@ -29,12 +29,12 @@ import mock
 import pytest
 
 from hikari import channels
-from hikari import config
 from hikari import errors
 from hikari import intents
 from hikari import presences
 from hikari.api import event_factory as event_factory_
 from hikari.events import guild_events
+from hikari.impl import config
 from hikari.impl import event_manager
 from hikari.internal import time
 from tests.hikari import hikari_test_helpers
