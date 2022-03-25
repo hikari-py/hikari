@@ -14,6 +14,7 @@ flake8-docstrings==1.6.0                # pydocstyle support
 flake8-executable==2.1.1                # shebangs
 flake8-fixme==1.1.1                     # "fix me" counter
 flake8-functions==0.0.7                 # function linting
+jinja2==3.0.3                           # temporarily freeze jinja2 due to incompatibilities with flake8-html
 flake8-html==0.4.1                      # html output
 flake8-if-statements==0.1.0             # condition linting
 flake8-isort==4.1.1                     # runs isort
