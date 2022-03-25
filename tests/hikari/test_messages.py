@@ -64,9 +64,7 @@ class TestMessageApplication:
             name="test app",
             description="",
             icon_hash="123abc",
-            summary="some summary",
             cover_image_hash="abc123",
-            primary_sku_id=456,
         )
 
     def test_cover_image_url(self, message_application):

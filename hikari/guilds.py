@@ -1222,9 +1222,6 @@ class PartialApplication(snowflakes.Unique):
     icon_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
     """The CDN hash of this application's icon, if set."""
 
-    summary: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
-    """This summary for this application's primary SKU if it's sold on Discord, if any."""
-
     def __str__(self) -> str:
         return self.name
 

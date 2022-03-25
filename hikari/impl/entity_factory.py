@@ -274,7 +274,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             channel_models.ChannelType.GUILD_CATEGORY: self.deserialize_guild_category,
             channel_models.ChannelType.GUILD_TEXT: self.deserialize_guild_text_channel,
             channel_models.ChannelType.GUILD_NEWS: self.deserialize_guild_news_channel,
-            channel_models.ChannelType.GUILD_STORE: self.deserialize_guild_store_channel,
             channel_models.ChannelType.GUILD_VOICE: self.deserialize_guild_voice_channel,
             channel_models.ChannelType.GUILD_STAGE: self.deserialize_guild_stage_channel,
         }
@@ -351,7 +350,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 owner_id=snowflakes.Snowflake(team_payload["owner_user_id"]),
             )
 
-        primary_sku_id = snowflakes.Snowflake(payload["primary_sku_id"]) if "primary_sku_id" in payload else None
         return application_models.Application(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
@@ -361,14 +359,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             is_bot_code_grant_required=payload["bot_require_code_grant"],
             owner=self.deserialize_user(payload["owner"]),
             rpc_origins=payload.get("rpc_origins"),
-            summary=payload["summary"] or None,
             public_key=bytes.fromhex(payload["verify_key"]),
             flags=application_models.ApplicationFlags(payload["flags"]),
             icon_hash=payload.get("icon"),
             team=team,
-            guild_id=snowflakes.Snowflake(payload["guild_id"]) if "guild_id" in payload else None,
-            primary_sku_id=primary_sku_id,
-            slug=payload.get("slug"),
             cover_image_hash=payload.get("cover_image"),
             privacy_policy_url=payload.get("privacy_policy_url"),
             terms_of_service_url=payload.get("terms_of_service_url"),
@@ -383,7 +377,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=application_payload["name"],
             description=application_payload["description"] or None,
             icon_hash=application_payload.get("icon"),
-            summary=application_payload["summary"] or None,
             is_bot_public=application_payload.get("bot_public"),
             is_bot_code_grant_required=application_payload.get("bot_require_code_grant"),
             public_key=bytes.fromhex(application_payload["verify_key"]),
@@ -766,25 +759,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             topic=payload["topic"],
             last_message_id=last_message_id,
             last_pin_timestamp=last_pin_timestamp,
-        )
-
-    def deserialize_guild_store_channel(
-        self,
-        payload: data_binding.JSONObject,
-        *,
-        guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
-    ) -> channel_models.GuildStoreChannel:
-        channel_fields = self._set_guild_channel_attributes(payload, guild_id=guild_id)
-        return channel_models.GuildStoreChannel(
-            app=self._app,
-            id=channel_fields.id,
-            name=channel_fields.name,
-            type=channel_fields.type,
-            guild_id=channel_fields.guild_id,
-            position=channel_fields.position,
-            permission_overwrites=channel_fields.permission_overwrites,
-            is_nsfw=channel_fields.is_nsfw,
-            parent_id=channel_fields.parent_id,
         )
 
     def deserialize_guild_voice_channel(
@@ -1310,7 +1284,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 id=snowflakes.Snowflake(raw_application["id"]),
                 name=raw_application["name"],
                 icon_hash=raw_application["icon"],
-                summary=raw_application["summary"] or None,
                 description=raw_application["description"] or None,
                 bot=bot,
             )
@@ -1607,7 +1580,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 id=snowflakes.Snowflake(invite_payload["id"]),
                 name=invite_payload["name"],
                 description=invite_payload["description"] or None,
-                summary=invite_payload["summary"] or None,
                 public_key=bytes.fromhex(invite_payload["verify_key"]),
                 icon_hash=invite_payload.get("icon"),
                 cover_image_hash=invite_payload.get("cover_image"),
@@ -2259,9 +2231,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=payload["name"],
             description=payload["description"] or None,
             icon_hash=payload["icon"],
-            summary=payload["summary"] or None,
             cover_image_hash=payload.get("cover_image"),
-            primary_sku_id=primary_sku_id,
         )
 
     def _deserialize_message_attachment(self, payload: data_binding.JSONObject) -> message_models.Attachment:

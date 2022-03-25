@@ -203,7 +203,6 @@ class TestEntityFactoryImpl:
             "bot_public": True,
             "bot_require_code_grant": False,
             "owner": owner_payload,
-            "summary": "not a blank string",
             "verify_key": "698c5d0859abb686be1f8a19e0e7634d8471e33817650f9fb29076de227bca90",
             "flags": 65536,
             "team": {
@@ -215,9 +214,6 @@ class TestEntityFactoryImpl:
                 ],
                 "owner_user_id": "393030292",
             },
-            "guild_id": "2020293939",
-            "primary_sku_id": "2020202002",
-            "slug": "192.168.1.254",
             "cover_image": "hashmebaby",
             "privacy_policy_url": "hahaha://hahaha",
             "terms_of_service_url": "haha2:2h2h2h2",
@@ -236,7 +232,6 @@ class TestEntityFactoryImpl:
         assert application.is_bot_code_grant_required is False
         assert application.owner == entity_factory_impl.deserialize_user(owner_payload)
         assert application.rpc_origins == ["127.0.0.0"]
-        assert application.summary == "not a blank string"
         assert (
             application.public_key
             == b'i\x8c]\x08Y\xab\xb6\x86\xbe\x1f\x8a\x19\xe0\xe7cM\x84q\xe38\x17e\x0f\x9f\xb2\x90v\xde"{\xca\x90'
@@ -260,9 +255,6 @@ class TestEntityFactoryImpl:
         assert member.user == entity_factory_impl.deserialize_user(user_payload)
         assert isinstance(member, application_models.TeamMember)
 
-        assert application.guild_id == 2020293939
-        assert application.primary_sku_id == 2020202002
-        assert application.slug == "192.168.1.254"
         assert application.cover_image_hash == "hashmebaby"
         assert isinstance(application, application_models.Application)
 
@@ -272,7 +264,6 @@ class TestEntityFactoryImpl:
                 "id": "209333111222",
                 "name": "Dream Sweet in Sea Major",
                 "description": "I am an application",
-                "summary": "not a blank string",
                 "bot_public": True,
                 "bot_require_code_grant": False,
                 "verify_key": "1232313223",
@@ -283,9 +274,6 @@ class TestEntityFactoryImpl:
 
         assert application.rpc_origins is None
         assert application.team is None
-        assert application.guild_id is None
-        assert application.primary_sku_id is None
-        assert application.slug is None
         assert application.icon_hash is None
         assert application.cover_image_hash is None
         assert application.privacy_policy_url is None
@@ -298,7 +286,6 @@ class TestEntityFactoryImpl:
                 "name": "Dream Sweet in Sea Major",
                 "icon": None,
                 "description": "",
-                "summary": "",
                 "team": None,
                 "owner": owner_payload,
                 "bot_public": True,
@@ -309,7 +296,6 @@ class TestEntityFactoryImpl:
         )
 
         assert application.description is None
-        assert application.summary is None
         assert application.icon_hash is None
         assert application.cover_image_hash is None
         assert application.team is None
@@ -321,7 +307,6 @@ class TestEntityFactoryImpl:
             "name": "Betrayal.io",
             "icon": "0227b2e89ea08d666c43003fbadbc72a",
             "description": "Play inside Discord with your friends!",
-            "summary": "Play inside Discord with your friends! (but as a summary)",
             "cover_image": "0227b2e89ea08d666c43003fbadbc72a (but as cover)",
             "verify_key": "1bf78fdbfcbabe2e1256f9b133818976591203a22febabba5ff89f86f24760ff",
         }
@@ -334,7 +319,6 @@ class TestEntityFactoryImpl:
                 "name": "abotnotabot",
                 "icon": "7c635c3cc8c7b109d254d8fcc1be85e6",
                 "description": "2123",
-                "summary": "dsasd",
                 "hook": True,
                 "bot_public": True,
                 "bot_require_code_grant": False,
@@ -359,7 +343,6 @@ class TestEntityFactoryImpl:
         assert application.name == "abotnotabot"
         assert application.description == "2123"
         assert application.icon_hash == "7c635c3cc8c7b109d254d8fcc1be85e6"
-        assert application.summary == "dsasd"
         assert application.public_key == b"okokodododo"
         assert application.is_bot_public is True
         assert application.is_bot_code_grant_required is False
@@ -1101,64 +1084,6 @@ class TestEntityFactoryImpl:
         assert news_channel.last_pin_timestamp is None
 
     @pytest.fixture()
-    def guild_store_channel_payload(self, permission_overwrite_payload):
-        return {
-            "id": "123",
-            "permission_overwrites": [permission_overwrite_payload],
-            "name": "Half Life 3",
-            "parent_id": "9876",
-            "nsfw": True,
-            "position": 2,
-            "guild_id": "1234",
-            "type": 6,
-        }
-
-    def test_deserialize_guild_store_channel(
-        self, entity_factory_impl, mock_app, guild_store_channel_payload, permission_overwrite_payload
-    ):
-        store_chanel = entity_factory_impl.deserialize_guild_store_channel(guild_store_channel_payload)
-        assert store_chanel.id == 123
-        assert store_chanel.name == "Half Life 3"
-        assert store_chanel.type == channel_models.ChannelType.GUILD_STORE
-        assert store_chanel.guild_id == 1234
-        assert store_chanel.position == 2
-        assert store_chanel.permission_overwrites == {
-            4242: entity_factory_impl.deserialize_permission_overwrite(permission_overwrite_payload)
-        }
-        assert store_chanel.is_nsfw is True
-        assert store_chanel.parent_id == 9876
-        assert isinstance(store_chanel, channel_models.GuildStoreChannel)
-
-    def test_deserialize_guild_store_channel_with_unset_fields(self, entity_factory_impl):
-        store_chanel = entity_factory_impl.deserialize_guild_store_channel(
-            {
-                "id": "123",
-                "permission_overwrites": [],
-                "name": "Half Life 3",
-                "position": 2,
-                "type": 6,
-                "guild_id": 123123,
-            }
-        )
-        assert store_chanel.parent_id is None
-        assert store_chanel.is_nsfw is None
-
-    def test_deserialize_guild_store_channel_with_null_fields(self, entity_factory_impl):
-        store_chanel = entity_factory_impl.deserialize_guild_store_channel(
-            {
-                "id": "123",
-                "permission_overwrites": [],
-                "name": "Half Life 3",
-                "parent_id": None,
-                "nsfw": True,
-                "position": 2,
-                "guild_id": "1234",
-                "type": 6,
-            }
-        )
-        assert store_chanel.parent_id is None
-
-    @pytest.fixture()
     def guild_voice_channel_payload(self, permission_overwrite_payload):
         return {
             "id": "555",
@@ -1312,7 +1237,6 @@ class TestEntityFactoryImpl:
         guild_category_payload,
         guild_text_channel_payload,
         guild_news_channel_payload,
-        guild_store_channel_payload,
         guild_voice_channel_payload,
         guild_stage_channel_payload,
     ):
@@ -1322,7 +1246,6 @@ class TestEntityFactoryImpl:
             (guild_category_payload, channel_models.GuildCategory),
             (guild_text_channel_payload, channel_models.GuildTextChannel),
             (guild_news_channel_payload, channel_models.GuildNewsChannel),
-            (guild_store_channel_payload, channel_models.GuildStoreChannel),
             (guild_voice_channel_payload, channel_models.GuildVoiceChannel),
             (guild_stage_channel_payload, channel_models.GuildStageChannel),
         ]:
@@ -2073,7 +1996,6 @@ class TestEntityFactoryImpl:
                 "id": "123",
                 "name": "some bot",
                 "icon": "123abc",
-                "summary": "same as desc",
                 "description": "same as desc2",
                 "bot": {
                     "id": "456",
@@ -2112,7 +2034,6 @@ class TestEntityFactoryImpl:
         assert integration.application.id == 123
         assert integration.application.name == "some bot"
         assert integration.application.icon_hash == "123abc"
-        assert integration.application.summary == "same as desc"
         assert integration.application.description == "same as desc2"
         assert integration.application.bot == entity_factory_impl.deserialize_user(
             {
@@ -2165,10 +2086,8 @@ class TestEntityFactoryImpl:
                     "id": 123,
                     "name": "some bot",
                     "icon": "123abc",
-                    "summary": "same as desc",
                     "description": "same as desc2",
                     "cover_image": "SMKLdiosa89123u",
-                    "primary_sku_id": "499494949494994",
                 },
             }
         )
@@ -3730,7 +3649,6 @@ class TestEntityFactoryImpl:
         assert application.id == 773336526917861400
         assert application.name == "Betrayal.io"
         assert application.description == "Play inside Discord with your friends!"
-        assert application.summary == "Play inside Discord with your friends! (but as a summary)"
         assert (
             application.public_key
             == b"\x1b\xf7\x8f\xdb\xfc\xba\xbe.\x12V\xf9\xb13\x81\x89vY\x12\x03\xa2/\xeb\xab\xba_\xf8\x9f\x86\xf2G`\xff"
@@ -3753,14 +3671,12 @@ class TestEntityFactoryImpl:
                     "id": "773336526917861400",
                     "name": "Betrayal.io",
                     "description": "",
-                    "summary": "",
                     "verify_key": "1bf78fdbfcbabe2e1256f9b133818976591203a22febabba5ff89f86f24760ff",
                 },
             }
         )
         assert invite.expires_at is None
         assert invite.target_application.description is None
-        assert invite.target_application.summary is None
 
     def test_deserialize_invite_with_unset_fields(self, entity_factory_impl, partial_channel_payload):
         invite = entity_factory_impl.deserialize_invite(
@@ -3786,7 +3702,6 @@ class TestEntityFactoryImpl:
             "id": "773336526917861400",
             "name": "Betrayal.io",
             "description": "Play inside Discord with your friends!",
-            "summary": "Play inside Discord with your friends! (but as a summary)",
             "verify_key": "1bf78fdbfcbabe2e1256f9b133818976591203a22febabba5ff89f86f24760ff",
         }
 
@@ -3894,7 +3809,6 @@ class TestEntityFactoryImpl:
         assert application.id == 773336526917861400
         assert application.name == "Betrayal.io"
         assert application.description == "Play inside Discord with your friends!"
-        assert application.summary == "Play inside Discord with your friends! (but as a summary)"
         assert (
             application.public_key
             == b"\x1b\xf7\x8f\xdb\xfc\xba\xbe.\x12V\xf9\xb13\x81\x89vY\x12\x03\xa2/\xeb\xab\xba_\xf8\x9f\x86\xf2G`\xff"
@@ -4079,8 +3993,6 @@ class TestEntityFactoryImpl:
             "description": "The best application",
             "icon": "2658b3029e775a931ffb49380073fa63",
             "cover_image": "58982a23790c4f22787b05d3be38a026",
-            "summary": "asas",
-            "primary_sku_id": "499494949494994",
         }
 
     @pytest.fixture()
@@ -4277,9 +4189,7 @@ class TestEntityFactoryImpl:
         assert partial_message.application.name == "hikari"
         assert partial_message.application.description == "The best application"
         assert partial_message.application.icon_hash == "2658b3029e775a931ffb49380073fa63"
-        assert partial_message.application.summary == "asas"
         assert partial_message.application.cover_image_hash == "58982a23790c4f22787b05d3be38a026"
-        assert partial_message.application.primary_sku_id == 499494949494994
         assert isinstance(partial_message.application, message_models.MessageApplication)
         # MessageReference
         assert partial_message.message_reference.app is mock_app
@@ -4314,7 +4224,6 @@ class TestEntityFactoryImpl:
     def test_deserialize_partial_message_with_partial_fields(self, entity_factory_impl, message_payload):
         message_payload["content"] = ""
         message_payload["edited_timestamp"] = None
-        message_payload["application"]["primary_sku_id"] = None
         message_payload["application"]["icon"] = None
         message_payload["referenced_message"] = None
         del message_payload["member"]
@@ -4328,7 +4237,6 @@ class TestEntityFactoryImpl:
         assert partial_message.edited_timestamp is None
         assert partial_message.guild_id is not None
         assert partial_message.member is undefined.UNDEFINED
-        assert partial_message.application.primary_sku_id is None
         assert partial_message.application.icon_hash is None
         assert partial_message.application.cover_image_hash is None
         assert partial_message.message_reference.id is None
@@ -4458,9 +4366,7 @@ class TestEntityFactoryImpl:
         assert message.application.name == "hikari"
         assert message.application.description == "The best application"
         assert message.application.icon_hash == "2658b3029e775a931ffb49380073fa63"
-        assert message.application.summary == "asas"
         assert message.application.cover_image_hash == "58982a23790c4f22787b05d3be38a026"
-        assert message.application.primary_sku_id == 499494949494994
         assert isinstance(message.application, message_models.MessageApplication)
 
         # MessageReference
@@ -4495,7 +4401,6 @@ class TestEntityFactoryImpl:
 
     def test_deserialize_message_with_unset_sub_fields(self, entity_factory_impl, message_payload):
         del message_payload["application"]["cover_image"]
-        del message_payload["application"]["primary_sku_id"]
         del message_payload["activity"]["party_id"]
         del message_payload["message_reference"]["message_id"]
         del message_payload["message_reference"]["guild_id"]
@@ -4511,7 +4416,6 @@ class TestEntityFactoryImpl:
 
         # MessageApplication
         assert message.application.cover_image_hash is None
-        assert message.application.primary_sku_id is None
         assert isinstance(message.application, message_models.MessageApplication)
 
         # MessageReference
@@ -4576,14 +4480,12 @@ class TestEntityFactoryImpl:
         assert message.components == []
 
     def test_deserialize_message_with_other_unset_fields(self, entity_factory_impl, message_payload):
-        message_payload["application"]["primary_sku_id"] = None
         message_payload["application"]["icon"] = None
         message_payload["referenced_message"] = None
         del message_payload["member"]
         del message_payload["application"]["cover_image"]
 
         message = entity_factory_impl.deserialize_message(message_payload)
-        assert message.application.primary_sku_id is None
         assert message.application.cover_image_hash is None
         assert message.application.icon_hash is None
         assert message.referenced_message is None
