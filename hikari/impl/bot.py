@@ -619,7 +619,6 @@ class GatewayBot(traits.GatewayBotAware):
 
     def listen(
         self,
-        event_type: typing.Optional[typing.Type[event_manager_.EventT_co]] = None,
         *event_types: typing.Type[event_manager_.EventT_co],
     ) -> typing.Callable[
         [event_manager_.CallbackT[event_manager_.EventT_co]],
@@ -631,8 +630,8 @@ class GatewayBot(traits.GatewayBotAware):
 
         Parameters
         ----------
-        event_type : typing.Optional[typing.Type[T]]
-            The event type to subscribe to. The implementation may allow this
+        *event_types : typing.Optional[typing.Type[T]]
+            The event types to subscribe to. The implementation may allow this
             to be undefined. If this is the case, the event type will be inferred
             instead from the type hints on the function signature.
 
@@ -653,7 +652,7 @@ class GatewayBot(traits.GatewayBotAware):
         Unsubscribe: `hikari.impl.bot.GatewayBot.unsubscribe`
         Wait_for: `hikari.impl.bot.GatewayBot.wait_for`
         """
-        return self._event_manager.listen(event_type, *event_types)
+        return self._event_manager.listen(*event_types)
 
     @staticmethod
     def print_banner(

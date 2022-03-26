@@ -30,6 +30,8 @@ import asyncio
 import inspect
 import itertools
 import logging
+import sys
+import types
 import typing
 import warnings
 import weakref
@@ -416,7 +418,12 @@ class EventManagerBase(event_manager_.EventManager):
         *,
         _nested: int = 0,
     ) -> None:
-        if not inspect.isclass(event_type) or not issubclass(event_type, base_events.Event):
+        try:
+            is_event = issubclass(event_type, base_events.Event)
+        except TypeError:
+            is_event = False
+
+        if not is_event:
             raise TypeError("Cannot subscribe to a non-Event type")
 
         if not inspect.iscoroutinefunction(callback):
@@ -499,7 +506,6 @@ class EventManagerBase(event_manager_.EventManager):
 
     def listen(
         self,
-        event_type: typing.Optional[typing.Type[event_manager_.EventT_co]] = None,
         *event_types: typing.Type[event_manager_.EventT_co],
     ) -> typing.Callable[
         [event_manager_.CallbackT[event_manager_.EventT_co]], event_manager_.CallbackT[event_manager_.EventT_co]
@@ -509,9 +515,9 @@ class EventManagerBase(event_manager_.EventManager):
         ) -> event_manager_.CallbackT[event_manager_.EventT_co]:
             # Avoid resolving forward references in the function's signature if
             # event_type was explicitly provided as this may lead to errors.
-            if event_type is not None:
+            if event_types:
                 _assert_is_listener(iter(inspect.signature(callback).parameters.values()))
-                resolved_types = (event_type, *event_types)
+                resolved_types = event_types
 
             else:
                 signature = reflect.resolve_signature(callback)
@@ -523,9 +529,18 @@ class EventManagerBase(event_manager_.EventManager):
                 if annotation is event_param.empty:
                     raise TypeError("Must provide the event type in the @listen decorator or as a type hint!")
 
-                # If annotation is not a Union, get_args will return an empty tuple
-                # so just return a tuple with the annotation
-                resolved_types = typing.get_args(annotation) or (annotation,)
+                if sys.version_info >= (3, 10):
+                    # We can use types.UnionType on 3.10+
+                    UNIONS = {typing.Union, types.UnionType}
+                else:
+                    UNIONS = {typing.Union}
+
+                if typing.get_origin(annotation) in UNIONS:
+                    # Resolve the types inside the union
+                    resolved_types = typing.get_args(annotation)
+                else:
+                    # Just pass back the annotation
+                    resolved_types = (annotation,)
 
             for resolved_type in resolved_types:
                 self.subscribe(resolved_type, callback, _nested=1)
