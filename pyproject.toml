@@ -63,7 +63,6 @@ include = ["hikari"]
 exclude = ["**/__init__.py", "hikari/internal/enums.py", "hikari/internal/fast_protocol.py"]
 pythonVersion = "3.8"
 typeCheckingMode = "strict"
-reportGeneralTypeIssues = "none"
 
 reportMissingTypeStubs = "none"
 reportImportCycles = "none" # Doesn't account for TYPE_CHECKING
