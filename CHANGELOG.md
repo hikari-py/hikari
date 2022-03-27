@@ -6,6 +6,49 @@ This file is updated every release with the use of `towncrier` from the fragment
 
 .. towncrier release notes start
 
+Hikari 2.0.0.dev108 (2022-03-27)
+================================
+
+Breaking Changes
+----------------
+
+- `hikari.config` has now been split up to `hikari.api.config` and `hikari.impl.config` to avoid leaking impl detail.
+  This also means that config types are no-longer accessible at the top level (directly on `hikari`). ([#1067](https://github.com/hikari-py/hikari/issues/1067))
+- Hide the entity factory's component deserialize methods. ([#1074](https://github.com/hikari-py/hikari/issues/1074))
+- Remove nonce parameter from create message.
+  This was purposely removed from the bot api documentation inferring that its no-longer officially supported. ([#1075](https://github.com/hikari-py/hikari/issues/1075))
+- Remove `VoiceRegion.is_vip` due to Discord no longer sending it. ([#1086](https://github.com/hikari-py/hikari/issues/1086))
+- Remove store sku related application fields and store channels. ([#1092](https://github.com/hikari-py/hikari/issues/1092))
+
+
+Deprecation
+-----------
+
+- Renamed `nick` argument to `nickname` for edit member and add user to guild REST methods. ([#1095](https://github.com/hikari-py/hikari/issues/1095))
+
+
+Features
+--------
+
+- Scheduled event support. ([#1056](https://github.com/hikari-py/hikari/issues/1056))
+- `get_guild()` is now available on `hikari.GuildChannel`. ([#1057](https://github.com/hikari-py/hikari/issues/1057))
+- Optimize receiving websocket JSON for the happy path. ([#1058](https://github.com/hikari-py/hikari/issues/1058))
+- The threaded file reader now persists the open file pointer while the context manager is active. ([#1073](https://github.com/hikari-py/hikari/issues/1073))
+- Optimize event dispatching by only deserializing events when they are needed. ([#1094](https://github.com/hikari-py/hikari/issues/1094))
+- Add `hikari.locales.Locale` to help with Discord locale strings. ([#1990](https://github.com/hikari-py/hikari/issues/1990))
+
+
+Bugfixes
+--------
+
+- `fetch_my_guilds` no-longer returns duplicate guilds nor makes unnecessary (duplicated) requests when `newest_first` is set to `True`. ([#1059](https://github.com/hikari-py/hikari/issues/1059))
+- Add `InviteEvent` to `hikari.events.channel_events.__all__`, `hikari.events.__all__` and `hikari.__all__`. ([#1065](https://github.com/hikari-py/hikari/issues/1065))
+- Fix incorrect type for ATTACHMENT option values. ([#1066](https://github.com/hikari-py/hikari/issues/1066))
+- `EventManager.get_listeners` now correctly defines polymorphic and returns accordingly. ([#1094](https://github.com/hikari-py/hikari/issues/1094))
+- Take the major param for webhook without token endpoints when handling bucket ratelimits. ([#1102](https://github.com/hikari-py/hikari/issues/1102))
+- Fix incorrect value for `GuildFeature.MORE_STICKERS`. ([#1989](https://github.com/hikari-py/hikari/issues/1989))
+
+
 Hikari 2.0.0.dev107 (2022-03-04)
 ================================
 
