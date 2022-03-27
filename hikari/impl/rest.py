@@ -736,6 +736,7 @@ class RESTClientImpl(rest_api.RESTClient):
                     if not no_auth:
                         await live_attributes.still_alive().global_rate_limit.acquire()
 
+                    start = time.monotonic()
                     if trace_logging_enabled:
                         _LOGGER.log(
                             ux.TRACE,
@@ -745,7 +746,6 @@ class RESTClientImpl(rest_api.RESTClient):
                             url,
                             self._stringify_http_message(headers, json),
                         )
-                        start = time.monotonic()
 
                     # Make the request.
                     response = await live_attributes.still_alive().client_session.request(

@@ -62,7 +62,7 @@ def resolve_signature(func: typing.Callable[..., typing.Any]) -> inspect.Signatu
 
     signature = inspect.signature(func)
     resolved_typehints = typing.get_type_hints(func)
-    params = []
+    params: typing.List[inspect.Parameter] = []
 
     none_type = type(None)
     for name, param in signature.parameters.items():

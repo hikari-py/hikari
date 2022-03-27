@@ -636,7 +636,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     def _deserialize_audit_log_change_roles(
         self, payload: data_binding.JSONArray
     ) -> typing.Mapping[snowflakes.Snowflake, guild_models.PartialRole]:
-        roles = {}
+        roles: typing.Dict[snowflakes.Snowflake, guild_models.PartialRole] = {}
         for role_payload in payload:
             role = guild_models.PartialRole(
                 app=self._app, id=snowflakes.Snowflake(role_payload["id"]), name=role_payload["name"]
@@ -710,7 +710,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         for entry_payload in payload["audit_log_entries"]:
             entry_id = snowflakes.Snowflake(entry_payload["id"])
 
-            changes = []
+            changes: typing.List[audit_log_models.AuditLogChange] = []
             if (change_payloads := entry_payload.get("changes")) is not None:
                 for change_payload in change_payloads:
                     key: typing.Union[audit_log_models.AuditLogChangeKey, str] = audit_log_models.AuditLogChangeKey(
@@ -1375,10 +1375,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             time.iso8601_datetime_string_to_datetime(raw_premium_since) if raw_premium_since is not None else None
         )
 
+        communication_disabled_until: typing.Optional[datetime.datetime] = None
         if raw_communication_disabled_until := payload.get("communication_disabled_until"):
             communication_disabled_until = time.iso8601_datetime_string_to_datetime(raw_communication_disabled_until)
-        else:
-            communication_disabled_until = None
 
         return guild_models.Member(
             user=user,
@@ -2622,7 +2621,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         *,
         guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> presence_models.MemberPresence:
-        activities = []
+        activities: typing.List[presence_models.RichActivity] = []
         for activity_payload in payload["activities"]:
             timestamps: typing.Optional[presence_models.ActivityTimestamps] = None
             if "timestamps" in activity_payload:
