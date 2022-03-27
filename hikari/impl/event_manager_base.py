@@ -555,11 +555,7 @@ class EventManagerBase(event_manager_.EventManager):
 
         return decorator
 
-<<<<<<< HEAD
-    def dispatch(self, event: base_events.EventT) -> asyncio.Future[typing.Any]:
-=======
     def dispatch(self, event: base_events.Event) -> asyncio.Future[typing.Any]:
->>>>>>> 82fd440e (Improve pyright support)
         if not isinstance(event, base_events.Event):
             raise TypeError(f"Events must be subclasses of {base_events.Event.__name__}, not {type(event).__name__}")
 

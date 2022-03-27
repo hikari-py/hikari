@@ -736,7 +736,6 @@ class RESTClientImpl(rest_api.RESTClient):
                     if not no_auth:
                         await live_attributes.still_alive().global_rate_limit.acquire()
 
-                    start = time.monotonic()
                     if trace_logging_enabled:
                         _LOGGER.log(
                             ux.TRACE,
@@ -746,6 +745,7 @@ class RESTClientImpl(rest_api.RESTClient):
                             url,
                             self._stringify_http_message(headers, json),
                         )
+                        start = time.monotonic()
 
                     # Make the request.
                     response = await live_attributes.still_alive().client_session.request(
@@ -762,7 +762,7 @@ class RESTClientImpl(rest_api.RESTClient):
                     )
 
                     if trace_logging_enabled:
-                        time_taken = (time.monotonic() - start) * 1_000
+                        time_taken = (time.monotonic() - start) * 1_000  # pyright: ignore[reportUnboundVariable]
                         _LOGGER.log(
                             ux.TRACE,
                             "%s %s %s in %sms\n%s",
