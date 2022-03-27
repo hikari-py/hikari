@@ -59,8 +59,8 @@ exclude_lines = [
 ]
 
 [tool.pyright]
-include = ["hikari"]
-exclude = ["**/__init__.py", "hikari/internal/enums.py", "hikari/internal/fast_protocol.py"]
+include = ["hikari", "examples"]
+exclude = ["examples/simple_dashboard.py", "**/__init__.py", "hikari/internal/enums.py", "hikari/internal/fast_protocol.py"]
 pythonVersion = "3.8"
 typeCheckingMode = "strict"
 
