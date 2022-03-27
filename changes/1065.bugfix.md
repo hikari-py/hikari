@@ -1,1 +1,0 @@
-Add `InviteEvent` to `hikari.events.channel_events.__all__`, `hikari.events.__all__` and `hikari.__all__`.
