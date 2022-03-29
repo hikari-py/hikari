@@ -50,8 +50,6 @@ from hikari.internal import reflect
 from hikari.internal import ux
 
 if typing.TYPE_CHECKING:
-    import types
-
     from hikari import intents as intents_
     from hikari.api import event_factory as event_factory_
     from hikari.api import shard as gateway_shard
@@ -77,6 +75,12 @@ if typing.TYPE_CHECKING:
     _EventStreamT = typing.TypeVar("_EventStreamT", bound="EventStream[typing.Any]")
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.event_manager")
+
+if sys.version_info >= (3, 10):
+    # We can use types.UnionType on 3.10+
+    UNIONS = frozenset((typing.Union, types.UnionType))
+else:
+    UNIONS = frozenset((typing.Union,))
 
 
 @typing.runtime_checkable
@@ -528,12 +532,6 @@ class EventManagerBase(event_manager_.EventManager):
 
                 if annotation is event_param.empty:
                     raise TypeError("Must provide the event type in the @listen decorator or as a type hint!")
-
-                if sys.version_info >= (3, 10):
-                    # We can use types.UnionType on 3.10+
-                    UNIONS = {typing.Union, types.UnionType}
-                else:
-                    UNIONS = {typing.Union}
 
                 if typing.get_origin(annotation) in UNIONS:
                     # Resolve the types inside the union
