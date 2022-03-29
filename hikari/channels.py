@@ -1268,7 +1268,7 @@ class GuildCategory(PermissibleGuildChannel):
     organisation.
     """
 
-    parent_id: None
+    parent_id: None = attr.field(eq=False, hash=False, repr=True)
     """The ID of the parent channel the channel belongs to.
 
     This is always `builtins.None` for categories.

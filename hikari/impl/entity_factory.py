@@ -237,13 +237,14 @@ class _UserFields:
 
 
 @attr_extensions.with_copy
-@attr.define(weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class _GatewayGuildDefinition(entity_factory.GatewayGuildDefinition):
     id: snowflakes.Snowflake = attr.field()
     _payload: data_binding.JSONObject = attr.field()
     _entity_factory: EntityFactoryImpl = attr.field()
+    _user_id: snowflakes.Snowflake = attr.field()
     # These will get deserialized as needed
-    _channels: UndefinedSnowflakeMapping[channel_models.GuildChannel] = attr.field(
+    _channels: UndefinedSnowflakeMapping[channel_models.PermissibleGuildChannel] = attr.field(
         init=False, default=undefined.UNDEFINED
     )
     _guild: undefined.UndefinedOr[guild_models.GatewayGuild] = attr.field(init=False, default=undefined.UNDEFINED)
@@ -258,11 +259,14 @@ class _GatewayGuildDefinition(entity_factory.GatewayGuildDefinition):
         init=False, default=undefined.UNDEFINED
     )
     _roles: UndefinedSnowflakeMapping[guild_models.Role] = attr.field(init=False, default=undefined.UNDEFINED)
+    _threads: UndefinedSnowflakeMapping[channel_models.GuildThreadChannel] = attr.field(
+        init=False, default=undefined.UNDEFINED
+    )
     _voice_states: UndefinedSnowflakeMapping[voice_models.VoiceState] = attr.field(
         init=False, default=undefined.UNDEFINED
     )
 
-    def channels(self) -> typing.Mapping[snowflakes.Snowflake, channel_models.GuildChannel]:
+    def channels(self) -> typing.Mapping[snowflakes.Snowflake, channel_models.PermissibleGuildChannel]:
         if self._channels is undefined.UNDEFINED:
             if "channels" not in self._payload:
                 raise LookupError("'channels' not in payload")
@@ -276,7 +280,7 @@ class _GatewayGuildDefinition(entity_factory.GatewayGuildDefinition):
                     # Ignore the channel, this has already been logged
                     continue
 
-                assert isinstance(channel, channel_models.GuildChannel)
+                assert isinstance(channel, channel_models.PermissibleGuildChannel)
                 self._channels[channel.id] = channel
 
         return self._channels
@@ -376,6 +380,26 @@ class _GatewayGuildDefinition(entity_factory.GatewayGuildDefinition):
             }
 
         return self._roles
+
+    def threads(self) -> typing.Mapping[snowflakes.Snowflake, channel_models.GuildThreadChannel]:
+        if self._threads is undefined.UNDEFINED:
+            if "threads" not in self._payload:
+                raise LookupError("'threads' not in payload")
+
+            self._threads = {}
+
+            for thread_payload in self._payload["threads"]:
+                try:
+                    thread = self._entity_factory.deserialize_guild_thread(
+                        thread_payload, guild_id=self.id, user_id=self._user_id
+                    )
+                except errors.UnrecognisedEntityError:
+                    # Ignore the channel, this has already been logged
+                    continue
+
+                self._threads[thread.id] = thread
+
+        return self._threads
 
     def voice_states(self) -> typing.Mapping[snowflakes.Snowflake, voice_models.VoiceState]:
         if self._voice_states is undefined.UNDEFINED:
@@ -1843,9 +1867,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             stickers=stickers,
         )
 
-    def deserialize_gateway_guild(self, payload: data_binding.JSONObject) -> entity_factory.GatewayGuildDefinition:
+    def deserialize_gateway_guild(
+        self, payload: data_binding.JSONObject, *, user_id: snowflakes.Snowflake
+    ) -> entity_factory.GatewayGuildDefinition:
         guild_id = snowflakes.Snowflake(payload["id"])
-        return _GatewayGuildDefinition(id=guild_id, payload=payload, entity_factory=self)
+        return _GatewayGuildDefinition(id=guild_id, payload=payload, entity_factory=self, user_id=user_id)
 
     #################
     # INVITE MODELS #

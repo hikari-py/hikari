@@ -244,7 +244,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
 
         elif self._cache:
             _LOGGER.log(ux.TRACE, "Skipping on_guild_create dispatch due to lack of any registered listeners")
-            gd = self._entity_factory.deserialize_gateway_guild(payload)
+            gd = self._entity_factory.deserialize_gateway_guild(payload, user_id=shard.user_id())
 
             channels = gd.channels() if self._cache_enabled_for(config.CacheComponents.GUILD_CHANNELS) else None
             emojis = gd.emojis() if self._cache_enabled_for(config.CacheComponents.EMOJIS) else None
@@ -356,7 +356,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
             _LOGGER.log(ux.TRACE, "Skipping on_guild_update raw dispatch due to lack of any registered listeners")
             event = None
 
-            gd = self._entity_factory.deserialize_gateway_guild(payload)
+            gd = self._entity_factory.deserialize_gateway_guild(payload, user_id=shard.user_id())
             emojis = gd.emojis() if self._cache_enabled_for(config.CacheComponents.EMOJIS) else None
             stickers = gd.stickers() if self._cache_enabled_for(config.CacheComponents.GUILD_STICKERS) else None
             guild = gd.guild() if self._cache_enabled_for(config.CacheComponents.GUILDS) else None

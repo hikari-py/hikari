@@ -72,7 +72,7 @@ class GatewayGuildDefinition(abc.ABC):
         """ID of the guild the definition is for."""
 
     @abc.abstractmethod
-    def channels(self) -> typing.Mapping[snowflakes.Snowflake, channel_models.GuildChannel]:
+    def channels(self) -> typing.Mapping[snowflakes.Snowflake, channel_models.PermissibleGuildChannel]:
         """Get a mapping of channel IDs to the channels that belong to the guild."""
 
     @abc.abstractmethod
@@ -106,6 +106,10 @@ class GatewayGuildDefinition(abc.ABC):
     @abc.abstractmethod
     def roles(self) -> typing.Mapping[snowflakes.Snowflake, guild_models.Role]:
         """Get a mapping of role IDs to the roles that belong to the guild."""
+
+    @abc.abstractmethod
+    def threads(self) -> typing.Mapping[snowflakes.Snowflake, channel_models.GuildThreadChannel]:
+        """Get a mapping of thread IDs to the public threads the bot can access in the guild."""
 
     @abc.abstractmethod
     def voice_states(self) -> typing.Mapping[snowflakes.Snowflake, voice_models.VoiceState]:

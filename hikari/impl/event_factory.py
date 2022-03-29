@@ -315,7 +315,7 @@ class EventFactoryImpl(event_factory.EventFactory):
     def deserialize_guild_available_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> guild_events.GuildAvailableEvent:
-        guild_information = self._app.entity_factory.deserialize_gateway_guild(payload)
+        guild_information = self._app.entity_factory.deserialize_gateway_guild(payload, user_id=shard.user_id())
         return guild_events.GuildAvailableEvent(
             shard=shard,
             guild=guild_information.guild(),
@@ -325,6 +325,7 @@ class EventFactoryImpl(event_factory.EventFactory):
             members=guild_information.members(),
             presences=guild_information.presences(),
             stickers=guild_information.stickers(),
+            threads=guild_information.threads(),
             voice_states=guild_information.voice_states(),
         )
 
@@ -341,6 +342,7 @@ class EventFactoryImpl(event_factory.EventFactory):
             members=guild_information.members(),
             presences=guild_information.presences(),
             stickers=guild_information.stickers(),
+            threads=guild_information.threads(),
             voice_states=guild_information.voice_states(),
         )
 
