@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["filtered", "EventManagerBase", "EventStream"]
+__all__: typing.Sequence[str] = ("filtered", "EventManagerBase", "EventStream")
 
 import asyncio
 import inspect

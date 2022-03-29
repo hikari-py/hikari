@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["Template", "TemplateGuild", "TemplateRole"]
+__all__: typing.Sequence[str] = ("Template", "TemplateGuild", "TemplateRole")
 
 import typing
 

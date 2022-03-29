@@ -23,7 +23,7 @@
 """Special additional endpoints used by the REST API."""
 from __future__ import annotations
 
-__all__: typing.List[str] = [
+__all__: typing.Sequence[str] = (
     "ActionRowBuilder",
     "ButtonBuilder",
     "CommandBuilder",
@@ -40,7 +40,7 @@ __all__: typing.List[str] = [
     "LinkButtonBuilder",
     "SelectMenuBuilder",
     "SelectOptionBuilder",
-]
+)
 
 import abc
 import typing

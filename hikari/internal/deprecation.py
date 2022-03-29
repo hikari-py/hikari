@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["deprecated", "warn_deprecated"]
+__all__: typing.Sequence[str] = ("deprecated", "warn_deprecated")
 
 import functools
 import inspect

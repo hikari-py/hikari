@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["generate_error_response", "create_client_session"]
+__all__: typing.Sequence[str] = ("generate_error_response", "create_client_session")
 
 import http
 import typing

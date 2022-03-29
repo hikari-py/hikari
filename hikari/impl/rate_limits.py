@@ -27,13 +27,13 @@ See `hikari.impl.buckets` for HTTP-specific rate-limiting logic.
 
 from __future__ import annotations
 
-__all__: typing.List[str] = [
+__all__: typing.Sequence[str] = (
     "BaseRateLimiter",
     "BurstRateLimiter",
     "ManualRateLimiter",
     "WindowedBurstRateLimiter",
     "ExponentialBackOff",
-]
+)
 
 import abc
 import asyncio

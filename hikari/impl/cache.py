@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["CacheImpl"]
+__all__: typing.Sequence[str] = ("CacheImpl",)
 
 import copy
 import logging

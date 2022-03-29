@@ -23,7 +23,7 @@
 """Models and enums used for Discord's Slash Commands interaction flow."""
 from __future__ import annotations
 
-__all__: typing.List[str] = [
+__all__: typing.Sequence[str] = (
     "AutocompleteInteraction",
     "BaseCommandInteraction",
     "CommandInteractionOption",
@@ -33,7 +33,7 @@ __all__: typing.List[str] = [
     "CommandResponseTypesT",
     "InteractionChannel",
     "ResolvedOptionData",
-]
+)
 
 import typing
 

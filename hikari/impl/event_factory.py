@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["EventFactoryImpl"]
+__all__: typing.Sequence[str] = ("EventFactoryImpl",)
 
 import datetime
 import types

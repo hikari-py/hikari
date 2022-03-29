@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = [
+__all__: typing.Sequence[str] = (
     "MessageEvent",
     "MessageCreateEvent",
     "MessageUpdateEvent",
@@ -36,7 +36,7 @@ __all__: typing.List[str] = [
     "DMMessageCreateEvent",
     "DMMessageUpdateEvent",
     "DMMessageDeleteEvent",
-]
+)
 
 import abc
 import typing

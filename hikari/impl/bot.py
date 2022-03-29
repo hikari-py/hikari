@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["GatewayBot"]
+__all__: typing.Sequence[str] = ("GatewayBot",)
 
 import asyncio
 import datetime

@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["EventManagerImpl"]
+__all__: typing.Sequence[str] = ("EventManagerImpl",)
 
 import asyncio
 import base64

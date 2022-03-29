@@ -23,7 +23,7 @@
 """Data binding utilities."""
 from __future__ import annotations
 
-__all__: typing.List[str] = [
+__all__: typing.Sequence[str] = (
     "Headers",
     "Query",
     "JSONObject",
@@ -34,7 +34,7 @@ __all__: typing.List[str] = [
     "JSONDecodeError",
     "JSONObjectBuilder",
     "URLEncodedFormBuilder",
-]
+)
 
 import typing
 

@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["VoiceComponentImpl"]
+__all__: typing.Sequence[str] = ("VoiceComponentImpl",)
 
 import asyncio
 import logging

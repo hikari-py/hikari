@@ -24,14 +24,14 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = [
+__all__: typing.Sequence[str] = (
     "TargetType",
     "VanityURL",
     "InviteGuild",
     "InviteCode",
     "Invite",
     "InviteWithMetadata",
-]
+)
 
 import abc
 import typing

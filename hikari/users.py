@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["PartialUser", "User", "OwnUser", "UserFlag", "PremiumType"]
+__all__: typing.Sequence[str] = ("PartialUser", "User", "OwnUser", "UserFlag", "PremiumType")
 
 import abc
 import typing

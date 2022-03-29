@@ -24,7 +24,13 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["BasicAuthHeader", "ProxySettings", "HTTPTimeoutSettings", "HTTPSettings", "CacheSettings"]
+__all__: typing.Sequence[str] = (
+    "BasicAuthHeader",
+    "ProxySettings",
+    "HTTPTimeoutSettings",
+    "HTTPSettings",
+    "CacheSettings",
+)
 
 import base64
 import ssl as ssl_

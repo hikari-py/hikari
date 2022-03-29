@@ -24,14 +24,14 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = [
+__all__: typing.Sequence[str] = (
     "completed_future",
     "get_or_make_loop",
     "is_async_iterator",
     "is_async_iterable",
     "first_completed",
     "all_of",
-]
+)
 
 import asyncio
 import inspect

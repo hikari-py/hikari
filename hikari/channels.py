@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = [
+__all__: typing.Sequence[str] = (
     "ChannelType",
     "VideoQualityMode",
     "ChannelFollow",
@@ -44,7 +44,7 @@ __all__: typing.List[str] = [
     "GuildStageChannel",
     "WebhookChannelT",
     "WebhookChannelTypes",
-]
+)
 
 import typing
 
