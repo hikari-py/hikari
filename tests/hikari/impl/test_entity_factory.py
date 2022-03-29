@@ -778,6 +778,25 @@ class TestGatewayGuildDefinition:
 
         entity_factory_impl.deserialize_guild_thread.assert_not_called()
 
+    def test_threads_ignores_unrecognised_and_threads(
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+    ):
+        thread_types = {*channel_models.ChannelType, -99999}.difference(
+            {
+                channel_models.ChannelType.GUILD_PRIVATE_THREAD,
+                channel_models.ChannelType.GUILD_NEWS_THREAD,
+                channel_models.ChannelType.GUILD_PUBLIC_THREAD,
+            }
+        )
+        threads = [{"id": str(id_), "type": type_} for id_, type_ in zip(iter(range(len(thread_types))), thread_types)]
+        assert threads
+        guild_definition = entity_factory_impl.deserialize_gateway_guild(
+            {"id": "4212312", "threads": threads}, user_id=123321
+        )
+
+        assert guild_definition.threads() == {}
+
     def test_voice_states(self, entity_factory_impl, member_payload, voice_state_payload):
         guild_definition = entity_factory_impl.deserialize_gateway_guild(
             {"id": "265828729970753537", "voice_states": [voice_state_payload], "members": [member_payload]},
@@ -3716,29 +3735,6 @@ class TestEntityFactoryImpl:
         assert guild.banner_hash is None
         assert guild.premium_subscription_count is None
         assert guild.public_updates_channel_id is None
-
-    @pytest.mark.parametrize(
-        "thread_type",
-        {*channel_models.ChannelType, -99999}.difference(
-            {
-                channel_models.ChannelType.GUILD_PRIVATE_THREAD,
-                channel_models.ChannelType.GUILD_NEWS_THREAD,
-                channel_models.ChannelType.GUILD_PUBLIC_THREAD,
-            }
-        ),
-    )
-    def test_deserialize_gateway_guild_ignores_unrecognised_channels_and_threads(
-        self,
-        entity_factory_impl: entity_factory.EntityFactoryImpl,
-        gateway_guild_payload: typing.Dict[str, typing.Any],
-        thread_type: int,
-    ):
-        gateway_guild_payload["channels"] = [{"id": "123", "type": 1000}]
-        gateway_guild_payload["threads"] = [{"id": "652", "type": thread_type}]
-        guild_definition = entity_factory_impl.deserialize_gateway_guild(gateway_guild_payload, user_id=123321)
-
-        assert guild_definition.channels() == {}
-        assert guild_definition.threads() == {}
 
     ######################
     # INTERACTION MODELS #

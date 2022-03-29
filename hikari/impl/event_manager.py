@@ -173,6 +173,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         # TODO: we need a method for this specifically
         await self.dispatch(self._event_factory.deserialize_channel_pins_update_event(shard, payload))
 
+    @event_manager_base.filtered((channel_events.GuildThreadAccessEvent, channel_events.GuildThreadCreateEvent))
     async def on_thread_create(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#thread-create for more info."""
         event: typing.Union[channel_events.GuildThreadAccessEvent, channel_events.GuildThreadCreateEvent]
@@ -184,24 +185,29 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
 
         await self.dispatch(event)
 
+    @event_manager_base.filtered(channel_events.GuildThreadUpdateEvent)
     async def on_thread_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#thread-update for more info."""
         await self.dispatch(self._event_factory.deserialize_guild_thread_update_event(shard, payload))
 
+    @event_manager_base.filtered(channel_events.GuildThreadDeleteEvent)
     async def on_thread_delete(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#thread-delete for more info."""
         await self.dispatch(self._event_factory.deserialize_guild_thread_delete_event(shard, payload))
 
+    @event_manager_base.filtered(channel_events.ThreadListSyncEvent)
     async def on_thread_list_sync(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#thread-list-sync for more info."""
         await self.dispatch(self._event_factory.deserialize_thread_list_sync_event(shard, payload))
 
+    @event_manager_base.filtered(channel_events.OwnThreadMemberUpdateEvent)
     async def on_thread_member_update(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> None:
         """See https://discord.com/developers/docs/topics/gateway#thread-member-update for more info."""
         await self.dispatch(self._event_factory.deserialize_own_thread_member_update_event(shard, payload))
 
+    @event_manager_base.filtered(channel_events.ThreadMembersUpdateEvent)
     async def on_thread_members_update(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> None:
