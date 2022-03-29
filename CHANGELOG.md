@@ -35,7 +35,7 @@ Features
 - Optimize receiving websocket JSON for the happy path. ([#1058](https://github.com/hikari-py/hikari/issues/1058))
 - The threaded file reader now persists the open file pointer while the context manager is active. ([#1073](https://github.com/hikari-py/hikari/issues/1073))
 - Optimize event dispatching by only deserializing events when they are needed. ([#1094](https://github.com/hikari-py/hikari/issues/1094))
-- Add `hikari.locales.Locale` to help with Discord locale strings. ([#1990](https://github.com/hikari-py/hikari/issues/1990))
+- Add `hikari.locales.Locale` to help with Discord locale strings. ([#1090](https://github.com/hikari-py/hikari/issues/1090))
 
 
 Bugfixes
