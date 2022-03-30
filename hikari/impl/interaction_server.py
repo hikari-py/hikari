@@ -138,7 +138,7 @@ _PONG_RESPONSE: typing.Final[_Response] = _Response(
 )
 
 
-class _Payload(aiohttp.Payload):
+class _FilePayload(aiohttp.Payload):
     _value: files_.Resource[files_.AsyncReader]
 
     def __init__(
@@ -335,7 +335,7 @@ class InteractionServer(interaction_server.InteractionServer):
                 async with file_.stream(head_only=True) as stream:
                     mimetype = stream.mimetype or _APPLICATION_OCTET_STREAM
 
-                payload = _Payload(file_, mimetype, executor=self._executor)
+                payload = _FilePayload(file_, mimetype, executor=self._executor)
                 payload.set_content_disposition("form-data", name=f"files[{index}]", filename=file_.filename)
                 multipart.append_payload(payload)
 
