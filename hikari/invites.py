@@ -186,14 +186,19 @@ class InviteGuild(guilds.PartialGuild):
         """Banner URL for the guild, if set."""
         return self.make_banner_url()
 
-    def make_banner_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+    def make_banner_url(self, *, ext: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the guild's banner image URL, if set.
 
         Parameters
         ----------
-        ext : builtins.str
-            The extension to use for this URL, defaults to `png`.
-            Supports `png`, `jpeg`, `jpg` and `webp`.
+        ext : typing.Optional[builtins.str]
+            The ext to use for this URL, defaults to `png` or `gif`.
+            Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
+            animated). Will be ignored for default avatars which can only be
+            `png`.
+
+            If `builtins.None`, then the correct default extension is
+            determined based on whether the icon is animated or not.
         size : builtins.int
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
@@ -210,6 +215,13 @@ class InviteGuild(guilds.PartialGuild):
         """
         if self.banner_hash is None:
             return None
+
+        if ext is None:
+            if self.banner_hash.startswith("a_"):
+                ext = "gif"
+
+            else:
+                ext = "png"
 
         return routes.CDN_GUILD_BANNER.compile_to_file(
             urls.CDN_URL,
