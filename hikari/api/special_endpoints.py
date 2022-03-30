@@ -566,7 +566,9 @@ class InteractionResponseBuilder(abc.ABC):
         """
 
     @abc.abstractmethod
-    def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObject:
+    def build(
+        self, entity_factory: entity_factory_.EntityFactory, /
+    ) -> typing.Tuple[data_binding.JSONObject, typing.Sequence[files.Resource[files.AsyncReader]]]:
         """Build a JSON object from this builder.
 
         Parameters
@@ -576,8 +578,9 @@ class InteractionResponseBuilder(abc.ABC):
 
         Returns
         -------
-        hikari.internal.data_binding.JSONObject
-            The built json object representation of this builder.
+        typing.Tuple[hikari.internal.data_binding.JSONObject, typing.Sequence[files.Resource[Files.AsyncReader]]
+            A tuple of the built json object representation of this builder and
+            a sequence of up to 10 files to send with the response.
         """
 
 
@@ -680,19 +683,18 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def components(self) -> typing.Sequence[ComponentBuilder]:
+    def attachments(self) -> undefined.UndefinedOr[typing.Sequence[files.Resourceish]]:
+        """Sequence of up to 10 attachments to send with the message."""
+
+    @property
+    @abc.abstractmethod
+    def components(self) -> undefined.UndefinedOr[typing.Sequence[ComponentBuilder]]:
         """Sequence of up to 5 component builders to send in this response."""
 
     @property
     @abc.abstractmethod
-    def embeds(self) -> typing.Sequence[embeds_.Embed]:
-        """Sequence of up to 10 of the embeds included in this response.
-
-        Returns
-        -------
-        typing.Sequence[hikari.embeds.Embed]
-            A sequence of up to 10 of the embeds included in this response.
-        """
+    def embeds(self) -> undefined.UndefinedOr[typing.Sequence[embeds_.Embed]]:
+        """Sequence of up to 10 of the embeds included in this response."""
 
     # Settable fields
 
@@ -776,6 +778,21 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
             `builtins.False` or `hikari.undefined.UNDEFINED` to disallow any user
             mentions or `True` to allow all user mentions.
         """  # noqa: E501 - Line too long
+
+    @abc.abstractmethod
+    def add_attachment(self: _T, attachment: files.Resourceish, /) -> _T:
+        """Add an attachment to this response.
+
+        Parameters
+        ----------
+        attachment : hikari.files.Resourceish
+            The attachment to add.
+
+        Returns
+        -------
+        InteractionMessageBuilder
+            Object of this builder.
+        """
 
     @abc.abstractmethod
     def add_component(self: _T, component: ComponentBuilder, /) -> _T:

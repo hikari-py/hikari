@@ -25,6 +25,7 @@ import pytest
 
 from hikari import commands
 from hikari import emojis
+from hikari import files
 from hikari import messages
 from hikari import snowflakes
 from hikari import undefined
@@ -318,17 +319,23 @@ class TestInteractionDeferredBuilder:
     def test_build(self):
         builder = special_endpoints.InteractionDeferredBuilder(base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE)
 
-        assert builder.build(object()) == {"type": base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE}
+        result, attachments = builder.build(object())
+
+        assert result == {"type": base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE}
+        assert attachments == ()
 
     def test_build_with_flags(self):
         builder = special_endpoints.InteractionDeferredBuilder(
             base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE
         ).set_flags(64)
 
-        assert builder.build(object()) == {
+        result, attachments = builder.build(object())
+
+        assert result == {
             "type": base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE,
             "data": {"flags": 64},
         }
+        assert attachments == ()
 
 
 class TestInteractionMessageBuilder:
@@ -348,25 +355,38 @@ class TestInteractionMessageBuilder:
 
         assert builder.content == "meow nya"
 
-    def test_components_property(self):
-        mock_component = object()
+    def test_attachments_property(self):
+        mock_attachment = mock.Mock()
+        builder = special_endpoints.InteractionMessageBuilder(4).add_attachment(mock_attachment)
+
+        assert builder.attachments == [mock_attachment]
+
+    def test_attachments_property_when_undefined(self):
         builder = special_endpoints.InteractionMessageBuilder(4)
 
-        assert builder.components == []
+        assert builder.attachments is undefined.UNDEFINED
 
-        builder.add_component(mock_component)
+    def test_components_property(self):
+        mock_component = object()
+        builder = special_endpoints.InteractionMessageBuilder(4).add_component(mock_component)
 
         assert builder.components == [mock_component]
 
-    def test_embeds_property(self):
-        mock_embed = object()
+    def test_components_property_when_undefined(self):
         builder = special_endpoints.InteractionMessageBuilder(4)
 
-        assert builder.embeds == []
+        assert builder.components is undefined.UNDEFINED
 
-        builder.add_embed(mock_embed)
+    def test_embeds_property(self):
+        mock_embed = object()
+        builder = special_endpoints.InteractionMessageBuilder(4).add_embed(mock_embed)
 
         assert builder.embeds == [mock_embed]
+
+    def test_embeds_property_when_undefined(self):
+        builder = special_endpoints.InteractionMessageBuilder(4)
+
+        assert builder.embeds is undefined.UNDEFINED
 
     def test_flags_property(self):
         builder = special_endpoints.InteractionMessageBuilder(4).set_flags(95995)
@@ -411,7 +431,7 @@ class TestInteractionMessageBuilder:
             .set_role_mentions([54234])
         )
 
-        result = builder.build(mock_entity_factory)
+        result, attachments = builder.build(mock_entity_factory)
 
         mock_entity_factory.serialize_embed.assert_called_once_with(mock_embed)
         mock_component.build.assert_called_once_with()
@@ -426,18 +446,62 @@ class TestInteractionMessageBuilder:
                 "allowed_mentions": {"parse": [], "users": ["123"], "roles": ["54234"]},
             },
         }
+        assert attachments == []
 
-    def test_build_handles_attachments(self):
+    def test_build_for_partial_when_message_create(self):
         mock_entity_factory = mock.Mock()
-        mock_entity_factory.serialize_embed.return_value = (object(), [object()])
-        builder = special_endpoints.InteractionMessageBuilder(base_interactions.ResponseType.MESSAGE_CREATE).add_embed(
-            object()
+        builder = special_endpoints.InteractionMessageBuilder(base_interactions.ResponseType.MESSAGE_CREATE)
+
+        result, attachments = builder.build(mock_entity_factory)
+
+        mock_entity_factory.serialize_embed.assert_not_called()
+        assert result == {
+            "type": base_interactions.ResponseType.MESSAGE_CREATE,
+            "data": {"allowed_mentions": {"parse": []}},
+        }
+        assert attachments == []
+
+    def test_build_for_partial_when_message_update(self):
+        mock_entity_factory = mock.Mock()
+        builder = special_endpoints.InteractionMessageBuilder(base_interactions.ResponseType.MESSAGE_UPDATE)
+
+        result, attachments = builder.build(mock_entity_factory)
+
+        mock_entity_factory.serialize_embed.assert_not_called()
+        assert result == {"type": base_interactions.ResponseType.MESSAGE_UPDATE, "data": {}}
+        assert attachments == []
+
+    def test_build_for_partial_when_empty_lists(self):
+        mock_entity_factory = mock.Mock()
+        builder = special_endpoints.InteractionMessageBuilder(
+            base_interactions.ResponseType.MESSAGE_UPDATE, attachments=[], components=[], embeds=[]
         )
 
-        with pytest.raises(
-            ValueError, match="Cannot send an embed with attachments in a slash command's initial response"
-        ):
-            builder.build(mock_entity_factory)
+        result, attachments = builder.build(mock_entity_factory)
+
+        mock_entity_factory.serialize_embed.assert_not_called()
+        assert result == {
+            "type": base_interactions.ResponseType.MESSAGE_UPDATE,
+            "data": {
+                "components": [],
+                "embeds": [],
+            },
+        }
+        assert attachments == []
+
+    def test_build_handles_attachments(self):
+        mock_attachment = mock.Mock()
+        mock_other_attachment = mock.Mock()
+        mock_entity_factory = mock.Mock()
+        mock_entity_factory.serialize_embed.return_value = (object(), [mock_other_attachment])
+        builder = (
+            special_endpoints.InteractionMessageBuilder(base_interactions.ResponseType.MESSAGE_CREATE)
+            .add_attachment(mock_attachment)
+            .add_embed(object())
+        )
+
+        _, attachments = builder.build(mock_entity_factory)
+        assert attachments == [files.ensure_resource(mock_attachment), mock_other_attachment]
 
 
 class TestSlashCommandBuilder:
