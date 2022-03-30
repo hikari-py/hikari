@@ -30,6 +30,8 @@ import asyncio
 import inspect
 import itertools
 import logging
+import sys
+import types
 import typing
 import warnings
 import weakref
@@ -48,8 +50,6 @@ from hikari.internal import reflect
 from hikari.internal import ux
 
 if typing.TYPE_CHECKING:
-    import types
-
     from hikari import intents as intents_
     from hikari.api import event_factory as event_factory_
     from hikari.api import shard as gateway_shard
@@ -75,6 +75,12 @@ if typing.TYPE_CHECKING:
     _EventStreamT = typing.TypeVar("_EventStreamT", bound="EventStream[typing.Any]")
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.event_manager")
+
+if sys.version_info >= (3, 10):
+    # We can use types.UnionType on 3.10+
+    UNIONS = frozenset((typing.Union, types.UnionType))
+else:
+    UNIONS = frozenset((typing.Union,))
 
 
 @typing.runtime_checkable
@@ -416,7 +422,12 @@ class EventManagerBase(event_manager_.EventManager):
         *,
         _nested: int = 0,
     ) -> None:
-        if not inspect.isclass(event_type) or not issubclass(event_type, base_events.Event):
+        try:
+            is_event = issubclass(event_type, base_events.Event)
+        except TypeError:
+            is_event = False
+
+        if not is_event:
             raise TypeError("Cannot subscribe to a non-Event type")
 
         if not inspect.iscoroutinefunction(callback):
@@ -499,32 +510,39 @@ class EventManagerBase(event_manager_.EventManager):
 
     def listen(
         self,
-        event_type: typing.Optional[typing.Type[event_manager_.EventT_co]] = None,
+        *event_types: typing.Type[event_manager_.EventT_co],
     ) -> typing.Callable[
         [event_manager_.CallbackT[event_manager_.EventT_co]], event_manager_.CallbackT[event_manager_.EventT_co]
     ]:
         def decorator(
             callback: event_manager_.CallbackT[event_manager_.EventT_co],
         ) -> event_manager_.CallbackT[event_manager_.EventT_co]:
-            nonlocal event_type
-
             # Avoid resolving forward references in the function's signature if
             # event_type was explicitly provided as this may lead to errors.
-            if event_type is not None:
+            if event_types:
                 _assert_is_listener(iter(inspect.signature(callback).parameters.values()))
+                resolved_types = event_types
 
             else:
                 signature = reflect.resolve_signature(callback)
                 params = signature.parameters.values()
                 _assert_is_listener(iter(params))
                 event_param = next(iter(params))
+                annotation = event_param.annotation
 
-                if event_param.annotation is event_param.empty:
+                if annotation is event_param.empty:
                     raise TypeError("Must provide the event type in the @listen decorator or as a type hint!")
 
-                event_type = event_param.annotation
+                if typing.get_origin(annotation) in UNIONS:
+                    # Resolve the types inside the union
+                    resolved_types = typing.get_args(annotation)
+                else:
+                    # Just pass back the annotation
+                    resolved_types = (annotation,)
 
-            self.subscribe(event_type, callback, _nested=1)
+            for resolved_type in resolved_types:
+                self.subscribe(resolved_type, callback, _nested=1)
+
             return callback
 
         return decorator

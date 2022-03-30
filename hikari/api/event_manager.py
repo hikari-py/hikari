@@ -393,7 +393,7 @@ class EventManager(abc.ABC):
     @abc.abstractmethod
     def listen(
         self,
-        event_type: typing.Optional[typing.Type[EventT_co]] = None,
+        *event_types: typing.Type[EventT_co],
     ) -> typing.Callable[[CallbackT[EventT_co]], CallbackT[EventT_co]]:
         """Generate a decorator to subscribe a callback to an event type.
 
@@ -401,8 +401,8 @@ class EventManager(abc.ABC):
 
         Parameters
         ----------
-        event_type : typing.Optional[typing.Type[T]]
-            The event type to subscribe to. The implementation may allow this
+        *event_types : typing.Optional[typing.Type[T]]
+            The event types to subscribe to. The implementation may allow this
             to be undefined. If this is the case, the event type will be inferred
             instead from the type hints on the function signature.
 

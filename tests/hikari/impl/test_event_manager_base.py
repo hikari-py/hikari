@@ -19,9 +19,13 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import annotations
+
 import asyncio
 import contextlib
 import logging
+import sys
+import typing
 import unittest
 import warnings
 import weakref
@@ -849,6 +853,27 @@ class TestEventManagerBase:
         resolve_signature.assert_not_called()
         subscribe.assert_called_once_with(member_events.MemberCreateEvent, test, _nested=1)
 
+    def test_listen_when_multiple_params_provided_in_decorator(self, event_manager):
+        stack = contextlib.ExitStack()
+
+        subscribe = stack.enter_context(mock.patch.object(event_manager_base.EventManagerBase, "subscribe"))
+        resolve_signature = stack.enter_context(mock.patch.object(reflect, "resolve_signature"))
+
+        with stack:
+
+            @event_manager.listen(member_events.MemberCreateEvent, member_events.MemberDeleteEvent)
+            async def test(event):
+                ...
+
+        assert subscribe.call_count == 2
+        resolve_signature.assert_not_called()
+        subscribe.assert_has_calls(
+            [
+                mock.call(member_events.MemberCreateEvent, test, _nested=1),
+                mock.call(member_events.MemberDeleteEvent, test, _nested=1),
+            ]
+        )
+
     def test_listen_when_param_provided_in_typehint(self, event_manager):
         with mock.patch.object(event_manager_base.EventManagerBase, "subscribe") as subscribe:
 
@@ -857,3 +882,41 @@ class TestEventManagerBase:
                 ...
 
         subscribe.assert_called_once_with(member_events.MemberCreateEvent, test, _nested=1)
+
+    def test_listen_when_multiple_params_provided_as_typing_union_in_typehint(self, event_manager):
+        with mock.patch.object(event_manager_base.EventManagerBase, "subscribe") as subscribe:
+
+            @event_manager.listen()
+            async def test(event: typing.Union[member_events.MemberCreateEvent, member_events.MemberDeleteEvent]):
+                ...
+
+        assert subscribe.call_count == 2
+        subscribe.assert_has_calls(
+            [
+                mock.call(member_events.MemberCreateEvent, test, _nested=1),
+                mock.call(member_events.MemberDeleteEvent, test, _nested=1),
+            ]
+        )
+
+    @pytest.mark.skipif(sys.version_info < (3, 10), reason="Bitwise union only available on 3.10+")
+    def test_listen_when_multiple_params_provided_as_bitwise_union_in_typehint(self, event_manager):
+        with mock.patch.object(event_manager_base.EventManagerBase, "subscribe") as subscribe:
+
+            @event_manager.listen()
+            async def test(event: member_events.MemberCreateEvent | member_events.MemberDeleteEvent):
+                ...
+
+        assert subscribe.call_count == 2
+        subscribe.assert_has_calls(
+            [
+                mock.call(member_events.MemberCreateEvent, test, _nested=1),
+                mock.call(member_events.MemberDeleteEvent, test, _nested=1),
+            ]
+        )
+
+    def test_listen_when_incorrect_type_in_typehint(self, event_manager):
+        with pytest.raises(TypeError):
+
+            @event_manager.listen()
+            async def test(event: list[member_events.MemberUpdateEvent]):
+                ...
