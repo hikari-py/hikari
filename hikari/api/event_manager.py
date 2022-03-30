@@ -23,7 +23,7 @@
 """Core interface for components that manage events in the library."""
 from __future__ import annotations
 
-__all__: typing.List[str] = ["EventManager", "EventStream"]
+__all__: typing.Sequence[str] = ("EventManager", "EventStream")
 
 import abc
 import asyncio

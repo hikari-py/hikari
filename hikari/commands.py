@@ -23,7 +23,7 @@
 """Models and enums used for application commands on Discord."""
 from __future__ import annotations
 
-__all__: typing.List[str] = [
+__all__: typing.Sequence[str] = (
     "PartialCommand",
     "ContextMenuCommand",
     "SlashCommand",
@@ -34,7 +34,7 @@ __all__: typing.List[str] = [
     "CommandType",
     "GuildCommandPermissions",
     "OptionType",
-]
+)
 
 import typing
 

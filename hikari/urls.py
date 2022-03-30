@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["BASE_URL", "REST_API_URL", "OAUTH2_API_URL", "CDN_URL"]
+__all__: typing.Sequence[str] = ("BASE_URL", "REST_API_URL", "OAUTH2_API_URL", "CDN_URL")
 
 import typing
 

@@ -26,7 +26,7 @@ You should never need to make any of these objects manually.
 """
 from __future__ import annotations
 
-__all__: typing.List[str] = [
+__all__: typing.Sequence[str] = (
     "ActionRowBuilder",
     "CommandBuilder",
     "SlashCommandBuilder",
@@ -39,7 +39,7 @@ __all__: typing.List[str] = [
     "InteractiveButtonBuilder",
     "LinkButtonBuilder",
     "SelectMenuBuilder",
-]
+)
 
 import asyncio
 import typing

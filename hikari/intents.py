@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["Intents"]
+__all__: typing.Sequence[str] = ("Intents",)
 
 import typing
 

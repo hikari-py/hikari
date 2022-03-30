@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = [
+__all__: typing.Sequence[str] = (
     "InviteApplication",
     "Application",
     "ApplicationFlags",
@@ -42,7 +42,7 @@ __all__: typing.List[str] = [
     "TeamMembershipState",
     "TokenType",
     "get_token_id",
-]
+)
 
 import base64
 import typing

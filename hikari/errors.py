@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = [
+__all__: typing.Sequence[str] = (
     "HikariError",
     "HikariWarning",
     "HikariInterrupt",
@@ -48,7 +48,7 @@ __all__: typing.List[str] = [
     "MissingIntentError",
     "BulkDeleteError",
     "VoiceError",
-]
+)
 
 import http
 import typing

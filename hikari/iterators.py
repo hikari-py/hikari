@@ -28,7 +28,7 @@ wish to extend this API further!
 """
 from __future__ import annotations
 
-__all__: typing.List[str] = [
+__all__: typing.Sequence[str] = (
     "LazyIterator",
     "FlatLazyIterator",
     "All",
@@ -36,7 +36,7 @@ __all__: typing.List[str] = [
     "BufferedLazyIterator",
     "ValueT",
     "AnotherValueT",
-]
+)
 
 import abc
 import asyncio

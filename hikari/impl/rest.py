@@ -28,7 +28,7 @@ RESTful functionality.
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["ClientCredentialsStrategy", "RESTApp", "RESTClientImpl"]
+__all__: typing.Sequence[str] = ("ClientCredentialsStrategy", "RESTApp", "RESTClientImpl")
 
 import asyncio
 import base64

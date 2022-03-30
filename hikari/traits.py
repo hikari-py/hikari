@@ -23,7 +23,7 @@
 """Core app interface for application implementations."""
 from __future__ import annotations
 
-__all__: typing.List[str] = [
+__all__: typing.Sequence[str] = (
     "CacheAware",
     "EventManagerAware",
     "EntityFactoryAware",
@@ -38,7 +38,7 @@ __all__: typing.List[str] = [
     "InteractionServerAware",
     "ShardAware",
     "VoiceAware",
-]
+)
 
 import typing
 

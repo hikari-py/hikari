@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["FastProtocolChecking"]
+__all__: typing.Sequence[str] = ("FastProtocolChecking",)
 
 import typing
 

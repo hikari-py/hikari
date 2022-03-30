@@ -23,7 +23,7 @@
 """Provides an interface for Interaction REST server API implementations to follow."""
 from __future__ import annotations
 
-__all__: typing.List[str] = ["ListenerT", "Response", "InteractionServer"]
+__all__: typing.Sequence[str] = ("ListenerT", "Response", "InteractionServer")
 
 import abc
 import typing

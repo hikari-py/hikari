@@ -23,7 +23,7 @@
 """Provides an interface for gateway shard implementations to conform to."""
 from __future__ import annotations
 
-__all__: typing.List[str] = ["GatewayDataFormat", "GatewayCompression", "GatewayShard"]
+__all__: typing.Sequence[str] = ("GatewayDataFormat", "GatewayCompression", "GatewayShard")
 
 import abc
 import typing

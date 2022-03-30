@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["Permissions"]
+__all__: typing.Sequence[str] = ("Permissions",)
 
 import functools
 import operator

@@ -23,7 +23,7 @@
 """Base classes and enums inherited and used throughout the interactions flow."""
 from __future__ import annotations
 
-__all__: typing.List[str] = [
+__all__: typing.Sequence[str] = (
     "DEFERRED_RESPONSE_TYPES",
     "DeferredResponseTypesT",
     "InteractionMember",
@@ -33,7 +33,7 @@ __all__: typing.List[str] = [
     "MessageResponseTypesT",
     "PartialInteraction",
     "ResponseType",
-]
+)
 
 import typing
 

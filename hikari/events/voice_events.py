@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["VoiceEvent", "VoiceStateUpdateEvent", "VoiceServerUpdateEvent"]
+__all__: typing.Sequence[str] = ("VoiceEvent", "VoiceStateUpdateEvent", "VoiceServerUpdateEvent")
 
 import abc
 import typing

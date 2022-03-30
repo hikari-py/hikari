@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["GatewayBotInfo", "SessionStartLimit"]
+__all__: typing.Sequence[str] = ("GatewayBotInfo", "SessionStartLimit")
 
 import typing
 

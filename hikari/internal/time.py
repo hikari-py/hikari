@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = [
+__all__: typing.Sequence[str] = (
     "DISCORD_EPOCH",
     "datetime_to_discord_epoch",
     "discord_epoch_to_datetime",
@@ -36,7 +36,7 @@ __all__: typing.List[str] = [
     "monotonic",
     "monotonic_ns",
     "uuid",
-]
+)
 
 import datetime
 import time

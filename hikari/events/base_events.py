@@ -23,14 +23,14 @@
 """Base types and functions for events in Hikari."""
 from __future__ import annotations
 
-__all__: typing.List[str] = [
+__all__: typing.Sequence[str] = (
     "Event",
     "ExceptionEvent",
     "is_no_recursive_throw_event",
     "no_recursive_throw",
     "get_required_intents_for",
     "requires_intents",
-]
+)
 
 import abc
 import inspect
