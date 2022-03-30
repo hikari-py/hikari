@@ -63,6 +63,7 @@ if typing.TYPE_CHECKING:
     from hikari import users
     from hikari import voices
     from hikari.api import entity_factory as entity_factory_
+    from hikari.api import rest as rest_api
     from hikari.interactions import base_interactions
     from hikari.internal import data_binding
     from hikari.internal import time
@@ -1033,6 +1034,37 @@ class CommandBuilder(abc.ABC):
             The built json object representation of this builder.
         """
 
+    @abc.abstractmethod
+    async def create(
+        self,
+        rest: rest_api.RESTClient,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        /,
+        *,
+        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+    ) -> commands.PartialCommand:
+        """Create this command through a REST call.
+
+        Parameters
+        ----------
+        rest : hikari.api.rest.RESTClient
+            The REST client to use to make this request.
+        application : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+            The application to create this command for.
+
+        Other Parameters
+        ----------------
+        guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
+            The guild to create this command for.
+
+            If left undefined then this command will be declared globally.
+
+        Returns
+        -------
+        hikari.commands.PartialCommand
+            The created command.
+        """
+
 
 class SlashCommandBuilder(CommandBuilder):
     """SlashCommandBuilder."""
@@ -1082,11 +1114,80 @@ class SlashCommandBuilder(CommandBuilder):
             Object of this command builder.
         """
 
+    @abc.abstractmethod
+    async def create(
+        self,
+        rest: rest_api.RESTClient,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        /,
+        *,
+        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+    ) -> commands.SlashCommand:
+        """Create this command through a REST call.
+
+        This is a shorthand for calling `hikari.api.rest.RESTClient.create_slash_command`
+        with the builder's information.
+
+        Parameters
+        ----------
+        rest : hikari.api.rest.RESTClient
+            The REST client to use to make this request.
+        application : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+            The application to create this command for.
+
+        Other Parameters
+        ----------------
+        guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
+            The guild to create this command for.
+
+            If left undefined then this command will be declared globally.
+
+        Returns
+        -------
+        hikari.commands.SlashCommand
+            The created command.
+        """
+
 
 class ContextMenuCommandBuilder(CommandBuilder):
     """ContextMenuCommandBuilder."""
 
     __slots__: typing.Sequence[str] = ()
+
+    @abc.abstractmethod
+    async def create(
+        self,
+        rest: rest_api.RESTClient,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        /,
+        *,
+        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+    ) -> commands.ContextMenuCommand:
+        """Create this command through a REST call.
+
+        This is a shorthand for calling
+        `hikari.api.rest.RESTClient.create_context_menu_command`
+        with the builder's information.
+
+        Parameters
+        ----------
+        rest : hikari.api.rest.RESTClient
+            The REST client to use to make this request.
+        application : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+            The application to create this command for.
+
+        Other Parameters
+        ----------------
+        guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
+            The guild to create this command for.
+
+            If left undefined then this command will be declared globally.
+
+        Returns
+        -------
+        hikari.commands.ContextMenuCommand
+            The created command.
+        """
 
 
 class ComponentBuilder(abc.ABC):

@@ -77,6 +77,7 @@ if typing.TYPE_CHECKING:
     from hikari import users
     from hikari import voices
     from hikari.api import entity_factory as entity_factory_
+    from hikari.api import rest as rest_api
 
     _T = typing.TypeVar("_T")
     _CommandBuilderT = typing.TypeVar("_CommandBuilderT", bound="CommandBuilder")
@@ -1099,6 +1100,23 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
         data.put_array("options", self._options, conversion=entity_factory.serialize_command_option)
         return data
 
+    async def create(
+        self,
+        rest: rest_api.RESTClient,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        /,
+        *,
+        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+    ) -> commands.SlashCommand:
+        return await rest.create_slash_command(
+            application,
+            self._name,
+            self._description,
+            guild=guild,
+            default_permission=self._default_permission,
+            options=self._options,
+        )
+
 
 @attr_extensions.with_copy
 @attr.define(kw_only=False, weakref_slot=False)
@@ -1112,6 +1130,18 @@ class ContextMenuCommandBuilder(CommandBuilder, special_endpoints.ContextMenuCom
     @property
     def type(self) -> commands.CommandType:
         return self._type
+
+    async def create(
+        self,
+        rest: rest_api.RESTClient,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        /,
+        *,
+        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+    ) -> commands.ContextMenuCommand:
+        return await rest.create_context_menu_command(
+            application, self._type, self._name, guild=guild, default_permission=self._default_permission
+        )
 
 
 def _build_emoji(
