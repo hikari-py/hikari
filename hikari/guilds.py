@@ -2935,11 +2935,10 @@ class Guild(PartialGuild):
         ext : typing.Optional[builtins.str]
             The ext to use for this URL, defaults to `png` or `gif`.
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
-            animated). Will be ignored for default avatars which can only be
-            `png`.
+            animated).
 
             If `builtins.None`, then the correct default extension is
-            determined based on whether the icon is animated or not.
+            determined based on whether the banner is animated or not.
         size : builtins.int
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
