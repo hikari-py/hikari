@@ -1,0 +1,1 @@
+Animated guild banner support.
