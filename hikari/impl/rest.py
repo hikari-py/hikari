@@ -2765,13 +2765,20 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_guild_member_ban(response)
 
-    async def fetch_bans(
-        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
-    ) -> typing.Sequence[guilds.GuildBan]:
-        route = routes.GET_GUILD_BANS.compile(guild=guild)
-        response = await self._request(route)
-        assert isinstance(response, list)
-        return [self._entity_factory.deserialize_guild_member_ban(ban_payload) for ban_payload in response]
+    def fetch_bans(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        *,
+        before: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
+        after: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
+    ) -> iterators.LazyIterator[guilds.GuildBan]:
+        return special_endpoints_impl.GuildBanIterator(
+            entity_factory=self._entity_factory,
+            request_call=self._request,
+            guild=guild,
+            first_id=after,
+            last_id=before,
+        )
 
     async def fetch_roles(
         self,

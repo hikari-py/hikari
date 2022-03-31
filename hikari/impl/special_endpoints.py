@@ -612,6 +612,55 @@ class OwnGuildIterator(iterators.BufferedLazyIterator["applications.OwnGuild"]):
 # We use an explicit forward reference for this, since this breaks potential
 # circular import issues (once the file has executed, using those resources is
 # not an issue for us).
+class GuildBanIterator(iterators.BufferedLazyIterator["guilds.GuildBan"]):
+    """Iterator implementation for retrieving guild bans."""
+
+    __slots__: typing.Sequence[str] = (
+        "_entity_factory",
+        "_guild_id",
+        "_request_call",
+        "_route",
+        "_first_id",
+        "_last_id",
+    )
+
+    def __init__(
+        self,
+        entity_factory: entity_factory_.EntityFactory,
+        request_call: typing.Callable[
+            ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
+        ],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        first_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]],
+        last_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]],
+    ) -> None:
+        super().__init__()
+        self._guild_id = snowflakes.Snowflake(str(int(guild)))
+        self._route = routes.GET_GUILD_BANS.compile(guild=guild)
+        self._request_call = request_call
+        self._entity_factory = entity_factory
+        self._first_id = first_id
+        self._last_id = last_id
+
+    async def _next_chunk(self) -> typing.Optional[typing.Generator[guilds.GuildBan, typing.Any, None]]:
+        query = data_binding.StringMapBuilder()
+        query.put("after", self._first_id)
+        query.put("before", self._last_id)
+        query.put("limit", 1000)
+
+        chunk = await self._request_call(compiled_route=self._route, query=query)
+        assert isinstance(chunk, list)
+
+        if not chunk:
+            return None
+
+        self._first_id = chunk[-1]["user"]["id"]
+        return (self._entity_factory.deserialize_guild_member_ban(b) for b in chunk)
+
+
+# We use an explicit forward reference for this, since this breaks potential
+# circular import issues (once the file has executed, using those resources is
+# not an issue for us).
 class MemberIterator(iterators.BufferedLazyIterator["guilds.Member"]):
     """Implementation of an iterator for retrieving members in a guild."""
 

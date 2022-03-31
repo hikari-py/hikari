@@ -1043,6 +1043,70 @@ class TestRESTClientImpl:
         assert reason is mock_unban_user.return_value
         mock_unban_user.assert_called_once_with(123, 321, reason="ayaya")
 
+    def test_fetch_bans_when_before_is_undefined(self, rest_client):
+        guild = StubModel(123)
+        after = StubModel(789)
+        stub_iterator = mock.Mock()
+
+        with mock.patch.object(special_endpoints, "GuildBanIterator", return_value=stub_iterator) as iterator:
+            assert rest_client.fetch_bans(guild, after=after) == stub_iterator
+
+            iterator.assert_called_once_with(
+                entity_factory=rest_client._entity_factory,
+                request_call=rest_client._request,
+                guild=guild,
+                first_id=after,
+                last_id=undefined.UNDEFINED,
+            )
+
+    def test_fetch_bans_when_after_is_undefined(self, rest_client):
+        guild = StubModel(123)
+        before = StubModel(456)
+        stub_iterator = mock.Mock()
+
+        with mock.patch.object(special_endpoints, "GuildBanIterator", return_value=stub_iterator) as iterator:
+            assert rest_client.fetch_bans(guild, before=before) == stub_iterator
+
+            iterator.assert_called_once_with(
+                entity_factory=rest_client._entity_factory,
+                request_call=rest_client._request,
+                guild=guild,
+                last_id=before,
+                first_id=undefined.UNDEFINED,
+            )
+
+    def test_fetch_bans_when_before_and_after_are_undefined(self, rest_client):
+        guild = StubModel(123)
+        stub_iterator = mock.Mock()
+
+        with mock.patch.object(special_endpoints, "GuildBanIterator", return_value=stub_iterator) as iterator:
+            assert rest_client.fetch_bans(guild) == stub_iterator
+
+            iterator.assert_called_once_with(
+                entity_factory=rest_client._entity_factory,
+                request_call=rest_client._request,
+                guild=guild,
+                last_id=undefined.UNDEFINED,
+                first_id=undefined.UNDEFINED,
+            )
+
+    def test_fetch_bans_when_before_and_after_are_provided(self, rest_client):
+        guild = StubModel(123)
+        before = StubModel(456)
+        after = StubModel(789)
+        stub_iterator = mock.Mock()
+
+        with mock.patch.object(special_endpoints, "GuildBanIterator", return_value=stub_iterator) as iterator:
+            assert rest_client.fetch_bans(guild, before=before, after=after) == stub_iterator
+
+            iterator.assert_called_once_with(
+                entity_factory=rest_client._entity_factory,
+                request_call=rest_client._request,
+                guild=guild,
+                last_id=before,
+                first_id=after,
+            )
+
     def test_command_builder(self, rest_client):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=DeprecationWarning)
@@ -4193,21 +4257,6 @@ class TestRESTClientImplAsync:
 
         rest_client._request.assert_awaited_once_with(expected_route)
         rest_client._entity_factory.deserialize_guild_member_ban.assert_called_once_with({"id": "789"})
-
-    async def test_fetch_bans(self, rest_client):
-        ban1 = StubModel(456)
-        ban2 = StubModel(789)
-        expected_route = routes.GET_GUILD_BANS.compile(guild=123)
-        rest_client._request = mock.AsyncMock(return_value=[{"id": "456"}, {"id": "789"}])
-        rest_client._entity_factory.deserialize_guild_member_ban = mock.Mock(side_effect=[ban1, ban2])
-
-        assert await rest_client.fetch_bans(StubModel(123)) == [ban1, ban2]
-
-        rest_client._request.assert_awaited_once_with(expected_route)
-        assert rest_client._entity_factory.deserialize_guild_member_ban.call_count == 2
-        rest_client._entity_factory.deserialize_guild_member_ban.assert_has_calls(
-            [mock.call({"id": "456"}), mock.call({"id": "789"})]
-        )
 
     async def test_fetch_roles(self, rest_client):
         role1 = StubModel(456)

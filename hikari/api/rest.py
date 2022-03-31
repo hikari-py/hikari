@@ -5498,10 +5498,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def fetch_bans(
+    def fetch_bans(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-    ) -> typing.Sequence[guilds.GuildBan]:
+        *,
+        before: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
+        after: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
+    ) -> iterators.LazyIterator[guilds.GuildBan]:
         """Fetch the bans of a guild.
 
         Parameters
@@ -5510,10 +5513,26 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The guild to fetch the bans from. This may be the
             object or the ID of an existing guild.
 
+        Other Parameters
+        ----------------
+        before : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]]
+            If provided, filter to only actions before this snowflake or user.
+        after : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]]
+            If provided, filter to only actions after this snowflake or user.
+
+        !!! note
+            Bans will always be returned in ascending order by user ID.
+            If both before and after are provided, only before is respected.
+
         Returns
         -------
-        typing.Sequence[hikari.guilds.GuildBan]
+        hikari.iterators.LazyIterator[hikari.guilds.GuildBan]
             The requested bans.
+
+        !!! note
+            This call is not a coroutine function, it returns a special type of
+            lazy iterator that will perform API calls as you iterate across it.
+            See `hikari.iterators` for the full API for this iterator type.
 
         Raises
         ------
