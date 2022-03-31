@@ -74,7 +74,7 @@ async def _request_guild_members(
 class EventManagerImpl(event_manager_base.EventManagerBase):
     """Provides event handling logic for Discord events."""
 
-    __slots__: typing.Sequence[str] = ("_cache", "_disable_member_chunks")
+    __slots__: typing.Sequence[str] = ("_cache", "_chunk_members")
 
     def __init__(
         self,
@@ -82,11 +82,11 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         intents: intents_.Intents,
         /,
         *,
-        disable_member_chunks: bool = False,
+        chunk_members: bool = True,
         cache: typing.Optional[cache_.MutableCache] = None,
     ) -> None:
         self._cache = cache
-        self._disable_member_chunks = disable_member_chunks
+        self._chunk_members = chunk_members
         super().__init__(event_factory=event_factory, intents=intents)
 
     async def on_ready(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
@@ -173,7 +173,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
             for voice_state in event.voice_states.values():
                 self._cache.set_voice_state(voice_state)
 
-            members_declared = self._intents & intents_.Intents.GUILD_MEMBERS and not self._disable_member_chunks
+            members_declared = self._intents & intents_.Intents.GUILD_MEMBERS and self._chunk_members
             presences_declared = self._intents & intents_.Intents.GUILD_PRESENCES
 
             # When intents are enabled discord will only send other member objects on the guild create

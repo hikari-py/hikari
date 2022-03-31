@@ -206,8 +206,8 @@ class GatewayBot(traits.GatewayBotAware):
         Defaults to `hikari.intents.Intents.ALL_UNPRIVILEGED`. This allows you
         to change which intents your application will use on the gateway. This
         can be used to control and change the types of events you will receive.
-    disable_member_chunks: builtins.bool
-        Defaults to `builtins.False`. If `builtins.True`, then no member chunks
+    chunk_members: builtins.bool
+        Defaults to `builtins.True`. If `builtins.False`, then no member chunks
         will be requested automatically, even if the members intent is enabled.
     logs : typing.Union[builtins.None, LoggerLevel, typing.Dict[str, typing.Any]]
         Defaults to `"INFO"`.
@@ -322,7 +322,7 @@ class GatewayBot(traits.GatewayBotAware):
         cache_settings: typing.Optional[config_impl.CacheSettings] = None,
         http_settings: typing.Optional[config_impl.HTTPSettings] = None,
         intents: intents_.Intents = intents_.Intents.ALL_UNPRIVILEGED,
-        disable_member_chunks: bool = False,
+        chunk_members: bool = True,
         logs: typing.Union[None, int, str, typing.Dict[str, typing.Any]] = "INFO",
         max_rate_limit: float = 300,
         max_retries: int = 3,
@@ -355,7 +355,7 @@ class GatewayBot(traits.GatewayBotAware):
 
         # Event handling
         self._event_manager = event_manager_impl.EventManagerImpl(
-            self._event_factory, self._intents, disable_member_chunks=disable_member_chunks, cache=self._cache
+            self._event_factory, self._intents, chunk_members=chunk_members, cache=self._cache
         )
 
         # Voice subsystem
