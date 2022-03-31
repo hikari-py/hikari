@@ -30,27 +30,24 @@ import asyncio
 import typing
 
 from hikari import iterators
+from hikari.events import base_events
 
 if typing.TYPE_CHECKING:
     import types
 
     from hikari.api import shard as gateway_shard
-    from hikari.events import base_events
     from hikari.internal import data_binding
 
-    _T = typing.TypeVar("_T")
-    EventT_co = typing.TypeVar("EventT_co", bound=base_events.Event, covariant=True)
-    EventT_inv = typing.TypeVar("EventT_inv", bound=base_events.Event)
-    PredicateT = typing.Callable[[EventT_co], bool]
-    CallbackT = typing.Callable[[EventT_inv], typing.Coroutine[typing.Any, typing.Any, None]]
+    PredicateT = typing.Callable[[base_events.EventT], bool]
+    CallbackT = typing.Callable[[base_events.EventT], typing.Coroutine[typing.Any, typing.Any, None]]
     ConsumerT = typing.Callable[
         [gateway_shard.GatewayShard, data_binding.JSONObject], typing.Coroutine[typing.Any, typing.Any, None]
     ]
 
-EventT = typing.TypeVar("EventT", bound="base_events.Event")
+    _EventStreamT = typing.TypeVar("_EventStreamT")
 
 
-class EventStream(iterators.LazyIterator[EventT], abc.ABC):
+class EventStream(iterators.LazyIterator[base_events.EventT], abc.ABC):
     """A base abstract class for all event streamers.
 
     Unlike `hikari.iterators.LazyIterator` (which this extends), an event
@@ -113,10 +110,10 @@ class EventStream(iterators.LazyIterator[EventT], abc.ABC):
 
     @abc.abstractmethod
     def filter(
-        self: _T,
-        *predicates: typing.Union[typing.Tuple[str, typing.Any], typing.Callable[[EventT], bool]],
+        self: _EventStreamT,
+        *predicates: typing.Union[typing.Tuple[str, typing.Any], typing.Callable[[base_events.EventT], bool]],
         **attrs: typing.Any,
-    ) -> _T:
+    ) -> _EventStreamT:
         """Filter the items by one or more conditions.
 
         Each condition is treated as a predicate, being called with each item
@@ -147,7 +144,7 @@ class EventStream(iterators.LazyIterator[EventT], abc.ABC):
         """
 
     @abc.abstractmethod
-    def __enter__(self) -> EventStream[EventT]:
+    def __enter__(self: _EventStreamT) -> _EventStreamT:
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -192,7 +189,7 @@ class EventManager(abc.ABC):
         """
 
     @abc.abstractmethod
-    def dispatch(self, event: EventT_inv) -> asyncio.Future[typing.Any]:
+    def dispatch(self, event: base_events.Event) -> asyncio.Future[typing.Any]:
         """Dispatch an event.
 
         Parameters
@@ -359,11 +356,11 @@ class EventManager(abc.ABC):
     @abc.abstractmethod
     def get_listeners(
         self,
-        event_type: typing.Type[EventT_co],
+        event_type: typing.Type[base_events.EventT],
         /,
         *,
         polymorphic: bool = True,
-    ) -> typing.Collection[CallbackT[EventT_co]]:
+    ) -> typing.Collection[CallbackT[base_events.EventT]]:
         """Get the listeners for a given event type, if there are any.
 
         Parameters
@@ -393,8 +390,8 @@ class EventManager(abc.ABC):
     @abc.abstractmethod
     def listen(
         self,
-        *event_types: typing.Type[EventT_co],
-    ) -> typing.Callable[[CallbackT[EventT_co]], CallbackT[EventT_co]]:
+        *event_types: typing.Type[base_events.EventT],
+    ) -> typing.Callable[[CallbackT[base_events.EventT]], CallbackT[base_events.EventT]]:
         """Generate a decorator to subscribe a callback to an event type.
 
         This is a second-order decorator.
@@ -427,11 +424,11 @@ class EventManager(abc.ABC):
     @abc.abstractmethod
     def stream(
         self,
-        event_type: typing.Type[EventT_co],
+        event_type: typing.Type[base_events.EventT],
         /,
         timeout: typing.Union[float, int, None],
         limit: typing.Optional[int] = None,
-    ) -> EventStream[EventT_co]:
+    ) -> EventStream[base_events.EventT]:
         """Return a stream iterator for the given event and sub-events.
 
         Parameters
@@ -493,11 +490,11 @@ class EventManager(abc.ABC):
     @abc.abstractmethod
     async def wait_for(
         self,
-        event_type: typing.Type[EventT_co],
+        event_type: typing.Type[base_events.EventT],
         /,
         timeout: typing.Union[float, int, None],
-        predicate: typing.Optional[PredicateT[EventT_co]] = None,
-    ) -> EventT_co:
+        predicate: typing.Optional[PredicateT[base_events.EventT]] = None,
+    ) -> base_events.EventT:
         """Wait for a given event to occur once, then return the event.
 
         Parameters
