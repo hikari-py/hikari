@@ -260,13 +260,13 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         # payload if presence intents are also declared, so if this isn't the case then we also want
         # to chunk small guilds.
         if (
-            self._intents & intents_.Intents.GUILD_MEMBERS
+            self._chunk_members
+            and self._intents & intents_.Intents.GUILD_MEMBERS
             and (payload.get("large") or not presences_declared)
             and (
                 self._cache_enabled_for(config.CacheComponents.MEMBERS)
                 or self._enabled_for_event(shard_events.MemberChunkEvent)
             )
-            and self._chunk_members
         ):
             # We create a task here instead of awaiting the result to avoid any rate-limits from delaying dispatch.
             nonce = f"{shard.id}.{_fixed_size_nonce()}"
