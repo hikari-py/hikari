@@ -23,7 +23,7 @@
 """User-experience extensions and utilities."""
 from __future__ import annotations
 
-__all__: typing.List[str] = ["init_logging", "print_banner", "supports_color", "HikariVersion", "check_for_updates"]
+__all__: typing.Sequence[str] = ("init_logging", "print_banner", "supports_color", "HikariVersion", "check_for_updates")
 
 import importlib.resources
 import logging

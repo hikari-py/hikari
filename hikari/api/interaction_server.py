@@ -23,12 +23,13 @@
 """Provides an interface for Interaction REST server API implementations to follow."""
 from __future__ import annotations
 
-__all__: typing.List[str] = ["ListenerT", "Response", "InteractionServer"]
+__all__: typing.Sequence[str] = ("ListenerT", "Response", "InteractionServer")
 
 import abc
 import typing
 
 if typing.TYPE_CHECKING:
+    from hikari import files as files_
     from hikari.api import special_endpoints
     from hikari.interactions import base_interactions
     from hikari.interactions import command_interactions
@@ -68,24 +69,23 @@ class Response(typing.Protocol):
     __slots__: typing.Sequence[str] = ()
 
     @property
-    def headers(self) -> typing.Optional[typing.Mapping[str, str]]:
-        """Headers that should be added to the response if applicable.
+    def content_type(self) -> typing.Optional[str]:
+        """Content type of the response's payload, if applicable."""
+        raise NotImplementedError
 
-        Returns
-        -------
-        typing.Optional[typing.Mapping[builtins.str, builtins.str]]
-            A mapping of string header names to string header values that should
-            be included in the response if applicable else `builtins.None`.
-        """
+    @property
+    def files(self) -> typing.Sequence[files_.Resource[files_.AsyncReader]]:
+        """Up to 10 files that should be included alongside a JSON response."""
+        raise NotImplementedError
+
+    @property
+    def headers(self) -> typing.Optional[typing.MutableMapping[str, str]]:
+        """Headers that should be added to the response if applicable."""
         raise NotImplementedError
 
     @property
     def payload(self) -> typing.Optional[bytes]:
         """Payload to provide in the response.
-
-        !!! note
-            If this is not `builtins.None` then an appropriate `"Content-Type"`
-            header should be declared in `Response.headers`
 
         Returns
         -------

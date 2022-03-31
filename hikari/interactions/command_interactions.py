@@ -23,7 +23,7 @@
 """Models and enums used for Discord's Slash Commands interaction flow."""
 from __future__ import annotations
 
-__all__: typing.List[str] = [
+__all__: typing.Sequence[str] = (
     "AutocompleteInteraction",
     "BaseCommandInteraction",
     "CommandInteractionOption",
@@ -33,7 +33,7 @@ __all__: typing.List[str] = [
     "CommandResponseTypesT",
     "InteractionChannel",
     "ResolvedOptionData",
-]
+)
 
 import typing
 
@@ -49,6 +49,7 @@ from hikari.internal import attr_extensions
 
 if typing.TYPE_CHECKING:
     from hikari import guilds
+    from hikari import locales
     from hikari import messages as messages_
     from hikari import permissions as permissions_
     from hikari import users as users_
@@ -170,10 +171,7 @@ class AutocompleteInteractionOption(CommandInteractionOption):
 @attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
 class BaseCommandInteraction(base_interactions.PartialInteraction):
-    """Represents a base command interaction on Discord.
-
-    May be a command interaction or an autocomplete interaction.
-    """
+    """Represents a base command interaction on Discord."""
 
     channel_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
     """ID of the channel this command interaction event was triggered in."""
@@ -184,7 +182,7 @@ class BaseCommandInteraction(base_interactions.PartialInteraction):
     This will be `builtins.None` for command interactions triggered in DMs.
     """
 
-    guild_locale: typing.Optional[str] = attr.field(eq=False, hash=False, repr=True)
+    guild_locale: typing.Optional[typing.Union[str, locales.Locale]] = attr.field(eq=False, hash=False, repr=True)
     """The preferred language of the guild this command interaction was triggered in.
 
     This will be `builtins.None` for command interactions triggered in DMs.
@@ -207,7 +205,7 @@ class BaseCommandInteraction(base_interactions.PartialInteraction):
     user: users_.User = attr.field(eq=False, hash=False, repr=True)
     """The user who triggered this command interaction."""
 
-    locale: str = attr.field(eq=False, hash=False, repr=True)
+    locale: typing.Union[str, locales.Locale] = attr.field(eq=False, hash=False, repr=True)
     """The selected language of the user who triggered this command interaction."""
 
     command_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)

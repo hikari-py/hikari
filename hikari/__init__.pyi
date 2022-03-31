@@ -44,7 +44,8 @@ from hikari.commands import *
 from hikari.embeds import *
 from hikari.emojis import *
 from hikari.errors import *
-from hikari.events.base_events import *
+from hikari.events.base_events import Event as Event
+from hikari.events.base_events import ExceptionEvent as ExceptionEvent
 from hikari.events.channel_events import *
 from hikari.events.guild_events import *
 from hikari.events.interaction_events import *
@@ -76,6 +77,7 @@ from hikari.interactions.command_interactions import *
 from hikari.interactions.component_interactions import *
 from hikari.invites import *
 from hikari.iterators import *
+from hikari.locales import *
 from hikari.messages import *
 from hikari.permissions import *
 from hikari.presences import *

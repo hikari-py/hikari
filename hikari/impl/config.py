@@ -24,7 +24,13 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["BasicAuthHeader", "ProxySettings", "HTTPTimeoutSettings", "HTTPSettings", "CacheSettings"]
+__all__: typing.Sequence[str] = (
+    "BasicAuthHeader",
+    "ProxySettings",
+    "HTTPTimeoutSettings",
+    "HTTPSettings",
+    "CacheSettings",
+)
 
 import base64
 import ssl as ssl_
@@ -379,7 +385,9 @@ class HTTPSettings(config.HTTPSettings):
 class CacheSettings(config.CacheSettings):
     """Settings to control the cache."""
 
-    components: config.CacheComponents = attr.field(default=config.CacheComponents.ALL)
+    components: config.CacheComponents = attr.field(
+        converter=config.CacheComponents, default=config.CacheComponents.ALL
+    )
     """The cache components to use.
 
     Defaults to `hikari.api.cache.CacheComponents.ALL`.

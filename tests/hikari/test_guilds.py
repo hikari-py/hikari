@@ -429,7 +429,7 @@ class TestMember:
         model.app.rest.edit_member = mock.AsyncMock()
         disabled_until = datetime.datetime(2021, 11, 17)
         edit = await model.edit(
-            nick="Imposter",
+            nickname="Imposter",
             roles=[123, 432, 345],
             mute=False,
             deaf=True,
@@ -441,7 +441,7 @@ class TestMember:
         model.app.rest.edit_member.assert_awaited_once_with(
             456,
             123,
-            nick="Imposter",
+            nickname="Imposter",
             roles=[123, 432, 345],
             mute=False,
             deaf=True,
@@ -450,6 +450,29 @@ class TestMember:
             reason="I'm God",
         )
 
+        assert edit == model.app.rest.edit_member.return_value
+
+    @pytest.mark.asyncio()
+    async def test_edit_when_deprecated_nick_field(self, model):
+        model.app.rest.edit_member = mock.AsyncMock()
+
+        with pytest.warns(
+            DeprecationWarning,
+            match="'nick' is deprecated and will be removed in a following version. You can use 'nickname' instead.",
+        ):
+            edit = await model.edit(nick="meow")
+
+        model.app.rest.edit_member.assert_awaited_once_with(
+            456,
+            123,
+            nickname="meow",
+            roles=undefined.UNDEFINED,
+            mute=undefined.UNDEFINED,
+            deaf=undefined.UNDEFINED,
+            voice_channel=undefined.UNDEFINED,
+            communication_disabled_until=undefined.UNDEFINED,
+            reason=undefined.UNDEFINED,
+        )
         assert edit == model.app.rest.edit_member.return_value
 
     def test_default_avatar_url_property(self, model, mock_user):
@@ -1128,6 +1151,38 @@ class TestGuild:
             hash="banner_hash",
             size=512,
             file_format="url",
+        )
+
+    def test_make_banner_url_when_format_is_None_and_banner_hash_is_for_gif(self, model):
+        model.banner_hash = "a_18dnf8dfbakfdh"
+
+        with mock.patch.object(
+            routes, "CDN_GUILD_BANNER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert model.make_banner_url(ext=None, size=4096) == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL,
+            guild_id=model.id,
+            hash="a_18dnf8dfbakfdh",
+            size=4096,
+            file_format="gif",
+        )
+
+    def test_make_banner_url_when_format_is_None_and_banner_hash_is_not_for_gif(self, model):
+        model.banner_hash = "18dnf8dfbakfdh"
+
+        with mock.patch.object(
+            routes, "CDN_GUILD_BANNER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert model.make_banner_url(ext=None, size=4096) == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL,
+            guild_id=model.id,
+            hash=model.banner_hash,
+            size=4096,
+            file_format="png",
         )
 
     def test_make_banner_url_when_no_hash(self, model):

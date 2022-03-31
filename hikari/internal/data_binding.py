@@ -23,7 +23,7 @@
 """Data binding utilities."""
 from __future__ import annotations
 
-__all__: typing.List[str] = [
+__all__: typing.Sequence[str] = (
     "Headers",
     "Query",
     "JSONObject",
@@ -34,7 +34,7 @@ __all__: typing.List[str] = [
     "JSONDecodeError",
     "JSONObjectBuilder",
     "URLEncodedFormBuilder",
-]
+)
 
 import typing
 
@@ -46,7 +46,7 @@ from hikari import snowflakes
 from hikari import undefined
 
 if typing.TYPE_CHECKING:
-    import concurrent
+    import concurrent.futures
     import contextlib
 
     T_co = typing.TypeVar("T_co", covariant=True)
@@ -87,9 +87,11 @@ if typing.TYPE_CHECKING:
 
     def dump_json(_: typing.Union[JSONArray, JSONObject], /, *, indent: int = ...) -> str:
         """Convert a Python type to a JSON string."""
+        raise NotImplementedError
 
     def load_json(_: typing.AnyStr, /) -> typing.Union[JSONArray, JSONObject]:
         """Convert a JSON string to a Python type."""
+        raise NotImplementedError
 
 else:
     import json

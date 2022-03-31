@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["EventFactory"]
+__all__: typing.Sequence[str] = ("EventFactory",)
 
 import abc
 import typing

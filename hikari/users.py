@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["PartialUser", "User", "OwnUser", "UserFlag", "PremiumType"]
+__all__: typing.Sequence[str] = ("PartialUser", "User", "OwnUser", "UserFlag", "PremiumType")
 
 import abc
 import typing
@@ -45,6 +45,7 @@ if typing.TYPE_CHECKING:
     from hikari import embeds as embeds_
     from hikari import files
     from hikari import guilds
+    from hikari import locales
     from hikari import messages
     from hikari.api import special_endpoints
 
@@ -756,8 +757,11 @@ class OwnUser(UserImpl):
     is_mfa_enabled: bool = attr.field(eq=False, hash=False, repr=False)
     """Whether the user's account has multi-factor authentication enabled."""
 
-    locale: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
-    """The user's set language. This is not provided by the `READY` event."""
+    locale: typing.Optional[typing.Union[str, locales.Locale]] = attr.field(eq=False, hash=False, repr=False)
+    """The user's set locale.
+
+    This is not provided in the `READY` event.
+    """
 
     is_verified: typing.Optional[bool] = attr.field(eq=False, hash=False, repr=False)
     """Whether the email for this user's account has been verified.

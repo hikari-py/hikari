@@ -23,7 +23,7 @@
 """Special additional endpoints used by the REST API."""
 from __future__ import annotations
 
-__all__: typing.List[str] = [
+__all__: typing.Sequence[str] = (
     "ActionRowBuilder",
     "ButtonBuilder",
     "CommandBuilder",
@@ -40,7 +40,7 @@ __all__: typing.List[str] = [
     "LinkButtonBuilder",
     "SelectMenuBuilder",
     "SelectOptionBuilder",
-]
+)
 
 import abc
 import typing
@@ -63,6 +63,7 @@ if typing.TYPE_CHECKING:
     from hikari import users
     from hikari import voices
     from hikari.api import entity_factory as entity_factory_
+    from hikari.api import rest as rest_api
     from hikari.interactions import base_interactions
     from hikari.internal import data_binding
     from hikari.internal import time
@@ -566,7 +567,9 @@ class InteractionResponseBuilder(abc.ABC):
         """
 
     @abc.abstractmethod
-    def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObject:
+    def build(
+        self, entity_factory: entity_factory_.EntityFactory, /
+    ) -> typing.Tuple[data_binding.JSONObject, typing.Sequence[files.Resource[files.AsyncReader]]]:
         """Build a JSON object from this builder.
 
         Parameters
@@ -576,8 +579,9 @@ class InteractionResponseBuilder(abc.ABC):
 
         Returns
         -------
-        hikari.internal.data_binding.JSONObject
-            The built json object representation of this builder.
+        typing.Tuple[hikari.internal.data_binding.JSONObject, typing.Sequence[files.Resource[Files.AsyncReader]]
+            A tuple of the built json object representation of this builder and
+            a sequence of up to 10 files to send with the response.
         """
 
 
@@ -680,19 +684,18 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def components(self) -> typing.Sequence[ComponentBuilder]:
+    def attachments(self) -> undefined.UndefinedOr[typing.Sequence[files.Resourceish]]:
+        """Sequence of up to 10 attachments to send with the message."""
+
+    @property
+    @abc.abstractmethod
+    def components(self) -> undefined.UndefinedOr[typing.Sequence[ComponentBuilder]]:
         """Sequence of up to 5 component builders to send in this response."""
 
     @property
     @abc.abstractmethod
-    def embeds(self) -> typing.Sequence[embeds_.Embed]:
-        """Sequence of up to 10 of the embeds included in this response.
-
-        Returns
-        -------
-        typing.Sequence[hikari.embeds.Embed]
-            A sequence of up to 10 of the embeds included in this response.
-        """
+    def embeds(self) -> undefined.UndefinedOr[typing.Sequence[embeds_.Embed]]:
+        """Sequence of up to 10 of the embeds included in this response."""
 
     # Settable fields
 
@@ -776,6 +779,21 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
             `builtins.False` or `hikari.undefined.UNDEFINED` to disallow any user
             mentions or `True` to allow all user mentions.
         """  # noqa: E501 - Line too long
+
+    @abc.abstractmethod
+    def add_attachment(self: _T, attachment: files.Resourceish, /) -> _T:
+        """Add an attachment to this response.
+
+        Parameters
+        ----------
+        attachment : hikari.files.Resourceish
+            The attachment to add.
+
+        Returns
+        -------
+        InteractionMessageBuilder
+            Object of this builder.
+        """
 
     @abc.abstractmethod
     def add_component(self: _T, component: ComponentBuilder, /) -> _T:
@@ -1016,6 +1034,37 @@ class CommandBuilder(abc.ABC):
             The built json object representation of this builder.
         """
 
+    @abc.abstractmethod
+    async def create(
+        self,
+        rest: rest_api.RESTClient,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        /,
+        *,
+        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+    ) -> commands.PartialCommand:
+        """Create this command through a REST call.
+
+        Parameters
+        ----------
+        rest : hikari.api.rest.RESTClient
+            The REST client to use to make this request.
+        application : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+            The application to create this command for.
+
+        Other Parameters
+        ----------------
+        guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
+            The guild to create this command for.
+
+            If left undefined then this command will be declared globally.
+
+        Returns
+        -------
+        hikari.commands.PartialCommand
+            The created command.
+        """
+
 
 class SlashCommandBuilder(CommandBuilder):
     """SlashCommandBuilder."""
@@ -1065,11 +1114,80 @@ class SlashCommandBuilder(CommandBuilder):
             Object of this command builder.
         """
 
+    @abc.abstractmethod
+    async def create(
+        self,
+        rest: rest_api.RESTClient,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        /,
+        *,
+        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+    ) -> commands.SlashCommand:
+        """Create this command through a REST call.
+
+        This is a shorthand for calling `hikari.api.rest.RESTClient.create_slash_command`
+        with the builder's information.
+
+        Parameters
+        ----------
+        rest : hikari.api.rest.RESTClient
+            The REST client to use to make this request.
+        application : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+            The application to create this command for.
+
+        Other Parameters
+        ----------------
+        guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
+            The guild to create this command for.
+
+            If left undefined then this command will be declared globally.
+
+        Returns
+        -------
+        hikari.commands.SlashCommand
+            The created command.
+        """
+
 
 class ContextMenuCommandBuilder(CommandBuilder):
     """ContextMenuCommandBuilder."""
 
     __slots__: typing.Sequence[str] = ()
+
+    @abc.abstractmethod
+    async def create(
+        self,
+        rest: rest_api.RESTClient,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        /,
+        *,
+        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+    ) -> commands.ContextMenuCommand:
+        """Create this command through a REST call.
+
+        This is a shorthand for calling
+        `hikari.api.rest.RESTClient.create_context_menu_command`
+        with the builder's information.
+
+        Parameters
+        ----------
+        rest : hikari.api.rest.RESTClient
+            The REST client to use to make this request.
+        application : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+            The application to create this command for.
+
+        Other Parameters
+        ----------------
+        guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
+            The guild to create this command for.
+
+            If left undefined then this command will be declared globally.
+
+        Returns
+        -------
+        hikari.commands.ContextMenuCommand
+            The created command.
+        """
 
 
 class ComponentBuilder(abc.ABC):

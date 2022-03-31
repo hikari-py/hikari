@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = [
+__all__: typing.Sequence[str] = (
     "Guild",
     "RESTGuild",
     "GatewayGuild",
@@ -52,7 +52,7 @@ __all__: typing.List[str] = [
     "PartialRole",
     "WelcomeScreen",
     "WelcomeChannel",
-]
+)
 
 import typing
 
@@ -66,6 +66,7 @@ from hikari import undefined
 from hikari import urls
 from hikari import users
 from hikari.internal import attr_extensions
+from hikari.internal import deprecation
 from hikari.internal import enums
 from hikari.internal import routes
 from hikari.internal import time
@@ -77,6 +78,7 @@ if typing.TYPE_CHECKING:
     from hikari import colours
     from hikari import emojis as emojis_
     from hikari import files
+    from hikari import locales
     from hikari import permissions as permissions_
     from hikari import presences as presences_
     from hikari import voices as voices_
@@ -167,7 +169,7 @@ class GuildFeature(str, enums.Enum):
     MONETIZATION_ENABLED = "MONETIZATION_ENABLED"
     """Guild has enabled monetization."""
 
-    MORE_STICKERS = "MONETIZATION_ENABLED"
+    MORE_STICKERS = "MORE_STICKERS"
     """Guild has an increased custom stickers slots."""
 
 
@@ -920,6 +922,7 @@ class Member(users.User):
     async def edit(
         self,
         *,
+        nickname: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
         nick: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
         roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[PartialRole]] = undefined.UNDEFINED,
         mute: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -934,11 +937,13 @@ class Member(users.User):
 
         Other Parameters
         ----------------
-        nick : hikari.undefined.UndefinedNoneOr[builtins.str]
+        nickname : hikari.undefined.UndefinedNoneOr[builtins.str]
             If provided, the new nick for the member. If `builtins.None`,
             will remove the members nick.
 
             Requires the `MANAGE_NICKNAMES` permission.
+        nick : hikari.undefined.UndefinedNoneOr[builtins.str]
+            Deprecated alias for `nickname`.
         roles : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole]]
             If provided, the new roles for the member.
 
@@ -1002,10 +1007,14 @@ class Member(users.User):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
+        if nick is not undefined.UNDEFINED:
+            deprecation.warn_deprecated("nick", alternative="nickname")
+            nickname = nick
+
         return await self.user.app.rest.edit_member(
             self.guild_id,
             self.user.id,
-            nick=nick,
+            nickname=nickname,
             roles=roles,
             mute=mute,
             deaf=deaf,
@@ -1220,9 +1229,6 @@ class PartialApplication(snowflakes.Unique):
 
     icon_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
     """The CDN hash of this application's icon, if set."""
-
-    summary: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
-    """This summary for this application's primary SKU if it's sold on Discord, if any."""
 
     def __str__(self) -> str:
         return self.name
@@ -1656,7 +1662,7 @@ class PartialGuild(snowflakes.Unique):
         public_updates_channel: undefined.UndefinedNoneOr[
             snowflakes.SnowflakeishOr[channels_.GuildTextChannel]
         ] = undefined.UNDEFINED,
-        preferred_locale: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        preferred_locale: undefined.UndefinedOr[typing.Union[str, locales.Locale]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> RESTGuild:
         """Edits the guild.
@@ -2758,7 +2764,7 @@ class Guild(PartialGuild):
     owner_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
     """The ID of the owner of this guild."""
 
-    preferred_locale: str = attr.field(eq=False, hash=False, repr=False)
+    preferred_locale: typing.Union[str, locales.Locale] = attr.field(eq=False, hash=False, repr=False)
     """The preferred locale to use for this guild.
 
     This can only be change if `GuildFeature.COMMUNITY` is in `Guild.features`
@@ -2921,14 +2927,18 @@ class Guild(PartialGuild):
 
         return self.app.cache.get_roles_view_for_guild(self.id)
 
-    def make_banner_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+    def make_banner_url(self, *, ext: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the guild's banner image URL, if set.
 
         Parameters
         ----------
-        ext : builtins.str
-            The extension to use for this URL, defaults to `png`.
-            Supports `png`, `jpeg`, `jpg` and `webp`.
+        ext : typing.Optional[builtins.str]
+            The ext to use for this URL, defaults to `png` or `gif`.
+            Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
+            animated).
+
+            If `builtins.None`, then the correct default extension is
+            determined based on whether the banner is animated or not.
         size : builtins.int
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
@@ -2945,6 +2955,13 @@ class Guild(PartialGuild):
         """
         if self.banner_hash is None:
             return None
+
+        if ext is None:
+            if self.banner_hash.startswith("a_"):
+                ext = "gif"
+
+            else:
+                ext = "png"
 
         return routes.CDN_GUILD_BANNER.compile_to_file(
             urls.CDN_URL,

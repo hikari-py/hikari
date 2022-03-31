@@ -54,6 +54,7 @@ class TestRoute:
             (routes.DELETE_CHANNEL, frozenset(("channel",))),
             (routes.PATCH_GUILD, frozenset(("guild",))),
             (routes.POST_WEBHOOK_WITH_TOKEN, frozenset(("webhook", "token"))),
+            (routes.GET_WEBHOOK, frozenset(("webhook",))),
             (routes.GET_INVITE, None),
         ],
     )

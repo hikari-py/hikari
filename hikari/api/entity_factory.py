@@ -23,15 +23,12 @@
 """Core interface for an object that serializes/deserializes API objects."""
 from __future__ import annotations
 
-__all__: typing.List[str] = ["EntityFactory", "GatewayGuildDefinition"]
+__all__: typing.Sequence[str] = ("EntityFactory", "GatewayGuildDefinition")
 
 import abc
 import typing
 
-import attr
-
 from hikari import undefined
-from hikari.internal import attr_extensions
 
 if typing.TYPE_CHECKING:
     from hikari import applications as application_models
@@ -59,53 +56,56 @@ if typing.TYPE_CHECKING:
     from hikari.internal import data_binding
 
 
-@attr_extensions.with_copy
-@attr.define(weakref_slot=False)
-class GatewayGuildDefinition:
-    """A structure for handling entities within guild create and update events."""
+class GatewayGuildDefinition(abc.ABC):
+    """Structure for handling entities within guild create and update events.
 
-    guild: guild_models.GatewayGuild = attr.field()
-    """Object of the guild the definition is for."""
-
-    channels: typing.Optional[typing.Mapping[snowflakes.Snowflake, channel_models.GuildChannel]] = attr.field()
-    """Mapping of channel IDs to the channels that belong to the guild.
-
-    Will be `builtins.None` when returned by guild update gateway events rather
-    than create.
+    !!! warning
+        The methods on this class may raise `builtins.LookupError` if called
+        when the relevant resource isn't available in the inner payload.
     """
 
-    members: typing.Optional[typing.Mapping[snowflakes.Snowflake, guild_models.Member]] = attr.field()
-    """Mapping of user IDs to the members that belong to the guild.
+    __slots__: typing.Sequence[str] = ()
 
-    Will be `builtins.None` when returned by guild update gateway events rather
-    than create.
+    @property
+    @abc.abstractmethod
+    def id(self) -> snowflakes.Snowflake:
+        """ID of the guild the definition is for."""
 
-    !!! note
-        This may be a partial mapping of members in the guild.
-    """
+    @abc.abstractmethod
+    def channels(self) -> typing.Mapping[snowflakes.Snowflake, channel_models.GuildChannel]:
+        """Get a mapping of channel IDs to the channels that belong to the guild."""
 
-    presences: typing.Optional[typing.Mapping[snowflakes.Snowflake, presence_models.MemberPresence]] = attr.field()
-    """Mapping of user IDs to the presences that are active in the guild.
+    @abc.abstractmethod
+    def emojis(self) -> typing.Mapping[snowflakes.Snowflake, emoji_models.KnownCustomEmoji]:
+        """Get a mapping of emoji IDs to the emojis that belong to the guild."""
 
-    Will be `builtins.None` when returned by guild update gateway events rather
-    than create.
+    @abc.abstractmethod
+    def guild(self) -> guild_models.GatewayGuild:
+        """Get the object of the guild this definition is for."""
 
-    !!! note
-        This may be a partial mapping of presences active in the guild.
-    """
+    @abc.abstractmethod
+    def members(self) -> typing.Mapping[snowflakes.Snowflake, guild_models.Member]:
+        """Get a mapping of user IDs to the members that belong to the guild.
 
-    roles: typing.Mapping[snowflakes.Snowflake, guild_models.Role] = attr.field()
-    """Mapping of role IDs to the roles that belong to the guild."""
+        !!! note
+            This may be a partial mapping of members in the guild.
+        """
 
-    emojis: typing.Mapping[snowflakes.Snowflake, emoji_models.KnownCustomEmoji] = attr.field()
-    """Mapping of emoji IDs to the emojis that belong to the guild."""
+    @abc.abstractmethod
+    def presences(self) -> typing.Mapping[snowflakes.Snowflake, presence_models.MemberPresence]:
+        """Get a mapping of user IDs to the presences that are active in the guild.
 
-    voice_states: typing.Optional[typing.Mapping[snowflakes.Snowflake, voice_models.VoiceState]] = attr.field()
-    """Mapping of user IDs to the voice states that are active in the guild.
+        !!! note
+            This may be a partial mapping of presences active in the guild.
+        """
 
-    !!! note
-        This may be a partial mapping of voice states active in the guild.
-    """
+    @abc.abstractmethod
+    def roles(self) -> typing.Mapping[snowflakes.Snowflake, guild_models.Role]:
+        """Get a mapping of role IDs to the roles that belong to the guild."""
+
+    @abc.abstractmethod
+    def voice_states(self) -> typing.Mapping[snowflakes.Snowflake, voice_models.VoiceState]:
+        """Get a mapping of user IDs to the voice states that are active in the guild."""
 
 
 class EntityFactory(abc.ABC):
@@ -439,42 +439,6 @@ class EntityFactory(abc.ABC):
         -------
         hikari.channels.GuildNewsChannel
             The deserialized guild news channel object.
-
-        Raises
-        ------
-        builtins.KeyError
-            If `guild_id` is left as `hikari.undefined.UNDEFINED` when
-            `"guild_id"` is not present in the passed payload.
-        """
-
-    @abc.abstractmethod
-    def deserialize_guild_store_channel(
-        self,
-        payload: data_binding.JSONObject,
-        *,
-        guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
-    ) -> channel_models.GuildStoreChannel:
-        """Parse a raw payload from Discord into a guild store channel object.
-
-        Parameters
-        ----------
-        payload : hikari.internal.data_binding.JSONObject
-            The JSON payload to deserialize.
-
-        Other Parameters
-        ----------------
-        guild_id : hikari.snowflakes.Snowflake
-            The ID of the guild this channel belongs to. If passed then this
-            will be prioritised over `"guild_id"` in the payload.
-
-        !!! note
-            `guild_id` currently only covers the gateway GUILD_CREATE event
-            where `"guild_id"` is not included in the channel's payload.
-
-        Returns
-        -------
-        hikari.channels.GuildStoreChannel
-            The deserialized guild store channel object.
 
         Raises
         ------

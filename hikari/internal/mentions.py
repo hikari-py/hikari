@@ -23,7 +23,7 @@
 """Utility functions used for managing mentions on Discord."""
 from __future__ import annotations
 
-__all__: typing.List[str] = ["generate_allowed_mentions"]
+__all__: typing.Sequence[str] = ("generate_allowed_mentions",)
 
 import typing
 

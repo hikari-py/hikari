@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["GatewayBot"]
+__all__: typing.Sequence[str] = ("GatewayBot",)
 
 import asyncio
 import datetime
@@ -70,6 +70,7 @@ if typing.TYPE_CHECKING:
     from hikari.api import rest as rest_
     from hikari.api import shard as gateway_shard
     from hikari.api import voice as voice_
+    from hikari.events import base_events
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.bot")
 
@@ -355,7 +356,7 @@ class GatewayBot(traits.GatewayBotAware):
 
         # Event handling
         self._event_manager = event_manager_impl.EventManagerImpl(
-            self._event_factory, self._intents, chunk_members=chunk_members, cache=self._cache
+            self._entity_factory, self._event_factory, self._intents, chunk_members=chunk_members, cache=self._cache
         )
 
         # Voice subsystem
@@ -503,7 +504,7 @@ class GatewayBot(traits.GatewayBotAware):
         self._closed_event.set()
         self._closed_event = None
 
-    def dispatch(self, event: event_manager_.EventT_inv) -> asyncio.Future[typing.Any]:
+    def dispatch(self, event: base_events.Event) -> asyncio.Future[typing.Any]:
         """Dispatch an event.
 
         Parameters
@@ -587,15 +588,15 @@ class GatewayBot(traits.GatewayBotAware):
         return self._event_manager.dispatch(event)
 
     def get_listeners(
-        self, event_type: typing.Type[event_manager_.EventT_co], /, *, polymorphic: bool = True
-    ) -> typing.Collection[event_manager_.CallbackT[event_manager_.EventT_co]]:
+        self, event_type: typing.Type[base_events.EventT], /, *, polymorphic: bool = True
+    ) -> typing.Collection[event_manager_.CallbackT[base_events.EventT]]:
         """Get the listeners for a given event type, if there are any.
 
         Parameters
         ----------
-        event_type : typing.Type[T]
+        event_type : typing.Type[EventT]
             The event type to look for.
-            `T` must be a subclass of `hikari.events.base_events.Event`.
+            `EventT` must be a subclass of `hikari.events.base_events.Event`.
         polymorphic : builtins.bool
             If `builtins.True`, this will also return the listeners of the
             subclasses of the given event type. If `builtins.False`, then
@@ -604,11 +605,11 @@ class GatewayBot(traits.GatewayBotAware):
 
         Returns
         -------
-        typing.Collection[typing.Callable[[T], typing.Coroutine[typing.Any, typing.Any, builtins.None]]
+        typing.Collection[typing.Callable[[EventT], typing.Coroutine[typing.Any, typing.Any, builtins.None]]
             A copy of the collection of listeners for the event. Will return
             an empty collection if nothing is registered.
 
-            `T` must be a subclass of `hikari.events.base_events.Event`.
+            `EventT` must be a subclass of `hikari.events.base_events.Event`.
         """
         return self._event_manager.get_listeners(event_type, polymorphic=polymorphic)
 
@@ -622,27 +623,25 @@ class GatewayBot(traits.GatewayBotAware):
         await aio.first_completed(*awaitables)
 
     def listen(
-        self, event_type: typing.Optional[typing.Type[event_manager_.EventT_co]] = None
-    ) -> typing.Callable[
-        [event_manager_.CallbackT[event_manager_.EventT_co]],
-        event_manager_.CallbackT[event_manager_.EventT_co],
-    ]:
+        self,
+        *event_types: typing.Type[base_events.EventT],
+    ) -> typing.Callable[[event_manager_.CallbackT[base_events.EventT]], event_manager_.CallbackT[base_events.EventT]]:
         """Generate a decorator to subscribe a callback to an event type.
 
         This is a second-order decorator.
 
         Parameters
         ----------
-        event_type : typing.Optional[typing.Type[T]]
-            The event type to subscribe to. The implementation may allow this
+        *event_types : typing.Optional[typing.Type[EventT]]
+            The event types to subscribe to. The implementation may allow this
             to be undefined. If this is the case, the event type will be inferred
             instead from the type hints on the function signature.
 
-            `T` must be a subclass of `hikari.events.base_events.Event`.
+            `EventT` must be a subclass of `hikari.events.base_events.Event`.
 
         Returns
         -------
-        typing.Callable[[T], T]
+        typing.Callable[[EventT], EventT]
             A decorator for a coroutine function that passes it to
             `EventManager.subscribe` before returning the function
             reference.
@@ -655,7 +654,7 @@ class GatewayBot(traits.GatewayBotAware):
         Unsubscribe: `hikari.impl.bot.GatewayBot.unsubscribe`
         Wait_for: `hikari.impl.bot.GatewayBot.wait_for`
         """
-        return self._event_manager.listen(event_type)
+        return self._event_manager.listen(*event_types)
 
     @staticmethod
     def print_banner(
@@ -1099,11 +1098,11 @@ class GatewayBot(traits.GatewayBotAware):
 
     def stream(
         self,
-        event_type: typing.Type[event_manager_.EventT_co],
+        event_type: typing.Type[base_events.EventT],
         /,
         timeout: typing.Union[float, int, None],
         limit: typing.Optional[int] = None,
-    ) -> event_manager_.EventStream[event_manager_.EventT_co]:
+    ) -> event_manager_.EventStream[base_events.EventT]:
         """Return a stream iterator for the given event and sub-events.
 
         Parameters
@@ -1164,6 +1163,10 @@ class GatewayBot(traits.GatewayBotAware):
         self._check_if_alive()
         return self._event_manager.stream(event_type, timeout=timeout, limit=limit)
 
+    # Yes, this is not generic. The reason for this is MyPy complains about
+    # using ABCs that are not concrete in generic types passed to functions.
+    # For the sake of UX, I will check this at runtime instead and let the
+    # user use a static type checker.
     def subscribe(self, event_type: typing.Type[typing.Any], callback: event_manager_.CallbackT[typing.Any]) -> None:
         """Subscribe a given callback to a given event type.
 
@@ -1202,6 +1205,10 @@ class GatewayBot(traits.GatewayBotAware):
         """
         self._event_manager.subscribe(event_type, callback)
 
+    # Yes, this is not generic. The reason for this is MyPy complains about
+    # using ABCs that are not concrete in generic types passed to functions.
+    # For the sake of UX, I will check this at runtime instead and let the
+    # user use a static type checker.
     def unsubscribe(self, event_type: typing.Type[typing.Any], callback: event_manager_.CallbackT[typing.Any]) -> None:
         """Unsubscribe a given callback from a given event type, if present.
 
@@ -1240,11 +1247,11 @@ class GatewayBot(traits.GatewayBotAware):
 
     async def wait_for(
         self,
-        event_type: typing.Type[event_manager_.EventT_co],
+        event_type: typing.Type[base_events.EventT],
         /,
         timeout: typing.Union[float, int, None],
-        predicate: typing.Optional[event_manager_.PredicateT[event_manager_.EventT_co]] = None,
-    ) -> event_manager_.EventT_co:
+        predicate: typing.Optional[event_manager_.PredicateT[base_events.EventT]] = None,
+    ) -> base_events.EventT:
         """Wait for a given event to occur once, then return the event.
 
         Parameters

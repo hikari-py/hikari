@@ -23,7 +23,7 @@
 """Core interface for Hikari's configuration dataclasses."""
 from __future__ import annotations
 
-__all__: typing.List[str] = ["CacheComponents"]
+__all__: typing.Sequence[str] = ("CacheComponents",)
 
 import abc
 import typing
@@ -67,6 +67,9 @@ class CacheComponents(enums.Flag):
     MESSAGES = 1 << 8
     """Enables the messages cache."""
 
+    ME = 1 << 9
+    """Enables the me cache."""
+
     DM_CHANNEL_IDS = 1 << 10
     """Enables the DM channel IDs cache."""
 
@@ -80,6 +83,7 @@ class CacheComponents(enums.Flag):
         | PRESENCES
         | VOICE_STATES
         | MESSAGES
+        | ME
         | DM_CHANNEL_IDS
     )
     """Fully enables the cache."""

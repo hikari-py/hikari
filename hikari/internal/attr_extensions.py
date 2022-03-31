@@ -23,13 +23,13 @@
 """Utility for extending and optimising the usage of `attr` models."""
 from __future__ import annotations
 
-__all__: typing.List[str] = [
+__all__: typing.Sequence[str] = (
     "with_copy",
     "copy_attrs",
     "deep_copy_attrs",
     "invalidate_deep_copy_cache",
     "invalidate_shallow_copy_cache",
-]
+)
 
 import copy as std_copy
 import logging

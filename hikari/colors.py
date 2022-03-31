@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["Color", "Colorish"]
+__all__: typing.Sequence[str] = ("Color", "Colorish")
 
 import re
 import string

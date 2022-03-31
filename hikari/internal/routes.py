@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["CompiledRoute", "Route", "CDNRoute"]
+__all__: typing.Sequence[str] = ("CompiledRoute", "Route", "CDNRoute")
 
 import math
 import re
@@ -43,6 +43,7 @@ MAJOR_PARAM_COMBOS: typing.Mapping[typing.FrozenSet[str], typing.Callable[[typin
     frozenset(("channel",)): lambda d: d["channel"],
     frozenset(("guild",)): lambda d: d["guild"],
     frozenset(("webhook", "token")): lambda d: d["webhook"] + ":" + d["token"],
+    frozenset(("webhook",)): lambda d: d["webhook"],
 }
 
 
@@ -545,7 +546,7 @@ CDN_GUILD_SPLASH: typing.Final[CDNRoute] = CDNRoute("/splashes/{guild_id}/{hash}
 CDN_GUILD_DISCOVERY_SPLASH: typing.Final[CDNRoute] = CDNRoute(
     "/discovery-splashes/{guild_id}/{hash}", {PNG, *JPEG_JPG, WEBP}
 )
-CDN_GUILD_BANNER: typing.Final[CDNRoute] = CDNRoute("/banners/{guild_id}/{hash}", {PNG, *JPEG_JPG, WEBP})
+CDN_GUILD_BANNER: typing.Final[CDNRoute] = CDNRoute("/banners/{guild_id}/{hash}", {PNG, *JPEG_JPG, WEBP, GIF})
 
 CDN_DEFAULT_USER_AVATAR: typing.Final[CDNRoute] = CDNRoute("/embed/avatars/{discriminator}", {PNG}, sizable=False)
 CDN_USER_AVATAR: typing.Final[CDNRoute] = CDNRoute("/avatars/{user_id}/{hash}", {PNG, *JPEG_JPG, WEBP, GIF})

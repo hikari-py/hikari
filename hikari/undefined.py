@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = [
+__all__: typing.Sequence[str] = (
     "UNDEFINED",
     "UndefinedNoneOr",
     "UndefinedOr",
@@ -32,7 +32,7 @@ __all__: typing.List[str] = [
     "all_undefined",
     "any_undefined",
     "count",
-]
+)
 
 import typing
 

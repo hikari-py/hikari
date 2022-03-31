@@ -23,7 +23,7 @@
 """Application and entities that are used to describe guild scheduled events on Discord."""
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = [
+__all__: typing.Sequence[str] = (
     "EventPrivacyLevel",
     "ScheduledEventType",
     "ScheduledEventStatus",
@@ -32,7 +32,7 @@ __all__: typing.Sequence[str] = [
     "ScheduledStageEvent",
     "ScheduledVoiceEvent",
     "ScheduledEventUser",
-]
+)
 
 import typing
 

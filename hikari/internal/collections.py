@@ -23,7 +23,7 @@
 """Custom data structures used within Hikari's core implementation."""
 from __future__ import annotations
 
-__all__: typing.List[str] = [
+__all__: typing.Sequence[str] = (
     "ExtendedMapT",
     "KeyT",
     "ValueT",
@@ -32,7 +32,7 @@ __all__: typing.List[str] = [
     "FreezableDict",
     "LimitedCapacityCacheMap",
     "get_index_or_slice",
-]
+)
 
 import abc
 import array
