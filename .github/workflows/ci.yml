@@ -155,30 +155,6 @@ jobs:
           retention-days: 2
           if-no-files-found: error
 
-  deploy-master-docs:
-    if: github.event.event_name == 'push' && endsWith(github.ref, 'master')
-    needs: [docs]
-
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2.4.0
-
-      - name: Setup python
-        uses: actions/setup-python@v2.3.2
-        with:
-          python-version: 3.8
-
-      - name: Update master docs
-        env:
-          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
-          REPO_SLUG: ${{ github.repository }}
-          DOCUMENTATION_REPO_SLUG: hikari-py/hikari-docs
-        run: |
-          pip install nox
-          bash scripts/deploy-master-pages.sh
-
   # Allows us to add this as a required check in Github branch rules, as all the other jobs are subject to change
   ci-done:
     # All new need jobs need to also be added to "env" with the prefix "RESULT_"

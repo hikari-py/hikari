@@ -25,8 +25,6 @@ env | grep -oP "^[^=]+" | sort
 
 if [ -z ${VERSION+x} ]; then echo '$VERSION environment variable is missing' && exit 1; fi
 if [ -z "${VERSION}" ]; then echo '$VERSION environment variable is empty' && exit 1; fi
-if [ -z ${REF+x} ]; then echo '$REF environment variable is missing' && exit 1; fi
-if [ -z "${REF}" ]; then echo '$REF environment variable is empty' && exit 1; fi
 if [ -z ${GITHUB_TOKEN+x} ]; then echo '$GITHUB_TOKEN environment variable is missing' && exit 1; fi
 if [ -z "${GITHUB_TOKEN}" ]; then echo '$GITHUB_TOKEN environment variable is empty' && exit 1; fi
 if [ -z ${REPO_SLUG+x} ]; then echo '$REPO_SLUG environment variable is missing' && exit 1; fi
@@ -35,6 +33,9 @@ if [ -z ${DOCUMENTATION_REPO_SLUG+x} ]; then echo '$DOCUMENTATION_REPO_SLUG envi
 if [ -z "${DOCUMENTATION_REPO_SLUG}" ]; then echo '$DOCUMENTATION_REPO_SLUG environment variable is empty' && exit 1; fi
 
 if [ "${VERSION}" != "master" ]; then
+  if [ -z ${REF+x} ]; then echo '$REF environment variable is missing' && exit 1; fi
+  if [ -z "${REF}" ]; then echo '$REF environment variable is empty' && exit 1; fi
+
   regex='__version__: typing\.Final\[str\] = "([^"]*)"'
   if [[ $(cat hikari/_about.py) =~ $regex ]]; then
     if [ "${BASH_REMATCH[1]}" != "${VERSION}" ]; then
@@ -43,6 +44,8 @@ if [ "${VERSION}" != "master" ]; then
   else
     echo "Variable '__version__' not found in about!" && exit 1
   fi
+else
+  REF="MASTER"
 fi
 
 rm -rf public
@@ -54,8 +57,7 @@ sed "/^__git_sha1__.*/, \${s||__git_sha1__: typing.Final[str] = \"${REF}\"|g; b}
 nox -s pdoc
 cd public/docs || exit 1
 
-# We do it here before we create the empty repository
-if [ "${REF}" == "MASTER" ]; then
+if [ "${VERSION}" == "master" ]; then
   REF="$(git rev-parse HEAD)"
 fi
 
@@ -66,4 +68,4 @@ git remote add origin "https://git:${GITHUB_TOKEN}@github.com/${DOCUMENTATION_RE
 git checkout -B "release/${VERSION}"
 git add -Av .
 git commit -am "Documentation for ${VERSION} [https://github.com/${REPO_SLUG}/commit/${REF}]"
-git push -u origin "release/${VERSION}" -f
+git push -u origin "release/${VERSION}/${REF}" -f
