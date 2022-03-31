@@ -27,45 +27,18 @@ if [ -z ${VERSION+x} ]; then echo '$VERSION environment variable is missing' && 
 if [ -z "${VERSION}" ]; then echo '$VERSION environment variable is empty' && exit 1; fi
 if [ -z ${GITHUB_TOKEN+x} ]; then echo '$GITHUB_TOKEN environment variable is missing' && exit 1; fi
 if [ -z "${GITHUB_TOKEN}" ]; then echo '$GITHUB_TOKEN environment variable is empty' && exit 1; fi
-if [ -z ${REPO_SLUG+x} ]; then echo '$REPO_SLUG environment variable is missing' && exit 1; fi
-if [ -z "${REPO_SLUG}" ]; then echo '$REPO_SLUG environment variable is empty' && exit 1; fi
 if [ -z ${DOCUMENTATION_REPO_SLUG+x} ]; then echo '$DOCUMENTATION_REPO_SLUG environment variable is missing' && exit 1; fi
 if [ -z "${DOCUMENTATION_REPO_SLUG}" ]; then echo '$DOCUMENTATION_REPO_SLUG environment variable is empty' && exit 1; fi
 
-if [ "${VERSION}" != "master" ]; then
-  if [ -z ${REF+x} ]; then echo '$REF environment variable is missing' && exit 1; fi
-  if [ -z "${REF}" ]; then echo '$REF environment variable is empty' && exit 1; fi
-
-  regex='__version__: typing\.Final\[str\] = "([^"]*)"'
-  if [[ $(cat hikari/_about.py) =~ $regex ]]; then
-    if [ "${BASH_REMATCH[1]}" != "${VERSION}" ]; then
-      echo "Variable '__version__' does not match the version this deploy is for! [__version__='${BASH_REMATCH[1]}'; VERSION='${VERSION}']" && exit 1
-    fi
-  else
-    echo "Variable '__version__' not found in about!" && exit 1
-  fi
-else
-  REF="MASTER"
-fi
-
-rm -rf public
-mkdir public
-
-echo "-- Setting __git_sha1__ to '${REF}' --"
-sed "/^__git_sha1__.*/, \${s||__git_sha1__: typing.Final[str] = \"${REF}\"|g; b}; \$q1" -i hikari/_about.py || (echo "Variable '__git_sha1__' not found in about!" && exit 1)
-
-nox -s pdoc
-cd public/docs || exit 1
-
-if [ "${VERSION}" == "master" ]; then
-  REF="$(git rev-parse HEAD)"
-fi
-
-echo "===== DEPLOYING PAGES ====="
-git init
-git remote add origin "https://git:${GITHUB_TOKEN}@github.com/${DOCUMENTATION_REPO_SLUG}"
-
-git checkout -B "release/${VERSION}"
-git add -Av .
-git commit -am "Documentation for ${VERSION} [https://github.com/${REPO_SLUG}/commit/${REF}]"
-git push -u origin "release/${VERSION}/${REF}" -f
+echo "===== TRIGGERING WORKFLOW IN ${DOCUMENTATION_REPO_SLUG} ====="
+curl \
+  -X POST \
+  -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+  -H "Accept: application/vnd.github.v3+json" \
+  "https://api.github.com/repos/${DOCUMENTATION_REPO_SLUG}/actions/workflows/deploy-docs.yml/dispatches" \
+  -d '{
+    "ref": "master",
+    "inputs": {
+      "version": "'"${VERSION}"'"
+    }
+  }'

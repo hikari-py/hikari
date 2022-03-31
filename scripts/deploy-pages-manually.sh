@@ -29,16 +29,7 @@ posix_read() {
 }
 
 posix_read "Tag ('master' for master documentation)" VERSION
-posix_read "GitHub deploy token (must have permissions to push to the documentation repository)" GITHUB_TOKEN
-posix_read "Repository slug (e.g. hikari-py/hikari)" REPO_SLUG
 posix_read "Documentation repository slug (e.g. hikari-py/hikari-docs)" DOCUMENTATION_REPO_SLUG
-
-if [ "${VERSION}" != "master" ]; then
-  git checkout "${VERSION}"
-  export REF=$(git rev-parse HEAD)
-  echo "Detected REF to be ${REF}"
-else
-  export REF="MASTER"
-fi
+posix_read "Github token (must have permissions to push to the documentation repository and trigger workflows)" GITHUB_TOKEN
 
 bash scripts/deploy-pages.sh
