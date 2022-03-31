@@ -30,6 +30,6 @@ posix_read() {
 
 posix_read "Tag ('master' for master documentation)" VERSION
 posix_read "Documentation repository slug (e.g. hikari-py/hikari-docs)" DOCUMENTATION_REPO_SLUG
-posix_read "Github token (must have permissions to push to the documentation repository and trigger workflows)" GITHUB_TOKEN
+posix_read "Github token (must have permissions to trigger workflows in the documentation repository)" GITHUB_TOKEN
 
 bash scripts/deploy-pages.sh
