@@ -89,7 +89,7 @@ bot.run(
 )
 ```
 
-[Many other helpful options](https://www.hikari-py.dev/docs/stable/hikari/impl/bot.html#hikari.impl.bot.GatewayBot.run)
+[Many other helpful options](https://docs.hikari-py.dev/stable/hikari/impl/bot.html#GatewayBot.run)
 exist for you to take advantage of if you wish.
 
 Events are determined by the type annotation on the event parameter, or alternatively as a type passed to the
