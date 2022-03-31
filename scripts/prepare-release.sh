@@ -26,8 +26,6 @@ env | grep -oP "^[^=]+" | sort
 
 if [ -z ${VERSION+x} ]; then echo '$VERSION environment variable is missing' && exit 1; fi
 if [ -z "${VERSION}" ]; then echo '$VERSION environment variable is empty' && exit 1; fi
-if [ -z ${GITHUB_TOKEN+x} ]; then echo '$GITHUB_TOKEN environment variable is missing' && exit 1; fi
-if [ -z "${GITHUB_TOKEN}" ]; then echo '$GITHUB_TOKEN environment variable is empty' && exit 1; fi
 
 echo "===== INSTALLING DEPENDENCIES ====="
 pip install towncrier

@@ -30,8 +30,6 @@ env | grep -oP "^[^=]+" | sort
 
 if [ -z ${VERSION+x} ]; then echo '$VERSION environment variable is missing' && exit 1; fi
 if [ -z "${VERSION}" ]; then echo '$VERSION environment variable is empty' && exit 1; fi
-if [ -z ${REF+x} ]; then echo '$REF environment variable is missing' && exit 1; fi
-if [ -z "${REF}" ]; then echo '$REF environment variable is empty' && exit 1; fi
 if [ -z ${GITHUB_TOKEN+x} ]; then echo '$GITHUB_TOKEN environment variable is missing' && exit 1; fi
 if [ -z "${GITHUB_TOKEN}" ]; then echo '$GITHUB_TOKEN environment variable is empty' && exit 1; fi
 if [ -z ${REPO_SLUG+x} ]; then echo '$REPO_SLUG environment variable is missing' && exit 1; fi
@@ -62,6 +60,8 @@ pip install wheel
 pip install twine
 pip install nox
 pip install -r requirements.txt
+
+REF=$(git rev-parse HEAD)
 
 echo "===== DEPLOYING TO PYPI ====="
 echo "-- Setting __git_sha1__ (ref: ${REF}) --"

@@ -37,7 +37,6 @@ jobs:
       - name: Run prepare script
         env:
           VERSION: ${{ github.event.inputs.version }}
-          GITHUB_TOKEN: ${{ steps.generate_token.outputs.token }}
         run: bash scripts/prepare-release.sh
 
       - name: Create pull request

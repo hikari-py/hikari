@@ -36,8 +36,4 @@ posix_read "Twine password" TWINE_PASSWORD
 posix_read "Github token (must have permissions to trigger workflows in the documentation repository)" GITHUB_TOKEN
 posix_read "Discord deployment webhook URL" DEPLOY_WEBHOOK_URL
 
-git checkout "${VERSION}"
-export REF=$(git rev-parse HEAD)
-echo "Detected REF to be ${REF}"
-
 bash scripts/deploy.sh
