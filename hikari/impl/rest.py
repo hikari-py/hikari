@@ -2768,16 +2768,20 @@ class RESTClientImpl(rest_api.RESTClient):
     def fetch_bans(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        /,
         *,
-        before: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
-        after: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
+        newest_first: bool = False,
+        start_at: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[guilds.GuildBan]:
+        if start_at is undefined.UNDEFINED:
+            start_at = snowflakes.Snowflake.max() if newest_first else snowflakes.Snowflake.min()
+        elif isinstance(start_at, datetime.datetime):
+            start_at = snowflakes.Snowflake.from_datetime(start_at)
+        else:
+            start_at = int(start_at)
+
         return special_endpoints_impl.GuildBanIterator(
-            entity_factory=self._entity_factory,
-            request_call=self._request,
-            guild=guild,
-            first_id=after,
-            last_id=before,
+            self._entity_factory, self._request, guild, newest_first, str(start_at)
         )
 
     async def fetch_roles(

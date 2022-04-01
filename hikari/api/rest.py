@@ -5501,9 +5501,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     def fetch_bans(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        /,
         *,
-        before: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
-        after: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
+        newest_first: bool = False,
+        start_at: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[guilds.GuildBan]:
         """Fetch the bans of a guild.
 
@@ -5515,14 +5516,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        before : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]]
-            If provided, filter to only actions before this snowflake or user.
-        after : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]]
-            If provided, filter to only actions after this snowflake or user.
+        newest_first : builtins.bool
+            Whether to fetch the newest first or the oldest first.
 
-        !!! note
-            Bans will always be returned in ascending order by user ID.
-            If both before and after are provided, only before is respected.
+            Defaults to `builtins.False`.
+        start_at : undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[users.PartialUser]]
+            If provided, will start at this snowflake. If you provide
+            a datetime object, it will be transformed into a snowflake. This
+            may also be a scheduled event object object. In this case, the
+            date the object was first created will be used.
 
         Returns
         -------

@@ -1043,69 +1043,58 @@ class TestRESTClientImpl:
         assert reason is mock_unban_user.return_value
         mock_unban_user.assert_called_once_with(123, 321, reason="ayaya")
 
-    def test_fetch_bans_when_before_is_undefined(self, rest_client):
-        guild = StubModel(123)
-        after = StubModel(789)
-        stub_iterator = mock.Mock()
+    def test_fetch_bans(self, rest_client: rest.RESTClientImpl):
+        with mock.patch.object(special_endpoints, "GuildBanIterator") as iterator_cls:
+            iterator = rest_client.fetch_bans(187, newest_first=True, start_at=StubModel(65652342134))
 
-        with mock.patch.object(special_endpoints, "GuildBanIterator", return_value=stub_iterator) as iterator:
-            assert rest_client.fetch_bans(guild, after=after) == stub_iterator
+        iterator_cls.assert_called_once_with(
+            rest_client._entity_factory,
+            rest_client._request,
+            187,
+            True,
+            "65652342134",
+        )
+        assert iterator is iterator_cls.return_value
 
-            iterator.assert_called_once_with(
-                entity_factory=rest_client._entity_factory,
-                request_call=rest_client._request,
-                guild=guild,
-                first_id=after,
-                last_id=undefined.UNDEFINED,
-            )
+    def test_fetch_bans_when_datetime_for_start_at(self, rest_client: rest.RESTClientImpl):
+        start_at = datetime.datetime(2022, 3, 6, 12, 1, 58, 415625, tzinfo=datetime.timezone.utc)
+        with mock.patch.object(special_endpoints, "GuildBanIterator") as iterator_cls:
+            iterator = rest_client.fetch_bans(9000, newest_first=True, start_at=start_at)
 
-    def test_fetch_bans_when_after_is_undefined(self, rest_client):
-        guild = StubModel(123)
-        before = StubModel(456)
-        stub_iterator = mock.Mock()
+        iterator_cls.assert_called_once_with(
+            rest_client._entity_factory,
+            rest_client._request,
+            9000,
+            True,
+            "950000286338908160",
+        )
+        assert iterator is iterator_cls.return_value
 
-        with mock.patch.object(special_endpoints, "GuildBanIterator", return_value=stub_iterator) as iterator:
-            assert rest_client.fetch_bans(guild, before=before) == stub_iterator
+    def test_fetch_bans_when_start_at_undefined(self, rest_client: rest.RESTClientImpl):
+        with mock.patch.object(special_endpoints, "GuildBanIterator") as iterator_cls:
+            iterator = rest_client.fetch_bans(8844)
 
-            iterator.assert_called_once_with(
-                entity_factory=rest_client._entity_factory,
-                request_call=rest_client._request,
-                guild=guild,
-                last_id=before,
-                first_id=undefined.UNDEFINED,
-            )
+        iterator_cls.assert_called_once_with(
+            rest_client._entity_factory,
+            rest_client._request,
+            8844,
+            False,
+            str(snowflakes.Snowflake.min()),
+        )
+        assert iterator is iterator_cls.return_value
 
-    def test_fetch_bans_when_before_and_after_are_undefined(self, rest_client):
-        guild = StubModel(123)
-        stub_iterator = mock.Mock()
+    def test_fetch_bans_when_start_at_undefined_and_newest_first(self, rest_client: rest.RESTClientImpl):
+        with mock.patch.object(special_endpoints, "GuildBanIterator") as iterator_cls:
+            iterator = rest_client.fetch_bans(3848, newest_first=True)
 
-        with mock.patch.object(special_endpoints, "GuildBanIterator", return_value=stub_iterator) as iterator:
-            assert rest_client.fetch_bans(guild) == stub_iterator
-
-            iterator.assert_called_once_with(
-                entity_factory=rest_client._entity_factory,
-                request_call=rest_client._request,
-                guild=guild,
-                last_id=undefined.UNDEFINED,
-                first_id=undefined.UNDEFINED,
-            )
-
-    def test_fetch_bans_when_before_and_after_are_provided(self, rest_client):
-        guild = StubModel(123)
-        before = StubModel(456)
-        after = StubModel(789)
-        stub_iterator = mock.Mock()
-
-        with mock.patch.object(special_endpoints, "GuildBanIterator", return_value=stub_iterator) as iterator:
-            assert rest_client.fetch_bans(guild, before=before, after=after) == stub_iterator
-
-            iterator.assert_called_once_with(
-                entity_factory=rest_client._entity_factory,
-                request_call=rest_client._request,
-                guild=guild,
-                last_id=before,
-                first_id=after,
-            )
+        iterator_cls.assert_called_once_with(
+            rest_client._entity_factory,
+            rest_client._request,
+            3848,
+            True,
+            str(snowflakes.Snowflake.max()),
+        )
+        assert iterator is iterator_cls.return_value
 
     def test_command_builder(self, rest_client):
         with warnings.catch_warnings():
