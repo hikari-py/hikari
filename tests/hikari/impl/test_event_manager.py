@@ -438,6 +438,29 @@ class TestEventManagerImpl:
         assert mock_event.chunk_nonce == "123.abc"
         stateless_event_manager_impl.dispatch.assert_awaited_once_with(mock_event)
 
+    @pytest.mark.parametrize("cache_enabled", [True, False])
+    @pytest.mark.parametrize("large", [True, False])
+    @pytest.mark.parametrize("enabled_for_event", [True, False])
+    @pytest.mark.asyncio()
+    async def test_on_guild_create_when_chunk_members_disabled(
+        self,
+        stateless_event_manager_impl,
+        shard,
+        large,
+        cache_enabled,
+        enabled_for_event,
+    ):
+        shard.id = 123
+        stateless_event_manager_impl._intents = intents.Intents.GUILD_MEMBERS
+        stateless_event_manager_impl._cache_enabled_for = mock.Mock(return_value=cache_enabled)
+        stateless_event_manager_impl._enabled_for_event = mock.Mock(return_value=enabled_for_event)
+        stateless_event_manager_impl._chunk_members = False
+
+        with mock.patch.object(event_manager, "_request_guild_members") as request_guild_members:
+            await stateless_event_manager_impl.on_guild_create(shard, {"id": 456, "large": large})
+
+        request_guild_members.assert_not_called()
+
     @pytest.mark.asyncio()
     async def test_on_guild_update_when_stateless(
         self, stateless_event_manager_impl, shard, event_factory, entity_factory
