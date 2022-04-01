@@ -1365,7 +1365,8 @@ class TestRESTClientImpl:
         assert isinstance(result, special_endpoints.InteractionAutocompleteBuilder)
         assert len(result.choices) == 2
 
-        raw = result.build(mock.Mock())
+        raw, files = result.build(mock.Mock())
+        assert files == ()
         assert raw["data"] == {"choices": [{"name": "name", "value": "value"}, {"name": "a", "value": "b"}]}
 
     def test_interaction_autocomplete_builder_with_set_choices(self, rest_client):
@@ -3368,13 +3369,35 @@ class TestRESTClientImplAsync:
             "token",
             StubModel(123),
             StubModel(456),
-            nick="cool nick",
+            nickname="cool nick",
             roles=[StubModel(234), StubModel(567)],
             mute=True,
             deaf=False,
         )
         assert returned is member
 
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
+        rest_client._entity_factory.deserialize_member.assert_called_once_with({"id": "789"}, guild_id=123)
+
+    async def test_add_user_to_guild_with_deprecated_nick_field(self, rest_client):
+        member = StubModel(789)
+        expected_route = routes.PUT_GUILD_MEMBER.compile(guild=123, user=456)
+        expected_json = {"access_token": "token", "nick": "cool nick2"}
+        rest_client._request = mock.AsyncMock(return_value={"id": "789"})
+        rest_client._entity_factory.deserialize_member = mock.Mock(return_value=member)
+
+        with pytest.warns(
+            DeprecationWarning,
+            match="'nick' is deprecated and will be removed in a following version. You can use 'nickname' instead.",
+        ):
+            returned = await rest_client.add_user_to_guild(
+                "token",
+                StubModel(123),
+                StubModel(456),
+                nick="cool nick2",
+            )
+
+        assert returned is member
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
         rest_client._entity_factory.deserialize_member.assert_called_once_with({"id": "789"}, guild_id=123)
 
@@ -4015,7 +4038,7 @@ class TestRESTClientImplAsync:
         result = await rest_client.edit_member(
             StubModel(123),
             StubModel(456),
-            nick="test",
+            nickname="test",
             roles=[StubModel(654), StubModel(321)],
             mute=True,
             deaf=False,
@@ -4030,6 +4053,24 @@ class TestRESTClientImplAsync:
         )
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="because i can")
 
+    async def test_edit_member_with_deprecated_nick_field(self, rest_client):
+        expected_route = routes.PATCH_GUILD_MEMBER.compile(guild=123, user=456)
+        expected_json = {"nick": "eeeeeestrogen"}
+        rest_client._request = mock.AsyncMock(return_value={"id": "789"})
+
+        with pytest.warns(
+            DeprecationWarning,
+            match="'nick' is deprecated and will be removed in a following version. You can use 'nickname' instead.",
+        ):
+            result = await rest_client.edit_member(StubModel(123), StubModel(456), nick="eeeeeestrogen")
+
+        assert result is rest_client._entity_factory.deserialize_member.return_value
+
+        rest_client._entity_factory.deserialize_member.assert_called_once_with(
+            rest_client._request.return_value, guild_id=123
+        )
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason=undefined.UNDEFINED)
+
     async def test_edit_member_when_voice_channel_is_None(self, rest_client):
         expected_route = routes.PATCH_GUILD_MEMBER.compile(guild=123, user=456)
         expected_json = {"nick": "test", "roles": ["654", "321"], "mute": True, "deaf": False, "channel_id": None}
@@ -4038,7 +4079,7 @@ class TestRESTClientImplAsync:
         result = await rest_client.edit_member(
             StubModel(123),
             StubModel(456),
-            nick="test",
+            nickname="test",
             roles=[StubModel(654), StubModel(321)],
             mute=True,
             deaf=False,

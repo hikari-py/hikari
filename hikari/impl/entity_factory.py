@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["EntityFactoryImpl"]
+__all__: typing.Sequence[str] = ("EntityFactoryImpl",)
 
 import datetime
 import logging
@@ -66,7 +66,12 @@ from hikari.internal import attr_extensions
 from hikari.internal import data_binding
 from hikari.internal import time
 
-_ValueT = typing.TypeVar("_ValueT")
+if typing.TYPE_CHECKING:
+    ValueT = typing.TypeVar("ValueT")
+    EntityT = typing.TypeVar("EntityT")
+    UndefinedSnowflakeMapping = undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, EntityT]]
+
+
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.entity_factory")
 
 _interaction_option_type_mapping: typing.Dict[int, typing.Callable[[typing.Any], typing.Any]] = {
@@ -78,7 +83,7 @@ _interaction_option_type_mapping: typing.Dict[int, typing.Callable[[typing.Any],
 }
 
 
-def _with_int_cast(cast: typing.Callable[[int], _ValueT]) -> typing.Callable[[typing.Any], _ValueT]:
+def _with_int_cast(cast: typing.Callable[[int], ValueT]) -> typing.Callable[[typing.Any], ValueT]:
     """Wrap a cast to ensure the value passed to it will first be cast to int."""
     return lambda value: cast(int(value))
 
@@ -153,6 +158,57 @@ class _GuildFields:
     public_updates_channel_id: typing.Optional[snowflakes.Snowflake] = attr.field()
     nsfw_level: guild_models.GuildNSFWLevel = attr.field()
 
+    @classmethod
+    def from_payload(cls, payload: data_binding.JSONObject) -> _GuildFields:
+        afk_channel_id = payload["afk_channel_id"]
+        default_message_notifications = guild_models.GuildMessageNotificationsLevel(
+            payload["default_message_notifications"]
+        )
+        application_id = payload["application_id"]
+        widget_channel_id = payload.get("widget_channel_id")
+        system_channel_id = payload["system_channel_id"]
+        rules_channel_id = payload["rules_channel_id"]
+        max_video_channel_users = (
+            int(payload["max_video_channel_users"]) if "max_video_channel_users" in payload else None
+        )
+        public_updates_channel_id = payload["public_updates_channel_id"]
+        public_updates_channel_id = (
+            snowflakes.Snowflake(public_updates_channel_id) if public_updates_channel_id is not None else None
+        )
+        return _GuildFields(
+            id=snowflakes.Snowflake(payload["id"]),
+            name=payload["name"],
+            icon_hash=payload["icon"],
+            features=[guild_models.GuildFeature(feature) for feature in payload["features"]],
+            splash_hash=payload["splash"],
+            # This is documented as always being present, but we have found old guilds where this is
+            # not present. Quicker to just assume the documentation is wrong at this point than try
+            # to contest whether this is right or not with Discord.
+            discovery_splash_hash=payload.get("discovery_splash"),
+            owner_id=snowflakes.Snowflake(payload["owner_id"]),
+            afk_channel_id=snowflakes.Snowflake(afk_channel_id) if afk_channel_id is not None else None,
+            afk_timeout=datetime.timedelta(seconds=payload["afk_timeout"]),
+            verification_level=guild_models.GuildVerificationLevel(payload["verification_level"]),
+            default_message_notifications=default_message_notifications,
+            explicit_content_filter=guild_models.GuildExplicitContentFilterLevel(payload["explicit_content_filter"]),
+            mfa_level=guild_models.GuildMFALevel(payload["mfa_level"]),
+            application_id=snowflakes.Snowflake(application_id) if application_id is not None else None,
+            widget_channel_id=snowflakes.Snowflake(widget_channel_id) if widget_channel_id is not None else None,
+            system_channel_id=snowflakes.Snowflake(system_channel_id) if system_channel_id is not None else None,
+            is_widget_enabled=payload.get("widget_enabled"),
+            system_channel_flags=guild_models.GuildSystemChannelFlag(payload["system_channel_flags"]),
+            rules_channel_id=snowflakes.Snowflake(rules_channel_id) if rules_channel_id is not None else None,
+            max_video_channel_users=max_video_channel_users,
+            vanity_url_code=payload["vanity_url_code"],
+            description=payload["description"],
+            banner_hash=payload["banner"],
+            premium_tier=guild_models.GuildPremiumTier(payload["premium_tier"]),
+            premium_subscription_count=payload.get("premium_subscription_count"),
+            preferred_locale=locales.Locale(payload["preferred_locale"]),
+            public_updates_channel_id=public_updates_channel_id,
+            nsfw_level=guild_models.GuildNSFWLevel(payload["nsfw_level"]),
+        )
+
 
 @attr_extensions.with_copy
 @attr.define(kw_only=True, repr=False, weakref_slot=False)
@@ -181,6 +237,153 @@ class _UserFields:
     accent_color: typing.Optional[color_models.Color] = attr.field()
     is_bot: bool = attr.field()
     is_system: bool = attr.field()
+
+
+@attr_extensions.with_copy
+@attr.define(weakref_slot=False)
+class _GatewayGuildDefinition(entity_factory.GatewayGuildDefinition):
+    id: snowflakes.Snowflake = attr.field()
+    _payload: data_binding.JSONObject = attr.field()
+    _entity_factory: EntityFactoryImpl = attr.field()
+    # These will get deserialized as needed
+    _channels: UndefinedSnowflakeMapping[channel_models.GuildChannel] = attr.field(
+        init=False, default=undefined.UNDEFINED
+    )
+    _guild: undefined.UndefinedOr[guild_models.GatewayGuild] = attr.field(init=False, default=undefined.UNDEFINED)
+    _emojis: UndefinedSnowflakeMapping[emoji_models.KnownCustomEmoji] = attr.field(
+        init=False, default=undefined.UNDEFINED
+    )
+    _members: UndefinedSnowflakeMapping[guild_models.Member] = attr.field(init=False, default=undefined.UNDEFINED)
+    _presences: UndefinedSnowflakeMapping[presence_models.MemberPresence] = attr.field(
+        init=False, default=undefined.UNDEFINED
+    )
+    _roles: UndefinedSnowflakeMapping[guild_models.Role] = attr.field(init=False, default=undefined.UNDEFINED)
+    _voice_states: UndefinedSnowflakeMapping[voice_models.VoiceState] = attr.field(
+        init=False, default=undefined.UNDEFINED
+    )
+
+    def channels(self) -> typing.Mapping[snowflakes.Snowflake, channel_models.GuildChannel]:
+        if self._channels is undefined.UNDEFINED:
+            if "channels" not in self._payload:
+                raise LookupError("'channels' not in payload")
+
+            self._channels = {}
+
+            for channel_payload in self._payload["channels"]:
+                try:
+                    channel = self._entity_factory.deserialize_channel(channel_payload, guild_id=self.id)
+                except errors.UnrecognisedEntityError:
+                    # Ignore the channel, this has already been logged
+                    continue
+
+                assert isinstance(channel, channel_models.GuildChannel)
+                self._channels[channel.id] = channel
+
+        return self._channels
+
+    def emojis(self) -> typing.Mapping[snowflakes.Snowflake, emoji_models.KnownCustomEmoji]:
+        if self._emojis is undefined.UNDEFINED:
+            self._emojis = {
+                snowflakes.Snowflake(e["id"]): self._entity_factory.deserialize_known_custom_emoji(e, guild_id=self.id)
+                for e in self._payload["emojis"]
+            }
+
+        return self._emojis
+
+    def guild(self) -> guild_models.GatewayGuild:
+        if self._guild is undefined.UNDEFINED:
+            payload = self._payload
+            guild_fields = _GuildFields.from_payload(payload)
+            self._guild = guild_models.GatewayGuild(
+                app=self._entity_factory.app,
+                id=guild_fields.id,
+                name=guild_fields.name,
+                icon_hash=guild_fields.icon_hash,
+                features=guild_fields.features,
+                splash_hash=guild_fields.splash_hash,
+                discovery_splash_hash=guild_fields.discovery_splash_hash,
+                owner_id=guild_fields.owner_id,
+                afk_channel_id=guild_fields.afk_channel_id,
+                afk_timeout=guild_fields.afk_timeout,
+                verification_level=guild_fields.verification_level,
+                default_message_notifications=guild_fields.default_message_notifications,
+                explicit_content_filter=guild_fields.explicit_content_filter,
+                mfa_level=guild_fields.mfa_level,
+                application_id=guild_fields.application_id,
+                widget_channel_id=guild_fields.widget_channel_id,
+                system_channel_id=guild_fields.system_channel_id,
+                is_widget_enabled=guild_fields.is_widget_enabled,
+                system_channel_flags=guild_fields.system_channel_flags,
+                rules_channel_id=guild_fields.rules_channel_id,
+                max_video_channel_users=guild_fields.max_video_channel_users,
+                vanity_url_code=guild_fields.vanity_url_code,
+                description=guild_fields.description,
+                banner_hash=guild_fields.banner_hash,
+                premium_tier=guild_fields.premium_tier,
+                premium_subscription_count=guild_fields.premium_subscription_count,
+                preferred_locale=guild_fields.preferred_locale,
+                public_updates_channel_id=guild_fields.public_updates_channel_id,
+                nsfw_level=guild_fields.nsfw_level,
+                is_large=payload.get("large"),
+                joined_at=(
+                    time.iso8601_datetime_string_to_datetime(payload["joined_at"]) if "joined_at" in payload else None
+                ),
+                member_count=int(payload["member_count"]) if "member_count" in payload else None,
+            )
+
+        return self._guild
+
+    def members(self) -> typing.Mapping[snowflakes.Snowflake, guild_models.Member]:
+        if self._members is undefined.UNDEFINED:
+            if "members" not in self._payload:
+                raise LookupError("'members' not in payload")
+
+            self._members = {
+                snowflakes.Snowflake(m["user"]["id"]): self._entity_factory.deserialize_member(m, guild_id=self.id)
+                for m in self._payload["members"]
+            }
+
+        return self._members
+
+    def presences(self) -> typing.Mapping[snowflakes.Snowflake, presence_models.MemberPresence]:
+        if self._presences is undefined.UNDEFINED:
+            if "presences" not in self._payload:
+                raise LookupError("'presences' not in payload")
+
+            self._presences = {
+                snowflakes.Snowflake(p["user"]["id"]): self._entity_factory.deserialize_member_presence(
+                    p, guild_id=self.id
+                )
+                for p in self._payload["presences"]
+            }
+
+        return self._presences
+
+    def roles(self) -> typing.Mapping[snowflakes.Snowflake, guild_models.Role]:
+        if self._roles is undefined.UNDEFINED:
+            self._roles = {
+                snowflakes.Snowflake(r["id"]): self._entity_factory.deserialize_role(r, guild_id=self.id)
+                for r in self._payload["roles"]
+            }
+
+        return self._roles
+
+    def voice_states(self) -> typing.Mapping[snowflakes.Snowflake, voice_models.VoiceState]:
+        if self._voice_states is undefined.UNDEFINED:
+            if "voice_states" not in self._payload:
+                raise LookupError("'voice_states' not in payload")
+
+            members = self.members()
+            self._voice_states = {}
+
+            for voice_state_payload in self._payload["voice_states"]:
+                member = members[snowflakes.Snowflake(voice_state_payload["user_id"])]
+                voice_state = self._entity_factory.deserialize_voice_state(
+                    voice_state_payload, guild_id=self.id, member=member
+                )
+                self._voice_states[voice_state.user_id] = voice_state
+
+        return self._voice_states
 
 
 class EntityFactoryImpl(entity_factory.EntityFactory):
@@ -276,7 +479,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             channel_models.ChannelType.GUILD_CATEGORY: self.deserialize_guild_category,
             channel_models.ChannelType.GUILD_TEXT: self.deserialize_guild_text_channel,
             channel_models.ChannelType.GUILD_NEWS: self.deserialize_guild_news_channel,
-            channel_models.ChannelType.GUILD_STORE: self.deserialize_guild_store_channel,
             channel_models.ChannelType.GUILD_VOICE: self.deserialize_guild_voice_channel,
             channel_models.ChannelType.GUILD_STAGE: self.deserialize_guild_stage_channel,
         }
@@ -298,6 +500,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             webhook_models.WebhookType.CHANNEL_FOLLOWER: self.deserialize_channel_follower_webhook,
             webhook_models.WebhookType.APPLICATION: self.deserialize_application_webhook,
         }
+
+    @property
+    def app(self) -> traits.RESTAware:
+        """Object of the application this entity factory is bound to."""
+        return self._app
 
     ######################
     # APPLICATION MODELS #
@@ -354,7 +561,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 owner_id=snowflakes.Snowflake(team_payload["owner_user_id"]),
             )
 
-        primary_sku_id = snowflakes.Snowflake(payload["primary_sku_id"]) if "primary_sku_id" in payload else None
         return application_models.Application(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
@@ -364,14 +570,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             is_bot_code_grant_required=payload["bot_require_code_grant"],
             owner=self.deserialize_user(payload["owner"]),
             rpc_origins=payload.get("rpc_origins"),
-            summary=payload["summary"] or None,
             public_key=bytes.fromhex(payload["verify_key"]),
             flags=application_models.ApplicationFlags(payload["flags"]),
             icon_hash=payload.get("icon"),
             team=team,
-            guild_id=snowflakes.Snowflake(payload["guild_id"]) if "guild_id" in payload else None,
-            primary_sku_id=primary_sku_id,
-            slug=payload.get("slug"),
             cover_image_hash=payload.get("cover_image"),
             privacy_policy_url=payload.get("privacy_policy_url"),
             terms_of_service_url=payload.get("terms_of_service_url"),
@@ -386,7 +588,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=application_payload["name"],
             description=application_payload["description"] or None,
             icon_hash=application_payload.get("icon"),
-            summary=application_payload["summary"] or None,
             is_bot_public=application_payload.get("bot_public"),
             is_bot_code_grant_required=application_payload.get("bot_require_code_grant"),
             public_key=bytes.fromhex(application_payload["verify_key"]),
@@ -769,25 +970,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             topic=payload["topic"],
             last_message_id=last_message_id,
             last_pin_timestamp=last_pin_timestamp,
-        )
-
-    def deserialize_guild_store_channel(
-        self,
-        payload: data_binding.JSONObject,
-        *,
-        guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
-    ) -> channel_models.GuildStoreChannel:
-        channel_fields = self._set_guild_channel_attributes(payload, guild_id=guild_id)
-        return channel_models.GuildStoreChannel(
-            app=self._app,
-            id=channel_fields.id,
-            name=channel_fields.name,
-            type=channel_fields.type,
-            guild_id=channel_fields.guild_id,
-            position=channel_fields.position,
-            permission_overwrites=channel_fields.permission_overwrites,
-            is_nsfw=channel_fields.is_nsfw,
-            parent_id=channel_fields.parent_id,
         )
 
     def deserialize_guild_voice_channel(
@@ -1313,7 +1495,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 id=snowflakes.Snowflake(raw_application["id"]),
                 name=raw_application["name"],
                 icon_hash=raw_application["icon"],
-                summary=raw_application["summary"] or None,
                 description=raw_application["description"] or None,
                 bot=bot,
             )
@@ -1360,58 +1541,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             description=payload["description"],
         )
 
-    def _set_guild_attributes(self, payload: data_binding.JSONObject) -> _GuildFields:
-        afk_channel_id = payload["afk_channel_id"]
-        default_message_notifications = guild_models.GuildMessageNotificationsLevel(
-            payload["default_message_notifications"]
-        )
-        application_id = payload["application_id"]
-        widget_channel_id = payload.get("widget_channel_id")
-        system_channel_id = payload["system_channel_id"]
-        rules_channel_id = payload["rules_channel_id"]
-        max_video_channel_users = (
-            int(payload["max_video_channel_users"]) if "max_video_channel_users" in payload else None
-        )
-        public_updates_channel_id = payload["public_updates_channel_id"]
-        public_updates_channel_id = (
-            snowflakes.Snowflake(public_updates_channel_id) if public_updates_channel_id is not None else None
-        )
-        return _GuildFields(
-            id=snowflakes.Snowflake(payload["id"]),
-            name=payload["name"],
-            icon_hash=payload["icon"],
-            features=[guild_models.GuildFeature(feature) for feature in payload["features"]],
-            splash_hash=payload["splash"],
-            # This is documented as always being present, but we have found old guilds where this is
-            # not present. Quicker to just assume the documentation is wrong at this point than try
-            # to contest whether this is right or not with Discord.
-            discovery_splash_hash=payload.get("discovery_splash"),
-            owner_id=snowflakes.Snowflake(payload["owner_id"]),
-            afk_channel_id=snowflakes.Snowflake(afk_channel_id) if afk_channel_id is not None else None,
-            afk_timeout=datetime.timedelta(seconds=payload["afk_timeout"]),
-            verification_level=guild_models.GuildVerificationLevel(payload["verification_level"]),
-            default_message_notifications=default_message_notifications,
-            explicit_content_filter=guild_models.GuildExplicitContentFilterLevel(payload["explicit_content_filter"]),
-            mfa_level=guild_models.GuildMFALevel(payload["mfa_level"]),
-            application_id=snowflakes.Snowflake(application_id) if application_id is not None else None,
-            widget_channel_id=snowflakes.Snowflake(widget_channel_id) if widget_channel_id is not None else None,
-            system_channel_id=snowflakes.Snowflake(system_channel_id) if system_channel_id is not None else None,
-            is_widget_enabled=payload.get("widget_enabled"),
-            system_channel_flags=guild_models.GuildSystemChannelFlag(payload["system_channel_flags"]),
-            rules_channel_id=snowflakes.Snowflake(rules_channel_id) if rules_channel_id is not None else None,
-            max_video_channel_users=max_video_channel_users,
-            vanity_url_code=payload["vanity_url_code"],
-            description=payload["description"],
-            banner_hash=payload["banner"],
-            premium_tier=guild_models.GuildPremiumTier(payload["premium_tier"]),
-            premium_subscription_count=payload.get("premium_subscription_count"),
-            preferred_locale=locales.Locale(payload["preferred_locale"]),
-            public_updates_channel_id=public_updates_channel_id,
-            nsfw_level=guild_models.GuildNSFWLevel(payload["nsfw_level"]),
-        )
-
     def deserialize_rest_guild(self, payload: data_binding.JSONObject) -> guild_models.RESTGuild:
-        guild_fields = self._set_guild_attributes(payload)
+        guild_fields = _GuildFields.from_payload(payload)
 
         approximate_member_count: typing.Optional[int] = None
         if "approximate_member_count" in payload:
@@ -1473,96 +1604,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     def deserialize_gateway_guild(self, payload: data_binding.JSONObject) -> entity_factory.GatewayGuildDefinition:
-        guild_fields = self._set_guild_attributes(payload)
-        is_large = payload.get("large")
-        joined_at = time.iso8601_datetime_string_to_datetime(payload["joined_at"]) if "joined_at" in payload else None
-        member_count = int(payload["member_count"]) if "member_count" in payload else None
-
-        guild = guild_models.GatewayGuild(
-            app=self._app,
-            id=guild_fields.id,
-            name=guild_fields.name,
-            icon_hash=guild_fields.icon_hash,
-            features=guild_fields.features,
-            splash_hash=guild_fields.splash_hash,
-            discovery_splash_hash=guild_fields.discovery_splash_hash,
-            owner_id=guild_fields.owner_id,
-            afk_channel_id=guild_fields.afk_channel_id,
-            afk_timeout=guild_fields.afk_timeout,
-            verification_level=guild_fields.verification_level,
-            default_message_notifications=guild_fields.default_message_notifications,
-            explicit_content_filter=guild_fields.explicit_content_filter,
-            mfa_level=guild_fields.mfa_level,
-            application_id=guild_fields.application_id,
-            widget_channel_id=guild_fields.widget_channel_id,
-            system_channel_id=guild_fields.system_channel_id,
-            is_widget_enabled=guild_fields.is_widget_enabled,
-            system_channel_flags=guild_fields.system_channel_flags,
-            rules_channel_id=guild_fields.rules_channel_id,
-            max_video_channel_users=guild_fields.max_video_channel_users,
-            vanity_url_code=guild_fields.vanity_url_code,
-            description=guild_fields.description,
-            banner_hash=guild_fields.banner_hash,
-            premium_tier=guild_fields.premium_tier,
-            premium_subscription_count=guild_fields.premium_subscription_count,
-            preferred_locale=guild_fields.preferred_locale,
-            public_updates_channel_id=guild_fields.public_updates_channel_id,
-            nsfw_level=guild_fields.nsfw_level,
-            is_large=is_large,
-            joined_at=joined_at,
-            member_count=member_count,
-        )
-
-        members: typing.Optional[typing.Dict[snowflakes.Snowflake, guild_models.Member]] = None
-        if "members" in payload:
-            members = {}
-
-            for member_payload in payload["members"]:
-                member = self.deserialize_member(member_payload, guild_id=guild.id)
-                members[member.user.id] = member
-
-        channels: typing.Optional[typing.Dict[snowflakes.Snowflake, channel_models.GuildChannel]] = None
-        if "channels" in payload:
-            channels = {}
-
-            for channel_payload in payload["channels"]:
-                try:
-                    channel = self.deserialize_channel(channel_payload, guild_id=guild.id)
-                except errors.UnrecognisedEntityError:
-                    # Ignore the channel, this has already been logged
-                    continue
-
-                assert isinstance(channel, channel_models.GuildChannel)
-                channels[channel.id] = channel
-
-        presences: typing.Optional[typing.Dict[snowflakes.Snowflake, presence_models.MemberPresence]] = None
-        if "presences" in payload:
-            presences = {}
-
-            for presence_payload in payload["presences"]:
-                presence = self.deserialize_member_presence(presence_payload, guild_id=guild.id)
-                presences[presence.user_id] = presence
-
-        voice_states: typing.Optional[typing.Dict[snowflakes.Snowflake, voice_models.VoiceState]] = None
-        if "voice_states" in payload:
-            voice_states = {}
-            assert members is not None
-
-            for voice_state_payload in payload["voice_states"]:
-                member = members[snowflakes.Snowflake(voice_state_payload["user_id"])]
-                voice_state = self.deserialize_voice_state(voice_state_payload, guild_id=guild.id, member=member)
-                voice_states[voice_state.user_id] = voice_state
-
-        roles = {
-            snowflakes.Snowflake(role["id"]): self.deserialize_role(role, guild_id=guild.id)
-            for role in payload["roles"]
-        }
-        emojis = {
-            snowflakes.Snowflake(emoji["id"]): self.deserialize_known_custom_emoji(emoji, guild_id=guild.id)
-            for emoji in payload["emojis"]
-        }
-
-        return entity_factory.GatewayGuildDefinition(guild, channels, members, presences, roles, emojis, voice_states)
+        guild_id = snowflakes.Snowflake(payload["id"])
+        return _GatewayGuildDefinition(id=guild_id, payload=payload, entity_factory=self)
 
     #################
     # INVITE MODELS #
@@ -1610,7 +1653,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 id=snowflakes.Snowflake(invite_payload["id"]),
                 name=invite_payload["name"],
                 description=invite_payload["description"] or None,
-                summary=invite_payload["summary"] or None,
                 public_key=bytes.fromhex(invite_payload["verify_key"]),
                 icon_hash=invite_payload.get("icon"),
                 cover_image_hash=invite_payload.get("cover_image"),
@@ -1996,7 +2038,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             id=snowflakes.Snowflake(payload["id"]),
             type=base_interactions.InteractionType(payload["type"]),
             guild_id=guild_id,
-            guild_locale=locales.Locale(payload.get("guild_locale", "en-US")),
+            guild_locale=locales.Locale(payload["guild_locale"]) if "guild_locale" in payload else None,
             locale=locales.Locale(payload["locale"]),
             channel_id=snowflakes.Snowflake(payload["channel_id"]),
             member=member,
@@ -2054,7 +2096,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             options=options,
             resolved=resolved,
             locale=locales.Locale(payload["locale"]),
-            guild_locale=locales.Locale(payload.get("guild_locale")),
+            guild_locale=locales.Locale(payload["guild_locale"]) if "guild_locale" in payload else None,
         )
 
     def deserialize_modal_interaction(self, payload: data_binding.JSONObject) -> modal_interactions.ModalInteraction:
@@ -2176,7 +2218,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             component_type=message_models.ComponentType(data_payload["component_type"]),
             message=self.deserialize_message(payload["message"]),
             locale=locales.Locale(payload["locale"]),
-            guild_locale=locales.Locale(payload.get("guild_locale")),
+            guild_locale=locales.Locale(payload["guild_locale"]) if "guild_locale" in payload else None,
         )
 
     ##################
@@ -2307,18 +2349,12 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     def _deserialize_message_application(self, payload: data_binding.JSONObject) -> message_models.MessageApplication:
-        primary_sku_id: typing.Optional[snowflakes.Snowflake] = None
-        if (raw_primary_sku_id := payload.get("primary_sku_id")) is not None:
-            primary_sku_id = snowflakes.Snowflake(raw_primary_sku_id)
-
         return message_models.MessageApplication(
             id=snowflakes.Snowflake(payload["id"]),
             name=payload["name"],
             description=payload["description"] or None,
             icon_hash=payload["icon"],
-            summary=payload["summary"] or None,
             cover_image_hash=payload.get("cover_image"),
-            primary_sku_id=primary_sku_id,
         )
 
     def _deserialize_message_attachment(self, payload: data_binding.JSONObject) -> message_models.Attachment:
@@ -2978,7 +3014,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             is_bot=user_fields.is_bot,
             is_system=user_fields.is_system,
             is_mfa_enabled=payload["mfa_enabled"],
-            locale=locales.Locale(payload["locale"]),
+            locale=locales.Locale(payload["locale"]) if "locale" in payload else None,
             is_verified=payload.get("verified"),
             email=payload.get("email"),
             flags=user_models.UserFlag(payload["flags"]),

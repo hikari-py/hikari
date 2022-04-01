@@ -71,7 +71,8 @@ from hikari.commands import *
 from hikari.embeds import *
 from hikari.emojis import *
 from hikari.errors import *
-from hikari.events.base_events import *
+from hikari.events.base_events import Event
+from hikari.events.base_events import ExceptionEvent
 from hikari.events.channel_events import *
 from hikari.events.guild_events import *
 from hikari.events.interaction_events import *

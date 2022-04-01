@@ -24,14 +24,14 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = [
+__all__: typing.Sequence[str] = (
     "ApplicationWebhook",
     "ChannelFollowerWebhook",
     "ExecutableWebhook",
     "PartialWebhook",
     "WebhookType",
     "IncomingWebhook",
-]
+)
 
 import abc
 import typing

@@ -184,7 +184,7 @@ released or documented...
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["UNKNOWN_HASH", "RESTBucket", "RESTBucketManager"]
+__all__: typing.Sequence[str] = ("UNKNOWN_HASH", "RESTBucket", "RESTBucketManager")
 
 import asyncio
 import logging

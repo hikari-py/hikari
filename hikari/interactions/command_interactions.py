@@ -23,7 +23,7 @@
 """Models and enums used for Discord's Slash Commands interaction flow."""
 from __future__ import annotations
 
-__all__: typing.List[str] = [
+__all__: typing.Sequence[str] = (
     "AutocompleteInteraction",
     "BaseCommandInteraction",
     "CommandInteractionOption",
@@ -33,7 +33,7 @@ __all__: typing.List[str] = [
     "CommandResponseTypesT",
     "InteractionChannel",
     "ResolvedOptionData",
-]
+)
 
 import typing
 
@@ -171,10 +171,7 @@ class AutocompleteInteractionOption(CommandInteractionOption):
 @attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
 class BaseCommandInteraction(base_interactions.PartialInteraction):
-    """Represents a base command interaction on Discord.
-
-    May be a command interaction or an autocomplete interaction.
-    """
+    """Represents a base command interaction on Discord."""
 
     channel_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
     """ID of the channel this command interaction event was triggered in."""

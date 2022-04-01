@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = [
+__all__: typing.Sequence[str] = (
     "MessageType",
     "MessageFlag",
     "MessageActivityType",
@@ -46,7 +46,7 @@ __all__: typing.List[str] = [
     "InteractiveButtonTypesT",
     "ComponentType",
     "PartialComponent",
-]
+)
 
 import typing
 
@@ -426,14 +426,11 @@ class MessageApplication(guilds.PartialApplication):
     """The representation of an application used in messages."""
 
     cover_image_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
-    """The CDN's hash of this application's cover image, used on the store."""
-
-    primary_sku_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
-    """The ID of the primary "Game SKU" of a game that's sold on Discord."""
+    """The CDN's hash of this application's default rich presence invite cover image."""
 
     @property
     def cover_image_url(self) -> typing.Optional[files.URL]:
-        """Cover image URL used on the store.
+        """Rich presence cover image URL for this application, if set.
 
         Returns
         -------
@@ -443,7 +440,7 @@ class MessageApplication(guilds.PartialApplication):
         return self.make_cover_image_url()
 
     def make_cover_image_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
-        """Generate the cover image URL used in the store, if set.
+        """Generate the rich presence cover image URL for this application, if set.
 
         Parameters
         ----------

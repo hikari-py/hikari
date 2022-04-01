@@ -23,14 +23,15 @@
 """Base types and functions for events in Hikari."""
 from __future__ import annotations
 
-__all__: typing.List[str] = [
+__all__: typing.Sequence[str] = (
     "Event",
     "ExceptionEvent",
+    "EventT",
     "is_no_recursive_throw_event",
     "no_recursive_throw",
     "get_required_intents_for",
     "requires_intents",
-]
+)
 
 import abc
 import inspect
@@ -46,16 +47,41 @@ from hikari.internal import attr_extensions
 if typing.TYPE_CHECKING:
     import types
 
-    T = typing.TypeVar("T")
+    _T = typing.TypeVar("_T")
 
 REQUIRED_INTENTS_ATTR: typing.Final[str] = "___requiresintents___"
 NO_RECURSIVE_THROW_ATTR: typing.Final[str] = "___norecursivethrow___"
+
+_id_counter = 1  # We start at 1 since Event is 0
 
 
 class Event(abc.ABC):
     """Base event type that all Hikari events should subclass."""
 
     __slots__: typing.Sequence[str] = ()
+
+    __dispatches: typing.ClassVar[typing.Tuple[typing.Type[Event], ...]]
+    __bitmask: typing.ClassVar[int]
+
+    def __init_subclass__(cls) -> None:
+        super().__init_subclass__()
+        # hasattr doesn't work with private variables in this case so we use a try except.
+        # We need to set Event's __dispatches when the first subclass is made as Event cannot
+        # be included in a tuple literal on itself due to not existing yet.
+        try:
+            Event.__dispatches
+        except AttributeError:
+            Event.__dispatches = (Event,)
+            Event.__bitmask = 1 << 0
+
+        global _id_counter
+
+        mro = cls.mro()
+        # We don't have to explicitly include Event here as issubclass(Event, Event) returns True.
+        # Non-event classes should be ignored.
+        cls.__dispatches = tuple(sub_cls for sub_cls in mro if issubclass(sub_cls, Event))
+        cls.__bitmask = 1 << _id_counter
+        _id_counter += 1
 
     @property
     @abc.abstractmethod
@@ -67,6 +93,16 @@ class Event(abc.ABC):
         hikari.traits.RESTAware
             The REST-aware app trait.
         """
+
+    @classmethod
+    def dispatches(cls) -> typing.Sequence[typing.Type[Event]]:
+        """Sequence of the event classes this event is dispatched as."""
+        return cls.__dispatches
+
+    @classmethod
+    def bitmask(cls) -> int:
+        """Bitmask for this event."""
+        return cls.__bitmask
 
 
 def get_required_intents_for(event_type: typing.Type[Event]) -> typing.Collection[intents.Intents]:
@@ -88,7 +124,7 @@ def get_required_intents_for(event_type: typing.Type[Event]) -> typing.Collectio
     return result
 
 
-def requires_intents(first: intents.Intents, *rest: intents.Intents) -> typing.Callable[[T], T]:
+def requires_intents(first: intents.Intents, *rest: intents.Intents) -> typing.Callable[[_T], _T]:
     """Decorate an event type to define what intents it requires.
 
     Parameters
@@ -101,7 +137,7 @@ def requires_intents(first: intents.Intents, *rest: intents.Intents) -> typing.C
         event to be subscribed to.
     """
 
-    def decorator(cls: T) -> T:
+    def decorator(cls: _T) -> _T:
         required_intents = [first, *rest]
         setattr(cls, REQUIRED_INTENTS_ATTR, required_intents)
         doc = inspect.getdoc(cls) or ""
@@ -118,14 +154,14 @@ def requires_intents(first: intents.Intents, *rest: intents.Intents) -> typing.C
     return decorator
 
 
-def no_recursive_throw() -> typing.Callable[[typing.Type[T]], typing.Type[T]]:
+def no_recursive_throw() -> typing.Callable[[_T], _T]:
     """Decorate an event type to indicate errors should not be handled.
 
     This is useful for exception event types that you do not want to
     have invoked recursively.
     """
 
-    def decorator(cls: typing.Type[T]) -> typing.Type[T]:
+    def decorator(cls: _T) -> _T:
         setattr(cls, NO_RECURSIVE_THROW_ATTR, True)
         doc = inspect.getdoc(cls) or ""
         doc += (
@@ -143,21 +179,21 @@ def no_recursive_throw() -> typing.Callable[[typing.Type[T]], typing.Type[T]]:
     return decorator
 
 
-def is_no_recursive_throw_event(obj: typing.Union[T, typing.Type[T]]) -> bool:
+def is_no_recursive_throw_event(obj: typing.Union[_T, typing.Type[_T]]) -> bool:
     """Return True if this event is marked as `___norecursivethrow___`."""
     result = getattr(obj, NO_RECURSIVE_THROW_ATTR, False)
     assert isinstance(result, bool)
     return result
 
 
-FailedEventT = typing.TypeVar("FailedEventT", bound=Event)
-FailedCallbackT = typing.Callable[[FailedEventT], typing.Coroutine[typing.Any, typing.Any, None]]
+EventT = typing.TypeVar("EventT", bound=Event)
+FailedCallbackT = typing.Callable[[EventT], typing.Coroutine[typing.Any, typing.Any, None]]
 
 
 @no_recursive_throw()
 @attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
-class ExceptionEvent(Event, typing.Generic[FailedEventT]):
+class ExceptionEvent(Event, typing.Generic[EventT]):
     """Event that is raised when another event handler raises an `Exception`.
 
     !!! note
@@ -177,7 +213,7 @@ class ExceptionEvent(Event, typing.Generic[FailedEventT]):
         Exception that was raised in the event handler.
     """
 
-    failed_event: FailedEventT = attr.field()
+    failed_event: EventT = attr.field()
     """Event instance that caused the exception.
 
     Returns
@@ -186,7 +222,7 @@ class ExceptionEvent(Event, typing.Generic[FailedEventT]):
         Event that was being processed when the exception occurred.
     """
 
-    failed_callback: FailedCallbackT[FailedEventT] = attr.field()
+    failed_callback: FailedCallbackT[EventT] = attr.field()
     """Event callback that threw an exception.
 
     Returns

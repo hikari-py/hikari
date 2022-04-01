@@ -23,7 +23,7 @@
 """Various utilities that may be used in a cache-impl."""
 from __future__ import annotations
 
-__all__: typing.List[str] = [
+__all__: typing.Sequence[str] = (
     "CacheMappingView",
     "EmptyCacheView",
     "GuildRecord",
@@ -44,7 +44,7 @@ __all__: typing.List[str] = [
     "DataT",
     "KeyT",
     "ValueT",
-]
+)
 
 import abc
 import copy

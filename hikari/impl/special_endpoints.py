@@ -26,7 +26,7 @@ You should never need to make any of these objects manually.
 """
 from __future__ import annotations
 
-__all__: typing.List[str] = [
+__all__: typing.Sequence[str] = (
     "ActionRowBuilder",
     "CommandBuilder",
     "SlashCommandBuilder",
@@ -41,7 +41,7 @@ __all__: typing.List[str] = [
     "SelectMenuBuilder",
     "TextInputBuilder",
     "InteractionModalBuilder",
-]
+)
 
 import asyncio
 import typing
@@ -79,6 +79,7 @@ if typing.TYPE_CHECKING:
     from hikari import users
     from hikari import voices
     from hikari.api import entity_factory as entity_factory_
+    from hikari.api import rest as rest_api
 
     _T = typing.TypeVar("_T")
     _CommandBuilderT = typing.TypeVar("_CommandBuilderT", bound="CommandBuilder")
@@ -792,9 +793,11 @@ class InteractionAutocompleteBuilder(special_endpoints.InteractionAutocompleteBu
         self._choices = choices
         return self
 
-    def build(self, _: entity_factory_.EntityFactory, /) -> data_binding.JSONObject:
+    def build(
+        self, _: entity_factory_.EntityFactory, /
+    ) -> typing.Tuple[data_binding.JSONObject, typing.Sequence[files.Resource[files.AsyncReader]]]:
         data = {"choices": [{"name": choice.name, "value": choice.value} for choice in self._choices]}
-        return {"type": self.type, "data": data}
+        return {"type": self.type, "data": data}, ()
 
 
 @attr_extensions.with_copy
@@ -832,11 +835,13 @@ class InteractionDeferredBuilder(special_endpoints.InteractionDeferredBuilder):
         self._flags = flags
         return self
 
-    def build(self, _: entity_factory_.EntityFactory, /) -> data_binding.JSONObject:
+    def build(
+        self, _: entity_factory_.EntityFactory, /
+    ) -> typing.Tuple[data_binding.JSONObject, typing.Sequence[files.Resource[files.AsyncReader]]]:
         if self._flags is not undefined.UNDEFINED:
-            return {"type": self._type, "data": {"flags": self._flags}}
+            return {"type": self._type, "data": {"flags": self._flags}}, ()
 
-        return {"type": self._type}
+        return {"type": self._type}, ()
 
 
 @attr_extensions.with_copy
@@ -877,20 +882,29 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
     _user_mentions: undefined.UndefinedOr[
         typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
     ] = attr.field(default=undefined.UNDEFINED, kw_only=True)
-    _components: typing.List[special_endpoints.ComponentBuilder] = attr.field(factory=list, kw_only=True)
-    _embeds: typing.List[embeds_.Embed] = attr.field(factory=list, kw_only=True)
+    _attachments: undefined.UndefinedOr[typing.List[files.Resourceish]] = attr.field(
+        default=undefined.UNDEFINED, kw_only=True
+    )
+    _components: undefined.UndefinedOr[typing.List[special_endpoints.ComponentBuilder]] = attr.field(
+        default=undefined.UNDEFINED, kw_only=True
+    )
+    _embeds: undefined.UndefinedOr[typing.List[embeds_.Embed]] = attr.field(default=undefined.UNDEFINED, kw_only=True)
+
+    @property
+    def attachments(self) -> undefined.UndefinedOr[typing.Sequence[files.Resourceish]]:
+        return self._attachments.copy() if self._attachments is not undefined.UNDEFINED else undefined.UNDEFINED
 
     @property
     def content(self) -> undefined.UndefinedOr[str]:
         return self._content
 
     @property
-    def components(self) -> typing.Sequence[special_endpoints.ComponentBuilder]:
-        return self._components.copy()
+    def components(self) -> undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]]:
+        return self._components.copy() if self._components is not undefined.UNDEFINED else undefined.UNDEFINED
 
     @property
-    def embeds(self) -> typing.Sequence[embeds_.Embed]:
-        return self._embeds.copy()
+    def embeds(self) -> undefined.UndefinedOr[typing.Sequence[embeds_.Embed]]:
+        return self._embeds.copy() if self._embeds is not undefined.UNDEFINED else undefined.UNDEFINED
 
     @property
     def flags(self) -> typing.Union[undefined.UndefinedType, int, messages.MessageFlag]:
@@ -920,13 +934,28 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
     ) -> undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]]:
         return self._user_mentions
 
+    def add_attachment(
+        self: _InteractionMessageBuilderT, attachment: files.Resourceish, /
+    ) -> _InteractionMessageBuilderT:
+        if self._attachments is undefined.UNDEFINED:
+            self._attachments = []
+
+        self._attachments.append(attachment)
+        return self
+
     def add_component(
         self: _InteractionMessageBuilderT, component: special_endpoints.ComponentBuilder, /
     ) -> _InteractionMessageBuilderT:
+        if self._components is undefined.UNDEFINED:
+            self._components = []
+
         self._components.append(component)
         return self
 
     def add_embed(self: _InteractionMessageBuilderT, embed: embeds_.Embed, /) -> _InteractionMessageBuilderT:
+        if self._embeds is undefined.UNDEFINED:
+            self._embeds = []
+
         self._embeds.append(embed)
         return self
 
@@ -972,15 +1001,22 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
         self._user_mentions = user_mentions
         return self
 
-    def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObject:
+    def build(
+        self, entity_factory: entity_factory_.EntityFactory, /
+    ) -> typing.Tuple[data_binding.JSONObject, typing.Sequence[files.Resource[files.AsyncReader]]]:
         data = data_binding.JSONObjectBuilder()
         data.put("content", self.content)
-        if self._embeds:
+
+        if self._attachments:
+            final_attachments = [files.ensure_resource(attachment) for attachment in self._attachments]
+
+        else:
+            final_attachments = []
+
+        if self._embeds is not undefined.UNDEFINED:
             embeds: typing.List[data_binding.JSONObject] = []
             for embed, attachments in map(entity_factory.serialize_embed, self._embeds):
-                if attachments:
-                    raise ValueError("Cannot send an embed with attachments in a slash command's initial response")
-
+                final_attachments.extend(attachments)
                 embeds.append(embed)
 
             data["embeds"] = embeds
@@ -989,12 +1025,15 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
         data.put("flags", self.flags)
         data.put("tts", self.is_tts)
 
-        if not undefined.all_undefined(self.mentions_everyone, self.user_mentions, self.role_mentions):
+        if (
+            not undefined.all_undefined(self.mentions_everyone, self.user_mentions, self.role_mentions)
+            or self.type is base_interactions.ResponseType.MESSAGE_CREATE
+        ):
             data["allowed_mentions"] = mentions.generate_allowed_mentions(
                 self.mentions_everyone, undefined.UNDEFINED, self.user_mentions, self.role_mentions
             )
 
-        return {"type": self._type, "data": data}
+        return {"type": self._type, "data": data}, final_attachments
 
 
 @attr.define(kw_only=False, weakref_slot=False)
@@ -1035,13 +1074,15 @@ class InteractionModalBuilder(special_endpoints.InteractionModalBuilder):
         self._components.append(component)
         return self
 
-    def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObject:
+    def build(
+        self, entity_factory: entity_factory_.EntityFactory, /
+    ) -> typing.Tuple[data_binding.JSONObject, typing.Sequence[files.Resource[files.AsyncReader]]]:
         data = data_binding.JSONObjectBuilder()
         data.put("title", self._title)
         data.put("custom_id", self._custom_id)
         data.put_array("components", self._components, conversion=lambda component: component.build())
 
-        return {"type": self.type, "data": data}
+        return {"type": self.type, "data": data}, ()
 
 
 @attr.define(kw_only=False, weakref_slot=False)
@@ -1112,6 +1153,23 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
         data.put_array("options", self._options, conversion=entity_factory.serialize_command_option)
         return data
 
+    async def create(
+        self,
+        rest: rest_api.RESTClient,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        /,
+        *,
+        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+    ) -> commands.SlashCommand:
+        return await rest.create_slash_command(
+            application,
+            self._name,
+            self._description,
+            guild=guild,
+            default_permission=self._default_permission,
+            options=self._options,
+        )
+
 
 @attr_extensions.with_copy
 @attr.define(kw_only=False, weakref_slot=False)
@@ -1125,6 +1183,18 @@ class ContextMenuCommandBuilder(CommandBuilder, special_endpoints.ContextMenuCom
     @property
     def type(self) -> commands.CommandType:
         return self._type
+
+    async def create(
+        self,
+        rest: rest_api.RESTClient,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        /,
+        *,
+        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+    ) -> commands.ContextMenuCommand:
+        return await rest.create_context_menu_command(
+            application, self._type, self._name, guild=guild, default_permission=self._default_permission
+        )
 
 
 def _build_emoji(

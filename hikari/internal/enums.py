@@ -23,7 +23,7 @@
 """Implementation of parts of Python's `enum` protocol to be more performant."""
 from __future__ import annotations
 
-__all__: typing.List[str] = ["Enum", "Flag"]
+__all__: typing.Sequence[str] = ("Enum", "Flag")
 
 import functools
 import operator

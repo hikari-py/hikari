@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = [
+__all__: typing.Sequence[str] = (
     "Snowflake",
     "Unique",
     "calculate_shard_id",
@@ -34,7 +34,7 @@ __all__: typing.List[str] = [
     "SearchableSnowflakeishOr",
     "SnowflakeishIterable",
     "SnowflakeishSequence",
-]
+)
 
 import abc
 import typing

@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = [
+__all__: typing.Sequence[str] = (
     "AuditLog",
     "AuditLogChange",
     "AuditLogChangeKey",
@@ -38,7 +38,7 @@ __all__: typing.List[str] = [
     "MessageBulkDeleteEntryInfo",
     "MessageDeleteEntryInfo",
     "MessagePinEntryInfo",
-]
+)
 
 import abc
 import typing

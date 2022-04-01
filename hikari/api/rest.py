@@ -23,7 +23,7 @@
 """Provides an interface for REST API implementations to follow."""
 from __future__ import annotations
 
-__all__: typing.List[str] = ["RESTClient", "TokenStrategy"]
+__all__: typing.Sequence[str] = ("RESTClient", "TokenStrategy")
 
 import abc
 import typing
@@ -3253,6 +3253,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         *,
+        nickname: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         nick: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
         mute: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -3279,10 +3280,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        nick : hikari.undefined.UndefinedOr[builtins.str]
+        nickname : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the nick to add to the user when he joins the guild.
 
             Requires the `MANAGE_NICKNAMES` permission on the guild.
+        nick : hikari.undefined.UndefinedOr[builtins.str]
+            Deprecated alias for `nickname`.
         roles : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole]]
             If provided, the roles to add to the user when he joins the guild.
             This may be a collection objects or IDs of existing roles.
@@ -4972,6 +4975,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         *,
+        nickname: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
         nick: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
         roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
         mute: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -4995,11 +4999,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        nick : hikari.undefined.UndefinedNoneOr[builtins.str]
+        nickname : hikari.undefined.UndefinedNoneOr[builtins.str]
             If provided, the new nick for the member. If `builtins.None`,
             will remove the members nick.
 
             Requires the `MANAGE_NICKNAMES` permission.
+        nick : hikari.undefined.UndefinedOr[builtins.str]
+            Deprecated alias for `nickname`.
         roles : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole]]
             If provided, the new roles for the member.
 
@@ -6935,7 +6941,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def create_context_menu_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        type: typing.Literal[commands.CommandType.USER, commands.CommandType.MESSAGE, 2, 3],
+        type: typing.Union[commands.CommandType, int],
         name: str,
         *,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
@@ -6947,6 +6953,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------
         application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to create a command for.
+        type : typing.Union[hikari.commands.CommandType, builtins.int]
+            The type of menu command to make.
+
+            Only USER and MESSAGE are valid here.
         name : builtins.str
             The command's name. This should match the regex `^[\w-]{1,32}$` in
             Unicode mode and be lowercase.

@@ -28,7 +28,7 @@ RESTful functionality.
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["ClientCredentialsStrategy", "RESTApp", "RESTClientImpl"]
+__all__: typing.Sequence[str] = ("ClientCredentialsStrategy", "RESTApp", "RESTClientImpl")
 
 import asyncio
 import base64
@@ -2053,15 +2053,20 @@ class RESTClientImpl(rest_api.RESTClient):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         *,
+        nickname: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         nick: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
         mute: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         deaf: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> typing.Optional[guilds.Member]:
+        if nick is not undefined.UNDEFINED:
+            deprecation.warn_deprecated("nick", alternative="nickname")
+            nickname = nick
+
         route = routes.PUT_GUILD_MEMBER.compile(guild=guild, user=user)
         body = data_binding.JSONObjectBuilder()
         body.put("access_token", str(access_token))
-        body.put("nick", nick)
+        body.put("nick", nickname)
         body.put("mute", mute)
         body.put("deaf", deaf)
         body.put_snowflake_array("roles", roles)
@@ -2627,6 +2632,7 @@ class RESTClientImpl(rest_api.RESTClient):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         *,
+        nickname: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
         nick: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
         roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
         mute: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -2637,9 +2643,13 @@ class RESTClientImpl(rest_api.RESTClient):
         communication_disabled_until: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.Member:
+        if nick is not undefined.UNDEFINED:
+            deprecation.warn_deprecated("nick", alternative="nickname")
+            nickname = nick
+
         route = routes.PATCH_GUILD_MEMBER.compile(guild=guild, user=user)
         body = data_binding.JSONObjectBuilder()
-        body.put("nick", nick)
+        body.put("nick", nickname)
         body.put("mute", mute)
         body.put("deaf", deaf)
         body.put_snowflake_array("roles", roles)
@@ -3239,7 +3249,7 @@ class RESTClientImpl(rest_api.RESTClient):
     async def create_context_menu_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        type: typing.Literal[commands.CommandType.USER, commands.CommandType.MESSAGE, 2, 3],
+        type: typing.Union[commands.CommandType, int],
         name: str,
         *,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,

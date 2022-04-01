@@ -7,7 +7,7 @@ mock==4.0.3
 
 # Py.test stuff.
 pytest==7.1.1
-pytest-asyncio==0.18.2
+pytest-asyncio==0.18.3
 pytest-cov==3.0.0
 pytest-randomly==3.11.0
 
@@ -28,8 +28,8 @@ sphobjinv==2.2.2
 # TYPE CHECKING #
 #################
 
-mypy==0.941
-pyright==1.1.231
+mypy==0.942
+pyright==1.1.234
 
 #######################
 # DEPENDENCY CHECKING #
@@ -41,7 +41,7 @@ safety~=1.10.3
 # FORMATTING #
 ##############
 
-black==22.1.0
+black==22.3.0
 isort==5.10.1
 
 ###########

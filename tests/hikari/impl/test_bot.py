@@ -204,7 +204,9 @@ class TestGatewayBot:
         assert bot._cache is cache.return_value
         cache.assert_called_once_with(bot, cache_settings)
         assert bot._event_manager is event_manager.return_value
-        event_manager.assert_called_once_with(event_factory.return_value, intents, cache=cache.return_value)
+        event_manager.assert_called_once_with(
+            entity_factory.return_value, event_factory.return_value, intents, cache=cache.return_value
+        )
         assert bot._entity_factory is entity_factory.return_value
         entity_factory.assert_called_once_with(bot)
         assert bot._event_factory is event_factory.return_value

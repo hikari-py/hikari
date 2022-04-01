@@ -23,7 +23,7 @@
 """Models and enums used for Discord's Components interaction flow."""
 from __future__ import annotations
 
-__all__: typing.List[str] = ["ComponentInteraction", "COMPONENT_RESPONSE_TYPES", "ComponentResponseTypesT"]
+__all__: typing.Sequence[str] = ("ComponentInteraction", "COMPONENT_RESPONSE_TYPES", "ComponentResponseTypesT")
 
 import typing
 
