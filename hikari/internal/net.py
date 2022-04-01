@@ -62,7 +62,10 @@ async def generate_error_response(response: aiohttp.ClientResponse) -> errors.HT
     if response.status == http.HTTPStatus.NOT_FOUND:
         return errors.NotFoundError(*args)
 
-    status = http.HTTPStatus(response.status)
+    try:
+        status: typing.Union[http.HTTPStatus, int] = http.HTTPStatus(response.status)
+    except ValueError:
+        status = response.status
 
     if 400 <= status < 500:
         return errors.ClientHTTPResponseError(real_url, status, response.headers, raw_body)

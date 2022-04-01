@@ -73,6 +73,52 @@ async def test_generate_error_response(status_, expected_error):
 @pytest.mark.parametrize(
     ("status_", "expected_error"),
     [
+        # The following internal server non-conforming status codes are used by cloudflare.
+        # Source I made it up...
+        # jk https://en.wikipedia.org/wiki/List_of_HTTP_status_codes
+        (520, "InternalServerError"),
+        (521, "InternalServerError"),
+        (522, "InternalServerError"),
+        (523, "InternalServerError"),
+        (524, "InternalServerError"),
+        (525, "InternalServerError"),
+        (526, "InternalServerError"),
+        (527, "InternalServerError"),
+        (530, "InternalServerError"),
+        # These non-conforming bad requests status codes are sent by NGINX.
+        # Same source as cloudflare status codes.
+        (494, "ClientHTTPResponseError"),
+        (495, "ClientHTTPResponseError"),
+        (496, "ClientHTTPResponseError"),
+        (497, "ClientHTTPResponseError"),
+        # This non-conforming status code is made up.
+        (694, "HTTPResponseError"),
+    ],
+)
+@pytest.mark.asyncio()
+async def test_generate_error_response_with_non_conforming_status_code(status_, expected_error):
+    class StubResponse:
+        real_url = "https://some.url"
+        status = status_
+        headers = {}
+
+        async def read(self):
+            return "some raw body"
+
+        async def json(self):
+            return {"message": "raw message", "code": 123}
+
+    with mock.patch.object(errors, expected_error) as error:
+        returned = await net.generate_error_response(StubResponse())
+
+    error.assert_called_once_with("https://some.url", status_, {}, "some raw body")
+
+    assert returned is error()
+
+
+@pytest.mark.parametrize(
+    ("status_", "expected_error"),
+    [
         (http.HTTPStatus.UNAUTHORIZED, "UnauthorizedError"),
         (http.HTTPStatus.FORBIDDEN, "ForbiddenError"),
         (http.HTTPStatus.NOT_FOUND, "NotFoundError"),
