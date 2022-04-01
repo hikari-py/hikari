@@ -33,7 +33,6 @@ import platform
 import re
 import string
 import sys
-import time
 import typing
 import warnings
 
