@@ -70,21 +70,6 @@ class InteractionTextInput(messages.PartialComponent):
     """Value provided for this text input."""
 
 
-class ModalInteractionActionRow(typing.Protocol):
-    """An action row with only partial text inputs.
-
-    Meant purely for use with ModalInteraction.
-    """
-
-    __slots__ = ()
-
-    type: typing.Literal[messages.ComponentType.ACTION_ROW]
-    """The type of component this is."""
-
-    components: typing.List[InteractionTextInput]
-    """Sequence of the components contained within this row."""
-
-
 @attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
 class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypesT]):
@@ -134,7 +119,7 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
     locale: str = attr.field(eq=False, hash=False, repr=True)
     """The selected language of the user who triggered this modal interaction."""
 
-    components: typing.Sequence[ModalInteractionActionRow] = attr.field(eq=False, hash=False, repr=True)
+    components: typing.Sequence[messages.ActionRowComponent] = attr.field(eq=False, hash=False, repr=True)
     """Components in the modal."""
 
     async def fetch_channel(self) -> channels.TextableChannel:
