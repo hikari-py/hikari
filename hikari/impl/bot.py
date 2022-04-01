@@ -207,9 +207,19 @@ class GatewayBot(traits.GatewayBotAware):
         Defaults to `hikari.intents.Intents.ALL_UNPRIVILEGED`. This allows you
         to change which intents your application will use on the gateway. This
         can be used to control and change the types of events you will receive.
-    chunk_members: builtins.bool
+    chunk_members : builtins.bool
         Defaults to `builtins.True`. If `builtins.False`, then no member chunks
-        will be requested automatically, even if the members intent is enabled.
+        will be requested automatically, even if there are reasons to do so.
+
+        All following statements must be true to automatically request chunks:
+
+        1. `chunk_members` is `builtins.True`.
+        2. The members intent is enabled.
+        3. The server is marked as "large" or the presences intent is not enabled
+            (since Discord only sends other members when presences are declared,
+            we should also chunk small guilds if the presences are not declared).
+        4. The members cache is enabled or there are listeners for the
+        `MemberChunkEvent`.
     logs : typing.Union[builtins.None, LoggerLevel, typing.Dict[str, typing.Any]]
         Defaults to `"INFO"`.
 
