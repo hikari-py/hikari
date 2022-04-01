@@ -63,7 +63,7 @@ if typing.TYPE_CHECKING:
         typing.List[event_manager_.CallbackT[base_events.EventT]],
     ]
     _WaiterT = typing.Tuple[
-        typing.Optional[event_manager_.PredicateT[base_events.EventT]], asyncio.Future[base_events.EventT]
+        typing.Optional[event_manager_.PredicateT[base_events.EventT]], "asyncio.Future[base_events.EventT]"
     ]
     _WaiterMapT = typing.Dict[typing.Type[base_events.EventT], typing.Set[_WaiterT[base_events.EventT]]]
 
@@ -613,7 +613,7 @@ class EventManagerBase(event_manager_.EventManager):
 
         future: asyncio.Future[base_events.EventT] = asyncio.get_running_loop().create_future()
 
-        waiter_set: typing.MutableSet[WaiterT[base_events.Event]]
+        waiter_set: typing.MutableSet[_WaiterT[base_events.Event]]
         try:
             waiter_set = self._waiters[event_type]
         except KeyError:
