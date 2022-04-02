@@ -231,8 +231,12 @@ class HTTPResponseError(HTTPError):
     url: str = attr.field()
     """The URL that produced this error message."""
 
-    status: http.HTTPStatus = attr.field()
-    """The HTTP status code for the response."""
+    status: typing.Union[http.HTTPStatus, int] = attr.field()
+    """The HTTP status code for the response.
+
+    This will be `int` if it's outside the range of status codes in the HTTP
+    specification (e.g. one of Cloudflare's non-standard status codes).
+    """
 
     headers: data_binding.Headers = attr.field()
     """The headers received in the error response."""
@@ -247,8 +251,12 @@ class HTTPResponseError(HTTPError):
     """The error code."""
 
     def __str__(self) -> str:
-        name = self.status.name.replace("_", " ").title()
-        name_value = f"{name} {self.status.value}"
+        if isinstance(self.status, http.HTTPStatus):
+            name = self.status.name.replace("_", " ").title()
+            name_value = f"{name} {self.status.value}"
+
+        else:
+            name_value = f"Unknown Status {self.status}"
 
         if self.code:
             code_str = f" ({self.code})"
