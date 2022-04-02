@@ -2914,6 +2914,19 @@ class Guild(PartialGuild):
 
         return self.app.cache.get_emojis_view_for_guild(self.id)
 
+    def get_stickers(self) -> typing.Mapping[snowflakes.Snowflake, stickers.GuildSticker]:
+        """Return the stickers in this guild.
+
+        Returns
+        -------
+        typing.Mapping[hikari.snowflakes.Snowflake, hikari.stickers.GuildSticker]
+            A mapping of sticker IDs to the objects of sticker in this guild.
+        """
+        if not isinstance(self.app, traits.CacheAware):
+            return {}
+
+        return self.app.cache.get_stickers_view_for_guild(self.id)
+
     def get_roles(self) -> typing.Mapping[snowflakes.Snowflake, Role]:
         """Return the roles in this guild.
 
@@ -3153,6 +3166,27 @@ class Guild(PartialGuild):
             return None
 
         return self.app.cache.get_emoji(emoji)
+
+    def get_sticker(
+        self, sticker: snowflakes.SnowflakeishOr[stickers.GuildSticker]
+    ) -> typing.Optional[stickers.GuildSticker]:
+        """Get a cached sticker that belongs to the guild by it's ID or object.
+
+        Parameters
+        ----------
+        sticker : hikari.snowflakes.SnowflakeishOr[hikari.stickers.GuildSticker]
+            The object or ID of the sticker to get from the cache.
+
+        Returns
+        -------
+        typing.Optional[hikari.stickers.GuildSticker]
+            The object of the sticker if found in cache, else
+            `builtins.None`.
+        """
+        if not isinstance(self.app, traits.CacheAware):
+            return None
+
+        return self.app.cache.get_sticker(sticker)
 
     def get_role(self, role: snowflakes.SnowflakeishOr[PartialRole]) -> typing.Optional[Role]:
         """Get a cached role that belongs to the guild by it's ID or object.

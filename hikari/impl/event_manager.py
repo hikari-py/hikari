@@ -394,6 +394,22 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
 
         await self.dispatch(event)
 
+    @event_manager_base.filtered(guild_events.StickersUpdateEvent, config.CacheComponents.EMOJIS)
+    async def on_guild_stickers_update(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> None:
+        """See https://discord.com/developers/docs/topics/gateway#guild-stickers-update for more info."""
+        guild_id = snowflakes.Snowflake(payload["guild_id"])
+        old = list(self._cache.clear_stickers_for_guild(guild_id).values()) if self._cache else None
+
+        event = self._event_factory.deserialize_guild_stickers_update_event(shard, payload, old_stickers=old)
+
+        if self._cache:
+            for sticker in event.stickers:
+                self._cache.set_sticker(sticker)
+
+        await self.dispatch(event)
+
     @event_manager_base.filtered(())  # An empty sequence here means that this method will always be skipped.
     async def on_guild_integrations_update(self, _: gateway_shard.GatewayShard, __: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#guild-integrations-update for more info."""

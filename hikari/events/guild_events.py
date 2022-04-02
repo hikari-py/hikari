@@ -36,6 +36,7 @@ __all__: typing.Sequence[str] = (
     "BanCreateEvent",
     "BanDeleteEvent",
     "EmojisUpdateEvent",
+    "StickersUpdateEvent",
     "IntegrationEvent",
     "IntegrationCreateEvent",
     "IntegrationDeleteEvent",
@@ -521,6 +522,47 @@ class EmojisUpdateEvent(GuildEvent):
             All emojis in the guild.
         """
         return await self.app.rest.fetch_guild_emojis(self.guild_id)
+
+
+@attr_extensions.with_copy
+@attr.define(kw_only=True, weakref_slot=False)
+@base_events.requires_intents(intents.Intents.GUILD_EMOJIS)
+class StickersUpdateEvent(GuildEvent):
+    """Event that is fired when the emojis in a guild are updated."""
+
+    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from ShardEvent>>.
+
+    guild_id: snowflakes.Snowflake = attr.field()
+    # <<inherited docstring from GuildEvent>>.
+
+    old_stickers: typing.Optional[typing.Sequence[guilds.stickers.GuildSticker]] = attr.field()
+    """Sequence of all old stickers in this guild.
+
+    This will be `builtins.None` if it's missing from the cache.
+    """
+
+    stickers: typing.Sequence[guilds.stickers.GuildSticker] = attr.field()
+    """Sequence of all stickers in this guild.
+
+    Returns
+    -------
+    typing.Sequence[guilds.stickers.GuildSticker]
+        All emojis in the guild.
+    """
+
+    async def fetch_stickers(self) -> typing.Sequence[guilds.stickers.GuildSticker]:
+        """Perform an API call to retrieve an up-to-date view of the emojis.
+
+        Returns
+        -------
+        typing.Sequence[guilds.stickers.GuildSticker]
+            All emojis in the guild.
+        """
+        return await self.app.rest.fetch_guild_stickers(self.guild_id)
 
 
 @base_events.requires_intents(intents.Intents.GUILD_INTEGRATIONS)
