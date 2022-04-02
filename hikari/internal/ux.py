@@ -33,7 +33,6 @@ import platform
 import re
 import string
 import sys
-import time
 import typing
 import warnings
 
@@ -223,10 +222,9 @@ def print_banner(
         for code in colorlog.escape_codes.escape_codes:
             args[code] = ""
 
-    sys.stdout.write(string.Template(raw_banner).safe_substitute(args))
-    # Give the stream some time to flush
-    sys.stdout.flush()
-    time.sleep(0.125)
+    # 1 maps to stdout
+    with open(1, "w", encoding="utf-8") as stdout:
+        stdout.write(string.Template(raw_banner).safe_substitute(args))
 
 
 def supports_color(allow_color: bool, force_color: bool) -> bool:
