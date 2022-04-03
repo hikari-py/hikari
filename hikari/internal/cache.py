@@ -520,7 +520,6 @@ class GuildStickerData(BaseData[stickers_.GuildSticker]):
     name: str = attr.field()
     description: typing.Optional[str] = attr.field()
     tag: str = attr.field()
-    type: stickers_.StickerType = attr.field()
     format_type: typing.Union[stickers_.StickerFormatType, int] = attr.field()
     is_available: bool = attr.field()
     guild_id: snowflakes.Snowflake = attr.field()
@@ -543,7 +542,6 @@ class GuildStickerData(BaseData[stickers_.GuildSticker]):
             description=sticker.description,
             guild_id=sticker.guild_id,
             tag=sticker.tag,
-            type=sticker.type,
             is_available=sticker.is_available,
             format_type=sticker.format_type,
             user=user,

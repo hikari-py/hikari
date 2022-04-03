@@ -216,6 +216,7 @@ class EventFactoryImpl(event_factory.EventFactory):
             channels=guild_information.channels(),
             members=guild_information.members(),
             presences=guild_information.presences(),
+            stickers=guild_information.stickers(),
             voice_states=guild_information.voice_states(),
         )
 
@@ -231,6 +232,7 @@ class EventFactoryImpl(event_factory.EventFactory):
             channels=guild_information.channels(),
             members=guild_information.members(),
             presences=guild_information.presences(),
+            stickers=guild_information.stickers(),
             voice_states=guild_information.voice_states(),
         )
 
@@ -247,6 +249,7 @@ class EventFactoryImpl(event_factory.EventFactory):
             guild=guild_information.guild(),
             emojis=guild_information.emojis(),
             roles=guild_information.roles(),
+            stickers=guild_information.stickers(),
             old_guild=old_guild,
         )
 

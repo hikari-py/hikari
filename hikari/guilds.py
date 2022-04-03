@@ -3439,6 +3439,9 @@ class RESTGuild(Guild):
     )
     """A mapping of emoji IDs to the objects of the emojis this guild provides."""
 
+    stickers: typing.Mapping[snowflakes.Snowflake, stickers.GuildSticker] = attr.field(eq=False, hash=False, repr=False)
+    """A mapping of sticker IDs to the objects of the stickers this guild provides."""
+
     roles: typing.Mapping[snowflakes.Snowflake, Role] = attr.field(eq=False, hash=False, repr=False)
     """The roles in this guild, represented as a mapping of role ID to role object."""
 

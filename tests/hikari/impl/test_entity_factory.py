@@ -2668,6 +2668,7 @@ class TestEntityFactoryImpl:
     def rest_guild_payload(
         self,
         known_custom_emoji_payload,
+        guild_sticker_payload,
         guild_role_payload,
     ):
         return {
@@ -2683,6 +2684,7 @@ class TestEntityFactoryImpl:
             "embed_channel_id": "9439394949",
             "embed_enabled": True,
             "emojis": [known_custom_emoji_payload],
+            "stickers": [guild_sticker_payload],
             "explicit_content_filter": 2,
             "features": ["ANIMATED_ICON", "MORE_EMOJI", "NEWS", "SOME_UNDOCUMENTED_FEATURE"],
             "icon": "1a2b3c4d",
@@ -2716,6 +2718,7 @@ class TestEntityFactoryImpl:
         rest_guild_payload,
         known_custom_emoji_payload,
         guild_role_payload,
+        guild_sticker_payload,
     ):
         guild = entity_factory_impl.deserialize_rest_guild(rest_guild_payload)
         assert guild.app is mock_app
@@ -2745,6 +2748,9 @@ class TestEntityFactoryImpl:
             12345: entity_factory_impl.deserialize_known_custom_emoji(
                 known_custom_emoji_payload, guild_id=snowflakes.Snowflake(265828729970753537)
             )
+        }
+        assert guild.stickers == {
+            749046696482439188: entity_factory_impl.deserialize_guild_sticker(guild_sticker_payload)
         }
         assert guild.mfa_level == guild_models.GuildMFALevel.ELEVATED
         assert guild.application_id == 39494949
@@ -2779,6 +2785,7 @@ class TestEntityFactoryImpl:
                 "description": "This is a server I guess, its a bit crap though",
                 "discovery_splash": "famfamFAMFAMfam",
                 "emojis": [],
+                "stickers": [],
                 "explicit_content_filter": 2,
                 "features": ["ANIMATED_ICON", "MORE_EMOJI", "NEWS", "SOME_UNDOCUMENTED_FEATURE"],
                 "icon": "1a2b3c4d",
@@ -2823,6 +2830,7 @@ class TestEntityFactoryImpl:
                 "embed_channel_id": None,
                 "embed_enabled": True,
                 "emojis": [],
+                "stickers": [],
                 "explicit_content_filter": 2,
                 "features": ["ANIMATED_ICON", "MORE_EMOJI", "NEWS", "SOME_UNDOCUMENTED_FEATURE"],
                 "icon": None,

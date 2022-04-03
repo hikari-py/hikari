@@ -61,6 +61,7 @@ if typing.TYPE_CHECKING:
     from hikari import guilds
     from hikari import presences as presences_
     from hikari import snowflakes
+    from hikari import stickers as stickers_
     from hikari import users
     from hikari import voices
     from hikari.api import shard as gateway_shard
@@ -169,6 +170,15 @@ class GuildAvailableEvent(GuildVisibilityEvent):
         The emojis in the guild.
     """
 
+    stickers: typing.Mapping[snowflakes.Snowflake, stickers_.GuildSticker] = attr.field(repr=False)
+    """Mapping of sticker IDs to the stickers in the guild.
+
+    Returns
+    -------
+    typing.Mapping[hikari.snowflakes.Snowflake, hikari.stickers.GuildSticker]
+        The stickers in the guild.
+    """
+
     roles: typing.Mapping[snowflakes.Snowflake, guilds.Role] = attr.field(repr=False)
     """Mapping of role IDs to the roles in the guild.
 
@@ -259,6 +269,9 @@ class GuildJoinEvent(GuildVisibilityEvent):
 
     emojis: typing.Mapping[snowflakes.Snowflake, emojis_.KnownCustomEmoji] = attr.field(repr=False)
     """Mapping of emoji IDs to the emojis in the guild."""
+
+    stickers: typing.Mapping[snowflakes.Snowflake, stickers_.GuildSticker] = attr.field(repr=False)
+    """Mapping of sticker IDs to the stickers in the guild."""
 
     roles: typing.Mapping[snowflakes.Snowflake, guilds.Role] = attr.field(repr=False)
     """Mapping of role IDs to the roles in the guild."""
@@ -372,6 +385,15 @@ class GuildUpdateEvent(GuildEvent):
     -------
     typing.Mapping[hikari.snowflakes.Snowflake, hikari.emojis.KnownCustomEmoji]
         The emojis in the guild.
+    """
+
+    stickers: typing.Mapping[snowflakes.Snowflake, stickers_.GuildSticker] = attr.field(repr=False)
+    """Mapping of sticker IDs to the stickers in the guild.
+
+    Returns
+    -------
+    typing.Mapping[hikari.snowflakes.Snowflake, hikari.stickers.GuildSticker]
+        The stickers in the guild.
     """
 
     roles: typing.Mapping[snowflakes.Snowflake, guilds.Role] = attr.field(repr=False)

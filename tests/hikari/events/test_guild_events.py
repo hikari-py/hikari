@@ -82,6 +82,7 @@ class TestGuildAvailableEvent:
             shard=object(),
             guild=mock.Mock(guilds.Guild),
             emojis={},
+            stickers={},
             roles={},
             channels={},
             members={},
@@ -105,6 +106,7 @@ class TestGuildUpdateEvent:
             guild=mock.Mock(guilds.Guild),
             old_guild=mock.Mock(guilds.Guild),
             emojis={},
+            stickers={},
             roles={},
         )
 
@@ -156,3 +158,30 @@ class TestPresenceUpdateEvent:
 
         assert event.old_presence.id == 123
         assert event.old_presence.guild_id == 456
+
+
+class TestGuildStickersUpdateEvent:
+    @pytest.fixture()
+    def event(self):
+        return guild_events.StickersUpdateEvent(
+            app=mock.Mock(),
+            shard=mock.Mock(),
+            guild_id=snowflakes.Snowflake(690),
+            old_stickers=(mock.Mock(), mock.Mock()),
+            stickers=(mock.Mock(), mock.Mock(), mock.Mock()),
+        )
+
+    def test_guild_id_property(self, event):
+        assert event.guild_id == 690
+
+    def test_old_stickers_when_some(self, event):
+        assert event.old_stickers is not None
+        assert len(event.old_stickers) == 2
+
+    def test_old_stickers_when_none(self, event):
+        event.old_stickers = None
+        assert not event.old_stickers
+
+    def test_stickers(self, event):
+        assert event.stickers is not None
+        assert len(event.stickers) == 3
