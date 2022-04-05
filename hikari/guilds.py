@@ -1114,13 +1114,7 @@ class Role(PartialRole):
 
     @property
     def icon_url(self) -> typing.Optional[files.URL]:
-        """Role icon URL, if there is one.
-
-        Returns
-        -------
-        typing.Optional[hikari.files.URL]
-            The URL, or `None` if no icon exists.
-        """
+        """Role icon URL, if there is one."""
         return self.make_icon_url()
 
     def make_icon_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:

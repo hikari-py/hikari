@@ -876,13 +876,7 @@ class CommandBuilder(abc.ABC):
     @property
     @abc.abstractmethod
     def type(self) -> commands.CommandType:
-        """Return the type of this command.
-
-        Returns
-        -------
-        hikari.commands.CommandType
-            The type of this command.
-        """
+        """Type of this command."""
 
     @property
     @abc.abstractmethod
@@ -983,23 +977,12 @@ class SlashCommandBuilder(CommandBuilder):
 
         .. warning::
             This should be inclusively between 1-100 characters in length.
-
-        Returns
-        -------
-        str
-            The description to set for this command.
         """
 
     @property
     @abc.abstractmethod
     def options(self) -> typing.Sequence[commands.CommandOption]:
-        """Sequence of up to 25 of the options set for this command.
-
-        Returns
-        -------
-        typing.Sequence[hikari.commands.CommandOption]
-            A sequence of up to 25 of the options set for this command.
-        """
+        """Sequence of up to 25 of the options set for this command."""
 
     @abc.abstractmethod
     def add_option(self: _T, option: commands.CommandOption) -> _T:

@@ -122,13 +122,7 @@ class Unique(abc.ABC):
     @property
     @abc.abstractmethod
     def id(self) -> Snowflake:
-        """Return the ID of this entity.
-
-        Returns
-        -------
-        Snowflake
-            The snowflake ID of this object.
-        """
+        """ID of this entity."""
 
     @property
     def created_at(self) -> datetime.datetime:
