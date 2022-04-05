@@ -229,57 +229,6 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
 
         return None
 
-    async def fetch_parent_message(self) -> typing.Optional[messages.Message]:
-        """Fetch the message which this interaction was triggered on.
-
-        Returns
-        -------
-        hikari.messages.Message
-            The requested message.
-
-        Raises
-        ------
-        builtins.ValueError
-            If `token` is not available.
-        hikari.errors.UnauthorizedError
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.NotFoundError
-            If the webhook is not found or the webhook's message wasn't found.
-        hikari.errors.RateLimitTooLongError
-            Raised in the event that a rate limit occurs that is
-            longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
-        hikari.errors.InternalServerError
-            If an internal error occurs on Discord while handling the request.
-        """
-        if self.message is None:
-            return None
-
-        return await self.fetch_message(self.message.id)
-
-    def get_parent_message(self) -> typing.Optional[messages.PartialMessage]:
-        """Get the message which this interaction was triggered on from the cache.
-
-        Returns
-        -------
-        typing.Optional[hikari.messages.Message]
-            The object of the message if found or `builtins.None`.
-        """
-        if self.message is None:
-            return None
-
-        if isinstance(self.app, traits.CacheAware):
-            return self.app.cache.get_message(self.message.id)
-
-        return None
-
     def build_response(self) -> special_endpoints.InteractionMessageBuilder:
         """Get a message response builder for use in the REST server flow.
 
