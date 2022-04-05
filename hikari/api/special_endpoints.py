@@ -187,13 +187,7 @@ class GuildBuilder(abc.ABC):
     @property
     @abc.abstractmethod
     def name(self) -> str:
-        """Name of the guild to create.
-
-        Returns
-        -------
-        builtins.str
-            The guild name.
-        """
+        """Name of the guild to create."""
 
     @property
     @abc.abstractmethod
@@ -201,11 +195,6 @@ class GuildBuilder(abc.ABC):
         """Default message notification level that can be overwritten.
 
         If not overridden, this will use the Discord default level.
-
-        Returns
-        -------
-        hikari.undefined.UndefinedOr[hikari.guilds.GuildMessageNotificationsLevel]
-            The default message notification level, if overwritten.
         """  # noqa: D401 - Imperative mood
 
     @default_message_notifications.setter
@@ -220,11 +209,6 @@ class GuildBuilder(abc.ABC):
         """Explicit content filter level that can be overwritten.
 
         If not overridden, this will use the Discord default level.
-
-        Returns
-        -------
-        hikari.undefined.UndefinedOr[hikari.guilds.GuildExplicitContentFilterLevel]
-            The explicit content filter level, if overwritten.
         """
 
     @explicit_content_filter_level.setter
@@ -239,11 +223,6 @@ class GuildBuilder(abc.ABC):
         """Guild icon to use that can be overwritten.
 
         If not overridden, the guild will not have an icon.
-
-        Returns
-        -------
-        hikari.undefined.UndefinedOr[hikari.files.Resourceish]
-            The guild icon to use, if overwritten.
         """
 
     @icon.setter
@@ -256,11 +235,6 @@ class GuildBuilder(abc.ABC):
         """Verification level required to join the guild that can be overwritten.
 
         If not overridden, the guild will use the default verification level for
-
-        Returns
-        -------
-        hikari.undefined.UndefinedOr[typing.Union[hikari.guilds.GuildVerificationLevel, builtins.int]]
-            The verification level required to join the guild, if overwritten.
         """
 
     @verification_level.setter
@@ -560,13 +534,7 @@ class InteractionResponseBuilder(abc.ABC):
     @property
     @abc.abstractmethod
     def type(self) -> typing.Union[int, base_interactions.ResponseType]:
-        """Return the type of this response.
-
-        Returns
-        -------
-        typing.Union[builtins.int, hikari.interactions.base_interactions.ResponseType]
-            The type of response this is.
-        """
+        """Return the type of this response."""
 
     @abc.abstractmethod
     def build(
@@ -595,13 +563,7 @@ class InteractionDeferredBuilder(InteractionResponseBuilder, abc.ABC):
     @property
     @abc.abstractmethod
     def type(self) -> base_interactions.DeferredResponseTypesT:
-        """Return the type of this response.
-
-        Returns
-        -------
-        hikari.interactions.base_interactions.DeferredResponseTypesT
-            The type of response this is.
-        """
+        """Return the type of this response."""
 
     @property
     @abc.abstractmethod
@@ -611,12 +573,6 @@ class InteractionDeferredBuilder(InteractionResponseBuilder, abc.ABC):
         !!! note
             As of writing the only message flag which can be set here is
             `hikari.messages.MessageFlag.EPHEMERAL`.
-
-        Returns
-        -------
-        typing.Union[hikari.undefined.UndefinedType, builtins.int, hikari.messages.MessageFlag]
-            The message flags this response should have if set else
-            `hikari.undefined.UNDEFINED`.
         """
 
     @abc.abstractmethod
@@ -674,13 +630,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
     @property
     @abc.abstractmethod
     def type(self) -> base_interactions.MessageResponseTypesT:
-        """Return the type of this response.
-
-        Returns
-        -------
-        hikari.interactions.base_interactions.MessageResponseTypesT
-            The type of response this is.
-        """
+        """Return the type of this response."""
 
     # Extendable fields
 
@@ -704,13 +654,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
     @property
     @abc.abstractmethod
     def content(self) -> undefined.UndefinedOr[str]:
-        """Response's message content.
-
-        Returns
-        -------
-        hikari.undefined.UndefinedOr[builtins.str]
-            The response's message content, if set.
-        """
+        """Response's message content."""
 
     @property
     @abc.abstractmethod
@@ -720,37 +664,17 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
         !!! note
             As of writing the only message flag which can be set here is
             `hikari.messages.MessageFlag.EPHEMERAL`.
-
-        Returns
-        -------
-        typing.Union[hikari.undefined.UndefinedType, builtins.int, hikari.messages.MessageFlag]
-            The message flags this response should have if set else
-            `hikari.undefined.UNDEFINED`.
         """
 
     @property
     @abc.abstractmethod
     def is_tts(self) -> undefined.UndefinedOr[bool]:
-        """Whether this response's content should be treated as text-to-speech.
-
-        Returns
-        -------
-        builtins.bool
-            Whether this response's content should be treated as text-to-speech.
-            If left as `hikari.undefined.UNDEFINED` then this will be disabled.
-        """
+        """Whether this response's content should be treated as text-to-speech."""
 
     @property
     @abc.abstractmethod
     def mentions_everyone(self) -> undefined.UndefinedOr[bool]:
-        """Whether @everyone and @here mentions should be enabled for this response.
-
-        Returns
-        -------
-        hikari.undefined.UndefinedOr[builtins.bool]
-            Whether @everyone mentions should be enabled for this response.
-            If left as `hikari.undefined.UNDEFINED` then they will be disabled.
-        """
+        """Whether @everyone and @here mentions should be enabled for this response."""
 
     @property
     @abc.abstractmethod
@@ -949,46 +873,22 @@ class InteractionModalBuilder(InteractionResponseBuilder, abc.ABC):
     @property
     @abc.abstractmethod
     def type(self) -> typing.Literal[base_interactions.ResponseType.MODAL]:
-        """Return the type of this response.
-
-        Returns
-        -------
-        hikari.interactions.base_interactions.MessageResponseTypesT
-            The type of response this is.
-        """
+        """Return the type of this response."""
 
     @property
     @abc.abstractmethod
     def title(self) -> str:
-        """Return the title that will show up in the modal.
-
-        Returns
-        -------
-        builtins.str
-            The title that will show up in the modal.
-        """
+        """Return the title that will show up in the modal."""
 
     @property
     @abc.abstractmethod
     def custom_id(self) -> str:
-        """Return the developer set custom ID used for identifying interactions with this modal.
-
-        Returns
-        -------
-        builtins.str
-            Developer set custom ID used for identifying interactions with this modal.
-        """
+        """Return the developer set custom ID used for identifying interactions with this modal."""
 
     @property
     @abc.abstractmethod
     def components(self) -> undefined.UndefinedOr[typing.Sequence[ComponentBuilder]]:
-        """Return the sequence of component builders to send in this modal.
-
-        Returns
-        -------
-        hikari.undefined.UndefinedOr[typing.Sequence[hikari.api.special_endpoints.ComponentBuilder]]
-            A sequence of component builders to send in this modal.
-        """
+        """Return the sequence of component builders to send in this modal."""
 
     @abc.abstractmethod
     def set_title(self: _T, title: str, /) -> _T:
@@ -1059,24 +959,12 @@ class CommandBuilder(abc.ABC):
     @property
     @abc.abstractmethod
     def type(self) -> commands.CommandType:
-        """Return the type of this command.
-
-        Returns
-        -------
-        hikari.commands.CommandType
-            The type of this command.
-        """
+        """Return the type of this command."""
 
     @property
     @abc.abstractmethod
     def id(self) -> undefined.UndefinedOr[snowflakes.Snowflake]:
-        """ID of this command.
-
-        Returns
-        -------
-        hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
-            The ID of this command if set.
-        """
+        """ID of this command."""
 
     @property
     @abc.abstractmethod
@@ -1084,11 +972,6 @@ class CommandBuilder(abc.ABC):
         """Whether the command should be enabled by default (without any permissions).
 
         Defaults to `builtins.bool`.
-
-        Returns
-        -------
-        undefined.UndefinedOr[builtins.bool]
-            Whether the command should be enabled by default (without any permissions).
         """
 
     @abc.abstractmethod
@@ -1180,23 +1063,12 @@ class SlashCommandBuilder(CommandBuilder):
 
         !!! warning
             This should be inclusively between 1-100 characters in length.
-
-        Returns
-        -------
-        builtins.str
-            The description to set for this command.
         """
 
     @property
     @abc.abstractmethod
     def options(self) -> typing.Sequence[commands.CommandOption]:
-        """Sequence of up to 25 of the options set for this command.
-
-        Returns
-        -------
-        typing.Sequence[hikari.commands.CommandOption]
-            A sequence of up to 25 of the options set for this command.
-        """
+        """Sequence of up to 25 of the options set for this command."""
 
     @abc.abstractmethod
     def add_option(self: _T, option: commands.CommandOption) -> _T:
@@ -1316,25 +1188,12 @@ class ButtonBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
     @property
     @abc.abstractmethod
     def style(self) -> typing.Union[messages.ButtonStyle, int]:
-        """Button's style.
-
-        Returns
-        -------
-        typing.Union[builtins.int, hikari.messages.ButtonStyle]
-            The button's style.
-        """
+        """Button's style."""
 
     @property
     @abc.abstractmethod
     def emoji(self) -> typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType]:
-        """Emoji which should appear on this button.
-
-        Returns
-        -------
-        typing.Union[hikari.snowflakes.Snowflakeish, hikari.emojis.Emoji, builtins.str, hikari.undefined.UndefinedType]
-            Object or ID or raw string of the emoji which should be displayed
-            on this button if set.
-        """
+        """Emoji which should appear on this button."""
 
     @property
     @abc.abstractmethod
@@ -1344,11 +1203,6 @@ class ButtonBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
         !!! note
             The text label to that should appear on this button. This may be
             up to 80 characters long.
-
-        Returns
-        -------
-        hikari.undefined.UndefinedOr[builtins.str]
-            Text label which should appear on this button.
         """
 
     @property
@@ -1358,11 +1212,6 @@ class ButtonBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
 
         !!! note
             Defaults to `builtins.False`.
-
-        Returns
-        -------
-        builtins.bool
-            Whether the button should be marked as disabled.
         """
 
     @abc.abstractmethod
@@ -1436,13 +1285,7 @@ class LinkButtonBuilder(ButtonBuilder[_ContainerT], abc.ABC):
     @property
     @abc.abstractmethod
     def url(self) -> str:
-        """Url this button should link to when pressed.
-
-        Returns
-        -------
-        builtins.str
-            Url this button should link to when pressed.
-        """
+        """Url this button should link to when pressed."""
 
 
 class InteractiveButtonBuilder(ButtonBuilder[_ContainerT], abc.ABC):
@@ -1453,13 +1296,7 @@ class InteractiveButtonBuilder(ButtonBuilder[_ContainerT], abc.ABC):
     @property
     @abc.abstractmethod
     def custom_id(self) -> str:
-        """Developer set custom ID used for identifying interactions with this button.
-
-        Returns
-        -------
-        builtins.str
-            Developer set custom ID used for identifying interactions with this button.
-        """
+        """Developer set custom ID used for identifying interactions with this button."""
 
 
 class SelectOptionBuilder(ComponentBuilder, abc.ABC, typing.Generic[_SelectMenuBuilderT]):
@@ -1470,47 +1307,22 @@ class SelectOptionBuilder(ComponentBuilder, abc.ABC, typing.Generic[_SelectMenuB
     @property
     @abc.abstractmethod
     def label(self) -> str:
-        """User-facing name of the option, max 100 characters.
-
-        Returns
-        -------
-        builtins.str
-            User-facing name of the option.
-        """
+        """User-facing name of the option, max 100 characters."""
 
     @property
     @abc.abstractmethod
     def value(self) -> str:
-        """Developer-defined value of the option, max 100 characters.
-
-        Returns
-        -------
-        builtins.str
-            Developer-defined value of the option.
-        """
+        """Developer-defined value of the option, max 100 characters."""
 
     @property
     @abc.abstractmethod
     def description(self) -> undefined.UndefinedOr[str]:
-        """Return the description of the option, max 100 characters.
-
-        Returns
-        -------
-        hikari.undefined.UndefinedOr[builtins.str]
-            Description of the option, if set.
-        """
+        """Return the description of the option, max 100 characters."""
 
     @property
     @abc.abstractmethod
     def emoji(self) -> typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType]:
-        """Emoji which should appear on this option.
-
-        Returns
-        -------
-        typing.Union[hikari.snowflakes.Snowflakeish, hikari.emojis.Emoji, builtins.str, hikari.undefined.UndefinedType]
-            Object or ID or raw string of the emoji which should be displayed
-            on this option if set.
-        """
+        """Emoji which should appear on this option."""
 
     @property
     @abc.abstractmethod
@@ -1518,11 +1330,6 @@ class SelectOptionBuilder(ComponentBuilder, abc.ABC, typing.Generic[_SelectMenuB
         """Whether this option should be marked as selected by default.
 
         Defaults to `builtins.False`.
-
-        Returns
-        -------
-        builtins.bool
-            Whether this option should be marked as selected by default.
         """
 
     @abc.abstractmethod
@@ -1595,13 +1402,7 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
     @property
     @abc.abstractmethod
     def custom_id(self) -> str:
-        """Developer set custom ID used for identifying interactions with this menu.
-
-        Returns
-        -------
-        builtins.str
-            Developer set custom ID used for identifying interactions with this menu.
-        """
+        """Developer set custom ID used for identifying interactions with this menu."""
 
     @property
     @abc.abstractmethod
@@ -1610,34 +1411,17 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
 
         !!! note
             Defaults to `builtins.False`.
-
-        Returns
-        -------
-        builtins.bool
-            Whether the select menu should be marked as disabled.
         """
 
     @property
     @abc.abstractmethod
     def options(self: _SelectMenuBuilderT) -> typing.Sequence[SelectOptionBuilder[_SelectMenuBuilderT]]:
-        """Sequence of the options set for this select menu.
-
-        Returns
-        -------
-        typing.Sequence[SelectOptionBuilder[Self]]
-            Sequence of the options set for this select menu.
-        """
+        """Sequence of the options set for this select menu."""
 
     @property
     @abc.abstractmethod
     def placeholder(self) -> undefined.UndefinedOr[str]:
-        """Return the placeholder text to display when no options are selected.
-
-        Returns
-        -------
-        hikari.undefined.UndefinedOr[builtins.str]
-            Placeholder text to display when no options are selected, if defined.
-        """
+        """Return the placeholder text to display when no options are selected."""
 
     @property
     @abc.abstractmethod
@@ -1647,11 +1431,6 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
         Defaults to 1.
         Must be less than or equal to `SelectMenuBuilder.max_values` and greater
         than or equal to 0.
-
-        Returns
-        -------
-        builtins.str
-            Minimum number of options which must be chosen.
         """
 
     @property
@@ -1662,11 +1441,6 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
         Defaults to 1.
         Must be greater than or equal to `SelectMenuBuilder.min_values` and
         less than or equal to 25.
-
-        Returns
-        -------
-        builtins.str
-            Maximum number of options which can be chosen.
         """
 
     @abc.abstractmethod
@@ -1782,89 +1556,42 @@ class TextInputBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
         !!! note
             This custom_id is never used in component interaction events.
             It is meant to be used purely for resolving components modal interactions.
-
-        Returns
-        -------
-        builtins.str
-            Developer set custom ID used for identifying this text input.
         """
 
     @property
     @abc.abstractmethod
     def label(self) -> str:
-        """Label above this text input.
-
-        Returns
-        -------
-        builtins.str
-            Label above this text input.
-        """
+        """Label above this text input."""
 
     @property
     @abc.abstractmethod
     def style(self) -> messages.TextInputStyle:
-        """Style to use for the text input.
-
-        Returns
-        -------
-        builtins.str
-            Style to use for the text input.
-        """
+        """Style to use for the text input."""
 
     @property
     @abc.abstractmethod
     def placeholder(self) -> undefined.UndefinedOr[str]:
-        """Return the placeholder text for when the text input is empty.
-
-        Returns
-        -------
-        hikari.undefined.UndefinedOr[builtins.str]
-            Placeholder text for when the text input is empty.
-        """
+        """Return the placeholder text for when the text input is empty."""
 
     @property
     @abc.abstractmethod
     def value(self) -> undefined.UndefinedOr[str]:
-        """Pre-filled text that will be sent if the user does not write anything.
-
-        Returns
-        -------
-        hikari.undefined.UndefinedOr[builtins.str]
-            Pre-filled text that will be sent if the user does not write anything.
-        """
+        """Pre-filled text that will be sent if the user does not write anything."""
 
     @property
     @abc.abstractmethod
     def required(self) -> undefined.UndefinedOr[bool]:
-        """Whether this text input is required to be filled-in.
-
-        Returns
-        -------
-        hikari.undefined.UndefinedOr[builtins.bool]
-            Whether this text input is required to be filled-in.
-        """
+        """Whether this text input is required to be filled-in."""
 
     @property
     @abc.abstractmethod
     def min_length(self) -> undefined.UndefinedOr[int]:
-        """Return the minimum length the text should have.
-
-        Returns
-        -------
-        hikari.undefined.UndefinedOr[builtins.int]
-            The minimum length the text should have.
-        """
+        """Return the minimum length the text should have."""
 
     @property
     @abc.abstractmethod
     def max_length(self) -> undefined.UndefinedOr[int]:
-        """Return the maxmimum length the text should have.
-
-        Returns
-        -------
-        hikari.undefined.UndefinedOr[builtins.int]
-            The maxmimum length the text should have.
-        """
+        """Return the maxmimum length the text should have."""
 
     @abc.abstractmethod
     def set_style(self: _T, style: typing.Union[messages.TextInputStyle, int], /) -> _T:
@@ -2005,13 +1732,7 @@ class ActionRowBuilder(ComponentBuilder, abc.ABC):
     @property
     @abc.abstractmethod
     def components(self) -> typing.Sequence[ComponentBuilder]:
-        """Sequence of the component builders registered within this action row.
-
-        Returns
-        -------
-        typing.Sequence[ComponentBuilder]
-            Sequence of the component builders registered within this action row.
-        """
+        """Sequence of the component builders registered within this action row."""
 
     @abc.abstractmethod
     def add_component(
