@@ -320,7 +320,7 @@ class ComponentInteraction(
 
         return None
 
-    @deprecation.deprecated("2.0.0.dev110", "message")
+    @deprecation.deprecated("2.0.0.dev110", "fetch_message")
     async def fetch_parent_message(self) -> messages.Message:
         """Fetch the message which this interaction was triggered on.
 

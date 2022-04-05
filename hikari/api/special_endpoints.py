@@ -534,7 +534,7 @@ class InteractionResponseBuilder(abc.ABC):
     @property
     @abc.abstractmethod
     def type(self) -> typing.Union[int, base_interactions.ResponseType]:
-        """Return the type of this response."""
+        """Type of this response."""
 
     @abc.abstractmethod
     def build(
@@ -563,7 +563,7 @@ class InteractionDeferredBuilder(InteractionResponseBuilder, abc.ABC):
     @property
     @abc.abstractmethod
     def type(self) -> base_interactions.DeferredResponseTypesT:
-        """Return the type of this response."""
+        """Type of this response."""
 
     @property
     @abc.abstractmethod
@@ -602,7 +602,7 @@ class InteractionAutocompleteBuilder(InteractionResponseBuilder, abc.ABC):
     @property
     @abc.abstractmethod
     def choices(self) -> typing.Sequence[commands.CommandChoice]:
-        """Return autocomplete choices."""
+        """Autocomplete choices."""
 
     @abc.abstractmethod
     def set_choices(self: _T, choices: typing.Sequence[commands.CommandChoice], /) -> _T:
@@ -630,7 +630,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
     @property
     @abc.abstractmethod
     def type(self) -> base_interactions.MessageResponseTypesT:
-        """Return the type of this response."""
+        """Type of this response."""
 
     # Extendable fields
 
@@ -873,22 +873,22 @@ class InteractionModalBuilder(InteractionResponseBuilder, abc.ABC):
     @property
     @abc.abstractmethod
     def type(self) -> typing.Literal[base_interactions.ResponseType.MODAL]:
-        """Return the type of this response."""
+        """Type of this response."""
 
     @property
     @abc.abstractmethod
     def title(self) -> str:
-        """Return the title that will show up in the modal."""
+        """Title that will show up in the modal."""
 
     @property
     @abc.abstractmethod
     def custom_id(self) -> str:
-        """Return the developer set custom ID used for identifying interactions with this modal."""
+        """Developer set custom ID used for identifying interactions with this modal."""
 
     @property
     @abc.abstractmethod
     def components(self) -> undefined.UndefinedOr[typing.Sequence[ComponentBuilder]]:
-        """Return the sequence of component builders to send in this modal."""
+        """Sequence of component builders to send in this modal."""
 
     @abc.abstractmethod
     def set_title(self: _T, title: str, /) -> _T:
@@ -959,7 +959,7 @@ class CommandBuilder(abc.ABC):
     @property
     @abc.abstractmethod
     def type(self) -> commands.CommandType:
-        """Return the type of this command."""
+        """Type of this command."""
 
     @property
     @abc.abstractmethod
@@ -1059,7 +1059,7 @@ class SlashCommandBuilder(CommandBuilder):
     @property
     @abc.abstractmethod
     def description(self) -> str:
-        """Return the description to set for this command.
+        """Description to set for this command.
 
         !!! warning
             This should be inclusively between 1-100 characters in length.
@@ -1317,7 +1317,7 @@ class SelectOptionBuilder(ComponentBuilder, abc.ABC, typing.Generic[_SelectMenuB
     @property
     @abc.abstractmethod
     def description(self) -> undefined.UndefinedOr[str]:
-        """Return the description of the option, max 100 characters."""
+        """Description of the option, max 100 characters."""
 
     @property
     @abc.abstractmethod
@@ -1421,7 +1421,7 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
     @property
     @abc.abstractmethod
     def placeholder(self) -> undefined.UndefinedOr[str]:
-        """Return the placeholder text to display when no options are selected."""
+        """Placeholder text to display when no options are selected."""
 
     @property
     @abc.abstractmethod
@@ -1571,7 +1571,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
     @property
     @abc.abstractmethod
     def placeholder(self) -> undefined.UndefinedOr[str]:
-        """Return the placeholder text for when the text input is empty."""
+        """Placeholder text for when the text input is empty."""
 
     @property
     @abc.abstractmethod
@@ -1586,12 +1586,12 @@ class TextInputBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
     @property
     @abc.abstractmethod
     def min_length(self) -> undefined.UndefinedOr[int]:
-        """Return the minimum length the text should have."""
+        """Minimum length the text should have."""
 
     @property
     @abc.abstractmethod
     def max_length(self) -> undefined.UndefinedOr[int]:
-        """Return the maxmimum length the text should have."""
+        """Maxmimum length the text should have."""
 
     @abc.abstractmethod
     def set_style(self: _T, style: typing.Union[messages.TextInputStyle, int], /) -> _T:
