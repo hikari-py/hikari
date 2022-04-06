@@ -335,8 +335,6 @@ def get_index_or_slice(
 
     Raises
     ------
-    TypeError
-        If `index_or_slice` isn't a `builtins.slice` or `builtins.int`.
     IndexError
         If `index_or_slice` is an int and is outside the range of the mapping's
         contents.
