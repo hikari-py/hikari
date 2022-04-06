@@ -29,7 +29,6 @@ from hikari import traits
 from hikari.impl import special_endpoints
 from hikari.interactions import base_interactions
 from hikari.interactions import modal_interactions
-from tests.hikari import hikari_test_helpers
 
 
 @pytest.fixture()

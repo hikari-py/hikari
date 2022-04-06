@@ -1063,7 +1063,7 @@ class SlashCommandBuilder(CommandBuilder):
 
         !!! warning
             This should be inclusively between 1-100 characters in length.
-        """
+        """  # noqa: D401 - Imperative mood
 
     @property
     @abc.abstractmethod
@@ -1317,7 +1317,7 @@ class SelectOptionBuilder(ComponentBuilder, abc.ABC, typing.Generic[_SelectMenuB
     @property
     @abc.abstractmethod
     def description(self) -> undefined.UndefinedOr[str]:
-        """Description of the option, max 100 characters."""
+        """Description of the option, max 100 characters."""  # noqa: D401 - Imperative mood
 
     @property
     @abc.abstractmethod
@@ -1421,7 +1421,7 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
     @property
     @abc.abstractmethod
     def placeholder(self) -> undefined.UndefinedOr[str]:
-        """Placeholder text to display when no options are selected."""
+        """Placeholder text to display when no options are selected."""  # noqa: D401 - Imperative mood
 
     @property
     @abc.abstractmethod
@@ -1571,7 +1571,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
     @property
     @abc.abstractmethod
     def placeholder(self) -> undefined.UndefinedOr[str]:
-        """Placeholder text for when the text input is empty."""
+        """Placeholder text for when the text input is empty."""  # noqa: D401 - Imperative mood
 
     @property
     @abc.abstractmethod

@@ -1388,6 +1388,14 @@ class TestRESTClientImpl:
         assert result.type == 9
         assert isinstance(result, special_endpoints.InteractionModalBuilder)
 
+    def test_interaction_modal_builder_with_components(self, rest_client):
+        component = mock.Mock()
+        result = rest_client.interaction_modal_builder("title", "custom", components=(component,))
+
+        assert result.type == 9
+        assert isinstance(result, special_endpoints.InteractionModalBuilder)
+        assert result.components == [component]
+
     def test_fetch_scheduled_event_users(self, rest_client: rest.RESTClientImpl):
         with mock.patch.object(special_endpoints, "ScheduledEventUserIterator") as iterator_cls:
             iterator = rest_client.fetch_scheduled_event_users(
