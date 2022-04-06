@@ -260,9 +260,6 @@ class _RESTProvider(traits.RESTAware):
         return self._rest().proxy_settings
 
 
-_NONE_OR_UNDEFINED: typing.Final[typing.Tuple[None, undefined.UndefinedType]] = (None, undefined.UNDEFINED)
-
-
 class RESTApp(traits.ExecutorAware):
     """The base for a HTTP-only Discord application.
 
@@ -1245,24 +1242,6 @@ class RESTClientImpl(rest_api.RESTClient):
 
         if not undefined.any_undefined(embed, embeds):
             raise ValueError("You may only specify one of 'embed' or 'embeds', not both")
-
-        if attachments is not undefined.UNDEFINED and not isinstance(attachments, typing.Collection):
-            raise TypeError(
-                "You passed a non-collection to 'attachments', but this expects a collection. Maybe you meant to "
-                "use 'attachment' (singular) instead?"
-            )
-
-        if components not in _NONE_OR_UNDEFINED and not isinstance(components, typing.Collection):
-            raise TypeError(
-                "You passed a non-collection to 'components', but this expects a collection. Maybe you meant to "
-                "use 'component' (singular) instead?"
-            )
-
-        if embeds not in _NONE_OR_UNDEFINED and not isinstance(embeds, typing.Collection):
-            raise TypeError(
-                "You passed a non-collection to 'embeds', but this expects a collection. Maybe you meant to "
-                "use 'embed' (singular) instead?"
-            )
 
         if undefined.all_undefined(embed, embeds) and isinstance(content, embeds_.Embed):
             # Syntactic sugar, common mistake to accidentally send an embed

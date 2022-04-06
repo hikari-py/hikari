@@ -556,9 +556,6 @@ class EventManagerBase(event_manager_.EventManager):
         return decorator
 
     def dispatch(self, event: base_events.Event) -> asyncio.Future[typing.Any]:
-        if not isinstance(event, base_events.Event):
-            raise TypeError(f"Events must be subclasses of {base_events.Event.__name__}, not {type(event).__name__}")
-
         tasks: typing.List[typing.Coroutine[None, typing.Any, None]] = []
 
         for cls in event.dispatches():

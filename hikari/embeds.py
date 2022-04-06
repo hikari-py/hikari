@@ -278,11 +278,11 @@ class EmbedField:
         self._inline = value
 
 
-def _ensure_embed_resource(resource: files.Resourceish, cls: typing.Type[_T]) -> _T:
+def _ensure_embed_resource(resource: files.Resourceish) -> files.Resource[files.AsyncReader]:
     if isinstance(resource, EmbedResource):
-        return cls(resource=resource.resource)
+        return resource.resource
 
-    return cls(resource=files.ensure_resource(resource))
+    return files.ensure_resource(resource)
 
 
 class Embed:
@@ -742,7 +742,7 @@ class Embed:
         if name is None and url is None and icon is None:
             self._author = None
         else:
-            real_icon = _ensure_embed_resource(icon, EmbedResourceWithProxy) if icon is not None else None
+            real_icon = EmbedResourceWithProxy(resource=_ensure_embed_resource(icon)) if icon is not None else None
             self._author = EmbedAuthor(name=name, url=url, icon=real_icon)
         return self
 
@@ -791,7 +791,7 @@ class Embed:
 
             self._footer = None
         else:
-            real_icon = _ensure_embed_resource(icon, EmbedResourceWithProxy) if icon is not None else None
+            real_icon = EmbedResourceWithProxy(resource=_ensure_embed_resource(icon)) if icon is not None else None
             self._footer = EmbedFooter(icon=real_icon, text=text)
         return self
 
@@ -829,7 +829,7 @@ class Embed:
             This embed. Allows for call chaining.
         """
         if image is not None:
-            self._image = _ensure_embed_resource(image, EmbedImage)
+            self._image = EmbedImage(resource=_ensure_embed_resource(image))
         else:
             self._image = None
 
@@ -868,7 +868,7 @@ class Embed:
             This embed. Allows for call chaining.
         """
         if image is not None:
-            self._thumbnail = _ensure_embed_resource(image, EmbedImage)
+            self._thumbnail = EmbedImage(resource=_ensure_embed_resource(image))
         else:
             self._thumbnail = None
 

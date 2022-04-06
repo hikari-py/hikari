@@ -1334,19 +1334,6 @@ class TestRESTClientImpl:
         ):
             rest_client._build_message_payload(**{singular_arg: object(), plural_arg: object()})
 
-    @pytest.mark.parametrize(
-        ("singular_arg", "plural_arg"),
-        [("attachment", "attachments"), ("component", "components"), ("embed", "embeds")],
-    )
-    def test__build_message_payload_when_non_collection_passed_to_plural(self, rest_client, singular_arg, plural_arg):
-        expected_error_message = (
-            f"You passed a non-collection to '{plural_arg}', but this expects a collection. Maybe you meant to use "
-            f"'{singular_arg}' (singular) instead?"
-        )
-
-        with pytest.raises(TypeError, match=re.escape(expected_error_message)):
-            rest_client._build_message_payload(**{plural_arg: object()})
-
     def test_interaction_deferred_builder(self, rest_client):
         result = rest_client.interaction_deferred_builder(5)
 
