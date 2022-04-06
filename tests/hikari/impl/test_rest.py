@@ -23,7 +23,6 @@ import asyncio
 import contextlib
 import datetime
 import http
-import re
 import warnings
 
 import mock
