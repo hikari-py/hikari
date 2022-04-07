@@ -101,12 +101,12 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         intents: intents_.Intents,
         /,
         *,
-        chunk_members: bool = True,
+        auto_chunk_members: bool = True,
         cache: typing.Optional[cache_.MutableCache] = None,
     ) -> None:
         self._cache = cache
 
-        self._chunk_members = chunk_members
+        self._chunk_members = auto_chunk_members
         self._entity_factory = entity_factory
         components = cache.settings.components if cache else config.CacheComponents.NONE
         super().__init__(event_factory=event_factory, intents=intents, cache_components=components)
