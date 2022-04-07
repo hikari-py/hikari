@@ -454,7 +454,7 @@ class TestEventManagerImpl:
         stateless_event_manager_impl._intents = intents.Intents.GUILD_MEMBERS
         stateless_event_manager_impl._cache_enabled_for = mock.Mock(return_value=cache_enabled)
         stateless_event_manager_impl._enabled_for_event = mock.Mock(return_value=enabled_for_event)
-        stateless_event_manager_impl._chunk_members = False
+        stateless_event_manager_impl._auto_chunk_members = False
 
         with mock.patch.object(event_manager, "_request_guild_members") as request_guild_members:
             await stateless_event_manager_impl.on_guild_create(shard, {"id": 456, "large": large})
