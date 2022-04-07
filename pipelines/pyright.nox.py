@@ -43,7 +43,7 @@ def pyright(session: nox.Session) -> None:
         "-r",
         "dev-requirements.txt",
     )
-    session.run("python", "-m", "pyright", config.MAIN_PACKAGE)
+    session.run("python", "-m", "pyright")
 
 
 @nox.session()
