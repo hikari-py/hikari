@@ -714,7 +714,7 @@ class Member(users.User):
 
         Other Parameters
         ----------------
-        delete_message_days : hikari.undefined.UndefinedNoneOr[int]
+        delete_message_days : hikari.undefined.UndefinedOr[int]
             If provided, the number of days to delete messages for.
             This must be between 0 and 7.
         reason : hikari.undefined.UndefinedOr[str]
@@ -1487,7 +1487,7 @@ class PartialGuild(snowflakes.Unique):
 
         Other Parameters
         ----------------
-        delete_message_days : hikari.undefined.UndefinedNoneOr[int]
+        delete_message_days : hikari.undefined.UndefinedOr[int]
             If provided, the number of days to delete messages for.
             This must be between 0 and 7.
         reason : hikari.undefined.UndefinedOr[str]
