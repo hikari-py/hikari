@@ -5498,11 +5498,20 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def fetch_bans(
+    def fetch_bans(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-    ) -> typing.Sequence[guilds.GuildBan]:
+        /,
+        *,
+        newest_first: bool = False,
+        start_at: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
+    ) -> iterators.LazyIterator[guilds.GuildBan]:
         """Fetch the bans of a guild.
+
+        !!! note
+            This call is not a coroutine function, it returns a special type of
+            lazy iterator that will perform API calls as you iterate across it.
+            See `hikari.iterators` for the full API for this iterator type.
 
         Parameters
         ----------
@@ -5510,9 +5519,21 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The guild to fetch the bans from. This may be the
             object or the ID of an existing guild.
 
+        Other Parameters
+        ----------------
+        newest_first : builtins.bool
+            Whether to fetch the newest first or the oldest first.
+
+            Defaults to `builtins.False`.
+        start_at : undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[users.PartialUser]]
+            If provided, will start at this snowflake. If you provide
+            a datetime object, it will be transformed into a snowflake. This
+            may also be a scheduled event object object. In this case, the
+            date the object was first created will be used.
+
         Returns
         -------
-        typing.Sequence[hikari.guilds.GuildBan]
+        hikari.iterators.LazyIterator[hikari.guilds.GuildBan]
             The requested bans.
 
         Raises
