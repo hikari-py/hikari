@@ -517,12 +517,12 @@ class Color(int):
             if len(value) != 3:
                 raise ValueError(f"Color must be an RGB triplet if set to a {type(value).__name__} type")
 
-            if any(isinstance(c, float) for c in value):
-                r, g, b = value
+            r, g, b = value
+
+            if isinstance(r, float) and isinstance(g, float) and isinstance(b, float):
                 return cls.from_rgb_float(r, g, b)
 
-            if all(isinstance(c, int) for c in value):
-                r, g, b = value
+            if isinstance(r, int) and isinstance(g, int) and isinstance(b, int):
                 return cls.from_rgb(r, g, b)
 
         if isinstance(value, str):

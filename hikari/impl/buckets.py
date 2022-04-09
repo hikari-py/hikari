@@ -496,7 +496,7 @@ class RESTBucketManager:
             `RESTBucketManager.start` and `RESTBucketManager.close` to control
             this instead.
         """
-        buckets_to_purge = []
+        buckets_to_purge: typing.List[str] = []
 
         now = time.monotonic()
 

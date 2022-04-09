@@ -7,4 +7,4 @@
 #
 # You should have received a copy of the CC0 Public Domain Dedication along with this software.
 # If not, see <https://creativecommons.org/publicdomain/zero/1.0/>.
-"""Allows mypy to run here."""
+"""Allows type-checkers to run here."""

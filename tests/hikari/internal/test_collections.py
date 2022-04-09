@@ -80,35 +80,6 @@ class TestFreezableDict:
         assert mock_map == {"hmm": "forearm", "cat": "bag", "ok": "bye", "bye": 4}
 
 
-class TestFrozenDict:
-    def test___init__(self):
-        mock_map = collections._FrozenDict({"foo": (0.432, "bar"), "blam": (0.111, "okok")})
-        assert mock_map == {"foo": "bar", "blam": "okok"}
-
-    def test___getitem__(self):
-        mock_map = collections._FrozenDict({"blam": (0.432, "bar"), "obar": (0.111, "okok")})
-        assert mock_map["obar"] == "okok"
-
-    def test___iter__(self):
-        mock_map = collections._FrozenDict({"bye": (0.33, "bye"), "111": (0.2, "222"), "45949": (0.5, "020202")})
-        assert list(mock_map) == ["bye", "111", "45949"]
-
-    def test___len__(self):
-        mock_map = collections._FrozenDict({"wsw": (0.3, "3"), "fdsa": (0.55, "ewqwe"), "45949": (0.23, "fsasd")})
-        assert len(mock_map) == 3
-
-    def test___delitem__(self):
-        mock_map = collections._FrozenDict({"rororo": (0.55, "bye bye"), "raw": (0.999, "ywywyw")})
-        del mock_map["raw"]
-        assert mock_map == {"rororo": "bye bye"}
-
-    def test___setitem__(self):
-        mock_map = collections._FrozenDict({"rororo": (0.55, "bye 3231"), "2121": (0.999, "4321")})
-        mock_map["foo bar"] = 42
-
-        assert mock_map == {"rororo": "bye 3231", "2121": "4321", "foo bar": 42}
-
-
 class TestLimitedCapacityCacheMap:
     def test___init___with_source(self):
         raw_map = {"voo": "doo", "blam": "blast", "foo": "bye"}
@@ -380,8 +351,3 @@ def test_get_index_or_slice_with_index_outside_range():
 def test_get_index_or_slice_with_slice():
     test_map = {"o": "b", "b": "o", "a": "m", "arara": "blam", "oof": "no", "rika": "may"}
     assert collections.get_index_or_slice(test_map, slice(1, 5, 2)) == ("o", "blam")
-
-
-def test_get_index_or_slice_with_invalid_type():
-    with pytest.raises(TypeError):
-        collections.get_index_or_slice({}, object())

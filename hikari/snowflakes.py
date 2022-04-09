@@ -93,7 +93,7 @@ class Snowflake(int):
             return cls.___MIN___
 
         except AttributeError:
-            cls.___MIN___ = Snowflake(0)
+            cls.___MIN___ = Snowflake(0)  # pyright: ignore[reportConstantRedefinition]
             return cls.___MIN___
 
     @classmethod
@@ -103,7 +103,7 @@ class Snowflake(int):
             return cls.___MAX___
 
         except AttributeError:
-            cls.___MAX___ = Snowflake((1 << 63) - 1)
+            cls.___MAX___ = Snowflake((1 << 63) - 1)  # pyright: ignore[reportConstantRedefinition]
             return cls.___MAX___
 
     @classmethod
