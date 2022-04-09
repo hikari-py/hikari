@@ -192,6 +192,7 @@ class TestGatewayBot:
                 cache_settings=cache_settings,
                 http_settings=http_settings,
                 intents=intents,
+                auto_chunk_members=False,
                 logs="DEBUG",
                 max_rate_limit=200,
                 max_retries=0,
@@ -205,7 +206,11 @@ class TestGatewayBot:
         cache.assert_called_once_with(bot, cache_settings)
         assert bot._event_manager is event_manager.return_value
         event_manager.assert_called_once_with(
-            entity_factory.return_value, event_factory.return_value, intents, cache=cache.return_value
+            entity_factory.return_value,
+            event_factory.return_value,
+            intents,
+            auto_chunk_members=False,
+            cache=cache.return_value,
         )
         assert bot._entity_factory is entity_factory.return_value
         entity_factory.assert_called_once_with(bot)
