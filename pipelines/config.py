@@ -92,7 +92,6 @@ FULL_REFORMATTING_PATHS = (
     *PYTHON_REFORMATTING_PATHS,
     *(f for f in _os.listdir(".") if _os.path.isfile(f) and f.endswith(REFORMATTING_FILE_EXTS)),
     ".github",
-    "pages",
     "docs",
     "changes",
 )

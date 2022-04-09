@@ -269,7 +269,7 @@ SOFTWARE.
             </section>
         {% endfor %}
     </main>
-    {# These shoul only load on release builds #}
+    {# These should only load on release builds #}
     {% if __hikari_version__ != "head" %}
         <script src="{{ "../" * (module.modulename.count(".") + 1) }}version_switcher.js"></script>
     {% endif %}

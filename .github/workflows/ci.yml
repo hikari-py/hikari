@@ -147,7 +147,7 @@ jobs:
           nox -s pdoc
 
       - name: Upload artifacts
-        if: github.event.event_name == 'pull_request'
+        if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v2
         with:
           name: docs

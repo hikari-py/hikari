@@ -40,7 +40,7 @@ pdoc_html_module = pdoc_render.html_module
 
 
 def patched_html_module(*args, **kwargs) -> str:
-    # We patch this to minify the HTML output before passing writing to the file
+    # We patch this to minify the HTML output before sending it further
     output = pdoc_html_module(*args, **kwargs)
 
     return minify_html.minify(output, minify_js=True, minify_css=True)
