@@ -105,7 +105,6 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         cache: typing.Optional[cache_.MutableCache] = None,
     ) -> None:
         self._cache = cache
-
         self._auto_chunk_members = auto_chunk_members
         self._entity_factory = entity_factory
         components = cache.settings.components if cache else config.CacheComponents.NONE
