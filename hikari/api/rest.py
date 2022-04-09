@@ -5508,6 +5508,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> iterators.LazyIterator[guilds.GuildBan]:
         """Fetch the bans of a guild.
 
+        !!! note
+            This call is not a coroutine function, it returns a special type of
+            lazy iterator that will perform API calls as you iterate across it.
+            See `hikari.iterators` for the full API for this iterator type.
+
         Parameters
         ----------
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
@@ -5530,11 +5535,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         -------
         hikari.iterators.LazyIterator[hikari.guilds.GuildBan]
             The requested bans.
-
-        !!! note
-            This call is not a coroutine function, it returns a special type of
-            lazy iterator that will perform API calls as you iterate across it.
-            See `hikari.iterators` for the full API for this iterator type.
 
         Raises
         ------
