@@ -496,7 +496,7 @@ class RESTBucketManager:
             retain unneeded ratelimit info for longer, but may produce more
             effective ratelimiting logic as a result.
         """
-        buckets_to_purge = []
+        buckets_to_purge: typing.List[str] = []
 
         now = time.monotonic()
 

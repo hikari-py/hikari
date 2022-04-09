@@ -1178,9 +1178,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             `role_mentions` or `user_mentions` or if both `attachment` and
             `attachments`, `component` and `components` or `embed` and `embeds`
             are specified.
-        TypeError
-            If `attachments`, `components` or `embeds` is passed but is not a
-            sequence.
         hikari.errors.BadRequestError
             This may be raised in several discrete situations, such as messages
             being empty with no attachments or embeds; messages with more than
@@ -1418,9 +1415,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ValueError
             If both `attachment` and `attachments`, `component` and `components`
             or `embed` and `embeds` are specified.
-        TypeError
-            If `attachments`, `components` or `embeds` is passed but is not a
-            sequence.
         hikari.errors.BadRequestError
             This may be raised in several discrete situations, such as messages
             being empty with no embeds; messages with more than 2000 characters
@@ -2321,8 +2315,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If more than 100 unique objects/entities are passed for
             `role_mentions` or `user_mentions` or if both `attachment` and
             `attachments` or `embed` and `embeds` are specified.
-        TypeError
-            If `attachments`, or `embeds` is passed but is not a sequence.
         hikari.errors.BadRequestError
             This may be raised in several discrete situations, such as messages
             being empty with no attachments or embeds; messages with more than
@@ -2535,9 +2527,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ValueError
             If both `attachment` and `attachments`, `component` and `components`
             or `embed` and `embeds` are specified.
-        TypeError
-            If `attachments`, `components` or `embeds` is passed but is not a
-            sequence.
         hikari.errors.BadRequestError
             This may be raised in several discrete situations, such as messages
             being empty with no attachments or embeds; messages with more than
@@ -7657,9 +7646,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ValueError
             If both `attachment` and `attachments`, `component` and `components`
             or `embed` and `embeds` are specified.
-        TypeError
-            If `attachments`, `components` or `embeds` is passed but is not a
-            sequence.
         hikari.errors.BadRequestError
             This may be raised in several discrete situations, such as messages
             being empty with no attachments or embeds; messages with more than

@@ -59,9 +59,23 @@ exclude_lines = [
 ]
 
 [tool.pyright]
-include = ["examples", "hikari"]
+include = ["hikari", "examples"]
+exclude = ["examples/simple_dashboard.py", "**/__init__.py", "hikari/internal/enums.py", "hikari/internal/fast_protocol.py"]
 pythonVersion = "3.8"
 typeCheckingMode = "strict"
+
+reportUnnecessaryTypeIgnoreComment = "error"
+reportMissingTypeStubs = "none"
+reportImportCycles = "none" # Doesn't account for TYPE_CHECKING
+reportIncompatibleMethodOverride = "none"  # This relies on ordering for keyword-only arguments
+reportOverlappingOverload = "none" # Type-Vars in last overloads may interfere
+reportIncompatibleVariableOverride = "none" # Cannot overwrite abstract properties using attrs
+
+# Attrs validators will always be unknown
+# https://github.com/python-attrs/attrs/issues/795
+reportUnknownMemberType = "warning"
+reportUntypedFunctionDecorator = "warning"
+reportOptionalMemberAccess = "warning"
 
 [tool.pytest.ini_options]
 asyncio_mode = "strict"

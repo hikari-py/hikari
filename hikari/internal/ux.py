@@ -222,8 +222,7 @@ def print_banner(
         for code in colorlog.escape_codes.escape_codes:
             args[code] = ""
 
-    # 1 maps to stdout
-    with open(1, "w", encoding="utf-8") as stdout:
+    with open(sys.stdout.fileno(), "w", encoding="utf-8", closefd=False) as stdout:
         stdout.write(string.Template(raw_banner).safe_substitute(args))
 
 

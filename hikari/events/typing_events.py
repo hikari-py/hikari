@@ -166,12 +166,12 @@ class GuildTypingEvent(TypingEvent):
         # <<inherited docstring from TypingEvent>>.
         return self.member.id
 
-    async def fetch_channel(self) -> typing.Union[channels.TextableGuildChannel]:
+    async def fetch_channel(self) -> channels.TextableGuildChannel:
         """Perform an API call to fetch an up-to-date image of this channel.
 
         Returns
         -------
-        typing.Union[hikari.channels.TextableGuildChannel]
+        hikari.channels.TextableGuildChannel
             The channel.
         """
         channel = await super().fetch_channel()

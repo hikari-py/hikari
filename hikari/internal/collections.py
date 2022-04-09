@@ -134,28 +134,6 @@ class FreezableDict(ExtendedMutableMapping[KeyT, ValueT]):
         self._data[key] = value
 
 
-class _FrozenDict(typing.MutableMapping[KeyT, ValueT]):
-    __slots__: typing.Sequence[str] = ("_source",)
-
-    def __init__(self, source: typing.Dict[KeyT, typing.Tuple[float, ValueT]], /) -> None:
-        self._source = source
-
-    def __getitem__(self, key: KeyT) -> ValueT:
-        return self._source[key][1]
-
-    def __iter__(self) -> typing.Iterator[KeyT]:
-        return iter(self._source)
-
-    def __len__(self) -> int:
-        return len(self._source)
-
-    def __delitem__(self, key: KeyT) -> None:
-        del self._source[key]
-
-    def __setitem__(self, key: KeyT, value: ValueT) -> None:
-        self._source[key] = (0.0, value)
-
-
 class LimitedCapacityCacheMap(ExtendedMutableMapping[KeyT, ValueT]):
     """Implementation of a capacity-limited most-recently-inserted mapping.
 
@@ -357,8 +335,6 @@ def get_index_or_slice(
 
     Raises
     ------
-    TypeError
-        If `index_or_slice` isn't a `slice` or `int`.
     IndexError
         If `index_or_slice` is an int and is outside the range of the mapping's
         contents.
@@ -366,10 +342,7 @@ def get_index_or_slice(
     if isinstance(index_or_slice, slice):
         return tuple(itertools.islice(mapping.values(), index_or_slice.start, index_or_slice.stop, index_or_slice.step))
 
-    if isinstance(index_or_slice, int):
-        try:
-            return next(itertools.islice(mapping.values(), index_or_slice, None))
-        except StopIteration:
-            raise IndexError(index_or_slice) from None
-
-    raise TypeError(f"sequence indices must be integers or slices, not {type(index_or_slice).__name__}")
+    try:
+        return next(itertools.islice(mapping.values(), index_or_slice, None))
+    except StopIteration:
+        raise IndexError(index_or_slice) from None
