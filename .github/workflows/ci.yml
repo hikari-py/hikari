@@ -43,7 +43,7 @@ jobs:
           mv .coverage .coverage.${{ matrix.os }}.${{ matrix.python-version }}
 
       - name: Upload coverage
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: coverage
           path: .coverage.${{ matrix.os }}.${{ matrix.python-version }}
@@ -148,7 +148,7 @@ jobs:
 
       - name: Upload artifacts
         if: github.event_name != 'release'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: pages
           path: public
