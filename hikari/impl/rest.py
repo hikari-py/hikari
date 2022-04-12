@@ -745,18 +745,36 @@ class RESTClientImpl(rest_api.RESTClient):
                         start = time.monotonic()
 
                     # Make the request.
-                    response = await live_attributes.still_alive().client_session.request(
-                        compiled_route.method,
-                        url,
-                        headers=headers,
-                        params=query,
-                        json=json,
-                        data=form,
-                        allow_redirects=self._http_settings.max_redirects is not None,
-                        max_redirects=self._http_settings.max_redirects,
-                        proxy=self._proxy_settings.url,
-                        proxy_headers=self._proxy_settings.all_headers,
-                    )
+                    try:
+                        response = await live_attributes.still_alive().client_session.request(
+                            compiled_route.method,
+                            url,
+                            headers=headers,
+                            params=query,
+                            json=json,
+                            data=form,
+                            allow_redirects=self._http_settings.max_redirects is not None,
+                            max_redirects=self._http_settings.max_redirects,
+                            proxy=self._proxy_settings.url,
+                            proxy_headers=self._proxy_settings.all_headers,
+                        )
+                    except asyncio.TimeoutError:  # Request timed out
+                        if retry_count >= self._max_retries:
+                            raise
+
+                        if backoff is None:
+                            backoff = rate_limits.ExponentialBackOff(maximum=_MAX_BACKOFF_DURATION)
+
+                        sleep_time = next(backoff)
+                        _LOGGER.warning(
+                            "Timed out on request, backing off for %.2fs and retrying. Retries remaining: %s",
+                            sleep_time,
+                            self._max_retries - retry_count,
+                        )
+                        retry_count += 1
+
+                        await asyncio.sleep(sleep_time)
+                        continue
 
                     if trace_logging_enabled:
                         time_taken = (time.monotonic() - start) * 1_000  # pyright: ignore[reportUnboundVariable]
