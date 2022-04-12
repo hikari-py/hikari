@@ -715,7 +715,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         url = compiled_route.create_url(self._rest_url)
 
-        # This is initiated the first time we hit a 5xx error to save a little memory when nothing goes wrong
+        # This is initiated the first time we time our or hit a 5xx error to save a little memory when nothing goes wrong
         backoff: typing.Optional[rate_limits.ExponentialBackOff] = None
         retry_count = 0
 
