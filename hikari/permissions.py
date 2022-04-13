@@ -41,7 +41,8 @@ class Permissions(enums.Flag):
     where each bit represents a permission. You can use bitwise operators
     to efficiently manipulate and compare permissions.
 
-    Examples:
+    Examples
+    --------
     You can create an enum which combines multiple permissions using the bitwise OR operator (`|`):
 
        my_perms = Permissions.MANAGE_CHANNELS | Permissions.MANAGE_GUILD
@@ -54,7 +55,7 @@ class Permissions(enums.Flag):
        )
 
     To find the intersection of two sets of permissions, use the bitwise AND
-    operator (`&`) between them. By then applying the == operator, you can check if all
+    operator (`&`) between them. By then applying the `==` operator, you can check if all
     permissions from one set are present in another set. This is useful, for instance,
     for checking if a user has all the required permissions
 
