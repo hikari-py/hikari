@@ -1456,6 +1456,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         deleted: typing.List[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = []
 
+        iterator: iterators.LazyIterator[snowflakes.SnowflakeishOr[messages_.PartialMessage]]
         if isinstance(messages, typing.AsyncIterable):
             iterator = iterators.NOOPLazyIterator(messages)
             if other_messages:
