@@ -39,6 +39,7 @@ from hikari import errors
 from hikari import files
 from hikari import guilds
 from hikari import invites
+from hikari import iterators
 from hikari import permissions
 from hikari import scheduled_events
 from hikari import snowflakes
@@ -2667,6 +2668,31 @@ class TestRESTClientImplAsync:
                 ),
             ]
         )
+
+    async def test_delete_messages_with_async_iterable(self, rest_client):
+        channel = StubModel(54123)
+        iterator = iterators.FlatLazyIterator(StubModel(i) for i in range(103))
+
+        rest_client._request = mock.AsyncMock()
+
+        await rest_client.delete_messages(channel, iterator)
+
+        rest_client._request.assert_has_awaits(
+            [
+                mock.call(
+                    routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel),
+                    json={"messages": [str(i) for i in range(100)]},
+                ),
+                mock.call(
+                    routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel),
+                    json={"messages": ["100", "101", "102"]},
+                ),
+            ]
+        )
+
+    async def test_delete_messages_with_async_iterable_and_args(self, rest_client):
+        with pytest.raises(TypeError):
+            await rest_client.delete_messages(54123, iterators.FlatLazyIterator(()), 1, 2)
 
     async def test_add_reaction(self, rest_client):
         expected_route = routes.PUT_MY_REACTION.compile(emoji="rooYay:123", channel=123, message=456)

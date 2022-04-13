@@ -1446,26 +1446,25 @@ class RESTClientImpl(rest_api.RESTClient):
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         messages: typing.Union[
             snowflakes.SnowflakeishOr[messages_.PartialMessage],
-            snowflakes.SnowflakeishIterable[messages_.PartialMessage],
+            typing.Iterable[snowflakes.SnowflakeishOr[messages_.PartialMessage]],
+            typing.AsyncIterable[snowflakes.SnowflakeishOr[messages_.PartialMessage]],
         ],
         /,
         *other_messages: snowflakes.SnowflakeishOr[messages_.PartialMessage],
     ) -> None:
         route = routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel)
 
-        pending: typing.List[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = []
         deleted: typing.List[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = []
 
-        if isinstance(messages, typing.Iterable):  # Syntactic sugar. Allows to use iterables
-            pending.extend(messages)
-
+        if isinstance(messages, typing.AsyncIterable):
+            iterator = iterators.NOOPLazyIterator(messages)
+            if other_messages:
+                raise TypeError("Cannot use *args with an async iterable.")
         else:
-            pending.append(messages)
+            messages = tuple(messages) if isinstance(messages, typing.Iterable) else (messages,)
+            iterator = iterators.FlatLazyIterator(messages + other_messages)
 
-        # This maintains the order in-order to keep a predictable deletion order.
-        pending.extend(other_messages)
-
-        while pending:
+        async for chunk in iterator.chunk(100):
             # Discord only allows 2-100 messages in the BULK_DELETE endpoint. Because of that,
             # if the user wants 101 messages deleted, we will post 100 messages in bulk delete
             # and then the last message in a normal delete.
@@ -1481,8 +1480,8 @@ class RESTClientImpl(rest_api.RESTClient):
             # (albeit at a cost of maybe a couple-dozen milliseconds per call),
             # I am just gonna invoke these sequentially instead.
             try:
-                if len(pending) == 1:
-                    message = pending[0]
+                if len(chunk) == 1:
+                    message = chunk[0]
                     try:
                         await self.delete_message(channel, message)
                     except errors.NotFoundError as exc:
@@ -1495,14 +1494,12 @@ class RESTClientImpl(rest_api.RESTClient):
 
                 else:
                     body = data_binding.JSONObjectBuilder()
-                    chunk = pending[:100]
                     body.put_snowflake_array("messages", chunk)
                     await self._request(route, json=body)
                     deleted += chunk
 
-                pending = pending[100:]
             except Exception as ex:
-                raise errors.BulkDeleteError(deleted, pending) from ex
+                raise errors.BulkDeleteError(deleted, await iterator) from ex
 
     @staticmethod
     def _transform_emoji_to_url_format(
