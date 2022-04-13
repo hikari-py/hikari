@@ -42,7 +42,7 @@ class Permissions(enums.Flag):
     to efficiently manipulate and compare permissions.
 
     Examples:
-    You can create an enum which combines multiple permissions Using the bitwise OR operator (`|`):
+    You can create an enum which combines multiple permissions using the bitwise OR operator (`|`):
 
        my_perms = Permissions.MANAGE_CHANNELS | Permissions.MANAGE_GUILD
 
@@ -64,18 +64,18 @@ class Permissions(enums.Flag):
            print("I am missing at least one required permission!")
 
     To determine which permissions from one set are missing from another, you can use the
-    bitwise equivalent of the set difference operation.
+    bitwise equivalent of the set difference operation, as shown below. This can be used,
+    for instance, to find which of a user's permissions are missing from the required permissions.
 
        missing_perms = ~my_perms & required_perms
        if (missing_perms):
            print(f"I'm missing these permissions: {missing_perms}")
 
-    Lastly, if you need all the permissions set except for a few,
+    Lastly, if you need all the permissions from a set except for a few,
     you can use the bitwise NOT operator (`~`).
 
         # All permissions except ADMINISTRATOR.
         my_perms = ~Permissions.ADMINISTRATOR
-
 
     """
 
