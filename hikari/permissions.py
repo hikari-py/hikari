@@ -70,6 +70,12 @@ class Permissions(enums.Flag):
        if (missing_perms):
            print(f"I'm missing these permissions: {missing_perms}")
 
+    Lastly, if you need all the permissions set except for a few,
+    you can use the bitwise NOT operator (`~`).
+
+        # All permissions except ADMINISTRATOR.
+        my_perms = ~Permissions.ADMINISTRATOR
+
 
     """
 
