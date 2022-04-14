@@ -1793,6 +1793,34 @@ class TestRESTClientImplAsync:
         asyncio_sleep.assert_has_awaits([mock.call(1), mock.call(2), mock.call(3)])
 
     @hikari_test_helpers.timeout()
+    async def test__request_when_timeout_will_retry_until_exhausted(self, rest_client, live_attributes):
+        route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
+        mock_session = mock.AsyncMock(request=mock.AsyncMock(side_effect=asyncio.TimeoutError))
+        rest_client._max_retries = 3
+        rest_client._parse_ratelimits = mock.AsyncMock()
+        live_attributes.buckets.is_started = True
+        live_attributes.client_session = mock_session
+
+        stack = contextlib.ExitStack()
+        stack.enter_context(pytest.raises(asyncio.TimeoutError))
+        exponential_backoff = stack.enter_context(
+            mock.patch.object(
+                rate_limits,
+                "ExponentialBackOff",
+                return_value=mock.Mock(__next__=mock.Mock(side_effect=[1, 2, 3, 4, 5])),
+            )
+        )
+        asyncio_sleep = stack.enter_context(mock.patch.object(asyncio, "sleep"))
+
+        with stack:
+            await rest_client._request(route)
+
+        assert live_attributes.still_alive.call_count == 12
+        assert exponential_backoff.return_value.__next__.call_count == 3
+        exponential_backoff.assert_called_once_with(maximum=16)
+        asyncio_sleep.assert_has_awaits([mock.call(1), mock.call(2), mock.call(3)])
+
+    @hikari_test_helpers.timeout()
     async def test__request_when_response__RetryRequest_gets_handled(
         self, rest_client, exit_exception, live_attributes
     ):
