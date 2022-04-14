@@ -37,52 +37,43 @@ from hikari.internal import enums
 class Permissions(enums.Flag):
     """Represents the permissions available in a given channel or guild.
 
-    This enum is an `enum.IntFlag`. This means that you can **combine multiple
-    permissions together** into one value using the bitwise-OR operator (`|`).
+    This enum is an `enum.IntFlag`, which means that it is stored as a bit field
+    where each bit represents a permission. You can use bitwise operators
+    to efficiently manipulate and compare permissions.
 
-        my_perms = Permissions.MANAGE_CHANNELS | Permissions.MANAGE_GUILD
+    Examples
+    --------
+    You can create an enum which combines multiple permissions using the bitwise OR operator (`|`):
 
-        your_perms = (
-            Permissions.CREATE_INSTANT_INVITE
-            | Permissions.KICK_MEMBERS
-            | Permissions.BAN_MEMBERS
-            | Permissions.MANAGE_GUILD
-        )
+       my_perms = Permissions.MANAGE_CHANNELS | Permissions.MANAGE_GUILD
 
-    You can **check if a permission is present** in a set of combined
-    permissions by using the bitwise-AND operator (`&`). This will return
-    the int-value of the permission if it is present, or `0` if not present.
+       required_perms = (
+           Permissions.CREATE_INSTANT_INVITE
+           | Permissions.KICK_MEMBERS
+           | Permissions.BAN_MEMBERS
+           | Permissions.MANAGE_GUILD
+       )
 
-        my_perms = Permissions.MANAGE_CHANNELS | Permissions.MANAGE_GUILD
+    To find the intersection of two sets of permissions, use the bitwise AND
+    operator (`&`) between them. By then applying the `==` operator, you can check if all
+    permissions from one set are present in another set. This is useful, for instance,
+    for checking if a user has all the required permissions
 
-        if my_perms & Permissions.MANAGE_CHANNELS:
-            if my_perms & Permissions.MANAGE_GUILD:
-                print("I have the permission to both manage the guild and the channels in it!")
-            else:
-                print("I have the permission to manage channels!")
-        else:
-            print("I don't have the permission to manage channels!")
+       if (my_perms & required_perms) == required_perms:
+           print("I have all of the required permissions!")
+       else:
+           print("I am missing at least one required permission!")
 
-        # Or you could simplify it:
+    To determine which permissions from one set are missing from another, you can use the
+    bitwise equivalent of the set difference operation, as shown below. This can be used,
+    for instance, to find which of a user's permissions are missing from the required permissions.
 
-        if my_perms & (Permissions.MANAGE_CHANNELS | Permissions.MANAGE_GUILD):
-            print("I have the permission to both manage the guild and the channels in it!")
-        elif my_perms & Permissions.MANAGE_CHANNELS:
-            print("I have the permission to manage channels!")
-        else:
-            print("I don't have the permission to manage channels!")
+       missing_perms = ~my_perms & required_perms
+       if (missing_perms):
+           print(f"I'm missing these permissions: {missing_perms}")
 
-    If you need to **check that a permission is not present**, you can use the
-    bitwise-XOR operator (`^`) to check. If the permission is not present, it
-    will return a non-zero value, otherwise if it is present, it will return `0`.
-
-        my_perms = Permissions.MANAGE_CHANNELS | Permissions.MANAGE_GUILD
-
-        if my_perms ^ Permissions.MANAGE_CHANNELS:
-            print("Please give me the MANAGE_CHANNELS permission!")
-
-    Lastly, if you need all the permissions set except the permission you want,
-    you can use the inversion operator (`~`) to do that.
+    Lastly, if you need all the permissions from a set except for a few,
+    you can use the bitwise NOT operator (`~`).
 
         # All permissions except ADMINISTRATOR.
         my_perms = ~Permissions.ADMINISTRATOR
