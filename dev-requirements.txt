@@ -30,7 +30,7 @@ minify-html==0.8
 #################
 
 mypy==0.942
-pyright==1.1.235
+pyright==1.1.237
 
 #######################
 # DEPENDENCY CHECKING #
