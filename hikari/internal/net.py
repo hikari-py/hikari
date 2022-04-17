@@ -119,7 +119,6 @@ def create_client_session(
     http_settings: config.HTTPSettings,
     raise_for_status: bool,
     trust_env: bool,
-    ws_response_cls: typing.Type[aiohttp.ClientWebSocketResponse] = aiohttp.ClientWebSocketResponse,
 ) -> aiohttp.ClientSession:
     """Generate a client session using the given settings.
 
@@ -138,7 +137,7 @@ def create_client_session(
         The connector to use.
     connector_owner : builtins.bool
         If `builtins.True`, then the client session will close the
-        connector on shutdown. Otherwise, you must do it manually.
+        connector on shut down. Otherwise, you must do it manually.
     http_settings : hikari.config.HTTPSettings
         HTTP settings to use.
     raise_for_status : builtins.bool
@@ -147,10 +146,6 @@ def create_client_session(
     trust_env : builtins.bool
         `builtins.True` to trust anything in environment variables
         and the `netrc` file, `builtins.False` to ignore it.
-    ws_response_cls : typing.Type[aiohttp.ClientWebSocketResponse]
-        The websocket response class to use.
-
-        Defaults to `aiohttp.ClientWebSocketResponse`.
 
     Returns
     -------
@@ -169,5 +164,4 @@ def create_client_session(
         ),
         trust_env=trust_env,
         version=aiohttp.HttpVersion11,
-        ws_response_class=ws_response_cls,
     )

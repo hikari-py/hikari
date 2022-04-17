@@ -38,6 +38,7 @@ from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import interaction_server as interaction_server_impl
 from hikari.impl import rest as rest_impl
 from hikari.internal import aio
+from hikari.internal import signals
 from hikari.internal import ux
 
 if typing.TYPE_CHECKING:
@@ -280,7 +281,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
             token_type=token_type,
         )
 
-        # IntegrationServer
+        # InteractionServer
         self._server = interaction_server_impl.InteractionServer(
             entity_factory=self._entity_factory,
             public_key=public_key,
@@ -359,18 +360,22 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
 
     async def close(self) -> None:
         if not self._close_event:
-            raise errors.ComponentStateConflictError("Cannot close an inactive interaction server")
+            raise errors.ComponentStateConflictError("Cannot close an inactive bot")
 
         if self._is_closing:
             await self.join()
             return
 
+        _LOGGER.info("bot requested to shut down")
+
         self._is_closing = True
-        close_event = self._close_event
         await self._server.close()
         await self._rest.close()
-        close_event.set()
+        self._close_event.set()
         self._close_event = None
+        self._is_closing = False
+
+        _LOGGER.info("bot shut down successfully")
 
     async def join(self) -> None:
         if not self._close_event:
@@ -393,6 +398,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         host: typing.Optional[typing.Union[str, typing.Sequence[str]]] = None,
         path: typing.Optional[str] = None,
         port: typing.Optional[int] = None,
+        propagate_interrupts: bool = False,
         reuse_address: typing.Optional[bool] = None,
         reuse_port: typing.Optional[bool] = None,
         shutdown_timeout: float = 60.0,
@@ -415,7 +421,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         close_loop : builtins.bool
             Defaults to `builtins.True`. If `builtins.True`, then once the bot
             enters a state where all components have shut down permanently
-            during application shutdown, then all asyncgens and background tasks
+            during application shut down, then all asyncgens and background tasks
             will be destroyed, and the event loop will be shut down.
 
             This will wait until all `hikari`-owned `aiohttp` connectors have
@@ -460,7 +466,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         socket : typing.Optional[socket.socket]
             A pre-existing socket object to accept connections on.
         shutdown_timeout : builtins.float
-            A delay to wait for graceful server shutdown before forcefully
+            A delay to wait for graceful server shut down before forcefully
             disconnecting all open client sockets. This defaults to 60 seconds.
         ssl_context : typing.Optional[ssl.SSLContext]
             SSL context for HTTPS servers.
@@ -480,36 +486,48 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
                 _LOGGER.log(ux.TRACE, "cannot set coroutine tracking depth for sys, no functionality exists for this")
 
         try:
-            loop.run_until_complete(
-                self.start(
-                    backlog=backlog,
-                    check_for_updates=check_for_updates,
-                    enable_signal_handlers=enable_signal_handlers,
-                    host=host,
-                    port=port,
-                    path=path,
-                    reuse_address=reuse_address,
-                    reuse_port=reuse_port,
-                    socket=socket,
-                    shutdown_timeout=shutdown_timeout,
-                    ssl_context=ssl_context,
+            with signals.handle_interrupts(
+                enabled=enable_signal_handlers,
+                loop=loop,
+                propagate_interrupts=propagate_interrupts,
+            ):
+                loop.run_until_complete(
+                    self.start(
+                        backlog=backlog,
+                        check_for_updates=check_for_updates,
+                        host=host,
+                        port=port,
+                        path=path,
+                        reuse_address=reuse_address,
+                        reuse_port=reuse_port,
+                        socket=socket,
+                        shutdown_timeout=shutdown_timeout,
+                        ssl_context=ssl_context,
+                    )
                 )
-            )
-            loop.run_until_complete(self.join())
+                loop.run_until_complete(self.join())
 
         finally:
+            if self._close_event:
+                if self._is_closing:
+                    loop.run_until_complete(self._close_event.wait())
+                else:
+                    loop.run_until_complete(self.close())
+
             if close_passed_executor and self._executor:
+                _LOGGER.debug("shutting down executor %s", self._executor)
                 self._executor.shutdown(wait=True)
                 self._executor = None
 
             if close_loop:
-                loop.close()
+                aio.destroy_loop(loop, _LOGGER)
+
+            _LOGGER.info("successfully terminated")
 
     async def start(
         self,
         backlog: int = 128,
         check_for_updates: bool = True,
-        enable_signal_handlers: typing.Optional[bool] = None,
         host: typing.Optional[typing.Union[str, typing.Sequence[str]]] = None,
         port: typing.Optional[int] = None,
         path: typing.Optional[str] = None,
@@ -529,16 +547,6 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         check_for_updates : builtins.bool
             Defaults to `builtins.True`. If `builtins.True`, will check for
             newer versions of `hikari` on PyPI and notify if available.
-        enable_signal_handlers : typing.Optional[builtins.bool]
-            Defaults to `builtins.True` if this is started in the main thread.
-
-            If on a __non-Windows__ OS with builtin support for kernel-level
-            POSIX signals, then setting this to `builtins.True` will allow
-            treating keyboard interrupts and other OS signals to safely shut
-            down the application as calls to shut down the application properly
-            rather than just killing the process in a dirty state immediately.
-            You should leave this enabled unless you plan to implement your own
-            signal handling yourself.
         host : typing.Optional[typing.Union[builtins.str, aiohttp.web.HostSequence]]
             TCP/IP host or a sequence of hosts for the HTTP server.
         port : typing.Optional[builtins.int]
@@ -554,7 +562,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         socket : typing.Optional[socket.socket]
             A pre-existing socket object to accept connections on.
         shutdown_timeout : builtins.float
-            A delay to wait for graceful server shutdown before forcefully
+            A delay to wait for graceful server shut down before forcefully
             disconnecting all open client sockets. This defaults to 60 seconds.
         ssl_context : typing.Optional[ssl.SSLContext]
             SSL context for HTTPS servers.
@@ -578,7 +586,6 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         self._rest.start()
         await self._server.start(
             backlog=backlog,
-            enable_signal_handlers=enable_signal_handlers,
             host=host,
             port=port,
             path=path,
