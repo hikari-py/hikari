@@ -62,6 +62,7 @@ from hikari.internal import data_binding
 from hikari.internal import mentions
 from hikari.internal import routes
 from hikari.internal import time
+from hikari.locales import Locale
 
 if typing.TYPE_CHECKING:
     import concurrent.futures
@@ -1093,6 +1094,17 @@ class CommandBuilder(special_endpoints.CommandBuilder):
     _id: undefined.UndefinedOr[snowflakes.Snowflake] = attr.field(default=undefined.UNDEFINED, kw_only=True)
     _default_permission: undefined.UndefinedOr[bool] = attr.field(default=undefined.UNDEFINED, kw_only=True)
 
+    _name_localizations: typing.Sequence[Locale, str] = attr.field(factory=dict, kw_only=True)
+    _description_localizations: typing.Sequence[Locale, str] = attr.field(factory=dict, kw_only=True)
+
+    @property
+    def name_localizations(self) -> typing.Sequence[Locale, str]:
+        return self._name_localizations
+
+    @property
+    def description_localizations(self) -> typing.Sequence[Locale, str]:
+        return self._description_localizations
+
     @property
     def id(self) -> undefined.UndefinedOr[snowflakes.Snowflake]:
         return self._id
@@ -1119,6 +1131,8 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         data["type"] = self.type
         data.put_snowflake("id", self._id)
         data.put("default_permission", self._default_permission)
+        data.put("name_localizations", self._name_localizations)
+        data.put("description_localizations", self._description_localizations)
         return data
 
 
@@ -1167,6 +1181,7 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
             guild=guild,
             default_permission=self._default_permission,
             options=self._options,
+            name_localizations=self._name_localizations
         )
 
 

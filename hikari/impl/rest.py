@@ -3121,15 +3121,31 @@ class RESTClientImpl(rest_api.RESTClient):
     def command_builder(self, name: str, description: str) -> special_endpoints.SlashCommandBuilder:
         return self.slash_command_builder(name, description)
 
-    def slash_command_builder(self, name: str, description: str) -> special_endpoints.SlashCommandBuilder:
-        return special_endpoints_impl.SlashCommandBuilder(name, description)
+    def slash_command_builder(
+        self,
+        name: str,
+        description: str,
+        name_localizations: typing.Sequence[locales.Locale, str] = undefined.UNDEFINED,
+        description_localizations: typing.Sequence[locales.Locale, str] = undefined.UNDEFINED
+    ) -> special_endpoints.SlashCommandBuilder:
+        return special_endpoints_impl.SlashCommandBuilder(
+            name,
+            description,
+            name_localizations=name_localizations,
+            description_localizations=description_localizations
+        )
 
     def context_menu_command_builder(
         self,
         type: typing.Union[commands.CommandType, int],
         name: str,
+        name_localizations: typing.Sequence[locales.Locale, str] = undefined.UNDEFINED,
     ) -> special_endpoints.ContextMenuCommandBuilder:
-        return special_endpoints_impl.ContextMenuCommandBuilder(commands.CommandType(type), name)
+        return special_endpoints_impl.ContextMenuCommandBuilder(
+            commands.CommandType(type),
+            name,
+            name_localizations=name_localizations
+        )
 
     async def fetch_application_command(
         self,
@@ -3175,6 +3191,7 @@ class RESTClientImpl(rest_api.RESTClient):
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
         default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        name_localizations: typing.Sequence[locales.Locale, str] = undefined.UNDEFINED
     ) -> data_binding.JSONObject:
         if guild is undefined.UNDEFINED:
             route = routes.POST_APPLICATION_COMMAND.compile(application=application)
@@ -3188,6 +3205,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("type", type)
         body.put_array("options", options, conversion=self._entity_factory.serialize_command_option)
         body.put("default_permission", default_permission)
+        body.put("name_localizations", name_localizations)
 
         response = await self._request(route, json=body)
         assert isinstance(response, dict)
@@ -3222,6 +3240,7 @@ class RESTClientImpl(rest_api.RESTClient):
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
         default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        name_localizations: typing.Sequence[locales.Locale, str] = undefined.UNDEFINED
     ) -> commands.SlashCommand:
         response = await self._create_application_command(
             application=application,
@@ -3231,6 +3250,7 @@ class RESTClientImpl(rest_api.RESTClient):
             guild=guild,
             options=options,
             default_permission=default_permission,
+            name_localizations=name_localizations
         )
         return self._entity_factory.deserialize_slash_command(
             response, guild_id=snowflakes.Snowflake(guild) if guild is not undefined.UNDEFINED else None

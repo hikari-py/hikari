@@ -45,6 +45,7 @@ from hikari import traits
 from hikari import undefined
 from hikari.internal import attr_extensions
 from hikari.internal import enums
+from hikari.locales import Locale
 
 if typing.TYPE_CHECKING:
     from hikari import channels
@@ -135,6 +136,12 @@ class CommandOption:
         This will match the regex `^[\w-]{1,32}$` in Unicode mode and will be
         lowercase.
     """
+
+    name_localizations: typing.Sequence[Locale, str] = attr.field(factory=dict, kw_only=True)
+    """A set of name localizations for this option"""
+
+    description_localizations: typing.Sequence[Locale, str] = attr.field(factory=dict, kw_only=True)
+    """A set of description localizations for this option"""
 
     description: str = attr.field(repr=False)
     """The command option's description.

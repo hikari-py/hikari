@@ -67,6 +67,7 @@ if typing.TYPE_CHECKING:
     from hikari.interactions import base_interactions
     from hikari.internal import data_binding
     from hikari.internal import time
+    from hikari.locales import Locale
 
     _T = typing.TypeVar("_T")
 
@@ -938,6 +939,17 @@ class CommandBuilder(abc.ABC):
     """Interface of a command builder used when bulk creating commands over REST."""
 
     __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def name_localizations(self) -> typing.Sequence[Locale, str]:
+        """Name localizations set for this command.
+
+            Returns
+            -------
+            typing.Sequence[hikari.locales.Locale, builtins.str]
+                The name localizations of this command
+        """
 
     @property
     @abc.abstractmethod

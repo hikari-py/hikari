@@ -28,6 +28,7 @@ __all__: typing.Sequence[str] = ("RESTClient", "TokenStrategy")
 import abc
 import typing
 
+import hikari.locales
 from hikari import scheduled_events
 from hikari import traits
 from hikari import undefined
@@ -6667,6 +6668,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         name: str,
         description: str,
+        name_localizations: typing.Sequence[hikari.locales.Locale, str] = undefined.UNDEFINED,
+        description_localizations: typing.Sequence[hikari.locales.Locale, str] = undefined.UNDEFINED
     ) -> special_endpoints.SlashCommandBuilder:
         r"""Create a command builder for use in `RESTClient.set_application_commands`.
 
@@ -6678,6 +6681,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         description : builtins.str
             The description to set for the command if this is a slash command.
             This should be inclusively between 1-100 characters in length.
+        name_localizations : typing.Sequence[hikari.locales.Locale, builtins.str]
+            The localized names of this command
+        description_localizations : typing.Sequence[hikari.locales.Locale, builtins.str]
+            The localized descriptions of this command
 
         Returns
         -------
@@ -6889,6 +6896,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
         default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        name_localizations: typing.Sequence[hikari.locales.Locale, str] = undefined.UNDEFINED
     ) -> commands.SlashCommand:
         r"""Create an application command.
 
