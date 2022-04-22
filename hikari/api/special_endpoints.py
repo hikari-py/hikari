@@ -942,13 +942,13 @@ class CommandBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def name_localizations(self) -> typing.Sequence[Locale, str]:
+    def name_localizations(self) -> typing.Optional[typing.Dict[Locale, str]]:
         """Name localizations set for this command.
 
-            Returns
-            -------
-            typing.Sequence[hikari.locales.Locale, builtins.str]
-                The name localizations of this command
+        Returns
+        -------
+        undefined.UndefinedOr[typing.Dict[hikari.locales.Locale, builtins.str]]
+            The name localizations of this command
         """
 
     @property
@@ -1095,6 +1095,17 @@ class SlashCommandBuilder(CommandBuilder):
         -------
         builtins.str
             The description to set for this command.
+        """
+
+    @property
+    @abc.abstractmethod
+    def description_localizations(self) -> typing.Optional[typing.Dict[Locale, str]]:
+        """Return the description locales to set for this command.
+
+        Returns
+        -------
+        undefined.UndefinedOr[typing.Dict[hikari.locales.Locale, builtins.str]]
+            The description localizations of this command
         """
 
     @property

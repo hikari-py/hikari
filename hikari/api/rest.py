@@ -6668,8 +6668,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         name: str,
         description: str,
-        name_localizations: typing.Sequence[hikari.locales.Locale, str] = undefined.UNDEFINED,
-        description_localizations: typing.Sequence[hikari.locales.Locale, str] = undefined.UNDEFINED
+        name_localizations: typing.Optional[typing.Dict[hikari.locales.Locale, str]] = None,
+        description_localizations: typing.Optional[typing.Dict[hikari.locales.Locale, str]] = None,
     ) -> special_endpoints.SlashCommandBuilder:
         r"""Create a command builder for use in `RESTClient.set_application_commands`.
 
@@ -6896,7 +6896,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
         default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        name_localizations: typing.Sequence[hikari.locales.Locale, str] = undefined.UNDEFINED
+        name_localizations: typing.Optional[typing.Dict[hikari.locales.Locale, str]] = None,
+        description_localizations: typing.Optional[typing.Dict[hikari.locales.Locale, str]] = None,
     ) -> commands.SlashCommand:
         r"""Create an application command.
 

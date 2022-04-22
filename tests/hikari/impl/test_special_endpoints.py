@@ -32,6 +32,7 @@ from hikari import undefined
 from hikari.impl import special_endpoints
 from hikari.interactions import base_interactions
 from hikari.internal import routes
+from hikari.locales import Locale
 from tests.hikari import hikari_test_helpers
 
 
@@ -666,7 +667,12 @@ class TestSlashCommandBuilder:
         mock_entity_factory = mock.Mock()
         mock_option = object()
         builder = (
-            special_endpoints.SlashCommandBuilder("we are number", "one")
+            special_endpoints.SlashCommandBuilder(
+                "we are number",
+                "one",
+                name_localizations={Locale.TR: "merhaba"},
+                description_localizations={Locale.TR: "bir"},
+            )
             .add_option(mock_option)
             .set_id(3412312)
             .set_default_permission(False)
@@ -682,6 +688,8 @@ class TestSlashCommandBuilder:
             "default_permission": False,
             "options": [mock_entity_factory.serialize_command_option.return_value],
             "id": "3412312",
+            "name_localizations": {Locale.TR: "merhaba"},
+            "description_localizations": {Locale.TR: "bir"},
         }
 
     def test_build_without_optional_data(self):
@@ -689,7 +697,14 @@ class TestSlashCommandBuilder:
 
         result = builder.build(mock.Mock())
 
-        assert result == {"type": 1, "name": "we are numberr", "description": "oner", "options": []}
+        assert result == {
+            "type": 1,
+            "name": "we are numberr",
+            "description": "oner",
+            "options": [],
+            "description_localizations": None,
+            "name_localizations": None,
+        }
 
     @pytest.mark.asyncio()
     async def test_create(self):
@@ -711,6 +726,8 @@ class TestSlashCommandBuilder:
             guild=undefined.UNDEFINED,
             default_permission=builder.default_permission,
             options=builder.options,
+            name_localizations=None,
+            description_localizations=None,
         )
 
     @pytest.mark.asyncio()
@@ -728,13 +745,19 @@ class TestSlashCommandBuilder:
             guild=54123123321,
             default_permission=builder.default_permission,
             options=builder.options,
+            name_localizations=None,
+            description_localizations=None,
         )
 
 
 class TestContextMenuBuilder:
     def test_build_with_optional_data(self):
         builder = (
-            special_endpoints.ContextMenuCommandBuilder(commands.CommandType.USER, "we are number")
+            special_endpoints.ContextMenuCommandBuilder(
+                commands.CommandType.USER,
+                "we are number",
+                name_localizations={Locale.TR: "merhaba"},
+            )
             .set_id(3412312)
             .set_default_permission(False)
         )
@@ -746,6 +769,7 @@ class TestContextMenuBuilder:
             "type": 2,
             "default_permission": False,
             "id": "3412312",
+            "name_localizations": {Locale.TR: "merhaba"},
         }
 
     def test_build_without_optional_data(self):
@@ -753,7 +777,7 @@ class TestContextMenuBuilder:
 
         result = builder.build(mock.Mock())
 
-        assert result == {"type": 3, "name": "nameeeee"}
+        assert result == {"type": 3, "name": "nameeeee", "name_localizations": None}
 
     @pytest.mark.asyncio()
     async def test_create(self):

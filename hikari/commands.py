@@ -137,11 +137,17 @@ class CommandOption:
         lowercase.
     """
 
-    name_localizations: typing.Sequence[Locale, str] = attr.field(factory=dict, kw_only=True)
-    """A set of name localizations for this option"""
+    name_localizations: typing.Optional[typing.Dict[Locale, str]] = attr.field(default=None, kw_only=True)
+    """A set of name localizations for this option
 
-    description_localizations: typing.Sequence[Locale, str] = attr.field(factory=dict, kw_only=True)
-    """A set of description localizations for this option"""
+    This will be `builtins.None` if not provided.
+    """
+
+    description_localizations: typing.Optional[typing.Dict[Locale, str]] = attr.field(default=None, kw_only=True)
+    """A set of description localizations for this option
+
+    This will be `builtins.None` if not provided.
+    """
 
     description: str = attr.field(repr=False)
     """The command option's description.
@@ -197,6 +203,18 @@ class PartialCommand(snowflakes.Unique):
 
     app: traits.RESTAware = attr.field(eq=False, hash=False, repr=False)
     """The client application that models may use for procedures."""
+
+    name_localizations: typing.Optional[typing.Dict[Locale, str]] = attr.field(default=None, kw_only=True)
+    """A set of name localizations for this option
+
+    This will be `builtins.None` if not provided.
+    """
+
+    description_localizations: typing.Optional[typing.Dict[Locale, str]] = attr.field(default=None, kw_only=True)
+    """A set of description localizations for this option
+
+    This will be `builtins.None` if not provided.
+    """
 
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
     # <<inherited docstring from Unique>>.

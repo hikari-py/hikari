@@ -1760,7 +1760,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             min_value=payload.get("min_value"),
             max_value=payload.get("max_value"),
             name_localizations=payload.get("name_localizations", {}),
-            description_localizations=payload.get("description_localizations", {})
+            description_localizations=payload.get("description_localizations", {}),
         )
 
     def deserialize_slash_command(
@@ -2115,7 +2115,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             "description": option.description,
             "required": option.is_required,
             "name_localizations": option.name_localizations,
-            "description_localizations": option.description_localizations
+            "description_localizations": option.description_localizations,
         }
 
         if option.channel_types is not None:

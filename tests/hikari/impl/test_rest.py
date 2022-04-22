@@ -4781,6 +4781,8 @@ class TestRESTClientImplAsync:
                 "name": "okokok",
                 "description": "not ok anymore",
                 "options": [rest_client._entity_factory.serialize_command_option.return_value],
+                "name_localizations": None,
+                "description_localizations": None,
             },
         )
 
@@ -4801,7 +4803,14 @@ class TestRESTClientImplAsync:
             rest_client._request.return_value, guild_id=None
         )
         rest_client._request.assert_awaited_once_with(
-            expected_route, json={"type": 1, "name": "okokok", "description": "not ok anymore"}
+            expected_route,
+            json={
+                "type": 1,
+                "name": "okokok",
+                "description": "not ok anymore",
+                "name_localizations": None,
+                "description_localizations": None,
+            },
         )
 
     async def test_create_slash_command(self, rest_client: rest.RESTClientImpl):
@@ -4815,7 +4824,14 @@ class TestRESTClientImplAsync:
             rest_client._request.return_value, guild_id=None
         )
         rest_client._request.assert_awaited_once_with(
-            expected_route, json={"type": 1, "name": "okokok", "description": "not ok anymore"}
+            expected_route,
+            json={
+                "type": 1,
+                "name": "okokok",
+                "description": "not ok anymore",
+                "name_localizations": None,
+                "description_localizations": None,
+            },
         )
 
     async def test_create_context_menu_command(self, rest_client: rest.RESTClientImpl):
@@ -4828,7 +4844,10 @@ class TestRESTClientImplAsync:
         rest_client._entity_factory.deserialize_context_menu_command.assert_called_once_with(
             rest_client._request.return_value, guild_id=None
         )
-        rest_client._request.assert_awaited_once_with(expected_route, json={"type": 2, "name": "okokok"})
+        rest_client._request.assert_awaited_once_with(
+            expected_route,
+            json={"type": 2, "name": "okokok", "name_localizations": None, "description_localizations": None},
+        )
 
     async def test_set_application_commands_with_guild(self, rest_client):
         expected_route = routes.PUT_APPLICATION_GUILD_COMMANDS.compile(application=4321231, guild=6543234)
