@@ -6681,9 +6681,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         description : builtins.str
             The description to set for the command if this is a slash command.
             This should be inclusively between 1-100 characters in length.
-        name_localizations : typing.Optional[typing.Dict[hikari.locales.Locale, builtins.str]]
+        name_localizations : typing.Optional[typing.Dict[hikari.locales.Locale | builtins.str, builtins.str]]
             The localized names of this command
-        description_localizations : typing.Optional[typing.Dict[hikari.locales.Locale, builtins.str]]
+        description_localizations : typing.Optional[typing.Dict[hikari.locales.Locale | builtins.str, builtins.str]]
             The localized descriptions of this command
 
         Returns
