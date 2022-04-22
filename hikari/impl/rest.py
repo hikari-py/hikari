@@ -3125,8 +3125,8 @@ class RESTClientImpl(rest_api.RESTClient):
         self,
         name: str,
         description: str,
-        name_localizations: typing.Optional[typing.Dict[locales.Locale, str]] = None,
-        description_localizations: typing.Optional[typing.Dict[locales.Locale, str]] = None,
+        name_localizations: typing.Optional[typing.Dict[locales.Locale | str, str]] = None,
+        description_localizations: typing.Optional[typing.Dict[locales.Locale | str, str]] = None,
     ) -> special_endpoints.SlashCommandBuilder:
         return special_endpoints_impl.SlashCommandBuilder(
             name,
@@ -3139,7 +3139,7 @@ class RESTClientImpl(rest_api.RESTClient):
         self,
         type: typing.Union[commands.CommandType, int],
         name: str,
-        name_localizations: typing.Optional[typing.Dict[locales.Locale, str]] = None,
+        name_localizations: typing.Optional[typing.Dict[locales.Locale | str, str]] = None,
     ) -> special_endpoints.ContextMenuCommandBuilder:
         return special_endpoints_impl.ContextMenuCommandBuilder(
             commands.CommandType(type), name, name_localizations=name_localizations
@@ -3189,8 +3189,8 @@ class RESTClientImpl(rest_api.RESTClient):
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
         default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        name_localizations: typing.Optional[typing.Dict[locales.Locale, str]] = None,
-        description_localizations: typing.Optional[typing.Dict[locales.Locale, str]] = None,
+        name_localizations: typing.Optional[typing.Dict[locales.Locale | str, str]] = None,
+        description_localizations: typing.Optional[typing.Dict[locales.Locale | str, str]] = None,
     ) -> data_binding.JSONObject:
         if guild is undefined.UNDEFINED:
             route = routes.POST_APPLICATION_COMMAND.compile(application=application)
@@ -3240,8 +3240,8 @@ class RESTClientImpl(rest_api.RESTClient):
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
         default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        name_localizations: typing.Optional[typing.Dict[locales.Locale, str]] = None,
-        description_localizations: typing.Optional[typing.Dict[locales.Locale, str]] = None,
+        name_localizations: typing.Optional[typing.Dict[locales.Locale | str, str]] = None,
+        description_localizations: typing.Optional[typing.Dict[locales.Locale | str, str]] = None,
     ) -> commands.SlashCommand:
         response = await self._create_application_command(
             application=application,

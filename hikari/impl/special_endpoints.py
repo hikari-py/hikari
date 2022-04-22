@@ -1094,10 +1094,10 @@ class CommandBuilder(special_endpoints.CommandBuilder):
     _id: undefined.UndefinedOr[snowflakes.Snowflake] = attr.field(default=undefined.UNDEFINED, kw_only=True)
     _default_permission: undefined.UndefinedOr[bool] = attr.field(default=undefined.UNDEFINED, kw_only=True)
 
-    _name_localizations: typing.Optional[typing.Dict[Locale, str]] = attr.field(default=None, kw_only=True)
+    _name_localizations: typing.Optional[typing.Dict[Locale | str, str]] = attr.field(default=None, kw_only=True)
 
     @property
-    def name_localizations(self) -> typing.Optional[typing.Dict[Locale, str]]:
+    def name_localizations(self) -> typing.Optional[typing.Dict[Locale | str, str]]:
         return self._name_localizations
 
     @property
@@ -1137,14 +1137,14 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
 
     _description: str = attr.field()
     _options: typing.List[commands.CommandOption] = attr.field(factory=list, kw_only=True)
-    _description_localizations: typing.Optional[typing.Dict[Locale, str]] = attr.field(default=None, kw_only=True)
+    _description_localizations: typing.Optional[typing.Dict[Locale | str, str]] = attr.field(default=None, kw_only=True)
 
     @property
     def description(self) -> str:
         return self._description
 
     @property
-    def description_localizations(self) -> typing.Optional[typing.Dict[Locale, str]]:
+    def description_localizations(self) -> typing.Optional[typing.Dict[Locale | str, str]]:
         return self._description_localizations
 
     @property

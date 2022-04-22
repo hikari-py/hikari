@@ -28,10 +28,10 @@ __all__: typing.Sequence[str] = ("RESTClient", "TokenStrategy")
 import abc
 import typing
 
-import hikari.locales
 from hikari import scheduled_events
 from hikari import traits
 from hikari import undefined
+from hikari.locales import Locale
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -6668,8 +6668,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         name: str,
         description: str,
-        name_localizations: typing.Optional[typing.Dict[hikari.locales.Locale, str]] = None,
-        description_localizations: typing.Optional[typing.Dict[hikari.locales.Locale, str]] = None,
+        name_localizations: typing.Optional[typing.Dict[Locale | str, str]] = None,
+        description_localizations: typing.Optional[typing.Dict[Locale | str, str]] = None,
     ) -> special_endpoints.SlashCommandBuilder:
         r"""Create a command builder for use in `RESTClient.set_application_commands`.
 
@@ -6896,8 +6896,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
         default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        name_localizations: typing.Optional[typing.Dict[hikari.locales.Locale, str]] = None,
-        description_localizations: typing.Optional[typing.Dict[hikari.locales.Locale, str]] = None,
+        name_localizations: typing.Optional[typing.Dict[Locale | str, str]] = None,
+        description_localizations: typing.Optional[typing.Dict[Locale | str, str]] = None,
     ) -> commands.SlashCommand:
         r"""Create an application command.
 

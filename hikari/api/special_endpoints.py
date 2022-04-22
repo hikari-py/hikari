@@ -942,7 +942,7 @@ class CommandBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def name_localizations(self) -> typing.Optional[typing.Dict[Locale, str]]:
+    def name_localizations(self) -> typing.Optional[typing.Dict[Locale | str, str]]:
         """Name localizations set for this command.
 
         Returns
@@ -1099,7 +1099,7 @@ class SlashCommandBuilder(CommandBuilder):
 
     @property
     @abc.abstractmethod
-    def description_localizations(self) -> typing.Optional[typing.Dict[Locale, str]]:
+    def description_localizations(self) -> typing.Optional[typing.Dict[Locale | str, str]]:
         """Return the description locales to set for this command.
 
         Returns
