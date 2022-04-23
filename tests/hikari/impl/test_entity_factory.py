@@ -3684,8 +3684,8 @@ class TestEntityFactoryImpl:
             "required": True,
             "min_value": 1.2,
             "max_value": 9.999,
-            "name_localizations": None,
-            "description_localizations": None,
+            "name_localizations": undefined.UNDEFINED,
+            "description_localizations": undefined.UNDEFINED,
         }
 
     def test_serialize_command_option_with_choices(self, entity_factory_impl):
@@ -3745,12 +3745,12 @@ class TestEntityFactoryImpl:
                     "name": "go home",
                     "required": False,
                     "choices": [{"name": "boo", "value": "hoo"}],
-                    "name_localizations": None,
-                    "description_localizations": None,
+                    "name_localizations": undefined.UNDEFINED,
+                    "description_localizations": undefined.UNDEFINED,
                 }
             ],
-            "name_localizations": None,
-            "description_localizations": None,
+            "name_localizations": undefined.UNDEFINED,
+            "description_localizations": undefined.UNDEFINED,
         }
 
     def test_serialize_command_option_with_autocomplete(self, entity_factory_impl):

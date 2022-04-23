@@ -702,8 +702,6 @@ class TestSlashCommandBuilder:
             "name": "we are numberr",
             "description": "oner",
             "options": [],
-            "description_localizations": None,
-            "name_localizations": None,
         }
 
     @pytest.mark.asyncio()
@@ -726,8 +724,8 @@ class TestSlashCommandBuilder:
             guild=undefined.UNDEFINED,
             default_permission=builder.default_permission,
             options=builder.options,
-            name_localizations=None,
-            description_localizations=None,
+            name_localizations=undefined.UNDEFINED,
+            description_localizations=undefined.UNDEFINED,
         )
 
     @pytest.mark.asyncio()
@@ -745,8 +743,8 @@ class TestSlashCommandBuilder:
             guild=54123123321,
             default_permission=builder.default_permission,
             options=builder.options,
-            name_localizations=None,
-            description_localizations=None,
+            name_localizations=undefined.UNDEFINED,
+            description_localizations=undefined.UNDEFINED,
         )
 
 
@@ -777,7 +775,7 @@ class TestContextMenuBuilder:
 
         result = builder.build(mock.Mock())
 
-        assert result == {"type": 3, "name": "nameeeee", "name_localizations": None}
+        assert result == {"type": 3, "name": "nameeeee"}
 
     @pytest.mark.asyncio()
     async def test_create(self):

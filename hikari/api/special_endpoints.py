@@ -942,7 +942,7 @@ class CommandBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def name_localizations(self) -> typing.Optional[typing.Dict[Locale | str, str]]:
+    def name_localizations(self) -> typing.Optional[typing.Mapping[typing.Union[Locale, str], str]]:
         """Name localizations set for this command.
 
         Returns
@@ -1009,6 +1009,23 @@ class CommandBuilder(abc.ABC):
         ----------
         id_ : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
             The ID to set for this command.
+
+        Returns
+        -------
+        CommandBuilder
+            Object of this command builder.
+        """
+
+    @abc.abstractmethod
+    def set_name_localizations(
+        self: _T, name_localizations_: undefined.UndefinedOr[typing.Mapping[typing.Union[Locale, str], str]], /
+    ) -> _T:
+        """Set the name localizations of this command.
+
+        Parameters
+        ----------
+        name_localizations_ : typing.Optional[typing.Mapping[typing.Union[hikari.locales.Locale, builtins.str], builtins.str]]
+            The name localizations to set for this command.
 
         Returns
         -------
@@ -1099,13 +1116,30 @@ class SlashCommandBuilder(CommandBuilder):
 
     @property
     @abc.abstractmethod
-    def description_localizations(self) -> typing.Optional[typing.Dict[Locale | str, str]]:
+    def description_localizations(self) -> undefined.UndefinedOr[typing.Mapping[typing.Union[Locale, str], str]]:
         """Return the description locales to set for this command.
 
         Returns
         -------
         undefined.UndefinedOr[typing.Dict[hikari.locales.Locale, builtins.str]]
             The description localizations of this command
+        """
+
+    @abc.abstractmethod
+    def set_description_localizations(
+        self: _T, description_localizations_: undefined.UndefinedOr[typing.Mapping[typing.Union[Locale, str], str]], /
+    ) -> _T:
+        """Set the ID of this command.
+
+        Parameters
+        ----------
+        description_localizations_ : typing.Optional[typing.Mapping[typing.Union[Locale, str], str]]
+            The description localizations to set for this command.
+
+        Returns
+        -------
+        CommandBuilder
+            Object of this command builder.
         """
 
     @property

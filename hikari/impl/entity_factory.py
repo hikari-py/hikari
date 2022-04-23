@@ -1759,8 +1759,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             autocomplete=payload.get("autocomplete", False),
             min_value=payload.get("min_value"),
             max_value=payload.get("max_value"),
-            name_localizations=payload.get("name_localizations", {}),
-            description_localizations=payload.get("description_localizations", {}),
+            name_localizations=payload.get("name_localizations", locales.Locale),
+            description_localizations=payload.get("description_localizations", locales.Locale),
         )
 
     def deserialize_slash_command(
@@ -1788,6 +1788,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             default_permission=payload.get("default_permission", True),
             guild_id=guild_id,
             version=snowflakes.Snowflake(payload["version"]),
+            name_localizations=payload.get("name_localizations", locales.Locale),
+            description_localizations=payload.get("description_localizations", locales.Locale)
         )
 
     def deserialize_context_menu_command(
@@ -1809,6 +1811,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             default_permission=payload.get("default_permission", True),
             guild_id=guild_id,
             version=snowflakes.Snowflake(payload["version"]),
+            name_localizations=payload.get("name_localizations", locales.Locale)
         )
 
     def deserialize_command(

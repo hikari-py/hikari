@@ -1094,10 +1094,12 @@ class CommandBuilder(special_endpoints.CommandBuilder):
     _id: undefined.UndefinedOr[snowflakes.Snowflake] = attr.field(default=undefined.UNDEFINED, kw_only=True)
     _default_permission: undefined.UndefinedOr[bool] = attr.field(default=undefined.UNDEFINED, kw_only=True)
 
-    _name_localizations: typing.Optional[typing.Dict[Locale | str, str]] = attr.field(default=None, kw_only=True)
+    _name_localizations: undefined.UndefinedOr[typing.Mapping[typing.Union[Locale, str], str]] = attr.field(
+        default=undefined.UNDEFINED, kw_only=True
+    )
 
     @property
-    def name_localizations(self) -> typing.Optional[typing.Dict[Locale | str, str]]:
+    def name_localizations(self) -> undefined.UndefinedOr[typing.Mapping[typing.Union[Locale, str], str]]:
         return self._name_localizations
 
     @property
@@ -1120,6 +1122,14 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         self._default_permission = state
         return self
 
+    def set_name_localizations(
+        self: _CommandBuilderT,
+        name_localizations_: undefined.UndefinedOr[typing.Mapping[typing.Union[Locale, str], str]],
+        /,
+    ) -> _CommandBuilderT:
+        self._name_localizations = name_localizations_
+        return self
+
     def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObjectBuilder:
         data = data_binding.JSONObjectBuilder()
         data["name"] = self._name
@@ -1137,14 +1147,24 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
 
     _description: str = attr.field()
     _options: typing.List[commands.CommandOption] = attr.field(factory=list, kw_only=True)
-    _description_localizations: typing.Optional[typing.Dict[Locale | str, str]] = attr.field(default=None, kw_only=True)
+    _description_localizations: undefined.UndefinedOr[typing.Mapping[typing.Union[Locale, str], str]] = attr.field(
+        default=undefined.UNDEFINED, kw_only=True
+    )
 
     @property
     def description(self) -> str:
         return self._description
 
+    def set_description_localizations(
+        self: _CommandBuilderT,
+        description_localizations_: undefined.UndefinedOr[typing.Mapping[typing.Union[Locale, str], str]],
+        /,
+    ) -> _CommandBuilderT:
+        self._description_localizations = description_localizations_
+        return self
+
     @property
-    def description_localizations(self) -> typing.Optional[typing.Dict[Locale | str, str]]:
+    def description_localizations(self) -> undefined.UndefinedOr[typing.Mapping[typing.Union[Locale, str], str]]:
         return self._description_localizations
 
     @property
