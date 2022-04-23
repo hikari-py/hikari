@@ -31,7 +31,6 @@ import typing
 from hikari import scheduled_events
 from hikari import traits
 from hikari import undefined
-from hikari import locales
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -6890,8 +6889,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
         default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        name_localizations: undefined.UndefinedOr[typing.Mapping[typing.Union[locales.Locale, str], str]] = undefined.UNDEFINED,
-        description_localizations: undefined.UndefinedOr[typing.Mapping[typing.Union[locales.Locale, str], str]] = undefined.UNDEFINED,
+        name_localizations: undefined.UndefinedOr[
+            typing.Mapping[typing.Union[locales.Locale, str], str]
+        ] = undefined.UNDEFINED,
+        description_localizations: undefined.UndefinedOr[
+            typing.Mapping[typing.Union[locales.Locale, str], str]
+        ] = undefined.UNDEFINED,
     ) -> commands.SlashCommand:
         r"""Create an application command.
 
@@ -6959,7 +6962,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        name_localizations: typing.Optional[typing.Dict[typing.Union[locales.Locale, str], str]] = undefined.UNDEFINED,
+        name_localizations: undefined.UndefinedOr[
+            typing.Dict[typing.Union[locales.Locale, str], str]
+        ] = undefined.UNDEFINED,
     ) -> commands.ContextMenuCommand:
         r"""Create an application command.
 

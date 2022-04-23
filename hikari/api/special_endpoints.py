@@ -942,7 +942,7 @@ class CommandBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def name_localizations(self) -> typing.Optional[typing.Mapping[typing.Union[Locale, str], str]]:
+    def name_localizations(self) -> undefined.UndefinedOr[typing.Mapping[typing.Union[Locale, str], str]]:
         """Name localizations set for this command.
 
         Returns

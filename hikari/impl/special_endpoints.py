@@ -1156,10 +1156,10 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
         return self._description
 
     def set_description_localizations(
-        self: _CommandBuilderT,
+        self: _SlashCommandBuilderT,
         description_localizations_: undefined.UndefinedOr[typing.Mapping[typing.Union[Locale, str], str]],
         /,
-    ) -> _CommandBuilderT:
+    ) -> _SlashCommandBuilderT:
         self._description_localizations = description_localizations_
         return self
 

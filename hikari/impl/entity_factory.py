@@ -1789,7 +1789,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             guild_id=guild_id,
             version=snowflakes.Snowflake(payload["version"]),
             name_localizations=payload.get("name_localizations", locales.Locale),
-            description_localizations=payload.get("description_localizations", locales.Locale)
+            description_localizations=payload.get("description_localizations", locales.Locale),
         )
 
     def deserialize_context_menu_command(
@@ -1811,7 +1811,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             default_permission=payload.get("default_permission", True),
             guild_id=guild_id,
             version=snowflakes.Snowflake(payload["version"]),
-            name_localizations=payload.get("name_localizations", locales.Locale)
+            name_localizations=payload.get("name_localizations", locales.Locale),
         )
 
     def deserialize_command(
