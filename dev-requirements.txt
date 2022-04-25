@@ -6,7 +6,7 @@
 mock==4.0.3
 
 # Py.test stuff.
-pytest==7.1.1
+pytest==7.1.2
 pytest-asyncio==0.18.3
 pytest-cov==3.0.0
 pytest-randomly==3.11.0
@@ -30,7 +30,7 @@ minify-html==0.8
 #################
 
 mypy==0.942
-pyright==1.1.237
+pyright==1.1.239
 
 #######################
 # DEPENDENCY CHECKING #
