@@ -70,7 +70,7 @@ class Locale(str, enums.Enum):
     NO = "no"
     """Norwegian"""
 
-    OL = "pl"
+    PL = "pl"
     """Polish"""
 
     PT_BR = "pt-BR"

@@ -29,8 +29,8 @@ minify-html==0.8
 # TYPE CHECKING #
 #################
 
-mypy==0.942
-pyright==1.1.239
+mypy==0.950
+pyright==1.1.241
 
 #######################
 # DEPENDENCY CHECKING #
