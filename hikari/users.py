@@ -651,7 +651,7 @@ class PartialUserImpl(PartialUser):
     app: traits.RESTAware = attr.field(
         repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
     )
-    """Reference to the client application that models may use for procedures."""
+    """The client application that models may use for procedures."""
 
     discriminator: undefined.UndefinedOr[str] = attr.field(eq=False, hash=False, repr=True)
     """Four-digit discriminator for the user."""

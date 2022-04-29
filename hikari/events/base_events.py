@@ -199,31 +199,13 @@ class ExceptionEvent(Event, typing.Generic[EventT]):
     """
 
     exception: Exception = attr.field()
-    """Exception that was raised.
-
-    Returns
-    -------
-    Exception
-        Exception that was raised in the event handler.
-    """
+    """Exception that was raised."""
 
     failed_event: EventT = attr.field()
-    """Event instance that caused the exception.
-
-    Returns
-    -------
-    hikari.events.base_events.Event
-        Event that was being processed when the exception occurred.
-    """
+    """Event instance that caused the exception."""
 
     failed_callback: FailedCallbackT[EventT] = attr.field()
-    """Event callback that threw an exception.
-
-    Returns
-    -------
-    callback
-        Event callback that failed execution.
-    """
+    """Event callback that threw an exception."""
 
     @property
     def app(self) -> traits.RESTAware:

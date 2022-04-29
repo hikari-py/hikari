@@ -80,7 +80,7 @@ class ExecutableWebhook(abc.ABC):
     @property
     @abc.abstractmethod
     def app(self) -> traits.RESTAware:
-        """Client application that models may use for procedures."""
+        """The client application that models may use for procedures."""
 
     @property
     @abc.abstractmethod

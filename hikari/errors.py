@@ -186,17 +186,7 @@ class GatewayServerClosedConnectionError(GatewayError):
     """An exception raised when the server closes the connection."""
 
     code: typing.Union[ShardCloseCode, int, None] = attr.field(default=None)
-    """Return the close code that was received, if there is one.
-
-    Returns
-    -------
-    typing.Union[ShardCloseCode, int, None]
-        The shard close code if there was one. Will be a `ShardCloseCode`
-        if the definition is known. Undocumented close codes may instead be
-        an `int` instead.
-
-        If no close code was received, this will be `None`.
-    """
+    """Return the close code that was received, if there is one."""
 
     can_reconnect: bool = attr.field(default=False)
     """Return `True` if we can recover from this closure.
@@ -205,11 +195,6 @@ class GatewayServerClosedConnectionError(GatewayError):
     than it being propagated to the caller. If `False`, this will
     be raised, thus stopping the application unless handled explicitly by the
     user.
-
-    Returns
-    -------
-    bool
-        Whether the closure can be recovered from via a reconnect.
     """
 
     def __str__(self) -> str:

@@ -123,31 +123,13 @@ class ChannelFollow:
     app: traits.RESTAware = attr.field(
         repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
     )
-    """Return the client application that models may use for procedures.
-
-    Returns
-    -------
-    hikari.traits.RESTAware
-        The REST-aware application object.
-    """
+    """The client application that models may use for procedures."""
 
     channel_id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
-    """Return the channel ID of the channel being followed.
-
-    Returns
-    -------
-    hikari.snowflakes.Snowflake
-        The channel ID for the channel being followed.
-    """
+    """Return the channel ID of the channel being followed."""
 
     webhook_id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
-    """Return the ID of the webhook for this follow.
-
-    Returns
-    -------
-    hikari.snowflakes.Snowflake
-        The ID of the webhook that was created for this follow.
-    """
+    """Return the ID of the webhook for this follow."""
 
     async def fetch_channel(self) -> typing.Union[GuildNewsChannel, GuildTextChannel]:
         """Fetch the object of the guild channel being followed.

@@ -107,12 +107,6 @@ class ProxySettings(config.ProxySettings):
 
     The default is to have this set to `None`, which will
     result in no authentication being provided.
-
-    Returns
-    -------
-    typing.Any
-        The value for the `Authentication` header, or `None`
-        to disable.
     """
 
     headers: typing.Optional[data_binding.Headers] = attr.field(default=None)
@@ -122,11 +116,6 @@ class ProxySettings(config.ProxySettings):
     """Proxy URL to use.
 
     Defaults to `None` which disables the use of an explicit proxy.
-
-    Returns
-    -------
-    typing.Union[None, str]
-        The proxy URL to use, or `None` to disable it.
     """
 
     trust_env: bool = attr.field(default=False, validator=attr.validators.instance_of(bool))
@@ -143,13 +132,6 @@ class ProxySettings(config.ProxySettings):
     .. note::
         For more details of using `netrc`, visit:
         <https://www.gnu.org/software/inetutils/manual/html_node/The-_002enetrc-file.html>
-
-    Returns
-    -------
-    bool
-        `True` if allowing the use of environment variables
-        and/or `netrc` to determine proxy settings; `False`
-        if this should be disabled explicitly.
     """
 
     @property
