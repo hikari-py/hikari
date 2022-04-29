@@ -137,7 +137,7 @@ class OAuth2Scope(str, enums.Enum):
     """
 
     APPLICATIONS_COMMANDS = "applications.commands"
-    """Allows your application's application commands to be used in a guild.
+    """Allows your application's commands to be used in a guild.
 
     This is used in Discord's special Bot Authorization Flow like
     `OAuth2Scope.BOT` in-order to join an application into a guild as an
@@ -145,10 +145,10 @@ class OAuth2Scope(str, enums.Enum):
     """
 
     APPLICATIONS_COMMANDS_UPDATE = "applications.commands.update"
-    """Allows your application to update it's application commands via a bearer token."""
+    """Allows your application to update it's commands via a bearer token."""
 
     APPLICATIONS_COMMANDS_PERMISSION_UPDATE = "applications.commands.permissions.update"
-    """Allows your application to update it's application commands permissions via a bearer token."""
+    """Allows your application to update it's commands permissions via a bearer token."""
 
     APPLICATIONS_ENTITLEMENTS = "applications.entitlements"
     """Enables reading entitlements for a user's applications."""
