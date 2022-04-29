@@ -27,6 +27,7 @@ from hikari import commands
 from hikari import emojis
 from hikari import files
 from hikari import messages
+from hikari import permissions
 from hikari import snowflakes
 from hikari import undefined
 from hikari.impl import special_endpoints
@@ -670,6 +671,8 @@ class TestSlashCommandBuilder:
             .add_option(mock_option)
             .set_id(3412312)
             .set_default_permission(False)
+            .set_default_member_permissions(permissions.Permissions.ADMINISTRATOR)
+            .set_dm_enabled(True)
         )
 
         result = builder.build(mock_entity_factory)
@@ -680,6 +683,8 @@ class TestSlashCommandBuilder:
             "description": "one",
             "type": 1,
             "default_permission": False,
+            "dm_permission": True,
+            "default_member_permissions": 8,
             "options": [mock_entity_factory.serialize_command_option.return_value],
             "id": "3412312",
         }
@@ -737,6 +742,8 @@ class TestContextMenuBuilder:
             special_endpoints.ContextMenuCommandBuilder(commands.CommandType.USER, "we are number")
             .set_id(3412312)
             .set_default_permission(False)
+            .set_default_member_permissions(permissions.Permissions.ADMINISTRATOR)
+            .set_dm_enabled(True)
         )
 
         result = builder.build(mock.Mock())
@@ -745,6 +752,8 @@ class TestContextMenuBuilder:
             "name": "we are number",
             "type": 2,
             "default_permission": False,
+            "dm_permission": True,
+            "default_member_permissions": 8,
             "id": "3412312",
         }
 

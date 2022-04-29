@@ -424,6 +424,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             audit_log_models.AuditLogChangeKey.APPLICATION_ID: snowflakes.Snowflake,
             audit_log_models.AuditLogChangeKey.PERMISSIONS: _with_int_cast(permission_models.Permissions),
             audit_log_models.AuditLogChangeKey.COLOR: color_models.Color,
+            audit_log_models.AuditLogChangeKey.COMMAND_ID: snowflakes.Snowflake,
             audit_log_models.AuditLogChangeKey.ALLOW: _with_int_cast(permission_models.Permissions),
             audit_log_models.AuditLogChangeKey.DENY: _with_int_cast(permission_models.Permissions),
             audit_log_models.AuditLogChangeKey.CHANNEL_ID: snowflakes.Snowflake,
@@ -1784,6 +1785,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             description=payload["description"],
             options=options,
             default_permission=payload.get("default_permission", True),
+            default_member_permissions=payload.get("default_member_permissions"),
+            is_dm_enabled=payload.get("dm_permission", False),
             guild_id=guild_id,
             version=snowflakes.Snowflake(payload["version"]),
         )
@@ -1805,6 +1808,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             application_id=snowflakes.Snowflake(payload["application_id"]),
             name=payload["name"],
             default_permission=payload.get("default_permission", True),
+            default_member_permissions=payload.get("default_member_permissions"),
+            is_dm_enabled=payload.get("dm_permission", False),
             guild_id=guild_id,
             version=snowflakes.Snowflake(payload["version"]),
         )

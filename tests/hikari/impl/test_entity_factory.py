@@ -3105,6 +3105,8 @@ class TestEntityFactoryImpl:
             "name": "good name",
             "description": "very good description",
             "default_permission": False,
+            "default_member_permissions": 8,
+            "dm_permission": True,
             "options": [
                 {
                     "type": 1,
@@ -3137,6 +3139,8 @@ class TestEntityFactoryImpl:
         assert command.name == "good name"
         assert command.description == "very good description"
         assert command.default_permission is False
+        assert command.default_member_permissions == permission_models.Permissions.ADMINISTRATOR
+        assert command.is_dm_enabled is True
         assert command.version == 123321123
 
         # CommandOption
@@ -3207,7 +3211,16 @@ class TestEntityFactoryImpl:
 
         assert command.options is None
         assert command.default_permission is True
+        assert command.default_member_permissions is None
+        assert command.is_dm_enabled is False
         assert isinstance(command, commands.SlashCommand)
+
+    def test_deserialize_command_when_unknown_command_type(self, entity_factory_impl, command_payload):
+        payload = command_payload.copy()
+        payload["type"] = 4
+
+        with pytest.raises(errors.UnrecognisedEntityError):
+            entity_factory_impl.deserialize_command(payload)
 
     @pytest.fixture()
     def guild_command_permissions_payload(self):
@@ -3309,7 +3322,7 @@ class TestEntityFactoryImpl:
         assert isinstance(member, base_interactions.InteractionMember)
 
     def test__deserialize_interaction_member_when_guild_id_already_in_roles_doesnt_duplicate(
-        self, entity_factory_impl, interaction_member_payload, user_payload
+        self, entity_factory_impl, interaction_member_payload
     ):
         interaction_member_payload["roles"] = [
             582345963851743243,
@@ -3328,9 +3341,7 @@ class TestEntityFactoryImpl:
             43123123,
         ]
 
-    def test__deserialize_interaction_member_with_unset_fields(
-        self, entity_factory_impl, interaction_member_payload, user_payload
-    ):
+    def test__deserialize_interaction_member_with_unset_fields(self, entity_factory_impl, interaction_member_payload):
         del interaction_member_payload["premium_since"]
         del interaction_member_payload["avatar"]
         del interaction_member_payload["communication_disabled_until"]
@@ -3341,9 +3352,7 @@ class TestEntityFactoryImpl:
         assert member.premium_since is None
         assert member.raw_communication_disabled_until is None
 
-    def test__deserialize_interaction_member_with_passed_user(
-        self, entity_factory_impl, interaction_member_payload, user_payload
-    ):
+    def test__deserialize_interaction_member_with_passed_user(self, entity_factory_impl, interaction_member_payload):
         mock_user = object()
         member = entity_factory_impl._deserialize_interaction_member(
             interaction_member_payload, guild_id=43123123, user=mock_user
@@ -3507,17 +3516,41 @@ class TestEntityFactoryImpl:
 
         assert isinstance(interaction, command_interactions.CommandInteraction)
 
+    @pytest.fixture()
+    def context_menu_command_interaction_payload(self, interaction_member_payload, user_payload):
+        return {
+            "id": "3490190239012093",
+            "type": 4,
+            "guild_id": "43123123",
+            "data": {
+                "id": "43123123",
+                "name": "okokokok",
+                "type": 2,
+                "target_id": "115590097100865541",
+                "resolved": {
+                    "users": {
+                        "115590097100865541": user_payload,
+                    }
+                },
+            },
+            "channel_id": "49949494",
+            "member": interaction_member_payload,
+            "token": "moe cat girls",
+            "locale": "es-ES",
+            "guild_locale": "en-US",
+            "version": 69420,
+            "application_id": "76234234",
+        }
+
     def test_deserialize_command_interaction_with_context_menu_field(
-        self,
-        entity_factory_impl,
-        context_menu_command_interaction_payload,
+        self, entity_factory_impl, context_menu_command_interaction_payload
     ):
         interaction = entity_factory_impl.deserialize_command_interaction(context_menu_command_interaction_payload)
         assert interaction.target_id == 115590097100865541
         assert isinstance(interaction, command_interactions.CommandInteraction)
 
     def test_deserialize_command_interaction_with_null_attributes(
-        self, entity_factory_impl, mock_app, command_interaction_payload, user_payload
+        self, entity_factory_impl, command_interaction_payload, user_payload
     ):
         del command_interaction_payload["guild_id"]
         del command_interaction_payload["member"]
@@ -3615,7 +3648,7 @@ class TestEntityFactoryImpl:
         assert isinstance(interaction, command_interactions.AutocompleteInteraction)
 
     def test_deserialize_autocomplete_interaction_with_null_fields(
-        self, entity_factory_impl, user_payload, mock_app, autocomplete_interaction_payload
+        self, entity_factory_impl, user_payload, autocomplete_interaction_payload
     ):
         del autocomplete_interaction_payload["data"]["resolved"]
         del autocomplete_interaction_payload["guild_locale"]
@@ -3642,73 +3675,17 @@ class TestEntityFactoryImpl:
         with pytest.raises(errors.UnrecognisedEntityError):
             entity_factory_impl.deserialize_interaction({"type": -999})
 
-    def test_serialize_command_option_with_channel_type(self, entity_factory_impl):
+    def test_serialize_command_option(self, entity_factory_impl):
         option = commands.CommandOption(
             type=commands.OptionType.INTEGER,
             name="a name",
             description="go away",
             is_required=True,
-            channel_types=[channel_models.ChannelType.GUILD_STAGE, channel_models.ChannelType.GUILD_TEXT, 100],
-        )
-
-        result = entity_factory_impl.serialize_command_option(option)
-
-        assert result == {
-            "type": 4,
-            "name": "a name",
-            "description": "go away",
-            "required": True,
-            "channel_types": [13, 0, 100],
-        }
-
-    def test_serialize_command_option_with_min_and_max_value(self, entity_factory_impl):
-        option = commands.CommandOption(
-            type=commands.OptionType.FLOAT,
-            name="a name",
-            description="go away",
-            is_required=True,
+            autocomplete=True,
             min_value=1.2,
             max_value=9.999,
-        )
-
-        result = entity_factory_impl.serialize_command_option(option)
-
-        assert result == {
-            "type": 10,
-            "name": "a name",
-            "description": "go away",
-            "required": True,
-            "min_value": 1.2,
-            "max_value": 9.999,
-        }
-
-    def test_serialize_command_option_with_choices(self, entity_factory_impl):
-        option = commands.CommandOption(
-            type=commands.OptionType.INTEGER,
-            name="a name",
-            description="go away",
-            is_required=True,
+            channel_types=[channel_models.ChannelType.GUILD_STAGE, channel_models.ChannelType.GUILD_TEXT, 100],
             choices=[commands.CommandChoice(name="a", value="choice")],
-            options=None,
-        )
-
-        result = entity_factory_impl.serialize_command_option(option)
-
-        assert result == {
-            "type": 4,
-            "name": "a name",
-            "description": "go away",
-            "required": True,
-            "choices": [{"name": "a", "value": "choice"}],
-        }
-
-    def test_serialize_command_option_with_options(self, entity_factory_impl):
-        option = commands.CommandOption(
-            type=commands.OptionType.SUB_COMMAND,
-            name="a name",
-            description="go away",
-            is_required=True,
-            choices=None,
             options=[
                 commands.CommandOption(
                     type=commands.OptionType.STRING,
@@ -3724,10 +3701,15 @@ class TestEntityFactoryImpl:
         result = entity_factory_impl.serialize_command_option(option)
 
         assert result == {
-            "type": 1,
+            "type": 4,
             "name": "a name",
             "description": "go away",
             "required": True,
+            "channel_types": [13, 0, 100],
+            "min_value": 1.2,
+            "max_value": 9.999,
+            "autocomplete": True,
+            "choices": [{"name": "a", "value": "choice"}],
             "options": [
                 {
                     "type": 3,
@@ -3739,51 +3721,6 @@ class TestEntityFactoryImpl:
             ],
         }
 
-    def test_serialize_command_option_with_autocomplete(self, entity_factory_impl):
-        option = commands.CommandOption(
-            type=commands.OptionType.STRING,
-            name="a name",
-            description="go away",
-            is_required=True,
-            autocomplete=True,
-        )
-
-        result = entity_factory_impl.serialize_command_option(option)
-
-        assert result == {
-            "type": 3,
-            "name": "a name",
-            "description": "go away",
-            "required": True,
-            "autocomplete": True,
-        }
-
-    @pytest.fixture()
-    def context_menu_command_interaction_payload(self, interaction_member_payload, user_payload):
-        return {
-            "id": "3490190239012093",
-            "type": 4,
-            "guild_id": "43123123",
-            "data": {
-                "id": "43123123",
-                "name": "okokokok",
-                "type": 2,
-                "target_id": "115590097100865541",
-                "resolved": {
-                    "users": {
-                        "115590097100865541": user_payload,
-                    }
-                },
-            },
-            "channel_id": "49949494",
-            "member": interaction_member_payload,
-            "token": "moe cat girls",
-            "locale": "es-ES",
-            "guild_locale": "en-US",
-            "version": 69420,
-            "application_id": "76234234",
-        }
-
     @pytest.fixture()
     def context_menu_command_payload(self):
         return {
@@ -3793,15 +3730,13 @@ class TestEntityFactoryImpl:
             "type": 2,
             "name": "good name",
             "default_permission": False,
+            "default_member_permissions": 8,
+            "dm_permission": True,
             "version": "123321123",
         }
 
-    def test_deserialize_context_menu_command(
-        self,
-        entity_factory_impl,
-        context_menu_command_payload,
-    ):
-        command = entity_factory_impl.deserialize_command(context_menu_command_payload)
+    def test_deserialize_context_menu_command(self, entity_factory_impl, context_menu_command_payload):
+        command = entity_factory_impl.deserialize_context_menu_command(context_menu_command_payload)
         assert isinstance(command, commands.ContextMenuCommand)
 
         assert command.id == 1231231231
@@ -3810,18 +3745,23 @@ class TestEntityFactoryImpl:
         assert command.type == commands.CommandType.USER
         assert command.name == "good name"
         assert command.default_permission is False
+        assert command.default_member_permissions == permission_models.Permissions.ADMINISTRATOR
+        assert command.is_dm_enabled is True
         assert command.version == 123321123
 
-    def test_unknown_command_type(
-        self,
-        entity_factory_impl,
-        command_payload,
+    def test_deserialize_context_menu_command_with_with_null_and_unset_values(
+        self, entity_factory_impl, context_menu_command_payload
     ):
-        payload = command_payload.copy()
-        payload["type"] = 4
+        del context_menu_command_payload["default_permission"]
+        del context_menu_command_payload["default_member_permissions"]
+        del context_menu_command_payload["dm_permission"]
 
-        with pytest.raises(errors.UnrecognisedEntityError):
-            entity_factory_impl.deserialize_command(payload)
+        command = entity_factory_impl.deserialize_context_menu_command(context_menu_command_payload)
+        assert isinstance(command, commands.ContextMenuCommand)
+
+        assert command.default_permission is True
+        assert command.default_member_permissions is None
+        assert command.is_dm_enabled is False
 
     @pytest.fixture()
     def component_interaction_payload(self, interaction_member_payload, message_payload):

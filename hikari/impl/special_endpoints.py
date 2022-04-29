@@ -59,6 +59,7 @@ from hikari.api import special_endpoints
 from hikari.interactions import base_interactions
 from hikari.internal import attr_extensions
 from hikari.internal import data_binding
+from hikari.internal import deprecation
 from hikari.internal import mentions
 from hikari.internal import routes
 from hikari.internal import time
@@ -1091,6 +1092,10 @@ class CommandBuilder(special_endpoints.CommandBuilder):
     _name: str = attr.field()
 
     _id: undefined.UndefinedOr[snowflakes.Snowflake] = attr.field(default=undefined.UNDEFINED, kw_only=True)
+    _default_member_permissions: undefined.UndefinedOr[permissions_.Permissions] = attr.field(
+        default=undefined.UNDEFINED, kw_only=True
+    )
+    _is_dm_enabled: undefined.UndefinedOr[bool] = attr.field(default=undefined.UNDEFINED, kw_only=True)
     _default_permission: undefined.UndefinedOr[bool] = attr.field(default=undefined.UNDEFINED, kw_only=True)
 
     @property
@@ -1102,6 +1107,14 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         return self._default_permission
 
     @property
+    def default_member_permissions(self) -> undefined.UndefinedOr[permissions_.Permissions]:
+        return self._default_member_permissions
+
+    @property
+    def is_dm_enabled(self) -> undefined.UndefinedOr[bool]:
+        return self._is_dm_enabled
+
+    @property
     def name(self) -> str:
         return self._name
 
@@ -1109,8 +1122,19 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         self._id = snowflakes.Snowflake(id_) if id_ is not undefined.UNDEFINED else undefined.UNDEFINED
         return self
 
+    @deprecation.deprecated("2.0.0.dev112", "set_default_member_permissions")
     def set_default_permission(self: _CommandBuilderT, state: undefined.UndefinedOr[bool], /) -> _CommandBuilderT:
         self._default_permission = state
+        return self
+
+    def set_default_member_permissions(
+        self: _CommandBuilderT, default_member_permissions: undefined.UndefinedOr[permissions_.Permissions], /
+    ) -> _CommandBuilderT:
+        self._default_member_permissions = default_member_permissions
+        return self
+
+    def set_dm_enabled(self: _CommandBuilderT, state: undefined.UndefinedOr[bool], /) -> _CommandBuilderT:
+        self._is_dm_enabled = state
         return self
 
     def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObjectBuilder:
@@ -1119,6 +1143,8 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         data["type"] = self.type
         data.put_snowflake("id", self._id)
         data.put("default_permission", self._default_permission)
+        data.put("default_member_permissions", self._default_member_permissions)
+        data.put("dm_permission", self._is_dm_enabled)
         return data
 
 

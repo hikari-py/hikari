@@ -3175,7 +3175,12 @@ class RESTClientImpl(rest_api.RESTClient):
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
         default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        default_member_permissions: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
+        dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> data_binding.JSONObject:
+        if default_permission is not undefined.UNDEFINED:
+            deprecation.warn_deprecated("default_permission", alternative="none")
+
         if guild is undefined.UNDEFINED:
             route = routes.POST_APPLICATION_COMMAND.compile(application=application)
 
@@ -3188,6 +3193,8 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("type", type)
         body.put_array("options", options, conversion=self._entity_factory.serialize_command_option)
         body.put("default_permission", default_permission)
+        body.put("default_member_permissions", default_member_permissions)
+        body.put("dm_enabled", dm_enabled)
 
         response = await self._request(route, json=body)
         assert isinstance(response, dict)
@@ -3222,6 +3229,8 @@ class RESTClientImpl(rest_api.RESTClient):
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
         default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        default_member_permissions: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
+        dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.SlashCommand:
         response = await self._create_application_command(
             application=application,
@@ -3231,6 +3240,8 @@ class RESTClientImpl(rest_api.RESTClient):
             guild=guild,
             options=options,
             default_permission=default_permission,
+            default_member_permissions=default_member_permissions,
+            dm_enabled=dm_enabled,
         )
         return self._entity_factory.deserialize_slash_command(
             response, guild_id=snowflakes.Snowflake(guild) if guild is not undefined.UNDEFINED else None
@@ -3244,6 +3255,8 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        default_member_permissions: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
+        dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.ContextMenuCommand:
         response = await self._create_application_command(
             application=application,
@@ -3251,6 +3264,8 @@ class RESTClientImpl(rest_api.RESTClient):
             name=name,
             guild=guild,
             default_permission=default_permission,
+            default_member_permissions=default_member_permissions,
+            dm_enabled=dm_enabled,
         )
         return self._entity_factory.deserialize_context_menu_command(
             response, guild_id=snowflakes.Snowflake(guild) if guild is not undefined.UNDEFINED else None
@@ -3341,6 +3356,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_guild_command_permissions(response)
 
+    @deprecation.deprecated("2.0.0.dev112", "set_application_command_permissions")
     async def set_application_guild_commands_permissions(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],

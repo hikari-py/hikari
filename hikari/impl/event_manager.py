@@ -37,6 +37,7 @@ from hikari import intents as intents_
 from hikari import presences as presences_
 from hikari import snowflakes
 from hikari.api import config
+from hikari.events import application_events
 from hikari.events import channel_events
 from hikari.events import guild_events
 from hikari.events import interaction_events
@@ -128,6 +129,12 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
     async def on_resumed(self, shard: gateway_shard.GatewayShard, _: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#resumed for more info."""
         await self.dispatch(self._event_factory.deserialize_resumed_event(shard))
+
+    @event_manager_base.filtered(application_events.ApplicationCommandPermissionsUpdateEvent)
+    async def on_application_command_permissions_updated(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> None:
+        await self.dispatch(self._event_factory.deserialize_application_command_permission_update_event(shard, payload))
 
     @event_manager_base.filtered(channel_events.GuildChannelCreateEvent, config.CacheComponents.GUILD_CHANNELS)
     async def on_channel_create(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
@@ -399,14 +406,14 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         event = self._event_factory.deserialize_integration_create_event(shard, payload)
         await self.dispatch(event)
 
-    @event_manager_base.filtered(guild_events.IntegrationDeleteEvent)
-    async def on_integration_delete(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
-        event = self._event_factory.deserialize_integration_delete_event(shard, payload)
-        await self.dispatch(event)
-
     @event_manager_base.filtered(guild_events.IntegrationUpdateEvent)
     async def on_integration_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         event = self._event_factory.deserialize_integration_update_event(shard, payload)
+        await self.dispatch(event)
+
+    @event_manager_base.filtered(guild_events.IntegrationDeleteEvent)
+    async def on_integration_delete(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
+        event = self._event_factory.deserialize_integration_delete_event(shard, payload)
         await self.dispatch(event)
 
     @event_manager_base.filtered(member_events.MemberCreateEvent, config.CacheComponents.MEMBERS)

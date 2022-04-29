@@ -40,6 +40,7 @@ import typing
 
 import attr
 
+from hikari import permissions
 from hikari import snowflakes
 from hikari import traits
 from hikari import undefined
@@ -214,6 +215,15 @@ class PartialCommand(snowflakes.Unique):
     Defaults to `builtins.True`. This behaviour is overridden by command
     permissions.
     """
+
+    default_member_permissions: typing.Optional[permissions.Permissions] = attr.field(eq=False, hash=False, repr=True)
+    """Member permissions necessary to utilize this command by default.
+
+    If `0`, then it will be disabled by default.
+    """
+
+    is_dm_enabled: bool = attr.field(eq=False, hash=False, repr=True)
+    """Whether this command is enabled in DMs with the bot."""
 
     guild_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
     """ID of the guild this command is in.
@@ -473,6 +483,9 @@ class CommandPermissionType(int, enums.Enum):
     USER = 2
     """A command permission which toggles access for a specific user."""
 
+    CHANNEL = 3
+    """A command permission which toggles access in a specific channel."""
+
 
 @attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
@@ -504,4 +517,4 @@ class GuildCommandPermissions:
     """ID of the guild these permissions are in."""
 
     permissions: typing.Sequence[CommandPermission] = attr.field()
-    """Sequence of up to (and including) 10 of the command permissions set in this guild."""
+    """Sequence of up to (and including) 100 of the command permissions set in this guild."""

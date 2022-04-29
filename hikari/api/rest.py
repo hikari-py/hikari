@@ -3275,6 +3275,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Requires the `MANAGE_NICKNAMES` permission on the guild.
         nick : hikari.undefined.UndefinedOr[builtins.str]
             Deprecated alias for `nickname`.
+
+            .. deprecated:: 2.0.0.dev106
+                Use `nickname` instead.
         roles : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole]]
             If provided, the roles to add to the user when he joins the guild.
             This may be a collection objects or IDs of existing roles.
@@ -4995,6 +4998,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Requires the `MANAGE_NICKNAMES` permission.
         nick : hikari.undefined.UndefinedOr[builtins.str]
             Deprecated alias for `nickname`.
+
+            .. deprecated:: 2.0.0.dev104
+                Use `nickname` instead.
         roles : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole]]
             If provided, the new roles for the member.
 
@@ -6889,6 +6895,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
         default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        default_member_permissions: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
+        dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.SlashCommand:
         r"""Create an application command.
 
@@ -6916,6 +6924,17 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             permissions) when added to a guild.
 
             Defaults to `builtins.True`.
+
+            .. deprecated:: 2.0.0.dev109
+                Use `default_member_permissions` instead.
+        default_member_permissions : hikari.undefined.UndefinedOr[hikari.permissions.Permissions]
+            Member permissions necessary to utilize this command by default.
+
+            If `0`, then it will be disabled by default.
+        dm_enabled : hikari.undefined.UndefinedOr[builtins.bool]
+            Whether this command is enabled in DMs with the bot.
+
+            This can only be applied to non-guild commands.
 
         Returns
         -------
@@ -6956,6 +6975,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        default_member_permissions: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
+        dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.ContextMenuCommand:
         r"""Create an application command.
 
@@ -6982,6 +7003,17 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             permissions) when added to a guild.
 
             Defaults to `builtins.True`.
+
+            .. deprecated:: 2.0.0.dev109
+                Use `default_member_permissions` instead.
+        default_member_permissions : hikari.undefined.UndefinedOr[hikari.permissions.Permissions]
+            Member permissions necessary to utilize this command by default.
+
+            If `0`, then it will be disabled by default.
+        dm_enabled : hikari.undefined.UndefinedOr[builtins.bool]
+            Whether this command is enabled in DMs with the bot.
+
+            This can only be applied to non-guild commands.
 
         Returns
         -------
