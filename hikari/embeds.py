@@ -52,20 +52,16 @@ if typing.TYPE_CHECKING:
     import concurrent.futures
     import datetime
 
-    _T = typing.TypeVar("_T", bound="EmbedResource[files.AsyncReader]")
-
-AsyncReaderT = typing.TypeVar("AsyncReaderT", bound=files.AsyncReader)
-
 
 @attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
-class EmbedResource(files.Resource[AsyncReaderT]):
+class EmbedResource(files.Resource[files.AsyncReader]):
     """A base type for any resource provided in an embed.
 
     Resources can be downloaded and uploaded.
     """
 
-    resource: files.Resource[AsyncReaderT] = attr.field(repr=True)
+    resource: files.Resource[files.AsyncReader] = attr.field(repr=True)
     """The resource this object wraps around."""
 
     @property
@@ -96,7 +92,7 @@ class EmbedResource(files.Resource[AsyncReaderT]):
         *,
         executor: typing.Optional[concurrent.futures.Executor] = None,
         head_only: bool = False,
-    ) -> files.AsyncReaderContextManager[AsyncReaderT]:
+    ) -> files.AsyncReaderContextManager[files.AsyncReader]:
         """Produce a stream of data for the resource.
 
         Parameters
@@ -114,10 +110,10 @@ class EmbedResource(files.Resource[AsyncReaderT]):
 
 
 @attr.define(kw_only=True, weakref_slot=False)
-class EmbedResourceWithProxy(EmbedResource[AsyncReaderT]):
+class EmbedResourceWithProxy(EmbedResource):
     """Resource with a corresponding proxied element."""
 
-    proxy_resource: typing.Optional[files.Resource[AsyncReaderT]] = attr.field(default=None, repr=False)
+    proxy_resource: typing.Optional[files.Resource[files.AsyncReader]] = attr.field(default=None, repr=False)
     """The proxied version of the resource, or `builtins.None` if not present.
 
     !!! note
@@ -163,12 +159,12 @@ class EmbedFooter:
     text: typing.Optional[str] = attr.field(default=None, repr=True)
     """The footer text, or `builtins.None` if not present."""
 
-    icon: typing.Optional[EmbedResourceWithProxy[files.AsyncReader]] = attr.field(default=None, repr=True)
+    icon: typing.Optional[EmbedResourceWithProxy] = attr.field(default=None, repr=True)
     """The URL of the footer icon, or `builtins.None` if not present."""
 
 
 @attr.define(hash=False, kw_only=True, weakref_slot=False)
-class EmbedImage(EmbedResourceWithProxy[AsyncReaderT]):
+class EmbedImage(EmbedResourceWithProxy):
     """Represents an embed image."""
 
     height: typing.Optional[int] = attr.field(default=None, repr=False)
@@ -191,7 +187,7 @@ class EmbedImage(EmbedResourceWithProxy[AsyncReaderT]):
 
 
 @attr.define(hash=False, kw_only=True, weakref_slot=False)
-class EmbedVideo(EmbedResourceWithProxy[AsyncReaderT]):
+class EmbedVideo(EmbedResourceWithProxy):
     """Represents an embed video.
 
     !!! note
@@ -246,7 +242,7 @@ class EmbedAuthor:
     This may be `builtins.None` if no hyperlink on the author's name is specified.
     """
 
-    icon: typing.Optional[EmbedResourceWithProxy[files.AsyncReader]] = attr.field(default=None, repr=False)
+    icon: typing.Optional[EmbedResourceWithProxy] = attr.field(default=None, repr=False)
     """The author's icon, or `builtins.None` if not present."""
 
 
@@ -315,9 +311,9 @@ class Embed:
         url: typing.Optional[str],
         color: typing.Optional[colors.Color],
         timestamp: typing.Optional[datetime.datetime],
-        image: typing.Optional[EmbedImage[files.AsyncReader]],
-        thumbnail: typing.Optional[EmbedImage[files.AsyncReader]],
-        video: typing.Optional[EmbedVideo[files.AsyncReader]],
+        image: typing.Optional[EmbedImage],
+        thumbnail: typing.Optional[EmbedImage],
+        video: typing.Optional[EmbedVideo],
         author: typing.Optional[EmbedAuthor],
         provider: typing.Optional[EmbedProvider],
         footer: typing.Optional[EmbedFooter],
@@ -372,10 +368,10 @@ class Embed:
         self.description = description
         self.url = url
         self._author: typing.Optional[EmbedAuthor] = None
-        self._image: typing.Optional[EmbedImage[files.AsyncReader]] = None
-        self._video: typing.Optional[EmbedVideo[files.AsyncReader]] = None
+        self._image: typing.Optional[EmbedImage] = None
+        self._video: typing.Optional[EmbedVideo] = None
         self._provider: typing.Optional[EmbedProvider] = None
-        self._thumbnail: typing.Optional[EmbedImage[files.AsyncReader]] = None
+        self._thumbnail: typing.Optional[EmbedImage] = None
         self._footer: typing.Optional[EmbedFooter] = None
 
         # More boilerplate to allow this to be optional, but saves a useless list on every embed
@@ -605,7 +601,7 @@ class Embed:
         return self._footer
 
     @property
-    def image(self) -> typing.Optional[EmbedImage[files.AsyncReader]]:
+    def image(self) -> typing.Optional[EmbedImage]:
         """Return the image set in the embed.
 
         Will be `builtins.None` if not set.
@@ -619,7 +615,7 @@ class Embed:
         return self._image
 
     @property
-    def thumbnail(self) -> typing.Optional[EmbedImage[files.AsyncReader]]:
+    def thumbnail(self) -> typing.Optional[EmbedImage]:
         """Return the thumbnail set in the embed.
 
         Will be `builtins.None` if not set.
@@ -633,7 +629,7 @@ class Embed:
         return self._thumbnail
 
     @property
-    def video(self) -> typing.Optional[EmbedVideo[files.AsyncReader]]:
+    def video(self) -> typing.Optional[EmbedVideo]:
         """Return the video to show in the embed.
 
         Will be `builtins.None` if not set.
