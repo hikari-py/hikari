@@ -3194,7 +3194,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put_array("options", options, conversion=self._entity_factory.serialize_command_option)
         body.put("default_permission", default_permission)
         body.put("default_member_permissions", default_member_permissions)
-        body.put("dm_enabled", dm_enabled)
+        body.put("dm_permission", dm_enabled)
 
         response = await self._request(route, json=body)
         assert isinstance(response, dict)

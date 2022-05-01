@@ -663,6 +663,18 @@ class TestSlashCommandBuilder:
 
         assert builder.default_permission is True
 
+    def test_default_member_permissions(self):
+        builder = special_endpoints.SlashCommandBuilder("oksksksk", "kfdkodfokfd").set_default_member_permissions(
+            permissions.Permissions.ADMINISTRATOR
+        )
+
+        assert builder.default_member_permissions == permissions.Permissions.ADMINISTRATOR
+
+    def test_is_dm_enabled(self):
+        builder = special_endpoints.SlashCommandBuilder("oksksksk", "kfdkodfokfd").set_dm_enabled(True)
+
+        assert builder.is_dm_enabled is True
+
     def test_build_with_optional_data(self):
         mock_entity_factory = mock.Mock()
         mock_option = object()

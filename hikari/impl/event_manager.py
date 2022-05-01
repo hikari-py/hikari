@@ -131,7 +131,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         await self.dispatch(self._event_factory.deserialize_resumed_event(shard))
 
     @event_manager_base.filtered(application_events.ApplicationCommandPermissionsUpdateEvent)
-    async def on_application_command_permissions_updated(
+    async def on_application_command_permissions_update(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> None:
         await self.dispatch(self._event_factory.deserialize_application_command_permission_update_event(shard, payload))
