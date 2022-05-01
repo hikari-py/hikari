@@ -145,10 +145,10 @@ class OAuth2Scope(str, enums.Enum):
     """
 
     APPLICATIONS_COMMANDS_UPDATE = "applications.commands.update"
-    """Allows your application to update it commands via a bearer token."""
+    """Allows your application to update its commands via a bearer token."""
 
     APPLICATIONS_COMMANDS_PERMISSION_UPDATE = "applications.commands.permissions.update"
-    """Allows your application to update it commands permissions via a bearer token."""
+    """Allows your application to update its commands permissions via a bearer token."""
 
     APPLICATIONS_ENTITLEMENTS = "applications.entitlements"
     """Enables reading entitlements for a user's applications."""
