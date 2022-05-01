@@ -3121,15 +3121,8 @@ class RESTClientImpl(rest_api.RESTClient):
     def command_builder(self, name: str, description: str) -> special_endpoints.SlashCommandBuilder:
         return self.slash_command_builder(name, description)
 
-    def slash_command_builder(
-        self,
-        name: str,
-        description: str,
-    ) -> special_endpoints.SlashCommandBuilder:
-        return special_endpoints_impl.SlashCommandBuilder(
-            name,
-            description,
-        )
+    def slash_command_builder(self, name: str, description: str) -> special_endpoints.SlashCommandBuilder:
+        return special_endpoints_impl.SlashCommandBuilder(name, description)
 
     def context_menu_command_builder(
         self,
@@ -3182,12 +3175,8 @@ class RESTClientImpl(rest_api.RESTClient):
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
         default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        name_localizations: undefined.UndefinedOr[
-            typing.Mapping[typing.Union[locales.Locale, str], str]
-        ] = undefined.UNDEFINED,
-        description_localizations: undefined.UndefinedOr[
-            typing.Mapping[typing.Union[locales.Locale, str], str]
-        ] = undefined.UNDEFINED,
+        name_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = undefined.UNDEFINED,
+        description_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = undefined.UNDEFINED,
     ) -> data_binding.JSONObject:
         if guild is undefined.UNDEFINED:
             route = routes.POST_APPLICATION_COMMAND.compile(application=application)
@@ -3218,12 +3207,8 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
         default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        name_localizations: undefined.UndefinedOr[
-            typing.Mapping[typing.Union[locales.Locale, str], str]
-        ] = undefined.UNDEFINED,
-        description_localizations: undefined.UndefinedOr[
-            typing.Mapping[typing.Union[locales.Locale, str], str]
-        ] = undefined.UNDEFINED,
+        name_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = undefined.UNDEFINED,
+        description_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = undefined.UNDEFINED,
     ) -> commands.SlashCommand:
         return await self.create_slash_command(
             application=application,
@@ -3245,12 +3230,8 @@ class RESTClientImpl(rest_api.RESTClient):
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
         default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        name_localizations: undefined.UndefinedOr[
-            typing.Mapping[typing.Union[locales.Locale, str], str]
-        ] = undefined.UNDEFINED,
-        description_localizations: undefined.UndefinedOr[
-            typing.Mapping[typing.Union[locales.Locale, str], str]
-        ] = undefined.UNDEFINED,
+        name_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = undefined.UNDEFINED,
+        description_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = undefined.UNDEFINED,
     ) -> commands.SlashCommand:
         response = await self._create_application_command(
             application=application,
@@ -3275,9 +3256,7 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        name_localizations: undefined.UndefinedOr[
-            typing.Mapping[typing.Union[locales.Locale, str], str]
-        ] = undefined.UNDEFINED,
+        name_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = undefined.UNDEFINED,
     ) -> commands.ContextMenuCommand:
         response = await self._create_application_command(
             application=application,

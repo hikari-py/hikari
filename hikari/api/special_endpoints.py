@@ -67,7 +67,6 @@ if typing.TYPE_CHECKING:
     from hikari.interactions import base_interactions
     from hikari.internal import data_binding
     from hikari.internal import time
-    from hikari.locales import Locale
 
     _T = typing.TypeVar("_T")
 
@@ -942,12 +941,12 @@ class CommandBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def name_localizations(self) -> undefined.UndefinedOr[typing.Mapping[typing.Union[Locale, str], str]]:
+    def name_localizations(self) -> undefined.UndefinedOr[typing.Mapping[str, str]]:
         """Name localizations set for this command.
 
         Returns
         -------
-        undefined.UndefinedOr[typing.Dict[hikari.locales.Locale, builtins.str]]
+        hikari.undefined.UndefinedOr[typing.Mapping[str, str]]
             The name localizations of this command
         """
 
@@ -1017,14 +1016,12 @@ class CommandBuilder(abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_name_localizations(
-        self: _T, name_localizations_: undefined.UndefinedOr[typing.Mapping[typing.Union[Locale, str], str]], /
-    ) -> _T:
+    def set_name_localizations(self: _T, name_localizations: undefined.UndefinedOr[typing.Mapping[str, str]], /) -> _T:
         """Set the name localizations of this command.
 
         Parameters
         ----------
-        name_localizations_ : typing.Optional[typing.Mapping[typing.Union[hikari.locales.Locale, builtins.str], builtins.str]]
+        name_localizations : hikari.undefined.UndefinedOr[typing.Mapping[str, str]]
             The name localizations to set for this command.
 
         Returns
@@ -1116,24 +1113,24 @@ class SlashCommandBuilder(CommandBuilder):
 
     @property
     @abc.abstractmethod
-    def description_localizations(self) -> undefined.UndefinedOr[typing.Mapping[typing.Union[Locale, str], str]]:
+    def description_localizations(self) -> undefined.UndefinedOr[typing.Mapping[str, str]]:
         """Return the description locales to set for this command.
 
         Returns
         -------
-        undefined.UndefinedOr[typing.Dict[hikari.locales.Locale, builtins.str]]
+        hikari.undefined.UndefinedOr[typing.Mapping[str, str]]
             The description localizations of this command
         """
 
     @abc.abstractmethod
     def set_description_localizations(
-        self: _T, description_localizations_: undefined.UndefinedOr[typing.Mapping[typing.Union[Locale, str], str]], /
+        self: _T, description_localizations: undefined.UndefinedOr[typing.Mapping[str, str]], /
     ) -> _T:
         """Set the ID of this command.
 
         Parameters
         ----------
-        description_localizations_ : typing.Optional[typing.Mapping[typing.Union[Locale, str], str]]
+        description_localizations : hikari.undefined.UndefinedOr[typing.Mapping[str, str]]
             The description localizations to set for this command.
 
         Returns

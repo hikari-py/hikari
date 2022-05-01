@@ -4803,33 +4803,10 @@ class TestRESTClientImplAsync:
         )
         rest_client._request.assert_awaited_once_with(
             expected_route,
-            json={
-                "type": 1,
-                "name": "okokok",
-                "description": "not ok anymore",
-            },
+            json={"type": 1, "name": "okokok", "description": "not ok anymore"},
         )
 
     async def test_create_slash_command(self, rest_client: rest.RESTClientImpl):
-        expected_route = routes.POST_APPLICATION_COMMAND.compile(application=4332123)
-        rest_client._request = mock.AsyncMock(return_value={"id": "29393939"})
-
-        result = await rest_client.create_slash_command(StubModel(4332123), "okokok", "not ok anymore")
-
-        assert result is rest_client._entity_factory.deserialize_slash_command.return_value
-        rest_client._entity_factory.deserialize_slash_command.assert_called_once_with(
-            rest_client._request.return_value, guild_id=None
-        )
-        rest_client._request.assert_awaited_once_with(
-            expected_route,
-            json={
-                "type": 1,
-                "name": "okokok",
-                "description": "not ok anymore",
-            },
-        )
-
-    async def test_create_slash_command_with_name_and_description_localizations(self, rest_client: rest.RESTClientImpl):
         expected_route = routes.POST_APPLICATION_COMMAND.compile(application=4332123)
         rest_client._request = mock.AsyncMock(return_value={"id": "29393939"})
 
@@ -4837,8 +4814,8 @@ class TestRESTClientImplAsync:
             StubModel(4332123),
             "okokok",
             "not ok anymore",
-            name_localizations={locales.Locale.TR: "pırt"},
-            description_localizations={locales.Locale.TR: "jej"},
+            name_localizations={locales.Locale.TR: "hhh"},
+            description_localizations={locales.Locale.TR: "jello"},
         )
 
         assert result is rest_client._entity_factory.deserialize_slash_command.return_value
@@ -4851,27 +4828,12 @@ class TestRESTClientImplAsync:
                 "type": 1,
                 "name": "okokok",
                 "description": "not ok anymore",
-                "name_localizations": {locales.Locale.TR: "pırt"},
-                "description_localizations": {locales.Locale.TR: "jej"},
+                "name_localizations": {locales.Locale.TR: "hhh"},
+                "description_localizations": {locales.Locale.TR: "jello"},
             },
         )
 
     async def test_create_context_menu_command(self, rest_client: rest.RESTClientImpl):
-        expected_route = routes.POST_APPLICATION_COMMAND.compile(application=4332123)
-        rest_client._request = mock.AsyncMock(return_value={"id": "29393939"})
-
-        result = await rest_client.create_context_menu_command(StubModel(4332123), 2, "okokok")
-
-        assert result is rest_client._entity_factory.deserialize_context_menu_command.return_value
-        rest_client._entity_factory.deserialize_context_menu_command.assert_called_once_with(
-            rest_client._request.return_value, guild_id=None
-        )
-        rest_client._request.assert_awaited_once_with(
-            expected_route,
-            json={"type": 2, "name": "okokok"},
-        )
-
-    async def test_create_context_menu_command_with_name_localizations(self, rest_client: rest.RESTClientImpl):
         expected_route = routes.POST_APPLICATION_COMMAND.compile(application=4332123)
         rest_client._request = mock.AsyncMock(return_value={"id": "29393939"})
 
@@ -4885,7 +4847,7 @@ class TestRESTClientImplAsync:
         )
         rest_client._request.assert_awaited_once_with(
             expected_route,
-            json={"type": 2, "name": "okokok", "name_localizations": {locales.Locale.TR: "hhh"}},
+            json={"type": 2, "name": "okokok", "name_localizations": {"tr": "hhh"}},
         )
 
     async def test_set_application_commands_with_guild(self, rest_client):

@@ -1748,19 +1748,15 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_channel_types := payload.get("channel_types"):
             channel_types = [channel_models.ChannelType(channel_type) for channel_type in raw_channel_types]
 
-        name_localizations: undefined.UndefinedOr[
-            typing.Mapping[typing.Union[locales.Locale, str], str]
-        ] = undefined.UNDEFINED
+        name_localizations: typing.Mapping[str, str] = {}
         if raw_name_localizations := payload.get("name_localizations"):
-            items = raw_name_localizations.items()
-            name_localizations = {locales.Locale(key): value for key, value in items}
+            name_localizations = {locales.Locale(k): raw_name_localizations[k] for k in raw_name_localizations}
 
-        description_localizations: undefined.UndefinedOr[
-            typing.Mapping[typing.Union[locales.Locale, str], str]
-        ] = undefined.UNDEFINED
+        description_localizations: typing.Mapping[str, str] = {}
         if raw_description_localizations := payload.get("description_localizations"):
-            items = raw_description_localizations.items()
-            description_localizations = {locales.Locale(key): value for key, value in items}
+            description_localizations = {
+                locales.Locale(k): raw_description_localizations[k] for k in raw_description_localizations
+            }
 
         return commands.CommandOption(
             type=commands.OptionType(payload["type"]),
@@ -1791,19 +1787,15 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_options := payload.get("options"):
             options = [self._deserialize_command_option(option) for option in raw_options]
 
-        name_localizations: undefined.UndefinedOr[
-            typing.Mapping[typing.Union[locales.Locale, str], str]
-        ] = undefined.UNDEFINED
+        name_localizations: typing.Mapping[str, str] = {}
         if raw_name_localizations := payload.get("name_localizations"):
-            items = raw_name_localizations.items()
-            name_localizations = {locales.Locale(key): value for key, value in items}
+            name_localizations = {locales.Locale(k): raw_name_localizations[k] for k in raw_name_localizations}
 
-        description_localizations: undefined.UndefinedOr[
-            typing.Mapping[typing.Union[locales.Locale, str], str]
-        ] = undefined.UNDEFINED
+        description_localizations: typing.Mapping[str, str] = {}
         if raw_description_localizations := payload.get("description_localizations"):
-            items = raw_description_localizations.items()
-            description_localizations = {locales.Locale(key): value for key, value in items}
+            description_localizations = {
+                locales.Locale(k): raw_description_localizations[k] for k in raw_description_localizations
+            }
 
         return commands.SlashCommand(
             app=self._app,
@@ -1830,12 +1822,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             raw_guild_id = payload["guild_id"]
             guild_id = snowflakes.Snowflake(raw_guild_id) if raw_guild_id is not None else None
 
-        name_localizations: undefined.UndefinedOr[
-            typing.Mapping[typing.Union[locales.Locale, str], str]
-        ] = undefined.UNDEFINED
+        name_localizations: typing.Mapping[str, str] = {}
         if raw_name_localizations := payload.get("name_localizations"):
-            items = raw_name_localizations.items()
-            name_localizations = {locales.Locale(key): value for key, value in items}
+            name_localizations = {locales.Locale(k): raw_name_localizations[k] for k in raw_name_localizations}
 
         return commands.ContextMenuCommand(
             app=self._app,
@@ -2172,12 +2161,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             payload["min_value"] = option.min_value
         if option.max_value is not None:
             payload["max_value"] = option.max_value
-
-        if option.name_localizations is not None:
-            payload["name_localizations"] = option.name_localizations
-
-        if option.description_localizations is not None:
-            payload["description_localizations"] = option.description_localizations
 
         return payload
 

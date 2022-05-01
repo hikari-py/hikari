@@ -26,13 +26,13 @@ import pytest
 from hikari import commands
 from hikari import emojis
 from hikari import files
+from hikari import locales
 from hikari import messages
 from hikari import snowflakes
 from hikari import undefined
 from hikari.impl import special_endpoints
 from hikari.interactions import base_interactions
 from hikari.internal import routes
-from hikari.locales import Locale
 from tests.hikari import hikari_test_helpers
 
 
@@ -670,8 +670,8 @@ class TestSlashCommandBuilder:
             special_endpoints.SlashCommandBuilder(
                 "we are number",
                 "one",
-                name_localizations={Locale.TR: "merhaba"},
-                description_localizations={Locale.TR: "bir"},
+                name_localizations={locales.Locale.TR: "merhaba"},
+                description_localizations={locales.Locale.TR: "bir"},
             )
             .add_option(mock_option)
             .set_id(3412312)
@@ -688,8 +688,8 @@ class TestSlashCommandBuilder:
             "default_permission": False,
             "options": [mock_entity_factory.serialize_command_option.return_value],
             "id": "3412312",
-            "name_localizations": {Locale.TR: "merhaba"},
-            "description_localizations": {Locale.TR: "bir"},
+            "name_localizations": {locales.Locale.TR: "merhaba"},
+            "description_localizations": {locales.Locale.TR: "bir"},
         }
 
     def test_build_without_optional_data(self):
@@ -702,6 +702,8 @@ class TestSlashCommandBuilder:
             "name": "we are numberr",
             "description": "oner",
             "options": [],
+            "name_localizations": {},
+            "description_localizations": {},
         }
 
     @pytest.mark.asyncio()
@@ -711,6 +713,8 @@ class TestSlashCommandBuilder:
             .add_option(mock.Mock())
             .set_id(3412312)
             .set_default_permission(False)
+            .set_name_localizations({locales.Locale.TR: "sayı"})
+            .set_description_localizations({locales.Locale.TR: "bir"})
         )
         mock_rest = mock.AsyncMock()
 
@@ -724,14 +728,17 @@ class TestSlashCommandBuilder:
             guild=undefined.UNDEFINED,
             default_permission=builder.default_permission,
             options=builder.options,
-            name_localizations=undefined.UNDEFINED,
-            description_localizations=undefined.UNDEFINED,
+            name_localizations={locales.Locale.TR: "sayı"},
+            description_localizations={locales.Locale.TR: "bir"},
         )
 
     @pytest.mark.asyncio()
     async def test_create_with_guild(self):
         builder = special_endpoints.SlashCommandBuilder("we are number", "one")
         mock_rest = mock.AsyncMock()
+
+        builder.set_name_localizations({locales.Locale.TR: "sayı"})
+        builder.set_description_localizations({locales.Locale.TR: "bir"})
 
         result = await builder.create(mock_rest, 54455445, guild=54123123321)
 
@@ -743,8 +750,8 @@ class TestSlashCommandBuilder:
             guild=54123123321,
             default_permission=builder.default_permission,
             options=builder.options,
-            name_localizations=undefined.UNDEFINED,
-            description_localizations=undefined.UNDEFINED,
+            name_localizations={locales.Locale.TR: "sayı"},
+            description_localizations={locales.Locale.TR: "bir"},
         )
 
 
@@ -754,10 +761,10 @@ class TestContextMenuBuilder:
             special_endpoints.ContextMenuCommandBuilder(
                 commands.CommandType.USER,
                 "we are number",
-                name_localizations={Locale.TR: "merhaba"},
             )
             .set_id(3412312)
             .set_default_permission(False)
+            .set_name_localizations({locales.Locale.TR: "merhaba"})
         )
 
         result = builder.build(mock.Mock())
@@ -767,7 +774,7 @@ class TestContextMenuBuilder:
             "type": 2,
             "default_permission": False,
             "id": "3412312",
-            "name_localizations": {Locale.TR: "merhaba"},
+            "name_localizations": {locales.Locale.TR: "merhaba"},
         }
 
     def test_build_without_optional_data(self):
@@ -775,7 +782,7 @@ class TestContextMenuBuilder:
 
         result = builder.build(mock.Mock())
 
-        assert result == {"type": 3, "name": "nameeeee"}
+        assert result == {"type": 3, "name": "nameeeee", "name_localizations": {}}
 
     @pytest.mark.asyncio()
     async def test_create(self):

@@ -45,7 +45,6 @@ from hikari import traits
 from hikari import undefined
 from hikari.internal import attr_extensions
 from hikari.internal import enums
-from hikari.locales import Locale
 
 if typing.TYPE_CHECKING:
     from hikari import channels
@@ -137,21 +136,11 @@ class CommandOption:
         lowercase.
     """
 
-    name_localizations: undefined.UndefinedOr[typing.Mapping[typing.Union[Locale, str], str]] = attr.field(
-        default=undefined.UNDEFINED, kw_only=True
-    )
-    """A set of name localizations for this option
+    name_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = attr.field(default={}, kw_only=True)
+    """A set of name localizations for this option."""
 
-    This will be `builtins.None` if not provided.
-    """
-
-    description_localizations: undefined.UndefinedOr[typing.Mapping[typing.Union[Locale, str], str]] = attr.field(
-        default=undefined.UNDEFINED, kw_only=True
-    )
-    """A set of description localizations for this option
-
-    This will be `builtins.None` if not provided.
-    """
+    description_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = attr.field(default={}, kw_only=True)
+    """A set of description localizations for this option"""
 
     description: str = attr.field(repr=False)
     """The command option's description.
@@ -208,21 +197,11 @@ class PartialCommand(snowflakes.Unique):
     app: traits.RESTAware = attr.field(eq=False, hash=False, repr=False)
     """The client application that models may use for procedures."""
 
-    name_localizations: undefined.UndefinedOr[typing.Mapping[typing.Union[Locale, str], str]] = attr.field(
-        default=undefined.UNDEFINED, kw_only=True
-    )
-    """A set of name localizations for this option
+    name_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = attr.field(default={}, kw_only=True)
+    """A set of name localizations for this option"""
 
-    This will be `builtins.None` if not provided.
-    """
-
-    description_localizations: undefined.UndefinedOr[typing.Mapping[typing.Union[Locale, str], str]] = attr.field(
-        default=undefined.UNDEFINED, kw_only=True
-    )
-    """A set of description localizations for this option
-
-    This will be `builtins.None` if not provided.
-    """
+    description_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = attr.field(default={}, kw_only=True)
+    """A set of description localizations for this option"""
 
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
     # <<inherited docstring from Unique>>.

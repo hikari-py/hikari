@@ -6889,12 +6889,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
         default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        name_localizations: undefined.UndefinedOr[
-            typing.Mapping[typing.Union[locales.Locale, str], str]
-        ] = undefined.UNDEFINED,
-        description_localizations: undefined.UndefinedOr[
-            typing.Mapping[typing.Union[locales.Locale, str], str]
-        ] = undefined.UNDEFINED,
+        name_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = undefined.UNDEFINED,
+        description_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = undefined.UNDEFINED,
     ) -> commands.SlashCommand:
         r"""Create an application command.
 
@@ -6922,6 +6918,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             permissions) when added to a guild.
 
             Defaults to `builtins.True`.
+        name_localizations : hikari.undefined.UndefinedOr[typing.Mapping[str, str]]
+            The name localizations for this command.
+        description_localizations : hikari.undefined.UndefinedOr[typing.Mapping[str, str]]
+            The name localizations for this command.
 
         Returns
         -------
@@ -6991,6 +6991,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             permissions) when added to a guild.
 
             Defaults to `builtins.True`.
+        name_localizations : hikari.undefined.UndefinedOr[typing.Mapping[str, str]]
+            The name localizations for this command.
 
         Returns
         -------
