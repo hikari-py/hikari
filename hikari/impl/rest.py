@@ -3297,6 +3297,8 @@ class RESTClientImpl(rest_api.RESTClient):
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
+        default_member_permissions: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
+        dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.PartialCommand:
         if guild is undefined.UNDEFINED:
             route = routes.PATCH_APPLICATION_COMMAND.compile(application=application, command=command)

@@ -7115,6 +7115,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
+        default_member_permissions: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
+        dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.PartialCommand:
         """Edit a registered application command.
 
@@ -7140,6 +7142,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         options : hikari.undefined.UndefinedOr[typing.Sequence[hikari.commands.CommandOption]]
             A sequence of up to 10 options to set for this command. Leave this as
             `hikari.undefined.UNDEFINED` to not change.
+        default_member_permissions : hikari.undefined.UndefinedOr[hikari.permissions.Permissions]
+            Member permissions necessary to utilize this command by default.
+
+            If `0`, then it will be disabled by default. This excludes administrators
+            of the guild and overwrites.
+        dm_enabled : hikari.undefined.UndefinedOr[builtins.bool]
+            Whether this command is enabled in DMs with the bot.
+
+            This can only be applied to non-guild commands.
 
         Returns
         -------
