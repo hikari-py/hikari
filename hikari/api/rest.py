@@ -6650,7 +6650,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Parameters
         ----------
         name : builtins.str
-            The command's name. This should match the regex `^[\w-]{1,32}$` in
+            The command's name. This should match the regex `^[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$` in
             Unicode mode and be lowercase.
         description : builtins.str
             The description to set for the command.
@@ -6673,7 +6673,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Parameters
         ----------
         name : builtins.str
-            The command's name. This should match the regex `^[\w-]{1,32}$` in
+            The command's name. This should match the regex `^[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$` in
             Unicode mode and be lowercase.
         description : builtins.str
             The description to set for the command if this is a slash command.
@@ -6829,7 +6829,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to create a command for.
         name : builtins.str
-            The command's name. This should match the regex `^[\w-]{1,32}$` in
+            The command's name. This should match the regex `^[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$` in
             Unicode mode and be lowercase.
         description : builtins.str
             The description to set for the command.
@@ -6899,7 +6899,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to create a command for.
         name : builtins.str
-            The command's name. This should match the regex `^[\w-]{1,32}$` in
+            The command's name. This should match the regex `^[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$` in
             Unicode mode and be lowercase.
         description : builtins.str
             The description to set for the command.
@@ -6977,7 +6977,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
             Only USER and MESSAGE are valid here.
         name : builtins.str
-            The command's name. This should match the regex `^[\w-]{1,32}$` in
+            The command's name. This should match the regex `^[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$` in
             Unicode mode and be lowercase.
 
         Other Parameters

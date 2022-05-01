@@ -132,7 +132,7 @@ class CommandOption:
     r"""The command option's name.
 
     !!! note
-        This will match the regex `^[\w-]{1,32}$` in Unicode mode and will be
+        This will match the regex `^[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$` in Unicode mode and will be
         lowercase.
     """
 
@@ -198,10 +198,10 @@ class PartialCommand(snowflakes.Unique):
     """The client application that models may use for procedures."""
 
     name_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = attr.field(default={}, kw_only=True)
-    """A set of name localizations for this option"""
+    """A set of name localizations for this command"""
 
     description_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = attr.field(default={}, kw_only=True)
-    """A set of description localizations for this option"""
+    """A set of description localizations for this command"""
 
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
     # <<inherited docstring from Unique>>.
@@ -216,7 +216,7 @@ class PartialCommand(snowflakes.Unique):
     r"""The command's name.
 
     !!! note
-        This will match the regex `^[\w-]{1,32}$` in Unicode mode and will be
+        This will match the regex `^[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$` in Unicode mode and will be
         lowercase.
     """
 
