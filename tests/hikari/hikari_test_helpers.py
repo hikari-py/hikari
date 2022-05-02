@@ -102,7 +102,7 @@ def retry(max_retries):
             ex = None
             for i in range(max_retries + 1):
                 if i:
-                    print("retry", i, "of", max_retries)  # noqa: T001 - Print found
+                    print("retry", i, "of", max_retries)  # noqa: T201 - Print found
                 try:
                     await func(*args, **kwargs)
                     return
