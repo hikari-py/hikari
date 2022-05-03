@@ -6762,7 +6762,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
-        with_localizations: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> typing.Sequence[commands.PartialCommand]:
         """Fetch the commands set for an application.
 
@@ -6778,9 +6777,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             `hikari.undefined.UNDEFINED` then this will only return the global
             commands, otherwise this will only return the commands set exclusively
             for the specific guild.
-        with_localizations : hikari.undefined.UndefinedOr[bool]
-            Whether to include full localization dictionaries (`name_localizations` and `description_localizations`)
-            in the returned objects. Defaults to `False`
 
         Returns
         -------

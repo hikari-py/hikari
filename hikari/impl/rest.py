@@ -3153,7 +3153,6 @@ class RESTClientImpl(rest_api.RESTClient):
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
-        with_localizations: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> typing.Sequence[commands.PartialCommand]:
         if guild is undefined.UNDEFINED:
             route = routes.GET_APPLICATION_COMMANDS.compile(application=application)
@@ -3161,11 +3160,8 @@ class RESTClientImpl(rest_api.RESTClient):
         else:
             route = routes.GET_APPLICATION_GUILD_COMMANDS.compile(application=application, guild=guild)
 
-        string_map_builder = None
-
-        if with_localizations is True:
-            string_map_builder = data_binding.StringMapBuilder()
-            string_map_builder.put("with_localizations", with_localizations)
+        string_map_builder = data_binding.StringMapBuilder()
+        string_map_builder.put("with_localizations", True)
 
         response = await self._request(route, query=string_map_builder)
         assert isinstance(response, list)
