@@ -3161,8 +3161,10 @@ class RESTClientImpl(rest_api.RESTClient):
         else:
             route = routes.GET_APPLICATION_GUILD_COMMANDS.compile(application=application, guild=guild)
 
-        string_map_builder = data_binding.StringMapBuilder()
+        string_map_builder = None
+
         if with_localizations is True:
+            string_map_builder = data_binding.StringMapBuilder()
             string_map_builder.put("with_localizations", with_localizations)
 
         response = await self._request(route, query=string_map_builder)
