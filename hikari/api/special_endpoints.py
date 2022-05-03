@@ -942,13 +942,7 @@ class CommandBuilder(abc.ABC):
     @property
     @abc.abstractmethod
     def name_localizations(self) -> undefined.UndefinedOr[typing.Mapping[str, str]]:
-        """Name localizations set for this command.
-
-        Returns
-        -------
-        hikari.undefined.UndefinedOr[typing.Mapping[str, str]]
-            The name localizations of this command
-        """
+        """Name localizations set for this command."""
 
     @property
     @abc.abstractmethod
@@ -1114,19 +1108,13 @@ class SlashCommandBuilder(CommandBuilder):
     @property
     @abc.abstractmethod
     def description_localizations(self) -> undefined.UndefinedOr[typing.Mapping[str, str]]:
-        """Return the description locales to set for this command.
-
-        Returns
-        -------
-        hikari.undefined.UndefinedOr[typing.Mapping[str, str]]
-            The description localizations of this command
-        """
+        """Description locales to set for this command."""
 
     @abc.abstractmethod
     def set_description_localizations(
         self: _T, description_localizations: undefined.UndefinedOr[typing.Mapping[str, str]], /
     ) -> _T:
-        """Set the ID of this command.
+        """Set the description localizations of this command.
 
         Parameters
         ----------
