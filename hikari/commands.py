@@ -136,10 +136,10 @@ class CommandOption:
         lowercase.
     """
 
-    name_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = attr.field(default={}, kw_only=True)
+    name_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = attr.field(factory=dict, kw_only=True)
     """A set of name localizations for this option."""
 
-    description_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = attr.field(default={}, kw_only=True)
+    description_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = attr.field(factory=dict, kw_only=True)
     """A set of description localizations for this option"""
 
     description: str = attr.field(repr=False)
@@ -197,10 +197,10 @@ class PartialCommand(snowflakes.Unique):
     app: traits.RESTAware = attr.field(eq=False, hash=False, repr=False)
     """The client application that models may use for procedures."""
 
-    name_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = attr.field(default={}, kw_only=True)
+    name_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = attr.field(factory=dict, kw_only=True)
     """A set of name localizations for this command"""
 
-    description_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = attr.field(default={}, kw_only=True)
+    description_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = attr.field(factory=dict, kw_only=True)
     """A set of description localizations for this command"""
 
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)

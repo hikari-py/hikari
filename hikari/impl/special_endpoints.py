@@ -1093,7 +1093,7 @@ class CommandBuilder(special_endpoints.CommandBuilder):
     _id: undefined.UndefinedOr[snowflakes.Snowflake] = attr.field(default=undefined.UNDEFINED, kw_only=True)
     _default_permission: undefined.UndefinedOr[bool] = attr.field(default=undefined.UNDEFINED, kw_only=True)
 
-    _name_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = attr.field(default={}, kw_only=True)
+    _name_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = attr.field(factory=dict, kw_only=True)
 
     @property
     def name_localizations(self) -> undefined.UndefinedOr[typing.Mapping[str, str]]:
@@ -1144,7 +1144,7 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
 
     _description: str = attr.field()
     _options: typing.List[commands.CommandOption] = attr.field(factory=list, kw_only=True)
-    _description_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = attr.field(default={}, kw_only=True)
+    _description_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = attr.field(factory=dict, kw_only=True)
 
     @property
     def description(self) -> str:
