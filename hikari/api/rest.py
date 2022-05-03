@@ -6962,9 +6962,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        name_localizations: undefined.UndefinedOr[
-            typing.Dict[typing.Union[locales.Locale, str], str]
-        ] = undefined.UNDEFINED,
+        name_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = undefined.UNDEFINED,
     ) -> commands.ContextMenuCommand:
         r"""Create an application command.
 

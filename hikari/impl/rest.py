@@ -3160,10 +3160,7 @@ class RESTClientImpl(rest_api.RESTClient):
         else:
             route = routes.GET_APPLICATION_GUILD_COMMANDS.compile(application=application, guild=guild)
 
-        string_map_builder = data_binding.StringMapBuilder()
-        string_map_builder.put("with_localizations", True)
-
-        response = await self._request(route, query=string_map_builder)
+        response = await self._request(route, query={"with_localizations": "true"})
         assert isinstance(response, list)
         guild_id = snowflakes.Snowflake(guild) if guild is not undefined.UNDEFINED else None
         return [self._entity_factory.deserialize_command(command, guild_id=guild_id) for command in response]
