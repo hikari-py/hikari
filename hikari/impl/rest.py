@@ -758,7 +758,10 @@ class RESTClientImpl(rest_api.RESTClient):
                             proxy=self._proxy_settings.url,
                             proxy_headers=self._proxy_settings.all_headers,
                         )
-                    except asyncio.TimeoutError:  # Request timed out
+                    except (
+                        asyncio.TimeoutError,
+                        aiohttp.ClientOSError,
+                    ):  # Request timed out or failed due to connection issues
                         if retry_count >= self._max_retries:
                             raise
 
