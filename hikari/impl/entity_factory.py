@@ -2073,10 +2073,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             member = None
             user = self.deserialize_user(payload["user"])
 
-        resolved: typing.Optional[command_interactions.ResolvedOptionData] = None
-        if resolved_payload := data_payload.get("resolved"):
-            resolved = self._deserialize_resolved_option_data(resolved_payload, guild_id=guild_id)
-
         return command_interactions.AutocompleteInteraction(
             app=self._app,
             application_id=snowflakes.Snowflake(payload["application_id"]),
@@ -2092,7 +2088,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             command_name=data_payload["name"],
             command_type=commands.CommandType(data_payload.get("type", commands.CommandType.SLASH)),
             options=options,
-            resolved=resolved,
             locale=locales.Locale(payload["locale"]),
             guild_locale=locales.Locale(payload["guild_locale"]) if "guild_locale" in payload else None,
         )
