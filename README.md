@@ -143,7 +143,6 @@ implementing your own command handler.
 Hikari does not include a command framework by default, so you will want to pick a third party library to do it:
 
 - [`lightbulb`](https://github.com/tandemdude/hikari-lightbulb) - a simple and easy to use command framework for Hikari.
-- [`tanjun`](https://github.com/FasterSpeeding/Tanjun) - a flexible command framework designed to extend Hikari.
 
 ---
 
