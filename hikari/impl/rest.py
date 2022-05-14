@@ -1485,10 +1485,10 @@ class RESTClientImpl(rest_api.RESTClient):
                     message = chunk[0]
                     try:
                         await self.delete_message(channel, message)
-                    except errors.NotFoundError as exc:
+                    except errors.NotFoundError as e:
                         # If the message is not found then this error should be suppressed
                         # to keep consistency with how the bulk delete endpoint functions.
-                        if exc.code != 10008:  # Unknown Message
+                        if e.code != 10008:  # Unknown Message
                             raise
 
                     deleted.append(message)
@@ -1499,8 +1499,8 @@ class RESTClientImpl(rest_api.RESTClient):
                     await self._request(route, json=body)
                     deleted += chunk
 
-            except Exception as ex:
-                raise errors.BulkDeleteError(deleted, await iterator) from ex
+            except Exception as e:
+                raise errors.BulkDeleteError(deleted, await iterator) from e
 
     @staticmethod
     def _transform_emoji_to_url_format(
