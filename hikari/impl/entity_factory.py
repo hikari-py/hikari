@@ -2694,6 +2694,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 is_instance=activity_payload.get("instance"),  # TODO: can we safely default this to False?
                 flags=presence_models.ActivityFlag(activity_payload["flags"]) if "flags" in activity_payload else None,
                 buttons=activity_payload.get("buttons") or [],
+                sync_id=activity_payload.get("sync_id"),
             )
             activities.append(activity)
 

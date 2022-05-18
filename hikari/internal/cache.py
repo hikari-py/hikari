@@ -525,6 +525,7 @@ class RichActivityData(BaseData[presences.RichActivity]):
     is_instance: typing.Optional[bool] = attr.field()
     flags: typing.Optional[presences.ActivityFlag] = attr.field()
     buttons: typing.Tuple[str, ...] = attr.field()
+    sync_id: typing.Optional[str] = attr.field()
 
     @classmethod
     def build_from_entity(
@@ -563,6 +564,7 @@ class RichActivityData(BaseData[presences.RichActivity]):
             assets=assets,
             secrets=secrets,
             buttons=tuple(activity.buttons),
+            sync_id=activity.sync_id,
         )
 
     def build_entity(self, _: traits.RESTAware, /) -> presences.RichActivity:
@@ -589,6 +591,7 @@ class RichActivityData(BaseData[presences.RichActivity]):
             secrets=copy.copy(self.secrets) if self.secrets is not None else None,
             emoji=emoji,
             buttons=self.buttons,
+            sync_id=self.sync_id,
         )
 
 

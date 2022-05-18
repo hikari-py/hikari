@@ -192,6 +192,7 @@ def presence_activity_payload(custom_emoji_payload):
         "instance": True,
         "flags": 3,
         "buttons": ["owo", "no"],
+        "sync_id": "4cOdK2wGLETKBW3PvgPWqT",
     }
 
 
@@ -4965,6 +4966,7 @@ class TestEntityFactoryImpl:
         assert activity.type == presence_models.ActivityType.STREAMING
         assert activity.url == "https://69.420.owouwunyaa"
         assert activity.created_at == datetime.datetime(2020, 3, 23, 20, 53, 12, 798000, tzinfo=datetime.timezone.utc)
+        assert activity.sync_id == "4cOdK2wGLETKBW3PvgPWqT"
         # ActivityTimestamps
         assert activity.timestamps.start == datetime.datetime(
             2020, 3, 23, 20, 53, 12, 798000, tzinfo=datetime.timezone.utc
@@ -5060,6 +5062,7 @@ class TestEntityFactoryImpl:
         assert activity.is_instance is None
         assert activity.flags is None
         assert activity.buttons == []
+        assert activity.sync_id is None
 
     def test_deserialize_member_presence_with_null_activity_fields(self, entity_factory_impl, user_payload):
         presence = entity_factory_impl.deserialize_member_presence(
@@ -5092,6 +5095,7 @@ class TestEntityFactoryImpl:
                         "secrets": {"join": "who's a good secret?", "spectate": "I'm a good secret", "match": "No."},
                         "instance": True,
                         "flags": 3,
+                        "sync_id": None,
                     }
                 ],
                 "client_status": {},
@@ -5103,6 +5107,7 @@ class TestEntityFactoryImpl:
         assert activity.details is None
         assert activity.state is None
         assert activity.emoji is None
+        assert activity.sync_id is None
 
     def test_deserialize_member_presence_with_unset_activity_sub_fields(self, entity_factory_impl, user_payload):
         presence = entity_factory_impl.deserialize_member_presence(
@@ -5127,6 +5132,7 @@ class TestEntityFactoryImpl:
                         "secrets": {},
                         "instance": True,
                         "flags": 3,
+                        "sync_id": "4cOdK2wGLETKBW3PvgPWqT",
                     }
                 ],
                 "client_status": {},

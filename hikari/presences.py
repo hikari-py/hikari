@@ -362,6 +362,9 @@ class RichActivity(Activity):
     buttons: typing.Sequence[str] = attr.field(repr=False)
     """A sequence of up to 2 of the button labels shown in this rich presence."""
 
+    sync_id: typing.Optional[str] = attr.field(repr=False)
+    """The sync ID for this activity, if applicable."""
+
 
 @typing.final
 class Status(str, enums.Enum):
