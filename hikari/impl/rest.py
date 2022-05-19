@@ -1265,7 +1265,7 @@ class RESTClientImpl(rest_api.RESTClient):
         elif attachments is not undefined.UNDEFINED:
             final_attachments.extend([files.ensure_resource(a) for a in attachments])
 
-        serialized_components: undefined.UndefinedOr[typing.List[data_binding.JSONObject]] = undefined.UNDEFINED
+        serialized_components: undefined.UndefinedOr[typing.List[typing.Mapping[str, typing.Any]]] = undefined.UNDEFINED
         if component is not undefined.UNDEFINED:
             if component is not None:
                 serialized_components = [component.build()]
