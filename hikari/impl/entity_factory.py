@@ -1050,7 +1050,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         timestamp = time.iso8601_datetime_string_to_datetime(payload["timestamp"]) if "timestamp" in payload else None
         fields: typing.Optional[typing.List[embed_models.EmbedField]] = None
 
-        image: typing.Optional[embed_models.EmbedImage[files.AsyncReader]] = None
+        image: typing.Optional[embed_models.EmbedImage] = None
         if (image_payload := payload.get("image")) and "url" in image_payload:
             proxy = files.ensure_resource(image_payload["proxy_url"]) if "proxy_url" in image_payload else None
             image = embed_models.EmbedImage(
@@ -1060,7 +1060,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 width=image_payload.get("width"),
             )
 
-        thumbnail: typing.Optional[embed_models.EmbedImage[files.AsyncReader]] = None
+        thumbnail: typing.Optional[embed_models.EmbedImage] = None
         if (thumbnail_payload := payload.get("thumbnail")) and "url" in thumbnail_payload:
             proxy = files.ensure_resource(thumbnail_payload["proxy_url"]) if "proxy_url" in thumbnail_payload else None
             thumbnail = embed_models.EmbedImage(
@@ -1070,7 +1070,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 width=thumbnail_payload.get("width"),
             )
 
-        video: typing.Optional[embed_models.EmbedVideo[files.AsyncReader]] = None
+        video: typing.Optional[embed_models.EmbedVideo] = None
         if (video_payload := payload.get("video")) and "url" in video_payload:
             raw_proxy_url = video_payload.get("proxy_url")
             video = embed_models.EmbedVideo(
@@ -1084,7 +1084,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if provider_payload := payload.get("provider"):
             provider = embed_models.EmbedProvider(name=provider_payload.get("name"), url=provider_payload.get("url"))
 
-        icon: typing.Optional[embed_models.EmbedResourceWithProxy[files.AsyncReader]]
+        icon: typing.Optional[embed_models.EmbedResourceWithProxy]
         author: typing.Optional[embed_models.EmbedAuthor] = None
         if author_payload := payload.get("author"):
             icon = None
@@ -2077,10 +2077,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             member = None
             user = self.deserialize_user(payload["user"])
 
-        resolved: typing.Optional[command_interactions.ResolvedOptionData] = None
-        if resolved_payload := data_payload.get("resolved"):
-            resolved = self._deserialize_resolved_option_data(resolved_payload, guild_id=guild_id)
-
         return command_interactions.AutocompleteInteraction(
             app=self._app,
             application_id=snowflakes.Snowflake(payload["application_id"]),
@@ -2096,7 +2092,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             command_name=data_payload["name"],
             command_type=commands.CommandType(data_payload.get("type", commands.CommandType.SLASH)),
             options=options,
-            resolved=resolved,
             locale=locales.Locale(payload["locale"]),
             guild_locale=locales.Locale(payload["guild_locale"]) if "guild_locale" in payload else None,
         )
