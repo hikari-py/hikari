@@ -4766,7 +4766,6 @@ class TestRESTClientImplAsync:
             description="not ok anymore",
             guild=StubModel(653452134),
             options=[mock_option],
-            default_permission=True,
             default_member_permissions=permissions.Permissions.ADMINISTRATOR,
             dm_enabled=False,
         )
@@ -4780,7 +4779,6 @@ class TestRESTClientImplAsync:
                 "name": "okokok",
                 "description": "not ok anymore",
                 "options": [rest_client._entity_factory.serialize_command_option.return_value],
-                "default_permission": True,
                 "default_member_permissions": 8,
                 "dm_permission": False,
             },
@@ -4804,31 +4802,6 @@ class TestRESTClientImplAsync:
             },
         )
 
-    async def test_create_application_command(self, rest_client: rest.RESTClientImpl):
-        rest_client.create_slash_command = mock.AsyncMock()
-        mock_options = object()
-        mock_application = StubModel(4332123)
-        mock_guild = StubModel(123123123)
-
-        result = await rest_client.create_application_command(
-            mock_application,
-            "okokok",
-            "not ok anymore",
-            guild=mock_guild,
-            options=mock_options,
-            default_permission=True,
-        )
-
-        assert result is rest_client.create_slash_command.return_value
-        rest_client.create_slash_command.assert_awaited_once_with(
-            application=mock_application,
-            name="okokok",
-            description="not ok anymore",
-            guild=mock_guild,
-            options=mock_options,
-            default_permission=True,
-        )
-
     async def test_create_slash_command(self, rest_client: rest.RESTClientImpl):
         rest_client._create_application_command = mock.AsyncMock()
         mock_options = object()
@@ -4841,7 +4814,6 @@ class TestRESTClientImplAsync:
             "not ok anymore",
             guild=mock_guild,
             options=mock_options,
-            default_permission=True,
             default_member_permissions=permissions.Permissions.ADMINISTRATOR,
             dm_enabled=False,
         )
@@ -4857,7 +4829,6 @@ class TestRESTClientImplAsync:
             description="not ok anymore",
             guild=mock_guild,
             options=mock_options,
-            default_permission=True,
             default_member_permissions=permissions.Permissions.ADMINISTRATOR,
             dm_enabled=False,
         )
@@ -4872,7 +4843,6 @@ class TestRESTClientImplAsync:
             commands.CommandType.USER,
             "okokok",
             guild=mock_guild,
-            default_permission=True,
             default_member_permissions=permissions.Permissions.ADMINISTRATOR,
             dm_enabled=False,
         )
@@ -4886,7 +4856,6 @@ class TestRESTClientImplAsync:
             type=commands.CommandType.USER,
             name="okokok",
             guild=mock_guild,
-            default_permission=True,
             default_member_permissions=permissions.Permissions.ADMINISTRATOR,
             dm_enabled=False,
         )
@@ -5003,29 +4972,6 @@ class TestRESTClientImplAsync:
         assert result is rest_client._entity_factory.deserialize_guild_command_permissions.return_value
         rest_client._entity_factory.deserialize_guild_command_permissions.assert_called_once_with(mock_command_payload)
         rest_client._request.assert_awaited_once_with(expected_route)
-
-    async def test_set_application_guild_commands_permissions(self, rest_client):
-        expected_route = routes.PUT_APPLICATION_GUILD_COMMANDS_PERMISSIONS.compile(application=321123, guild=542123)
-        mock_command_payload = object()
-        mock_permission = object()
-        rest_client._request = mock.AsyncMock(return_value=[mock_command_payload])
-
-        result = await rest_client.set_application_guild_commands_permissions(
-            321123, 542123, {564123123: [mock_permission]}
-        )
-
-        assert result == [rest_client._entity_factory.deserialize_guild_command_permissions.return_value]
-        rest_client._entity_factory.serialize_command_permission.assert_called_once_with(mock_permission)
-        rest_client._entity_factory.deserialize_guild_command_permissions.assert_called_once_with(mock_command_payload)
-        rest_client._request.assert_awaited_once_with(
-            expected_route,
-            json=[
-                {
-                    "id": "564123123",
-                    "permissions": [rest_client._entity_factory.serialize_command_permission.return_value],
-                }
-            ],
-        )
 
     async def test_set_application_command_permissions(self, rest_client):
         route = routes.PUT_APPLICATION_COMMAND_PERMISSIONS.compile(application=2321, guild=431, command=666666)

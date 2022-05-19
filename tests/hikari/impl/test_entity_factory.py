@@ -3104,7 +3104,6 @@ class TestEntityFactoryImpl:
             "type": 1,
             "name": "good name",
             "description": "very good description",
-            "default_permission": False,
             "default_member_permissions": 8,
             "dm_permission": True,
             "options": [
@@ -3138,7 +3137,6 @@ class TestEntityFactoryImpl:
         assert command.guild_id == 49949494
         assert command.name == "good name"
         assert command.description == "very good description"
-        assert command.default_permission is False
         assert command.default_member_permissions == permission_models.Permissions.ADMINISTRATOR
         assert command.is_dm_enabled is True
         assert command.version == 123321123
@@ -3210,7 +3208,6 @@ class TestEntityFactoryImpl:
         command = entity_factory_impl.deserialize_command(payload)
 
         assert command.options is None
-        assert command.default_permission is True
         assert command.default_member_permissions is None
         assert command.is_dm_enabled is False
         assert isinstance(command, commands.SlashCommand)
@@ -3729,7 +3726,6 @@ class TestEntityFactoryImpl:
             "guild_id": "49949494",
             "type": 2,
             "name": "good name",
-            "default_permission": False,
             "default_member_permissions": 8,
             "dm_permission": True,
             "version": "123321123",
@@ -3744,7 +3740,6 @@ class TestEntityFactoryImpl:
         assert command.guild_id == 49949494
         assert command.type == commands.CommandType.USER
         assert command.name == "good name"
-        assert command.default_permission is False
         assert command.default_member_permissions == permission_models.Permissions.ADMINISTRATOR
         assert command.is_dm_enabled is True
         assert command.version == 123321123
@@ -3752,14 +3747,12 @@ class TestEntityFactoryImpl:
     def test_deserialize_context_menu_command_with_with_null_and_unset_values(
         self, entity_factory_impl, context_menu_command_payload
     ):
-        del context_menu_command_payload["default_permission"]
         del context_menu_command_payload["default_member_permissions"]
         del context_menu_command_payload["dm_permission"]
 
         command = entity_factory_impl.deserialize_context_menu_command(context_menu_command_payload)
         assert isinstance(command, commands.ContextMenuCommand)
 
-        assert command.default_permission is True
         assert command.default_member_permissions is None
         assert command.is_dm_enabled is False
 

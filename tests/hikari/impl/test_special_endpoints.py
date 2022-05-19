@@ -658,11 +658,6 @@ class TestSlashCommandBuilder:
 
         assert builder.id == 3212123
 
-    def test_default_permission(self):
-        builder = special_endpoints.SlashCommandBuilder("oksksksk", "kfdkodfokfd").set_default_permission(True)
-
-        assert builder.default_permission is True
-
     def test_default_member_permissions(self):
         builder = special_endpoints.SlashCommandBuilder("oksksksk", "kfdkodfokfd").set_default_member_permissions(
             permissions.Permissions.ADMINISTRATOR
@@ -682,7 +677,6 @@ class TestSlashCommandBuilder:
             special_endpoints.SlashCommandBuilder("we are number", "one")
             .add_option(mock_option)
             .set_id(3412312)
-            .set_default_permission(False)
             .set_default_member_permissions(permissions.Permissions.ADMINISTRATOR)
             .set_dm_enabled(True)
         )
@@ -694,7 +688,6 @@ class TestSlashCommandBuilder:
             "name": "we are number",
             "description": "one",
             "type": 1,
-            "default_permission": False,
             "dm_permission": True,
             "default_member_permissions": 8,
             "options": [mock_entity_factory.serialize_command_option.return_value],
@@ -710,12 +703,7 @@ class TestSlashCommandBuilder:
 
     @pytest.mark.asyncio()
     async def test_create(self):
-        builder = (
-            special_endpoints.SlashCommandBuilder("we are number", "one")
-            .add_option(mock.Mock())
-            .set_id(3412312)
-            .set_default_permission(False)
-        )
+        builder = special_endpoints.SlashCommandBuilder("we are number", "one").add_option(mock.Mock()).set_id(3412312)
         mock_rest = mock.AsyncMock()
 
         result = await builder.create(mock_rest, 123431123)
@@ -726,7 +714,6 @@ class TestSlashCommandBuilder:
             builder.name,
             builder.description,
             guild=undefined.UNDEFINED,
-            default_permission=builder.default_permission,
             options=builder.options,
         )
 
@@ -743,7 +730,6 @@ class TestSlashCommandBuilder:
             builder.name,
             builder.description,
             guild=54123123321,
-            default_permission=builder.default_permission,
             options=builder.options,
         )
 
@@ -753,7 +739,6 @@ class TestContextMenuBuilder:
         builder = (
             special_endpoints.ContextMenuCommandBuilder(commands.CommandType.USER, "we are number")
             .set_id(3412312)
-            .set_default_permission(False)
             .set_default_member_permissions(permissions.Permissions.ADMINISTRATOR)
             .set_dm_enabled(True)
         )
@@ -763,7 +748,6 @@ class TestContextMenuBuilder:
         assert result == {
             "name": "we are number",
             "type": 2,
-            "default_permission": False,
             "dm_permission": True,
             "default_member_permissions": 8,
             "id": "3412312",
@@ -778,10 +762,8 @@ class TestContextMenuBuilder:
 
     @pytest.mark.asyncio()
     async def test_create(self):
-        builder = (
-            special_endpoints.ContextMenuCommandBuilder(commands.CommandType.USER, "we are number")
-            .set_id(3412312)
-            .set_default_permission(False)
+        builder = special_endpoints.ContextMenuCommandBuilder(commands.CommandType.USER, "we are number").set_id(
+            3412312
         )
         mock_rest = mock.AsyncMock()
 
@@ -793,7 +775,6 @@ class TestContextMenuBuilder:
             builder.type,
             builder.name,
             guild=undefined.UNDEFINED,
-            default_permission=builder.default_permission,
         )
 
     @pytest.mark.asyncio()
@@ -809,7 +790,6 @@ class TestContextMenuBuilder:
             builder.type,
             builder.name,
             guild=765234123,
-            default_permission=builder.default_permission,
         )
 
 

@@ -209,13 +209,6 @@ class PartialCommand(snowflakes.Unique):
         lowercase.
     """
 
-    default_permission: bool = attr.field(eq=False, hash=False, repr=True)
-    """Whether the command is enabled by default when added to a guild.
-
-    Defaults to `builtins.True`. This behaviour is overridden by command
-    permissions.
-    """
-
     default_member_permissions: typing.Optional[permissions.Permissions] = attr.field(eq=False, hash=False, repr=True)
     """Member permissions necessary to utilize this command by default.
 
@@ -494,7 +487,13 @@ class CommandPermission:
     """Representation of a permission which enables or disables a command for a user or role."""
 
     id: snowflakes.Snowflake = attr.field(converter=snowflakes.Snowflake)
-    """Id of the role or user this permission changes the permission's state for."""
+    """ID of the role or user this permission changes the permission's state for.
+    
+    There are some special constants for this field:
+
+    * If equals to `guild_id`, then it applies to all members in a guild.
+    * If equals to (`guild_id` - 1), then it applies to all channels in a guild.
+    """
 
     type: typing.Union[CommandPermissionType, int] = attr.field(converter=CommandPermissionType)
     """The entity this permission overrides the command's state for."""
@@ -507,6 +506,14 @@ class CommandPermission:
 @attr.define(kw_only=True, weakref_slot=False)
 class GuildCommandPermissions:
     """Representation of the permissions set for a command within a guild."""
+
+    id: snowflakes.Snowflake = attr.field()
+    """ID of the entity these permissions apply to.
+    
+    This may be the ID of a specific command or the application ID. When this is equal
+    to `application_id`, the permissions apply to all commands that do not contain
+    explicit overwrites.
+    """
 
     application_id: snowflakes.Snowflake = attr.field()
     """ID of the application the relevant command belongs to."""

@@ -1784,7 +1784,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=payload["name"],
             description=payload["description"],
             options=options,
-            default_permission=payload.get("default_permission", True),
             default_member_permissions=payload.get("default_member_permissions"),
             is_dm_enabled=payload.get("dm_permission", False),
             guild_id=guild_id,
@@ -1807,7 +1806,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             type=commands.CommandType(payload["type"]),
             application_id=snowflakes.Snowflake(payload["application_id"]),
             name=payload["name"],
-            default_permission=payload.get("default_permission", True),
             default_member_permissions=payload.get("default_member_permissions"),
             is_dm_enabled=payload.get("dm_permission", False),
             guild_id=guild_id,
@@ -1840,6 +1838,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             for perm in payload["permissions"]
         ]
         return commands.GuildCommandPermissions(
+            id=snowflakes.Snowflake(payload["id"]),
             application_id=snowflakes.Snowflake(payload["application_id"]),
             command_id=snowflakes.Snowflake(payload["id"]),
             guild_id=snowflakes.Snowflake(payload["guild_id"]),

@@ -978,15 +978,7 @@ class CommandBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def default_permission(self) -> undefined.UndefinedOr[bool]:
-        """Whether the command should be enabled by default (without any permissions).
-
-        Defaults to `builtins.bool`.
-        """
-
-    @property
-    @abc.abstractmethod
-    def default_member_permissions(self) -> undefined.UndefinedOr[permissions_.Permissions]:
+    def default_member_permissions(self) -> typing.Union[undefined.UndefinedType, permissions_.Permissions, int]:
         """Member permissions necessary to utilize this command by default.
 
         If `0`, then it will be disabled by default. This excludes administrators
@@ -1017,23 +1009,8 @@ class CommandBuilder(abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_default_permission(self: _T, state: undefined.UndefinedOr[bool], /) -> _T:
-        """Set whether this command should be enabled by default (without any permissions).
-
-        Parameters
-        ----------
-        state : hikari.undefined.UndefinedOr[builtins.bool]
-            Whether this command should be enabled by default.
-
-        Returns
-        -------
-        CommandBuilder
-            Object of this command builder for chained calls.
-        """
-
-    @abc.abstractmethod
     def set_default_member_permissions(
-        self: _T, default_member_permissions: undefined.UndefinedOr[permissions_.Permissions], /
+        self: _T, default_member_permissions: typing.Union[undefined.UndefinedType, int, permissions_.Permissions], /
     ) -> _T:
         """Set the member permissions necessary to utilize this command by default.
 

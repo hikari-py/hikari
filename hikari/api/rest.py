@@ -6815,77 +6815,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def create_application_command(
-        self,
-        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        name: str,
-        description: str,
-        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
-        *,
-        options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
-        default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-    ) -> commands.SlashCommand:
-        r"""Create an application slash command.
-
-        .. deprecated:: 2.0.0.dev106
-            Use `RESTClient.create_slash_command` instead.
-
-        Parameters
-        ----------
-        application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
-            Object or ID of the application to create a command for.
-        name : builtins.str
-            The command's name. This should match the regex `^[\w-]{1,32}$` in
-            Unicode mode and be lowercase.
-        description : builtins.str
-            The description to set for the command.
-            This should be inclusively between 1-100 characters in length.
-        guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
-            Object or ID of the specific guild this should be made for.
-            If left as `hikari.undefined.UNDEFINED` then this call will create
-            a global command rather than a guild specific one.
-
-        Other Parameters
-        ----------------
-        options : hikari.undefined.UndefinedOr[typing.Sequence[hikari.commands.CommandOption]]
-            A sequence of up to 10 options for this command.
-        default_permission : hikari.undefined.UndefinedOr[builtins.bool]
-            Whether this command should be enabled by default (without any
-            permissions) when added to a guild.
-
-            Defaults to `builtins.True`.
-
-        Returns
-        -------
-        hikari.commands.SlashCommand
-            Object of the created command.
-
-        Raises
-        ------
-        hikari.errors.ForbiddenError
-            If you cannot access the provided application's commands.
-        hikari.errors.NotFoundError
-            If the provided application isn't found.
-        hikari.errors.BadRequestError
-            If any of the fields that are passed have an invalid value.
-        hikari.errors.UnauthorizedError
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.RateLimitTooLongError
-            Raised in the event that a rate limit occurs that is
-            longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
-        hikari.errors.InternalServerError
-            If an internal error occurs on Discord while handling the request.
-        """
-
-    @abc.abstractmethod
     async def create_slash_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
@@ -6894,8 +6823,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
-        default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        default_member_permissions: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
+        default_member_permissions: typing.Union[
+            undefined.UndefinedType, int, permissions_.Permissions
+        ] = undefined.UNDEFINED,
         dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.SlashCommand:
         r"""Create an application command.
@@ -6919,15 +6849,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             a global command rather than a guild specific one.
         options : hikari.undefined.UndefinedOr[typing.Sequence[hikari.commands.CommandOption]]
             A sequence of up to 10 options for this command.
-        default_permission : hikari.undefined.UndefinedOr[builtins.bool]
-            Whether this command should be enabled by default (without any
-            permissions) when added to a guild.
-
-            Defaults to `builtins.True`.
-
-            .. deprecated:: 2.0.0.dev109
-                Use `default_member_permissions` instead.
-        default_member_permissions : hikari.undefined.UndefinedOr[hikari.permissions.Permissions]
+        default_member_permissions : typing.Union[hikari.undefined.UndefinedType, int, hikari.permissions.Permissions]
             Member permissions necessary to utilize this command by default.
 
             If `0`, then it will be disabled by default. This excludes administrators
@@ -6975,8 +6897,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         name: str,
         *,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
-        default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        default_member_permissions: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
+        default_member_permissions: typing.Union[
+            undefined.UndefinedType, int, permissions_.Permissions
+        ] = undefined.UNDEFINED,
         dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.ContextMenuCommand:
         r"""Create an application command.
@@ -6999,15 +6922,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Object or ID of the specific guild this should be made for.
             If left as `hikari.undefined.UNDEFINED` then this call will create
             a global command rather than a guild specific one.
-        default_permission : hikari.undefined.UndefinedOr[builtins.bool]
-            Whether this command should be enabled by default (without any
-            permissions) when added to a guild.
-
-            Defaults to `builtins.True`.
-
-            .. deprecated:: 2.0.0.dev109
-                Use `default_member_permissions` instead.
-        default_member_permissions : hikari.undefined.UndefinedOr[hikari.permissions.Permissions]
+        default_member_permissions : typing.Union[hikari.undefined.UndefinedType, int, hikari.permissions.Permissions]
             Member permissions necessary to utilize this command by default.
 
             If `0`, then it will be disabled by default. This excludes administrators
@@ -7115,7 +7030,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
-        default_member_permissions: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
+        default_member_permissions: typing.Union[
+            undefined.UndefinedType, int, permissions_.Permissions
+        ] = undefined.UNDEFINED,
         dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.PartialCommand:
         """Edit a registered application command.
@@ -7142,7 +7059,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         options : hikari.undefined.UndefinedOr[typing.Sequence[hikari.commands.CommandOption]]
             A sequence of up to 10 options to set for this command. Leave this as
             `hikari.undefined.UNDEFINED` to not change.
-        default_member_permissions : hikari.undefined.UndefinedOr[hikari.permissions.Permissions]
+        default_member_permissions : typing.Union[hikari.undefined.UndefinedType, int, hikari.permissions.Permissions]
             Member permissions necessary to utilize this command by default.
 
             If `0`, then it will be disabled by default. This excludes administrators
@@ -7317,62 +7234,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If an internal error occurs on Discord while handling the request.
         """
 
-    @abc.abstractmethod
-    async def set_application_guild_commands_permissions(
-        self,
-        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        permissions: typing.Mapping[
-            snowflakes.SnowflakeishOr[commands.PartialCommand], typing.Sequence[commands.CommandPermission]
-        ],
-    ) -> typing.Sequence[commands.GuildCommandPermissions]:
-        """Set permissions in a guild for multiple commands.
-
-        !!! note
-            This overwrites any previously set permissions for the specified
-            commands.
-
-        Parameters
-        ----------
-        application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
-            Object or ID of the application to set the command permissions for.
-        guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
-            Object or ID of the guild to set the command permissions for.
-        permissions : typing.Mapping[hikari.snowflakes.SnowflakeishOr[hikari.commands.PartialCommand], typing.Sequence[hikari.commands.CommandPermission]]
-            Mapping of objects and/or IDs of commands to sequences of the commands
-            to set for the specified guild.
-
-            !!! warning
-                Only a maximum of up to 10 permissions can be set per command.
-
-        Returns
-        -------
-        typing.Sequence[hikari.commands.GuildCommandPermissions]
-            Sequence of the set guild command permissions.
-
-        Raises
-        ------
-        hikari.errors.ForbiddenError
-            If you cannot access the provided application's commands or guild.
-        hikari.errors.NotFoundError
-            If the provided application or command isn't found.
-        hikari.errors.UnauthorizedError
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.RateLimitTooLongError
-            Raised in the event that a rate limit occurs that is
-            longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
-        hikari.errors.InternalServerError
-            If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
-
+    # THIS IS AN OAUTH2 FLOW ONLY
     @abc.abstractmethod
     async def set_application_command_permissions(
         self,
@@ -7382,6 +7244,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         permissions: typing.Sequence[commands.CommandPermission],
     ) -> commands.GuildCommandPermissions:
         """Set permissions for a specific command.
+
+        !!! note
+            This requires the `access_token` to have the
+            `hikari.applications.OAuth2Scope.APPLICATIONS_COMMANDS_PERMISSION_UPDATE`
+            scope enabled along with the authorization of a Bot which has `MANAGE_INVITES`
+            permission within the target guild.
 
         !!! note
             This overwrites any previously set permissions.

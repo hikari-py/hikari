@@ -1092,22 +1092,17 @@ class CommandBuilder(special_endpoints.CommandBuilder):
     _name: str = attr.field()
 
     _id: undefined.UndefinedOr[snowflakes.Snowflake] = attr.field(default=undefined.UNDEFINED, kw_only=True)
-    _default_member_permissions: undefined.UndefinedOr[permissions_.Permissions] = attr.field(
+    _default_member_permissions: typing.Union[undefined.UndefinedType, int, permissions_.Permissions] = attr.field(
         default=undefined.UNDEFINED, kw_only=True
     )
     _is_dm_enabled: undefined.UndefinedOr[bool] = attr.field(default=undefined.UNDEFINED, kw_only=True)
-    _default_permission: undefined.UndefinedOr[bool] = attr.field(default=undefined.UNDEFINED, kw_only=True)
 
     @property
     def id(self) -> undefined.UndefinedOr[snowflakes.Snowflake]:
         return self._id
 
     @property
-    def default_permission(self) -> undefined.UndefinedOr[bool]:
-        return self._default_permission
-
-    @property
-    def default_member_permissions(self) -> undefined.UndefinedOr[permissions_.Permissions]:
+    def default_member_permissions(self) -> typing.Union[undefined.UndefinedType, permissions_.Permissions, int]:
         return self._default_member_permissions
 
     @property
@@ -1122,13 +1117,10 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         self._id = snowflakes.Snowflake(id_) if id_ is not undefined.UNDEFINED else undefined.UNDEFINED
         return self
 
-    @deprecation.deprecated("2.0.0.dev112", "set_default_member_permissions")
-    def set_default_permission(self: _CommandBuilderT, state: undefined.UndefinedOr[bool], /) -> _CommandBuilderT:
-        self._default_permission = state
-        return self
-
     def set_default_member_permissions(
-        self: _CommandBuilderT, default_member_permissions: undefined.UndefinedOr[permissions_.Permissions], /
+        self: _CommandBuilderT,
+        default_member_permissions: typing.Union[undefined.UndefinedType, int, permissions_.Permissions],
+        /,
     ) -> _CommandBuilderT:
         self._default_member_permissions = default_member_permissions
         return self
@@ -1142,7 +1134,6 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         data["name"] = self._name
         data["type"] = self.type
         data.put_snowflake("id", self._id)
-        data.put("default_permission", self._default_permission)
         data.put("default_member_permissions", self._default_member_permissions)
         data.put("dm_permission", self._is_dm_enabled)
         return data
@@ -1191,7 +1182,6 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
             self._name,
             self._description,
             guild=guild,
-            default_permission=self._default_permission,
             options=self._options,
         )
 
@@ -1217,9 +1207,7 @@ class ContextMenuCommandBuilder(CommandBuilder, special_endpoints.ContextMenuCom
         *,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
     ) -> commands.ContextMenuCommand:
-        return await rest.create_context_menu_command(
-            application, self._type, self._name, guild=guild, default_permission=self._default_permission
-        )
+        return await rest.create_context_menu_command(application, self._type, self._name, guild=guild)
 
 
 def _build_emoji(
