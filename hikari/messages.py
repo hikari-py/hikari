@@ -931,7 +931,7 @@ class PartialMessage(snowflakes.Unique):
         if self.channel_mentions is undefined.UNDEFINED:
             return undefined.UNDEFINED
 
-        return tuple(self.channel_mentions.keys())
+        return list(self.channel_mentions.keys())
 
     @property
     def user_mentions_ids(self) -> undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]]:
@@ -946,7 +946,7 @@ class PartialMessage(snowflakes.Unique):
         if self.user_mentions is undefined.UNDEFINED:
             return undefined.UNDEFINED
 
-        return tuple(self.user_mentions.keys())
+        return list(self.user_mentions.keys())
 
     def get_member_mentions(self) -> undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, guilds.Member]]:
         """Discover any cached members notified by this message.
