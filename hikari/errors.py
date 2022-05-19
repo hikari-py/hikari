@@ -461,6 +461,8 @@ class BulkDeleteError(HikariError):
 
     This will contain the list of message items that failed to be deleted,
     and will have a cause containing the initial exception.
+
+    If the bulk delete was ran with an async iterator the messages_skipped field may be missing some messages.
     """
 
     messages_deleted: snowflakes.SnowflakeishSequence[messages.PartialMessage] = attr.field()

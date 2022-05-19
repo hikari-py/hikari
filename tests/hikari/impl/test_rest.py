@@ -23,6 +23,7 @@ import asyncio
 import contextlib
 import datetime
 import http
+import re
 import warnings
 
 import mock
@@ -2691,7 +2692,7 @@ class TestRESTClientImplAsync:
         )
 
     async def test_delete_messages_with_async_iterable_and_args(self, rest_client):
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeError, match=re.escape("Cannot use *args with an async iterable.")):
             await rest_client.delete_messages(54123, iterators.FlatLazyIterator(()), 1, 2)
 
     async def test_add_reaction(self, rest_client):
