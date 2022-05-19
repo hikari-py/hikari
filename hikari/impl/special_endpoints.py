@@ -1113,7 +1113,7 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         self._default_permission = state
         return self
 
-    def build(self, _: entity_factory_.EntityFactory, /) -> data_binding.JSONObject:
+    def build(self, _: entity_factory_.EntityFactory, /) -> typing.MutableMapping[str, typing.Any]:
         data = data_binding.JSONObjectBuilder()
         data["name"] = self._name
         data["type"] = self.type
@@ -1146,7 +1146,7 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
     def options(self) -> typing.Sequence[commands.CommandOption]:
         return self._options.copy()
 
-    def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObject:
+    def build(self, entity_factory: entity_factory_.EntityFactory, /) -> typing.MutableMapping[str, typing.Any]:
         data = super().build(entity_factory)
         # Under this context we know this'll always be a JSONObjectBuilder but
         # the return types need to be kept as JSONObject to avoid exposing an
@@ -1278,7 +1278,7 @@ class _ButtonBuilder(special_endpoints.ButtonBuilder[_ContainerProtoT]):
         self._container.add_component(self)
         return self._container
 
-    def build(self) -> data_binding.JSONObject:
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
         data = data_binding.JSONObjectBuilder()
 
         data["type"] = messages.ComponentType.BUTTON
@@ -1379,7 +1379,7 @@ class _SelectOptionBuilder(special_endpoints.SelectOptionBuilder["_SelectMenuBui
         self._menu.add_raw_option(self)
         return self._menu
 
-    def build(self) -> data_binding.JSONObject:
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
         data = data_binding.JSONObjectBuilder()
 
         data["label"] = self._label
@@ -1467,7 +1467,7 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder[_ContainerProtoT]):
         self._container.add_component(self)
         return self._container
 
-    def build(self) -> data_binding.JSONObject:
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
         data = data_binding.JSONObjectBuilder()
 
         data["type"] = messages.ComponentType.SELECT_MENU
@@ -1545,7 +1545,7 @@ class ActionRowBuilder(special_endpoints.ActionRowBuilder):
         self._assert_can_add_type(messages.ComponentType.SELECT_MENU)
         return SelectMenuBuilder(container=self, custom_id=custom_id)
 
-    def build(self) -> data_binding.JSONObject:
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
         return {
             "type": messages.ComponentType.ACTION_ROW,
             "components": [component.build() for component in self._components],

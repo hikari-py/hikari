@@ -569,7 +569,7 @@ class InteractionResponseBuilder(abc.ABC):
     @abc.abstractmethod
     def build(
         self, entity_factory: entity_factory_.EntityFactory, /
-    ) -> typing.Tuple[data_binding.JSONObject, typing.Sequence[files.Resource[files.AsyncReader]]]:
+    ) -> typing.Tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
         """Build a JSON object from this builder.
 
         Parameters
@@ -579,7 +579,7 @@ class InteractionResponseBuilder(abc.ABC):
 
         Returns
         -------
-        typing.Tuple[hikari.internal.data_binding.JSONObject, typing.Sequence[files.Resource[Files.AsyncReader]]
+        typing.Tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[Files.AsyncReader]]
             A tuple of the built json object representation of this builder and
             a sequence of up to 10 files to send with the response.
         """
@@ -1020,7 +1020,7 @@ class CommandBuilder(abc.ABC):
         """
 
     @abc.abstractmethod
-    def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObject:
+    def build(self, entity_factory: entity_factory_.EntityFactory, /) -> typing.MutableMapping[str, typing.Any]:
         """Build a JSON object from this builder.
 
         Parameters
@@ -1030,7 +1030,7 @@ class CommandBuilder(abc.ABC):
 
         Returns
         -------
-        hikari.internal.data_binding.JSONObject
+        typing.MutableMapping[str, typing.Any]
             The built json object representation of this builder.
         """
 
@@ -1196,12 +1196,12 @@ class ComponentBuilder(abc.ABC):
     __slots__: typing.Sequence[str] = ()
 
     @abc.abstractmethod
-    def build(self) -> data_binding.JSONObject:
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
         """Build a JSON object from this builder.
 
         Returns
         -------
-        hikari.internal.data_binding.JSONObject
+        typing.MutableMapping[str, typing.Any]
             The built json object representation of this builder.
         """
 
