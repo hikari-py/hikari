@@ -918,7 +918,7 @@ class PartialMessage(snowflakes.Unique):
 
     @property
     def channel_mention_ids(self) -> undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]]:
-        """IDs of channels that reference channels in the target crosspost's guild.
+        """Ids of channels that reference channels in the target crosspost's guild.
 
         If the message is not crossposted, this will always be empty.
 
@@ -935,7 +935,7 @@ class PartialMessage(snowflakes.Unique):
 
     @property
     def user_mentions_ids(self) -> undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]]:
-        """IDs of the users who were notified by their mention in the message.
+        """Ids of the users who were notified by their mention in the message.
 
         !!! warning
             If the contents have not mutated and this is a message update event,
