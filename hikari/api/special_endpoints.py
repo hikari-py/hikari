@@ -65,7 +65,6 @@ if typing.TYPE_CHECKING:
     from hikari.api import entity_factory as entity_factory_
     from hikari.api import rest as rest_api
     from hikari.interactions import base_interactions
-    from hikari.internal import data_binding
     from hikari.internal import time
 
     _T = typing.TypeVar("_T")
