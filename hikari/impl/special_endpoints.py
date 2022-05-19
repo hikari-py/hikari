@@ -843,7 +843,7 @@ class InteractionAutocompleteBuilder(special_endpoints.InteractionAutocompleteBu
 
     def build(
         self, _: entity_factory_.EntityFactory, /
-    ) -> typing.Tuple[data_binding.JSONObject, typing.Sequence[files.Resource[files.AsyncReader]]]:
+    ) -> typing.Tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
         data = {"choices": [{"name": choice.name, "value": choice.value} for choice in self._choices]}
         return {"type": self.type, "data": data}, ()
 
@@ -885,7 +885,7 @@ class InteractionDeferredBuilder(special_endpoints.InteractionDeferredBuilder):
 
     def build(
         self, _: entity_factory_.EntityFactory, /
-    ) -> typing.Tuple[data_binding.JSONObject, typing.Sequence[files.Resource[files.AsyncReader]]]:
+    ) -> typing.Tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
         if self._flags is not undefined.UNDEFINED:
             return {"type": self._type, "data": {"flags": self._flags}}, ()
 
@@ -1051,7 +1051,7 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
 
     def build(
         self, entity_factory: entity_factory_.EntityFactory, /
-    ) -> typing.Tuple[data_binding.JSONObject, typing.Sequence[files.Resource[files.AsyncReader]]]:
+    ) -> typing.Tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
         data = data_binding.JSONObjectBuilder()
         data.put("content", self.content)
 
