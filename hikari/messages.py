@@ -291,9 +291,9 @@ class Mentions:
     def channels_ids(self) -> undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]]:
         """Sequence of IDs of the channels that were mentioned in the message."""
         deprecation.warn_deprecated(
-            "Mentions.channels_ids", alternative="channel_mentions_ids in the base message object"
+            "Mentions.channels_ids", alternative="channel_mention_ids in the base message object"
         )
-        return self._message.channel_mentions_ids
+        return self._message.channel_mention_ids
 
     @property
     def users(self) -> undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, users_.User]]:
@@ -917,7 +917,7 @@ class PartialMessage(snowflakes.Unique):
     """Sequence of the components attached to this message."""
 
     @property
-    def channel_mentions_ids(self) -> undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]]:
+    def channel_mention_ids(self) -> undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]]:
         """IDs of channels that reference channels in the target crosspost's guild.
 
         If the message is not crossposted, this will always be empty.
