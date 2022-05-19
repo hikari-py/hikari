@@ -1149,7 +1149,7 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
     def build(self, entity_factory: entity_factory_.EntityFactory, /) -> typing.MutableMapping[str, typing.Any]:
         data = super().build(entity_factory)
         # Under this context we know this'll always be a JSONObjectBuilder but
-        # the return types need to be kept as JSONObject to avoid exposing an
+        # the return types need to be kept as MutableMapping to avoid exposing an
         # internal type on the public API.
         assert isinstance(data, data_binding.JSONObjectBuilder)
         data.put("description", self._description)
