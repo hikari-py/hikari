@@ -291,9 +291,9 @@ class Mentions:
     def channels_ids(self) -> undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]]:
         """Sequence of IDs of the channels that were mentioned in the message."""
         deprecation.warn_deprecated(
-            "Mentions.channels_ids", alternative="channels_mentions_ids in the base message object"
+            "Mentions.channels_ids", alternative="channel_mentions_ids in the base message object"
         )
-        return self._message.channels_mentions_ids
+        return self._message.channel_mentions_ids
 
     @property
     def users(self) -> undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, users_.User]]:
@@ -917,18 +917,36 @@ class PartialMessage(snowflakes.Unique):
     """Sequence of the components attached to this message."""
 
     @property
-    def channels_mentions_ids(self) -> undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]]:
+    def channel_mentions_ids(self) -> undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]]:
+        """IDs of channels that reference channels in the target crosspost's guild.
+
+        If the message is not crossposted, this will always be empty.
+
+        !!! warning
+            If the contents have not mutated and this is a message update event,
+            some fields that are not affected may be empty instead.
+
+            This is a Discord limitation.
+        """
         if self.channel_mentions is undefined.UNDEFINED:
             return undefined.UNDEFINED
 
-        return list(self.channel_mentions.keys())
+        return tuple(self.channel_mentions.keys())
 
     @property
     def user_mentions_ids(self) -> undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]]:
+        """IDs of the users who were notified by their mention in the message.
+
+        !!! warning
+            If the contents have not mutated and this is a message update event,
+            some fields that are not affected may be empty instead.
+
+            This is a Discord limitation.
+        """
         if self.user_mentions is undefined.UNDEFINED:
             return undefined.UNDEFINED
 
-        return list(self.user_mentions.keys())
+        return tuple(self.user_mentions.keys())
 
     def get_member_mentions(self) -> undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, guilds.Member]]:
         """Discover any cached members notified by this message.
