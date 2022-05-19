@@ -1113,7 +1113,7 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         self._default_permission = state
         return self
 
-    def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObjectBuilder:
+    def build(self, _: entity_factory_.EntityFactory, /) -> data_binding.JSONObject:
         data = data_binding.JSONObjectBuilder()
         data["name"] = self._name
         data["type"] = self.type
@@ -1146,8 +1146,12 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
     def options(self) -> typing.Sequence[commands.CommandOption]:
         return self._options.copy()
 
-    def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObjectBuilder:
+    def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObject:
         data = super().build(entity_factory)
+        # Under this context we know this'll always be a JSONObjectBuilder but
+        # the return types need to be kept as JSONObject to avoid exposing an
+        # internal type on the public API.
+        assert isinstance(data, data_binding.JSONObjectBuilder)
         data.put("description", self._description)
         data.put_array("options", self._options, conversion=entity_factory.serialize_command_option)
         return data
