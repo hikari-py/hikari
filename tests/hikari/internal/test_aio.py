@@ -44,7 +44,7 @@ class CoroutineStub:
 
     def __repr__(self):
         args = ", ".join(map(repr, self.args))
-        kwargs = ", ".join("{key!s}={value!r}" for key, value in self.kwargs.items())
+        kwargs = ", ".join(f"{key!s}={value!r}" for key, value in self.kwargs.items())
         return f"({args}, {kwargs})"
 
 
