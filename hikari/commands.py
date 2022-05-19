@@ -488,7 +488,7 @@ class CommandPermission:
 
     id: snowflakes.Snowflake = attr.field(converter=snowflakes.Snowflake)
     """ID of the role or user this permission changes the permission's state for.
-    
+
     There are some special constants for this field:
 
     * If equals to `guild_id`, then it applies to all members in a guild.
@@ -509,7 +509,7 @@ class GuildCommandPermissions:
 
     id: snowflakes.Snowflake = attr.field()
     """ID of the entity these permissions apply to.
-    
+
     This may be the ID of a specific command or the application ID. When this is equal
     to `application_id`, the permissions apply to all commands that do not contain
     explicit overwrites.
