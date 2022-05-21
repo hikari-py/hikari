@@ -1208,7 +1208,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             payload["author"] = author_payload
 
         if embed.fields:
-            field_payloads: list[data_binding.JSONObject] = []
+            field_payloads: typing.List[data_binding.JSONObject] = []
             for i, field in enumerate(embed.fields):
 
                 # Yep, these are technically two unreachable branches. However, this is an incredibly
