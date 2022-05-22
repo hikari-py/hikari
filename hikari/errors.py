@@ -292,7 +292,7 @@ class BadRequestError(ClientHTTPResponseError):
     status: http.HTTPStatus = attr.field(default=http.HTTPStatus.BAD_REQUEST, init=False)
     """The HTTP status code for the response."""
 
-    errors: typing.Optional[typing.Dict[str, data_binding.JSONObject]] = attr.field(default=None, kw_only=True)
+    errors: typing.Optional[typing.Mapping[str, data_binding.JSONObject]] = attr.field(default=None, kw_only=True)
     """Dict of top level field names to field specific error paths.
 
     For more information, this error format is loosely defined at

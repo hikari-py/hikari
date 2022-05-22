@@ -1138,11 +1138,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     def serialize_embed(  # noqa: C901 - Function too complex
-        self,
-        embed: embed_models.Embed,
+        self, embed: embed_models.Embed
     ) -> typing.Tuple[data_binding.JSONObject, typing.List[files.Resource[files.AsyncReader]]]:
 
-        payload: data_binding.JSONObject = {}
+        payload: typing.Dict[str, typing.Any] = {}
         uploads: typing.List[files.Resource[files.AsyncReader]] = []
 
         if embed.title is not None:
@@ -1161,7 +1160,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             payload["color"] = int(embed.color)
 
         if embed.footer is not None:
-            footer_payload: data_binding.JSONObject = {}
+            footer_payload: typing.MutableMapping[str, typing.Any] = {}
 
             if embed.footer.text is not None:
                 footer_payload["text"] = embed.footer.text
@@ -1175,7 +1174,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             payload["footer"] = footer_payload
 
         if embed.image is not None:
-            image_payload: data_binding.JSONObject = {}
+            image_payload: typing.MutableMapping[str, typing.Any] = {}
 
             if not isinstance(embed.image.resource, files.WebResource):
                 uploads.append(embed.image.resource)
@@ -1184,7 +1183,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             payload["image"] = image_payload
 
         if embed.thumbnail is not None:
-            thumbnail_payload: data_binding.JSONObject = {}
+            thumbnail_payload: typing.MutableMapping[str, typing.Any] = {}
 
             if not isinstance(embed.thumbnail.resource, files.WebResource):
                 uploads.append(embed.thumbnail.resource)
@@ -1193,7 +1192,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             payload["thumbnail"] = thumbnail_payload
 
         if embed.author is not None:
-            author_payload: data_binding.JSONObject = {}
+            author_payload: typing.MutableMapping[str, typing.Any] = {}
 
             if embed.author.name is not None:
                 author_payload["name"] = embed.author.name
@@ -1209,7 +1208,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             payload["author"] = author_payload
 
         if embed.fields:
-            field_payloads: data_binding.JSONArray = []
+            field_payloads: typing.List[data_binding.JSONObject] = []
             for i, field in enumerate(embed.fields):
 
                 # Yep, these are technically two unreachable branches. However, this is an incredibly
@@ -1339,7 +1338,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         return guild_models.WelcomeScreen(description=payload["description"], channels=channels)
 
     def serialize_welcome_channel(self, welcome_channel: guild_models.WelcomeChannel) -> data_binding.JSONObject:
-        payload: data_binding.JSONObject = {
+        payload: typing.Dict[str, typing.Any] = {
             "channel_id": str(welcome_channel.channel_id),
             "description": welcome_channel.description,
         }
@@ -2110,10 +2109,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             member = None
             user = self.deserialize_user(payload["user"])
 
-        resolved: typing.Optional[command_interactions.ResolvedOptionData] = None
-        if resolved_payload := data_payload.get("resolved"):
-            resolved = self._deserialize_resolved_option_data(resolved_payload, guild_id=guild_id)
-
         return command_interactions.AutocompleteInteraction(
             app=self._app,
             application_id=snowflakes.Snowflake(payload["application_id"]),
@@ -2129,7 +2124,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             command_name=data_payload["name"],
             command_type=commands.CommandType(data_payload.get("type", commands.CommandType.SLASH)),
             options=options,
-            resolved=resolved,
             locale=locales.Locale(payload["locale"]),
             guild_locale=locales.Locale(payload["guild_locale"]) if "guild_locale" in payload else None,
         )
@@ -2144,7 +2138,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         raise errors.UnrecognisedEntityError(f"Unrecognised interaction type {interaction_type}")
 
     def serialize_command_option(self, option: commands.CommandOption) -> data_binding.JSONObject:
-        payload: data_binding.JSONObject = {
+        payload: typing.MutableMapping[str, typing.Any] = {
             "type": option.type,
             "name": option.name,
             "description": option.description,
