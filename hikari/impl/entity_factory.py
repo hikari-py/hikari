@@ -1748,15 +1748,19 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_channel_types := payload.get("channel_types"):
             channel_types = [channel_models.ChannelType(channel_type) for channel_type in raw_channel_types]
 
-        name_localizations: typing.Mapping[str, str] = {}
+        name_localizations: typing.Mapping[str, str]
         if raw_name_localizations := payload.get("name_localizations"):
             name_localizations = {locales.Locale(k): raw_name_localizations[k] for k in raw_name_localizations}
+        else:
+            name_localizations = {}
 
-        description_localizations: typing.Mapping[str, str] = {}
+        description_localizations: typing.Mapping[str, str]
         if raw_description_localizations := payload.get("description_localizations"):
             description_localizations = {
                 locales.Locale(k): raw_description_localizations[k] for k in raw_description_localizations
             }
+        else:
+            description_localizations = {}
 
         return commands.CommandOption(
             type=commands.OptionType(payload["type"]),
@@ -1787,15 +1791,19 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_options := payload.get("options"):
             options = [self._deserialize_command_option(option) for option in raw_options]
 
-        name_localizations: typing.Mapping[str, str] = {}
+        name_localizations: typing.Mapping[str, str]
         if raw_name_localizations := payload.get("name_localizations"):
             name_localizations = {locales.Locale(k): raw_name_localizations[k] for k in raw_name_localizations}
+        else:
+            name_localizations = {}
 
-        description_localizations: typing.Mapping[str, str] = {}
+        description_localizations: typing.Mapping[str, str]
         if raw_description_localizations := payload.get("description_localizations"):
             description_localizations = {
                 locales.Locale(k): raw_description_localizations[k] for k in raw_description_localizations
             }
+        else:
+            description_localizations = {}
 
         return commands.SlashCommand(
             app=self._app,

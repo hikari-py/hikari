@@ -136,9 +136,6 @@ class CommandOption:
         lowercase.
     """
 
-    name_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = attr.field(factory=dict, kw_only=True)
-    """A set of name localizations for this option."""
-
     description_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = attr.field(factory=dict, kw_only=True)
     """A set of description localizations for this option"""
 
@@ -188,6 +185,9 @@ class CommandOption:
     and `builtins.float` if the type is `hikari.commands.OptionType.FLOAT`.
     """
 
+    name_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = attr.field(factory=dict)
+    """A set of name localizations for this option."""
+
 
 @attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
@@ -196,12 +196,6 @@ class PartialCommand(snowflakes.Unique):
 
     app: traits.RESTAware = attr.field(eq=False, hash=False, repr=False)
     """The client application that models may use for procedures."""
-
-    name_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = attr.field(factory=dict, kw_only=True)
-    """A set of name localizations for this command"""
-
-    description_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = attr.field(factory=dict, kw_only=True)
-    """A set of description localizations for this command"""
 
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
     # <<inherited docstring from Unique>>.
@@ -235,6 +229,12 @@ class PartialCommand(snowflakes.Unique):
 
     version: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
     """Auto-incrementing version identifier updated during substantial record changes."""
+
+    name_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = attr.field(factory=dict)
+    """A set of name localizations for this command"""
+
+    description_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = attr.field(factory=dict)
+    """A set of description localizations for this command"""
 
     async def fetch_self(self) -> PartialCommand:
         """Fetch an up-to-date version of this command object.
