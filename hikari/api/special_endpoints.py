@@ -1107,7 +1107,7 @@ class SlashCommandBuilder(CommandBuilder):
     @property
     @abc.abstractmethod
     def description_localizations(self) -> undefined.UndefinedOr[typing.Mapping[str, str]]:
-        """Description locales set for this command."""
+        """Return the description locales set for this command."""
 
     @abc.abstractmethod
     def set_description_localizations(

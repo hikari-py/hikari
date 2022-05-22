@@ -1126,7 +1126,7 @@ class CommandBuilder(special_endpoints.CommandBuilder):
     ) -> _CommandBuilderT:
         self._name_localizations = name_localizations
         return self
-      
+
     def build(self, _: entity_factory_.EntityFactory, /) -> typing.MutableMapping[str, typing.Any]:
         data = data_binding.JSONObjectBuilder()
         data["name"] = self._name
