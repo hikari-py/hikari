@@ -60,10 +60,10 @@ Query = typing.Union[typing.Dict[str, str], multidict.MultiDict[str]]
 # MyPy does not support recursive types yet. This has been ongoing for a long time, unfortunately.
 # See https://github.com/python/typing/issues/182
 
-JSONObject = typing.Dict[str, typing.Any]
+JSONObject = typing.Mapping[str, typing.Any]
 """Type hint for a JSON-decoded object representation as a mapping."""
 
-JSONArray = typing.List[typing.Any]
+JSONArray = typing.Sequence[typing.Any]
 """Type hint for a JSON-decoded array representation as a sequence."""
 
 JSONish = typing.Union[str, int, float, bool, None, JSONArray, JSONObject]
@@ -73,10 +73,7 @@ Stringish = typing.Union[str, int, bool, undefined.UndefinedType, None, snowflak
 """Type hint for any valid that can be put in a StringMapBuilder"""
 
 _StringMapBuilderArg = typing.Union[
-    typing.Mapping[str, str],
-    typing.Dict[str, str],
-    multidict.MultiMapping[str],
-    typing.Iterable[typing.Tuple[str, str]],
+    typing.Mapping[str, str], multidict.MultiMapping[str], typing.Iterable[typing.Tuple[str, str]]
 ]
 
 _APPLICATION_OCTET_STREAM: typing.Final[str] = "application/octet-stream"
