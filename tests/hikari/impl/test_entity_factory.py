@@ -3643,6 +3643,8 @@ class TestEntityFactoryImpl:
             description="go away",
             is_required=True,
             channel_types=[channel_models.ChannelType.GUILD_STAGE, channel_models.ChannelType.GUILD_TEXT, 100],
+            description_localizations=None,
+            name_localizations=None,
         )
 
         result = entity_factory_impl.serialize_command_option(option)
@@ -3653,6 +3655,8 @@ class TestEntityFactoryImpl:
             "description": "go away",
             "required": True,
             "channel_types": [13, 0, 100],
+            "description_localizations": None,
+            "name_localizations": None,
         }
 
     def test_serialize_command_option_with_min_and_max_value(self, entity_factory_impl):
@@ -3674,6 +3678,8 @@ class TestEntityFactoryImpl:
             "required": True,
             "min_value": 1.2,
             "max_value": 9.999,
+            "name_localizations": {},
+            "description_localizations": {},
         }
 
     def test_serialize_command_option_with_choices(self, entity_factory_impl):
@@ -3684,6 +3690,8 @@ class TestEntityFactoryImpl:
             is_required=True,
             choices=[commands.CommandChoice(name="a", value="choice")],
             options=None,
+            description_localizations=None,
+            name_localizations=None,
         )
 
         result = entity_factory_impl.serialize_command_option(option)
@@ -3694,6 +3702,8 @@ class TestEntityFactoryImpl:
             "description": "go away",
             "required": True,
             "choices": [{"name": "a", "value": "choice"}],
+            "description_localizations": None,
+            "name_localizations": None,
         }
 
     def test_serialize_command_option_with_options(self, entity_factory_impl):
@@ -3729,8 +3739,12 @@ class TestEntityFactoryImpl:
                     "name": "go home",
                     "required": False,
                     "choices": [{"name": "boo", "value": "hoo"}],
+                    "name_localizations": {},
+                    "description_localizations": {},
                 }
             ],
+            "name_localizations": {},
+            "description_localizations": {},
         }
 
     def test_serialize_command_option_with_autocomplete(self, entity_factory_impl):
@@ -3740,6 +3754,8 @@ class TestEntityFactoryImpl:
             description="go away",
             is_required=True,
             autocomplete=True,
+            description_localizations=None,
+            name_localizations=None,
         )
 
         result = entity_factory_impl.serialize_command_option(option)
@@ -3750,6 +3766,8 @@ class TestEntityFactoryImpl:
             "description": "go away",
             "required": True,
             "autocomplete": True,
+            "description_localizations": None,
+            "name_localizations": None,
         }
 
     @pytest.fixture()

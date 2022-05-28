@@ -6650,7 +6650,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Parameters
         ----------
         name : builtins.str
-            The command's name. This should match the regex `^[\w-]{1,32}$` in
+            The command's name. This should match the regex `^[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$` in
             Unicode mode and be lowercase.
         description : builtins.str
             The description to set for the command.
@@ -6673,7 +6673,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Parameters
         ----------
         name : builtins.str
-            The command's name. This should match the regex `^[\w-]{1,32}$` in
+            The command's name. This should match the regex `^[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$` in
             Unicode mode and be lowercase.
         description : builtins.str
             The description to set for the command if this is a slash command.
@@ -6829,7 +6829,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to create a command for.
         name : builtins.str
-            The command's name. This should match the regex `^[\w-]{1,32}$` in
+            The command's name. This should match the regex `^[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$` in
             Unicode mode and be lowercase.
         description : builtins.str
             The description to set for the command.
@@ -6889,6 +6889,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
         default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        name_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = undefined.UNDEFINED,
+        description_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = undefined.UNDEFINED,
     ) -> commands.SlashCommand:
         r"""Create an application command.
 
@@ -6897,7 +6899,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to create a command for.
         name : builtins.str
-            The command's name. This should match the regex `^[\w-]{1,32}$` in
+            The command's name. This should match the regex `^[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$` in
             Unicode mode and be lowercase.
         description : builtins.str
             The description to set for the command.
@@ -6916,6 +6918,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             permissions) when added to a guild.
 
             Defaults to `builtins.True`.
+        name_localizations : hikari.undefined.UndefinedOr[typing.Mapping[str, str]]
+            The name localizations for this command.
+        description_localizations : hikari.undefined.UndefinedOr[typing.Mapping[str, str]]
+            The name localizations for this command.
 
         Returns
         -------
@@ -6956,6 +6962,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        name_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = undefined.UNDEFINED,
     ) -> commands.ContextMenuCommand:
         r"""Create an application command.
 
@@ -6968,7 +6975,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
             Only USER and MESSAGE are valid here.
         name : builtins.str
-            The command's name. This should match the regex `^[\w-]{1,32}$` in
+            The command's name. This should match the regex `^[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$` in
             Unicode mode and be lowercase.
 
         Other Parameters
@@ -6982,6 +6989,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             permissions) when added to a guild.
 
             Defaults to `builtins.True`.
+        name_localizations : hikari.undefined.UndefinedOr[typing.Mapping[str, str]]
+            The name localizations for this command.
 
         Returns
         -------

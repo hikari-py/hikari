@@ -1747,6 +1747,20 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_channel_types := payload.get("channel_types"):
             channel_types = [channel_models.ChannelType(channel_type) for channel_type in raw_channel_types]
 
+        name_localizations: typing.Mapping[str, str]
+        if raw_name_localizations := payload.get("name_localizations"):
+            name_localizations = {locales.Locale(k): raw_name_localizations[k] for k in raw_name_localizations}
+        else:
+            name_localizations = {}
+
+        description_localizations: typing.Mapping[str, str]
+        if raw_description_localizations := payload.get("description_localizations"):
+            description_localizations = {
+                locales.Locale(k): raw_description_localizations[k] for k in raw_description_localizations
+            }
+        else:
+            description_localizations = {}
+
         return commands.CommandOption(
             type=commands.OptionType(payload["type"]),
             name=payload["name"],
@@ -1758,6 +1772,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             autocomplete=payload.get("autocomplete", False),
             min_value=payload.get("min_value"),
             max_value=payload.get("max_value"),
+            name_localizations=name_localizations,
+            description_localizations=description_localizations,
         )
 
     def deserialize_slash_command(
@@ -1774,6 +1790,20 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_options := payload.get("options"):
             options = [self._deserialize_command_option(option) for option in raw_options]
 
+        name_localizations: typing.Mapping[str, str]
+        if raw_name_localizations := payload.get("name_localizations"):
+            name_localizations = {locales.Locale(k): raw_name_localizations[k] for k in raw_name_localizations}
+        else:
+            name_localizations = {}
+
+        description_localizations: typing.Mapping[str, str]
+        if raw_description_localizations := payload.get("description_localizations"):
+            description_localizations = {
+                locales.Locale(k): raw_description_localizations[k] for k in raw_description_localizations
+            }
+        else:
+            description_localizations = {}
+
         return commands.SlashCommand(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
@@ -1785,6 +1815,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             default_permission=payload.get("default_permission", True),
             guild_id=guild_id,
             version=snowflakes.Snowflake(payload["version"]),
+            name_localizations=name_localizations,
+            description_localizations=description_localizations,
         )
 
     def deserialize_context_menu_command(
@@ -1797,6 +1829,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             raw_guild_id = payload["guild_id"]
             guild_id = snowflakes.Snowflake(raw_guild_id) if raw_guild_id is not None else None
 
+        name_localizations: typing.Mapping[str, str] = {}
+        if raw_name_localizations := payload.get("name_localizations"):
+            name_localizations = {locales.Locale(k): raw_name_localizations[k] for k in raw_name_localizations}
+
         return commands.ContextMenuCommand(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
@@ -1806,6 +1842,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             default_permission=payload.get("default_permission", True),
             guild_id=guild_id,
             version=snowflakes.Snowflake(payload["version"]),
+            name_localizations=name_localizations,
         )
 
     def deserialize_command(
@@ -2106,6 +2143,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             "name": option.name,
             "description": option.description,
             "required": option.is_required,
+            "name_localizations": option.name_localizations,
+            "description_localizations": option.description_localizations,
         }
 
         if option.channel_types is not None:

@@ -1093,6 +1093,12 @@ class CommandBuilder(special_endpoints.CommandBuilder):
     _id: undefined.UndefinedOr[snowflakes.Snowflake] = attr.field(default=undefined.UNDEFINED, kw_only=True)
     _default_permission: undefined.UndefinedOr[bool] = attr.field(default=undefined.UNDEFINED, kw_only=True)
 
+    _name_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = attr.field(factory=dict, kw_only=True)
+
+    @property
+    def name_localizations(self) -> undefined.UndefinedOr[typing.Mapping[str, str]]:
+        return self._name_localizations.copy()
+
     @property
     def id(self) -> undefined.UndefinedOr[snowflakes.Snowflake]:
         return self._id
@@ -1113,12 +1119,21 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         self._default_permission = state
         return self
 
+    def set_name_localizations(
+        self: _CommandBuilderT,
+        name_localizations: undefined.UndefinedOr[typing.Mapping[str, str]],
+        /,
+    ) -> _CommandBuilderT:
+        self._name_localizations = name_localizations
+        return self
+
     def build(self, _: entity_factory_.EntityFactory, /) -> typing.MutableMapping[str, typing.Any]:
         data = data_binding.JSONObjectBuilder()
         data["name"] = self._name
         data["type"] = self.type
         data.put_snowflake("id", self._id)
         data.put("default_permission", self._default_permission)
+        data.put("name_localizations", self._name_localizations)
         return data
 
 
@@ -1129,10 +1144,23 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
 
     _description: str = attr.field()
     _options: typing.List[commands.CommandOption] = attr.field(factory=list, kw_only=True)
+    _description_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = attr.field(factory=dict, kw_only=True)
 
     @property
     def description(self) -> str:
         return self._description
+
+    def set_description_localizations(
+        self: _SlashCommandBuilderT,
+        description_localizations: undefined.UndefinedOr[typing.Mapping[str, str]],
+        /,
+    ) -> _SlashCommandBuilderT:
+        self._description_localizations = description_localizations
+        return self
+
+    @property
+    def description_localizations(self) -> undefined.UndefinedOr[typing.Mapping[str, str]]:
+        return self._description_localizations.copy()
 
     @property
     def type(self) -> commands.CommandType:
@@ -1154,6 +1182,7 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
         assert isinstance(data, data_binding.JSONObjectBuilder)
         data.put("description", self._description)
         data.put_array("options", self._options, conversion=entity_factory.serialize_command_option)
+        data.put("description_localizations", self._description_localizations)
         return data
 
     async def create(
@@ -1171,6 +1200,8 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
             guild=guild,
             default_permission=self._default_permission,
             options=self._options,
+            name_localizations=self._name_localizations,
+            description_localizations=self._description_localizations,
         )
 
 

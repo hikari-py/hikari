@@ -3160,7 +3160,7 @@ class RESTClientImpl(rest_api.RESTClient):
         else:
             route = routes.GET_APPLICATION_GUILD_COMMANDS.compile(application=application, guild=guild)
 
-        response = await self._request(route)
+        response = await self._request(route, query={"with_localizations": "true"})
         assert isinstance(response, list)
         guild_id = snowflakes.Snowflake(guild) if guild is not undefined.UNDEFINED else None
         return [self._entity_factory.deserialize_command(command, guild_id=guild_id) for command in response]
@@ -3175,6 +3175,8 @@ class RESTClientImpl(rest_api.RESTClient):
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
         default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        name_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = undefined.UNDEFINED,
+        description_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = undefined.UNDEFINED,
     ) -> data_binding.JSONObject:
         if guild is undefined.UNDEFINED:
             route = routes.POST_APPLICATION_COMMAND.compile(application=application)
@@ -3188,6 +3190,8 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("type", type)
         body.put_array("options", options, conversion=self._entity_factory.serialize_command_option)
         body.put("default_permission", default_permission)
+        body.put("name_localizations", name_localizations)
+        body.put("description_localizations", description_localizations)
 
         response = await self._request(route, json=body)
         assert isinstance(response, dict)
@@ -3203,6 +3207,8 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
         default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        name_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = undefined.UNDEFINED,
+        description_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = undefined.UNDEFINED,
     ) -> commands.SlashCommand:
         return await self.create_slash_command(
             application=application,
@@ -3211,6 +3217,8 @@ class RESTClientImpl(rest_api.RESTClient):
             guild=guild,
             options=options,
             default_permission=default_permission,
+            name_localizations=name_localizations,
+            description_localizations=description_localizations,
         )
 
     async def create_slash_command(
@@ -3222,6 +3230,8 @@ class RESTClientImpl(rest_api.RESTClient):
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
         default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        name_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = undefined.UNDEFINED,
+        description_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = undefined.UNDEFINED,
     ) -> commands.SlashCommand:
         response = await self._create_application_command(
             application=application,
@@ -3231,6 +3241,8 @@ class RESTClientImpl(rest_api.RESTClient):
             guild=guild,
             options=options,
             default_permission=default_permission,
+            name_localizations=name_localizations,
+            description_localizations=description_localizations,
         )
         return self._entity_factory.deserialize_slash_command(
             response, guild_id=snowflakes.Snowflake(guild) if guild is not undefined.UNDEFINED else None
@@ -3244,6 +3256,7 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        name_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = undefined.UNDEFINED,
     ) -> commands.ContextMenuCommand:
         response = await self._create_application_command(
             application=application,
@@ -3251,6 +3264,7 @@ class RESTClientImpl(rest_api.RESTClient):
             name=name,
             guild=guild,
             default_permission=default_permission,
+            name_localizations=name_localizations,
         )
         return self._entity_factory.deserialize_context_menu_command(
             response, guild_id=snowflakes.Snowflake(guild) if guild is not undefined.UNDEFINED else None

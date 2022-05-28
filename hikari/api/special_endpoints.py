@@ -940,11 +940,16 @@ class CommandBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
+    def name_localizations(self) -> undefined.UndefinedOr[typing.Mapping[str, str]]:
+        """Name localizations set for this command."""
+
+    @property
+    @abc.abstractmethod
     def name(self) -> str:
         r"""Name to set for this command.
 
         !!! warning
-            This should match the regex `^[\w-]{1,32}$` in Unicode mode
+            This should match the regex `^[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$` in Unicode mode
             and must be lowercase.
 
         Returns
@@ -996,6 +1001,21 @@ class CommandBuilder(abc.ABC):
         ----------
         id_ : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
             The ID to set for this command.
+
+        Returns
+        -------
+        CommandBuilder
+            Object of this command builder.
+        """
+
+    @abc.abstractmethod
+    def set_name_localizations(self: _T, name_localizations: undefined.UndefinedOr[typing.Mapping[str, str]], /) -> _T:
+        """Set the name localizations of this command.
+
+        Parameters
+        ----------
+        name_localizations : hikari.undefined.UndefinedOr[typing.Mapping[str, str]]
+            The name localizations to set for this command.
 
         Returns
         -------
@@ -1082,6 +1102,28 @@ class SlashCommandBuilder(CommandBuilder):
         -------
         builtins.str
             The description to set for this command.
+        """
+
+    @property
+    @abc.abstractmethod
+    def description_localizations(self) -> undefined.UndefinedOr[typing.Mapping[str, str]]:
+        """Return the description locales set for this command."""
+
+    @abc.abstractmethod
+    def set_description_localizations(
+        self: _T, description_localizations: undefined.UndefinedOr[typing.Mapping[str, str]], /
+    ) -> _T:
+        """Set the description localizations of this command.
+
+        Parameters
+        ----------
+        description_localizations : hikari.undefined.UndefinedOr[typing.Mapping[str, str]]
+            The description localizations to set for this command.
+
+        Returns
+        -------
+        CommandBuilder
+            Object of this command builder.
         """
 
     @property

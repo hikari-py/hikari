@@ -26,6 +26,7 @@ import pytest
 from hikari import commands
 from hikari import emojis
 from hikari import files
+from hikari import locales
 from hikari import messages
 from hikari import snowflakes
 from hikari import undefined
@@ -666,7 +667,12 @@ class TestSlashCommandBuilder:
         mock_entity_factory = mock.Mock()
         mock_option = object()
         builder = (
-            special_endpoints.SlashCommandBuilder("we are number", "one")
+            special_endpoints.SlashCommandBuilder(
+                "we are number",
+                "one",
+                name_localizations={locales.Locale.TR: "merhaba"},
+                description_localizations={locales.Locale.TR: "bir"},
+            )
             .add_option(mock_option)
             .set_id(3412312)
             .set_default_permission(False)
@@ -682,6 +688,8 @@ class TestSlashCommandBuilder:
             "default_permission": False,
             "options": [mock_entity_factory.serialize_command_option.return_value],
             "id": "3412312",
+            "name_localizations": {locales.Locale.TR: "merhaba"},
+            "description_localizations": {locales.Locale.TR: "bir"},
         }
 
     def test_build_without_optional_data(self):
@@ -689,7 +697,14 @@ class TestSlashCommandBuilder:
 
         result = builder.build(mock.Mock())
 
-        assert result == {"type": 1, "name": "we are numberr", "description": "oner", "options": []}
+        assert result == {
+            "type": 1,
+            "name": "we are numberr",
+            "description": "oner",
+            "options": [],
+            "name_localizations": {},
+            "description_localizations": {},
+        }
 
     @pytest.mark.asyncio()
     async def test_create(self):
@@ -698,6 +713,8 @@ class TestSlashCommandBuilder:
             .add_option(mock.Mock())
             .set_id(3412312)
             .set_default_permission(False)
+            .set_name_localizations({locales.Locale.TR: "sayı"})
+            .set_description_localizations({locales.Locale.TR: "bir"})
         )
         mock_rest = mock.AsyncMock()
 
@@ -711,12 +728,17 @@ class TestSlashCommandBuilder:
             guild=undefined.UNDEFINED,
             default_permission=builder.default_permission,
             options=builder.options,
+            name_localizations={locales.Locale.TR: "sayı"},
+            description_localizations={locales.Locale.TR: "bir"},
         )
 
     @pytest.mark.asyncio()
     async def test_create_with_guild(self):
         builder = special_endpoints.SlashCommandBuilder("we are number", "one")
         mock_rest = mock.AsyncMock()
+
+        builder.set_name_localizations({locales.Locale.TR: "sayı"})
+        builder.set_description_localizations({locales.Locale.TR: "bir"})
 
         result = await builder.create(mock_rest, 54455445, guild=54123123321)
 
@@ -728,15 +750,21 @@ class TestSlashCommandBuilder:
             guild=54123123321,
             default_permission=builder.default_permission,
             options=builder.options,
+            name_localizations={locales.Locale.TR: "sayı"},
+            description_localizations={locales.Locale.TR: "bir"},
         )
 
 
 class TestContextMenuBuilder:
     def test_build_with_optional_data(self):
         builder = (
-            special_endpoints.ContextMenuCommandBuilder(commands.CommandType.USER, "we are number")
+            special_endpoints.ContextMenuCommandBuilder(
+                commands.CommandType.USER,
+                "we are number",
+            )
             .set_id(3412312)
             .set_default_permission(False)
+            .set_name_localizations({locales.Locale.TR: "merhaba"})
         )
 
         result = builder.build(mock.Mock())
@@ -746,6 +774,7 @@ class TestContextMenuBuilder:
             "type": 2,
             "default_permission": False,
             "id": "3412312",
+            "name_localizations": {locales.Locale.TR: "merhaba"},
         }
 
     def test_build_without_optional_data(self):
@@ -753,7 +782,7 @@ class TestContextMenuBuilder:
 
         result = builder.build(mock.Mock())
 
-        assert result == {"type": 3, "name": "nameeeee"}
+        assert result == {"type": 3, "name": "nameeeee", "name_localizations": {}}
 
     @pytest.mark.asyncio()
     async def test_create(self):
