@@ -1010,7 +1010,7 @@ class CommandBuilder(abc.ABC):
 
     @abc.abstractmethod
     def set_name_localizations(self: _T, name_localizations: undefined.UndefinedOr[typing.Mapping[str, str]], /) -> _T:
-        """Set the name localizations of this command.
+        """Set the name localizations for this command.
 
         Parameters
         ----------
@@ -1113,7 +1113,7 @@ class SlashCommandBuilder(CommandBuilder):
     def set_description_localizations(
         self: _T, description_localizations: undefined.UndefinedOr[typing.Mapping[str, str]], /
     ) -> _T:
-        """Set the description localizations of this command.
+        """Set the description localizations for this command.
 
         Parameters
         ----------

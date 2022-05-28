@@ -136,9 +136,6 @@ class CommandOption:
         lowercase.
     """
 
-    description_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = attr.field(factory=dict, kw_only=True)
-    """A set of description localizations for this option"""
-
     description: str = attr.field(repr=False)
     """The command option's description.
 
@@ -187,6 +184,10 @@ class CommandOption:
 
     name_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = attr.field(factory=dict)
     """A set of name localizations for this option."""
+
+    description_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = attr.field(factory=dict
+                                                                                            )
+    """A set of description localizations for this option"""
 
 
 @attr_extensions.with_copy
