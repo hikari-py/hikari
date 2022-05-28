@@ -55,13 +55,6 @@ if generate_inventory:
     project_inventory.project = "hikari"
     project_inventory.version = hikari.__version__
 
-    type_to_role = {
-        "module": "module",
-        "class": "class",
-        "function": "func",
-        "variable": "var",
-    }
-
     def _add_to_inventory(dobj: pdoc_doc.Doc):
         if dobj.name.startswith("_"):
             # These won't be documented anyway, so we can ignore them
@@ -76,7 +69,7 @@ if generate_inventory:
             sphobjinv.DataObjStr(
                 name=dobj.fullname,
                 domain="py",
-                role=type_to_role[dobj.type],
+                role=dobj.type,
                 uri=uri,
                 priority="1",
                 dispname="-",
