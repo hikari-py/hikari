@@ -185,8 +185,7 @@ class CommandOption:
     name_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = attr.field(factory=dict)
     """A set of name localizations for this option."""
 
-    description_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = attr.field(factory=dict
-                                                                                            )
+    description_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = attr.field(factory=dict)
     """A set of description localizations for this option"""
 
 
