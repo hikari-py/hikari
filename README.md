@@ -144,7 +144,7 @@ Hikari does not include a command framework by default, so you will want to pick
 
 - [`lightbulb`](https://github.com/tandemdude/hikari-lightbulb) - a simple and easy to use command framework for Hikari.
 - [`tanjun`](https://github.com/FasterSpeeding/Tanjun) - a flexible command framework designed to extend Hikari.
-
+- [`crescent`](https://github.com/magpie-dev/hikari-crescent) - a command handler for Hikari that keeps your project neat and tidy.
 ---
 
 ## Making your application more efficient
