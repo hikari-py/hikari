@@ -2427,6 +2427,20 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 except errors.UnrecognisedEntityError:
                     pass
 
+        channel_mentions: undefined.UndefinedOr[
+            typing.Dict[snowflakes.Snowflake, channel_models.PartialChannel]
+        ] = undefined.UNDEFINED
+        if raw_channel_mentions := payload.get("mention_channels"):
+            channel_mentions = {c.id: c for c in map(self.deserialize_partial_channel, raw_channel_mentions)}
+
+        user_mentions: undefined.UndefinedOr[typing.Dict[snowflakes.Snowflake, user_models.User]] = undefined.UNDEFINED
+        if raw_user_mentions := payload.get("mentions"):
+            user_mentions = {u.id: u for u in map(self.deserialize_user, raw_user_mentions)}
+
+        role_mention_ids: undefined.UndefinedOr[typing.List[snowflakes.Snowflake]] = undefined.UNDEFINED
+        if raw_role_mention_ids := payload.get("mention_roles"):
+            role_mention_ids = [snowflakes.Snowflake(i) for i in raw_role_mention_ids]
+
         message = message_models.PartialMessage(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
@@ -2454,33 +2468,15 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             application_id=application_id,
             interaction=interaction,
             components=components,
+            channel_mentions=channel_mentions,
+            user_mentions=user_mentions,
+            role_mention_ids=role_mention_ids,
+            mentions_everyone=payload.get("mention_everyone", undefined.UNDEFINED),
             # We initialize these next.
             mentions=NotImplemented,
         )
 
-        channels: undefined.UndefinedOr[typing.Dict[snowflakes.Snowflake, channel_models.PartialChannel]]
-        channels = undefined.UNDEFINED
-        if raw_channels := payload.get("mention_channels"):
-            channels = {c.id: c for c in map(self.deserialize_partial_channel, raw_channels)}
-
-        users: undefined.UndefinedOr[typing.Dict[snowflakes.Snowflake, user_models.User]]
-        users = undefined.UNDEFINED
-        if raw_users := payload.get("mentions"):
-            users = {u.id: u for u in map(self.deserialize_user, raw_users)}
-
-        role_ids: undefined.UndefinedOr[typing.List[snowflakes.Snowflake]] = undefined.UNDEFINED
-        if raw_role_ids := payload.get("mention_roles"):
-            role_ids = [snowflakes.Snowflake(i) for i in raw_role_ids]
-
-        everyone = payload.get("mention_everyone", undefined.UNDEFINED)
-
-        message.mentions = message_models.Mentions(
-            message=message,
-            users=users,
-            role_ids=role_ids,
-            channels=channels,
-            everyone=everyone,
-        )
+        message.mentions = message_models.Mentions(message=message)
 
         return message
 
@@ -2546,6 +2542,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 except errors.UnrecognisedEntityError:
                     pass
 
+        user_mentions = {u.id: u for u in map(self.deserialize_user, payload.get("mentions", ()))}
+        role_mention_ids = [snowflakes.Snowflake(i) for i in payload.get("mention_roles", ())]
+        channel_mentions = {u.id: u for u in map(self.deserialize_partial_channel, payload.get("mention_channels", ()))}
+
         message = message_models.Message(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
@@ -2573,37 +2573,15 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             application_id=snowflakes.Snowflake(payload["application_id"]) if "application_id" in payload else None,
             interaction=interaction,
             components=components,
+            user_mentions=user_mentions,
+            channel_mentions=channel_mentions,
+            role_mention_ids=role_mention_ids,
+            mentions_everyone=payload.get("mention_everyone", False),
             # We initialize these next.
             mentions=NotImplemented,
         )
 
-        if raw_channels := payload.get("mention_channels"):
-            channels = {c.id: c for c in map(self.deserialize_partial_channel, raw_channels)}
-
-        else:
-            channels = {}
-
-        if raw_users := payload.get("mentions"):
-            users = {u.id: u for u in map(self.deserialize_user, raw_users)}
-
-        else:
-            users = {}
-
-        if raw_role_ids := payload.get("mention_roles"):
-            role_ids = [snowflakes.Snowflake(i) for i in raw_role_ids]
-
-        else:
-            role_ids = []
-
-        everyone = payload.get("mention_everyone", False)
-
-        message.mentions = message_models.Mentions(
-            message=message,
-            users=users,
-            role_ids=role_ids,
-            channels=channels,
-            everyone=everyone,
-        )
+        message.mentions = message_models.Mentions(message=message)
 
         return message
 

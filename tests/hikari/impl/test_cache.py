@@ -2437,12 +2437,9 @@ class TestCacheImpl:
         member_data = mock.Mock(build_entity=mock.Mock(return_value=mock_member))
         mock_channel = mock.MagicMock()
         mock_mention_user = mock.MagicMock()
-        mention_data = cache_utilities.MentionsData(
-            users={snowflakes.Snowflake(4231): cache_utilities.RefCell(mock_mention_user)},
-            role_ids=(snowflakes.Snowflake(21323123),),
-            channels={snowflakes.Snowflake(4444): mock_channel},
-            everyone=True,
-        )
+        mock_user_mentions = {snowflakes.Snowflake(4231): cache_utilities.RefCell(mock_mention_user)}
+        mock_role_mention_ids = (snowflakes.Snowflake(21323123),)
+        mock_channel_mentions = {snowflakes.Snowflake(4444): mock_channel}
         mock_attachment = mock.MagicMock(messages.Attachment)
         mock_embed_field = mock.MagicMock(embeds.EmbedField)
         mock_embed = mock.MagicMock(embeds.Embed, fields=(mock_embed_field,))
@@ -2468,7 +2465,10 @@ class TestCacheImpl:
             timestamp=datetime.datetime(2020, 7, 30, 7, 10, 9, 550233, tzinfo=datetime.timezone.utc),
             edited_timestamp=datetime.datetime(2020, 8, 30, 7, 10, 9, 550233, tzinfo=datetime.timezone.utc),
             is_tts=True,
-            mentions=mention_data,
+            user_mentions=mock_user_mentions,
+            role_mention_ids=mock_role_mention_ids,
+            channel_mentions=mock_channel_mentions,
+            mentions_everyone=False,
             attachments=(mock_attachment,),
             embeds=(mock_embed,),
             reactions=(mock_reaction,),
@@ -2499,13 +2499,10 @@ class TestCacheImpl:
         assert result.timestamp == datetime.datetime(2020, 7, 30, 7, 10, 9, 550233, tzinfo=datetime.timezone.utc)
         assert result.edited_timestamp == datetime.datetime(2020, 8, 30, 7, 10, 9, 550233, tzinfo=datetime.timezone.utc)
         assert result.is_tts is True
-
-        # MentionsData
-        assert result.mentions.users == {4231: mock_mention_user}
-        assert result.mentions.role_ids == (snowflakes.Snowflake(21323123),)
-        assert result.mentions.channels == {4444: mock_channel}
-        assert result.mentions.everyone is True
-
+        assert result.user_mentions == {4231: mock_mention_user}
+        assert result.role_mention_ids == (snowflakes.Snowflake(21323123),)
+        assert result.channel_mentions == {4444: mock_channel}
+        assert result.mentions_everyone is False
         assert result.attachments == (mock_attachment,)
 
         for field in (
@@ -2545,12 +2542,6 @@ class TestCacheImpl:
         assert result.components == (mock_component,)
 
     def test__build_message_with_null_fields(self, cache_impl):
-        mentions = cache_utilities.MentionsData(
-            role_ids=undefined.UNDEFINED,
-            channels=undefined.UNDEFINED,
-            everyone=undefined.UNDEFINED,
-            users=undefined.UNDEFINED,
-        )
         message_data = cache_utilities.MessageData(
             id=snowflakes.Snowflake(32123123),
             channel_id=snowflakes.Snowflake(3123123123),
@@ -2561,7 +2552,10 @@ class TestCacheImpl:
             timestamp=datetime.datetime(2020, 7, 30, 7, 10, 9, 550233, tzinfo=datetime.timezone.utc),
             edited_timestamp=None,
             is_tts=True,
-            mentions=mentions,
+            user_mentions=undefined.UNDEFINED,
+            role_mention_ids=undefined.UNDEFINED,
+            channel_mentions=undefined.UNDEFINED,
+            mentions_everyone=undefined.UNDEFINED,
             attachments=(),
             embeds=(),
             reactions=(),
@@ -2589,10 +2583,10 @@ class TestCacheImpl:
         assert result.is_tts is True
 
         # MentionsData
-        assert result.mentions.users is undefined.UNDEFINED
-        assert result.mentions.role_ids is undefined.UNDEFINED
-        assert result.mentions.channels is undefined.UNDEFINED
-        assert result.mentions.everyone is undefined.UNDEFINED
+        assert result.user_mentions is undefined.UNDEFINED
+        assert result.role_mention_ids is undefined.UNDEFINED
+        assert result.channel_mentions is undefined.UNDEFINED
+        assert result.mentions_everyone is undefined.UNDEFINED
 
         assert result.webhook_id is None
         assert result.activity is None
