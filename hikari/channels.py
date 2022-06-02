@@ -1288,7 +1288,7 @@ class GuildNewsChannel(TextableGuildChannel):
 
 
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
-class GuildVoiceChannel(GuildChannel):
+class GuildVoiceChannel(TextableGuildChannel):
     """Represents a voice channel."""
 
     bitrate: int = attr.field(eq=False, hash=False, repr=True)
