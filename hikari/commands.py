@@ -209,11 +209,10 @@ class PartialCommand(snowflakes.Unique):
         lowercase.
     """
 
-    default_member_permissions: typing.Optional[permissions.Permissions] = attr.field(eq=False, hash=False, repr=True)
+    default_member_permissions: permissions.Permissions = attr.field(eq=False, hash=False, repr=True)
     """Member permissions necessary to utilize this command by default.
 
-    If `0`, then it will be disabled by default. This excludes administrators of the guild
-    and overwrites.
+    This excludes administrators of the guild and overwrites.
     """
 
     is_dm_enabled: bool = attr.field(eq=False, hash=False, repr=True)

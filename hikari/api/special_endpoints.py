@@ -981,7 +981,7 @@ class CommandBuilder(abc.ABC):
     def default_member_permissions(self) -> typing.Union[undefined.UndefinedType, permissions_.Permissions, int]:
         """Member permissions necessary to utilize this command by default.
 
-        If `0`, then it will be disabled by default. This excludes administrators
+        If `0`, then it will be available for all members. This excludes administrators
         of the guild and overwrites.
         """
 
@@ -1019,7 +1019,7 @@ class CommandBuilder(abc.ABC):
         default_member_permissions : hikari.undefined.UndefinedOr[builtins.bool]
             The default member permissions to utilize this command by default.
 
-            If `0`, then it will be disabled by default. This excludes administrators
+            If `0`, then it will be available for all members. This excludes administrators
             of the guild and overwrites.
 
         Returns

@@ -3190,7 +3190,9 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("description", description)
         body.put("type", type)
         body.put_array("options", options, conversion=self._entity_factory.serialize_command_option)
-        body.put("default_member_permissions", default_member_permissions)
+        # Discord has some funky behaviour around what 0 means. They consider it to be the same as ADMINISTRATOR,
+        # but we consider it to be the same as None for developer sanity reasons
+        body.put("default_member_permissions", None if default_member_permissions == 0 else default_member_permissions)
         body.put("dm_permission", dm_enabled)
 
         response = await self._request(route, json=body)
@@ -3291,6 +3293,10 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("name", name)
         body.put("description", description)
         body.put_array("options", options, conversion=self._entity_factory.serialize_command_option)
+        # Discord has some funky behaviour around what 0 means. They consider it to be the same as ADMINISTRATOR,
+        # but we consider it to be the same as None for developer sanity reasons
+        body.put("default_member_permissions", None if default_member_permissions == 0 else default_member_permissions)
+        body.put("dm_permission", dm_enabled)
 
         response = await self._request(route, json=body)
         assert isinstance(response, dict)
