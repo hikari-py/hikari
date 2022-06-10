@@ -6852,8 +6852,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         default_member_permissions : typing.Union[hikari.undefined.UndefinedType, int, hikari.permissions.Permissions]
             Member permissions necessary to utilize this command by default.
 
-            If `0`, then it will be available for all members. This excludes administrators
-            of the guild and overwrites.
+            If `0`, then it will be available for all members. Note that this doesn't affect
+            administrators of the guild and overwrites.
         dm_enabled : hikari.undefined.UndefinedOr[builtins.bool]
             Whether this command is enabled in DMs with the bot.
 
@@ -6925,8 +6925,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         default_member_permissions : typing.Union[hikari.undefined.UndefinedType, int, hikari.permissions.Permissions]
             Member permissions necessary to utilize this command by default.
 
-            If `0`, then it will be available for all members. This excludes administrators
-            of the guild and overwrites.
+            If `0`, then it will be available for all members. Note that this doesn't affect
+            administrators of the guild and overwrites.
         dm_enabled : hikari.undefined.UndefinedOr[builtins.bool]
             Whether this command is enabled in DMs with the bot.
 
@@ -7062,8 +7062,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         default_member_permissions : typing.Union[hikari.undefined.UndefinedType, int, hikari.permissions.Permissions]
             Member permissions necessary to utilize this command by default.
 
-            If `0`, then it will be available for all members. This excludes administrators
-            of the guild and overwrites.
+            If `0`, then it will be available for all members. Note that this doesn't affect
+            administrators of the guild and overwrites.
         dm_enabled : hikari.undefined.UndefinedOr[builtins.bool]
             Whether this command is enabled in DMs with the bot.
 
