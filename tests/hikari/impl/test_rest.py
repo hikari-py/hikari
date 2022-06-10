@@ -4965,7 +4965,6 @@ class TestRESTClientImplAsync:
     ):
         expected_route = routes.PATCH_APPLICATION_COMMAND.compile(application=1235432, command=3451231)
         rest_client._request = mock.AsyncMock(return_value={"id": "94594994"})
-        mock_option = object()
 
         result = await rest_client.edit_application_command(
             StubModel(1235432),

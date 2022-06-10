@@ -4447,7 +4447,7 @@ class TestEntityFactoryImpl:
             (3, "_deserialize_select_menu"),
         ],
     )
-    def test_deserialize_interaction(self, mock_app, type_, fn):
+    def test__deserialize_component(self, mock_app, type_, fn):
         payload = {"type": type_}
 
         with mock.patch.object(entity_factory.EntityFactoryImpl, fn) as expected_fn:
