@@ -423,34 +423,6 @@ class Color(int):
         else:
             return cls.from_rgb(_to_rgb_int(r, "red"), _to_rgb_int(g, "green"), _to_rgb_int(b, "blue"))
 
-    # Partially chose to override these as the docstrings contain typos according to Sphinx.
-    @classmethod
-    def from_bytes(
-        cls,
-        bytes_: typing.Union[typing.Iterable[typing.SupportsIndex], typing.SupportsBytes],
-        byteorder: typing.Literal["little", "big"],
-        *,
-        signed: bool = True,
-    ) -> Color:
-        """Convert the bytes to a `Color`.
-
-        Parameters
-        ----------
-        bytes_ : typing.Iterable[int]
-            A iterable of int byte values.
-        byteorder : str
-            The endianness of the value represented by the bytes.
-            Can be `"big"` endian or `"little"` endian.
-        signed : bool
-            Whether the value is signed or unsigned.
-
-        Returns
-        -------
-        Color
-            The Color object.
-        """
-        return Color(int.from_bytes(bytes_, byteorder, signed=signed))
-
     @classmethod
     def of(cls, value: Colorish, /) -> Color:
         """Convert the value to a `Color`.

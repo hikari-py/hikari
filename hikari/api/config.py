@@ -23,7 +23,7 @@
 """Core interface for Hikari's configuration dataclasses."""
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("CacheComponents",)
+__all__: typing.Sequence[str] = ("CacheComponents", "CacheSettings", "HTTPSettings", "ProxySettings")
 
 import abc
 import typing

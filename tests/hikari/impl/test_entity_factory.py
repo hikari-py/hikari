@@ -3555,7 +3555,6 @@ class TestEntityFactoryImpl:
                         ],
                     },
                 ],
-                "resolved": interaction_resolved_data_payload,
             },
             "channel_id": "49949494",
             "user": user_payload,
@@ -3567,7 +3566,7 @@ class TestEntityFactoryImpl:
         }
 
     def test_deserialize_autocomplete_interaction(
-        self, entity_factory_impl, mock_app, autocomplete_interaction_payload, interaction_resolved_data_payload
+        self, entity_factory_impl, mock_app, autocomplete_interaction_payload
     ):
         interaction = entity_factory_impl.deserialize_autocomplete_interaction(autocomplete_interaction_payload)
 
@@ -3583,9 +3582,6 @@ class TestEntityFactoryImpl:
         assert interaction.locale is locales.Locale.ES_ES
         assert interaction.guild_locale == "en-US"
         assert interaction.guild_locale is locales.Locale.EN_US
-        assert interaction.resolved == entity_factory_impl._deserialize_resolved_option_data(
-            interaction_resolved_data_payload, guild_id=43123123
-        )
 
         # AutocompleteInteractionOption
         assert len(interaction.options) == 1
@@ -3617,7 +3613,6 @@ class TestEntityFactoryImpl:
     def test_deserialize_autocomplete_interaction_with_null_fields(
         self, entity_factory_impl, user_payload, mock_app, autocomplete_interaction_payload
     ):
-        del autocomplete_interaction_payload["data"]["resolved"]
         del autocomplete_interaction_payload["guild_locale"]
         del autocomplete_interaction_payload["guild_id"]
 
@@ -3626,7 +3621,6 @@ class TestEntityFactoryImpl:
         assert interaction.guild_id is None
         assert interaction.member is None
         assert interaction.user == entity_factory_impl.deserialize_user(user_payload)
-        assert interaction.resolved is None
         assert interaction.guild_locale is None
 
     def test_deserialize_interaction_returns_expected_type(
