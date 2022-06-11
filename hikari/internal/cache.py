@@ -306,7 +306,8 @@ class BaseData(abc.ABC, typing.Generic[ValueT]):
 
         Returns
         -------
-        The initialised entity object.
+        ValueT
+            The initialised entity object.
         """
 
     @classmethod
@@ -321,7 +322,8 @@ class BaseData(abc.ABC, typing.Generic[ValueT]):
 
         Returns
         -------
-        The built data class.
+        DataT
+            The built data class.
         """
 
 
@@ -413,7 +415,7 @@ class MemberData(BaseData[guilds.Member]):
     is_pending: undefined.UndefinedOr[bool] = attr.field()
     raw_communication_disabled_until: typing.Optional[datetime.datetime] = attr.field()
     # meta-attribute
-    has_been_deleted: bool = attr.field(default=False)
+    has_been_deleted: bool = attr.field(default=False, init=False)
 
     @classmethod
     def build_from_entity(
@@ -980,7 +982,7 @@ def unwrap_ref_cell(cell: RefCell[ValueT]) -> ValueT:
     Parameters
     ----------
     cell : RefCell[ValueT]
-        The reference cell instance to unwrap
+        The reference cell instance to unwrap.
 
     Returns
     -------

@@ -157,15 +157,15 @@ class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentRespo
 
         Examples
         --------
-        ```py
-        async def handle_component_interaction(interaction: ComponentInteraction) -> InteractionMessageBuilder:
-            return (
-                interaction
-                .build_response(ResponseType.MESSAGE_UPDATE)
-                .add_embed(Embed(description="Hi there"))
-                .set_content("Konnichiwa")
-            )
-        ```
+        .. code-block:: python
+
+            async def handle_component_interaction(interaction: ComponentInteraction) -> InteractionMessageBuilder:
+                return (
+                    interaction
+                    .build_response(ResponseType.MESSAGE_UPDATE)
+                    .add_embed(Embed(description="Hi there"))
+                    .set_content("Konnichiwa")
+                )
 
         Returns
         -------

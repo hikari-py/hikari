@@ -112,7 +112,6 @@ class VoiceComponent(abc.ABC):
             Any arguments to provide to the `VoiceConnection.initialize`
             method.
 
-
         Returns
         -------
         VoiceConnection

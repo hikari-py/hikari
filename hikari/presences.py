@@ -63,7 +63,7 @@ class ActivityType(int, enums.Enum):
     """The activity type."""
 
     PLAYING = 0
-    """Shows up as `Playing <name>`"""
+    """Shows up as `Playing <name>`."""
 
     STREAMING = 1
     """Shows up as `Streaming` and links to a Twitch or YouTube stream/video.
@@ -274,22 +274,22 @@ class ActivityFlag(enums.Flag):
     """
 
     INSTANCE = 1 << 0
-    """Instance"""
+    """Instance."""
 
     JOIN = 1 << 1
-    """Join"""
+    """Join."""
 
     SPECTATE = 1 << 2
-    """Spectate"""
+    """Spectate."""
 
     JOIN_REQUEST = 1 << 3
-    """Join Request"""
+    """Join Request."""
 
     SYNC = 1 << 4
-    """Sync"""
+    """Sync."""
 
     PLAY = 1 << 5
-    """Play"""
+    """Play."""
 
     PARTY_PRIVACY_FRIENDS = 1 << 6
     """Party privacy: friends only."""
@@ -328,9 +328,7 @@ class RichActivity(Activity):
     """When this activity was added to the user's session."""
 
     timestamps: typing.Optional[ActivityTimestamps] = attr.field(repr=False)
-    """The timestamps for when this activity's current state will start and
-    end, if applicable.
-    """
+    """The timestamps for when this activity's current state will start and end, if applicable."""
 
     application_id: typing.Optional[snowflakes.Snowflake] = attr.field(repr=False)
     """The ID of the application this activity is for, if applicable."""
@@ -403,7 +401,7 @@ class MemberPresence:
     app: traits.RESTAware = attr.field(
         repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
     )
-    """The client application that models may use for procedures."""
+    """Client application that models may use for procedures."""
 
     user_id: snowflakes.Snowflake = attr.field(repr=True, hash=True)
     """The ID of the user this presence belongs to."""

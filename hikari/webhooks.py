@@ -80,7 +80,7 @@ class ExecutableWebhook(abc.ABC):
     @property
     @abc.abstractmethod
     def app(self) -> traits.RESTAware:
-        """The client application that models may use for procedures."""
+        """Client application that models may use for procedures."""
 
     @property
     @abc.abstractmethod
@@ -210,7 +210,7 @@ class ExecutableWebhook(abc.ABC):
             If you pass a token that's invalid for the target webhook.
         ValueError
             If either `ExecutableWebhook.token` is `None` or more than 100 unique
-            objects/entities are passed for `role_mentions` or `user_mentions or
+            objects/entities are passed for `role_mentions` or `user_mentions` or
             if `token` is not available.
         TypeError
             If both `attachment` and `attachments`, `component` and `components`
@@ -373,7 +373,7 @@ class ExecutableWebhook(abc.ABC):
             If this is `None` then any present embeds are removed.
             Otherwise, the new embeds that were provided will be used as the
             replacement.
-        replace_attachments: bool
+        replace_attachments : bool
             Whether to replace the attachments with the provided ones. Defaults
             to `False`.
 
@@ -503,7 +503,7 @@ class PartialWebhook(snowflakes.Unique):
     app: traits.RESTAware = attr.field(
         repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
     )
-    """The client application that models may use for procedures."""
+    """Client application that models may use for procedures."""
 
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
     """The ID of this entity."""
@@ -532,12 +532,12 @@ class PartialWebhook(snowflakes.Unique):
             from the gateway, and without some bot backend to support it, will
             not be able to detect mentions of their webhook.
 
-        Example
-        -------
-        ```py
-        >>> some_webhook.mention
-        '<@123456789123456789>'
-        ```
+        Examples
+        --------
+        .. code-block:: python
+
+            >>> some_webhook.mention
+            '<@123456789123456789>'
         """
         return f"<@{self.id}>"
 
@@ -614,7 +614,7 @@ class IncomingWebhook(PartialWebhook, ExecutableWebhook):
     """The guild ID of the webhook."""
 
     author: typing.Optional[users_.User] = attr.field(eq=False, hash=False, repr=True)
-    """The user that created the webhook
+    """The user that created the webhook.
 
     .. note::
         This will be `None` when fetched with the webhook's token
@@ -852,7 +852,7 @@ class ChannelFollowerWebhook(PartialWebhook):
     """The guild ID of the webhook."""
 
     author: typing.Optional[users_.User] = attr.field(eq=False, hash=False, repr=True)
-    """The user that created the webhook
+    """The user that created the webhook.
 
     .. note::
         This will be `None` when received within an audit log.

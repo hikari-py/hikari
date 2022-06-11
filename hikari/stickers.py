@@ -90,7 +90,7 @@ class StickerPack(snowflakes.Unique):
     """The description of the pack."""
 
     cover_sticker_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
-    """The ID of a sticker in the pack which is shown as the pack's icon"""
+    """The ID of a sticker in the pack which is shown as the pack's icon."""
 
     stickers: typing.Sequence[StandardSticker] = attr.field(eq=False, hash=False, repr=False)
     """The stickers that belong to this pack."""
@@ -193,7 +193,7 @@ class GuildSticker(PartialSticker):
     """The description of this sticker."""
 
     guild_id: snowflakes.Snowflake = attr.field(eq=False, hash=False)
-    """The guild this sticker belongs to"""
+    """The guild this sticker belongs to."""
 
     is_available: bool = attr.field(eq=False, hash=False)
     """Whether the sticker can be used."""

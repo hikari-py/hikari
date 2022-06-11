@@ -124,7 +124,7 @@ class Route:
     Parameters
     ----------
     method : str
-        The HTTP method
+        The HTTP method.
     path_template : str
         The template string for the path to use.
     """

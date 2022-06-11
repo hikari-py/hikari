@@ -177,7 +177,7 @@ class PartialInteraction(snowflakes.Unique, webhooks.ExecutableWebhook):
     """The base model for all interaction models."""
 
     app: traits.RESTAware = attr.field(repr=False, eq=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    """The client application that models may use for procedures."""
+    """Client application that models may use for procedures."""
 
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
     # <<inherited docstring from Unique>>.
@@ -282,6 +282,14 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
             If this is a `hikari.embeds.Embed` and no `embed` nor `embeds` kwarg
             is provided, then this will instead update the embed. This allows
             for simpler syntax when sending an embed alone.
+        flags : typing.Union[int, hikari.messages.MessageFlag, hikari.undefined.UndefinedType]
+            If provided, the message flags this response should have.
+
+            As of writing the only message flag which can be set here is
+            `hikari.messages.MessageFlag.EPHEMERAL`.
+        tts : hikari.undefined.UndefinedOr[bool]
+            If provided, whether the message will be read out by a screen
+            reader using Discord's TTS (text-to-speech) system.
         attachment : hikari.undefined.UndefinedOr[hikari.files.Resourceish],
             If provided, the message attachment. This can be a resource,
             or string of a path on your computer or a URL.
@@ -297,14 +305,6 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
             If provided, the message embed.
         embeds : hikari.undefined.UndefinedOr[typing.Sequence[hikari.embeds.Embed]]
             If provided, the message embeds.
-        flags : typing.Union[int, hikari.messages.MessageFlag, hikari.undefined.UndefinedType]
-            If provided, the message flags this response should have.
-
-            As of writing the only message flag which can be set here is
-            `hikari.messages.MessageFlag.EPHEMERAL`.
-        tts : hikari.undefined.UndefinedOr[bool]
-            If provided, whether the message will be read out by a screen
-            reader using Discord's TTS (text-to-speech) system.
         mentions_everyone : hikari.undefined.UndefinedOr[bool]
             If provided, whether the message should parse @everyone/@here
             mentions.
@@ -463,7 +463,7 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
             If this is `None` then any present embeds are removed.
             Otherwise, the new embeds that were provided will be used as the
             replacement.
-        replace_attachments: bool
+        replace_attachments : bool
             Whether to replace the attachments with the provided ones. Defaults
             to `False`.
 

@@ -59,29 +59,29 @@ class EventStream(iterators.LazyIterator[base_events.EventT], abc.ABC):
     where `EventStream.open` and `EventStream.close` are implicitly called based on
     context.
 
-    ```py
-    with EventStream(app, EventType, timeout=50) as stream:
-        async for entry in stream:
-            ...
-    ```
+    .. code-block:: python
+
+        with EventStream(app, EventType, timeout=50) as stream:
+            async for entry in stream:
+                ...
 
     A streamer may also be directly started and closed using the `EventStream.close`
     and `EventStream.open`. Note that if you don't call `EventStream.close` after
     opening a streamer when you're finished with it then it may queue events
     events in memory indefinitely.
 
-    ```py
-    stream = EventStream(app, EventType, timeout=50)
-    await stream.open()
-    async for event in stream:
-        ...
+    .. code-block:: python
 
-    await stream.close()
-    ```
+        stream = EventStream(app, EventType, timeout=50)
+        await stream.open()
+        async for event in stream:
+            ...
+
+        await stream.close()
 
     See Also
     --------
-    `hikari.iterators.LazyIterator`
+    LazyIterator : `hikari.iterators.LazyIterator`.
     """
 
     __slots__: typing.Sequence[str] = ()
@@ -197,62 +197,62 @@ class EventManager(abc.ABC):
         event : hikari.events.base_events.Event
             The event to dispatch.
 
-        Example
-        -------
+        Examples
+        --------
         We can dispatch custom events by first defining a class that
         derives from `hikari.events.base_events.Event`.
 
-        ```py
-        import attr
+        .. code-block:: python
 
-        from hikari.traits import RESTAware
-        from hikari.events.base_events import Event
-        from hikari.users import User
-        from hikari.snowflakes import Snowflake
+            import attr
 
-        @attr.define()
-        class EveryoneMentionedEvent(Event):
-            app: RESTAware = attr.field()
+            from hikari.traits import RESTAware
+            from hikari.events.base_events import Event
+            from hikari.users import User
+            from hikari.snowflakes import Snowflake
 
-            author: User = attr.field()
-            '''The user who mentioned everyone.'''
+            @attr.define()
+            class EveryoneMentionedEvent(Event):
+                app: RESTAware = attr.field()
 
-            content: str = attr.field()
-            '''The message that was sent.'''
+                author: User = attr.field()
+                '''The user who mentioned everyone.'''
 
-            message_id: Snowflake = attr.field()
-            '''The message ID.'''
+                content: str = attr.field()
+                '''The message that was sent.'''
 
-            channel_id: Snowflake = attr.field()
-            '''The channel ID.'''
-        ```
+                message_id: Snowflake = attr.field()
+                '''The message ID.'''
+
+                channel_id: Snowflake = attr.field()
+                '''The channel ID.'''
 
         We can then dispatch our event as we see fit.
 
-        ```py
-        from hikari.events.messages import MessageCreateEvent
+        .. code-block:: python
 
-        @bot.listen(MessageCreateEvent)
-        async def on_message(event):
-            if "@everyone" in event.content or "@here" in event.content:
-                event = EveryoneMentionedEvent(
-                    author=event.author,
-                    content=event.content,
-                    message_id=event.id,
-                    channel_id=event.channel_id,
-                )
+            from hikari.events.messages import MessageCreateEvent
 
-                bot.dispatch(event)
-        ```
+            @bot.listen(MessageCreateEvent)
+            async def on_message(event):
+                if "@everyone" in event.content or "@here" in event.content:
+                    event = EveryoneMentionedEvent(
+                        author=event.author,
+                        content=event.content,
+                        message_id=event.id,
+                        channel_id=event.channel_id,
+                    )
+
+                    bot.dispatch(event)
 
         This event can be listened to elsewhere by subscribing to it with
         `EventManager.subscribe`.
 
-        ```py
-        @bot.listen(EveryoneMentionedEvent)
-        async def on_everyone_mentioned(event):
-            print(event.user, "just pinged everyone in", event.channel_id)
-        ```
+        .. code-block:: python
+
+            @bot.listen(EveryoneMentionedEvent)
+            async def on_everyone_mentioned(event):
+                print(event.user, "just pinged everyone in", event.channel_id)
 
         Returns
         -------
@@ -264,11 +264,11 @@ class EventManager(abc.ABC):
 
         See Also
         --------
-        `hikari.api.event_manager.EventManager.listen`
-        `hikari.api.event_manager.EventManager.stream`
-        `hikari.api.event_manager.EventManager.subscribe`
-        `hikari.api.event_manager.EventManager.unsubscribe`
-        `hikari.api.event_manager.EventManager.wait_for`
+        Listen : `hikari.api.event_manager.EventManager.listen`.
+        Stream : `hikari.api.event_manager.EventManager.stream`.
+        Subscribe : `hikari.api.event_manager.EventManager.subscribe`.
+        Unsubscribe : `hikari.api.event_manager.EventManager.unsubscribe`.
+        Wait_for: `hikari.api.event_manager.EventManager.wait_for`.
         """
 
     # Yes, this is not generic. The reason for this is MyPy complains about
@@ -290,27 +290,27 @@ class EventManager(abc.ABC):
             consume an instance of the given event, or an instance of a valid
             subclass if one exists. Any result is discarded.
 
-        Example
-        -------
+        Examples
+        --------
         The following demonstrates subscribing a callback to message creation
         events.
 
-        ```py
-        from hikari.events.messages import MessageCreateEvent
+        .. code-block:: python
 
-        async def on_message(event):
-            ...
+            from hikari.events.messages import MessageCreateEvent
 
-        bot.subscribe(MessageCreateEvent, on_message)
-        ```
+            async def on_message(event):
+                ...
+
+            bot.subscribe(MessageCreateEvent, on_message)
 
         See Also
         --------
-        `hikari.api.event_manager.EventManager.dispatch`
-        `hikari.api.event_manager.EventManager.listen`
-        `hikari.api.event_manager.EventManager.stream`
-        `hikari.api.event_manager.EventManager.unsubscribe`
-        `hikari.api.event_manager.EventManager.wait_for`
+        Dispatch : `hikari.api.event_manager.EventManager.dispatch`.
+        Listen : `hikari.api.event_manager.EventManager.listen`.
+        Stream : `hikari.api.event_manager.EventManager.stream`.
+        Unsubscribe : `hikari.api.event_manager.EventManager.unsubscribe`.
+        Wait_for : `hikari.api.event_manager.EventManager.wait_for`.
         """
 
     # Yes, this is not generic. The reason for this is MyPy complains about
@@ -330,27 +330,27 @@ class EventManager(abc.ABC):
         callback
             The callback to unsubscribe.
 
-        Example
-        -------
+        Examples
+        --------
         The following demonstrates unsubscribing a callback from a message
         creation event.
 
-        ```py
-        from hikari.events.messages import MessageCreateEvent
+        .. code-block:: python
 
-        async def on_message(event):
-            ...
+            from hikari.events.messages import MessageCreateEvent
 
-        bot.unsubscribe(MessageCreateEvent, on_message)
-        ```
+            async def on_message(event):
+                ...
+
+            bot.unsubscribe(MessageCreateEvent, on_message)
 
         See Also
         --------
-        `hikari.api.event_manager.EventManager.dispatch`
-        `hikari.api.event_manager.EventManager.listen`
-        `hikari.api.event_manager.EventManager.stream`
-        `hikari.api.event_manager.EventManager.subscribe`
-        `hikari.api.event_manager.EventManager.wait_for`
+        Dispatch : `hikari.api.event_manager.EventManager.dispatch`.
+        Listen : `hikari.api.event_manager.EventManager.listen`.
+        Stream : `hikari.api.event_manager.EventManager.stream`.
+        Subscribe : `hikari.api.event_manager.EventManager.subscribe`.
+        Wait_for : `hikari.api.event_manager.EventManager.wait_for`.
         """
 
     @abc.abstractmethod
@@ -407,11 +407,11 @@ class EventManager(abc.ABC):
 
         See Also
         --------
-        `hikari.api.event_manager.EventManager.dispatch`
-        `hikari.api.event_manager.EventManager.stream`
-        `hikari.api.event_manager.EventManager.subscribe`
-        `hikari.api.event_manager.EventManager.unsubscribe`
-        `hikari.api.event_manager.EventManager.wait_for`
+        Dispatch : `hikari.api.event_manager.EventManager.dispatch`.
+        Stream : `hikari.api.event_manager.EventManager.stream`.
+        Subscribe : `hikari.api.event_manager.EventManager.subscribe`.
+        Unsubscribe : `hikari.api.event_manager.EventManager.unsubscribe`.
+        Wait_for : `hikari.api.event_manager.EventManager.wait_for`.
         """
 
     @abc.abstractmethod
@@ -452,31 +452,31 @@ class EventManager(abc.ABC):
 
         Examples
         --------
-        ```py
-        with bot.stream(events.ReactionAddEvent, timeout=30).filter(("message_id", message.id)) as stream:
-            async for user_id in stream.map("user_id").limit(50):
-                ...
-        ```
+        .. code-block:: python
+
+            with bot.stream(events.ReactionAddEvent, timeout=30).filter(("message_id", message.id)) as stream:
+                async for user_id in stream.map("user_id").limit(50):
+                    ...
 
         or using `open()` and `close()`
 
-        ```py
-        stream = bot.stream(events.ReactionAddEvent, timeout=30).filter(("message_id", message.id))
-        stream.open()
+        .. code-block:: python
 
-        async for user_id in stream.map("user_id").limit(50)
-            ...
+            stream = bot.stream(events.ReactionAddEvent, timeout=30).filter(("message_id", message.id))
+            stream.open()
 
-        stream.close()
-        ```
+            async for user_id in stream.map("user_id").limit(50)
+                ...
+
+            stream.close()
 
         See Also
         --------
-        `hikari.api.event_manager.EventManager.dispatch`
-        `hikari.api.event_manager.EventManager.listen`
-        `hikari.api.event_manager.EventManager.subscribe`
-        `hikari.api.event_manager.EventManager.unsubscribe`
-        `hikari.api.event_manager.EventManager.wait_for`
+        Dispatch : `hikari.api.event_manager.EventManager.dispatch`.
+        Listen : `hikari.api.event_manager.EventManager.listen`.
+        Subscribe : `hikari.api.event_manager.EventManager.subscribe`.
+        Unsubscribe : `hikari.api.event_manager.EventManager.unsubscribe`.
+        Wait_for : `hikari.api.event_manager.EventManager.wait_for`.
         """
 
     @abc.abstractmethod
@@ -523,9 +523,9 @@ class EventManager(abc.ABC):
 
         See Also
         --------
-        `hikari.api.event_manager.EventManager.dispatch`
-        `hikari.api.event_manager.EventManager.listen`
-        `hikari.api.event_manager.EventManager.stream`
-        `hikari.api.event_manager.EventManager.subscribe`
-        `hikari.api.event_manager.EventManager.unsubscribe`
+        Dispatch : `hikari.api.event_manager.EventManager.dispatch`.
+        Listen : `hikari.api.event_manager.EventManager.listen`.
+        Stream : `hikari.api.event_manager.EventManager.stream`.
+        Subscribe : `hikari.api.event_manager.EventManager.subscribe`.
+        Unsubscribe : `hikari.api.event_manager.EventManager.unsubscribe`.
         """

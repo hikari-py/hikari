@@ -99,8 +99,11 @@ required_plugins = ["pytest-asyncio"]
 package = "hikari"
 package_dir = "hikari"
 directory = "changes"
+template = "changes/.template.rst"
 filename = "CHANGELOG.md"
 issue_format = "[#{issue}](https://github.com/hikari-py/hikari/issues/{issue})"
+# We use this differently in the template
+underlines = [2, 3]
 type = [
     { name = "Breaking Changes",            directory = "breaking",     showcontent = true },
     { name = "Deprecation",                 directory = "deprecation",  showcontent = true },

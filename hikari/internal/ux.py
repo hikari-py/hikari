@@ -158,7 +158,7 @@ def print_banner(
     Inspired by Spring Boot, we display an ASCII logo on startup. This is styled
     to grab the user's attention, and contains info such as the library version,
     the Python interpreter, the OS, and links to our Discord server and
-    documentation. Users can override this by placing a `banner.txt' in some
+    documentation. Users can override this by placing a `banner.txt` in some
     package and referencing it in this call.
 
     .. note::
@@ -316,9 +316,6 @@ class HikariVersion:
 
     def __repr__(self) -> str:
         return f"HikariVersion('{str(self)}')"
-
-    def __hash__(self) -> int:
-        return id(self)
 
     def __eq__(self, other: typing.Any) -> bool:
         return self._compare(other, lambda s, o: s == o)

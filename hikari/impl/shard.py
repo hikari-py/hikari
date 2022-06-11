@@ -136,7 +136,7 @@ class _GatewayTransport(aiohttp.ClientWebSocketResponse):
         self.zlib = zlib.decompressobj()
         self.sent_close = False
 
-        # Initialized from `connect'
+        # Initialized from `connect`
         # These are type-hinted here instead of above to prevent MyPy from misinterpreting typing.Callable as a method
         self.logger: logging.Logger
         self.log_filterer: typing.Callable[[str], str]

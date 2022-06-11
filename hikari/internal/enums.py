@@ -225,14 +225,14 @@ class Enum(metaclass=_EnumMeta):
     * ` __objtype__` :
         Always the first type that the enum is derived from. For example:
 
-    ```py
-    >>> class UserType(str, Enum):
-    ...     USER = "user"
-    ...     PARTIAL = "partial"
-    ...     MEMBER = "member"
-    >>> print(UserType.__objtype__)
-    <class 'str'>
-    ```
+    .. code-block:: python
+
+        >>> class UserType(str, Enum):
+        ...     USER = "user"
+        ...     PARTIAL = "partial"
+        ...     MEMBER = "member"
+        >>> print(UserType.__objtype__)
+        <class 'str'>
 
     Operators on the class
     ----------------------
@@ -460,7 +460,7 @@ class Flag(metaclass=_FlagMeta):
     In simple terms, an `Flag` is a set of wrapped constant `int`
     values that can be combined in any combination to make a special value.
     This is a more efficient way of combining things like permissions together
-    into a single integral value, and works by setting individual `1`s and `0`s
+    into a single integral value, and works by setting the individual `1` and `0`
     on the binary representation of the integer.
 
     This implementation has extra features, in that it will actively behave

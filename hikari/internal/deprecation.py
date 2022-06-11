@@ -43,19 +43,19 @@ def warn_deprecated(obj: typing.Any, additional_information: str, /, *, stack_le
 
     Parameters
     ----------
-    obj: typing.Any
+    obj : typing.Any
         The object that is deprecated.
 
         Possible values are:
         - A class
         - A function/method
         - An argument
-    additional_information: str
+    additional_information : str
         Additional information on the deprecation for the user.
 
     Other Parameters
     ----------------
-    stack_level: int
+    stack_level : int
         The stack level for the warning. Defaults to `3`.
     """
     if inspect.isclass(obj):
@@ -79,11 +79,11 @@ def deprecated(deprecated_version: str, removal_version: str, additional_informa
 
     Parameters
     ----------
-    deprecated_version: str
+    deprecated_version : str
         The version this function or object is deprecated in.
-    removal_version: str
+    removal_version : str
         The version this function or object will be removed in.
-    additional_information: str
+    additional_information : str
         Additional information on the deprecation for the user.
     """
 

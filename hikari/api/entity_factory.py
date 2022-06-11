@@ -1040,7 +1040,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        permission: hikari.commands.CommandPermission
+        permission : hikari.commands.CommandPermission
             The command permission object to serialize.
 
         Returns
@@ -1082,8 +1082,25 @@ class EntityFactory(abc.ABC):
         """
 
     @abc.abstractmethod
+    def deserialize_autocomplete_interaction(
+        self, payload: data_binding.JSONObject
+    ) -> command_interactions.AutocompleteInteraction:
+        """Parse a raw payload from Discord into an autocomplete interaction object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.interactions.command_interactions.AutocompleteInteraction
+            The deserialized autocomplete interaction object.
+        """
+
+    @abc.abstractmethod
     def deserialize_interaction(self, payload: data_binding.JSONObject) -> base_interactions.PartialInteraction:
-        """Parse a raw payload from Discord into a interaction object.
+        """Parse a raw payload from Discord into an interaction object.
 
         .. note::
             This isn't required to implement logic for deserializing
@@ -1112,7 +1129,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        option: hikari.commands.CommandOption
+        option : hikari.commands.CommandOption
             The command option object to serialize.
 
         Returns

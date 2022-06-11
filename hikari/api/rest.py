@@ -77,6 +77,11 @@ class TokenStrategy(abc.ABC):
     async def acquire(self, client: RESTClient) -> str:
         """Acquire an authorization token (including the prefix).
 
+        Parameters
+        ----------
+        client : hikari.api.rest.RESTClient
+            The rest client to use to acquire the token.
+
         Returns
         -------
         str
@@ -221,9 +226,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        name : hikari.undefined.UndefinedOr[[str]
+        name : hikari.undefined.UndefinedOr[str]
             If provided, the new name for the channel.
-        position : hikari.undefined.UndefinedOr[[int]
+        position : hikari.undefined.UndefinedOr[int]
             If provided, the new position for the channel.
         topic : hikari.undefined.UndefinedOr[str]
             If provided, the new topic for the channel.
@@ -231,7 +236,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, whether the channel should be marked as NSFW or not.
         bitrate : hikari.undefined.UndefinedOr[int]
             If provided, the new bitrate for the channel.
-        video_quality_mode: hikari.undefined.UndefinedOr[typing.Union[hikari.channels.VideoQualityMode, int]]
+        video_quality_mode : hikari.undefined.UndefinedOr[typing.Union[hikari.channels.VideoQualityMode, int]]
             If provided, the new video quality mode for the channel.
         user_limit : hikari.undefined.UndefinedOr[int]
             If provided, the new user limit in the channel.
@@ -762,14 +767,14 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Examples
         --------
-        ```py
-        # Trigger typing just once.
-        await rest.trigger_typing(channel)
+        .. code-block:: python
 
-        # Trigger typing repeatedly for 1 minute.
-        async with rest.trigger_typing(channel):
-            await asyncio.sleep(60)
-        ```
+            # Trigger typing just once.
+            await rest.trigger_typing(channel)
+
+            # Trigger typing repeatedly for 1 minute.
+            async with rest.trigger_typing(channel):
+                await asyncio.sleep(60)
 
         .. warning::
             Sending a message to the channel will cause the typing indicator
@@ -942,13 +947,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> iterators.LazyIterator[messages_.Message]:
         """Browse the message history for a given text channel.
 
-        Notes
-        -----
-        This call is not a coroutine function, it returns a special type of
-        lazy iterator that will perform API calls as you iterate across it,
-        thus any errors documented below will happen then.
+        .. note::
+            This call is not a coroutine function, it returns a special type of
+            lazy iterator that will perform API calls as you iterate across it,
+            thus any errors documented below will happen then.
 
-        See `hikari.iterators` for the full API for this iterator type.
+            See `hikari.iterators` for the full API for this iterator type.
 
         Parameters
         ----------
@@ -1288,20 +1292,19 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             you may provide to this call is the `flags` parameter. Anything
             else will result in a `hikari.errors.ForbiddenError` being raised.
 
-        Notes
-        -----
-        Mentioning everyone, roles, or users in message edits currently
-        will not send a push notification showing a new mention to people
-        on Discord. It will still highlight in their chat as if they
-        were mentioned, however.
+        .. note::
+            Mentioning everyone, roles, or users in message edits currently
+            will not send a push notification showing a new mention to people
+            on Discord. It will still highlight in their chat as if they
+            were mentioned, however.
 
-        Also important to note that if you specify a text `content`, `mentions_everyone`,
-        `mentions_reply`, `user_mentions`, and `role_mentions` will default
-        to `False` as the message will be re-parsed for mentions. This will
-        also occur if only one of the four are specified
+            Also important to note that if you specify a text `content`, `mentions_everyone`,
+            `mentions_reply`, `user_mentions`, and `role_mentions` will default
+            to `False` as the message will be re-parsed for mentions. This will
+            also occur if only one of the four are specified
 
-        This is a limitation of Discord's design. If in doubt, specify all
-        four of them each time.
+            This is a limitation of Discord's design. If in doubt, specify all
+            four of them each time.
 
         Parameters
         ----------
@@ -1360,7 +1363,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If this is `None` then any present embeds are removed.
             Otherwise, the new embeds that were provided will be used as the
             replacement.
-        replace_attachments: bool
+        replace_attachments : bool
             Whether to replace the attachments with the provided ones. Defaults
             to `False`.
 
@@ -1726,7 +1729,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         message : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
             The message to delete a reaction from. This may be the
             object or the ID of an existing message.
-        user: hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
+        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
             Object or ID of the user to remove the reaction of.
         emoji : typing.Union[str, hikari.emojis.Emoji]
             Object or name of the emoji to react with.
@@ -1817,13 +1820,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> iterators.LazyIterator[users.User]:
         """Fetch reactions for an emoji from a message.
 
-        Notes
-        -----
-        This call is not a coroutine function, it returns a special type of
-        lazy iterator that will perform API calls as you iterate across it,
-        thus any errors documented below will happen then.
+        .. note::
+            This call is not a coroutine function, it returns a special type of
+            lazy iterator that will perform API calls as you iterate across it,
+            thus any errors documented below will happen then.
 
-        See `hikari.iterators` for the full API for this iterator type.
+            See `hikari.iterators` for the full API for this iterator type.
 
         Parameters
         ----------
@@ -2208,7 +2210,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         webhook : typing.Union[hikari.snowflakes.Snowflakeish, hikari.webhooks.ExecutableWebhook]
             The webhook to execute. This may be the object
             or the ID of an existing webhook.
-        token: str
+        token : str
             The webhook token.
         content : hikari.undefined.UndefinedOr[typing.Any]
             If provided, the message contents. If
@@ -2355,7 +2357,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         webhook : typing.Union[hikari.snowflakes.Snowflakeish, hikari.webhooks.ExecutableWebhook]
             The webhook to execute. This may be the object
             or the ID of an existing webhook.
-        token: str
+        token : str
             The webhook token.
         message : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
             The message to fetch. This may be the object or the ID of an
@@ -2415,27 +2417,26 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> messages_.Message:
         """Edit a message sent by a webhook.
 
-        Notes
-        -----
-        Mentioning everyone, roles, or users in message edits currently
-        will not send a push notification showing a new mention to people
-        on Discord. It will still highlight in their chat as if they
-        were mentioned, however.
+         .. note::
+            Mentioning everyone, roles, or users in message edits currently
+            will not send a push notification showing a new mention to people
+            on Discord. It will still highlight in their chat as if they
+            were mentioned, however.
 
-        Also important to note that if you specify a text `content`, `mentions_everyone`,
-        `mentions_reply`, `user_mentions`, and `role_mentions` will default
-        to `False` as the message will be re-parsed for mentions. This will
-        also occur if only one of the four are specified
+            Also important to note that if you specify a text `content`, `mentions_everyone`,
+            `mentions_reply`, `user_mentions`, and `role_mentions` will default
+            to `False` as the message will be re-parsed for mentions. This will
+            also occur if only one of the four are specified
 
-        This is a limitation of Discord's design. If in doubt, specify all
-        four of them each time.
+            This is a limitation of Discord's design. If in doubt, specify all
+            four of them each time.
 
         Parameters
         ----------
         webhook : typing.Union[hikari.snowflakes.Snowflakeish, hikari.webhooks.ExecutableWebhook]
             The webhook to execute. This may be the object
             or the ID of an existing webhook.
-        token: str
+        token : str
             The webhook token.
         message : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
             The message to delete. This may be the object or the ID of
@@ -2489,7 +2490,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If this is `None` then any present embeds are removed.
             Otherwise, the new embeds that were provided will be used as the
             replacement.
-        replace_attachments: bool
+        replace_attachments : bool
             Whether to replace the attachments with the provided ones. Defaults
             to `False`.
 
@@ -2567,7 +2568,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         webhook : typing.Union[hikari.snowflakes.Snowflakeish, hikari.webhooks.ExecutableWebhook]
             The webhook to execute. This may be the object
             or the ID of an existing webhook.
-        token: str
+        token : str
             The webhook token.
         message : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
             The message to delete. This may be the object or the ID of
@@ -2822,13 +2823,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> iterators.LazyIterator[applications.OwnGuild]:
         """Fetch the token's associated guilds.
 
-        Notes
-        -----
-        This call is not a coroutine function, it returns a special type of
-        lazy iterator that will perform API calls as you iterate across it,
-        thus any errors documented below will happen then.
+        .. note::
+            This call is not a coroutine function, it returns a special type of
+            lazy iterator that will perform API calls as you iterate across it,
+            thus any errors documented below will happen then.
 
-        See `hikari.iterators` for the full API for this iterator type.
+            See `hikari.iterators` for the full API for this iterator type.
 
         Other Parameters
         ----------------
@@ -3319,7 +3319,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Returns
         -------
         hikari.users.User
-            The requested user
+            The requested user.
 
         Raises
         ------
@@ -3353,13 +3353,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> iterators.LazyIterator[audit_logs.AuditLog]:
         """Fetch pages of the guild's audit log.
 
-        Notes
-        -----
-        This call is not a coroutine function, it returns a special type of
-        lazy iterator that will perform API calls as you iterate across it,
-        thus any errors documented below will happen then.
+        .. note::
+            This call is not a coroutine function, it returns a special type of
+            lazy iterator that will perform API calls as you iterate across it,
+            thus any errors documented below will happen then.
 
-        See `hikari.iterators` for the full API for this iterator type.
+            See `hikari.iterators` for the full API for this iterator type.
 
         Parameters
         ----------
@@ -3845,7 +3844,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        description: hikari.undefined.UndefinedOr[str]
+        description : hikari.undefined.UndefinedOr[str]
             If provided, the description of the sticker.
         reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
@@ -3998,13 +3997,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     def guild_builder(self, name: str, /) -> special_endpoints.GuildBuilder:
         """Make a guild builder to create a guild with.
 
-        Notes
-        -----
-        This endpoint can only be used by bots in less than 10 guilds.
+        .. note::
+            This endpoint can only be used by bots in less than 10 guilds.
 
-        This call is not a coroutine function, it returns a special type of
-        lazy iterator that will perform API calls as you iterate across it,
-        thus any errors documented below will happen then.
+        .. note::
+            This call is not a coroutine function, it returns a special type of
+            lazy iterator that will perform API calls as you iterate across it,
+            thus any errors documented below will happen then.
+
+            See `hikari.iterators` for the full API for this iterator type.
 
         Parameters
         ----------
@@ -4040,7 +4041,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         See Also
         --------
-        `hikari.api.special_endpoints.GuildBuilder`
+        GuildBuilder : `hikari.api.special_endpoints.GuildBuilder`.
         """
 
     @abc.abstractmethod
@@ -4500,7 +4501,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the bitrate for the channel. Must be
             between 8000 and 96000 or 8000 and 128000 for VIP
             servers.
-        video_quality_mode: hikari.undefined.UndefinedOr[typing.Union[hikari.channels.VideoQualityMode, int]]
+        video_quality_mode : hikari.undefined.UndefinedOr[typing.Union[hikari.channels.VideoQualityMode, int]]
             If provided, the new video quality mode for the channel.
         permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
             If provided, the permission overwrites for the channel.
@@ -4785,13 +4786,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             gateway. If you don't have the intents you can use `search_members`
             which doesn't require any intents.
 
-        Notes
-        -----
-        This call is not a coroutine function, it returns a special type of
-        lazy iterator that will perform API calls as you iterate across it,
-        thus any errors documented below will happen then.
+        .. note::
+            This call is not a coroutine function, it returns a special type of
+            lazy iterator that will perform API calls as you iterate across it,
+            thus any errors documented below will happen then.
 
-        See `hikari.iterators` for the full API for this iterator type.
+            See `hikari.iterators` for the full API for this iterator type.
 
         Parameters
         ----------
@@ -5076,11 +5076,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Parameters
         ----------
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
-            The guild to edit. This may be the object
-            or the ID of an existing guild.
+            The guild to edit.
+
+            This may be the object or the ID of an existing guild.
         nick : typing.Optional[str]
-            The new nick. If `None`,
-            will remove the nick.
+            The new nick.
+
+            If `None`, will remove the nick.
 
         Other Parameters
         ----------------
@@ -5453,7 +5455,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> iterators.LazyIterator[guilds.GuildBan]:
         """Fetch the bans of a guild.
 
-        !!! note
+        .. note::
             This call is not a coroutine function, it returns a special type of
             lazy iterator that will perform API calls as you iterate across it.
             See `hikari.iterators` for the full API for this iterator type.
@@ -5864,7 +5866,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------------
         days : hikari.undefined.UndefinedOr[int]
             If provided, number of days to count prune for.
-        compute_prune_count: hikari.snowflakes.SnowflakeishOr[bool]
+        compute_prune_count : hikari.snowflakes.SnowflakeishOr[bool]
             If provided, whether to return the prune count. This is discouraged
             for large guilds.
         include_roles : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole]]
@@ -6660,9 +6662,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+        application : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to fetch a command for.
-        command: hikari.snowflakes.SnowflakeishOr[hikari.commands.PartialCommand]
+        command : hikari.snowflakes.SnowflakeishOr[hikari.commands.PartialCommand]
             Object or ID of the command to fetch.
 
         Other Parameters
@@ -6710,7 +6712,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+        application : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to fetch the commands for.
 
         Other Parameters
@@ -6767,7 +6769,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+        application : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to create a command for.
         name : str
             The command's name. This should match the regex `^[\w-]{1,32}$` in
@@ -6835,7 +6837,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+        application : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to create a command for.
         name : str
             The command's name. This should match the regex `^[\w-]{1,32}$` in
@@ -6902,7 +6904,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+        application : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to create a command for.
         type : typing.Union[hikari.commands.CommandType, int]
             The type of menu command to make.
@@ -6969,9 +6971,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+        application : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to create a command for.
-        commands: typing.Sequence[hikari.api.special_endpoints.CommandBuilder]
+        commands : typing.Sequence[hikari.api.special_endpoints.CommandBuilder]
             A sequence of up to 100 initialised command builder objects of the
             commands to set for this the application.
 
@@ -7027,7 +7029,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+        application : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to edit a command for.
         command : hikari.snowflakes.SnowflakeishOr[hikari.commands.PartialCommand]
             Object or ID of the command to modify.
@@ -7089,7 +7091,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+        application : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to delete a command for.
         command : hikari.snowflakes.SnowflakeishOr[hikari.commands.PartialCommand]
             Object or ID of the command to delete.
@@ -7134,7 +7136,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+        application : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to fetch the command permissions for.
         guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
             Object or ID of the guild to fetch the command permissions for.
@@ -7178,11 +7180,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+        application : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to fetch the command permissions for.
         guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
             Object or ID of the guild to fetch the command permissions for.
-        command: hikari.snowflakes.SnowflakeishOr[hikari.commands.PartialCommand]
+        command : hikari.snowflakes.SnowflakeishOr[hikari.commands.PartialCommand]
             Object or ID of the command to fetch the command permissions for.
 
         Returns
@@ -7230,7 +7232,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+        application : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to set the command permissions for.
         guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
             Object or ID of the guild to set the command permissions for.
@@ -7284,7 +7286,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+        application : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to set the command permissions for.
         guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
             Object or ID of the guild to set the command permissions for.
@@ -7329,7 +7331,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        type: typing.Union[hikari.interactions.base_interactions.ResponseType, int]
+        type : typing.Union[hikari.interactions.base_interactions.ResponseType, int]
             The type of deferred message response this builder is for.
 
         Returns
@@ -7375,9 +7377,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+        application : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to fetch a command for.
-        token: str
+        token : str
             Token of the interaction to get the initial response for.
 
         Returns
@@ -7562,24 +7564,23 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> messages_.Message:
         """Edit the initial response to a command interaction.
 
-        Notes
-        -----
-        Mentioning everyone, roles, or users in message edits currently
-        will not send a push notification showing a new mention to people
-        on Discord. It will still highlight in their chat as if they
-        were mentioned, however.
+        .. note::
+            Mentioning everyone, roles, or users in message edits currently
+            will not send a push notification showing a new mention to people
+            on Discord. It will still highlight in their chat as if they
+            were mentioned, however.
 
-        Also important to note that if you specify a text `content`, `mentions_everyone`,
-        `mentions_reply`, `user_mentions`, and `role_mentions` will default
-        to `False` as the message will be re-parsed for mentions. This will
-        also occur if only one of the four are specified
+            Also important to note that if you specify a text `content`, `mentions_everyone`,
+            `mentions_reply`, `user_mentions`, and `role_mentions` will default
+            to `False` as the message will be re-parsed for mentions. This will
+            also occur if only one of the four are specified
 
-        This is a limitation of Discord's design. If in doubt, specify all
-        four of them each time.
+            This is a limitation of Discord's design. If in doubt, specify all
+            four of them each time.
 
         Parameters
         ----------
-        application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+        application : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to edit a command response for.
         token : str
             The interaction's token.
@@ -7632,7 +7633,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If this is `None` then any present embeds are removed.
             Otherwise, the new embeds that were provided will be used as the
             replacement.
-        replace_attachments: bool
+        replace_attachments : bool
             Whether to replace the attachments with the provided ones. Defaults
             to `False`.
 
@@ -7700,7 +7701,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+        application : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to delete a command response for.
         token : str
             The interaction's token.
@@ -7800,7 +7801,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Returns
         -------
         hikari.scheduled_events.ScheduledEvent
-            The scheduled event
+            The scheduled event.
 
         Raises
         ------
@@ -8258,13 +8259,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> iterators.LazyIterator[scheduled_events.ScheduledEventUser]:
         """Asynchronously iterate over the users who're subscribed to a scheduled event.
 
-        Notes
-        -----
-        This call is not a coroutine function, it returns a special type of
-        lazy iterator that will perform API calls as you iterate across it,
-        thus any errors documented below will happen then.
+        .. note::
+            This call is not a coroutine function, it returns a special type of
+            lazy iterator that will perform API calls as you iterate across it,
+            thus any errors documented below will happen then.
 
-        See `hikari.iterators` for the full API for this iterator type.
+            See `hikari.iterators` for the full API for this iterator type.
 
         Parameters
         ----------

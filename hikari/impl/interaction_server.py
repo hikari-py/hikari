@@ -475,7 +475,7 @@ class InteractionServer(interaction_server.InteractionServer):
         enable_signal_handlers : typing.Optional[bool]
             Defaults to `True` if this is started in the main thread.
 
-            If on a __non-Windows__ OS with builtin support for kernel-level
+            If on a non-Windows OS with builtin support for kernel-level
             POSIX signals, then setting this to `True` will allow
             treating keyboard interrupts and other OS signals to safely shut
             down the application as calls to shut down the application properly

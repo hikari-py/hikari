@@ -624,7 +624,7 @@ class Cache(abc.ABC):
         -------
         CacheView[hikari.snowflakes.Snowflake, CacheView[hikari.snowflakes.Snowflake, hikari.voices.VoiceState]]
             A view of guild IDs to views of user IDs to objects of the voice
-            states that were found in the cache,
+            states that were found in the cache.
         """  # noqa E501 - Line too long
 
     @abc.abstractmethod
@@ -949,7 +949,7 @@ class MutableCache(Cache, abc.ABC):
     def update_guild_channel(
         self, channel: channels.GuildChannel, /
     ) -> typing.Tuple[typing.Optional[channels.GuildChannel], typing.Optional[channels.GuildChannel]]:
-        """Update a guild channel in the cache,
+        """Update a guild channel in the cache.
 
         Parameters
         ----------
@@ -1190,7 +1190,7 @@ class MutableCache(Cache, abc.ABC):
         typing.Tuple[typing.Optional[hikari.guilds.Member], typing.Optional[hikari.guilds.Member]]
             A tuple of the old cached member object if found (else `None`)
             and the new cached member object if it could be cached (else
-            `None`)
+            `None`).
         """
 
     @abc.abstractmethod

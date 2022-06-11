@@ -149,7 +149,7 @@ class MessageFlag(enums.Flag):
     """Additional flags for message options."""
 
     NONE = 0
-    """None"""
+    """None."""
 
     CROSSPOSTED = 1 << 0
     """This message has been published to subscribed channels via channel following."""
@@ -284,39 +284,39 @@ class Mentions:
 
         If the message is not crossposted, this will always be empty.
         """
-        deprecation.warn_deprecated("Mentions.channels", alternative="channel_mentions in the base message object")
+        deprecation.warn_deprecated("Mentions.channels", "Use `channel_mentions` in the base message object instead")
         return self._message.channel_mentions
 
     @property
     def channels_ids(self) -> undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]]:
         """Sequence of IDs of the channels that were mentioned in the message."""
         deprecation.warn_deprecated(
-            "Mentions.channels_ids", alternative="channel_mention_ids in the base message object"
+            "Mentions.channels_ids", "Use `channel_mention_ids` in the base message object instead"
         )
         return self._message.channel_mention_ids
 
     @property
     def users(self) -> undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, users_.User]]:
         """Users who were notified by their mention in the message."""
-        deprecation.warn_deprecated("Mentions.users", alternative="user_mentions in the base message object")
+        deprecation.warn_deprecated("Mentions.users", "Use `user_mentions` in the base message object instead")
         return self._message.user_mentions
 
     @property
     def user_ids(self) -> undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]]:
         """Sequence of IDs of the users that were mentioned in the message."""
-        deprecation.warn_deprecated("Mentions.user_ids", alternative="user_mentions_ids in the base message object")
+        deprecation.warn_deprecated("Mentions.user_ids", "Use `user_mentions_ids` in the base message object instead")
         return self._message.user_mentions_ids
 
     @property
     def role_ids(self) -> undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]]:
         """Sequence of IDs of roles that were notified by their mention in the message."""
-        deprecation.warn_deprecated("Mentions.role_ids", alternative="role_mention_ids in the base message object")
+        deprecation.warn_deprecated("Mentions.role_ids", "Use `role_mention_ids` in the base message object instead")
         return self._message.role_mention_ids
 
     @property
     def everyone(self) -> undefined.UndefinedOr[bool]:
         """Whether the message notifies using `@everyone` or `@here`."""
-        deprecation.warn_deprecated("Mentions.everyone", alternative="mentions_everyone in the base message object")
+        deprecation.warn_deprecated("Mentions.everyone", "Use `mentions_everyone` in the base message object instead")
         return self._message.mentions_everyone
 
     def get_members(self) -> undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, guilds.Member]]:
@@ -341,7 +341,7 @@ class Mentions:
             in `notified_users` may not be present here.
         """
         deprecation.warn_deprecated(
-            "Mentions.get_members", alternative="get_member_mentions in the base message object"
+            "Mentions.get_members", "Use `get_member_mentions` in the base message object instead"
         )
         return self._message.get_member_mentions()
 
@@ -367,7 +367,7 @@ class Mentions:
             in `notifies_role_ids` may not be present here. This is a limitation
             of Discord, again.
         """
-        deprecation.warn_deprecated("Mentions.get_roles", alternative="get_role_mentions in the base message object")
+        deprecation.warn_deprecated("Mentions.get_roles", "Use `get_role_mentions` in the base message object instead")
         return self._message.get_role_mentions()
 
 
@@ -383,7 +383,7 @@ class MessageReference:
     app: traits.RESTAware = attr.field(
         repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
     )
-    """The client application that models may use for procedures."""
+    """Client application that models may use for procedures."""
 
     id: typing.Optional[snowflakes.Snowflake] = attr.field(repr=True)
     """The ID of the original message.
@@ -553,7 +553,7 @@ The following values are valid for this:
 InteractiveButtonTypes: typing.AbstractSet[InteractiveButtonTypesT] = frozenset(
     [ButtonStyle.PRIMARY, ButtonStyle.SECONDARY, ButtonStyle.SUCCESS, ButtonStyle.DANGER]
 )
-"""Set of the `ButtonType`s which are valid for interactive buttons.
+"""Set of `ButtonType` which are valid for interactive buttons.
 
 The following values are included in this:
 
@@ -728,7 +728,7 @@ class PartialMessage(snowflakes.Unique):
     app: traits.RESTAware = attr.field(
         repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
     )
-    """The client application that models may use for procedures."""
+    """Client application that models may use for procedures."""
 
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
     """The ID of this entity."""
@@ -795,7 +795,7 @@ class PartialMessage(snowflakes.Unique):
     )
     """Users who were notified by their mention in the message.
 
-    !!! warning
+    .. warning::
         If the contents have not mutated and this is a message update event,
         some fields that are not affected may be empty instead.
 
@@ -807,7 +807,7 @@ class PartialMessage(snowflakes.Unique):
     )
     """IDs of roles that were notified by their mention in the message.
 
-    !!! warning
+    .. warning::
         If the contents have not mutated and this is a message update event,
         some fields that are not affected may be empty instead.
 
@@ -821,7 +821,7 @@ class PartialMessage(snowflakes.Unique):
 
     If the message is not crossposted, this will always be empty.
 
-    !!! warning
+    .. warning::
         If the contents have not mutated and this is a message update event,
         some fields that are not affected may be empty instead.
 
@@ -831,7 +831,7 @@ class PartialMessage(snowflakes.Unique):
     mentions_everyone: undefined.UndefinedOr[bool] = attr.field(hash=False, eq=False, repr=False)
     """Whether the message notifies using `@everyone` or `@here`.
 
-    !!! warning
+    .. warning::
         If the contents have not mutated and this is a message update event,
         some fields that are not affected may be empty instead.
 
@@ -916,7 +916,7 @@ class PartialMessage(snowflakes.Unique):
 
         If the message is not crossposted, this will always be empty.
 
-        !!! warning
+        .. warning::
             If the contents have not mutated and this is a message update event,
             some fields that are not affected may be empty instead.
 
@@ -931,7 +931,7 @@ class PartialMessage(snowflakes.Unique):
     def user_mentions_ids(self) -> undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]]:
         """Ids of the users who were notified by their mention in the message.
 
-        !!! warning
+        .. warning::
             If the contents have not mutated and this is a message update event,
             some fields that are not affected may be empty instead.
 
@@ -947,13 +947,13 @@ class PartialMessage(snowflakes.Unique):
 
         If this message was sent in a DM, this will always be empty.
 
-        !!! warning
+        .. warning::
             This will only return valid results on gateway events. For REST
             endpoints, this will potentially be empty. This is a limitation of
             Discord's API, as they do not consistently notify of the ID of the
             guild a message was sent in.
 
-        !!! note
+        .. note::
             If you are using a stateless application such as a stateless bot
             or a REST-only client, this will always be empty. Furthermore,
             if you are running a stateful bot and have the GUILD_MEMBERS
@@ -980,13 +980,13 @@ class PartialMessage(snowflakes.Unique):
 
         If this message was sent in a DM, this will always be empty.
 
-        !!! warning
+        .. warning::
             This will only return valid results on gateway events. For REST
             endpoints, this will potentially be empty. This is a limitation of
             Discord's API, as they do not consistently notify of the ID of the
             guild a message was sent in.
 
-        !!! note
+        .. note::
             If you are using a stateless application such as a stateless bot
             or a REST-only client, this will always be empty. Furthermore,
             if you are running a stateful bot and have the GUILD intent
@@ -1157,7 +1157,7 @@ class PartialMessage(snowflakes.Unique):
             If this is `None` then any present embeds are removed.
             Otherwise, the new embeds that were provided will be used as the
             replacement.
-        replace_attachments: bool
+        replace_attachments : bool
             Whether to replace the attachments with the provided ones. Defaults
             to `False`.
 
@@ -1443,7 +1443,7 @@ class PartialMessage(snowflakes.Unique):
 
         Parameters
         ----------
-        emoji: typing.Union[str, hikari.emojis.Emoji]
+        emoji : typing.Union[str, hikari.emojis.Emoji]
             Object or name of the emoji to react with.
 
             Note that if the emoji is an `hikari.emojis.CustomEmoji`
@@ -1461,19 +1461,19 @@ class PartialMessage(snowflakes.Unique):
 
         Examples
         --------
-        ```py
-        # Using a unicode emoji.
-        await message.add_reaction("👌")
+        .. code-block:: python
 
-        # Using a unicode emoji name.
-        await message.add_reaction("\N{OK HAND SIGN}")
+            # Using a unicode emoji.
+            await message.add_reaction("👌")
 
-        # Using the name and id.
-        await message.add_reaction("rooAYAYA", 705837374319493284)
+            # Using a unicode emoji name.
+            await message.add_reaction("\N{OK HAND SIGN}")
 
-        # Using an Emoji-derived object.
-        await message.add_reaction(some_emoji_object)
-        ```
+            # Using the name and id.
+            await message.add_reaction("rooAYAYA", 705837374319493284)
+
+            # Using an Emoji-derived object.
+            await message.add_reaction(some_emoji_object)
 
         Raises
         ------
@@ -1538,26 +1538,26 @@ class PartialMessage(snowflakes.Unique):
 
         Examples
         --------
-        ```py
-        # Using a unicode emoji and removing the bot's reaction from this
-        # reaction.
-        await message.remove_reaction("\N{OK HAND SIGN}")
+        .. code-block:: python
 
-        # Using a custom emoji's name and ID to remove a specific user's
-        # reaction from this reaction.
-        await message.remove_reaction("a:Distraction", 745991233939439616, user=some_user)
+            # Using a unicode emoji and removing the bot's reaction from this
+            # reaction.
+            await message.remove_reaction("\N{OK HAND SIGN}")
 
-        # Using a unicode emoji and removing a specific user from this
-        # reaction.
-        await message.remove_reaction("\N{OK HAND SIGN}", user=some_user)
+            # Using a custom emoji's name and ID to remove a specific user's
+            # reaction from this reaction.
+            await message.remove_reaction("a:Distraction", 745991233939439616, user=some_user)
 
-        # Using the name and id.
-        await message.add_reaction("rooAYAYA", 705837374319493284)
+            # Using a unicode emoji and removing a specific user from this
+            # reaction.
+            await message.remove_reaction("\N{OK HAND SIGN}", user=some_user)
 
-        # Using an Emoji object and removing a specific user from this
-        # reaction.
-        await message.remove_reaction(some_emoji_object, user=some_user)
-        ```
+            # Using the name and id.
+            await message.add_reaction("rooAYAYA", 705837374319493284)
+
+            # Using an Emoji object and removing a specific user from this
+            # reaction.
+            await message.remove_reaction(some_emoji_object, user=some_user)
 
         Raises
         ------
@@ -1622,17 +1622,17 @@ class PartialMessage(snowflakes.Unique):
 
         Examples
         --------
-        ```py
-        # Using a unicode emoji and removing all 👌 reacts from the message.
-        # reaction.
-        await message.remove_all_reactions("\N{OK HAND SIGN}")
+        .. code-block:: python
 
-        # Using the name and id.
-        await message.add_reaction("rooAYAYA", 705837374319493284)
+            # Using a unicode emoji and removing all 👌 reacts from the message.
+            # reaction.
+            await message.remove_all_reactions("\N{OK HAND SIGN}")
 
-        # Removing all reactions entirely.
-        await message.remove_all_reactions()
-        ```
+            # Using the name and id.
+            await message.add_reaction("rooAYAYA", 705837374319493284)
+
+            # Removing all reactions entirely.
+            await message.remove_all_reactions()
 
         Raises
         ------

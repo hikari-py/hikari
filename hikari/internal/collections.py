@@ -142,18 +142,15 @@ class LimitedCapacityCacheMap(ExtendedMutableMapping[KeyT, ValueT]):
 
     Parameters
     ----------
+    source : typing.Optional[typing.Dict[KeyT, ValueT]]
+        A source dictionary of keys to values to create this from.
     limit : int
         The limit for how many objects should be stored by this mapping before
         it starts removing the oldest entries.
-
-    Other Parameters
-    ----------------
-    source : typing.Optional[typing.Dict[KeyT, ValueT]]
-        A source dictionary of keys to values to create this from.
     on_expire : typing.Optional[typing.Callable[[ValueT], None]]
         A function to call each time an item is garbage collected from this
         map. This should take one positional argument of the same type stored
-        in this mapping as the value and should return `None.
+        in this mapping as the value and should return `None`.
 
         This will always be called after the entry has been removed.
     """

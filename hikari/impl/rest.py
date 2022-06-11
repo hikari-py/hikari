@@ -121,7 +121,7 @@ class ClientCredentialsStrategy(rest_api.TokenStrategy):
 
     Parameters
     ----------
-    client: typing.Optional[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]]
+    client : typing.Optional[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]]
         Object or ID of the application this client credentials strategy should
         authorize as.
     client_secret : typing.Optional[str]
@@ -348,14 +348,14 @@ class RESTApp(traits.ExecutorAware):
 
         Examples
         --------
-        ```py
-        rest_app = RESTApp()
+        .. code-block:: python
 
-        # Using the returned client as a context manager to implicitly start
-        # and stop it.
-        async with rest_app.acquire("A token", "Bot") as client:
-            user = await client.fetch_my_user()
-        ```
+            rest_app = RESTApp()
+
+            # Using the returned client as a context manager to implicitly start
+            # and stop it.
+            async with rest_app.acquire("A token", "Bot") as client:
+                user = await client.fetch_my_user()
 
         Parameters
         ----------
@@ -520,9 +520,9 @@ class RESTClientImpl(rest_api.RESTClient):
     Raises
     ------
     ValueError
-        * If `token_type` is provided when a token strategy is passed for `token`.
-        * if `token_type` is left as `None` when a string is passed for `token`.
-        * If the a value more than 5 is provided for `max_retries`
+        If `token_type` is provided when a token strategy is passed for `token`, if
+        `token_type` is left as `None` when a string is passed for `token` or if a
+        value greater than 5 is provided for `max_retries`.
     """
 
     __slots__: typing.Sequence[str] = (

@@ -28,10 +28,7 @@ EXAMPLE_SCRIPTS = "examples"
 
 # Generating documentation and artifacts.
 ARTIFACT_DIRECTORY = "public"
-PAGES_DIRECTORY = "pages"
 DOCUMENTATION_DIRECTORY = "docs"
-ROOT_INDEX_SOURCE = "index.html"
-LOGO_SOURCE = "logo.png"
 
 # Linting and test configs.
 FLAKE8_REPORT = _os.path.join(ARTIFACT_DIRECTORY, "flake8")

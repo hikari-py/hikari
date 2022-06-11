@@ -385,15 +385,15 @@ class CommandInteraction(BaseCommandInteraction, base_interactions.MessageRespon
 
         Examples
         --------
-        ```py
-        async def handle_command_interaction(interaction: CommandInteraction) -> InteractionMessageBuilder:
-            return (
-                interaction
-                .build_response()
-                .add_embed(Embed(description="Hi there"))
-                .set_content("Konnichiwa")
-            )
-        ```
+        .. code-block:: python
+
+            async def handle_command_interaction(interaction: CommandInteraction) -> InteractionMessageBuilder:
+                return (
+                    interaction
+                    .build_response()
+                    .add_embed(Embed(description="Hi there"))
+                    .set_content("Konnichiwa")
+                )
 
         Returns
         -------
@@ -443,19 +443,19 @@ class AutocompleteInteraction(BaseCommandInteraction):
 
         Examples
         --------
-        ```py
-        async def handle_autocomplete_interaction(interaction: AutocompleteInteraction) -> InteractionAutocompleteBuilder:
-            return (
-                interaction
-                .build_response(
-                    [
-                        CommandChoice(name="foo", value="a"),
-                        CommandChoice(name="bar", value="b"),
-                        CommandChoice(name="baz", value="c"),
-                    ]
+        .. code-block:: python
+
+            async def handle_autocomplete_interaction(interaction: AutocompleteInteraction) -> InteractionAutocompleteBuilder:
+                return (
+                    interaction
+                    .build_response(
+                        [
+                            CommandChoice(name="foo", value="a"),
+                            CommandChoice(name="bar", value="b"),
+                            CommandChoice(name="baz", value="c"),
+                        ]
+                    )
                 )
-            )
-        ```
 
         Returns
         -------

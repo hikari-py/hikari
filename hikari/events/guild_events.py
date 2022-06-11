@@ -428,7 +428,7 @@ class EmojisUpdateEvent(GuildEvent):
 
         Returns
         -------
-        typing.Sequence[emojis_.KnownCustomEmoji]
+        typing.Sequence[hikari.emojis.KnownCustomEmoji]
             All emojis in the guild.
         """
         return await self.app.rest.fetch_guild_emojis(self.guild_id)

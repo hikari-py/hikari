@@ -176,13 +176,13 @@ class UnicodeEmoji(str, Emoji):
         match what is on Discord if Discord have failed to keep their emoji
         packs up-to-date with this repository.
 
-        Example
-        -------
-        ```py
-        >>> emoji = hikari.UnicodeEmoji("\N{OK HAND SIGN}")
-        >>> emoji.url
-        'https://raw.githubusercontent.com/twitter/twemoji/master/assets/72x72/1f44c.png'
-        ```
+        Examples
+        --------
+        .. code-block:: python
+
+            >>> emoji = hikari.UnicodeEmoji("\N{OK HAND SIGN}")
+            >>> emoji.url
+            'https://raw.githubusercontent.com/twitter/twemoji/master/assets/72x72/1f44c.png'
         """
         return _TWEMOJI_PNG_BASE_URL + self.filename
 
@@ -336,7 +336,7 @@ class KnownCustomEmoji(CustomEmoji):
     app: traits.RESTAware = attr.field(
         repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
     )
-    """The client application that models may use for procedures."""
+    """Client application that models may use for procedures."""
 
     guild_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=False)
     """The ID of the guild this emoji belongs to."""

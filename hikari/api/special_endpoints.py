@@ -114,68 +114,62 @@ class GuildBuilder(abc.ABC):
     and detailed.
 
     .. note::
-        This is a helper class that is used by `hikari.api.rest.RESTClient`.
-        You should only ever need to use instances of this class that are
-        produced by that API, thus, any details about the constructor are
-        omitted from the following examples for brevity.
+        If you call `add_role`, the default roles provided by Discord will
+        be created. This also applies to the `add_` functions for
+        text channels/voice channels/categories.
+
+    .. note::
+        Functions that return a `hikari.snowflakes.Snowflake` do
+        **not** provide the final ID that the object will have once the
+        API call is made. The returned IDs are only able to be used to
+        re-reference particular objects while building the guild format
+        to allow for the creation of channels within categories,
+        and to provide permission overwrites.
 
     Examples
     --------
     Creating an empty guild:
 
-    ```py
-    guild = await rest.guild_builder("My Server!").create()
-    ```
+    .. code-block:: python
+
+        guild = await rest.guild_builder("My Server!").create()
 
     Creating a guild with an icon:
 
-    ```py
-    from hikari.files import WebResourceStream
+    .. code-block:: python
 
-    guild_builder = rest.guild_builder("My Server!")
-    guild_builder.icon = WebResourceStream("cat.png", "http://...")
-    guild = await guild_builder.create()
-    ```
+        from hikari.files import WebResourceStream
+
+        guild_builder = rest.guild_builder("My Server!")
+        guild_builder.icon = WebResourceStream("cat.png", "http://...")
+        guild = await guild_builder.create()
 
     Adding roles to your guild:
 
-    ```py
-    from hikari.permissions import Permissions
+    .. code-block:: python
 
-    guild_builder = rest.guild_builder("My Server!")
+        from hikari.permissions import Permissions
 
-    everyone_role_id = guild_builder.add_role("@everyone")
-    admin_role_id = guild_builder.add_role("Admins", permissions=Permissions.ADMINISTRATOR)
+        guild_builder = rest.guild_builder("My Server!")
 
-    await guild_builder.create()
-    ```
+        everyone_role_id = guild_builder.add_role("@everyone")
+        admin_role_id = guild_builder.add_role("Admins", permissions=Permissions.ADMINISTRATOR)
+
+        await guild_builder.create()
 
     .. warning::
         The first role must always be the `@everyone` role.
 
     Adding a text channel to your guild:
 
-    ```py
-    guild_builder = rest.guild_builder("My Server!")
+    .. code-block:: python
 
-    category_id = guild_builder.add_category("My safe place")
-    channel_id = guild_builder.add_text_channel("general", parent_id=category_id)
+        guild_builder = rest.guild_builder("My Server!")
 
-    await guild_builder.create()
-    ```
+        category_id = guild_builder.add_category("My safe place")
+        channel_id = guild_builder.add_text_channel("general", parent_id=category_id)
 
-    Notes
-    -----
-    - If you call `add_role`, the default roles provided by Discord will
-        be created. This also applies to the `add_` functions for
-        text channels/voice channels/categories.
-
-    - Functions that return a `hikari.snowflakes.Snowflake` do
-        **not** provide the final ID that the object will have once the
-        API call is made. The returned IDs are only able to be used to
-        re-reference particular objects while building the guild format
-        to allow for the creation of channels within categories,
-        and to provide permission overwrites.
+        await guild_builder.create()
     """
 
     __slots__: typing.Sequence[str] = ()
@@ -299,9 +293,6 @@ class GuildBuilder(abc.ABC):
             If provided, whether to hoist the role.
         mentionable : hikari.undefined.UndefinedOr[bool]
             If provided, whether to make the role mentionable.
-        reason : hikari.undefined.UndefinedOr[str]
-            If provided, the reason that will be recorded in the audit logs.
-            Maximum of 512 characters.
 
         Returns
         -------
@@ -394,9 +385,8 @@ class GuildBuilder(abc.ABC):
             Maximum 21600 seconds.
         permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
             If provided, the permission overwrites for the channel.
-        parent_id : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
-            The category to create the channel under. This may be the
-            object or the ID of an existing category.
+        parent_id : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
+            The ID of the category to create the channel under.
 
         Returns
         -------
@@ -443,7 +433,7 @@ class GuildBuilder(abc.ABC):
             If provided, the bitrate for the channel. Must be
             between 8000 and 96000 or 8000 and 128000 for VIP
             servers.
-        video_quality_mode: hikari.undefined.UndefinedOr[typing.Union[hikari.channels.VideoQualityMode, int]]
+        video_quality_mode : hikari.undefined.UndefinedOr[typing.Union[hikari.channels.VideoQualityMode, int]]
             If provided, the new video quality mode for the channel.
         permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
             If provided, the permission overwrites for the channel.
@@ -452,9 +442,8 @@ class GuildBuilder(abc.ABC):
              `None` here will set it to "auto" mode where the used
              region will be decided based on the first person who connects to it
              when it's empty.
-        parent_id : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
-            The category to create the channel under. This may be the
-            object or the ID of an existing category.
+        parent_id : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
+            The ID of the category to create the channel under.
 
         Returns
         -------
@@ -507,9 +496,8 @@ class GuildBuilder(abc.ABC):
              `None` here will set it to "auto" mode where the used
              region will be decided based on the first person who connects to it
              when it's empty.
-        category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
-            The category to create the channel under. This may be the
-            object or the ID of an existing category.
+        parent_id : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
+            The ID of the category to create the channel under.
 
         Returns
         -------
@@ -787,7 +775,8 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
         Parameters
         ----------
-        tts : Whether this response should trigger text-to-speech processing.
+        tts : bool
+            Whether this response should trigger text-to-speech processing.
 
         Returns
         -------
@@ -845,7 +834,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
         Parameters
         ----------
-        mentions: hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
+        mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
             Either a sequence of object/IDs of the users mentions should be enabled for,
             `False` or `hikari.undefined.UNDEFINED` to disallow any user
             mentions or `True` to allow all user mentions.

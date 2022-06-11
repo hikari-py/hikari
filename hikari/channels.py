@@ -123,7 +123,7 @@ class ChannelFollow:
     app: traits.RESTAware = attr.field(
         repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
     )
-    """The client application that models may use for procedures."""
+    """Client application that models may use for procedures."""
 
     channel_id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
     """Return the channel ID of the channel being followed."""
@@ -137,9 +137,10 @@ class ChannelFollow:
         Returns
         -------
         typing.Union[hikari.channels.GuildNewsChannel, hikari.channels.GuildTextChannel]
-            The channel being followed. While this will usually be
-            `GuildNewsChannel`, if the channel's news status has been removed
-            then this will be a `GuildTextChannel`
+            The channel being followed.
+
+            While this will usually be `GuildNewsChannel`, if the channel's
+            news status has been removed then this will be a `GuildTextChannel`.
 
         Raises
         ------
@@ -244,24 +245,24 @@ class PermissionOverwrite:
     You may sometimes need to make instances of this object to add/edit
     permission overwrites on channels.
 
-    Example
-    -------
+    Examples
+    --------
     Creating a permission overwrite.
 
-    ```py
-    overwrite = PermissionOverwrite(
-        type=PermissionOverwriteType.MEMBER,
-        allow=(
-            Permissions.VIEW_CHANNEL
-            | Permissions.READ_MESSAGE_HISTORY
-            | Permissions.SEND_MESSAGES
-        ),
-        deny=(
-            Permissions.MANAGE_MESSAGES
-            | Permissions.SPEAK
-        ),
-    )
-    ```
+    .. code-block:: python
+
+        overwrite = PermissionOverwrite(
+            type=PermissionOverwriteType.MEMBER,
+            allow=(
+                Permissions.VIEW_CHANNEL
+                | Permissions.READ_MESSAGE_HISTORY
+                | Permissions.SEND_MESSAGES
+            ),
+            deny=(
+                Permissions.MANAGE_MESSAGES
+                | Permissions.SPEAK
+            ),
+        )
     """
 
     id: snowflakes.Snowflake = attr.field(converter=snowflakes.Snowflake, repr=True)
@@ -298,7 +299,7 @@ class PartialChannel(snowflakes.Unique):
     app: traits.RESTAware = attr.field(
         repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
     )
-    """The client application that models may use for procedures."""
+    """Client application that models may use for procedures."""
 
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
     """The ID of this entity."""
@@ -606,16 +607,16 @@ class TextableChannel(PartialChannel):
     def trigger_typing(self) -> special_endpoints.TypingIndicator:
         """Trigger typing in a given channel.
 
-        This returns an object that can either be `await`ed to trigger typing
+        This returns an object that can either be awaited to trigger typing
         once, or used as an async context manager to keep typing until the
         block completes.
 
-        ```py
-        await channel.trigger_typing()   # type for 10s
+        .. code-block:: python
 
-        async with channel.trigger_typing():
-            await asyncio.sleep(35)            # keep typing until this finishes
-        ```
+            await channel.trigger_typing()   # type for 10s
+
+            async with channel.trigger_typing():
+                await asyncio.sleep(35)            # keep typing until this finishes
 
         .. note::
             Sending a message to this channel will stop the typing indicator. If
@@ -1114,9 +1115,9 @@ class GuildChannel(PartialChannel):
 
         Other Parameters
         ----------------
-        name : hikari.undefined.UndefinedOr[[str]
+        name : hikari.undefined.UndefinedOr[str]
             If provided, the new name for the channel.
-        position : hikari.undefined.UndefinedOr[[int]
+        position : hikari.undefined.UndefinedOr[int]
             If provided, the new position for the channel.
         topic : hikari.undefined.UndefinedOr[str]
             If provided, the new topic for the channel.
@@ -1124,7 +1125,7 @@ class GuildChannel(PartialChannel):
             If provided, whether the channel should be marked as NSFW or not.
         bitrate : hikari.undefined.UndefinedOr[int]
             If provided, the new bitrate for the channel.
-        video_quality_mode: hikari.undefined.UndefinedOr[typing.Union[hikari.channels.VideoQualityMode, int]]
+        video_quality_mode : hikari.undefined.UndefinedOr[typing.Union[hikari.channels.VideoQualityMode, int]]
             If provided, the new video quality mode for the channel.
         user_limit : hikari.undefined.UndefinedOr[int]
             If provided, the new user limit in the channel.

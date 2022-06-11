@@ -102,7 +102,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         While mainly supporting the `concurrent.futures.ThreadPoolExecutor`
         implementation in the standard lib, Hikari's file handling systems
         should also work with `concurrent.futures.ProcessPoolExecutor`, which
-        relies on all objects used in IPC to be `pickle`able. Many third-party
+        relies on all objects used in IPC to be pickleable. Many third-party
         libraries will not support this fully though, so your mileage may vary
         on using ProcessPoolExecutor implementations with this parameter.
     force_color : bool
@@ -157,7 +157,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
     max_retries : typing.Optional[int]
         Maximum number of times a request will be retried if
         it fails with a `5xx` status. Defaults to 3 if set to `None`.
-    proxy_settings : typing.Optional[config.ProxySettings]
+    proxy_settings : typing.Optional[hikari.impl.config.ProxySettings]
         Custom proxy settings to use with network-layer logic
         in your application to get through an HTTP-proxy.
     public_key : typing.Union[str, bytes, None]
@@ -436,7 +436,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         enable_signal_handlers : typing.Optional[bool]
             Defaults to `True` if this is started in the main thread.
 
-            If on a __non-Windows__ OS with builtin support for kernel-level
+            If on a non-Windows OS with builtin support for kernel-level
             POSIX signals, then setting this to `True` will allow
             treating keyboard interrupts and other OS signals to safely shut
             down the application as calls to shut down the application properly
@@ -534,7 +534,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         enable_signal_handlers : typing.Optional[bool]
             Defaults to `True` if this is started in the main thread.
 
-            If on a __non-Windows__ OS with builtin support for kernel-level
+            If on a non-Windows OS with builtin support for kernel-level
             POSIX signals, then setting this to `True` will allow
             treating keyboard interrupts and other OS signals to safely shut
             down the application as calls to shut down the application properly
