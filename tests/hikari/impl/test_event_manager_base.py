@@ -443,7 +443,7 @@ class TestEventManagerBase:
             "foo": event_manager_base._Consumer(manager.on_foo, 9, True),
             "bar": event_manager_base._Consumer(manager.on_bar, 105, False),
             "bat": event_manager_base._Consumer(manager.on_bat, 65545, False),
-            "not_decorated": event_manager_base._Consumer(manager.on_not_decorated, -1, True),
+            "not_decorated": event_manager_base._AlwaysEnabledConsumer(manager.on_not_decorated),
         }
 
     def test___init___loads_consumers_when_cacheless(self):
@@ -471,7 +471,7 @@ class TestEventManagerBase:
             "foo": event_manager_base._Consumer(manager.on_foo, 9, False),
             "bar": event_manager_base._Consumer(manager.on_bar, 105, False),
             "bat": event_manager_base._Consumer(manager.on_bat, 65545, False),
-            "not_decorated": event_manager_base._Consumer(manager.on_not_decorated, -1, False),
+            "not_decorated": event_manager_base._AlwaysEnabledConsumer(manager.on_not_decorated),
         }
 
     def test__increment_listener_group_count(self, event_manager):

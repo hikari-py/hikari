@@ -343,7 +343,22 @@ class _Consumer:
 
     @property
     def is_enabled(self) -> bool:
+        """Whether this consumer is enabled."""
         return self.is_caching or self.listener_group_count > 0 or self.waiter_group_count > 0
+
+
+@attr.define(weakref_slot=False)
+class _AlwaysEnabledConsumer(_Consumer):
+    # By using 0 here, we avoid increasing/decreasing listener_group_count and/or waiter_group_count
+    # when a new group gets added/removed.
+    events_bitmask: int = attr.field(init=False, default=0)
+    # <<inherited docstring from _Consumer>>.
+
+    is_caching: bool = attr.field(init=False, default=True)
+    # <<inherited docstring from _Consumer>>.
+
+    is_enabled: bool = attr.field(init=False, default=True)
+    # <<inherited docstring from _Consumer>>.
 
 
 class EventManagerBase(event_manager_.EventManager):
@@ -383,7 +398,7 @@ class EventManagerBase(event_manager_.EventManager):
                     self._consumers[event_name] = _Consumer(member, member.__events_bitmask__, caching)
 
                 else:
-                    self._consumers[event_name] = _Consumer(member, -1, cache_components != cache_components.NONE)
+                    self._consumers[event_name] = _AlwaysEnabledConsumer(member)
 
     def _increment_listener_group_count(
         self, event_type: typing.Type[base_events.Event], count: typing.Literal[-1, 1]
