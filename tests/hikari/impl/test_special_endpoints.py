@@ -1097,7 +1097,7 @@ class TestSelectMenuBuilder:
             "custom_id": "o2o2o2",
             "options": [],
             "disabled": False,
-            "min_values": 0,
+            "min_values": 1,
             "max_values": 1,
         }
 

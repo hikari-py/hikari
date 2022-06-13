@@ -1406,7 +1406,7 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder[_ContainerProtoT]):
     # Any has to be used here as we can't access Self type in this context
     _options: typing.List[special_endpoints.SelectOptionBuilder[typing.Any]] = attr.field(factory=list)
     _placeholder: undefined.UndefinedOr[str] = attr.field(default=undefined.UNDEFINED)
-    _min_values: int = attr.field(default=0)
+    _min_values: int = attr.field(default=1)
     _max_values: int = attr.field(default=1)
     _is_disabled: bool = attr.field(default=False)
 
