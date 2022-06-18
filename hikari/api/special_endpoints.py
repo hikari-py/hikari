@@ -1029,7 +1029,7 @@ class CommandBuilder(abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_dm_enabled(self: _T, state: undefined.UndefinedOr[bool], /) -> _T:
+    def set_is_dm_enabled(self: _T, state: undefined.UndefinedOr[bool], /) -> _T:
         """Set whether this command will be enabled in DMs with the bot.
 
         Parameters

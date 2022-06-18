@@ -666,7 +666,7 @@ class TestSlashCommandBuilder:
         assert builder.default_member_permissions == permissions.Permissions.ADMINISTRATOR
 
     def test_is_dm_enabled(self):
-        builder = special_endpoints.SlashCommandBuilder("oksksksk", "kfdkodfokfd").set_dm_enabled(True)
+        builder = special_endpoints.SlashCommandBuilder("oksksksk", "kfdkodfokfd").set_is_dm_enabled(True)
 
         assert builder.is_dm_enabled is True
 
@@ -678,7 +678,7 @@ class TestSlashCommandBuilder:
             .add_option(mock_option)
             .set_id(3412312)
             .set_default_member_permissions(permissions.Permissions.ADMINISTRATOR)
-            .set_dm_enabled(True)
+            .set_is_dm_enabled(True)
         )
 
         result = builder.build(mock_entity_factory)
@@ -703,7 +703,12 @@ class TestSlashCommandBuilder:
 
     @pytest.mark.asyncio()
     async def test_create(self):
-        builder = special_endpoints.SlashCommandBuilder("we are number", "one").add_option(mock.Mock()).set_id(3412312)
+        builder = (
+            special_endpoints.SlashCommandBuilder("we are number", "one")
+            .add_option(mock.Mock())
+            .set_default_member_permissions(permissions.Permissions.BAN_MEMBERS)
+            .set_is_dm_enabled(True)
+        )
         mock_rest = mock.AsyncMock()
 
         result = await builder.create(mock_rest, 123431123)
@@ -715,11 +720,17 @@ class TestSlashCommandBuilder:
             builder.description,
             guild=undefined.UNDEFINED,
             options=builder.options,
+            default_member_permissions=permissions.Permissions.BAN_MEMBERS,
+            dm_enabled=True,
         )
 
     @pytest.mark.asyncio()
     async def test_create_with_guild(self):
-        builder = special_endpoints.SlashCommandBuilder("we are number", "one")
+        builder = (
+            special_endpoints.SlashCommandBuilder("we are number", "one")
+            .set_default_member_permissions(permissions.Permissions.BAN_MEMBERS)
+            .set_is_dm_enabled(True)
+        )
         mock_rest = mock.AsyncMock()
 
         result = await builder.create(mock_rest, 54455445, guild=54123123321)
@@ -731,6 +742,8 @@ class TestSlashCommandBuilder:
             builder.description,
             guild=54123123321,
             options=builder.options,
+            default_member_permissions=permissions.Permissions.BAN_MEMBERS,
+            dm_enabled=True,
         )
 
 
@@ -740,7 +753,7 @@ class TestContextMenuBuilder:
             special_endpoints.ContextMenuCommandBuilder(commands.CommandType.USER, "we are number")
             .set_id(3412312)
             .set_default_member_permissions(permissions.Permissions.ADMINISTRATOR)
-            .set_dm_enabled(True)
+            .set_is_dm_enabled(True)
         )
 
         result = builder.build(mock.Mock())
@@ -762,8 +775,10 @@ class TestContextMenuBuilder:
 
     @pytest.mark.asyncio()
     async def test_create(self):
-        builder = special_endpoints.ContextMenuCommandBuilder(commands.CommandType.USER, "we are number").set_id(
-            3412312
+        builder = (
+            special_endpoints.ContextMenuCommandBuilder(commands.CommandType.USER, "we are number")
+            .set_default_member_permissions(permissions.Permissions.BAN_MEMBERS)
+            .set_is_dm_enabled(True)
         )
         mock_rest = mock.AsyncMock()
 
@@ -775,11 +790,17 @@ class TestContextMenuBuilder:
             builder.type,
             builder.name,
             guild=undefined.UNDEFINED,
+            default_member_permissions=permissions.Permissions.BAN_MEMBERS,
+            dm_enabled=True,
         )
 
     @pytest.mark.asyncio()
     async def test_create_with_guild(self):
-        builder = special_endpoints.ContextMenuCommandBuilder(commands.CommandType.MESSAGE, "we are number")
+        builder = (
+            special_endpoints.ContextMenuCommandBuilder(commands.CommandType.USER, "we are number")
+            .set_default_member_permissions(permissions.Permissions.BAN_MEMBERS)
+            .set_is_dm_enabled(True)
+        )
         mock_rest = mock.AsyncMock()
 
         result = await builder.create(mock_rest, 4444444, guild=765234123)
@@ -790,6 +811,8 @@ class TestContextMenuBuilder:
             builder.type,
             builder.name,
             guild=765234123,
+            default_member_permissions=permissions.Permissions.BAN_MEMBERS,
+            dm_enabled=True,
         )
 
 

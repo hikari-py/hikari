@@ -1124,7 +1124,7 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         self._default_member_permissions = default_member_permissions
         return self
 
-    def set_dm_enabled(self: _CommandBuilderT, state: undefined.UndefinedOr[bool], /) -> _CommandBuilderT:
+    def set_is_dm_enabled(self: _CommandBuilderT, state: undefined.UndefinedOr[bool], /) -> _CommandBuilderT:
         self._is_dm_enabled = state
         return self
 
@@ -1182,6 +1182,8 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
             self._description,
             guild=guild,
             options=self._options,
+            default_member_permissions=self._default_member_permissions,
+            dm_enabled=self._is_dm_enabled,
         )
 
 
@@ -1206,7 +1208,14 @@ class ContextMenuCommandBuilder(CommandBuilder, special_endpoints.ContextMenuCom
         *,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
     ) -> commands.ContextMenuCommand:
-        return await rest.create_context_menu_command(application, self._type, self._name, guild=guild)
+        return await rest.create_context_menu_command(
+            application,
+            self._type,
+            self._name,
+            guild=guild,
+            default_member_permissions=self._default_member_permissions,
+            dm_enabled=self._is_dm_enabled,
+        )
 
 
 def _build_emoji(
