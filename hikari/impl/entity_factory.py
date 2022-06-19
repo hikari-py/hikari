@@ -2514,9 +2514,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if "message_reference" in payload:
             message_reference = self._deserialize_message_reference(payload["message_reference"])
 
-        referenced_message: typing.Optional[message_models.Message] = None
+        referenced_message: typing.Optional[message_models.PartialMessage] = None
         if referenced_message_payload := payload.get("referenced_message"):
-            referenced_message = self.deserialize_message(referenced_message_payload)
+            referenced_message = self.deserialize_partial_message(referenced_message_payload)
 
         application: typing.Optional[message_models.MessageApplication] = None
         if "application" in payload:
