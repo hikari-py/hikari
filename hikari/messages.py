@@ -1739,7 +1739,7 @@ class Message(PartialMessage):
 
     referenced_message: typing.Optional[PartialMessage] = attr.field(hash=False, eq=False, repr=False)
     """The message that was replied to.
-    
+
     If `type` is `MessageType.REPLY` and `builtins.None`, the message was deleted.
     """
 
