@@ -917,21 +917,6 @@ class TestCacheImpl:
         cache_impl._set_user.assert_called_once_with(mock_user)
         cache_impl._increment_user_ref_count.assert_not_called()
 
-    def test_update_sticker(self, cache_impl):
-        mock_cached_sticker_1 = mock.Mock(stickers.GuildSticker)
-        mock_cached_sticker_2 = mock.Mock(stickers.GuildSticker)
-        mock_sticker = mock.Mock(emojis.KnownCustomEmoji, id=snowflakes.Snowflake(54123123))
-        cache_impl.get_sticker = mock.Mock(side_effect=[mock_cached_sticker_1, mock_cached_sticker_2])
-        cache_impl.set_sticker = mock.Mock()
-
-        result = cache_impl.update_sticker(mock_sticker)
-
-        assert result == (mock_cached_sticker_1, mock_cached_sticker_2)
-        cache_impl.get_sticker.assert_has_calls(
-            [mock.call(snowflakes.Snowflake(54123123)), mock.call(snowflakes.Snowflake(54123123))]
-        )
-        cache_impl.set_sticker.assert_called_once_with(mock_sticker)
-
     def test_clear_guilds_when_no_guilds_cached(self, cache_impl):
         cache_impl._guild_entries = collections.FreezableDict(
             {
@@ -3108,6 +3093,8 @@ class TestCacheImpl:
             ("clear_presences_for_guild", config_api.CacheComponents.PRESENCES, cache_utilities.EmptyCacheView()),
             ("clear_roles", config_api.CacheComponents.ROLES, cache_utilities.EmptyCacheView()),
             ("clear_roles_for_guild", config_api.CacheComponents.ROLES, cache_utilities.EmptyCacheView()),
+            ("clear_stickers", config_api.CacheComponents.GUILD_STICKERS, cache_utilities.EmptyCacheView()),
+            ("clear_stickers_for_guild", config_api.CacheComponents.GUILD_STICKERS, cache_utilities.EmptyCacheView()),
             ("clear_voice_states", config_api.CacheComponents.VOICE_STATES, cache_utilities.EmptyCacheView()),
             (
                 "clear_voice_states_for_channel",
@@ -3123,6 +3110,7 @@ class TestCacheImpl:
             ("delete_message", config_api.CacheComponents.MESSAGES, None),
             ("delete_presence", config_api.CacheComponents.PRESENCES, None),
             ("delete_role", config_api.CacheComponents.ROLES, None),
+            ("delete_sticker", config_api.CacheComponents.GUILD_STICKERS, None),
             ("delete_voice_state", config_api.CacheComponents.VOICE_STATES, None),
             ("get_available_guild", config_api.CacheComponents.GUILDS, None),
             ("get_available_guilds_view", config_api.CacheComponents.GUILDS, cache_utilities.EmptyCacheView()),
@@ -3151,6 +3139,13 @@ class TestCacheImpl:
             ("get_role", config_api.CacheComponents.ROLES, None),
             ("get_roles_view", config_api.CacheComponents.ROLES, cache_utilities.EmptyCacheView()),
             ("get_roles_view_for_guild", config_api.CacheComponents.ROLES, cache_utilities.EmptyCacheView()),
+            ("get_sticker", config_api.CacheComponents.GUILD_STICKERS, None),
+            ("get_stickers_view", config_api.CacheComponents.GUILD_STICKERS, cache_utilities.EmptyCacheView()),
+            (
+                "get_stickers_view_for_guild",
+                config_api.CacheComponents.GUILD_STICKERS,
+                cache_utilities.EmptyCacheView(),
+            ),
             ("get_unavailable_guild", config_api.CacheComponents.GUILDS, None),
             ("get_unavailable_guilds_view", config_api.CacheComponents.GUILDS, cache_utilities.EmptyCacheView()),
             ("get_voice_state", config_api.CacheComponents.VOICE_STATES, None),
@@ -3174,6 +3169,7 @@ class TestCacheImpl:
             ("set_message", config_api.CacheComponents.MESSAGES, None),
             ("set_presence", config_api.CacheComponents.PRESENCES, None),
             ("set_role", config_api.CacheComponents.ROLES, None),
+            ("set_sticker", config_api.CacheComponents.GUILD_STICKERS, None),
             ("set_voice_state", config_api.CacheComponents.VOICE_STATES, None),
             ("update_emoji", config_api.CacheComponents.EMOJIS, (None, None)),
             ("update_guild", config_api.CacheComponents.GUILDS, (None, None)),

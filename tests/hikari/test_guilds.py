@@ -1061,6 +1061,10 @@ class TestGuild:
         assert model.get_sticker(456) is model.app.cache.get_sticker.return_value
         model.app.cache.get_sticker.assert_called_once_with(456)
 
+    def test_get_sticker_when_no_cache_trait(self, model):
+        model.app = object()
+        assert model.get_sticker(1234) is None
+
     def test_get_stickers(self, model):
         assert model.get_stickers() is model.app.cache.get_stickers_view_for_guild.return_value
         model.app.cache.get_stickers_view_for_guild.assert_called_once_with(123)

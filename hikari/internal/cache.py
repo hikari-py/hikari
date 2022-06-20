@@ -221,10 +221,10 @@ class GuildRecord:
     """
 
     stickers: typing.Optional[typing.MutableSet[snowflakes.Snowflake]] = attr.field(default=None)
-    """A set of the IDs of the stickers cached for this guild.
+    """A sequence of sticker IDs cached for this guild.
 
     This will be `builtins.None` if no stickers are cached for this guild else
-    `typing.MutableSet[hikari.snowflakes.Snowflake]` of emoji IDs.
+    `typing.Sequence[hikari.snowflakes.Snowflake]` of emoji IDs.
     """
 
     invites: typing.Optional[typing.MutableSequence[str]] = attr.field(default=None)

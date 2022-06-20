@@ -4033,6 +4033,29 @@ class TestEntityFactoryImpl:
         assert sticker.sort_value == 96
         assert sticker.tags == ["thinking", "thonkang"]
 
+    def test_stickers(self, entity_factory_impl, guild_sticker_payload):
+        guild_definition = entity_factory_impl.deserialize_gateway_guild(
+            {"id": "265828729970753537", "stickers": [guild_sticker_payload]},
+        )
+
+        assert guild_definition.stickers() == {
+            749046696482439188: entity_factory_impl.deserialize_guild_sticker(
+                guild_sticker_payload,
+            )
+        }
+
+    def test_stickers_returns_cached_values(self, entity_factory_impl):
+        with mock.patch.object(
+            entity_factory.EntityFactoryImpl, "deserialize_guild_sticker"
+        ) as mock_deserialize_guild_sticker:
+            guild_definition = entity_factory_impl.deserialize_gateway_guild({"id": "265828729970753537"})
+
+            mock_sticker = object()
+            guild_definition._stickers = {"54545454": mock_sticker}
+
+            assert guild_definition.stickers() == {"54545454": mock_sticker}
+            mock_deserialize_guild_sticker.assert_not_called()
+
     #################
     # INVITE MODELS #
     #################

@@ -171,13 +171,7 @@ class GuildAvailableEvent(GuildVisibilityEvent):
     """
 
     stickers: typing.Mapping[snowflakes.Snowflake, stickers_.GuildSticker] = attr.field(repr=False)
-    """Mapping of sticker IDs to the stickers in the guild.
-
-    Returns
-    -------
-    typing.Mapping[hikari.snowflakes.Snowflake, hikari.stickers.GuildSticker]
-        The stickers in the guild.
-    """
+    """Mapping of sticker IDs to the stickers in the guild."""
 
     roles: typing.Mapping[snowflakes.Snowflake, guilds.Role] = attr.field(repr=False)
     """Mapping of role IDs to the roles in the guild.
@@ -388,13 +382,7 @@ class GuildUpdateEvent(GuildEvent):
     """
 
     stickers: typing.Mapping[snowflakes.Snowflake, stickers_.GuildSticker] = attr.field(repr=False)
-    """Mapping of sticker IDs to the stickers in the guild.
-
-    Returns
-    -------
-    typing.Mapping[hikari.snowflakes.Snowflake, hikari.stickers.GuildSticker]
-        The stickers in the guild.
-    """
+    """Mapping of sticker IDs to the stickers in the guild."""
 
     roles: typing.Mapping[snowflakes.Snowflake, guilds.Role] = attr.field(repr=False)
     """Mapping of role IDs to the roles in the guild.
@@ -568,13 +556,7 @@ class StickersUpdateEvent(GuildEvent):
     """
 
     stickers: typing.Sequence[guilds.stickers.GuildSticker] = attr.field()
-    """Sequence of all stickers in this guild.
-
-    Returns
-    -------
-    typing.Sequence[guilds.stickers.GuildSticker]
-        All emojis in the guild.
-    """
+    """Sequence of all stickers in this guild."""
 
     async def fetch_stickers(self) -> typing.Sequence[guilds.stickers.GuildSticker]:
         """Perform an API call to retrieve an up-to-date view of the emojis.

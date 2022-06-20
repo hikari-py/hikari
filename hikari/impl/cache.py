@@ -423,16 +423,6 @@ class CacheImpl(cache.MutableCache):
 
         guild_record.stickers.add(sticker.id)
 
-    def update_sticker(
-        self, sticker: stickers.GuildSticker, /
-    ) -> typing.Tuple[typing.Optional[stickers.GuildSticker], typing.Optional[stickers.GuildSticker]]:
-        if not self._is_cache_enabled_for(config_api.CacheComponents.GUILD_STICKERS):
-            return None, None
-
-        cached_sticker = self.get_sticker(sticker.id)
-        self.set_sticker(sticker)
-        return cached_sticker, self.get_sticker(sticker.id)
-
     def _remove_guild_record_if_empty(
         self, guild_id: snowflakes.Snowflake, record: cache_utility.GuildRecord, /
     ) -> None:

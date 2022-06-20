@@ -929,25 +929,6 @@ class MutableCache(Cache, abc.ABC):
         """
 
     @abc.abstractmethod
-    def update_sticker(
-        self, sticker: guilds.stickers.GuildSticker, /
-    ) -> typing.Tuple[typing.Optional[stickers.GuildSticker], typing.Optional[stickers.GuildSticker]]:
-        """Update a sticker object in the cache.
-
-        Parameters
-        ----------
-        sticker : hikari.stickers.GuildSticker
-            The object of the sticker to update in the cache.
-
-        Returns
-        -------
-        typing.Tuple[typing.Optional[hikari.stickers.GuildSticker], typing.Optional[hikari.stickers.GuildSticker]]
-            A tuple of the old cached sticker object if found (else `builtins.None`)
-            and the new cached sticker object if it could be cached (else
-            `builtins.None`).
-        """
-
-    @abc.abstractmethod
     def clear_guilds(self) -> CacheView[snowflakes.Snowflake, guilds.GatewayGuild]:
         """Remove all the guild objects from the cache.
 
