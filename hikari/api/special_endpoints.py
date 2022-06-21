@@ -977,15 +977,19 @@ class CommandBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def default_permission(self) -> undefined.UndefinedOr[bool]:
-        """Whether the command should be enabled by default (without any permissions).
+    def default_member_permissions(self) -> typing.Union[undefined.UndefinedType, permissions_.Permissions, int]:
+        """Member permissions necessary to utilize this command by default.
 
-        Defaults to `builtins.bool`.
+        If `0`, then it will be available for all members. Note that this doesn't affect
+        administrators of the guild and overwrites.
+        """
 
-        Returns
-        -------
-        undefined.UndefinedOr[builtins.bool]
-            Whether the command should be enabled by default (without any permissions).
+    @property
+    @abc.abstractmethod
+    def is_dm_enabled(self) -> undefined.UndefinedOr[bool]:
+        """Whether this command is enabled in DMs with the bot.
+
+        Only applicable to globally-scoped commands.
         """
 
     @abc.abstractmethod
@@ -1004,13 +1008,33 @@ class CommandBuilder(abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_default_permission(self: _T, state: undefined.UndefinedOr[bool], /) -> _T:
-        """Whether this command should be enabled by default (without any permissions).
+    def set_default_member_permissions(
+        self: _T, default_member_permissions: typing.Union[undefined.UndefinedType, int, permissions_.Permissions], /
+    ) -> _T:
+        """Set the member permissions necessary to utilize this command by default.
+
+        Parameters
+        ----------
+        default_member_permissions : hikari.undefined.UndefinedOr[builtins.bool]
+            The default member permissions to utilize this command by default.
+
+            If `0`, then it will be available for all members. Note that this doesn't affect
+            administrators of the guild and overwrites.
+
+        Returns
+        -------
+        CommandBuilder
+            Object of this command builder for chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_is_dm_enabled(self: _T, state: undefined.UndefinedOr[bool], /) -> _T:
+        """Set whether this command will be enabled in DMs with the bot.
 
         Parameters
         ----------
         state : hikari.undefined.UndefinedOr[builtins.bool]
-            Whether this command should be enabled by default.
+            Whether this command is enabled in DMs with the bot.
 
         Returns
         -------

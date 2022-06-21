@@ -20,23 +20,34 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Events that can be fired by Hikari's gateway implementation."""
-
+"""Events fired for application related changes."""
 from __future__ import annotations
 
-from hikari.events.application_events import *
-from hikari.events.base_events import Event
-from hikari.events.base_events import ExceptionEvent
-from hikari.events.channel_events import *
-from hikari.events.guild_events import *
-from hikari.events.interaction_events import *
-from hikari.events.lifetime_events import *
-from hikari.events.member_events import *
-from hikari.events.message_events import *
-from hikari.events.reaction_events import *
-from hikari.events.role_events import *
-from hikari.events.scheduled_events import *
-from hikari.events.shard_events import *
-from hikari.events.typing_events import *
-from hikari.events.user_events import *
-from hikari.events.voice_events import *
+__all__: typing.Sequence[str] = ("ApplicationCommandPermissionsUpdateEvent",)
+
+import typing
+
+import attr
+
+from hikari.events import shard_events
+from hikari.internal import attr_extensions
+
+if typing.TYPE_CHECKING:
+    from hikari import commands
+    from hikari import traits
+    from hikari.api import shard as gateway_shard
+
+
+@attr_extensions.with_copy
+@attr.define(kw_only=True, weakref_slot=False)
+class ApplicationCommandPermissionsUpdateEvent(shard_events.ShardEvent):
+    """Event fired when permissions for an application command are updated."""
+
+    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from ShardEvent>>.
+
+    permissions: commands.GuildCommandPermissions = attr.field(repr=False)
+    """The updated application command permissions."""

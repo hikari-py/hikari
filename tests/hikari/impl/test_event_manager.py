@@ -148,6 +148,17 @@ class TestEventManagerImpl:
         event_manager_impl.dispatch.assert_awaited_once_with(event_factory.deserialize_resumed_event.return_value)
 
     @pytest.mark.asyncio()
+    async def test_on_application_command_permissions_update(self, event_manager_impl, shard, event_factory):
+        payload = {}
+
+        await event_manager_impl.on_application_command_permissions_update(shard, payload)
+
+        event_factory.deserialize_application_command_permission_update_event.assert_called_once_with(shard, payload)
+        event_manager_impl.dispatch.assert_awaited_once_with(
+            event_factory.deserialize_application_command_permission_update_event.return_value
+        )
+
+    @pytest.mark.asyncio()
     async def test_on_channel_create_stateful(self, event_manager_impl, shard, event_factory):
         payload = {}
         event = mock.Mock(channel=mock.Mock(channels.GuildChannel))

@@ -1763,6 +1763,51 @@ class TestEntityFactoryImpl:
         with pytest.raises(errors.UnrecognisedEntityError):
             entity_factory_impl.deserialize_channel({"type": -9999999999})
 
+    @pytest.mark.parametrize(
+        ("type_", "fn"),
+        [
+            (0, "deserialize_guild_text_channel"),
+            (2, "deserialize_guild_voice_channel"),
+            (4, "deserialize_guild_category"),
+            (5, "deserialize_guild_news_channel"),
+            (13, "deserialize_guild_stage_channel"),
+        ],
+    )
+    def test_deserialize_channel_when_guild(self, mock_app, type_, fn):
+        payload = {"type": type_}
+
+        with mock.patch.object(entity_factory.EntityFactoryImpl, fn) as expected_fn:
+            # We need to instantiate it after the mock so that the functions that are stored in the dicts
+            # are the ones we mock
+            entity_factory_impl = entity_factory.EntityFactoryImpl(app=mock_app)
+
+            assert entity_factory_impl.deserialize_channel(payload, guild_id=123) is expected_fn.return_value
+
+        expected_fn.assert_called_once_with(payload, guild_id=123)
+
+    @pytest.mark.parametrize(
+        ("type_", "fn"),
+        [
+            (1, "deserialize_dm"),
+            (3, "deserialize_group_dm"),
+        ],
+    )
+    def test_deserialize_channel_when_dm(self, mock_app, type_, fn):
+        payload = {"type": type_}
+
+        with mock.patch.object(entity_factory.EntityFactoryImpl, fn) as expected_fn:
+            # We need to instantiate it after the mock so that the functions that are stored in the dicts
+            # are the ones we mock
+            entity_factory_impl = entity_factory.EntityFactoryImpl(app=mock_app)
+
+            assert entity_factory_impl.deserialize_channel(payload, guild_id=123123123) is expected_fn.return_value
+
+        expected_fn.assert_called_once_with(payload)
+
+    def test_deserialize_channel_when_unknown_type(self, entity_factory_impl):
+        with pytest.raises(errors.UnrecognisedEntityError):
+            entity_factory_impl.deserialize_channel({"type": -111})
+
     ################
     # EMBED MODELS #
     ################
@@ -3096,7 +3141,7 @@ class TestEntityFactoryImpl:
     ######################
 
     @pytest.fixture()
-    def command_payload(self):
+    def slash_command_payload(self):
         return {
             "id": "1231231231",
             "application_id": "12354123",
@@ -3104,7 +3149,8 @@ class TestEntityFactoryImpl:
             "type": 1,
             "name": "good name",
             "description": "very good description",
-            "default_permission": False,
+            "default_member_permissions": 8,
+            "dm_permission": True,
             "options": [
                 {
                     "type": 1,
@@ -3127,8 +3173,8 @@ class TestEntityFactoryImpl:
             "version": "123321123",
         }
 
-    def test_deserialize_command(self, entity_factory_impl, mock_app, command_payload):
-        command = entity_factory_impl.deserialize_command(payload=command_payload)
+    def test_deserialize_slash_command(self, entity_factory_impl, mock_app, slash_command_payload):
+        command = entity_factory_impl.deserialize_slash_command(payload=slash_command_payload)
 
         assert command.app is mock_app
         assert command.id == 1231231231
@@ -3136,7 +3182,8 @@ class TestEntityFactoryImpl:
         assert command.guild_id == 49949494
         assert command.name == "good name"
         assert command.description == "very good description"
-        assert command.default_permission is False
+        assert command.default_member_permissions == permission_models.Permissions.ADMINISTRATOR
+        assert command.is_dm_enabled is True
         assert command.version == 123321123
 
         # CommandOption
@@ -3176,22 +3223,24 @@ class TestEntityFactoryImpl:
         assert isinstance(option, commands.CommandOption)
         assert isinstance(command, commands.SlashCommand)
 
-    def test_deserialize_command_with_passed_through_guild_id(self, entity_factory_impl):
+    def test_deserialize_slash_command_with_passed_through_guild_id(self, entity_factory_impl):
         payload = {
             "id": "1231231231",
+            "guild_id": "987654321",
             "application_id": "12354123",
             "type": 1,
             "name": "good name",
             "description": "very good description",
             "options": [],
+            "default_member_permissions": 0,
             "version": "123312",
         }
 
-        command = entity_factory_impl.deserialize_command(payload, guild_id=123123)
+        command = entity_factory_impl.deserialize_slash_command(payload, guild_id=123123)
 
         assert command.guild_id == 123123
 
-    def test_deserialize_command_with_null_and_unset_values(self, entity_factory_impl):
+    def test_deserialize_slash_command_with_null_and_unset_values(self, entity_factory_impl):
         payload = {
             "id": "1231231231",
             "application_id": "12354123",
@@ -3200,14 +3249,48 @@ class TestEntityFactoryImpl:
             "name": "good name",
             "description": "very good description",
             "options": [],
+            "default_member_permissions": 0,
             "version": "43123",
         }
 
-        command = entity_factory_impl.deserialize_command(payload)
+        command = entity_factory_impl.deserialize_slash_command(payload)
 
         assert command.options is None
-        assert command.default_permission is True
+        assert command.is_dm_enabled is False
         assert isinstance(command, commands.SlashCommand)
+
+    def test_deserialize_slash_command_standardizes_default_member_permissions(
+        self, entity_factory_impl, slash_command_payload
+    ):
+        slash_command_payload["default_member_permissions"] = 0
+
+        command = entity_factory_impl.deserialize_slash_command(slash_command_payload)
+
+        assert command.default_member_permissions == permission_models.Permissions.ADMINISTRATOR
+
+    @pytest.mark.parametrize(
+        ("type_", "fn"),
+        [
+            (1, "deserialize_slash_command"),
+            (2, "deserialize_context_menu_command"),
+            (3, "deserialize_context_menu_command"),
+        ],
+    )
+    def test_deserialize_command(self, mock_app, type_, fn):
+        payload = {"type": type_}
+
+        with mock.patch.object(entity_factory.EntityFactoryImpl, fn) as expected_fn:
+            # We need to instantiate it after the mock so that the functions that are stored in the dicts
+            # are the ones we mock
+            entity_factory_impl = entity_factory.EntityFactoryImpl(app=mock_app)
+
+            assert entity_factory_impl.deserialize_command(payload, guild_id=123) is expected_fn.return_value
+
+        expected_fn.assert_called_once_with(payload, guild_id=123)
+
+    def test_deserialize_command_when_unknown_type(self, entity_factory_impl):
+        with pytest.raises(errors.UnrecognisedEntityError):
+            entity_factory_impl.deserialize_command({"type": -111})
 
     @pytest.fixture()
     def guild_command_permissions_payload(self):
@@ -3309,7 +3392,7 @@ class TestEntityFactoryImpl:
         assert isinstance(member, base_interactions.InteractionMember)
 
     def test__deserialize_interaction_member_when_guild_id_already_in_roles_doesnt_duplicate(
-        self, entity_factory_impl, interaction_member_payload, user_payload
+        self, entity_factory_impl, interaction_member_payload
     ):
         interaction_member_payload["roles"] = [
             582345963851743243,
@@ -3328,9 +3411,7 @@ class TestEntityFactoryImpl:
             43123123,
         ]
 
-    def test__deserialize_interaction_member_with_unset_fields(
-        self, entity_factory_impl, interaction_member_payload, user_payload
-    ):
+    def test__deserialize_interaction_member_with_unset_fields(self, entity_factory_impl, interaction_member_payload):
         del interaction_member_payload["premium_since"]
         del interaction_member_payload["avatar"]
         del interaction_member_payload["communication_disabled_until"]
@@ -3341,9 +3422,7 @@ class TestEntityFactoryImpl:
         assert member.premium_since is None
         assert member.raw_communication_disabled_until is None
 
-    def test__deserialize_interaction_member_with_passed_user(
-        self, entity_factory_impl, interaction_member_payload, user_payload
-    ):
+    def test__deserialize_interaction_member_with_passed_user(self, entity_factory_impl, interaction_member_payload):
         mock_user = object()
         member = entity_factory_impl._deserialize_interaction_member(
             interaction_member_payload, guild_id=43123123, user=mock_user
@@ -3507,17 +3586,41 @@ class TestEntityFactoryImpl:
 
         assert isinstance(interaction, command_interactions.CommandInteraction)
 
+    @pytest.fixture()
+    def context_menu_command_interaction_payload(self, interaction_member_payload, user_payload):
+        return {
+            "id": "3490190239012093",
+            "type": 4,
+            "guild_id": "43123123",
+            "data": {
+                "id": "43123123",
+                "name": "okokokok",
+                "type": 2,
+                "target_id": "115590097100865541",
+                "resolved": {
+                    "users": {
+                        "115590097100865541": user_payload,
+                    }
+                },
+            },
+            "channel_id": "49949494",
+            "member": interaction_member_payload,
+            "token": "moe cat girls",
+            "locale": "es-ES",
+            "guild_locale": "en-US",
+            "version": 69420,
+            "application_id": "76234234",
+        }
+
     def test_deserialize_command_interaction_with_context_menu_field(
-        self,
-        entity_factory_impl,
-        context_menu_command_interaction_payload,
+        self, entity_factory_impl, context_menu_command_interaction_payload
     ):
         interaction = entity_factory_impl.deserialize_command_interaction(context_menu_command_interaction_payload)
         assert interaction.target_id == 115590097100865541
         assert isinstance(interaction, command_interactions.CommandInteraction)
 
     def test_deserialize_command_interaction_with_null_attributes(
-        self, entity_factory_impl, mock_app, command_interaction_payload, user_payload
+        self, entity_factory_impl, command_interaction_payload, user_payload
     ):
         del command_interaction_payload["guild_id"]
         del command_interaction_payload["member"]
@@ -3611,7 +3714,7 @@ class TestEntityFactoryImpl:
         assert isinstance(interaction, command_interactions.AutocompleteInteraction)
 
     def test_deserialize_autocomplete_interaction_with_null_fields(
-        self, entity_factory_impl, user_payload, mock_app, autocomplete_interaction_payload
+        self, entity_factory_impl, user_payload, autocomplete_interaction_payload
     ):
         del autocomplete_interaction_payload["guild_locale"]
         del autocomplete_interaction_payload["guild_id"]
@@ -3623,86 +3726,41 @@ class TestEntityFactoryImpl:
         assert interaction.user == entity_factory_impl.deserialize_user(user_payload)
         assert interaction.guild_locale is None
 
-    def test_deserialize_interaction_returns_expected_type(
-        self, entity_factory_impl, command_interaction_payload, component_interaction_payload
-    ):
-        for payload, expected_type in [
-            (command_interaction_payload, command_interactions.CommandInteraction),
-            (component_interaction_payload, component_interactions.ComponentInteraction),
-        ]:
-            assert type(entity_factory_impl.deserialize_interaction(payload)) is expected_type
+    @pytest.mark.parametrize(
+        ("type_", "fn"),
+        [
+            (2, "deserialize_command_interaction"),
+            (3, "deserialize_component_interaction"),
+            (4, "deserialize_autocomplete_interaction"),
+        ],
+    )
+    def test_deserialize_interaction(self, mock_app, type_, fn):
+        payload = {"type": type_}
+
+        with mock.patch.object(entity_factory.EntityFactoryImpl, fn) as expected_fn:
+            # We need to instantiate it after the mock so that the functions that are stored in the dicts
+            # are the ones we mock
+            entity_factory_impl = entity_factory.EntityFactoryImpl(app=mock_app)
+
+            assert entity_factory_impl.deserialize_interaction(payload) is expected_fn.return_value
+
+        expected_fn.assert_called_once_with(payload)
 
     def test_deserialize_interaction_handles_unknown_type(self, entity_factory_impl):
         with pytest.raises(errors.UnrecognisedEntityError):
             entity_factory_impl.deserialize_interaction({"type": -999})
 
-    def test_serialize_command_option_with_channel_type(self, entity_factory_impl):
+    def test_serialize_command_option(self, entity_factory_impl):
         option = commands.CommandOption(
             type=commands.OptionType.INTEGER,
             name="a name",
             description="go away",
             is_required=True,
-            channel_types=[channel_models.ChannelType.GUILD_STAGE, channel_models.ChannelType.GUILD_TEXT, 100],
-        )
-
-        result = entity_factory_impl.serialize_command_option(option)
-
-        assert result == {
-            "type": 4,
-            "name": "a name",
-            "description": "go away",
-            "required": True,
-            "channel_types": [13, 0, 100],
-        }
-
-    def test_serialize_command_option_with_min_and_max_value(self, entity_factory_impl):
-        option = commands.CommandOption(
-            type=commands.OptionType.FLOAT,
-            name="a name",
-            description="go away",
-            is_required=True,
+            autocomplete=True,
             min_value=1.2,
             max_value=9.999,
-        )
-
-        result = entity_factory_impl.serialize_command_option(option)
-
-        assert result == {
-            "type": 10,
-            "name": "a name",
-            "description": "go away",
-            "required": True,
-            "min_value": 1.2,
-            "max_value": 9.999,
-        }
-
-    def test_serialize_command_option_with_choices(self, entity_factory_impl):
-        option = commands.CommandOption(
-            type=commands.OptionType.INTEGER,
-            name="a name",
-            description="go away",
-            is_required=True,
+            channel_types=[channel_models.ChannelType.GUILD_STAGE, channel_models.ChannelType.GUILD_TEXT, 100],
             choices=[commands.CommandChoice(name="a", value="choice")],
-            options=None,
-        )
-
-        result = entity_factory_impl.serialize_command_option(option)
-
-        assert result == {
-            "type": 4,
-            "name": "a name",
-            "description": "go away",
-            "required": True,
-            "choices": [{"name": "a", "value": "choice"}],
-        }
-
-    def test_serialize_command_option_with_options(self, entity_factory_impl):
-        option = commands.CommandOption(
-            type=commands.OptionType.SUB_COMMAND,
-            name="a name",
-            description="go away",
-            is_required=True,
-            choices=None,
             options=[
                 commands.CommandOption(
                     type=commands.OptionType.STRING,
@@ -3718,10 +3776,15 @@ class TestEntityFactoryImpl:
         result = entity_factory_impl.serialize_command_option(option)
 
         assert result == {
-            "type": 1,
+            "type": 4,
             "name": "a name",
             "description": "go away",
             "required": True,
+            "channel_types": [13, 0, 100],
+            "min_value": 1.2,
+            "max_value": 9.999,
+            "autocomplete": True,
+            "choices": [{"name": "a", "value": "choice"}],
             "options": [
                 {
                     "type": 3,
@@ -3733,51 +3796,6 @@ class TestEntityFactoryImpl:
             ],
         }
 
-    def test_serialize_command_option_with_autocomplete(self, entity_factory_impl):
-        option = commands.CommandOption(
-            type=commands.OptionType.STRING,
-            name="a name",
-            description="go away",
-            is_required=True,
-            autocomplete=True,
-        )
-
-        result = entity_factory_impl.serialize_command_option(option)
-
-        assert result == {
-            "type": 3,
-            "name": "a name",
-            "description": "go away",
-            "required": True,
-            "autocomplete": True,
-        }
-
-    @pytest.fixture()
-    def context_menu_command_interaction_payload(self, interaction_member_payload, user_payload):
-        return {
-            "id": "3490190239012093",
-            "type": 4,
-            "guild_id": "43123123",
-            "data": {
-                "id": "43123123",
-                "name": "okokokok",
-                "type": 2,
-                "target_id": "115590097100865541",
-                "resolved": {
-                    "users": {
-                        "115590097100865541": user_payload,
-                    }
-                },
-            },
-            "channel_id": "49949494",
-            "member": interaction_member_payload,
-            "token": "moe cat girls",
-            "locale": "es-ES",
-            "guild_locale": "en-US",
-            "version": 69420,
-            "application_id": "76234234",
-        }
-
     @pytest.fixture()
     def context_menu_command_payload(self):
         return {
@@ -3786,16 +3804,13 @@ class TestEntityFactoryImpl:
             "guild_id": "49949494",
             "type": 2,
             "name": "good name",
-            "default_permission": False,
+            "default_member_permissions": 8,
+            "dm_permission": True,
             "version": "123321123",
         }
 
-    def test_deserialize_context_menu_command(
-        self,
-        entity_factory_impl,
-        context_menu_command_payload,
-    ):
-        command = entity_factory_impl.deserialize_command(context_menu_command_payload)
+    def test_deserialize_context_menu_command(self, entity_factory_impl, context_menu_command_payload):
+        command = entity_factory_impl.deserialize_context_menu_command(context_menu_command_payload)
         assert isinstance(command, commands.ContextMenuCommand)
 
         assert command.id == 1231231231
@@ -3803,19 +3818,28 @@ class TestEntityFactoryImpl:
         assert command.guild_id == 49949494
         assert command.type == commands.CommandType.USER
         assert command.name == "good name"
-        assert command.default_permission is False
+        assert command.default_member_permissions == permission_models.Permissions.ADMINISTRATOR
+        assert command.is_dm_enabled is True
         assert command.version == 123321123
 
-    def test_unknown_command_type(
-        self,
-        entity_factory_impl,
-        command_payload,
+    def test_deserialize_context_menu_command_with_with_null_and_unset_values(
+        self, entity_factory_impl, context_menu_command_payload
     ):
-        payload = command_payload.copy()
-        payload["type"] = 4
+        del context_menu_command_payload["dm_permission"]
 
-        with pytest.raises(errors.UnrecognisedEntityError):
-            entity_factory_impl.deserialize_command(payload)
+        command = entity_factory_impl.deserialize_context_menu_command(context_menu_command_payload)
+        assert isinstance(command, commands.ContextMenuCommand)
+
+        assert command.is_dm_enabled is False
+
+    def test_deserialize_context_menu_command_default_member_permissions(
+        self, entity_factory_impl, context_menu_command_payload
+    ):
+        context_menu_command_payload["default_member_permissions"] = 0
+
+        command = entity_factory_impl.deserialize_context_menu_command(context_menu_command_payload)
+
+        assert command.default_member_permissions == permission_models.Permissions.ADMINISTRATOR
 
     @pytest.fixture()
     def component_interaction_payload(self, interaction_member_payload, message_payload):
@@ -4415,13 +4439,25 @@ class TestEntityFactoryImpl:
         assert menu.max_values == 1
         assert menu.is_disabled is False
 
-    def test__deserialize_component(self, entity_factory_impl, action_row_payload, button_payload, select_menu_payload):
-        for expected_type, payload in [
-            (message_models.ActionRowComponent, action_row_payload),
-            (message_models.ButtonComponent, button_payload),
-            (message_models.SelectMenuComponent, select_menu_payload),
-        ]:
-            assert type(entity_factory_impl._deserialize_component(payload)) is expected_type
+    @pytest.mark.parametrize(
+        ("type_", "fn"),
+        [
+            (1, "_deserialize_action_row"),
+            (2, "_deserialize_button"),
+            (3, "_deserialize_select_menu"),
+        ],
+    )
+    def test__deserialize_component(self, mock_app, type_, fn):
+        payload = {"type": type_}
+
+        with mock.patch.object(entity_factory.EntityFactoryImpl, fn) as expected_fn:
+            # We need to instantiate it after the mock so that the functions that are stored in the dicts
+            # are the ones we mock
+            entity_factory_impl = entity_factory.EntityFactoryImpl(app=mock_app)
+
+            assert entity_factory_impl._deserialize_component(payload) is expected_fn.return_value
+
+        expected_fn.assert_called_once_with(payload)
 
     def test__deserialize_component_handles_unknown_type(self, entity_factory_impl):
         with pytest.raises(errors.UnrecognisedEntityError):
@@ -5908,16 +5944,25 @@ class TestEntityFactoryImpl:
 
         assert webhook.avatar_hash is None
 
-    def test_deserialize_webhook(
-        self, entity_factory_impl, incoming_webhook_payload, follower_webhook_payload, application_webhook_payload
-    ):
-        for expected_type, payload in [
-            (webhook_models.IncomingWebhook, incoming_webhook_payload),
-            (webhook_models.ChannelFollowerWebhook, follower_webhook_payload),
-            (webhook_models.ApplicationWebhook, application_webhook_payload),
-        ]:
-            result = entity_factory_impl.deserialize_webhook(payload)
-            assert isinstance(result, expected_type)
+    @pytest.mark.parametrize(
+        ("type_", "fn"),
+        [
+            (1, "deserialize_incoming_webhook"),
+            (2, "deserialize_channel_follower_webhook"),
+            (3, "deserialize_application_webhook"),
+        ],
+    )
+    def test_deserialize_webhook(self, mock_app, type_, fn):
+        payload = {"type": type_}
+
+        with mock.patch.object(entity_factory.EntityFactoryImpl, fn) as expected_fn:
+            # We need to instantiate it after the mock so that the functions that are stored in the dicts
+            # are the ones we mock
+            entity_factory_impl = entity_factory.EntityFactoryImpl(app=mock_app)
+
+            assert entity_factory_impl.deserialize_webhook(payload) is expected_fn.return_value
+
+        expected_fn.assert_called_once_with(payload)
 
     def test_deserialize_webhook_for_unexpected_webhook_type(self, entity_factory_impl):
         with pytest.raises(errors.UnrecognisedEntityError):
