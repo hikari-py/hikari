@@ -895,7 +895,7 @@ class PartialMessage(snowflakes.Unique):
     This is a string used for validating a message was sent.
     """
 
-    referenced_message: undefined.UndefinedNoneOr[Message] = attr.field(hash=False, eq=False, repr=False)
+    referenced_message: undefined.UndefinedNoneOr[PartialMessage] = attr.field(hash=False, eq=False, repr=False)
     """The message that was replied to.
 
     If `type` is `MessageType.REPLY` and `hikari.undefined.UNDEFINED`, Discord's
@@ -1737,8 +1737,11 @@ class Message(PartialMessage):
     nonce: typing.Optional[str] = attr.field(hash=False, eq=False, repr=False)
     """The message nonce. This is a string used for validating a message was sent."""
 
-    referenced_message: typing.Optional[Message] = attr.field(hash=False, eq=False, repr=False)
-    """The message that was replied to."""
+    referenced_message: typing.Optional[PartialMessage] = attr.field(hash=False, eq=False, repr=False)
+    """The message that was replied to.
+
+    If `type` is `MessageType.REPLY` and `builtins.None`, the message was deleted.
+    """
 
     interaction: typing.Optional[MessageInteraction] = attr.field(hash=False, eq=False, repr=False)
     """Information about the interaction this message was created by."""

@@ -4854,7 +4854,7 @@ class TestEntityFactoryImpl:
         assert message.message_reference.guild_id == 278325129692446720
         assert isinstance(message.message_reference, message_models.MessageReference)
 
-        assert message.referenced_message == entity_factory_impl.deserialize_message(referenced_message)
+        assert message.referenced_message == entity_factory_impl.deserialize_partial_message(referenced_message)
         assert message.flags == message_models.MessageFlag.IS_CROSSPOST
 
         # Sticker

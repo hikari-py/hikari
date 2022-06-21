@@ -723,9 +723,6 @@ class MessageData(BaseData[messages.Message]):
         if not member and message.member:
             member = RefCell(MemberData.build_from_entity(message.member))
 
-        if not referenced_message and message.referenced_message:
-            referenced_message = RefCell(MessageData.build_from_entity(message.referenced_message))
-
         interaction = (
             MessageInteractionData.build_from_entity(message.interaction, user=interaction_user)
             if message.interaction
