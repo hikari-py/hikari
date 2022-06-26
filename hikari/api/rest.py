@@ -505,7 +505,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @typing.overload
     @abc.abstractmethod
-    async def edit_permission_overwrites(
+    async def edit_permission_overwrite(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
         target: typing.Union[channels_.PermissionOverwrite, users.PartialUser, guilds.PartialRole],
@@ -518,7 +518,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @typing.overload
     @abc.abstractmethod
-    async def edit_permission_overwrites(
+    async def edit_permission_overwrite(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
         target: snowflakes.Snowflakeish,
@@ -531,7 +531,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """Edit permissions for a given entity ID and type."""
 
     @abc.abstractmethod
-    async def edit_permission_overwrites(
+    async def edit_permission_overwrite(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
         target: typing.Union[

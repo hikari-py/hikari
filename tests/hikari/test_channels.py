@@ -340,7 +340,7 @@ class TestGuildChannel:
 
     @pytest.mark.asyncio()
     async def test_edit_overwrite(self, model):
-        model.app.rest.edit_permission_overwrites = mock.AsyncMock()
+        model.app.rest.edit_permission_overwrite = mock.AsyncMock()
         user = mock.Mock(users.PartialUser)
         await model.edit_overwrite(
             333,
@@ -350,7 +350,7 @@ class TestGuildChannel:
             reason="vrooom vroom",
         )
 
-        model.app.rest.edit_permission_overwrites.assert_called_once_with(
+        model.app.rest.edit_permission_overwrite.assert_called_once_with(
             69420,
             333,
             target_type=user,
@@ -361,13 +361,13 @@ class TestGuildChannel:
 
     @pytest.mark.asyncio()
     async def test_edit_overwrite_target_type_none(self, model):
-        model.app.rest.edit_permission_overwrites = mock.AsyncMock()
+        model.app.rest.edit_permission_overwrite = mock.AsyncMock()
         user = mock.Mock(users.PartialUser)
         await model.edit_overwrite(
             user, allow=permissions.Permissions.BAN_MEMBERS, deny=permissions.Permissions.CONNECT, reason="vrooom vroom"
         )
 
-        model.app.rest.edit_permission_overwrites.assert_called_once_with(
+        model.app.rest.edit_permission_overwrite.assert_called_once_with(
             69420,
             user,
             allow=permissions.Permissions.BAN_MEMBERS,

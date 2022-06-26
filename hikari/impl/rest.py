@@ -1046,7 +1046,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("suppress", suppress)
         await self._request(route, json=body)
 
-    async def edit_permission_overwrites(
+    async def edit_permission_overwrite(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
         target: typing.Union[
