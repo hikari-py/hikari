@@ -1091,7 +1091,7 @@ class RESTClientImpl(rest_api.RESTClient):
         deny: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
-        return await self.edit_permission_overwrite(
+        await self.edit_permission_overwrite(
             channel, target, target_type=target_type, allow=allow, deny=deny, reason=reason
         )
 

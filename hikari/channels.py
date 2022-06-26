@@ -1074,11 +1074,9 @@ class GuildChannel(PartialChannel):
             assert not isinstance(
                 target, int
             ), "Cannot determine the type of the target to update. Try specifying 'target_type' manually."
-            return await self.app.rest.edit_permission_overwrites(
-                self.id, target, allow=allow, deny=deny, reason=reason
-            )
+            return await self.app.rest.edit_permission_overwrite(self.id, target, allow=allow, deny=deny, reason=reason)
 
-        return await self.app.rest.edit_permission_overwrites(
+        return await self.app.rest.edit_permission_overwrite(
             self.id, typing.cast(int, target), target_type=target_type, allow=allow, deny=deny, reason=reason
         )
 
