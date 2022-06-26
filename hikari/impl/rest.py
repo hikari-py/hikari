@@ -1091,25 +1091,9 @@ class RESTClientImpl(rest_api.RESTClient):
         deny: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
-        if target_type is undefined.UNDEFINED:
-            if isinstance(target, users.PartialUser):
-                target_type = channels_.PermissionOverwriteType.MEMBER
-            elif isinstance(target, guilds.Role):
-                target_type = channels_.PermissionOverwriteType.ROLE
-            elif isinstance(target, channels_.PermissionOverwrite):
-                target_type = target.type
-            else:
-                raise TypeError(
-                    "Cannot determine the type of the target to update. Try specifying 'target_type' manually."
-                )
-
-        target = target.id if isinstance(target, channels_.PermissionOverwrite) else target
-        route = routes.PUT_CHANNEL_PERMISSIONS.compile(channel=channel, overwrite=target)
-        body = data_binding.JSONObjectBuilder()
-        body.put("type", target_type)
-        body.put("allow", allow)
-        body.put("deny", deny)
-        await self._request(route, json=body, reason=reason)
+        return await self.edit_permission_overwrite(
+            channel, target, target_type=target_type, allow=allow, deny=deny, reason=reason
+        )
 
     async def delete_permission_overwrite(
         self,
