@@ -596,6 +596,110 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If an internal error occurs on Discord while handling the request.
         """  # noqa: E501 - Line too long
 
+    @typing.overload
+    @abc.abstractmethod
+    async def edit_permission_overwrites(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
+        target: typing.Union[channels_.PermissionOverwrite, users.PartialUser, guilds.PartialRole],
+        *,
+        allow: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
+        deny: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
+        """Edit permissions for a target entity.
+
+        .. deprecated:: 2.0.0.dev109
+            Use `RESTClient.edit_permission_overwrite` instead.
+        """
+
+    @typing.overload
+    @abc.abstractmethod
+    async def edit_permission_overwrites(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
+        target: snowflakes.Snowflakeish,
+        *,
+        target_type: typing.Union[channels_.PermissionOverwriteType, int],
+        allow: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
+        deny: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
+        """Edit permissions for a given entity ID and type.
+
+        .. deprecated:: 2.0.0.dev109
+            Use `RESTClient.edit_permission_overwrite` instead.
+        """
+
+    @abc.abstractmethod
+    async def edit_permission_overwrites(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
+        target: typing.Union[
+            snowflakes.Snowflakeish, users.PartialUser, guilds.PartialRole, channels_.PermissionOverwrite
+        ],
+        *,
+        target_type: undefined.UndefinedOr[typing.Union[channels_.PermissionOverwriteType, int]] = undefined.UNDEFINED,
+        allow: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
+        deny: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
+        """Edit permissions for a specific entity in the given guild channel.
+
+        .. deprecated:: 2.0.0.dev109
+            Use `RESTClient.edit_permission_overwrite` instead.
+
+        Parameters
+        ----------
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildChannel]
+            The channel to edit a permission overwrite in. This may be the
+            object, or the ID of an existing channel.
+        target : typing.Union[hikari.users.PartialUser, hikari.guilds.PartialRole, hikari.channels.PermissionOverwrite, hikari.snowflakes.Snowflakeish]
+            The channel overwrite to edit. This may be the object or the ID of an
+            existing overwrite.
+
+        Other Parameters
+        ----------------
+        target_type : hikari.undefined.UndefinedOr[typing.Union[hikari.channels.PermissionOverwriteType, int]]
+            If provided, the type of the target to update. If unset, will attempt to get
+            the type from `target`.
+        allow : hikari.undefined.UndefinedOr[hikari.permissions.Permissions]
+            If provided, the new vale of all allowed permissions.
+        deny : hikari.undefined.UndefinedOr[hikari.permissions.Permissions]
+            If provided, the new vale of all disallowed permissions.
+        reason : hikari.undefined.UndefinedOr[builtins.str]
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Raises
+        ------
+        builtins.TypeError
+            If `target_type` is unset and we were unable to determine the type
+            from `target`.
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you are missing the `MANAGE_PERMISSIONS` permission in the channel.
+        hikari.errors.NotFoundError
+            If the channel is not found or the target is not found if it is
+            a role.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """  # noqa: E501 - Line too long
+
     @abc.abstractmethod
     async def delete_permission_overwrite(
         self,

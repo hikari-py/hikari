@@ -1078,6 +1078,39 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("deny", deny)
         await self._request(route, json=body, reason=reason)
 
+    @deprecation.deprecated("2.0.0.dev109", "edit_permission_overwrite")
+    async def edit_permission_overwrites(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
+        target: typing.Union[
+            snowflakes.Snowflakeish, users.PartialUser, guilds.PartialRole, channels_.PermissionOverwrite
+        ],
+        *,
+        target_type: undefined.UndefinedOr[typing.Union[channels_.PermissionOverwriteType, int]] = undefined.UNDEFINED,
+        allow: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
+        deny: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
+        if target_type is undefined.UNDEFINED:
+            if isinstance(target, users.PartialUser):
+                target_type = channels_.PermissionOverwriteType.MEMBER
+            elif isinstance(target, guilds.Role):
+                target_type = channels_.PermissionOverwriteType.ROLE
+            elif isinstance(target, channels_.PermissionOverwrite):
+                target_type = target.type
+            else:
+                raise TypeError(
+                    "Cannot determine the type of the target to update. Try specifying 'target_type' manually."
+                )
+
+        target = target.id if isinstance(target, channels_.PermissionOverwrite) else target
+        route = routes.PUT_CHANNEL_PERMISSIONS.compile(channel=channel, overwrite=target)
+        body = data_binding.JSONObjectBuilder()
+        body.put("type", target_type)
+        body.put("allow", allow)
+        body.put("deny", deny)
+        await self._request(route, json=body, reason=reason)
+
     async def delete_permission_overwrite(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
