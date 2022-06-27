@@ -2175,20 +2175,24 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="cause why not :)")
 
     async def test_edit_permission_overwrites(self, rest_client):
-        target = StubModel(456)
-        expected_route = routes.PUT_CHANNEL_PERMISSIONS.compile(channel=123, overwrite=456)
-        rest_client._request = mock.AsyncMock()
-        expected_json = {"type": 1, "allow": 4, "deny": 1}
+        with mock.patch.object(rest_client, "edit_permission_overwrite") as edit_permission_overwrite:
+            await rest_client.edit_permission_overwrites(
+                StubModel(123),
+                StubModel(456),
+                target_type=channels.PermissionOverwriteType.MEMBER,
+                allow=permissions.Permissions.BAN_MEMBERS,
+                deny=permissions.Permissions.CREATE_INSTANT_INVITE,
+                reason="cause why not :)",
+            )
 
-        await rest_client.edit_permission_overwrites(
+        edit_permission_overwrite.assert_awaited_once_with(
             StubModel(123),
-            target,
+            StubModel(456),
             target_type=channels.PermissionOverwriteType.MEMBER,
             allow=permissions.Permissions.BAN_MEMBERS,
             deny=permissions.Permissions.CREATE_INSTANT_INVITE,
             reason="cause why not :)",
         )
-        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="cause why not :)")
 
     @pytest.mark.parametrize(
         ("target", "expected_type"),
@@ -2242,65 +2246,9 @@ class TestRESTClientImplAsync:
         await rest_client.edit_permission_overwrite(StubModel(123), target)
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason=undefined.UNDEFINED)
 
-    @pytest.mark.parametrize(
-        ("target", "expected_type"),
-        [
-            (
-                users.UserImpl(
-                    id=456,
-                    app=object(),
-                    avatar_hash="",
-                    banner_hash="",
-                    accent_color=123456,
-                    discriminator="",
-                    flags=0,
-                    username="",
-                    is_bot=True,
-                    is_system=True,
-                ),
-                channels.PermissionOverwriteType.MEMBER,
-            ),
-            (
-                guilds.Role(
-                    id=456,
-                    app=object(),
-                    color=None,
-                    guild_id=123,
-                    is_hoisted=True,
-                    icon_hash="icon_hash",
-                    unicode_emoji=None,
-                    is_managed=False,
-                    name="",
-                    is_mentionable=True,
-                    permissions=0,
-                    position=0,
-                    bot_id=None,
-                    integration_id=None,
-                    is_premium_subscriber_role=False,
-                ),
-                channels.PermissionOverwriteType.ROLE,
-            ),
-            (
-                channels.PermissionOverwrite(type=channels.PermissionOverwriteType.MEMBER, id=456),
-                channels.PermissionOverwriteType.MEMBER,
-            ),
-        ],
-    )
-    async def test_edit_permission_overwrites_when_target_undefined(self, rest_client, target, expected_type):
-        expected_route = routes.PUT_CHANNEL_PERMISSIONS.compile(channel=123, overwrite=456)
-        rest_client._request = mock.AsyncMock()
-        expected_json = {"type": expected_type}
-
-        await rest_client.edit_permission_overwrites(StubModel(123), target)
-        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason=undefined.UNDEFINED)
-
     async def test_edit_permission_overwrite_when_cant_determine_target_type(self, rest_client):
         with pytest.raises(TypeError):
             await rest_client.edit_permission_overwrite(StubModel(123), StubModel(123))
-
-    async def test_edit_permission_overwrites_when_cant_determine_target_type(self, rest_client):
-        with pytest.raises(TypeError):
-            await rest_client.edit_permission_overwrites(StubModel(123), StubModel(123))
 
     async def test_delete_permission_overwrite(self, rest_client):
         expected_route = routes.DELETE_CHANNEL_PERMISSIONS.compile(channel=123, overwrite=456)
