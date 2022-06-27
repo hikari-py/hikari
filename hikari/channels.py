@@ -1035,9 +1035,9 @@ class GuildChannel(PartialChannel):
             If provided, the type of the target to update. If unset, will attempt to get
             the type from `target`.
         allow : hikari.undefined.UndefinedOr[hikari.permissions.Permissions]
-            If provided, the new vale of all allowed permissions.
+            If provided, the new value of all allowed permissions.
         deny : hikari.undefined.UndefinedOr[hikari.permissions.Permissions]
-            If provided, the new vale of all disallowed permissions.
+            If provided, the new value of all disallowed permissions.
         reason : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
