@@ -609,7 +609,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> None:
         """Edit permissions for a target entity.
 
-        .. deprecated:: 2.0.0.dev109
+        .. deprecated:: 2.0.0.dev110
             Use `RESTClient.edit_permission_overwrite` instead.
         """
 
@@ -627,7 +627,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> None:
         """Edit permissions for a given entity ID and type.
 
-        .. deprecated:: 2.0.0.dev109
+        .. deprecated:: 2.0.0.dev110
             Use `RESTClient.edit_permission_overwrite` instead.
         """
 
@@ -646,7 +646,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> None:
         """Edit permissions for a specific entity in the given guild channel.
 
-        .. deprecated:: 2.0.0.dev109
+        .. deprecated:: 2.0.0.dev110
             Use `RESTClient.edit_permission_overwrite` instead.
 
         Parameters
