@@ -2049,6 +2049,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_target_id := data_payload.get("target_id"):
             target_id = snowflakes.Snowflake(raw_target_id)
 
+        app_perms = payload.get("app_permissions")
         return command_interactions.CommandInteraction(
             app=self._app,
             application_id=snowflakes.Snowflake(payload["application_id"]),
@@ -2068,6 +2069,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             options=options,
             resolved=resolved,
             target_id=target_id,
+            app_permissions=permission_models.Permissions(app_perms) if app_perms is not None else None,
         )
 
     def deserialize_autocomplete_interaction(
@@ -2167,6 +2169,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             member = None
             user = self.deserialize_user(payload["user"])
 
+        app_perms = payload.get("app_permissions")
         return component_interactions.ComponentInteraction(
             app=self._app,
             application_id=snowflakes.Snowflake(payload["application_id"]),
@@ -2184,6 +2187,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             message=self.deserialize_message(payload["message"]),
             locale=locales.Locale(payload["locale"]),
             guild_locale=locales.Locale(payload["guild_locale"]) if "guild_locale" in payload else None,
+            app_permissions=permission_models.Permissions(app_perms) if app_perms is not None else None,
         )
 
     ##################

@@ -55,6 +55,7 @@ class TestComponentInteraction:
             message=object(),
             locale="es-ES",
             guild_locale="en-US",
+            app_permissions=123321,
         )
 
     def test_build_response(self, mock_component_interaction, mock_app):
