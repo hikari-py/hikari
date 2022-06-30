@@ -364,6 +364,9 @@ class BaseCommandInteraction(base_interactions.PartialInteraction):
 class CommandInteraction(BaseCommandInteraction, base_interactions.MessageResponseMixin[CommandResponseTypesT]):
     """Represents a command interaction on Discord."""
 
+    app_permissions: typing.Optional[permissions_.Permissions] = attr.field(eq=False, hash=False, repr=False)
+    """Permissions the bot has in this interaction's channel if it's in a guild."""
+
     options: typing.Optional[typing.Sequence[CommandInteractionOption]] = attr.field(eq=False, hash=False, repr=True)
     """Parameter values provided by the user invoking this command."""
 
