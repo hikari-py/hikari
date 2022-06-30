@@ -1311,6 +1311,14 @@ class GuildVoiceChannel(TextableGuildChannel):
     video_quality_mode: typing.Union[VideoQualityMode, int] = attr.field(eq=False, hash=False, repr=False)
     """The video quality mode for the voice channel."""
 
+    last_message_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
+    """The ID of the last message sent in this channel.
+
+    !!! warning
+        This might point to an invalid or deleted message. Do not assume that
+        this will always be valid.
+    """
+
 
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
 class GuildStageChannel(GuildChannel):
