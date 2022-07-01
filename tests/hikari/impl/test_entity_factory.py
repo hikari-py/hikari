@@ -99,6 +99,7 @@ def guild_voice_channel_payload(permission_overwrite_payload):
         "rtc_region": "europe",
         "parent_id": "456",
         "video_quality_mode": 1,
+        "last_message_id": 1234567890,
     }
 
 

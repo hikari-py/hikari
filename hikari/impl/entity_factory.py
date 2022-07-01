@@ -981,6 +981,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         channel_fields = self._set_guild_channel_attributes(payload, guild_id=guild_id)
         # Discord seems to be only returning this after it's been initially PATCHed in for older channels.
         video_quality_mode = payload.get("video_quality_mode", channel_models.VideoQualityMode.AUTO)
+
+        last_message_id: typing.Optional[snowflakes.Snowflake] = None
+        if (raw_last_message_id := payload.get("last_message_id")) is not None:
+            last_message_id = snowflakes.Snowflake(raw_last_message_id)
+
         return channel_models.GuildVoiceChannel(
             app=self._app,
             id=channel_fields.id,
@@ -997,6 +1002,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             bitrate=int(payload["bitrate"]),
             user_limit=int(payload["user_limit"]),
             video_quality_mode=channel_models.VideoQualityMode(int(video_quality_mode)),
+            last_message_id=last_message_id,
         )
 
     def deserialize_guild_stage_channel(
