@@ -1791,20 +1791,20 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_options := payload.get("options"):
             options = [self._deserialize_command_option(option) for option in raw_options]
 
-        name_localizations: typing.Mapping[str, str]
+        name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str]
         if raw_name_localizations := payload.get("name_localizations"):
             name_localizations = {locales.Locale(k): raw_name_localizations[k] for k in raw_name_localizations}
         else:
             name_localizations = {}
 
-        description_localizations: typing.Mapping[str, str]
+        description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str]
         if raw_description_localizations := payload.get("description_localizations"):
             description_localizations = {
                 locales.Locale(k): raw_description_localizations[k] for k in raw_description_localizations
             }
         else:
             description_localizations = {}
-            
+
         # Discord considers 0 the same thing as ADMINISTRATORS, but we make it nicer to work with
         # by setting it correctly.
         default_member_permissions = payload["default_member_permissions"]
@@ -1839,9 +1839,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             raw_guild_id = payload["guild_id"]
             guild_id = snowflakes.Snowflake(raw_guild_id) if raw_guild_id is not None else None
 
-        name_localizations: typing.Mapping[str, str] = {}
+        name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str]
         if raw_name_localizations := payload.get("name_localizations"):
             name_localizations = {locales.Locale(k): raw_name_localizations[k] for k in raw_name_localizations}
+        else:
+            name_localizations = {}
 
         # Discord considers 0 the same thing as ADMINISTRATORS, but we make it nicer to work with
         # by setting it correctly.

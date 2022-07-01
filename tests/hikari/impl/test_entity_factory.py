@@ -3776,8 +3776,6 @@ class TestEntityFactoryImpl:
                     options=None,
                 )
             ],
-            description_localizations=None,
-            name_localizations=None,
         )
 
         result = entity_factory_impl.serialize_command_option(option)
@@ -3799,10 +3797,12 @@ class TestEntityFactoryImpl:
                     "name": "go home",
                     "required": False,
                     "choices": [{"name": "boo", "value": "hoo"}],
+                    "description_localizations": {},
+                    "name_localizations": {},
                 }
             ],
-            "description_localizations": None,
-            "name_localizations": None,
+            "description_localizations": {},
+            "name_localizations": {},
         }
 
     @pytest.fixture()

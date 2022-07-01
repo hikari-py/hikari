@@ -57,6 +57,7 @@ if typing.TYPE_CHECKING:
     from hikari import emojis
     from hikari import files
     from hikari import guilds
+    from hikari import locales
     from hikari import messages
     from hikari import permissions as permissions_
     from hikari import snowflakes
@@ -940,11 +941,6 @@ class CommandBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def name_localizations(self) -> undefined.UndefinedOr[typing.Mapping[str, str]]:
-        """Name localizations set for this command."""
-
-    @property
-    @abc.abstractmethod
     def name(self) -> str:
         r"""Name to set for this command.
 
@@ -997,6 +993,11 @@ class CommandBuilder(abc.ABC):
         Only applicable to globally-scoped commands.
         """
 
+    @property
+    @abc.abstractmethod
+    def name_localizations(self) -> undefined.UndefinedOr[typing.Mapping[typing.Union[locales.Locale, str], str]]:
+        """Name localizations set for this command."""
+
     @abc.abstractmethod
     def set_id(self: _T, id_: undefined.UndefinedOr[snowflakes.Snowflakeish], /) -> _T:
         """Set the ID of this command.
@@ -1012,21 +1013,6 @@ class CommandBuilder(abc.ABC):
             Object of this command builder.
         """
 
-    @abc.abstractmethod
-    def set_name_localizations(self: _T, name_localizations: undefined.UndefinedOr[typing.Mapping[str, str]], /) -> _T:
-        """Set the name localizations for this command.
-
-        Parameters
-        ----------
-        name_localizations : hikari.undefined.UndefinedOr[typing.Mapping[str, str]]
-            The name localizations to set for this command.
-            
-        Returns
-        -------
-        CommandBuilder
-            Object of this command builder.
-        """
-         
     @abc.abstractmethod
     def set_default_member_permissions(
         self: _T, default_member_permissions: typing.Union[undefined.UndefinedType, int, permissions_.Permissions], /
@@ -1045,12 +1031,6 @@ class CommandBuilder(abc.ABC):
         -------
         CommandBuilder
             Object of this command builder.
-        """
-
-    @abc.abstractmethod
-    def set_default_permission(self: _T, state: undefined.UndefinedOr[bool], /) -> _T:
-        """Whether this command should be enabled by default (without any permissions).
-            Object of this command builder for chained calls.
         """
 
     @abc.abstractmethod
@@ -1114,6 +1094,23 @@ class CommandBuilder(abc.ABC):
             The created command.
         """
 
+    @abc.abstractmethod
+    def set_name_localizations(
+        self: _T, name_localizations: undefined.UndefinedOr[typing.Mapping[typing.Union[locales.Locale, str], str]], /
+    ) -> _T:
+        """Set the name localizations for this command.
+
+        Parameters
+        ----------
+        name_localizations : hikari.undefined.UndefinedOr[typing.Mapping[typing.Union[hikari.locales.Locale, str], str]]
+            The name localizations to set for this command.
+
+        Returns
+        -------
+        CommandBuilder
+            Object of this command builder.
+        """
+
 
 class SlashCommandBuilder(CommandBuilder):
     """SlashCommandBuilder."""
@@ -1136,18 +1133,22 @@ class SlashCommandBuilder(CommandBuilder):
 
     @property
     @abc.abstractmethod
-    def description_localizations(self) -> undefined.UndefinedOr[typing.Mapping[str, str]]:
+    def description_localizations(
+        self,
+    ) -> undefined.UndefinedOr[typing.Mapping[typing.Union[locales.Locale, str], str]]:
         """Command's localised descriptions."""
 
     @abc.abstractmethod
     def set_description_localizations(
-        self: _T, description_localizations: undefined.UndefinedOr[typing.Mapping[str, str]], /
+        self: _T,
+        description_localizations: undefined.UndefinedOr[typing.Mapping[typing.Union[locales.Locale, str], str]],
+        /,
     ) -> _T:
         """Set the localised descriptions for this command.
 
         Parameters
         ----------
-        description_localizations : hikari.undefined.UndefinedOr[typing.Mapping[str, str]]
+        description_localizations : hikari.undefined.UndefinedOr[typing.Mapping[typing.Union[hikari.locales.Locale, str], str]]
             The description localizations to set for this command.
 
         Returns

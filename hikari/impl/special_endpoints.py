@@ -52,6 +52,7 @@ from hikari import emojis
 from hikari import errors
 from hikari import files
 from hikari import iterators
+from hikari import locales
 from hikari import messages
 from hikari import snowflakes
 from hikari import undefined
@@ -1096,11 +1097,9 @@ class CommandBuilder(special_endpoints.CommandBuilder):
     )
     _is_dm_enabled: undefined.UndefinedOr[bool] = attr.field(default=undefined.UNDEFINED, kw_only=True)
 
-    _name_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = attr.field(factory=dict, kw_only=True)
-
-    @property
-    def name_localizations(self) -> undefined.UndefinedOr[typing.Mapping[str, str]]:
-        return self._name_localizations.copy()
+    _name_localizations: undefined.UndefinedOr[typing.Mapping[typing.Union[locales.Locale, str], str]] = attr.field(
+        factory=dict, kw_only=True
+    )
 
     @property
     def id(self) -> undefined.UndefinedOr[snowflakes.Snowflake]:
@@ -1117,6 +1116,10 @@ class CommandBuilder(special_endpoints.CommandBuilder):
     @property
     def name(self) -> str:
         return self._name
+
+    @property
+    def name_localizations(self) -> undefined.UndefinedOr[typing.Mapping[typing.Union[locales.Locale, str], str]]:
+        return self._name_localizations
 
     def set_id(self: _CommandBuilderT, id_: undefined.UndefinedOr[snowflakes.Snowflakeish], /) -> _CommandBuilderT:
         self._id = snowflakes.Snowflake(id_) if id_ is not undefined.UNDEFINED else undefined.UNDEFINED
@@ -1136,7 +1139,7 @@ class CommandBuilder(special_endpoints.CommandBuilder):
 
     def set_name_localizations(
         self: _CommandBuilderT,
-        name_localizations: undefined.UndefinedOr[typing.Mapping[str, str]],
+        name_localizations: undefined.UndefinedOr[typing.Mapping[typing.Union[locales.Locale, str], str]],
         /,
     ) -> _CommandBuilderT:
         self._name_localizations = name_localizations
@@ -1160,7 +1163,9 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
 
     _description: str = attr.field()
     _options: typing.List[commands.CommandOption] = attr.field(factory=list, kw_only=True)
-    _description_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = attr.field(factory=dict, kw_only=True)
+    _description_localizations: undefined.UndefinedOr[
+        typing.Mapping[typing.Union[locales.Locale, str], str]
+    ] = attr.field(factory=dict, kw_only=True)
 
     @property
     def description(self) -> str:
@@ -1168,15 +1173,17 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
 
     def set_description_localizations(
         self: _SlashCommandBuilderT,
-        description_localizations: undefined.UndefinedOr[typing.Mapping[str, str]],
+        description_localizations: undefined.UndefinedOr[typing.Mapping[typing.Union[locales.Locale, str], str]],
         /,
     ) -> _SlashCommandBuilderT:
         self._description_localizations = description_localizations
         return self
 
     @property
-    def description_localizations(self) -> undefined.UndefinedOr[typing.Mapping[str, str]]:
-        return self._description_localizations.copy()
+    def description_localizations(
+        self,
+    ) -> undefined.UndefinedOr[typing.Mapping[typing.Union[locales.Locale, str], str]]:
+        return self._description_localizations
 
     @property
     def type(self) -> commands.CommandType:

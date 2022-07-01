@@ -4809,11 +4809,13 @@ class TestRESTClientImplAsync:
         expected_route = routes.POST_APPLICATION_COMMAND.compile(application=4332123)
         rest_client._request = mock.AsyncMock(return_value={"id": "29393939"})
 
-        result = await rest_client.create_slash_command(
-            StubModel(4332123),
-            "okokok",
-            "not ok anymore",
+        result = await rest_client._create_application_command(
+            application=StubModel(4332123),
+            type=100,
+            name="okokok",
+            description="not ok anymore",
             default_member_permissions=permissions.Permissions.NONE,
+        )
 
         assert result is rest_client._request.return_value
         rest_client._request.assert_awaited_once_with(
@@ -4867,13 +4869,13 @@ class TestRESTClientImplAsync:
         mock_guild = StubModel(123123123)
 
         result = await rest_client.create_context_menu_command(
-            StubModel(4332123), 2, "okokok", name_localizations={locales.Locale.TR: "hhh"}
             mock_application,
             commands.CommandType.USER,
             "okokok",
             guild=mock_guild,
             default_member_permissions=permissions.Permissions.ADMINISTRATOR,
             dm_enabled=False,
+            name_localizations={locales.Locale.TR: "hhh"},
         )
 
         assert result is rest_client._entity_factory.deserialize_context_menu_command.return_value
@@ -4886,8 +4888,8 @@ class TestRESTClientImplAsync:
             name="okokok",
             guild=mock_guild,
             default_member_permissions=permissions.Permissions.ADMINISTRATOR,
-            name_Localizations={"tr": "hhh"}
             dm_enabled=False,
+            name_localizations={"tr": "hhh"},
         )
 
     async def test_set_application_commands_with_guild(self, rest_client):

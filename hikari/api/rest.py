@@ -6823,8 +6823,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
-        name_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = undefined.UNDEFINED,
-        description_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = undefined.UNDEFINED,
+        name_localizations: undefined.UndefinedOr[
+            typing.Mapping[typing.Union[locales.Locale, str], str]
+        ] = undefined.UNDEFINED,
+        description_localizations: undefined.UndefinedOr[
+            typing.Mapping[typing.Union[locales.Locale, str], str]
+        ] = undefined.UNDEFINED,
         default_member_permissions: typing.Union[
             undefined.UndefinedType, int, permissions_.Permissions
         ] = undefined.UNDEFINED,
@@ -6851,9 +6855,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             a global command rather than a guild specific one.
         options : hikari.undefined.UndefinedOr[typing.Sequence[hikari.commands.CommandOption]]
             A sequence of up to 10 options for this command.
-        name_localizations : hikari.undefined.UndefinedOr[typing.Mapping[str, str]]
+        name_localizations : hikari.undefined.UndefinedOr[typing.Mapping[typing.Union[hikari.locales.Locale, str], str]]
             The name localizations for this command.
-        description_localizations : hikari.undefined.UndefinedOr[typing.Mapping[str, str]]
+        description_localizations : hikari.undefined.UndefinedOr[typing.Mapping[typing.Union[hikari.locales.Locale, str], str]]
             The name localizations for this command.
         default_member_permissions : typing.Union[hikari.undefined.UndefinedType, int, hikari.permissions.Permissions]
             Member permissions necessary to utilize this command by default.
@@ -6862,7 +6866,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             administrators of the guild and overwrites.
         dm_enabled : hikari.undefined.UndefinedOr[builtins.bool]
             Whether this command is enabled in DMs with the bot.
-            
+
             This can only be applied to non-guild commands.
 
         Returns
@@ -6903,7 +6907,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         name: str,
         *,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
-        name_localizations: undefined.UndefinedOr[typing.Mapping[str, str]] = undefined.UNDEFINED,
+        name_localizations: undefined.UndefinedOr[
+            typing.Mapping[typing.Union[locales.Locale, str], str]
+        ] = undefined.UNDEFINED,
         default_member_permissions: typing.Union[
             undefined.UndefinedType, int, permissions_.Permissions
         ] = undefined.UNDEFINED,
@@ -6929,7 +6935,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Object or ID of the specific guild this should be made for.
             If left as `hikari.undefined.UNDEFINED` then this call will create
             a global command rather than a guild specific one.
-        name_localizations : hikari.undefined.UndefinedOr[typing.Mapping[str, str]]
+        name_localizations : hikari.undefined.UndefinedOr[typing.Mapping[typing.Union[hikari.locales.Locale, str], str]]
             The name localizations for this command.
         default_member_permissions : typing.Union[hikari.undefined.UndefinedType, int, hikari.permissions.Permissions]
             Member permissions necessary to utilize this command by default.
@@ -6938,7 +6944,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             administrators of the guild and overwrites.
         dm_enabled : hikari.undefined.UndefinedOr[builtins.bool]
             Whether this command is enabled in DMs with the bot.
-            
+
             This can only be applied to non-guild commands.
 
 
