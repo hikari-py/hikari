@@ -995,7 +995,7 @@ class CommandBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def name_localizations(self) -> undefined.UndefinedOr[typing.Mapping[typing.Union[locales.Locale, str], str]]:
+    def name_localizations(self) -> typing.Mapping[typing.Union[locales.Locale, str], str]:
         """Name localizations set for this command."""
 
     @abc.abstractmethod
@@ -1096,7 +1096,7 @@ class CommandBuilder(abc.ABC):
 
     @abc.abstractmethod
     def set_name_localizations(
-        self: _T, name_localizations: undefined.UndefinedOr[typing.Mapping[typing.Union[locales.Locale, str], str]], /
+        self: _T, name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str], /
     ) -> _T:
         """Set the name localizations for this command.
 
@@ -1135,13 +1135,13 @@ class SlashCommandBuilder(CommandBuilder):
     @abc.abstractmethod
     def description_localizations(
         self,
-    ) -> undefined.UndefinedOr[typing.Mapping[typing.Union[locales.Locale, str], str]]:
+    ) -> typing.Mapping[typing.Union[locales.Locale, str], str]:
         """Command's localised descriptions."""
 
     @abc.abstractmethod
     def set_description_localizations(
         self: _T,
-        description_localizations: undefined.UndefinedOr[typing.Mapping[typing.Union[locales.Locale, str], str]],
+        description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str],
         /,
     ) -> _T:
         """Set the localised descriptions for this command.

@@ -1097,9 +1097,7 @@ class CommandBuilder(special_endpoints.CommandBuilder):
     )
     _is_dm_enabled: undefined.UndefinedOr[bool] = attr.field(default=undefined.UNDEFINED, kw_only=True)
 
-    _name_localizations: undefined.UndefinedOr[typing.Mapping[typing.Union[locales.Locale, str], str]] = attr.field(
-        factory=dict, kw_only=True
-    )
+    _name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attr.field(factory=dict, kw_only=True)
 
     @property
     def id(self) -> undefined.UndefinedOr[snowflakes.Snowflake]:
@@ -1118,7 +1116,7 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         return self._name
 
     @property
-    def name_localizations(self) -> undefined.UndefinedOr[typing.Mapping[typing.Union[locales.Locale, str], str]]:
+    def name_localizations(self) -> typing.Mapping[typing.Union[locales.Locale, str], str]:
         return self._name_localizations
 
     def set_id(self: _CommandBuilderT, id_: undefined.UndefinedOr[snowflakes.Snowflakeish], /) -> _CommandBuilderT:
@@ -1139,7 +1137,7 @@ class CommandBuilder(special_endpoints.CommandBuilder):
 
     def set_name_localizations(
         self: _CommandBuilderT,
-        name_localizations: undefined.UndefinedOr[typing.Mapping[typing.Union[locales.Locale, str], str]],
+        name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str],
         /,
     ) -> _CommandBuilderT:
         self._name_localizations = name_localizations
@@ -1163,26 +1161,18 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
 
     _description: str = attr.field()
     _options: typing.List[commands.CommandOption] = attr.field(factory=list, kw_only=True)
-    _description_localizations: undefined.UndefinedOr[
-        typing.Mapping[typing.Union[locales.Locale, str], str]
-    ] = attr.field(factory=dict, kw_only=True)
+    _description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attr.field(
+        factory=dict, kw_only=True
+    )
 
     @property
     def description(self) -> str:
         return self._description
 
-    def set_description_localizations(
-        self: _SlashCommandBuilderT,
-        description_localizations: undefined.UndefinedOr[typing.Mapping[typing.Union[locales.Locale, str], str]],
-        /,
-    ) -> _SlashCommandBuilderT:
-        self._description_localizations = description_localizations
-        return self
-
     @property
     def description_localizations(
         self,
-    ) -> undefined.UndefinedOr[typing.Mapping[typing.Union[locales.Locale, str], str]]:
+    ) -> typing.Mapping[typing.Union[locales.Locale, str], str]:
         return self._description_localizations
 
     @property
@@ -1196,6 +1186,14 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
     @property
     def options(self) -> typing.Sequence[commands.CommandOption]:
         return self._options.copy()
+
+    def set_description_localizations(
+        self: _SlashCommandBuilderT,
+        description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str],
+        /,
+    ) -> _SlashCommandBuilderT:
+        self._description_localizations = description_localizations
+        return self
 
     def build(self, entity_factory: entity_factory_.EntityFactory, /) -> typing.MutableMapping[str, typing.Any]:
         data = super().build(entity_factory)

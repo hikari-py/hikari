@@ -184,14 +184,10 @@ class CommandOption:
     and `builtins.float` if the type is `hikari.commands.OptionType.FLOAT`.
     """
 
-    name_localizations: undefined.UndefinedOr[typing.Mapping[typing.Union[locales.Locale, str], str]] = attr.field(
-        factory=dict
-    )
+    name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attr.field(factory=dict)
     """A set of name localizations for this option."""
 
-    description_localizations: undefined.UndefinedOr[
-        typing.Mapping[typing.Union[locales.Locale, str], str]
-    ] = attr.field(factory=dict)
+    description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attr.field(factory=dict)
     """A set of description localizations for this option"""
 
 
@@ -238,14 +234,10 @@ class PartialCommand(snowflakes.Unique):
     version: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
     """Auto-incrementing version identifier updated during substantial record changes."""
 
-    name_localizations: undefined.UndefinedOr[typing.Mapping[typing.Union[locales.Locale, str], str]] = attr.field(
-        factory=dict
-    )
+    name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attr.field(factory=dict)
     """A set of name localizations for this command"""
 
-    description_localizations: undefined.UndefinedOr[
-        typing.Mapping[typing.Union[locales.Locale, str], str]
-    ] = attr.field(factory=dict)
+    description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attr.field(factory=dict)
     """A set of description localizations for this command"""
 
     async def fetch_self(self) -> PartialCommand:
