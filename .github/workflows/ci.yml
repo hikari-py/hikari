@@ -163,21 +163,17 @@ jobs:
   # other jobs are subject to change
   ci-done:
     needs: [upload-coverage, linting, twemoji, pages]
-    if: always()
+    if: always() && !cancelled()
 
     runs-on: ubuntu-latest
 
     steps:
-      - name: Mark status based on past job status
+      - name: Set status based on required jobs
         env:
-          # All new need jobs need to be added here with the prefix "RESULT_"
-          RESULT_UPLOAD_COVERAGE: ${{ needs.upload-coverage.result }}
-          RESULT_LINTING: ${{ needs.linting.result }}
-          RESULT_TWEMOJI: ${{ needs.twemoji.result }}
-          RESULT_PAGES: ${{ needs.pages.result }}
+          RESULTS: ${{ join(needs.*.result, ' ') }}
         run: |
-          if [ "$(env | grep 'RESULT_')" = "$(env | grep "RESULT_" | grep '=success')" ]; then
-            exit 0
-          else
-            exit 1
-          fi
+          for result in $RESULTS; do
+            if [ "$result" != "success" ]; then
+              exit 1
+            fi
+          done

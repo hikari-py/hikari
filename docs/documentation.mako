@@ -550,7 +550,7 @@
             sphobjinv.DataObjStr(
                 name = name,
                 domain = "py",
-                role = "var",
+                role = "variable",
                 uri = v.url(),
                 priority = "1",
                 dispname = "-",
@@ -602,7 +602,7 @@
                 sphobjinv.DataObjStr(
                     name = f.obj.__module__ + "." + f.obj.__qualname__,
                     domain = "py",
-                    role = "func",
+                    role = "function",
                     uri = f.url(),
                     priority = "1",
                     dispname = "-",

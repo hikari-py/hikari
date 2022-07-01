@@ -29,26 +29,26 @@ sphobjinv==2.2.2
 #################
 
 mypy==0.961
-pyright==1.1.255
+pyright==1.1.256
 
 #######################
 # DEPENDENCY CHECKING #
 #######################
 
-safety~=1.10.3
+safety~=2.0.0
 
 ##############
 # FORMATTING #
 ##############
 
-black==22.3.0
+black==22.6.0
 isort==5.10.1
 
 ###########
 # Linting #
 ###########
 
-slotscheck==0.14.0
+slotscheck==0.14.1
 
 ##################
 # SPELL CHECKING #

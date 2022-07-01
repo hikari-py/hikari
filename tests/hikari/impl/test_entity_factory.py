@@ -3527,6 +3527,7 @@ class TestEntityFactoryImpl:
             "guild_locale": "en-US",
             "version": 69420,
             "application_id": "76234234",
+            "app_permissions": "54123",
         }
 
     def test_deserialize_command_interaction(
@@ -3559,6 +3560,7 @@ class TestEntityFactoryImpl:
         assert interaction.resolved == entity_factory_impl._deserialize_resolved_option_data(
             interaction_resolved_data_payload, guild_id=43123123
         )
+        assert interaction.app_permissions == 54123
 
         # CommandInteractionOption
         assert len(interaction.options) == 1
@@ -3610,6 +3612,7 @@ class TestEntityFactoryImpl:
             "guild_locale": "en-US",
             "version": 69420,
             "application_id": "76234234",
+            "app_permissions": "54123123",
         }
 
     def test_deserialize_command_interaction_with_context_menu_field(
@@ -3628,6 +3631,7 @@ class TestEntityFactoryImpl:
         del command_interaction_payload["data"]["resolved"]
         del command_interaction_payload["data"]["options"]
         del command_interaction_payload["guild_locale"]
+        del command_interaction_payload["app_permissions"]
 
         interaction = entity_factory_impl.deserialize_command_interaction(command_interaction_payload)
 
@@ -3637,6 +3641,7 @@ class TestEntityFactoryImpl:
         assert interaction.options is None
         assert interaction.resolved is None
         assert interaction.guild_locale is None
+        assert interaction.app_permissions is None
 
     @pytest.fixture()
     def autocomplete_interaction_payload(self, user_payload, interaction_resolved_data_payload):
@@ -3860,6 +3865,7 @@ class TestEntityFactoryImpl:
             "application_id": "290926444748734465",
             "locale": "es-ES",
             "guild_locale": "en-US",
+            "app_permissions": "5431234",
         }
 
     def test_deserialize_component_interaction(
@@ -3887,6 +3893,7 @@ class TestEntityFactoryImpl:
         assert interaction.locale is locales.Locale.ES_ES
         assert interaction.guild_locale == "en-US"
         assert interaction.guild_locale is locales.Locale.EN_US
+        assert interaction.app_permissions == 5431234
         assert isinstance(interaction, component_interactions.ComponentInteraction)
 
     def test_deserialize_component_interaction_with_undefined_fields(
@@ -3912,6 +3919,7 @@ class TestEntityFactoryImpl:
         assert interaction.user == entity_factory_impl.deserialize_user(user_payload)
         assert interaction.values == ()
         assert interaction.guild_locale is None
+        assert interaction.app_permissions is None
         assert isinstance(interaction, component_interactions.ComponentInteraction)
 
     ##################
