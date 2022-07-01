@@ -424,6 +424,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             audit_log_models.AuditLogChangeKey.APPLICATION_ID: snowflakes.Snowflake,
             audit_log_models.AuditLogChangeKey.PERMISSIONS: _with_int_cast(permission_models.Permissions),
             audit_log_models.AuditLogChangeKey.COLOR: color_models.Color,
+            audit_log_models.AuditLogChangeKey.COMMAND_ID: snowflakes.Snowflake,
             audit_log_models.AuditLogChangeKey.ALLOW: _with_int_cast(permission_models.Permissions),
             audit_log_models.AuditLogChangeKey.DENY: _with_int_cast(permission_models.Permissions),
             audit_log_models.AuditLogChangeKey.CHANNEL_ID: snowflakes.Snowflake,
@@ -1774,6 +1775,14 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_options := payload.get("options"):
             options = [self._deserialize_command_option(option) for option in raw_options]
 
+        # Discord considers 0 the same thing as ADMINISTRATORS, but we make it nicer to work with
+        # by setting it correctly.
+        default_member_permissions = payload["default_member_permissions"]
+        if default_member_permissions == 0:
+            default_member_permissions = permission_models.Permissions.ADMINISTRATOR
+        else:
+            default_member_permissions = permission_models.Permissions(default_member_permissions or 0)
+
         return commands.SlashCommand(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
@@ -1782,7 +1791,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=payload["name"],
             description=payload["description"],
             options=options,
-            default_permission=payload.get("default_permission", True),
+            default_member_permissions=default_member_permissions,
+            is_dm_enabled=payload.get("dm_permission", False),
             guild_id=guild_id,
             version=snowflakes.Snowflake(payload["version"]),
         )
@@ -1797,13 +1807,22 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             raw_guild_id = payload["guild_id"]
             guild_id = snowflakes.Snowflake(raw_guild_id) if raw_guild_id is not None else None
 
+        # Discord considers 0 the same thing as ADMINISTRATORS, but we make it nicer to work with
+        # by setting it correctly.
+        default_member_permissions = payload["default_member_permissions"]
+        if default_member_permissions == 0:
+            default_member_permissions = permission_models.Permissions.ADMINISTRATOR
+        else:
+            default_member_permissions = permission_models.Permissions(default_member_permissions or 0)
+
         return commands.ContextMenuCommand(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
             type=commands.CommandType(payload["type"]),
             application_id=snowflakes.Snowflake(payload["application_id"]),
             name=payload["name"],
-            default_permission=payload.get("default_permission", True),
+            default_member_permissions=default_member_permissions,
+            is_dm_enabled=payload.get("dm_permission", False),
             guild_id=guild_id,
             version=snowflakes.Snowflake(payload["version"]),
         )
@@ -1834,6 +1853,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             for perm in payload["permissions"]
         ]
         return commands.GuildCommandPermissions(
+            id=snowflakes.Snowflake(payload["id"]),
             application_id=snowflakes.Snowflake(payload["application_id"]),
             command_id=snowflakes.Snowflake(payload["id"]),
             guild_id=snowflakes.Snowflake(payload["guild_id"]),
@@ -2029,6 +2049,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_target_id := data_payload.get("target_id"):
             target_id = snowflakes.Snowflake(raw_target_id)
 
+        app_perms = payload.get("app_permissions")
         return command_interactions.CommandInteraction(
             app=self._app,
             application_id=snowflakes.Snowflake(payload["application_id"]),
@@ -2048,6 +2069,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             options=options,
             resolved=resolved,
             target_id=target_id,
+            app_permissions=permission_models.Permissions(app_perms) if app_perms is not None else None,
         )
 
     def deserialize_autocomplete_interaction(
@@ -2147,6 +2169,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             member = None
             user = self.deserialize_user(payload["user"])
 
+        app_perms = payload.get("app_permissions")
         return component_interactions.ComponentInteraction(
             app=self._app,
             application_id=snowflakes.Snowflake(payload["application_id"]),
@@ -2164,6 +2187,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             message=self.deserialize_message(payload["message"]),
             locale=locales.Locale(payload["locale"]),
             guild_locale=locales.Locale(payload["guild_locale"]) if "guild_locale" in payload else None,
+            app_permissions=permission_models.Permissions(app_perms) if app_perms is not None else None,
         )
 
     ##################
@@ -2427,6 +2451,20 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 except errors.UnrecognisedEntityError:
                     pass
 
+        channel_mentions: undefined.UndefinedOr[
+            typing.Dict[snowflakes.Snowflake, channel_models.PartialChannel]
+        ] = undefined.UNDEFINED
+        if raw_channel_mentions := payload.get("mention_channels"):
+            channel_mentions = {c.id: c for c in map(self.deserialize_partial_channel, raw_channel_mentions)}
+
+        user_mentions: undefined.UndefinedOr[typing.Dict[snowflakes.Snowflake, user_models.User]] = undefined.UNDEFINED
+        if raw_user_mentions := payload.get("mentions"):
+            user_mentions = {u.id: u for u in map(self.deserialize_user, raw_user_mentions)}
+
+        role_mention_ids: undefined.UndefinedOr[typing.List[snowflakes.Snowflake]] = undefined.UNDEFINED
+        if raw_role_mention_ids := payload.get("mention_roles"):
+            role_mention_ids = [snowflakes.Snowflake(i) for i in raw_role_mention_ids]
+
         message = message_models.PartialMessage(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
@@ -2454,33 +2492,15 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             application_id=application_id,
             interaction=interaction,
             components=components,
+            channel_mentions=channel_mentions,
+            user_mentions=user_mentions,
+            role_mention_ids=role_mention_ids,
+            mentions_everyone=payload.get("mention_everyone", undefined.UNDEFINED),
             # We initialize these next.
             mentions=NotImplemented,
         )
 
-        channels: undefined.UndefinedOr[typing.Dict[snowflakes.Snowflake, channel_models.PartialChannel]]
-        channels = undefined.UNDEFINED
-        if raw_channels := payload.get("mention_channels"):
-            channels = {c.id: c for c in map(self.deserialize_partial_channel, raw_channels)}
-
-        users: undefined.UndefinedOr[typing.Dict[snowflakes.Snowflake, user_models.User]]
-        users = undefined.UNDEFINED
-        if raw_users := payload.get("mentions"):
-            users = {u.id: u for u in map(self.deserialize_user, raw_users)}
-
-        role_ids: undefined.UndefinedOr[typing.List[snowflakes.Snowflake]] = undefined.UNDEFINED
-        if raw_role_ids := payload.get("mention_roles"):
-            role_ids = [snowflakes.Snowflake(i) for i in raw_role_ids]
-
-        everyone = payload.get("mention_everyone", undefined.UNDEFINED)
-
-        message.mentions = message_models.Mentions(
-            message=message,
-            users=users,
-            role_ids=role_ids,
-            channels=channels,
-            everyone=everyone,
-        )
+        message.mentions = message_models.Mentions(message=message)
 
         return message
 
@@ -2518,9 +2538,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if "message_reference" in payload:
             message_reference = self._deserialize_message_reference(payload["message_reference"])
 
-        referenced_message: typing.Optional[message_models.Message] = None
+        referenced_message: typing.Optional[message_models.PartialMessage] = None
         if referenced_message_payload := payload.get("referenced_message"):
-            referenced_message = self.deserialize_message(referenced_message_payload)
+            referenced_message = self.deserialize_partial_message(referenced_message_payload)
 
         application: typing.Optional[message_models.MessageApplication] = None
         if "application" in payload:
@@ -2545,6 +2565,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
                 except errors.UnrecognisedEntityError:
                     pass
+
+        user_mentions = {u.id: u for u in map(self.deserialize_user, payload.get("mentions", ()))}
+        role_mention_ids = [snowflakes.Snowflake(i) for i in payload.get("mention_roles", ())]
+        channel_mentions = {u.id: u for u in map(self.deserialize_partial_channel, payload.get("mention_channels", ()))}
 
         message = message_models.Message(
             app=self._app,
@@ -2573,37 +2597,15 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             application_id=snowflakes.Snowflake(payload["application_id"]) if "application_id" in payload else None,
             interaction=interaction,
             components=components,
+            user_mentions=user_mentions,
+            channel_mentions=channel_mentions,
+            role_mention_ids=role_mention_ids,
+            mentions_everyone=payload.get("mention_everyone", False),
             # We initialize these next.
             mentions=NotImplemented,
         )
 
-        if raw_channels := payload.get("mention_channels"):
-            channels = {c.id: c for c in map(self.deserialize_partial_channel, raw_channels)}
-
-        else:
-            channels = {}
-
-        if raw_users := payload.get("mentions"):
-            users = {u.id: u for u in map(self.deserialize_user, raw_users)}
-
-        else:
-            users = {}
-
-        if raw_role_ids := payload.get("mention_roles"):
-            role_ids = [snowflakes.Snowflake(i) for i in raw_role_ids]
-
-        else:
-            role_ids = []
-
-        everyone = payload.get("mention_everyone", False)
-
-        message.mentions = message_models.Mentions(
-            message=message,
-            users=users,
-            role_ids=role_ids,
-            channels=channels,
-            everyone=everyone,
-        )
+        message.mentions = message_models.Mentions(message=message)
 
         return message
 

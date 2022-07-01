@@ -33,7 +33,6 @@ __all__: typing.Sequence[str] = (
     "KnownCustomEmojiData",
     "RichActivityData",
     "MemberPresenceData",
-    "MentionsData",
     "MessageInteractionData",
     "MessageData",
     "VoiceStateData",
@@ -628,84 +627,6 @@ class MemberPresenceData(BaseData[presences.MemberPresence]):
 
 @attr_extensions.with_copy
 @attr.define(kw_only=True, repr=False, hash=False, weakref_slot=False)
-class MentionsData(BaseData[messages.Mentions]):
-    """A model for storing message mentions data in an in-memory cache."""
-
-    users: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, RefCell[users_.User]]] = attr.field()
-    role_ids: undefined.UndefinedOr[typing.Tuple[snowflakes.Snowflake, ...]] = attr.field()
-    channels: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, channels_.PartialChannel]] = attr.field()
-    everyone: undefined.UndefinedOr[bool] = attr.field()
-
-    @classmethod
-    def build_from_entity(
-        cls,
-        mentions: messages.Mentions,
-        /,
-        *,
-        users: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, RefCell[users_.User]]] = undefined.UNDEFINED,
-    ) -> MentionsData:
-        if not users and mentions.users is not undefined.UNDEFINED:
-            users = {user_id: RefCell(copy.copy(user)) for user_id, user in mentions.users.items()}
-
-        channels: undefined.UndefinedOr[
-            typing.Mapping[snowflakes.Snowflake, "channels_.PartialChannel"]
-        ] = undefined.UNDEFINED
-        if mentions.channels is not undefined.UNDEFINED:
-            channels = {channel_id: copy.copy(channel) for channel_id, channel in mentions.channels.items()}
-
-        return cls(
-            users=users,
-            role_ids=tuple(mentions.role_ids) if mentions.role_ids is not undefined.UNDEFINED else undefined.UNDEFINED,
-            channels=channels,
-            everyone=mentions.everyone,
-        )
-
-    def build_entity(
-        self, _: traits.RESTAware, /, *, message: typing.Optional[messages.Message] = None
-    ) -> messages.Mentions:
-        users: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, users_.User]] = undefined.UNDEFINED
-        if self.users is not undefined.UNDEFINED:
-            users = {user_id: user.copy() for user_id, user in self.users.items()}
-
-        channels: undefined.UndefinedOr[
-            typing.Mapping[snowflakes.Snowflake, channels_.PartialChannel]
-        ] = undefined.UNDEFINED
-        if self.channels is not undefined.UNDEFINED:
-            channels = {channel_id: copy.copy(channel) for channel_id, channel in self.channels.items()}
-
-        return messages.Mentions(
-            message=message or NotImplemented,
-            users=users,
-            role_ids=self.role_ids,
-            channels=channels,
-            everyone=self.everyone,
-        )
-
-    def update(
-        self,
-        mention: messages.Mentions,
-        /,
-        *,
-        users: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, RefCell[users_.User]]] = undefined.UNDEFINED,
-    ) -> None:
-        if users is not undefined.UNDEFINED:
-            self.users = users
-
-        elif mention.users is not undefined.UNDEFINED:
-            self.users = {user_id: RefCell(copy.copy(user)) for user_id, user in mention.users.items()}
-
-        if mention.role_ids is not undefined.UNDEFINED:
-            self.role_ids = tuple(mention.role_ids)
-
-        if mention.channels is not undefined.UNDEFINED:
-            self.channels = {channel_id: copy.copy(channel) for channel_id, channel in mention.channels.items()}
-
-        if mention.everyone is not undefined.UNDEFINED:
-            self.everyone = mention.everyone
-
-
-@attr_extensions.with_copy
-@attr.define(kw_only=True, repr=False, hash=False, weakref_slot=False)
 class MessageInteractionData(BaseData[messages.MessageInteraction]):
     """A model for storing message interaction data."""
 
@@ -762,7 +683,12 @@ class MessageData(BaseData[messages.Message]):
     timestamp: datetime.datetime = attr.field()
     edited_timestamp: typing.Optional[datetime.datetime] = attr.field()
     is_tts: bool = attr.field()
-    mentions: MentionsData = attr.field()
+    user_mentions: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, RefCell[users_.User]]] = attr.field()
+    role_mention_ids: undefined.UndefinedOr[typing.Tuple[snowflakes.Snowflake, ...]] = attr.field()
+    channel_mentions: undefined.UndefinedOr[
+        typing.Mapping[snowflakes.Snowflake, channels_.PartialChannel]
+    ] = attr.field()
+    mentions_everyone: undefined.UndefinedOr[bool] = attr.field()
     attachments: typing.Tuple[messages.Attachment, ...] = attr.field()
     embeds: typing.Tuple[embeds_.Embed, ...] = attr.field()
     reactions: typing.Tuple[messages.Reaction, ...] = attr.field()
@@ -788,7 +714,7 @@ class MessageData(BaseData[messages.Message]):
         *,
         author: typing.Optional[RefCell[users_.User]] = None,
         member: typing.Optional[RefCell[MemberData]] = None,
-        mention_users: undefined.UndefinedOr[
+        user_mentions: undefined.UndefinedOr[
             typing.Mapping[snowflakes.Snowflake, RefCell[users_.User]]
         ] = undefined.UNDEFINED,
         referenced_message: typing.Optional[RefCell[MessageData]] = None,
@@ -797,12 +723,25 @@ class MessageData(BaseData[messages.Message]):
         if not member and message.member:
             member = RefCell(MemberData.build_from_entity(message.member))
 
-        if not referenced_message and message.referenced_message:
-            referenced_message = RefCell(MessageData.build_from_entity(message.referenced_message))
+        interaction = (
+            MessageInteractionData.build_from_entity(message.interaction, user=interaction_user)
+            if message.interaction
+            else None
+        )
 
-        interaction: typing.Optional[MessageInteractionData] = None
-        if message.interaction:
-            interaction = MessageInteractionData.build_from_entity(message.interaction, user=interaction_user)
+        if not user_mentions and message.user_mentions is not undefined.UNDEFINED:
+            user_mentions = {user_id: RefCell(copy.copy(user)) for user_id, user in message.user_mentions.items()}
+
+        channel_mentions: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, channels_.PartialChannel]] = (
+            {channel_id: copy.copy(channel) for channel_id, channel in message.channel_mentions.items()}
+            if message.channel_mentions is not undefined.UNDEFINED
+            else undefined.UNDEFINED
+        )
+        role_mention_ids: undefined.UndefinedOr[typing.Tuple[snowflakes.Snowflake, ...]] = (
+            tuple(message.role_mention_ids)
+            if message.role_mention_ids is not undefined.UNDEFINED
+            else undefined.UNDEFINED
+        )
 
         return cls(
             id=message.id,
@@ -814,7 +753,10 @@ class MessageData(BaseData[messages.Message]):
             timestamp=message.timestamp,
             edited_timestamp=message.edited_timestamp,
             is_tts=message.is_tts,
-            mentions=MentionsData.build_from_entity(message.mentions, users=mention_users),
+            user_mentions=user_mentions,
+            channel_mentions=channel_mentions,
+            role_mention_ids=role_mention_ids,
+            mentions_everyone=message.mentions_everyone,
             attachments=tuple(map(copy.copy, message.attachments)),
             embeds=tuple(map(_copy_embed, message.embeds)),
             reactions=tuple(map(copy.copy, message.reactions)),
@@ -834,9 +776,16 @@ class MessageData(BaseData[messages.Message]):
         )
 
     def build_entity(self, app: traits.RESTAware, /) -> messages.Message:
-        referenced_message: typing.Optional[messages.Message] = None
-        if self.referenced_message:
-            referenced_message = self.referenced_message.object.build_entity(app)
+        channel_mentions: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, channels_.PartialChannel]] = (
+            {channel_id: copy.copy(channel) for channel_id, channel in self.channel_mentions.items()}
+            if self.channel_mentions is not undefined.UNDEFINED
+            else undefined.UNDEFINED
+        )
+        user_mentions: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, users_.User]] = (
+            {user_id: user.copy() for user_id, user in self.user_mentions.items()}
+            if self.user_mentions is not undefined.UNDEFINED
+            else undefined.UNDEFINED
+        )
 
         message = messages.Message(
             id=self.id,
@@ -850,6 +799,10 @@ class MessageData(BaseData[messages.Message]):
             edited_timestamp=self.edited_timestamp,
             is_tts=self.is_tts,
             mentions=NotImplemented,
+            user_mentions=user_mentions,
+            channel_mentions=channel_mentions,
+            role_mention_ids=copy.copy(self.role_mention_ids),
+            mentions_everyone=self.mentions_everyone,
             attachments=tuple(map(copy.copy, self.attachments)),
             embeds=tuple(map(_copy_embed, self.embeds)),
             reactions=tuple(map(copy.copy, self.reactions)),
@@ -862,12 +815,12 @@ class MessageData(BaseData[messages.Message]):
             flags=self.flags,
             stickers=tuple(map(copy.copy, self.stickers)),
             nonce=self.nonce,
-            referenced_message=referenced_message,
+            referenced_message=self.referenced_message.object.build_entity(app) if self.referenced_message else None,
             interaction=self.interaction.build_entity(app) if self.interaction else None,
             application_id=self.application_id,
             components=self.components,
         )
-        message.mentions = self.mentions.build_entity(app, message=message)
+        message.mentions = messages.Mentions(message=message)
         return message
 
     def update(
@@ -875,7 +828,7 @@ class MessageData(BaseData[messages.Message]):
         message: messages.PartialMessage,
         /,
         *,
-        mention_users: undefined.UndefinedOr[
+        user_mentions: undefined.UndefinedOr[
             typing.Mapping[snowflakes.Snowflake, RefCell[users_.User]]
         ] = undefined.UNDEFINED,
     ) -> None:
@@ -897,7 +850,21 @@ class MessageData(BaseData[messages.Message]):
         if message.components is not undefined.UNDEFINED:
             self.components = tuple(message.components)
 
-        self.mentions.update(message.mentions, users=mention_users)
+        if user_mentions is not undefined.UNDEFINED:
+            self.user_mentions = user_mentions
+        elif message.user_mentions is not undefined.UNDEFINED:
+            self.user_mentions = {user_id: RefCell(copy.copy(user)) for user_id, user in message.user_mentions.items()}
+
+        if message.role_mention_ids is not undefined.UNDEFINED:
+            self.role_mention_ids = tuple(message.role_mention_ids)
+
+        if message.channel_mentions is not undefined.UNDEFINED:
+            self.channel_mentions = {
+                channel_id: copy.copy(channel) for channel_id, channel in message.channel_mentions.items()
+            }
+
+        if message.mentions_everyone is not undefined.UNDEFINED:
+            self.mentions_everyone = message.mentions_everyone
 
 
 @attr_extensions.with_copy

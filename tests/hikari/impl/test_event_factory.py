@@ -29,6 +29,7 @@ from hikari import emojis as emoji_models
 from hikari import traits
 from hikari import undefined
 from hikari import users as user_models
+from hikari.events import application_events
 from hikari.events import channel_events
 from hikari.events import guild_events
 from hikari.events import interaction_events
@@ -58,13 +59,28 @@ class TestEventFactoryImpl:
     def event_factory(self, mock_app):
         return event_factory_.EventFactoryImpl(mock_app)
 
+    ######################
+    # APPLICATION EVENTS #
+    ######################
+
+    def test_deserialize_application_command_permission_update_event(self, event_factory, mock_app, mock_shard):
+        mock_payload = object()
+
+        event = event_factory.deserialize_application_command_permission_update_event(mock_shard, mock_payload)
+
+        mock_app.entity_factory.deserialize_guild_command_permissions.assert_called_once_with(mock_payload)
+        assert isinstance(event, application_events.ApplicationCommandPermissionsUpdateEvent)
+        assert event.app is mock_app
+        assert event.shard is mock_shard
+        assert event.permissions is mock_app.entity_factory.deserialize_guild_command_permissions.return_value
+
     ##################
     # CHANNEL EVENTS #
     ##################
 
     def test_deserialize_guild_channel_create_event(self, event_factory, mock_app, mock_shard):
         mock_app.entity_factory.deserialize_channel.return_value = mock.Mock(spec=channel_models.GuildChannel)
-        mock_payload = mock.Mock(app=mock_app)
+        mock_payload = object()
 
         event = event_factory.deserialize_guild_channel_create_event(mock_shard, mock_payload)
 

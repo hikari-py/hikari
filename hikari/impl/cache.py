@@ -1479,8 +1479,8 @@ class CacheImpl(cache.MutableCache):
         if message.object.referenced_message:
             self._garbage_collect_message(message.object.referenced_message, decrement=1)
 
-        if message.object.mentions.users:
-            for user in message.object.mentions.users.values():
+        if message.object.user_mentions:
+            for user in message.object.user_mentions.values():
                 self._garbage_collect_user(user, decrement=1)
 
         # If we got this far the message won't be in _message_entries as that'd infer that it hasn't been marked as
@@ -1551,11 +1551,11 @@ class CacheImpl(cache.MutableCache):
         author = self._set_user(message.author)
         member = self._set_member(message.member) if message.member else None
 
-        mention_users: undefined.UndefinedOr[
+        user_mentions: undefined.UndefinedOr[
             typing.Mapping[snowflakes.Snowflake, cache_utility.RefCell[users.User]]
         ] = undefined.UNDEFINED
-        if message.mentions.users is not undefined.UNDEFINED:
-            mention_users = {user_id: self._set_user(user) for user_id, user in message.mentions.users.items()}
+        if message.user_mentions is not undefined.UNDEFINED:
+            user_mentions = {user_id: self._set_user(user) for user_id, user in message.user_mentions.items()}
 
         interaction_user: typing.Optional[cache_utility.RefCell[users.User]] = None
         if message.interaction:
@@ -1563,7 +1563,12 @@ class CacheImpl(cache.MutableCache):
 
         referenced_message: typing.Optional[cache_utility.RefCell[cache_utility.MessageData]] = None
         if message.referenced_message:
-            referenced_message = self._set_message(message.referenced_message)
+            reference_id = message.referenced_message.id
+            referenced_message = self._message_entries.get(reference_id) or self._referenced_messages.get(reference_id)
+
+            if referenced_message:
+                # Since the message is partial, if we don't have it cached, there is nothing we can do about it
+                referenced_message.object.update(message.referenced_message)
 
         # Only increment ref counts if this wasn't previously cached.
         if message.id not in self._referenced_messages and message.id not in self._message_entries:
@@ -1573,8 +1578,8 @@ class CacheImpl(cache.MutableCache):
             if referenced_message:
                 self._increment_ref_count(referenced_message)
 
-            if mention_users is not undefined.UNDEFINED:
-                for user in mention_users.values():
+            if user_mentions is not undefined.UNDEFINED:
+                for user in user_mentions.values():
                     self._increment_ref_count(user)
 
             if interaction_user:
@@ -1584,7 +1589,7 @@ class CacheImpl(cache.MutableCache):
             message,
             author=author,
             member=member,
-            mention_users=mention_users,
+            user_mentions=user_mentions,
             referenced_message=referenced_message,
             interaction_user=interaction_user,
         )
@@ -1625,19 +1630,19 @@ class CacheImpl(cache.MutableCache):
             self.set_message(message)
 
         elif cached_message_data := self._message_entries.get(message.id) or self._referenced_messages.get(message.id):
-            mention_user: undefined.UndefinedOr[
+            user_mentions: undefined.UndefinedOr[
                 typing.Mapping[snowflakes.Snowflake, cache_utility.RefCell[users.User]]
             ] = undefined.UNDEFINED
-            if message.mentions.users is not undefined.UNDEFINED:
-                mention_user = {user_id: self._set_user(user) for user_id, user in message.mentions.users.items()}
+            if message.user_mentions is not undefined.UNDEFINED:
+                user_mentions = {user_id: self._set_user(user) for user_id, user in message.user_mentions.items()}
 
                 # We want to ensure that any previously mentioned users are garbage collected if they're no longer
                 # being mentioned.
-                if cached_message_data.object.mentions.users is not undefined.UNDEFINED:
-                    for user_id, user in cached_message_data.object.mentions.users.items():
-                        if user_id not in mention_user:
+                if cached_message_data.object.user_mentions is not undefined.UNDEFINED:
+                    for user_id, user in cached_message_data.object.user_mentions.items():
+                        if user_id not in user_mentions:
                             self._garbage_collect_user(user, decrement=1)
 
-            cached_message_data.object.update(message, mention_users=mention_user)
+            cached_message_data.object.update(message, user_mentions=user_mentions)
 
         return cached_message, self.get_message(message.id)
