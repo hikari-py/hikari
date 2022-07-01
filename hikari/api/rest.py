@@ -6947,7 +6947,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
             This can only be applied to non-guild commands.
 
-
         Returns
         -------
         hikari.commands.ContextMenuCommand

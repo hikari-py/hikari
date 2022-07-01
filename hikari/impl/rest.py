@@ -3160,10 +3160,10 @@ class RESTClientImpl(rest_api.RESTClient):
         else:
             route = routes.GET_APPLICATION_GUILD_COMMANDS.compile(application=application, guild=guild)
 
-        builder = data_binding.StringMapBuilder()
-        builder.put("with_localizations", True)
+        query = data_binding.StringMapBuilder()
+        query.put("with_localizations", True)
 
-        response = await self._request(route, query=builder)
+        response = await self._request(route, query=query)
         assert isinstance(response, list)
         guild_id = snowflakes.Snowflake(guild) if guild is not undefined.UNDEFINED else None
         return [self._entity_factory.deserialize_command(command, guild_id=guild_id) for command in response]
@@ -3317,7 +3317,6 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("name", name)
         body.put("description", description)
         body.put_array("options", options, conversion=self._entity_factory.serialize_command_option)
-
         # Discord has some funky behaviour around what 0 means. They consider it to be the same as ADMINISTRATOR,
         # but we consider it to be the same as None for developer sanity reasons
         body.put("default_member_permissions", None if default_member_permissions == 0 else default_member_permissions)

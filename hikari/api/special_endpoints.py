@@ -1049,6 +1049,23 @@ class CommandBuilder(abc.ABC):
         """
 
     @abc.abstractmethod
+    def set_name_localizations(
+        self: _T, name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str], /
+    ) -> _T:
+        """Set the name localizations for this command.
+
+        Parameters
+        ----------
+        name_localizations : hikari.undefined.UndefinedOr[typing.Mapping[typing.Union[hikari.locales.Locale, str], str]]
+            The name localizations to set for this command.
+
+        Returns
+        -------
+        CommandBuilder
+            Object of this command builder.
+        """
+
+    @abc.abstractmethod
     def build(self, entity_factory: entity_factory_.EntityFactory, /) -> typing.MutableMapping[str, typing.Any]:
         """Build a JSON object from this builder.
 
@@ -1092,23 +1109,6 @@ class CommandBuilder(abc.ABC):
         -------
         hikari.commands.PartialCommand
             The created command.
-        """
-
-    @abc.abstractmethod
-    def set_name_localizations(
-        self: _T, name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str], /
-    ) -> _T:
-        """Set the name localizations for this command.
-
-        Parameters
-        ----------
-        name_localizations : hikari.undefined.UndefinedOr[typing.Mapping[typing.Union[hikari.locales.Locale, str], str]]
-            The name localizations to set for this command.
-
-        Returns
-        -------
-        CommandBuilder
-            Object of this command builder.
         """
 
 

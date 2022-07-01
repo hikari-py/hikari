@@ -1115,10 +1115,6 @@ class CommandBuilder(special_endpoints.CommandBuilder):
     def name(self) -> str:
         return self._name
 
-    @property
-    def name_localizations(self) -> typing.Mapping[typing.Union[locales.Locale, str], str]:
-        return self._name_localizations
-
     def set_id(self: _CommandBuilderT, id_: undefined.UndefinedOr[snowflakes.Snowflakeish], /) -> _CommandBuilderT:
         self._id = snowflakes.Snowflake(id_) if id_ is not undefined.UNDEFINED else undefined.UNDEFINED
         return self
@@ -1134,6 +1130,10 @@ class CommandBuilder(special_endpoints.CommandBuilder):
     def set_is_dm_enabled(self: _CommandBuilderT, state: undefined.UndefinedOr[bool], /) -> _CommandBuilderT:
         self._is_dm_enabled = state
         return self
+
+    @property
+    def name_localizations(self) -> typing.Mapping[typing.Union[locales.Locale, str], str]:
+        return self._name_localizations
 
     def set_name_localizations(
         self: _CommandBuilderT,
