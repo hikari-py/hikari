@@ -897,11 +897,6 @@ class InteractionModalBuilder(InteractionResponseBuilder, abc.ABC):
         ----------
         title : builtins.str
             The title that will show up in the modal.
-
-        Returns
-        -------
-        InteractionModalBuilder
-            Object of this builder.
         """
 
     @abc.abstractmethod
@@ -912,11 +907,6 @@ class InteractionModalBuilder(InteractionResponseBuilder, abc.ABC):
         ----------
         custom_id : builtins.str
             The developer set custom ID used for identifying interactions with this modal.
-
-        Returns
-        -------
-        InteractionModalBuilder
-            Object of this builder.
         """
 
     @abc.abstractmethod
@@ -927,11 +917,6 @@ class InteractionModalBuilder(InteractionResponseBuilder, abc.ABC):
         ----------
         component : ComponentBuilder
             The component builder to add to this modal.
-
-        Returns
-        -------
-        InteractionModalBuilder
-            Object of this builder.
         """
 
 
