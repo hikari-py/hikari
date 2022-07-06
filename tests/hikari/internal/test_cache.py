@@ -19,6 +19,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+import copy
 import mock
 
 from hikari import snowflakes
@@ -64,10 +65,10 @@ class TestStickerData:
             user=mock_user,
         )
 
-        with mock.patch.object(cache.copy, "copy") as copy:
+        with mock.patch.object(copy, "copy") as mock_copy:
             with mock.patch.object(cache, "RefCell") as refcell:
                 data = cache.GuildStickerData.build_from_entity(mock_sticker)
 
         assert data.user is refcell.return_value
-        copy.assert_called_once_with(mock_user)
-        refcell.assert_called_once_with(copy.return_value)
+        mock_copy.assert_called_once_with(mock_user)
+        refcell.assert_called_once_with(mock_copy.return_value)
