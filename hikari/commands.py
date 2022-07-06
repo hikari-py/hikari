@@ -40,7 +40,6 @@ import typing
 
 import attr
 
-from hikari import locales
 from hikari import permissions
 from hikari import snowflakes
 from hikari import traits
@@ -51,6 +50,7 @@ from hikari.internal import enums
 if typing.TYPE_CHECKING:
     from hikari import channels
     from hikari import guilds
+    from hikari import locales
 
 
 class CommandType(int, enums.Enum):

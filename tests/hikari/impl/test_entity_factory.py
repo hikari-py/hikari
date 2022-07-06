@@ -3767,6 +3767,8 @@ class TestEntityFactoryImpl:
             max_value=9.999,
             channel_types=[channel_models.ChannelType.GUILD_STAGE, channel_models.ChannelType.GUILD_TEXT, 100],
             choices=[commands.CommandChoice(name="a", value="choice")],
+            name_localizations={locales.Locale.TR: "b"},
+            description_localizations={locales.Locale.TR: "c"},
             options=[
                 commands.CommandOption(
                     type=commands.OptionType.STRING,
@@ -3775,6 +3777,8 @@ class TestEntityFactoryImpl:
                     is_required=False,
                     choices=[commands.CommandChoice(name="boo", value="hoo")],
                     options=None,
+                    name_localizations={locales.Locale.TR: "b"},
+                    description_localizations={locales.Locale.TR: "c"},
                 )
             ],
         )
@@ -3791,6 +3795,8 @@ class TestEntityFactoryImpl:
             "max_value": 9.999,
             "autocomplete": True,
             "choices": [{"name": "a", "value": "choice"}],
+            "description_localizations": {"tr": "c"},
+            "name_localizations": {"tr": "b"},
             "options": [
                 {
                     "type": 3,
@@ -3798,12 +3804,10 @@ class TestEntityFactoryImpl:
                     "name": "go home",
                     "required": False,
                     "choices": [{"name": "boo", "value": "hoo"}],
-                    "description_localizations": {},
-                    "name_localizations": {},
+                    "description_localizations": {"tr": "c"},
+                    "name_localizations": {"tr": "b"},
                 }
             ],
-            "description_localizations": {},
-            "name_localizations": {},
         }
 
     @pytest.fixture()

@@ -1170,12 +1170,6 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
         return self._description
 
     @property
-    def description_localizations(
-        self,
-    ) -> typing.Mapping[typing.Union[locales.Locale, str], str]:
-        return self._description_localizations
-
-    @property
     def type(self) -> commands.CommandType:
         return commands.CommandType.SLASH
 
@@ -1186,6 +1180,12 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
     @property
     def options(self) -> typing.Sequence[commands.CommandOption]:
         return self._options.copy()
+
+    @property
+    def description_localizations(
+        self,
+    ) -> typing.Mapping[typing.Union[locales.Locale, str], str]:
+        return self._description_localizations
 
     def set_description_localizations(
         self: _SlashCommandBuilderT,
