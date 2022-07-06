@@ -1128,7 +1128,7 @@ class InteractionModalBuilder(special_endpoints.InteractionModalBuilder):
 
     def build(
         self, entity_factory: entity_factory_.EntityFactory, /
-    ) -> typing.Tuple[data_binding.JSONObject, typing.Sequence[files.Resource[files.AsyncReader]]]:
+    ) -> typing.Tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
         data = data_binding.JSONObjectBuilder()
         data.put("title", self._title)
         data.put("custom_id", self._custom_id)
@@ -1639,7 +1639,7 @@ class TextInputBuilder(special_endpoints.TextInputBuilder[_ContainerProtoT]):
         self._container.add_component(self)
         return self._container
 
-    def build(self) -> data_binding.JSONObject:
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
         data = data_binding.JSONObjectBuilder()
 
         data["type"] = messages.ComponentType.TEXT_INPUT
