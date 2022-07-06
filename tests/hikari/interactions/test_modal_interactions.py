@@ -54,6 +54,7 @@ class TestModalInteraction:
             message=object(),
             locale="es-ES",
             guild_locale="en-US",
+            app_permissions=543123,
             components=special_endpoints.ActionRowBuilder(
                 components=[
                     modal_interactions.InteractionTextInput(

@@ -2140,6 +2140,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             member = None
             user = self.deserialize_user(payload["user"])
 
+        app_perms = payload.get("app_permissions")
+
         components: typing.List[typing.Any] = []
         for component_payload in data_payload["components"]:
             try:
@@ -2157,6 +2159,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             id=snowflakes.Snowflake(payload["id"]),
             type=base_interactions.InteractionType(payload["type"]),
             guild_id=guild_id,
+            app_permissions=permission_models.Permissions(app_perms) if app_perms is not None else None,
             guild_locale=locales.Locale(payload["guild_locale"]) if "guild_locale" in payload else None,
             locale=locales.Locale(payload["locale"]),
             channel_id=snowflakes.Snowflake(payload["channel_id"]),

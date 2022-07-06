@@ -38,6 +38,7 @@ import attr
 from hikari import channels
 from hikari import guilds
 from hikari import messages
+from hikari import permissions
 from hikari import snowflakes
 from hikari import traits
 from hikari.interactions import base_interactions
@@ -118,6 +119,9 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
 
     locale: str = attr.field(eq=False, hash=False, repr=True)
     """The selected language of the user who triggered this modal interaction."""
+
+    app_permissions: typing.Optional[permissions.Permissions] = attr.field(eq=False, hash=False, repr=False)
+    """Permissions the bot has in this interaction's channel if it's in a guild."""
 
     components: typing.Sequence[messages.ActionRowComponent] = attr.field(eq=False, hash=False, repr=True)
     """Components in the modal."""
