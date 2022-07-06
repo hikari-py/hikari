@@ -56,6 +56,7 @@ class TestCommandInteraction:
             resolved=None,
             locale="es-ES",
             guild_locale="en-US",
+            app_permissions=543123,
         )
 
     def test_build_response(self, mock_command_interaction, mock_app):
@@ -113,7 +114,6 @@ class TestAutocompleteInteraction:
             command_name="OKOKOK",
             command_type=1,
             options=[],
-            resolved=None,
         )
 
     @pytest.fixture()

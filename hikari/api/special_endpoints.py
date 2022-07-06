@@ -67,7 +67,6 @@ if typing.TYPE_CHECKING:
     from hikari.api import entity_factory as entity_factory_
     from hikari.api import rest as rest_api
     from hikari.interactions import base_interactions
-    from hikari.internal import data_binding
     from hikari.internal import time
 
     _T = typing.TypeVar("_T")
@@ -539,7 +538,7 @@ class InteractionResponseBuilder(abc.ABC):
     @abc.abstractmethod
     def build(
         self, entity_factory: entity_factory_.EntityFactory, /
-    ) -> typing.Tuple[data_binding.JSONObject, typing.Sequence[files.Resource[files.AsyncReader]]]:
+    ) -> typing.Tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
         """Build a JSON object from this builder.
 
         Parameters
@@ -549,7 +548,7 @@ class InteractionResponseBuilder(abc.ABC):
 
         Returns
         -------
-        typing.Tuple[hikari.internal.data_binding.JSONObject, typing.Sequence[files.Resource[Files.AsyncReader]]
+        typing.Tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[Files.AsyncReader]]
             A tuple of the built json object representation of this builder and
             a sequence of up to 10 files to send with the response.
         """
@@ -968,10 +967,19 @@ class CommandBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def default_permission(self) -> undefined.UndefinedOr[bool]:
-        """Whether the command should be enabled by default (without any permissions).
+    def default_member_permissions(self) -> typing.Union[undefined.UndefinedType, permissions_.Permissions, int]:
+        """Member permissions necessary to utilize this command by default.
 
-        Defaults to `builtins.bool`.
+        If `0`, then it will be available for all members. Note that this doesn't affect
+        administrators of the guild and overwrites.
+        """
+
+    @property
+    @abc.abstractmethod
+    def is_dm_enabled(self) -> undefined.UndefinedOr[bool]:
+        """Whether this command is enabled in DMs with the bot.
+
+        Only applicable to globally-scoped commands.
         """
 
     @abc.abstractmethod
@@ -990,13 +998,18 @@ class CommandBuilder(abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_default_permission(self: _T, state: undefined.UndefinedOr[bool], /) -> _T:
-        """Whether this command should be enabled by default (without any permissions).
+    def set_default_member_permissions(
+        self: _T, default_member_permissions: typing.Union[undefined.UndefinedType, int, permissions_.Permissions], /
+    ) -> _T:
+        """Set the member permissions necessary to utilize this command by default.
 
         Parameters
         ----------
-        state : hikari.undefined.UndefinedOr[builtins.bool]
-            Whether this command should be enabled by default.
+        default_member_permissions : hikari.undefined.UndefinedOr[builtins.bool]
+            The default member permissions to utilize this command by default.
+
+            If `0`, then it will be available for all members. Note that this doesn't affect
+            administrators of the guild and overwrites.
 
         Returns
         -------
@@ -1005,7 +1018,22 @@ class CommandBuilder(abc.ABC):
         """
 
     @abc.abstractmethod
-    def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObject:
+    def set_is_dm_enabled(self: _T, state: undefined.UndefinedOr[bool], /) -> _T:
+        """Set whether this command will be enabled in DMs with the bot.
+
+        Parameters
+        ----------
+        state : hikari.undefined.UndefinedOr[builtins.bool]
+            Whether this command is enabled in DMs with the bot.
+
+        Returns
+        -------
+        CommandBuilder
+            Object of this command builder for chained calls.
+        """
+
+    @abc.abstractmethod
+    def build(self, entity_factory: entity_factory_.EntityFactory, /) -> typing.MutableMapping[str, typing.Any]:
         """Build a JSON object from this builder.
 
         Parameters
@@ -1015,7 +1043,7 @@ class CommandBuilder(abc.ABC):
 
         Returns
         -------
-        hikari.internal.data_binding.JSONObject
+        typing.MutableMapping[str, typing.Any]
             The built json object representation of this builder.
         """
 
@@ -1170,12 +1198,12 @@ class ComponentBuilder(abc.ABC):
     __slots__: typing.Sequence[str] = ()
 
     @abc.abstractmethod
-    def build(self) -> data_binding.JSONObject:
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
         """Build a JSON object from this builder.
 
         Returns
         -------
-        hikari.internal.data_binding.JSONObject
+        typing.MutableMapping[str, typing.Any]
             The built json object representation of this builder.
         """
 

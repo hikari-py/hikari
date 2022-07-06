@@ -63,7 +63,7 @@ if typing.TYPE_CHECKING:
         typing.List[event_manager_.CallbackT[base_events.EventT]],
     ]
     _WaiterT = typing.Tuple[
-        typing.Optional[event_manager_.PredicateT[base_events.EventT]], asyncio.Future[base_events.EventT]
+        typing.Optional[event_manager_.PredicateT[base_events.EventT]], "asyncio.Future[base_events.EventT]"
     ]
     _WaiterMapT = typing.Dict[typing.Type[base_events.EventT], typing.Set[_WaiterT[base_events.EventT]]]
 
@@ -103,8 +103,8 @@ class _FilteredMethodT(fast_protocol.FastProtocolChecking, typing.Protocol):
 
 def _generate_weak_listener(
     reference: weakref.WeakMethod[typing.Any],
-) -> typing.Callable[[base_events.EventT], typing.Coroutine[typing.Any, typing.Any, None]]:
-    async def call_weak_method(event: base_events.EventT) -> None:
+) -> typing.Callable[[base_events.Event], typing.Coroutine[typing.Any, typing.Any, None]]:
+    async def call_weak_method(event: base_events.Event) -> None:
         method = reference()
         if method is None:
             raise TypeError(
@@ -555,10 +555,7 @@ class EventManagerBase(event_manager_.EventManager):
 
         return decorator
 
-    def dispatch(self, event: base_events.EventT) -> asyncio.Future[typing.Any]:
-        if not isinstance(event, base_events.Event):
-            raise TypeError(f"Events must be subclasses of {base_events.Event.__name__}, not {type(event).__name__}")
-
+    def dispatch(self, event: base_events.Event) -> asyncio.Future[typing.Any]:
         tasks: typing.List[typing.Coroutine[None, typing.Any, None]] = []
 
         for cls in event.dispatches():
@@ -613,6 +610,7 @@ class EventManagerBase(event_manager_.EventManager):
 
         future: asyncio.Future[base_events.EventT] = asyncio.get_running_loop().create_future()
 
+        waiter_set: typing.MutableSet[_WaiterT[base_events.Event]]
         try:
             waiter_set = self._waiters[event_type]
         except KeyError:

@@ -23,7 +23,6 @@ import asyncio
 import contextlib
 import datetime
 import http
-import re
 import warnings
 
 import mock
@@ -1044,6 +1043,59 @@ class TestRESTClientImpl:
         assert reason is mock_unban_user.return_value
         mock_unban_user.assert_called_once_with(123, 321, reason="ayaya")
 
+    def test_fetch_bans(self, rest_client: rest.RESTClientImpl):
+        with mock.patch.object(special_endpoints, "GuildBanIterator") as iterator_cls:
+            iterator = rest_client.fetch_bans(187, newest_first=True, start_at=StubModel(65652342134))
+
+        iterator_cls.assert_called_once_with(
+            rest_client._entity_factory,
+            rest_client._request,
+            187,
+            True,
+            "65652342134",
+        )
+        assert iterator is iterator_cls.return_value
+
+    def test_fetch_bans_when_datetime_for_start_at(self, rest_client: rest.RESTClientImpl):
+        start_at = datetime.datetime(2022, 3, 6, 12, 1, 58, 415625, tzinfo=datetime.timezone.utc)
+        with mock.patch.object(special_endpoints, "GuildBanIterator") as iterator_cls:
+            iterator = rest_client.fetch_bans(9000, newest_first=True, start_at=start_at)
+
+        iterator_cls.assert_called_once_with(
+            rest_client._entity_factory,
+            rest_client._request,
+            9000,
+            True,
+            "950000286338908160",
+        )
+        assert iterator is iterator_cls.return_value
+
+    def test_fetch_bans_when_start_at_undefined(self, rest_client: rest.RESTClientImpl):
+        with mock.patch.object(special_endpoints, "GuildBanIterator") as iterator_cls:
+            iterator = rest_client.fetch_bans(8844)
+
+        iterator_cls.assert_called_once_with(
+            rest_client._entity_factory,
+            rest_client._request,
+            8844,
+            False,
+            str(snowflakes.Snowflake.min()),
+        )
+        assert iterator is iterator_cls.return_value
+
+    def test_fetch_bans_when_start_at_undefined_and_newest_first(self, rest_client: rest.RESTClientImpl):
+        with mock.patch.object(special_endpoints, "GuildBanIterator") as iterator_cls:
+            iterator = rest_client.fetch_bans(3848, newest_first=True)
+
+        iterator_cls.assert_called_once_with(
+            rest_client._entity_factory,
+            rest_client._request,
+            3848,
+            True,
+            str(snowflakes.Snowflake.max()),
+        )
+        assert iterator is iterator_cls.return_value
+
     def test_command_builder(self, rest_client):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=DeprecationWarning)
@@ -1333,19 +1385,6 @@ class TestRESTClientImpl:
             ValueError, match=rf"You may only specify one of '{singular_arg}' or '{plural_arg}', not both"
         ):
             rest_client._build_message_payload(**{singular_arg: object(), plural_arg: object()})
-
-    @pytest.mark.parametrize(
-        ("singular_arg", "plural_arg"),
-        [("attachment", "attachments"), ("component", "components"), ("embed", "embeds")],
-    )
-    def test__build_message_payload_when_non_collection_passed_to_plural(self, rest_client, singular_arg, plural_arg):
-        expected_error_message = (
-            f"You passed a non-collection to '{plural_arg}', but this expects a collection. Maybe you meant to use "
-            f"'{singular_arg}' (singular) instead?"
-        )
-
-        with pytest.raises(TypeError, match=re.escape(expected_error_message)):
-            rest_client._build_message_payload(**{plural_arg: object()})
 
     def test_interaction_deferred_builder(self, rest_client):
         result = rest_client.interaction_deferred_builder(5)
@@ -4223,21 +4262,6 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route)
         rest_client._entity_factory.deserialize_guild_member_ban.assert_called_once_with({"id": "789"})
 
-    async def test_fetch_bans(self, rest_client):
-        ban1 = StubModel(456)
-        ban2 = StubModel(789)
-        expected_route = routes.GET_GUILD_BANS.compile(guild=123)
-        rest_client._request = mock.AsyncMock(return_value=[{"id": "456"}, {"id": "789"}])
-        rest_client._entity_factory.deserialize_guild_member_ban = mock.Mock(side_effect=[ban1, ban2])
-
-        assert await rest_client.fetch_bans(StubModel(123)) == [ban1, ban2]
-
-        rest_client._request.assert_awaited_once_with(expected_route)
-        assert rest_client._entity_factory.deserialize_guild_member_ban.call_count == 2
-        rest_client._entity_factory.deserialize_guild_member_ban.assert_has_calls(
-            [mock.call({"id": "456"}), mock.call({"id": "789"})]
-        )
-
     async def test_fetch_roles(self, rest_client):
         role1 = StubModel(456)
         role2 = StubModel(789)
@@ -4745,33 +4769,33 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route)
         rest_client._entity_factory.deserialize_command.assert_called_once_with({"id": "34512312"}, guild_id=None)
 
-    async def test_create_application_command_with_optionals(self, rest_client: rest.RESTClientImpl):
+    async def test__create_application_command_with_optionals(self, rest_client: rest.RESTClientImpl):
         expected_route = routes.POST_APPLICATION_GUILD_COMMAND.compile(application=4332123, guild=653452134)
         rest_client._request = mock.AsyncMock(return_value={"id": "29393939"})
         mock_option = object()
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", category=DeprecationWarning)
-            result = await rest_client.create_application_command(
-                application=StubModel(4332123),
-                guild=StubModel(653452134),
-                name="okokok",
-                description="not ok anymore",
-                options=[mock_option],
-            )
-
-        assert result is rest_client._entity_factory.deserialize_slash_command.return_value
-        rest_client._entity_factory.serialize_command_option.assert_called_once_with(mock_option)
-        rest_client._entity_factory.deserialize_slash_command.assert_called_once_with(
-            rest_client._request.return_value, guild_id=653452134
+        result = await rest_client._create_application_command(
+            application=StubModel(4332123),
+            type=100,
+            name="okokok",
+            description="not ok anymore",
+            guild=StubModel(653452134),
+            options=[mock_option],
+            default_member_permissions=permissions.Permissions.ADMINISTRATOR,
+            dm_enabled=False,
         )
+
+        assert result is rest_client._request.return_value
+        rest_client._entity_factory.serialize_command_option.assert_called_once_with(mock_option)
         rest_client._request.assert_awaited_once_with(
             expected_route,
             json={
-                "type": 1,
+                "type": 100,
                 "name": "okokok",
                 "description": "not ok anymore",
                 "options": [rest_client._entity_factory.serialize_command_option.return_value],
+                "default_member_permissions": 8,
+                "dm_permission": False,
             },
         )
 
@@ -4779,47 +4803,102 @@ class TestRESTClientImplAsync:
         expected_route = routes.POST_APPLICATION_COMMAND.compile(application=4332123)
         rest_client._request = mock.AsyncMock(return_value={"id": "29393939"})
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", category=DeprecationWarning)
-            result = await rest_client.create_application_command(
-                StubModel(4332123),
-                name="okokok",
-                description="not ok anymore",
-            )
-
-        assert result is rest_client._entity_factory.deserialize_slash_command.return_value
-        rest_client._entity_factory.deserialize_slash_command.assert_called_once_with(
-            rest_client._request.return_value, guild_id=None
+        result = await rest_client._create_application_command(
+            application=StubModel(4332123), type=100, name="okokok", description="not ok anymore"
         )
+
+        assert result is rest_client._request.return_value
         rest_client._request.assert_awaited_once_with(
-            expected_route, json={"type": 1, "name": "okokok", "description": "not ok anymore"}
+            expected_route,
+            json={
+                "type": 100,
+                "name": "okokok",
+                "description": "not ok anymore",
+            },
+        )
+
+    async def test__create_application_command_standardizes_default_member_permissions(
+        self, rest_client: rest.RESTClientImpl
+    ):
+        expected_route = routes.POST_APPLICATION_COMMAND.compile(application=4332123)
+        rest_client._request = mock.AsyncMock(return_value={"id": "29393939"})
+
+        result = await rest_client._create_application_command(
+            application=StubModel(4332123),
+            type=100,
+            name="okokok",
+            description="not ok anymore",
+            default_member_permissions=permissions.Permissions.NONE,
+        )
+
+        assert result is rest_client._request.return_value
+        rest_client._request.assert_awaited_once_with(
+            expected_route,
+            json={
+                "type": 100,
+                "name": "okokok",
+                "description": "not ok anymore",
+                "default_member_permissions": None,
+            },
         )
 
     async def test_create_slash_command(self, rest_client: rest.RESTClientImpl):
-        expected_route = routes.POST_APPLICATION_COMMAND.compile(application=4332123)
-        rest_client._request = mock.AsyncMock(return_value={"id": "29393939"})
+        rest_client._create_application_command = mock.AsyncMock()
+        mock_options = object()
+        mock_application = StubModel(4332123)
+        mock_guild = StubModel(123123123)
 
-        result = await rest_client.create_slash_command(StubModel(4332123), "okokok", "not ok anymore")
+        result = await rest_client.create_slash_command(
+            mock_application,
+            "okokok",
+            "not ok anymore",
+            guild=mock_guild,
+            options=mock_options,
+            default_member_permissions=permissions.Permissions.ADMINISTRATOR,
+            dm_enabled=False,
+        )
 
         assert result is rest_client._entity_factory.deserialize_slash_command.return_value
         rest_client._entity_factory.deserialize_slash_command.assert_called_once_with(
-            rest_client._request.return_value, guild_id=None
+            rest_client._create_application_command.return_value, guild_id=123123123
         )
-        rest_client._request.assert_awaited_once_with(
-            expected_route, json={"type": 1, "name": "okokok", "description": "not ok anymore"}
+        rest_client._create_application_command.assert_awaited_once_with(
+            application=mock_application,
+            type=commands.CommandType.SLASH,
+            name="okokok",
+            description="not ok anymore",
+            guild=mock_guild,
+            options=mock_options,
+            default_member_permissions=permissions.Permissions.ADMINISTRATOR,
+            dm_enabled=False,
         )
 
     async def test_create_context_menu_command(self, rest_client: rest.RESTClientImpl):
-        expected_route = routes.POST_APPLICATION_COMMAND.compile(application=4332123)
-        rest_client._request = mock.AsyncMock(return_value={"id": "29393939"})
+        rest_client._create_application_command = mock.AsyncMock()
+        mock_application = StubModel(4332123)
+        mock_guild = StubModel(123123123)
 
-        result = await rest_client.create_context_menu_command(StubModel(4332123), 2, "okokok")
+        result = await rest_client.create_context_menu_command(
+            mock_application,
+            commands.CommandType.USER,
+            "okokok",
+            guild=mock_guild,
+            default_member_permissions=permissions.Permissions.ADMINISTRATOR,
+            dm_enabled=False,
+        )
 
         assert result is rest_client._entity_factory.deserialize_context_menu_command.return_value
         rest_client._entity_factory.deserialize_context_menu_command.assert_called_once_with(
-            rest_client._request.return_value, guild_id=None
+            rest_client._create_application_command.return_value, guild_id=123123123
         )
-        rest_client._request.assert_awaited_once_with(expected_route, json={"type": 2, "name": "okokok"})
+        rest_client._create_application_command.assert_awaited_once_with(
+            application=mock_application,
+            type=commands.CommandType.USER,
+            name="okokok",
+            guild=mock_guild,
+            default_member_permissions=permissions.Permissions.ADMINISTRATOR,
+            dm_enabled=False,
+        )
 
     async def test_set_application_commands_with_guild(self, rest_client):
         expected_route = routes.PUT_APPLICATION_GUILD_COMMANDS.compile(application=4321231, guild=6543234)
@@ -4861,6 +4940,8 @@ class TestRESTClientImplAsync:
             name="ok sis",
             description="cancelled",
             options=[mock_option],
+            default_member_permissions=permissions.Permissions.BAN_MEMBERS,
+            dm_enabled=True,
         )
 
         assert result is rest_client._entity_factory.deserialize_command.return_value
@@ -4873,6 +4954,8 @@ class TestRESTClientImplAsync:
                 "name": "ok sis",
                 "description": "cancelled",
                 "options": [rest_client._entity_factory.serialize_command_option.return_value],
+                "default_member_permissions": 4,
+                "dm_permission": True,
             },
         )
         rest_client._entity_factory.serialize_command_option.assert_called_once_with(mock_option)
@@ -4891,6 +4974,27 @@ class TestRESTClientImplAsync:
             rest_client._request.return_value, guild_id=None
         )
         rest_client._request.assert_awaited_once_with(expected_route, json={})
+
+    async def test_edit_application_command_standardizes_default_member_permissions(
+        self, rest_client: rest.RESTClientImpl
+    ):
+        expected_route = routes.PATCH_APPLICATION_COMMAND.compile(application=1235432, command=3451231)
+        rest_client._request = mock.AsyncMock(return_value={"id": "94594994"})
+
+        result = await rest_client.edit_application_command(
+            StubModel(1235432),
+            StubModel(3451231),
+            default_member_permissions=permissions.Permissions.NONE,
+        )
+
+        assert result is rest_client._entity_factory.deserialize_command.return_value
+        rest_client._entity_factory.deserialize_command.assert_called_once_with(
+            rest_client._request.return_value, guild_id=None
+        )
+        rest_client._request.assert_awaited_once_with(
+            expected_route,
+            json={"default_member_permissions": None},
+        )
 
     async def test_delete_application_command_with_guild(self, rest_client):
         expected_route = routes.DELETE_APPLICATION_GUILD_COMMAND.compile(
@@ -4933,29 +5037,6 @@ class TestRESTClientImplAsync:
         assert result is rest_client._entity_factory.deserialize_guild_command_permissions.return_value
         rest_client._entity_factory.deserialize_guild_command_permissions.assert_called_once_with(mock_command_payload)
         rest_client._request.assert_awaited_once_with(expected_route)
-
-    async def test_set_application_guild_commands_permissions(self, rest_client):
-        expected_route = routes.PUT_APPLICATION_GUILD_COMMANDS_PERMISSIONS.compile(application=321123, guild=542123)
-        mock_command_payload = object()
-        mock_permission = object()
-        rest_client._request = mock.AsyncMock(return_value=[mock_command_payload])
-
-        result = await rest_client.set_application_guild_commands_permissions(
-            321123, 542123, {564123123: [mock_permission]}
-        )
-
-        assert result == [rest_client._entity_factory.deserialize_guild_command_permissions.return_value]
-        rest_client._entity_factory.serialize_command_permission.assert_called_once_with(mock_permission)
-        rest_client._entity_factory.deserialize_guild_command_permissions.assert_called_once_with(mock_command_payload)
-        rest_client._request.assert_awaited_once_with(
-            expected_route,
-            json=[
-                {
-                    "id": "564123123",
-                    "permissions": [rest_client._entity_factory.serialize_command_permission.return_value],
-                }
-            ],
-        )
 
     async def test_set_application_command_permissions(self, rest_client):
         route = routes.PUT_APPLICATION_COMMAND_PERMISSIONS.compile(application=2321, guild=431, command=666666)

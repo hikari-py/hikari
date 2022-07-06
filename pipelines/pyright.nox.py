@@ -26,6 +26,27 @@ from pipelines import nox
 
 
 @nox.session()
+def pyright(session: nox.Session) -> None:
+    """Perform static type analysis on Python source code using pyright.
+
+    At the time of writing this, this pipeline will not run successfully,
+    as hikari does not have 100% compatibility with pyright just yet. This
+    exists to make it easier to test and eventually reach that 100% compatibility.
+    """
+    session.install(
+        "-r",
+        "requirements.txt",
+        "-r",
+        "speedup-requirements.txt",
+        "-r",
+        "server-requirements.txt",
+        "-r",
+        "dev-requirements.txt",
+    )
+    session.run("python", "-m", "pyright")
+
+
+@nox.session()
 def verify_types(session: nox.Session) -> None:
     """Verify the "type completeness" of types exported by the library using Pyright."""
     session.install("-r", "dev-requirements.txt")

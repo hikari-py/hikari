@@ -59,6 +59,7 @@ from hikari import traits
 from hikari import undefined
 from hikari import urls
 from hikari.internal import attr_extensions
+from hikari.internal import deprecation
 from hikari.internal import enums
 from hikari.internal import routes
 
@@ -278,34 +279,46 @@ class Mentions:
     # through this mechanism.
     _message: PartialMessage = attr.field(repr=False)
 
-    users: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, users_.User]] = attr.field()
-    """Users who were notified by their mention in the message."""
+    @property
+    def channels(self) -> undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, channels_.PartialChannel]]:
+        """Channel mentions that reference channels in the target crosspost's guild.
 
-    role_ids: undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]] = attr.field()
-    """IDs of roles that were notified by their mention in the message."""
-
-    channels: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, channels_.PartialChannel]] = attr.field()
-    """Channel mentions that reference channels in the target crosspost's guild.
-
-    If the message is not crossposted, this will always be empty.
-    """
-
-    everyone: undefined.UndefinedOr[bool] = attr.field()
-    """Whether the message notifies using `@everyone` or `@here`."""
+        If the message is not crossposted, this will always be empty.
+        """
+        deprecation.warn_deprecated("Mentions.channels", alternative="channel_mentions in the base message object")
+        return self._message.channel_mentions
 
     @property
     def channels_ids(self) -> undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]]:
-        if self.channels is undefined.UNDEFINED:
-            return undefined.UNDEFINED
+        """Sequence of IDs of the channels that were mentioned in the message."""
+        deprecation.warn_deprecated(
+            "Mentions.channels_ids", alternative="channel_mention_ids in the base message object"
+        )
+        return self._message.channel_mention_ids
 
-        return list(self.channels.keys())
+    @property
+    def users(self) -> undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, users_.User]]:
+        """Users who were notified by their mention in the message."""
+        deprecation.warn_deprecated("Mentions.users", alternative="user_mentions in the base message object")
+        return self._message.user_mentions
 
     @property
     def user_ids(self) -> undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]]:
-        if self.users is undefined.UNDEFINED:
-            return undefined.UNDEFINED
+        """Sequence of IDs of the users that were mentioned in the message."""
+        deprecation.warn_deprecated("Mentions.user_ids", alternative="user_mentions_ids in the base message object")
+        return self._message.user_mentions_ids
 
-        return list(self.users.keys())
+    @property
+    def role_ids(self) -> undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]]:
+        """Sequence of IDs of roles that were notified by their mention in the message."""
+        deprecation.warn_deprecated("Mentions.role_ids", alternative="role_mention_ids in the base message object")
+        return self._message.role_mention_ids
+
+    @property
+    def everyone(self) -> undefined.UndefinedOr[bool]:
+        """Whether the message notifies using `@everyone` or `@here`."""
+        deprecation.warn_deprecated("Mentions.everyone", alternative="mentions_everyone in the base message object")
+        return self._message.mentions_everyone
 
     def get_members(self) -> undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, guilds.Member]]:
         """Discover any cached members notified by this message.
@@ -328,18 +341,10 @@ class Mentions:
             means that there is a very small chance that some users provided
             in `notified_users` may not be present here.
         """
-        if self.users is undefined.UNDEFINED:
-            return undefined.UNDEFINED
-
-        if isinstance(self._message.app, traits.CacheAware) and self._message.guild_id is not None:
-            app = self._message.app
-            guild_id = self._message.guild_id
-            return self._map_cache_maybe_discover(
-                self.users,
-                lambda user_id: app.cache.get_member(guild_id, user_id),
-            )
-
-        return {}
+        deprecation.warn_deprecated(
+            "Mentions.get_members", alternative="get_member_mentions in the base message object"
+        )
+        return self._message.get_member_mentions()
 
     def get_roles(self) -> undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, guilds.Role]]:
         """Attempt to look up the roles that are notified by this message.
@@ -363,29 +368,8 @@ class Mentions:
             in `notifies_role_ids` may not be present here. This is a limitation
             of Discord, again.
         """
-        if self.role_ids is undefined.UNDEFINED:
-            return undefined.UNDEFINED
-
-        if isinstance(self._message.app, traits.CacheAware) and self._message.guild_id is not None:
-            app = self._message.app
-            return self._map_cache_maybe_discover(
-                self.role_ids,
-                app.cache.get_role,
-            )
-
-        return {}
-
-    @staticmethod
-    def _map_cache_maybe_discover(
-        ids: typing.Iterable[snowflakes.Snowflake],
-        cache_call: typing.Callable[[snowflakes.Snowflake], typing.Optional[_T]],
-    ) -> typing.Dict[snowflakes.Snowflake, _T]:
-        results: typing.Dict[snowflakes.Snowflake, _T] = {}
-        for id_ in ids:
-            obj = cache_call(id_)
-            if obj is not None:
-                results[id_] = obj
-        return results
+        deprecation.warn_deprecated("Mentions.get_roles", alternative="get_role_mentions in the base message object")
+        return self._message.get_role_mentions()
 
 
 @attr_extensions.with_copy
@@ -737,6 +721,18 @@ class ActionRowComponent(PartialComponent):
         return len(self.components)
 
 
+def _map_cache_maybe_discover(
+    ids: typing.Iterable[snowflakes.Snowflake],
+    cache_call: typing.Callable[[snowflakes.Snowflake], typing.Optional[_T]],
+) -> typing.Dict[snowflakes.Snowflake, _T]:
+    results: typing.Dict[snowflakes.Snowflake, _T] = {}
+    for id_ in ids:
+        obj = cache_call(id_)
+        if obj is not None:
+            results[id_] = obj
+    return results
+
+
 @attr_extensions.with_copy
 @attr.define(kw_only=True, repr=True, eq=False, weakref_slot=False)
 class PartialMessage(snowflakes.Unique):
@@ -818,6 +814,54 @@ class PartialMessage(snowflakes.Unique):
         This is a Discord limitation.
     """
 
+    user_mentions: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, users_.User]] = attr.field(
+        hash=False, eq=False, repr=False
+    )
+    """Users who were notified by their mention in the message.
+
+    !!! warning
+        If the contents have not mutated and this is a message update event,
+        some fields that are not affected may be empty instead.
+
+        This is a Discord limitation.
+    """
+
+    role_mention_ids: undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]] = attr.field(
+        hash=False, eq=False, repr=False
+    )
+    """IDs of roles that were notified by their mention in the message.
+
+    !!! warning
+        If the contents have not mutated and this is a message update event,
+        some fields that are not affected may be empty instead.
+
+        This is a Discord limitation.
+    """
+
+    channel_mentions: undefined.UndefinedOr[
+        typing.Mapping[snowflakes.Snowflake, channels_.PartialChannel]
+    ] = attr.field(hash=False, eq=False, repr=False)
+    """Channel mentions that reference channels in the target crosspost's guild.
+
+    If the message is not crossposted, this will always be empty.
+
+    !!! warning
+        If the contents have not mutated and this is a message update event,
+        some fields that are not affected may be empty instead.
+
+        This is a Discord limitation.
+    """
+
+    mentions_everyone: undefined.UndefinedOr[bool] = attr.field(hash=False, eq=False, repr=False)
+    """Whether the message notifies using `@everyone` or `@here`.
+
+    !!! warning
+        If the contents have not mutated and this is a message update event,
+        some fields that are not affected may be empty instead.
+
+        This is a Discord limitation.
+    """
+
     attachments: undefined.UndefinedOr[typing.Sequence[Attachment]] = attr.field(hash=False, eq=False, repr=False)
     """The message attachments."""
 
@@ -869,7 +913,7 @@ class PartialMessage(snowflakes.Unique):
     This is a string used for validating a message was sent.
     """
 
-    referenced_message: undefined.UndefinedNoneOr[Message] = attr.field(hash=False, eq=False, repr=False)
+    referenced_message: undefined.UndefinedNoneOr[PartialMessage] = attr.field(hash=False, eq=False, repr=False)
     """The message that was replied to.
 
     If `type` is `MessageType.REPLY` and `hikari.undefined.UNDEFINED`, Discord's
@@ -890,6 +934,101 @@ class PartialMessage(snowflakes.Unique):
     components: undefined.UndefinedOr[typing.Sequence[PartialComponent]] = attr.field(hash=False, eq=False, repr=False)
     """Sequence of the components attached to this message."""
 
+    @property
+    def channel_mention_ids(self) -> undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]]:
+        """Ids of channels that reference channels in the target crosspost's guild.
+
+        If the message is not crossposted, this will always be empty.
+
+        !!! warning
+            If the contents have not mutated and this is a message update event,
+            some fields that are not affected may be empty instead.
+
+            This is a Discord limitation.
+        """
+        if self.channel_mentions is undefined.UNDEFINED:
+            return undefined.UNDEFINED
+
+        return list(self.channel_mentions.keys())
+
+    @property
+    def user_mentions_ids(self) -> undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]]:
+        """Ids of the users who were notified by their mention in the message.
+
+        !!! warning
+            If the contents have not mutated and this is a message update event,
+            some fields that are not affected may be empty instead.
+
+            This is a Discord limitation.
+        """
+        if self.user_mentions is undefined.UNDEFINED:
+            return undefined.UNDEFINED
+
+        return list(self.user_mentions.keys())
+
+    def get_member_mentions(self) -> undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, guilds.Member]]:
+        """Discover any cached members notified by this message.
+
+        If this message was sent in a DM, this will always be empty.
+
+        !!! warning
+            This will only return valid results on gateway events. For REST
+            endpoints, this will potentially be empty. This is a limitation of
+            Discord's API, as they do not consistently notify of the ID of the
+            guild a message was sent in.
+
+        !!! note
+            If you are using a stateless application such as a stateless bot
+            or a REST-only client, this will always be empty. Furthermore,
+            if you are running a stateful bot and have the GUILD_MEMBERS
+            intent disabled, this will also be empty.
+
+            Members that are not cached will not appear in this mapping. This
+            means that there is a very small chance that some users provided
+            in `notified_users` may not be present here.
+        """
+        if self.user_mentions is undefined.UNDEFINED:
+            return undefined.UNDEFINED
+
+        if isinstance(self.app, traits.CacheAware) and self.guild_id is not None:
+            app = self.app
+            guild_id = self.guild_id
+            return _map_cache_maybe_discover(
+                self.user_mentions, lambda user_id: app.cache.get_member(guild_id, user_id)
+            )
+
+        return {}
+
+    def get_role_mentions(self) -> undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, guilds.Role]]:
+        """Attempt to look up the roles that are notified by this message.
+
+        If this message was sent in a DM, this will always be empty.
+
+        !!! warning
+            This will only return valid results on gateway events. For REST
+            endpoints, this will potentially be empty. This is a limitation of
+            Discord's API, as they do not consistently notify of the ID of the
+            guild a message was sent in.
+
+        !!! note
+            If you are using a stateless application such as a stateless bot
+            or a REST-only client, this will always be empty. Furthermore,
+            if you are running a stateful bot and have the GUILD intent
+            disabled, this will also be empty.
+
+            Roles that are not cached will not appear in this mapping. This
+            means that there is a very small chance that some role IDs provided
+            in `notifies_role_ids` may not be present here. This is a limitation
+            of Discord, again.
+        """
+        if self.role_mention_ids is undefined.UNDEFINED:
+            return undefined.UNDEFINED
+
+        if isinstance(self.app, traits.CacheAware) and self.guild_id is not None:
+            return _map_cache_maybe_discover(self.role_mention_ids, self.app.cache.get_role)
+
+        return {}
+
     def make_link(self, guild: typing.Optional[snowflakes.SnowflakeishOr[guilds.PartialGuild]]) -> str:
         """Generate a jump link to this message.
 
@@ -909,7 +1048,6 @@ class PartialMessage(snowflakes.Unique):
         builtins.str
             The jump link to the message.
         """
-        # TODO: this doesn't seem like a safe assumption for rest only applications
         guild_id_str = "@me" if guild is None else str(int(guild))
         return f"{urls.BASE_URL}/channels/{guild_id_str}/{self.channel_id}/{self.id}"
 
@@ -1617,8 +1755,11 @@ class Message(PartialMessage):
     nonce: typing.Optional[str] = attr.field(hash=False, eq=False, repr=False)
     """The message nonce. This is a string used for validating a message was sent."""
 
-    referenced_message: typing.Optional[Message] = attr.field(hash=False, eq=False, repr=False)
-    """The message that was replied to."""
+    referenced_message: typing.Optional[PartialMessage] = attr.field(hash=False, eq=False, repr=False)
+    """The message that was replied to.
+
+    If `type` is `MessageType.REPLY` and `builtins.None`, the message was deleted.
+    """
 
     interaction: typing.Optional[MessageInteraction] = attr.field(hash=False, eq=False, repr=False)
     """Information about the interaction this message was created by."""

@@ -217,9 +217,6 @@ class BaseCommandInteraction(base_interactions.PartialInteraction):
     command_type: typing.Union[commands.CommandType, int] = attr.field(eq=False, hash=False, repr=True)
     """The type of the command."""
 
-    resolved: typing.Optional[ResolvedOptionData] = attr.field(eq=False, hash=False, repr=False)
-    """Mappings of the objects resolved for the provided command options."""
-
     async def fetch_channel(self) -> channels.TextableChannel:
         """Fetch the guild channel this was triggered in.
 
@@ -371,8 +368,14 @@ class CommandInteraction(
 ):
     """Represents a command interaction on Discord."""
 
+    app_permissions: typing.Optional[permissions_.Permissions] = attr.field(eq=False, hash=False, repr=False)
+    """Permissions the bot has in this interaction's channel if it's in a guild."""
+
     options: typing.Optional[typing.Sequence[CommandInteractionOption]] = attr.field(eq=False, hash=False, repr=True)
     """Parameter values provided by the user invoking this command."""
+
+    resolved: typing.Optional[ResolvedOptionData] = attr.field(eq=False, hash=False, repr=False)
+    """Mappings of the objects resolved for the provided command options."""
 
     target_id: typing.Optional[snowflakes.Snowflake] = attr.field(default=None, eq=False, hash=False, repr=True)
     """The target of the command. Only available if the command is a context menu command."""

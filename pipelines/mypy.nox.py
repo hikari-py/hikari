@@ -34,7 +34,7 @@ STUBGEN_GENERATE = [
 
 @nox.session(reuse_venv=True)
 def mypy(session: nox.Session) -> None:
-    """Perform static type analysis on Python source code."""
+    """Perform static type analysis on Python source code using mypy."""
     session.install(
         "-r",
         "requirements.txt",

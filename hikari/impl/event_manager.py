@@ -37,6 +37,7 @@ from hikari import intents as intents_
 from hikari import presences as presences_
 from hikari import snowflakes
 from hikari.api import config
+from hikari.events import application_events
 from hikari.events import channel_events
 from hikari.events import guild_events
 from hikari.events import interaction_events
@@ -92,7 +93,7 @@ async def _request_guild_members(
 class EventManagerImpl(event_manager_base.EventManagerBase):
     """Provides event handling logic for Discord events."""
 
-    __slots__: typing.Sequence[str] = ("_cache", "_entity_factory")
+    __slots__: typing.Sequence[str] = ("_cache", "_entity_factory", "_auto_chunk_members")
 
     def __init__(
         self,
@@ -101,9 +102,11 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         intents: intents_.Intents,
         /,
         *,
+        auto_chunk_members: bool = True,
         cache: typing.Optional[cache_.MutableCache] = None,
     ) -> None:
         self._cache = cache
+        self._auto_chunk_members = auto_chunk_members
         self._entity_factory = entity_factory
         components = cache.settings.components if cache else config.CacheComponents.NONE
         super().__init__(event_factory=event_factory, intents=intents, cache_components=components)
@@ -126,6 +129,12 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
     async def on_resumed(self, shard: gateway_shard.GatewayShard, _: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway#resumed for more info."""
         await self.dispatch(self._event_factory.deserialize_resumed_event(shard))
+
+    @event_manager_base.filtered(application_events.ApplicationCommandPermissionsUpdateEvent)
+    async def on_application_command_permissions_update(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> None:
+        await self.dispatch(self._event_factory.deserialize_application_command_permission_update_event(shard, payload))
 
     @event_manager_base.filtered(channel_events.GuildChannelCreateEvent, config.CacheComponents.GUILD_CHANNELS)
     async def on_channel_create(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
@@ -257,7 +266,8 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         # payload if presence intents are also declared, so if this isn't the case then we also want
         # to chunk small guilds.
         if (
-            self._intents & intents_.Intents.GUILD_MEMBERS
+            self._auto_chunk_members
+            and self._intents & intents_.Intents.GUILD_MEMBERS
             and (payload.get("large") or not presences_declared)
             and (
                 self._cache_enabled_for(config.CacheComponents.MEMBERS)
@@ -396,14 +406,14 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         event = self._event_factory.deserialize_integration_create_event(shard, payload)
         await self.dispatch(event)
 
-    @event_manager_base.filtered(guild_events.IntegrationDeleteEvent)
-    async def on_integration_delete(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
-        event = self._event_factory.deserialize_integration_delete_event(shard, payload)
-        await self.dispatch(event)
-
     @event_manager_base.filtered(guild_events.IntegrationUpdateEvent)
     async def on_integration_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         event = self._event_factory.deserialize_integration_update_event(shard, payload)
+        await self.dispatch(event)
+
+    @event_manager_base.filtered(guild_events.IntegrationDeleteEvent)
+    async def on_integration_delete(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
+        event = self._event_factory.deserialize_integration_delete_event(shard, payload)
         await self.dispatch(event)
 
     @event_manager_base.filtered(member_events.MemberCreateEvent, config.CacheComponents.MEMBERS)

@@ -19,6 +19,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+import builtins
 import contextlib
 import importlib
 import logging
@@ -180,9 +181,10 @@ class TestPrintBanner:
         supports_color = stack.enter_context(mock.patch.object(ux, "supports_color", return_value=True))
         read_text = stack.enter_context(mock.patch.object(importlib.resources, "read_text"))
         template = stack.enter_context(mock.patch.object(string, "Template"))
-        write = stack.enter_context(mock.patch.object(sys.stdout, "write"))
+        builtins_open = stack.enter_context(mock.patch.object(builtins, "open"))
         abspath = stack.enter_context(mock.patch.object(os.path, "abspath", return_value="some path"))
         dirname = stack.enter_context(mock.patch.object(os.path, "dirname"))
+        fileno = stack.enter_context(mock.patch.object(sys.stdout, "fileno"))
 
         with stack:
             ux.print_banner("hikari", True, False)
@@ -207,7 +209,8 @@ class TestPrintBanner:
 
         template.assert_called_once_with(read_text())
         template().safe_substitute.assert_called_once_with(args)
-        write.assert_called_once_with(template().safe_substitute())
+        builtins_open.assert_called_once_with(fileno.return_value, "w", encoding="utf-8", closefd=False)
+        builtins_open.return_value.__enter__.return_value.write.assert_called_once_with(template().safe_substitute())
         dirname.assert_called_once_with("~/hikari")
         abspath.assert_called_once_with(dirname())
         supports_color.assert_called_once_with(True, False)
@@ -221,9 +224,10 @@ class TestPrintBanner:
         supports_color = stack.enter_context(mock.patch.object(ux, "supports_color", return_value=False))
         read_text = stack.enter_context(mock.patch.object(importlib.resources, "read_text"))
         template = stack.enter_context(mock.patch.object(string, "Template"))
-        write = stack.enter_context(mock.patch.object(sys.stdout, "write"))
         abspath = stack.enter_context(mock.patch.object(os.path, "abspath", return_value="some path"))
         dirname = stack.enter_context(mock.patch.object(os.path, "dirname"))
+        builtins_open = stack.enter_context(mock.patch.object(builtins, "open"))
+        fileno = stack.enter_context(mock.patch.object(sys.stdout, "fileno"))
 
         with stack:
             ux.print_banner("hikari", True, False)
@@ -248,10 +252,11 @@ class TestPrintBanner:
 
         template.assert_called_once_with(read_text())
         template().safe_substitute.assert_called_once_with(args)
-        write.assert_called_once_with(template().safe_substitute())
         dirname.assert_called_once_with("~/hikari")
         abspath.assert_called_once_with(dirname())
         supports_color.assert_called_once_with(True, False)
+        builtins_open.assert_called_once_with(fileno.return_value, "w", encoding="utf-8", closefd=False)
+        builtins_open.return_value.__enter__.return_value.write.assert_called_once_with(template().safe_substitute())
 
     def test_use_extra_args(self, mock_args):
         stack = contextlib.ExitStack()
@@ -259,8 +264,9 @@ class TestPrintBanner:
         stack.enter_context(mock.patch.object(time, "sleep"))
         read_text = stack.enter_context(mock.patch.object(importlib.resources, "read_text"))
         template = stack.enter_context(mock.patch.object(string, "Template"))
-        write = stack.enter_context(mock.patch.object(sys.stdout, "write"))
+        builtins_open = stack.enter_context(mock.patch.object(builtins, "open"))
         stack.enter_context(mock.patch.object(os.path, "abspath", return_value="some path"))
+        fileno = stack.enter_context(mock.patch.object(sys.stdout, "fileno"))
 
         extra_args = {
             "extra_argument_1": "one",
@@ -289,7 +295,8 @@ class TestPrintBanner:
 
         template.assert_called_once_with(read_text())
         template().safe_substitute.assert_called_once_with(args)
-        write.assert_called_once_with(template().safe_substitute())
+        builtins_open.assert_called_once_with(fileno.return_value, "w", encoding="utf-8", closefd=False)
+        builtins_open.return_value.__enter__.return_value.write.assert_called_once_with(template().safe_substitute())
 
     def test_overwrite_args_raises_error(self, mock_args):
         stack = contextlib.ExitStack()

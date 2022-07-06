@@ -6,6 +6,10 @@ on:
     branches:
       - master
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   check-fragment-added:
     if: github.event.pull_request.user.type != 'Bot' && !contains(github.event.pull_request.labels.*.name, 'skip-fragment-check')
@@ -20,7 +24,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: 3.8
 

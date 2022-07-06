@@ -62,7 +62,7 @@ def resolve_signature(func: typing.Callable[..., typing.Any]) -> inspect.Signatu
 
     signature = inspect.signature(func)
     resolved_typehints = typing.get_type_hints(func)
-    params = []
+    params: typing.List[inspect.Parameter] = []
 
     none_type = type(None)
     for name, param in signature.parameters.items():
@@ -98,7 +98,7 @@ def profiled(call: typing.Callable[..., _T]) -> typing.Callable[..., _T]:  # pra
 
     @functools.wraps(call)
     def wrapped(*args: typing.Any, **kwargs: typing.Any) -> typing.Any:
-        print("Profiling", call.__module__ + "." + call.__qualname__)  # noqa: T001 print disallowed.
+        print("Profiling", call.__module__ + "." + call.__qualname__)  # noqa: T201 print disallowed.
         cProfile.runctx(invoker, globals=globals(), locals=locals(), filename=None, sort=1)
         return locals()["result"]
 

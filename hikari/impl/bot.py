@@ -207,6 +207,19 @@ class GatewayBot(traits.GatewayBotAware):
         Defaults to `hikari.intents.Intents.ALL_UNPRIVILEGED`. This allows you
         to change which intents your application will use on the gateway. This
         can be used to control and change the types of events you will receive.
+    auto_chunk_members : builtins.bool
+        Defaults to `builtins.True`. If `builtins.False`, then no member chunks
+        will be requested automatically, even if there are reasons to do so.
+
+        All following statements must be true to automatically request chunks:
+
+        1. `auto_chunk_members` is `builtins.True`.
+        2. The members intent is enabled.
+        3. The server is marked as "large" or the presences intent is not enabled
+            (since Discord only sends other members when presences are declared,
+            we should also chunk small guilds if the presences are not declared).
+        4. The members cache is enabled or there are listeners for the
+        `MemberChunkEvent`.
     logs : typing.Union[builtins.None, LoggerLevel, typing.Dict[str, typing.Any]]
         Defaults to `"INFO"`.
 
@@ -320,6 +333,7 @@ class GatewayBot(traits.GatewayBotAware):
         cache_settings: typing.Optional[config_impl.CacheSettings] = None,
         http_settings: typing.Optional[config_impl.HTTPSettings] = None,
         intents: intents_.Intents = intents_.Intents.ALL_UNPRIVILEGED,
+        auto_chunk_members: bool = True,
         logs: typing.Union[None, int, str, typing.Dict[str, typing.Any]] = "INFO",
         max_rate_limit: float = 300,
         max_retries: int = 3,
@@ -352,7 +366,11 @@ class GatewayBot(traits.GatewayBotAware):
 
         # Event handling
         self._event_manager = event_manager_impl.EventManagerImpl(
-            self._entity_factory, self._event_factory, self._intents, cache=self._cache
+            self._entity_factory,
+            self._event_factory,
+            self._intents,
+            auto_chunk_members=auto_chunk_members,
+            cache=self._cache,
         )
 
         # Voice subsystem

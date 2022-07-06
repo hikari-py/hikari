@@ -38,6 +38,7 @@ if typing.TYPE_CHECKING:
     from hikari import guilds
     from hikari import locales
     from hikari import messages
+    from hikari import permissions
     from hikari import snowflakes
     from hikari import users
     from hikari.api import special_endpoints
@@ -140,6 +141,9 @@ class ComponentInteraction(
 
     locale: typing.Union[str, locales.Locale] = attr.field(eq=False, hash=False, repr=True)
     """The selected language of the user who triggered this component interaction."""
+
+    app_permissions: typing.Optional[permissions.Permissions] = attr.field(eq=False, hash=False, repr=False)
+    """Permissions the bot has in this interaction's channel if it's in a guild."""
 
     def build_response(self, type_: _ImmediateTypesT, /) -> special_endpoints.InteractionMessageBuilder:
         """Get a message response builder for use in the REST server flow.

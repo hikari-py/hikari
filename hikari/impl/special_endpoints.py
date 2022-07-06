@@ -616,6 +616,58 @@ class OwnGuildIterator(iterators.BufferedLazyIterator["applications.OwnGuild"]):
 # We use an explicit forward reference for this, since this breaks potential
 # circular import issues (once the file has executed, using those resources is
 # not an issue for us).
+class GuildBanIterator(iterators.BufferedLazyIterator["guilds.GuildBan"]):
+    """Iterator implementation for retrieving guild bans."""
+
+    __slots__: typing.Sequence[str] = (
+        "_entity_factory",
+        "_guild_id",
+        "_request_call",
+        "_route",
+        "_first_id",
+        "_newest_first",
+    )
+
+    def __init__(
+        self,
+        entity_factory: entity_factory_.EntityFactory,
+        request_call: typing.Callable[
+            ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
+        ],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        newest_first: bool,
+        first_id: str,
+    ) -> None:
+        super().__init__()
+        self._guild_id = snowflakes.Snowflake(str(int(guild)))
+        self._route = routes.GET_GUILD_BANS.compile(guild=guild)
+        self._request_call = request_call
+        self._entity_factory = entity_factory
+        self._first_id = first_id
+        self._newest_first = newest_first
+
+    async def _next_chunk(self) -> typing.Optional[typing.Generator[guilds.GuildBan, typing.Any, None]]:
+        query = data_binding.StringMapBuilder()
+        query.put("before" if self._newest_first else "after", self._first_id)
+        query.put("limit", 1000)
+
+        chunk = await self._request_call(compiled_route=self._route, query=query)
+        assert isinstance(chunk, list)
+
+        if not chunk:
+            return None
+
+        if self._newest_first:
+            # These are always returned in ascending order by `.user.id`.
+            chunk.reverse()
+
+        self._first_id = chunk[-1]["user"]["id"]
+        return (self._entity_factory.deserialize_guild_member_ban(b) for b in chunk)
+
+
+# We use an explicit forward reference for this, since this breaks potential
+# circular import issues (once the file has executed, using those resources is
+# not an issue for us).
 class MemberIterator(iterators.BufferedLazyIterator["guilds.Member"]):
     """Implementation of an iterator for retrieving members in a guild."""
 
@@ -795,7 +847,7 @@ class InteractionAutocompleteBuilder(special_endpoints.InteractionAutocompleteBu
 
     def build(
         self, _: entity_factory_.EntityFactory, /
-    ) -> typing.Tuple[data_binding.JSONObject, typing.Sequence[files.Resource[files.AsyncReader]]]:
+    ) -> typing.Tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
         data = {"choices": [{"name": choice.name, "value": choice.value} for choice in self._choices]}
         return {"type": self.type, "data": data}, ()
 
@@ -837,7 +889,7 @@ class InteractionDeferredBuilder(special_endpoints.InteractionDeferredBuilder):
 
     def build(
         self, _: entity_factory_.EntityFactory, /
-    ) -> typing.Tuple[data_binding.JSONObject, typing.Sequence[files.Resource[files.AsyncReader]]]:
+    ) -> typing.Tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
         if self._flags is not undefined.UNDEFINED:
             return {"type": self._type, "data": {"flags": self._flags}}, ()
 
@@ -1003,7 +1055,7 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
 
     def build(
         self, entity_factory: entity_factory_.EntityFactory, /
-    ) -> typing.Tuple[data_binding.JSONObject, typing.Sequence[files.Resource[files.AsyncReader]]]:
+    ) -> typing.Tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
         data = data_binding.JSONObjectBuilder()
         data.put("content", self.content)
 
@@ -1092,15 +1144,22 @@ class CommandBuilder(special_endpoints.CommandBuilder):
     _name: str = attr.field()
 
     _id: undefined.UndefinedOr[snowflakes.Snowflake] = attr.field(default=undefined.UNDEFINED, kw_only=True)
-    _default_permission: undefined.UndefinedOr[bool] = attr.field(default=undefined.UNDEFINED, kw_only=True)
+    _default_member_permissions: typing.Union[undefined.UndefinedType, int, permissions_.Permissions] = attr.field(
+        default=undefined.UNDEFINED, kw_only=True
+    )
+    _is_dm_enabled: undefined.UndefinedOr[bool] = attr.field(default=undefined.UNDEFINED, kw_only=True)
 
     @property
     def id(self) -> undefined.UndefinedOr[snowflakes.Snowflake]:
         return self._id
 
     @property
-    def default_permission(self) -> undefined.UndefinedOr[bool]:
-        return self._default_permission
+    def default_member_permissions(self) -> typing.Union[undefined.UndefinedType, permissions_.Permissions, int]:
+        return self._default_member_permissions
+
+    @property
+    def is_dm_enabled(self) -> undefined.UndefinedOr[bool]:
+        return self._is_dm_enabled
 
     @property
     def name(self) -> str:
@@ -1110,16 +1169,25 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         self._id = snowflakes.Snowflake(id_) if id_ is not undefined.UNDEFINED else undefined.UNDEFINED
         return self
 
-    def set_default_permission(self: _CommandBuilderT, state: undefined.UndefinedOr[bool], /) -> _CommandBuilderT:
-        self._default_permission = state
+    def set_default_member_permissions(
+        self: _CommandBuilderT,
+        default_member_permissions: typing.Union[undefined.UndefinedType, int, permissions_.Permissions],
+        /,
+    ) -> _CommandBuilderT:
+        self._default_member_permissions = default_member_permissions
         return self
 
-    def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObjectBuilder:
+    def set_is_dm_enabled(self: _CommandBuilderT, state: undefined.UndefinedOr[bool], /) -> _CommandBuilderT:
+        self._is_dm_enabled = state
+        return self
+
+    def build(self, _: entity_factory_.EntityFactory, /) -> typing.MutableMapping[str, typing.Any]:
         data = data_binding.JSONObjectBuilder()
         data["name"] = self._name
         data["type"] = self.type
         data.put_snowflake("id", self._id)
-        data.put("default_permission", self._default_permission)
+        data.put("default_member_permissions", self._default_member_permissions)
+        data.put("dm_permission", self._is_dm_enabled)
         return data
 
 
@@ -1147,8 +1215,12 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
     def options(self) -> typing.Sequence[commands.CommandOption]:
         return self._options.copy()
 
-    def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObjectBuilder:
+    def build(self, entity_factory: entity_factory_.EntityFactory, /) -> typing.MutableMapping[str, typing.Any]:
         data = super().build(entity_factory)
+        # Under this context we know this'll always be a JSONObjectBuilder but
+        # the return types need to be kept as MutableMapping to avoid exposing an
+        # internal type on the public API.
+        assert isinstance(data, data_binding.JSONObjectBuilder)
         data.put("description", self._description)
         data.put_array("options", self._options, conversion=entity_factory.serialize_command_option)
         return data
@@ -1166,8 +1238,9 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
             self._name,
             self._description,
             guild=guild,
-            default_permission=self._default_permission,
             options=self._options,
+            default_member_permissions=self._default_member_permissions,
+            dm_enabled=self._is_dm_enabled,
         )
 
 
@@ -1193,7 +1266,12 @@ class ContextMenuCommandBuilder(CommandBuilder, special_endpoints.ContextMenuCom
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
     ) -> commands.ContextMenuCommand:
         return await rest.create_context_menu_command(
-            application, self._type, self._name, guild=guild, default_permission=self._default_permission
+            application,
+            self._type,
+            self._name,
+            guild=guild,
+            default_member_permissions=self._default_member_permissions,
+            dm_enabled=self._is_dm_enabled,
         )
 
 
@@ -1275,7 +1353,7 @@ class _ButtonBuilder(special_endpoints.ButtonBuilder[_ContainerProtoT]):
         self._container.add_component(self)
         return self._container
 
-    def build(self) -> data_binding.JSONObject:
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
         data = data_binding.JSONObjectBuilder()
 
         data["type"] = messages.ComponentType.BUTTON
@@ -1376,7 +1454,7 @@ class _SelectOptionBuilder(special_endpoints.SelectOptionBuilder["_SelectMenuBui
         self._menu.add_raw_option(self)
         return self._menu
 
-    def build(self) -> data_binding.JSONObject:
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
         data = data_binding.JSONObjectBuilder()
 
         data["label"] = self._label
@@ -1464,7 +1542,7 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder[_ContainerProtoT]):
         self._container.add_component(self)
         return self._container
 
-    def build(self) -> data_binding.JSONObject:
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
         data = data_binding.JSONObjectBuilder()
 
         data["type"] = messages.ComponentType.SELECT_MENU
@@ -1650,7 +1728,7 @@ class ActionRowBuilder(special_endpoints.ActionRowBuilder):
         self._assert_can_add_type(messages.ComponentType.TEXT_INPUT)
         return TextInputBuilder(container=self, custom_id=custom_id, label=label)
 
-    def build(self) -> data_binding.JSONObject:
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
         return {
             "type": messages.ComponentType.ACTION_ROW,
             "components": [component.build() for component in self._components],

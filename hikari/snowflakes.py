@@ -57,9 +57,6 @@ class Snowflake(int):
 
     __slots__: typing.Sequence[str] = ()
 
-    ___MIN___: Snowflake
-    ___MAX___: Snowflake
-
     @property
     def created_at(self) -> datetime.datetime:
         """When the object was created."""
@@ -89,22 +86,12 @@ class Snowflake(int):
     @classmethod
     def min(cls) -> Snowflake:
         """Minimum value for a snowflakes."""
-        try:
-            return cls.___MIN___
-
-        except AttributeError:
-            cls.___MIN___ = Snowflake(0)
-            return cls.___MIN___
+        return cls(0)
 
     @classmethod
     def max(cls) -> Snowflake:
         """Maximum value for a snowflakes."""
-        try:
-            return cls.___MAX___
-
-        except AttributeError:
-            cls.___MAX___ = Snowflake((1 << 63) - 1)
-            return cls.___MAX___
+        return cls((1 << 63) - 1)
 
     @classmethod
     def from_data(cls, timestamp: datetime.datetime, worker_id: int, process_id: int, increment: int) -> Snowflake:

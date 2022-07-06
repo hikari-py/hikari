@@ -246,7 +246,7 @@ class HTTPTimeoutSettings:
     @request_socket_connect.validator
     @request_socket_read.validator
     @total.validator
-    def _(self, attrib: attr.Attribute[typing.Optional[float]], value: typing.Optional[float]) -> None:
+    def _(self, attrib: attr.Attribute[typing.Optional[float]], value: typing.Any) -> None:
         # This error won't occur until some time in the future where it will be annoying to
         # try and determine the root cause, so validate it NOW.
         if value is not None and (not isinstance(value, (float, int)) or value <= 0):
@@ -317,7 +317,7 @@ class HTTPSettings(config.HTTPSettings):
     """
 
     @max_redirects.validator
-    def _(self, _: attr.Attribute[typing.Optional[int]], value: typing.Optional[int]) -> None:
+    def _(self, _: attr.Attribute[typing.Optional[int]], value: typing.Any) -> None:
         # This error won't occur until some time in the future where it will be annoying to
         # try and determine the root cause, so validate it NOW.
         if value is not None and (not isinstance(value, int) or value <= 0):

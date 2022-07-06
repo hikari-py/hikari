@@ -158,15 +158,6 @@ class TestAuditLog:
         )
         assert audit_log[1:5:2] == (entry_1, entry_2)
 
-    def test_get_item_with_ivalid_type(self):
-        with pytest.raises(TypeError):
-            audit_logs.AuditLog(
-                entries=[object(), object()],
-                integrations={},
-                users={},
-                webhooks={},
-            )["OK"]
-
     def test_len(self):
         audit_log = audit_logs.AuditLog(
             entries={
