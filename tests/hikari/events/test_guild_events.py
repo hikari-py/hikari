@@ -171,21 +171,6 @@ class TestGuildStickersUpdateEvent:
             stickers=(mock.Mock(), mock.Mock(), mock.Mock()),
         )
 
-    def test_guild_id_property(self, event):
-        assert event.guild_id == 690
-
-    def test_old_stickers_when_some(self, event):
-        assert event.old_stickers is not None
-        assert len(event.old_stickers) == 2
-
-    def test_old_stickers_when_none(self, event):
-        event.old_stickers = None
-        assert not event.old_stickers
-
-    def test_stickers(self, event):
-        assert event.stickers is not None
-        assert len(event.stickers) == 3
-
     async def test_fetch_stickers(self, event):
         event.app.rest.fetch_stickers = mock.AsyncMock()
         stickers = await event.fetch_stickers()
