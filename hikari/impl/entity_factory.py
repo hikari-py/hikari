@@ -1215,35 +1215,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             payload["author"] = author_payload
 
         if embed.fields:
-            field_payloads: typing.List[data_binding.JSONObject] = []
-            for i, field in enumerate(embed.fields):
-
-                # Yep, these are technically two unreachable branches. However, this is an incredibly
-                # common mistake to make when working with embeds and not using a static type
-                # checker, so I have added these as additional safeguards for UX and ease
-                # of debugging. The case that there are `None` should be detected immediately by
-                # static type checkers, regardless.
-                name = str(field.name) if field.name is not None else None
-                value = str(field.value) if field.value is not None else None
-
-                if name is None:
-                    raise TypeError(f"in embed.fields[{i}].name - cannot have `None`")
-                if not name:
-                    raise TypeError(f"in embed.fields[{i}].name - cannot have empty string")
-                if not name.strip():
-                    raise TypeError(f"in embed.fields[{i}].name - cannot have only whitespace")
-
-                if value is None:
-                    raise TypeError(f"in embed.fields[{i}].value - cannot have `None`")
-                if not value:
-                    raise TypeError(f"in embed.fields[{i}].value - cannot have empty string")
-                if not value.strip():
-                    raise TypeError(f"in embed.fields[{i}].value - cannot have only whitespace")
-
-                # Name and value always have to be specified; we can always
-                # send a default `inline` value also just to keep this simpler.
-                field_payloads.append({"name": name, "value": value, "inline": field.is_inline})
-            payload["fields"] = field_payloads
+            payload["fields"] = [
+                {"name": field.name, "value": field.value, "inline": field.is_inline} for field in embed.fields
+            ]
 
         return payload, uploads
 
