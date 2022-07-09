@@ -485,11 +485,7 @@ class TestMember:
         model.nickname = None
         assert model.display_name is mock_user.username
 
-    def test_mention_property_when_nickname(self, model):
-        assert model.mention == "<@!123>"
-
-    def test_mention_property_when_no_nickname(self, model, mock_user):
-        model.nickname = None
+    def test_mention_property(self, model, mock_user):
         assert model.mention == mock_user.mention
 
     def test_get_guild(self, model):
