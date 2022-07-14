@@ -484,28 +484,7 @@ class Member(users.User):
 
     @property
     def mention(self) -> str:
-        """Return a raw mention string for the given member.
-
-        If the member has a known nickname, we always return
-        a bang ("`!`") before the ID part of the mention string. This
-        mimics the behaviour Discord clients tend to provide.
-
-        Example
-        -------
-
-        ```py
-        >>> some_member_without_nickname.mention
-        '<@123456789123456789>'
-        >>> some_member_with_nickname.mention
-        '<@!123456789123456789>'
-        ```
-
-        Returns
-        -------
-        builtins.str
-            The mention string to use.
-        """
-        return f"<@!{self.id}>" if self.nickname is not None else self.user.mention
+        return self.user.mention
 
     def communication_disabled_until(self) -> typing.Optional[datetime.datetime]:
         """Return when the timeout for this member ends.
