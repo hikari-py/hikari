@@ -484,21 +484,6 @@ class Member(users.User):
 
     @property
     def mention(self) -> str:
-        """Return a raw mention string for the given member.
-
-        Example
-        -------
-
-        ```py
-        >>> some_member.mention
-        '<@123456789123456789>'
-        ```
-
-        Returns
-        -------
-        builtins.str
-            The mention string to use.
-        """
         return self.user.mention
 
     def communication_disabled_until(self) -> typing.Optional[datetime.datetime]:
