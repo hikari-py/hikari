@@ -36,6 +36,7 @@ __all__: typing.Sequence[str] = (
     "BanCreateEvent",
     "BanDeleteEvent",
     "EmojisUpdateEvent",
+    "StickersUpdateEvent",
     "IntegrationEvent",
     "IntegrationCreateEvent",
     "IntegrationDeleteEvent",
@@ -60,6 +61,7 @@ if typing.TYPE_CHECKING:
     from hikari import guilds
     from hikari import presences as presences_
     from hikari import snowflakes
+    from hikari import stickers as stickers_
     from hikari import users
     from hikari import voices
     from hikari.api import shard as gateway_shard
@@ -168,6 +170,9 @@ class GuildAvailableEvent(GuildVisibilityEvent):
         The emojis in the guild.
     """
 
+    stickers: typing.Mapping[snowflakes.Snowflake, stickers_.GuildSticker] = attr.field(repr=False)
+    """Mapping of sticker IDs to the stickers in the guild."""
+
     roles: typing.Mapping[snowflakes.Snowflake, guilds.Role] = attr.field(repr=False)
     """Mapping of role IDs to the roles in the guild.
 
@@ -258,6 +263,9 @@ class GuildJoinEvent(GuildVisibilityEvent):
 
     emojis: typing.Mapping[snowflakes.Snowflake, emojis_.KnownCustomEmoji] = attr.field(repr=False)
     """Mapping of emoji IDs to the emojis in the guild."""
+
+    stickers: typing.Mapping[snowflakes.Snowflake, stickers_.GuildSticker] = attr.field(repr=False)
+    """Mapping of sticker IDs to the stickers in the guild."""
 
     roles: typing.Mapping[snowflakes.Snowflake, guilds.Role] = attr.field(repr=False)
     """Mapping of role IDs to the roles in the guild."""
@@ -372,6 +380,9 @@ class GuildUpdateEvent(GuildEvent):
     typing.Mapping[hikari.snowflakes.Snowflake, hikari.emojis.KnownCustomEmoji]
         The emojis in the guild.
     """
+
+    stickers: typing.Mapping[snowflakes.Snowflake, stickers_.GuildSticker] = attr.field(repr=False)
+    """Mapping of sticker IDs to the stickers in the guild."""
 
     roles: typing.Mapping[snowflakes.Snowflake, guilds.Role] = attr.field(repr=False)
     """Mapping of role IDs to the roles in the guild.
@@ -521,6 +532,41 @@ class EmojisUpdateEvent(GuildEvent):
             All emojis in the guild.
         """
         return await self.app.rest.fetch_guild_emojis(self.guild_id)
+
+
+@attr_extensions.with_copy
+@attr.define(kw_only=True, weakref_slot=False)
+@base_events.requires_intents(intents.Intents.GUILD_EMOJIS)
+class StickersUpdateEvent(GuildEvent):
+    """Event that is fired when the emojis in a guild are updated."""
+
+    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from ShardEvent>>.
+
+    guild_id: snowflakes.Snowflake = attr.field()
+    # <<inherited docstring from GuildEvent>>.
+
+    old_stickers: typing.Optional[typing.Sequence[guilds.stickers.GuildSticker]] = attr.field()
+    """Sequence of all old stickers in this guild.
+
+    This will be `builtins.None` if it's missing from the cache.
+    """
+
+    stickers: typing.Sequence[guilds.stickers.GuildSticker] = attr.field()
+    """Sequence of all stickers in this guild."""
+
+    async def fetch_stickers(self) -> typing.Sequence[guilds.stickers.GuildSticker]:
+        """Perform an API call to retrieve an up-to-date view of the emojis.
+
+        Returns
+        -------
+        typing.Sequence[guilds.stickers.GuildSticker]
+            All emojis in the guild.
+        """
+        return await self.app.rest.fetch_guild_stickers(self.guild_id)
 
 
 @base_events.requires_intents(intents.Intents.GUILD_INTEGRATIONS)

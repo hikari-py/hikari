@@ -273,6 +273,8 @@ class TestEventManagerImpl:
         event_manager_impl._cache.set_guild_channel.assert_not_called()
         event_manager_impl._cache.clear_emojis_for_guild.assert_not_called()
         event_manager_impl._cache.set_emoji.assert_not_called()
+        event_manager_impl._cache.clear_stickers_for_guild.assert_not_called()
+        event_manager_impl._cache.set_sticker.assert_not_called()
         event_manager_impl._cache.clear_roles_for_guild.assert_not_called()
         event_manager_impl._cache.set_role.assert_not_called()
         event_manager_impl._cache.clear_members_for_guild.assert_not_called()
@@ -311,6 +313,8 @@ class TestEventManagerImpl:
         event_manager_impl._cache.set_guild_channel.assert_not_called()
         event_manager_impl._cache.clear_emojis_for_guild.assert_not_called()
         event_manager_impl._cache.set_emoji.assert_not_called()
+        event_manager_impl._cache.clear_stickers_for_guild.assert_not_called()
+        event_manager_impl._cache.set_sticker.assert_not_called()
         event_manager_impl._cache.clear_roles_for_guild.assert_not_called()
         event_manager_impl._cache.set_role.assert_not_called()
         event_manager_impl._cache.clear_members_for_guild.assert_not_called()
@@ -339,6 +343,7 @@ class TestEventManagerImpl:
         gateway_guild.voice_states.return_value = {1: "voice1", 2: "voice2"}
         gateway_guild.presences.return_value = {1: "presence1", 2: "presence2"}
         gateway_guild.members.return_value = {1: "member1", 2: "member2"}
+        gateway_guild.stickers.return_value = {1: "sticker1", 2: "sticker2"}
 
         with mock.patch.object(event_manager, "_request_guild_members") as request_guild_members:
             await event_manager_impl.on_guild_create(shard, payload)
@@ -356,6 +361,8 @@ class TestEventManagerImpl:
         event_manager_impl._cache.set_guild_channel.assert_has_calls([mock.call("channel1"), mock.call("channel2")])
         event_manager_impl._cache.clear_emojis_for_guild.assert_called_once_with(gateway_guild.id)
         event_manager_impl._cache.set_emoji.assert_has_calls([mock.call("emoji1"), mock.call("emoji2")])
+        event_manager_impl._cache.clear_stickers_for_guild.assert_called_once_with(gateway_guild.id)
+        event_manager_impl._cache.set_sticker.assert_has_calls([mock.call("sticker1"), mock.call("sticker2")])
         event_manager_impl._cache.clear_roles_for_guild.assert_called_once_with(gateway_guild.id)
         event_manager_impl._cache.set_role.assert_has_calls([mock.call("role1"), mock.call("role2")])
         event_manager_impl._cache.clear_members_for_guild.assert_called_once_with(gateway_guild.id)
@@ -495,8 +502,11 @@ class TestEventManagerImpl:
         old_guild = object()
         mock_role = object()
         mock_emoji = object()
+        mock_sticker = object()
         event_manager_impl._enabled_for_event = mock.Mock(return_value=True)
-        event = mock.Mock(roles={555: mock_role}, emojis={333: mock_emoji}, guild=mock.Mock(id=123))
+        event = mock.Mock(
+            roles={555: mock_role}, emojis={333: mock_emoji}, guild=mock.Mock(id=123), stickers={444: mock_sticker}
+        )
 
         event_factory.deserialize_guild_update_event.return_value = event
         event_manager_impl._cache.get_guild.return_value = old_guild
@@ -510,6 +520,8 @@ class TestEventManagerImpl:
         event_manager_impl._cache.set_role.assert_called_once_with(mock_role)
         event_manager_impl._cache.clear_emojis_for_guild.assert_called_once_with(123)
         event_manager_impl._cache.set_emoji.assert_called_once_with(mock_emoji)
+        event_manager_impl._cache.clear_stickers_for_guild.assert_called_once_with(123)
+        event_manager_impl._cache.set_sticker.assert_called_once_with(mock_sticker)
         entity_factory.deserialize_gateway_guild.assert_not_called()
         event_factory.deserialize_guild_update_event.assert_called_once_with(shard, payload, old_guild=old_guild)
         event_manager_impl.dispatch.assert_awaited_once_with(event)
@@ -521,11 +533,13 @@ class TestEventManagerImpl:
         payload = {"id": 123}
         mock_role = object()
         mock_emoji = object()
+        mock_sticker = object()
         event_manager_impl._enabled_for_event = mock.Mock(return_value=False)
         guild_definition = entity_factory.deserialize_gateway_guild.return_value
         guild_definition.id = 123
         guild_definition.emojis.return_value = {0: mock_emoji}
         guild_definition.roles.return_value = {1: mock_role}
+        guild_definition.stickers.return_value = {4: mock_sticker}
 
         await event_manager_impl.on_guild_update(shard, payload)
 
@@ -534,6 +548,8 @@ class TestEventManagerImpl:
         event_manager_impl._cache.update_guild.assert_called_once_with(guild_definition.guild.return_value)
         event_manager_impl._cache.clear_emojis_for_guild.assert_called_once_with(123)
         event_manager_impl._cache.set_emoji.assert_called_once_with(mock_emoji)
+        event_manager_impl._cache.clear_stickers_for_guild.assert_called_once_with(123)
+        event_manager_impl._cache.set_sticker.assert_called_once_with(mock_sticker)
         event_manager_impl._cache.clear_roles_for_guild.assert_called_once_with(123)
         event_manager_impl._cache.set_role.assert_called_once_with(mock_role)
         event_factory.deserialize_guild_update_event.assert_not_called()
@@ -558,6 +574,8 @@ class TestEventManagerImpl:
         event_manager_impl._cache.update_guild.assert_not_called()
         event_manager_impl._cache.clear_emojis_for_guild.assert_not_called()
         event_manager_impl._cache.set_emoji.assert_not_called()
+        event_manager_impl._cache.clear_stickers_for_guild.assert_not_called()
+        event_manager_impl._cache.set_sticker.assert_not_called()
         event_manager_impl._cache.clear_roles_for_guild.assert_not_called()
         event_manager_impl._cache.set_role.assert_not_called()
         event_factory.deserialize_guild_update_event.assert_not_called()
@@ -598,6 +616,7 @@ class TestEventManagerImpl:
         event_manager_impl._cache.clear_presences_for_guild.assert_called_once_with(123)
         event_manager_impl._cache.clear_guild_channels_for_guild.assert_called_once_with(123)
         event_manager_impl._cache.clear_emojis_for_guild.assert_called_once_with(123)
+        event_manager_impl._cache.clear_stickers_for_guild.assert_called_once_with(123)
         event_manager_impl._cache.clear_roles_for_guild.assert_called_once_with(123)
         event_factory.deserialize_guild_leave_event.assert_called_once_with(
             shard, payload, old_guild=event_manager_impl._cache.delete_guild.return_value
@@ -689,6 +708,36 @@ class TestEventManagerImpl:
         event_factory.deserialize_guild_emojis_update_event.assert_called_once_with(shard, payload, old_emojis=None)
         stateless_event_manager_impl.dispatch.assert_awaited_once_with(
             event_factory.deserialize_guild_emojis_update_event.return_value
+        )
+
+    @pytest.mark.asyncio()
+    async def test_on_guild_stickers_update_stateful(self, event_manager_impl, shard, event_factory):
+        payload = {"guild_id": 720}
+        old_stickers = {700: 123}
+        mock_sticker = object()
+        event = mock.Mock(stickers=[mock_sticker], guild_id=123)
+
+        event_factory.deserialize_guild_stickers_update_event.return_value = event
+        event_manager_impl._cache.clear_stickers_for_guild.return_value = old_stickers
+
+        await event_manager_impl.on_guild_stickers_update(shard, payload)
+
+        event_manager_impl._cache.clear_stickers_for_guild.assert_called_once_with(720)
+        event_manager_impl._cache.set_sticker.assert_called_once_with(mock_sticker)
+        event_factory.deserialize_guild_stickers_update_event.assert_called_once_with(
+            shard, payload, old_stickers=[123]
+        )
+        event_manager_impl.dispatch.assert_awaited_once_with(event)
+
+    @pytest.mark.asyncio()
+    async def test_on_guild_stickers_update_stateless(self, stateless_event_manager_impl, shard, event_factory):
+        payload = {"guild_id": 123}
+
+        await stateless_event_manager_impl.on_guild_stickers_update(shard, payload)
+
+        event_factory.deserialize_guild_stickers_update_event.assert_called_once_with(shard, payload, old_stickers=None)
+        stateless_event_manager_impl.dispatch.assert_awaited_once_with(
+            event_factory.deserialize_guild_stickers_update_event.return_value
         )
 
     @pytest.mark.asyncio()

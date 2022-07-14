@@ -1053,6 +1053,22 @@ class TestGuild:
         model.app = object()
         assert model.get_emojis() == {}
 
+    def test_get_sticker(self, model):
+        assert model.get_sticker(456) is model.app.cache.get_sticker.return_value
+        model.app.cache.get_sticker.assert_called_once_with(456)
+
+    def test_get_sticker_when_no_cache_trait(self, model):
+        model.app = object()
+        assert model.get_sticker(1234) is None
+
+    def test_get_stickers(self, model):
+        assert model.get_stickers() is model.app.cache.get_stickers_view_for_guild.return_value
+        model.app.cache.get_stickers_view_for_guild.assert_called_once_with(123)
+
+    def test_get_stickers_when_no_cache_trait(self, model):
+        model.app = object()
+        assert model.get_stickers() == {}
+
     def test_roles(self, model):
         assert model.get_roles() is model.app.cache.get_roles_view_for_guild.return_value
         model.app.cache.get_roles_view_for_guild.assert_called_once_with(123)
@@ -1349,6 +1365,7 @@ class TestRestGuild:
             widget_channel_id=None,
             system_channel_flags=guilds.GuildSystemChannelFlag.SUPPRESS_PREMIUM_SUBSCRIPTION,
             emojis={},
+            stickers={},
             roles={},
             approximate_active_member_count=1000,
             approximate_member_count=100,
