@@ -7,7 +7,7 @@ mock==4.0.3
 
 # Py.test stuff.
 pytest==7.1.2
-pytest-asyncio==0.18.3
+pytest-asyncio==0.19.0
 pytest-cov==3.0.0
 pytest-randomly==3.12.0
 
