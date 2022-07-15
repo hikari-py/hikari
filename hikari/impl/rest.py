@@ -1046,7 +1046,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("suppress", suppress)
         await self._request(route, json=body)
 
-    async def edit_permission_overwrites(
+    async def edit_permission_overwrite(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
         target: typing.Union[
@@ -1077,6 +1077,28 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("allow", allow)
         body.put("deny", deny)
         await self._request(route, json=body, reason=reason)
+
+    @deprecation.deprecated("2.0.0.dev110", "edit_permission_overwrite")
+    async def edit_permission_overwrites(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
+        target: typing.Union[
+            snowflakes.Snowflakeish, users.PartialUser, guilds.PartialRole, channels_.PermissionOverwrite
+        ],
+        *,
+        target_type: undefined.UndefinedOr[typing.Union[channels_.PermissionOverwriteType, int]] = undefined.UNDEFINED,
+        allow: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
+        deny: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
+        """Edit permissions for a specific entity in the given guild channel.
+
+        .. deprecated:: 2.0.0.dev110
+            Use `RESTClient.edit_permission_overwrite` instead.
+        """
+        await self.edit_permission_overwrite(
+            channel, target, target_type=target_type, allow=allow, deny=deny, reason=reason
+        )
 
     async def delete_permission_overwrite(
         self,

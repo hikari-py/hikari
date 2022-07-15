@@ -252,6 +252,9 @@ class _GatewayGuildDefinition(entity_factory.GatewayGuildDefinition):
     _emojis: UndefinedSnowflakeMapping[emoji_models.KnownCustomEmoji] = attr.field(
         init=False, default=undefined.UNDEFINED
     )
+    _stickers: UndefinedSnowflakeMapping[sticker_models.GuildSticker] = attr.field(
+        init=False, default=undefined.UNDEFINED
+    )
     _members: UndefinedSnowflakeMapping[guild_models.Member] = attr.field(init=False, default=undefined.UNDEFINED)
     _presences: UndefinedSnowflakeMapping[presence_models.MemberPresence] = attr.field(
         init=False, default=undefined.UNDEFINED
@@ -288,6 +291,15 @@ class _GatewayGuildDefinition(entity_factory.GatewayGuildDefinition):
             }
 
         return self._emojis
+
+    def stickers(self) -> typing.Mapping[snowflakes.Snowflake, sticker_models.GuildSticker]:
+        if self._stickers is undefined.UNDEFINED:
+            self._stickers = {
+                snowflakes.Snowflake(s["id"]): self._entity_factory.deserialize_guild_sticker(s)
+                for s in self._payload["stickers"]
+            }
+
+        return self._stickers
 
     def guild(self) -> guild_models.GatewayGuild:
         if self._guild is undefined.UNDEFINED:
@@ -1569,6 +1581,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             snowflakes.Snowflake(emoji["id"]): self.deserialize_known_custom_emoji(emoji, guild_id=guild_fields.id)
             for emoji in payload["emojis"]
         }
+        stickers = {
+            snowflakes.Snowflake(sticker["id"]): self.deserialize_guild_sticker(sticker)
+            for sticker in payload["stickers"]
+        }
         return guild_models.RESTGuild(
             app=self._app,
             id=guild_fields.id,
@@ -1605,6 +1621,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             approximate_active_member_count=approximate_active_member_count,
             roles=roles,
             emojis=emojis,
+            stickers=stickers,
         )
 
     def deserialize_gateway_guild(self, payload: data_binding.JSONObject) -> entity_factory.GatewayGuildDefinition:

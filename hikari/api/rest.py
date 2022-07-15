@@ -505,7 +505,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @typing.overload
     @abc.abstractmethod
-    async def edit_permission_overwrites(
+    async def edit_permission_overwrite(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
         target: typing.Union[channels_.PermissionOverwrite, users.PartialUser, guilds.PartialRole],
@@ -518,7 +518,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @typing.overload
     @abc.abstractmethod
-    async def edit_permission_overwrites(
+    async def edit_permission_overwrite(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
         target: snowflakes.Snowflakeish,
@@ -531,7 +531,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """Edit permissions for a given entity ID and type."""
 
     @abc.abstractmethod
-    async def edit_permission_overwrites(
+    async def edit_permission_overwrite(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
         target: typing.Union[
@@ -560,9 +560,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the type of the target to update. If unset, will attempt to get
             the type from `target`.
         allow : hikari.undefined.UndefinedOr[hikari.permissions.Permissions]
-            If provided, the new vale of all allowed permissions.
+            If provided, the new value of all allowed permissions.
         deny : hikari.undefined.UndefinedOr[hikari.permissions.Permissions]
-            If provided, the new vale of all disallowed permissions.
+            If provided, the new value of all disallowed permissions.
         reason : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.

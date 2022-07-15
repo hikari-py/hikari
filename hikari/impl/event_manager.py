@@ -191,6 +191,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
             # We also filter here to prevent iterating over them and calling a function that won't do anything
             channels = event.channels if self._cache_enabled_for(config.CacheComponents.GUILD_CHANNELS) else None
             emojis = event.emojis if self._cache_enabled_for(config.CacheComponents.EMOJIS) else None
+            stickers = event.stickers if self._cache_enabled_for(config.CacheComponents.GUILD_STICKERS) else None
             guild = event.guild if self._cache_enabled_for(config.CacheComponents.GUILDS) else None
             guild_id = event.guild.id
             members = event.members if self._cache_enabled_for(config.CacheComponents.MEMBERS) else None
@@ -204,6 +205,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
 
             channels = gd.channels() if self._cache_enabled_for(config.CacheComponents.GUILD_CHANNELS) else None
             emojis = gd.emojis() if self._cache_enabled_for(config.CacheComponents.EMOJIS) else None
+            stickers = gd.stickers() if self._cache_enabled_for(config.CacheComponents.GUILD_STICKERS) else None
             guild = gd.guild() if self._cache_enabled_for(config.CacheComponents.GUILDS) else None
             guild_id = gd.id
             members = gd.members() if self._cache_enabled_for(config.CacheComponents.MEMBERS) else None
@@ -218,6 +220,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
 
             channels = None
             emojis = None
+            stickers = None
             guild = None
             guild_id = snowflakes.Snowflake(payload["id"])
             members = None
@@ -238,6 +241,11 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
                 self._cache.clear_emojis_for_guild(guild_id)
                 for emoji in emojis.values():
                     self._cache.set_emoji(emoji)
+
+            if stickers:
+                self._cache.clear_stickers_for_guild(guild_id)
+                for sticker in stickers.values():
+                    self._cache.set_sticker(sticker)
 
             if roles:
                 self._cache.clear_roles_for_guild(guild_id)
@@ -297,6 +305,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
 
             # We also filter here to prevent iterating over them and calling a function that won't do anything
             emojis = event.emojis if self._cache_enabled_for(config.CacheComponents.EMOJIS) else None
+            stickers = event.stickers if self._cache_enabled_for(config.CacheComponents.GUILD_STICKERS) else None
             guild = event.guild if self._cache_enabled_for(config.CacheComponents.GUILDS) else None
             roles = event.roles if self._cache_enabled_for(config.CacheComponents.ROLES) else None
 
@@ -306,6 +315,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
 
             gd = self._entity_factory.deserialize_gateway_guild(payload)
             emojis = gd.emojis() if self._cache_enabled_for(config.CacheComponents.EMOJIS) else None
+            stickers = gd.stickers() if self._cache_enabled_for(config.CacheComponents.GUILD_STICKERS) else None
             guild = gd.guild() if self._cache_enabled_for(config.CacheComponents.GUILDS) else None
             guild_id = gd.id
             roles = gd.roles() if self._cache_enabled_for(config.CacheComponents.ROLES) else None
@@ -325,6 +335,11 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
                 for emoji in emojis.values():
                     self._cache.set_emoji(emoji)
 
+            if stickers:
+                self._cache.clear_stickers_for_guild(guild_id)
+                for sticker in stickers.values():
+                    self._cache.set_sticker(sticker)
+
             if roles:
                 self._cache.clear_roles_for_guild(guild_id)
                 for role in roles.values():
@@ -338,6 +353,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         config.CacheComponents.GUILDS
         | config.CacheComponents.GUILD_CHANNELS
         | config.CacheComponents.EMOJIS
+        | config.CacheComponents.GUILD_STICKERS
         | config.CacheComponents.ROLES
         | config.CacheComponents.PRESENCES
         | config.CacheComponents.VOICE_STATES
@@ -364,6 +380,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
                 self._cache.clear_presences_for_guild(guild_id)
                 self._cache.clear_guild_channels_for_guild(guild_id)
                 self._cache.clear_emojis_for_guild(guild_id)
+                self._cache.clear_stickers_for_guild(guild_id)
                 self._cache.clear_roles_for_guild(guild_id)
 
             event = self._event_factory.deserialize_guild_leave_event(shard, payload, old_guild=old)
@@ -391,6 +408,22 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         if self._cache:
             for emoji in event.emojis:
                 self._cache.set_emoji(emoji)
+
+        await self.dispatch(event)
+
+    @event_manager_base.filtered(guild_events.StickersUpdateEvent, config.CacheComponents.EMOJIS)
+    async def on_guild_stickers_update(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> None:
+        """See https://discord.com/developers/docs/topics/gateway#guild-stickers-update for more info."""
+        guild_id = snowflakes.Snowflake(payload["guild_id"])
+        old = list(self._cache.clear_stickers_for_guild(guild_id).values()) if self._cache else None
+
+        event = self._event_factory.deserialize_guild_stickers_update_event(shard, payload, old_stickers=old)
+
+        if self._cache:
+            for sticker in event.stickers:
+                self._cache.set_sticker(sticker)
 
         await self.dispatch(event)
 

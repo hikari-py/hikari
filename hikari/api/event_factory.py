@@ -447,6 +447,34 @@ class EventFactory(abc.ABC):
         """
 
     @abc.abstractmethod
+    def deserialize_guild_stickers_update_event(
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+        *,
+        old_stickers: typing.Optional[typing.Sequence[guild_models.stickers.GuildSticker]] = None,
+    ) -> guild_events.StickersUpdateEvent:
+        """Parse a raw payload from Discord into a guild stickers update event object.
+
+        Parameters
+        ----------
+        shard : hikari.api.shard.GatewayShard
+            The shard that emitted this event.
+        payload : hikari.internal.data_binding.JSONObject
+            The dict payload to parse.
+
+        Other Parameters
+        ----------------
+        typing.Optional[typing.Sequence[hikari.guilds.stickers.GuildSticker]]
+            The sequence of stickers or `builtins.None`.
+
+        Returns
+        -------
+        hikari.events.guild_events.StickersUpdateEvent
+            The parsed guild stickers update event object.
+        """
+
+    @abc.abstractmethod
     def deserialize_integration_create_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> guild_events.IntegrationCreateEvent:

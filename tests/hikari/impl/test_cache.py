@@ -536,6 +536,387 @@ class TestCacheImpl:
         )
         cache_impl.set_emoji.assert_called_once_with(mock_emoji)
 
+    def test__build_sticker(self, cache_impl):
+        mock_user = mock.MagicMock(users.User)
+        sticker_data = cache_utilities.GuildStickerData(
+            id=snowflakes.Snowflake(1233534234),
+            name="OKOKOKOKOK",
+            description="hi",
+            guild_id=snowflakes.Snowflake(65234123),
+            tag="lol",
+            format_type=1,
+            user=cache_utilities.RefCell(mock_user),
+            is_available=True,
+        )
+
+        sticker = cache_impl._build_sticker(sticker_data)
+
+        assert sticker.id == snowflakes.Snowflake(1233534234)
+        assert sticker.name == "OKOKOKOKOK"
+        assert sticker.guild_id == snowflakes.Snowflake(65234123)
+        assert sticker.user == mock_user
+        assert sticker.user is not mock_user
+        assert sticker.tag == "lol"
+        assert sticker.format_type == 1
+        assert sticker.is_available is True
+        assert sticker.description == "hi"
+
+    def test__build_sticker_with_no_user(self, cache_impl):
+        sticker_data = cache_utilities.GuildStickerData(
+            id=snowflakes.Snowflake(1233534234),
+            name="OKOKOKOKOK",
+            description="hi",
+            guild_id=snowflakes.Snowflake(65234123),
+            tag="lol",
+            format_type=1,
+            user=None,
+            is_available=True,
+        )
+        cache_impl._build_user = mock.Mock()
+
+        sticker = cache_impl._build_sticker(sticker_data)
+
+        cache_impl._build_user.assert_not_called()
+        assert sticker.user is None
+
+    def test_clear_stickers(self, cache_impl):
+        mock_user_1 = mock.Mock(cache_utilities.RefCell[users.User])
+        mock_user_2 = mock.Mock(cache_utilities.RefCell[users.User])
+        mock_sticker_data_1 = mock.Mock(cache_utilities.GuildStickerData, user=mock_user_1)
+        mock_sticker_data_2 = mock.Mock(cache_utilities.GuildStickerData, user=mock_user_2)
+        mock_sticker_data_3 = mock.Mock(cache_utilities.GuildStickerData, user=None)
+        mock_sticker_1 = mock.Mock(stickers.GuildSticker)
+        mock_sticker_2 = mock.Mock(stickers.GuildSticker)
+        mock_sticker_3 = mock.Mock(stickers.GuildSticker)
+        cache_impl._sticker_entries = collections.FreezableDict(
+            {
+                snowflakes.Snowflake(43123123): mock_sticker_data_1,
+                snowflakes.Snowflake(87643523): mock_sticker_data_2,
+                snowflakes.Snowflake(6873451): mock_sticker_data_3,
+            }
+        )
+        cache_impl._build_sticker = mock.Mock(side_effect=[mock_sticker_1, mock_sticker_2, mock_sticker_3])
+        cache_impl._garbage_collect_user = mock.Mock()
+
+        view = cache_impl.clear_stickers()
+
+        assert view == {
+            snowflakes.Snowflake(43123123): mock_sticker_1,
+            snowflakes.Snowflake(87643523): mock_sticker_2,
+            snowflakes.Snowflake(6873451): mock_sticker_3,
+        }
+        assert cache_impl._sticker_entries == {}
+        cache_impl._garbage_collect_user.assert_has_calls(
+            [mock.call(mock_user_1, decrement=1), mock.call(mock_user_2, decrement=1)]
+        )
+        cache_impl._build_sticker.assert_has_calls(
+            [mock.call(mock_sticker_data_1), mock.call(mock_sticker_data_2), mock.call(mock_sticker_data_3)]
+        )
+
+    def test_clear_stickers_for_guild(self, cache_impl):
+        mock_user_1 = mock.Mock(cache_utilities.RefCell[users.User])
+        mock_user_2 = mock.Mock(cache_utilities.RefCell[users.User])
+        mock_sticker_data_1 = mock.Mock(cache_utilities.GuildStickerData, user=mock_user_1)
+        mock_sticker_data_2 = mock.Mock(cache_utilities.GuildStickerData, user=mock_user_2)
+        mock_sticker_data_3 = mock.Mock(cache_utilities.GuildStickerData, user=None)
+        mock_other_sticker_data = mock.Mock(cache_utilities.GuildStickerData)
+        sticker_ids = collections.SnowflakeSet()
+        sticker_ids.add_all(
+            [snowflakes.Snowflake(43123123), snowflakes.Snowflake(87643523), snowflakes.Snowflake(6873451)]
+        )
+        mock_sticker_1 = mock.Mock(stickers.GuildSticker)
+        mock_sticker_2 = mock.Mock(stickers.GuildSticker)
+        mock_sticker_3 = mock.Mock(stickers.GuildSticker)
+        cache_impl._sticker_entries = collections.FreezableDict(
+            {
+                snowflakes.Snowflake(6873451): mock_sticker_data_1,
+                snowflakes.Snowflake(43123123): mock_sticker_data_2,
+                snowflakes.Snowflake(87643523): mock_sticker_data_3,
+                snowflakes.Snowflake(111): mock_other_sticker_data,
+            }
+        )
+        guild_record = cache_utilities.GuildRecord(stickers=sticker_ids)
+        cache_impl._guild_entries = collections.FreezableDict(
+            {
+                snowflakes.Snowflake(432123123): guild_record,
+                snowflakes.Snowflake(1): mock.Mock(cache_utilities.GuildRecord),
+            }
+        )
+        cache_impl._build_sticker = mock.Mock(side_effect=[mock_sticker_1, mock_sticker_2, mock_sticker_3])
+        cache_impl._remove_guild_record_if_empty = mock.Mock()
+        cache_impl._garbage_collect_user = mock.Mock()
+
+        sticker_mapping = cache_impl.clear_stickers_for_guild(StubModel(432123123))
+
+        cache_impl._garbage_collect_user.assert_has_calls(
+            [mock.call(mock_user_1, decrement=1), mock.call(mock_user_2, decrement=1)]
+        )
+        cache_impl._remove_guild_record_if_empty.assert_called_once_with(snowflakes.Snowflake(432123123), guild_record)
+        assert sticker_mapping == {
+            snowflakes.Snowflake(6873451): mock_sticker_1,
+            snowflakes.Snowflake(43123123): mock_sticker_2,
+            snowflakes.Snowflake(87643523): mock_sticker_3,
+        }
+        assert cache_impl._sticker_entries == collections.FreezableDict(
+            {snowflakes.Snowflake(111): mock_other_sticker_data}
+        )
+        assert cache_impl._guild_entries[snowflakes.Snowflake(432123123)].stickers is None
+        cache_impl._build_sticker.assert_has_calls(
+            [mock.call(mock_sticker_data_1), mock.call(mock_sticker_data_2), mock.call(mock_sticker_data_3)]
+        )
+
+    def test_clear_stickers_for_guild_for_unknown_sticker_cache(self, cache_impl):
+        cache_impl._sticker_entries = {snowflakes.Snowflake(3123): mock.Mock(cache_utilities.GuildStickerData)}
+        cache_impl._guild_entries = collections.FreezableDict(
+            {
+                snowflakes.Snowflake(432123123): cache_utilities.GuildRecord(),
+                snowflakes.Snowflake(1): mock.Mock(cache_utilities.GuildRecord),
+            }
+        )
+        cache_impl._build_sticker = mock.Mock()
+        cache_impl._remove_guild_record_if_empty = mock.Mock()
+        cache_impl._garbage_collect_user = mock.Mock()
+
+        sticker_mapping = cache_impl.clear_stickers_for_guild(StubModel(432123123))
+
+        cache_impl._garbage_collect_user.assert_not_called()
+        cache_impl._remove_guild_record_if_empty.assert_not_called()
+        assert sticker_mapping == {}
+        cache_impl._build_sticker.assert_not_called()
+
+    def test_clear_stickers_for_guild_for_unknown_record(self, cache_impl):
+        cache_impl._sticker_entries = {snowflakes.Snowflake(123124): mock.Mock(cache_utilities.GuildStickerData)}
+        cache_impl._guild_entries = collections.FreezableDict(
+            {snowflakes.Snowflake(1): mock.Mock(cache_utilities.GuildRecord)}
+        )
+        cache_impl._build_sticker = mock.Mock()
+        cache_impl._remove_guild_record_if_empty = mock.Mock()
+        cache_impl._garbage_collect_user = mock.Mock()
+
+        sticker_mapping = cache_impl.clear_stickers_for_guild(StubModel(432123123))
+
+        cache_impl._garbage_collect_user.assert_not_called()
+        cache_impl._remove_guild_record_if_empty.assert_not_called()
+        assert sticker_mapping == {}
+        cache_impl._build_sticker.assert_not_called()
+
+    def test_delete_sticker(self, cache_impl):
+        mock_user = object()
+        mock_sticker_data = mock.Mock(
+            cache_utilities.GuildStickerData, user=mock_user, guild_id=snowflakes.Snowflake(123333)
+        )
+        mock_other_sticker_data = mock.Mock(cache_utilities.GuildStickerData)
+        mock_sticker = mock.Mock(stickers.GuildSticker)
+        sticker_ids = collections.SnowflakeSet()
+        sticker_ids.add_all([snowflakes.Snowflake(12354123), snowflakes.Snowflake(432123)])
+        cache_impl._sticker_entries = collections.FreezableDict(
+            {snowflakes.Snowflake(12354123): mock_sticker_data, snowflakes.Snowflake(999): mock_other_sticker_data}
+        )
+        cache_impl._guild_entries = collections.FreezableDict(
+            {snowflakes.Snowflake(123333): cache_utilities.GuildRecord(stickers=sticker_ids)}
+        )
+        cache_impl._garbage_collect_user = mock.Mock()
+        cache_impl._build_sticker = mock.Mock(return_value=mock_sticker)
+
+        result = cache_impl.delete_sticker(StubModel(12354123))
+
+        assert result is mock_sticker
+        assert cache_impl._sticker_entries == {snowflakes.Snowflake(999): mock_other_sticker_data}
+        assert cache_impl._guild_entries[snowflakes.Snowflake(123333)].stickers == {snowflakes.Snowflake(432123)}
+        cache_impl._build_sticker.assert_called_once_with(mock_sticker_data)
+        cache_impl._garbage_collect_user.assert_called_once_with(mock_user, decrement=1)
+
+    def test_delete_sticker_without_user(self, cache_impl):
+        mock_sticker_data = mock.Mock(
+            cache_utilities.GuildStickerData, user=None, guild_id=snowflakes.Snowflake(123333)
+        )
+        mock_other_sticker_data = mock.Mock(cache_utilities.GuildStickerData)
+        mock_sticker = mock.Mock(stickers.GuildSticker)
+        sticker_ids = collections.SnowflakeSet()
+        sticker_ids.add_all([snowflakes.Snowflake(12354123), snowflakes.Snowflake(432123)])
+        cache_impl._sticker_entries = collections.FreezableDict(
+            {snowflakes.Snowflake(12354123): mock_sticker_data, snowflakes.Snowflake(999): mock_other_sticker_data}
+        )
+        cache_impl._guild_entries = collections.FreezableDict(
+            {snowflakes.Snowflake(123333): cache_utilities.GuildRecord(stickers=sticker_ids)}
+        )
+        cache_impl._garbage_collect_user = mock.Mock()
+        cache_impl._build_sticker = mock.Mock(return_value=mock_sticker)
+
+        result = cache_impl.delete_sticker(StubModel(12354123))
+
+        assert result is mock_sticker
+        assert cache_impl._sticker_entries == {snowflakes.Snowflake(999): mock_other_sticker_data}
+        assert cache_impl._guild_entries[snowflakes.Snowflake(123333)].stickers == {snowflakes.Snowflake(432123)}
+        cache_impl._build_sticker.assert_called_once_with(mock_sticker_data)
+        cache_impl._garbage_collect_user.assert_not_called()
+
+    def test_delete_sticker_for_unknown_sticker(self, cache_impl):
+        cache_impl._garbage_collect_user = mock.Mock()
+        cache_impl._build_sticker = mock.Mock()
+
+        result = cache_impl.delete_sticker(StubModel(12354123))
+
+        assert result is None
+        cache_impl._build_sticker.assert_not_called()
+        cache_impl._garbage_collect_user.assert_not_called()
+
+    def test_get_sticker(self, cache_impl):
+        mock_sticker_data = mock.Mock(cache_utilities.GuildStickerData)
+        mock_sticker = mock.Mock(emojis.KnownCustomEmoji)
+        cache_impl._build_sticker = mock.Mock(return_value=mock_sticker)
+        cache_impl._sticker_entries = collections.FreezableDict({snowflakes.Snowflake(3422123): mock_sticker_data})
+
+        result = cache_impl.get_sticker(StubModel(3422123))
+
+        assert result is mock_sticker
+        cache_impl._build_sticker.assert_called_once_with(mock_sticker_data)
+
+    def test_get_sticker_with_unknown_sticker(self, cache_impl):
+        cache_impl._build_sticker = mock.Mock()
+
+        result = cache_impl.get_sticker(StubModel(3422123))
+
+        assert result is None
+        cache_impl._build_sticker.assert_not_called()
+
+    def test_get_stickers_view(self, cache_impl):
+        mock_sticker_data_1 = mock.Mock(cache_utilities.GuildStickerData)
+        mock_sticker_data_2 = mock.Mock(cache_utilities.GuildStickerData)
+        mock_sticker_1 = mock.Mock(stickers.GuildSticker)
+        mock_sticker_2 = mock.Mock(stickers.GuildSticker)
+        cache_impl._sticker_entries = collections.FreezableDict(
+            {snowflakes.Snowflake(123123123): mock_sticker_data_1, snowflakes.Snowflake(43156234): mock_sticker_data_2}
+        )
+        cache_impl._build_sticker = mock.Mock(side_effect=[mock_sticker_1, mock_sticker_2])
+
+        result = cache_impl.get_stickers_view()
+
+        assert result == {
+            snowflakes.Snowflake(123123123): mock_sticker_1,
+            snowflakes.Snowflake(43156234): mock_sticker_2,
+        }
+        cache_impl._build_sticker.assert_has_calls([mock.call(mock_sticker_data_1), mock.call(mock_sticker_data_2)])
+
+    def test_get_stickers_view_for_guild(self, cache_impl):
+        mock_sticker_data_1 = mock.Mock(cache_utilities.GuildStickerData)
+        mock_sticker_data_2 = mock.Mock(cache_utilities.GuildStickerData)
+        mock_sticker_1 = mock.Mock(stickers.GuildSticker)
+        mock_sticker_2 = mock.Mock(stickers.GuildSticker)
+        sticker_ids = collections.SnowflakeSet()
+        sticker_ids.add_all([snowflakes.Snowflake(65123), snowflakes.Snowflake(43156234)])
+        cache_impl._sticker_entries = collections.FreezableDict(
+            {
+                snowflakes.Snowflake(65123): mock_sticker_data_1,
+                snowflakes.Snowflake(942123): mock.Mock(cache_utilities.GuildStickerData),
+                snowflakes.Snowflake(43156234): mock_sticker_data_2,
+            }
+        )
+        cache_impl._guild_entries = collections.FreezableDict(
+            {
+                snowflakes.Snowflake(99999): mock.Mock(cache_utilities.GuildRecord),
+                snowflakes.Snowflake(9342123): cache_utilities.GuildRecord(stickers=sticker_ids),
+            }
+        )
+        cache_impl._build_sticker = mock.Mock(side_effect=[mock_sticker_1, mock_sticker_2])
+
+        result = cache_impl.get_stickers_view_for_guild(StubModel(9342123))
+
+        assert result == {
+            snowflakes.Snowflake(65123): mock_sticker_1,
+            snowflakes.Snowflake(43156234): mock_sticker_2,
+        }
+        cache_impl._build_sticker.assert_has_calls([mock.call(mock_sticker_data_1), mock.call(mock_sticker_data_2)])
+
+    def test_get_stickers_view_for_guild_for_unknown_sticker_cache(self, cache_impl):
+        cache_impl._sticker_entries = collections.FreezableDict(
+            {snowflakes.Snowflake(9999): mock.Mock(cache_utilities.GuildStickerData)}
+        )
+        cache_impl._guild_entries = collections.FreezableDict(
+            {
+                snowflakes.Snowflake(99999): mock.Mock(cache_utilities.GuildRecord),
+                snowflakes.Snowflake(9342123): cache_utilities.GuildRecord(),
+            }
+        )
+        cache_impl._build_sticker = mock.Mock()
+
+        result = cache_impl.get_stickers_view_for_guild(StubModel(9342123))
+
+        assert result == {}
+        cache_impl._build_sticker.assert_not_called()
+
+    def test_get_stickers_view_for_guild_for_unknown_record(self, cache_impl):
+        cache_impl._sticker_entries = collections.FreezableDict(
+            {snowflakes.Snowflake(12354345): mock.Mock(cache_utilities.GuildStickerData)}
+        )
+        cache_impl._guild_entries = collections.FreezableDict(
+            {snowflakes.Snowflake(9342123): cache_utilities.GuildRecord()}
+        )
+        cache_impl._build_sticker = mock.Mock()
+
+        result = cache_impl.get_stickers_view_for_guild(StubModel(9342123))
+
+        assert result == {}
+        cache_impl._build_sticker.assert_not_called()
+
+    def test_set_sticker(self, cache_impl):
+        mock_user = mock.Mock(users.User, id=snowflakes.Snowflake(654234))
+        mock_reffed_user = cache_utilities.RefCell(mock_user)
+        sticker = stickers.GuildSticker(
+            id=snowflakes.Snowflake(5123123),
+            name="A name",
+            guild_id=snowflakes.Snowflake(65234),
+            user=mock_user,
+            description="Jax cute",
+            tag="lul",
+            format_type=1,
+            is_available=False,
+        )
+        cache_impl._set_user = mock.Mock(return_value=mock_reffed_user)
+        cache_impl._increment_ref_count = mock.Mock()
+
+        cache_impl.set_sticker(sticker)
+
+        assert 65234 in cache_impl._guild_entries
+        assert cache_impl._guild_entries[snowflakes.Snowflake(65234)].stickers
+        assert 5123123 in cache_impl._guild_entries[snowflakes.Snowflake(65234)].stickers
+        assert 5123123 in cache_impl._sticker_entries
+        sticker_data = cache_impl._sticker_entries[snowflakes.Snowflake(5123123)]
+        cache_impl._set_user.assert_called_once_with(mock_user)
+        cache_impl._increment_ref_count.assert_called_once_with(mock_reffed_user)
+        assert sticker_data.id == snowflakes.Snowflake(5123123)
+        assert sticker_data.name == "A name"
+        assert sticker_data.guild_id == snowflakes.Snowflake(65234)
+        assert sticker_data.user is mock_reffed_user
+        assert sticker_data.is_available is False
+        assert sticker_data.format_type == 1
+        assert sticker_data.tag == "lul"
+        assert sticker_data.description == "Jax cute"
+
+    def test_set_sticker_with_pre_cached_sticker(self, cache_impl):
+        mock_user = mock.Mock(users.User, id=snowflakes.Snowflake(654234))
+        sticker = stickers.GuildSticker(
+            id=snowflakes.Snowflake(5123123),
+            name="A name",
+            guild_id=snowflakes.Snowflake(65234),
+            description="OI",
+            user=mock_user,
+            tag="lul",
+            format_type=1,
+            is_available=False,
+        )
+        cache_impl._sticker_entries = collections.FreezableDict(
+            {snowflakes.Snowflake(5123123): mock.Mock(cache_utilities.GuildStickerData)}
+        )
+        cache_impl._set_user = mock.Mock()
+        cache_impl._increment_user_ref_count = mock.Mock()
+
+        cache_impl.set_sticker(sticker)
+
+        assert 5123123 in cache_impl._sticker_entries
+        cache_impl._set_user.assert_called_once_with(mock_user)
+        cache_impl._increment_user_ref_count.assert_not_called()
+
     def test_clear_guilds_when_no_guilds_cached(self, cache_impl):
         cache_impl._guild_entries = collections.FreezableDict(
             {
@@ -2712,6 +3093,8 @@ class TestCacheImpl:
             ("clear_presences_for_guild", config_api.CacheComponents.PRESENCES, cache_utilities.EmptyCacheView()),
             ("clear_roles", config_api.CacheComponents.ROLES, cache_utilities.EmptyCacheView()),
             ("clear_roles_for_guild", config_api.CacheComponents.ROLES, cache_utilities.EmptyCacheView()),
+            ("clear_stickers", config_api.CacheComponents.GUILD_STICKERS, cache_utilities.EmptyCacheView()),
+            ("clear_stickers_for_guild", config_api.CacheComponents.GUILD_STICKERS, cache_utilities.EmptyCacheView()),
             ("clear_voice_states", config_api.CacheComponents.VOICE_STATES, cache_utilities.EmptyCacheView()),
             (
                 "clear_voice_states_for_channel",
@@ -2727,6 +3110,7 @@ class TestCacheImpl:
             ("delete_message", config_api.CacheComponents.MESSAGES, None),
             ("delete_presence", config_api.CacheComponents.PRESENCES, None),
             ("delete_role", config_api.CacheComponents.ROLES, None),
+            ("delete_sticker", config_api.CacheComponents.GUILD_STICKERS, None),
             ("delete_voice_state", config_api.CacheComponents.VOICE_STATES, None),
             ("get_available_guild", config_api.CacheComponents.GUILDS, None),
             ("get_available_guilds_view", config_api.CacheComponents.GUILDS, cache_utilities.EmptyCacheView()),
@@ -2755,6 +3139,13 @@ class TestCacheImpl:
             ("get_role", config_api.CacheComponents.ROLES, None),
             ("get_roles_view", config_api.CacheComponents.ROLES, cache_utilities.EmptyCacheView()),
             ("get_roles_view_for_guild", config_api.CacheComponents.ROLES, cache_utilities.EmptyCacheView()),
+            ("get_sticker", config_api.CacheComponents.GUILD_STICKERS, None),
+            ("get_stickers_view", config_api.CacheComponents.GUILD_STICKERS, cache_utilities.EmptyCacheView()),
+            (
+                "get_stickers_view_for_guild",
+                config_api.CacheComponents.GUILD_STICKERS,
+                cache_utilities.EmptyCacheView(),
+            ),
             ("get_unavailable_guild", config_api.CacheComponents.GUILDS, None),
             ("get_unavailable_guilds_view", config_api.CacheComponents.GUILDS, cache_utilities.EmptyCacheView()),
             ("get_voice_state", config_api.CacheComponents.VOICE_STATES, None),
@@ -2778,6 +3169,7 @@ class TestCacheImpl:
             ("set_message", config_api.CacheComponents.MESSAGES, None),
             ("set_presence", config_api.CacheComponents.PRESENCES, None),
             ("set_role", config_api.CacheComponents.ROLES, None),
+            ("set_sticker", config_api.CacheComponents.GUILD_STICKERS, None),
             ("set_voice_state", config_api.CacheComponents.VOICE_STATES, None),
             ("update_emoji", config_api.CacheComponents.EMOJIS, (None, None)),
             ("update_guild", config_api.CacheComponents.GUILDS, (None, None)),
