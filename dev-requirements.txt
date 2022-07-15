@@ -35,7 +35,7 @@ pyright==1.1.260
 # DEPENDENCY CHECKING #
 #######################
 
-safety~=2.0.0
+safety~=2.1.0
 
 ##############
 # FORMATTING #
