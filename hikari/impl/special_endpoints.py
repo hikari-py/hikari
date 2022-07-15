@@ -1134,6 +1134,8 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         data["type"] = self.type
         data.put_snowflake("id", self._id)
 
+        # Discord considers 0 the same thing as ADMINISTRATORS, but we make it nicer to work with
+        # by using it correctly.
         if self._default_member_permissions != 0:
             data.put("default_member_permissions", self._default_member_permissions)
 
