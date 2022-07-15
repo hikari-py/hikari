@@ -1133,7 +1133,10 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         data["name"] = self._name
         data["type"] = self.type
         data.put_snowflake("id", self._id)
-        data.put("default_member_permissions", self._default_member_permissions)
+
+        if self._default_member_permissions != 0:
+            data.put("default_member_permissions", self._default_member_permissions)
+
         data.put("dm_permission", self._is_dm_enabled)
         return data
 
