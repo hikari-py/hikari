@@ -86,6 +86,8 @@ class AutoModerationActionType(int, enums.Enum):
 @attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
 class AutoModerationAction:
+    """Represents an action which will execute whenever an auto moderation rule is triggered."""
+
     type: AutoModerationActionType = attr.field(hash=True, repr=False)
     """Type of this auto moderation action."""
 
