@@ -6563,6 +6563,8 @@ class TestRESTClientImplAsync:
             reason="a reason meow",
         )
 
+        assert result is rest_client._entity_factory.deserialize_auto_mod_rule.return_value
+        rest_client._entity_factory.deserialize_auto_mod_rule.assert_called_once_with(rest_client._request.return_value)
         rest_client._request.assert_awaited_once_with(
             expected_route,
             json={
@@ -6596,6 +6598,8 @@ class TestRESTClientImplAsync:
             actions=[mock_action],
         )
 
+        assert result is rest_client._entity_factory.deserialize_auto_mod_rule.return_value
+        rest_client._entity_factory.deserialize_auto_mod_rule.assert_called_once_with(rest_client._request.return_value)
         rest_client._request.assert_awaited_once_with(
             expected_route,
             json={
@@ -6629,6 +6633,8 @@ class TestRESTClientImplAsync:
             reason="nyaa nyaa",
         )
 
+        assert result is rest_client._entity_factory.deserialize_auto_mod_rule.return_value
+        rest_client._entity_factory.deserialize_auto_mod_rule.assert_called_once_with(rest_client._request.return_value)
         rest_client._request.assert_awaited_once_with(
             expected_route,
             json={
@@ -6657,6 +6663,8 @@ class TestRESTClientImplAsync:
             StubModel(44332222),
         )
 
+        assert result is rest_client._entity_factory.deserialize_auto_mod_rule.return_value
+        rest_client._entity_factory.deserialize_auto_mod_rule.assert_called_once_with(rest_client._request.return_value)
         rest_client._request.assert_awaited_once_with(expected_route, json={}, reason=undefined.UNDEFINED)
         rest_client._entity_factory.serialize_auto_mod_action.assert_not_called()
 
