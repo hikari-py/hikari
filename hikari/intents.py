@@ -335,6 +335,20 @@ class Intents(enums.Flag):
     * `GUILD_SCHEDULED_EVENT_USER_REMOVE`
     """
 
+    AUTO_MODERATION_CONFIGURATION = 1 << 20
+    """Subscribe to the following events:
+
+    * `AUTO_MODERATION_RULE_CREATE`
+    * `AUTO_MODERATION_RULE_UPDATE`
+    * `AUTO_MODERATION_RULE_DELETE`
+    """
+
+    AUTO_MODERATION_EXECUTION = 1 << 21
+    """Subscribe to the following events:
+
+    * `AUTO_MODERATION_ACTION_EXECUTION`
+    """
+
     # Annoyingly, enums hide classmethods and staticmethods from __dir__ in
     # EnumMeta which means if I make methods to generate these, then stuff
     # will not be documented by pdoc. Alas, my dream of being smart with
@@ -386,7 +400,7 @@ class Intents(enums.Flag):
     ALL_MESSAGE_TYPING = DM_MESSAGE_TYPING | GUILD_MESSAGE_TYPING
     """All typing indicator intents."""
 
-    ALL_UNPRIVILEGED = ALL_GUILDS_UNPRIVILEGED | ALL_DMS
+    ALL_UNPRIVILEGED = ALL_GUILDS_UNPRIVILEGED | ALL_DMS | AUTO_MODERATION_CONFIGURATION | AUTO_MODERATION_EXECUTION
     """All unprivileged intents."""
 
     ALL_PRIVILEGED = ALL_GUILDS_PRIVILEGED | MESSAGE_CONTENT

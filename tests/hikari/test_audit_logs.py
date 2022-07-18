@@ -114,6 +114,7 @@ class TestAuditLog:
         entry_2 = object()
         entry_3 = object()
         audit_log = audit_logs.AuditLog(
+            auto_mod_rules={},
             entries={
                 snowflakes.Snowflake(432123): entry_1,
                 snowflakes.Snowflake(432654): entry_2,
@@ -130,6 +131,7 @@ class TestAuditLog:
         entry = object()
         entry_2 = object()
         audit_log = audit_logs.AuditLog(
+            auto_mod_rules={},
             entries={
                 snowflakes.Snowflake(432123): object(),
                 snowflakes.Snowflake(432654): entry,
@@ -149,6 +151,7 @@ class TestAuditLog:
         entry_1 = object()
         entry_2 = object()
         audit_log = audit_logs.AuditLog(
+            auto_mod_rules={},
             entries={
                 snowflakes.Snowflake(432123): object(),
                 snowflakes.Snowflake(432654): entry_1,
@@ -165,6 +168,7 @@ class TestAuditLog:
 
     def test_len(self):
         audit_log = audit_logs.AuditLog(
+            auto_mod_rules={},
             entries={
                 snowflakes.Snowflake(432123): object(),
                 snowflakes.Snowflake(432654): object(),

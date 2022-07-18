@@ -24,6 +24,7 @@ import datetime
 import mock
 import pytest
 
+from hikari import auto_mod
 from hikari import channels as channel_models
 from hikari import emojis as emoji_models
 from hikari import traits
@@ -31,6 +32,7 @@ from hikari import undefined
 from hikari import users as user_models
 from hikari.api import shard
 from hikari.events import application_events
+from hikari.events import auto_mod_events
 from hikari.events import channel_events
 from hikari.events import guild_events
 from hikari.events import interaction_events
@@ -1495,3 +1497,100 @@ class TestEventFactoryImpl:
         assert event.token == "okokok"
         assert event.guild_id == 3122312
         assert event.raw_endpoint == "httppppppp"
+
+    def test_deserialize_auto_mod_rule_create_event(self, event_factory, mock_app, mock_shard):
+        mock_payload = {"id": "49499494"}
+
+        event = event_factory.deserialize_auto_mod_rule_create_event(mock_shard, mock_payload)
+
+        assert isinstance(event, auto_mod_events.AutoModRuleCreateEvent)
+        assert event.shard is mock_shard
+        assert event.rule is mock_app.entity_factory.deserialize_auto_mod_rule.return_value
+        mock_app.entity_factory.deserialize_auto_mod_rule.assert_called_once_with(mock_payload)
+
+    def test_deserialize_auto_mod_rule_update_event(self, event_factory, mock_app, mock_shard):
+        mock_payload = {"id": "49499494"}
+
+        event = event_factory.deserialize_auto_mod_rule_update_event(mock_shard, mock_payload)
+
+        assert isinstance(event, auto_mod_events.AutoModRuleUpdateEvent)
+        assert event.shard is mock_shard
+        assert event.rule is mock_app.entity_factory.deserialize_auto_mod_rule.return_value
+        mock_app.entity_factory.deserialize_auto_mod_rule.assert_called_once_with(mock_payload)
+
+    def test_deserialize_auto_mod_rule_delete_event(self, event_factory, mock_app, mock_shard):
+        mock_payload = {"id": "49499494"}
+
+        event = event_factory.deserialize_auto_mod_rule_delete_event(mock_shard, mock_payload)
+
+        assert isinstance(event, auto_mod_events.AutoModRuleDeleteEvent)
+        assert event.shard is mock_shard
+        assert event.rule is mock_app.entity_factory.deserialize_auto_mod_rule.return_value
+        mock_app.entity_factory.deserialize_auto_mod_rule.assert_called_once_with(mock_payload)
+
+    def test_deserialize_auto_mod_action_execution_event(self, event_factory, mock_app, mock_shard):
+        mock_action_payload = {"type": "69"}
+
+        event = event_factory.deserialize_auto_mod_action_execution_event(
+            mock_shard,
+            {
+                "guild_id": "123321",
+                "action": mock_action_payload,
+                "rule_id": "4959595",
+                "rule_trigger_type": 3,
+                "user_id": "4949494",
+                "channel_id": "5423234",
+                "message_id": "49343292",
+                "alert_system_message_id": "49211123",
+                "content": "meow",
+                "matched_keyword": "fredf",
+                "matched_content": "dfofodofdodf",
+            },
+        )
+
+        assert event.app is mock_app
+        assert event.shard is mock_shard
+        assert event.guild_id == 123321
+        assert event.action is mock_app.entity_factory.deserialize_auto_mod_action.return_value
+        assert event.rule_id == 4959595
+        assert event.rule_trigger_type is auto_mod.AutoModTriggerType.SPAM
+        assert event.user_id == 4949494
+        assert event.channel_id == 5423234
+        assert event.message_id == 49343292
+        assert event.alert_system_message_id == 49211123
+        assert event.content == "meow"
+        assert event.matched_keyword == "fredf"
+        assert event.matched_content == "dfofodofdodf"
+        mock_app.entity_factory.deserialize_auto_mod_action.assert_called_once_with(mock_action_payload)
+
+    def test_deserialize_auto_mod_action_execution_event_when_partial(self, event_factory, mock_app, mock_shard):
+        mock_action_payload = {"type": "69"}
+
+        event = event_factory.deserialize_auto_mod_action_execution_event(
+            mock_shard,
+            {
+                "guild_id": "123321",
+                "action": mock_action_payload,
+                "rule_id": "4959595",
+                "rule_trigger_type": 3,
+                "user_id": "4949494",
+                "content": "",
+                "matched_keyword": None,
+                "matched_content": None,
+            },
+        )
+
+        assert event.app is mock_app
+        assert event.shard is mock_shard
+        assert event.guild_id == 123321
+        assert event.action is mock_app.entity_factory.deserialize_auto_mod_action.return_value
+        assert event.rule_id == 4959595
+        assert event.rule_trigger_type is auto_mod.AutoModTriggerType.SPAM
+        assert event.user_id == 4949494
+        assert event.channel_id is None
+        assert event.message_id is None
+        assert event.alert_system_message_id is None
+        assert event.content is None
+        assert event.matched_keyword is None
+        assert event.matched_content is None
+        mock_app.entity_factory.deserialize_auto_mod_action.assert_called_once_with(mock_action_payload)

@@ -447,6 +447,12 @@ GET_GUILD_VOICE_REGIONS: typing.Final[Route] = Route(GET, "/guilds/{guild}/regio
 
 GET_GUILD_WEBHOOKS: typing.Final[Route] = Route(GET, "/guilds/{guild}/webhooks")
 
+GET_GUILD_AUTO_MODERATION_RULES: typing.Final[Route] = Route(GET, "/guilds/{guild}/auto-moderation/rules")
+GET_GUILD_AUTO_MODERATION_RULE: typing.Final[Route] = Route(GET, "/guilds/{guild}/auto-moderation/rules/{rule}")
+POST_GUILD_AUTO_MODERATION_RULE: typing.Final[Route] = Route(POST, "/guilds/{guild}/auto-moderation/rules")
+PATCH_GUILD_AUTO_MODERATION_RULE: typing.Final[Route] = Route(PATCH, "/guilds/{guild}/auto-moderation/rules/{rule}")
+DELETE_GUILD_AUTO_MODERATION_RULE: typing.Final[Route] = Route(DELETE, "/guilds/{guild}/auto-moderation/rules/{rule}")
+
 # Stickers
 GET_STICKER_PACKS: typing.Final[Route] = Route(GET, "/sticker-packs")
 GET_STICKER: typing.Final[Route] = Route(GET, "/stickers/{sticker}")

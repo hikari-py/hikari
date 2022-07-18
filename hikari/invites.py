@@ -102,7 +102,7 @@ class InviteGuild(guilds.PartialGuild):
     """Represents the partial data of a guild that is attached to invites."""
 
     features: typing.Sequence[typing.Union[str, guilds.GuildFeature]] = attr.field(eq=False, hash=False, repr=False)
-    """A list of the features in this guild."""
+    """A sequence of the features in this guild."""
 
     splash_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
     """The hash of the splash for the guild, if there is one."""

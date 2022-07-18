@@ -34,6 +34,7 @@ import attr
 
 from hikari import applications as application_models
 from hikari import audit_logs as audit_log_models
+from hikari import auto_mod as auto_mod_models
 from hikari import channels as channel_models
 from hikari import colors as color_models
 from hikari import commands
@@ -430,6 +431,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         "_app",
         "_audit_log_entry_converters",
         "_audit_log_event_mapping",
+        "_auto_mod_action_mapping",
+        "_auto_mod_trigger_mapping",
         "_command_mapping",
         "_message_component_type_mapping",
         "_modal_component_type_mapping",
@@ -497,6 +500,17 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             audit_log_models.AuditLogEventType.MESSAGE_DELETE: self._deserialize_message_delete_entry_info,
             audit_log_models.AuditLogEventType.MEMBER_DISCONNECT: self._deserialize_member_disconnect_entry_info,
             audit_log_models.AuditLogEventType.MEMBER_MOVE: self._deserialize_member_move_entry_info,
+        }
+        self._auto_mod_action_mapping = {
+            auto_mod_models.AutoModActionType.BLOCK_MESSAGES: self._deserialize_auto_mod_block_message,
+            auto_mod_models.AutoModActionType.SEND_ALERT_MESSAGE: self._deserialize_auto_mod_block_send_alert_message,
+            auto_mod_models.AutoModActionType.TIMEOUT: self._deserialize_auto_mod_timeout,
+        }
+        self._auto_mod_trigger_mapping = {
+            auto_mod_models.AutoModTriggerType.HARMFUL_LINK: self._deserialize_auto_mod_harmful_link_trigger,
+            auto_mod_models.AutoModTriggerType.KEYWORD: self._deserialize_auto_mod_keyword_trigger,
+            auto_mod_models.AutoModTriggerType.KEYWORD_PRESET: self._deserialize_auto_mod_keyword_preset_trigger,
+            auto_mod_models.AutoModTriggerType.SPAM: self._deserialize_auto_mod_spam_trigger,
         }
         self._command_mapping = {
             commands.CommandType.SLASH: self.deserialize_slash_command,
@@ -895,6 +909,16 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             else:
                 entries[entry.id] = entry
 
+        auto_mod_rules: typing.Dict[snowflakes.Snowflake, auto_mod_models.AutoModRule] = {}
+        for rule_payload in payload["auto_moderation_rules"]:
+            try:
+                rule = self.deserialize_auto_mod_rule(rule_payload)
+
+            except errors.UnrecognisedEntityError:
+                continue
+
+            auto_mod_rules[rule.id] = rule
+
         integrations = {
             snowflakes.Snowflake(integration["id"]): self.deserialize_partial_integration(integration)
             for integration in payload["integrations"]
@@ -923,6 +947,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         return audit_log_models.AuditLog(
             entries=entries, integrations=integrations, threads=threads, users=users, webhooks=webhooks
+        )
+        return audit_log_models.AuditLog(
+            auto_mod_rules=auto_mod_rules, entries=entries, integrations=integrations, users=users, webhooks=webhooks
         )
 
     ##################
@@ -3683,3 +3710,96 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         _LOGGER.debug(f"Unrecognised webhook type {webhook_type}")
         raise errors.UnrecognisedEntityError(f"Unrecognised webhook type {webhook_type}")
+
+    ###################
+    # AUTO-MOD MODELS #
+    ###################
+
+    def _deserialize_auto_mod_block_message(
+        self, payload: data_binding.JSONObject
+    ) -> auto_mod_models.AutoModBlockMessage:
+        return auto_mod_models.AutoModBlockMessage(type=auto_mod_models.AutoModActionType(payload["type"]))
+
+    def _deserialize_auto_mod_block_send_alert_message(
+        self, payload: data_binding.JSONObject
+    ) -> auto_mod_models.AutoModSendAlertMessage:
+        return auto_mod_models.AutoModSendAlertMessage(
+            channel_id=snowflakes.Snowflake(payload["metadata"]["channel_id"]),
+            type=auto_mod_models.AutoModActionType(payload["type"]),
+        )
+
+    def _deserialize_auto_mod_timeout(self, payload: data_binding.JSONObject) -> auto_mod_models.AutoModTimeout:
+        return auto_mod_models.AutoModTimeout(
+            type=auto_mod_models.AutoModActionType(payload["type"]),
+            duration=datetime.timedelta(seconds=payload["metadata"]["duration_seconds"]),
+        )
+
+    def deserialize_auto_mod_action(self, payload: data_binding.JSONObject) -> auto_mod_models.PartialAutoModAction:
+        action_type = auto_mod_models.AutoModActionType(payload["type"])
+
+        if converter := self._auto_mod_action_mapping.get(action_type):
+            return converter(payload)
+
+        _LOGGER.debug(f"Unrecognised auto moderation action type {action_type}")
+        raise errors.UnrecognisedEntityError(f"Unrecognised auto moderation action type {action_type}")
+
+    def serialize_auto_mod_action(self, action: auto_mod_models.PartialAutoModAction) -> data_binding.JSONObject:
+        payload: typing.Dict[str, typing.Any] = {"type": action.type}
+
+        # TODO: can we switch to using the type attribute here for efficiency?
+        if isinstance(action, auto_mod_models.AutoModSendAlertMessage):
+            payload["metadata"] = {"channel_id": str(action.channel_id)}
+
+        elif isinstance(action, auto_mod_models.AutoModTimeout):
+            payload["metadata"] = {"duration_seconds": int(action.duration.total_seconds())}
+
+        return payload
+
+    def _deserialize_auto_mod_harmful_link_trigger(
+        self, _: typing.Optional[data_binding.JSONObject], /
+    ) -> auto_mod_models.HarmfulLinkTrigger:
+        return auto_mod_models.HarmfulLinkTrigger(type=auto_mod_models.AutoModTriggerType.HARMFUL_LINK)
+
+    def _deserialize_auto_mod_keyword_trigger(
+        self, payload: typing.Optional[data_binding.JSONObject], /
+    ) -> auto_mod_models.KeywordTrigger:
+        assert payload is not None
+        return auto_mod_models.KeywordTrigger(
+            type=auto_mod_models.AutoModTriggerType.KEYWORD, keyword_filter=payload["keyword_filter"]
+        )
+
+    def _deserialize_auto_mod_keyword_preset_trigger(
+        self, payload: typing.Optional[data_binding.JSONObject], /
+    ) -> auto_mod_models.KeywordPresetTrigger:
+        assert payload is not None
+        return auto_mod_models.KeywordPresetTrigger(
+            type=auto_mod_models.AutoModTriggerType.KEYWORD_PRESET,
+            allow_list=payload["allow_list"],
+            presets=[auto_mod_models.AutoModKeywordPresetType(preset) for preset in payload["presets"]],
+        )
+
+    def _deserialize_auto_mod_spam_trigger(
+        self, _: typing.Optional[data_binding.JSONObject], /
+    ) -> auto_mod_models.SpamTrigger:
+        return auto_mod_models.SpamTrigger(type=auto_mod_models.AutoModTriggerType.SPAM)
+
+    def deserialize_auto_mod_rule(self, payload: data_binding.JSONObject) -> auto_mod_models.AutoModRule:
+        trigger_type = auto_mod_models.AutoModTriggerType(payload["trigger_type"])
+        trigger_converter = self._auto_mod_trigger_mapping.get(trigger_type)
+        if not trigger_converter:
+            _LOGGER.debug(f"Unrecognised auto moderation trigger type {trigger_type}")
+            raise errors.UnrecognisedEntityError(f"Unrecognised auto moderation trigger type {trigger_type}")
+
+        return auto_mod_models.AutoModRule(
+            app=self._app,
+            id=snowflakes.Snowflake(payload["id"]),
+            guild_id=snowflakes.Snowflake(payload["guild_id"]),
+            name=payload["name"],
+            creator_id=snowflakes.Snowflake(payload["creator_id"]),
+            event_type=auto_mod_models.AutoModEventType(payload["event_type"]),
+            trigger=trigger_converter(payload.get("trigger_metadata")),
+            actions=[self.deserialize_auto_mod_action(action) for action in payload["actions"]],
+            is_enabled=payload["enabled"],
+            exempt_channel_ids=[snowflakes.Snowflake(id_) for id_ in payload["exempt_channels"]],
+            exempt_role_ids=[snowflakes.Snowflake(id_) for id_ in payload["exempt_roles"]],
+        )
