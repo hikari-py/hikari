@@ -333,7 +333,9 @@ class PartialChannel(snowflakes.Unique):
 
         !!! note
             As of writing, GuildCategory, GroupDMChannel, and DMChannel channels are
-            a special case for this and mentions of them will not resolve as clickable.
+            a special case for this. Mentions of them will not resolve as clickable
+            on all platforms, a "#" followed by the channel's name is rendered on the 
+            client instead.
 
         Returns
         -------
