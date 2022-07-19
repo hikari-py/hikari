@@ -1036,10 +1036,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------
         channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextableChannel]
             The channel to fetch messages in. This may be the object or
-            the ID of an existing message.
+            the ID of an existing channel.
         message : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
             The message to fetch. This may be the object or the ID of an
-            existing channel.
+            existing message.
 
         Returns
         -------
