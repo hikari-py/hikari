@@ -327,6 +327,21 @@ class PartialChannel(snowflakes.Unique):
     type: typing.Union[ChannelType, int] = attr.field(eq=False, hash=False, repr=True)
     """The channel's type."""
 
+    @property
+    def mention(self) -> str:
+        """Return a raw mention string for the channel.
+
+        !!! note
+            As of writing, GuildCategory, GroupDMChannel, and DMChannel channels are
+            a special case for this and mentions of them will not resolve as clickable.
+
+        Returns
+        -------
+        builtins.str
+            The mention string to use.
+        """
+        return f"<#{self.id}>"
+
     def __str__(self) -> str:
         return self.name if self.name is not None else f"Unnamed {self.__class__.__name__} ID {self.id}"
 
@@ -938,21 +953,6 @@ class GuildChannel(PartialChannel):
 
     If no parent category is set for the channel, this will be `builtins.None`.
     """
-
-    @property
-    def mention(self) -> str:
-        """Return a raw mention string for the guild channel.
-
-        !!! note
-            As of writing, GuildCategory channels are a special case
-            for this and mentions of them will not resolve as clickable.
-
-        Returns
-        -------
-        builtins.str
-            The mention string to use.
-        """
-        return f"<#{self.id}>"
 
     @property
     def shard_id(self) -> typing.Optional[int]:
