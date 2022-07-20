@@ -332,10 +332,9 @@ class PartialChannel(snowflakes.Unique):
         """Return a raw mention string for the channel.
 
         !!! note
-            As of writing, GuildCategory, GroupDMChannel, and DMChannel channels are
-            a special case for this. Mentions of them will not resolve as clickable
-            on all platforms, a "#" followed by the channel's name is rendered on the 
-            client instead.
+            There are platform specific inconsistencies with mentions of
+            GuildCategories, GroupDMChannels and DMChannels showing
+            the correct name but not being interactable.
 
         Returns
         -------
