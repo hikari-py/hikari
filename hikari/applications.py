@@ -96,7 +96,7 @@ class ApplicationFlags(enums.Flag):
     """Denotes that the application has message content access while pending verification."""
 
     APPLICATION_COMMAND_BADGE = 1 << 23
-    """Denotes that the application supports app commands and has the corresponding badge."""
+    """Denotes that the application has at least one global application command, and thus has the corresponding badge."""
 
 
 @typing.final
