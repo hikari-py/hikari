@@ -95,6 +95,9 @@ class ApplicationFlags(enums.Flag):
     MESSAGE_CONTENT_INTENT_LIMITED = 1 << 19
     """Denotes that the application has message content access while pending verification."""
 
+    APPLICATION_COMMAND_BADGE = 1 << 23
+    """Denotes that the application supports app commands and has the corresponding badge."""
+
 
 @typing.final
 class OAuth2Scope(str, enums.Enum):
