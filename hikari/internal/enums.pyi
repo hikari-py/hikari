@@ -69,12 +69,13 @@ class Flag(__enum.IntFlag):
     def symmetricdifference(self: __FlagT, other: __Union[int, __FlagT]) -> __FlagT: ...  # symmetric_difference
     def issubset(self: __FlagT, other: __Union[int, __FlagT]) -> bool: ...  # is_subset
     def __contains__(self: __FlagT, other: __Union[int, __FlagT]) -> bool: ...  # is_subset
-    def __rand__(self: __FlagT, other: __Union[int, __FlagT]) -> __FlagT: ...  # intersection
     def __and__(self: __FlagT, other: __Union[int, __FlagT]) -> __FlagT: ...  # intersection
-    def __ror__(self: __FlagT, other: __Union[int, __FlagT]) -> __FlagT: ...  # union
     def __or__(self: __FlagT, other: __Union[int, __FlagT]) -> __FlagT: ...  # union
     def __rsub__(self: __FlagT, other: __Union[int, __FlagT]) -> __FlagT: ...  # difference
     def __sub__(self: __FlagT, other: __Union[int, __FlagT]) -> __FlagT: ...  # difference
-    def __rxor__(self: __FlagT, other: __Union[int, __FlagT]) -> __FlagT: ...  # symmetric_difference
     def __xor__(self: __FlagT, other: __Union[int, __FlagT]) -> __FlagT: ...  # symmetric_difference
     def __invert__(self: __FlagT) -> __FlagT: ...  # invert
+
+    __ror__ = __or__
+    __rand__ = __and__
+    __rxor__ = __xor__
