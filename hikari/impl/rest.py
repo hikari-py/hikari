@@ -73,6 +73,7 @@ from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import rate_limits
 from hikari.impl import special_endpoints as special_endpoints_impl
 from hikari.interactions import base_interactions
+from hikari.internal import aio
 from hikari.internal import data_binding
 from hikari.internal import deprecation
 from hikari.internal import mentions
@@ -112,7 +113,7 @@ _X_RATELIMIT_BUCKET_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Bucket")
 _X_RATELIMIT_LIMIT_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Limit")
 _X_RATELIMIT_REMAINING_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Remaining")
 _X_RATELIMIT_RESET_AFTER_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Reset-After")
-_RETRY_ERROR_CODES: typing.Final[typing.Set[int]] = {500, 502, 503, 504}
+_RETRY_ERROR_CODES: typing.Final[typing.FrozenSet[int]] = frozenset((500, 502, 503, 504))
 _MAX_BACKOFF_DURATION: typing.Final[int] = 16
 
 
@@ -435,15 +436,18 @@ class _LiveAttributes:
 
     buckets: buckets_impl.RESTBucketManager = attr.field()
     client_session: aiohttp.ClientSession = attr.field()
-    closed_event: asyncio.Event = attr.field()
+    close_event: asyncio.Event = attr.field()
     # We've been told in DAPI that this is per token.
     global_rate_limit: rate_limits.ManualRateLimiter = attr.field()
     tcp_connector: aiohttp.TCPConnector = attr.field()
-    is_closing: bool = attr.field(default=False, init=False)
 
     @classmethod
     def build(
-        cls, max_rate_limit: float, http_settings: config_impl.HTTPSettings, proxy_settings: config_impl.ProxySettings
+        cls,
+        max_rate_limit: float,
+        http_settings: config_impl.HTTPSettings,
+        proxy_settings: config_impl.ProxySettings,
+        default_headers: typing.Mapping[str, str],
     ) -> _LiveAttributes:
         """Build a live attributes object.
 
@@ -455,6 +459,7 @@ class _LiveAttributes:
         asyncio.get_running_loop()
         tcp_connector = net.create_tcp_connector(http_settings)
         _LOGGER.log(ux.TRACE, "acquired new tcp connector")
+
         client_session = net.create_client_session(
             connector=tcp_connector,
             # No, this is correct. We manage closing the connector ourselves in this class.
@@ -463,36 +468,24 @@ class _LiveAttributes:
             http_settings=http_settings,
             raise_for_status=False,
             trust_env=proxy_settings.trust_env,
+            default_headers=default_headers,
         )
         _LOGGER.log(ux.TRACE, "acquired new aiohttp client session")
+
         return _LiveAttributes(
             buckets=buckets_impl.RESTBucketManager(max_rate_limit),
             client_session=client_session,
-            closed_event=asyncio.Event(),
+            close_event=asyncio.Event(),
             global_rate_limit=rate_limits.ManualRateLimiter(),
             tcp_connector=tcp_connector,
         )
 
     async def close(self) -> None:
-        self.is_closing = True
-        self.closed_event.set()
-        self.buckets.close()
-        self.global_rate_limit.close()
+        self.close_event.set()
         await self.client_session.close()
         await self.tcp_connector.close()
-
-    def still_alive(self) -> _LiveAttributes:
-        """Chained method used to Check if `close` has been called before using this object's resources."""
-        if self.is_closing:
-            raise errors.ComponentStateConflictError("The REST client was closed mid-request")
-
-        return self
-
-
-# The standard exceptions are all unsloted so slotting here would be a waste of time.
-@attr.define(auto_exc=True, repr=False, slots=False)
-class _RetryRequest(RuntimeError):
-    ...
+        self.buckets.close()
+        self.global_rate_limit.close()
 
 
 class RESTClientImpl(rest_api.RESTClient):
@@ -643,7 +636,11 @@ class RESTClientImpl(rest_api.RESTClient):
         if self._live_attributes:
             raise errors.ComponentStateConflictError("Cannot start a REST Client which is already alive")
 
-        self._live_attributes = _LiveAttributes.build(self._max_rate_limit, self._http_settings, self._proxy_settings)
+        default_headers = {_USER_AGENT_HEADER: _HTTP_USER_AGENT}
+
+        self._live_attributes = _LiveAttributes.build(
+            self._max_rate_limit, self._http_settings, self._proxy_settings, default_headers
+        )
 
     def _get_live_attributes(self) -> _LiveAttributes:
         if self._live_attributes:
@@ -688,136 +685,163 @@ class RESTClientImpl(rest_api.RESTClient):
         form_builder: typing.Optional[data_binding.URLEncodedFormBuilder] = None,
         json: typing.Union[data_binding.JSONObjectBuilder, data_binding.JSONArray, None] = None,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        no_auth: bool = False,
-        auth: typing.Optional[str] = None,
+        auth: typing.Union[None, str, typing.Literal[False]] = None,
+    ) -> typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]:
+        live_attributes = self._get_live_attributes()
+
+        request_task = asyncio.create_task(
+            self._perform_request(
+                compiled_route=compiled_route,
+                live_attributes=live_attributes,
+                query=query,
+                form_builder=form_builder,
+                json=json,
+                reason=reason,
+                auth=auth,
+            )
+        )
+
+        await aio.first_completed(request_task, live_attributes.close_event.wait())
+
+        if not live_attributes.close_event.is_set():
+            return request_task.result()
+
+        raise errors.ComponentStateConflictError("The REST client was closed mid-request")
+
+    @typing.final
+    async def _perform_request(
+        self,
+        compiled_route: routes.CompiledRoute,
+        live_attributes: _LiveAttributes,
+        *,
+        query: typing.Optional[data_binding.StringMapBuilder] = None,
+        form_builder: typing.Optional[data_binding.URLEncodedFormBuilder] = None,
+        json: typing.Union[data_binding.JSONObjectBuilder, data_binding.JSONArray, None] = None,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        auth: typing.Union[None, str, typing.Literal[False]] = None,
     ) -> typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]:
         # Make a ratelimit-protected HTTP request to a JSON endpoint and expect some form
         # of JSON response.
-        live_attributes = self._get_live_attributes()
         headers = data_binding.StringMapBuilder()
-        headers.setdefault(_USER_AGENT_HEADER, _HTTP_USER_AGENT)
-
-        re_authed = False
-        token: typing.Optional[str] = None
-        if auth:
-            headers[_AUTHORIZATION_HEADER] = auth
-
-        elif not no_auth:
-            if isinstance(self._token, str):
-                headers[_AUTHORIZATION_HEADER] = self._token
-
-            elif self._token is not None:
-                token = await self._token.acquire(self)
-                headers[_AUTHORIZATION_HEADER] = token
-
         # As per the docs, UTF-8 characters are only supported here if it's url-encoded.
         headers.put(_X_AUDIT_LOG_REASON_HEADER, reason, conversion=urllib.parse.quote)
 
+        can_re_auth = False
+        if auth:
+            headers[_AUTHORIZATION_HEADER] = auth
+
+        elif auth is not False:
+            if isinstance(self._token, str):
+                headers[_AUTHORIZATION_HEADER] = self._token
+
+            elif self._token:
+                headers[_AUTHORIZATION_HEADER] = await self._token.acquire(self)
+                can_re_auth = True
+
         url = compiled_route.create_url(self._rest_url)
 
+        stack = contextlib.AsyncExitStack()
         # This is initiated the first time we hit a 5xx error to save a little memory when nothing goes wrong
         backoff: typing.Optional[rate_limits.ExponentialBackOff] = None
         retry_count = 0
-
-        stack = contextlib.AsyncExitStack()
         trace_logging_enabled = _LOGGER.isEnabledFor(ux.TRACE)
+
         while True:
-            try:
-                uuid = time.uuid()
-                async with stack:
-                    form = await form_builder.build(stack) if form_builder else None
+            async with stack:
+                form = await form_builder.build(stack) if form_builder else None
 
-                    await stack.enter_async_context(live_attributes.still_alive().buckets.acquire(compiled_route))
-                    # Buckets not using authentication still have a global
-                    # rate limit, but it is different from the token one.
-                    if not no_auth:
-                        await live_attributes.still_alive().global_rate_limit.acquire()
+                await stack.enter_async_context(live_attributes.buckets.acquire(compiled_route))
+                # Buckets not using authentication still have a global
+                # rate limit, but it is different from the token one.
+                if auth is None:
+                    await live_attributes.global_rate_limit.acquire()
 
-                    if trace_logging_enabled:
-                        _LOGGER.log(
-                            ux.TRACE,
-                            "%s %s %s\n%s",
-                            uuid,
-                            compiled_route.method,
-                            url,
-                            self._stringify_http_message(headers, json),
-                        )
-                        start = time.monotonic()
-
-                    # Make the request.
-                    response = await live_attributes.still_alive().client_session.request(
+                if trace_logging_enabled:
+                    uuid = time.uuid()
+                    _LOGGER.log(
+                        ux.TRACE,
+                        "%s %s %s\n%s",
+                        uuid,
                         compiled_route.method,
                         url,
-                        headers=headers,
-                        params=query,
-                        json=json,
-                        data=form,
-                        allow_redirects=self._http_settings.max_redirects is not None,
-                        max_redirects=self._http_settings.max_redirects,
-                        proxy=self._proxy_settings.url,
-                        proxy_headers=self._proxy_settings.all_headers,
+                        self._stringify_http_message(headers, json),
                     )
+                    start = time.monotonic()
 
-                    if trace_logging_enabled:
-                        time_taken = (time.monotonic() - start) * 1_000  # pyright: ignore[reportUnboundVariable]
-                        _LOGGER.log(
-                            ux.TRACE,
-                            "%s %s %s in %sms\n%s",
-                            uuid,
-                            response.status,
-                            response.reason,
-                            time_taken,
-                            self._stringify_http_message(response.headers, await response.read()),
-                        )
+                # Make the request.
+                response = await live_attributes.client_session.request(
+                    compiled_route.method,
+                    url,
+                    headers=headers,
+                    params=query,
+                    json=json,
+                    data=form,
+                    allow_redirects=self._http_settings.max_redirects is not None,
+                    max_redirects=self._http_settings.max_redirects,
+                    proxy=self._proxy_settings.url,
+                    proxy_headers=self._proxy_settings.all_headers,
+                )
 
-                    # Ensure we are not rate limited, and update rate limiting headers where appropriate.
-                    await self._parse_ratelimits(compiled_route, response, live_attributes)
-
-                # Don't bother processing any further if we got NO CONTENT. There's not anything
-                # to check.
-                if response.status == http.HTTPStatus.NO_CONTENT:
-                    return None
-
-                # Handle the response when everything went good
-                if 200 <= response.status < 300:
-                    if response.content_type == _APPLICATION_JSON:
-                        # Only deserializing here stops Cloudflare shenanigans messing us around.
-                        return data_binding.load_json(await response.read())
-
-                    real_url = str(response.real_url)
-                    raise errors.HTTPError(f"Expected JSON [{response.content_type=}, {real_url=}]")
-
-                # Handling 5xx errors
-                if response.status in _RETRY_ERROR_CODES and retry_count < self._max_retries:
-                    if backoff is None:
-                        backoff = rate_limits.ExponentialBackOff(maximum=_MAX_BACKOFF_DURATION)
-
-                    sleep_time = next(backoff)
-                    _LOGGER.warning(
-                        "Received status %s on request, backing off for %.2fs and retrying. Retries remaining: %s",
+                if trace_logging_enabled:
+                    time_taken = (time.monotonic() - start) * 1_000  # pyright: ignore[reportUnboundVariable]
+                    _LOGGER.log(
+                        ux.TRACE,
+                        "%s %s %s in %sms\n%s",
+                        uuid,  # pyright: ignore[reportUnboundVariable]
                         response.status,
-                        sleep_time,
-                        self._max_retries - retry_count,
+                        response.reason,
+                        time_taken,
+                        self._stringify_http_message(response.headers, await response.read()),
                     )
-                    retry_count += 1
 
-                    await asyncio.sleep(sleep_time)
-                    continue
+                # Ensure we are not rate limited, and update rate limiting headers where appropriate.
+                retry = await self._parse_ratelimits(compiled_route, response, live_attributes)
 
-                # Attempt to re-auth on UNAUTHORIZED if we are using a TokenStrategy
-                can_re_auth = response.status == 401 and not (auth or no_auth or re_authed)
-                if can_re_auth and isinstance(self._token, rest_api.TokenStrategy):
-                    assert token is not None
-                    self._token.invalidate(token)
-                    token = await self._token.acquire(self)
-                    headers[_AUTHORIZATION_HEADER] = token
-                    re_authed = True
-                    continue
-
-                await self._handle_error_response(response)
-
-            except _RetryRequest:
+            if retry:
                 continue
+
+            # Don't bother processing any further if we got NO CONTENT. There's not anything
+            # to check.
+            if response.status == http.HTTPStatus.NO_CONTENT:
+                return None
+
+            # Handle the response when everything went good
+            if 200 <= response.status < 300:
+                if response.content_type == _APPLICATION_JSON:
+                    # Only deserializing here stops Cloudflare shenanigans messing us around.
+                    return data_binding.load_json(await response.read())
+
+                real_url = str(response.real_url)
+                raise errors.HTTPError(f"Expected JSON [{response.content_type=}, {real_url=}]")
+
+            # Handling 5xx errors
+            if response.status in _RETRY_ERROR_CODES and retry_count < self._max_retries:
+                if not backoff:
+                    backoff = rate_limits.ExponentialBackOff(maximum=_MAX_BACKOFF_DURATION)
+
+                sleep_time = next(backoff)
+                retry_count += 1
+                _LOGGER.warning(
+                    "Received status %s on request, backing off for %.2fs and retrying. Retries remaining: %s",
+                    response.status,
+                    sleep_time,
+                    self._max_retries - retry_count,
+                )
+
+                await asyncio.sleep(sleep_time)
+                continue
+
+            # Attempt to re-auth on UNAUTHORIZED if we are using a TokenStrategy
+            if can_re_auth and response.status == 401:
+                # can_re_auth ensures that it is a token strategy
+                assert isinstance(self._token, rest_api.TokenStrategy)
+
+                self._token.invalidate(headers[_AUTHORIZATION_HEADER])
+                headers[_AUTHORIZATION_HEADER] = await self._token.acquire(self)
+                can_re_auth = False
+                continue
+
+            raise await net.generate_error_response(response)
 
     @staticmethod
     @typing.final
@@ -833,15 +857,10 @@ class RESTClientImpl(rest_api.RESTClient):
 
         return string
 
-    @staticmethod
-    @typing.final
-    async def _handle_error_response(response: aiohttp.ClientResponse) -> typing.NoReturn:
-        raise await net.generate_error_response(response)
-
     @typing.final
     async def _parse_ratelimits(
         self, compiled_route: routes.CompiledRoute, response: aiohttp.ClientResponse, live_attributes: _LiveAttributes
-    ) -> None:
+    ) -> bool:
         # Handle rate limiting.
         resp_headers = response.headers
         limit = int(resp_headers.get(_X_RATELIMIT_LIMIT_HEADER, "1"))
@@ -850,7 +869,7 @@ class RESTClientImpl(rest_api.RESTClient):
         reset_after = float(resp_headers.get(_X_RATELIMIT_RESET_AFTER_HEADER, "0"))
 
         if bucket:
-            live_attributes.still_alive().buckets.update_rate_limits(
+            live_attributes.buckets.update_rate_limits(
                 compiled_route=compiled_route,
                 bucket_header=bucket,
                 remaining_header=remaining,
@@ -859,7 +878,7 @@ class RESTClientImpl(rest_api.RESTClient):
             )
 
         if response.status != http.HTTPStatus.TOO_MANY_REQUESTS:
-            return
+            return False
 
         # Discord have started applying ratelimits to operations on some endpoints
         # based on specific fields used in the JSON body.
@@ -887,7 +906,7 @@ class RESTClientImpl(rest_api.RESTClient):
                 "rate limited on bucket %s, maybe you are running more than one bot on this token? Retrying request...",
                 bucket,
             )
-            raise _RetryRequest
+            return True
 
         if response.content_type != _APPLICATION_JSON:
             # We don't know exactly what this could imply. It is likely Cloudflare interfering
@@ -909,15 +928,15 @@ class RESTClientImpl(rest_api.RESTClient):
                 "rate limited on the global bucket. You should consider lowering the number of requests you make or "
                 "contacting Discord to raise this limit. Backing off and retrying request..."
             )
-            live_attributes.still_alive().global_rate_limit.throttle(body_retry_after)
-            raise _RetryRequest
+            live_attributes.global_rate_limit.throttle(body_retry_after)
+            return True
 
         # If the values are within 20% of each other by relativistic tolerance, it is probably
         # safe to retry the request, as they are likely the same value just with some
         # measuring difference. 20% was used as a rounded figure.
         if math.isclose(body_retry_after, reset_after, rel_tol=0.20):
             _LOGGER.error("rate limited on a sub bucket on bucket %s, but it is safe to retry", bucket)
-            raise _RetryRequest
+            return True
 
         raise errors.RateLimitedError(
             url=str(response.real_url),
@@ -1150,7 +1169,7 @@ class RESTClientImpl(rest_api.RESTClient):
         self, channel: snowflakes.SnowflakeishOr[channels_.TextableChannel]
     ) -> special_endpoints.TypingIndicator:
         return special_endpoints_impl.TypingIndicator(
-            request_call=self._request, channel=channel, rest_closed_event=self._get_live_attributes().closed_event
+            request_call=self._request, channel=channel, rest_close_event=self._get_live_attributes().close_event
         )
 
     async def fetch_pins(
@@ -1651,14 +1670,15 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         token: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> webhooks.PartialWebhook:
+        auth: typing.Optional[typing.Literal[False]]
         if token is undefined.UNDEFINED:
             route = routes.GET_WEBHOOK.compile(webhook=webhook)
-            no_auth = False
+            auth = False
         else:
             route = routes.GET_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
-            no_auth = True
+            auth = None
 
-        response = await self._request(route, no_auth=no_auth)
+        response = await self._request(route, auth=auth)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_webhook(response)
 
@@ -1690,12 +1710,13 @@ class RESTClientImpl(rest_api.RESTClient):
         channel: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.WebhookChannelT]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> webhooks.PartialWebhook:
+        auth: typing.Optional[typing.Literal[False]]
         if token is undefined.UNDEFINED:
             route = routes.PATCH_WEBHOOK.compile(webhook=webhook)
-            no_auth = False
+            auth = False
         else:
             route = routes.PATCH_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
-            no_auth = True
+            auth = None
 
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
@@ -1708,7 +1729,7 @@ class RESTClientImpl(rest_api.RESTClient):
             async with avatar_resource.stream(executor=self._executor) as stream:
                 body.put("avatar", await stream.data_uri())
 
-        response = await self._request(route, json=body, reason=reason, no_auth=no_auth)
+        response = await self._request(route, json=body, reason=reason, auth=auth)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_webhook(response)
 
@@ -1718,14 +1739,15 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         token: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
+        auth: typing.Optional[typing.Literal[False]]
         if token is undefined.UNDEFINED:
             route = routes.DELETE_WEBHOOK.compile(webhook=webhook)
-            no_auth = False
+            auth = False
         else:
             route = routes.DELETE_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
-            no_auth = True
+            auth = None
 
-        await self._request(route, no_auth=no_auth)
+        await self._request(route, auth=auth)
 
     async def execute_webhook(
         self,
@@ -1777,9 +1799,9 @@ class RESTClientImpl(rest_api.RESTClient):
 
         if form_builder is not None:
             form_builder.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
-            response = await self._request(route, form_builder=form_builder, query=query, no_auth=True)
+            response = await self._request(route, form_builder=form_builder, query=query, auth=False)
         else:
-            response = await self._request(route, json=body, query=query, no_auth=True)
+            response = await self._request(route, json=body, query=query, auth=False)
 
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
@@ -1793,7 +1815,7 @@ class RESTClientImpl(rest_api.RESTClient):
         # int(ExecutableWebhook) isn't guaranteed to be valid nor the ID used to execute this entity as a webhook.
         webhook_id = webhook if isinstance(webhook, int) else webhook.webhook_id
         route = routes.GET_WEBHOOK_MESSAGE.compile(webhook=webhook_id, token=token, message=message)
-        response = await self._request(route, no_auth=True)
+        response = await self._request(route, auth=False)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
 
@@ -1842,9 +1864,9 @@ class RESTClientImpl(rest_api.RESTClient):
 
         if form_builder is not None:
             form_builder.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
-            response = await self._request(route, form_builder=form_builder, no_auth=True)
+            response = await self._request(route, form_builder=form_builder, auth=False)
         else:
-            response = await self._request(route, json=body, no_auth=True)
+            response = await self._request(route, json=body, auth=False)
 
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
@@ -1858,12 +1880,12 @@ class RESTClientImpl(rest_api.RESTClient):
         # int(ExecutableWebhook) isn't guaranteed to be valid nor the ID used to execute this entity as a webhook.
         webhook_id = webhook if isinstance(webhook, int) else webhook.webhook_id
         route = routes.DELETE_WEBHOOK_MESSAGE.compile(webhook=webhook_id, token=token, message=message)
-        await self._request(route, no_auth=True)
+        await self._request(route, auth=False)
 
     async def fetch_gateway_url(self) -> str:
         route = routes.GET_GATEWAY.compile()
         # This doesn't need authorization.
-        response = await self._request(route, no_auth=True)
+        response = await self._request(route, auth=False)
         assert isinstance(response, dict)
         url = response["url"]
         assert isinstance(url, str)
@@ -2193,7 +2215,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def fetch_available_sticker_packs(self) -> typing.Sequence[stickers.StickerPack]:
         route = routes.GET_STICKER_PACKS.compile()
-        response = await self._request(route, no_auth=True)
+        response = await self._request(route, auth=False)
         assert isinstance(response, dict)
         return [
             self._entity_factory.deserialize_sticker_pack(sticker_pack_payload)
@@ -3401,7 +3423,7 @@ class RESTClientImpl(rest_api.RESTClient):
         self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], token: str
     ) -> messages_.Message:
         route = routes.GET_INTERACTION_RESPONSE.compile(webhook=application, token=token)
-        response = await self._request(route, no_auth=True)
+        response = await self._request(route, auth=False)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
 
@@ -3450,9 +3472,9 @@ class RESTClientImpl(rest_api.RESTClient):
 
         if form is not None:
             form.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
-            await self._request(route, form_builder=form, no_auth=True)
+            await self._request(route, form_builder=form, auth=False)
         else:
-            await self._request(route, json=body, no_auth=True)
+            await self._request(route, json=body, auth=False)
 
     async def edit_interaction_response(
         self,
@@ -3496,9 +3518,9 @@ class RESTClientImpl(rest_api.RESTClient):
 
         if form_builder is not None:
             form_builder.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
-            response = await self._request(route, form_builder=form_builder, no_auth=True)
+            response = await self._request(route, form_builder=form_builder, auth=False)
         else:
-            response = await self._request(route, json=body, no_auth=True)
+            response = await self._request(route, json=body, auth=False)
 
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
@@ -3507,7 +3529,7 @@ class RESTClientImpl(rest_api.RESTClient):
         self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], token: str
     ) -> None:
         route = routes.DELETE_INTERACTION_RESPONSE.compile(webhook=application, token=token)
-        await self._request(route, no_auth=True)
+        await self._request(route, auth=False)
 
     async def create_autocomplete_response(
         self,
@@ -3524,7 +3546,7 @@ class RESTClientImpl(rest_api.RESTClient):
         data.put("choices", [{"name": choice.name, "value": choice.value} for choice in choices])
 
         body.put("data", data)
-        await self._request(route, json=body, no_auth=True)
+        await self._request(route, json=body, auth=False)
 
     def build_action_row(self) -> special_endpoints.ActionRowBuilder:
         return special_endpoints_impl.ActionRowBuilder()

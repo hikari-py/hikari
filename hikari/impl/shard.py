@@ -270,7 +270,9 @@ class _GatewayTransport(aiohttp.ClientWebSocketResponse):
         try:
             connector = net.create_tcp_connector(http_settings, dns_cache=False, limit=1)
             client_session = await exit_stack.enter_async_context(
-                net.create_client_session(connector, True, http_settings, True, proxy_settings.trust_env, cls)
+                net.create_client_session(
+                    connector, True, http_settings, True, proxy_settings.trust_env, ws_response_cls=cls
+                )
             )
 
             web_socket = await exit_stack.enter_async_context(

@@ -123,13 +123,13 @@ class TypingIndicator(special_endpoints.TypingIndicator):
             ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
         ],
         channel: snowflakes.SnowflakeishOr[channels.TextableChannel],
-        rest_closed_event: asyncio.Event,
+        rest_close_event: asyncio.Event,
     ) -> None:
         self._route = routes.POST_CHANNEL_TYPING.compile(channel=channel)
         self._request_call = request_call
         self._task_name = f"repeatedly trigger typing in {channel}"
         self._task: typing.Optional[asyncio.Task[None]] = None
-        self._rest_close_event = rest_closed_event
+        self._rest_close_event = rest_close_event
 
     def __await__(self) -> typing.Generator[typing.Any, typing.Any, typing.Any]:
         return self._request_call(self._route).__await__()

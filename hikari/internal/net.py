@@ -119,6 +119,7 @@ def create_client_session(
     http_settings: config.HTTPSettings,
     raise_for_status: bool,
     trust_env: bool,
+    default_headers: typing.Optional[typing.Mapping[str, str]] = None,
     ws_response_cls: typing.Type[aiohttp.ClientWebSocketResponse] = aiohttp.ClientWebSocketResponse,
 ) -> aiohttp.ClientSession:
     """Generate a client session using the given settings.
@@ -147,6 +148,8 @@ def create_client_session(
     trust_env : builtins.bool
         `builtins.True` to trust anything in environment variables
         and the `netrc` file, `builtins.False` to ignore it.
+    default_headers : typing.Optional[typing.Mapping[str, str]]
+        If provided, the default headers to use for every request.
     ws_response_cls : typing.Type[aiohttp.ClientWebSocketResponse]
         The websocket response class to use.
 
@@ -168,6 +171,7 @@ def create_client_session(
             total=http_settings.timeouts.total,
         ),
         trust_env=trust_env,
+        headers=default_headers,
         version=aiohttp.HttpVersion11,
         ws_response_class=ws_response_cls,
     )
