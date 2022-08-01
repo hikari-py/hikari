@@ -40,6 +40,7 @@ if typing.TYPE_CHECKING:
     from hikari import users as user_models
     from hikari import voices as voices_models
     from hikari.api import shard as gateway_shard
+    from hikari.events import application_events
     from hikari.events import channel_events
     from hikari.events import guild_events
     from hikari.events import interaction_events
@@ -60,6 +61,29 @@ class EventFactory(abc.ABC):
     """Interface for components that deserialize JSON events."""
 
     __slots__: typing.Sequence[str] = ()
+
+    ######################
+    # APPLICATION EVENTS #
+    ######################
+
+    @abc.abstractmethod
+    def deserialize_application_command_permission_update_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> application_events.ApplicationCommandPermissionsUpdateEvent:
+        """Parse a raw payload from Discord into an application command permissions update event object.
+
+        Parameters
+        ----------
+        shard : hikari.api.shard.GatewayShard
+            The shard that emitted this event.
+        payload : hikari.internal.data_binding.JSONObject
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.application_events.ApplicationCommandPermissionsUpdateEvent
+            The parsed application command permissions update event.
+        """
 
     ##################
     # CHANNEL EVENTS #
@@ -420,6 +444,34 @@ class EventFactory(abc.ABC):
         -------
         hikari.events.guild_events.EmojisUpdateEvent
             The parsed guild emojis update event object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_guild_stickers_update_event(
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+        *,
+        old_stickers: typing.Optional[typing.Sequence[guild_models.stickers.GuildSticker]] = None,
+    ) -> guild_events.StickersUpdateEvent:
+        """Parse a raw payload from Discord into a guild stickers update event object.
+
+        Parameters
+        ----------
+        shard : hikari.api.shard.GatewayShard
+            The shard that emitted this event.
+        payload : hikari.internal.data_binding.JSONObject
+            The dict payload to parse.
+
+        Other Parameters
+        ----------------
+        typing.Optional[typing.Sequence[hikari.guilds.stickers.GuildSticker]]
+            The sequence of stickers or `builtins.None`.
+
+        Returns
+        -------
+        hikari.events.guild_events.StickersUpdateEvent
+            The parsed guild stickers update event object.
         """
 
     @abc.abstractmethod

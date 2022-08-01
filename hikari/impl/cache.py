@@ -45,6 +45,7 @@ if typing.TYPE_CHECKING:
     from hikari import guilds
     from hikari import invites
     from hikari import presences
+    from hikari import stickers
     from hikari import traits
     from hikari import users
     from hikari import voices
@@ -74,6 +75,7 @@ class CacheImpl(cache.MutableCache):
         "_invite_entries",
         "_me",
         "_role_entries",
+        "_sticker_entries",
         "_unknown_custom_emoji_entries",
         "_user_entries",
         "_message_entries",
@@ -89,6 +91,7 @@ class CacheImpl(cache.MutableCache):
     _guild_entries: collections.ExtendedMutableMapping[snowflakes.Snowflake, cache_utility.GuildRecord]
     _invite_entries: collections.ExtendedMutableMapping[str, cache_utility.InviteData]
     _role_entries: collections.ExtendedMutableMapping[snowflakes.Snowflake, guilds.Role]
+    _sticker_entries: collections.ExtendedMutableMapping[snowflakes.Snowflake, cache_utility.GuildStickerData]
     _unknown_custom_emoji_entries: collections.ExtendedMutableMapping[
         snowflakes.Snowflake,
         cache_utility.RefCell[emojis.CustomEmoji],
@@ -118,6 +121,7 @@ class CacheImpl(cache.MutableCache):
         self._guild_entries = collections.FreezableDict()
         self._invite_entries = collections.FreezableDict()
         self._role_entries = collections.FreezableDict()
+        self._sticker_entries = collections.FreezableDict()
         # This is a purely internal cache used for handling the caching and de-duplicating of the unknown custom emojis
         # found attached to cached presence activities.
         self._unknown_custom_emoji_entries = collections.FreezableDict()
@@ -304,6 +308,120 @@ class CacheImpl(cache.MutableCache):
         cached_emoji = self.get_emoji(emoji.id)
         self.set_emoji(emoji)
         return cached_emoji, self.get_emoji(emoji.id)
+
+    def _build_sticker(
+        self,
+        sticker_data: cache_utility.GuildStickerData,
+    ) -> stickers.GuildSticker:
+        return sticker_data.build_entity(self._app)
+
+    def clear_stickers(self) -> cache.CacheView[snowflakes.Snowflake, stickers.GuildSticker]:
+        if not self._is_cache_enabled_for(config_api.CacheComponents.GUILD_STICKERS):
+            return cache_utility.EmptyCacheView()
+
+        cached_stickers = self._sticker_entries
+        self._sticker_entries = collections.FreezableDict()
+
+        for sticker_data in cached_stickers.values():
+            if sticker_data.user:
+                self._garbage_collect_user(sticker_data.user, decrement=1)
+
+        for guild_id, guild_record in self._guild_entries.freeze().items():
+            guild_record.stickers = None
+            self._remove_guild_record_if_empty(guild_id, guild_record)
+
+        return cache_utility.CacheMappingView(cached_stickers, builder=self._build_sticker)
+
+    def clear_stickers_for_guild(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
+    ) -> cache.CacheView[snowflakes.Snowflake, stickers.GuildSticker]:
+        if not self._is_cache_enabled_for(config_api.CacheComponents.GUILD_STICKERS):
+            return cache_utility.EmptyCacheView()
+
+        guild_id = snowflakes.Snowflake(guild)
+        guild_record = self._guild_entries.get(guild_id)
+        if not guild_record or not guild_record.stickers:
+            return cache_utility.EmptyCacheView()
+
+        cached_stickers = {sticker_id: self._sticker_entries.pop(sticker_id) for sticker_id in guild_record.stickers}
+        guild_record.stickers = None
+        self._remove_guild_record_if_empty(guild_id, guild_record)
+
+        for sticker_data in cached_stickers.values():
+            if sticker_data.user:
+                self._garbage_collect_user(sticker_data.user, decrement=1)
+
+        return cache_utility.CacheMappingView(cached_stickers, builder=self._build_sticker)
+
+    def get_sticker(
+        self, sticker: snowflakes.SnowflakeishOr[stickers.GuildSticker], /
+    ) -> typing.Optional[stickers.GuildSticker]:
+        if not self._is_cache_enabled_for(config_api.CacheComponents.GUILD_STICKERS):
+            return None
+
+        sticker_data = self._sticker_entries.get(snowflakes.Snowflake(sticker))
+        return self._build_sticker(sticker_data) if sticker_data else None
+
+    def get_stickers_view(self) -> cache.CacheView[snowflakes.Snowflake, stickers.GuildSticker]:
+        if not self._is_cache_enabled_for(config_api.CacheComponents.GUILD_STICKERS):
+            return cache_utility.EmptyCacheView()
+
+        return cache_utility.CacheMappingView(self._sticker_entries.freeze(), builder=self._build_sticker)
+
+    def get_stickers_view_for_guild(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
+    ) -> cache.CacheView[snowflakes.Snowflake, stickers.GuildSticker]:
+        if not self._is_cache_enabled_for(config_api.CacheComponents.GUILD_STICKERS):
+            return cache_utility.EmptyCacheView()
+
+        guild_record = self._guild_entries.get(snowflakes.Snowflake(guild))
+        if not guild_record or not guild_record.stickers:
+            return cache_utility.EmptyCacheView()
+
+        cached_stickers = {sticker_id: self._sticker_entries[sticker_id] for sticker_id in guild_record.stickers}
+        return cache_utility.CacheMappingView(cached_stickers, builder=self._build_sticker)
+
+    def delete_sticker(
+        self, sticker: snowflakes.SnowflakeishOr[stickers.GuildSticker], /
+    ) -> typing.Optional[stickers.GuildSticker]:
+        if not self._is_cache_enabled_for(config_api.CacheComponents.GUILD_STICKERS):
+            return None
+
+        sticker_id = snowflakes.Snowflake(sticker)
+        sticker_data = self._sticker_entries.pop(sticker_id, None)
+        if not sticker_data:
+            return None
+
+        if sticker_data.user:
+            self._garbage_collect_user(sticker_data.user, decrement=1)
+
+        guild_record = self._guild_entries.get(sticker_data.guild_id)
+        if guild_record and guild_record.stickers:
+            guild_record.stickers.remove(sticker_id)
+
+            if not guild_record.stickers:
+                guild_record.stickers = None
+
+        return self._build_sticker(sticker_data)
+
+    def set_sticker(self, sticker: stickers.GuildSticker, /) -> None:
+        if not self._is_cache_enabled_for(config_api.CacheComponents.GUILD_STICKERS):
+            return None
+
+        user: typing.Optional[cache_utility.RefCell[users.User]] = None
+        if sticker.user:
+            user = self._set_user(sticker.user)
+            if sticker.id not in self._sticker_entries:
+                self._increment_ref_count(user)
+
+        sticker_data = cache_utility.GuildStickerData.build_from_entity(sticker, user=user)
+        self._sticker_entries[sticker.id] = sticker_data
+        guild_record = self._get_or_create_guild_record(sticker.guild_id)
+
+        if guild_record.stickers is None:  # TODO: add test cases when it is not None?
+            guild_record.stickers = collections.SnowflakeSet()
+
+        guild_record.stickers.add(sticker.id)
 
     def _remove_guild_record_if_empty(
         self, guild_id: snowflakes.Snowflake, record: cache_utility.GuildRecord, /
@@ -1563,7 +1681,12 @@ class CacheImpl(cache.MutableCache):
 
         referenced_message: typing.Optional[cache_utility.RefCell[cache_utility.MessageData]] = None
         if message.referenced_message:
-            referenced_message = self._set_message(message.referenced_message)
+            reference_id = message.referenced_message.id
+            referenced_message = self._message_entries.get(reference_id) or self._referenced_messages.get(reference_id)
+
+            if referenced_message:
+                # Since the message is partial, if we don't have it cached, there is nothing we can do about it
+                referenced_message.object.update(message.referenced_message)
 
         # Only increment ref counts if this wasn't previously cached.
         if message.id not in self._referenced_messages and message.id not in self._message_entries:

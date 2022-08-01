@@ -4,6 +4,10 @@ on:
   push:
   pull_request:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     strategy:
@@ -157,22 +161,18 @@ jobs:
 
   # Allows us to add this as a required check in Github branch rules, as all the other jobs are subject to change
   ci-done:
-    # All new need jobs need to also be added to "env" with the prefix "RESULT_"
     needs: [upload-coverage, linting, twemoji, docs]
-    if: always()
+    if: always() && !cancelled()
 
     runs-on: ubuntu-latest
 
     steps:
-      - name: Mark status based on past job status
+      - name: Set status based on required jobs
         env:
-          RESULT_UPLOAD_COVERAGE: ${{ needs.upload-coverage.result }}
-          RESULT_LINTING: ${{ needs.linting.result }}
-          RESULT_TWEMOJI: ${{ needs.twemoji.result }}
-          RESULT_DOCS: ${{ needs.docs.result }}
+          RESULTS: ${{ join(needs.*.result, ' ') }}
         run: |
-          if [ "$(env | grep 'RESULT_')" = "$(env | grep "RESULT_" | grep '=success')" ]; then
-            exit 0
-          else
-            exit 1
-          fi
+          for result in $RESULTS; do
+            if [ "$result" != "success" ]; then
+              exit 1
+            fi
+          done

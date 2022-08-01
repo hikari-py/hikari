@@ -1115,9 +1115,9 @@ class TestGatewayShardImplAsync:
                 "compress": False,
                 "large_threshold": 123,
                 "properties": {
-                    "$os": "Potato PC ARM64",
-                    "$browser": "hikari (v1.0.0, aiohttp v0.0.1)",
-                    "$device": "hikari v1.0.0",
+                    "os": "Potato PC ARM64",
+                    "browser": "hikari (v1.0.0, aiohttp v0.0.1)",
+                    "device": "hikari v1.0.0",
                 },
                 "shard": [0, 1],
                 "intents": 131071,

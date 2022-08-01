@@ -252,6 +252,9 @@ class _GatewayGuildDefinition(entity_factory.GatewayGuildDefinition):
     _emojis: UndefinedSnowflakeMapping[emoji_models.KnownCustomEmoji] = attr.field(
         init=False, default=undefined.UNDEFINED
     )
+    _stickers: UndefinedSnowflakeMapping[sticker_models.GuildSticker] = attr.field(
+        init=False, default=undefined.UNDEFINED
+    )
     _members: UndefinedSnowflakeMapping[guild_models.Member] = attr.field(init=False, default=undefined.UNDEFINED)
     _presences: UndefinedSnowflakeMapping[presence_models.MemberPresence] = attr.field(
         init=False, default=undefined.UNDEFINED
@@ -288,6 +291,15 @@ class _GatewayGuildDefinition(entity_factory.GatewayGuildDefinition):
             }
 
         return self._emojis
+
+    def stickers(self) -> typing.Mapping[snowflakes.Snowflake, sticker_models.GuildSticker]:
+        if self._stickers is undefined.UNDEFINED:
+            self._stickers = {
+                snowflakes.Snowflake(s["id"]): self._entity_factory.deserialize_guild_sticker(s)
+                for s in self._payload["stickers"]
+            }
+
+        return self._stickers
 
     def guild(self) -> guild_models.GatewayGuild:
         if self._guild is undefined.UNDEFINED:
@@ -424,6 +436,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             audit_log_models.AuditLogChangeKey.APPLICATION_ID: snowflakes.Snowflake,
             audit_log_models.AuditLogChangeKey.PERMISSIONS: _with_int_cast(permission_models.Permissions),
             audit_log_models.AuditLogChangeKey.COLOR: color_models.Color,
+            audit_log_models.AuditLogChangeKey.COMMAND_ID: snowflakes.Snowflake,
             audit_log_models.AuditLogChangeKey.ALLOW: _with_int_cast(permission_models.Permissions),
             audit_log_models.AuditLogChangeKey.DENY: _with_int_cast(permission_models.Permissions),
             audit_log_models.AuditLogChangeKey.CHANNEL_ID: snowflakes.Snowflake,
@@ -980,6 +993,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         channel_fields = self._set_guild_channel_attributes(payload, guild_id=guild_id)
         # Discord seems to be only returning this after it's been initially PATCHed in for older channels.
         video_quality_mode = payload.get("video_quality_mode", channel_models.VideoQualityMode.AUTO)
+
+        last_message_id: typing.Optional[snowflakes.Snowflake] = None
+        if (raw_last_message_id := payload.get("last_message_id")) is not None:
+            last_message_id = snowflakes.Snowflake(raw_last_message_id)
+
         return channel_models.GuildVoiceChannel(
             app=self._app,
             id=channel_fields.id,
@@ -996,6 +1014,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             bitrate=int(payload["bitrate"]),
             user_limit=int(payload["user_limit"]),
             video_quality_mode=channel_models.VideoQualityMode(int(video_quality_mode)),
+            last_message_id=last_message_id,
         )
 
     def deserialize_guild_stage_channel(
@@ -1562,6 +1581,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             snowflakes.Snowflake(emoji["id"]): self.deserialize_known_custom_emoji(emoji, guild_id=guild_fields.id)
             for emoji in payload["emojis"]
         }
+        stickers = {
+            snowflakes.Snowflake(sticker["id"]): self.deserialize_guild_sticker(sticker)
+            for sticker in payload["stickers"]
+        }
         return guild_models.RESTGuild(
             app=self._app,
             id=guild_fields.id,
@@ -1598,6 +1621,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             approximate_active_member_count=approximate_active_member_count,
             roles=roles,
             emojis=emojis,
+            stickers=stickers,
         )
 
     def deserialize_gateway_guild(self, payload: data_binding.JSONObject) -> entity_factory.GatewayGuildDefinition:
@@ -1774,6 +1798,14 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_options := payload.get("options"):
             options = [self._deserialize_command_option(option) for option in raw_options]
 
+        # Discord considers 0 the same thing as ADMINISTRATORS, but we make it nicer to work with
+        # by setting it correctly.
+        default_member_permissions = payload["default_member_permissions"]
+        if default_member_permissions == 0:
+            default_member_permissions = permission_models.Permissions.ADMINISTRATOR
+        else:
+            default_member_permissions = permission_models.Permissions(default_member_permissions or 0)
+
         return commands.SlashCommand(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
@@ -1782,7 +1814,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=payload["name"],
             description=payload["description"],
             options=options,
-            default_permission=payload.get("default_permission", True),
+            default_member_permissions=default_member_permissions,
+            is_dm_enabled=payload.get("dm_permission", False),
             guild_id=guild_id,
             version=snowflakes.Snowflake(payload["version"]),
         )
@@ -1797,13 +1830,22 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             raw_guild_id = payload["guild_id"]
             guild_id = snowflakes.Snowflake(raw_guild_id) if raw_guild_id is not None else None
 
+        # Discord considers 0 the same thing as ADMINISTRATORS, but we make it nicer to work with
+        # by setting it correctly.
+        default_member_permissions = payload["default_member_permissions"]
+        if default_member_permissions == 0:
+            default_member_permissions = permission_models.Permissions.ADMINISTRATOR
+        else:
+            default_member_permissions = permission_models.Permissions(default_member_permissions or 0)
+
         return commands.ContextMenuCommand(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
             type=commands.CommandType(payload["type"]),
             application_id=snowflakes.Snowflake(payload["application_id"]),
             name=payload["name"],
-            default_permission=payload.get("default_permission", True),
+            default_member_permissions=default_member_permissions,
+            is_dm_enabled=payload.get("dm_permission", False),
             guild_id=guild_id,
             version=snowflakes.Snowflake(payload["version"]),
         )
@@ -1834,6 +1876,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             for perm in payload["permissions"]
         ]
         return commands.GuildCommandPermissions(
+            id=snowflakes.Snowflake(payload["id"]),
             application_id=snowflakes.Snowflake(payload["application_id"]),
             command_id=snowflakes.Snowflake(payload["id"]),
             guild_id=snowflakes.Snowflake(payload["guild_id"]),
@@ -2029,6 +2072,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_target_id := data_payload.get("target_id"):
             target_id = snowflakes.Snowflake(raw_target_id)
 
+        app_perms = payload.get("app_permissions")
         return command_interactions.CommandInteraction(
             app=self._app,
             application_id=snowflakes.Snowflake(payload["application_id"]),
@@ -2048,6 +2092,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             options=options,
             resolved=resolved,
             target_id=target_id,
+            app_permissions=permission_models.Permissions(app_perms) if app_perms is not None else None,
         )
 
     def deserialize_autocomplete_interaction(
@@ -2147,6 +2192,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             member = None
             user = self.deserialize_user(payload["user"])
 
+        app_perms = payload.get("app_permissions")
         return component_interactions.ComponentInteraction(
             app=self._app,
             application_id=snowflakes.Snowflake(payload["application_id"]),
@@ -2164,6 +2210,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             message=self.deserialize_message(payload["message"]),
             locale=locales.Locale(payload["locale"]),
             guild_locale=locales.Locale(payload["guild_locale"]) if "guild_locale" in payload else None,
+            app_permissions=permission_models.Permissions(app_perms) if app_perms is not None else None,
         )
 
     ##################
@@ -2514,9 +2561,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if "message_reference" in payload:
             message_reference = self._deserialize_message_reference(payload["message_reference"])
 
-        referenced_message: typing.Optional[message_models.Message] = None
+        referenced_message: typing.Optional[message_models.PartialMessage] = None
         if referenced_message_payload := payload.get("referenced_message"):
-            referenced_message = self.deserialize_message(referenced_message_payload)
+            referenced_message = self.deserialize_partial_message(referenced_message_payload)
 
         application: typing.Optional[message_models.MessageApplication] = None
         if "application" in payload:
