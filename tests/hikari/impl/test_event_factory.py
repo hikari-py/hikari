@@ -29,6 +29,7 @@ from hikari import emojis as emoji_models
 from hikari import traits
 from hikari import undefined
 from hikari import users as user_models
+from hikari.events import application_events
 from hikari.events import channel_events
 from hikari.events import guild_events
 from hikari.events import interaction_events
@@ -58,13 +59,28 @@ class TestEventFactoryImpl:
     def event_factory(self, mock_app):
         return event_factory_.EventFactoryImpl(mock_app)
 
+    ######################
+    # APPLICATION EVENTS #
+    ######################
+
+    def test_deserialize_application_command_permission_update_event(self, event_factory, mock_app, mock_shard):
+        mock_payload = object()
+
+        event = event_factory.deserialize_application_command_permission_update_event(mock_shard, mock_payload)
+
+        mock_app.entity_factory.deserialize_guild_command_permissions.assert_called_once_with(mock_payload)
+        assert isinstance(event, application_events.ApplicationCommandPermissionsUpdateEvent)
+        assert event.app is mock_app
+        assert event.shard is mock_shard
+        assert event.permissions is mock_app.entity_factory.deserialize_guild_command_permissions.return_value
+
     ##################
     # CHANNEL EVENTS #
     ##################
 
     def test_deserialize_guild_channel_create_event(self, event_factory, mock_app, mock_shard):
         mock_app.entity_factory.deserialize_channel.return_value = mock.Mock(spec=channel_models.GuildChannel)
-        mock_payload = mock.Mock(app=mock_app)
+        mock_payload = object()
 
         event = event_factory.deserialize_guild_channel_create_event(mock_shard, mock_payload)
 
@@ -216,6 +232,7 @@ class TestEventFactoryImpl:
         guild_definition = mock_app.entity_factory.deserialize_gateway_guild.return_value
         assert event.guild is guild_definition.guild.return_value
         assert event.emojis is guild_definition.emojis.return_value
+        assert event.stickers is guild_definition.stickers.return_value
         assert event.roles is guild_definition.roles.return_value
         assert event.channels is guild_definition.channels.return_value
         assert event.members is guild_definition.members.return_value
@@ -223,6 +240,7 @@ class TestEventFactoryImpl:
         assert event.voice_states is guild_definition.voice_states.return_value
         guild_definition.guild.assert_called_once_with()
         guild_definition.emojis.assert_called_once_with()
+        guild_definition.stickers.assert_called_once_with()
         guild_definition.roles.assert_called_once_with()
         guild_definition.channels.assert_called_once_with()
         guild_definition.members.assert_called_once_with()
@@ -328,6 +346,23 @@ class TestEventFactoryImpl:
         assert event.emojis == [mock_app.entity_factory.deserialize_known_custom_emoji.return_value]
         assert event.guild_id == 123431
         assert event.old_emojis is mock_old_emojis
+
+    def test_deserialize_guild_stickers_update_event(self, event_factory, mock_app, mock_shard):
+        mock_sticker_payload = object()
+        mock_old_stickers = object()
+        mock_payload = {"guild_id": "472", "stickers": [mock_sticker_payload]}
+
+        event = event_factory.deserialize_guild_stickers_update_event(
+            mock_shard, mock_payload, old_stickers=mock_old_stickers
+        )
+
+        mock_app.entity_factory.deserialize_guild_sticker.assert_called_once_with(mock_sticker_payload)
+        assert isinstance(event, guild_events.StickersUpdateEvent)
+        assert event.app is mock_app
+        assert event.shard is mock_shard
+        assert event.stickers == [mock_app.entity_factory.deserialize_guild_sticker.return_value]
+        assert event.guild_id == 472
+        assert event.old_stickers is mock_old_stickers
 
     def test_deserialize_integration_create_event(self, event_factory, mock_app, mock_shard):
         mock_payload = object()

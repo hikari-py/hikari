@@ -1013,9 +1013,9 @@ class GuildChannel(PartialChannel):
             If provided, the type of the target to update. If unset, will attempt to get
             the type from `target`.
         allow : hikari.undefined.UndefinedOr[hikari.permissions.Permissions]
-            If provided, the new vale of all allowed permissions.
+            If provided, the new value of all allowed permissions.
         deny : hikari.undefined.UndefinedOr[hikari.permissions.Permissions]
-            If provided, the new vale of all disallowed permissions.
+            If provided, the new value of all disallowed permissions.
         reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -1052,11 +1052,9 @@ class GuildChannel(PartialChannel):
             assert not isinstance(
                 target, int
             ), "Cannot determine the type of the target to update. Try specifying 'target_type' manually."
-            return await self.app.rest.edit_permission_overwrites(
-                self.id, target, allow=allow, deny=deny, reason=reason
-            )
+            return await self.app.rest.edit_permission_overwrite(self.id, target, allow=allow, deny=deny, reason=reason)
 
-        return await self.app.rest.edit_permission_overwrites(
+        return await self.app.rest.edit_permission_overwrite(
             self.id, typing.cast(int, target), target_type=target_type, allow=allow, deny=deny, reason=reason
         )
 
@@ -1266,7 +1264,7 @@ class GuildNewsChannel(TextableGuildChannel):
 
 
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
-class GuildVoiceChannel(GuildChannel):
+class GuildVoiceChannel(TextableGuildChannel):
     """Represents a voice channel."""
 
     bitrate: int = attr.field(eq=False, hash=False, repr=True)
@@ -1288,6 +1286,14 @@ class GuildVoiceChannel(GuildChannel):
 
     video_quality_mode: typing.Union[VideoQualityMode, int] = attr.field(eq=False, hash=False, repr=False)
     """The video quality mode for the voice channel."""
+
+    last_message_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
+    """The ID of the last message sent in this channel.
+
+    .. warning::
+        This might point to an invalid or deleted message. Do not assume that
+        this will always be valid.
+    """
 
 
 @attr.define(hash=True, kw_only=True, weakref_slot=False)

@@ -1,3 +1,46 @@
+## Hikari 2.0.0.dev109 (2022-06-26)
+
+### Breaking Changes
+
+- Removal of all application commands v1 related fields and endpoints.
+   - Discord has completely disabled some endpoints, so we unfortunately can't
+     deprecate them instead of removing them ([#1148](https://github.com/hikari-py/hikari/issues/1148))
+- Removed the `resolved` attribute from `AutocompleteInteraction` as autocomplete interactions never have resolved objects. ([#1152](https://github.com/hikari-py/hikari/issues/1152))
+- `build` methods are now typed as returning `MutableMapping[str, typing.Any]`. ([#1164](https://github.com/hikari-py/hikari/issues/1164))
+
+### Deprecation
+
+- `messages.Mentions` object deprecated
+   - Alternatives can be found in the base message object ([#1149](https://github.com/hikari-py/hikari/issues/1149))
+
+### Features
+
+- Add `create` method to `CommandBuilder`. ([#1016](https://github.com/hikari-py/hikari/issues/1016))
+- Support for attachments in REST-based interaction responses. ([#1048](https://github.com/hikari-py/hikari/issues/1048))
+- Add option to disable automatic member chunking.
+  Added the `auto_chunk_members` kwarg to `GatewayBot` and `EventManagerImpl`, which when `False` will disable automatic member chunking. ([#1084](https://github.com/hikari-py/hikari/issues/1084))
+- Allow passing multiple event types to the listen decorator.
+  Parse union type hints for events if listen decorator is empty. ([#1103](https://github.com/hikari-py/hikari/issues/1103))
+- Animated guild banner support. ([#1116](https://github.com/hikari-py/hikari/issues/1116))
+- Implement application commands permission v2.
+   - New `default_member_permissions` and `is_dm_enabled` related fields.
+   - Added `hikari.events.application_events.ApplicationCommandPermissionsUpdate`.
+   - Added `APPLICATION_COMMAND_PERMISSION_UPDATE` audit log entry ([#1148](https://github.com/hikari-py/hikari/issues/1148))
+
+### Bugfixes
+
+- Improved pyright support. ([#1108](https://github.com/hikari-py/hikari/issues/1108))
+- `RESTClientImpl.fetch_bans` now return a `LazyIterator` to allow pagination of values. ([#1119](https://github.com/hikari-py/hikari/issues/1119))
+- Fix unicode decode error caused by `latin-1` encoding when sending the banner. ([#1120](https://github.com/hikari-py/hikari/issues/1120))
+- Don't error on an out-of-spec HTTP status code (e.g one of Cloudflare's custom status codes).
+  `HTTPResponseError.status` may now be of type `http.HTTPStatus` or `int`. ([#1121](https://github.com/hikari-py/hikari/issues/1121))
+- Fix name of polish locale (`hikari.Locale.OL` -> `hikari.Locale.PL`) ([#1144](https://github.com/hikari-py/hikari/issues/1144))
+- Properly garbage collect message references in the cache
+    - Properly deserialize `PartialMessage.referenced_message` as a partial message ([#1192](https://github.com/hikari-py/hikari/issues/1192))
+
+---
+
+
 ## Hikari 2.0.0.dev108 (2022-03-27)
 
 ### Breaking Changes

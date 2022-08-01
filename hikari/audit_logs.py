@@ -101,6 +101,7 @@ class AuditLogChangeKey(str, enums.Enum):
     PERMISSIONS = "permissions"
     USER_LIMIT = "user_limit"
     COLOR = "color"
+    COMMAND_ID = "command_id"
     HOIST = "hoist"
     MENTIONABLE = "mentionable"
     ALLOW = "allow"
@@ -194,6 +195,10 @@ class AuditLogEventType(int, enums.Enum):
     STICKER_CREATE = 90
     STICKER_UPDATE = 91
     STICKER_DELETE = 92
+    GUILD_SCHEDULED_EVENT_CREATE = 100
+    GUILD_SCHEDULED_EVENT_UPDATE = 101
+    GUILD_SCHEDULED_EVENT_DELETE = 102
+    APPLICATION_COMMAND_PERMISSION_UPDATE = 121
 
 
 @attr.define(hash=False, kw_only=True, weakref_slot=False)

@@ -7,12 +7,12 @@ mock==4.0.3
 
 # Py.test stuff.
 pytest==7.1.2
-pytest-asyncio==0.18.3
+pytest-asyncio==0.19.0
 pytest-cov==3.0.0
 pytest-randomly==3.12.0
 
 # Coverage testing.
-coverage[toml]==6.4.1
+coverage[toml]==6.4.2
 
 # Other stuff
 async-timeout==4.0.2  # Used for timeouts in some test cases.
@@ -34,26 +34,26 @@ sphinx-copybutton==0.5.0
 #################
 
 mypy==0.961
-pyright==1.1.253
+pyright==1.1.264
 
 #######################
 # DEPENDENCY CHECKING #
 #######################
 
-safety~=1.10.3
+safety~=2.1.1
 
 ##############
 # FORMATTING #
 ##############
 
-black==22.3.0
+black==22.6.0
 isort==5.10.1
 
 ###########
 # LINTING #
 ###########
 
-slotscheck==0.14.0
+slotscheck==0.14.1
 
 ##################
 # SPELL CHECKING #

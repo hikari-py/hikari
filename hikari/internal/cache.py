@@ -60,6 +60,7 @@ from hikari import iterators
 from hikari import messages
 from hikari import presences
 from hikari import snowflakes
+from hikari import stickers as stickers_
 from hikari import undefined
 from hikari import voices
 from hikari.api import cache
@@ -69,7 +70,6 @@ from hikari.internal import collections
 if typing.TYPE_CHECKING:
     from hikari import applications
     from hikari import channels as channels_
-    from hikari import stickers as stickers_
     from hikari import traits
     from hikari import users as users_
     from hikari.interactions import base_interactions
@@ -218,6 +218,13 @@ class GuildRecord:
 
     This will be `None` if no emojis are cached for this guild else
     `typing.MutableSet[hikari.snowflakes.Snowflake]` of emoji IDs.
+    """
+
+    stickers: typing.Optional[typing.MutableSet[snowflakes.Snowflake]] = attr.field(default=None)
+    """A sequence of sticker IDs cached for this guild.
+
+    This will be `None` if no stickers are cached for this guild else
+    `typing.Sequence[hikari.snowflakes.Snowflake]` of emoji IDs.
     """
 
     invites: typing.Optional[typing.MutableSequence[str]] = attr.field(default=None)
@@ -508,6 +515,55 @@ class KnownCustomEmojiData(BaseData[emojis.KnownCustomEmoji]):
 
 @attr_extensions.with_copy
 @attr.define(kw_only=True, repr=False, hash=False, weakref_slot=False)
+class GuildStickerData(BaseData[stickers_.GuildSticker]):
+    """A data model for storing sticker data in an in-memory cache."""
+
+    id: snowflakes.Snowflake = attr.field()
+    name: str = attr.field()
+    description: typing.Optional[str] = attr.field()
+    tag: str = attr.field()
+    format_type: typing.Union[stickers_.StickerFormatType, int] = attr.field()
+    is_available: bool = attr.field()
+    guild_id: snowflakes.Snowflake = attr.field()
+    user: typing.Optional[RefCell[users_.User]] = attr.field()
+
+    @classmethod
+    def build_from_entity(
+        cls,
+        sticker: stickers_.GuildSticker,
+        /,
+        *,
+        user: typing.Optional[RefCell[users_.User]] = None,
+    ) -> GuildStickerData:
+        if not user and sticker.user:
+            user = RefCell(copy.copy(sticker.user))
+
+        return cls(
+            id=sticker.id,
+            name=sticker.name,
+            description=sticker.description,
+            guild_id=sticker.guild_id,
+            tag=sticker.tag,
+            is_available=sticker.is_available,
+            format_type=sticker.format_type,
+            user=user,
+        )
+
+    def build_entity(self, app: traits.RESTAware, /) -> stickers_.GuildSticker:
+        return stickers_.GuildSticker(
+            id=self.id,
+            name=self.name,
+            description=self.description,
+            guild_id=self.guild_id,
+            tag=self.tag,
+            is_available=self.is_available,
+            format_type=self.format_type,
+            user=self.user.copy() if self.user else None,
+        )
+
+
+@attr_extensions.with_copy
+@attr.define(kw_only=True, repr=False, hash=False, weakref_slot=False)
 class RichActivityData(BaseData[presences.RichActivity]):
     """A data model for storing rich activity data in an in-memory cache."""
 
@@ -724,9 +780,6 @@ class MessageData(BaseData[messages.Message]):
     ) -> MessageData:
         if not member and message.member:
             member = RefCell(MemberData.build_from_entity(message.member))
-
-        if not referenced_message and message.referenced_message:
-            referenced_message = RefCell(MessageData.build_from_entity(message.referenced_message))
 
         interaction = (
             MessageInteractionData.build_from_entity(message.interaction, user=interaction_user)

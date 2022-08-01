@@ -73,6 +73,9 @@ class CacheComponents(enums.Flag):
     DM_CHANNEL_IDS = 1 << 10
     """Enables the DM channel IDs cache."""
 
+    GUILD_STICKERS = 1 << 11
+    """Enables the guild stickers cache."""
+
     ALL = (
         GUILDS
         | GUILD_CHANNELS
@@ -85,6 +88,7 @@ class CacheComponents(enums.Flag):
         | MESSAGES
         | ME
         | DM_CHANNEL_IDS
+        | GUILD_STICKERS
     )
     """Fully enables the cache."""
 

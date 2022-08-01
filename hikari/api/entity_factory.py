@@ -80,6 +80,10 @@ class GatewayGuildDefinition(abc.ABC):
         """Get a mapping of emoji IDs to the emojis that belong to the guild."""
 
     @abc.abstractmethod
+    def stickers(self) -> typing.Mapping[snowflakes.Snowflake, sticker_models.GuildSticker]:
+        """Get a mapping of sticker IDs to the stickers that belong to the guild."""
+
+    @abc.abstractmethod
     def guild(self) -> guild_models.GatewayGuild:
         """Get the object of the guild this definition is for."""
 
@@ -907,8 +911,9 @@ class EntityFactory(abc.ABC):
             `hikari.channels.GuildChannel`,
             `hikari.guilds.Member`,
             `hikari.presences.MemberPresence`,
-            `hikari.guilds.Role`, and
-            `hikari.emojis.KnownCustomEmoji`. This is provided in
+            `hikari.guilds.Role`,
+            `hikari.emojis.KnownCustomEmoji`, and
+            `hikari.stickers.GuildSticker`. This is provided in
             several components to allow separate caching and linking
             between entities in various relational cache implementations
             internally.

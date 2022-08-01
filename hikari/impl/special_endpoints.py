@@ -1084,15 +1084,22 @@ class CommandBuilder(special_endpoints.CommandBuilder):
     _name: str = attr.field()
 
     _id: undefined.UndefinedOr[snowflakes.Snowflake] = attr.field(default=undefined.UNDEFINED, kw_only=True)
-    _default_permission: undefined.UndefinedOr[bool] = attr.field(default=undefined.UNDEFINED, kw_only=True)
+    _default_member_permissions: typing.Union[undefined.UndefinedType, int, permissions_.Permissions] = attr.field(
+        default=undefined.UNDEFINED, kw_only=True
+    )
+    _is_dm_enabled: undefined.UndefinedOr[bool] = attr.field(default=undefined.UNDEFINED, kw_only=True)
 
     @property
     def id(self) -> undefined.UndefinedOr[snowflakes.Snowflake]:
         return self._id
 
     @property
-    def default_permission(self) -> undefined.UndefinedOr[bool]:
-        return self._default_permission
+    def default_member_permissions(self) -> typing.Union[undefined.UndefinedType, permissions_.Permissions, int]:
+        return self._default_member_permissions
+
+    @property
+    def is_dm_enabled(self) -> undefined.UndefinedOr[bool]:
+        return self._is_dm_enabled
 
     @property
     def name(self) -> str:
@@ -1102,8 +1109,16 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         self._id = snowflakes.Snowflake(id_) if id_ is not undefined.UNDEFINED else undefined.UNDEFINED
         return self
 
-    def set_default_permission(self: _CommandBuilderT, state: undefined.UndefinedOr[bool], /) -> _CommandBuilderT:
-        self._default_permission = state
+    def set_default_member_permissions(
+        self: _CommandBuilderT,
+        default_member_permissions: typing.Union[undefined.UndefinedType, int, permissions_.Permissions],
+        /,
+    ) -> _CommandBuilderT:
+        self._default_member_permissions = default_member_permissions
+        return self
+
+    def set_is_dm_enabled(self: _CommandBuilderT, state: undefined.UndefinedOr[bool], /) -> _CommandBuilderT:
+        self._is_dm_enabled = state
         return self
 
     def build(self, entity_factory: entity_factory_.EntityFactory, /) -> typing.MutableMapping[str, typing.Any]:
@@ -1111,7 +1126,13 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         data["name"] = self._name
         data["type"] = self.type
         data.put_snowflake("id", self._id)
-        data.put("default_permission", self._default_permission)
+
+        # Discord considers 0 the same thing as ADMINISTRATORS, but we make it nicer to work with
+        # by using it correctly.
+        if self._default_member_permissions != 0:
+            data.put("default_member_permissions", self._default_member_permissions)
+
+        data.put("dm_permission", self._is_dm_enabled)
         return data
 
 
@@ -1162,8 +1183,9 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
             self._name,
             self._description,
             guild=guild,
-            default_permission=self._default_permission,
             options=self._options,
+            default_member_permissions=self._default_member_permissions,
+            dm_enabled=self._is_dm_enabled,
         )
 
 
@@ -1189,7 +1211,12 @@ class ContextMenuCommandBuilder(CommandBuilder, special_endpoints.ContextMenuCom
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
     ) -> commands.ContextMenuCommand:
         return await rest.create_context_menu_command(
-            application, self._type, self._name, guild=guild, default_permission=self._default_permission
+            application,
+            self._type,
+            self._name,
+            guild=guild,
+            default_member_permissions=self._default_member_permissions,
+            dm_enabled=self._is_dm_enabled,
         )
 
 
