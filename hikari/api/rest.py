@@ -5459,7 +5459,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> iterators.LazyIterator[guilds.GuildBan]:
         """Fetch the bans of a guild.
 
-        !!! note
+        .. note::
             This call is not a coroutine function, it returns a special type of
             lazy iterator that will perform API calls as you iterate across it.
             See `hikari.iterators` for the full API for this iterator type.
@@ -5472,10 +5472,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        newest_first : builtins.bool
+        newest_first : bool
             Whether to fetch the newest first or the oldest first.
 
-            Defaults to `builtins.False`.
+            Defaults to `False`.
         start_at : undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[users.PartialUser]]
             If provided, will start at this snowflake. If you provide
             a datetime object, it will be transformed into a snowflake. This
@@ -6797,7 +6797,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
             If `0`, then it will be available for all members. Note that this doesn't affect
             administrators of the guild and overwrites.
-        dm_enabled : hikari.undefined.UndefinedOr[builtins.bool]
+        dm_enabled : hikari.undefined.UndefinedOr[bool]
             Whether this command is enabled in DMs with the bot.
 
             This can only be applied to non-guild commands.
@@ -6870,7 +6870,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
             If `0`, then it will be available for all members. Note that this doesn't affect
             administrators of the guild and overwrites.
-        dm_enabled : hikari.undefined.UndefinedOr[builtins.bool]
+        dm_enabled : hikari.undefined.UndefinedOr[bool]
             Whether this command is enabled in DMs with the bot.
 
             This can only be applied to non-guild commands.
@@ -7007,7 +7007,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
             If `0`, then it will be available for all members. Note that this doesn't affect
             administrators of the guild and overwrites.
-        dm_enabled : hikari.undefined.UndefinedOr[builtins.bool]
+        dm_enabled : hikari.undefined.UndefinedOr[bool]
             Whether this command is enabled in DMs with the bot.
 
             This can only be applied to non-guild commands.

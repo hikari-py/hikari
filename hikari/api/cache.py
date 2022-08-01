@@ -183,7 +183,7 @@ class Cache(abc.ABC):
         Returns
         -------
         typing.Optional[hikari.stickers.GuildSticker]
-            The object of the sticker that was found in the cache or `builtins.None`.
+            The object of the sticker that was found in the cache or `None`.
         """
 
     @abc.abstractmethod
@@ -866,7 +866,7 @@ class MutableCache(Cache, abc.ABC):
     def clear_stickers(self) -> CacheView[snowflakes.Snowflake, stickers.GuildSticker]:
         """Remove all the sticker objects from the cache.
 
-        !!! note
+        .. note::
             This will skip stickers that are being kept alive by a reference.
 
         Returns
@@ -887,7 +887,7 @@ class MutableCache(Cache, abc.ABC):
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             Object or ID of the guild to remove the cached sticker objects for.
 
-        !!! note
+        .. note::
             This will skip stickers that are being kept alive by a reference.
 
         Returns
@@ -908,14 +908,14 @@ class MutableCache(Cache, abc.ABC):
         sticker : hikari.snowflakes.SnowflakeishOr[hikari.stickers.GuildSticker]
             Object or ID of the sticker to remove from the cache.
 
-        !!! note
+        .. note::
             This will not delete stickers that are being kept alive by a reference.
 
         Returns
         -------
         typing.Optional[hikari.stickers.GuildSticker]
             The object of the sticker that was removed from the cache or
-            `builtins.None`.
+            `None`.
         """
 
     @abc.abstractmethod

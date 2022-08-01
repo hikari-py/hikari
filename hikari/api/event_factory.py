@@ -466,7 +466,7 @@ class EventFactory(abc.ABC):
         Other Parameters
         ----------------
         typing.Optional[typing.Sequence[hikari.guilds.stickers.GuildSticker]]
-            The sequence of stickers or `builtins.None`.
+            The sequence of stickers or `None`.
 
         Returns
         -------

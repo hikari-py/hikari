@@ -795,7 +795,7 @@ class PartialMessage(snowflakes.Unique):
     )
     """Users who were notified by their mention in the message.
 
-    !!! warning
+    .. warning::
         If the contents have not mutated and this is a message update event,
         some fields that are not affected may be empty instead.
 
@@ -807,7 +807,7 @@ class PartialMessage(snowflakes.Unique):
     )
     """IDs of roles that were notified by their mention in the message.
 
-    !!! warning
+    .. warning::
         If the contents have not mutated and this is a message update event,
         some fields that are not affected may be empty instead.
 
@@ -821,7 +821,7 @@ class PartialMessage(snowflakes.Unique):
 
     If the message is not crossposted, this will always be empty.
 
-    !!! warning
+    .. warning::
         If the contents have not mutated and this is a message update event,
         some fields that are not affected may be empty instead.
 
@@ -831,7 +831,7 @@ class PartialMessage(snowflakes.Unique):
     mentions_everyone: undefined.UndefinedOr[bool] = attr.field(hash=False, eq=False, repr=False)
     """Whether the message notifies using `@everyone` or `@here`.
 
-    !!! warning
+    .. warning::
         If the contents have not mutated and this is a message update event,
         some fields that are not affected may be empty instead.
 
@@ -916,7 +916,7 @@ class PartialMessage(snowflakes.Unique):
 
         If the message is not crossposted, this will always be empty.
 
-        !!! warning
+        .. warning::
             If the contents have not mutated and this is a message update event,
             some fields that are not affected may be empty instead.
 
@@ -931,7 +931,7 @@ class PartialMessage(snowflakes.Unique):
     def user_mentions_ids(self) -> undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]]:
         """Ids of the users who were notified by their mention in the message.
 
-        !!! warning
+        .. warning::
             If the contents have not mutated and this is a message update event,
             some fields that are not affected may be empty instead.
 
@@ -947,13 +947,13 @@ class PartialMessage(snowflakes.Unique):
 
         If this message was sent in a DM, this will always be empty.
 
-        !!! warning
+        .. warning::
             This will only return valid results on gateway events. For REST
             endpoints, this will potentially be empty. This is a limitation of
             Discord's API, as they do not consistently notify of the ID of the
             guild a message was sent in.
 
-        !!! note
+        .. note::
             If you are using a stateless application such as a stateless bot
             or a REST-only client, this will always be empty. Furthermore,
             if you are running a stateful bot and have the GUILD_MEMBERS
@@ -980,13 +980,13 @@ class PartialMessage(snowflakes.Unique):
 
         If this message was sent in a DM, this will always be empty.
 
-        !!! warning
+        .. warning::
             This will only return valid results on gateway events. For REST
             endpoints, this will potentially be empty. This is a limitation of
             Discord's API, as they do not consistently notify of the ID of the
             guild a message was sent in.
 
-        !!! note
+        .. note::
             If you are using a stateless application such as a stateless bot
             or a REST-only client, this will always be empty. Furthermore,
             if you are running a stateful bot and have the GUILD intent
@@ -1729,7 +1729,7 @@ class Message(PartialMessage):
     referenced_message: typing.Optional[PartialMessage] = attr.field(hash=False, eq=False, repr=False)
     """The message that was replied to.
 
-    If `type` is `MessageType.REPLY` and `builtins.None`, the message was deleted.
+    If `type` is `MessageType.REPLY` and `None`, the message was deleted.
     """
 
     interaction: typing.Optional[MessageInteraction] = attr.field(hash=False, eq=False, repr=False)

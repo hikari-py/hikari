@@ -3129,7 +3129,7 @@ class Guild(PartialGuild):
         -------
         typing.Optional[hikari.stickers.GuildSticker]
             The object of the sticker if found in cache, else
-            `builtins.None`.
+            `None`.
         """
         if not isinstance(self.app, traits.CacheAware):
             return None

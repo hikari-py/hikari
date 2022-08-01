@@ -463,7 +463,7 @@ class StickersUpdateEvent(GuildEvent):
     old_stickers: typing.Optional[typing.Sequence[guilds.stickers.GuildSticker]] = attr.field()
     """Sequence of all old stickers in this guild.
 
-    This will be `builtins.None` if it's missing from the cache.
+    This will be `None` if it's missing from the cache.
     """
 
     stickers: typing.Sequence[guilds.stickers.GuildSticker] = attr.field()

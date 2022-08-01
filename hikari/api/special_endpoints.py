@@ -922,7 +922,7 @@ class CommandBuilder(abc.ABC):
 
         Parameters
         ----------
-        default_member_permissions : hikari.undefined.UndefinedOr[builtins.bool]
+        default_member_permissions : hikari.undefined.UndefinedOr[bool]
             The default member permissions to utilize this command by default.
 
             If `0`, then it will be available for all members. Note that this doesn't affect
@@ -940,7 +940,7 @@ class CommandBuilder(abc.ABC):
 
         Parameters
         ----------
-        state : hikari.undefined.UndefinedOr[builtins.bool]
+        state : hikari.undefined.UndefinedOr[bool]
             Whether this command is enabled in DMs with the bot.
 
         Returns

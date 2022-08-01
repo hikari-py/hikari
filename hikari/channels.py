@@ -1289,7 +1289,7 @@ class GuildVoiceChannel(TextableGuildChannel):
     last_message_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
     """The ID of the last message sent in this channel.
 
-    !!! warning
+    .. warning::
         This might point to an invalid or deleted message. Do not assume that
         this will always be valid.
     """
