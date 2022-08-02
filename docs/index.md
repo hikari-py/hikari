@@ -1,4 +1,4 @@
-# Welcome to hikari's documentation!
+# Welcome!
 
 ```{include} ../README.md
 ```
