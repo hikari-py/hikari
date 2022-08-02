@@ -284,39 +284,31 @@ class Mentions:
 
         If the message is not crossposted, this will always be empty.
         """
-        deprecation.warn_deprecated("Mentions.channels", "Use `channel_mentions` in the base message object instead")
         return self._message.channel_mentions
 
     @property
     def channels_ids(self) -> undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]]:
         """Sequence of IDs of the channels that were mentioned in the message."""
-        deprecation.warn_deprecated(
-            "Mentions.channels_ids", "Use `channel_mention_ids` in the base message object instead"
-        )
         return self._message.channel_mention_ids
 
     @property
     def users(self) -> undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, users_.User]]:
         """Users who were notified by their mention in the message."""
-        deprecation.warn_deprecated("Mentions.users", "Use `user_mentions` in the base message object instead")
         return self._message.user_mentions
 
     @property
     def user_ids(self) -> undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]]:
         """Sequence of IDs of the users that were mentioned in the message."""
-        deprecation.warn_deprecated("Mentions.user_ids", "Use `user_mentions_ids` in the base message object instead")
         return self._message.user_mentions_ids
 
     @property
     def role_ids(self) -> undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]]:
         """Sequence of IDs of roles that were notified by their mention in the message."""
-        deprecation.warn_deprecated("Mentions.role_ids", "Use `role_mention_ids` in the base message object instead")
         return self._message.role_mention_ids
 
     @property
     def everyone(self) -> undefined.UndefinedOr[bool]:
         """Whether the message notifies using `@everyone` or `@here`."""
-        deprecation.warn_deprecated("Mentions.everyone", "Use `mentions_everyone` in the base message object instead")
         return self._message.mentions_everyone
 
     def get_members(self) -> undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, guilds.Member]]:
@@ -340,9 +332,6 @@ class Mentions:
             means that there is a very small chance that some users provided
             in `notified_users` may not be present here.
         """
-        deprecation.warn_deprecated(
-            "Mentions.get_members", "Use `get_member_mentions` in the base message object instead"
-        )
         return self._message.get_member_mentions()
 
     def get_roles(self) -> undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, guilds.Role]]:
@@ -367,7 +356,6 @@ class Mentions:
             in `notifies_role_ids` may not be present here. This is a limitation
             of Discord, again.
         """
-        deprecation.warn_deprecated("Mentions.get_roles", "Use `get_role_mentions` in the base message object instead")
         return self._message.get_role_mentions()
 
 
@@ -780,15 +768,33 @@ class PartialMessage(snowflakes.Unique):
     is_tts: undefined.UndefinedOr[bool] = attr.field(hash=False, eq=False, repr=False)
     """Whether the message is a TTS message."""
 
-    mentions: Mentions = attr.field(hash=False, eq=False, repr=True)
-    """Description of who is mentioned in a message.
+    _mentions: Mentions = attr.field(hash=False, eq=False, repr=True)
 
-    .. warning::
-        If the contents have not mutated and this is a message update event,
-        some fields that are not affected may be empty instead.
+    @property
+    def mentions(self) -> Mentions:
+        """Description of who is mentioned in a message.
 
-        This is a Discord limitation.
-    """
+        .. deprecated:: 2.0.0.dev109
+            Will be removed in `2.0.0.dev112`.
+
+            Use the methods in the base object instead.
+
+        .. warning::
+            If the contents have not mutated and this is a message update event,
+            some fields that are not affected may be empty instead.
+
+            This is a Discord limitation.
+        """
+        deprecation.warn_deprecated(
+            "mentions",
+            removal_version="2.0.0.dev112",
+            additional_info="Use the methods in the base object instead",
+        )
+        return self._mentions
+
+    @mentions.setter
+    def mentions(self, value: Mentions) -> None:
+        self._mentions = value
 
     user_mentions: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, users_.User]] = attr.field(
         hash=False, eq=False, repr=False

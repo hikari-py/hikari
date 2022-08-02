@@ -479,26 +479,7 @@ class Member(users.User):
 
     @property
     def mention(self) -> str:
-<<<<<<< HEAD
-        """Return a raw mention string for the given member.
-
-        If the member has a known nickname, we always return
-        a bang ("`!`") before the ID part of the mention string. This
-        mimics the behaviour Discord clients tend to provide.
-
-        Examples
-        --------
-        .. code-block:: python
-
-            >>> some_member_without_nickname.mention
-            '<@123456789123456789>'
-            >>> some_member_with_nickname.mention
-            '<@!123456789123456789>'
-        """
-        return f"<@!{self.id}>" if self.nickname is not None else self.user.mention
-=======
         return self.user.mention
->>>>>>> feature/docs-v2
 
     def communication_disabled_until(self) -> typing.Optional[datetime.datetime]:
         """Return when the timeout for this member ends.
@@ -935,8 +916,6 @@ class Member(users.User):
             will remove the members nick.
 
             Requires the `MANAGE_NICKNAMES` permission.
-        nick : hikari.undefined.UndefinedNoneOr[str]
-            Deprecated alias for `nickname`.
         roles : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole]]
             If provided, the new roles for the member.
 
@@ -1000,10 +979,6 @@ class Member(users.User):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
-        if nick is not undefined.UNDEFINED:
-            deprecation.warn_deprecated("nick", "Use 'nickname' argument instead")
-            nickname = nick
-
         return await self.user.app.rest.edit_member(
             self.guild_id,
             self.user.id,

@@ -127,7 +127,7 @@ class EventFactory(abc.ABC):
 
         Other Parameters
         ----------------
-        old_channel  : typing.Optional[hikari.channels.GuildChannel]
+        old_channel : typing.Optional[hikari.channels.GuildChannel]
             The guild channel object or `None`.
 
         Returns
@@ -324,7 +324,7 @@ class EventFactory(abc.ABC):
 
         Other Parameters
         ----------------
-        old_guild  : typing.Optional[hikari.guilds.GatewayGuild]
+        old_guild : typing.Optional[hikari.guilds.GatewayGuild]
             The guild object or `None`.
 
         Returns
@@ -352,7 +352,7 @@ class EventFactory(abc.ABC):
 
         Other Parameters
         ----------------
-        old_guild  : typing.Optional[hikari.guilds.GatewayGuild]
+        old_guild : typing.Optional[hikari.guilds.GatewayGuild]
             The guild object or `None`.
 
         Returns
@@ -437,7 +437,7 @@ class EventFactory(abc.ABC):
 
         Other Parameters
         ----------------
-        old_emojis  : typing.Optional[typing.Sequence[hikari.emojis.KnownCustomEmoji]]
+        old_emojis : typing.Optional[typing.Sequence[hikari.emojis.KnownCustomEmoji]]
             The sequence of emojis or `None`.
 
         Returns
@@ -654,7 +654,7 @@ class EventFactory(abc.ABC):
 
         Other Parameters
         ----------------
-        old_member  : typing.Optional[hikari.guilds.Member]
+        old_member : typing.Optional[hikari.guilds.Member]
             The member object or `None`.
 
         Returns
@@ -965,7 +965,7 @@ class EventFactory(abc.ABC):
 
         Other Parameters
         ----------------
-        old_message  : typing.Optional[hikari.messages.Message]
+        old_message : typing.Optional[hikari.messages.Message]
             The old message object.
 
         Returns
@@ -993,7 +993,7 @@ class EventFactory(abc.ABC):
 
         Other Parameters
         ----------------
-        old_messages  : typing.Optional[typing.Mapping[hikari.snowflakes.Snowflake, hikari.messages.Message]]
+        old_messages : typing.Optional[typing.Mapping[hikari.snowflakes.Snowflake, hikari.messages.Message]]
             A mapping of the old message objects.
 
         Returns

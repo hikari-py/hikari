@@ -3197,7 +3197,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         *,
         nickname: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        nick: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
         mute: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         deaf: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -3227,11 +3226,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the nick to add to the user when he joins the guild.
 
             Requires the `MANAGE_NICKNAMES` permission on the guild.
-        nick : hikari.undefined.UndefinedOr[str]
-            Deprecated alias for `nickname`.
-
-            .. deprecated:: 2.0.0.dev106
-                Use `nickname` instead.
         roles : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole]]
             If provided, the roles to add to the user when he joins the guild.
             This may be a collection objects or IDs of existing roles.
@@ -4915,7 +4909,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         *,
         nickname: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
-        nick: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
         roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
         mute: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         deaf: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -4943,11 +4936,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             will remove the members nick.
 
             Requires the `MANAGE_NICKNAMES` permission.
-        nick : hikari.undefined.UndefinedOr[str]
-            Deprecated alias for `nickname`.
-
-            .. deprecated:: 2.0.0.dev104
-                Use `nickname` instead.
         roles : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole]]
             If provided, the new roles for the member.
 
@@ -5049,57 +5037,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If any of the fields that are passed have an invalid value.
         hikari.errors.ForbiddenError
             If you are missing a permission to do an action.
-        hikari.errors.UnauthorizedError
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.NotFoundError
-            If the guild is not found.
-        hikari.errors.RateLimitTooLongError
-            Raised in the event that a rate limit occurs that is
-            longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
-        hikari.errors.InternalServerError
-            If an internal error occurs on Discord while handling the request.
-        """
-
-    @abc.abstractmethod
-    @deprecation.deprecated("2.0.0.dev104", "2.0.0.dev110", "Use `edit_my_member`'s `nick` argument instead.")
-    async def edit_my_nick(
-        self,
-        guild: snowflakes.SnowflakeishOr[guilds.Guild],
-        nick: typing.Optional[str],
-        *,
-        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> None:
-        """Edit the associated token's member nick.
-
-        Parameters
-        ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
-            The guild to edit.
-
-            This may be the object or the ID of an existing guild.
-        nick : typing.Optional[str]
-            The new nick.
-
-            If `None`, will remove the nick.
-
-        Other Parameters
-        ----------------
-        reason : hikari.undefined.UndefinedOr[str]
-            If provided, the reason that will be recorded in the audit logs.
-            Maximum of 512 characters.
-
-        Raises
-        ------
-        hikari.errors.ForbiddenError
-            If you are missing the `CHANGE_NICKNAME` permission.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
@@ -6591,26 +6528,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """
-
-    @abc.abstractmethod
-    @deprecation.deprecated("2.0.0.dev106", "2.0.0.dev110", "Use `slash_command_builder` instead.")
-    def command_builder(self, name: str, description: str) -> special_endpoints.SlashCommandBuilder:
-        r"""Create a slash command builder for use in `RESTClient.set_application_commands`.
-
-        Parameters
-        ----------
-        name : str
-            The command's name. This should match the regex `^[\w-]{1,32}$` in
-            Unicode mode and be lowercase.
-        description : str
-            The description to set for the command.
-            This should be inclusively between 1-100 characters in length.
-
-        Returns
-        -------
-        hikari.api.special_endpoints.SlashCommandBuilder
-            The created command builder object.
         """
 
     @abc.abstractmethod

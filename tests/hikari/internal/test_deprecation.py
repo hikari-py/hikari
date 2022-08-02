@@ -23,38 +23,4 @@ import pytest
 
 from hikari.internal import deprecation
 
-
-class TestWarnDeprecated:
-    def test_when_function(self):
-        def test():
-            ...
-
-        with pytest.warns(
-            DeprecationWarning,
-            match=(
-                r"Call to deprecated function/method "
-                r"'tests.hikari.internal.test_deprecation.TestWarnDeprecated.test_when_function.<locals>.test' "
-                r"\(Too cool\)"
-            ),
-        ):
-            deprecation.warn_deprecated(test, "Too cool")
-
-    def test_when_class(self):
-        class Test:
-            ...
-
-        with pytest.warns(
-            DeprecationWarning,
-            match=(
-                r"Instantiation of deprecated class "
-                r"'tests.hikari.internal.test_deprecation.TestWarnDeprecated.test_when_class.<locals>.Test' \(Too old\)"
-            ),
-        ):
-            deprecation.warn_deprecated(Test, "Too old")
-
-    def test_when_str(self):
-        with pytest.warns(
-            DeprecationWarning,
-            match=r"Use of deprecated argument 'testing' \(Use 'foo.bar' instead\)",
-        ):
-            deprecation.warn_deprecated("testing", "Use 'foo.bar' instead")
+# FIXME: Do

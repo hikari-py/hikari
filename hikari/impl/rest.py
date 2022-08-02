@@ -1062,7 +1062,6 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("deny", deny)
         await self._request(route, json=body, reason=reason)
 
-    @deprecation.deprecated("2.0.0.dev110", "edit_permission_overwrite")
     async def edit_permission_overwrites(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
@@ -1078,8 +1077,15 @@ class RESTClientImpl(rest_api.RESTClient):
         """Edit permissions for a specific entity in the given guild channel.
 
         .. deprecated:: 2.0.0.dev110
+            Will be removed in `2.0.0.dev112`.
+
             Use `RESTClient.edit_permission_overwrite` instead.
         """
+        deprecation.warn_deprecated(
+            "edit_permission_overwrites",
+            removal_version="2.0.0.dev112",
+            additional_info="Use `edit_permission_overwrite` instead",
+        )
         await self.edit_permission_overwrite(
             channel, target, target_type=target_type, allow=allow, deny=deny, reason=reason
         )
@@ -2039,15 +2045,10 @@ class RESTClientImpl(rest_api.RESTClient):
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         *,
         nickname: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        nick: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
         mute: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         deaf: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> typing.Optional[guilds.Member]:
-        if nick is not undefined.UNDEFINED:
-            deprecation.warn_deprecated("nick", "Use 'nickname' argument instead")
-            nickname = nick
-
         route = routes.PUT_GUILD_MEMBER.compile(guild=guild, user=user)
         body = data_binding.JSONObjectBuilder()
         body.put("access_token", str(access_token))
@@ -2618,7 +2619,6 @@ class RESTClientImpl(rest_api.RESTClient):
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         *,
         nickname: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
-        nick: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
         roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
         mute: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         deaf: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -2628,10 +2628,6 @@ class RESTClientImpl(rest_api.RESTClient):
         communication_disabled_until: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.Member:
-        if nick is not undefined.UNDEFINED:
-            deprecation.warn_deprecated("nick", "Use 'nickname' argument instead")
-            nickname = nick
-
         route = routes.PATCH_GUILD_MEMBER.compile(guild=guild, user=user)
         body = data_binding.JSONObjectBuilder()
         body.put("nick", nickname)
@@ -2667,16 +2663,6 @@ class RESTClientImpl(rest_api.RESTClient):
         response = await self._request(route, json=body, reason=reason)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_member(response, guild_id=snowflakes.Snowflake(guild))
-
-    @deprecation.deprecated("2.0.0.dev104", "2.0.0.dev110", "Use `edit_my_member`'s `nick` argument instead.")
-    async def edit_my_nick(
-        self,
-        guild: snowflakes.SnowflakeishOr[guilds.Guild],
-        nick: typing.Optional[str],
-        *,
-        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> None:
-        await self.edit_my_member(guild, nickname=nick, reason=reason)
 
     async def add_role_to_member(
         self,
@@ -3123,10 +3109,6 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_template(response)
 
-    @deprecation.deprecated("2.0.0.dev106", "2.0.0.dev110", "Use `slash_command_builder` instead.")
-    def command_builder(self, name: str, description: str) -> special_endpoints.SlashCommandBuilder:
-        return self.slash_command_builder(name, description)
-
     def slash_command_builder(self, name: str, description: str) -> special_endpoints.SlashCommandBuilder:
         return special_endpoints_impl.SlashCommandBuilder(name, description)
 
@@ -3205,29 +3187,6 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return response
 
-<<<<<<< HEAD
-    @deprecation.deprecated("2.0.0.dev106", "2.0.0.dev110", "Use `create_slash_command` instead.")
-    async def create_application_command(
-        self,
-        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        name: str,
-        description: str,
-        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
-        *,
-        options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
-        default_permission: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-    ) -> commands.SlashCommand:
-        return await self.create_slash_command(
-            application=application,
-            name=name,
-            description=description,
-            guild=guild,
-            options=options,
-            default_permission=default_permission,
-        )
-
-=======
->>>>>>> master
     async def create_slash_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
