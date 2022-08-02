@@ -24,18 +24,17 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("warn_deprecated", "deprecated")
+__all__: typing.Sequence[str] = ("warn_deprecated", "HikariDeprecationWarning")
 
-import functools
-import inspect
 import typing
 import warnings
 
 from hikari import _about as hikari_about
 from hikari.internal import ux
 
-if typing.TYPE_CHECKING:
-    T = typing.TypeVar("T", bound=typing.Callable[..., typing.Any])
+
+class HikariDeprecationWarning(DeprecationWarning):
+    """Warning about a hikari deprecation."""
 
 
 def warn_deprecated(name: str, /, *, removal_version: str, additional_info: str, stack_level: int = 3) -> None:
@@ -44,7 +43,10 @@ def warn_deprecated(name: str, /, *, removal_version: str, additional_info: str,
     Parameters
     ----------
     name : str
-        What is being deprecated
+        What is being deprecated.
+
+    Other Parameters
+    ----------------
     removal_version : str
         The version it will be removed in.
     additional_info : str
@@ -53,60 +55,10 @@ def warn_deprecated(name: str, /, *, removal_version: str, additional_info: str,
         The stack level to issue the warning in.
     """
     if ux.HikariVersion(hikari_about.__version__) >= ux.HikariVersion(removal_version):
-        raise DeprecationWarning(f"{name!r} is passed its removal version ({removal_version})")
+        raise HikariDeprecationWarning(f"{name!r} is passed its removal version ({removal_version})")
 
     warnings.warn(
-        f"[hikari] {name!r} is deprecated and will be removed in {removal_version}. {additional_info}",
-        category=DeprecationWarning,
+        f"{name!r} is deprecated and will be removed in `{removal_version}`. {additional_info}",
+        category=HikariDeprecationWarning,
         stacklevel=stack_level,
     )
-
-
-def _deprecation_wrapper(fn: T, removal_version: str, additional_info: str, obj: typing.Any = None) -> T:
-    name = (obj or fn).__name__
-
-    @functools.wraps(fn)
-    def wrapper(*args: typing.Any, **kwargs: typing.Any) -> typing.Any:
-        warn_deprecated(name, removal_version=removal_version, additional_info=additional_info)
-        return fn(*args, **kwargs)
-
-    return typing.cast("T", wrapper)
-
-
-def deprecated(*, deprecation_version: str, removal_version: str, additional_info: str) -> typing.Callable[[T], T]:
-    """Mark a function or object as being deprecated.
-
-    Parameters
-    ----------
-    deprecation_version : str
-        The version it got deprecated in.
-    removal_version : str
-        The version it will be removed in.
-    additional_info : str
-        Additional information on the deprecation for the user.
-    """
-
-    def decorator(obj: T) -> T:
-        old_doc = inspect.getdoc(obj) or ""
-
-        first_line_end = old_doc.find("\n")
-        obj.__doc__ = (
-            old_doc[:first_line_end]
-            + f"\n\n.. deprecated:: {deprecation_version}\n"
-            + f"    It is scheduled for removal in `{removal_version}`.\n\n"
-            + f"    {additional_info}\n"
-            + old_doc[first_line_end:]
-        )
-
-        if inspect.isclass(obj):
-            # We want to warn about the deprecation in both the init and the subclass of a class
-            obj.__init__ = _deprecation_wrapper(obj.__init__, removal_version, additional_info, obj=obj)
-            obj.__init_subclass__ = _deprecation_wrapper(
-                obj.__init_subclass__, removal_version, additional_info, obj=obj
-            )
-        else:
-            obj = _deprecation_wrapper(obj, removal_version, additional_info)
-
-        return typing.cast("T", obj)
-
-    return decorator

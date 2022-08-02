@@ -772,7 +772,7 @@ class PartialMessage(snowflakes.Unique):
 
     @property
     def mentions(self) -> Mentions:
-        """Description of who is mentioned in a message.
+        """Information of who is mentioned in a message.
 
         .. deprecated:: 2.0.0.dev109
             Will be removed in `2.0.0.dev112`.

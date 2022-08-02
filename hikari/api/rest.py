@@ -31,7 +31,6 @@ import typing
 from hikari import scheduled_events
 from hikari import traits
 from hikari import undefined
-from hikari.internal import deprecation
 
 if typing.TYPE_CHECKING:
     import datetime

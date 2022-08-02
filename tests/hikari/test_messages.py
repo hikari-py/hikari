@@ -152,6 +152,11 @@ def message():
 
 
 class TestMessage:
+    def test_mentions_property(self, message):
+        message._mentions = object()
+
+        assert message.mentions is message._mentions
+
     def test_make_link_when_guild_is_not_none(self, message):
         message.id = 789
         message.channel_id = 456
