@@ -162,7 +162,7 @@ class TestPrintBanner:
 
         stack.enter_context(mock.patch.object(_about, "__version__", new="2.2.2"))
         stack.enter_context(mock.patch.object(_about, "__git_sha1__", new="12345678901234567890"))
-        stack.enter_context(mock.patch.object(_about, "__copyright__", new="© 2020 Nekokatt"))
+        stack.enter_context(mock.patch.object(_about, "__copyright__", new="2020, Nekokatt"))
         stack.enter_context(mock.patch.object(_about, "__license__", new="MIT"))
         stack.enter_context(mock.patch.object(_about, "__file__", new="~/hikari"))
         stack.enter_context(mock.patch.object(_about, "__docs__", new="https://nekokatt.github.io/hikari/docs"))
@@ -193,7 +193,7 @@ class TestPrintBanner:
             # Hikari stuff.
             "hikari_version": "2.2.2",
             "hikari_git_sha1": "12345678",
-            "hikari_copyright": "© 2020 Nekokatt",
+            "hikari_copyright": "2020, Nekokatt",
             "hikari_license": "MIT",
             "hikari_install_location": "some path",
             "hikari_documentation_url": "https://nekokatt.github.io/hikari/docs",
@@ -236,7 +236,7 @@ class TestPrintBanner:
             # Hikari stuff.
             "hikari_version": "2.2.2",
             "hikari_git_sha1": "12345678",
-            "hikari_copyright": "© 2020 Nekokatt",
+            "hikari_copyright": "2020, Nekokatt",
             "hikari_license": "MIT",
             "hikari_install_location": "some path",
             "hikari_documentation_url": "https://nekokatt.github.io/hikari/docs",
@@ -280,7 +280,7 @@ class TestPrintBanner:
             # Hikari stuff.
             "hikari_version": "2.2.2",
             "hikari_git_sha1": "12345678",
-            "hikari_copyright": "© 2020 Nekokatt",
+            "hikari_copyright": "2020, Nekokatt",
             "hikari_license": "MIT",
             "hikari_install_location": "some path",
             "hikari_documentation_url": "https://nekokatt.github.io/hikari/docs",

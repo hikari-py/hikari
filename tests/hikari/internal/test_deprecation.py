@@ -19,42 +19,23 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+import mock
 import pytest
 
+from hikari import _about as hikari_about
 from hikari.internal import deprecation
 
 
 class TestWarnDeprecated:
-    def test_when_function(self):
-        def test():
-            ...
+    def test_when_not_past_removal(self):
+        with mock.patch.object(hikari_about, "__version__", "2.0.1"):
+            with pytest.warns(
+                deprecation.HikariDeprecationWarning,
+                match=r"'testing' is deprecated and will be removed in `2.0.2`. Some info!",
+            ):
+                deprecation.warn_deprecated("testing", removal_version="2.0.2", additional_info="Some info!")
 
-        with pytest.warns(
-            DeprecationWarning,
-            match=(
-                r"Call to deprecated function/method "
-                r"'tests.hikari.internal.test_deprecation.TestWarnDeprecated.test_when_function.<locals>.test' "
-                r"\(Too cool\)"
-            ),
-        ):
-            deprecation.warn_deprecated(test, "Too cool")
-
-    def test_when_class(self):
-        class Test:
-            ...
-
-        with pytest.warns(
-            DeprecationWarning,
-            match=(
-                r"Instantiation of deprecated class "
-                r"'tests.hikari.internal.test_deprecation.TestWarnDeprecated.test_when_class.<locals>.Test' \(Too old\)"
-            ),
-        ):
-            deprecation.warn_deprecated(Test, "Too old")
-
-    def test_when_str(self):
-        with pytest.warns(
-            DeprecationWarning,
-            match=r"Use of deprecated argument 'testing' \(Use 'foo.bar' instead\)",
-        ):
-            deprecation.warn_deprecated("testing", "Use 'foo.bar' instead")
+    def test_when_past_removal(self):
+        with mock.patch.object(hikari_about, "__version__", "2.0.2"):
+            with pytest.raises(deprecation.HikariDeprecationWarning):
+                deprecation.warn_deprecated("testing", removal_version="2.0.2", additional_info="Some info!")

@@ -49,7 +49,7 @@ class TemplateRole(guilds.PartialRole):
     """The partial role object attached to `Template`."""
 
     permissions: permissions_.Permissions = attr.field(eq=False, hash=False, repr=False)
-    """The guild wide permissions this role gives to the members it's attached to,
+    """The guild wide permissions this role gives to the members it's attached to.
 
     This may be overridden by channel overwrites.
     """

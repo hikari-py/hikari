@@ -66,7 +66,6 @@ from hikari import undefined
 from hikari import urls
 from hikari import users
 from hikari.internal import attr_extensions
-from hikari.internal import deprecation
 from hikari.internal import enums
 from hikari.internal import routes
 from hikari.internal import time
@@ -277,7 +276,7 @@ class GuildWidget:
     app: traits.RESTAware = attr.field(
         repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
     )
-    """The client application that models may use for procedures."""
+    """Client application that models may use for procedures."""
 
     channel_id: typing.Optional[snowflakes.Snowflake] = attr.field(repr=True)
     """The ID of the channel the invite for this embed targets, if enabled."""
@@ -456,8 +455,8 @@ class Member(users.User):
 
         See Also
         --------
-        `Member.nickname`
-        `Member.username`
+        Nickname: `Member.nickname`.
+        Username: `Member.username`.
         """
         return self.nickname if isinstance(self.nickname, str) else self.username
 
@@ -916,8 +915,6 @@ class Member(users.User):
             will remove the members nick.
 
             Requires the `MANAGE_NICKNAMES` permission.
-        nick : hikari.undefined.UndefinedNoneOr[str]
-            Deprecated alias for `nickname`.
         roles : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole]]
             If provided, the new roles for the member.
 
@@ -981,10 +978,6 @@ class Member(users.User):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
-        if nick is not undefined.UNDEFINED:
-            deprecation.warn_deprecated("nick", "Use 'nickname' argument instead")
-            nickname = nick
-
         return await self.user.app.rest.edit_member(
             self.guild_id,
             self.user.id,
@@ -1015,7 +1008,7 @@ class PartialRole(snowflakes.Unique):
     app: traits.RESTAware = attr.field(
         repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
     )
-    """The client application that models may use for procedures."""
+    """Client application that models may use for procedures."""
 
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
     """The ID of this entity."""
@@ -1043,12 +1036,12 @@ class Role(PartialRole):
     """
 
     guild_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
-    """The ID of the guild this role belongs to"""
+    """The ID of the guild this role belongs to."""
 
     is_hoisted: bool = attr.field(eq=False, hash=False, repr=True)
     """Whether this role is hoisting the members it's attached to in the member list.
 
-    members will be hoisted under their highest role where this is set to `True`.
+    Members will be hoisted under their highest role where this is set to `True`.
     """
 
     icon_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
@@ -1064,7 +1057,7 @@ class Role(PartialRole):
     """Whether this role can be mentioned by all regardless of permissions."""
 
     permissions: permissions_.Permissions = attr.field(eq=False, hash=False, repr=False)
-    """The guild wide permissions this role gives to the members it's attached to,
+    """The guild wide permissions this role gives to the members it's attached to.
 
     This may be overridden by channel overwrites.
     """
@@ -1283,8 +1276,7 @@ class Integration(PartialIntegration):
     """
 
     expire_grace_period: typing.Optional[datetime.timedelta] = attr.field(eq=False, hash=False, repr=False)
-    """How many days users with expired subscriptions are given until
-    `GuildIntegration.expire_behavior` is enacted out on them.
+    """How many days users with expired subscriptions are given until the expire behavior is enacted out on them.
 
     .. note::
         This will always be `None` for Discord integrations.
@@ -1379,7 +1371,7 @@ class PartialGuild(snowflakes.Unique):
     app: traits.RESTAware = attr.field(
         repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
     )
-    """The client application that models may use for procedures."""
+    """Client application that models may use for procedures."""
 
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
     """The ID of this entity."""
@@ -1466,8 +1458,8 @@ class PartialGuild(snowflakes.Unique):
 
         Parameters
         ----------
-        user: hikari.snowflakes.Snowflakeish[hikari.users.PartialUser]
-            The user to ban from the guild
+        user : hikari.snowflakes.Snowflakeish[hikari.users.PartialUser]
+            The user to ban from the guild.
 
         Other Parameters
         ----------------
@@ -1514,8 +1506,8 @@ class PartialGuild(snowflakes.Unique):
 
         Parameters
         ----------
-        user: hikari.snowflakes.Snowflakeish[hikari.users.PartialUser]
-            The user to unban from the guild
+        user : hikari.snowflakes.Snowflakeish[hikari.users.PartialUser]
+            The user to unban from the guild.
 
         Other Parameters
         ----------------
@@ -1555,12 +1547,12 @@ class PartialGuild(snowflakes.Unique):
         *,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
-        """Kicks the given user from this guild.
+        """Kick the given user from this guild.
 
         Parameters
         ----------
-        user: hikari.snowflakes.Snowflakeish[hikari.users.PartialUser]
-            The user to kick from the guild
+        user : hikari.snowflakes.Snowflakeish[hikari.users.PartialUser]
+            The user to kick from the guild.
 
         Other Parameters
         ----------------
@@ -1621,7 +1613,7 @@ class PartialGuild(snowflakes.Unique):
         preferred_locale: undefined.UndefinedOr[typing.Union[str, locales.Locale]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> RESTGuild:
-        """Edits the guild.
+        """Edit the guild.
 
         Parameters
         ----------
@@ -1877,7 +1869,7 @@ class PartialGuild(snowflakes.Unique):
 
         Other Parameters
         ----------------
-        description: hikari.undefined.UndefinedOr[str]
+        description : hikari.undefined.UndefinedOr[str]
             If provided, the description of the sticker.
         reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
@@ -2283,7 +2275,7 @@ class PartialGuild(snowflakes.Unique):
             If provided, the bitrate for the channel. Must be
             between 8000 and 96000 or 8000 and 128000 for VIP
             servers.
-        video_quality_mode: hikari.undefined.UndefinedOr[typing.Union[hikari.channels.VideoQualityMode, int]]
+        video_quality_mode : hikari.undefined.UndefinedOr[typing.Union[hikari.channels.VideoQualityMode, int]]
             If provided, the new video quality mode for the channel.
         permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
             If provided, the permission overwrites for the channel.
@@ -2523,8 +2515,8 @@ class PartialGuild(snowflakes.Unique):
         ------
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
-            hikari.errors.NotFoundError
-                If the guild is not found.
+        hikari.errors.NotFoundError
+            If the guild is not found.
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
@@ -2734,16 +2726,14 @@ class Guild(PartialGuild):
     """The premium tier for this guild."""
 
     public_updates_channel_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
-    """The channel ID of the channel where admins and moderators receive notices
-    from Discord.
+    """The channel ID of the channel where admins and moderators receive notices from Discord.
 
     This is only present if `GuildFeature.COMMUNITY` is in `Guild.features` for
     this guild. For all other purposes, it should be considered to be `None`.
     """
 
     rules_channel_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
-    """The ID of the channel where guilds with the `GuildFeature.COMMUNITY`
-    `features` display rules and guidelines.
+    """The ID of the channel where guilds with the `GuildFeature.COMMUNITY` feature display rules and guidelines.
 
     If the `GuildFeature.COMMUNITY` feature is not defined, then this is `None`.
     """
@@ -3012,7 +3002,7 @@ class Guild(PartialGuild):
         Returns
         -------
         typing.Optional[hikari.channels.GuildChannel]
-            The object of the guild channel found in cache or `None.
+            The object of the guild channel found in cache or `None`.
         """
         if not isinstance(self.app, traits.CacheAware):
             return None

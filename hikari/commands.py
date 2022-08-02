@@ -190,7 +190,7 @@ class PartialCommand(snowflakes.Unique):
     """Represents any application command on Discord."""
 
     app: traits.RESTAware = attr.field(eq=False, hash=False, repr=False)
-    """The client application that models may use for procedures."""
+    """Client application that models may use for procedures."""
 
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
     # <<inherited docstring from Unique>>.

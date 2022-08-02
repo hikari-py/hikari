@@ -316,7 +316,7 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
 
         Parameters
         ----------
-        real_bucket_hash: str
+        real_bucket_hash : str
             The real bucket hash for this bucket.
 
         Raises
@@ -360,9 +360,10 @@ class RESTBucketManager:
     """Maps routes to their `X-RateLimit-Bucket` header being used."""
 
     real_hashes_to_buckets: typing.Final[typing.MutableMapping[str, RESTBucket]]
-    """Maps full bucket hashes (`X-RateLimit-Bucket` appended with a hash of
-    major parameters used in that compiled route) to their corresponding rate
-    limiters.
+    """Maps full bucket hashes to their corresponding rate limiters.
+
+    The full bucket hash consists of `X-RateLimit-Bucket` appended with a hash of
+    major parameters used in that compiled route.
     """
 
     closed_event: typing.Final[asyncio.Event]

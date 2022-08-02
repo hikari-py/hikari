@@ -55,7 +55,7 @@ class UserFlag(enums.Flag):
     """The known user flags that represent account badges."""
 
     NONE = 0
-    """None"""
+    """None."""
 
     DISCORD_EMPLOYEE = 1 << 0
     """Discord Employee."""
@@ -180,7 +180,7 @@ class PartialUser(snowflakes.Unique, abc.ABC):
     @property
     @abc.abstractmethod
     def is_system(self) -> undefined.UndefinedOr[bool]:
-        """`Whether  this user is a system account."""
+        """Whether  this user is a system account."""
 
     @property
     @abc.abstractmethod
@@ -192,12 +192,12 @@ class PartialUser(snowflakes.Unique, abc.ABC):
     def mention(self) -> str:
         """Return a raw mention string for the given user.
 
-        Example
-        -------
-        ```py
-        >>> some_user.mention
-        '<@123456789123456789>'
-        ```
+        Examples
+        --------
+        .. code-block:: python
+
+            >>> some_user.mention
+            '<@123456789123456789>'
         """
 
     async def fetch_dm_channel(self) -> channels.DMChannel:
@@ -296,7 +296,6 @@ class PartialUser(snowflakes.Unique, abc.ABC):
             Likewise, if this is a `hikari.files.Resource`, then the
             content is instead treated as an attachment if no `attachment` and
             no `attachments` kwargs are provided.
-
 
         Other Parameters
         ----------------
@@ -528,12 +527,12 @@ class User(PartialUser, abc.ABC):
     def mention(self) -> str:
         """Return a raw mention string for the given user.
 
-        Example
-        -------
-        ```py
-        >>> some_user.mention
-        '<@123456789123456789>'
-        ```
+        Examples
+        --------
+        .. code-block:: python
+
+            >>> some_user.mention
+            '<@123456789123456789>'
         """
 
     @property
@@ -651,7 +650,7 @@ class PartialUserImpl(PartialUser):
     app: traits.RESTAware = attr.field(
         repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
     )
-    """The client application that models may use for procedures."""
+    """Client application that models may use for procedures."""
 
     discriminator: undefined.UndefinedOr[str] = attr.field(eq=False, hash=False, repr=True)
     """Four-digit discriminator for the user."""
@@ -684,13 +683,12 @@ class PartialUserImpl(PartialUser):
     def mention(self) -> str:
         """Return a raw mention string for the given user.
 
-        Example
-        -------
+        Examples
+        --------
+        .. code-block:: python
 
-        ```py
-        >>> some_user.mention
-        '<@123456789123456789>'
-        ```
+            >>> some_user.mention
+            '<@123456789123456789>'
         """
         return f"<@{self.id}>"
 

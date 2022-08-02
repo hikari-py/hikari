@@ -21,9 +21,13 @@ async-timeout==4.0.2  # Used for timeouts in some test cases.
 # DOCUMENTATION #
 #################
 
-pdoc==11.0.0
-sphobjinv==2.2.2
-minify-html==0.8
+sphinx==5.0.1
+sphinx-autoapi==1.8.4
+numpydoc==1.4.0
+furo==2022.6.21
+myst-parser==0.18.0
+sphinxext.opengraph==0.6.3
+sphinx-copybutton==0.5.0
 
 #################
 # TYPE CHECKING #
@@ -46,7 +50,7 @@ black==22.6.0
 isort==5.10.1
 
 ###########
-# Linting #
+# LINTING #
 ###########
 
 slotscheck==0.14.1

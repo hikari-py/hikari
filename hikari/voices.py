@@ -48,7 +48,7 @@ class VoiceState:
     app: traits.RESTAware = attr.field(
         repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
     )
-    """The client application that models may use for procedures."""
+    """Client application that models may use for procedures."""
 
     channel_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=True)
     """The ID of the channel this user is connected to.

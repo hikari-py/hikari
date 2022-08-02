@@ -103,7 +103,7 @@ class ScheduledEvent(snowflakes.Unique):
     app: traits.RESTAware = attr.field(
         repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
     )
-    """The client application that models may use for procedures."""
+    """Client application that models may use for procedures."""
 
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
     """ID of the scheduled event."""

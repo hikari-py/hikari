@@ -30,10 +30,8 @@ posix_read() {
 
 posix_read "Tag" VERSION
 posix_read "Repository slug (e.g. hikari-py/hikari)" REPO_SLUG
-posix_read "Documentation repository slug (e.g. hikari-py/hikari-docs)" DOCUMENTATION_REPO_SLUG
 posix_read "Twine username" TWINE_USERNAME
 posix_read "Twine password" TWINE_PASSWORD
-posix_read "Github token (must have permissions to trigger workflows in the documentation repository)" GITHUB_TOKEN
 posix_read "Discord deployment webhook URL" DEPLOY_WEBHOOK_URL
 
 bash scripts/deploy.sh

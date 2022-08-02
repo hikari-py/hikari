@@ -59,17 +59,19 @@ class All(typing.Generic[ValueT]):
 
     For example...
 
-    ```py
-    if w(foo) and x(foo) and y(foo) and z(foo):
-        ...
-    ```
-    is equivalent to
-    ```py
-    condition = All([w, x, y, z])
+    .. code-block:: python
 
-    if condition(foo):
-        ...
-    ```
+        if w(foo) and x(foo) and y(foo) and z(foo):
+            ...
+
+    is equivalent to
+
+    .. code-block:: python
+
+        condition = All([w, x, y, z])
+
+        if condition(foo):
+            ...
 
     This behaves like a lazy wrapper implementation of the `all` builtin.
 
@@ -94,7 +96,7 @@ class All(typing.Generic[ValueT]):
 
     Parameters
     ----------
-    *conditions : typing.Callable[[ValueT], bool]
+    conditions : typing.Callable[[ValueT], bool]
         The predicates to wrap.
     """
 
@@ -170,29 +172,29 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
 
     As an async iterable:
 
-    ```py
-    >>> async for item in paginated_results:
-    ...    process(item)
-    ```
+    .. code-block:: python
+
+        >>> async for item in paginated_results:
+        ...    process(item)
 
     As an eagerly retrieved set of results (performs all API calls at once,
     which may be slow for large sets of data):
 
-    ```py
-    >>> results = await paginated_results
-    >>> # ... which is equivalent to this...
-    >>> results = [item async for item in paginated_results]
-    ```
+    .. code-block:: python
+
+        >>> results = await paginated_results
+        >>> # ... which is equivalent to this...
+        >>> results = [item async for item in paginated_results]
 
     As an async iterator (not recommended):
 
-    ```py
-    >>> try:
-    ...    while True:
-    ...        process(await paginated_results.__anext__())
-    ... except StopAsyncIteration:
-    ...    pass
-    ```
+    .. code-block:: python
+
+        >>> try:
+        ...    while True:
+        ...        process(await paginated_results.__anext__())
+        ... except StopAsyncIteration:
+        ...    pass
 
     Additionally, you can make use of some of the provided helper methods
     on this class to perform basic operations easily.
@@ -200,20 +202,20 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
     Iterating across the items with indexes (like `enumerate` for normal
     iterables):
 
-    ```py
-    >>> async for i, item in paginated_results.enumerate():
-    ...    print(i, item)
-    (0, foo)
-    (1, bar)
-    (2, baz)
-    ```
+    .. code-block:: python
+
+        >>> async for i, item in paginated_results.enumerate():
+        ...    print(i, item)
+        (0, foo)
+        (1, bar)
+        (2, baz)
 
     Limiting the number of results you iterate across:
 
-    ```py
-    >>> async for item in paginated_results.limit(3):
-    ...    process(item)
-    ```
+    .. code-block:: python
+
+        >>> async for item in paginated_results.limit(3):
+        ...    process(item)
     """
 
     __slots__: typing.Sequence[str] = ()
@@ -257,7 +259,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
         return _MappingLazyIterator(self, transformation)
 
     async def for_each(self, consumer: typing.Callable[[ValueT], typing.Any]) -> None:
-        """Pass each value to a given consumer immediately."""
+        """Forward each value to a given consumer immediately."""
         if asyncio.iscoroutinefunction(consumer):
             async for item in self:
                 await consumer(item)
@@ -440,29 +442,29 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
 
         Examples
         --------
-        ```py
-        >>> async for i, item in paginated_results.enumerate():
-        ...    print(i, item)
-        (0, foo)
-        (1, bar)
-        (2, baz)
-        (3, bork)
-        (4, qux)
+        .. code-block:: python
 
-        >>> async for i, item in paginated_results.enumerate(start=9):
-        ...    print(i, item)
-        (9, foo)
-        (10, bar)
-        (11, baz)
-        (12, bork)
-        (13, qux)
+            >>> async for i, item in paginated_results.enumerate():
+            ...    print(i, item)
+            (0, foo)
+            (1, bar)
+            (2, baz)
+            (3, bork)
+            (4, qux)
 
-        >>> async for i, item in paginated_results.enumerate(start=9).limit(3):
-        ...    print(i, item)
-        (9, foo)
-        (10, bar)
-        (11, baz)
-        ```
+            >>> async for i, item in paginated_results.enumerate(start=9):
+            ...    print(i, item)
+            (9, foo)
+            (10, bar)
+            (11, baz)
+            (12, bork)
+            (13, qux)
+
+            >>> async for i, item in paginated_results.enumerate(start=9).limit(3):
+            ...    print(i, item)
+            (9, foo)
+            (10, bar)
+            (11, baz)
 
         Returns
         -------
@@ -482,10 +484,10 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
 
         Examples
         --------
-        ```py
-        >>> async for item in paginated_results.limit(3):
-        ...     print(item)
-        ```
+        .. code-block:: python
+
+            >>> async for item in paginated_results.limit(3):
+            ...     print(item)
 
         Returns
         -------
@@ -612,26 +614,25 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
             A function that returns either an async iterator or iterator of
             new values. Could be an attribute name instead.
 
-        Example
-        -------
-
+        Examples
+        --------
         The following example generates a distinct collection of all mentioned
         users in the given channel from the past 500 messages.
 
-        ```py
-        def iter_mentioned_users(message: hikari.Message) -> typing.Iterable[Snowflake]:
-            for match in re.findall(r"<@!?(\d+)>", message.content):
-                yield Snowflake(match)
+        .. code-block:: python
 
-        mentioned_users = await (
-            channel
-            .history()
-            .limit(500)
-            .map(".content")
-            .flat_map(iter_mentioned_users)
-            .distinct()
-        )
-        ```
+            def iter_mentioned_users(message: hikari.Message) -> typing.Iterable[Snowflake]:
+                for match in re.findall(r"<@!?(\d+)>", message.content):
+                    yield Snowflake(match)
+
+            mentioned_users = await (
+                channel
+                .history()
+                .limit(500)
+                .map(".content")
+                .flat_map(iter_mentioned_users)
+                .distinct()
+            )
 
         Returns
         -------
@@ -745,27 +746,27 @@ class BufferedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT], abc.ABC
 
     An example would look like the following:
 
-    ```py
-    async def some_http_call(i):
-        ...
+    .. code-block:: python
+
+        async def some_http_call(i):
+            ...
 
 
-    class SomeEndpointLazyIterator(BufferedLazyIterator[SomeObject]):
-        def __init__(self):
-            super().__init__()
-            self._i = 0
+        class SomeEndpointLazyIterator(BufferedLazyIterator[SomeObject]):
+            def __init__(self):
+                super().__init__()
+                self._i = 0
 
 
-        def _next_chunk(self) -> typing.Optional[typing.Generator[ValueT, None, None]]:
-            raw_items = await some_http_call(self._i)
-            self._i += 1
+            def _next_chunk(self) -> typing.Optional[typing.Generator[ValueT, None, None]]:
+                raw_items = await some_http_call(self._i)
+                self._i += 1
 
-            if not raw_items:
-                return None
+                if not raw_items:
+                    return None
 
-            generator = (SomeObject(raw_item) for raw_item in raw_items)
-            return generator
-    ```
+                generator = (SomeObject(raw_item) for raw_item in raw_items)
+                return generator
     """
 
     __slots__: typing.Sequence[str] = ("_buffer",)

@@ -265,8 +265,8 @@ class ShardAware(
     async def update_presence(
         self,
         *,
-        status: undefined.UndefinedOr[presences.Status] = undefined.UNDEFINED,
         idle_since: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
+        status: undefined.UndefinedOr[presences.Status] = undefined.UNDEFINED,
         activity: undefined.UndefinedNoneOr[presences.Activity] = undefined.UNDEFINED,
         afk: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> None:
@@ -356,20 +356,20 @@ class ShardAware(
 
         Parameters
         ----------
-        guild: hikari.guilds.Guild
+        guild : hikari.guilds.Guild
             The guild to request chunk for.
 
         Other Parameters
         ----------------
-        include_presences: hikari.undefined.UndefinedOr[bool]
+        include_presences : hikari.undefined.UndefinedOr[bool]
             If provided, whether to request presences.
-        query: str
+        query : str
             If not `""`, request the members which username starts with the string.
-        limit: int
+        limit : int
             Maximum number of members to send matching the query.
-        users: hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.users.User]]
+        users : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.users.User]]
             If provided, the users to request for.
-        nonce: hikari.undefined.UndefinedOr[str]
+        nonce : hikari.undefined.UndefinedOr[str]
             If provided, the nonce to be sent with guild chunks.
 
         Raises
@@ -527,6 +527,9 @@ class GatewayBotAware(
             Threshold for members in a guild before it is treated as being
             "large" and no longer sending member details in the `GUILD CREATE`
             event. Defaults to `250`.
+        status : hikari.presences.Status
+            The initial status to show for the user presence on startup.
+            Defaults to `hikari.presences.Status.ONLINE`.
         shard_ids : typing.Optional[typing.AbstractSet[int]]
             The shard IDs to create shards for. If not `None`, then
             a non-`None` `shard_count` must ALSO be provided. Defaults to
@@ -536,9 +539,6 @@ class GatewayBotAware(
             The number of shards to use in the entire distributed application.
             Defaults to `None` which results in the count being
             determined dynamically on startup.
-        status : hikari.presences.Status
-            The initial status to show for the user presence on startup.
-            Defaults to `hikari.presences.Status.ONLINE`.
         """
         raise NotImplementedError
 

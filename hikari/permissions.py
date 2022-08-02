@@ -45,6 +45,8 @@ class Permissions(enums.Flag):
     --------
     You can create an enum which combines multiple permissions using the bitwise OR operator (`|`):
 
+    .. code-block:: python
+
        my_perms = Permissions.MANAGE_CHANNELS | Permissions.MANAGE_GUILD
 
        required_perms = (
@@ -59,6 +61,8 @@ class Permissions(enums.Flag):
     permissions from one set are present in another set. This is useful, for instance,
     for checking if a user has all the required permissions
 
+    .. code-block:: python
+
        if (my_perms & required_perms) == required_perms:
            print("I have all of the required permissions!")
        else:
@@ -68,12 +72,16 @@ class Permissions(enums.Flag):
     bitwise equivalent of the set difference operation, as shown below. This can be used,
     for instance, to find which of a user's permissions are missing from the required permissions.
 
+    .. code-block:: python
+
        missing_perms = ~my_perms & required_perms
        if (missing_perms):
            print(f"I'm missing these permissions: {missing_perms}")
 
     Lastly, if you need all the permissions from a set except for a few,
     you can use the bitwise NOT operator (`~`).
+
+    .. code-block:: python
 
         # All permissions except ADMINISTRATOR.
         my_perms = ~Permissions.ADMINISTRATOR
@@ -171,11 +179,7 @@ class Permissions(enums.Flag):
     """Allows for reading of message history."""
 
     MENTION_ROLES = 1 << 17
-    """Allows for using the `@everyone` tag to notify all users in a channel,
-    and the `@here` tag to notify all online users in a channel, and the
-    `@role` tag (even if the role is not mentionable) to notify all users with
-    that role in a channel.
-    """
+    """Allows for using the `@everyone`, `@here` and `@role` (regardless of its mention status) tag to notify users."""
 
     USE_EXTERNAL_EMOJIS = 1 << 18
     """Allows the usage of custom emojis from other guilds."""

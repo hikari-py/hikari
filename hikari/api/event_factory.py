@@ -231,7 +231,7 @@ class EventFactory(abc.ABC):
 
         Other Parameters
         ----------------
-        old_invite: typing.Optional[hikari.invites.InviteWithMetadata]
+        old_invite : typing.Optional[hikari.invites.InviteWithMetadata]
             The invite object or `None`.
 
         Returns
@@ -550,7 +550,7 @@ class EventFactory(abc.ABC):
 
         Other Parameters
         ----------------
-        old_presence: typing.Optional[hikari.presences.MemberPresence]
+        old_presence : typing.Optional[hikari.presences.MemberPresence]
             The presence object or `None`.
 
         Returns
@@ -626,7 +626,7 @@ class EventFactory(abc.ABC):
 
         Other Parameters
         ----------------
-        old_member: typing.Optional[hikari.guilds.Member]
+        old_member : typing.Optional[hikari.guilds.Member]
             The member object or `None`.
 
         Returns
@@ -654,7 +654,7 @@ class EventFactory(abc.ABC):
 
         Other Parameters
         ----------------
-        old_member: typing.Optional[hikari.guilds.Member]
+        old_member : typing.Optional[hikari.guilds.Member]
             The member object or `None`.
 
         Returns
@@ -705,7 +705,7 @@ class EventFactory(abc.ABC):
 
         Other Parameters
         ----------------
-        old_role: typing.Optional[hikari.guilds.Role]
+        old_role : typing.Optional[hikari.guilds.Role]
             The role object or `None`.
 
         Returns
@@ -733,7 +733,7 @@ class EventFactory(abc.ABC):
 
         Other Parameters
         ----------------
-        old_role: typing.Optional[hikari.guilds.Role]
+        old_role : typing.Optional[hikari.guilds.Role]
             The role object or `None`.
 
         Returns
@@ -937,7 +937,7 @@ class EventFactory(abc.ABC):
 
         Other Parameters
         ----------------
-        old_message: typing.Optional[hikari.messages.PartialMessage]
+        old_message : typing.Optional[hikari.messages.PartialMessage]
             The message object or `None`.
 
         Returns
@@ -1215,7 +1215,7 @@ class EventFactory(abc.ABC):
 
         Other Parameters
         ----------------
-        old_user: typing.Optional[hikari.users.OwnUser]
+        old_user : typing.Optional[hikari.users.OwnUser]
             The OwnUser object or `None`.
 
         Returns
@@ -1247,7 +1247,7 @@ class EventFactory(abc.ABC):
 
         Other Parameters
         ----------------
-        old_state: typing.Optional[hikari.voices.VoiceState]
+        old_state : typing.Optional[hikari.voices.VoiceState]
             The VoiceState object or `None`.
 
         Returns

@@ -135,7 +135,7 @@ class AuditLogChangeKey(str, enums.Enum):
     REMOVE_ROLE_FROM_MEMBER = "$remove"
 
     COLOUR = COLOR
-    """Alias for "COLOR"""
+    """Alias for `COLOR`."""
 
 
 @attr_extensions.with_copy
@@ -206,7 +206,7 @@ class BaseAuditLogEntryInfo(abc.ABC):
     """A base object that all audit log entry info objects will inherit from."""
 
     app: traits.RESTAware = attr.field(repr=False, eq=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    """The client application that models may use for procedures."""
+    """Client application that models may use for procedures."""
 
 
 @attr_extensions.with_copy
@@ -388,7 +388,7 @@ class MemberMoveEntryInfo(MemberDisconnectEntryInfo):
     """Extra information for the voice chat based member move entry."""
 
     channel_id: snowflakes.Snowflake = attr.field(repr=True)
-    """The channel that the member(s) have been moved to"""
+    """The channel that the member(s) have been moved to."""
 
     async def fetch_channel(self) -> channels.GuildVoiceChannel:
         """Fetch the guild voice based channel where the member(s) have been moved to.
@@ -433,7 +433,7 @@ class AuditLogEntry(snowflakes.Unique):
     app: traits.RESTAware = attr.field(
         repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
     )
-    """The client application that models may use for procedures."""
+    """Client application that models may use for procedures."""
 
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
     """The ID of this entity."""

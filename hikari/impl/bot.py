@@ -195,7 +195,7 @@ class GatewayBot(traits.GatewayBotAware):
         While mainly supporting the `concurrent.futures.ThreadPoolExecutor`
         implementation in the standard lib, Hikari's file handling systems
         should also work with `concurrent.futures.ProcessPoolExecutor`, which
-        relies on all objects used in IPC to be `pickle`able. Many third-party
+        relies on all objects used in IPC to be pickleable. Many third-party
         libraries will not support this fully though, so your mileage may vary
         on using ProcessPoolExecutor implementations with this parameter.
     force_color : bool
@@ -225,10 +225,10 @@ class GatewayBot(traits.GatewayBotAware):
         1. `auto_chunk_members` is `True`.
         2. The members intent is enabled.
         3. The server is marked as "large" or the presences intent is not enabled
-          (since Discord only sends other members when presences are declared,
-          we should also chunk small guilds if the presences are not declared).
+           (since Discord only sends other members when presences are declared,
+           we should also chunk small guilds if the presences are not declared).
         4. The members cache is enabled or there are listeners for the
-          `MemberChunkEvent`.
+           `MemberChunkEvent`.
     logs : typing.Union[None, LoggerLevel, typing.Dict[str, typing.Any]]
         Defaults to `"INFO"`.
 
@@ -278,28 +278,28 @@ class GatewayBot(traits.GatewayBotAware):
         if you are attempting to mock/stub the Discord API for any reason.
         Generally you do not want to change this.
 
-    Example
-    -------
+    Examples
+    --------
     Setting up logging using a dictionary configuration:
 
-    ```py
-    import os
+    .. code-block:: python
 
-    import hikari
+        import os
 
-    # We want to make gateway logs output as DEBUG, and TRACE for all ratelimit content.
-    bot = hikari.GatewayBot(
-        token=os.environ["BOT_TOKEN"],
-        logs={
-            "version": 1,
-            "incremental": True,
-            "loggers": {
-                "hikari.gateway": {"level": "DEBUG"},
-                "hikari.ratelimits": {"level": "TRACE_HIKARI"},
+        import hikari
+
+        # We want to make gateway logs output as DEBUG, and TRACE for all ratelimit content.
+        bot = hikari.GatewayBot(
+            token=os.environ["BOT_TOKEN"],
+            logs={
+                "version": 1,
+                "incremental": True,
+                "loggers": {
+                    "hikari.gateway": {"level": "DEBUG"},
+                    "hikari.ratelimits": {"level": "TRACE_HIKARI"},
+                },
             },
-        },
-    )
-    ```
+        )
     """
 
     shards: typing.Mapping[int, gateway_shard.GatewayShard]
@@ -534,62 +534,62 @@ class GatewayBot(traits.GatewayBotAware):
         event : hikari.events.base_events.Event
             The event to dispatch.
 
-        Example
-        -------
+        Examples
+        --------
         We can dispatch custom events by first defining a class that
         derives from `hikari.events.base_events.Event`.
 
-        ```py
-        import attr
+        .. code-block:: python
 
-        from hikari.traits import RESTAware
-        from hikari.events.base_events import Event
-        from hikari.users import User
-        from hikari.snowflakes import Snowflake
+            import attr
 
-        @attr.define()
-        class EveryoneMentionedEvent(Event):
-            app: RESTAware = attr.field()
+            from hikari.traits import RESTAware
+            from hikari.events.base_events import Event
+            from hikari.users import User
+            from hikari.snowflakes import Snowflake
 
-            author: User = attr.field()
-            '''The user who mentioned everyone.'''
+            @attr.define()
+            class EveryoneMentionedEvent(Event):
+                app: RESTAware = attr.field()
 
-            content: str = attr.field()
-            '''The message that was sent.'''
+                author: User = attr.field()
+                '''The user who mentioned everyone.'''
 
-            message_id: Snowflake = attr.field()
-            '''The message ID.'''
+                content: str = attr.field()
+                '''The message that was sent.'''
 
-            channel_id: Snowflake = attr.field()
-            '''The channel ID.'''
-        ```
+                message_id: Snowflake = attr.field()
+                '''The message ID.'''
+
+                channel_id: Snowflake = attr.field()
+                '''The channel ID.'''
 
         We can then dispatch our event as we see fit.
 
-        ```py
-        from hikari.events.messages import MessageCreateEvent
+        .. code-block:: python
 
-        @bot.listen(MessageCreateEvent)
-        async def on_message(event):
-            if "@everyone" in event.content or "@here" in event.content:
-                event = EveryoneMentionedEvent(
-                    author=event.author,
-                    content=event.content,
-                    message_id=event.id,
-                    channel_id=event.channel_id,
-                )
+            from hikari.events.messages import MessageCreateEvent
 
-                bot.dispatch(event)
-        ```
+            @bot.listen(MessageCreateEvent)
+            async def on_message(event):
+                if "@everyone" in event.content or "@here" in event.content:
+                    event = EveryoneMentionedEvent(
+                        author=event.author,
+                        content=event.content,
+                        message_id=event.id,
+                        channel_id=event.channel_id,
+                    )
+
+                    bot.dispatch(event)
 
         This event can be listened to elsewhere by subscribing to it with
-        `EventManager.subscribe`.
+        `hikari.impl.event_manager_base.EventManager.subscribe`.
 
-        ```py
-        @bot.listen(EveryoneMentionedEvent)
-        async def on_everyone_mentioned(event):
-            print(event.user, "just pinged everyone in", event.channel_id)
-        ```
+        .. code-block:: python
+
+            @bot.listen(EveryoneMentionedEvent)
+            async def on_everyone_mentioned(event):
+                print(event.user, "just pinged everyone in", event.channel_id)
 
         Returns
         -------
@@ -601,11 +601,11 @@ class GatewayBot(traits.GatewayBotAware):
 
         See Also
         --------
-        `hikari.impl.bot.GatewayBot.listen`
-        `hikari.impl.bot.GatewayBot.stream`
-        `hikari.impl.bot.GatewayBot.subscribe`
-        `hikari.impl.bot.GatewayBot.unsubscribe`
-        `hikari.impl.bot.GatewayBot.wait_for`
+        Listen : `hikari.impl.bot.GatewayBot.listen`.
+        Stream : `hikari.impl.bot.GatewayBot.stream`.
+        Subscribe : `hikari.impl.bot.GatewayBot.subscribe`.
+        Unsubscribe : `hikari.impl.bot.GatewayBot.unsubscribe`.
+        Wait_for : `hikari.impl.bot.GatewayBot.wait_for`.
         """
         return self._event_manager.dispatch(event)
 
@@ -668,11 +668,11 @@ class GatewayBot(traits.GatewayBotAware):
 
         See Also
         --------
-        `hikari.impl.bot.GatewayBot.dispatch`
-        `hikari.impl.bot.GatewayBot.stream`
-        `hikari.impl.bot.GatewayBot.subscribe`
-        `hikari.impl.bot.GatewayBot.unsubscribe`
-        `hikari.impl.bot.GatewayBot.wait_for`
+        Dispatch : `hikari.impl.bot.GatewayBot.dispatch`.
+        Stream : `hikari.impl.bot.GatewayBot.stream`.
+        Subscribe : `hikari.impl.bot.GatewayBot.subscribe`.
+        Unsubscribe : `hikari.impl.bot.GatewayBot.unsubscribe`.
+        Wait_for : `hikari.impl.bot.GatewayBot.wait_for`.
         """
         return self._event_manager.listen(*event_types)
 
@@ -778,7 +778,7 @@ class GatewayBot(traits.GatewayBotAware):
         enable_signal_handlers : typing.Optional[bool]
             Defaults to `True` if this is started in the main thread.
 
-            If on a __non-Windows__ OS with builtin support for kernel-level
+            If on a non-Windows OS with builtin support for kernel-level
             POSIX signals, then setting this to `True` will allow
             treating keyboard interrupts and other OS signals to safely shut
             down the application as calls to shut down the application properly
@@ -1152,31 +1152,31 @@ class GatewayBot(traits.GatewayBotAware):
 
         Examples
         --------
-        ```py
-        with bot.stream(events.ReactionAddEvent, timeout=30).filter(("message_id", message.id)) as stream:
-            async for user_id in stream.map("user_id").limit(50):
-                ...
-        ```
+        .. code-block:: python
+
+            with bot.stream(events.ReactionAddEvent, timeout=30).filter(("message_id", message.id)) as stream:
+                async for user_id in stream.map("user_id").limit(50):
+                    ...
 
         or using `open()` and `close()`
 
-        ```py
-        stream = bot.stream(events.ReactionAddEvent, timeout=30).filter(("message_id", message.id))
-        stream.open()
+        .. code-block:: python
 
-        async for user_id in stream.map("user_id").limit(50)
-            ...
+            stream = bot.stream(events.ReactionAddEvent, timeout=30).filter(("message_id", message.id))
+            stream.open()
 
-        stream.close()
-        ```
+            async for user_id in stream.map("user_id").limit(50)
+                ...
+
+            stream.close()
 
         See Also
         --------
-        `hikari.impl.bot.GatewayBot.dispatch`
-        `hikari.impl.bot.GatewayBot.listen`
-        `hikari.impl.bot.GatewayBot.subscribe`
-        `hikari.impl.bot.GatewayBot.unsubscribe`
-        `hikari.impl.bot.GatewayBot.wait_for`
+        Dispatch : `hikari.impl.bot.GatewayBot.dispatch`.
+        Listen : `hikari.impl.bot.GatewayBot.listen`.
+        Subscribe : `hikari.impl.bot.GatewayBot.subscribe`.
+        Unsubscribe : `hikari.impl.bot.GatewayBot.unsubscribe`.
+        Wait_for : `hikari.impl.bot.GatewayBot.wait_for`.
         """
         self._check_if_alive()
         return self._event_manager.stream(event_type, timeout=timeout, limit=limit)
@@ -1199,27 +1199,27 @@ class GatewayBot(traits.GatewayBotAware):
             consume an instance of the given event, or an instance of a valid
             subclass if one exists. Any result is discarded.
 
-        Example
-        -------
+        Examples
+        --------
         The following demonstrates subscribing a callback to message creation
         events.
 
-        ```py
-        from hikari.events.messages import MessageCreateEvent
+        .. code-block:: python
 
-        async def on_message(event):
-            ...
+            from hikari.events.messages import MessageCreateEvent
 
-        bot.subscribe(MessageCreateEvent, on_message)
-        ```
+            async def on_message(event):
+                ...
+
+            bot.subscribe(MessageCreateEvent, on_message)
 
         See Also
         --------
-        `hikari.impl.bot.GatewayBot.dispatch`
-        `hikari.impl.bot.GatewayBot.listen`
-        `hikari.impl.bot.GatewayBot.stream`
-        `hikari.impl.bot.GatewayBot.unsubscribe`
-        `hikari.impl.bot.GatewayBot.wait_for`
+        Dispatch : `hikari.impl.bot.GatewayBot.dispatch`.
+        Listen : `hikari.impl.bot.GatewayBot.listen`.
+        Stream : `hikari.impl.bot.GatewayBot.stream`.
+        Unsubscribe : `hikari.impl.bot.GatewayBot.unsubscribe`.
+        Wait_for : `hikari.impl.bot.GatewayBot.wait_for`.
         """
         self._event_manager.subscribe(event_type, callback)
 
@@ -1239,27 +1239,27 @@ class GatewayBot(traits.GatewayBotAware):
         callback
             The callback to unsubscribe.
 
-        Example
-        -------
+        Examples
+        --------
         The following demonstrates unsubscribing a callback from a message
         creation event.
 
-        ```py
-        from hikari.events.messages import MessageCreateEvent
+        .. code-block:: python
 
-        async def on_message(event):
-            ...
+            from hikari.events.messages import MessageCreateEvent
 
-        bot.unsubscribe(MessageCreateEvent, on_message)
-        ```
+            async def on_message(event):
+                ...
+
+            bot.unsubscribe(MessageCreateEvent, on_message)
 
         See Also
         --------
-        `hikari.impl.bot.GatewayBot.dispatch`
-        `hikari.impl.bot.GatewayBot.listen`
-        `hikari.impl.bot.GatewayBot.stream`
-        `hikari.impl.bot.GatewayBot.subscribe`
-        `hikari.impl.bot.GatewayBot.wait_for`
+        Dispatch : `hikari.impl.bot.GatewayBot.dispatch`.
+        Listen : `hikari.impl.bot.GatewayBot.listen`.
+        Stream : `hikari.impl.bot.GatewayBot.stream`.
+        Subscribe : `hikari.impl.bot.GatewayBot.subscribe`.
+        Wait_for : `hikari.impl.bot.GatewayBot.wait_for`.
         """
         self._event_manager.unsubscribe(event_type, callback)
 
@@ -1306,11 +1306,11 @@ class GatewayBot(traits.GatewayBotAware):
 
         See Also
         --------
-        `hikari.impl.bot.GatewayBot.dispatch`
-        `hikari.impl.bot.GatewayBot.listen`
-        `hikari.impl.bot.GatewayBot.stream`
-        `hikari.impl.bot.GatewayBot.subscribe`
-        `hikari.impl.bot.GatewayBot.unsubscribe`
+        Dispatch : `hikari.impl.bot.GatewayBot.dispatch`.
+        Listen : `hikari.impl.bot.GatewayBot.listen`.
+        Stream : `hikari.impl.bot.GatewayBot.stream`.
+        Subscribe : `hikari.impl.bot.GatewayBot.subscribe`.
+        Unsubscribe : `hikari.impl.bot.GatewayBot.unsubscribe`.
         """
         self._check_if_alive()
         return await self._event_manager.wait_for(event_type, timeout=timeout, predicate=predicate)

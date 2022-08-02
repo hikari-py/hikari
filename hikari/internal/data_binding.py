@@ -81,7 +81,7 @@ _APPLICATION_OCTET_STREAM: typing.Final[str] = "application/octet-stream"
 
 if typing.TYPE_CHECKING:
     JSONDecodeError: typing.Type[Exception] = Exception
-    """Exception raised when loading an invalid JSON string"""
+    """Exception raised when loading an invalid JSON string."""
 
     def dump_json(_: typing.Union[JSONArray, JSONObject], /, *, indent: int = ...) -> str:
         """Convert a Python type to a JSON string."""
@@ -101,7 +101,7 @@ else:
     """Convert a JSON string to a Python type."""
 
     JSONDecodeError = json.JSONDecodeError
-    """Exception raised when loading an invalid JSON string"""
+    """Exception raised when loading an invalid JSON string."""
 
 
 @typing.final
@@ -140,7 +140,7 @@ class StringMapBuilder(multidict.MultiDict[str]):
     """Helper class used to quickly build query strings or header maps.
 
     This will consume any items that are not `hikari.undefined.UNDEFINED`.
-    If a value _is_ unspecified, it will be ignored when inserting it. This reduces
+    If a value is unspecified, it will be ignored when inserting it. This reduces
     the amount of boilerplate needed for generating the headers and query strings for
     low-level HTTP API interaction, amongst other things.
 

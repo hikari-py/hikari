@@ -30,12 +30,8 @@ env | grep -oP "^[^=]+" | sort
 
 if [ -z ${VERSION+x} ]; then echo '$VERSION environment variable is missing' && exit 1; fi
 if [ -z "${VERSION}" ]; then echo '$VERSION environment variable is empty' && exit 1; fi
-if [ -z ${GITHUB_TOKEN+x} ]; then echo '$GITHUB_TOKEN environment variable is missing' && exit 1; fi
-if [ -z "${GITHUB_TOKEN}" ]; then echo '$GITHUB_TOKEN environment variable is empty' && exit 1; fi
 if [ -z ${REPO_SLUG+x} ]; then echo '$REPO_SLUG environment variable is missing' && exit 1; fi
 if [ -z "${REPO_SLUG}" ]; then echo '$REPO_SLUG environment variable is empty' && exit 1; fi
-if [ -z ${DOCUMENTATION_REPO_SLUG+x} ]; then echo '$DOCUMENTATION_REPO_SLUG environment variable is missing' && exit 1; fi
-if [ -z "${DOCUMENTATION_REPO_SLUG}" ]; then echo '$DOCUMENTATION_REPO_SLUG environment variable is empty' && exit 1; fi
 if [ -z ${DEPLOY_WEBHOOK_URL+x} ]; then echo '$DEPLOY_WEBHOOK_URL environment variable is missing' && exit 1; fi
 if [ -z "${DEPLOY_WEBHOOK_URL}" ]; then echo '$DEPLOY_WEBHOOK_URL environment variable is empty' && exit 1; fi
 if [ -z ${TWINE_USERNAME+x} ]; then echo '$TWINE_USERNAME environment variable is missing' && exit 1; fi
@@ -84,9 +80,6 @@ python -m twine check dist/*
 echo
 echo "-- Uploading to PyPI --"
 python -m twine upload --disable-progress-bar --skip-existing dist/* --non-interactive --repository-url https://upload.pypi.org/legacy/
-
-echo "===== DEPLOYING PAGES ====="
-bash scripts/deploy-pages.sh
 
 echo "===== SENDING WEBHOOK ====="
 bash scripts/deploy-webhook.sh

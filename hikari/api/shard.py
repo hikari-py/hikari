@@ -205,20 +205,20 @@ class GatewayShard(abc.ABC):
 
         Parameters
         ----------
-        guild: hikari.guilds.Guild
+        guild : hikari.guilds.Guild
             The guild to request chunk for.
 
         Other Parameters
         ----------------
-        include_presences: hikari.undefined.UndefinedOr[bool]
+        include_presences : hikari.undefined.UndefinedOr[bool]
             If provided, whether to request presences.
-        query: str
+        query : str
             If not `""`, request the members which username starts with the string.
-        limit: int
+        limit : int
             Maximum number of members to send matching the query.
-        users: hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.users.User]]
+        users : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.users.User]]
             If provided, the users to request for.
-        nonce: hikari.undefined.UndefinedOr[str]
+        nonce : hikari.undefined.UndefinedOr[str]
             If provided, the nonce to be sent with guild chunks.
 
         Raises

@@ -24,95 +24,41 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("deprecated", "warn_deprecated")
+__all__: typing.Sequence[str] = ("warn_deprecated", "HikariDeprecationWarning")
 
-import functools
-import inspect
 import typing
 import warnings
 
 from hikari import _about as hikari_about
 from hikari.internal import ux
 
-if typing.TYPE_CHECKING:
-    T = typing.TypeVar("T", bound=typing.Callable[..., typing.Any])
+
+class HikariDeprecationWarning(DeprecationWarning):
+    """Warning about a hikari deprecation."""
 
 
-def warn_deprecated(obj: typing.Any, additional_information: str, /, *, stack_level: int = 3) -> None:
-    """Raise a deprecated warning.
+def warn_deprecated(name: str, /, *, removal_version: str, additional_info: str, stack_level: int = 3) -> None:
+    """Issue a deprecation warning.
 
     Parameters
     ----------
-    obj: typing.Any
-        The object that is deprecated.
-
-        Possible values are:
-        - A class
-        - A function/method
-        - An argument
-    additional_information: str
-        Additional information on the deprecation for the user.
+    name : str
+        What is being deprecated.
 
     Other Parameters
     ----------------
-    stack_level: int
-        The stack level for the warning. Defaults to `3`.
+    removal_version : str
+        The version it will be removed in.
+    additional_info : str
+        Additional information on the deprecation for the user.
+    stack_level : int
+        The stack level to issue the warning in.
     """
-    if inspect.isclass(obj):
-        action = ("Instantiation of", "class")
-        obj = f"{obj.__module__}.{obj.__qualname__}"
-    elif inspect.isfunction(obj):
-        action = ("Call to", "function/method")
-        obj = f"{obj.__module__}.{obj.__qualname__}"
-    else:
-        action = ("Use of", "argument")
+    if ux.HikariVersion(hikari_about.__version__) >= ux.HikariVersion(removal_version):
+        raise HikariDeprecationWarning(f"{name!r} is passed its removal version ({removal_version})")
 
     warnings.warn(
-        f"{action[0]} deprecated {action[1]} {obj!r} ({additional_information})",
-        category=DeprecationWarning,
+        f"{name!r} is deprecated and will be removed in `{removal_version}`. {additional_info}",
+        category=HikariDeprecationWarning,
         stacklevel=stack_level,
     )
-
-
-def deprecated(deprecated_version: str, removal_version: str, additional_information: str) -> typing.Callable[[T], T]:
-    """Mark a function or object as being deprecated.
-
-    Parameters
-    ----------
-    deprecated_version: str
-        The version this function or object is deprecated in.
-    removal_version: str
-        The version this function or object will be removed in.
-    additional_information: str
-        Additional information on the deprecation for the user.
-    """
-
-    def decorator(obj: T) -> T:
-        # No, this will not cause issues.
-        # Thanks to CI and our deploy pipeline, we will be able to catch these and remove them before deployment
-        if ux.HikariVersion(hikari_about.__version__) >= ux.HikariVersion(removal_version):
-            raise DeprecationWarning(
-                f"'{obj.__module__}.{obj.__qualname__}' is passed its removal version ({removal_version})"
-            )
-
-        old_doc = inspect.getdoc(obj)
-
-        # If the docstring is inherited we can assume that the deprecation warning was already added there
-        if old_doc:
-            first_line_end = old_doc.index("\n")
-            obj.__doc__ = (
-                old_doc[:first_line_end]
-                + f"\n\n.. deprecated:: {deprecated_version}\n"
-                + f"    Will be removed in *{removal_version}*.\n"
-                + f"    {additional_information}\n"
-                + old_doc[first_line_end:]
-            )
-
-        @functools.wraps(obj)
-        def wrapper(*args: typing.Any, **kwargs: typing.Any) -> typing.Any:
-            warn_deprecated(obj, additional_information)
-            return obj(*args, **kwargs)
-
-        return typing.cast("T", wrapper)
-
-    return decorator

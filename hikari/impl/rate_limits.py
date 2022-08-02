@@ -193,19 +193,18 @@ class ManualRateLimiter(BurstRateLimiter):
         Iterates repeatedly while the queue is not empty, adhering to any
         rate limits that occur in the mean time.
 
-        Notes
-        -----
-        This will invoke `ManualRateLimiter.unlock_later` as a scheduled
-        task in the future (it will not await it to finish).
+        .. note::
+            This will invoke `ManualRateLimiter.unlock_later` as a scheduled
+            task in the future (it will not await it to finish).
 
-        When the `ManualRateLimiter.unlock_later` coroutine function
-        completes, it should be expected to set the `throttle_task` to
-        `None`. This means you can check if throttling is occurring
-        by checking if `throttle_task` is not `None`.
+            When the `ManualRateLimiter.unlock_later` coroutine function
+            completes, it should be expected to set the `throttle_task` to
+            `None`. This means you can check if throttling is occurring
+            by checking if `throttle_task` is not `None`.
 
-        If this is invoked while another throttle is in progress, that one
-        is cancelled and a new one is started. This enables new rate limits
-        to override existing ones.
+            If this is invoked while another throttle is in progress, that one
+            is cancelled and a new one is started. This enables new rate limits
+            to override existing ones.
 
         Parameters
         ----------
@@ -220,17 +219,16 @@ class ManualRateLimiter(BurstRateLimiter):
         self.throttle_task = loop.create_task(self.unlock_later(retry_after))
 
     async def unlock_later(self, retry_after: float) -> None:
-        """Sleeps for a while, then removes the lock.
+        """Sleep for a while, then remove the lock.
 
-        Notes
-        -----
-        You should not need to invoke this directly. Call
-        `ManualRateLimiter.throttle` instead.
+        .. warning::
+            You should not need to invoke this directly. Call
+            `ManualRateLimiter.throttle` instead.
 
-        When the `ManualRateLimiter.unlock_later` coroutine function
-        completes, it should be expected to set the `throttle_task` to
-        `None`. This means you can check if throttling is occurring
-        by checking if `throttle_task` is not `None`.
+            When the `ManualRateLimiter.unlock_later` coroutine function
+            completes, it should be expected to set the `throttle_task` to
+            `None`. This means you can check if throttling is occurring
+            by checking if `throttle_task` is not `None`.
 
         Parameters
         ----------
@@ -252,7 +250,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
     Rate limiter for rate limits that last fixed periods of time with a
     fixed number of times it can be used in that time frame.
 
-    To use this, you should call WindowedBurstRateLimiter.acquire` and await the
+    To use this, you should call `WindowedBurstRateLimiter.acquire` and await the
     result immediately before performing your rate-limited task.
 
     If the rate limit has been hit, acquiring time will return an incomplete
@@ -284,17 +282,13 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
     """The `time.monotonic_timestamp` that the limit window ends at."""
 
     remaining: int
-    """The number of `WindowedBurstRateLimiter.acquire`'s left in this window
-    before you will get rate limited.
-    """
+    """The number of `WindowedBurstRateLimiter.acquire`'s left in this window before you will get rate limited."""
 
     period: float
     """How long the window lasts for from the start in seconds."""
 
     limit: int
-    """The maximum number of `WindowedBurstRateLimiter.acquire`'s allowed in
-    this time window.
-    """
+    """The maximum number of `WindowedBurstRateLimiter.acquire`'s allowed in this time window."""
 
     def __init__(self, name: str, period: float, limit: int) -> None:
         super().__init__(name)
@@ -379,7 +373,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
         return self.remaining <= 0
 
     def drip(self) -> None:
-        """Decrements the remaining counter."""
+        """Decrement the remaining counter."""
         self.remaining -= 1
 
     async def throttle(self) -> None:
@@ -430,8 +424,9 @@ class ExponentialBackOff:
     base : float
         The base to use. Defaults to `2.0`.
     maximum : float
-        The max value the backoff can be in a single iteration. Anything above
-        this will be capped to this base value plus random jitter.
+        The max value the backoff can be in a single iteration.
+
+        All values will be capped to this base value plus some random jitter.
     jitter_multiplier : float
         The multiplier for the random jitter. Defaults to `1.0`.
         Set to `0` to disable jitter.
@@ -455,9 +450,7 @@ class ExponentialBackOff:
     """The current increment."""
 
     maximum: float
-    """This is the max value the backoff can be in a single iteration before an
-    `asyncio.TimeoutError` is raised.
-    """
+    """This is the max value the backoff can be in a single iteration before an `asyncio.TimeoutError` is raised."""
 
     jitter_multiplier: typing.Final[float]
     """The multiplier for the random jitter.

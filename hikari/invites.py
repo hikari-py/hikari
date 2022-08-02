@@ -88,7 +88,7 @@ class VanityURL(InviteCode):
     app: traits.RESTAware = attr.field(
         repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
     )
-    """The client application that models may use for procedures."""
+    """Client application that models may use for procedures."""
 
     code: str = attr.field(hash=True, repr=True)
     """The code for this invite."""
@@ -233,7 +233,7 @@ class Invite(InviteCode):
     app: traits.RESTAware = attr.field(
         repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
     )
-    """The client application that models may use for procedures."""
+    """Client application that models may use for procedures."""
 
     code: str = attr.field(hash=True, repr=True)
     """The code for this invite."""

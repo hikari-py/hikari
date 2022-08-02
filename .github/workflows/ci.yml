@@ -148,7 +148,7 @@ jobs:
       - name: Build documentation
         run: |
           pip install nox
-          nox -s pdoc
+          nox -s sphinx
 
       - name: Upload artifacts
         if: github.event_name == 'pull_request'

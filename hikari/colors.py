@@ -82,80 +82,80 @@ class Color(int):
     --------
     Examples of conversions to given formats include:
 
-    ```py
-    >>> c = Color(0xFF051A)
-    Color(r=0xff, g=0x5, b=0x1a)
+    .. code-block:: python
 
-    >>> hex(c)
-    0xff051a
+        >>> c = Color(0xFF051A)
+        Color(r=0xff, g=0x5, b=0x1a)
 
-    >>> c.hex_code
-    #FF051A
+        >>> hex(c)
+        0xff051a
 
-    >>> str(c)
-    #FF051A
+        >>> c.hex_code
+        #FF051A
 
-    >>> int(c)
-    16712986
+        >>> str(c)
+        #FF051A
 
-    >>> c.rgb
-    (255, 5, 26)
+        >>> int(c)
+        16712986
 
-    >>> c.rgb_float
-    (1.0, 0.0196078431372549, 0.10196078431372549)
-    ```
+        >>> c.rgb
+        (255, 5, 26)
+
+        >>> c.rgb_float
+        (1.0, 0.0196078431372549, 0.10196078431372549)
 
     Alternatively, if you have an arbitrary input in one of the above formats
     that you wish to become a color, you can use `Color.of` on the class itself
     to automatically attempt to resolve the color:
 
-    ```py
-    >>> Color.of(0xFF051A)
-    Color(r=0xff, g=0x5, b=0x1a)
+    .. code-block:: python
 
-    >>> Color.of(16712986)
-    Color(r=0xff, g=0x5, b=0x1a)
+        >>> Color.of(0xFF051A)
+        Color(r=0xff, g=0x5, b=0x1a)
 
-    >>> c = Color.of((255, 5, 26))
-    Color(r=0xff, g=0x5, b=1xa)
+        >>> Color.of(16712986)
+        Color(r=0xff, g=0x5, b=0x1a)
 
-    >>> c = Color.of(255, 5, 26)
-    Color(r=0xff, g=0x5, b=1xa)
+        >>> c = Color.of((255, 5, 26))
+        Color(r=0xff, g=0x5, b=1xa)
 
-    >>> c = Color.of([0xFF, 0x5, 0x1a])
-    Color(r=0xff, g=0x5, b=1xa)
+        >>> c = Color.of(255, 5, 26)
+        Color(r=0xff, g=0x5, b=1xa)
 
-    >>> c = Color.of("#1a2b3c")
-    Color(r=0x1a, g=0x2b, b=0x3c)
+        >>> c = Color.of([0xFF, 0x5, 0x1a])
+        Color(r=0xff, g=0x5, b=1xa)
 
-    >>> c = Color.of("#1AB")
-    Color(r=0x11, g=0xaa, b=0xbb)
+        >>> c = Color.of("#1a2b3c")
+        Color(r=0x1a, g=0x2b, b=0x3c)
 
-    >>> c = Color.of((1.0, 0.0196078431372549, 0.10196078431372549))
-    Color(r=0xff, g=0x5, b=0x1a)
+        >>> c = Color.of("#1AB")
+        Color(r=0x11, g=0xaa, b=0xbb)
 
-    >>> c = Color.of([1.0, 0.0196078431372549, 0.10196078431372549])
-    Color(r=0xff, g=0x5, b=0x1a)
-    ```
+        >>> c = Color.of((1.0, 0.0196078431372549, 0.10196078431372549))
+        Color(r=0xff, g=0x5, b=0x1a)
+
+        >>> c = Color.of([1.0, 0.0196078431372549, 0.10196078431372549])
+        Color(r=0xff, g=0x5, b=0x1a)
 
     Examples of initialization of Color objects from given formats include:
 
-    ```py
-    >>> c = Color(16712986)
-    Color(r=0xff, g=0x5, b=0x1a)
+    .. code-block:: python
 
-    >>> c = Color.from_rgb(255, 5, 26)
-    Color(r=0xff, g=0x5, b=1xa)
+        >>> c = Color(16712986)
+        Color(r=0xff, g=0x5, b=0x1a)
 
-    >>> c = Color.from_hex_code("#1a2b3c")
-    Color(r=0x1a, g=0x2b, b=0x3c)
+        >>> c = Color.from_rgb(255, 5, 26)
+        Color(r=0xff, g=0x5, b=1xa)
 
-    >>> c = Color.from_hex_code("#1AB")
-    Color(r=0x11, g=0xaa, b=0xbb)
+        >>> c = Color.from_hex_code("#1a2b3c")
+        Color(r=0x1a, g=0x2b, b=0x3c)
 
-    >>> c = Color.from_rgb_float(1.0, 0.0196078431372549, 0.10196078431372549)
-    Color(r=0xff, g=0x5, b=0x1a)
-    ```
+        >>> c = Color.from_hex_code("#1AB")
+        Color(r=0x11, g=0xaa, b=0xbb)
+
+        >>> c = Color.from_rgb_float(1.0, 0.0196078431372549, 0.10196078431372549)
+        Color(r=0xff, g=0x5, b=0x1a)
     """
 
     __slots__: typing.Sequence[str] = ()
@@ -181,8 +181,8 @@ class Color(int):
         Represented as a tuple of R, G, B. Each value is
         in the range [0, 0xFF].
 
-        Example
-        -------
+        Examples
+        --------
         `(123, 234, 47)`
         """  # noqa: D401 - Imperative mood
         return (self >> 16) & 0xFF, (self >> 8) & 0xFF, self & 0xFF
@@ -193,8 +193,8 @@ class Color(int):
 
         Represented as a tuple of R, G, B. Each value is in the range [0, 1].
 
-        Example
-        -------
+        Examples
+        --------
         `(0.1, 0.2, 0.76)`
         """
         r, g, b = self.rgb
@@ -206,8 +206,8 @@ class Color(int):
 
         This is prepended with a `#` symbol, and will be in upper case.
 
-        Example
-        -------
+        Examples
+        --------
         `#1A2B3C`
         """
         return "#" + self.raw_hex_code
@@ -216,8 +216,8 @@ class Color(int):
     def raw_hex_code(self) -> str:
         """Raw hex code.
 
-        Example
-        -------
+        Examples
+        --------
         `1A2B3C`
         """
         components = self.rgb
@@ -369,27 +369,27 @@ class Color(int):
 
         Examples
         --------
-        ```py
-        # Floats
-        "1.0 1.0 1.0"
-        "(1.0 1.0 1.0)"
-        "[1.0 1.0 1.0]"
-        "{1.0 1.0 1.0}"
-        "1.0, 1.0, 1.0"
-        "(1.0, 1.0, 1.0)"
-        "[1.0, 1.0, 1.0]"
-        "{1.0, 1.0, 1.0}"
+        .. code-block:: python
 
-        # Ints
-        "252 252 252"
-        "(252 252 252)"
-        "[252 252 252]"
-        "{252 252 252}"
-        "252, 252, 252"
-        "(252, 252, 252)"
-        "[252, 252, 252]"
-        "{252, 252, 252}"
-        ```
+            # Floats
+            "1.0 1.0 1.0"
+            "(1.0 1.0 1.0)"
+            "[1.0 1.0 1.0]"
+            "{1.0 1.0 1.0}"
+            "1.0, 1.0, 1.0"
+            "(1.0, 1.0, 1.0)"
+            "[1.0, 1.0, 1.0]"
+            "{1.0, 1.0, 1.0}"
+
+            # Ints
+            "252 252 252"
+            "(252 252 252)"
+            "[252 252 252]"
+            "{252 252 252}"
+            "252, 252, 252"
+            "(252, 252, 252)"
+            "[252, 252, 252]"
+            "{252, 252, 252}"
 
         Parameters
         ----------
@@ -437,43 +437,43 @@ class Color(int):
 
         Examples
         --------
-        ```py
-        >>> Color.of(0xFF051A)
-        Color(r=0xff, g=0x5, b=0x1a)
+        .. code-block:: python
 
-        >>> Color.of(16712986)
-        Color(r=0xff, g=0x5, b=0x1a)
+            >>> Color.of(0xFF051A)
+            Color(r=0xff, g=0x5, b=0x1a)
 
-        >>> c = Color.of((255, 5, 26))
-        Color(r=0xff, g=0x5, b=1xa)
+            >>> Color.of(16712986)
+            Color(r=0xff, g=0x5, b=0x1a)
 
-        >>> c = Color.of([0xFF, 0x5, 0x1a])
-        Color(r=0xff, g=0x5, b=1xa)
+            >>> c = Color.of((255, 5, 26))
+            Color(r=0xff, g=0x5, b=1xa)
 
-        >>> c = Color.of("#1a2b3c")
-        Color(r=0x1a, g=0x2b, b=0x3c)
+            >>> c = Color.of([0xFF, 0x5, 0x1a])
+            Color(r=0xff, g=0x5, b=1xa)
 
-        >>> c = Color.of("#1AB")
-        Color(r=0x11, g=0xaa, b=0xbb)
+            >>> c = Color.of("#1a2b3c")
+            Color(r=0x1a, g=0x2b, b=0x3c)
 
-        >>> c = Color.of((1.0, 0.0196078431372549, 0.10196078431372549))
-        Color(r=0xff, g=0x5, b=0x1a)
+            >>> c = Color.of("#1AB")
+            Color(r=0x11, g=0xaa, b=0xbb)
 
-        >>> c = Color.of([1.0, 0.0196078431372549, 0.10196078431372549])
-        Color(r=0xff, g=0x5, b=0x1a)
+            >>> c = Color.of((1.0, 0.0196078431372549, 0.10196078431372549))
+            Color(r=0xff, g=0x5, b=0x1a)
 
-        # Commas and brackets are optional, whitespace is ignored, and these
-        # are compatible with all-ints between 0-255 or all-floats between
-        # 0.0 and 1.0 only.
-        >>> c = Color.of("5, 22, 33")
-        Color(r=0x5, g=0x16, b=0x21)
-        >>> c = Color.of("(5, 22, 33)")
-        Color(r=0x5, g=0x16, b=0x21)
-        >>> c = Color.of("[5, 22, 33]")
-        Color(r=0x5, g=0x16, b=0x21)
-        >>> c = Color.of("{5, 22, 33}")
-        Color(r=0x5, g=0x16, b=0x21)
-        ```
+            >>> c = Color.of([1.0, 0.0196078431372549, 0.10196078431372549])
+            Color(r=0xff, g=0x5, b=0x1a)
+
+            # Commas and brackets are optional, whitespace is ignored, and these
+            # are compatible with all-ints between 0-255 or all-floats between
+            # 0.0 and 1.0 only.
+            >>> c = Color.of("5, 22, 33")
+            Color(r=0x5, g=0x16, b=0x21)
+            >>> c = Color.of("(5, 22, 33)")
+            Color(r=0x5, g=0x16, b=0x21)
+            >>> c = Color.of("[5, 22, 33]")
+            Color(r=0x5, g=0x16, b=0x21)
+            >>> c = Color.of("{5, 22, 33}")
+            Color(r=0x5, g=0x16, b=0x21)
 
         Returns
         -------

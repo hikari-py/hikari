@@ -4,12 +4,12 @@
 <a href="https://pypi.org/project/hikari"><img height="20" alt="Supported python versions" src="https://img.shields.io/pypi/pyversions/hikari"></a>
 <br>
 <a href="https://github.com/hikari-py/hikari/actions"><img height="20" alt="CI status" src="https://github.com/hikari-py/hikari/actions/workflows/ci.yml/badge.svg?branch=master&event=push"></a>
-<a href="https://pypi.org/project/mypy/"><img height="20" alt="Mypy badge" src="http://www.mypy-lang.org/static/mypy_badge.svg"></a>
+<a href="https://pypi.org/project/mypy/"><img height="20" alt="Mypy badge" src="https://img.shields.io/badge/mypy-checked-blue"></a>
 <a href="https://pypi.org/project/black"><img height="20" alt="Black badge" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
 <a href="https://codeclimate.com/github/hikari-py/hikari/test_coverage"><img height="20" alt="Test coverage" src="https://api.codeclimate.com/v1/badges/f95070b25136a69b0589/test_coverage"></a>
 <br>
 <a href="https://discord.gg/Jx4cNGG"><img height="20" alt="Discord invite" src="https://discord.com/api/guilds/574921006817476608/widget.png"></a>
-<a href="https://docs.hikari-py.dev/stable"><img height="20" alt="Documentation status" src="https://img.shields.io/badge/documentation-up-00FF00.svg"></a>
+<a href="https://docs.hikari-py.dev/en/stable"><img height="20" alt="Documentation Status" src="https://readthedocs.org/projects/hikari-py/badge/?version=latest"></a>
 </p>
 
 An opinionated, static typed Discord microframework for Python3 and asyncio that supports Discord's V8 REST API and
@@ -125,15 +125,27 @@ async def print_my_user(token):
         my_user = await client.fetch_my_user()
         print(my_user)
 
-asyncio.run(print_my_user("user token here"))
+asyncio.run(print_my_user("user token acquired through OAuth here"))
 ```
 
 ---
 
 ## Optional Features
 
-* `hikari[server]` - Install dependencies required to enable Hikari's standard interaction server (RESTBot) functionality.
-* `hikari[speedups]` - Detailed in [`hikari[speedups]`](#hikarispeedups).
+Optional features can be specified when installing hikari:
+
+* `server` - Install dependencies required to enable Hikari's standard interaction server (RESTBot) functionality.
+* `speedups` - Detailed in [`hikari[speedups]`](#hikarispeedups).
+
+Example:
+
+```bash
+# To install hikari with the speedups feature:
+python -m pip install -U hikari[speedups]
+
+# To install hikari with both the speedups and server features:
+python -m pip install -U hikari[speedups, server]
+```
 
 ## Additional resources
 
@@ -152,24 +164,23 @@ Hikari does not include a command framework by default, so you will want to pick
 
 As your application scales, you may need to adjust some things to keep it performing nicely.
 
-### Python optimisation flags
+### Python optimization flags
 
-CPython provides two optimisation flags that remove internal safety checks that are useful for development, and change
+CPython provides two optimization flags that remove internal safety checks that are useful for development, and change
 other internal settings in the interpreter.
 
-- `python bot.py` - no optimisation - this is the default.
-- `python -O bot.py` - first level optimisation - features such as internal
-    assertions will be disabled.
-- `python -OO bot.py` - second level optimisation - more features (**including
-    all docstrings**) will be removed from the loaded code at runtime.
+- `python bot.py` - no optimization - this is the default.
+- `python -O bot.py` - first level optimization - features such as internal assertions will be disabled.
+- `python -OO bot.py` - second level optimization - more features (**including all docstrings**) will be removed from
+  the loaded code at runtime.
 
-**A minimum of first level of optimizations** is recommended when running bots in a production environment.
+**A minimum of first level of optimization** is recommended when running bots in a production environment.
 
 ### `hikari[speedups]`
 
-If you have a C compiler (Microsoft VC++ Redistributable 14.0 or newer, or a modern copy of GCC/G++, Clang, etc), you
-can install Hikari using `pip install -U hikari[speedups]`. This will install `aiodns`, `cchardet`, `Brotli`, and
-`ciso8601` which will provide you with a small performance boost.
+If you have a C compiler (Microsoft VC++ Redistributable 14.0 or newer, or a modern copy of GCC/G++, Clang, etc), it is
+recommended you install Hikari using `pip install -U hikari[speedups]`. This will install `aiodns`, `cchardet`,
+`Brotli`, and `ciso8601` which will provide you with a small performance boost.
 
 ### `uvloop`
 
