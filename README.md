@@ -1,4 +1,4 @@
-<div style="text-align: center;">
+<div align="center">
 <h1>hikari</h1>
 <a href="https://pypi.org/project/hikari"><img height="20" alt="Supported python versions" src="https://img.shields.io/pypi/pyversions/hikari"></a>
 <a href="https://pypi.org/project/hikari"><img height="20" alt="PyPI version" src="https://img.shields.io/pypi/v/hikari"></a>
