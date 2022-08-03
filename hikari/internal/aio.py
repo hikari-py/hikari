@@ -43,7 +43,7 @@ if typing.TYPE_CHECKING:
     import logging
 
     # typing_extensions is a dependency of mypy, and pyright vendors it.
-    from typing_extensions import TypeGuard
+    import typing_extensions
 
 T_co = typing.TypeVar("T_co", covariant=True)
 T_inv = typing.TypeVar("T_inv")
