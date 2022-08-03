@@ -30,12 +30,12 @@ class TestWarnDeprecated:
     def test_when_not_past_removal(self):
         with mock.patch.object(hikari_about, "__version__", "2.0.1"):
             with pytest.warns(
-                deprecation.HikariDeprecationWarning,
+                DeprecationWarning,
                 match=r"'testing' is deprecated and will be removed in `2.0.2`. Some info!",
             ):
                 deprecation.warn_deprecated("testing", removal_version="2.0.2", additional_info="Some info!")
 
     def test_when_past_removal(self):
         with mock.patch.object(hikari_about, "__version__", "2.0.2"):
-            with pytest.raises(deprecation.HikariDeprecationWarning):
+            with pytest.raises(DeprecationWarning):
                 deprecation.warn_deprecated("testing", removal_version="2.0.2", additional_info="Some info!")

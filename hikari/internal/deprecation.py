@@ -24,17 +24,13 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("warn_deprecated", "HikariDeprecationWarning")
+__all__: typing.Sequence[str] = ("warn_deprecated",)
 
 import typing
 import warnings
 
 from hikari import _about as hikari_about
 from hikari.internal import ux
-
-
-class HikariDeprecationWarning(DeprecationWarning):
-    """Warning about a hikari deprecation."""
 
 
 def warn_deprecated(name: str, /, *, removal_version: str, additional_info: str, stack_level: int = 3) -> None:
@@ -55,10 +51,10 @@ def warn_deprecated(name: str, /, *, removal_version: str, additional_info: str,
         The stack level to issue the warning in.
     """
     if ux.HikariVersion(hikari_about.__version__) >= ux.HikariVersion(removal_version):
-        raise HikariDeprecationWarning(f"{name!r} is passed its removal version ({removal_version})")
+        raise DeprecationWarning(f"{name!r} is passed its removal version ({removal_version})")
 
     warnings.warn(
         f"{name!r} is deprecated and will be removed in `{removal_version}`. {additional_info}",
-        category=HikariDeprecationWarning,
+        category=DeprecationWarning,
         stacklevel=stack_level,
     )

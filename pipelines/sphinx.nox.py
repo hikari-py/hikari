@@ -35,6 +35,7 @@ from pipelines import nox
 
 @nox.session(reuse_venv=True)
 def sphinx(session: nox.Session):
+    """Generate docs using sphinx."""
     if not os.path.exists(config.ARTIFACT_DIRECTORY):
         os.mkdir(config.ARTIFACT_DIRECTORY)
 

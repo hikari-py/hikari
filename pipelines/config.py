@@ -92,5 +92,3 @@ FULL_REFORMATTING_PATHS = (
     "docs",
     "changes",
 )
-
-CODESPELL_IGNORE_WORDS = ("nd",)
