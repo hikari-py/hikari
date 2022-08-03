@@ -209,7 +209,7 @@ class Cache(abc.ABC):
 
         Returns
         -------
-        CacheView[hikari.snowflakes.Snowflake, hikari.guilds.stickers.GuildSticker]
+        CacheView[hikari.snowflakes.Snowflake, hikari.stickers.GuildSticker]
             A view of sticker IDs to objects of stickers found in the cache for the
             specified guild.
         """

@@ -460,21 +460,21 @@ class StickersUpdateEvent(GuildEvent):
     guild_id: snowflakes.Snowflake = attr.field()
     # <<inherited docstring from GuildEvent>>.
 
-    old_stickers: typing.Optional[typing.Sequence[guilds.stickers.GuildSticker]] = attr.field()
+    old_stickers: typing.Optional[typing.Sequence[stickers_.GuildSticker]] = attr.field()
     """Sequence of all old stickers in this guild.
 
     This will be `None` if it's missing from the cache.
     """
 
-    stickers: typing.Sequence[guilds.stickers.GuildSticker] = attr.field()
+    stickers: typing.Sequence[stickers_.GuildSticker] = attr.field()
     """Sequence of all stickers in this guild."""
 
-    async def fetch_stickers(self) -> typing.Sequence[guilds.stickers.GuildSticker]:
+    async def fetch_stickers(self) -> typing.Sequence[stickers_.GuildSticker]:
         """Perform an API call to retrieve an up-to-date view of the emojis.
 
         Returns
         -------
-        typing.Sequence[guilds.stickers.GuildSticker]
+        typing.Sequence[hikari.stickers.GuildSticker]
             All emojis in the guild.
         """
         return await self.app.rest.fetch_guild_stickers(self.guild_id)

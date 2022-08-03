@@ -33,7 +33,7 @@ sphinx-copybutton==0.5.0
 # TYPE CHECKING #
 #################
 
-mypy==0.961
+mypy==0.971
 pyright==1.1.264
 
 #######################
