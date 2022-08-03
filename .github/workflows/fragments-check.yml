@@ -21,7 +21,7 @@ jobs:
         with:
           # `towncrier check` runs `git diff --name-only origin/main...`, which
           # needs a non-shallow clone.
-          fetch-depth: 2
+          fetch-depth: 0
 
       - name: Setup python
         uses: actions/setup-python@v4
