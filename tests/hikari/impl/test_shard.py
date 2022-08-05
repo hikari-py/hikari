@@ -352,16 +352,9 @@ class TestGatewayTransport:
         transport_impl._ws.receive.assert_has_awaits([mock.call(), mock.call(), mock.call()])
         transport_impl._zlib.decompress.assert_called_once_with(bytearray(b"somemoredata\x00\x00\xff\xff"))
 
-    @pytest.mark.parametrize(
-        ("url", "expect_compression"),
-        [
-            ("https://some.url", False),
-            ("https://some.url?compress=zlib-stream", True),
-            ("https://some.url?compress=zlib-transport", False),
-        ],
-    )
+    @pytest.mark.parametrize("transport_compression", [True, False])
     @pytest.mark.asyncio()
-    async def test_connect(self, http_settings, proxy_settings, url, expect_compression):
+    async def test_connect(self, http_settings, proxy_settings, transport_compression):
         logger = mock.Mock()
         log_filterer = mock.Mock()
         client_session = mock.Mock()
@@ -379,8 +372,9 @@ class TestGatewayTransport:
                 http_settings=http_settings,
                 proxy_settings=proxy_settings,
                 logger=logger,
-                url=url,
+                url="testing.com",
                 log_filterer=log_filterer,
+                transport_compression=transport_compression,
             )
 
         assert isinstance(ws, shard._GatewayTransport)
@@ -389,7 +383,7 @@ class TestGatewayTransport:
         assert ws._logger is logger
         assert ws._log_filterer is log_filterer
 
-        if expect_compression:
+        if transport_compression:
             assert ws._receive_and_check == ws._receive_and_check_zlib
         else:
             assert ws._receive_and_check == ws._receive_and_check_text
@@ -411,7 +405,7 @@ class TestGatewayTransport:
             max_msg_size=0,
             proxy=proxy_settings.url,
             proxy_headers=proxy_settings.headers,
-            url=url,
+            url="testing.com",
             autoclose=False,
         )
         exit_stack.aclose.assert_not_called()
@@ -438,6 +432,7 @@ class TestGatewayTransport:
                 logger=logger,
                 url="https://some.url",
                 log_filterer=log_filterer,
+                transport_compression=True,
             )
 
         exit_stack.aclose.assert_awaited_once_with()
@@ -478,6 +473,7 @@ class TestGatewayTransport:
                 logger=logger,
                 url="https://some.url",
                 log_filterer=log_filterer,
+                transport_compression=True,
             )
 
         exit_stack.aclose.assert_awaited_once_with()
@@ -511,28 +507,6 @@ class TestGatewayShardImpl:
                 compression="something",
                 token="12345",
             )
-
-    @pytest.mark.parametrize(
-        ("compression", "expect"),
-        [
-            (None, f"v={shard._VERSION}&encoding=json"),
-            ("transport_zlib_stream", f"v={shard._VERSION}&encoding=json&compress=zlib-stream"),
-        ],
-    )
-    def test__init__sets_url_is_correct_json(self, compression, expect, http_settings, proxy_settings):
-        g = shard.GatewayShardImpl(
-            event_manager=mock.Mock(),
-            event_factory=mock.Mock(),
-            http_settings=http_settings,
-            proxy_settings=proxy_settings,
-            intents=intents.Intents.ALL,
-            url="wss://gaytewhuy.discord.meh",
-            data_format="json",
-            compression=compression,
-            token="12345",
-        )
-
-        assert g._url == f"wss://gaytewhuy.discord.meh?{expect}"
 
     def test_using_etf_is_unsupported(self, http_settings, proxy_settings):
         with pytest.raises(NotImplementedError, match="Unsupported gateway data format: etf"):
@@ -940,12 +914,14 @@ class TestGatewayShardImplAsync:
         with pytest.raises(errors.ComponentStateConflictError):
             await client._connect()
 
-    async def test__connect_when_no_seq(self, client, http_settings, proxy_settings):
+    async def test__connect_when_not_reconnecting(self, client, http_settings, proxy_settings):
         ws = mock.AsyncMock()
         ws.receive_json.return_value = {"op": 10, "d": {"heartbeat_interval": 10}}
+        client._transport_compression = False
         client._shard_id = 20
         client._shard_count = 100
-        client._url = "somewhere.com"
+        client._gateway_url = "wss://somewhere.com"
+        client._resume_gateway_url = None
         client._token = "sometoken"
         client._logger = mock.Mock()
         client._handshake_event = mock.Mock()
@@ -976,6 +952,7 @@ class TestGatewayShardImplAsync:
         gateway_transport_connect = stack.enter_context(
             mock.patch.object(shard._GatewayTransport, "connect", return_value=ws)
         )
+        stack.enter_context(mock.patch.object(shard, "_VERSION", new=400))
         stack.enter_context(mock.patch.object(platform, "system", return_value="Potato OS"))
         stack.enter_context(mock.patch.object(platform, "architecture", return_value=["ARM64"]))
         stack.enter_context(mock.patch.object(aiohttp, "__version__", new="4.0"))
@@ -990,7 +967,8 @@ class TestGatewayShardImplAsync:
             log_filterer=log_filterer.return_value,
             logger=client._logger,
             proxy_settings=proxy_settings,
-            url="somewhere.com",
+            transport_compression=False,
+            url="wss://somewhere.com?v=400&encoding=json",
         )
         client._event_factory.deserialize_connected_event.assert_called_once_with(client)
         client._event_manager.dispatch.assert_called_once_with(
@@ -1032,11 +1010,13 @@ class TestGatewayShardImplAsync:
             client._handshake_event.wait.return_value, shielded_heartbeat_task, shielded_poll_events_task
         )
 
-    async def test__connect_when_seq(self, client, http_settings, proxy_settings):
+    async def test__connect_when_reconnecting(self, client, http_settings, proxy_settings):
         ws = mock.AsyncMock()
         ws.receive_json.return_value = {"op": 10, "d": {"heartbeat_interval": 10}}
+        client._transport_compression = True
         client._shard_id = 20
-        client._url = "somewhere.com"
+        client._gateway_url = "wss://somewhere.com"
+        client._resume_gateway_url = "wss://notsomewhere.com"
         client._token = "sometoken"
         client._logger = mock.Mock()
         client._handshake_event = mock.Mock()
@@ -1063,6 +1043,7 @@ class TestGatewayShardImplAsync:
         gateway_transport_connect = stack.enter_context(
             mock.patch.object(shard._GatewayTransport, "connect", return_value=ws)
         )
+        stack.enter_context(mock.patch.object(shard, "_VERSION", new=400))
 
         with stack:
             assert await client._connect() == (heartbeat_task, poll_events_task)
@@ -1073,7 +1054,8 @@ class TestGatewayShardImplAsync:
             log_filterer=log_filterer.return_value,
             logger=client._logger,
             proxy_settings=proxy_settings,
-            url="somewhere.com",
+            transport_compression=True,
+            url="wss://notsomewhere.com?v=400&encoding=json&compress=zlib-stream",
         )
         client._event_factory.deserialize_connected_event.assert_called_once_with(client)
         client._event_manager.dispatch.assert_called_once_with(
@@ -1110,7 +1092,7 @@ class TestGatewayShardImplAsync:
     async def test__connect_when_op_received_is_not_HELLO(self, client):
         ws = mock.AsyncMock()
         ws.receive_json.return_value = {"op": 0, "d": {"not": "hello"}}
-        client._url = "somewhere.com"
+        client._gateway_url = "somewhere.com"
         client._logger = mock.Mock()
         client._handshake_event = object()
 
@@ -1162,6 +1144,7 @@ class TestGatewayShardImplAsync:
         data = {
             "v": 10,
             "session_id": 100001,
+            "resume_gateway_url": "testing_endpoint",
             "user": {
                 "id": 123,
                 "username": "davfsa",
@@ -1175,6 +1158,7 @@ class TestGatewayShardImplAsync:
         client._ws = mock.Mock(receive_json=mock.AsyncMock(side_effect=[payload, RuntimeError]))
         client._seq = None
         client._session_id = None
+        client._resume_gateway_url = None
         client._user_id = None
         client._event_manager.consume_raw_event = mock.Mock(side_effect=[LookupError])
         client._handshake_event = mock.Mock()
@@ -1184,6 +1168,7 @@ class TestGatewayShardImplAsync:
 
         assert client._ws.receive_json.await_count == 2
         assert client._seq == 101
+        assert client._resume_gateway_url == "testing_endpoint"
         assert client._session_id == 100001
         assert client._user_id == 123
         client._event_manager.consume_raw_event.assert_called_once_with("READY", client, data)

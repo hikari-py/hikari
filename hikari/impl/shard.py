@@ -256,6 +256,7 @@ class _GatewayTransport:
         logger: logging.Logger,
         proxy_settings: config.ProxySettings,
         log_filterer: typing.Callable[[str], str],
+        transport_compression: bool,
         url: str,
     ) -> _GatewayTransport:
         """Generate a single-use websocket connection.
@@ -291,7 +292,7 @@ class _GatewayTransport:
 
                 return cls(
                     ws=web_socket,
-                    transport_compression="compress=zlib-stream" in url,
+                    transport_compression=transport_compression,
                     exit_stack=exit_stack,
                     logger=logger,
                     log_filterer=log_filterer,
@@ -409,6 +410,7 @@ class GatewayShardImpl(shard.GatewayShard):
         "_chunking_rate_limit",
         "_event_manager",
         "_event_factory",
+        "_gateway_url",
         "_handshake_event",
         "_heartbeat_latency",
         "_http_settings",
@@ -422,6 +424,7 @@ class GatewayShardImpl(shard.GatewayShard):
         "_last_heartbeat_sent",
         "_logger",
         "_proxy_settings",
+        "_resume_gateway_url",
         "_seq",
         "_session_id",
         "_shard_count",
@@ -429,7 +432,7 @@ class GatewayShardImpl(shard.GatewayShard):
         "_status",
         "_token",
         "_total_rate_limit",
-        "_url",
+        "_transport_compression",
         "_user_id",
         "_ws",
     )
@@ -457,16 +460,8 @@ class GatewayShardImpl(shard.GatewayShard):
         if data_format != shard.GatewayDataFormat.JSON:
             raise NotImplementedError(f"Unsupported gateway data format: {data_format}")
 
-        query = {"v": _VERSION, "encoding": str(data_format)}
-
-        if compression is not None:
-            if compression == shard.GatewayCompression.TRANSPORT_ZLIB_STREAM:
-                query["compress"] = "zlib-stream"
-            else:
-                raise NotImplementedError(f"Unsupported compression format {compression}")
-
-        scheme, netloc, path, params, _, _ = urllib.parse.urlparse(url, allow_fragments=True)
-        new_query = urllib.parse.urlencode(query)
+        if compression and compression != shard.GatewayCompression.TRANSPORT_ZLIB_STREAM:
+            raise NotImplementedError(f"Unsupported compression format {compression}")
 
         self._activity = initial_activity
         self._chunking_rate_limit = rate_limits.WindowedBurstRateLimiter(
@@ -474,6 +469,7 @@ class GatewayShardImpl(shard.GatewayShard):
         )
         self._event_manager = event_manager
         self._event_factory = event_factory
+        self._gateway_url = url
         self._handshake_event: typing.Optional[asyncio.Event] = None
         self._heartbeat_latency = float("nan")
         self._http_settings = http_settings
@@ -487,6 +483,7 @@ class GatewayShardImpl(shard.GatewayShard):
         self._last_heartbeat_sent = float("nan")
         self._logger = logging.getLogger(f"hikari.gateway.{shard_id}")
         self._proxy_settings = proxy_settings
+        self._resume_gateway_url: typing.Optional[str] = None
         self._seq: typing.Optional[int] = None
         self._session_id: typing.Optional[str] = None
         self._shard_count = shard_count
@@ -496,7 +493,7 @@ class GatewayShardImpl(shard.GatewayShard):
         self._total_rate_limit = rate_limits.WindowedBurstRateLimiter(
             f"shard {shard_id} total rate limit", *_TOTAL_RATELIMIT
         )
-        self._url = urllib.parse.urlunparse((scheme, netloc, path, params, new_query, ""))
+        self._transport_compression = compression is not None
         self._user_id: typing.Optional[snowflakes.Snowflake] = None
         self._ws: typing.Optional[_GatewayTransport] = None
 
@@ -708,6 +705,7 @@ class GatewayShardImpl(shard.GatewayShard):
 
                 if name == _READY:
                     self._session_id = data["session_id"]
+                    self._resume_gateway_url = data["resume_gateway_url"]
                     user_pl = data["user"]
                     self._user_id = snowflakes.Snowflake(user_pl["id"])
 
@@ -749,6 +747,7 @@ class GatewayShardImpl(shard.GatewayShard):
                 if not can_reconnect:
                     self._logger.info("received invalid session, will need to start a new session")
                     self._seq = None
+                    self._resume_gateway_url = None
                     self._session_id = None
                 else:
                     self._logger.info("received invalid session, will resume existing session")
@@ -764,12 +763,21 @@ class GatewayShardImpl(shard.GatewayShard):
 
         assert self._handshake_event is not None
 
+        query = {"v": _VERSION, "encoding": "json"}
+        if self._transport_compression:
+            query["compress"] = "zlib-stream"
+
+        url = self._resume_gateway_url or self._gateway_url
+        scheme, netloc, path, params, _, _ = urllib.parse.urlparse(url, allow_fragments=True)
+        encoded_query = urllib.parse.urlencode(query)
+
         self._ws = await _GatewayTransport.connect(
             http_settings=self._http_settings,
             log_filterer=_log_filterer(self._token),
             logger=self._logger,
             proxy_settings=self._proxy_settings,
-            url=self._url,
+            transport_compression=self._transport_compression,
+            url=urllib.parse.urlunparse((scheme, netloc, path, params, encoded_query, "")),
         )
         self._event_manager.dispatch(self._event_factory.deserialize_connected_event(self))
 
