@@ -30,7 +30,7 @@ jobs:
 
       - name: Test Installation
         run: |
-          pip install wheel
+          pip install -r dev-requirements/build.txt
 
           pip install .
           pip uninstall -y hikari
@@ -40,7 +40,7 @@ jobs:
 
       - name: Run tests
         run: |
-          pip install nox
+          pip install -r dev-requirements/nox.txt
           nox -s pytest
           nox -s pytest-all-features -- --cov-append
 
@@ -76,7 +76,7 @@ jobs:
 
       - name: Combine coverage
         run: |
-          pip install -r dev-requirements.txt
+          pip install -r dev-requirements/coverage.txt
           coverage combine
           coverage xml
           coverage report
@@ -103,7 +103,7 @@ jobs:
       - name: Check stubs
         if: always()
         run: |
-          pip install nox
+          pip install -r dev-requirements/nox.txt
           nox -s generate-stubs
           if [ "$(git status --short)" ]; then
             echo "Stubs were not updated accordingly to the changes. Please run 'nox -s generate-stubs' and commit the changes to fix this."
@@ -129,7 +129,7 @@ jobs:
 
       - name: Test twemoji mapping
         run: |
-          pip install nox
+          pip install -r dev-requirements/nox.txt
           nox -s twemoji-test
 
   pages:
@@ -149,7 +149,7 @@ jobs:
 
       - name: Build pages
         run: |
-          pip install nox
+          pip install -r dev-requirements/nox.txt
           nox -s pages
 
       - name: Upload artifacts
