@@ -3773,6 +3773,8 @@ class TestEntityFactoryImpl:
             autocomplete=True,
             min_value=1.2,
             max_value=9.999,
+            min_length=3,
+            max_length=69,
             channel_types=[channel_models.ChannelType.GUILD_STAGE, channel_models.ChannelType.GUILD_TEXT, 100],
             choices=[commands.CommandChoice(name="a", value="choice")],
             options=[
@@ -3797,6 +3799,8 @@ class TestEntityFactoryImpl:
             "channel_types": [13, 0, 100],
             "min_value": 1.2,
             "max_value": 9.999,
+            "min_length": 3,
+            "max_length": 69,
             "autocomplete": True,
             "choices": [{"name": "a", "value": "choice"}],
             "options": [

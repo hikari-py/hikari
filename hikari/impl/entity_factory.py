@@ -1782,6 +1782,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             autocomplete=payload.get("autocomplete", False),
             min_value=payload.get("min_value"),
             max_value=payload.get("max_value"),
+            min_length=payload.get("min_length"),
+            max_length=payload.get("max_length"),
         )
 
     def deserialize_slash_command(
@@ -2169,6 +2171,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             payload["min_value"] = option.min_value
         if option.max_value is not None:
             payload["max_value"] = option.max_value
+
+        if option.min_length is not None:
+            payload["min_length"] = option.min_length
+        if option.max_length is not None:
+            payload["max_length"] = option.max_length
 
         return payload
 

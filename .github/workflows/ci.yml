@@ -44,6 +44,7 @@ jobs:
           nox -s pytest
           nox -s pytest-all-features -- --cov-append
 
+          python scripts/normalize_coverage.py
           mv .coverage .coverage.${{ matrix.os }}.${{ matrix.python-version }}
 
       - name: Upload coverage
@@ -66,7 +67,7 @@ jobs:
       - name: Setup python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.8
+          python-version: "3.10"
 
       - name: Download coverage
         uses: actions/download-artifact@v3
@@ -77,7 +78,8 @@ jobs:
         run: |
           pip install -r dev-requirements.txt
           coverage combine
-          coverage xml -i
+          coverage xml
+          coverage report
 
       - name: Upload coverage to codeclimate
         uses: paambaati/codeclimate-action@v3.0.0
