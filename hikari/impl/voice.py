@@ -178,7 +178,7 @@ class VoiceComponentImpl(voice.VoiceComponent):
             )
         except asyncio.TimeoutError:
             raise errors.VoiceError(
-                f"Could not connect to voice channel {guild} in guild {channel}.",
+                f"Could not connect to voice channel {channel} in guild {guild}.",
             )
 
         # We will never receive the first endpoint as `None`
