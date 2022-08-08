@@ -134,7 +134,7 @@ class MessageType(int, enums.Enum):
     """A message sent to indicate a context menu has been executed."""
 
     AUTO_MODERATION_ACTION = 24
-    """A message sent to indicate an auto moderation action has been triggered."""
+    """A message sent to indicate an auto-moderation action has been triggered."""
 
 
 @typing.final

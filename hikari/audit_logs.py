@@ -598,7 +598,7 @@ class AuditLog(typing.Sequence[AuditLogEntry]):
     """Represents a guilds audit log's page."""
 
     auto_mod_rules: typing.Mapping[snowflakes.Snowflake, auto_mod.AutoModRule] = attr.field(repr=False)
-    """A mapping of the auto moderation rule objects referenced in this audit log."""
+    """A mapping of the auto-moderation rule objects referenced in this audit log."""
 
     entries: typing.Mapping[snowflakes.Snowflake, AuditLogEntry] = attr.field(repr=False)
     """A mapping of snowflake IDs to the audit log's entries."""

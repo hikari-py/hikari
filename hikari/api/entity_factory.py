@@ -2005,7 +2005,7 @@ class EntityFactory(abc.ABC):
 
     @abc.abstractmethod
     def deserialize_auto_mod_action(self, payload: data_binding.JSONObject) -> auto_mod_models.PartialAutoModAction:
-        """Parse a raw payload from Discord into an auto moderation action object.
+        """Parse a raw payload from Discord into an auto-moderation action object.
 
         Parameters
         ----------
@@ -2015,27 +2015,27 @@ class EntityFactory(abc.ABC):
         Returns
         -------
         hikari.auto_mod.PartialAutoModAction
-            The deserialized auto moderation action object.
+            The deserialized auto-moderation action object.
         """
 
     @abc.abstractmethod
     def serialize_auto_mod_action(self, action: auto_mod_models.PartialAutoModAction) -> data_binding.JSONObject:
-        """Serialize an auto moderation action object to a json serializable dict.
+        """Serialize an auto-moderation action object to a json serializable dict.
 
         Parameters
         ----------
         overwrite : hikari.auto_mod.PartialAutoModAction
-            The auto moderation action object to serialize.
+            The auto-moderation action object to serialize.
 
         Returns
         -------
         hikari.internal.data_binding.JSONObject
-            The serialized representation of the auto moderation action object.
+            The serialized representation of the auto-moderation action object.
         """
 
     @abc.abstractmethod
     def deserialize_auto_mod_rule(self, payload: data_binding.JSONObject) -> auto_mod_models.AutoModRule:
-        """Parse a raw payload from Discord into an auto moderation rule object.
+        """Parse a raw payload from Discord into an auto-moderation rule object.
 
         Parameters
         ----------
@@ -2045,5 +2045,5 @@ class EntityFactory(abc.ABC):
         Returns
         -------
         hikari.auto_mod.AutoModRule
-            The deserialized auto moderation rule object.
+            The deserialized auto-moderation rule object.
         """

@@ -20,7 +20,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Entities that are used to describe auto moderation on Discord."""
+"""Entities that are used to describe auto-moderation on Discord."""
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
@@ -55,7 +55,7 @@ if typing.TYPE_CHECKING:
 
 
 class AutoModActionType(int, enums.Enum):
-    """The type of an auto moderation rule action."""
+    """The type of an auto-moderation rule action."""
 
     BLOCK_MESSAGES = 1
     """Block the content of the triggering message."""
@@ -77,7 +77,7 @@ class PartialAutoModAction:
     """Base class for an action which is executed when a ruleis triggered."""
 
     type: AutoModActionType = attr.field()
-    """The type of auto moderation action."""
+    """The type of auto-moderation action."""
 
 
 @attr.define(kw_only=True, weakref_slot=False)
@@ -106,14 +106,14 @@ class AutoModTimeout(PartialAutoModAction):
 
 
 class AutoModEventType(int, enums.Enum):
-    """Type of event to check for an auto moderation rule."""
+    """Type of event to check for an auto-moderation rule."""
 
     MESSAGE_SEND = 1
     """When a member sends or edits a message in the guild."""
 
 
 class AutoModTriggerType(int, enums.Enum):
-    """Type of trigger for an auto moderation rule."""
+    """Type of trigger for an auto-moderation rule."""
 
     KEYWORD = 1
     """Match message content against a list of keywords."""

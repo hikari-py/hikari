@@ -20,7 +20,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Events that fire for auto moderation related changes."""
+"""Events that fire for auto-moderation related changes."""
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
@@ -50,7 +50,7 @@ if typing.TYPE_CHECKING:
 
 @base_events.requires_intents(intents.Intents.AUTO_MODERATION_CONFIGURATION, intents.Intents.AUTO_MODERATION_EXECUTION)
 class AutoModEvent(shard_events.ShardEvent, abc.ABC):
-    """Base class for auto moderation gateway events."""
+    """Base class for auto-moderation gateway events."""
 
     __slots__: typing.Sequence[str] = ()
 
@@ -59,13 +59,13 @@ class AutoModEvent(shard_events.ShardEvent, abc.ABC):
 @attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
 class AutoModRuleCreateEvent(AutoModEvent):
-    """Event that's fired when an auto moderation rule is created."""
+    """Event that's fired when an auto-moderation rule is created."""
 
     shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     rule: auto_mod.AutoModRule = attr.field()
-    """Object of the auto moderation rule which was created."""
+    """Object of the auto-moderation rule which was created."""
 
     @property
     def app(self) -> traits.RESTAware:
@@ -77,13 +77,13 @@ class AutoModRuleCreateEvent(AutoModEvent):
 @attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
 class AutoModRuleUpdateEvent(AutoModEvent):
-    """Event that's fired when an auto moderation rule is updated."""
+    """Event that's fired when an auto-moderation rule is updated."""
 
     shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     rule: auto_mod.AutoModRule = attr.field()
-    """Object of the auto moderation rule which was updated."""
+    """Object of the auto-moderation rule which was updated."""
 
     @property
     def app(self) -> traits.RESTAware:
@@ -95,13 +95,13 @@ class AutoModRuleUpdateEvent(AutoModEvent):
 @attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
 class AutoModRuleDeleteEvent(AutoModEvent):
-    """Event that's fired when an auto moderation rule is deleted."""
+    """Event that's fired when an auto-moderation rule is deleted."""
 
     shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     rule: auto_mod.AutoModRule = attr.field()
-    """Object of the auto moderation rule which was deleted."""
+    """Object of the auto-moderation rule which was deleted."""
 
     @property
     def app(self) -> traits.RESTAware:
@@ -151,7 +151,7 @@ class AutoModActionExecutionEvent(AutoModEvent):
     """
 
     alert_system_message_id: typing.Optional[snowflakes.Snowflake] = attr.field(repr=False)
-    """ID of any system auto moderation messages posted as a result of this action.
+    """ID of any system auto-moderation messages posted as a result of this action.
 
     This will only be provided for `SEND_ALERT_MESSAGE` actions.
     """

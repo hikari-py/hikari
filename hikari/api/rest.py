@@ -8229,12 +8229,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Parameters
         ----------
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
-            Object or ID of the guild to fetch the auto moderation rules of.
+            Object or ID of the guild to fetch the auto-moderation rules of.
 
         Returns
         -------
         typing.Sequence[hiakri.auto_mod.AutoModRule]
-            Sequence of the guild's auto moderation rules.
+            Sequence of the guild's auto-moderation rules.
 
         Raises
         ------
@@ -8273,14 +8273,14 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Parameters
         ----------
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
-            Object or ID of the guild to fetch the auto moderation rules of.
+            Object or ID of the guild to fetch the auto-moderation rules of.
         rule : hikari.snowflakes.SnowflakeishOr[hikari.auto_mod.AutoModRule]
-            Object or ID of the auto moderation rule to fetch.
+            Object or ID of the auto-moderation rule to fetch.
 
         Returns
         -------
         hiakri.auto_mod.AutoModRule
-            The fetched auto moderation rule.
+            The fetched auto-moderation rule.
 
         Raises
         ------
@@ -8333,7 +8333,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Parameters
         ----------
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
-            Object or ID of the guild to create the auto moderation rules in.
+            Object or ID of the guild to create the auto-moderation rules in.
         name : builtins.str
             The rule's name.
         event_type : typing.Union[builtins.int, hikari.auto_mod.AutoModEventType]
@@ -8363,7 +8363,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
             This is required for and can only be set for KEYWORD_PRESET triggers.
         enabled : hikari.undefined.UndefinedOr[builtins.bool]
-            Whether this auto moderation rule should be enabled.
+            Whether this auto-moderation rule should be enabled.
         exempt_channels : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.channels.PartialChannel]]
             Sequence of up to 50 objects and IDs of channels which are not
             effected by the rule.
@@ -8377,7 +8377,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Returns
         -------
         hiakri.auto_mod.AutoModRule
-            The created auto moderation rule.
+            The created auto-moderation rule.
 
         Raises
         ------
@@ -8431,9 +8431,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Parameters
         ----------
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
-            Object or ID of the guild to edit an auto moderation rule in.
+            Object or ID of the guild to edit an auto-moderation rule in.
         rule : hikari.snowflakes.SnowflakeishOr[hikari.auto_mod.AutoModRule]
-            Object or ID of the auto moderation rule to edit.
+            Object or ID of the auto-moderation rule to edit.
         name : hikari.undefined.UndefinedOr[builtins.str]
             If specified, the rule's new name.
         event_type : hikari.undefined.UndefinedOr[typing.Union[builtins.int, hikari.auto_mod.AutoModEventType]]
@@ -8462,7 +8462,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
             This is required for and can only be set for KEYWORD_PRESET triggers.
         enabled : hikari.undefined.UndefinedOr[builtins.bool]
-            If specified, whether this auto moderation rule should be enabled.
+            If specified, whether this auto-moderation rule should be enabled.
         exempt_channels : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.channels.PartialChannel]]
             If specified, a sequence of up to 50 objects and IDs of channels
             which are not effected by the rule.
@@ -8476,7 +8476,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Returns
         -------
         hiakri.auto_mod.AutoModRule
-            The created auto moderation rule.
+            The created auto-moderation rule.
 
         Raises
         ------
@@ -8517,9 +8517,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Parameters
         ----------
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
-            Object or ID of the guild to delete the auto moderation rules of.
+            Object or ID of the guild to delete the auto-moderation rules of.
         rule : hikari.snowflakes.SnowflakeishOr[hikari.auto_mod.AutoModRule]
-            Object or ID of the auto moderation rule to delete.
+            Object or ID of the auto-moderation rule to delete.
         reason : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.

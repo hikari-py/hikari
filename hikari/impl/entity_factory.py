@@ -3740,8 +3740,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if converter := self._auto_mod_action_mapping.get(action_type):
             return converter(payload)
 
-        _LOGGER.debug(f"Unrecognised auto moderation action type {action_type}")
-        raise errors.UnrecognisedEntityError(f"Unrecognised auto moderation action type {action_type}")
+        _LOGGER.debug(f"Unrecognised auto-moderation action type {action_type}")
+        raise errors.UnrecognisedEntityError(f"Unrecognised auto-moderation action type {action_type}")
 
     def serialize_auto_mod_action(self, action: auto_mod_models.PartialAutoModAction) -> data_binding.JSONObject:
         payload: typing.Dict[str, typing.Any] = {"type": action.type}
@@ -3787,8 +3787,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         trigger_type = auto_mod_models.AutoModTriggerType(payload["trigger_type"])
         trigger_converter = self._auto_mod_trigger_mapping.get(trigger_type)
         if not trigger_converter:
-            _LOGGER.debug(f"Unrecognised auto moderation trigger type {trigger_type}")
-            raise errors.UnrecognisedEntityError(f"Unrecognised auto moderation trigger type {trigger_type}")
+            _LOGGER.debug(f"Unrecognised auto-moderation trigger type {trigger_type}")
+            raise errors.UnrecognisedEntityError(f"Unrecognised auto-moderation trigger type {trigger_type}")
 
         return auto_mod_models.AutoModRule(
             app=self._app,
