@@ -126,6 +126,7 @@ class VoiceComponentImpl(voice.VoiceComponent):
         *,
         deaf: bool = False,
         mute: bool = False,
+        timeout: int = 3,
         **kwargs: typing.Any,
     ) -> _VoiceConnectionT:
         self._check_if_alive()
@@ -160,20 +161,25 @@ class VoiceComponentImpl(voice.VoiceComponent):
             shard_id,
         )
 
-        state_event, server_event = await asyncio.gather(
-            # Voice state update:
-            self._app.event_manager.wait_for(
-                voice_events.VoiceStateUpdateEvent,
-                timeout=None,
-                predicate=self._init_state_update_predicate(guild_id, user.id),
-            ),
-            # Server update:
-            self._app.event_manager.wait_for(
-                voice_events.VoiceServerUpdateEvent,
-                timeout=None,
-                predicate=self._init_server_update_predicate(guild_id),
-            ),
-        )
+        try:
+            state_event, server_event = await asyncio.gather(
+                # Voice state update:
+                self._app.event_manager.wait_for(
+                    voice_events.VoiceStateUpdateEvent,
+                    timeout=timeout,
+                    predicate=self._init_state_update_predicate(guild_id, user.id),
+                ),
+                # Server update:
+                self._app.event_manager.wait_for(
+                    voice_events.VoiceServerUpdateEvent,
+                    timeout=timeout,
+                    predicate=self._init_server_update_predicate(guild_id),
+                ),
+            )
+        except asyncio.TimeoutError:
+            raise errors.VoiceError(
+                f"Could not connect to voice channel {guild} in guild {channel}.",
+            )
 
         # We will never receive the first endpoint as `None`
         assert server_event.endpoint is not None
