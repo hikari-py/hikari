@@ -1416,7 +1416,7 @@ class EventFactory(abc.ABC):
     def deserialize_auto_mod_rule_create_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> auto_mod_events.AutoModRuleCreateEvent:
-        """Parse a raw payload from Discord into a auto-mod rule create event object.
+        """Parse a raw payload from Discord into an auto-mod rule create event object.
 
         Parameters
         ----------
@@ -1435,7 +1435,7 @@ class EventFactory(abc.ABC):
     def deserialize_auto_mod_rule_update_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> auto_mod_events.AutoModRuleUpdateEvent:
-        """Parse a raw payload from Discord into a auto-mod rule update event object.
+        """Parse a raw payload from Discord into an auto-mod rule update event object.
 
         Parameters
         ----------
@@ -1454,7 +1454,7 @@ class EventFactory(abc.ABC):
     def deserialize_auto_mod_rule_delete_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> auto_mod_events.AutoModRuleDeleteEvent:
-        """Parse a raw payload from Discord into a auto-mod rule delete event object.
+        """Parse a raw payload from Discord into an auto-mod rule delete event object.
 
         Parameters
         ----------
@@ -1473,7 +1473,7 @@ class EventFactory(abc.ABC):
     def deserialize_auto_mod_action_execution_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> auto_mod_events.AutoModActionExecutionEvent:
-        """Parse a raw payload from Discord into a auto-mod action  execution event object.
+        """Parse a raw payload from Discord into an auto-mod action  execution event object.
 
         Parameters
         ----------

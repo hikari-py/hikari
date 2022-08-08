@@ -74,7 +74,7 @@ class AutoModActionType(int, enums.Enum):
 @attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
 class PartialAutoModAction:
-    """Base class for an action which is executed when a ruleis triggered."""
+    """Base class for an action which is executed when a rule is triggered."""
 
     type: AutoModActionType = attr.field()
     """The type of auto-moderation action."""

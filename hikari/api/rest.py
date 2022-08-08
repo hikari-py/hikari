@@ -8233,7 +8233,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        typing.Sequence[hiakri.auto_mod.AutoModRule]
+        typing.Sequence[hikari.auto_mod.AutoModRule]
             Sequence of the guild's auto-moderation rules.
 
         Raises
@@ -8279,7 +8279,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        hiakri.auto_mod.AutoModRule
+        hikari.auto_mod.AutoModRule
             The fetched auto-moderation rule.
 
         Raises
@@ -8344,7 +8344,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Note that the required fields very dependent on what this is set to.
         actions : typing.Sequence[hikari.auto_mod.PartialAutoModAction]
             Sequence of the actions to execute when this rule is triggered.
-        allow_list: hikari.undefined.UndefinedOr[typing.Sequence[builtins.str]]
+        allow_list : hikari.undefined.UndefinedOr[typing.Sequence[builtins.str]]
             A sequence of filters which will be exempt from triggering the preset trigger.
 
             This supports a wildcard matching strategy which is documented at
@@ -8376,7 +8376,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        hiakri.auto_mod.AutoModRule
+        hikari.auto_mod.AutoModRule
             The created auto-moderation rule.
 
         Raises
@@ -8442,7 +8442,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         actions : hikari.undefined.UndefinedOr[typing.Sequence[hikari.auto_mod.PartialAutoModAction]]
             If specified, a sequence of the actions to execute when this rule
             is triggered.
-        allow_list: hikari.undefined.UndefinedOr[typing.Sequence[builtins.str]]
+        allow_list : hikari.undefined.UndefinedOr[typing.Sequence[builtins.str]]
             If specified, a sequence of filters which will be exempt from
             triggering the preset trigger.
 
@@ -8475,7 +8475,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        hiakri.auto_mod.AutoModRule
+        hikari.auto_mod.AutoModRule
             The created auto-moderation rule.
 
         Raises
