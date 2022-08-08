@@ -176,10 +176,10 @@ class VoiceComponentImpl(voice.VoiceComponent):
                     predicate=self._init_server_update_predicate(guild_id),
                 ),
             )
-        except asyncio.TimeoutError:
+        except asyncio.TimeoutError as e:
             raise errors.VoiceError(
                 f"Could not connect to voice channel {channel} in guild {guild}.",
-            )
+            ) from e
 
         # We will never receive the first endpoint as `None`
         assert server_event.endpoint is not None
