@@ -113,7 +113,7 @@ class AutoModRuleDeleteEvent(AutoModEvent):
 @attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
 class AutoModActionExecutionEvent(AutoModEvent):
-    """Event that's fired when an auto mod action is executed."""
+    """Event that's fired when an auto-mod action is executed."""
 
     app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
