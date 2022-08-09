@@ -86,7 +86,7 @@ class VoiceComponent(abc.ABC):
         *,
         deaf: bool = False,
         mute: bool = False,
-        timeout: typing.Optional[int] = 3,
+        timeout: typing.Optional[int] = 5,
         **kwargs: typing.Any,
     ) -> _VoiceConnectionT:
         """Connect to a given voice channel.
@@ -108,7 +108,7 @@ class VoiceComponent(abc.ABC):
             Defaulting to `builtins.False`, if `builtins.True`, the client will
             enter the voice channel muted (thus unable to send audio).
         timeout: typing.Optional[builtins.int]
-            Defaulting to `3`, The amount of time to wait before erroring when
+            Defaulting to `5`, The amount of time to wait before erroring when
             connecting to the voice channel. If timeout is `None` there will be
             no timeout.
 

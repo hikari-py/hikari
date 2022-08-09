@@ -126,7 +126,7 @@ class VoiceComponentImpl(voice.VoiceComponent):
         *,
         deaf: bool = False,
         mute: bool = False,
-        timeout: typing.Optional[int] = 3,
+        timeout: typing.Optional[int] = 5,
         **kwargs: typing.Any,
     ) -> _VoiceConnectionT:
         self._check_if_alive()
