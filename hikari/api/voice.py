@@ -109,11 +109,15 @@ class VoiceComponent(abc.ABC):
             enter the voice channel muted (thus unable to send audio).
         timeout: typing.Optional[builtins.int]
             Defaulting to `3`, The amount of time to wait before erroring when
-            connecting to the voice channel.
+            connecting to the voice channel. If timeout is `None` there will be
+            no timeout.
         **kwargs : typing.Any
             Any arguments to provide to the `VoiceConnection.initialize`
             method.
 
+        !!! warning
+            If timeout is `None`, this function will be awaited forever if an
+            invalid guild_id or channel_id is provided.
 
         Returns
         -------
