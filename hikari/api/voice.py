@@ -111,13 +111,15 @@ class VoiceComponent(abc.ABC):
             Defaulting to `3`, The amount of time to wait before erroring when
             connecting to the voice channel. If timeout is `None` there will be
             no timeout.
+
+        !!! warning
+            If timeout is `None`, this function will be awaited forever if an
+            invalid `guild_id` or `channel_id` is provided.
+
         **kwargs : typing.Any
             Any arguments to provide to the `VoiceConnection.initialize`
             method.
 
-        !!! warning
-            If timeout is `None`, this function will be awaited forever if an
-            invalid guild_id or channel_id is provided.
 
         Returns
         -------
