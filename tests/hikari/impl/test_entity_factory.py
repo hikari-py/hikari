@@ -3265,7 +3265,7 @@ class TestEntityFactoryImpl:
         command = entity_factory_impl.deserialize_slash_command(payload)
 
         assert command.options is None
-        assert command.is_dm_enabled is False
+        assert command.is_dm_enabled is True
         assert isinstance(command, commands.SlashCommand)
 
     def test_deserialize_slash_command_standardizes_default_member_permissions(
@@ -3848,7 +3848,7 @@ class TestEntityFactoryImpl:
         command = entity_factory_impl.deserialize_context_menu_command(context_menu_command_payload)
         assert isinstance(command, commands.ContextMenuCommand)
 
-        assert command.is_dm_enabled is False
+        assert command.is_dm_enabled is True
 
     def test_deserialize_context_menu_command_default_member_permissions(
         self, entity_factory_impl, context_menu_command_payload
