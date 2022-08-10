@@ -1798,6 +1798,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             max_value=payload.get("max_value"),
             name_localizations=name_localizations,
             description_localizations=description_localizations,
+            min_length=payload.get("min_length"),
+            max_length=payload.get("max_length"),
         )
 
     def deserialize_slash_command(
@@ -1845,7 +1847,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             description=payload["description"],
             options=options,
             default_member_permissions=default_member_permissions,
-            is_dm_enabled=payload.get("dm_permission", False),
+            is_dm_enabled=payload.get("dm_permission", True),
             guild_id=guild_id,
             version=snowflakes.Snowflake(payload["version"]),
             name_localizations=name_localizations,
@@ -1883,7 +1885,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             application_id=snowflakes.Snowflake(payload["application_id"]),
             name=payload["name"],
             default_member_permissions=default_member_permissions,
-            is_dm_enabled=payload.get("dm_permission", False),
+            is_dm_enabled=payload.get("dm_permission", True),
             guild_id=guild_id,
             version=snowflakes.Snowflake(payload["version"]),
             name_localizations=name_localizations,
@@ -2210,6 +2212,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             payload["min_value"] = option.min_value
         if option.max_value is not None:
             payload["max_value"] = option.max_value
+
+        if option.min_length is not None:
+            payload["min_length"] = option.min_length
+        if option.max_length is not None:
+            payload["max_length"] = option.max_length
 
         return payload
 

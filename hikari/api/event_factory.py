@@ -37,6 +37,7 @@ if typing.TYPE_CHECKING:
     from hikari import messages as messages_models
     from hikari import presences as presences_models
     from hikari import snowflakes
+    from hikari import stickers as sticker_models
     from hikari import users as user_models
     from hikari import voices as voices_models
     from hikari.api import shard as gateway_shard
@@ -452,7 +453,7 @@ class EventFactory(abc.ABC):
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
         *,
-        old_stickers: typing.Optional[typing.Sequence[guild_models.stickers.GuildSticker]] = None,
+        old_stickers: typing.Optional[typing.Sequence[sticker_models.GuildSticker]] = None,
     ) -> guild_events.StickersUpdateEvent:
         """Parse a raw payload from Discord into a guild stickers update event object.
 
@@ -465,7 +466,7 @@ class EventFactory(abc.ABC):
 
         Other Parameters
         ----------------
-        typing.Optional[typing.Sequence[hikari.guilds.stickers.GuildSticker]]
+        old_stickers : typing.Optional[typing.Sequence[hikari.stickers.GuildSticker]]
             The sequence of stickers or `builtins.None`.
 
         Returns

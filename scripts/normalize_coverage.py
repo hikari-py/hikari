@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -20,24 +19,13 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Package metadata."""
-from __future__ import annotations
+"""Normalize coverage collected across runners."""
+import sqlite3
 
-import typing
+connection = sqlite3.connect(".coverage")
 
-# DO NOT CHANGE THE TYPE HINTS FOR THESE FIELDS. THESE ARE AUTOMATICALLY UPDATED
-# FROM THE CI SCRIPT AND DOING THIS MAY LEAD TO THE DEPLOY PROCESS FAILING.
+# Normalize windows paths
+connection.execute("UPDATE file SET path = REPLACE(path, '\\', '/')")
 
-__author__: typing.Final[str] = "Nekokatt"
-__maintainer__: typing.Final[str] = "davfsa"
-__ci__: typing.Final[str] = "https://github.com/hikari-py/hikari/actions"
-__copyright__: typing.Final[str] = "© 2021-present davfsa"
-__coverage__: typing.Final[str] = "https://codeclimate.com/github/hikari-py/hikari"
-__discord_invite__: typing.Final[str] = "https://discord.gg/Jx4cNGG"
-__docs__: typing.Final[str] = "https://hikari-py.dev/hikari"
-__email__: typing.Final[str] = "davfsa@gmail.com"
-__issue_tracker__: typing.Final[str] = "https://github.com/hikari-py/hikari/issues"
-__license__: typing.Final[str] = "MIT"
-__url__: typing.Final[str] = "https://github.com/hikari-py/hikari"
-__version__: typing.Final[str] = "2.0.0.dev111"
-__git_sha1__: typing.Final[str] = "HEAD"
+connection.commit()
+connection.close()

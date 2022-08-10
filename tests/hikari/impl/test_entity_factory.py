@@ -3265,7 +3265,7 @@ class TestEntityFactoryImpl:
         command = entity_factory_impl.deserialize_slash_command(payload)
 
         assert command.options is None
-        assert command.is_dm_enabled is False
+        assert command.is_dm_enabled is True
         assert isinstance(command, commands.SlashCommand)
 
     def test_deserialize_slash_command_standardizes_default_member_permissions(
@@ -3773,6 +3773,8 @@ class TestEntityFactoryImpl:
             autocomplete=True,
             min_value=1.2,
             max_value=9.999,
+            min_length=3,
+            max_length=69,
             channel_types=[channel_models.ChannelType.GUILD_STAGE, channel_models.ChannelType.GUILD_TEXT, 100],
             choices=[commands.CommandChoice(name="a", value="choice")],
             name_localizations={locales.Locale.TR: "b"},
@@ -3801,6 +3803,8 @@ class TestEntityFactoryImpl:
             "channel_types": [13, 0, 100],
             "min_value": 1.2,
             "max_value": 9.999,
+            "min_length": 3,
+            "max_length": 69,
             "autocomplete": True,
             "choices": [{"name": "a", "value": "choice"}],
             "description_localizations": {"tr": "c"},
@@ -3852,7 +3856,7 @@ class TestEntityFactoryImpl:
         command = entity_factory_impl.deserialize_context_menu_command(context_menu_command_payload)
         assert isinstance(command, commands.ContextMenuCommand)
 
-        assert command.is_dm_enabled is False
+        assert command.is_dm_enabled is True
 
     def test_deserialize_context_menu_command_default_member_permissions(
         self, entity_factory_impl, context_menu_command_payload

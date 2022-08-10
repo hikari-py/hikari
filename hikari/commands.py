@@ -190,6 +190,18 @@ class CommandOption:
     description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attr.field(factory=dict)
     """A set of description localizations for this option"""
 
+    min_length: typing.Optional[int] = attr.field(default=None, repr=False)
+    """The minimum length permitted (inclusive).
+
+    This is only valid for `hikari.commands.OptionType.STRING`, otherwise it will be `builtins.None`.
+    """
+
+    max_length: typing.Optional[int] = attr.field(default=None, repr=False)
+    """The maximum length permitted (inclusive).
+
+    This is only valid for `hikari.commands.OptionType.STRING`, otherwise it will be `builtins.None`.
+    """
+
 
 @attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
