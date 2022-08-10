@@ -1817,7 +1817,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             description=payload["description"],
             options=options,
             default_member_permissions=default_member_permissions,
-            is_dm_enabled=payload.get("dm_permission", False),
+            is_dm_enabled=payload.get("dm_permission", True),
             guild_id=guild_id,
             version=snowflakes.Snowflake(payload["version"]),
         )
@@ -1847,7 +1847,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             application_id=snowflakes.Snowflake(payload["application_id"]),
             name=payload["name"],
             default_member_permissions=default_member_permissions,
-            is_dm_enabled=payload.get("dm_permission", False),
+            is_dm_enabled=payload.get("dm_permission", True),
             guild_id=guild_id,
             version=snowflakes.Snowflake(payload["version"]),
         )
