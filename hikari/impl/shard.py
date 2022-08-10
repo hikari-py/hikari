@@ -696,7 +696,7 @@ class GatewayShardImpl(shard.GatewayShard):
             )
             self._handshake_completed.set()
 
-        elif name == "RESUME":
+        elif name == "RESUMED":
             self._logger.info("shard has resumed [session:%s, seq:%s]", self._session_id, self._seq)
             self._handshake_completed.set()
 

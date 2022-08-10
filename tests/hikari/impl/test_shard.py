@@ -715,14 +715,14 @@ class TestGatewayShardImpl:
             pl,
         )
 
-    def test__dipatch_when_RESUME(self, client):
+    def test__dipatch_when_RESUMED(self, client):
         client._seq = 0
         client._session_id = 123
         client._logger = mock.Mock()
         client._handshake_completed = mock.Mock()
         client._event_manager = mock.Mock()
 
-        client._dispatch("RESUME", 10, {})
+        client._dispatch("RESUMED", 10, {})
 
         assert client._seq == 10
         client._logger.info.assert_called_once_with("shard has resumed [session:%s, seq:%s]", 123, 10)
