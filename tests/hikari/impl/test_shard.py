@@ -611,28 +611,6 @@ def client(http_settings, proxy_settings):
 
 
 class TestGatewayShardImpl:
-    @pytest.mark.parametrize(
-        ("compression", "expect"),
-        [
-            (None, f"v={shard._VERSION}&encoding=json"),
-            ("transport_zlib_stream", f"v={shard._VERSION}&encoding=json&compress=zlib-stream"),
-        ],
-    )
-    def test__init__sets_url_is_correct_json(self, compression, expect, http_settings, proxy_settings):
-        g = shard.GatewayShardImpl(
-            event_manager=mock.Mock(),
-            event_factory=mock.Mock(),
-            http_settings=http_settings,
-            proxy_settings=proxy_settings,
-            intents=intents.Intents.ALL,
-            url="wss://gaytewhuy.discord.meh",
-            data_format="json",
-            compression=compression,
-            token="12345",
-        )
-
-        assert g._url == f"wss://gaytewhuy.discord.meh?{expect}"
-
     def test_using_etf_is_unsupported(self, http_settings, proxy_settings):
         with pytest.raises(NotImplementedError, match="Unsupported gateway data format: etf"):
             shard.GatewayShardImpl(
@@ -693,6 +671,7 @@ class TestGatewayShardImpl:
 
     def test_dispatch_when_READY(self, client):
         client._seq = 0
+        client._resume_gateway_url = None
         client._session_id = 0
         client._user_id = 0
         client._logger = mock.Mock()
@@ -701,6 +680,7 @@ class TestGatewayShardImpl:
 
         pl = {
             "session_id": 101,
+            "resume_gateway_url": "testing.com",
             "user": {"id": 123, "username": "hikari", "discriminator": "5863"},
             "guilds": [
                 {"id": "123"},
@@ -717,6 +697,7 @@ class TestGatewayShardImpl:
         )
 
         assert client._seq == 10
+        assert client._resume_gateway_url == "testing.com"
         assert client._session_id == 101
         assert client._user_id == 123
         client._logger.info.assert_called_once_with(
