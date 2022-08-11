@@ -727,7 +727,7 @@ class TestGatewayShardImpl:
         assert client._seq == 10
         client._logger.info.assert_called_once_with("shard has resumed [session:%s, seq:%s]", 123, 10)
         client._handshake_completed.set.assert_called_once_with()
-        client._event_manager.consume_raw_event.assert_called_once_with("RESUME", client, {})
+        client._event_manager.consume_raw_event.assert_called_once_with("RESUMED", client, {})
 
     def test__dipatch(self, client):
         client._logger = mock.Mock()
