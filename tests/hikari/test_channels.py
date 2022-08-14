@@ -113,7 +113,7 @@ class TestPartialChannel:
         assert str(model) == "Unnamed PartialChannel ID 1234567"
 
     def test_mention_property(self, model):
-        assert model.mention == "<#69420>"
+        assert model.mention == "<#1234567>"
 
     @pytest.mark.asyncio()
     async def test_delete(self, model):
