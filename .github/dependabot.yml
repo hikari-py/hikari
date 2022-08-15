@@ -21,13 +21,3 @@ updates:
       - FasterSpeeding
     rebase-strategy: auto
     target-branch: master
-
-  - package-ecosystem: pip
-    directory: /dev-requirements/
-    schedule:
-      interval: daily
-    reviewers:
-      - davfsa
-      - FasterSpeeding
-    rebase-strategy: auto
-    target-branch: master
