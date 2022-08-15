@@ -1,0 +1,3 @@
+twine==4.0.1
+
+-r build.txt

@@ -51,13 +51,7 @@ else
 fi
 
 echo "===== INSTALLING DEPENDENCIES ====="
-# Note: We install each of these separately due to issues with the new PIP resolver
-# https://github.com/pypa/pip/issues/9187
-pip install setuptools
-pip install wheel
-pip install twine
-pip install nox
-pip install -r requirements.txt
+pip install -r requirements.txt -r dev-requirements/release.txt -r dev-requirements/nox.txt
 
 echo "===== DEPLOYING TO PYPI ====="
 echo "-- Setting __git_sha1__ (ref: ${REF}) --"

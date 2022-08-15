@@ -30,8 +30,7 @@ if [ -z ${GITHUB_TOKEN+x} ]; then echo '$GITHUB_TOKEN environment variable is mi
 if [ -z "${GITHUB_TOKEN}" ]; then echo '$GITHUB_TOKEN environment variable is empty' && exit 1; fi
 
 echo "===== INSTALLING DEPENDENCIES ====="
-pip install towncrier
-pip install -e .
+pip install -r dev-requirements/towncier.txt -e .
 
 echo "===== UPDATING INFORMATION ====="
 echo "-- Checkout branch --"
