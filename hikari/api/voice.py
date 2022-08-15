@@ -86,6 +86,7 @@ class VoiceComponent(abc.ABC):
         *,
         deaf: bool = False,
         mute: bool = False,
+        timeout: typing.Optional[int] = 5,
         **kwargs: typing.Any,
     ) -> _VoiceConnectionT:
         """Connect to a given voice channel.
@@ -106,6 +107,15 @@ class VoiceComponent(abc.ABC):
         mute : builtins.bool
             Defaulting to `builtins.False`, if `builtins.True`, the client will
             enter the voice channel muted (thus unable to send audio).
+        timeout: typing.Optional[builtins.int]
+            Defaulting to `5`, The amount of time to wait before erroring when
+            connecting to the voice channel. If timeout is `None` there will be
+            no timeout.
+
+            !!! warning
+                If timeout is `None`, this function will be awaited forever if an
+                invalid `guild_id` or `channel_id` is provided.
+
         **kwargs : typing.Any
             Any arguments to provide to the `VoiceConnection.initialize`
             method.
