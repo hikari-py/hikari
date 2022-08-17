@@ -40,15 +40,13 @@ def pyright(session: nox.Session) -> None:
         "speedup-requirements.txt",
         "-r",
         "server-requirements.txt",
-        "-r",
-        "dev-requirements.txt",
+        *nox.dev_requirements("pyright"),
     )
-    session.run("python", "-m", "pyright")
+    session.run("pyright")
 
 
 @nox.session()
 def verify_types(session: nox.Session) -> None:
     """Verify the "type completeness" of types exported by the library using Pyright."""
-    session.install("-r", "dev-requirements.txt")
-    session.install(".")
-    session.run("python", "-m", "pyright", "--verifytypes", config.MAIN_PACKAGE, "--ignoreexternal")
+    session.install(".", *nox.dev_requirements("pyright"))
+    session.run("pyright", "--verifytypes", config.MAIN_PACKAGE, "--ignoreexternal")

@@ -52,10 +52,10 @@ This is an alias for `typing.Union[int, float, datetime.datetime]`,
 where `builtins.int` and `builtins.float` types are interpreted as a number of seconds.
 """
 
-DISCORD_EPOCH: typing.Final[int] = 1_420_070_400
+DISCORD_EPOCH: typing.Final[datetime.timedelta] = datetime.timedelta(seconds=1_420_070_400)
 """Discord epoch used within snowflake identifiers.
 
-This is defined as the number of seconds between
+This is defined as the timedelta of seconds between
 `1/1/1970 00:00:00 UTC` and `1/1/2015 00:00:00 UTC`.
 
 References
@@ -118,7 +118,7 @@ def discord_epoch_to_datetime(epoch: int, /) -> datetime.datetime:
     datetime.datetime
         Number of seconds since `1/1/1970 00:00:00 UTC`.
     """
-    return datetime.datetime.fromtimestamp(epoch / 1_000 + DISCORD_EPOCH, datetime.timezone.utc)
+    return datetime.datetime.fromtimestamp(epoch / 1_000, datetime.timezone.utc) + DISCORD_EPOCH
 
 
 def datetime_to_discord_epoch(timestamp: datetime.datetime) -> int:
@@ -134,7 +134,7 @@ def datetime_to_discord_epoch(timestamp: datetime.datetime) -> int:
     builtins.int
         Number of milliseconds since `1/1/2015 00:00:00 UTC`.
     """
-    return int((timestamp.timestamp() - DISCORD_EPOCH) * 1_000)
+    return int((timestamp - DISCORD_EPOCH).timestamp() * 1_000)
 
 
 def unix_epoch_to_datetime(epoch: typing.Union[int, float], /, *, is_millis: bool = True) -> datetime.datetime:

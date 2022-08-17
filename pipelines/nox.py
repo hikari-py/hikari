@@ -20,10 +20,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Wrapper around nox to give default job kwargs."""
-import functools
-import os
-import subprocess
-import typing
+import os as _os
+import typing as _typing
 
 from nox import options as _options
 from nox import session as _session
@@ -34,35 +32,22 @@ from pipelines import config
 # Default sessions should be defined here
 _options.sessions = ["reformat-code", "pytest", "flake8", "slotscheck", "mypy", "verify-types"]
 
-_NoxCallbackSig = typing.Callable[[Session], None]
+_NoxCallbackSig = _typing.Callable[[Session], None]
 
 
-def session(
-    *, only_if: typing.Callable[[], bool] = lambda: True, reuse_venv: bool = False, **kwargs: typing.Any
-) -> typing.Callable[[_NoxCallbackSig], typing.Union[_NoxCallbackSig, Session]]:
-    def decorator(func: _NoxCallbackSig) -> typing.Union[_NoxCallbackSig, Session]:
-        func.__name__ = func.__name__.replace("_", "-")
+def session(*, reuse_venv: bool = False, **kwargs: _typing.Any) -> _typing.Callable[[_NoxCallbackSig], _NoxCallbackSig]:
+    def decorator(func: _NoxCallbackSig) -> _NoxCallbackSig:
+        name = func.__name__.replace("_", "-")
 
-        return _session(reuse_venv=reuse_venv, **kwargs)(func) if only_if() else func
+        return _session(name=name, reuse_venv=reuse_venv, **kwargs)(func)
 
     return decorator
 
 
-def inherit_environment_vars(func: _NoxCallbackSig) -> _NoxCallbackSig:
-    @functools.wraps(func)
-    def logic(session: Session) -> None:
-        for n, v in os.environ.items():
-            session.env[n] = v
-        return func(session)
+def dev_requirements(*dependencies: str) -> _typing.Sequence[str]:
+    args = []
 
-    return logic
+    for dep in dependencies:
+        args.extend(("-r", _os.path.join(config.DEV_REQUIREMENTS_DIRECTORY, f"{dep}.txt")))
 
-
-def shell(arg: str, *args: str) -> int:
-    command = " ".join((arg, *args))
-    print("nox > shell >", command)
-    return subprocess.check_call(command, shell=True)
-
-
-if not os.path.isdir(config.ARTIFACT_DIRECTORY):
-    os.mkdir(config.ARTIFACT_DIRECTORY)
+    return args

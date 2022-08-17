@@ -26,5 +26,5 @@ from pipelines import nox
 @nox.session(reuse_venv=True)
 def codespell(session: nox.Session) -> None:
     """Run codespell to check for spelling mistakes."""
-    session.install("-r", "dev-requirements.txt")
+    session.install(*nox.dev_requirements("codespell"))
     session.run("codespell", *config.FULL_REFORMATTING_PATHS)
