@@ -4031,7 +4031,7 @@ class TestRESTClientImplAsync:
         )
 
     async def test_reposition_channels(self, rest_client):
-        expected_route = routes.POST_GUILD_CHANNELS.compile(guild=123)
+        expected_route = routes.PATCH_GUILD_CHANNELS.compile(guild=123)
         expected_json = [{"id": "456", "position": 1}, {"id": "789", "position": 2}]
         rest_client._request = mock.AsyncMock()
 
