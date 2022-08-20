@@ -43,6 +43,7 @@ from hikari import intents as intents_
 from hikari import presences
 from hikari import snowflakes
 from hikari import undefined
+from hikari import urls
 from hikari.api import shard
 from hikari.impl import rate_limits
 from hikari.internal import data_binding
@@ -96,8 +97,6 @@ _TOTAL_RATELIMIT: typing.Final[typing.Tuple[float, int]] = (60.0, 120)
 # Rate-limit for chunking requests (used to prevent saturating the entire
 # ratelimit window).
 _CHUNKING_RATELIMIT: typing.Final[typing.Tuple[float, int]] = (60.0, 60)
-# Supported gateway version
-_VERSION: int = 8
 # Used to identify the end of a ZLIB payload
 _ZLIB_SUFFIX: typing.Final[bytes] = b"\x00\x00\xff\xff"
 # Close codes which don't invalidate the current session.
@@ -463,7 +462,7 @@ class GatewayShardImpl(shard.GatewayShard):
         if data_format != shard.GatewayDataFormat.JSON:
             raise NotImplementedError(f"Unsupported gateway data format: {data_format}")
 
-        query = {"v": _VERSION, "encoding": str(data_format)}
+        query = {"v": urls.VERSION, "encoding": str(data_format)}
 
         if compression is not None:
             if compression == shard.GatewayCompression.TRANSPORT_ZLIB_STREAM:

@@ -34,6 +34,7 @@ from hikari import errors
 from hikari import intents
 from hikari import presences
 from hikari import undefined
+from hikari import urls
 from hikari.impl import config
 from hikari.impl import shard
 from hikari.internal import time
@@ -614,8 +615,8 @@ class TestGatewayShardImpl:
     @pytest.mark.parametrize(
         ("compression", "expect"),
         [
-            (None, f"v={shard._VERSION}&encoding=json"),
-            ("transport_zlib_stream", f"v={shard._VERSION}&encoding=json&compress=zlib-stream"),
+            (None, f"v={urls.VERSION}&encoding=json"),
+            ("transport_zlib_stream", f"v={urls.VERSION}&encoding=json&compress=zlib-stream"),
         ],
     )
     def test__init__sets_url_is_correct_json(self, compression, expect, http_settings, proxy_settings):
