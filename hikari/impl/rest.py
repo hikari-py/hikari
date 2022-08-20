@@ -1078,7 +1078,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("deny", deny)
         await self._request(route, json=body, reason=reason)
 
-    @deprecation.deprecated("2.0.0.dev110", "edit_permission_overwrite")
+    @deprecation.deprecated("2.0.0.dev113", "edit_permission_overwrite")
     async def edit_permission_overwrites(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
