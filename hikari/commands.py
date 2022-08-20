@@ -50,6 +50,7 @@ from hikari.internal import enums
 if typing.TYPE_CHECKING:
     from hikari import channels
     from hikari import guilds
+    from hikari import locales
 
 
 class CommandType(int, enums.Enum):
@@ -133,7 +134,7 @@ class CommandOption:
     r"""The command option's name.
 
     !!! note
-        This will match the regex `^[\w-]{1,32}$` in Unicode mode and will be
+        This will match the regex `^[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$` in Unicode mode and will be
         lowercase.
     """
 
@@ -183,6 +184,12 @@ class CommandOption:
     and `builtins.float` if the type is `hikari.commands.OptionType.FLOAT`.
     """
 
+    name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attr.field(factory=dict)
+    """A set of name localizations for this option."""
+
+    description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attr.field(factory=dict)
+    """A set of description localizations for this option"""
+
     min_length: typing.Optional[int] = attr.field(default=None, repr=False)
     """The minimum length permitted (inclusive).
 
@@ -217,7 +224,7 @@ class PartialCommand(snowflakes.Unique):
     r"""The command's name.
 
     !!! note
-        This will match the regex `^[\w-]{1,32}$` in Unicode mode and will be
+        This will match the regex `^[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$` in Unicode mode and will be
         lowercase.
     """
 
@@ -238,6 +245,12 @@ class PartialCommand(snowflakes.Unique):
 
     version: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
     """Auto-incrementing version identifier updated during substantial record changes."""
+
+    name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attr.field(factory=dict)
+    """A set of name localizations for this command"""
+
+    description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attr.field(factory=dict)
+    """A set of description localizations for this command"""
 
     async def fetch_self(self) -> PartialCommand:
         """Fetch an up-to-date version of this command object.
