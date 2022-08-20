@@ -172,13 +172,13 @@ class TestGatewayTransport:
     async def test__handle_other_message_when_message_type_is_CLOSE_and_should_not_reconnect(
         self, code, transport_impl
     ):
-        stub_response = StubResponse(type=aiohttp.WSMsgType.CLOSE, extra="dont reconnect", data=code)
+        stub_response = StubResponse(type=aiohttp.WSMsgType.CLOSE, extra="don't reconnect", data=code)
 
         with pytest.raises(errors.GatewayServerClosedConnectionError) as exinfo:
             await transport_impl._handle_other_message(stub_response)
 
         exception = exinfo.value
-        assert exception.reason == "dont reconnect"
+        assert exception.reason == "don't reconnect"
         assert exception.code == int(code)
         assert exception.can_reconnect is False
 

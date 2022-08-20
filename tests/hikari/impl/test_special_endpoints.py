@@ -695,11 +695,11 @@ class TestSlashCommandBuilder:
         }
 
     def test_build_without_optional_data(self):
-        builder = special_endpoints.SlashCommandBuilder("we are numberr", "oner")
+        builder = special_endpoints.SlashCommandBuilder("we are number", "oner")
 
         result = builder.build(mock.Mock())
 
-        assert result == {"type": 1, "name": "we are numberr", "description": "oner", "options": []}
+        assert result == {"type": 1, "name": "we are number", "description": "oner", "options": []}
 
     @pytest.mark.asyncio()
     async def test_create(self):
