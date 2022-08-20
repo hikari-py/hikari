@@ -39,6 +39,7 @@ from hikari import errors
 from hikari import files
 from hikari import guilds
 from hikari import invites
+from hikari import locales
 from hikari import permissions
 from hikari import scheduled_events
 from hikari import snowflakes
@@ -4761,7 +4762,7 @@ class TestRESTClientImplAsync:
         result = await rest_client.fetch_application_commands(StubModel(54123), StubModel(7623423))
 
         assert result == [rest_client._entity_factory.deserialize_command.return_value]
-        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._request.assert_awaited_once_with(expected_route, query={"with_localizations": "true"})
         rest_client._entity_factory.deserialize_command.assert_called_once_with({"id": "34512312"}, guild_id=7623423)
 
     async def test_fetch_application_commands_without_guild(self, rest_client):
@@ -4771,7 +4772,7 @@ class TestRESTClientImplAsync:
         result = await rest_client.fetch_application_commands(StubModel(54123))
 
         assert result == [rest_client._entity_factory.deserialize_command.return_value]
-        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._request.assert_awaited_once_with(expected_route, query={"with_localizations": "true"})
         rest_client._entity_factory.deserialize_command.assert_called_once_with({"id": "34512312"}, guild_id=None)
 
     async def test__create_application_command_with_optionals(self, rest_client: rest.RESTClientImpl):
@@ -4859,6 +4860,8 @@ class TestRESTClientImplAsync:
             "not ok anymore",
             guild=mock_guild,
             options=mock_options,
+            name_localizations={locales.Locale.TR: "hhh"},
+            description_localizations={locales.Locale.TR: "jello"},
             default_member_permissions=permissions.Permissions.ADMINISTRATOR,
             dm_enabled=False,
         )
@@ -4874,6 +4877,8 @@ class TestRESTClientImplAsync:
             description="not ok anymore",
             guild=mock_guild,
             options=mock_options,
+            name_localizations={"tr": "hhh"},
+            description_localizations={"tr": "jello"},
             default_member_permissions=permissions.Permissions.ADMINISTRATOR,
             dm_enabled=False,
         )
@@ -4890,6 +4895,7 @@ class TestRESTClientImplAsync:
             guild=mock_guild,
             default_member_permissions=permissions.Permissions.ADMINISTRATOR,
             dm_enabled=False,
+            name_localizations={locales.Locale.TR: "hhh"},
         )
 
         assert result is rest_client._entity_factory.deserialize_context_menu_command.return_value
@@ -4903,6 +4909,7 @@ class TestRESTClientImplAsync:
             guild=mock_guild,
             default_member_permissions=permissions.Permissions.ADMINISTRATOR,
             dm_enabled=False,
+            name_localizations={"tr": "hhh"},
         )
 
     async def test_set_application_commands_with_guild(self, rest_client):
