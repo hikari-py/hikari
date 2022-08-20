@@ -703,13 +703,13 @@ class TestSlashCommandBuilder:
         }
 
     def test_build_without_optional_data(self):
-        builder = special_endpoints.SlashCommandBuilder("we are numberr", "oner")
+        builder = special_endpoints.SlashCommandBuilder("we are number", "oner")
 
         result = builder.build(mock.Mock())
 
         assert result == {
             "type": 1,
-            "name": "we are numberr",
+            "name": "we are number",
             "description": "oner",
             "options": [],
             "name_localizations": {},
