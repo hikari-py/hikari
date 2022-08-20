@@ -268,7 +268,7 @@ class PermissionOverwrite:
 
     ```py
     overwrite = PermissionOverwrite(
-        id=random.randint(0, 10000),
+        id=163979124820541440,
         type=PermissionOverwriteType.MEMBER,
         allow=(
             Permissions.VIEW_CHANNEL
