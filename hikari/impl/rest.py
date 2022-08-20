@@ -1093,7 +1093,7 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> None:
         """Edit permissions for a specific entity in the given guild channel.
 
-        .. deprecated:: 2.0.0.dev113
+        .. deprecated:: 2.0.0.dev110
             Use `RESTClient.edit_permission_overwrite` instead.
         """
         await self.edit_permission_overwrite(
