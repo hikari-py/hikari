@@ -23,16 +23,25 @@
 """Provides the `python -m hikari` and `hikari` commands to the shell."""
 from __future__ import annotations
 
-import os
+import importlib.metadata
+import pathlib
 import platform
 import sys
+import typing
 
 from hikari import _about
 
 
+def _get_entry_points(group: str) -> typing.Optional[typing.Sequence[importlib.metadata.EntryPoint]]:
+    if sys.version_info >= (3, 10):
+        return importlib.metadata.entry_points(group=group)
+
+    return importlib.metadata.entry_points().get(group)
+
+
 def main() -> None:
     """Print package info and exit."""
-    path = os.path.abspath(os.path.dirname(_about.__file__))
+    path = pathlib.Path(_about.__file__).parent
     sha1 = _about.__git_sha1__[:8]
     version = _about.__version__
     py_impl = platform.python_implementation()
@@ -43,3 +52,14 @@ def main() -> None:
     sys.stderr.write(f"located at {path}\n")
     sys.stderr.write(f"{py_impl} {py_ver} {py_compiler}\n")
     sys.stderr.write(" ".join(frag.strip() for frag in platform.uname() if frag and frag.strip()) + "\n")
+
+    if extensions := _get_entry_points("hikari"):
+        sys.stderr.write("\nInstalled extensions:\n")
+
+        for extension in extensions:
+            name = extension.name
+            version = importlib.metadata.version(name)
+            module = extension.load()
+            module_path = pathlib.Path(module.__file__).parent
+
+            sys.stderr.write(f"  {name} ({version}) [{module_path}]\n")
