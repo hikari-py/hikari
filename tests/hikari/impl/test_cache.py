@@ -3186,7 +3186,7 @@ class TestCacheImpl:
         cache_impl._is_cache_enabled_for = mock.Mock(return_value=False)
 
         fn = getattr(cache_impl, name)
-        n = fn.__code__.co_argcount - 1  # Dont count self as an argument as we don't need to pass it
+        n = fn.__code__.co_argcount - 1  # Don't count self as an argument as we don't need to pass it
 
         assert fn(*(None for _ in range(n))) == expected
 

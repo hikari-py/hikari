@@ -19,34 +19,13 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Pyright integrations."""
+"""Normalize coverage collected across runners."""
+import sqlite3
 
-from pipelines import config
-from pipelines import nox
+connection = sqlite3.connect(".coverage")
 
+# Normalize windows paths
+connection.execute("UPDATE file SET path = REPLACE(path, '\\', '/')")
 
-@nox.session()
-def pyright(session: nox.Session) -> None:
-    """Perform static type analysis on Python source code using pyright.
-
-    At the time of writing this, this pipeline will not run successfully,
-    as hikari does not have 100% compatibility with pyright just yet. This
-    exists to make it easier to test and eventually reach that 100% compatibility.
-    """
-    session.install(
-        "-r",
-        "requirements.txt",
-        "-r",
-        "speedup-requirements.txt",
-        "-r",
-        "server-requirements.txt",
-        *nox.dev_requirements("pyright"),
-    )
-    session.run("pyright")
-
-
-@nox.session()
-def verify_types(session: nox.Session) -> None:
-    """Verify the "type completeness" of types exported by the library using Pyright."""
-    session.install(".", *nox.dev_requirements("pyright"))
-    session.run("pyright", "--verifytypes", config.MAIN_PACKAGE, "--ignoreexternal")
+connection.commit()
+connection.close()

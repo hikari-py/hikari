@@ -20,7 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Pytest integration."""
-import os
+import typing
 
 from pipelines import config
 from pipelines import nox
@@ -50,7 +50,6 @@ def pytest(session: nox.Session) -> None:
 
     Coverage can be disabled with the `--skip-coverage` flag.
     """
-    session.install("-r", "requirements.txt", "-r", "dev-requirements.txt")
     _pytest(session)
 
 
@@ -60,24 +59,28 @@ def pytest_all_features(session: nox.Session) -> None:
 
     Coverage can be disabled with the `--skip-coverage` flag.
     """
+
+    _pytest(
+        session,
+        extra_install=("-r", "server-requirements.txt", "-r", "speedup-requirements.txt"),
+        python_flags=("-OO",),
+    )
+
+
+def _pytest(
+    session: nox.Session, *, extra_install: typing.Sequence[str] = (), python_flags: typing.Sequence[str] = ()
+) -> None:
     session.install(
         "-r",
         "requirements.txt",
-        "-r",
-        "server-requirements.txt",
-        "-r",
-        "speedup-requirements.txt",
-        "-r",
-        "dev-requirements.txt",
+        *extra_install,
+        *nox.dev_requirements("pytest"),
     )
-    _pytest(session, "-OO")
 
-
-def _pytest(session: nox.Session, *py_flags: str) -> None:
     if "--skip-coverage" in session.posargs:
         session.posargs.remove("--skip-coverage")
         flags = RUN_FLAGS
     else:
         flags = [*RUN_FLAGS, *COVERAGE_FLAGS]
 
-    session.run("python", *py_flags, "-m", "pytest", *flags, *session.posargs, config.TEST_PACKAGE)
+    session.run("python", *python_flags, "-m", "pytest", *flags, *session.posargs, config.TEST_PACKAGE)

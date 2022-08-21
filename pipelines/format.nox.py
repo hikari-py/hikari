@@ -20,10 +20,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Code-style jobs."""
-import os
+import pathlib
 import shutil
 import subprocess
 import time
+import typing
 
 from pipelines import config
 from pipelines import nox
@@ -34,7 +35,7 @@ GIT = shutil.which("git")
 @nox.session(reuse_venv=True)
 def reformat_code(session: nox.Session) -> None:
     """Remove trailing whitespace in source, run isort, codespell and then run black code formatter."""
-    session.install("-r", "dev-requirements.txt")
+    session.install(*nox.dev_requirements("formatting", "codespell"))
 
     remove_trailing_whitespaces(session)
 
@@ -56,34 +57,46 @@ def remove_trailing_whitespaces(session: nox.Session, check_only: bool = False) 
     total = 0
 
     start = time.perf_counter()
-    for path in config.FULL_REFORMATTING_PATHS:
-        if os.path.isfile(path):
-            total += 1
-            count += remove_trailing_whitespaces_for_file(path, session, check_only)
+    for raw_path in config.FULL_REFORMATTING_PATHS:
+        path = pathlib.Path(raw_path)
 
-        for root, dirs, files in os.walk(path, topdown=True, followlinks=False):
-            for file in files:
-                if file.casefold().endswith(config.REFORMATTING_FILE_EXTS):
-                    total += 1
-                    count += remove_trailing_whitespaces_for_file(os.path.join(root, file), session, check_only)
+        dir_total, dir_count = remove_trailing_whitespaces_for_directory(pathlib.Path(path), session, check_only)
 
-                i = len(dirs) - 1
-                while i >= 0:
-                    if dirs[i] == "__pycache__":
-                        del dirs[i]
-                    i -= 1
+        total += dir_total
+        count += dir_count
 
     end = time.perf_counter()
 
     remark = "Good job! " if not count else ""
     message = "Had to fix" if not check_only else "Found issues in"
-    session.log(
+    call = session.error if check_only and count else session.log
+
+    call(
         f"{message} {count} file(s). "
-        f"{remark}Took {1_000 * (end - start):.2f}ms to check {total} files in this project.",
+        f"{remark}Took {1_000 * (end - start):.2f}ms to check {total} files in this project."
+        + ("\nTry running 'nox -s reformat-code' to fix them" if check_only and count else ""),
     )
 
-    if check_only and count:
-        session.error("Trailing whitespaces found. Try running 'nox -s reformat-code' to fix them")
+
+def remove_trailing_whitespaces_for_directory(
+    root_path: pathlib.Path, session: nox.Session, check_only: bool
+) -> typing.Tuple[int, int]:
+    total = 0
+    count = 0
+
+    for path in root_path.glob("*"):
+        if path.is_file():
+            if path.name.casefold().endswith(config.REFORMATTING_FILE_EXTS):
+                total += 1
+                count += remove_trailing_whitespaces_for_file(str(path), session, check_only)
+            continue
+
+        dir_total, dir_count = remove_trailing_whitespaces_for_directory(path, session, check_only)
+
+        total += dir_total
+        count += dir_count
+
+    return total, count
 
 
 def remove_trailing_whitespaces_for_file(file: str, session: nox.Session, check_only: bool) -> bool:
@@ -101,7 +114,7 @@ def remove_trailing_whitespaces_for_file(file: str, session: nox.Session, check_
             return False
 
         if check_only:
-            session.log(f"Trailing whitespaces found in {file}")
+            session.warn(f"Trailing whitespaces found in {file}")
             return True
 
         session.log(f"Removing trailing whitespaces present in {file}")
@@ -118,4 +131,4 @@ def remove_trailing_whitespaces_for_file(file: str, session: nox.Session, check_
         return True
     except Exception as ex:
         print("Failed to check", file, "because", type(ex).__name__, ex)
-        return False
+        return True

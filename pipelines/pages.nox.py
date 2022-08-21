@@ -46,7 +46,6 @@ def copy_from_in(src: str, dest: str) -> None:
 
 
 @nox.session(reuse_venv=True)
-@nox.inherit_environment_vars
 def pages(session: nox.Session) -> None:
     """Generate website pages."""
     if not os.path.exists(config.ARTIFACT_DIRECTORY):
@@ -57,7 +56,7 @@ def pages(session: nox.Session) -> None:
     copy_from_in(config.PAGES_DIRECTORY, config.ARTIFACT_DIRECTORY)
 
     # Documentation
-    session.install("-r", "requirements.txt", "-r", "dev-requirements.txt")
+    session.install("-r", "requirements.txt", *nox.dev_requirements("pdoc"))
     session.env["PDOC3_GENERATING"] = "1"
 
     print("Building documentation...")

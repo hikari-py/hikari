@@ -161,7 +161,6 @@ This includes the following:
 DeferredResponseTypesT = typing.Literal[
     ResponseType.DEFERRED_MESSAGE_CREATE, 5, ResponseType.DEFERRED_MESSAGE_UPDATE, 6
 ]
-
 """Type-hint of the response types which are valid for deferred messages responses.
 
 The following are valid for this:
