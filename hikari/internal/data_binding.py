@@ -90,6 +90,7 @@ if typing.TYPE_CHECKING:
         """Convert a JSON string to a Python type."""
         raise NotImplementedError
 
+
 else:
     import json
 
