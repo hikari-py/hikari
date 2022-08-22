@@ -7466,7 +7466,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the message embeds.
         replace_attachments: bool
             Whether to replace the attachments with the provided ones. Defaults
-            to `builtins.False`. This is only valid for component interactions.
+            to `builtins.False`. This only effects component interactions.
 
             Note this will also overwrite the embed attachments.
         flags : typing.Union[builtins.int, hikari.messages.MessageFlag, hikari.undefined.UndefinedType]
