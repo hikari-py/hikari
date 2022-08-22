@@ -42,6 +42,7 @@ __all__: typing.Sequence[str] = (
     "SelectOptionBuilder",
     "TextInputBuilder",
     "InteractionModalBuilder",
+    "ModalActionRowBuilder",
 )
 
 import abc
@@ -68,6 +69,7 @@ if typing.TYPE_CHECKING:
     from hikari.api import entity_factory as entity_factory_
     from hikari.api import rest as rest_api
     from hikari.interactions import base_interactions
+    from hikari.interactions import modal_interactions
     from hikari.internal import time
 
     _T = typing.TypeVar("_T")
@@ -1627,7 +1629,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
 
     @property
     @abc.abstractmethod
-    def style(self) -> messages.TextInputStyle:
+    def style(self) -> modal_interactions.TextInputStyle:
         """Style to use for the text input."""
 
     @property
@@ -1656,12 +1658,12 @@ class TextInputBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
         """Maximum length the text should have."""
 
     @abc.abstractmethod
-    def set_style(self: _T, style: typing.Union[messages.TextInputStyle, int], /) -> _T:
+    def set_style(self: _T, style: typing.Union[modal_interactions.TextInputStyle, int], /) -> _T:
         """Set the style to use for the text input.
 
         Parameters
         ----------
-        style : typing.Union[hikari.messages.TextInputStyle, int]
+        style : typing.Union[hikari.modal_interactions.TextInputStyle, int]
             Style to use for the text input.
 
         Returns
@@ -1880,6 +1882,41 @@ class ActionRowBuilder(ComponentBuilder, abc.ABC):
             Select menu builder object.
             `SelectMenuBuilder.add_to_container` should be called to finalise the
             component.
+        """
+
+
+class ModalActionRowBuilder(ComponentBuilder, abc.ABC):
+    """Builder class for modal action row components."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def components(self) -> typing.Sequence[ComponentBuilder]:
+        """Sequence of the component builders registered within this action row."""
+
+    @abc.abstractmethod
+    def add_component(
+        self: _T,
+        component: ComponentBuilder,
+        /,
+    ) -> _T:
+        """Add a component to this action row builder.
+
+        !!! warning
+            It is generally better to use `ActionRowBuilder.add_button`
+            and `ActionRowBuilder.add_select_menu` to add your
+            component to the builder. Those methods utilize this one.
+
+        Parameters
+        ----------
+        component : ComponentBuilder
+            The component builder to add to the action row.
+
+        Returns
+        -------
+        ActionRowBuilder
+            The builder object to enable chained calls.
         """
 
     @abc.abstractmethod

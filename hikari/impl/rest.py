@@ -3594,6 +3594,9 @@ class RESTClientImpl(rest_api.RESTClient):
     def build_action_row(self) -> special_endpoints.ActionRowBuilder:
         return special_endpoints_impl.ActionRowBuilder()
 
+    def build_modal_action_row(self) -> special_endpoints.ModalActionRowBuilder:
+        return special_endpoints_impl.ModalActionRowBuilder()
+
     async def fetch_scheduled_event(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],

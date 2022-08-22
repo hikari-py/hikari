@@ -7819,6 +7819,16 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
+    def build_modal_action_row(self) -> special_endpoints.ModalActionRowBuilder:
+        """Build an action row modal component for use in interactions and REST calls.
+
+        Returns
+        -------
+        hikari.api.special_endpoints.ModalActionRowBuilder
+            The initialised action row builder.
+        """
+
+    @abc.abstractmethod
     async def fetch_scheduled_event(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],

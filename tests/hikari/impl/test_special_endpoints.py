@@ -33,6 +33,7 @@ from hikari import snowflakes
 from hikari import undefined
 from hikari.impl import special_endpoints
 from hikari.interactions import base_interactions
+from hikari.interactions import modal_interactions
 from hikari.internal import routes
 from tests.hikari import hikari_test_helpers
 
@@ -1221,8 +1222,8 @@ class TestTextInput:
         )
 
     def test_set_style(self, text_input):
-        assert text_input.set_style(messages.TextInputStyle.PARAGRAPH) is text_input
-        assert text_input.style == messages.TextInputStyle.PARAGRAPH
+        assert text_input.set_style(modal_interactions.TextInputStyle.PARAGRAPH) is text_input
+        assert text_input.style == modal_interactions.TextInputStyle.PARAGRAPH
 
     def test_set_custom_id(self, text_input):
         assert text_input.set_custom_id("custooom") is text_input
@@ -1264,7 +1265,7 @@ class TestTextInput:
         ).build()
 
         assert result == {
-            "type": messages.ComponentType.TEXT_INPUT,
+            "type": modal_interactions.ModalComponentType.TEXT_INPUT,
             "style": 1,
             "custom_id": "o2o2o2",
             "label": "label",
@@ -1286,7 +1287,7 @@ class TestTextInput:
         )
 
         assert result == {
-            "type": messages.ComponentType.TEXT_INPUT,
+            "type": modal_interactions.ModalComponentType.TEXT_INPUT,
             "style": 1,
             "custom_id": "o2o2o2",
             "label": "label",
@@ -1328,14 +1329,6 @@ class TestActionRowBuilder:
 
         assert row.components == [menu]
 
-    def test_add_text_input(self):
-        row = special_endpoints.ActionRowBuilder()
-        menu = row.add_text_input("hihihi", "label")
-
-        menu.add_to_container()
-
-        assert row.components == [menu]
-
     def test_build(self):
         mock_component_1 = mock.Mock()
         mock_component_2 = mock.Mock()
@@ -1351,3 +1344,13 @@ class TestActionRowBuilder:
         }
         mock_component_1.build.assert_called_once_with()
         mock_component_2.build.assert_called_once_with()
+
+
+class TestModalActionRow:
+    def test_add_text_input(self):
+        row = special_endpoints.ModalActionRowBuilder()
+        menu = row.add_text_input("hihihi", "label")
+
+        menu.add_to_container()
+
+        assert row.components == [menu]
