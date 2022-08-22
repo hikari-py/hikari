@@ -592,13 +592,6 @@ class ModalResponseMixin(PartialInteraction):
 
         Parameters
         ----------
-        interaction : hikari.snowflakes.SnowflakeishOr[hikari.interactions.base_interactions.PartialInteraction]
-            Object or ID of the interaction this response is for.
-        token : builtins.str
-            The command interaction's token.
-
-        Other Parameters
-        ----------------
         title : str
             The title that will show up in the modal.
         custom_id : str
