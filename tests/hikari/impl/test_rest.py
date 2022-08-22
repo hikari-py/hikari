@@ -39,6 +39,7 @@ from hikari import errors
 from hikari import files
 from hikari import guilds
 from hikari import invites
+from hikari import locales
 from hikari import permissions
 from hikari import scheduled_events
 from hikari import snowflakes
@@ -2173,13 +2174,13 @@ class TestRESTClientImplAsync:
         assert result is None
         rest_client._request.assert_awaited_once_with(expected_route, json={"channel_id": "321"})
 
-    async def test_edit_permission_overwrites(self, rest_client):
+    async def test_edit_permission_overwrite(self, rest_client):
         target = StubModel(456)
         expected_route = routes.PUT_CHANNEL_PERMISSIONS.compile(channel=123, overwrite=456)
         rest_client._request = mock.AsyncMock()
         expected_json = {"type": 1, "allow": 4, "deny": 1}
 
-        await rest_client.edit_permission_overwrites(
+        await rest_client.edit_permission_overwrite(
             StubModel(123),
             target,
             target_type=channels.PermissionOverwriteType.MEMBER,
@@ -2188,6 +2189,26 @@ class TestRESTClientImplAsync:
             reason="cause why not :)",
         )
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="cause why not :)")
+
+    async def test_edit_permission_overwrites(self, rest_client):
+        with mock.patch.object(rest_client, "edit_permission_overwrite") as edit_permission_overwrite:
+            await rest_client.edit_permission_overwrites(
+                StubModel(123),
+                StubModel(456),
+                target_type=channels.PermissionOverwriteType.MEMBER,
+                allow=permissions.Permissions.BAN_MEMBERS,
+                deny=permissions.Permissions.CREATE_INSTANT_INVITE,
+                reason="cause why not :)",
+            )
+
+        edit_permission_overwrite.assert_awaited_once_with(
+            StubModel(123),
+            StubModel(456),
+            target_type=channels.PermissionOverwriteType.MEMBER,
+            allow=permissions.Permissions.BAN_MEMBERS,
+            deny=permissions.Permissions.CREATE_INSTANT_INVITE,
+            reason="cause why not :)",
+        )
 
     @pytest.mark.parametrize(
         ("target", "expected_type"),
@@ -2233,17 +2254,17 @@ class TestRESTClientImplAsync:
             ),
         ],
     )
-    async def test_edit_permission_overwrites_when_target_undefined(self, rest_client, target, expected_type):
+    async def test_edit_permission_overwrite_when_target_undefined(self, rest_client, target, expected_type):
         expected_route = routes.PUT_CHANNEL_PERMISSIONS.compile(channel=123, overwrite=456)
         rest_client._request = mock.AsyncMock()
         expected_json = {"type": expected_type}
 
-        await rest_client.edit_permission_overwrites(StubModel(123), target)
+        await rest_client.edit_permission_overwrite(StubModel(123), target)
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason=undefined.UNDEFINED)
 
-    async def test_edit_permission_overwrites_when_cant_determine_target_type(self, rest_client):
+    async def test_edit_permission_overwrite_when_cant_determine_target_type(self, rest_client):
         with pytest.raises(TypeError):
-            await rest_client.edit_permission_overwrites(StubModel(123), StubModel(123))
+            await rest_client.edit_permission_overwrite(StubModel(123), StubModel(123))
 
     async def test_delete_permission_overwrite(self, rest_client):
         expected_route = routes.DELETE_CHANNEL_PERMISSIONS.compile(channel=123, overwrite=456)
@@ -4026,7 +4047,7 @@ class TestRESTClientImplAsync:
         )
 
     async def test_reposition_channels(self, rest_client):
-        expected_route = routes.POST_GUILD_CHANNELS.compile(guild=123)
+        expected_route = routes.PATCH_GUILD_CHANNELS.compile(guild=123)
         expected_json = [{"id": "456", "position": 1}, {"id": "789", "position": 2}]
         rest_client._request = mock.AsyncMock()
 
@@ -4756,7 +4777,7 @@ class TestRESTClientImplAsync:
         result = await rest_client.fetch_application_commands(StubModel(54123), StubModel(7623423))
 
         assert result == [rest_client._entity_factory.deserialize_command.return_value]
-        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._request.assert_awaited_once_with(expected_route, query={"with_localizations": "true"})
         rest_client._entity_factory.deserialize_command.assert_called_once_with({"id": "34512312"}, guild_id=7623423)
 
     async def test_fetch_application_commands_without_guild(self, rest_client):
@@ -4766,7 +4787,7 @@ class TestRESTClientImplAsync:
         result = await rest_client.fetch_application_commands(StubModel(54123))
 
         assert result == [rest_client._entity_factory.deserialize_command.return_value]
-        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._request.assert_awaited_once_with(expected_route, query={"with_localizations": "true"})
         rest_client._entity_factory.deserialize_command.assert_called_once_with({"id": "34512312"}, guild_id=None)
 
     async def test__create_application_command_with_optionals(self, rest_client: rest.RESTClientImpl):
@@ -4854,6 +4875,8 @@ class TestRESTClientImplAsync:
             "not ok anymore",
             guild=mock_guild,
             options=mock_options,
+            name_localizations={locales.Locale.TR: "hhh"},
+            description_localizations={locales.Locale.TR: "jello"},
             default_member_permissions=permissions.Permissions.ADMINISTRATOR,
             dm_enabled=False,
         )
@@ -4869,6 +4892,8 @@ class TestRESTClientImplAsync:
             description="not ok anymore",
             guild=mock_guild,
             options=mock_options,
+            name_localizations={"tr": "hhh"},
+            description_localizations={"tr": "jello"},
             default_member_permissions=permissions.Permissions.ADMINISTRATOR,
             dm_enabled=False,
         )
@@ -4885,6 +4910,7 @@ class TestRESTClientImplAsync:
             guild=mock_guild,
             default_member_permissions=permissions.Permissions.ADMINISTRATOR,
             dm_enabled=False,
+            name_localizations={locales.Locale.TR: "hhh"},
         )
 
         assert result is rest_client._entity_factory.deserialize_context_menu_command.return_value
@@ -4898,6 +4924,7 @@ class TestRESTClientImplAsync:
             guild=mock_guild,
             default_member_permissions=permissions.Permissions.ADMINISTRATOR,
             dm_enabled=False,
+            name_localizations={"tr": "hhh"},
         )
 
     async def test_set_application_commands_with_guild(self, rest_client):

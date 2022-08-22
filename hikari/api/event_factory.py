@@ -37,6 +37,7 @@ if typing.TYPE_CHECKING:
     from hikari import messages as messages_models
     from hikari import presences as presences_models
     from hikari import snowflakes
+    from hikari import stickers as sticker_models
     from hikari import users as user_models
     from hikari import voices as voices_models
     from hikari.api import shard as gateway_shard
@@ -444,6 +445,34 @@ class EventFactory(abc.ABC):
         -------
         hikari.events.guild_events.EmojisUpdateEvent
             The parsed guild emojis update event object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_guild_stickers_update_event(
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+        *,
+        old_stickers: typing.Optional[typing.Sequence[sticker_models.GuildSticker]] = None,
+    ) -> guild_events.StickersUpdateEvent:
+        """Parse a raw payload from Discord into a guild stickers update event object.
+
+        Parameters
+        ----------
+        shard : hikari.api.shard.GatewayShard
+            The shard that emitted this event.
+        payload : hikari.internal.data_binding.JSONObject
+            The dict payload to parse.
+
+        Other Parameters
+        ----------------
+        old_stickers : typing.Optional[typing.Sequence[hikari.stickers.GuildSticker]]
+            The sequence of stickers or `builtins.None`.
+
+        Returns
+        -------
+        hikari.events.guild_events.StickersUpdateEvent
+            The parsed guild stickers update event object.
         """
 
     @abc.abstractmethod

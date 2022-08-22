@@ -113,8 +113,10 @@ def test_parse_discord_epoch_to_datetime():
 
 
 def test_parse_datetime_to_discord_epoch():
-    timestamp = datetime.datetime(2016, 3, 14, 21, 41, 18, 956000, tzinfo=datetime.timezone.utc)
-    expected_discord_timestamp = 37921278956
+    # This specific timestamp (amongst others) has given problems in the past with
+    # float precision, so make sure it doesn't happen again.
+    timestamp = datetime.datetime(2022, 8, 13, 23, 10, 35, 843000, tzinfo=datetime.timezone.utc)
+    expected_discord_timestamp = 240361835843
     assert time.datetime_to_discord_epoch(timestamp) == expected_discord_timestamp
 
 

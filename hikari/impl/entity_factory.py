@@ -253,6 +253,9 @@ class _GatewayGuildDefinition(entity_factory.GatewayGuildDefinition):
     _emojis: UndefinedSnowflakeMapping[emoji_models.KnownCustomEmoji] = attr.field(
         init=False, default=undefined.UNDEFINED
     )
+    _stickers: UndefinedSnowflakeMapping[sticker_models.GuildSticker] = attr.field(
+        init=False, default=undefined.UNDEFINED
+    )
     _members: UndefinedSnowflakeMapping[guild_models.Member] = attr.field(init=False, default=undefined.UNDEFINED)
     _presences: UndefinedSnowflakeMapping[presence_models.MemberPresence] = attr.field(
         init=False, default=undefined.UNDEFINED
@@ -289,6 +292,15 @@ class _GatewayGuildDefinition(entity_factory.GatewayGuildDefinition):
             }
 
         return self._emojis
+
+    def stickers(self) -> typing.Mapping[snowflakes.Snowflake, sticker_models.GuildSticker]:
+        if self._stickers is undefined.UNDEFINED:
+            self._stickers = {
+                snowflakes.Snowflake(s["id"]): self._entity_factory.deserialize_guild_sticker(s)
+                for s in self._payload["stickers"]
+            }
+
+        return self._stickers
 
     def guild(self) -> guild_models.GatewayGuild:
         if self._guild is undefined.UNDEFINED:
@@ -1572,6 +1584,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             snowflakes.Snowflake(emoji["id"]): self.deserialize_known_custom_emoji(emoji, guild_id=guild_fields.id)
             for emoji in payload["emojis"]
         }
+        stickers = {
+            snowflakes.Snowflake(sticker["id"]): self.deserialize_guild_sticker(sticker)
+            for sticker in payload["stickers"]
+        }
         return guild_models.RESTGuild(
             app=self._app,
             id=guild_fields.id,
@@ -1608,6 +1624,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             approximate_active_member_count=approximate_active_member_count,
             roles=roles,
             emojis=emojis,
+            stickers=stickers,
         )
 
     def deserialize_gateway_guild(self, payload: data_binding.JSONObject) -> entity_factory.GatewayGuildDefinition:
@@ -1757,6 +1774,20 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_channel_types := payload.get("channel_types"):
             channel_types = [channel_models.ChannelType(channel_type) for channel_type in raw_channel_types]
 
+        name_localizations: typing.Mapping[str, str]
+        if raw_name_localizations := payload.get("name_localizations"):
+            name_localizations = {locales.Locale(k): raw_name_localizations[k] for k in raw_name_localizations}
+        else:
+            name_localizations = {}
+
+        description_localizations: typing.Mapping[str, str]
+        if raw_description_localizations := payload.get("description_localizations"):
+            description_localizations = {
+                locales.Locale(k): raw_description_localizations[k] for k in raw_description_localizations
+            }
+        else:
+            description_localizations = {}
+
         return commands.CommandOption(
             type=commands.OptionType(payload["type"]),
             name=payload["name"],
@@ -1768,6 +1799,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             autocomplete=payload.get("autocomplete", False),
             min_value=payload.get("min_value"),
             max_value=payload.get("max_value"),
+            name_localizations=name_localizations,
+            description_localizations=description_localizations,
+            min_length=payload.get("min_length"),
+            max_length=payload.get("max_length"),
         )
 
     def deserialize_slash_command(
@@ -1783,6 +1818,20 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         options: typing.Optional[typing.List[commands.CommandOption]] = None
         if raw_options := payload.get("options"):
             options = [self._deserialize_command_option(option) for option in raw_options]
+
+        name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str]
+        if raw_name_localizations := payload.get("name_localizations"):
+            name_localizations = {locales.Locale(k): raw_name_localizations[k] for k in raw_name_localizations}
+        else:
+            name_localizations = {}
+
+        description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str]
+        if raw_description_localizations := payload.get("description_localizations"):
+            description_localizations = {
+                locales.Locale(k): raw_description_localizations[k] for k in raw_description_localizations
+            }
+        else:
+            description_localizations = {}
 
         # Discord considers 0 the same thing as ADMINISTRATORS, but we make it nicer to work with
         # by setting it correctly.
@@ -1801,9 +1850,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             description=payload["description"],
             options=options,
             default_member_permissions=default_member_permissions,
-            is_dm_enabled=payload.get("dm_permission", False),
+            is_dm_enabled=payload.get("dm_permission", True),
             guild_id=guild_id,
             version=snowflakes.Snowflake(payload["version"]),
+            name_localizations=name_localizations,
+            description_localizations=description_localizations,
         )
 
     def deserialize_context_menu_command(
@@ -1815,6 +1866,12 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if guild_id is undefined.UNDEFINED:
             raw_guild_id = payload["guild_id"]
             guild_id = snowflakes.Snowflake(raw_guild_id) if raw_guild_id is not None else None
+
+        name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str]
+        if raw_name_localizations := payload.get("name_localizations"):
+            name_localizations = {locales.Locale(k): raw_name_localizations[k] for k in raw_name_localizations}
+        else:
+            name_localizations = {}
 
         # Discord considers 0 the same thing as ADMINISTRATORS, but we make it nicer to work with
         # by setting it correctly.
@@ -1831,9 +1888,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             application_id=snowflakes.Snowflake(payload["application_id"]),
             name=payload["name"],
             default_member_permissions=default_member_permissions,
-            is_dm_enabled=payload.get("dm_permission", False),
+            is_dm_enabled=payload.get("dm_permission", True),
             guild_id=guild_id,
             version=snowflakes.Snowflake(payload["version"]),
+            name_localizations=name_localizations,
         )
 
     def deserialize_command(
@@ -2187,6 +2245,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             "name": option.name,
             "description": option.description,
             "required": option.is_required,
+            "name_localizations": option.name_localizations,
+            "description_localizations": option.description_localizations,
         }
 
         if option.channel_types is not None:
@@ -2205,6 +2265,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             payload["min_value"] = option.min_value
         if option.max_value is not None:
             payload["max_value"] = option.max_value
+
+        if option.min_length is not None:
+            payload["min_length"] = option.min_length
+        if option.max_length is not None:
+            payload["max_length"] = option.max_length
 
         return payload
 

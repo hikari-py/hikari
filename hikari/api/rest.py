@@ -505,7 +505,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @typing.overload
     @abc.abstractmethod
-    async def edit_permission_overwrites(
+    async def edit_permission_overwrite(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
         target: typing.Union[channels_.PermissionOverwrite, users.PartialUser, guilds.PartialRole],
@@ -518,7 +518,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @typing.overload
     @abc.abstractmethod
-    async def edit_permission_overwrites(
+    async def edit_permission_overwrite(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
         target: snowflakes.Snowflakeish,
@@ -531,7 +531,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """Edit permissions for a given entity ID and type."""
 
     @abc.abstractmethod
-    async def edit_permission_overwrites(
+    async def edit_permission_overwrite(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
         target: typing.Union[
@@ -560,9 +560,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the type of the target to update. If unset, will attempt to get
             the type from `target`.
         allow : hikari.undefined.UndefinedOr[hikari.permissions.Permissions]
-            If provided, the new vale of all allowed permissions.
+            If provided, the new value of all allowed permissions.
         deny : hikari.undefined.UndefinedOr[hikari.permissions.Permissions]
-            If provided, the new vale of all disallowed permissions.
+            If provided, the new value of all disallowed permissions.
         reason : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -1036,10 +1036,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------
         channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextableChannel]
             The channel to fetch messages in. This may be the object or
-            the ID of an existing message.
+            the ID of an existing channel.
         message : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
             The message to fetch. This may be the object or the ID of an
-            existing channel.
+            existing message.
 
         Returns
         -------
@@ -6656,7 +6656,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Parameters
         ----------
         name : builtins.str
-            The command's name. This should match the regex `^[\w-]{1,32}$` in
+            The command's name. This should match the regex `^[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$` in
             Unicode mode and be lowercase.
         description : builtins.str
             The description to set for the command.
@@ -6679,7 +6679,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Parameters
         ----------
         name : builtins.str
-            The command's name. This should match the regex `^[\w-]{1,32}$` in
+            The command's name. This should match the regex `^[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$` in
             Unicode mode and be lowercase.
         description : builtins.str
             The description to set for the command if this is a slash command.
@@ -6823,6 +6823,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
+        name_localizations: undefined.UndefinedOr[
+            typing.Mapping[typing.Union[locales.Locale, str], str]
+        ] = undefined.UNDEFINED,
+        description_localizations: undefined.UndefinedOr[
+            typing.Mapping[typing.Union[locales.Locale, str], str]
+        ] = undefined.UNDEFINED,
         default_member_permissions: typing.Union[
             undefined.UndefinedType, int, permissions_.Permissions
         ] = undefined.UNDEFINED,
@@ -6835,7 +6841,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to create a command for.
         name : builtins.str
-            The command's name. This should match the regex `^[\w-]{1,32}$` in
+            The command's name. This should match the regex `^[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$` in
             Unicode mode and be lowercase.
         description : builtins.str
             The description to set for the command.
@@ -6849,6 +6855,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             a global command rather than a guild specific one.
         options : hikari.undefined.UndefinedOr[typing.Sequence[hikari.commands.CommandOption]]
             A sequence of up to 10 options for this command.
+        name_localizations : hikari.undefined.UndefinedOr[typing.Mapping[typing.Union[hikari.locales.Locale, str], str]]
+            The name localizations for this command.
+        description_localizations : hikari.undefined.UndefinedOr[typing.Mapping[typing.Union[hikari.locales.Locale, str], str]]
+            The name localizations for this command.
         default_member_permissions : typing.Union[hikari.undefined.UndefinedType, int, hikari.permissions.Permissions]
             Member permissions necessary to utilize this command by default.
 
@@ -6897,6 +6907,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         name: str,
         *,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+        name_localizations: undefined.UndefinedOr[
+            typing.Mapping[typing.Union[locales.Locale, str], str]
+        ] = undefined.UNDEFINED,
         default_member_permissions: typing.Union[
             undefined.UndefinedType, int, permissions_.Permissions
         ] = undefined.UNDEFINED,
@@ -6913,7 +6926,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
             Only USER and MESSAGE are valid here.
         name : builtins.str
-            The command's name. This should match the regex `^[\w-]{1,32}$` in
+            The command's name. This should match the regex `^[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$` in
             Unicode mode and be lowercase.
 
         Other Parameters
@@ -6922,6 +6935,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Object or ID of the specific guild this should be made for.
             If left as `hikari.undefined.UNDEFINED` then this call will create
             a global command rather than a guild specific one.
+        name_localizations : hikari.undefined.UndefinedOr[typing.Mapping[typing.Union[hikari.locales.Locale, str], str]]
+            The name localizations for this command.
         default_member_permissions : typing.Union[hikari.undefined.UndefinedType, int, hikari.permissions.Permissions]
             Member permissions necessary to utilize this command by default.
 

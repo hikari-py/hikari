@@ -54,6 +54,7 @@ from hikari import emojis
 from hikari import errors
 from hikari import files
 from hikari import iterators
+from hikari import locales
 from hikari import messages
 from hikari import snowflakes
 from hikari import undefined
@@ -1149,6 +1150,8 @@ class CommandBuilder(special_endpoints.CommandBuilder):
     )
     _is_dm_enabled: undefined.UndefinedOr[bool] = attr.field(default=undefined.UNDEFINED, kw_only=True)
 
+    _name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attr.field(factory=dict, kw_only=True)
+
     @property
     def id(self) -> undefined.UndefinedOr[snowflakes.Snowflake]:
         return self._id
@@ -1181,13 +1184,31 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         self._is_dm_enabled = state
         return self
 
+    @property
+    def name_localizations(self) -> typing.Mapping[typing.Union[locales.Locale, str], str]:
+        return self._name_localizations
+
+    def set_name_localizations(
+        self: _CommandBuilderT,
+        name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str],
+        /,
+    ) -> _CommandBuilderT:
+        self._name_localizations = name_localizations
+        return self
+
     def build(self, _: entity_factory_.EntityFactory, /) -> typing.MutableMapping[str, typing.Any]:
         data = data_binding.JSONObjectBuilder()
         data["name"] = self._name
         data["type"] = self.type
         data.put_snowflake("id", self._id)
-        data.put("default_member_permissions", self._default_member_permissions)
+        data.put("name_localizations", self._name_localizations)
         data.put("dm_permission", self._is_dm_enabled)
+
+        # Discord considers 0 the same thing as ADMINISTRATORS, but we make it nicer to work with
+        # by using it correctly.
+        if self._default_member_permissions != 0:
+            data.put("default_member_permissions", self._default_member_permissions)
+
         return data
 
 
@@ -1198,6 +1219,9 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
 
     _description: str = attr.field()
     _options: typing.List[commands.CommandOption] = attr.field(factory=list, kw_only=True)
+    _description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attr.field(
+        factory=dict, kw_only=True
+    )
 
     @property
     def description(self) -> str:
@@ -1215,6 +1239,20 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
     def options(self) -> typing.Sequence[commands.CommandOption]:
         return self._options.copy()
 
+    @property
+    def description_localizations(
+        self,
+    ) -> typing.Mapping[typing.Union[locales.Locale, str], str]:
+        return self._description_localizations
+
+    def set_description_localizations(
+        self: _SlashCommandBuilderT,
+        description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str],
+        /,
+    ) -> _SlashCommandBuilderT:
+        self._description_localizations = description_localizations
+        return self
+
     def build(self, entity_factory: entity_factory_.EntityFactory, /) -> typing.MutableMapping[str, typing.Any]:
         data = super().build(entity_factory)
         # Under this context we know this'll always be a JSONObjectBuilder but
@@ -1223,6 +1261,7 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
         assert isinstance(data, data_binding.JSONObjectBuilder)
         data.put("description", self._description)
         data.put_array("options", self._options, conversion=entity_factory.serialize_command_option)
+        data.put("description_localizations", self._description_localizations)
         return data
 
     async def create(
@@ -1239,6 +1278,8 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
             self._description,
             guild=guild,
             options=self._options,
+            name_localizations=self._name_localizations,
+            description_localizations=self._description_localizations,
             default_member_permissions=self._default_member_permissions,
             dm_enabled=self._is_dm_enabled,
         )

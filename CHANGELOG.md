@@ -6,6 +6,37 @@ This file is updated every release with the use of `towncrier` from the fragment
 
 .. towncrier release notes start
 
+Hikari 2.0.0.dev110 (2022-08-08)
+================================
+
+Breaking Changes
+----------------
+
+- Removed case of `Member.mention` returning bang (`!`) mention, as it is deprecated by Discord. ([#1207](https://github.com/hikari-py/hikari/issues/1207))
+
+
+Deprecation
+-----------
+
+- `RESTClient.edit_permission_overwrites` renamed to `RESTClient.edit_permission_overwrite` ([#1195](https://github.com/hikari-py/hikari/issues/1195))
+
+
+Features
+--------
+
+- Add `hikari.events.StickersUpdateEvent` and relevant cache internals.
+  Add sticker related public methods onto `hikari.impl.CacheImpl` and `hikari.guilds.Guild`. ([#1126](https://github.com/hikari-py/hikari/issues/1126))
+- `GuildVoiceChannel` now inherits from `TextableGuildChannel` instead of `GuildChannel`. ([#1189](https://github.com/hikari-py/hikari/issues/1189))
+- Add the `app_permissions` field to command and component interactions. ([#1201](https://github.com/hikari-py/hikari/issues/1201))
+- Add application command badge ([#1225](https://github.com/hikari-py/hikari/issues/1225))
+
+
+Bugfixes
+--------
+
+- Fix how CommandBuilder handles `default_member_permissions` to match the behaviour on PartialCommand. ([#1212](https://github.com/hikari-py/hikari/issues/1212))
+
+
 Hikari 2.0.0.dev109 (2022-06-26)
 ================================
 

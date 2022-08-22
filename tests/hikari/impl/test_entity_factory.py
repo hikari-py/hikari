@@ -2669,6 +2669,7 @@ class TestEntityFactoryImpl:
     def rest_guild_payload(
         self,
         known_custom_emoji_payload,
+        guild_sticker_payload,
         guild_role_payload,
     ):
         return {
@@ -2684,6 +2685,7 @@ class TestEntityFactoryImpl:
             "embed_channel_id": "9439394949",
             "embed_enabled": True,
             "emojis": [known_custom_emoji_payload],
+            "stickers": [guild_sticker_payload],
             "explicit_content_filter": 2,
             "features": ["ANIMATED_ICON", "MORE_EMOJI", "NEWS", "SOME_UNDOCUMENTED_FEATURE"],
             "icon": "1a2b3c4d",
@@ -2717,6 +2719,7 @@ class TestEntityFactoryImpl:
         rest_guild_payload,
         known_custom_emoji_payload,
         guild_role_payload,
+        guild_sticker_payload,
     ):
         guild = entity_factory_impl.deserialize_rest_guild(rest_guild_payload)
         assert guild.app is mock_app
@@ -2746,6 +2749,9 @@ class TestEntityFactoryImpl:
             12345: entity_factory_impl.deserialize_known_custom_emoji(
                 known_custom_emoji_payload, guild_id=snowflakes.Snowflake(265828729970753537)
             )
+        }
+        assert guild.stickers == {
+            749046696482439188: entity_factory_impl.deserialize_guild_sticker(guild_sticker_payload)
         }
         assert guild.mfa_level == guild_models.GuildMFALevel.ELEVATED
         assert guild.application_id == 39494949
@@ -2780,6 +2786,7 @@ class TestEntityFactoryImpl:
                 "description": "This is a server I guess, its a bit crap though",
                 "discovery_splash": "famfamFAMFAMfam",
                 "emojis": [],
+                "stickers": [],
                 "explicit_content_filter": 2,
                 "features": ["ANIMATED_ICON", "MORE_EMOJI", "NEWS", "SOME_UNDOCUMENTED_FEATURE"],
                 "icon": "1a2b3c4d",
@@ -2824,6 +2831,7 @@ class TestEntityFactoryImpl:
                 "embed_channel_id": None,
                 "embed_enabled": True,
                 "emojis": [],
+                "stickers": [],
                 "explicit_content_filter": 2,
                 "features": ["ANIMATED_ICON", "MORE_EMOJI", "NEWS", "SOME_UNDOCUMENTED_FEATURE"],
                 "icon": None,
@@ -3258,7 +3266,7 @@ class TestEntityFactoryImpl:
         command = entity_factory_impl.deserialize_slash_command(payload)
 
         assert command.options is None
-        assert command.is_dm_enabled is False
+        assert command.is_dm_enabled is True
         assert isinstance(command, commands.SlashCommand)
 
     def test_deserialize_slash_command_standardizes_default_member_permissions(
@@ -3766,8 +3774,12 @@ class TestEntityFactoryImpl:
             autocomplete=True,
             min_value=1.2,
             max_value=9.999,
+            min_length=3,
+            max_length=69,
             channel_types=[channel_models.ChannelType.GUILD_STAGE, channel_models.ChannelType.GUILD_TEXT, 100],
             choices=[commands.CommandChoice(name="a", value="choice")],
+            name_localizations={locales.Locale.TR: "b"},
+            description_localizations={locales.Locale.TR: "c"},
             options=[
                 commands.CommandOption(
                     type=commands.OptionType.STRING,
@@ -3776,6 +3788,8 @@ class TestEntityFactoryImpl:
                     is_required=False,
                     choices=[commands.CommandChoice(name="boo", value="hoo")],
                     options=None,
+                    name_localizations={locales.Locale.TR: "b"},
+                    description_localizations={locales.Locale.TR: "c"},
                 )
             ],
         )
@@ -3790,8 +3804,12 @@ class TestEntityFactoryImpl:
             "channel_types": [13, 0, 100],
             "min_value": 1.2,
             "max_value": 9.999,
+            "min_length": 3,
+            "max_length": 69,
             "autocomplete": True,
             "choices": [{"name": "a", "value": "choice"}],
+            "description_localizations": {"tr": "c"},
+            "name_localizations": {"tr": "b"},
             "options": [
                 {
                     "type": 3,
@@ -3799,6 +3817,8 @@ class TestEntityFactoryImpl:
                     "name": "go home",
                     "required": False,
                     "choices": [{"name": "boo", "value": "hoo"}],
+                    "description_localizations": {"tr": "c"},
+                    "name_localizations": {"tr": "b"},
                 }
             ],
         }
@@ -3837,7 +3857,7 @@ class TestEntityFactoryImpl:
         command = entity_factory_impl.deserialize_context_menu_command(context_menu_command_payload)
         assert isinstance(command, commands.ContextMenuCommand)
 
-        assert command.is_dm_enabled is False
+        assert command.is_dm_enabled is True
 
     def test_deserialize_context_menu_command_default_member_permissions(
         self, entity_factory_impl, context_menu_command_payload
@@ -4103,6 +4123,29 @@ class TestEntityFactoryImpl:
         assert sticker.pack_id == 123
         assert sticker.sort_value == 96
         assert sticker.tags == ["thinking", "thonkang"]
+
+    def test_stickers(self, entity_factory_impl, guild_sticker_payload):
+        guild_definition = entity_factory_impl.deserialize_gateway_guild(
+            {"id": "265828729970753537", "stickers": [guild_sticker_payload]},
+        )
+
+        assert guild_definition.stickers() == {
+            749046696482439188: entity_factory_impl.deserialize_guild_sticker(
+                guild_sticker_payload,
+            )
+        }
+
+    def test_stickers_returns_cached_values(self, entity_factory_impl):
+        with mock.patch.object(
+            entity_factory.EntityFactoryImpl, "deserialize_guild_sticker"
+        ) as mock_deserialize_guild_sticker:
+            guild_definition = entity_factory_impl.deserialize_gateway_guild({"id": "265828729970753537"})
+
+            mock_sticker = object()
+            guild_definition._stickers = {"54545454": mock_sticker}
+
+            assert guild_definition.stickers() == {"54545454": mock_sticker}
+            mock_deserialize_guild_sticker.assert_not_called()
 
     #################
     # INVITE MODELS #

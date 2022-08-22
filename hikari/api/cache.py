@@ -38,6 +38,7 @@ if typing.TYPE_CHECKING:
     from hikari import messages
     from hikari import presences
     from hikari import snowflakes
+    from hikari import stickers
     from hikari import users
     from hikari import voices
     from hikari.api import config
@@ -165,6 +166,51 @@ class Cache(abc.ABC):
         -------
         CacheView[hikari.snowflakes.Snowflake, hikari.emojis.KnownCustomEmoji]
             A view of emoji IDs to objects of emojis found in the cache for the
+            specified guild.
+        """
+
+    @abc.abstractmethod
+    def get_sticker(
+        self, sticker: snowflakes.SnowflakeishOr[stickers.GuildSticker], /
+    ) -> typing.Optional[stickers.GuildSticker]:
+        """Get a sticker from the cache.
+
+        Parameters
+        ----------
+        sticker : hikari.snowflakes.SnowflakeishOr[hikari.stickers.GuildSticker]
+            Object or ID of the sticker to get from the cache.
+
+        Returns
+        -------
+        typing.Optional[hikari.stickers.GuildSticker]
+            The object of the sticker that was found in the cache or `builtins.None`.
+        """
+
+    @abc.abstractmethod
+    def get_stickers_view(self) -> CacheView[snowflakes.Snowflake, stickers.GuildSticker]:
+        """Get a view of the sticker objects in the cache.
+
+        Returns
+        -------
+        CacheView[hikari.snowflakes.Snowflake, hikari.stickers.GuildSticker]
+            A view of sticker IDs to objects of the stickers found in the cache.
+        """
+
+    @abc.abstractmethod
+    def get_stickers_view_for_guild(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
+    ) -> CacheView[snowflakes.Snowflake, stickers.GuildSticker]:
+        """Get a view of the known custom emojis cached for a specific guild.
+
+        Parameters
+        ----------
+        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+            Object or ID of the guild to get the cached sticker objects for.
+
+        Returns
+        -------
+        CacheView[hikari.snowflakes.Snowflake, hikari.stickers.GuildSticker]
+            A view of sticker IDs to objects of stickers found in the cache for the
             specified guild.
         """
 
@@ -814,6 +860,72 @@ class MutableCache(Cache, abc.ABC):
             A tuple of the old cached emoji object if found (else `builtins.None`)
             and the new cached emoji object if it could be cached (else
             `builtins.None`).
+        """
+
+    @abc.abstractmethod
+    def clear_stickers(self) -> CacheView[snowflakes.Snowflake, stickers.GuildSticker]:
+        """Remove all the sticker objects from the cache.
+
+        !!! note
+            This will skip stickers that are being kept alive by a reference.
+
+        Returns
+        -------
+        CacheView[hikari.snowflakes.Snowflake, hikari.stickers.GuildSticker]
+            A cache view of sticker IDs to objects of the stickers that were
+            removed from the cache.
+        """
+
+    @abc.abstractmethod
+    def clear_stickers_for_guild(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
+    ) -> CacheView[snowflakes.Snowflake, stickers.GuildSticker]:
+        """Remove the known custom emoji objects cached for a specific guild.
+
+        Parameters
+        ----------
+        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+            Object or ID of the guild to remove the cached sticker objects for.
+
+        !!! note
+            This will skip stickers that are being kept alive by a reference.
+
+        Returns
+        -------
+        CacheView[hikari.snowflakes.Snowflake, hikari.stickers.GuildSticker]
+            A view of sticker IDs to objects of the stickers that were removed
+            from the cache.
+        """
+
+    @abc.abstractmethod
+    def delete_sticker(
+        self, sticker: snowflakes.SnowflakeishOr[stickers.GuildSticker], /
+    ) -> typing.Optional[stickers.GuildSticker]:
+        """Remove a sticker from the cache.
+
+        Parameters
+        ----------
+        sticker : hikari.snowflakes.SnowflakeishOr[hikari.stickers.GuildSticker]
+            Object or ID of the sticker to remove from the cache.
+
+        !!! note
+            This will not delete stickers that are being kept alive by a reference.
+
+        Returns
+        -------
+        typing.Optional[hikari.stickers.GuildSticker]
+            The object of the sticker that was removed from the cache or
+            `builtins.None`.
+        """
+
+    @abc.abstractmethod
+    def set_sticker(self, sticker: stickers.GuildSticker, /) -> None:
+        """Add a sticker to the cache.
+
+        Parameters
+        ----------
+        sticker : hikari.stickers.GuildSticker
+            The object of the sticker to add to the cache.
         """
 
     @abc.abstractmethod

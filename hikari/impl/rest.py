@@ -1046,7 +1046,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("suppress", suppress)
         await self._request(route, json=body)
 
-    async def edit_permission_overwrites(
+    async def edit_permission_overwrite(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
         target: typing.Union[
@@ -1077,6 +1077,28 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("allow", allow)
         body.put("deny", deny)
         await self._request(route, json=body, reason=reason)
+
+    @deprecation.deprecated("2.0.0.dev113", "edit_permission_overwrite")
+    async def edit_permission_overwrites(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
+        target: typing.Union[
+            snowflakes.Snowflakeish, users.PartialUser, guilds.PartialRole, channels_.PermissionOverwrite
+        ],
+        *,
+        target_type: undefined.UndefinedOr[typing.Union[channels_.PermissionOverwriteType, int]] = undefined.UNDEFINED,
+        allow: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
+        deny: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
+        """Edit permissions for a specific entity in the given guild channel.
+
+        .. deprecated:: 2.0.0.dev110
+            Use `RESTClient.edit_permission_overwrite` instead.
+        """
+        await self.edit_permission_overwrite(
+            channel, target, target_type=target_type, allow=allow, deny=deny, reason=reason
+        )
 
     async def delete_permission_overwrite(
         self,
@@ -2563,7 +2585,7 @@ class RESTClientImpl(rest_api.RESTClient):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         positions: typing.Mapping[int, snowflakes.SnowflakeishOr[channels_.GuildChannel]],
     ) -> None:
-        route = routes.POST_GUILD_CHANNELS.compile(guild=guild)
+        route = routes.PATCH_GUILD_CHANNELS.compile(guild=guild)
         body = [{"id": str(int(channel)), "position": pos} for pos, channel in positions.items()]
         await self._request(route, json=body)
 
@@ -3160,7 +3182,10 @@ class RESTClientImpl(rest_api.RESTClient):
         else:
             route = routes.GET_APPLICATION_GUILD_COMMANDS.compile(application=application, guild=guild)
 
-        response = await self._request(route)
+        query = data_binding.StringMapBuilder()
+        query.put("with_localizations", True)
+
+        response = await self._request(route, query=query)
         assert isinstance(response, list)
         guild_id = snowflakes.Snowflake(guild) if guild is not undefined.UNDEFINED else None
         return [self._entity_factory.deserialize_command(command, guild_id=guild_id) for command in response]
@@ -3174,6 +3199,12 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
+        name_localizations: undefined.UndefinedOr[
+            typing.Mapping[typing.Union[locales.Locale, str], str]
+        ] = undefined.UNDEFINED,
+        description_localizations: undefined.UndefinedOr[
+            typing.Mapping[typing.Union[locales.Locale, str], str]
+        ] = undefined.UNDEFINED,
         default_member_permissions: typing.Union[
             undefined.UndefinedType, int, permissions_.Permissions
         ] = undefined.UNDEFINED,
@@ -3190,6 +3221,9 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("description", description)
         body.put("type", type)
         body.put_array("options", options, conversion=self._entity_factory.serialize_command_option)
+        body.put("name_localizations", name_localizations)
+        body.put("description_localizations", description_localizations)
+
         # Discord has some funky behaviour around what 0 means. They consider it to be the same as ADMINISTRATOR,
         # but we consider it to be the same as None for developer sanity reasons
         body.put("default_member_permissions", None if default_member_permissions == 0 else default_member_permissions)
@@ -3207,6 +3241,12 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
+        name_localizations: undefined.UndefinedOr[
+            typing.Mapping[typing.Union[locales.Locale, str], str]
+        ] = undefined.UNDEFINED,
+        description_localizations: undefined.UndefinedOr[
+            typing.Mapping[typing.Union[locales.Locale, str], str]
+        ] = undefined.UNDEFINED,
         default_member_permissions: typing.Union[
             undefined.UndefinedType, int, permissions_.Permissions
         ] = undefined.UNDEFINED,
@@ -3219,6 +3259,8 @@ class RESTClientImpl(rest_api.RESTClient):
             description=description,
             guild=guild,
             options=options,
+            name_localizations=name_localizations,
+            description_localizations=description_localizations,
             default_member_permissions=default_member_permissions,
             dm_enabled=dm_enabled,
         )
@@ -3233,6 +3275,9 @@ class RESTClientImpl(rest_api.RESTClient):
         name: str,
         *,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+        name_localizations: undefined.UndefinedOr[
+            typing.Mapping[typing.Union[locales.Locale, str], str]
+        ] = undefined.UNDEFINED,
         default_member_permissions: typing.Union[
             undefined.UndefinedType, int, permissions_.Permissions
         ] = undefined.UNDEFINED,
@@ -3243,6 +3288,7 @@ class RESTClientImpl(rest_api.RESTClient):
             type=type,
             name=name,
             guild=guild,
+            name_localizations=name_localizations,
             default_member_permissions=default_member_permissions,
             dm_enabled=dm_enabled,
         )

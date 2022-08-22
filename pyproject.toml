@@ -28,6 +28,7 @@ include = ".*pyi?$"
 target-version = ["py38"]
 
 [tool.coverage.run]
+relative_files = true
 parallel = true
 branch = true
 timid = false

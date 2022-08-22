@@ -26,6 +26,7 @@ import pytest
 from hikari import commands
 from hikari import emojis
 from hikari import files
+from hikari import locales
 from hikari import messages
 from hikari import permissions
 from hikari import snowflakes
@@ -708,7 +709,12 @@ class TestSlashCommandBuilder:
         mock_entity_factory = mock.Mock()
         mock_option = object()
         builder = (
-            special_endpoints.SlashCommandBuilder("we are number", "one")
+            special_endpoints.SlashCommandBuilder(
+                "we are number",
+                "one",
+                name_localizations={locales.Locale.TR: "merhaba"},
+                description_localizations={locales.Locale.TR: "bir"},
+            )
             .add_option(mock_option)
             .set_id(3412312)
             .set_default_member_permissions(permissions.Permissions.ADMINISTRATOR)
@@ -726,20 +732,32 @@ class TestSlashCommandBuilder:
             "default_member_permissions": 8,
             "options": [mock_entity_factory.serialize_command_option.return_value],
             "id": "3412312",
+            "name_localizations": {locales.Locale.TR: "merhaba"},
+            "description_localizations": {locales.Locale.TR: "bir"},
         }
 
     def test_build_without_optional_data(self):
-        builder = special_endpoints.SlashCommandBuilder("we are numberr", "oner")
+        builder = special_endpoints.SlashCommandBuilder("we are number", "oner")
 
         result = builder.build(mock.Mock())
 
-        assert result == {"type": 1, "name": "we are numberr", "description": "oner", "options": []}
+        assert result == {
+            "type": 1,
+            "name": "we are number",
+            "description": "oner",
+            "options": [],
+            "name_localizations": {},
+            "description_localizations": {},
+        }
 
     @pytest.mark.asyncio()
     async def test_create(self):
         builder = (
             special_endpoints.SlashCommandBuilder("we are number", "one")
             .add_option(mock.Mock())
+            .set_id(3412312)
+            .set_name_localizations({locales.Locale.TR: "sayı"})
+            .set_description_localizations({locales.Locale.TR: "bir"})
             .set_default_member_permissions(permissions.Permissions.BAN_MEMBERS)
             .set_is_dm_enabled(True)
         )
@@ -754,6 +772,8 @@ class TestSlashCommandBuilder:
             builder.description,
             guild=undefined.UNDEFINED,
             options=builder.options,
+            name_localizations={locales.Locale.TR: "sayı"},
+            description_localizations={locales.Locale.TR: "bir"},
             default_member_permissions=permissions.Permissions.BAN_MEMBERS,
             dm_enabled=True,
         )
@@ -767,6 +787,9 @@ class TestSlashCommandBuilder:
         )
         mock_rest = mock.AsyncMock()
 
+        builder.set_name_localizations({locales.Locale.TR: "sayı"})
+        builder.set_description_localizations({locales.Locale.TR: "bir"})
+
         result = await builder.create(mock_rest, 54455445, guild=54123123321)
 
         assert result is mock_rest.create_slash_command.return_value
@@ -776,6 +799,8 @@ class TestSlashCommandBuilder:
             builder.description,
             guild=54123123321,
             options=builder.options,
+            name_localizations={locales.Locale.TR: "sayı"},
+            description_localizations={locales.Locale.TR: "bir"},
             default_member_permissions=permissions.Permissions.BAN_MEMBERS,
             dm_enabled=True,
         )
@@ -784,8 +809,12 @@ class TestSlashCommandBuilder:
 class TestContextMenuBuilder:
     def test_build_with_optional_data(self):
         builder = (
-            special_endpoints.ContextMenuCommandBuilder(commands.CommandType.USER, "we are number")
+            special_endpoints.ContextMenuCommandBuilder(
+                commands.CommandType.USER,
+                "we are number",
+            )
             .set_id(3412312)
+            .set_name_localizations({locales.Locale.TR: "merhaba"})
             .set_default_member_permissions(permissions.Permissions.ADMINISTRATOR)
             .set_is_dm_enabled(True)
         )
@@ -798,6 +827,7 @@ class TestContextMenuBuilder:
             "dm_permission": True,
             "default_member_permissions": 8,
             "id": "3412312",
+            "name_localizations": {locales.Locale.TR: "merhaba"},
         }
 
     def test_build_without_optional_data(self):
@@ -805,7 +835,7 @@ class TestContextMenuBuilder:
 
         result = builder.build(mock.Mock())
 
-        assert result == {"type": 3, "name": "nameeeee"}
+        assert result == {"type": 3, "name": "nameeeee", "name_localizations": {}}
 
     @pytest.mark.asyncio()
     async def test_create(self):
