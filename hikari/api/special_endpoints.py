@@ -1604,7 +1604,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
     @property
     @abc.abstractmethod
     def max_length(self) -> undefined.UndefinedOr[int]:
-        """Maxmimum length the text should have."""
+        """Maximum length the text should have."""
 
     @abc.abstractmethod
     def set_style(self: _T, style: typing.Union[messages.TextInputStyle, int], /) -> _T:
@@ -1713,12 +1713,12 @@ class TextInputBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
 
     @abc.abstractmethod
     def set_max_length(self: _T, max_length: int, /) -> _T:
-        """Set the maxmimum length the text should have.
+        """Set the maximum length the text should have.
 
         Parameters
         ----------
         max_length : builtins.int
-            The maxmimum length the text should have.
+            The maximum length the text should have.
 
         Returns
         -------
