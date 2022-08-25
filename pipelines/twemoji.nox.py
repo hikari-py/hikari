@@ -20,11 +20,62 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import json
+import pathlib
+import subprocess
+import time
+import urllib.request
+
+from hikari import emojis
 from pipelines import nox
 
+TWEMOJI_REPO_BASE_URL = "https://github.com/twitter/twemoji.git"
+DISCORD_EMOJI_MAPPING_URL = "https://emzi0767.gl-pages.emzi0767.dev/discord-emoji/discordEmojiMap-canary.min.json"
 
-@nox.session(reuse_venv=True)
+
+@nox.session(reuse_venv=False, venv_backend="none")
 def twemoji_test(session: nox.Session):
     """Brute-force test all possible Twemoji mappings for Discord unicode emojis."""
-    session.install("-e", ".", *nox.dev_requirements("twemoji"))
-    session.run("python", "scripts/test_twemoji_mapping.py")
+    start = time.perf_counter()
+    tempdir = pathlib.Path(session.create_tmp())
+    invalid_emojis = []
+
+    if (tempdir / ".git").exists():
+        session.log("Twemoji collection exists; updating")
+        subprocess.check_call("git pull", shell=True, cwd=tempdir)
+    else:
+        session.log("Cloning twemoji collection")
+        subprocess.check_call(f"git clone {TWEMOJI_REPO_BASE_URL} --depth=1", shell=True, cwd=tempdir)
+
+    session.log("Fetching emoji mapping")
+    with urllib.request.urlopen(DISCORD_EMOJI_MAPPING_URL) as request:
+        mapping = json.loads(request.read())["emojiDefinitions"]
+
+    assets_path = tempdir / "assets" / "72x72"
+
+    total = len(mapping)
+    for i, emoji in enumerate(mapping, start=1):
+        name = emoji["primaryName"]
+        emoji_surrogates = emoji["surrogates"]
+        emoji = emojis.UnicodeEmoji.parse(emoji_surrogates)
+        line_repr = f"{i}/{total} {name} {' '.join(map(hex, map(ord, emoji_surrogates)))} {emoji.url}"
+
+        if (assets_path / emoji.filename).exists():
+            session.log(f"[  OK  ] {line_repr}")
+        else:
+            invalid_emojis.append(line_repr)
+            session.log(f"[  FAIL  ] {line_repr}")
+
+    session.log("")
+    session.log("Results")
+    session.log("-------")
+    session.log(f"Valid emojis: {total - len(invalid_emojis)}")
+    session.log(f"Invalid emojis: {len(invalid_emojis)}")
+
+    for line_repr in invalid_emojis:
+        session.log(f"  {line_repr}")
+
+    session.log(f"Took {time.perf_counter() - start} seconds")
+
+    if invalid_emojis or total == 0:
+        session.error()
