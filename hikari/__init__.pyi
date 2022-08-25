@@ -17,6 +17,7 @@ from hikari._about import __copyright__ as __copyright__
 from hikari._about import __discord_invite__ as __discord_invite__
 from hikari._about import __docs__ as __docs__
 from hikari._about import __email__ as __email__
+from hikari._about import __git_sha1__ as __git_sha1__
 from hikari._about import __issue_tracker__ as __issue_tracker__
 from hikari._about import __license__ as __license__
 from hikari._about import __url__ as __url__
