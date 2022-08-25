@@ -35,13 +35,12 @@ GIT = shutil.which("git")
 @nox.session(reuse_venv=True)
 def reformat_code(session: nox.Session) -> None:
     """Remove trailing whitespace in source, run isort, codespell and then run black code formatter."""
-    session.install(*nox.dev_requirements("formatting", "codespell"))
+    session.install(*nox.dev_requirements("formatting"))
 
     remove_trailing_whitespaces(session)
 
     session.run("isort", *config.PYTHON_REFORMATTING_PATHS)
     session.run("black", *config.PYTHON_REFORMATTING_PATHS)
-    session.run("codespell", "-w", *config.FULL_REFORMATTING_PATHS)
 
 
 @nox.session(reuse_venv=True)
