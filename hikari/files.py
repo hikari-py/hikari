@@ -473,6 +473,38 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
         async with self.stream(executor=executor) as reader:
             return await reader.read()
 
+    async def save(
+        self,
+        *,
+        path: typing.Optional[typing.Union[pathlib.Path, str]] = None,
+        executor: typing.Optional[concurrent.futures.Executor] = None,
+    ) -> None:
+        """Save this resource to disk.
+
+        This writes the resource file in chunks, and so does not load
+        the entire resource into memory.
+
+        Parameters
+        ----------
+        path : typing.Optional[typing.Union[pathlib.Path, str]]
+            The path to save this resource to. If this is a string, the
+            path will be relative to the current working directory. If
+            `builtins.None`, the resource will be saved in the
+            current working directory with the same name as it has on
+            Discord.
+        executor : typing.Optional[concurrent.futures.Executor]
+            The executor to run in for blocking operations.
+            If `builtins.None`, then the default executor is used for the
+            current event loop.
+        """
+        loop = asyncio.get_running_loop()
+        path = path or self.filename
+
+        with await loop.run_in_executor(executor, open, path, "wb") as f:
+            async with self.stream(executor=executor) as reader:
+                async for chunk in reader:
+                    await loop.run_in_executor(executor, f.write, chunk)
+
     @abc.abstractmethod
     def stream(
         self,
