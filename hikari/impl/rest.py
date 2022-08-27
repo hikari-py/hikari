@@ -3462,6 +3462,7 @@ class RESTClientImpl(rest_api.RESTClient):
         components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        replace_attachments: bool = False,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
@@ -3480,6 +3481,7 @@ class RESTClientImpl(rest_api.RESTClient):
             components=components,
             embed=embed,
             embeds=embeds,
+            replace_attachments=replace_attachments,
             tts=tts,
             flags=flags,
             mentions_everyone=mentions_everyone,
