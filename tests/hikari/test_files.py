@@ -213,7 +213,7 @@ class TestResource:
         return b"line1\nline2\nline3\n"
 
     @pytest.fixture()
-    def attachment(self, data):
+    def attachment(self, data: bytes):
         return messages.Attachment(
             id=123,
             filename="file.txt",
@@ -259,7 +259,7 @@ class TestResource:
                 assert await attachment.read() == data
             except AttributeError as exc:
                 if str(exc) != "'NotImplementedType' object has no attribute '__aexit__'":
-                    raise exc
+                    raise
 
     @pytest.mark.asyncio()
     async def test_resource_save(self, attachment: messages.Attachment, data: bytes):
@@ -279,7 +279,7 @@ class TestResource:
                         await attachment.save(path=path)
                     except AttributeError as exc:
                         if str(exc) != "'NotImplementedType' object has no attribute '__aexit__'":
-                            raise exc
+                            raise
 
                     with open(path, "rb") as f:
                         assert f.read() == data
