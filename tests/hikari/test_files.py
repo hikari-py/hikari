@@ -20,16 +20,19 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import asyncio
 import base64
 import concurrent.futures
 import pathlib
 import random
 import tempfile
 
+import aiohttp
 import mock
 import pytest
 
 from hikari import files
+from hikari import messages
 from tests.hikari import hikari_test_helpers
 
 
@@ -202,3 +205,83 @@ class Test_MultiProcessingFileReaderContextManagerImpl:
             with pytest.raises(IsADirectoryError):  # noqa:  PT012 - raises block should contain a single statement
                 async with context_manager:
                     ...
+
+
+class TestResource:
+    @pytest.fixture()
+    def data(self):
+        return b"line1\nline2\nline3\n"
+
+    @pytest.fixture()
+    def attachment(self, data):
+        return messages.Attachment(
+            id=123,
+            filename="file.txt",
+            media_type="text",
+            height=None,
+            width=None,
+            proxy_url="htt",
+            size=len(b"line1\nline2\nline3\n"),
+            url="https://rick.roll",
+            is_ephemeral=False,
+        )
+
+    async def create_stream(self):
+        # https://github.com/aio-libs/aiohttp/blob/master/tests/test_streams.py#L26
+        loop = asyncio.get_event_loop()
+        protocol = mock.Mock(_reading_paused=False)
+        stream = aiohttp.streams.StreamReader(protocol, 2**16, loop=loop)
+        stream.feed_data(b"line1\nline2\nline3\n")
+        stream.feed_eof()
+        return stream
+
+    async def create_reader(self):
+        return files.WebReader(
+            stream=await self.create_stream(),
+            url="https://rick.roll",
+            status=200,
+            reason="None",
+            filename="file.txt",
+            charset=None,
+            mimetype="your mum",
+            size=len(b"line1\nline2\nline3\n"),
+            head_only=False,
+        )
+
+    @pytest.mark.asyncio()
+    async def test_resource_read(self, attachment: messages.Attachment, data: bytes):
+        with mock.patch.object(files._WebReaderAsyncReaderContextManagerImpl, "__aenter__") as mock_aenter:
+            mock_aenter.return_value = await self.create_reader()
+
+            # Mocking the previous object throws an error here
+            # so we just want to avoid it.
+            try:
+                assert await attachment.read() == data
+            except AttributeError as exc:
+                if str(exc) != "'NotImplementedType' object has no attribute '__aexit__'":
+                    raise exc
+
+    @pytest.mark.asyncio()
+    async def test_resource_save(self, attachment: messages.Attachment, data: bytes):
+        with mock.patch.object(files._WebReaderAsyncReaderContextManagerImpl, "__aenter__") as mock_aenter:
+            mock_aenter.return_value = await self.create_reader()
+
+            # A try, finally is used to delete the file rather than relying on delete=True behaviour
+            # as on Windows the file cannot be accessed by other processes if delete is True.
+            try:
+                file = tempfile.NamedTemporaryFile("wb", delete=False)
+                path = pathlib.Path(file.name)
+
+                with file:
+                    # Mocking the previous object throws an error here
+                    # so we just want to avoid it.
+                    try:
+                        await attachment.save(path=path)
+                    except AttributeError as exc:
+                        if str(exc) != "'NotImplementedType' object has no attribute '__aexit__'":
+                            raise exc
+
+                    with open(path, "rb") as f:
+                        assert f.read() == data
+            finally:
+                path.unlink()
