@@ -631,7 +631,7 @@ class TestGatewayShardImplAsync:
 
     async def test_close_when_closing_event_set(self, client):
         client._keep_alive_task = mock.Mock(cancel=mock.AsyncMock())
-        client._chunking_rate_limit = mock.Mock()
+        client._non_priority_rate_limit = mock.Mock()
         client._total_rate_limit = mock.Mock()
         client._is_closing = True
 
@@ -640,7 +640,7 @@ class TestGatewayShardImplAsync:
 
         join.assert_awaited_once_with()
         client._keep_alive_task.cancel.assert_not_called()
-        client._chunking_rate_limit.close.assert_not_called()
+        client._non_priority_rate_limit.close.assert_not_called()
         client._total_rate_limit.close.assert_not_called()
 
     async def test_close_when_closing_event_not_set(self, client):
@@ -662,7 +662,7 @@ class TestGatewayShardImplAsync:
                 assert self._awaited_count == 1
 
         client._keep_alive_task = keep_alive_task = TaskMock()
-        client._chunking_rate_limit = mock.Mock()
+        client._non_priority_rate_limit = mock.Mock()
         client._total_rate_limit = mock.Mock()
 
         with mock.patch.object(shard.GatewayShardImpl, "join") as join:
@@ -671,7 +671,7 @@ class TestGatewayShardImplAsync:
         join.assert_not_called()
         cancel_async_mock.assert_called_once_with()
         keep_alive_task.assert_awaited_once()
-        client._chunking_rate_limit.close.assert_called_once_with()
+        client._non_priority_rate_limit.close.assert_called_once_with()
         client._total_rate_limit.close.assert_called_once_with()
 
     async def test_join_when_not_alive(self, client):
@@ -692,11 +692,25 @@ class TestGatewayShardImplAsync:
 
     async def test__send_json(self, client):
         client._total_rate_limit = mock.AsyncMock()
+        client._non_priority_rate_limit = mock.AsyncMock()
         client._ws = mock.AsyncMock()
         data = object()
 
         await client._send_json(data)
 
+        client._non_priority_rate_limit.acquire.assert_awaited_once_with()
+        client._total_rate_limit.acquire.assert_awaited_once_with()
+        client._ws.send_json.assert_awaited_once_with(data)
+
+    async def test__send_json_when_priority(self, client):
+        client._total_rate_limit = mock.AsyncMock()
+        client._non_priority_rate_limit = mock.AsyncMock()
+        client._ws = mock.AsyncMock()
+        data = object()
+
+        await client._send_json(data, priority=True)
+
+        client._non_priority_rate_limit.acquire.assert_not_called()
         client._total_rate_limit.acquire.assert_awaited_once_with()
         client._ws.send_json.assert_awaited_once_with(data)
 
@@ -1121,7 +1135,7 @@ class TestGatewayShardImplAsync:
             with mock.patch.object(time, "monotonic", return_value=200):
                 await client._send_heartbeat()
 
-        send_json.assert_awaited_once_with({"op": 1, "d": 10})
+        send_json.assert_awaited_once_with({"op": 1, "d": 10}, priority=True)
         assert client._last_heartbeat_sent == 200
 
     async def test__poll_events_on_dispatch(self, client):

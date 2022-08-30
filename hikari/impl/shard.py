@@ -96,9 +96,10 @@ _BACKOFF_CAP: typing.Final[float] = 60.0
 _RESUME_CLOSE_CODE: typing.Final[int] = 3_000
 # Per-shard sending rate-limit
 _TOTAL_RATELIMIT: typing.Final[typing.Tuple[float, int]] = (60.0, 120)
-# Rate-limit for chunking requests (used to prevent saturating the entire
-# ratelimit window).
-_CHUNKING_RATELIMIT: typing.Final[typing.Tuple[float, int]] = (60.0, 60)
+# Rate-limit for non-priority packages.
+# This is done to always allow for HEARTBEAT packages
+# to get around (leaving 3 slots for it).
+_NON_PRIORITY_RATELIMIT: typing.Final[typing.Tuple[float, int]] = (60.0, 117)
 # Supported gateway version
 _VERSION: typing.Final[int] = 8
 # Used to identify the end of a ZLIB payload
@@ -407,7 +408,6 @@ class GatewayShardImpl(shard.GatewayShard):
 
     __slots__: typing.Sequence[str] = (
         "_activity",
-        "_chunking_rate_limit",
         "_event_manager",
         "_event_factory",
         "_gateway_url",
@@ -423,6 +423,7 @@ class GatewayShardImpl(shard.GatewayShard):
         "_last_heartbeat_ack_received",
         "_last_heartbeat_sent",
         "_logger",
+        "_non_priority_rate_limit",
         "_proxy_settings",
         "_resume_gateway_url",
         "_seq",
@@ -464,9 +465,6 @@ class GatewayShardImpl(shard.GatewayShard):
             raise NotImplementedError(f"Unsupported compression format {compression}")
 
         self._activity = initial_activity
-        self._chunking_rate_limit = rate_limits.WindowedBurstRateLimiter(
-            f"shard {shard_id} chunking rate limit", *_CHUNKING_RATELIMIT
-        )
         self._event_manager = event_manager
         self._event_factory = event_factory
         self._gateway_url = url
@@ -482,6 +480,9 @@ class GatewayShardImpl(shard.GatewayShard):
         self._last_heartbeat_ack_received = float("nan")
         self._last_heartbeat_sent = float("nan")
         self._logger = logging.getLogger(f"hikari.gateway.{shard_id}")
+        self._non_priority_rate_limit = rate_limits.WindowedBurstRateLimiter(
+            f"shard {shard_id} non-priority rate limit", *_NON_PRIORITY_RATELIMIT
+        )
         self._proxy_settings = proxy_settings
         self._resume_gateway_url: typing.Optional[str] = None
         self._seq: typing.Optional[int] = None
@@ -539,7 +540,7 @@ class GatewayShardImpl(shard.GatewayShard):
             pass
 
         self._keep_alive_task = None
-        self._chunking_rate_limit.close()
+        self._non_priority_rate_limit.close()
         self._total_rate_limit.close()
         self._is_closing = False
         self._logger.info("shard shutdown successfully")
@@ -555,8 +556,12 @@ class GatewayShardImpl(shard.GatewayShard):
 
         await asyncio.wait_for(asyncio.shield(self._keep_alive_task), timeout=None)
 
-    async def _send_json(self, data: data_binding.JSONObject) -> None:
+    async def _send_json(self, data: data_binding.JSONObject, /, priority: bool = False) -> None:
+        if not priority:
+            await self._non_priority_rate_limit.acquire()
+
         await self._total_rate_limit.acquire()
+
         assert self._ws is not None
         await self._ws.send_json(data)
 
@@ -594,8 +599,6 @@ class GatewayShardImpl(shard.GatewayShard):
 
         if nonce is not undefined.UNDEFINED and len(bytes(nonce, "utf-8")) > 32:
             raise ValueError("'nonce' can be no longer than 32 byte characters long.")
-
-        await self._chunking_rate_limit.acquire()
 
         payload = data_binding.JSONObjectBuilder()
         payload.put_snowflake("guild_id", guild)
@@ -665,7 +668,7 @@ class GatewayShardImpl(shard.GatewayShard):
 
     async def _send_heartbeat(self) -> None:
         self._logger.log(ux.TRACE, "sending HEARTBEAT [s:%s]", self._seq)
-        await self._send_json({_OP: _HEARTBEAT, _D: self._seq})
+        await self._send_json({_OP: _HEARTBEAT, _D: self._seq}, priority=True)
         self._last_heartbeat_sent = time.monotonic()
 
     async def _heartbeat(self, heartbeat_interval: float) -> None:
