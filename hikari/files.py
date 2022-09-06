@@ -476,8 +476,9 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
     async def save(
         self,
         *,
-        path: typing.Optional[typing.Union[pathlib.Path, str]] = None,
+        path: typing.Optional[Pathish] = None,
         executor: typing.Optional[concurrent.futures.Executor] = None,
+        force: bool = False,
     ) -> None:
         """Save this resource to disk.
 
@@ -486,19 +487,27 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
 
         Parameters
         ----------
-        path : typing.Optional[typing.Union[pathlib.Path, str]]
+        path : typing.Optional[Pathish]
             The path to save this resource to. If this is a string, the
             path will be relative to the current working directory. If
-            `builtins.None`, the resource will be saved in the
-            current working directory with the same name as it has on
-            Discord.
+            `builtins.None`, the resource will be saved as
+            `self.filename` in the current working directory.
         executor : typing.Optional[concurrent.futures.Executor]
             The executor to run in for blocking operations.
-            If `builtins.None`, then the default executor is used for the
-            current event loop.
+            If `builtins.None`, then the default executor is used for
+            the current event loop.
         """
         loop = asyncio.get_running_loop()
         path = path or self.filename
+
+        if not isinstance(path, pathlib.Path):
+            path = pathlib.Path(path)
+
+        if path.is_dir():
+            path = path / self.filename
+
+        if path.exists() and not force:
+            raise FileExistsError("file already exists; use `force=True` to overwrite")
 
         with await loop.run_in_executor(executor, open, path, "wb") as f:
             async with self.stream(executor=executor) as reader:
