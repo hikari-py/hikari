@@ -490,26 +490,31 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
         path : typing.Optional[Pathish]
             The path to save this resource to. If this is a string, the
             path will be relative to the current working directory. If
-            `builtins.None`, the resource will be saved as
-            `self.filename` in the current working directory.
+            `builtins.None`, the resource will be saved as `filename` in
+            the current working directory.
         executor : typing.Optional[concurrent.futures.Executor]
             The executor to run in for blocking operations.
             If `builtins.None`, then the default executor is used for
             the current event loop.
         """
+        def _open(path: pathlib.Path):
+            if path.is_dir():
+                path = path / self.filename
+
+            if path.exists() and not force:
+                raise FileExistsError(
+                    f"file {path} already exists; use `force=True` to overwrite"
+                )
+
+            return path.open("wb")
+
         loop = asyncio.get_running_loop()
         path = path or self.filename
 
         if not isinstance(path, pathlib.Path):
             path = pathlib.Path(path)
 
-        if path.is_dir():
-            path = path / self.filename
-
-        if path.exists() and not force:
-            raise FileExistsError("file already exists; use `force=True` to overwrite")
-
-        with await loop.run_in_executor(executor, open, path, "wb") as f:
+        with await loop.run_in_executor(executor, _open, path) as f:
             async with self.stream(executor=executor) as reader:
                 async for chunk in reader:
                     await loop.run_in_executor(executor, f.write, chunk)
