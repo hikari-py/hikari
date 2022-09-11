@@ -260,7 +260,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the new permission overwrites for the channel.
         parent_category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
             If provided, the new guild category for the channel.
-        default_auto_archive_duration : hikari.undefined.UndefinedOr[hikari.time.Intervalish]
+        default_auto_archive_duration : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
             If provided, the auto archive duration Discord's end user client
             should default to when creating threads in this channel.
 
@@ -4467,7 +4467,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
             The category to create the channel under. This may be the
             object or the ID of an existing category.
-        default_auto_archive_duration : hikari.undefined.UndefinedOr[hikari.time.Intervalish]
+        default_auto_archive_duration : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
             If provided, the auto archive duration Discord's end user client
             should default to when creating threads in this channel.
 
@@ -4553,7 +4553,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
             The category to create the channel under. This may be the
             object or the ID of an existing category.
-        default_auto_archive_duration : hikari.undefined.UndefinedOr[hikari.time.Intervalish]
+        default_auto_archive_duration : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
             If provided, the auto archive duration Discord's end user client
             should default to when creating threads in this channel.
 

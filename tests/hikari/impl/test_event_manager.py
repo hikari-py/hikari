@@ -357,21 +357,6 @@ class TestEventManagerImpl:
         event_factory.deserialize_thread_list_sync_event.assert_called_once_with(shard, mock_payload)
 
     @pytest.mark.asyncio()
-    async def test_on_thread_member_update(
-        self,
-        event_manager_impl: event_manager.EventManagerImpl,
-        shard: mock.Mock,
-        event_factory: mock.Mock,
-    ):
-        mock_payload = mock.Mock()
-        await event_manager_impl.on_thread_member_update(shard, mock_payload)
-
-        event_manager_impl.dispatch.assert_awaited_once_with(
-            event_factory.deserialize_own_thread_member_update_event.return_value
-        )
-        event_factory.deserialize_own_thread_member_update_event.assert_called_once_with(shard, mock_payload)
-
-    @pytest.mark.asyncio()
     async def test_on_thread_members_update(
         self,
         event_manager_impl: event_manager.EventManagerImpl,

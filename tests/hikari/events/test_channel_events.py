@@ -309,14 +309,3 @@ class TestGuildThreadUpdateEvent:
 
     def test_thread_id_property(self, event: channel_events.GuildThreadUpdateEvent):
         assert event.thread_id is event.thread.id
-
-
-class TestOwnThreadMemberUpdateEvent:
-    @pytest.fixture()
-    def event(self) -> channel_events.OwnThreadMemberUpdateEvent:
-        return channel_events.OwnThreadMemberUpdateEvent(
-            app=mock.Mock(), shard=mock.Mock(), member=mock.Mock(), guild_id=snowflakes.Snowflake(123321)
-        )
-
-    def test_thread_id_property(self, event: channel_events.OwnThreadMemberUpdateEvent):
-        assert event.thread_id is event.member.thread_id

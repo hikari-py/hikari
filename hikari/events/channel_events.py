@@ -46,7 +46,6 @@ __all__: typing.Sequence[str] = (
     "GuildThreadCreateEvent",
     "GuildThreadUpdateEvent",
     "GuildThreadDeleteEvent",
-    "OwnThreadMemberUpdateEvent",
     "ThreadMembersUpdateEvent",
     "ThreadListSyncEvent",
 )
@@ -195,7 +194,7 @@ class GuildChannelEvent(ChannelEvent, abc.ABC):
         """
         return await self.app.rest.fetch_guild(self.guild_id)
 
-    def get_channel(self) -> typing.Optional[channels.GuildChannel]:
+    def get_channel(self) -> typing.Optional[channels.PermissibleGuildChannel]:
         """Get the cached channel that this event relates to, if known.
 
         If not, return `builtins.None`.
@@ -476,7 +475,7 @@ class GuildPinsUpdateEvent(PinsUpdateEvent, GuildChannelEvent):
     last_pin_timestamp: typing.Optional[datetime.datetime] = attr.field(repr=True)
     # <<inherited docstring from ChannelPinsUpdateEvent>>.
 
-    def get_channel(self) -> typing.Optional[channels.TextableGuildChannel]:
+    def get_channel(self) -> typing.Optional[channels.PermissibleGuildChannel]:
         """Get the cached channel that this event relates to, if known.
 
         If not, return `builtins.None`.
@@ -488,7 +487,7 @@ class GuildPinsUpdateEvent(PinsUpdateEvent, GuildChannelEvent):
             will return `builtins.None` instead.
         """
         channel = super().get_channel()
-        assert channel is None or isinstance(channel, channels.TextableGuildChannel)
+        assert channel is None or isinstance(channel, channels.PermissibleGuildChannel)
         return channel
 
     async def fetch_channel(self) -> channels.TextableGuildChannel:
@@ -963,32 +962,8 @@ class GuildThreadDeleteEvent(GuildThreadEvent):
 @base_events.requires_intents(intents.Intents.GUILDS)
 @attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
-class OwnThreadMemberUpdateEvent(GuildThreadEvent):
-    """Event fired when the bot's own member is updated in a thread."""
-
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    # <<inherited docstring from Event>>.
-
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    # <<inherited docstring from ShardEvent>>.
-
-    member: channels.ThreadMember = attr.field()
-    """The member that was updated."""
-
-    guild_id: snowflakes.Snowflake = attr.field()
-    # <<inherited docstring from GuildThreadEvent>>.
-
-    @property
-    def thread_id(self) -> snowflakes.Snowflake:
-        # <<inherited docstring from GuildThreadEvent>>.
-        return self.member.thread_id
-
-
-@base_events.requires_intents(intents.Intents.GUILDS | intents.Intents.GUILD_MEMBERS)
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
 class ThreadMembersUpdateEvent(GuildThreadEvent):
-    """Event fired when other thread members are updated."""
+    """Event fired when a thread's members are updated."""
 
     app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
@@ -1006,20 +981,26 @@ class ThreadMembersUpdateEvent(GuildThreadEvent):
     """Approximate count of members in the thread channel.
 
     !!! warning
-        This stops counting at 50.
+        This stops counting at 50 for threads created before 2022/06/01.
     """
 
     added_members: typing.Mapping[snowflakes.Snowflake, channels.ThreadMember] = attr.field()
-    """Mapping of IDs to objects of the members that were added to the thread."""
+    """Mapping of IDs to objects of the members which were added to the thread."""
 
     removed_member_ids: typing.Sequence[snowflakes.Snowflake] = attr.field()
-    """Sequence of IDs of users that were removed from the thread."""
+    """Sequence of IDs of users which were removed from the thread."""
 
     guild_members: typing.Mapping[snowflakes.Snowflake, guilds.Member] = attr.field()
-    """Mapping of IDs to guild member objects of the added thread members."""
+    """Mapping of IDs to guild member objects of the added thread members.
+
+    Will only be filled if the `GUILD_MEMBERS` intent is declared.
+    """
 
     guild_presences: typing.Mapping[snowflakes.Snowflake, presences.MemberPresence] = attr.field()
-    """Mapping of IDs to guild presence objects of the added members."""
+    """Mapping of IDs to guild presence objects of the added members.
+
+    Will only be filled if the `GUILD_PRESENCES` intent is declared.
+    """
 
 
 @base_events.requires_intents(intents.Intents.GUILDS)

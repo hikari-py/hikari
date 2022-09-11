@@ -1067,7 +1067,7 @@ class GuildChannel(PartialChannel):
             If provided, the new permission overwrites for the channel.
         parent_category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
             If provided, the new guild category for the channel.
-        default_auto_archive_duration : hikari.undefined.UndefinedOr[hikari.time.Intervalish]
+        default_auto_archive_duration : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
             If provided, the auto archive duration Discord's end user client
             should default to when creating threads in this channel.
 
@@ -1484,7 +1484,7 @@ class GuildThreadChannel(TextableGuildChannel):
     """Approximate number of messages in the thread channel.
 
     !!! warning
-        This stops counting at 50.
+        This stops counting at 50 for threads created before 2022/06/01.
     """
 
     approximate_member_count: int = attr.field(eq=False, hash=False, repr=True)

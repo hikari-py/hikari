@@ -176,16 +176,6 @@ class EventFactoryImpl(event_factory.EventFactory):
             type=channel_models.ChannelType(payload["type"]),
         )
 
-    def deserialize_own_thread_member_update_event(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
-    ) -> channel_events.OwnThreadMemberUpdateEvent:
-        return channel_events.OwnThreadMemberUpdateEvent(
-            app=self._app,
-            shard=shard,
-            member=self._app.entity_factory.deserialize_thread_member(payload),
-            guild_id=snowflakes.Snowflake(payload["guild_id"]),
-        )
-
     def deserialize_thread_members_update_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> channel_events.ThreadMembersUpdateEvent:

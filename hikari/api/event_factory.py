@@ -252,25 +252,6 @@ class EventFactory(abc.ABC):
         """
 
     @abc.abstractmethod
-    def deserialize_own_thread_member_update_event(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
-    ) -> channel_events.OwnThreadMemberUpdateEvent:
-        """Parse a raw payload from Discord into a own thread member update event object.
-
-        Parameters
-        ----------
-        shard : hikari.api.shard.GatewayShard
-            The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.events.channel_events.OwnThreadMemberUpdateEvent
-            The parsed own thread member update event object.
-        """
-
-    @abc.abstractmethod
     def deserialize_thread_members_update_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> channel_events.ThreadMembersUpdateEvent:

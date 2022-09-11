@@ -222,23 +222,6 @@ class TestEventFactoryImpl:
         assert event.type is channel_models.ChannelType.GUILD_PUBLIC_THREAD
         assert isinstance(event, channel_events.GuildThreadDeleteEvent)
 
-    def test_deserialize_own_thread_member_update_event(
-        self,
-        event_factory: event_factory_.EventFactoryImpl,
-        mock_app: mock.Mock,
-        mock_shard: shard.GatewayShard,
-    ):
-        mock_payload = {"id": "92929929", "user_id": "939393939", "guild_id": "39393939"}
-
-        event = event_factory.deserialize_own_thread_member_update_event(mock_shard, mock_payload)
-
-        assert event.app is mock_app
-        assert event.shard is mock_shard
-        assert event.member is mock_app.entity_factory.deserialize_thread_member.return_value
-        assert event.guild_id == 39393939
-        mock_app.entity_factory.deserialize_thread_member.assert_called_once_with(mock_payload)
-        assert isinstance(event, channel_events.OwnThreadMemberUpdateEvent)
-
     def test_deserialize_thread_members_update_event(
         self,
         event_factory: event_factory_.EventFactoryImpl,

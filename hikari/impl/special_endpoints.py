@@ -644,9 +644,7 @@ class GuildBanIterator(iterators.BufferedLazyIterator["guilds.GuildBan"]):
     def __init__(
         self,
         entity_factory: entity_factory_.EntityFactory,
-        request_call: typing.Callable[
-            ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
-        ],
+        request_call: _RequestCallSig,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         newest_first: bool,
         first_id: str,
@@ -735,9 +733,7 @@ class ScheduledEventUserIterator(iterators.BufferedLazyIterator["scheduled_event
     def __init__(
         self,
         entity_factory: entity_factory_.EntityFactory,
-        request_call: typing.Callable[
-            ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
-        ],
+        request_call: _RequestCallSig,
         newest_first: bool,
         first_id: str,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -877,12 +873,12 @@ class GuildThreadIterator(iterators.BufferedLazyIterator[_GuildThreadChannelT]):
         self._has_more = response["has_more"]
         members = {int(member["id"]): member for member in response["members"]}
         if self._before_is_timestamp:
-            self._next_before = min(
-                time.iso8601_datetime_string_to_datetime(t["thread_metadata"]["archive_timestamp"]) for t in threads
+            self._next_before = (
+                time.iso8601_datetime_string_to_datetime(threads[-1]["thread_metadata"]["archive_timestamp"])
             ).isoformat()
 
         else:
-            self._next_before = str(min(int(thread["id"]) for thread in threads))
+            self._next_before = str(int(threads[-1]["id"]))
 
         return (
             self._deserialize(
