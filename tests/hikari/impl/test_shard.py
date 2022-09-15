@@ -934,7 +934,7 @@ class TestGatewayShardImplAsync:
         client._transport_compression = False
         client._shard_id = 20
         client._shard_count = 100
-        client._gateway_url = "wss://somewhere.com"
+        client._gateway_url = "wss://somewhere.com?somewhere=true"
         client._resume_gateway_url = None
         client._token = "sometoken"
         client._logger = mock.Mock()
@@ -982,7 +982,7 @@ class TestGatewayShardImplAsync:
             logger=client._logger,
             proxy_settings=proxy_settings,
             transport_compression=False,
-            url="wss://somewhere.com?v=400&encoding=json",
+            url="wss://somewhere.com?somewhere=true&v=400&encoding=json",
         )
         client._event_factory.deserialize_connected_event.assert_called_once_with(client)
         client._event_manager.dispatch.assert_called_once_with(
@@ -1029,8 +1029,8 @@ class TestGatewayShardImplAsync:
         ws.receive_json.return_value = {"op": 10, "d": {"heartbeat_interval": 10}}
         client._transport_compression = True
         client._shard_id = 20
-        client._gateway_url = "wss://somewhere.com"
-        client._resume_gateway_url = "wss://notsomewhere.com"
+        client._gateway_url = "wss://somewhere.com?somewhere=false"
+        client._resume_gateway_url = "wss://notsomewhere.com?somewhere=true"
         client._token = "sometoken"
         client._logger = mock.Mock()
         client._handshake_event = mock.Mock()
@@ -1069,7 +1069,7 @@ class TestGatewayShardImplAsync:
             logger=client._logger,
             proxy_settings=proxy_settings,
             transport_compression=True,
-            url="wss://notsomewhere.com?v=400&encoding=json&compress=zlib-stream",
+            url="wss://notsomewhere.com?somewhere=true&v=400&encoding=json&compress=zlib-stream",
         )
         client._event_factory.deserialize_connected_event.assert_called_once_with(client)
         client._event_manager.dispatch.assert_called_once_with(

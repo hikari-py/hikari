@@ -766,13 +766,28 @@ class GatewayShardImpl(shard.GatewayShard):
 
         assert self._handshake_event is not None
 
-        query = {"v": _VERSION, "encoding": "json"}
+        url_parts = urllib.parse.urlparse(
+            self._resume_gateway_url or self._gateway_url,
+            allow_fragments=True,
+        )
+
+        query = dict(urllib.parse.parse_qsl(url_parts.query))
+        query["v"] = str(_VERSION)
+        query["encoding"] = "json"
+
         if self._transport_compression:
             query["compress"] = "zlib-stream"
 
-        url = self._resume_gateway_url or self._gateway_url
-        scheme, netloc, path, params, _, _ = urllib.parse.urlparse(url, allow_fragments=True)
-        encoded_query = urllib.parse.urlencode(query)
+        url = urllib.parse.urlunparse(
+            (
+                url_parts.scheme,
+                url_parts.netloc,
+                url_parts.path,
+                url_parts.params,
+                urllib.parse.urlencode(query),
+                "",
+            )
+        )
 
         self._ws = await _GatewayTransport.connect(
             http_settings=self._http_settings,
@@ -780,7 +795,7 @@ class GatewayShardImpl(shard.GatewayShard):
             logger=self._logger,
             proxy_settings=self._proxy_settings,
             transport_compression=self._transport_compression,
-            url=urllib.parse.urlunparse((scheme, netloc, path, params, encoded_query, "")),
+            url=url,
         )
         self._event_manager.dispatch(self._event_factory.deserialize_connected_event(self))
 
