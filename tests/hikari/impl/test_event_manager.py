@@ -414,7 +414,9 @@ class TestEventManagerImpl:
     async def test_on_guild_create_when_stateless(
         self, stateless_event_manager_impl, shard, event_factory, entity_factory, include_unavailable
     ):
-        payload = {"unavailable": False} if include_unavailable else {}
+        payload = {"id": 123}
+        if include_unavailable:
+            payload["unavailable"] = False
 
         stateless_event_manager_impl._intents = intents.Intents.NONE
         stateless_event_manager_impl._cache_enabled_for = mock.Mock(return_value=True)
