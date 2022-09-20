@@ -156,6 +156,5 @@ require-subclass = true
 exclude-classes = """
 (
     ^hikari\\.internal\\.enums:(Enum|Flag|_EnumMeta|_FlagMeta)$
-    |^hikari\\.files:MultiprocessingFileReader$
 )
 """
