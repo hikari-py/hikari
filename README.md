@@ -168,7 +168,7 @@ other internal settings in the interpreter.
 ### `hikari[speedups]`
 
 If you have a C compiler (Microsoft VC++ Redistributable 14.0 or newer, or a modern copy of GCC/G++, Clang, etc), you
-can install Hikari using `pip install -U hikari[speedups]`. This will install `aiodns`, `cchardet`, `Brotli`, and
+can install Hikari using `pip install -U hikari[speedups]`. This will install `aiohttp` with its available speedups, and
 `ciso8601` which will provide you with a small performance boost.
 
 ### `uvloop`
