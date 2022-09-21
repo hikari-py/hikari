@@ -246,12 +246,46 @@ class TestEventManagerImpl:
             event_factory.deserialize_channel_pins_update_event.return_value
         )
 
-    @pytest.mark.parametrize("unavailable", [True, False])
+    @pytest.mark.asyncio()
+    async def test_on_guild_create_when_unavailable_guild(
+        self, event_manager_impl, shard, event_factory, entity_factory
+    ):
+        payload = {"unavailable": True}
+        event_manager_impl._cache_enabled_for = mock.Mock(return_value=True)
+        event_manager_impl._enabled_for_event = mock.Mock(return_value=True)
+
+        with mock.patch.object(event_manager, "_request_guild_members") as request_guild_members:
+            await event_manager_impl.on_guild_create(shard, payload)
+
+        event_manager_impl._enabled_for_event.assert_not_called()
+        event_factory.deserialize_guild_available_event.assert_not_called()
+        event_factory.deserialize_guild_join_event.assert_not_called()
+
+        event_manager_impl._cache.update_guild.assert_not_called()
+        event_manager_impl._cache.clear_guild_channels_for_guild.assert_not_called()
+        event_manager_impl._cache.set_guild_channel.assert_not_called()
+        event_manager_impl._cache.clear_emojis_for_guild.assert_not_called()
+        event_manager_impl._cache.set_emoji.assert_not_called()
+        event_manager_impl._cache.clear_stickers_for_guild.assert_not_called()
+        event_manager_impl._cache.set_sticker.assert_not_called()
+        event_manager_impl._cache.clear_roles_for_guild.assert_not_called()
+        event_manager_impl._cache.set_role.assert_not_called()
+        event_manager_impl._cache.clear_members_for_guild.assert_not_called()
+        event_manager_impl._cache.set_member.assert_not_called()
+        event_manager_impl._cache.clear_presences_for_guild.assert_not_called()
+        event_manager_impl._cache.set_presence.assert_not_called()
+        event_manager_impl._cache.clear_voice_states_for_guild.assert_not_called()
+        event_manager_impl._cache.set_voice_state.assert_not_called()
+        request_guild_members.assert_not_called()
+
+        event_manager_impl.dispatch.assert_not_called()
+
+    @pytest.mark.parametrize("include_unavailable", [True, False])
     @pytest.mark.asyncio()
     async def test_on_guild_create_when_dispatching_and_not_caching(
-        self, event_manager_impl, shard, event_factory, entity_factory, unavailable
+        self, event_manager_impl, shard, event_factory, entity_factory, include_unavailable
     ):
-        payload = {"unavailable": False} if unavailable else {}
+        payload = {"unavailable": False} if include_unavailable else {}
         event_manager_impl._intents = intents.Intents.NONE
         event_manager_impl._cache_enabled_for = mock.Mock(return_value=False)
         event_manager_impl._enabled_for_event = mock.Mock(return_value=True)
@@ -259,7 +293,7 @@ class TestEventManagerImpl:
         with mock.patch.object(event_manager, "_request_guild_members") as request_guild_members:
             await event_manager_impl.on_guild_create(shard, payload)
 
-        if unavailable:
+        if include_unavailable:
             event_manager_impl._enabled_for_event.assert_called_once_with(guild_events.GuildAvailableEvent)
             event_factory.deserialize_guild_available_event.assert_called_once_with(shard, payload)
             event = event_factory.deserialize_guild_available_event.return_value
@@ -287,12 +321,12 @@ class TestEventManagerImpl:
 
         event_manager_impl.dispatch.assert_awaited_once_with(event)
 
-    @pytest.mark.parametrize("unavailable", [True, False])
+    @pytest.mark.parametrize("include_unavailable", [True, False])
     @pytest.mark.asyncio()
     async def test_on_guild_create_when_not_dispatching_and_not_caching(
-        self, event_manager_impl, shard, event_factory, entity_factory, unavailable
+        self, event_manager_impl, shard, event_factory, entity_factory, include_unavailable
     ):
-        payload = {"unavailable": False} if unavailable else {}
+        payload = {"unavailable": False} if include_unavailable else {}
         event_manager_impl._intents = intents.Intents.NONE
         event_manager_impl._cache_enabled_for = mock.Mock(return_value=False)
         event_manager_impl._enabled_for_event = mock.Mock(return_value=False)
@@ -300,7 +334,7 @@ class TestEventManagerImpl:
         with mock.patch.object(event_manager, "_request_guild_members") as request_guild_members:
             await event_manager_impl.on_guild_create(shard, payload)
 
-        if unavailable:
+        if include_unavailable:
             event_manager_impl._enabled_for_event.assert_called_once_with(guild_events.GuildAvailableEvent)
         else:
             event_manager_impl._enabled_for_event.assert_called_once_with(guild_events.GuildJoinEvent)
@@ -327,12 +361,12 @@ class TestEventManagerImpl:
 
         event_manager_impl.dispatch.assert_not_called()
 
-    @pytest.mark.parametrize("unavailable", [True, False])
+    @pytest.mark.parametrize("include_unavailable", [True, False])
     @pytest.mark.asyncio()
     async def test_on_guild_create_when_not_dispatching_and_caching(
-        self, event_manager_impl, shard, event_factory, entity_factory, unavailable
+        self, event_manager_impl, shard, event_factory, entity_factory, include_unavailable
     ):
-        payload = {"unavailable": False} if unavailable else {}
+        payload = {"unavailable": False} if include_unavailable else {}
         event_manager_impl._intents = intents.Intents.NONE
         event_manager_impl._cache_enabled_for = mock.Mock(return_value=True)
         event_manager_impl._enabled_for_event = mock.Mock(return_value=False)
@@ -348,7 +382,7 @@ class TestEventManagerImpl:
         with mock.patch.object(event_manager, "_request_guild_members") as request_guild_members:
             await event_manager_impl.on_guild_create(shard, payload)
 
-        if unavailable:
+        if include_unavailable:
             event_manager_impl._enabled_for_event.assert_called_once_with(guild_events.GuildAvailableEvent)
         else:
             event_manager_impl._enabled_for_event.assert_called_once_with(guild_events.GuildJoinEvent)
@@ -375,13 +409,13 @@ class TestEventManagerImpl:
 
         event_manager_impl.dispatch.assert_not_called()
 
-    @pytest.mark.parametrize("unavailable", [True, False])
+    @pytest.mark.parametrize("include_unavailable", [True, False])
     @pytest.mark.asyncio()
     async def test_on_guild_create_when_stateless(
-        self, stateless_event_manager_impl, shard, event_factory, entity_factory, unavailable
+        self, stateless_event_manager_impl, shard, event_factory, entity_factory, include_unavailable
     ):
         payload = {"id": 123}
-        if unavailable:
+        if include_unavailable:
             payload["unavailable"] = False
 
         stateless_event_manager_impl._intents = intents.Intents.NONE
@@ -391,7 +425,7 @@ class TestEventManagerImpl:
         with mock.patch.object(event_manager, "_request_guild_members") as request_guild_members:
             await stateless_event_manager_impl.on_guild_create(shard, payload)
 
-        if unavailable:
+        if include_unavailable:
             stateless_event_manager_impl._enabled_for_event.assert_called_once_with(guild_events.GuildAvailableEvent)
         else:
             stateless_event_manager_impl._enabled_for_event.assert_called_once_with(guild_events.GuildJoinEvent)

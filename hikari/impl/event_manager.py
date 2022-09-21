@@ -180,9 +180,17 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         """See https://discord.com/developers/docs/topics/gateway#guild-create for more info."""
         event: typing.Union[guild_events.GuildAvailableEvent, guild_events.GuildJoinEvent, None]
 
-        if "unavailable" in payload and self._enabled_for_event(guild_events.GuildAvailableEvent):
+        unavailable = payload.get("unavailable")
+
+        if unavailable:
+            # It is possible for GUILD_CREATE to contain unavailable guilds during outages
+            # In cases like this, we can just ignore the event and wait for the outage to
+            # be resolved, where the correct guild visibility event will be dispatched
+            return
+
+        if unavailable is not None and self._enabled_for_event(guild_events.GuildAvailableEvent):
             event = self._event_factory.deserialize_guild_available_event(shard, payload)
-        elif "unavailable" not in payload and self._enabled_for_event(guild_events.GuildJoinEvent):
+        elif unavailable is None and self._enabled_for_event(guild_events.GuildJoinEvent):
             event = self._event_factory.deserialize_guild_join_event(shard, payload)
         else:
             event = None

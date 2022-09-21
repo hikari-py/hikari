@@ -21,6 +21,7 @@
 # SOFTWARE.
 
 import http
+import inspect
 
 import mock
 import pytest
@@ -108,28 +109,102 @@ class TestBadRequestError:
     @pytest.fixture()
     def error(self):
         return errors.BadRequestError(
-            "https://some.url", http.HTTPStatus.BAD_REQUEST, {}, "raw body", errors={"components": {"0": "ok"}}
+            "https://some.url",
+            http.HTTPStatus.BAD_REQUEST,
+            {},
+            "raw body",
+            errors={
+                "components": {
+                    "0": {
+                        "_errors": [
+                            {"code": "123", "message": "something went wrong"},
+                            {"code": "456", "message": "but more things too!"},
+                        ],
+                    },
+                },
+                "attachments": {
+                    "1": {
+                        "_errors": [
+                            {"code": "789", "message": "at this point, all wrong!"},
+                        ],
+                    },
+                },
+            },
         )
 
     def test_str(self, error):
-        assert (
-            str(error)
-            == 'Bad Request 400: \'raw body\' for https://some.url\n{\n  "components": {\n    "0": "ok"\n  }\n}'
+        with mock.patch.object(data_binding, "dump_json") as dump_json:
+            string = str(error)
+
+        assert string == inspect.cleandoc(
+            """
+            Bad Request 400: 'raw body' for https://some.url
+
+            components.0:
+             - something went wrong
+             - but more things too!
+
+            attachments.1:
+             - at this point, all wrong!
+            """
+        )
+        dump_json.assert_not_called()
+
+    def test_str_when_dump_error_errors(self, error):
+        with mock.patch.object(errors, "_dump_errors", side_effect=KeyError):
+            string = str(error)
+
+        assert string == inspect.cleandoc(
+            """
+            Bad Request 400: 'raw body' for https://some.url
+
+            {
+              "components": {
+                "0": {
+                  "_errors": [
+                    {
+                      "code": "123",
+                      "message": "something went wrong"
+                    },
+                    {
+                      "code": "456",
+                      "message": "but more things too!"
+                    }
+                  ]
+                }
+              },
+              "attachments": {
+                "1": {
+                  "_errors": [
+                    {
+                      "code": "789",
+                      "message": "at this point, all wrong!"
+                    }
+                  ]
+                }
+              }
+            }
+            """
         )
 
     def test_str_when_cached(self, error):
         error._cached_str = "ok"
 
         with mock.patch.object(data_binding, "dump_json") as dump_json:
-            assert str(error) == "ok"
+            with mock.patch.object(errors, "_dump_errors") as dump_errors:
+                assert str(error) == "ok"
 
+        dump_errors.assert_not_called()
         dump_json.assert_not_called()
 
     def test_str_when_no_errors(self, error):
         error.errors = None
-        with mock.patch.object(data_binding, "dump_json") as dump_json:
-            assert str(error) == "Bad Request 400: 'raw body' for https://some.url"
 
+        with mock.patch.object(data_binding, "dump_json") as dump_json:
+            with mock.patch.object(errors, "_dump_errors") as dump_errors:
+                assert str(error) == "Bad Request 400: 'raw body' for https://some.url"
+
+        dump_errors.assert_not_called()
         dump_json.assert_not_called()
 
 
