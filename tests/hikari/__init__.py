@@ -20,14 +20,17 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 import asyncio
+import inspect
 import sys
 import typing
+import warnings
 
 import pytest
 
-sys.set_coroutine_origin_tracking_depth(100)
 
-
+#####################
+# Enable loop debug #
+#####################
 class TestingPolicy(asyncio.DefaultEventLoopPolicy):
     def set_event_loop(self, loop: typing.Optional[asyncio.AbstractEventLoop]) -> None:
         if loop is not None:
@@ -37,14 +40,39 @@ class TestingPolicy(asyncio.DefaultEventLoopPolicy):
 
 
 asyncio.set_event_loop_policy(TestingPolicy())
+sys.set_coroutine_origin_tracking_depth(100)
 
+################################################################################
+# Force ids in parametrize to be stringified by default for better readability #
+################################################################################
 _pytest_parametrize = pytest.mark.parametrize
 
 
 def parametrize(*args, **kwargs):
-    # Force ids to be strified by default for readability.
     kwargs.setdefault("ids", repr)
     return _pytest_parametrize(*args, **kwargs)
 
 
 pytest.mark.parametrize = parametrize
+
+#################################################
+# Filter out deprecation warnings emitted by us #
+#################################################
+
+_warn = warnings.warn
+
+
+def warn(*args, **kwargs):
+    frame = inspect.currentframe().f_back
+
+    if frame.f_globals.get("__name__") == "hikari.internal.deprecation" and frame.f_code.co_name == "warn_deprecated":
+        # Ignore this specific DeprecationWarning
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            _warn(*args, **kwargs)
+
+    else:
+        _warn(*args, **kwargs)
+
+
+warnings.warn = warn

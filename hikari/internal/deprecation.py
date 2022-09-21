@@ -24,85 +24,34 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("deprecated", "warn_deprecated")
+__all__: typing.Sequence[str] = ("warn_deprecated",)
 
-import functools
-import inspect
 import typing
 import warnings
 
-if typing.TYPE_CHECKING:
-    T = typing.TypeVar("T", bound=typing.Callable[..., typing.Any])
+from hikari import _about as hikari_about
+from hikari.internal import ux
 
 
-def warn_deprecated(
-    obj: typing.Any,
-    /,
-    *,
-    version: typing.Optional[str] = None,
-    alternative: typing.Optional[str] = None,
-    stack_level: int = 3,
-) -> None:
-    """Raise a deprecated warning.
+def warn_deprecated(name: str, /, *, removal_version: str, additional_info: str, stack_level: int = 3) -> None:
+    """Issue a deprecation warning.
 
     Parameters
     ----------
-    obj: typing.Any
-        The object that is deprecated.
-
-    Other Parameters
-    ----------------
-    version: typing.Optional[str]
-        If specified, the version it will be removed in.
-    alternative: typing.Optional[str]
-        If specified, the alternative to use.
-    stack_level: int
-        The stack level for the warning. Defaults to `3`.
+    name : str
+        What is being deprecated.
+    removal_version : str
+        The version it will be removed in.
+    additional_info : str
+        Additional information on the deprecation for the user.
+    stack_level : int
+        The stack level to issue the warning in.
     """
-    if inspect.isclass(obj) or inspect.isfunction(obj):
-        obj = f"{obj.__module__}.{obj.__qualname__}"
+    if ux.HikariVersion(hikari_about.__version__) >= ux.HikariVersion(removal_version):
+        raise DeprecationWarning(f"{name!r} is passed its removal version ({removal_version})")
 
-    version_str = f"version {version}" if version is not None else "a following version"
-    message = f"'{obj}' is deprecated and will be removed in {version_str}."
-
-    if alternative is not None:
-        message += f" You can use '{alternative}' instead."
-
-    warnings.warn(message, category=DeprecationWarning, stacklevel=stack_level)
-
-
-def deprecated(
-    version: typing.Optional[str] = None, alternative: typing.Optional[str] = None
-) -> typing.Callable[[T], T]:
-    """Mark a function as deprecated.
-
-    Other Parameters
-    ----------------
-    version: typing.Optional[str]
-        If specified, the version it will be removed in.
-    alternative: typing.Optional[str]
-        If specified, the alternative to use.
-    """
-
-    def decorator(obj: T) -> T:
-        type_str = "class" if inspect.isclass(obj) else "function"
-        version_str = f"version {version}" if version is not None else "a following version"
-        alternative_str = f"You can use `{alternative}` instead." if alternative else ""
-
-        doc = inspect.getdoc(obj) or ""
-        doc += (
-            "\n"
-            "!!! warning\n"
-            f"    This {type_str} is deprecated and will be removed in {version_str}.\n"
-            f"    {alternative_str}\n"
-        )
-        obj.__doc__ = doc
-
-        @functools.wraps(obj)
-        def wrapper(*args: typing.Any, **kwargs: typing.Any) -> typing.Any:
-            warn_deprecated(obj, version=version, alternative=alternative, stack_level=3)
-            return obj(*args, **kwargs)
-
-        return typing.cast("T", wrapper)
-
-    return decorator
+    warnings.warn(
+        f"{name!r} is deprecated and will be removed in `{removal_version}`. {additional_info}",
+        category=DeprecationWarning,
+        stacklevel=stack_level,
+    )
