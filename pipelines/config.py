@@ -83,7 +83,6 @@ PYTHON_REFORMATTING_PATHS = (
     "pipelines",
     "setup.py",
     "noxfile.py",
-    _os.path.join(".idea", "fileTemplates"),
 )
 
 FULL_REFORMATTING_PATHS = (
