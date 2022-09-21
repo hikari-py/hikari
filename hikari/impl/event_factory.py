@@ -762,17 +762,13 @@ class EventFactoryImpl(event_factory.EventFactory):
     def deserialize_ready_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> shard_events.ShardReadyEvent:
-        gateway_version = int(payload["v"])
-        my_user = self._app.entity_factory.deserialize_my_user(payload["user"])
-        unavailable_guilds = [snowflakes.Snowflake(guild["id"]) for guild in payload["guilds"]]
-        session_id = payload["session_id"]
-
         return shard_events.ShardReadyEvent(
             shard=shard,
-            actual_gateway_version=gateway_version,
-            session_id=session_id,
-            my_user=my_user,
-            unavailable_guilds=unavailable_guilds,
+            actual_gateway_version=int(payload["v"]),
+            resume_gateway_url=payload["resume_gateway_url"],
+            session_id=payload["session_id"],
+            my_user=self._app.entity_factory.deserialize_my_user(payload["user"]),
+            unavailable_guilds=[snowflakes.Snowflake(guild["id"]) for guild in payload["guilds"]],
             application_id=snowflakes.Snowflake(payload["application"]["id"]),
             application_flags=application_models.ApplicationFlags(int(payload["application"]["flags"])),
         )
