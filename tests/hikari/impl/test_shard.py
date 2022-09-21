@@ -185,12 +185,14 @@ class TestGatewayTransport:
         transport_impl._ws.send_str.assert_awaited_once_with(dump_json.return_value)
         dump_json.assert_called_once_with({"json_send": None})
 
+    @pytest.mark.asyncio()
     async def test__handle_other_message_when_TEXT(self, transport_impl):
         stub_response = StubResponse(type=aiohttp.WSMsgType.TEXT)
 
         with pytest.raises(errors.GatewayError, match="Unexpected message type received TEXT, expected BINARY"):
             transport_impl._handle_other_message(stub_response)
 
+    @pytest.mark.asyncio()
     async def test__handle_other_message_when_BINARY(self, transport_impl):
         stub_response = StubResponse(type=aiohttp.WSMsgType.BINARY)
 
