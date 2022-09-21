@@ -14,11 +14,14 @@ from hikari import undefined as undefined
 from hikari._about import __author__ as __author__
 from hikari._about import __ci__ as __ci__
 from hikari._about import __copyright__ as __copyright__
+from hikari._about import __coverage__ as __coverage__
 from hikari._about import __discord_invite__ as __discord_invite__
 from hikari._about import __docs__ as __docs__
 from hikari._about import __email__ as __email__
+from hikari._about import __git_sha1__ as __git_sha1__
 from hikari._about import __issue_tracker__ as __issue_tracker__
 from hikari._about import __license__ as __license__
+from hikari._about import __maintainer__ as __maintainer__
 from hikari._about import __url__ as __url__
 from hikari._about import __version__ as __version__
 from hikari.applications import Application as Application
