@@ -299,18 +299,12 @@ class _GatewayTransport:
                     log_filterer=log_filterer,
                 )
 
-            except (
-                aiohttp.ClientOSError,
-                aiohttp.ClientConnectionError,
-                aiohttp.WSServerHandshakeError,
-                asyncio.TimeoutError,
-            ) as ex:
-                # Windows will sometimes raise an aiohttp.ClientOSError
-                # If we cannot do DNS lookup, this will fail with a ClientConnectionError
+            except (aiohttp.ClientConnectionError, aiohttp.ClientResponseError, asyncio.TimeoutError) as ex:
+                # If we cannot do DNS lookup, this will fail with an aiohttp.ClientConnectionError
                 # usually, but it might also fail with asyncio.TimeoutError if its gets stuck in a weird way
                 #
-                # aiohttp.WSServerHandshakeError has a really bad str, so we use the repr instead
-                if isinstance(ex, aiohttp.WSServerHandshakeError):
+                # aiohttp.ClientResponseError has a really bad str, so we use the repr instead
+                if isinstance(ex, aiohttp.ClientResponseError):
                     reason = repr(ex)
                 elif isinstance(ex, asyncio.TimeoutError):
                     reason = "Timeout exceeded"
