@@ -19,62 +19,30 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+import warnings
+
 import mock
 import pytest
 
+from hikari import _about as hikari_about
 from hikari.internal import deprecation
 
 
 class TestWarnDeprecated:
-    def test_when_obj(self):
-        def test():
-            ...
+    def test_when_not_past_removal(self):
+        with mock.patch.object(hikari_about, "__version__", "2.0.1"):
+            with mock.patch.object(warnings, "warn") as warn:
+                deprecation.warn_deprecated(
+                    "testing", removal_version="2.0.2", additional_info="Some info!", stack_level=100
+                )
 
-        with pytest.warns(
-            DeprecationWarning,
-            match=(
-                r"'tests.hikari.internal.test_deprecation.TestWarnDeprecated.test_when_obj.<locals>.test'"
-                r" is deprecated and will be removed in a following version."
-            ),
-        ):
-            deprecation.warn_deprecated(test)
+        warn.assert_called_once_with(
+            "'testing' is deprecated and will be removed in `2.0.2`. Some info!",
+            category=DeprecationWarning,
+            stacklevel=100,
+        )
 
-    def test_when_alternative(self):
-        with pytest.warns(
-            DeprecationWarning,
-            match=r"'test' is deprecated and will be removed in a following version. You can use 'foo.bar' instead.",
-        ):
-            deprecation.warn_deprecated("test", alternative="foo.bar")
-
-    def test_when_version(self):
-        with pytest.warns(DeprecationWarning, match=r"'test' is deprecated and will be removed in version 0.0.1"):
-            deprecation.warn_deprecated("test", version="0.0.1")
-
-
-class TestDeprecated:
-    def test_on_function(self):
-        call_mock = mock.Mock()
-
-        @deprecation.deprecated("0.0.0", "other")
-        def test():
-            return call_mock()
-
-        with mock.patch.object(deprecation, "warn_deprecated") as warn_deprecated:
-            assert test() is call_mock.return_value
-
-        warn_deprecated.assert_called_once_with(test.__wrapped__, version="0.0.0", alternative="other", stack_level=3)
-
-    def test_on_class(self):
-        called = False
-
-        @deprecation.deprecated("0.0.0", "other")
-        class Test:
-            def __init__(self):
-                nonlocal called
-                called = True
-
-        with mock.patch.object(deprecation, "warn_deprecated") as warn_deprecated:
-            Test()
-
-        assert called is True
-        warn_deprecated.assert_called_once_with(Test.__wrapped__, version="0.0.0", alternative="other", stack_level=3)
+    def test_when_past_removal(self):
+        with mock.patch.object(hikari_about, "__version__", "2.0.2"):
+            with pytest.raises(DeprecationWarning):
+                deprecation.warn_deprecated("testing", removal_version="2.0.2", additional_info="Some info!")

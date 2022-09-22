@@ -285,6 +285,25 @@ class ClientHTTPResponseError(HTTPResponseError):
     """
 
 
+def _dump_errors(obj: data_binding.JSONObject, obj_string: str = "") -> str:
+    string = ""
+    for key, value in obj.items():
+        if isinstance(value, typing.Sequence):
+            string += obj_string + ":"
+
+            for item in value:
+                string += f"\n - {item['message']}"
+
+            string += "\n\n"
+
+            continue
+
+        current_obj_string = f"{obj_string}{'.' if obj_string else ''}{key}"
+        string += _dump_errors(value, current_obj_string)
+
+    return string
+
+
 @attr.define(auto_exc=True, repr=False, slots=False)
 class BadRequestError(ClientHTTPResponseError):
     """Raised when you send an invalid request somehow."""
@@ -308,7 +327,12 @@ class BadRequestError(ClientHTTPResponseError):
 
         value = super().__str__()
         if self.errors:
-            value += "\n" + data_binding.dump_json(self.errors, indent=2)
+            value += "\n\n"
+
+            try:
+                value += _dump_errors(self.errors).strip("\n")
+            except KeyError:
+                value += data_binding.dump_json(self.errors, indent=2)
 
         self._cached_str = value
         return value

@@ -346,12 +346,12 @@ class InteractionServer(interaction_server.InteractionServer):
 
             return aiohttp.web.Response(status=response.status_code, headers=response.headers, body=multipart)
 
-        headers = response.headers
-        if response.content_type:
-            headers = headers or {}
-            headers[_CONTENT_TYPE_KEY] = response.content_type
-
-        return aiohttp.web.Response(status=response.status_code, headers=headers, body=response.payload)
+        return aiohttp.web.Response(
+            status=response.status_code,
+            headers=response.headers,
+            body=response.payload,
+            content_type=response.content_type,
+        )
 
     async def close(self) -> None:
         """Gracefully close the server and any open connections."""

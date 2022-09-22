@@ -843,6 +843,7 @@ class TestContextMenuBuilder:
         builder = (
             special_endpoints.ContextMenuCommandBuilder(commands.CommandType.USER, "we are number")
             .set_default_member_permissions(permissions.Permissions.BAN_MEMBERS)
+            .set_name_localizations({"meow": "nyan"})
             .set_is_dm_enabled(True)
         )
         mock_rest = mock.AsyncMock()
@@ -856,6 +857,7 @@ class TestContextMenuBuilder:
             builder.name,
             guild=undefined.UNDEFINED,
             default_member_permissions=permissions.Permissions.BAN_MEMBERS,
+            name_localizations={"meow": "nyan"},
             dm_enabled=True,
         )
 
@@ -864,6 +866,7 @@ class TestContextMenuBuilder:
         builder = (
             special_endpoints.ContextMenuCommandBuilder(commands.CommandType.USER, "we are number")
             .set_default_member_permissions(permissions.Permissions.BAN_MEMBERS)
+            .set_name_localizations({"en-ghibli": "meow"})
             .set_is_dm_enabled(True)
         )
         mock_rest = mock.AsyncMock()
@@ -877,6 +880,7 @@ class TestContextMenuBuilder:
             builder.name,
             guild=765234123,
             default_member_permissions=permissions.Permissions.BAN_MEMBERS,
+            name_localizations={"en-ghibli": "meow"},
             dm_enabled=True,
         )
 

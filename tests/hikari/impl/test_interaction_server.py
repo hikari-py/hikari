@@ -326,7 +326,7 @@ class TestInteractionServer:
     async def test_aiohttp_hook(self, mock_interaction_server: interaction_server_impl.InteractionServer):
         mock_interaction_server.on_interaction = mock.AsyncMock(
             return_value=mock.Mock(
-                payload=b"abody", files=[], status_code=200, headers={"header1": "ok"}, content_type="oogabooga"
+                payload=b"abody", files=[], status_code=200, headers={"header1": "ok"}, content_type="ooga/booga"
             )
         )
         request = mock.Mock(
@@ -342,8 +342,8 @@ class TestInteractionServer:
             body=b"bfddasdasd", signature=b"troekpewieojksi9", timestamp=b"123123"
         )
         assert result.body == b"abody"
-        assert result.content_type == "oogabooga"
-        assert result.headers == {"header1": "ok", "Content-Type": "oogabooga"}
+        assert result.content_type == "ooga/booga"
+        assert result.headers == {"header1": "ok", "Content-Type": "ooga/booga"}
         assert result.status == 200
 
     @pytest.mark.asyncio()
@@ -351,7 +351,7 @@ class TestInteractionServer:
         self, mock_interaction_server: interaction_server_impl.InteractionServer
     ):
         mock_interaction_server.on_interaction = mock.AsyncMock(
-            return_value=mock.Mock(payload=b"abody", files=[], headers=None, status_code=200, content_type="oogabooga")
+            return_value=mock.Mock(payload=b"abody", files=[], headers=None, status_code=200, content_type="ooga/booga")
         )
         request = mock.Mock(
             aiohttp.web.Request,
@@ -366,8 +366,8 @@ class TestInteractionServer:
             body=b"bfddasdasd", signature=b"troekpewieojksi9", timestamp=b"123123"
         )
         assert result.body == b"abody"
-        assert result.content_type == "oogabooga"
-        assert result.headers == {"Content-Type": "oogabooga"}
+        assert result.content_type == "ooga/booga"
+        assert result.headers == {"Content-Type": "ooga/booga"}
         assert result.status == 200
 
     @pytest.mark.asyncio()
@@ -378,7 +378,7 @@ class TestInteractionServer:
                 files=[files.Bytes("x" * 329, "meow.txt"), files.Bytes("y" * 124, "nyaa.txt")],
                 status_code=200,
                 headers={"header1": "ok"},
-                content_type="oogabooga",
+                content_type="ooga/booga",
             )
         )
         request = mock.Mock(
@@ -406,7 +406,7 @@ class TestInteractionServer:
 
         boundary = result.body.boundary.encode()
         assert mock_writer.payload == (
-            b"--" + boundary + b"""\r\nContent-Type: oogabooga\r\nContent-Disposition: form-data; name="payload_json"""
+            b"--" + boundary + b"""\r\nContent-Type: ooga/booga\r\nContent-Disposition: form-data; name="payload_json"""
             b""""\r\nContent-Length: 5\r\n\r\nabody\r\n--""" + boundary + b"""\r\nContent-Type: text/plain\r\nConten"""
             b"""t-Disposition: form-data; name="files[0]"; filename="meow.txt"\r\n\r\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"""
             b"""xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"""
