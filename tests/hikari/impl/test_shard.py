@@ -164,8 +164,8 @@ class TestGatewayTransport:
     @pytest.mark.asyncio()
     @pytest.mark.parametrize("trace", [True, False])
     async def test_receive_json(self, transport_impl, trace):
-        transport_impl._logger.isEnabledFor.return_value = trace
         transport_impl._receive_and_check = mock.AsyncMock()
+        transport_impl._log_payload = trace
 
         with mock.patch.object(data_binding, "load_json") as load_json:
             assert await transport_impl.receive_json() == load_json.return_value
@@ -177,7 +177,7 @@ class TestGatewayTransport:
     @pytest.mark.parametrize("trace", [True, False])
     async def test_send_json(self, transport_impl, trace):
         transport_impl._ws.send_str = mock.AsyncMock()
-        transport_impl._logger.isEnabledFor.return_value = trace
+        transport_impl._log_payload = trace
 
         with mock.patch.object(data_binding, "dump_json") as dump_json:
             await transport_impl.send_json({"json_send": None})
@@ -545,6 +545,25 @@ class TestGatewayShardImpl:
         client._keep_alive_task = keep_alive_task
 
         assert client.is_alive is expected
+
+    @pytest.mark.parametrize(
+        ("ws", "handshake_event", "expected"),
+        [
+            (None, None, False),
+            (None, True, False),
+            (None, False, False),
+            ("something", None, False),
+            ("something", True, True),
+            ("something", False, False),
+        ],
+    )
+    def test_is_connected_property(self, client, ws, handshake_event, expected):
+        client._ws = ws
+        client._handshake_event = (
+            None if handshake_event is None else mock.Mock(is_set=mock.Mock(return_value=handshake_event))
+        )
+
+        assert client.is_connected is expected
 
     def test_shard_count_property(self, client):
         client._shard_count = 69

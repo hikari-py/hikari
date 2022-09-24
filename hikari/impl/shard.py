@@ -134,7 +134,16 @@ class _GatewayTransport:
     Payload logging is also performed here.
     """
 
-    __slots__ = ("_zlib", "_sent_close", "_logger", "_exit_stack", "_log_filterer", "_ws", "_receive_and_check")
+    __slots__ = (
+        "_zlib",
+        "_sent_close",
+        "_logger",
+        "_exit_stack",
+        "_log_filterer",
+        "_ws",
+        "_receive_and_check",
+        "_log_payload",
+    )
 
     def __init__(
         self,
@@ -145,6 +154,7 @@ class _GatewayTransport:
         log_filterer: typing.Callable[[str], str],
     ) -> None:
         self._logger = logger
+        self._log_payload = self._logger.isEnabledFor(ux.TRACE)
         self._log_filterer = log_filterer
         self._exit_stack = exit_stack
         self._sent_close = False
@@ -179,7 +189,7 @@ class _GatewayTransport:
 
     async def receive_json(self) -> typing.Any:
         pl = await self._receive_and_check()
-        if self._logger.isEnabledFor(ux.TRACE):
+        if self._log_payload:
             filtered = self._log_filterer(pl)
             self._logger.log(ux.TRACE, "received payload with size %s\n    %s", len(pl), filtered)
 
@@ -187,7 +197,7 @@ class _GatewayTransport:
 
     async def send_json(self, data: data_binding.JSONObject) -> None:
         pl = data_binding.dump_json(data)
-        if self._logger.isEnabledFor(ux.TRACE):
+        if self._log_payload:
             filtered = self._log_filterer(pl)
             self._logger.log(ux.TRACE, "sending payload with size %s\n    %s", len(pl), filtered)
 
@@ -797,7 +807,8 @@ class GatewayShardImpl(shard.GatewayShard):
         hello_payload = await self._ws.receive_json()
         if hello_payload[_OP] != _HELLO:
             self._logger.debug(
-                f"expected {_HELLO} (HELLO) opcode, received %s which makes no sense, closing with PROTOCOL ERROR",
+                "expected %s (HELLO) opcode, received %s which makes no sense, closing with PROTOCOL ERROR",
+                _HELLO,
                 hello_payload[_OP],
             )
             await self._ws.send_close(code=errors.ShardCloseCode.PROTOCOL_ERROR, message=b"Expected HELLO op")
@@ -808,7 +819,6 @@ class GatewayShardImpl(shard.GatewayShard):
         heartbeat_task = asyncio.create_task(
             self._heartbeat(heartbeat_interval), name=f"heartbeat (shard {self._shard_id})"
         )
-
         poll_events_task = asyncio.create_task(self._poll_events(), name=f"poll events (shard {self._shard_id})")
 
         # Perform handshake
