@@ -376,7 +376,7 @@ class EventManager(abc.ABC):
 
         Returns
         -------
-        typing.Collection[typing.Callable[[T], typing.Coroutine[typing.Any, typing.Any, builtins.None]]
+        typing.Collection[typing.Callable[[T], typing.Coroutine[typing.Any, typing.Any, builtins.None]]]
             A copy of the collection of listeners for the event. Will return
             an empty collection if nothing is registered.
 

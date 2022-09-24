@@ -750,7 +750,7 @@ class TestEventManagerBase:
             member_events.MemberDeleteEvent: ["coroutine4", "coroutine5"],
         }
 
-        assert event_manager.get_listeners(member_events.MemberEvent, polymorphic=False) == []
+        assert event_manager.get_listeners(member_events.MemberEvent, polymorphic=False) == ()
 
     def test_get_listeners_monomorphic_and_results(self, event_manager):
         event_manager._listeners = {

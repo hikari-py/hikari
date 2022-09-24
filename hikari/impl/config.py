@@ -274,7 +274,7 @@ class HTTPSettings(config.HTTPSettings):
     """
 
     force_close_transports: bool = attr.field(default=True, validator=attr.validators.instance_of(bool))
-    """Toggle whether to force close transports on shutdown.
+    """Toggle whether to force close transports on shut down.
 
     This defaults to `builtins.True` to combat various protocol and asyncio
     issues present when using Microsoft Windows. If you are sure you know
