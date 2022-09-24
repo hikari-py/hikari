@@ -28,8 +28,6 @@ __all__: typing.Sequence[str] = ("CacheView", "Cache", "MutableCache")
 import abc
 import typing
 
-from hikari import iterators
-
 if typing.TYPE_CHECKING:
     from hikari import channels
     from hikari import emojis
@@ -68,10 +66,6 @@ class CacheView(typing.Mapping[_KeyT, _ValueT], abc.ABC):
     @abc.abstractmethod
     def get_item_at(self, index: typing.Union[slice, int], /) -> typing.Union[_ValueT, typing.Sequence[_ValueT]]:
         ...
-
-    @abc.abstractmethod
-    def iterator(self) -> iterators.LazyIterator[_ValueT]:
-        """Get a lazy iterator of the entities in the view."""
 
 
 class Cache(abc.ABC):
