@@ -142,7 +142,6 @@ class _GatewayTransport:
         "_log_filterer",
         "_ws",
         "_receive_and_check",
-        "_log_payload",
     )
 
     def __init__(
@@ -154,7 +153,6 @@ class _GatewayTransport:
         log_filterer: typing.Callable[[str], str],
     ) -> None:
         self._logger = logger
-        self._log_payload = self._logger.isEnabledFor(ux.TRACE)
         self._log_filterer = log_filterer
         self._exit_stack = exit_stack
         self._sent_close = False
@@ -189,7 +187,7 @@ class _GatewayTransport:
 
     async def receive_json(self) -> typing.Any:
         pl = await self._receive_and_check()
-        if self._log_payload:
+        if self._logger.isEnabledFor(ux.TRACE):
             filtered = self._log_filterer(pl)
             self._logger.log(ux.TRACE, "received payload with size %s\n    %s", len(pl), filtered)
 
@@ -197,7 +195,7 @@ class _GatewayTransport:
 
     async def send_json(self, data: data_binding.JSONObject) -> None:
         pl = data_binding.dump_json(data)
-        if self._log_payload:
+        if self._logger.isEnabledFor(ux.TRACE):
             filtered = self._log_filterer(pl)
             self._logger.log(ux.TRACE, "sending payload with size %s\n    %s", len(pl), filtered)
 

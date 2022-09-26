@@ -165,7 +165,7 @@ class TestGatewayTransport:
     @pytest.mark.parametrize("trace", [True, False])
     async def test_receive_json(self, transport_impl, trace):
         transport_impl._receive_and_check = mock.AsyncMock()
-        transport_impl._log_payload = trace
+        transport_impl._logger = mock.Mock(enabled_for=mock.Mock(return_value=trace))
 
         with mock.patch.object(data_binding, "load_json") as load_json:
             assert await transport_impl.receive_json() == load_json.return_value
@@ -177,7 +177,7 @@ class TestGatewayTransport:
     @pytest.mark.parametrize("trace", [True, False])
     async def test_send_json(self, transport_impl, trace):
         transport_impl._ws.send_str = mock.AsyncMock()
-        transport_impl._log_payload = trace
+        transport_impl._logger = mock.Mock(enabled_for=mock.Mock(return_value=trace))
 
         with mock.patch.object(data_binding, "dump_json") as dump_json:
             await transport_impl.send_json({"json_send": None})
