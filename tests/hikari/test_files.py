@@ -23,12 +23,10 @@
 import asyncio
 import pathlib
 
-import aiohttp
 import mock
 import pytest
 
 from hikari import files
-from hikari import messages
 from tests.hikari import hikari_test_helpers
 
 

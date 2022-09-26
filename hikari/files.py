@@ -408,7 +408,7 @@ class _NoOpAsyncReaderContextManagerImpl(AsyncReaderContextManager[ReaderImplT])
         pass
 
 
-def _open_write_path(path: pathlib.Path, default_filename: str, force: bool):
+def _open_write_path(path: pathlib.Path, default_filename: str, force: bool) -> typing.BinaryIO:
     if path.is_dir():
         path = path.joinpath(default_filename)
 
