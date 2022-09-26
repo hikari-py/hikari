@@ -437,6 +437,17 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
         _, _, ext = self.filename.rpartition(".")
         return ext if ext != self.filename else None
 
+    def _open(self, path: pathlib.Path, force: bool):
+        if path.is_dir():
+            path = path / self.filename
+
+        if path.exists() and not force:
+            raise FileExistsError(
+                f"file {path} already exists; use `force=True` to overwrite"
+            )
+
+        return path.open("wb")
+
     async def read(
         self,
         *,
@@ -499,16 +510,6 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
         force : bool
             Whether to overwrite an existing file. Defaults to `False`.
         """
-        def _open(path: pathlib.Path):
-            if path.is_dir():
-                path = path / self.filename
-
-            if path.exists() and not force:
-                raise FileExistsError(
-                    f"file {path} already exists; use `force=True` to overwrite"
-                )
-
-            return path.open("wb")
 
         loop = asyncio.get_running_loop()
         path = path or self.filename
@@ -516,7 +517,7 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
         if not isinstance(path, pathlib.Path):
             path = pathlib.Path(path)
 
-        with await loop.run_in_executor(executor, _open, path) as f:
+        with await loop.run_in_executor(executor, self._open, path, force) as f:
             async with self.stream(executor=executor) as reader:
                 async for chunk in reader:
                     await loop.run_in_executor(executor, f.write, chunk)
