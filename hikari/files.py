@@ -475,8 +475,8 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
 
     async def save(
         self,
-        *,
         path: typing.Optional[Pathish] = None,
+        *,
         executor: typing.Optional[concurrent.futures.Executor] = None,
         force: bool = False,
     ) -> None:
@@ -496,6 +496,8 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
             The executor to run in for blocking operations.
             If `builtins.None`, then the default executor is used for
             the current event loop.
+        force : bool
+            Whether to overwrite an existing file. Defaults to `False`.
         """
         def _open(path: pathlib.Path):
             if path.is_dir():
