@@ -1258,6 +1258,7 @@ class ContextMenuCommandBuilder(CommandBuilder, special_endpoints.ContextMenuCom
             self._type,
             self._name,
             guild=guild,
+            name_localizations=self._name_localizations,
             default_member_permissions=self._default_member_permissions,
             dm_enabled=self._is_dm_enabled,
         )

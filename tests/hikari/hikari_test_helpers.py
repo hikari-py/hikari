@@ -156,6 +156,22 @@ def ensure_occurs_quickly():
         yield
 
 
+class ContextManagerMock:
+    enter_count = 0
+    exit_count = 0
+
+    def __enter__(self):
+        self.enter_count += 1
+        return self
+
+    def __exit__(self, *args):
+        self.exit_count += 1
+
+    def assert_used_once(self):
+        assert self.enter_count == 1
+        assert self.exit_count == 1
+
+
 class AsyncContextManagerMock:
     aenter_count = 0
     aexit_count = 0

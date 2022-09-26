@@ -494,7 +494,7 @@ class EventManagerBase(event_manager_.EventManager):
         if items := self._listeners.get(event_type):
             return items.copy()
 
-        return []
+        return ()
 
     # Yes, this is not generic. The reason for this is MyPy complains about
     # using ABCs that are not concrete in generic types passed to functions.

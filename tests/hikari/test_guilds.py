@@ -456,11 +456,7 @@ class TestMember:
     async def test_edit_when_deprecated_nick_field(self, model):
         model.app.rest.edit_member = mock.AsyncMock()
 
-        with pytest.warns(
-            DeprecationWarning,
-            match="'nick' is deprecated and will be removed in a following version. You can use 'nickname' instead.",
-        ):
-            edit = await model.edit(nick="meow")
+        edit = await model.edit(nick="meow")
 
         model.app.rest.edit_member.assert_awaited_once_with(
             456,

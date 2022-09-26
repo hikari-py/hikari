@@ -93,7 +93,11 @@ norecursedirs = [
     "public",
     "ci",
 ]
-filterwarnings = ["ignore:.*assertions not in test modules or plugins will be ignored because assert statements are not executed by the underlying Python interpreter.*:pytest.PytestConfigWarning"]
+filterwarnings = [
+    "error", # Treat warnings as errors
+    "ignore:.*assertions not in test modules or plugins will be ignored .*:pytest.PytestConfigWarning",
+    "ignore::pytest.PytestUnraisableExceptionWarning",
+]
 required_plugins = ["pytest-asyncio"]
 
 [tool.towncrier]
@@ -156,6 +160,5 @@ require-subclass = true
 exclude-classes = """
 (
     ^hikari\\.internal\\.enums:(Enum|Flag|_EnumMeta|_FlagMeta)$
-    |^hikari\\.files:MultiprocessingFileReader$
 )
 """

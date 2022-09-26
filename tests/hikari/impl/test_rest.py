@@ -3439,16 +3439,12 @@ class TestRESTClientImplAsync:
         rest_client._request = mock.AsyncMock(return_value={"id": "789"})
         rest_client._entity_factory.deserialize_member = mock.Mock(return_value=member)
 
-        with pytest.warns(
-            DeprecationWarning,
-            match="'nick' is deprecated and will be removed in a following version. You can use 'nickname' instead.",
-        ):
-            returned = await rest_client.add_user_to_guild(
-                "token",
-                StubModel(123),
-                StubModel(456),
-                nick="cool nick2",
-            )
+        returned = await rest_client.add_user_to_guild(
+            "token",
+            StubModel(123),
+            StubModel(456),
+            nick="cool nick2",
+        )
 
         assert returned is member
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
@@ -4111,11 +4107,7 @@ class TestRESTClientImplAsync:
         expected_json = {"nick": "eeeeeestrogen"}
         rest_client._request = mock.AsyncMock(return_value={"id": "789"})
 
-        with pytest.warns(
-            DeprecationWarning,
-            match="'nick' is deprecated and will be removed in a following version. You can use 'nickname' instead.",
-        ):
-            result = await rest_client.edit_member(StubModel(123), StubModel(456), nick="eeeeeestrogen")
+        result = await rest_client.edit_member(StubModel(123), StubModel(456), nick="eeeeeestrogen")
 
         assert result is rest_client._entity_factory.deserialize_member.return_value
 

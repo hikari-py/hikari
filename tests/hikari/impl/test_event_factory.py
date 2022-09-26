@@ -1089,6 +1089,7 @@ class TestEventFactoryImpl:
         mock_user_payload = object()
         mock_payload = {
             "v": "69",
+            "resume_gateway_url": "testing.com",
             "user": mock_user_payload,
             "guilds": [{"id": "432123"}, {"id": "949494"}],
             "session_id": "kjsdjiodsaiosad",
@@ -1102,6 +1103,7 @@ class TestEventFactoryImpl:
         assert isinstance(event, shard_events.ShardReadyEvent)
         assert event.shard is mock_shard
         assert event.actual_gateway_version == 69
+        assert event.resume_gateway_url == "testing.com"
         assert event.my_user is mock_app.entity_factory.deserialize_my_user.return_value
         assert event.unavailable_guilds == [432123, 949494]
         assert event.session_id == "kjsdjiodsaiosad"

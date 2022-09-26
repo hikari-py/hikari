@@ -395,9 +395,6 @@ class RESTBucketManager:
     ) -> None:
         self.close()
 
-    def __del__(self) -> None:
-        self.close()
-
     def start(self, poll_period: float = 20.0, expire_after: float = 10.0) -> None:
         """Start this ratelimiter up.
 

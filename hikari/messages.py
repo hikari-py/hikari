@@ -284,39 +284,61 @@ class Mentions:
 
         If the message is not crossposted, this will always be empty.
         """
-        deprecation.warn_deprecated("Mentions.channels", alternative="channel_mentions in the base message object")
+        deprecation.warn_deprecated(
+            "channels",
+            removal_version="2.0.0.dev113",
+            additional_info="Use 'channel_mentions' in the base message object instead",
+        )
         return self._message.channel_mentions
 
     @property
     def channels_ids(self) -> undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]]:
         """Sequence of IDs of the channels that were mentioned in the message."""
         deprecation.warn_deprecated(
-            "Mentions.channels_ids", alternative="channel_mention_ids in the base message object"
+            "channels_ids",
+            removal_version="2.0.0.dev113",
+            additional_info="Use 'channel_mention_ids' in the base message object instead",
         )
         return self._message.channel_mention_ids
 
     @property
     def users(self) -> undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, users_.User]]:
         """Users who were notified by their mention in the message."""
-        deprecation.warn_deprecated("Mentions.users", alternative="user_mentions in the base message object")
+        deprecation.warn_deprecated(
+            "users",
+            removal_version="2.0.0.dev113",
+            additional_info="Use 'user_mentions' in the base message object instead",
+        )
         return self._message.user_mentions
 
     @property
     def user_ids(self) -> undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]]:
         """Sequence of IDs of the users that were mentioned in the message."""
-        deprecation.warn_deprecated("Mentions.user_ids", alternative="user_mentions_ids in the base message object")
+        deprecation.warn_deprecated(
+            "user_ids",
+            removal_version="2.0.0.dev113",
+            additional_info="Use 'user_mentions_ids' in the base message object instead",
+        )
         return self._message.user_mentions_ids
 
     @property
     def role_ids(self) -> undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]]:
         """Sequence of IDs of roles that were notified by their mention in the message."""
-        deprecation.warn_deprecated("Mentions.role_ids", alternative="role_mention_ids in the base message object")
+        deprecation.warn_deprecated(
+            "role_ids",
+            removal_version="2.0.0.dev113",
+            additional_info="Use 'role_mention_ids' in the base message object instead",
+        )
         return self._message.role_mention_ids
 
     @property
     def everyone(self) -> undefined.UndefinedOr[bool]:
         """Whether the message notifies using `@everyone` or `@here`."""
-        deprecation.warn_deprecated("Mentions.everyone", alternative="mentions_everyone in the base message object")
+        deprecation.warn_deprecated(
+            "everyone",
+            removal_version="2.0.0.dev113",
+            additional_info="Use 'mentions_everyone' in the base message object instead",
+        )
         return self._message.mentions_everyone
 
     def get_members(self) -> undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, guilds.Member]]:
@@ -341,7 +363,9 @@ class Mentions:
             in `notified_users` may not be present here.
         """
         deprecation.warn_deprecated(
-            "Mentions.get_members", alternative="get_member_mentions in the base message object"
+            "get_members",
+            removal_version="2.0.0.dev113",
+            additional_info="Use 'get_member_mentions' in the base message object instead",
         )
         return self._message.get_member_mentions()
 
@@ -367,7 +391,11 @@ class Mentions:
             in `notifies_role_ids` may not be present here. This is a limitation
             of Discord, again.
         """
-        deprecation.warn_deprecated("Mentions.get_roles", alternative="get_role_mentions in the base message object")
+        deprecation.warn_deprecated(
+            "get_roles",
+            removal_version="2.0.0.dev113",
+            additional_info="Use 'get_role_mentions' in the base message object instead",
+        )
         return self._message.get_role_mentions()
 
 
