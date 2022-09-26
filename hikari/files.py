@@ -408,6 +408,16 @@ class _NoOpAsyncReaderContextManagerImpl(AsyncReaderContextManager[ReaderImplT])
         pass
 
 
+def _open_write_path(path: pathlib.Path, default_filename: str, force: bool):
+    if path.is_dir():
+        path = path.joinpath(default_filename)
+
+    if not force and path.exists():
+        raise FileExistsError(f"file {path!r} already exists; use `force=True` to overwrite")
+
+    return path.expanduser().open("wb")
+
+
 class Resource(typing.Generic[ReaderImplT], abc.ABC):
     """Base for any uploadable or downloadable representation of information.
 
@@ -433,17 +443,6 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
         """File extension, if there is one."""
         _, _, ext = self.filename.rpartition(".")
         return ext if ext != self.filename else None
-
-    def _open(self, path: pathlib.Path, force: bool):
-        if path.is_dir():
-            path = path / self.filename
-
-        if path.exists() and not force:
-            raise FileExistsError(
-                f"file {path} already exists; use `force=True` to overwrite"
-            )
-
-        return path.open("wb")
 
     async def read(
         self,
@@ -507,14 +506,10 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
         force : bool
             Whether to overwrite an existing file. Defaults to `False`.
         """
-
         loop = asyncio.get_running_loop()
-        path = path or self.filename
+        path = ensure_path(path or self.filename)
 
-        if not isinstance(path, pathlib.Path):
-            path = pathlib.Path(path)
-
-        with await loop.run_in_executor(executor, self._open, path, force) as f:
+        with await loop.run_in_executor(executor, _open_write_path, path, self.filename, force) as f:
             async with self.stream(executor=executor) as reader:
                 async for chunk in reader:
                     await loop.run_in_executor(executor, f.write, chunk)
@@ -824,7 +819,7 @@ class ThreadedFileReader(AsyncReader):
                 break
 
 
-def _open_path(path: pathlib.Path) -> typing.BinaryIO:
+def _open_read_path(path: pathlib.Path) -> typing.BinaryIO:
     return path.expanduser().open("rb")
 
 
@@ -841,7 +836,7 @@ class _ThreadedFileReaderContextManagerImpl(AsyncReaderContextManager[ThreadedFi
             raise RuntimeError("File is already open")
 
         loop = asyncio.get_running_loop()
-        file = await loop.run_in_executor(self.executor, _open_path, self.path)
+        file = await loop.run_in_executor(self.executor, _open_read_path, self.path)
         self.file = file
         return ThreadedFileReader(self.filename, None, self.executor, file)
 

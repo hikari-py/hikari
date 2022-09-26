@@ -49,11 +49,11 @@ class TestAsyncReaderContextManager:
             pytest.fail(exc)
 
 
-def test__open_path():
+def test__open_read_path():
     expanded_path = mock.Mock()
     path = mock.Mock(expanduser=mock.Mock(return_value=expanded_path))
 
-    assert files._open_path(path) is expanded_path.open.return_value
+    assert files._open_read_path(path) is expanded_path.open.return_value
 
     expanded_path.open.assert_called_once_with("rb")
 
@@ -90,91 +90,41 @@ class TestThreadedFileReaderContextManagerImpl:
                 assert reader.filename == "meow.txt"
                 assert reader._executor is executor
 
-                loop.run_in_executor.assert_called_once_with(executor, files._open_path, path)
+                loop.run_in_executor.assert_called_once_with(executor, files._open_read_path, path)
                 loop.run_in_executor.reset_mock()
 
         loop.run_in_executor.assert_called_once_with(executor, mock_file.close)
         assert context_manager.file is None
 
 
-# class TestResource:
-#     @pytest.fixture()
-#     def data(self):
-#         return b"line1\nline2\nline3\n"
+class TestOpenWritePath:
+    def test_when_dir(self):
+        mock_path = mock.Mock(is_dir=mock.Mock(return_value=True))
+        joinpath = mock_path.joinpath.return_value = mock.Mock(exists=mock.Mock(return_value=False))
 
-#     @pytest.fixture()
-#     def attachment(self, data: bytes):
-#         return messages.Attachment(
-#             id=123,
-#             filename="file.txt",
-#             media_type="text",
-#             height=None,
-#             width=None,
-#             proxy_url="htt",
-#             size=len(b"line1\nline2\nline3\n"),
-#             url="https://rick.roll",
-#             is_ephemeral=False,
-#         )
+        assert (
+            files._open_write_path(mock_path, "some_filename.png", False)
+            is joinpath.expanduser.return_value.open.return_value
+        )
 
-#     async def create_stream(self):
-#         # https://github.com/aio-libs/aiohttp/blob/master/tests/test_streams.py#L26
-#         loop = asyncio.get_event_loop()
-#         protocol = mock.Mock(_reading_paused=False)
-#         stream = aiohttp.streams.StreamReader(protocol, 2**16, loop=loop)
-#         stream.feed_data(b"line1\nline2\nline3\n")
-#         stream.feed_eof()
-#         return stream
+        mock_path.joinpath.assert_called_once_with("some_filename.png")
+        joinpath.expanduser.return_value.open.assert_called_once_with("wb")
 
-#     async def create_reader(self):
-#         return files.WebReader(
-#             stream=await self.create_stream(),
-#             url="https://rick.roll",
-#             status=200,
-#             reason="None",
-#             filename="file.txt",
-#             charset=None,
-#             mimetype="your mum",
-#             size=len(b"line1\nline2\nline3\n"),
-#             head_only=False,
-#         )
+    def test_when_exists_but_not_force(self):
+        mock_path = mock.Mock(is_dir=mock.Mock(return_value=False), exists=mock.Mock(return_value=True))
 
-#     @pytest.mark.asyncio()
-#     async def test_resource_read(self, attachment: messages.Attachment, data: bytes):
-#         with mock.patch.object(files._WebReaderAsyncReaderContextManagerImpl, "__aenter__") as mock_aenter:
-#             mock_aenter.return_value = await self.create_reader()
+        with pytest.raises(FileExistsError):
+            files._open_write_path(mock_path, "some_filename.png", False)
 
-#             # Mocking the previous object throws an error here
-#             # so we just want to avoid it.
-#             try:
-#                 assert await attachment.read() == data
-#             except AttributeError as exc:
-#                 if str(exc) != "'NotImplementedType' object has no attribute '__aexit__'":
-#                     raise
+    def test_when_exists_but_force(self):
+        mock_path = mock.Mock(is_dir=mock.Mock(return_value=False), exists=mock.Mock(return_value=True))
 
-#     @pytest.mark.asyncio()
-#     async def test_resource_save(self, attachment: messages.Attachment, data: bytes):
-#         with mock.patch.object(files._WebReaderAsyncReaderContextManagerImpl, "__aenter__") as mock_aenter:
-#             mock_aenter.return_value = await self.create_reader()
+        assert (
+            files._open_write_path(mock_path, "some_filename.png", True)
+            is mock_path.expanduser.return_value.open.return_value
+        )
 
-#             # A try, finally is used to delete the file rather than relying on delete=True behaviour
-#             # as on Windows the file cannot be accessed by other processes if delete is True.
-#             try:
-#                 file = tempfile.NamedTemporaryFile("wb", delete=True)
-#                 path = pathlib.Path(file.name)
-
-#                 with file:
-#                     # Mocking the previous object throws an error here
-#                     # so we just want to avoid it.
-#                     try:
-#                         await attachment.save(path=path)
-#                     except AttributeError as exc:
-#                         if str(exc) != "'NotImplementedType' object has no attribute '__aexit__'":
-#                             raise
-
-#                     with open(path, "rb") as f:
-#                         assert f.read() == data
-#             finally:
-#                 path.unlink()
+        mock_path.expanduser.return_value.open.assert_called_once_with("wb")
 
 
 class TestResource:
@@ -208,23 +158,22 @@ class TestResource:
     @pytest.mark.asyncio()
     async def test_save(self, resource):
         executor = object()
-        path = pathlib.Path("rickroll/lyrics.txt")
-        file_open = hikari_test_helpers.AsyncContextManagerMock()
+        file_open = hikari_test_helpers.ContextManagerMock()
         file_open.write = mock.Mock()
-        loop = mock.Mock(run_in_executor=mock.Mock(side_effect=[file_open, None]))
+        loop = mock.Mock(run_in_executor=mock.AsyncMock(side_effect=[file_open, None, None, None, None, None]))
 
         with mock.patch.object(asyncio, "get_running_loop", return_value=loop):
-            await resource.save(path, executor=executor, force=True)
+            await resource.save("rickroll/lyrics.txt", executor=executor, force=True)
 
         file_open.assert_used_once()
         assert loop.run_in_executor.call_count == 6
         loop.run_in_executor.assert_has_calls(
             [
-                mock.call(executor, resource._open, path, True),
-                mock.call(executor, path.write, "never"),
-                mock.call(executor, path.write, "gonna"),
-                mock.call(executor, path.write, "give"),
-                mock.call(executor, path.write, "you"),
-                mock.call(executor, path.write, "up"),
+                mock.call(executor, files._open_write_path, pathlib.Path("rickroll/lyrics.txt"), "lyrics.txt", True),
+                mock.call(executor, file_open.write, "never"),
+                mock.call(executor, file_open.write, "gonna"),
+                mock.call(executor, file_open.write, "give"),
+                mock.call(executor, file_open.write, "you"),
+                mock.call(executor, file_open.write, "up"),
             ]
         )
