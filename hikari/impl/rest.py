@@ -680,7 +680,7 @@ class RESTClientImpl(rest_api.RESTClient):
             return None
 
     @typing.final
-    async def _request(
+    async def _request(  # noqa: C901 CFQ001
         self,
         compiled_route: routes.CompiledRoute,
         *,
