@@ -39,14 +39,20 @@ import typing
 
 import attr
 
-from hikari import guilds, snowflakes, undefined, webhooks
-from hikari.internal import attr_extensions, enums
+from hikari import guilds
+from hikari import snowflakes
+from hikari import undefined
+from hikari import webhooks
+from hikari.internal import attr_extensions
+from hikari.internal import enums
 
 if typing.TYPE_CHECKING:
     from hikari import embeds as embeds_
-    from hikari import files, messages
+    from hikari import files
+    from hikari import messages
     from hikari import permissions as permissions_
-    from hikari import traits, users
+    from hikari import traits
+    from hikari import users
     from hikari.api import special_endpoints
 
 

@@ -396,7 +396,6 @@ def test_get_or_make_loop():
 
 
 def test_get_or_make_loop_handles_runtime_error():
-    asyncio.get_event_loop_policy().get_event_loop().close()
     asyncio.set_event_loop(None)
     mock_loop = mock.Mock(asyncio.AbstractEventLoop)
 

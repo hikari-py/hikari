@@ -33,6 +33,10 @@ import pytest
 #####################
 class TestingPolicy(asyncio.DefaultEventLoopPolicy):
     def set_event_loop(self, loop: typing.Optional[asyncio.AbstractEventLoop]) -> None:
+        # Close any old event loops to prevent them from raising warnings
+        if self._local._loop:
+            self._local._loop.close()
+
         if loop is not None:
             loop.set_debug(True)
 

@@ -5,7 +5,7 @@ Mayor and minor releases also include the changes specified in prior development
 ```
 
 ```{towncrier-draft-entries} Unreleased changes
-``` 
+```
 
 ```{include} ../../CHANGELOG.md
 ```
