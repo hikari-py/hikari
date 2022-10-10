@@ -15,6 +15,8 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
+        # 3.11-dev temporarily disabled due to CPython crash
+        # https://github.com/python/cpython/issues/97002
         python-version: [3.8, 3.9, "3.10"]
 
     runs-on: ${{ matrix.os }}
@@ -30,7 +32,7 @@ jobs:
 
       - name: Test Installation
         run: |
-          pip install wheel
+          pip install -r dev-requirements/build.txt
 
           pip install .
           pip uninstall -y hikari
@@ -40,10 +42,11 @@ jobs:
 
       - name: Run tests
         run: |
-          pip install nox
+          pip install -r dev-requirements/nox.txt
           nox -s pytest
           nox -s pytest-all-features -- --cov-append
 
+          python scripts/normalize_coverage.py
           mv .coverage .coverage.${{ matrix.os }}.${{ matrix.python-version }}
 
       - name: Upload coverage
@@ -66,7 +69,7 @@ jobs:
       - name: Setup python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.8
+          python-version: "3.10"
 
       - name: Download coverage
         uses: actions/download-artifact@v3
@@ -75,9 +78,10 @@ jobs:
 
       - name: Combine coverage
         run: |
-          pip install -r dev-requirements.txt
+          pip install -r dev-requirements/coverage.txt
           coverage combine
-          coverage xml -i
+          coverage xml
+          coverage report
 
       - name: Upload coverage to codeclimate
         uses: paambaati/codeclimate-action@v3.0.0
@@ -101,7 +105,7 @@ jobs:
       - name: Check stubs
         if: always()
         run: |
-          pip install nox
+          pip install -r dev-requirements/nox.txt
           nox -s generate-stubs
           if [ "$(git status --short)" ]; then
             echo "Stubs were not updated accordingly to the changes. Please run 'nox -s generate-stubs' and commit the changes to fix this."
@@ -127,7 +131,7 @@ jobs:
 
       - name: Test twemoji mapping
         run: |
-          pip install nox
+          pip install -r dev-requirements/nox.txt
           nox -s twemoji-test
 
   docs:
@@ -147,7 +151,7 @@ jobs:
 
       - name: Build documentation
         run: |
-          pip install nox
+          pip install -r dev-requirements/nox.txt
           nox -s sphinx
 
       - name: Upload artifacts

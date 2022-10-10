@@ -18,7 +18,7 @@ Gateway.
 Built on good intentions and the hope that it will be extendable and reusable, rather than an obstacle for future
 development.
 
-Python 3.8, 3.9 and 3.10 are currently supported.
+Python 3.8, 3.9 and 3.10 and 3.11-dev are currently supported.
 
 ## Installation
 
@@ -179,8 +179,8 @@ other internal settings in the interpreter.
 ### `hikari[speedups]`
 
 If you have a C compiler (Microsoft VC++ Redistributable 14.0 or newer, or a modern copy of GCC/G++, Clang, etc), it is
-recommended you install Hikari using `pip install -U hikari[speedups]`. This will install `aiodns`, `cchardet`,
-`Brotli`, and `ciso8601` which will provide you with a small performance boost.
+recommended you install Hikari using `pip install -U hikari[speedups]`. This will install `aiohttp` with its available
+speedups, and `ciso8601` which will provide you with a small performance boost.
 
 ### `uvloop`
 
@@ -221,9 +221,8 @@ In the repository, make a virtual environment (`python -m venv .venv`) and enter
 Linux, or for Windows use one of `.venv\Scripts\activate.ps1`, `.venv\Scripts\activate.bat`,
 `source .venv/Scripts/activate`).
 
-The first thing you should run is `pip install nox` to install nox. This handles running predefined tasks and pipelines.
-
-You can install any dependencies with `pip install -r requirements.txt -r dev-requirements.txt`.
+The first thing you should run is `pip install -r dev-requirements/nox.txt` to install nox.
+This handles running predefined tasks and pipelines.
 
 Once this is complete, you can run `nox` without any arguments to ensure everything builds and is correct.
 

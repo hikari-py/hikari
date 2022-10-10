@@ -28,6 +28,7 @@ include = ".*pyi?$"
 target-version = ["py38"]
 
 [tool.coverage.run]
+relative_files = true
 parallel = true
 branch = true
 timid = false
@@ -95,8 +96,7 @@ norecursedirs = [
 filterwarnings = [
     "error", # Treat warnings as errors
     "ignore:.*assertions not in test modules or plugins will be ignored .*:pytest.PytestConfigWarning",
-    "ignore::pytest.PytestUnraisableExceptionWarning",
-    "ignore:'(.*)' is deprecated and will be removed in `(.*)`:DeprecationWarning"
+    "ignore:unclosed <socket.socket .*:ResourceWarning"
 ]
 required_plugins = ["pytest-asyncio"]
 
@@ -163,6 +163,5 @@ require-subclass = true
 exclude-classes = """
 (
     ^hikari\\.internal\\.enums:(Enum|Flag|_EnumMeta|_FlagMeta)$
-    |^hikari\\.files:MultiprocessingFileReader$
 )
 """

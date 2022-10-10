@@ -132,6 +132,9 @@ class ShardReadyEvent(ShardStateEvent):
     actual_gateway_version: int = attr.field(repr=True)
     """Actual gateway version being used."""
 
+    resume_gateway_url: str = attr.field(repr=False)
+    """The URL to use to when reconnecting to the gateway."""
+
     session_id: str = attr.field(repr=True)
     """ID for this session."""
 

@@ -57,6 +57,7 @@ if typing.TYPE_CHECKING:
     from hikari import emojis
     from hikari import files
     from hikari import guilds
+    from hikari import locales
     from hikari import messages
     from hikari import permissions as permissions_
     from hikari import snowflakes
@@ -857,7 +858,7 @@ class CommandBuilder(abc.ABC):
         r"""Name to set for this command.
 
         .. warning::
-            This should match the regex `^[\w-]{1,32}$` in Unicode mode
+            This should match the regex `^[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$` in Unicode mode
             and must be lowercase.
         """
 
@@ -887,6 +888,11 @@ class CommandBuilder(abc.ABC):
 
         Only applicable to globally-scoped commands.
         """
+
+    @property
+    @abc.abstractmethod
+    def name_localizations(self) -> typing.Mapping[typing.Union[locales.Locale, str], str]:
+        """Name localizations set for this command."""
 
     @abc.abstractmethod
     def set_id(self: _T, id_: undefined.UndefinedOr[snowflakes.Snowflakeish], /) -> _T:
@@ -920,7 +926,7 @@ class CommandBuilder(abc.ABC):
         Returns
         -------
         CommandBuilder
-            Object of this command builder for chained calls.
+            Object of this command builder.
         """
 
     @abc.abstractmethod
@@ -936,6 +942,23 @@ class CommandBuilder(abc.ABC):
         -------
         CommandBuilder
             Object of this command builder to allow for chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_name_localizations(
+        self: _T, name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str], /
+    ) -> _T:
+        """Set the name localizations for this command.
+
+        Parameters
+        ----------
+        name_localizations : hikari.undefined.UndefinedOr[typing.Mapping[typing.Union[hikari.locales.Locale, str], str]]
+            The name localizations to set for this command.
+
+        Returns
+        -------
+        CommandBuilder
+            Object of this command builder.
         """
 
     @abc.abstractmethod
@@ -997,6 +1020,32 @@ class SlashCommandBuilder(CommandBuilder):
 
         .. warning::
             This should be inclusively between 1-100 characters in length.
+        """
+
+    @property
+    @abc.abstractmethod
+    def description_localizations(
+        self,
+    ) -> typing.Mapping[typing.Union[locales.Locale, str], str]:
+        """Command's localised descriptions."""
+
+    @abc.abstractmethod
+    def set_description_localizations(
+        self: _T,
+        description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str],
+        /,
+    ) -> _T:
+        """Set the localised descriptions for this command.
+
+        Parameters
+        ----------
+        description_localizations : hikari.undefined.UndefinedOr[typing.Mapping[typing.Union[hikari.locales.Locale, str], str]]
+            The description localizations to set for this command.
+
+        Returns
+        -------
+        CommandBuilder
+            Object of this command builder.
         """
 
     @property

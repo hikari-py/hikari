@@ -42,8 +42,7 @@ def mypy(session: nox.Session) -> None:
         "speedup-requirements.txt",
         "-r",
         "server-requirements.txt",
-        "-r",
-        "dev-requirements.txt",
+        *nox.dev_requirements("mypy", "formatting"),
     )
 
     _generate_stubs(session)
@@ -55,7 +54,7 @@ def mypy(session: nox.Session) -> None:
 @nox.session(reuse_venv=True)
 def generate_stubs(session: nox.Session) -> None:
     """Generate the stubs for the package."""
-    session.install("-r", "dev-requirements.txt")
+    session.install(*nox.dev_requirements("mypy", "formatting"))
     _generate_stubs(session)
 
 

@@ -39,20 +39,14 @@ import typing
 
 import attr
 
-from hikari import guilds
-from hikari import snowflakes
-from hikari import undefined
-from hikari import webhooks
-from hikari.internal import attr_extensions
-from hikari.internal import enums
+from hikari import guilds, snowflakes, undefined, webhooks
+from hikari.internal import attr_extensions, enums
 
 if typing.TYPE_CHECKING:
     from hikari import embeds as embeds_
-    from hikari import files
-    from hikari import messages
+    from hikari import files, messages
     from hikari import permissions as permissions_
-    from hikari import traits
-    from hikari import users
+    from hikari import traits, users
     from hikari.api import special_endpoints
 
 
@@ -161,7 +155,6 @@ This includes the following:
 DeferredResponseTypesT = typing.Literal[
     ResponseType.DEFERRED_MESSAGE_CREATE, 5, ResponseType.DEFERRED_MESSAGE_UPDATE, 6
 ]
-
 """Type-hint of the response types which are valid for deferred messages responses.
 
 The following are valid for this:
@@ -250,6 +243,7 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
         components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        replace_attachments: bool = False,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
@@ -305,6 +299,19 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
             If provided, the message embed.
         embeds : hikari.undefined.UndefinedOr[typing.Sequence[hikari.embeds.Embed]]
             If provided, the message embeds.
+        replace_attachments: bool
+            Whether to replace the attachments with the provided ones. Defaults
+            to `False`. This only effects component interactions.
+
+            Note this will also overwrite the embed attachments.
+        flags : typing.Union[int, hikari.messages.MessageFlag, hikari.undefined.UndefinedType]
+            If provided, the message flags this response should have.
+
+            As of writing the only message flag which can be set here is
+            `hikari.messages.MessageFlag.EPHEMERAL`.
+        tts : hikari.undefined.UndefinedOr[bool]
+            If provided, whether the message will be read out by a screen
+            reader using Discord's TTS (text-to-speech) system.
         mentions_everyone : hikari.undefined.UndefinedOr[bool]
             If provided, whether the message should parse @everyone/@here
             mentions.
@@ -368,6 +375,7 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
             components=components,
             embed=embed,
             embeds=embeds,
+            replace_attachments=replace_attachments,
             flags=flags,
             mentions_everyone=mentions_everyone,
             user_mentions=user_mentions,

@@ -252,6 +252,7 @@ class PermissionOverwrite:
     .. code-block:: python
 
         overwrite = PermissionOverwrite(
+            id=163979124820541440,
             type=PermissionOverwriteType.MEMBER,
             allow=(
                 Permissions.VIEW_CHANNEL
@@ -263,6 +264,7 @@ class PermissionOverwrite:
                 | Permissions.SPEAK
             ),
         )
+    ```
     """
 
     id: snowflakes.Snowflake = attr.field(converter=snowflakes.Snowflake, repr=True)
@@ -309,6 +311,22 @@ class PartialChannel(snowflakes.Unique):
 
     type: typing.Union[ChannelType, int] = attr.field(eq=False, hash=False, repr=True)
     """The channel's type."""
+
+    @property
+    def mention(self) -> str:
+        """Return a raw mention string for the channel.
+
+        .. note::
+            There are platform specific inconsistencies with mentions of
+            GuildCategories, GroupDMChannels and DMChannels showing
+            the correct name but not being interactable.
+
+        Returns
+        -------
+        str
+            The mention string to use.
+        """
+        return f"<#{self.id}>"
 
     def __str__(self) -> str:
         return self.name if self.name is not None else f"Unnamed {self.__class__.__name__} ID {self.id}"
@@ -920,17 +938,6 @@ class GuildChannel(PartialChannel):
 
     If no parent category is set for the channel, this will be `None`.
     """
-
-    @property
-    def mention(self) -> str:
-        """Return a raw mention string for the guild channel.
-
-        .. note::
-            As of writing, GuildCategory channels are a special case
-            for this and mentions of them will not resolve as clickable, but
-            will still parse as mentions.
-        """
-        return f"<#{self.id}>"
 
     @property
     def shard_id(self) -> typing.Optional[int]:

@@ -6535,12 +6535,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         name: str,
         description: str,
     ) -> special_endpoints.SlashCommandBuilder:
-        r"""Create a command builder for use in `RESTClient.set_application_commands`.
+        r"""Create a command builder to use in `RESTClient.set_application_commands`.
 
         Parameters
         ----------
         name : str
-            The command's name. This should match the regex `^[\w-]{1,32}$` in
+            The command's name. This should match the regex `^[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$` in
             Unicode mode and be lowercase.
         description : str
             The description to set for the command if this is a slash command.
@@ -6558,7 +6558,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         type: typing.Union[commands.CommandType, int],
         name: str,
     ) -> special_endpoints.ContextMenuCommandBuilder:
-        r"""Create a command builder for use in `RESTClient.set_application_commands`.
+        r"""Create a command builder to use in `RESTClient.set_application_commands`.
 
         Parameters
         ----------
@@ -6684,6 +6684,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
+        name_localizations: undefined.UndefinedOr[
+            typing.Mapping[typing.Union[locales.Locale, str], str]
+        ] = undefined.UNDEFINED,
+        description_localizations: undefined.UndefinedOr[
+            typing.Mapping[typing.Union[locales.Locale, str], str]
+        ] = undefined.UNDEFINED,
         default_member_permissions: typing.Union[
             undefined.UndefinedType, int, permissions_.Permissions
         ] = undefined.UNDEFINED,
@@ -6710,6 +6716,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             a global command rather than a guild specific one.
         options : hikari.undefined.UndefinedOr[typing.Sequence[hikari.commands.CommandOption]]
             A sequence of up to 10 options for this command.
+        name_localizations : hikari.undefined.UndefinedOr[typing.Mapping[typing.Union[hikari.locales.Locale, str], str]]
+            The name localizations for this command.
+        description_localizations : hikari.undefined.UndefinedOr[typing.Mapping[typing.Union[hikari.locales.Locale, str], str]]
+            The name localizations for this command.
         default_member_permissions : typing.Union[hikari.undefined.UndefinedType, int, hikari.permissions.Permissions]
             Member permissions necessary to utilize this command by default.
 
@@ -6758,6 +6768,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         name: str,
         *,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+        name_localizations: undefined.UndefinedOr[
+            typing.Mapping[typing.Union[locales.Locale, str], str]
+        ] = undefined.UNDEFINED,
         default_member_permissions: typing.Union[
             undefined.UndefinedType, int, permissions_.Permissions
         ] = undefined.UNDEFINED,
@@ -6774,7 +6787,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
             Only USER and MESSAGE are valid here.
         name : str
-            The command's name. This should match the regex `^[\w-]{1,32}$` in
+            The command's name. This should match the regex `^[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$` in
             Unicode mode and be lowercase.
 
         Other Parameters
@@ -6783,6 +6796,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Object or ID of the specific guild this should be made for.
             If left as `hikari.undefined.UNDEFINED` then this call will create
             a global command rather than a guild specific one.
+        name_localizations : hikari.undefined.UndefinedOr[typing.Mapping[typing.Union[hikari.locales.Locale, str], str]]
+            The name localizations for this command.
         default_member_permissions : typing.Union[hikari.undefined.UndefinedType, int, hikari.permissions.Permissions]
             Member permissions necessary to utilize this command by default.
 
@@ -7257,6 +7272,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        replace_attachments: bool = False,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
@@ -7309,6 +7325,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the message embed.
         embeds : hikari.undefined.UndefinedOr[typing.Sequence[hikari.embeds.Embed]]
             If provided, the message embeds.
+        replace_attachments: bool
+            Whether to replace the attachments with the provided ones. Defaults
+            to `False`. This only effects component interactions.
+
+            Note this will also overwrite the embed attachments.
         flags : typing.Union[int, hikari.messages.MessageFlag, hikari.undefined.UndefinedType]
             If provided, the message flags this response should have.
 

@@ -57,11 +57,6 @@ from tests.hikari import hikari_test_helpers
 
 
 @pytest.fixture()
-def mock_app() -> traits.RESTAware:
-    return mock.MagicMock(traits.RESTAware)
-
-
-@pytest.fixture()
 def permission_overwrite_payload():
     return {"id": "4242", "type": 1, "allow": 65, "deny": 49152, "allow_new": "65", "deny_new": "49152"}
 
@@ -282,11 +277,17 @@ def test__deserialize_max_age_returns_null():
     assert entity_factory._deserialize_max_age(0) is None
 
 
-class TestGatewayGuildDefinition:
-    @pytest.fixture()
-    def entity_factory_impl(self, mock_app) -> entity_factory.EntityFactoryImpl:
-        return hikari_test_helpers.mock_class_namespace(entity_factory.EntityFactoryImpl, slots_=False)(mock_app)
+@pytest.fixture()
+def mock_app() -> traits.RESTAware:
+    return mock.Mock()
 
+
+@pytest.fixture()
+def entity_factory_impl(mock_app) -> entity_factory.EntityFactoryImpl:
+    return hikari_test_helpers.mock_class_namespace(entity_factory.EntityFactoryImpl, slots_=False)(mock_app)
+
+
+class TestGatewayGuildDefinition:
     def test_id_property(self, entity_factory_impl):
         guild_definition = entity_factory_impl.deserialize_gateway_guild({"id": "123123451234"})
 
@@ -640,12 +641,8 @@ class TestGatewayGuildDefinition:
 
 
 class TestEntityFactoryImpl:
-    @pytest.fixture()
-    def entity_factory_impl(self, mock_app) -> entity_factory.EntityFactoryImpl:
-        return entity_factory.EntityFactoryImpl(app=mock_app)
-
     def test_app(self, entity_factory_impl, mock_app):
-        assert entity_factory_impl._app is mock_app
+        assert entity_factory_impl.app is mock_app
 
     ######################
     # APPLICATION MODELS #
@@ -3265,7 +3262,7 @@ class TestEntityFactoryImpl:
         command = entity_factory_impl.deserialize_slash_command(payload)
 
         assert command.options is None
-        assert command.is_dm_enabled is False
+        assert command.is_dm_enabled is True
         assert isinstance(command, commands.SlashCommand)
 
     def test_deserialize_slash_command_standardizes_default_member_permissions(
@@ -3653,11 +3650,12 @@ class TestEntityFactoryImpl:
         assert interaction.app_permissions is None
 
     @pytest.fixture()
-    def autocomplete_interaction_payload(self, user_payload, interaction_resolved_data_payload):
+    def autocomplete_interaction_payload(self, member_payload, user_payload, interaction_resolved_data_payload):
         return {
             "id": "3490190239012093",
             "type": 4,
             "guild_id": "43123123",
+            "member": member_payload,
             "data": {
                 "id": "43123123",
                 "name": "okokokok",
@@ -3667,8 +3665,8 @@ class TestEntityFactoryImpl:
                         "name": "options",
                         "type": 1,
                         "options": [
-                            {"name": "meat", "type": 4, "value": 123312},
-                            {"name": "yeet", "type": 3, "value": "ea", "focused": True},
+                            {"name": "meat", "type": 6, "value": 123312, "focused": True},
+                            {"name": "yeet", "type": 3, "value": "ea"},
                         ],
                     },
                 ],
@@ -3683,8 +3681,15 @@ class TestEntityFactoryImpl:
         }
 
     def test_deserialize_autocomplete_interaction(
-        self, entity_factory_impl, mock_app, autocomplete_interaction_payload
+        self,
+        entity_factory_impl,
+        mock_app,
+        member_payload,
+        autocomplete_interaction_payload,
+        interaction_resolved_data_payload,
     ):
+        entity_factory_impl._deserialize_interaction_member = mock.Mock()
+        entity_factory_impl._deserialize_resolved_option_data = mock.Mock()
         interaction = entity_factory_impl.deserialize_autocomplete_interaction(autocomplete_interaction_payload)
 
         assert interaction.app is mock_app
@@ -3695,9 +3700,9 @@ class TestEntityFactoryImpl:
         assert interaction.version == 69420
         assert interaction.channel_id == 49949494
         assert interaction.guild_id == 43123123
-        assert interaction.locale == "es-ES"
+        assert interaction.member is entity_factory_impl._deserialize_interaction_member.return_value
+        entity_factory_impl._deserialize_interaction_member.assert_called_once_with(member_payload, guild_id=43123123)
         assert interaction.locale is locales.Locale.ES_ES
-        assert interaction.guild_locale == "en-US"
         assert interaction.guild_locale is locales.Locale.EN_US
 
         # AutocompleteInteractionOption
@@ -3711,9 +3716,10 @@ class TestEntityFactoryImpl:
         sub_option1 = option.options[0]
         assert sub_option1.name == "meat"
         assert sub_option1.value == 123312
-        assert sub_option1.type is commands.OptionType.INTEGER
+        assert isinstance(sub_option1.value, snowflakes.Snowflake)
+        assert sub_option1.type is commands.OptionType.USER
         assert sub_option1.options is None
-        assert sub_option1.is_focused is False
+        assert sub_option1.is_focused is True
         assert isinstance(sub_option1, command_interactions.CommandInteractionOption)
 
         sub_option2 = option.options[1]
@@ -3721,7 +3727,7 @@ class TestEntityFactoryImpl:
         assert sub_option2.value == "ea"
         assert sub_option2.type is commands.OptionType.STRING
         assert sub_option2.options is None
-        assert sub_option2.is_focused is True
+        assert sub_option2.is_focused is False
         assert isinstance(sub_option2, command_interactions.AutocompleteInteractionOption)
         assert isinstance(option, command_interactions.AutocompleteInteractionOption)
 
@@ -3732,13 +3738,18 @@ class TestEntityFactoryImpl:
     ):
         del autocomplete_interaction_payload["guild_locale"]
         del autocomplete_interaction_payload["guild_id"]
+        del autocomplete_interaction_payload["member"]
+
+        entity_factory_impl.deserialize_user = mock.Mock()
 
         interaction = entity_factory_impl.deserialize_autocomplete_interaction(autocomplete_interaction_payload)
 
         assert interaction.guild_id is None
         assert interaction.member is None
-        assert interaction.user == entity_factory_impl.deserialize_user(user_payload)
         assert interaction.guild_locale is None
+
+        assert interaction.user is entity_factory_impl.deserialize_user.return_value
+        entity_factory_impl.deserialize_user.assert_called_once_with(user_payload)
 
     @pytest.mark.parametrize(
         ("type_", "fn"),
@@ -3773,8 +3784,12 @@ class TestEntityFactoryImpl:
             autocomplete=True,
             min_value=1.2,
             max_value=9.999,
+            min_length=3,
+            max_length=69,
             channel_types=[channel_models.ChannelType.GUILD_STAGE, channel_models.ChannelType.GUILD_TEXT, 100],
             choices=[commands.CommandChoice(name="a", value="choice")],
+            name_localizations={locales.Locale.TR: "b"},
+            description_localizations={locales.Locale.TR: "c"},
             options=[
                 commands.CommandOption(
                     type=commands.OptionType.STRING,
@@ -3783,6 +3798,8 @@ class TestEntityFactoryImpl:
                     is_required=False,
                     choices=[commands.CommandChoice(name="boo", value="hoo")],
                     options=None,
+                    name_localizations={locales.Locale.TR: "b"},
+                    description_localizations={locales.Locale.TR: "c"},
                 )
             ],
         )
@@ -3797,8 +3814,12 @@ class TestEntityFactoryImpl:
             "channel_types": [13, 0, 100],
             "min_value": 1.2,
             "max_value": 9.999,
+            "min_length": 3,
+            "max_length": 69,
             "autocomplete": True,
             "choices": [{"name": "a", "value": "choice"}],
+            "description_localizations": {"tr": "c"},
+            "name_localizations": {"tr": "b"},
             "options": [
                 {
                     "type": 3,
@@ -3806,6 +3827,8 @@ class TestEntityFactoryImpl:
                     "name": "go home",
                     "required": False,
                     "choices": [{"name": "boo", "value": "hoo"}],
+                    "description_localizations": {"tr": "c"},
+                    "name_localizations": {"tr": "b"},
                 }
             ],
         }
@@ -3836,6 +3859,23 @@ class TestEntityFactoryImpl:
         assert command.is_dm_enabled is True
         assert command.version == 123321123
 
+    def test_deserialize_context_menu_command_with_guild_id(
+        self,
+        entity_factory_impl,
+        context_menu_command_payload,
+    ):
+        command = entity_factory_impl.deserialize_command(context_menu_command_payload, guild_id=123)
+        assert isinstance(command, commands.ContextMenuCommand)
+
+        assert command.id == 1231231231
+        assert command.application_id == 12354123
+        assert command.guild_id == 123
+        assert command.type == commands.CommandType.USER
+        assert command.name == "good name"
+        assert command.default_member_permissions == permission_models.Permissions.ADMINISTRATOR
+        assert command.is_dm_enabled is True
+        assert command.version == 123321123
+
     def test_deserialize_context_menu_command_with_with_null_and_unset_values(
         self, entity_factory_impl, context_menu_command_payload
     ):
@@ -3844,7 +3884,7 @@ class TestEntityFactoryImpl:
         command = entity_factory_impl.deserialize_context_menu_command(context_menu_command_payload)
         assert isinstance(command, commands.ContextMenuCommand)
 
-        assert command.is_dm_enabled is False
+        assert command.is_dm_enabled is True
 
     def test_deserialize_context_menu_command_default_member_permissions(
         self, entity_factory_impl, context_menu_command_payload
@@ -5291,6 +5331,11 @@ class TestEntityFactoryImpl:
         scheduled_external_event_payload["description"] = None
         scheduled_external_event_payload["image"] = None
 
+        event = entity_factory_impl.deserialize_scheduled_external_event(scheduled_external_event_payload)
+
+        assert event.description is None
+        assert event.image_hash is None
+
     def test_deserialize_scheduled_external_event_with_undefined_fields(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
@@ -5301,6 +5346,13 @@ class TestEntityFactoryImpl:
         del scheduled_external_event_payload["description"]
         del scheduled_external_event_payload["image"]
         del scheduled_external_event_payload["user_count"]
+
+        event = entity_factory_impl.deserialize_scheduled_external_event(scheduled_external_event_payload)
+
+        assert event.description is None
+        assert event.image_hash is None
+        assert event.creator is None
+        assert event.user_count is None
 
     @pytest.fixture()
     def scheduled_stage_event_payload(self, user_payload: typing.Dict[str, typing.Any]) -> typing.Dict[str, typing.Any]:
@@ -5479,6 +5531,10 @@ class TestEntityFactoryImpl:
             result = entity_factory_impl.deserialize_scheduled_event(payload)
 
             assert isinstance(result, cls)
+
+    def test_deserialize_scheduled_event_when_unknown(self, entity_factory_impl: entity_factory.EntityFactoryImpl):
+        with pytest.raises(errors.UnrecognisedEntityError):
+            entity_factory_impl.deserialize_scheduled_event({"entity_type": -1})
 
     @pytest.fixture()
     def scheduled_event_user_payload(

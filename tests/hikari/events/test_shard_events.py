@@ -31,6 +31,7 @@ class TestShardReadyEvent:
     def event(self):
         return shard_events.ShardReadyEvent(
             my_user=mock.Mock(),
+            resume_gateway_url="testing",
             shard=None,
             actual_gateway_version=1,
             session_id="ok",

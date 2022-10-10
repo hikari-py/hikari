@@ -39,7 +39,7 @@ def sphinx(session: nox.Session):
     if not os.path.exists(config.ARTIFACT_DIRECTORY):
         os.mkdir(config.ARTIFACT_DIRECTORY)
 
-    session.install("-r", "dev-requirements.txt")
+    session.install("-e", ".", *nox.dev_requirements("sphinx"))
 
     session.run(
         "sphinx-build",

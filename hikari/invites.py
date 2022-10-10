@@ -101,7 +101,7 @@ class VanityURL(InviteCode):
 class InviteGuild(guilds.PartialGuild):
     """Represents the partial data of a guild that is attached to invites."""
 
-    features: typing.Sequence[typing.Union[guilds.GuildFeature, int]] = attr.field(eq=False, hash=False, repr=False)
+    features: typing.Sequence[typing.Union[str, guilds.GuildFeature]] = attr.field(eq=False, hash=False, repr=False)
     """A list of the features in this guild."""
 
     splash_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)

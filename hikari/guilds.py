@@ -66,6 +66,7 @@ from hikari import undefined
 from hikari import urls
 from hikari import users
 from hikari.internal import attr_extensions
+from hikari.internal import deprecation
 from hikari.internal import enums
 from hikari.internal import routes
 from hikari.internal import time
@@ -915,6 +916,11 @@ class Member(users.User):
             will remove the members nick.
 
             Requires the `MANAGE_NICKNAMES` permission.
+        nick : hikari.undefined.UndefinedNoneOr[str]
+            Deprecated alias for `nickname`.
+
+            .. deprecated:: 2.0.0.dev104
+                Use `nickname` instead.
         roles : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole]]
             If provided, the new roles for the member.
 
@@ -978,6 +984,14 @@ class Member(users.User):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
+        if nick is not undefined.UNDEFINED:
+            deprecation.warn_deprecated(
+                "nick",
+                removal_version="2.0.0.dev113",
+                additional_info="Use 'nickname' parameter instead",
+            )
+            nickname = nick
+
         return await self.user.app.rest.edit_member(
             self.guild_id,
             self.user.id,

@@ -92,7 +92,12 @@ class GatewayShard(abc.ABC):
     @property
     @abc.abstractmethod
     def is_alive(self) -> bool:
-        """Whether the shard is alive and connected."""
+        """Whether the shard is alive."""
+
+    @property
+    @abc.abstractmethod
+    def is_connected(self) -> bool:
+        """Whether the shard is connected."""
 
     @property
     @abc.abstractmethod
@@ -100,11 +105,8 @@ class GatewayShard(abc.ABC):
         """Return the total number of shards expected in the entire application."""
 
     @abc.abstractmethod
-    async def get_user_id(self) -> snowflakes.Snowflake:
+    def get_user_id(self) -> snowflakes.Snowflake:
         """Return the user ID.
-
-        If the shard has not connected fully yet, this should wait until the ID
-        is set before returning.
 
         Returns
         -------

@@ -19,6 +19,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+import warnings
+
 import mock
 import pytest
 
@@ -29,11 +31,16 @@ from hikari.internal import deprecation
 class TestWarnDeprecated:
     def test_when_not_past_removal(self):
         with mock.patch.object(hikari_about, "__version__", "2.0.1"):
-            with pytest.warns(
-                DeprecationWarning,
-                match=r"'testing' is deprecated and will be removed in `2.0.2`. Some info!",
-            ):
-                deprecation.warn_deprecated("testing", removal_version="2.0.2", additional_info="Some info!")
+            with mock.patch.object(warnings, "warn") as warn:
+                deprecation.warn_deprecated(
+                    "testing", removal_version="2.0.2", additional_info="Some info!", stack_level=100
+                )
+
+        warn.assert_called_once_with(
+            "'testing' is deprecated and will be removed in `2.0.2`. Some info!",
+            category=DeprecationWarning,
+            stacklevel=100,
+        )
 
     def test_when_past_removal(self):
         with mock.patch.object(hikari_about, "__version__", "2.0.2"):

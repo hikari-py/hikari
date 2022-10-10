@@ -26,17 +26,17 @@ MAIN_PACKAGE = "hikari"
 TEST_PACKAGE = "tests"
 EXAMPLE_SCRIPTS = "examples"
 
-# Generating documentation and artifacts.
+# Directories
 ARTIFACT_DIRECTORY = "public"
 DOCUMENTATION_DIRECTORY = "docs"
+DEV_REQUIREMENTS_DIRECTORY = "dev-requirements"
 
-# Linting and test configs.
+# Linting and test configs
 FLAKE8_REPORT = _os.path.join(ARTIFACT_DIRECTORY, "flake8")
 PYPROJECT_TOML = "pyproject.toml"
 COVERAGE_HTML_PATH = _os.path.join(ARTIFACT_DIRECTORY, "coverage", "html")
 
 # Reformatting paths
-
 REFORMATTING_FILE_EXTS = (
     ".py",
     ".pyx",
@@ -82,7 +82,6 @@ PYTHON_REFORMATTING_PATHS = (
     "pipelines",
     "setup.py",
     "noxfile.py",
-    _os.path.join(".idea", "fileTemplates"),
 )
 
 FULL_REFORMATTING_PATHS = (

@@ -28,8 +28,7 @@ if [ -z ${VERSION+x} ]; then echo '$VERSION environment variable is missing' && 
 if [ -z "${VERSION}" ]; then echo '$VERSION environment variable is empty' && exit 1; fi
 
 echo "===== INSTALLING DEPENDENCIES ====="
-pip install towncrier
-pip install -e .
+pip install -r dev-requirements/towncrier.txt -e .
 
 echo "===== UPDATING INFORMATION ====="
 echo "-- Checkout branch --"

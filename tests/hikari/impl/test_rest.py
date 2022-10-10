@@ -38,6 +38,7 @@ from hikari import errors
 from hikari import files
 from hikari import guilds
 from hikari import invites
+from hikari import locales
 from hikari import permissions
 from hikari import scheduled_events
 from hikari import snowflakes
@@ -3421,6 +3422,24 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
         rest_client._entity_factory.deserialize_member.assert_called_once_with({"id": "789"}, guild_id=123)
 
+    async def test_add_user_to_guild_with_deprecated_nick_field(self, rest_client):
+        member = StubModel(789)
+        expected_route = routes.PUT_GUILD_MEMBER.compile(guild=123, user=456)
+        expected_json = {"access_token": "token", "nick": "cool nick2"}
+        rest_client._request = mock.AsyncMock(return_value={"id": "789"})
+        rest_client._entity_factory.deserialize_member = mock.Mock(return_value=member)
+
+        returned = await rest_client.add_user_to_guild(
+            "token",
+            StubModel(123),
+            StubModel(456),
+            nick="cool nick2",
+        )
+
+        assert returned is member
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
+        rest_client._entity_factory.deserialize_member.assert_called_once_with({"id": "789"}, guild_id=123)
+
     async def test_add_user_to_guild_when_already_in_guild(self, rest_client):
         expected_route = routes.PUT_GUILD_MEMBER.compile(guild=123, user=456)
         expected_json = {"access_token": "token"}
@@ -3999,7 +4018,7 @@ class TestRESTClientImplAsync:
         )
 
     async def test_reposition_channels(self, rest_client):
-        expected_route = routes.POST_GUILD_CHANNELS.compile(guild=123)
+        expected_route = routes.PATCH_GUILD_CHANNELS.compile(guild=123)
         expected_json = [{"id": "456", "position": 1}, {"id": "789", "position": 2}]
         rest_client._request = mock.AsyncMock()
 
@@ -4072,6 +4091,20 @@ class TestRESTClientImplAsync:
             rest_client._request.return_value, guild_id=123
         )
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="because i can")
+
+    async def test_edit_member_with_deprecated_nick_field(self, rest_client):
+        expected_route = routes.PATCH_GUILD_MEMBER.compile(guild=123, user=456)
+        expected_json = {"nick": "eeeeeestrogen"}
+        rest_client._request = mock.AsyncMock(return_value={"id": "789"})
+
+        result = await rest_client.edit_member(StubModel(123), StubModel(456), nick="eeeeeestrogen")
+
+        assert result is rest_client._entity_factory.deserialize_member.return_value
+
+        rest_client._entity_factory.deserialize_member.assert_called_once_with(
+            rest_client._request.return_value, guild_id=123
+        )
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason=undefined.UNDEFINED)
 
     async def test_edit_member_when_voice_channel_is_None(self, rest_client):
         expected_route = routes.PATCH_GUILD_MEMBER.compile(guild=123, user=456)
@@ -4698,7 +4731,7 @@ class TestRESTClientImplAsync:
         result = await rest_client.fetch_application_commands(StubModel(54123), StubModel(7623423))
 
         assert result == [rest_client._entity_factory.deserialize_command.return_value]
-        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._request.assert_awaited_once_with(expected_route, query={"with_localizations": "true"})
         rest_client._entity_factory.deserialize_command.assert_called_once_with({"id": "34512312"}, guild_id=7623423)
 
     async def test_fetch_application_commands_without_guild(self, rest_client):
@@ -4708,7 +4741,7 @@ class TestRESTClientImplAsync:
         result = await rest_client.fetch_application_commands(StubModel(54123))
 
         assert result == [rest_client._entity_factory.deserialize_command.return_value]
-        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._request.assert_awaited_once_with(expected_route, query={"with_localizations": "true"})
         rest_client._entity_factory.deserialize_command.assert_called_once_with({"id": "34512312"}, guild_id=None)
 
     async def test__create_application_command_with_optionals(self, rest_client: rest.RESTClientImpl):
@@ -4796,6 +4829,8 @@ class TestRESTClientImplAsync:
             "not ok anymore",
             guild=mock_guild,
             options=mock_options,
+            name_localizations={locales.Locale.TR: "hhh"},
+            description_localizations={locales.Locale.TR: "jello"},
             default_member_permissions=permissions.Permissions.ADMINISTRATOR,
             dm_enabled=False,
         )
@@ -4811,6 +4846,8 @@ class TestRESTClientImplAsync:
             description="not ok anymore",
             guild=mock_guild,
             options=mock_options,
+            name_localizations={"tr": "hhh"},
+            description_localizations={"tr": "jello"},
             default_member_permissions=permissions.Permissions.ADMINISTRATOR,
             dm_enabled=False,
         )
@@ -4827,6 +4864,7 @@ class TestRESTClientImplAsync:
             guild=mock_guild,
             default_member_permissions=permissions.Permissions.ADMINISTRATOR,
             dm_enabled=False,
+            name_localizations={locales.Locale.TR: "hhh"},
         )
 
         assert result is rest_client._entity_factory.deserialize_context_menu_command.return_value
@@ -4840,6 +4878,7 @@ class TestRESTClientImplAsync:
             guild=mock_guild,
             default_member_permissions=permissions.Permissions.ADMINISTRATOR,
             dm_enabled=False,
+            name_localizations={"tr": "hhh"},
         )
 
     async def test_set_application_commands_with_guild(self, rest_client):
@@ -5029,6 +5068,7 @@ class TestRESTClientImplAsync:
             components=[component_obj2],
             embed=embed_obj,
             embeds=[embed_obj2],
+            replace_attachments=True,
             tts=True,
             flags=120,
             mentions_everyone=False,
@@ -5044,6 +5084,7 @@ class TestRESTClientImplAsync:
             components=[component_obj2],
             embed=embed_obj,
             embeds=[embed_obj2],
+            replace_attachments=True,
             tts=True,
             flags=120,
             mentions_everyone=False,
@@ -5079,6 +5120,7 @@ class TestRESTClientImplAsync:
             components=[component_obj2],
             embed=embed_obj,
             embeds=[embed_obj2],
+            replace_attachments=True,
             tts=True,
             flags=120,
             mentions_everyone=False,
@@ -5094,6 +5136,7 @@ class TestRESTClientImplAsync:
             components=[component_obj2],
             embed=embed_obj,
             embeds=[embed_obj2],
+            replace_attachments=True,
             tts=True,
             flags=120,
             mentions_everyone=False,

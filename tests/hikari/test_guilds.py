@@ -452,6 +452,25 @@ class TestMember:
 
         assert edit == model.app.rest.edit_member.return_value
 
+    @pytest.mark.asyncio()
+    async def test_edit_when_deprecated_nick_field(self, model):
+        model.app.rest.edit_member = mock.AsyncMock()
+
+        edit = await model.edit(nick="meow")
+
+        model.app.rest.edit_member.assert_awaited_once_with(
+            456,
+            123,
+            nickname="meow",
+            roles=undefined.UNDEFINED,
+            mute=undefined.UNDEFINED,
+            deaf=undefined.UNDEFINED,
+            voice_channel=undefined.UNDEFINED,
+            communication_disabled_until=undefined.UNDEFINED,
+            reason=undefined.UNDEFINED,
+        )
+        assert edit == model.app.rest.edit_member.return_value
+
     def test_default_avatar_url_property(self, model, mock_user):
         assert model.default_avatar_url is mock_user.default_avatar_url
 
