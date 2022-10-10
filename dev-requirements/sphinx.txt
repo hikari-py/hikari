@@ -5,3 +5,4 @@ furo==2022.9.29
 myst-parser==0.18.1
 sphinxext.opengraph==0.6.3
 sphinx-copybutton==0.5.0
+sphinxcontrib-towncrier==0.3.0a0

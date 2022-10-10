@@ -44,7 +44,6 @@ copyright = metadata.copyright
 author = metadata.author
 release = version = metadata.version
 
-# So that we don't interfere with any potential config
 del os, re, types, code, token_pattern, group, metadata
 
 # -- General configuration ---------------------------------------------------
@@ -63,6 +62,7 @@ extensions = [
     # Misc
     "sphinxext.opengraph",
     "sphinx_copybutton",
+    "sphinxcontrib.towncrier.ext",
 ]
 
 templates_path = ["_templates"]
@@ -74,13 +74,11 @@ default_role = "py:obj"
 
 html_theme = "furo"
 html_favicon = "https://www.hikari-py.dev/logo.png"
-html_theme_options = {
-    "top_of_page_button": None,
-}
+# html_theme_options = {
+#     "top_of_page_button": None,
+# }
 html_static_path = ["_static"]
-html_css_files = [
-    "extra.css",
-]
+html_css_files = ["extra.css"]
 
 # -- OpenGraph ----------------------------------------------------------------
 
@@ -126,8 +124,8 @@ intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
     "aiohttp": ("https://docs.aiohttp.org/en/stable", None),
     "attrs": ("https://www.attrs.org/en/stable/", None),
-    "multidict": ("https://multidict.readthedocs.io/en/stable/", None),
-    "yarl": ("https://yarl.readthedocs.io/en/stable/", None),
+    "multidict": ("https://multidict.aio-libs.org/en/stable/", None),
+    "yarl": ("https://yarl.aio-libs.org/en/stable/", None),
 }
 
 # -- MyST ---------------------------------------------------------------------

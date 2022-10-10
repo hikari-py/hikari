@@ -1,8 +1,4 @@
-{% if versiondata.name %}
-## {{ versiondata.name }} {{ versiondata.version }} ({{ versiondata.date }})
-{% else %}
 ## {{ versiondata.version }} ({{ versiondata.date }})
-{% endif %}
 {% for section, _ in sections.items() %}
 {% set anchor = "#" * underlines[0] %}{% if section %}{{ anchor }} {{section}}
 {% set anchor = "#" * underlines[1] %}
