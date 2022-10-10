@@ -264,7 +264,6 @@ class PermissionOverwrite:
                 | Permissions.SPEAK
             ),
         )
-    ```
     """
 
     id: snowflakes.Snowflake = attr.field(converter=snowflakes.Snowflake, repr=True)

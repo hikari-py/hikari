@@ -1,7 +1,7 @@
-sphinx==5.0.1
-sphinx-autoapi==1.8.4
-numpydoc==1.4.0
-furo==2022.6.21
-myst-parser==0.18.0
+sphinx==5.2.3
+sphinx-autoapi==2.0.0
+numpydoc==1.5.0
+furo==2022.9.29
+myst-parser==0.18.1
 sphinxext.opengraph==0.6.3
 sphinx-copybutton==0.5.0
