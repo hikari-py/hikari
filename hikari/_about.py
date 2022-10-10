@@ -26,7 +26,7 @@ from __future__ import annotations
 import typing
 
 # DO NOT CHANGE THE TYPE HINTS FOR THESE FIELDS. THESE ARE AUTOMATICALLY UPDATED
-# FROM THE CI SCRIPT AND DOING THIS MAY LEAD TO THE DEPLOY PROCESS FAILING.
+# FROM THE CI SCRIPT AND DOING THIS MAY LEAD TO THE RELEASE PROCESS FAILING.
 
 __author__: typing.Final[str] = "Nekokatt"
 __maintainer__: typing.Final[str] = "davfsa"

@@ -42,7 +42,7 @@ if [ -z "${TWINE_PASSWORD}" ]; then echo '$TWINE_PASSWORD environment variable i
 regex='__version__: typing\.Final\[str\] = "([^"]*)"'
 if [[ $(cat hikari/_about.py) =~ $regex ]]; then
   if [ "${BASH_REMATCH[1]}" != "${VERSION}" ]; then
-    echo "Variable '__version__' does not match the version this deploy is for! [__version__='${BASH_REMATCH[1]}'; VERSION='${VERSION}']" && exit 1
+    echo "Variable '__version__' does not match the version this release is for! [__version__='${BASH_REMATCH[1]}'; VERSION='${VERSION}']" && exit 1
   fi
 else
   echo "Variable '__version__' not found in about!" && exit 1
@@ -76,7 +76,7 @@ echo "-- Uploading to PyPI --"
 python -m twine upload --disable-progress-bar --skip-existing dist/* --non-interactive --repository-url https://upload.pypi.org/legacy/
 
 echo "===== SENDING WEBHOOK ====="
-bash scripts/deploy-webhook.sh
+bash scripts/release-webhook.sh
 
 echo "===== UPDATING VERSION IN REPOSITORY ====="
 NEW_VERSION=$(python scripts/increase_version_number.py "${VERSION}")

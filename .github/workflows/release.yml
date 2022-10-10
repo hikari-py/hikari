@@ -37,14 +37,14 @@ jobs:
           access_token: ${{ steps.generate_token.outputs.token }}
           enforce_admins: false
 
-      - name: Deploy
+      - name: Release
         env:
           VERSION: ${{ github.event.release.tag_name }}
           REPO_SLUG: ${{ github.repository }}
           DEPLOY_WEBHOOK_URL: ${{ secrets.DEPLOY_WEBHOOK_URL }}
           TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-        run: bash scripts/deploy.sh
+        run: bash scripts/release.sh
 
       - name: Re-enable "include administrators" branch protection
         uses: benjefferies/branch-protection-bot@1.0.7
