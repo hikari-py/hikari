@@ -1,8 +1,17 @@
 sphinx==5.2.3
+
+# Theme
+furo==2022.9.29
+
+# Autodocumentation
 sphinx-autoapi==2.0.0
 numpydoc==1.5.0
-furo==2022.9.29
+
+# Static files
 myst-parser==0.18.1
+
+# Misc extensions
 sphinxext.opengraph==0.6.3
 sphinx-copybutton==0.5.0
 sphinxcontrib-towncrier==0.3.0a0
+readthedocs-sphinx-search==0.1.2

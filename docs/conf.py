@@ -21,6 +21,7 @@
 # SOFTWARE.
 """Configuration file for the Sphinx documentation builder."""
 import os
+import pathlib
 import re
 import types
 
@@ -44,7 +45,8 @@ copyright = metadata.copyright
 author = metadata.author
 release = version = metadata.version
 
-del os, re, types, code, token_pattern, group, metadata
+PROJECT_ROOT_DIR = pathlib.Path(__file__).parents[1].resolve()
+
 
 # -- General configuration ---------------------------------------------------
 
@@ -63,6 +65,7 @@ extensions = [
     "sphinxext.opengraph",
     "sphinx_copybutton",
     "sphinxcontrib.towncrier.ext",
+    "sphinx_search.extension",
 ]
 
 templates_path = ["_templates"]
@@ -131,3 +134,9 @@ intersphinx_mapping = {
 # -- MyST ---------------------------------------------------------------------
 
 myst_heading_anchors = 3
+
+# -- Towncrier ----------------------------------------------------------------
+
+towncrier_draft_autoversion_mode = "draft"
+towncrier_draft_include_empty = True
+towncrier_draft_working_directory = PROJECT_ROOT_DIR

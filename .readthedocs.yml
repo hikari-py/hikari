@@ -11,7 +11,9 @@ sphinx:
 
 python:
    install:
-     - requirements: dev-requirements.txt
+     - requirements: dev-requirements/sphinx.txt
+     - method: pip
+       path: .
 
 search:
   ignore:
