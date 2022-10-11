@@ -41,13 +41,15 @@ bot = hikari.GatewayBot(token="...")
 
 @bot.listen()
 async def ping(event: hikari.GuildMessageCreateEvent) -> None:
-    # If a non-bot user sends a message "hk.ping", respond with "Pong!"
-    # We check there is actually content first, if no message content exists,
-    # we would get `None' here.
-    if event.is_bot or not event.content:
+    """If a non-bot user mentions your bot, respond with 'Pong!'."""
+
+    # Do not respond to bots nor webhooks pinging us, only user accounts
+    if not event.is_human:
         return
 
-    if event.content.startswith("hk.ping"):
+    me = bot.get_me()
+
+    if me.id in event.message.user_mentions_ids:
         await event.message.respond("Pong!")
 
 bot.run()
@@ -61,20 +63,20 @@ enable it manually. This has been implemented after seeing a large number of new
 writing their first bot in other frameworks simply because of working blind after not understanding or knowing how
 to set up standard logging messages.
 
-If you wish to customise the intents being used in order to change which events your bot is notified about, then you
+If you wish to customize the intents being used in order to change which events your bot is notified about, then you
 can pass the `intents` kwarg to the `GatewayBot` constructor:
 
 ```py
 # the default is to enable all unprivileged intents (all events that do not target the
-# presence or activity of a specific member).
+# presence, activity of a specific member nor message content).
 bot = hikari.GatewayBot(intents=hikari.Intents.ALL, token="...")
 ```
 
 The above example would enable all intents, thus enabling events relating to member presences to be received
 (you'd need to whitelist your application first to be able to start the bot if you do this).
-[Other options also exist](https://docs.hikari-py.dev/stable/hikari/impl/bot.html#GatewayBot) such as
-[customising timeouts for requests](https://docs.hikari-py.dev/stable/hikari/impl/config.html#HTTPSettings.timeouts)
-and [enabling a proxy](https://docs.hikari-py.dev/stable/hikari/impl/config.html#ProxySettings).
+[Other options also exist](https://docs.hikari-py.dev/en/stable/reference/hikari/impl/bot/#hikari.impl.bot.GatewayBot)
+such as [customizing timeouts for requests](https://docs.hikari-py.dev/en/stable/reference/hikari/impl/config/#hikari.impl.config.HTTPSettings.timeouts)
+and [enabling a proxy](https://docs.hikari-py.dev/en/stable/reference/hikari/impl/config/#hikari.impl.config.ProxySettings).
 
 Also note that you could pass extra options to `bot.run` during development, for example:
 
@@ -89,7 +91,7 @@ bot.run(
 )
 ```
 
-[Many other helpful options](https://docs.hikari-py.dev/stable/hikari/impl/bot.html#GatewayBot.run)
+[Many other helpful options](https://docs.hikari-py.dev/en/stable/reference/hikari/impl/bot/#hikari.impl.bot.GatewayBot.run)
 exist for you to take advantage of if you wish.
 
 Events are determined by the type annotation on the event parameter, or alternatively as a type passed to the
@@ -232,3 +234,6 @@ Check out the issues tab on GitHub. If you are nervous, look for issues marked a
 easy to start with!
 
 [![good-first-issues](https://img.shields.io/github/issues/hikari-py/hikari/good%20first%20issue)](https://github.com/hikari-py/hikari/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
+
+Feel free to also join our [Discord](https://discord.gg/Jx4cNGG) to directly ask questions to the maintainers! They will
+be glad to help you out and point you in the right direction.
