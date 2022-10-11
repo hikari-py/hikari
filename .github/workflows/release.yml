@@ -21,15 +21,15 @@ jobs:
         with:
           token: ${{ steps.generate_token.outputs.token }}
 
-      - name: Setup python
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.8
-
       - name: Setup git config
         run: |
           git config --global user.name "hikari-bot"
           git config --global user.email "90276125+hikari-bot[bot]@users.noreply.github.com"
+
+      - name: Setup python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.8
 
       - name: Temporarily disable "include administrators" branch protection
         uses: benjefferies/branch-protection-bot@1.0.7
@@ -40,7 +40,6 @@ jobs:
       - name: Release
         env:
           VERSION: ${{ github.event.release.tag_name }}
-          REPO_SLUG: ${{ github.repository }}
           DEPLOY_WEBHOOK_URL: ${{ secrets.DEPLOY_WEBHOOK_URL }}
           TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}

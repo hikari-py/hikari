@@ -14,22 +14,31 @@ jobs:
     if: github.ref == 'refs/heads/master'
 
     steps:
+      - name: Generate token
+        id: generate_token
+        uses: tibdex/github-app-token@v1
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          private_key: ${{ secrets.PRIVATE_KEY }}
+
       - name: Checkout repository
         uses: actions/checkout@v3
-
-      - name: Setup python
-        uses: actions/setup-python@v4
         with:
-          python-version: 3.8
+          token: ${{ steps.generate_token.outputs.token }}
 
       - name: Setup git config
         run: |
           git config --global user.name "hikari-bot"
           git config --global user.email "90276125+hikari-bot[bot]@users.noreply.github.com"
 
+      - name: Setup python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.8
+
       - name: Run prepare script
         env:
-          VERSION: ${{ github.event.inputs.version }}
+          VERSION: ${{ inputs.version }}
         run: bash scripts/prepare-release.sh
 
       - name: Create pull request

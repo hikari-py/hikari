@@ -30,8 +30,6 @@ env | grep -oP "^[^=]+" | sort
 
 if [ -z ${VERSION+x} ]; then echo '$VERSION environment variable is missing' && exit 1; fi
 if [ -z "${VERSION}" ]; then echo '$VERSION environment variable is empty' && exit 1; fi
-if [ -z ${REPO_SLUG+x} ]; then echo '$REPO_SLUG environment variable is missing' && exit 1; fi
-if [ -z "${REPO_SLUG}" ]; then echo '$REPO_SLUG environment variable is empty' && exit 1; fi
 if [ -z ${DEPLOY_WEBHOOK_URL+x} ]; then echo '$DEPLOY_WEBHOOK_URL environment variable is missing' && exit 1; fi
 if [ -z "${DEPLOY_WEBHOOK_URL}" ]; then echo '$DEPLOY_WEBHOOK_URL environment variable is empty' && exit 1; fi
 if [ -z ${TWINE_USERNAME+x} ]; then echo '$TWINE_USERNAME environment variable is missing' && exit 1; fi
@@ -87,7 +85,7 @@ git checkout -f master
 
 echo "-- Bumping to development version (${NEW_VERSION}) --"
 sed "/^__version__.*/, \${s||__version__: typing.Final[str] = \"${NEW_VERSION}\"|g; b}; \$q1" -i hikari/_about.py || (echo "Variable '__version__' not found in about!" && exit 1)
-sed "/^__docs__.*/, \${s||__docs__: typing.Final[str] = \"https://docs.hikari-py.dev/master\"|g; b}; \$q1" -i hikari/_about.py || (echo "Variable '__docs__' not found in about!" && exit 1)
+sed "/^__docs__.*/, \${s||__docs__: typing.Final[str] = \"https://docs.hikari-py.dev/en/master\"|g; b}; \$q1" -i hikari/_about.py || (echo "Variable '__docs__' not found in about!" && exit 1)
 
 echo "-- Pushing to repository --"
 git commit -am "Bump to development version (${NEW_VERSION})"
