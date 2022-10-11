@@ -96,7 +96,6 @@ norecursedirs = [
 filterwarnings = [
     "error", # Treat warnings as errors
     "ignore:.*assertions not in test modules or plugins will be ignored .*:pytest.PytestConfigWarning",
-    "ignore:unclosed <socket.socket .*:ResourceWarning"
 ]
 required_plugins = ["pytest-asyncio"]
 
