@@ -2620,7 +2620,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_gateway_bot_info(self) -> sessions.GatewayBotInfo:
-        """Fetch the gateway gateway info for the bot.
+        """Fetch the gateway info for the bot.
 
         Returns
         -------
