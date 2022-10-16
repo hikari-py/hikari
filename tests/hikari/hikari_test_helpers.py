@@ -25,22 +25,10 @@ import contextlib
 import copy
 import functools
 import inspect
-import os
 import typing
 
 import async_timeout
 import mock
-import pytest
-
-# Value that is considered a reasonable time to wait for something asyncio-based
-# to occur in the background. This is long enough that a shit computer will
-# generally still be able to do some stuff with asyncio even if being tanked,
-# but at the same time not so long that the tests take forever to run. I am
-# aware waiting for anything in unit tests is evil, but there isn't really a
-# good way to advance the state of an asyncio coroutine without manually
-# iterating it, which I consider to be far more evil and will vary in results
-# if unrelated changes are made in the same function.
-REASONABLE_SLEEP_TIME = 0.2
 
 # How long to reasonably expect something to take if it is considered instant.
 REASONABLE_QUICK_RESPONSE_TIME = 0.2
@@ -134,18 +122,6 @@ def timeout(time_period=REASONABLE_TIMEOUT_AFTER):
                 raise thrown_timeout_error
 
         return wrapper
-
-    return decorator
-
-
-def skip_on_system(os_name: str):
-    """Skip a test on certain systems.
-
-    The valid system names are based on `os.system`
-    """
-
-    def decorator(test):
-        return pytest.mark.skipif(os.name == os_name, reason=f"This test will not pass on {os_name} systems")(test)
 
     return decorator
 

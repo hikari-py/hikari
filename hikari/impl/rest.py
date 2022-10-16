@@ -112,7 +112,7 @@ _X_RATELIMIT_BUCKET_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Bucket")
 _X_RATELIMIT_LIMIT_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Limit")
 _X_RATELIMIT_REMAINING_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Remaining")
 _X_RATELIMIT_RESET_AFTER_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Reset-After")
-_RETRY_ERROR_CODES: typing.Final[typing.Set[int]] = {500, 502, 503, 504}
+_RETRY_ERROR_CODES: typing.Final[typing.FrozenSet[int]] = frozenset({500, 502, 503, 504})
 _MAX_BACKOFF_DURATION: typing.Final[int] = 16
 
 
@@ -807,7 +807,6 @@ class RESTClientImpl(rest_api.RESTClient):
                 # Attempt to re-auth on UNAUTHORIZED if we are using a TokenStrategy
                 can_re_auth = response.status == 401 and not (auth or no_auth or re_authed)
                 if can_re_auth and isinstance(self._token, rest_api.TokenStrategy):
-                    assert token is not None
                     self._token.invalidate(token)
                     token = await self._token.acquire(self)
                     headers[_AUTHORIZATION_HEADER] = token
