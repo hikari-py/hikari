@@ -478,7 +478,7 @@ class TestEventFactoryImpl:
         event = event_factory.deserialize_guild_available_event(mock_shard, mock_payload)
 
         mock_app.entity_factory.deserialize_gateway_guild.assert_called_once_with(
-            mock_payload, user_id=mock_shard.user_id.return_value
+            mock_payload, user_id=mock_shard.get_user_id.return_value
         )
         assert isinstance(event, guild_events.GuildAvailableEvent)
         assert event.shard is mock_shard
@@ -499,7 +499,7 @@ class TestEventFactoryImpl:
         guild_definition.members.assert_called_once_with()
         guild_definition.presences.assert_called_once_with()
         guild_definition.voice_states.assert_called_once_with()
-        mock_shard.user_id.assert_called_once_with()
+        mock_shard.get_user_id.assert_called_once_with()
 
     def test_deserialize_guild_join_event(self, event_factory, mock_app, mock_shard):
         mock_payload = mock.Mock(app=mock_app)
@@ -507,7 +507,7 @@ class TestEventFactoryImpl:
         event = event_factory.deserialize_guild_join_event(mock_shard, mock_payload)
 
         mock_app.entity_factory.deserialize_gateway_guild.assert_called_once_with(
-            mock_payload, user_id=mock_shard.user_id.return_value
+            mock_payload, user_id=mock_shard.get_user_id.return_value
         )
         assert isinstance(event, guild_events.GuildJoinEvent)
         assert event.shard is mock_shard
@@ -519,7 +519,7 @@ class TestEventFactoryImpl:
         assert event.members is guild_definition.members.return_value
         assert event.presences is guild_definition.presences.return_value
         assert event.voice_states is guild_definition.voice_states.return_value
-        mock_shard.user_id.assert_called_once_with()
+        mock_shard.get_user_id.assert_called_once_with()
 
     def test_deserialize_guild_update_event(self, event_factory, mock_app, mock_shard):
         mock_payload = mock.Mock(app=mock_app)
@@ -528,7 +528,7 @@ class TestEventFactoryImpl:
         event = event_factory.deserialize_guild_update_event(mock_shard, mock_payload, old_guild=mock_old_guild)
 
         mock_app.entity_factory.deserialize_gateway_guild.assert_called_once_with(
-            mock_payload, user_id=mock_shard.user_id.return_value
+            mock_payload, user_id=mock_shard.get_user_id.return_value
         )
         assert isinstance(event, guild_events.GuildUpdateEvent)
         assert event.shard is mock_shard
@@ -540,7 +540,7 @@ class TestEventFactoryImpl:
         guild_definition.guild.assert_called_once_with()
         guild_definition.emojis.assert_called_once_with()
         guild_definition.roles.assert_called_once_with()
-        mock_shard.user_id.assert_called_once_with()
+        mock_shard.get_user_id.assert_called_once_with()
 
     def test_deserialize_guild_leave_event(self, event_factory, mock_app, mock_shard):
         mock_payload = {"id": "43123123"}

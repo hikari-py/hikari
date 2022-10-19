@@ -136,24 +136,6 @@ class GatewayShard(abc.ABC):
         """
 
     @abc.abstractmethod
-    def user_id(self) -> snowflakes.Snowflake:
-        """Return the user ID.
-
-        Unlike `GatewayShard.get_user_id`, this will raise a `RuntimeError` if
-        the shard hasn't fully connected yet instead of waiting.
-
-        Returns
-        -------
-        hikari.snowflakes.Snowflake
-            The user ID for the application user.
-
-        Raises
-        ------
-        hikari.errors.ComponentStateConflictError
-            If the shard hasn't connected fully yet.
-        """
-
-    @abc.abstractmethod
     async def close(self) -> None:
         """Close the websocket if it is connected."""
 
