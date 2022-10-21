@@ -6773,7 +6773,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         name_localizations : hikari.undefined.UndefinedOr[typing.Mapping[typing.Union[hikari.locales.Locale, str], str]]
             The name localizations for this command.
         description_localizations : hikari.undefined.UndefinedOr[typing.Mapping[typing.Union[hikari.locales.Locale, str], str]]
-            The name localizations for this command.
+            The description localizations for this command.
         default_member_permissions : typing.Union[hikari.undefined.UndefinedType, int, hikari.permissions.Permissions]
             Member permissions necessary to utilize this command by default.
 
