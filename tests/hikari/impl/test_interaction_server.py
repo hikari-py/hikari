@@ -326,7 +326,12 @@ class TestInteractionServer:
     async def test_aiohttp_hook(self, mock_interaction_server: interaction_server_impl.InteractionServer):
         mock_interaction_server.on_interaction = mock.AsyncMock(
             return_value=mock.Mock(
-                payload=b"abody", files=[], status_code=200, headers={"header1": "ok"}, content_type="ooga/booga"
+                payload=b"abody",
+                files=[],
+                status_code=200,
+                headers={"header1": "ok"},
+                content_type="ooga/booga",
+                charset=None,
             )
         )
         request = mock.Mock(
@@ -351,7 +356,9 @@ class TestInteractionServer:
         self, mock_interaction_server: interaction_server_impl.InteractionServer
     ):
         mock_interaction_server.on_interaction = mock.AsyncMock(
-            return_value=mock.Mock(payload=b"abody", files=[], headers=None, status_code=200, content_type="ooga/booga")
+            return_value=mock.Mock(
+                payload=b"abody", files=[], headers=None, status_code=200, content_type="ooga/booga", charset=None
+            )
         )
         request = mock.Mock(
             aiohttp.web.Request,
@@ -582,7 +589,8 @@ class TestInteractionServer:
         mock_listener.assert_awaited_once_with(mock_entity_factory.deserialize_interaction.return_value)
         mock_builder.build.assert_called_once_with(mock_entity_factory)
         mock_entity_factory.deserialize_interaction.assert_called_once_with(valid_payload)
-        assert result.content_type == "application/json; charset=UTF-8"
+        assert result.content_type == "application/json"
+        assert result.charset == "UTF-8"
         assert result.files == [mock_file_1, mock_file_2]
         assert result.headers is None
         assert result.payload == b'{"ok": "No boomer"}'
@@ -602,7 +610,8 @@ class TestInteractionServer:
 
         mock_fetcher.assert_awaited_once()
         mock_fetcher.return_value.verify.assert_called_once_with(b"timestampbody", b"signature")
-        assert result.content_type == "text/plain; charset=UTF-8"
+        assert result.content_type == "text/plain"
+        assert result.charset == "UTF-8"
         assert result.files == ()
         assert result.headers is None
         assert result.payload == b"Invalid request signature"
@@ -619,7 +628,8 @@ class TestInteractionServer:
 
         result = await mock_interaction_server.on_interaction(*invalid_ed25519)
 
-        assert result.content_type == "text/plain; charset=UTF-8"
+        assert result.content_type == "text/plain"
+        assert result.charset == "UTF-8"
         assert result.files == ()
         assert result.headers is None
         assert result.payload == b"Invalid request signature"
@@ -634,7 +644,8 @@ class TestInteractionServer:
 
         result = await mock_interaction_server.on_interaction(body, b"signature", b"timestamp")
 
-        assert result.content_type == "text/plain; charset=UTF-8"
+        assert result.content_type == "text/plain"
+        assert result.charset == "UTF-8"
         assert result.files == ()
         assert result.headers is None
         assert result.payload == b"Invalid JSON body"
@@ -648,7 +659,8 @@ class TestInteractionServer:
 
         result = await mock_interaction_server.on_interaction(b'{"key": "OK"}', b"signature", b"timestamp")
 
-        assert result.content_type == "text/plain; charset=UTF-8"
+        assert result.content_type == "text/plain"
+        assert result.charset == "UTF-8"
         assert result.files == ()
         assert result.headers is None
         assert result.payload == b"Missing required 'type' field in payload"
@@ -660,7 +672,8 @@ class TestInteractionServer:
 
         result = await mock_interaction_server.on_interaction(b'{"type": 1}', b"signature", b"timestamp")
 
-        assert result.content_type == "application/json; charset=UTF-8"
+        assert result.content_type == "application/json"
+        assert result.charset == "UTF-8"
         assert result.files == ()
         assert result.headers is None
         assert result.payload == b'{"type": 1}'
@@ -677,7 +690,8 @@ class TestInteractionServer:
 
         result = await mock_interaction_server.on_interaction(b'{"type": 2}', b"signature", b"timestamp")
 
-        assert result.content_type == "text/plain; charset=UTF-8"
+        assert result.content_type == "text/plain"
+        assert result.charset == "UTF-8"
         assert result.files == ()
         assert result.headers is None
         assert result.payload == b"Interaction type not implemented"
@@ -700,7 +714,8 @@ class TestInteractionServer:
                 {"message": "Exception occurred during interaction deserialization", "exception": mock_exception}
             )
 
-        assert result.content_type == "text/plain; charset=UTF-8"
+        assert result.content_type == "text/plain"
+        assert result.charset == "UTF-8"
         assert result.files == ()
         assert result.headers is None
         assert result.payload == b"Exception occurred during interaction deserialization"
@@ -728,7 +743,8 @@ class TestInteractionServer:
                 {"message": "Exception occurred during interaction dispatch", "exception": mock_exception}
             )
 
-        assert result.content_type == "text/plain; charset=UTF-8"
+        assert result.content_type == "text/plain"
+        assert result.charset == "UTF-8"
         assert result.files == ()
         assert result.headers is None
         assert result.payload == b"Exception occurred during interaction dispatch"
@@ -757,7 +773,8 @@ class TestInteractionServer:
                 {"message": "Exception occurred during interaction dispatch", "exception": mock_exception}
             )
 
-        assert result.content_type == "text/plain; charset=UTF-8"
+        assert result.content_type == "text/plain"
+        assert result.charset == "UTF-8"
         assert result.files == ()
         assert result.headers is None
         assert result.payload == b"Exception occurred during interaction dispatch"
@@ -787,7 +804,8 @@ class TestInteractionServer:
                 {"message": "Exception occurred during interaction dispatch", "exception": mock_exception}
             )
 
-        assert result.content_type == "text/plain; charset=UTF-8"
+        assert result.content_type == "text/plain"
+        assert result.charset == "UTF-8"
         assert result.files == ()
         assert result.headers is None
         assert result.payload == b"Exception occurred during interaction dispatch"
@@ -803,7 +821,8 @@ class TestInteractionServer:
 
         result = await mock_interaction_server.on_interaction(b'{"type": 2}', b"signature", b"timestamp")
 
-        assert result.content_type == "text/plain; charset=UTF-8"
+        assert result.content_type == "text/plain"
+        assert result.charset == "UTF-8"
         assert result.files == ()
         assert result.headers is None
         assert result.payload == b"Handler not set for this interaction type"
