@@ -1056,7 +1056,7 @@ class CommandBuilder(abc.ABC):
 
         Parameters
         ----------
-        name_localizations : hikari.undefined.UndefinedOr[typing.Mapping[typing.Union[hikari.locales.Locale, str], str]]
+        name_localizations : typing.Mapping[typing.Union[hikari.locales.Locale, str], str]
             The name localizations to set for this command.
 
         Returns
@@ -1148,7 +1148,7 @@ class SlashCommandBuilder(CommandBuilder):
 
         Parameters
         ----------
-        description_localizations : hikari.undefined.UndefinedOr[typing.Mapping[typing.Union[hikari.locales.Locale, str], str]]
+        description_localizations : typing.Mapping[typing.Union[hikari.locales.Locale, str], str]
             The description localizations to set for this command.
 
         Returns
