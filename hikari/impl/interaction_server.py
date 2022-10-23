@@ -291,6 +291,7 @@ class InteractionServer(interaction_server.InteractionServer):
                 status=_UNSUPPORTED_MEDIA_TYPE_STATUS,
                 body=b"Unsupported Media Type",
                 content_type=_TEXT_CONTENT_TYPE,
+                charset=_UTF_8_CHARSET,
             )
 
         try:
@@ -304,6 +305,7 @@ class InteractionServer(interaction_server.InteractionServer):
                 status=_BAD_REQUEST_STATUS,
                 body=b"Missing or invalid required request signature header(s)",
                 content_type=_TEXT_CONTENT_TYPE,
+                charset=_UTF_8_CHARSET,
             )
 
         try:
@@ -315,6 +317,7 @@ class InteractionServer(interaction_server.InteractionServer):
                 status=_PAYLOAD_TOO_LARGE_STATUS,
                 body=b"Payload too large",
                 content_type=_TEXT_CONTENT_TYPE,
+                charset=_UTF_8_CHARSET,
             )
 
         if not body:
@@ -324,6 +327,7 @@ class InteractionServer(interaction_server.InteractionServer):
                 status=_BAD_REQUEST_STATUS,
                 body=b"POST request must have a body",
                 content_type=_TEXT_CONTENT_TYPE,
+                charset=_UTF_8_CHARSET,
             )
 
         response = await self.on_interaction(body=body, signature=signature_header, timestamp=timestamp_header)
@@ -453,9 +457,7 @@ class InteractionServer(interaction_server.InteractionServer):
                 )
                 return _Response(_INTERNAL_SERVER_ERROR_STATUS, b"Exception occurred during interaction dispatch")
 
-            return _Response(
-                _OK_STATUS, payload.encode(), files=files, content_type=_JSON_CONTENT_TYPE, charset=_UTF_8_CHARSET
-            )
+            return _Response(_OK_STATUS, payload.encode(), files=files, content_type=_JSON_CONTENT_TYPE)
 
         _LOGGER.debug(
             "Ignoring interaction %s of type %s without registered listener", interaction.id, interaction.type
