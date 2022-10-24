@@ -15,9 +15,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        # 3.11-dev temporarily disabled due to CPython crash
-        # https://github.com/python/cpython/issues/97002
-        python-version: [3.8, 3.9, "3.10"]
+        python-version: [3.8, 3.9, "3.10", 3.11]
 
     runs-on: ${{ matrix.os }}
 
