@@ -28,7 +28,6 @@ __all__: typing.Sequence[str] = (
     "HikariError",
     "HikariWarning",
     "HikariInterrupt",
-    "MultiError",
     "ComponentStateConflictError",
     "UnrecognisedEntityError",
     "NotFoundError",
@@ -91,44 +90,6 @@ class HikariWarning(RuntimeWarning):
     !!! note
         You should never initialize this warning directly.
     """
-
-
-@attr.define(auto_attribs=False, auto_exc=True, repr=False, slots=False)
-class MultiError(HikariError):
-    """Generic error raised in scenarios where multiple errors are raised at once."""
-
-    __cause__: Exception
-    """The first source error."""
-
-    message: str = attr.field()
-    """The error's message."""
-
-    errors: typing.Sequence[Exception] = attr.field()
-    """A sequence of the errors which caused this error."""
-
-    @classmethod
-    def raise_from(cls, message: str, errors: typing.Sequence[Exception]) -> None:
-        """Raise a new MultiError from the given errors.
-
-        Parameters
-        ----------
-        message: str
-            The error message.
-        errors: typing.Sequence[Exception]
-            The errors which caused this error.
-
-        Raises
-        ------
-        MultiError
-            The new MultiError if more than one error was passed.
-        Exception
-            If only one error was passed.
-        """
-        if len(errors) == 1:
-            raise errors[0]
-
-        elif errors:
-            raise cls(message=message, errors=errors) from errors[0]
 
 
 @attr.define(auto_exc=True, repr=False, slots=False)

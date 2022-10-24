@@ -299,7 +299,7 @@ class TestRESTBot:
         mock_shutdown_2.assert_awaited_once_with()
 
     @pytest.mark.asyncio()
-    async def test_close_when_one_shutdown_callback_raises(
+    async def test_close_when_shutdown_callback_raises(
         self, mock_rest_bot: rest_bot_impl.RESTBot, mock_interaction_server: mock.Mock, mock_rest_client: mock.Mock
     ):
         mock_error = KeyError("Too many catgirls")
@@ -320,36 +320,7 @@ class TestRESTBot:
         close_event.set.assert_called_once()
         assert mock_rest_bot._is_closing is True
         mock_shutdown_1.assert_awaited_once_with()
-        mock_shutdown_2.assert_awaited_once_with()
-
-    @pytest.mark.asyncio()
-    async def test_close_when_multiple_shutdown_callbacks_raise(
-        self, mock_rest_bot: rest_bot_impl.RESTBot, mock_interaction_server: mock.Mock, mock_rest_client: mock.Mock
-    ):
-        mock_error = KeyError("Too many catgirls")
-        mock_other_error = ValueError("Too many cooks")
-        mock_shutdown_1 = mock.AsyncMock(side_effect=mock_error)
-        mock_shutdown_2 = mock.AsyncMock(return_value=42)
-        mock_shutdown_3 = mock.AsyncMock(side_effect=mock_other_error)
-        mock_rest_bot._close_event = close_event = mock.Mock()
-        mock_interaction_server.close = mock.AsyncMock()
-        mock_rest_bot._is_closing = False
-        mock_rest_bot.add_shutdown_callback(mock_shutdown_1)
-        mock_rest_bot.add_shutdown_callback(mock_shutdown_2)
-        mock_rest_bot.add_shutdown_callback(mock_shutdown_3)
-
-        with pytest.raises(errors.MultiError) as exc_info:
-            await mock_rest_bot.close()
-
-        assert exc_info.value.__cause__ is mock_error
-        assert exc_info.value.message == "Shutdown callback(s) failed"
-        assert exc_info.value.errors == [mock_error, mock_other_error]
-        mock_interaction_server.close.assert_awaited_once()
-        mock_rest_client.close.assert_awaited_once()
-        close_event.set.assert_called_once()
-        assert mock_rest_bot._is_closing is True
-        mock_shutdown_1.assert_awaited_once_with()
-        mock_shutdown_2.assert_awaited_once_with()
+        mock_shutdown_2.assert_not_called()
 
     @pytest.mark.asyncio()
     async def test_close_when_is_closing(
@@ -628,51 +599,7 @@ class TestRESTBot:
         mock_rest_client.start.assert_not_called()
         assert mock_rest_bot._is_closing is False
         mock_callback_1.assert_awaited_once_with()
-        mock_callback_2.assert_awaited_once_with()
-
-    @pytest.mark.asyncio()
-    async def test_start_when_multiple_startup_callbacks_raise(
-        self, mock_rest_bot: rest_bot_impl.RESTBot, mock_interaction_server: mock.Mock, mock_rest_client: mock.Mock
-    ):
-        mock_socket = object()
-        mock_ssl_context = object()
-        mock_rest_bot._is_closing = True
-        mock_error = TypeError("Not a real catgirl")
-        mock_other_error = ValueError("Not a real catgirl")
-        mock_callback_1 = mock.AsyncMock(side_effect=mock_error)
-        mock_callback_2 = mock.AsyncMock()
-        mock_callback_3 = mock.AsyncMock(side_effect=mock_other_error)
-        mock_rest_bot.add_startup_callback(mock_callback_1)
-        mock_rest_bot.add_startup_callback(mock_callback_2)
-        mock_rest_bot.add_startup_callback(mock_callback_3)
-
-        with mock.patch.object(ux, "check_for_updates"):
-            with pytest.raises(errors.MultiError) as exc_info:
-                await mock_rest_bot.start(
-                    backlog=34123,
-                    check_for_updates=False,
-                    enable_signal_handlers=False,
-                    host="hostostosot",
-                    port=123123123,
-                    path="patpatpapt",
-                    reuse_address=True,
-                    reuse_port=False,
-                    socket=mock_socket,
-                    shutdown_timeout=4312312.3132132,
-                    ssl_context=mock_ssl_context,
-                )
-
-            assert exc_info.value.__cause__ is mock_error
-            assert exc_info.value.message == "Startup callback(s) failed"
-            assert exc_info.value.errors == [mock_error, mock_other_error]
-            ux.check_for_updates.assert_not_called()
-
-        mock_interaction_server.start.assert_not_called()
-        mock_rest_client.start.assert_not_called()
-        assert mock_rest_bot._is_closing is False
-        mock_callback_1.assert_awaited_once_with()
-        mock_callback_2.assert_awaited_once_with()
-        mock_callback_3.assert_awaited_once_with()
+        mock_callback_2.assert_not_called()
 
     @pytest.mark.asyncio()
     async def test_start_checks_for_update(self, mock_rest_bot, mock_http_settings, mock_proxy_settings):

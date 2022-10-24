@@ -63,14 +63,6 @@ if typing.TYPE_CHECKING:
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.rest_bot")
 
 
-async def _wrap_callback(callback: typing.Callable[[], typing.Coroutine[typing.Any, typing.Any, None]]) -> None:
-    # While the callbacks are typed as returning None, we can't trust this
-    # to be the case and thus wrap it to ensure that only None will ever
-    # be returned.
-    # This helps while filtering for exceptions.
-    await callback()
-
-
 class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
     """Basic implementation of an interaction based REST-only bot.
 
@@ -623,11 +615,8 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
                 name="check for package updates",
             )
 
-        results = await asyncio.gather(*map(_wrap_callback, self._on_startup), return_exceptions=True)
-        if results := list(filter(None, results)):  # This filters out non-errors
-            self._close_event = None
-            # This will always raise since errors isn't empty
-            errors.MultiError.raise_from("Startup callback(s) failed", results)
+        for callback in self._on_startup:
+            await callback()
 
         self._rest.start()
         await self._server.start(
