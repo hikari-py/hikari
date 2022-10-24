@@ -65,6 +65,8 @@ if typing.TYPE_CHECKING:
     from hikari.api import shard as gateway_shard
     from hikari.api import voice as voice_
 
+    _RESTBotAwareT = typing.TypeVar("_RESTBotAwareT", bound="RESTBotAware")
+
 
 @typing.runtime_checkable
 class NetworkSettingsAware(fast_protocol.FastProtocolChecking, typing.Protocol):
@@ -568,35 +570,39 @@ class RESTBotAware(InteractionServerAware, Runnable, fast_protocol.FastProtocolC
     __slots__: typing.Sequence[str] = ()
 
     @property
-    def on_shutdown(self) -> typing.Sequence[typing.Callable[[], typing.Coroutine[typing.Any, typing.Any, None]]]:
+    def on_shutdown(
+        self: _RESTBotAwareT,
+    ) -> typing.Sequence[typing.Callable[[_RESTBotAwareT], typing.Coroutine[typing.Any, typing.Any, None]]]:
         """Sequence of the bot's asynchronous shutdown callbacks."""
         raise NotImplementedError
 
     @property
-    def on_startup(self) -> typing.Sequence[typing.Callable[[], typing.Coroutine[typing.Any, typing.Any, None]]]:
+    def on_startup(
+        self: _RESTBotAwareT,
+    ) -> typing.Sequence[typing.Callable[[_RESTBotAwareT], typing.Coroutine[typing.Any, typing.Any, None]]]:
         """Sequence of the bot's asynchronous startup callbacks."""
         raise NotImplementedError
 
     def add_shutdown_callback(
-        self, callback: typing.Callable[[], typing.Coroutine[typing.Any, typing.Any, None]], /
+        self, callback: typing.Callable[[RESTBotAware], typing.Coroutine[typing.Any, typing.Any, None]], /
     ) -> None:
         """Add an asynchronous callback to be called when the bot shuts down.
 
         Parameters
         ----------
-        callback : typing.Callable[[], typing.Coroutine[typing.Any, typing.Any, None]]
+        callback : typing.Callable[[RESTBotAware], typing.Coroutine[typing.Any, typing.Any, None]]
             The asynchronous shutdown callback to add.
         """
         raise NotImplementedError
 
     def remove_shutdown_callback(
-        self, callback: typing.Callable[[], typing.Coroutine[typing.Any, typing.Any, None]], /
+        self, callback: typing.Callable[[RESTBotAware], typing.Coroutine[typing.Any, typing.Any, None]], /
     ) -> None:
         """Remove an asynchronous shutdown callback from the bot.
 
         Parameters
         ----------
-        callback : typing.Callable[[], typing.Coroutine[typing.Any, typing.Any, None]]
+        callback : typing.Callable[[RESTBotAware], typing.Coroutine[typing.Any, typing.Any, None]]
             The shutdown callback to remove.
 
         Raises
