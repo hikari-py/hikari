@@ -264,8 +264,8 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         self._executor = executor
         self._http_settings = http_settings if http_settings is not None else config_impl.HTTPSettings()
         self._is_closing = False
-        self._on_shutdown: typing.List[typing.Callable[[], typing.Coroutine[typing.Any, typing.Any, None]]] = []
-        self._on_startup: typing.List[typing.Callable[[], typing.Coroutine[typing.Any, typing.Any, None]]] = []
+        self._on_shutdown: typing.List[typing.Callable[[RESTBot], typing.Coroutine[typing.Any, typing.Any, None]]] = []
+        self._on_startup: typing.List[typing.Callable[[RESTBot], typing.Coroutine[typing.Any, typing.Any, None]]] = []
         self._proxy_settings = proxy_settings if proxy_settings is not None else config_impl.ProxySettings()
 
         # Entity creation
@@ -301,11 +301,13 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         return self._server
 
     @property
-    def on_shutdown(self) -> typing.Sequence[typing.Callable[[], typing.Coroutine[typing.Any, typing.Any, None]]]:
+    def on_shutdown(
+        self,
+    ) -> typing.Sequence[typing.Callable[[RESTBot], typing.Coroutine[typing.Any, typing.Any, None]]]:
         return self._on_shutdown.copy()
 
     @property
-    def on_startup(self) -> typing.Sequence[typing.Callable[[], typing.Coroutine[typing.Any, typing.Any, None]]]:
+    def on_startup(self) -> typing.Sequence[typing.Callable[[RESTBot], typing.Coroutine[typing.Any, typing.Any, None]]]:
         return self._on_startup.copy()
 
     @property
@@ -371,22 +373,22 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         ux.print_banner(banner, allow_color, force_color, extra_args=extra_args)
 
     def add_shutdown_callback(
-        self, callback: typing.Callable[[], typing.Coroutine[typing.Any, typing.Any, None]], /
+        self, callback: typing.Callable[[RESTBot], typing.Coroutine[typing.Any, typing.Any, None]], /
     ) -> None:
         self._on_shutdown.append(callback)
 
     def remove_shutdown_callback(
-        self, callback: typing.Callable[[], typing.Coroutine[typing.Any, typing.Any, None]], /
+        self, callback: typing.Callable[[RESTBot], typing.Coroutine[typing.Any, typing.Any, None]], /
     ) -> None:
         self._on_shutdown.remove(callback)
 
     def add_startup_callback(
-        self, callback: typing.Callable[[], typing.Coroutine[typing.Any, typing.Any, None]], /
+        self, callback: typing.Callable[[RESTBot], typing.Coroutine[typing.Any, typing.Any, None]], /
     ) -> None:
         self._on_startup.append(callback)
 
     def remove_startup_callback(
-        self, callback: typing.Callable[[], typing.Coroutine[typing.Any, typing.Any, None]], /
+        self, callback: typing.Callable[[RESTBot], typing.Coroutine[typing.Any, typing.Any, None]], /
     ) -> None:
         self._on_startup.remove(callback)
 
@@ -402,12 +404,18 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
 
         self._is_closing = True
         await self._server.close()
-        await self._rest.close()
-        self._close_event.set()
-        self._close_event = None
-        self._is_closing = False
 
-        _LOGGER.info("bot shut down successfully")
+        try:
+            for callback in self._on_shutdown:
+                await callback(self)
+
+        finally:
+            await self._rest.close()
+            self._close_event.set()
+            self._close_event = None
+            self._is_closing = False
+
+            _LOGGER.info("bot shut down")
 
     async def join(self) -> None:
         if not self._close_event:
@@ -615,13 +623,17 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
                 name="check for package updates",
             )
 
-        for callback in self._on_startup:
-            await callback()
-
         self._rest.start()
+        try:
+            for callback in self._on_startup:
+                await callback(self)
+
+        except Exception:
+            await self._rest.close()
+            raise
+
         await self._server.start(
             backlog=backlog,
-            enable_signal_handlers=enable_signal_handlers,
             host=host,
             port=port,
             path=path,

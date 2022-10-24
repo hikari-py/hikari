@@ -295,8 +295,8 @@ class TestRESTBot:
         mock_rest_client.close.assert_awaited_once()
         close_event.set.assert_called_once()
         assert mock_rest_bot._is_closing is False
-        mock_shutdown_1.assert_awaited_once_with()
-        mock_shutdown_2.assert_awaited_once_with()
+        mock_shutdown_1.assert_awaited_once_with(mock_rest_bot)
+        mock_shutdown_2.assert_awaited_once_with(mock_rest_bot)
 
     @pytest.mark.asyncio()
     async def test_close_when_shutdown_callback_raises(
@@ -318,8 +318,8 @@ class TestRESTBot:
         mock_interaction_server.close.assert_awaited_once()
         mock_rest_client.close.assert_awaited_once()
         close_event.set.assert_called_once()
-        assert mock_rest_bot._is_closing is True
-        mock_shutdown_1.assert_awaited_once_with()
+        assert mock_rest_bot._is_closing is False
+        mock_shutdown_1.assert_awaited_once_with(mock_rest_bot)
         mock_shutdown_2.assert_not_called()
 
     @pytest.mark.asyncio()
@@ -559,9 +559,10 @@ class TestRESTBot:
             ssl_context=mock_ssl_context,
         )
         mock_rest_client.start.assert_called_once_with()
+        mock_rest_client.close.assert_not_called()
         assert mock_rest_bot._is_closing is False
-        mock_callback_1.assert_awaited_once_with()
-        mock_callback_2.assert_awaited_once_with()
+        mock_callback_1.assert_awaited_once_with(mock_rest_bot)
+        mock_callback_2.assert_awaited_once_with(mock_rest_bot)
 
     @pytest.mark.asyncio()
     async def test_start_when_startup_callback_raises(
@@ -581,7 +582,6 @@ class TestRESTBot:
                 await mock_rest_bot.start(
                     backlog=34123,
                     check_for_updates=False,
-                    enable_signal_handlers=False,
                     host="hostostosot",
                     port=123123123,
                     path="patpatpapt",
@@ -596,9 +596,10 @@ class TestRESTBot:
             ux.check_for_updates.assert_not_called()
 
         mock_interaction_server.start.assert_not_called()
-        mock_rest_client.start.assert_not_called()
+        mock_rest_client.start.assert_called_once_with()
+        mock_rest_client.close.assert_awaited_once_with()
         assert mock_rest_bot._is_closing is False
-        mock_callback_1.assert_awaited_once_with()
+        mock_callback_1.assert_awaited_once_with(mock_rest_bot)
         mock_callback_2.assert_not_called()
 
     @pytest.mark.asyncio()

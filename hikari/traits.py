@@ -607,25 +607,25 @@ class RESTBotAware(InteractionServerAware, Runnable, fast_protocol.FastProtocolC
         raise NotImplementedError
 
     def add_startup_callback(
-        self, callback: typing.Callable[[], typing.Coroutine[typing.Any, typing.Any, None]], /
+        self, callback: typing.Callable[[RESTBotAware], typing.Coroutine[typing.Any, typing.Any, None]], /
     ) -> None:
         """Add an asynchronous callback to be called when the bot starts up.
 
         Parameters
         ----------
-        callback : typing.Callable[[], typing.Coroutine[typing.Any, typing.Any, None]]
+        callback : typing.Callable[[RESTBotAware], typing.Coroutine[typing.Any, typing.Any, None]]
             The asynchronous startup callback to add.
         """
         raise NotImplementedError
 
     def remove_startup_callback(
-        self, callback: typing.Callable[[], typing.Coroutine[typing.Any, typing.Any, None]], /
+        self, callback: typing.Callable[[RESTBotAware], typing.Coroutine[typing.Any, typing.Any, None]], /
     ) -> None:
         """Remove an asynchronous startup callback from the bot.
 
         Parameters
         ----------
-        callback : typing.Callable[[], typing.Coroutine[typing.Any, typing.Any, None]]
+        callback : typing.Callable[[RESTBotAware], typing.Coroutine[typing.Any, typing.Any, None]]
             The asynchronous startup callback to remove.
 
         Raises
