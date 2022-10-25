@@ -172,6 +172,9 @@ class MessageFlag(enums.Flag):
     LOADING = 1 << 7
     """This message symbolizes that the interaction is 'thinking'."""
 
+    FAILED_TO_MENTION_SOME_ROLES_IN_THREAD = 1 << 8
+    """This message failed to mention some roles and add their mentions to the thread."""
+
 
 @typing.final
 class MessageActivityType(int, enums.Enum):

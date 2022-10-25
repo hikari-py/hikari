@@ -95,6 +95,13 @@ class TestComponentInteraction:
 
         mock_app.cache.get_guild_channel.assert_called_once_with(3123123)
 
+    def test_get_channel_when_not_cached(self, mock_component_interaction, mock_app):
+        mock_app.cache.get_guild_channel.return_value = None
+
+        assert mock_component_interaction.get_channel() is None
+
+        mock_app.cache.get_guild_channel.assert_called_once_with(3123123)
+
     def test_get_channel_without_cache(self, mock_component_interaction):
         mock_component_interaction.app = mock.Mock(traits.RESTAware)
 

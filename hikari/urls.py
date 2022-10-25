@@ -31,7 +31,7 @@ import typing
 BASE_URL: typing.Final[str] = "https://discord.com"
 """The base URL."""
 
-REST_API_URL: typing.Final[str] = f"{BASE_URL}/api/v8"
+REST_API_URL: typing.Final[str] = f"{BASE_URL}/api/v9"
 """The REST API URL."""
 
 OAUTH2_API_URL: typing.Final[str] = f"{REST_API_URL}/oauth2"

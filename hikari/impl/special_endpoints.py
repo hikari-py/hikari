@@ -93,6 +93,31 @@ if typing.TYPE_CHECKING:
     _SelectOptionBuilderT = typing.TypeVar("_SelectOptionBuilderT", bound="_SelectOptionBuilder[typing.Any]")
     _SelectMenuBuilderT = typing.TypeVar("_SelectMenuBuilderT", bound="SelectMenuBuilder[typing.Any]")
 
+    class _RequestCallSig(typing.Protocol):
+        async def __call__(
+            self,
+            compiled_route: routes.CompiledRoute,
+            *,
+            query: typing.Optional[data_binding.StringMapBuilder] = None,
+            form_builder: typing.Optional[data_binding.URLEncodedFormBuilder] = None,
+            json: typing.Union[data_binding.JSONObjectBuilder, data_binding.JSONArray, None] = None,
+            reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+            no_auth: bool = False,
+            auth: typing.Optional[str] = None,
+        ) -> typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]:
+            ...
+
+    class _ThreadDeserailzeSig(typing.Protocol["_GuildThreadChannelT"]):
+        def __call__(
+            self,
+            payload: data_binding.JSONObject,
+            /,
+            *,
+            guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+            member: undefined.UndefinedNoneOr[channels.ThreadMember] = undefined.UNDEFINED,
+        ) -> _GuildThreadChannelT:
+            raise NotImplementedError
+
     # Hack around used to avoid recursive generic types leading to type checker issues in builders
     class _ContainerProto(typing.Protocol):
         def add_component(self: _T, component: special_endpoints.ComponentBuilder, /) -> _T:
@@ -100,6 +125,7 @@ if typing.TYPE_CHECKING:
 
 
 _ContainerProtoT = typing.TypeVar("_ContainerProtoT", bound="_ContainerProto")
+_GuildThreadChannelT = typing.TypeVar("_GuildThreadChannelT", bound=channels.GuildThreadChannel, covariant=True)
 
 
 @typing.final
@@ -120,9 +146,7 @@ class TypingIndicator(special_endpoints.TypingIndicator):
 
     def __init__(
         self,
-        request_call: typing.Callable[
-            ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
-        ],
+        request_call: _RequestCallSig,
         channel: snowflakes.SnowflakeishOr[channels.TextableChannel],
         rest_closed_event: asyncio.Event,
     ) -> None:
@@ -266,9 +290,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         metadata={attr_extensions.SKIP_DEEP_COPY: True}
     )
     _name: str = attr.field()
-    _request_call: typing.Callable[
-        ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
-    ] = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    _request_call: _RequestCallSig = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
 
     # Optional arguments.
     default_message_notifications: undefined.UndefinedOr[guilds.GuildMessageNotificationsLevel] = attr.field(
@@ -497,9 +519,7 @@ class MessageIterator(iterators.BufferedLazyIterator["messages.Message"]):
     def __init__(
         self,
         entity_factory: entity_factory_.EntityFactory,
-        request_call: typing.Callable[
-            ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
-        ],
+        request_call: _RequestCallSig,
         channel: snowflakes.SnowflakeishOr[channels.TextableChannel],
         direction: str,
         first_id: undefined.UndefinedOr[str],
@@ -539,9 +559,7 @@ class ReactorIterator(iterators.BufferedLazyIterator["users.User"]):
     def __init__(
         self,
         entity_factory: entity_factory_.EntityFactory,
-        request_call: typing.Callable[
-            ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
-        ],
+        request_call: _RequestCallSig,
         channel: snowflakes.SnowflakeishOr[channels.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages.PartialMessage],
         emoji: str,
@@ -578,9 +596,7 @@ class OwnGuildIterator(iterators.BufferedLazyIterator["applications.OwnGuild"]):
     def __init__(
         self,
         entity_factory: entity_factory_.EntityFactory,
-        request_call: typing.Callable[
-            ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
-        ],
+        request_call: _RequestCallSig,
         newest_first: bool,
         first_id: str,
     ) -> None:
@@ -628,9 +644,7 @@ class GuildBanIterator(iterators.BufferedLazyIterator["guilds.GuildBan"]):
     def __init__(
         self,
         entity_factory: entity_factory_.EntityFactory,
-        request_call: typing.Callable[
-            ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
-        ],
+        request_call: _RequestCallSig,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         newest_first: bool,
         first_id: str,
@@ -673,9 +687,7 @@ class MemberIterator(iterators.BufferedLazyIterator["guilds.Member"]):
     def __init__(
         self,
         entity_factory: entity_factory_.EntityFactory,
-        request_call: typing.Callable[
-            ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
-        ],
+        request_call: _RequestCallSig,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
     ) -> None:
         super().__init__()
@@ -721,9 +733,7 @@ class ScheduledEventUserIterator(iterators.BufferedLazyIterator["scheduled_event
     def __init__(
         self,
         entity_factory: entity_factory_.EntityFactory,
-        request_call: typing.Callable[
-            ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
-        ],
+        request_call: _RequestCallSig,
         newest_first: bool,
         first_id: str,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -777,9 +787,7 @@ class AuditLogIterator(iterators.LazyIterator["audit_logs.AuditLog"]):
     def __init__(
         self,
         entity_factory: entity_factory_.EntityFactory,
-        request_call: typing.Callable[
-            ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
-        ],
+        request_call: _RequestCallSig,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         before: undefined.UndefinedOr[str],
         user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]],
@@ -812,6 +820,82 @@ class AuditLogIterator(iterators.LazyIterator["audit_logs.AuditLog"]):
         # may be missing entries.
         self._first_id = str(min(entry["id"] for entry in audit_log_entries))
         return log
+
+
+class GuildThreadIterator(iterators.BufferedLazyIterator[_GuildThreadChannelT]):
+    """Iterator implemented for guild thread endpoints."""
+
+    __slots__: typing.Sequence[str] = (
+        "_before_is_timestamp",
+        "_deserialize",
+        "_entity_factory",
+        "_has_more",
+        "_next_before",
+        "_request_call",
+        "_route",
+    )
+
+    def __init__(
+        self,
+        deserialize: _ThreadDeserailzeSig[_GuildThreadChannelT],
+        entity_factory: entity_factory_.EntityFactory,
+        request_call: _RequestCallSig,
+        route: routes.CompiledRoute,
+        before: undefined.UndefinedOr[str],
+        before_is_timestamp: bool,
+    ) -> None:
+        super().__init__()
+        self._before_is_timestamp = before_is_timestamp
+        self._deserialize = deserialize
+        self._entity_factory = entity_factory
+        self._has_more = True
+        self._next_before = before
+        self._request_call = request_call
+        self._route = route
+
+    async def _next_chunk(self) -> typing.Optional[typing.Generator[_GuildThreadChannelT, typing.Any, None]]:
+        if not self._has_more:
+            return None
+
+        query = data_binding.StringMapBuilder()
+        query.put("limit", 100)
+        query.put("before", self._next_before)
+
+        response = await self._request_call(compiled_route=self._route, query=query)
+        assert isinstance(response, dict)
+
+        if not (threads := response["threads"]):
+            # Since GET is idempotent, has_more should always be false if there
+            # are no threads in the current response.
+            self._has_more = False
+            return None
+
+        self._has_more = response["has_more"]
+        members = {int(member["id"]): member for member in response["members"]}
+        if self._before_is_timestamp:
+            self._next_before = (
+                time.iso8601_datetime_string_to_datetime(threads[-1]["thread_metadata"]["archive_timestamp"])
+            ).isoformat()
+
+        else:
+            self._next_before = str(int(threads[-1]["id"]))
+
+        return (
+            self._deserialize(
+                payload,
+                member=_maybe_cast(self._entity_factory.deserialize_thread_member, members.get(int(payload["id"]))),
+            )
+            for payload in threads
+        )
+
+
+def _maybe_cast(
+    callback: typing.Callable[[data_binding.JSONObject], _T], data: typing.Optional[data_binding.JSONObject]
+) -> typing.Optional[_T]:
+    if data:
+        return callback(data)
+
+    return None
 
 
 @attr_extensions.with_copy

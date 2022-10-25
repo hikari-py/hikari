@@ -101,7 +101,7 @@ _TOTAL_RATELIMIT: typing.Final[typing.Tuple[float, int]] = (60.0, 120)
 # to get around (leaving 3 slots for it).
 _NON_PRIORITY_RATELIMIT: typing.Final[typing.Tuple[float, int]] = (60.0, 117)
 # Supported gateway version
-_VERSION: typing.Final[int] = 8
+_VERSION: typing.Final[int] = 9
 # Used to identify the end of a ZLIB payload
 _ZLIB_SUFFIX: typing.Final[bytes] = b"\x00\x00\xff\xff"
 # Close codes which don't invalidate the current session.
