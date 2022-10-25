@@ -6,6 +6,71 @@ This file is updated every release with the use of `towncrier` from the fragment
 
 .. towncrier release notes start
 
+Hikari 2.0.0.dev111 (2022-09-26)
+================================
+
+Breaking Changes
+----------------
+
+- Lifetime improvements breaking changes:
+  - `GatewayBot.join`'s `until_close` argument removed.
+  - `GatewayShardImpl.get_user_id` is no longer async and will now always be available.
+  - `GatewayBotAware` no longer defines the default parameters for `join`, `start` and `run`. It is left to implementation detail. ([#1204](https://github.com/hikari-py/hikari/issues/1204))
+- Remove support for ProcessPoolExecutor executor when reading files
+  - It is much more efficient to use a threadpool executor for I/O actions like this one
+    - Due to the nature of process pool, we were also not able to perform proper chunking when reading off the file ([#1273](https://github.com/hikari-py/hikari/issues/1273))
+
+
+Deprecation
+-----------
+
+- Deprecate `CacheView.iterator` in favour of using the `itertools` module. ([#1289](https://github.com/hikari-py/hikari/issues/1289))
+
+
+Features
+--------
+
+- Add python 3.11-dev support. ([#847](https://github.com/hikari-py/hikari/issues/847))
+- Support for Application Command Localizations. ([#1141](https://github.com/hikari-py/hikari/issues/1141))
+- Improve components lifetimes:
+  - `GatewayBot`:
+    - General speedups.
+    - Fix a lot of edge cases of hard crashes if the application shuts unexpectedly.
+    - More consistent signal handling.
+    - `run`'s `shard_ids` argument can now be a `typing.Sequence`.
+    - Improved logging.
+  - `RESTBot`:
+    - Consistent signal handling inline with `GatewayBot`.
+    - Improved logging.
+    - Improved loop closing.
+  - `GatewayShardImpl`:
+    - New `is_connected` property to determine whether the shard is connected to the gateway.
+    - Faster websocket pulling and heartbeating.
+    - Improved error handling.
+    - Rate limiting changes:
+      - Chunking no longer has its own special ratelimit. Now it is shared with the rest of
+      "non-priority" packages sent, which is of 117/60s (3 less than the hard limit).
+        - "priority" packages currently only include heartbeating. ([#1204](https://github.com/hikari-py/hikari/issues/1204))
+- Implement slash option min/max length fields ([#1216](https://github.com/hikari-py/hikari/issues/1216))
+- Add `mention` property to `PartialChannel`. ([#1221](https://github.com/hikari-py/hikari/issues/1221))
+- Implement new Gateway reconnect logic enforced by Discord. ([#1245](https://github.com/hikari-py/hikari/issues/1245))
+
+
+Bugfixes
+--------
+
+- Lifetime improvements bugfixes:
+  - `GatewayShardImpl` can now be instantiated out of an async environment for consistency with other components.
+  - Correct signal handling in `RESTBot`. ([#1204](https://github.com/hikari-py/hikari/issues/1204))
+- Improve `BadRequestError`'s error string. ([#1213](https://github.com/hikari-py/hikari/issues/1213))
+- Fix `hikari.impl.VoiceImpl.connect_to` silently failing if the guild or voice channel do not exist by providing a timeout. ([#1242](https://github.com/hikari-py/hikari/issues/1242))
+- `dm_permission` now correctly defaults to `True` instead of `False` when parsing command objects from Discord. ([#1243](https://github.com/hikari-py/hikari/issues/1243))
+- Fix float precision issues when creating a snowflake from a datetime object. ([#1247](https://github.com/hikari-py/hikari/issues/1247))
+- Fix `reposition_channels` to use the correct route. ([#1259](https://github.com/hikari-py/hikari/issues/1259))
+- Allow for `replace_attachments` kwarg to be used in `RESTClient.create_initial_response`. ([#1266](https://github.com/hikari-py/hikari/issues/1266))
+- Ignore guild create events which contain unavailable guilds ([#1284](https://github.com/hikari-py/hikari/issues/1284))
+
+
 Hikari 2.0.0.dev110 (2022-08-08)
 ================================
 

@@ -107,13 +107,12 @@ class GatewayShard(abc.ABC):
     @property
     @abc.abstractmethod
     def is_alive(self) -> bool:
-        """Return `builtins.True` if the shard is alive and connected.
+        """Whether the shard is alive."""
 
-        Returns
-        -------
-        builtins.bool
-            `builtins.True` if connected, or `builtins.False` if not.
-        """
+    @property
+    @abc.abstractmethod
+    def is_connected(self) -> bool:
+        """Whether the shard is connected."""
 
     @property
     @abc.abstractmethod
@@ -127,11 +126,8 @@ class GatewayShard(abc.ABC):
         """
 
     @abc.abstractmethod
-    async def get_user_id(self) -> snowflakes.Snowflake:
+    def get_user_id(self) -> snowflakes.Snowflake:
         """Return the user ID.
-
-        If the shard has not connected fully yet, this should wait until the ID
-        is set before returning.
 
         Returns
         -------

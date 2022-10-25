@@ -353,13 +353,7 @@ class EventManagerBase(event_manager_.EventManager):
     is the raw event name being dispatched in lower-case.
     """
 
-    __slots__: typing.Sequence[str] = (
-        "_consumers",
-        "_event_factory",
-        "_intents",
-        "_listeners",
-        "_waiters",
-    )
+    __slots__: typing.Sequence[str] = ("_consumers", "_event_factory", "_intents", "_listeners", "_waiters")
 
     def __init__(
         self,
@@ -494,7 +488,7 @@ class EventManagerBase(event_manager_.EventManager):
         if items := self._listeners.get(event_type):
             return items.copy()
 
-        return []
+        return ()
 
     # Yes, this is not generic. The reason for this is MyPy complains about
     # using ABCs that are not concrete in generic types passed to functions.

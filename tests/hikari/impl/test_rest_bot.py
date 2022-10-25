@@ -34,6 +34,7 @@ from hikari.impl import interaction_server as interaction_server_impl
 from hikari.impl import rest as rest_impl
 from hikari.impl import rest_bot as rest_bot_impl
 from hikari.internal import aio
+from hikari.internal import signals
 from hikari.internal import ux
 from tests.hikari import hikari_test_helpers
 
@@ -162,7 +163,7 @@ class TestRESTBot:
         stack.enter_context(mock.patch.object(interaction_server_impl, "InteractionServer"))
 
         with stack:
-            result = cls("token", "token_type", "6f66646f646f646f6f")
+            result = cls(object(), "token_type", "6f66646f646f646f6f")
 
             interaction_server_impl.InteractionServer.assert_called_once_with(
                 entity_factory=result.entity_factory, public_key=b"ofdododoo", rest_client=result.rest
@@ -236,25 +237,103 @@ class TestRESTBot:
 
             print_banner.assert_called_once_with("okokok", True, False, extra_args={"test_key": "test_value"})
 
+    def test_add_shutdown_callback(self, mock_rest_bot: rest_bot_impl.RESTBot):
+        callback = mock.Mock()
+        mock_rest_bot.add_shutdown_callback(callback)
+
+        assert callback in mock_rest_bot.on_shutdown
+
+    def test_remove_shutdown_callback(self, mock_rest_bot: rest_bot_impl.RESTBot):
+        callback = mock.Mock()
+        mock_rest_bot.add_shutdown_callback(callback)
+
+        mock_rest_bot.remove_shutdown_callback(callback)
+
+        assert callback not in mock_rest_bot.on_shutdown
+
+    def test_remove_shutdown_callback_when_not_present(self, mock_rest_bot: rest_bot_impl.RESTBot):
+        callback = mock.Mock()
+
+        with pytest.raises(ValueError, match=".*"):
+            mock_rest_bot.remove_shutdown_callback(callback)
+
+    def test_add_startup_callback(self, mock_rest_bot: rest_bot_impl.RESTBot):
+        callback = mock.Mock()
+        mock_rest_bot.add_startup_callback(callback)
+
+        assert callback in mock_rest_bot.on_startup
+
+    def test_remove_startup_callback(self, mock_rest_bot: rest_bot_impl.RESTBot):
+        callback = mock.Mock()
+        mock_rest_bot.add_startup_callback(callback)
+
+        mock_rest_bot.remove_startup_callback(callback)
+
+        assert callback not in mock_rest_bot.on_startup
+
+    def test_remove_startup_callback_when_not_present(self, mock_rest_bot: rest_bot_impl.RESTBot):
+        callback = mock.Mock()
+
+        with pytest.raises(ValueError, match=".*"):
+            mock_rest_bot.remove_startup_callback(callback)
+
     @pytest.mark.asyncio()
-    async def test_close(self, mock_rest_bot, mock_interaction_server, mock_rest_client):
+    async def test_close(
+        self, mock_rest_bot: rest_bot_impl.RESTBot, mock_interaction_server: mock.Mock, mock_rest_client: mock.Mock
+    ):
+        mock_shutdown_1 = mock.AsyncMock()
+        mock_shutdown_2 = mock.AsyncMock()
         mock_rest_bot._close_event = close_event = mock.Mock()
         mock_interaction_server.close = mock.AsyncMock()
         mock_rest_bot._is_closing = False
+        mock_rest_bot.add_shutdown_callback(mock_shutdown_1)
+        mock_rest_bot.add_shutdown_callback(mock_shutdown_2)
 
         await mock_rest_bot.close()
 
         mock_interaction_server.close.assert_awaited_once()
         mock_rest_client.close.assert_awaited_once()
         close_event.set.assert_called_once()
-        assert mock_rest_bot._is_closing is True
+        assert mock_rest_bot._is_closing is False
+        mock_shutdown_1.assert_awaited_once_with(mock_rest_bot)
+        mock_shutdown_2.assert_awaited_once_with(mock_rest_bot)
 
     @pytest.mark.asyncio()
-    async def test_close_when_is_closing(self, mock_rest_bot, mock_interaction_server, mock_rest_client):
+    async def test_close_when_shutdown_callback_raises(
+        self, mock_rest_bot: rest_bot_impl.RESTBot, mock_interaction_server: mock.Mock, mock_rest_client: mock.Mock
+    ):
+        mock_error = KeyError("Too many catgirls")
+        mock_shutdown_1 = mock.AsyncMock(side_effect=mock_error)
+        mock_shutdown_2 = mock.AsyncMock()
+        mock_rest_bot._close_event = close_event = mock.Mock()
+        mock_interaction_server.close = mock.AsyncMock()
+        mock_rest_bot._is_closing = False
+        mock_rest_bot.add_shutdown_callback(mock_shutdown_1)
+        mock_rest_bot.add_shutdown_callback(mock_shutdown_2)
+
+        with pytest.raises(KeyError) as exc_info:
+            await mock_rest_bot.close()
+
+        assert exc_info.value is mock_error
+        mock_interaction_server.close.assert_awaited_once()
+        mock_rest_client.close.assert_awaited_once()
+        close_event.set.assert_called_once()
+        assert mock_rest_bot._is_closing is False
+        mock_shutdown_1.assert_awaited_once_with(mock_rest_bot)
+        mock_shutdown_2.assert_not_called()
+
+    @pytest.mark.asyncio()
+    async def test_close_when_is_closing(
+        self, mock_rest_bot: rest_bot_impl.RESTBot, mock_interaction_server: mock.Mock, mock_rest_client: mock.Mock
+    ):
+        mock_shutdown_1 = mock.AsyncMock()
+        mock_shutdown_2 = mock.AsyncMock()
         mock_rest_bot._close_event = mock.Mock()
         mock_interaction_server.close = mock.AsyncMock()
         mock_rest_bot._is_closing = True
         mock_rest_bot.join = mock.AsyncMock()
+        mock_rest_bot.add_shutdown_callback(mock_shutdown_1)
+        mock_rest_bot.add_shutdown_callback(mock_shutdown_2)
 
         await mock_rest_bot.close()
 
@@ -262,6 +341,9 @@ class TestRESTBot:
         mock_rest_client.close.assert_not_called()
         mock_rest_bot._close_event.set.assert_not_called()
         mock_rest_bot.join.assert_awaited_once()
+        assert mock_rest_bot._is_closing is True
+        mock_shutdown_1.assert_not_called()
+        mock_shutdown_2.assert_not_called()
 
     @pytest.mark.asyncio()
     async def test_close_when_inactive(self, mock_rest_bot):
@@ -301,30 +383,39 @@ class TestRESTBot:
         mock_rest_bot.join = mock.AsyncMock()
 
         with mock.patch.object(ux, "check_for_updates") as check_for_updates:
-            mock_rest_bot.run(
-                asyncio_debug=False,
-                backlog=321,
-                check_for_updates=False,
-                close_loop=False,
-                close_passed_executor=False,
-                coroutine_tracking_depth=32123,
-                enable_signal_handlers=True,
-                host="192.168.1.102",
-                path="pathathath",
-                port=4554,
-                reuse_address=True,
-                reuse_port=False,
-                shutdown_timeout=534.534,
-                socket=mock_socket,
-                ssl_context=mock_context,
-            )
+            with mock.patch.object(
+                signals, "handle_interrupts", return_value=hikari_test_helpers.ContextManagerMock()
+            ) as handle_interrupts:
+                mock_rest_bot.run(
+                    asyncio_debug=False,
+                    backlog=321,
+                    check_for_updates=False,
+                    close_loop=False,
+                    close_passed_executor=False,
+                    coroutine_tracking_depth=32123,
+                    enable_signal_handlers=True,
+                    propagate_interrupts=True,
+                    host="192.168.1.102",
+                    path="pathathath",
+                    port=4554,
+                    reuse_address=True,
+                    reuse_port=False,
+                    shutdown_timeout=534.534,
+                    socket=mock_socket,
+                    ssl_context=mock_context,
+                )
 
-            check_for_updates.assert_not_called()
+        check_for_updates.assert_not_called()
+        handle_interrupts.assert_called_once_with(
+            enabled=True,
+            loop=asyncio.get_event_loop_policy().get_event_loop(),
+            propagate_interrupts=True,
+        )
+        handle_interrupts.return_value.assert_used_once()
 
         mock_rest_bot.start.assert_awaited_once_with(
             backlog=321,
             check_for_updates=False,
-            enable_signal_handlers=True,
             host="192.168.1.102",
             path="pathathath",
             port=4554,
@@ -337,12 +428,23 @@ class TestRESTBot:
         mock_rest_bot.join.assert_awaited_once()
         assert asyncio.get_event_loop_policy().get_event_loop().is_closed() is False
 
+    def test_run_when_close_loop(self, mock_rest_bot):
+        mock_rest_bot.start = mock.Mock()
+        mock_rest_bot.join = mock.Mock()
+
+        with mock.patch.object(aio, "get_or_make_loop") as get_or_make_loop:
+            with mock.patch.object(aio, "destroy_loop") as destroy_loop:
+                with mock.patch.object(rest_bot_impl, "_LOGGER") as logger:
+                    mock_rest_bot.run(close_loop=True)
+
+        destroy_loop.assert_called_once_with(get_or_make_loop.return_value, logger)
+
     def test_run_when_asyncio_debug(self, mock_rest_bot):
         mock_rest_bot.start = mock.Mock()
         mock_rest_bot.join = mock.Mock()
 
         with mock.patch.object(aio, "get_or_make_loop") as get_or_make_loop:
-            mock_rest_bot.run(asyncio_debug=True)
+            mock_rest_bot.run(asyncio_debug=True, close_loop=False)
 
         get_or_make_loop.return_value.set_debug.assert_called_once_with(True)
 
@@ -354,7 +456,7 @@ class TestRESTBot:
             with mock.patch.object(
                 sys, "set_coroutine_origin_tracking_depth", side_effect=AttributeError, create=True
             ) as set_tracking_depth:
-                mock_rest_bot.run(coroutine_tracking_depth=42)
+                mock_rest_bot.run(coroutine_tracking_depth=42, close_loop=False)
 
         set_tracking_depth.assert_called_once_with(42)
 
@@ -418,16 +520,21 @@ class TestRESTBot:
         assert mock_rest_bot.executor is None
 
     @pytest.mark.asyncio()
-    async def test_start(self, mock_rest_bot, mock_interaction_server, mock_rest_client):
+    async def test_start(
+        self, mock_rest_bot: rest_bot_impl.RESTBot, mock_interaction_server: mock.Mock, mock_rest_client: mock.Mock
+    ):
         mock_socket = object()
         mock_ssl_context = object()
+        mock_callback_1 = mock.AsyncMock()
+        mock_callback_2 = mock.AsyncMock()
+        mock_rest_bot.add_startup_callback(mock_callback_1)
+        mock_rest_bot.add_startup_callback(mock_callback_2)
         mock_rest_bot._is_closing = True
 
         with mock.patch.object(ux, "check_for_updates"):
             await mock_rest_bot.start(
                 backlog=34123,
                 check_for_updates=False,
-                enable_signal_handlers=False,
                 host="hostostosot",
                 port=123123123,
                 path="patpatpapt",
@@ -442,7 +549,6 @@ class TestRESTBot:
 
         mock_interaction_server.start.assert_awaited_once_with(
             backlog=34123,
-            enable_signal_handlers=False,
             host="hostostosot",
             port=123123123,
             path="patpatpapt",
@@ -453,7 +559,48 @@ class TestRESTBot:
             ssl_context=mock_ssl_context,
         )
         mock_rest_client.start.assert_called_once_with()
+        mock_rest_client.close.assert_not_called()
         assert mock_rest_bot._is_closing is False
+        mock_callback_1.assert_awaited_once_with(mock_rest_bot)
+        mock_callback_2.assert_awaited_once_with(mock_rest_bot)
+
+    @pytest.mark.asyncio()
+    async def test_start_when_startup_callback_raises(
+        self, mock_rest_bot: rest_bot_impl.RESTBot, mock_interaction_server: mock.Mock, mock_rest_client: mock.Mock
+    ):
+        mock_socket = object()
+        mock_ssl_context = object()
+        mock_rest_bot._is_closing = True
+        mock_error = TypeError("Not a real catgirl")
+        mock_callback_1 = mock.AsyncMock(side_effect=mock_error)
+        mock_callback_2 = mock.AsyncMock()
+        mock_rest_bot.add_startup_callback(mock_callback_1)
+        mock_rest_bot.add_startup_callback(mock_callback_2)
+
+        with mock.patch.object(ux, "check_for_updates"):
+            with pytest.raises(TypeError) as exc_info:
+                await mock_rest_bot.start(
+                    backlog=34123,
+                    check_for_updates=False,
+                    host="hostostosot",
+                    port=123123123,
+                    path="patpatpapt",
+                    reuse_address=True,
+                    reuse_port=False,
+                    socket=mock_socket,
+                    shutdown_timeout=4312312.3132132,
+                    ssl_context=mock_ssl_context,
+                )
+
+            assert exc_info.value is mock_error
+            ux.check_for_updates.assert_not_called()
+
+        mock_interaction_server.start.assert_not_called()
+        mock_rest_client.start.assert_called_once_with()
+        mock_rest_client.close.assert_awaited_once_with()
+        assert mock_rest_bot._is_closing is False
+        mock_callback_1.assert_awaited_once_with(mock_rest_bot)
+        mock_callback_2.assert_not_called()
 
     @pytest.mark.asyncio()
     async def test_start_checks_for_update(self, mock_rest_bot, mock_http_settings, mock_proxy_settings):
@@ -465,7 +612,6 @@ class TestRESTBot:
             await mock_rest_bot.start(
                 backlog=34123,
                 check_for_updates=True,
-                enable_signal_handlers=False,
                 host="hostostosot",
                 port=123123123,
                 path="patpatpapt",

@@ -112,7 +112,7 @@ _X_RATELIMIT_BUCKET_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Bucket")
 _X_RATELIMIT_LIMIT_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Limit")
 _X_RATELIMIT_REMAINING_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Remaining")
 _X_RATELIMIT_RESET_AFTER_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Reset-After")
-_RETRY_ERROR_CODES: typing.Final[typing.Set[int]] = {500, 502, 503, 504}
+_RETRY_ERROR_CODES: typing.Final[typing.FrozenSet[int]] = frozenset({500, 502, 503, 504})
 _MAX_BACKOFF_DURATION: typing.Final[int] = 16
 
 
@@ -807,7 +807,6 @@ class RESTClientImpl(rest_api.RESTClient):
                 # Attempt to re-auth on UNAUTHORIZED if we are using a TokenStrategy
                 can_re_auth = response.status == 401 and not (auth or no_auth or re_authed)
                 if can_re_auth and isinstance(self._token, rest_api.TokenStrategy):
-                    assert token is not None
                     self._token.invalidate(token)
                     token = await self._token.acquire(self)
                     headers[_AUTHORIZATION_HEADER] = token
@@ -960,6 +959,11 @@ class RESTClientImpl(rest_api.RESTClient):
         parent_category: undefined.UndefinedOr[
             snowflakes.SnowflakeishOr[channels_.GuildCategory]
         ] = undefined.UNDEFINED,
+        default_auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        archived: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        locked: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        invitable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.PartialChannel:
         route = routes.PATCH_CHANNEL.compile(channel=channel)
@@ -979,6 +983,12 @@ class RESTClientImpl(rest_api.RESTClient):
             permission_overwrites,
             conversion=self._entity_factory.serialize_permission_overwrite,
         )
+        body.put("default_auto_archive_duration", default_auto_archive_duration, conversion=time.timespan_to_int)
+        # thread-only fields
+        body.put("archived", archived)
+        body.put("auto_archive_duration", auto_archive_duration, conversion=time.timespan_to_int)
+        body.put("locked", locked)
+        body.put("invitable", invitable)
 
         response = await self._request(route, json=body, reason=reason)
         assert isinstance(response, dict)
@@ -1078,7 +1088,6 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("deny", deny)
         await self._request(route, json=body, reason=reason)
 
-    @deprecation.deprecated("2.0.0.dev113", "edit_permission_overwrite")
     async def edit_permission_overwrites(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
@@ -1095,7 +1104,62 @@ class RESTClientImpl(rest_api.RESTClient):
 
         .. deprecated:: 2.0.0.dev110
             Use `RESTClient.edit_permission_overwrite` instead.
-        """
+
+        Parameters
+        ----------
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildChannel]
+            The channel to edit a permission overwrite in. This may be the
+            object, or the ID of an existing channel.
+        target : typing.Union[hikari.users.PartialUser, hikari.guilds.PartialRole, hikari.channels.PermissionOverwrite, hikari.snowflakes.Snowflakeish]
+            The channel overwrite to edit. This may be the object or the ID of an
+            existing overwrite.
+
+        Other Parameters
+        ----------------
+        target_type : hikari.undefined.UndefinedOr[typing.Union[hikari.channels.PermissionOverwriteType, int]]
+            If provided, the type of the target to update. If unset, will attempt to get
+            the type from `target`.
+        allow : hikari.undefined.UndefinedOr[hikari.permissions.Permissions]
+            If provided, the new value of all allowed permissions.
+        deny : hikari.undefined.UndefinedOr[hikari.permissions.Permissions]
+            If provided, the new value of all disallowed permissions.
+        reason : hikari.undefined.UndefinedOr[builtins.str]
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Raises
+        ------
+        builtins.TypeError
+            If `target_type` is unset and we were unable to determine the type
+            from `target`.
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you are missing the `MANAGE_PERMISSIONS` permission in the channel.
+        hikari.errors.NotFoundError
+            If the channel is not found or the target is not found if it is
+            a role.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """  # noqa: E501 - Line too long
+        deprecation.warn_deprecated(
+            "edit_permission_overwrites",
+            removal_version="2.0.0.dev113",
+            additional_info="Use 'edit_permission_overwrite' instead",
+        )
         await self.edit_permission_overwrite(
             channel, target, target_type=target_type, allow=allow, deny=deny, reason=reason
         )
@@ -1751,6 +1815,9 @@ class RESTClientImpl(rest_api.RESTClient):
         token: str,
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
+        thread: typing.Union[
+            undefined.UndefinedType, snowflakes.SnowflakeishOr[channels_.GuildThreadChannel]
+        ] = undefined.UNDEFINED,
         username: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         avatar_url: typing.Union[undefined.UndefinedType, str, files.URL] = undefined.UNDEFINED,
         attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
@@ -1775,6 +1842,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         query = data_binding.StringMapBuilder()
         query.put("wait", True)
+        query.put("thread_id", thread)
 
         body, form_builder = self._build_message_payload(
             content=content,
@@ -1807,11 +1875,17 @@ class RESTClientImpl(rest_api.RESTClient):
         webhook: typing.Union[webhooks.ExecutableWebhook, snowflakes.Snowflakeish],
         token: str,
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
+        *,
+        thread: typing.Union[
+            undefined.UndefinedType, snowflakes.SnowflakeishOr[channels_.GuildThreadChannel]
+        ] = undefined.UNDEFINED,
     ) -> messages_.Message:
         # int(ExecutableWebhook) isn't guaranteed to be valid nor the ID used to execute this entity as a webhook.
         webhook_id = webhook if isinstance(webhook, int) else webhook.webhook_id
         route = routes.GET_WEBHOOK_MESSAGE.compile(webhook=webhook_id, token=token, message=message)
-        response = await self._request(route, no_auth=True)
+        query = data_binding.StringMapBuilder()
+        query.put("thread_id", thread)
+        response = await self._request(route, no_auth=True, query=query)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
 
@@ -1822,6 +1896,9 @@ class RESTClientImpl(rest_api.RESTClient):
         message: snowflakes.SnowflakeishOr[messages_.Message],
         content: undefined.UndefinedNoneOr[typing.Any] = undefined.UNDEFINED,
         *,
+        thread: typing.Union[
+            undefined.UndefinedType, snowflakes.SnowflakeishOr[channels_.GuildThreadChannel]
+        ] = undefined.UNDEFINED,
         attachment: undefined.UndefinedNoneOr[
             typing.Union[files.Resourceish, messages_.Attachment]
         ] = undefined.UNDEFINED,
@@ -1845,6 +1922,8 @@ class RESTClientImpl(rest_api.RESTClient):
         # int(ExecutableWebhook) isn't guaranteed to be valid nor the ID used to execute this entity as a webhook.
         webhook_id = webhook if isinstance(webhook, int) else webhook.webhook_id
         route = routes.PATCH_WEBHOOK_MESSAGE.compile(webhook=webhook_id, token=token, message=message)
+        query = data_binding.StringMapBuilder()
+        query.put("thread_id", thread)
 
         body, form_builder = self._build_message_payload(
             content=content,
@@ -1862,9 +1941,9 @@ class RESTClientImpl(rest_api.RESTClient):
 
         if form_builder is not None:
             form_builder.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
-            response = await self._request(route, form_builder=form_builder, no_auth=True)
+            response = await self._request(route, form_builder=form_builder, query=query, no_auth=True)
         else:
-            response = await self._request(route, json=body, no_auth=True)
+            response = await self._request(route, json=body, query=query, no_auth=True)
 
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
@@ -1874,11 +1953,17 @@ class RESTClientImpl(rest_api.RESTClient):
         webhook: typing.Union[webhooks.ExecutableWebhook, snowflakes.Snowflakeish],
         token: str,
         message: snowflakes.SnowflakeishOr[messages_.Message],
+        *,
+        thread: typing.Union[
+            undefined.UndefinedType, snowflakes.SnowflakeishOr[channels_.GuildThreadChannel]
+        ] = undefined.UNDEFINED,
     ) -> None:
         # int(ExecutableWebhook) isn't guaranteed to be valid nor the ID used to execute this entity as a webhook.
         webhook_id = webhook if isinstance(webhook, int) else webhook.webhook_id
+        query = data_binding.StringMapBuilder()
+        query.put("thread_id", thread)
         route = routes.DELETE_WEBHOOK_MESSAGE.compile(webhook=webhook_id, token=token, message=message)
-        await self._request(route, no_auth=True)
+        await self._request(route, no_auth=True, query=query)
 
     async def fetch_gateway_url(self) -> str:
         route = routes.GET_GATEWAY.compile()
@@ -2080,8 +2165,90 @@ class RESTClientImpl(rest_api.RESTClient):
         mute: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         deaf: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> typing.Optional[guilds.Member]:
+        """Add a user to a guild.
+
+        !!! note
+            This requires the `access_token` to have the
+            `hikari.applications.OAuth2Scope.GUILDS_JOIN` scope enabled along
+            with the authorization of a Bot which has `MANAGE_INVITES`
+            permission within the target guild.
+
+        Parameters
+        ----------
+        access_token : typing.Union[builtins.str, hikari.applications.PartialOAuth2Token]
+            Object or string of the access token to use for this request.
+        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+            The guild to add the user to. This may be the object
+            or the ID of an existing guild.
+        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
+            The user to add to the guild. This may be the object
+            or the ID of an existing user.
+
+        Other Parameters
+        ----------------
+        nickname : hikari.undefined.UndefinedOr[builtins.str]
+            If provided, the nick to add to the user when he joins the guild.
+
+            Requires the `MANAGE_NICKNAMES` permission on the guild.
+        nick : hikari.undefined.UndefinedNoneOr[builtins.str]
+            Deprecated alias for `nickname`.
+
+            .. deprecated:: 2.0.0.dev106
+                Use `nickname` instead.
+        roles : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole]]
+            If provided, the roles to add to the user when he joins the guild.
+            This may be a collection objects or IDs of existing roles.
+
+            Requires the `MANAGE_ROLES` permission on the guild.
+        mute : hikari.undefined.UndefinedOr[builtins.bool]
+            If provided, the mute state to add the user when he joins the guild.
+
+            Requires the `MUTE_MEMBERS` permission on the guild.
+        deaf : hikari.undefined.UndefinedOr[builtins.bool]
+            If provided, the deaf state to add the user when he joins the guild.
+
+            Requires the `DEAFEN_MEMBERS` permission on the guild.
+
+        Returns
+        -------
+        typing.Optional[hikari.guilds.Member]
+            `builtins.None` if the user was already part of the guild, else
+            `hikari.guilds.Member`.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you are not part of the guild you want to add the user to,
+            if you are missing permissions to do one of the things you specified,
+            if you are using an access token for another user, if the token is
+            bound to another bot or if the access token doesn't have the
+            `hikari.applications.OAuth2Scope.GUILDS_JOIN` scope enabled.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If you own the guild or the user is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
         if nick is not undefined.UNDEFINED:
-            deprecation.warn_deprecated("nick", alternative="nickname")
+            deprecation.warn_deprecated(
+                "nick",
+                removal_version="2.0.0.dev113",
+                additional_info="Use 'nickname' parameter instead",
+            )
             nickname = nick
 
         route = routes.PUT_GUILD_MEMBER.compile(guild=guild, user=user)
@@ -2431,6 +2598,7 @@ class RESTClientImpl(rest_api.RESTClient):
             typing.Sequence[channels_.PermissionOverwrite]
         ] = undefined.UNDEFINED,
         category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
+        default_auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.GuildTextChannel:
         response = await self._create_guild_channel(
@@ -2443,6 +2611,7 @@ class RESTClientImpl(rest_api.RESTClient):
             rate_limit_per_user=rate_limit_per_user,
             permission_overwrites=permission_overwrites,
             category=category,
+            default_auto_archive_duration=default_auto_archive_duration,
             reason=reason,
         )
         return self._entity_factory.deserialize_guild_text_channel(response)
@@ -2460,6 +2629,7 @@ class RESTClientImpl(rest_api.RESTClient):
             typing.Sequence[channels_.PermissionOverwrite]
         ] = undefined.UNDEFINED,
         category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
+        default_auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.GuildNewsChannel:
         response = await self._create_guild_channel(
@@ -2472,6 +2642,7 @@ class RESTClientImpl(rest_api.RESTClient):
             rate_limit_per_user=rate_limit_per_user,
             permission_overwrites=permission_overwrites,
             category=category,
+            default_auto_archive_duration=default_auto_archive_duration,
             reason=reason,
         )
         return self._entity_factory.deserialize_guild_news_channel(response)
@@ -2575,6 +2746,7 @@ class RESTClientImpl(rest_api.RESTClient):
         ] = undefined.UNDEFINED,
         region: undefined.UndefinedOr[typing.Union[voices.VoiceRegion, str]] = undefined.UNDEFINED,
         category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
+        default_auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> data_binding.JSONObject:
         route = routes.POST_GUILD_CHANNELS.compile(guild=guild)
@@ -2595,10 +2767,198 @@ class RESTClientImpl(rest_api.RESTClient):
             permission_overwrites,
             conversion=self._entity_factory.serialize_permission_overwrite,
         )
+        body.put("default_auto_archive_duration", default_auto_archive_duration, conversion=time.timespan_to_int)
 
         response = await self._request(route, json=body, reason=reason)
         assert isinstance(response, dict)
         return response
+
+    async def create_message_thread(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
+        message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
+        name: str,
+        /,
+        *,
+        auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = datetime.timedelta(days=1),
+        rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> typing.Union[channels_.GuildPublicThread, channels_.GuildNewsThread]:
+        if auto_archive_duration is not undefined.UNDEFINED and isinstance(auto_archive_duration, datetime.timedelta):
+            auto_archive_duration = round(auto_archive_duration.total_seconds() / 60)
+
+        route = routes.POST_MESSAGE_THREADS.compile(channel=channel, message=message)
+        body = data_binding.JSONObjectBuilder()
+        body.put("name", name)
+        body.put("auto_archive_duration", auto_archive_duration)
+        body.put("rate_limit_per_user", rate_limit_per_user, conversion=time.timespan_to_int)
+
+        response = await self._request(route, json=body, reason=reason)
+
+        assert isinstance(response, dict)
+        channel = self._entity_factory.deserialize_guild_thread(response)
+        assert isinstance(channel, (channels_.GuildPublicThread, channels_.GuildNewsThread))
+        return channel
+
+    async def create_thread(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
+        type: typing.Union[channels_.ChannelType, int],
+        name: str,
+        /,
+        *,
+        auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = datetime.timedelta(days=1),
+        invitable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> channels_.GuildThreadChannel:
+        if auto_archive_duration is not undefined.UNDEFINED and isinstance(auto_archive_duration, datetime.timedelta):
+            auto_archive_duration = round(auto_archive_duration.total_seconds() / 60)
+
+        route = routes.POST_CHANNEL_THREADS.compile(channel=channel)
+        body = data_binding.JSONObjectBuilder()
+        body.put("name", name)
+        body.put("auto_archive_duration", auto_archive_duration)
+        body.put("type", type)
+        body.put("invitable", invitable)
+        body.put("rate_limit_per_user", rate_limit_per_user, conversion=time.timespan_to_int)
+
+        response = await self._request(route, json=body, reason=reason)
+
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_guild_thread(response)
+
+    async def join_thread(self, channel: snowflakes.SnowflakeishOr[channels_.GuildTextChannel], /) -> None:
+        route = routes.PUT_MY_THREAD_MEMBER.compile(channel=channel)
+        await self._request(route)
+
+    async def add_thread_member(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildThreadChannel],
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        /,
+    ) -> None:
+        route = routes.PUT_THREAD_MEMBER.compile(channel=channel, user=user)
+        await self._request(route)
+
+    async def leave_thread(self, channel: snowflakes.SnowflakeishOr[channels_.GuildThreadChannel]) -> None:
+        route = routes.DELETE_MY_THREAD_MEMBER.compile(channel=channel)
+        await self._request(route)
+
+    async def remove_thread_member(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildThreadChannel],
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        /,
+    ) -> None:
+        route = routes.DELETE_THREAD_MEMBER.compile(channel=channel, user=user)
+        await self._request(route)
+
+    async def fetch_thread_member(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildThreadChannel],
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        /,
+    ) -> channels_.ThreadMember:
+        route = routes.GET_THREAD_MEMBER.compile(channel=channel, user=user)
+        response = await self._request(route)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_thread_member(response)
+
+    async def fetch_thread_members(
+        self, channel: snowflakes.SnowflakeishOr[channels_.GuildThreadChannel], /
+    ) -> typing.Sequence[channels_.ThreadMember]:
+        route = routes.GET_THREAD_MEMBERS.compile(channel=channel)
+        response = await self._request(route)
+        assert isinstance(response, list)
+        return [self._entity_factory.deserialize_thread_member(member) for member in response]
+
+    async def fetch_active_threads(
+        self, guild: snowflakes.SnowflakeishOr[guilds.Guild], /
+    ) -> typing.Sequence[channels_.GuildThreadChannel]:
+        route = routes.GET_ACTIVE_THREADS.compile(guild=guild)
+        response = await self._request(route)
+        assert isinstance(response, dict)
+        members = {
+            member.thread_id: member
+            for member in map(self._entity_factory.deserialize_thread_member, response["members"])
+        }
+        return [
+            self._entity_factory.deserialize_guild_thread(
+                thread, member=members.get(snowflakes.Snowflake(thread["id"]))
+            )
+            for thread in response["threads"]
+        ]
+
+    def _deserialize_public_thread(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+        member: undefined.UndefinedNoneOr[channels_.ThreadMember] = undefined.UNDEFINED,
+    ) -> typing.Union[channels_.GuildNewsThread, channels_.GuildPublicThread]:
+        channel = self._entity_factory.deserialize_guild_thread(payload, guild_id=guild_id, member=member)
+        assert isinstance(channel, (channels_.GuildNewsThread, channels_.GuildPublicThread))
+        return channel
+
+    def fetch_public_archived_threads(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
+        /,
+        *,
+        before: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
+    ) -> iterators.LazyIterator[typing.Union[channels_.GuildNewsThread, channels_.GuildPublicThread]]:
+        return special_endpoints_impl.GuildThreadIterator(
+            deserialize=self._deserialize_public_thread,
+            entity_factory=self._entity_factory,
+            request_call=self._request,
+            route=routes.GET_PUBLIC_ARCHIVED_THREADS.compile(channel=channel),
+            before=before.isoformat() if before is not undefined.UNDEFINED else undefined.UNDEFINED,
+            before_is_timestamp=True,
+        )
+
+    def fetch_private_archived_threads(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
+        /,
+        *,
+        before: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
+    ) -> iterators.LazyIterator[channels_.GuildPrivateThread]:
+        return special_endpoints_impl.GuildThreadIterator(
+            deserialize=self._entity_factory.deserialize_guild_private_thread,
+            entity_factory=self._entity_factory,
+            request_call=self._request,
+            route=routes.GET_PRIVATE_ARCHIVED_THREADS.compile(channel=channel),
+            before=before.isoformat() if before is not undefined.UNDEFINED else undefined.UNDEFINED,
+            before_is_timestamp=True,
+        )
+
+    def fetch_joined_private_archived_threads(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
+        /,
+        *,
+        before: undefined.UndefinedOr[
+            snowflakes.SearchableSnowflakeishOr[channels_.GuildThreadChannel]
+        ] = undefined.UNDEFINED,
+    ) -> iterators.LazyIterator[channels_.GuildPrivateThread]:
+        if before is undefined.UNDEFINED:
+            start: undefined.UndefinedOr[str] = undefined.UNDEFINED
+
+        elif isinstance(before, datetime.datetime):
+            start = str(snowflakes.Snowflake.from_datetime(before))
+
+        else:
+            start = str(snowflakes.Snowflake(before))
+
+        return special_endpoints_impl.GuildThreadIterator(
+            deserialize=self._entity_factory.deserialize_guild_private_thread,
+            entity_factory=self._entity_factory,
+            request_call=self._request,
+            route=routes.GET_JOINED_PRIVATE_ARCHIVED_THREADS.compile(channel=channel),
+            before=start,
+            before_is_timestamp=False,
+        )
 
     async def reposition_channels(
         self,
@@ -2664,8 +3024,98 @@ class RESTClientImpl(rest_api.RESTClient):
         communication_disabled_until: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.Member:
+        """Edit a guild member.
+
+        Parameters
+        ----------
+        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+            The guild to edit. This may be the object
+            or the ID of an existing guild.
+        user : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+            The guild to edit. This may be the object
+            or the ID of an existing guild.
+
+        Other Parameters
+        ----------------
+        nickname : hikari.undefined.UndefinedNoneOr[builtins.str]
+            If provided, the new nick for the member. If `builtins.None`,
+            will remove the members nick.
+
+            Requires the `MANAGE_NICKNAMES` permission.
+        nick : hikari.undefined.UndefinedNoneOr[builtins.str]
+            Deprecated alias for `nickname`.
+
+            .. deprecated:: 2.0.0.dev104
+                Use `nickname` instead.
+        roles : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole]]
+            If provided, the new roles for the member.
+
+            Requires the `MANAGE_ROLES` permission.
+        mute : hikari.undefined.UndefinedOr[builtins.bool]
+            If provided, the new server mute state for the member.
+
+            Requires the `MUTE_MEMBERS` permission.
+        deaf : hikari.undefined.UndefinedOr[builtins.bool]
+            If provided, the new server deaf state for the member.
+
+            Requires the `DEAFEN_MEMBERS` permission.
+        voice_channel : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildVoiceChannel]]]
+            If provided, `builtins.None` or the object or the ID of
+            an existing voice channel to move the member to.
+            If `builtins.None`, will disconnect the member from voice.
+
+            Requires the `MOVE_MEMBERS` permission and the `CONNECT`
+            permission in the original voice channel and the target
+            voice channel.
+
+            !!! note
+                If the member is not in a voice channel, this will
+                take no effect.
+        communication_disabled_until : hikari.undefined.UndefinedNoneOr[datetime.datetime]
+            If provided, the datetime when the timeout (disable communication)
+            of the member expires, up to 28 days in the future, or `builtins.None`
+            to remove the timeout from the member.
+
+            Requires the `MODERATE_MEMBERS` permission.
+        reason : hikari.undefined.UndefinedOr[builtins.str]
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Returns
+        -------
+        hikari.guilds.Member
+            Object of the member that was updated.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you are missing a permission to do an action.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild or the user are not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
         if nick is not undefined.UNDEFINED:
-            deprecation.warn_deprecated("nick", alternative="nickname")
+            deprecation.warn_deprecated(
+                "nick",
+                removal_version="2.0.0.dev113",
+                additional_info="Use 'nickname' parameter instead",
+            )
             nickname = nick
 
         route = routes.PATCH_GUILD_MEMBER.compile(guild=guild, user=user)
@@ -2704,7 +3154,6 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_member(response, guild_id=snowflakes.Snowflake(guild))
 
-    @deprecation.deprecated("2.0.0.dev104", alternative="RESTClientImpl.edit_my_member's nickname parameter")
     async def edit_my_nick(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.Guild],
@@ -2712,6 +3161,53 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
+        """Edit the associated token's member nick.
+
+        .. deprecated:: 2.0.0.dev104
+            Use `RESTClient.edit_my_member`'s `nick` argument instead.
+
+        Parameters
+        ----------
+        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+            The guild to edit. This may be the object
+            or the ID of an existing guild.
+        nick : typing.Optional[builtins.str]
+            The new nick. If `builtins.None`,
+            will remove the nick.
+
+        Other Parameters
+        ----------------
+        reason : hikari.undefined.UndefinedOr[builtins.str]
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you are missing the `CHANGE_NICKNAME` permission.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        deprecation.warn_deprecated(
+            "edit_permission_overwrites",
+            removal_version="2.0.0.dev113",
+            additional_info="Use 'edit_my_member' with the nickname parameter instead.",
+        )
         await self.edit_my_member(guild, nickname=nick, reason=reason)
 
     async def add_role_to_member(
@@ -3159,8 +3655,31 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_template(response)
 
-    @deprecation.deprecated("2.0.0.dev106", "slash_command_builder")
     def command_builder(self, name: str, description: str) -> special_endpoints.SlashCommandBuilder:
+        r"""Create a slash command builder to use in `RESTClient.set_application_commands`.
+
+        .. deprecated:: 2.0.0.dev106
+            Use `RESTClient.slash_command_builder` instead.
+
+        Parameters
+        ----------
+        name : builtins.str
+            The command's name. This should match the regex `^[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$` in
+            Unicode mode and be lowercase.
+        description : builtins.str
+            The description to set for the command.
+            This should be inclusively between 1-100 characters in length.
+
+        Returns
+        -------
+        hikari.api.special_endpoints.SlashCommandBuilder
+            The created command builder object.
+        """
+        deprecation.warn_deprecated(
+            "command_builder",
+            removal_version="2.0.0.dev113",
+            additional_info="Use 'slash_command_builder' instead.",
+        )
         return self.slash_command_builder(name, description)
 
     def slash_command_builder(self, name: str, description: str) -> special_endpoints.SlashCommandBuilder:

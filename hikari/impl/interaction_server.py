@@ -27,7 +27,6 @@ __all__: typing.Sequence[str] = ("InteractionServer",)
 
 import asyncio
 import logging
-import threading
 import typing
 
 import aiohttp
@@ -341,12 +340,12 @@ class InteractionServer(interaction_server.InteractionServer):
 
             return aiohttp.web.Response(status=response.status_code, headers=response.headers, body=multipart)
 
-        headers = response.headers
-        if response.content_type:
-            headers = headers or {}
-            headers[_CONTENT_TYPE_KEY] = response.content_type
-
-        return aiohttp.web.Response(status=response.status_code, headers=headers, body=response.payload)
+        return aiohttp.web.Response(
+            status=response.status_code,
+            headers=response.headers,
+            body=response.payload,
+            content_type=response.content_type,
+        )
 
     async def close(self) -> None:
         """Gracefully close the server and any open connections."""
@@ -358,13 +357,14 @@ class InteractionServer(interaction_server.InteractionServer):
             return
 
         self._is_closing = True
-        self._application_fetch_lock = None
-        # This shutdown then cleanup ordering matters.
+        # This shut down then cleanup ordering matters.
         await self._server.shutdown()
         await self._server.cleanup()
+        self._server = None
+        self._application_fetch_lock = None
         self._close_event.set()
         self._close_event = None
-        self._server = None
+        self._is_closing = False
 
     async def join(self) -> None:
         """Wait for the process to halt before continuing."""
@@ -457,7 +457,6 @@ class InteractionServer(interaction_server.InteractionServer):
     async def start(
         self,
         backlog: int = 128,
-        enable_signal_handlers: typing.Optional[bool] = None,
         host: typing.Optional[typing.Union[str, typing.Sequence[str]]] = None,
         port: typing.Optional[int] = None,
         path: typing.Optional[str] = None,
@@ -474,16 +473,6 @@ class InteractionServer(interaction_server.InteractionServer):
         backlog : builtins.int
             The number of unaccepted connections that the system will allow before
             refusing new connections.
-        enable_signal_handlers : typing.Optional[builtins.bool]
-            Defaults to `builtins.True` if this is started in the main thread.
-
-            If on a __non-Windows__ OS with builtin support for kernel-level
-            POSIX signals, then setting this to `builtins.True` will allow
-            treating keyboard interrupts and other OS signals to safely shut
-            down the application as calls to shut down the application properly
-            rather than just killing the process in a dirty state immediately.
-            You should leave this enabled unless you plan to implement your own
-            signal handling yourself.
         host : typing.Optional[typing.Union[builtins.str, aiohttp.web.HostSequence]]
             TCP/IP host or a sequence of hosts for the HTTP server.
         port : typing.Optional[builtins.int]
@@ -499,7 +488,7 @@ class InteractionServer(interaction_server.InteractionServer):
         socket : typing.Optional[socket.socket]
             A pre-existing socket object to accept connections on.
         shutdown_timeout : builtins.float
-            A delay to wait for graceful server shutdown before forcefully
+            A delay to wait for graceful server shut down before forcefully
             disconnecting all open client sockets. This defaults to 60 seconds.
         ssl_context : typing.Optional[ssl.SSLContext]
             SSL context for HTTPS servers.
@@ -511,27 +500,26 @@ class InteractionServer(interaction_server.InteractionServer):
         if self._server:
             raise errors.ComponentStateConflictError("Cannot start an already active interaction server")
 
-        if enable_signal_handlers is None:
-            enable_signal_handlers = threading.current_thread() is threading.main_thread()
-
         self._close_event = asyncio.Event()
         self._is_closing = False
+
         aio_app = aiohttp.web.Application()
         aio_app.add_routes([aiohttp.web.post("/", self.aiohttp_hook)])
-        self._server = aiohttp.web_runner.AppRunner(aio_app, handle_signals=enable_signal_handlers, access_log=_LOGGER)
+        self._server = aiohttp.web_runner.AppRunner(aio_app, access_log=_LOGGER)
         await self._server.setup()
+
         sites: typing.List[aiohttp.web.BaseSite] = []
 
         if host is not None:
             if isinstance(host, str):
-                host = [host]
+                host = (host,)
 
             for h in host:
                 sites.append(
                     aiohttp.web.TCPSite(
                         self._server,
                         h,
-                        port,
+                        port=port,
                         shutdown_timeout=shutdown_timeout,
                         ssl_context=ssl_context,
                         backlog=backlog,
@@ -540,7 +528,7 @@ class InteractionServer(interaction_server.InteractionServer):
                     )
                 )
 
-        elif path is None and socket is None or port is None:
+        elif path is None and socket is None or port is not None:
             sites.append(
                 aiohttp.web.TCPSite(
                     self._server,

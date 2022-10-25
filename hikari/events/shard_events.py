@@ -144,6 +144,9 @@ class ShardReadyEvent(ShardStateEvent):
         The actual gateway version we are actively using for this protocol.
     """
 
+    resume_gateway_url: str = attr.field(repr=False)
+    """The URL to use to when reconnecting to the gateway."""
+
     session_id: str = attr.field(repr=True)
     """ID for this session.
 

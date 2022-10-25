@@ -66,6 +66,7 @@ from hikari import voices
 from hikari.api import cache
 from hikari.internal import attr_extensions
 from hikari.internal import collections
+from hikari.internal import deprecation
 
 if typing.TYPE_CHECKING:
     from hikari import applications
@@ -74,7 +75,7 @@ if typing.TYPE_CHECKING:
     from hikari import users as users_
     from hikari.interactions import base_interactions
 
-ChannelT = typing.TypeVar("ChannelT", bound="channels_.GuildChannel")
+ChannelT = typing.TypeVar("ChannelT", bound="channels_.PermissibleGuildChannel")
 DataT = typing.TypeVar("DataT", bound="BaseData[typing.Any]")
 """Type-hint for "data" objects used for storing and building entities."""
 KeyT = typing.TypeVar("KeyT", bound=typing.Hashable)
@@ -156,6 +157,11 @@ class CacheMappingView(cache.CacheView[KeyT, ValueT]):
         return collections.get_index_or_slice(self, index)
 
     def iterator(self) -> iterators.LazyIterator[ValueT]:
+        deprecation.warn_deprecated(
+            "iterator",
+            removal_version="2.0.0.dev113",
+            additional_info="Use the 'itertools' module instead",
+        )
         return iterators.FlatLazyIterator(self.values())
 
 
@@ -180,6 +186,11 @@ class EmptyCacheView(cache.CacheView[typing.Any, typing.Any]):
         raise IndexError(index)
 
     def iterator(self) -> iterators.LazyIterator[ValueT]:
+        deprecation.warn_deprecated(
+            "iterator",
+            removal_version="2.0.0.dev113",
+            additional_info="Use the 'itertools' module instead",
+        )
         return iterators.FlatLazyIterator(())
 
 

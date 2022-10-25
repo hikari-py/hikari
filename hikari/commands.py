@@ -489,7 +489,7 @@ class SlashCommand(PartialCommand):
 @attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
 class ContextMenuCommand(PartialCommand):
-    """Represents a slash command on Discord."""
+    """Represents a context menu command on Discord."""
 
 
 class CommandPermissionType(int, enums.Enum):

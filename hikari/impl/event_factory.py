@@ -95,7 +95,9 @@ class EventFactoryImpl(event_factory.EventFactory):
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> channel_events.GuildChannelCreateEvent:
         channel = self._app.entity_factory.deserialize_channel(payload)
-        assert isinstance(channel, channel_models.GuildChannel), "DM channel create events are undocumented behaviour"
+        assert isinstance(
+            channel, channel_models.PermissibleGuildChannel
+        ), "CHANNEL_CREATE events for threads and DMS are undocumented behaviour"
         return channel_events.GuildChannelCreateEvent(shard=shard, channel=channel)
 
     def deserialize_guild_channel_update_event(
@@ -103,17 +105,21 @@ class EventFactoryImpl(event_factory.EventFactory):
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
         *,
-        old_channel: typing.Optional[channel_models.GuildChannel] = None,
+        old_channel: typing.Optional[channel_models.PermissibleGuildChannel] = None,
     ) -> channel_events.GuildChannelUpdateEvent:
         channel = self._app.entity_factory.deserialize_channel(payload)
-        assert isinstance(channel, channel_models.GuildChannel), "DM channel update events are undocumented behaviour"
+        assert isinstance(
+            channel, channel_models.PermissibleGuildChannel
+        ), "CHANNEL_UPDATE events for threads and DMS are undocumented behaviour"
         return channel_events.GuildChannelUpdateEvent(shard=shard, channel=channel, old_channel=old_channel)
 
     def deserialize_guild_channel_delete_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> channel_events.GuildChannelDeleteEvent:
         channel = self._app.entity_factory.deserialize_channel(payload)
-        assert isinstance(channel, channel_models.GuildChannel), "DM channel delete events are undocumented behaviour"
+        assert isinstance(
+            channel, channel_models.PermissibleGuildChannel
+        ), "CHANNEL_DELETE events for threads and DMS are undocumented behaviour"
         return channel_events.GuildChannelDeleteEvent(shard=shard, channel=channel)
 
     def deserialize_channel_pins_update_event(
@@ -138,6 +144,97 @@ class EventFactoryImpl(event_factory.EventFactory):
 
         return channel_events.DMPinsUpdateEvent(
             app=self._app, shard=shard, channel_id=channel_id, last_pin_timestamp=last_pin_timestamp
+        )
+
+    def deserialize_guild_thread_create_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> channel_events.GuildThreadCreateEvent:
+        channel = self._app.entity_factory.deserialize_guild_thread(payload)
+        return channel_events.GuildThreadCreateEvent(shard=shard, thread=channel)
+
+    def deserialize_guild_thread_access_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> channel_events.GuildThreadAccessEvent:
+        channel = self._app.entity_factory.deserialize_guild_thread(payload)
+        return channel_events.GuildThreadAccessEvent(shard=shard, thread=channel)
+
+    def deserialize_guild_thread_update_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> channel_events.GuildThreadUpdateEvent:
+        channel = self._app.entity_factory.deserialize_guild_thread(payload)
+        return channel_events.GuildThreadUpdateEvent(shard=shard, thread=channel)
+
+    def deserialize_guild_thread_delete_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> channel_events.GuildThreadDeleteEvent:
+        return channel_events.GuildThreadDeleteEvent(
+            app=self._app,
+            shard=shard,
+            thread_id=snowflakes.Snowflake(payload["id"]),
+            guild_id=snowflakes.Snowflake(payload["guild_id"]),
+            parent_id=snowflakes.Snowflake(payload["parent_id"]),
+            type=channel_models.ChannelType(payload["type"]),
+        )
+
+    def deserialize_thread_members_update_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> channel_events.ThreadMembersUpdateEvent:
+        guild_id = snowflakes.Snowflake(payload["guild_id"])
+
+        added_members: typing.Dict[snowflakes.Snowflake, channel_models.ThreadMember] = {}
+        guild_members: typing.Dict[snowflakes.Snowflake, guild_models.Member] = {}
+        guild_presences: typing.Dict[snowflakes.Snowflake, presences_models.MemberPresence] = {}
+        if raw_added_members := payload.get("added_members"):
+            for member_payload in raw_added_members:
+                member = self._app.entity_factory.deserialize_thread_member(member_payload)
+                added_members[member.user_id] = member
+                if guild_member_payload := member_payload.get("member"):
+                    guild_members[member.user_id] = self._app.entity_factory.deserialize_member(
+                        guild_member_payload, guild_id=guild_id
+                    )
+
+                if presence_payload := member_payload.get("presence"):
+                    guild_presences[member.user_id] = self._app.entity_factory.deserialize_member_presence(
+                        presence_payload, guild_id=guild_id
+                    )
+
+        if raw_removed_members := payload.get("removed_member_ids"):
+            removed_member_ids = [snowflakes.Snowflake(m) for m in raw_removed_members]
+
+        else:
+            removed_member_ids = []
+
+        return channel_events.ThreadMembersUpdateEvent(
+            app=self._app,
+            shard=shard,
+            thread_id=snowflakes.Snowflake(payload["id"]),
+            guild_id=guild_id,
+            added_members=added_members,
+            removed_member_ids=removed_member_ids,
+            approximate_member_count=payload["member_count"],
+            guild_members=guild_members,
+            guild_presences=guild_presences,
+        )
+
+    def deserialize_thread_list_sync_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> channel_events.ThreadListSyncEvent:
+        guild_id = snowflakes.Snowflake(payload["guild_id"])
+        channel_ids: typing.Optional[typing.List[snowflakes.Snowflake]] = None
+        if raw_channel_ids := payload.get("channel_ids"):
+            channel_ids = [snowflakes.Snowflake(x) for x in raw_channel_ids]
+
+        members = {m.thread_id: m for m in map(self._app.entity_factory.deserialize_thread_member, payload["members"])}
+        threads: typing.Dict[snowflakes.Snowflake, channel_models.GuildThreadChannel] = {}
+        for thread_payload in payload["threads"]:
+            thread_id = snowflakes.Snowflake(thread_payload["id"])
+            thread = self._app.entity_factory.deserialize_guild_thread(
+                thread_payload, guild_id=guild_id, member=members.get(thread_id)
+            )
+            threads[thread.id] = thread
+
+        return channel_events.ThreadListSyncEvent(
+            app=self._app, shard=shard, guild_id=guild_id, channel_ids=channel_ids, threads=threads
         )
 
     def deserialize_webhook_update_event(
@@ -208,7 +305,7 @@ class EventFactoryImpl(event_factory.EventFactory):
     def deserialize_guild_available_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> guild_events.GuildAvailableEvent:
-        guild_information = self._app.entity_factory.deserialize_gateway_guild(payload)
+        guild_information = self._app.entity_factory.deserialize_gateway_guild(payload, user_id=shard.get_user_id())
         return guild_events.GuildAvailableEvent(
             shard=shard,
             guild=guild_information.guild(),
@@ -218,13 +315,14 @@ class EventFactoryImpl(event_factory.EventFactory):
             members=guild_information.members(),
             presences=guild_information.presences(),
             stickers=guild_information.stickers(),
+            threads=guild_information.threads(),
             voice_states=guild_information.voice_states(),
         )
 
     def deserialize_guild_join_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> guild_events.GuildJoinEvent:
-        guild_information = self._app.entity_factory.deserialize_gateway_guild(payload)
+        guild_information = self._app.entity_factory.deserialize_gateway_guild(payload, user_id=shard.get_user_id())
         return guild_events.GuildJoinEvent(
             shard=shard,
             guild=guild_information.guild(),
@@ -234,6 +332,7 @@ class EventFactoryImpl(event_factory.EventFactory):
             members=guild_information.members(),
             presences=guild_information.presences(),
             stickers=guild_information.stickers(),
+            threads=guild_information.threads(),
             voice_states=guild_information.voice_states(),
         )
 
@@ -244,7 +343,7 @@ class EventFactoryImpl(event_factory.EventFactory):
         *,
         old_guild: typing.Optional[guild_models.GatewayGuild] = None,
     ) -> guild_events.GuildUpdateEvent:
-        guild_information = self._app.entity_factory.deserialize_gateway_guild(payload)
+        guild_information = self._app.entity_factory.deserialize_gateway_guild(payload, user_id=shard.get_user_id())
         return guild_events.GuildUpdateEvent(
             shard=shard,
             guild=guild_information.guild(),
@@ -762,17 +861,13 @@ class EventFactoryImpl(event_factory.EventFactory):
     def deserialize_ready_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> shard_events.ShardReadyEvent:
-        gateway_version = int(payload["v"])
-        my_user = self._app.entity_factory.deserialize_my_user(payload["user"])
-        unavailable_guilds = [snowflakes.Snowflake(guild["id"]) for guild in payload["guilds"]]
-        session_id = payload["session_id"]
-
         return shard_events.ShardReadyEvent(
             shard=shard,
-            actual_gateway_version=gateway_version,
-            session_id=session_id,
-            my_user=my_user,
-            unavailable_guilds=unavailable_guilds,
+            actual_gateway_version=int(payload["v"]),
+            resume_gateway_url=payload["resume_gateway_url"],
+            session_id=payload["session_id"],
+            my_user=self._app.entity_factory.deserialize_my_user(payload["user"]),
+            unavailable_guilds=[snowflakes.Snowflake(guild["id"]) for guild in payload["guilds"]],
             application_id=snowflakes.Snowflake(payload["application"]["id"]),
             application_flags=application_models.ApplicationFlags(int(payload["application"]["flags"])),
         )

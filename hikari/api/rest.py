@@ -26,6 +26,7 @@ from __future__ import annotations
 __all__: typing.Sequence[str] = ("RESTClient", "TokenStrategy")
 
 import abc
+import datetime
 import typing
 
 from hikari import scheduled_events
@@ -33,8 +34,6 @@ from hikari import traits
 from hikari import undefined
 
 if typing.TYPE_CHECKING:
-    import datetime
-
     from hikari import applications
     from hikari import audit_logs
     from hikari import channels as channels_
@@ -219,6 +218,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         parent_category: undefined.UndefinedOr[
             snowflakes.SnowflakeishOr[channels_.GuildCategory]
         ] = undefined.UNDEFINED,
+        default_auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        archived: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        locked: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        invitable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.PartialChannel:
         """Edit a channel.
@@ -256,6 +260,29 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the new permission overwrites for the channel.
         parent_category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
             If provided, the new guild category for the channel.
+        default_auto_archive_duration : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
+            If provided, the auto archive duration Discord's end user client
+            should default to when creating threads in this channel.
+
+            This should be either 60, 1440, 4320 or 10080 seconds and, as of
+            writing, ignores the parent channel's set default_auto_archive_duration
+            when passed as `hikari.undefined.UNDEFINED`.
+        archived : hikari.undefined.UndefinedOr[builtins.bool]
+            If provided, whether to archive or unarchive this thread channel.
+        locked : hikari.undefined.UndefinedOr[builtins.bool]
+            If provided, whether to lock or unlock this thread channel.
+
+            If it's locked then only people with `MANAGE_THREADS` can unarchive it.
+        invitable : undefined.UndefinedOr[builtins.bool]
+            If provided, whether non-moderators should be able to add other non-moderators to the thread.
+
+            This only applies to private threads.
+        auto_archive_duration : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
+            If provided, how long the thread should remain inactive until it's archived.
+
+            This should be either 60, 1440, 4320 or 10080 seconds and, as of
+            writing, ignores the parent channel's set default_auto_archive_duration
+            when passed as `hikari.undefined.UNDEFINED`.
         reason : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -2207,6 +2234,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         token: str,
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
+        thread: typing.Union[
+            undefined.UndefinedType, snowflakes.SnowflakeishOr[channels_.GuildThreadChannel]
+        ] = undefined.UNDEFINED,
         username: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         avatar_url: typing.Union[undefined.UndefinedType, str, files.URL] = undefined.UNDEFINED,
         attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
@@ -2251,6 +2281,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
+        thread : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildThreadChannel]]
+            If provided then the message will be created in the target thread
+            within the webhook's channel, otherwise it will be created in
+            the webhook's target channel.
+
+            This is required when trying to create a thread message.
         username : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the username to override the webhook's username
             for this request.
@@ -2382,6 +2418,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         webhook: typing.Union[webhooks.ExecutableWebhook, snowflakes.Snowflakeish],
         token: str,
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
+        *,
+        thread: typing.Union[
+            undefined.UndefinedType, snowflakes.SnowflakeishOr[channels_.GuildThreadChannel]
+        ] = undefined.UNDEFINED,
     ) -> messages_.Message:
         """Fetch an old message sent by the webhook.
 
@@ -2395,6 +2435,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         message : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
             The message to fetch. This may be the object or the ID of an
             existing channel.
+
+        Other Parameters
+        ----------------
+        thread : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildThreadChannel]]
+            If provided then the message will be fetched from the target thread
+            within the webhook's channel, otherwise it will be fetched from
+            the webhook's target channel.
+
+            This is required when trying to fetch a thread message.
 
         Returns
         -------
@@ -2431,6 +2480,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         message: snowflakes.SnowflakeishOr[messages_.Message],
         content: undefined.UndefinedNoneOr[typing.Any] = undefined.UNDEFINED,
         *,
+        thread: typing.Union[
+            undefined.UndefinedType, snowflakes.SnowflakeishOr[channels_.GuildThreadChannel]
+        ] = undefined.UNDEFINED,
         attachment: undefined.UndefinedNoneOr[
             typing.Union[files.Resourceish, messages_.Attachment]
         ] = undefined.UNDEFINED,
@@ -2479,6 +2531,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
+        thread : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildThreadChannel]]
+            If provided then the message will be edited in the target thread
+            within the webhook's channel, otherwise it will be edited in
+            the webhook's target channel.
+
+            This is required when trying to edit a thread message.
         attachment : hikari.undefined.UndefinedNoneOr[typing.Union[hikari.files.Resourceish, hikari.messages.Attachment]]
             If provided, the attachment to set on the message. If
             `hikari.undefined.UNDEFINED`, the previous attachment, if
@@ -2599,6 +2657,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         webhook: typing.Union[webhooks.ExecutableWebhook, snowflakes.Snowflakeish],
         token: str,
         message: snowflakes.SnowflakeishOr[messages_.Message],
+        *,
+        thread: typing.Union[
+            undefined.UndefinedType, snowflakes.SnowflakeishOr[channels_.GuildThreadChannel]
+        ] = undefined.UNDEFINED,
     ) -> None:
         """Delete a given message in a given channel.
 
@@ -2612,6 +2674,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         message : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
             The message to delete. This may be the object or the ID of
             an existing message.
+
+        Other Parameters
+        ----------------
+        thread : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildThreadChannel]]
+            If provided then the message will be deleted from the target thread
+            within the webhook's channel, otherwise it will be deleted from
+            the webhook's target channel.
+
+            This is required when trying to delete a thread message.
 
         Raises
         ------
@@ -3239,7 +3310,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         *,
         nickname: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        nick: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
         mute: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         deaf: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -3269,11 +3339,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the nick to add to the user when he joins the guild.
 
             Requires the `MANAGE_NICKNAMES` permission on the guild.
-        nick : hikari.undefined.UndefinedOr[builtins.str]
-            Deprecated alias for `nickname`.
-
-            .. deprecated:: 2.0.0.dev106
-                Use `nickname` instead.
         roles : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole]]
             If provided, the roles to add to the user when he joins the guild.
             This may be a collection objects or IDs of existing roles.
@@ -4367,6 +4432,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             typing.Sequence[channels_.PermissionOverwrite]
         ] = undefined.UNDEFINED,
         category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
+        default_auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.GuildTextChannel:
         """Create a text channel in a guild.
@@ -4397,6 +4463,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
             The category to create the channel under. This may be the
             object or the ID of an existing category.
+        default_auto_archive_duration : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
+            If provided, the auto archive duration Discord's end user client
+            should default to when creating threads in this channel.
+
+            This should be either 60, 1440, 4320 or 10080 seconds and, as of
+            writing, ignores the parent channel's set default_auto_archive_duration
+            when passed as `hikari.undefined.UNDEFINED`.
         reason : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -4445,6 +4518,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             typing.Sequence[channels_.PermissionOverwrite]
         ] = undefined.UNDEFINED,
         category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
+        default_auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.GuildNewsChannel:
         """Create a news channel in a guild.
@@ -4475,6 +4549,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
             The category to create the channel under. This may be the
             object or the ID of an existing category.
+        default_auto_archive_duration : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
+            If provided, the auto archive duration Discord's end user client
+            should default to when creating threads in this channel.
+
+            This should be either 60, 1440, 4320 or 10080 seconds and, as of
+            writing, ignores the parent channel's set default_auto_archive_duration
+            when passed as `hikari.undefined.UNDEFINED`.
         reason : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -4739,6 +4820,608 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
+    async def create_message_thread(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
+        message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
+        name: str,
+        /,
+        *,
+        # While there is a "default archive duration" setting this doesn't seem to effect this context
+        # since it always defaults to 1440 minutes if auto_archive_duration is left undefined.
+        auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = datetime.timedelta(days=1),
+        rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> typing.Union[channels_.GuildPublicThread, channels_.GuildNewsThread]:
+        """Create a public or news thread on a message in a guild channel.
+
+        !!! note
+            This call may create a public or news thread dependent on the
+            target channel's type and cannot create private threads.
+
+        Parameters
+        ----------
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.PermissibleGuildChannel]
+            Object or ID of the guild news or text channel to create a public thread in.
+        message : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
+            Object or ID of the message to attach the created thread to.
+        name : builtins.str
+            Name of the thread channel.
+
+        Other Parameters
+        ----------------
+        auto_archive_duration : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
+            If provided, how long the thread should remain inactive until it's archived.
+
+            This should be either 60, 1440, 4320 or 10080 seconds and, as of
+            writing, ignores the parent channel's set default_auto_archive_duration
+            when passed as `hikari.undefined.UNDEFINED`.
+        rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
+            If provided, the amount of seconds a user has to wait
+            before being able to send another message in the channel.
+            Maximum 21600 seconds.
+
+        Returns
+        -------
+        typing.Union[hikari.channels.GuildPublicThread, hikari.channels.GuildNewsThread]
+            The created public or news thread channel.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you are missing the `CREATE_PUBLIC_THREADS` permission or if you
+            can't send messages in the target channel.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def create_thread(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
+        type: typing.Union[channels_.ChannelType, int],
+        name: str,
+        /,
+        *,
+        # While there is a "default archive duration" setting this doesn't seem to effect this context
+        # since it always defaults to 1440 minutes if auto_archive_duration is left undefined.
+        auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = datetime.timedelta(days=1),
+        invitable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> channels_.GuildThreadChannel:
+        """Create a thread in a guild channel.
+
+        !!! warning
+            Private and public threads can only be made in guild text channels,
+            and news threads can only be made in guild news channels.
+
+        Parameters
+        ----------
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.PermissibleGuildChannel]
+            Object or ID of the guild news or text channel to create a thread in.
+        name : builtins.str
+            Name of the thread channel.
+
+        Other Parameters
+        ----------------
+        auto_archive_duration : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
+            If provided, how long the thread should remain inactive until it's archived.
+
+            This should be either 60, 1440, 4320 or 10080 seconds and, as of
+            writing, ignores the parent channel's set default_auto_archive_duration
+            when passed as `hikari.undefined.UNDEFINED`.
+        invitable : undefined.UndefinedOr[builtins.bool]
+            If provided, whether non-moderators should be able to add other non-moderators to the thread.
+
+            This only applies to private threads.
+        rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
+            If provided, the amount of seconds a user has to wait
+            before being able to send another message in the channel.
+            Maximum 21600 seconds.
+
+        Returns
+        -------
+        hikari.channels.GuildThreadChannel
+            The created thread channel.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you are missing the `CREATE_PUBLIC_THREADS` permission or if you
+            can't send messages in the target channel.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def join_thread(self, channel: snowflakes.SnowflakeishOr[channels_.GuildTextChannel], /) -> None:
+        """Join a thread channel.
+
+        Parameters
+        ----------
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildTextChannel]
+            Object or ID of the thread channel to join.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you cannot join this thread.
+        hikari.errors.NotFoundError
+            If the thread channel does not exist.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def add_thread_member(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildThreadChannel],
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        /,
+    ) -> None:
+        """Add a user to a thread channel.
+
+        Parameters
+        ----------
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildTextChannel]
+            Object or ID of the thread channel to add a member to.
+        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
+            Object or ID of the user to add to the thread.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you cannot add a user to this thread.
+        hikari.errors.NotFoundError
+            If the thread channel doesn't exist.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def leave_thread(self, channel: snowflakes.SnowflakeishOr[channels_.GuildThreadChannel], /) -> None:
+        """Leave a thread channel.
+
+        Parameters
+        ----------
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildTextChannel]
+            Object or ID of the thread channel to leave.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.NotFoundError
+            If you're not in the thread or it doesn't exist.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def remove_thread_member(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildThreadChannel],
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        /,
+    ) -> None:
+        """Remove a user from a thread.
+
+        Parameters
+        ----------
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildTextChannel]
+            Object or ID of the thread channel to remove a user from.
+        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
+            Object or ID of the user to remove from the thread.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you cannot remove this user from the thread.
+        hikari.errors.NotFoundError
+            If the thread channel or member doesn't exist.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def fetch_thread_member(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildThreadChannel],
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        /,
+    ) -> channels_.ThreadMember:
+        """Fetch a thread member.
+
+        Parameters
+        ----------
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildTextChannel]
+            Object or ID of the thread channel to fetch the member of.
+        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
+            Object or ID of the user to fetch the thread member of.
+
+        Returns
+        -------
+        hikari.channels.ThreadMember
+            The thread member.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you access the thread.
+        hikari.errors.NotFoundError
+            If the thread channel or member doesn't exist.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def fetch_thread_members(
+        self, channel: snowflakes.SnowflakeishOr[channels_.GuildThreadChannel], /
+    ) -> typing.Sequence[channels_.ThreadMember]:
+        """Fetch a thread's members.
+
+        Parameters
+        ----------
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildTextChannel]
+            Object or ID of the thread channel to fetch the members of.
+
+        Returns
+        -------
+        typing.Sequence[hikari.channels.ThreadMember]
+            A sequence of the thread's members.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you access the thread.
+        hikari.errors.NotFoundError
+            If the thread channel doesn't exist.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def fetch_active_threads(
+        self, guild: snowflakes.SnowflakeishOr[guilds.Guild], /
+    ) -> typing.Sequence[channels_.GuildThreadChannel]:
+        """Fetch a guild's active threads.
+
+        Parameters
+        ----------
+        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.Guild]
+            Object or ID of the guild to fetch the active threads of.
+
+        Returns
+        -------
+        typing.Sequence[hikari.channels.GuildThreadChannel]
+            A sequence of the guild's active threads.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you access the guild's active threads.
+        hikari.errors.NotFoundError
+            If the guild doesn't exist.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    def fetch_public_archived_threads(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
+        /,
+        *,
+        before: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
+    ) -> iterators.LazyIterator[typing.Union[channels_.GuildNewsThread, channels_.GuildPublicThread]]:
+        """Fetch a channel's public archived threads.
+
+        !!! note
+            The exceptions on this endpoint will only be raised once the
+            result is awaited or iterated over. Invoking this function
+            itself will not raise anything.
+
+        Parameters
+        ----------
+        channel : hikari.undefined.UndefinedOr[hikari.channels.PermissibleGuildChannel]
+            Object or ID of the channel to fetch the archived threads of.
+
+        Other Parameters
+        ----------------
+        before : hikari.undefined.UndefinedOr[datetime.datetime]
+            The date to fetch threads before.
+
+            This is based on the thread's `archive_timestamp` field.
+
+        Returns
+        -------
+        hikari.iterators.LazyIterator[typing.Union[hikari.channels.GuildNewsChannel, hikari.channels.GuildPublicThread]]
+            An iterator to fetch the threads.
+
+            !!! note
+                This call is not a coroutine function, it returns a special type of
+                lazy iterator that will perform API calls as you iterate across it.
+                See `hikari.iterators` for the full API for this iterator type.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you cannot access the channel.
+        hikari.errors.NotFoundError
+            If the channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """  # noqa: E501 - Line too long
+
+    @abc.abstractmethod
+    def fetch_private_archived_threads(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
+        /,
+        *,
+        before: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
+    ) -> iterators.LazyIterator[channels_.GuildPrivateThread]:
+        """Fetch a channel's private archived threads.
+
+        !!! note
+            The exceptions on this endpoint will only be raised once the
+            result is awaited or iterated over. Invoking this function
+            itself will not raise anything.
+
+        Parameters
+        ----------
+        channel : hikari.undefined.UndefinedOr[hikari.channels.PermissibleGuildChannel]
+            Object or ID of the channel to fetch the private archived threads of.
+
+        Other Parameters
+        ----------------
+        before : hikari.undefined.UndefinedOr[datetime.datetime]
+            The date to fetch threads before.
+
+            This is based on the thread's `archive_timestamp` field.
+
+        Returns
+        -------
+        hikari.iterators.LazyIterator[hikari.channels.GuildPrivateThread]
+            An iterator to fetch the threads.
+
+            !!! note
+                This call is not a coroutine function, it returns a special type of
+                lazy iterator that will perform API calls as you iterate across it.
+                See `hikari.iterators` for the full API for this iterator type.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you do not have `MANAGE_THREADS` in the target channel.
+        hikari.errors.NotFoundError
+            If the channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """  # noqa: E501 - Line too long
+
+    @abc.abstractmethod
+    def fetch_joined_private_archived_threads(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
+        /,
+        *,
+        before: undefined.UndefinedOr[
+            snowflakes.SearchableSnowflakeishOr[channels_.GuildThreadChannel]
+        ] = undefined.UNDEFINED,
+    ) -> iterators.LazyIterator[channels_.GuildPrivateThread]:
+        """Fetch the private archived threads you have joined in a channel.
+
+        !!! note
+            The exceptions on this endpoint will only be raised once the
+            result is awaited or iterated over. Invoking this function
+            itself will not raise anything.
+
+        Parameters
+        ----------
+        channel : hikari.undefined.UndefinedOr[hikari.channels.PermissibleGuildChannel]
+            Object or ID of the channel to fetch the private archived threads of.
+
+        Other Parameters
+        ----------------
+        before : hikari.undefined.UndefinedOr[hikari.snowflakes.SearchableSnowflakeishOr[hikari.channels.GuildThreadChannel]]
+            If provided, fetch joined threads before this snowflake. If you
+            provide a datetime object, it will be transformed into a snowflake.
+
+        Returns
+        -------
+        hikari.iterators.LazyIterator[hikari.channels.GuildPrivateThread]
+            An iterator to fetch the threads.
+
+            !!! note
+                This call is not a coroutine function, it returns a special type of
+                lazy iterator that will perform API calls as you iterate across it.
+                See `hikari.iterators` for the full API for this iterator type.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you cannot access the channel.
+        hikari.errors.NotFoundError
+            If the channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """  # noqa: E501 - Line too long
+
+    @abc.abstractmethod
     async def reposition_channels(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -4964,7 +5647,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         *,
         nickname: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
-        nick: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
         roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
         mute: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         deaf: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -4992,11 +5674,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             will remove the members nick.
 
             Requires the `MANAGE_NICKNAMES` permission.
-        nick : hikari.undefined.UndefinedOr[builtins.str]
-            Deprecated alias for `nickname`.
-
-            .. deprecated:: 2.0.0.dev104
-                Use `nickname` instead.
         roles : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole]]
             If provided, the new roles for the member.
 
@@ -5098,57 +5775,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If any of the fields that are passed have an invalid value.
         hikari.errors.ForbiddenError
             If you are missing a permission to do an action.
-        hikari.errors.UnauthorizedError
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.NotFoundError
-            If the guild is not found.
-        hikari.errors.RateLimitTooLongError
-            Raised in the event that a rate limit occurs that is
-            longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
-        hikari.errors.InternalServerError
-            If an internal error occurs on Discord while handling the request.
-        """
-
-    @abc.abstractmethod
-    async def edit_my_nick(
-        self,
-        guild: snowflakes.SnowflakeishOr[guilds.Guild],
-        nick: typing.Optional[str],
-        *,
-        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> None:
-        """Edit the associated token's member nick.
-
-        .. deprecated:: 2.0.0.dev104
-            Use `RESTClient.edit_my_member`'s `nick` argument instead.
-
-        Parameters
-        ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
-            The guild to edit. This may be the object
-            or the ID of an existing guild.
-        nick : typing.Optional[builtins.str]
-            The new nick. If `builtins.None`,
-            will remove the nick.
-
-        Other Parameters
-        ----------------
-        reason : hikari.undefined.UndefinedOr[builtins.str]
-            If provided, the reason that will be recorded in the audit logs.
-            Maximum of 512 characters.
-
-        Raises
-        ------
-        hikari.errors.ForbiddenError
-            If you are missing the `CHANGE_NICKNAME` permission.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
@@ -6643,34 +7269,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    def command_builder(self, name: str, description: str) -> special_endpoints.SlashCommandBuilder:
-        r"""Create a slash command builder for use in `RESTClient.set_application_commands`.
-
-        .. deprecated:: 2.0.0.dev106
-            Use `RESTClient.slash_command_builder` instead.
-
-        Parameters
-        ----------
-        name : builtins.str
-            The command's name. This should match the regex `^[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$` in
-            Unicode mode and be lowercase.
-        description : builtins.str
-            The description to set for the command.
-            This should be inclusively between 1-100 characters in length.
-
-        Returns
-        -------
-        hikari.api.special_endpoints.SlashCommandBuilder
-            The created command builder object.
-        """
-
-    @abc.abstractmethod
     def slash_command_builder(
         self,
         name: str,
         description: str,
     ) -> special_endpoints.SlashCommandBuilder:
-        r"""Create a command builder for use in `RESTClient.set_application_commands`.
+        r"""Create a command builder to use in `RESTClient.set_application_commands`.
 
         Parameters
         ----------
@@ -6693,7 +7297,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         type: typing.Union[commands.CommandType, int],
         name: str,
     ) -> special_endpoints.ContextMenuCommandBuilder:
-        r"""Create a command builder for use in `RESTClient.set_application_commands`.
+        r"""Create a command builder to use in `RESTClient.set_application_commands`.
 
         Parameters
         ----------
@@ -6854,7 +7458,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         name_localizations : hikari.undefined.UndefinedOr[typing.Mapping[typing.Union[hikari.locales.Locale, str], str]]
             The name localizations for this command.
         description_localizations : hikari.undefined.UndefinedOr[typing.Mapping[typing.Union[hikari.locales.Locale, str], str]]
-            The name localizations for this command.
+            The description localizations for this command.
         default_member_permissions : typing.Union[hikari.undefined.UndefinedType, int, hikari.permissions.Permissions]
             Member permissions necessary to utilize this command by default.
 

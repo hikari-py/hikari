@@ -923,6 +923,9 @@ class Member(users.User):
             Requires the `MANAGE_NICKNAMES` permission.
         nick : hikari.undefined.UndefinedNoneOr[builtins.str]
             Deprecated alias for `nickname`.
+
+            .. deprecated:: 2.0.0.dev104
+                Use `nickname` instead.
         roles : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole]]
             If provided, the new roles for the member.
 
@@ -987,7 +990,11 @@ class Member(users.User):
             If an internal error occurs on Discord while handling the request.
         """
         if nick is not undefined.UNDEFINED:
-            deprecation.warn_deprecated("nick", alternative="nickname")
+            deprecation.warn_deprecated(
+                "nick",
+                removal_version="2.0.0.dev113",
+                additional_info="Use 'nickname' parameter instead",
+            )
             nickname = nick
 
         return await self.user.app.rest.edit_member(
@@ -2852,7 +2859,7 @@ class Guild(PartialGuild):
 
         return self.app.cache.get_presences_view_for_guild(self.id)
 
-    def get_channels(self) -> typing.Mapping[snowflakes.Snowflake, channels_.GuildChannel]:
+    def get_channels(self) -> typing.Mapping[snowflakes.Snowflake, channels_.PermissibleGuildChannel]:
         """Get the channels cached for the guild.
 
         Returns
@@ -3032,7 +3039,7 @@ class Guild(PartialGuild):
     def get_channel(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.PartialChannel],
-    ) -> typing.Optional[channels_.GuildChannel]:
+    ) -> typing.Optional[channels_.PermissibleGuildChannel]:
         """Get a cached channel that belongs to the guild by it's ID or object.
 
         Parameters
