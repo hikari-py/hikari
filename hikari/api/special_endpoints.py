@@ -684,7 +684,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def attachments(self) -> undefined.UndefinedOr[typing.Sequence[files.Resourceish]]:
+    def attachments(self) -> undefined.UndefinedNoneOr[typing.Sequence[files.Resourceish]]:
         """Sequence of up to 10 attachments to send with the message."""
 
     @property
@@ -779,6 +779,19 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
             `builtins.False` or `hikari.undefined.UNDEFINED` to disallow any user
             mentions or `True` to allow all user mentions.
         """  # noqa: E501 - Line too long
+
+    @abc.abstractmethod
+    def clear_attachments(self: _T, /) -> _T:
+        """Clears attachments for this response.
+
+        This is only useful for message update responses, where you might want to
+        remove all existing attachments.
+
+        Returns
+        -------
+        InteractionMessageBuilder
+            Object of this builder.
+        """
 
     @abc.abstractmethod
     def add_attachment(self: _T, attachment: files.Resourceish, /) -> _T:

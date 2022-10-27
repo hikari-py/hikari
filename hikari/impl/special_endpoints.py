@@ -1015,7 +1015,7 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
     _user_mentions: undefined.UndefinedOr[
         typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
     ] = attr.field(default=undefined.UNDEFINED, kw_only=True)
-    _attachments: undefined.UndefinedOr[typing.List[files.Resourceish]] = attr.field(
+    _attachments: undefined.UndefinedNoneOr[typing.List[files.Resourceish]] = attr.field(
         default=undefined.UNDEFINED, kw_only=True
     )
     _components: undefined.UndefinedOr[typing.List[special_endpoints.ComponentBuilder]] = attr.field(
@@ -1024,8 +1024,8 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
     _embeds: undefined.UndefinedOr[typing.List[embeds_.Embed]] = attr.field(default=undefined.UNDEFINED, kw_only=True)
 
     @property
-    def attachments(self) -> undefined.UndefinedOr[typing.Sequence[files.Resourceish]]:
-        return self._attachments.copy() if self._attachments is not undefined.UNDEFINED else undefined.UNDEFINED
+    def attachments(self) -> undefined.UndefinedNoneOr[typing.Sequence[files.Resourceish]]:
+        return self._attachments.copy() if self._attachments else self._attachments
 
     @property
     def content(self) -> undefined.UndefinedOr[str]:
@@ -1067,10 +1067,14 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
     ) -> undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]]:
         return self._user_mentions
 
+    def clear_attachments(self: _InteractionMessageBuilderT, /) -> _InteractionMessageBuilderT:
+        self._attachments = None
+        return self
+
     def add_attachment(
         self: _InteractionMessageBuilderT, attachment: files.Resourceish, /
     ) -> _InteractionMessageBuilderT:
-        if self._attachments is undefined.UNDEFINED:
+        if not self._attachments:
             self._attachments = []
 
         self._attachments.append(attachment)
@@ -1140,11 +1144,22 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
         data = data_binding.JSONObjectBuilder()
         data.put("content", self.content)
 
+        final_attachments = []
         if self._attachments:
-            final_attachments = [files.ensure_resource(attachment) for attachment in self._attachments]
+            attachments_payload = []
 
-        else:
-            final_attachments = []
+            for f in self._attachments:
+                if isinstance(f, messages.Attachment):
+                    attachments_payload.append({"id": f.id, "filename": f.filename})
+                    continue
+
+                final_attachments.append(files.ensure_resource(f))
+
+            if attachments_payload:
+                data.put("attachments", attachments_payload)
+
+        elif self._attachments is None:
+            data.put("attachments", None)
 
         if self._embeds is not undefined.UNDEFINED:
             embeds: typing.List[data_binding.JSONObject] = []
