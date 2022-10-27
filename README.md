@@ -18,7 +18,7 @@ Gateway.
 Built on good intentions and the hope that it will be extendable and reusable, rather than an obstacle for future
 development.
 
-Python 3.8, 3.9 and 3.10 and 3.11-dev are currently supported.
+Python 3.8, 3.9 and 3.10 and 3.11 are currently supported.
 
 ## Installation
 
