@@ -782,7 +782,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
     @abc.abstractmethod
     def clear_attachments(self: _T, /) -> _T:
-        """Clears attachments for this response.
+        """Clear attachments for this response.
 
         This is only useful for message update responses, where you might want to
         remove all existing attachments.
