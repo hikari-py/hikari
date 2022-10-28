@@ -1444,6 +1444,7 @@ class RESTClientImpl(rest_api.RESTClient):
         role_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
+        flags: typing.Union[undefined.UndefinedType, int, messages_.MessageFlag] = undefined.UNDEFINED,
     ) -> messages_.Message:
         route = routes.POST_CHANNEL_MESSAGES.compile(channel=channel)
         body, form_builder = self._build_message_payload(
@@ -1459,6 +1460,7 @@ class RESTClientImpl(rest_api.RESTClient):
             mentions_reply=mentions_reply,
             user_mentions=user_mentions,
             role_mentions=role_mentions,
+            flags=flags,
         )
         body.put("message_reference", reply, conversion=lambda m: {"message_id": str(int(m))})
 

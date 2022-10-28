@@ -2510,6 +2510,7 @@ class TestRESTClientImplAsync:
             user_mentions=[9876],
             role_mentions=[1234],
             reply=StubModel(987654321),
+            flags=54123,
         )
         assert returned is rest_client._entity_factory.deserialize_message.return_value
 
@@ -2526,6 +2527,7 @@ class TestRESTClientImplAsync:
             mentions_reply=undefined.UNDEFINED,
             user_mentions=[9876],
             role_mentions=[1234],
+            flags=54123,
         )
         mock_form.add_field.assert_called_once_with(
             "payload_json",
@@ -2562,6 +2564,7 @@ class TestRESTClientImplAsync:
             user_mentions=[9876],
             role_mentions=[1234],
             reply=StubModel(987654321),
+            flags=6643,
         )
         assert returned is rest_client._entity_factory.deserialize_message.return_value
 
@@ -2578,6 +2581,7 @@ class TestRESTClientImplAsync:
             mentions_reply=undefined.UNDEFINED,
             user_mentions=[9876],
             role_mentions=[1234],
+            flags=6643,
         )
         rest_client._request.assert_awaited_once_with(
             expected_route,

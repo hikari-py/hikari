@@ -200,9 +200,9 @@ class ExecutableWebhook(abc.ABC):
             The flags to set for this webhook message.
 
             !!! warning
-                As of writing this can only be set for interaction webhooks
-                and the only settable flag is EPHEMERAL; this field is just
-                ignored for non-interaction webhooks.
+                As of writing the only flags which can be passed here are
+                `EPHEMERAL` (if this is an interaction response webhook) and
+                `SUPPRESS_EMBEDS`.
 
         !!! warning
             As of writing, `username` and `avatar_url` are ignored for
