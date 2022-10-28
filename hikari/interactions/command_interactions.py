@@ -270,7 +270,7 @@ class BaseCommandInteraction(base_interactions.PartialInteraction):
         """
         if isinstance(self.app, traits.CacheAware):
             channel = self.app.cache.get_guild_channel(self.channel_id)
-            assert isinstance(channel, channels.TextableGuildChannel)
+            assert channel is None or isinstance(channel, channels.TextableGuildChannel)
             return channel
 
         return None

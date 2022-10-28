@@ -111,8 +111,6 @@ class _GuildChannelFields:
     name: typing.Optional[str] = attr.field()
     type: typing.Union[channel_models.ChannelType, int] = attr.field()
     guild_id: snowflakes.Snowflake = attr.field()
-    position: int = attr.field()
-    permission_overwrites: typing.Dict[snowflakes.Snowflake, channel_models.PermissionOverwrite] = attr.field()
     is_nsfw: typing.Optional[bool] = attr.field()
     parent_id: typing.Optional[snowflakes.Snowflake] = attr.field()
 
@@ -240,13 +238,14 @@ class _UserFields:
 
 
 @attr_extensions.with_copy
-@attr.define(weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class _GatewayGuildDefinition(entity_factory.GatewayGuildDefinition):
     id: snowflakes.Snowflake = attr.field()
     _payload: data_binding.JSONObject = attr.field()
     _entity_factory: EntityFactoryImpl = attr.field()
+    _user_id: snowflakes.Snowflake = attr.field()
     # These will get deserialized as needed
-    _channels: UndefinedSnowflakeMapping[channel_models.GuildChannel] = attr.field(
+    _channels: UndefinedSnowflakeMapping[channel_models.PermissibleGuildChannel] = attr.field(
         init=False, default=undefined.UNDEFINED
     )
     _guild: undefined.UndefinedOr[guild_models.GatewayGuild] = attr.field(init=False, default=undefined.UNDEFINED)
@@ -261,11 +260,14 @@ class _GatewayGuildDefinition(entity_factory.GatewayGuildDefinition):
         init=False, default=undefined.UNDEFINED
     )
     _roles: UndefinedSnowflakeMapping[guild_models.Role] = attr.field(init=False, default=undefined.UNDEFINED)
+    _threads: UndefinedSnowflakeMapping[channel_models.GuildThreadChannel] = attr.field(
+        init=False, default=undefined.UNDEFINED
+    )
     _voice_states: UndefinedSnowflakeMapping[voice_models.VoiceState] = attr.field(
         init=False, default=undefined.UNDEFINED
     )
 
-    def channels(self) -> typing.Mapping[snowflakes.Snowflake, channel_models.GuildChannel]:
+    def channels(self) -> typing.Mapping[snowflakes.Snowflake, channel_models.PermissibleGuildChannel]:
         if self._channels is undefined.UNDEFINED:
             if "channels" not in self._payload:
                 raise LookupError("'channels' not in payload")
@@ -279,7 +281,7 @@ class _GatewayGuildDefinition(entity_factory.GatewayGuildDefinition):
                     # Ignore the channel, this has already been logged
                     continue
 
-                assert isinstance(channel, channel_models.GuildChannel)
+                assert isinstance(channel, channel_models.PermissibleGuildChannel)
                 self._channels[channel.id] = channel
 
         return self._channels
@@ -380,6 +382,26 @@ class _GatewayGuildDefinition(entity_factory.GatewayGuildDefinition):
 
         return self._roles
 
+    def threads(self) -> typing.Mapping[snowflakes.Snowflake, channel_models.GuildThreadChannel]:
+        if self._threads is undefined.UNDEFINED:
+            if "threads" not in self._payload:
+                raise LookupError("'threads' not in payload")
+
+            self._threads = {}
+
+            for thread_payload in self._payload["threads"]:
+                try:
+                    thread = self._entity_factory.deserialize_guild_thread(
+                        thread_payload, guild_id=self.id, user_id=self._user_id
+                    )
+                except errors.UnrecognisedEntityError:
+                    # Ignore the channel, this has already been logged
+                    continue
+
+                self._threads[thread.id] = thread
+
+        return self._threads
+
     def voice_states(self) -> typing.Mapping[snowflakes.Snowflake, voice_models.VoiceState]:
         if self._voice_states is undefined.UNDEFINED:
             if "voice_states" not in self._payload:
@@ -413,6 +435,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         "_component_type_mapping",
         "_dm_channel_type_mapping",
         "_guild_channel_type_mapping",
+        "_thread_channel_type_mapping",
         "_interaction_type_mapping",
         "_scheduled_event_type_mapping",
         "_webhook_type_mapping",
@@ -435,6 +458,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             audit_log_models.AuditLogChangeKey.WIDGET_CHANNEL_ID: snowflakes.Snowflake,
             audit_log_models.AuditLogChangeKey.POSITION: int,
             audit_log_models.AuditLogChangeKey.BITRATE: int,
+            audit_log_models.AuditLogChangeKey.DEFAULT_AUTO_ARCHIVE_DURATION: lambda v: datetime.timedelta(minutes=v),
+            audit_log_models.AuditLogChangeKey.AUTO_ARCHIVE_DURATION: lambda v: datetime.timedelta(minutes=v),
             audit_log_models.AuditLogChangeKey.APPLICATION_ID: snowflakes.Snowflake,
             audit_log_models.AuditLogChangeKey.PERMISSIONS: _with_int_cast(permission_models.Permissions),
             audit_log_models.AuditLogChangeKey.COLOR: color_models.Color,
@@ -498,6 +523,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             channel_models.ChannelType.GUILD_NEWS: self.deserialize_guild_news_channel,
             channel_models.ChannelType.GUILD_VOICE: self.deserialize_guild_voice_channel,
             channel_models.ChannelType.GUILD_STAGE: self.deserialize_guild_stage_channel,
+        }
+        self._thread_channel_type_mapping = {
+            channel_models.ChannelType.GUILD_NEWS_THREAD: self.deserialize_guild_news_thread,
+            channel_models.ChannelType.GUILD_PUBLIC_THREAD: self.deserialize_guild_public_thread,
+            channel_models.ChannelType.GUILD_PRIVATE_THREAD: self.deserialize_guild_private_thread,
         }
         self._interaction_type_mapping: typing.Dict[
             int, typing.Callable[[data_binding.JSONObject], base_interactions.PartialInteraction]
@@ -787,6 +817,16 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         }
         users = {snowflakes.Snowflake(user["id"]): self.deserialize_user(user) for user in payload["users"]}
 
+        threads: typing.Dict[snowflakes.Snowflake, channel_models.GuildThreadChannel] = {}
+        for thread_payload in payload["threads"]:
+            try:
+                thread = self.deserialize_guild_thread(thread_payload)
+
+            except errors.UnrecognisedEntityError:
+                continue
+
+            threads[thread.id] = thread
+
         webhooks: typing.Dict[snowflakes.Snowflake, webhook_models.PartialWebhook] = {}
         for webhook_payload in payload["webhooks"]:
             try:
@@ -797,7 +837,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
             webhooks[webhook.id] = webhook
 
-        return audit_log_models.AuditLog(entries=entries, integrations=integrations, users=users, webhooks=webhooks)
+        return audit_log_models.AuditLog(
+            entries=entries, integrations=integrations, threads=threads, users=users, webhooks=webhooks
+        )
 
     ##################
     # CHANNEL MODELS #
@@ -886,11 +928,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if guild_id is undefined.UNDEFINED:
             guild_id = snowflakes.Snowflake(payload["guild_id"])
 
-        permission_overwrites = {
-            snowflakes.Snowflake(overwrite["id"]): self.deserialize_permission_overwrite(overwrite)
-            for overwrite in payload["permission_overwrites"]
-        }
-
         parent_id: typing.Optional[snowflakes.Snowflake] = None
         if (raw_parent_id := payload.get("parent_id")) is not None:
             parent_id = snowflakes.Snowflake(raw_parent_id)
@@ -900,8 +937,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=payload.get("name"),
             type=channel_models.ChannelType(payload["type"]),
             guild_id=guild_id,
-            position=int(payload["position"]),
-            permission_overwrites=permission_overwrites,
             is_nsfw=payload.get("nsfw"),
             parent_id=parent_id,
         )
@@ -913,16 +948,20 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> channel_models.GuildCategory:
         channel_fields = self._set_guild_channel_attributes(payload, guild_id=guild_id)
+        permission_overwrites = {
+            snowflakes.Snowflake(overwrite["id"]): self.deserialize_permission_overwrite(overwrite)
+            for overwrite in payload["permission_overwrites"]
+        }
         return channel_models.GuildCategory(
             app=self._app,
             id=channel_fields.id,
             name=channel_fields.name,
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
-            position=channel_fields.position,
-            permission_overwrites=channel_fields.permission_overwrites,
+            permission_overwrites=permission_overwrites,
             is_nsfw=channel_fields.is_nsfw,
-            parent_id=channel_fields.parent_id,
+            parent_id=None,
+            position=int(payload["position"]),
         )
 
     def deserialize_guild_text_channel(
@@ -932,6 +971,13 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> channel_models.GuildTextChannel:
         channel_fields = self._set_guild_channel_attributes(payload, guild_id=guild_id)
+        # As of present this isn't included in the payloads of old channels where it hasn't been explicitly set.
+        # In this case it's 1440 minutes.
+        default_auto_archive_duration = datetime.timedelta(minutes=payload.get("default_auto_archive_duration", 1440))
+        permission_overwrites = {
+            snowflakes.Snowflake(overwrite["id"]): self.deserialize_permission_overwrite(overwrite)
+            for overwrite in payload["permission_overwrites"]
+        }
 
         last_message_id: typing.Optional[snowflakes.Snowflake] = None
         if (raw_last_message_id := payload.get("last_message_id")) is not None:
@@ -947,8 +993,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=channel_fields.name,
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
-            position=channel_fields.position,
-            permission_overwrites=channel_fields.permission_overwrites,
+            permission_overwrites=permission_overwrites,
             is_nsfw=channel_fields.is_nsfw,
             parent_id=channel_fields.parent_id,
             topic=payload["topic"],
@@ -958,6 +1003,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             # at all if they have never had the rate limit changed...
             rate_limit_per_user=datetime.timedelta(seconds=payload.get("rate_limit_per_user", 0)),
             last_pin_timestamp=last_pin_timestamp,
+            default_auto_archive_duration=default_auto_archive_duration,
+            position=int(payload["position"]),
         )
 
     def deserialize_guild_news_channel(
@@ -967,6 +1014,13 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> channel_models.GuildNewsChannel:
         channel_fields = self._set_guild_channel_attributes(payload, guild_id=guild_id)
+        # As of present this isn't included in the payloads of old channels where it hasn't been explicitly set.
+        # In this case it's 1440 minutes.
+        default_auto_archive_duration = datetime.timedelta(minutes=payload.get("default_auto_archive_duration", 1440))
+        permission_overwrites = {
+            snowflakes.Snowflake(overwrite["id"]): self.deserialize_permission_overwrite(overwrite)
+            for overwrite in payload["permission_overwrites"]
+        }
 
         last_message_id: typing.Optional[snowflakes.Snowflake] = None
         if (raw_last_message_id := payload.get("last_message_id")) is not None:
@@ -982,13 +1036,14 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=channel_fields.name,
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
-            position=channel_fields.position,
-            permission_overwrites=channel_fields.permission_overwrites,
+            permission_overwrites=permission_overwrites,
             is_nsfw=channel_fields.is_nsfw,
             parent_id=channel_fields.parent_id,
             topic=payload["topic"],
             last_message_id=last_message_id,
             last_pin_timestamp=last_pin_timestamp,
+            default_auto_archive_duration=default_auto_archive_duration,
+            position=int(payload["position"]),
         )
 
     def deserialize_guild_voice_channel(
@@ -998,6 +1053,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> channel_models.GuildVoiceChannel:
         channel_fields = self._set_guild_channel_attributes(payload, guild_id=guild_id)
+        permission_overwrites = {
+            snowflakes.Snowflake(overwrite["id"]): self.deserialize_permission_overwrite(overwrite)
+            for overwrite in payload["permission_overwrites"]
+        }
         # Discord seems to be only returning this after it's been initially PATCHed in for older channels.
         video_quality_mode = payload.get("video_quality_mode", channel_models.VideoQualityMode.AUTO)
 
@@ -1011,8 +1070,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=channel_fields.name,
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
-            position=channel_fields.position,
-            permission_overwrites=channel_fields.permission_overwrites,
+            permission_overwrites=permission_overwrites,
             is_nsfw=channel_fields.is_nsfw,
             parent_id=channel_fields.parent_id,
             # There seems to be an edge case where rtc_region won't be included in gateway events (e.g. GUILD_CREATE)
@@ -1022,6 +1080,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             user_limit=int(payload["user_limit"]),
             video_quality_mode=channel_models.VideoQualityMode(int(video_quality_mode)),
             last_message_id=last_message_id,
+            position=int(payload["position"]),
         )
 
     def deserialize_guild_stage_channel(
@@ -1031,19 +1090,200 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> channel_models.GuildStageChannel:
         channel_fields = self._set_guild_channel_attributes(payload, guild_id=guild_id)
+        permission_overwrites = {
+            snowflakes.Snowflake(overwrite["id"]): self.deserialize_permission_overwrite(overwrite)
+            for overwrite in payload["permission_overwrites"]
+        }
         return channel_models.GuildStageChannel(
             app=self._app,
             id=channel_fields.id,
             name=channel_fields.name,
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
-            position=channel_fields.position,
-            permission_overwrites=channel_fields.permission_overwrites,
+            permission_overwrites=permission_overwrites,
             is_nsfw=channel_fields.is_nsfw,
             parent_id=channel_fields.parent_id,
             region=payload["rtc_region"],
             bitrate=int(payload["bitrate"]),
             user_limit=int(payload["user_limit"]),
+            position=int(payload["position"]),
+        )
+
+    def deserialize_thread_member(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        thread_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+        user_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+    ) -> channel_models.ThreadMember:
+        return channel_models.ThreadMember(
+            thread_id=thread_id or snowflakes.Snowflake(payload["id"]),
+            user_id=user_id or snowflakes.Snowflake(payload["user_id"]),
+            joined_at=time.iso8601_datetime_string_to_datetime(payload["join_timestamp"]),
+            flags=int(payload["flags"]),
+        )
+
+    def deserialize_guild_thread(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+        member: undefined.UndefinedNoneOr[channel_models.ThreadMember] = undefined.UNDEFINED,
+        user_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+    ) -> channel_models.GuildThreadChannel:
+        channel_type = channel_models.ChannelType(payload["type"])
+        if deserialize := self._thread_channel_type_mapping.get(channel_type):
+            return deserialize(payload, guild_id=guild_id, member=member, user_id=user_id)
+
+        _LOGGER.debug(f"Unrecognised thread channel type {channel_type}")
+        raise errors.UnrecognisedEntityError(f"Unrecognised thread channel type {channel_type}")
+
+    def deserialize_guild_news_thread(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+        member: undefined.UndefinedNoneOr[channel_models.ThreadMember] = undefined.UNDEFINED,
+        user_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+    ) -> channel_models.GuildNewsThread:
+        channel_fields = self._set_guild_channel_attributes(payload, guild_id=guild_id)
+        last_message_id: typing.Optional[snowflakes.Snowflake] = None
+        if (raw_last_message_id := payload.get("last_message_id")) is not None:
+            last_message_id = snowflakes.Snowflake(raw_last_message_id)
+
+        last_pin_timestamp: typing.Optional[datetime.datetime] = None
+        if (raw_last_pin_timestamp := payload.get("last_pin_timestamp")) is not None:
+            last_pin_timestamp = time.iso8601_datetime_string_to_datetime(raw_last_pin_timestamp)
+
+        metadata = payload["thread_metadata"]
+        actual_member = member if member is not undefined.UNDEFINED else None
+        if member_payload := payload.get("member"):
+            actual_member = self.deserialize_thread_member(member_payload, thread_id=channel_fields.id, user_id=user_id)
+
+        thread_created_at: typing.Optional[datetime.datetime] = None
+        if raw_thread_created_at := metadata.get("create_timestamp"):
+            thread_created_at = time.iso8601_datetime_string_to_datetime(raw_thread_created_at)
+
+        assert channel_fields.parent_id is not None
+        return channel_models.GuildNewsThread(
+            app=self._app,
+            id=channel_fields.id,
+            name=channel_fields.name,
+            type=channel_fields.type,
+            guild_id=channel_fields.guild_id,
+            is_nsfw=channel_fields.is_nsfw,
+            parent_id=channel_fields.parent_id,
+            last_message_id=last_message_id,
+            last_pin_timestamp=last_pin_timestamp,
+            rate_limit_per_user=datetime.timedelta(seconds=payload.get("rate_limit_per_user", 0)),
+            approximate_member_count=int(payload["member_count"]),
+            approximate_message_count=int(payload["message_count"]),
+            is_archived=metadata["archived"],
+            auto_archive_duration=datetime.timedelta(minutes=metadata["auto_archive_duration"]),
+            archive_timestamp=time.iso8601_datetime_string_to_datetime(metadata["archive_timestamp"]),
+            is_locked=metadata["locked"],
+            member=actual_member,
+            owner_id=snowflakes.Snowflake(payload["owner_id"]),
+            thread_created_at=thread_created_at,
+        )
+
+    def deserialize_guild_public_thread(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+        member: undefined.UndefinedNoneOr[channel_models.ThreadMember] = undefined.UNDEFINED,
+        user_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+    ) -> channel_models.GuildPublicThread:
+        channel_fields = self._set_guild_channel_attributes(payload, guild_id=guild_id)
+        last_message_id: typing.Optional[snowflakes.Snowflake] = None
+        if (raw_last_message_id := payload.get("last_message_id")) is not None:
+            last_message_id = snowflakes.Snowflake(raw_last_message_id)
+
+        last_pin_timestamp: typing.Optional[datetime.datetime] = None
+        if (raw_last_pin_timestamp := payload.get("last_pin_timestamp")) is not None:
+            last_pin_timestamp = time.iso8601_datetime_string_to_datetime(raw_last_pin_timestamp)
+
+        metadata = payload["thread_metadata"]
+        actual_member = member if member is not undefined.UNDEFINED else None
+        if member_payload := payload.get("member"):
+            actual_member = self.deserialize_thread_member(member_payload, thread_id=channel_fields.id, user_id=user_id)
+
+        thread_created_at: typing.Optional[datetime.datetime] = None
+        if raw_thread_created_at := metadata.get("create_timestamp"):
+            thread_created_at = time.iso8601_datetime_string_to_datetime(raw_thread_created_at)
+
+        assert channel_fields.parent_id is not None
+        return channel_models.GuildPublicThread(
+            app=self._app,
+            id=channel_fields.id,
+            name=channel_fields.name,
+            type=channel_fields.type,
+            guild_id=channel_fields.guild_id,
+            is_nsfw=channel_fields.is_nsfw,
+            parent_id=channel_fields.parent_id,
+            last_message_id=last_message_id,
+            last_pin_timestamp=last_pin_timestamp,
+            rate_limit_per_user=datetime.timedelta(seconds=payload.get("rate_limit_per_user", 0)),
+            approximate_member_count=int(payload["member_count"]),
+            approximate_message_count=int(payload["message_count"]),
+            is_archived=metadata["archived"],
+            auto_archive_duration=datetime.timedelta(minutes=metadata["auto_archive_duration"]),
+            archive_timestamp=time.iso8601_datetime_string_to_datetime(metadata["archive_timestamp"]),
+            is_locked=metadata["locked"],
+            member=actual_member,
+            owner_id=snowflakes.Snowflake(payload["owner_id"]),
+            thread_created_at=thread_created_at,
+        )
+
+    def deserialize_guild_private_thread(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+        member: undefined.UndefinedNoneOr[channel_models.ThreadMember] = undefined.UNDEFINED,
+        user_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+    ) -> channel_models.GuildPrivateThread:
+        channel_fields = self._set_guild_channel_attributes(payload, guild_id=guild_id)
+        last_message_id: typing.Optional[snowflakes.Snowflake] = None
+        if (raw_last_message_id := payload.get("last_message_id")) is not None:
+            last_message_id = snowflakes.Snowflake(raw_last_message_id)
+
+        last_pin_timestamp: typing.Optional[datetime.datetime] = None
+        if (raw_last_pin_timestamp := payload.get("last_pin_timestamp")) is not None:
+            last_pin_timestamp = time.iso8601_datetime_string_to_datetime(raw_last_pin_timestamp)
+
+        metadata = payload["thread_metadata"]
+        actual_member = member if member is not undefined.UNDEFINED else None
+        if member_payload := payload.get("member"):
+            actual_member = self.deserialize_thread_member(member_payload, thread_id=channel_fields.id, user_id=user_id)
+
+        thread_created_at: typing.Optional[datetime.datetime] = None
+        if raw_thread_created_at := metadata.get("create_timestamp"):
+            thread_created_at = time.iso8601_datetime_string_to_datetime(raw_thread_created_at)
+
+        assert channel_fields.parent_id is not None
+        return channel_models.GuildPrivateThread(
+            app=self._app,
+            id=channel_fields.id,
+            name=channel_fields.name,
+            type=channel_fields.type,
+            guild_id=channel_fields.guild_id,
+            is_nsfw=channel_fields.is_nsfw,
+            parent_id=channel_fields.parent_id,
+            last_message_id=last_message_id,
+            last_pin_timestamp=last_pin_timestamp,
+            rate_limit_per_user=datetime.timedelta(seconds=payload.get("rate_limit_per_user", 0)),
+            approximate_member_count=int(payload["member_count"]),
+            approximate_message_count=int(payload["message_count"]),
+            is_archived=metadata["archived"],
+            auto_archive_duration=datetime.timedelta(minutes=metadata["auto_archive_duration"]),
+            archive_timestamp=time.iso8601_datetime_string_to_datetime(metadata["archive_timestamp"]),
+            is_locked=metadata["locked"],
+            member=actual_member,
+            owner_id=snowflakes.Snowflake(payload["owner_id"]),
+            is_invitable=metadata["invitable"],
+            thread_created_at=thread_created_at,
         )
 
     def deserialize_channel(
@@ -1055,6 +1295,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         channel_type = channel_models.ChannelType(payload["type"])
         if guild_channel_model := self._guild_channel_type_mapping.get(channel_type):
             return guild_channel_model(payload, guild_id=guild_id)
+
+        if thread_channel_deserialize := self._thread_channel_type_mapping.get(channel_type):
+            return thread_channel_deserialize(payload, guild_id=guild_id)
 
         if dm_channel_model := self._dm_channel_type_mapping.get(channel_type):
             return dm_channel_model(payload)
@@ -1631,9 +1874,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             stickers=stickers,
         )
 
-    def deserialize_gateway_guild(self, payload: data_binding.JSONObject) -> entity_factory.GatewayGuildDefinition:
+    def deserialize_gateway_guild(
+        self, payload: data_binding.JSONObject, *, user_id: snowflakes.Snowflake
+    ) -> entity_factory.GatewayGuildDefinition:
         guild_id = snowflakes.Snowflake(payload["id"])
-        return _GatewayGuildDefinition(id=guild_id, payload=payload, entity_factory=self)
+        return _GatewayGuildDefinition(id=guild_id, payload=payload, entity_factory=self, user_id=user_id)
 
     #################
     # INVITE MODELS #

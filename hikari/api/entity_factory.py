@@ -73,7 +73,7 @@ class GatewayGuildDefinition(abc.ABC):
         """ID of the guild the definition is for."""
 
     @abc.abstractmethod
-    def channels(self) -> typing.Mapping[snowflakes.Snowflake, channel_models.GuildChannel]:
+    def channels(self) -> typing.Mapping[snowflakes.Snowflake, channel_models.PermissibleGuildChannel]:
         """Get a mapping of channel IDs to the channels that belong to the guild."""
 
     @abc.abstractmethod
@@ -107,6 +107,10 @@ class GatewayGuildDefinition(abc.ABC):
     @abc.abstractmethod
     def roles(self) -> typing.Mapping[snowflakes.Snowflake, guild_models.Role]:
         """Get a mapping of role IDs to the roles that belong to the guild."""
+
+    @abc.abstractmethod
+    def threads(self) -> typing.Mapping[snowflakes.Snowflake, channel_models.GuildThreadChannel]:
+        """Get a mapping of thread IDs to the public threads the bot can access in the guild."""
 
     @abc.abstractmethod
     def voice_states(self) -> typing.Mapping[snowflakes.Snowflake, voice_models.VoiceState]:
@@ -474,7 +478,7 @@ class EntityFactory(abc.ABC):
 
         !!! note
             `guild_id` currently only covers the gateway GUILD_CREATE event
-            where `"guild_id"` is npt included in the channel's payload.
+            where `"guild_id"` is not included in the channel's payload.
 
         Returns
         -------
@@ -510,12 +514,203 @@ class EntityFactory(abc.ABC):
 
         !!! note
             `guild_id` currently only covers the gateway GUILD_CREATE event
-            where `"guild_id"` is npt included in the channel's payload.
+            where `"guild_id"` is not included in the channel's payload.
 
         Returns
         -------
         hikari.channels.GuildStageChannel
             The deserialized guild stage channel object.
+
+        Raises
+        ------
+        builtins.KeyError
+            If `guild_id` is left as `hikari.undefined.UNDEFINED` when
+            `"guild_id"` is not present in the passed payload.
+        """
+
+    @abc.abstractmethod
+    def deserialize_thread_member(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        thread_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+    ) -> channel_models.ThreadMember:
+        """Parse a raw payload from Discord into a thread member object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Other Parameters
+        ----------------
+        thread_id : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
+            ID of the thread this member belongs to. This will be
+            prioritised over `"id"` in the payload when passed.
+
+            !!! note
+                `thread_id` currently only covers the gateway GUILD_CREATE event
+                where the field are is included in the thread member's payload.
+
+        Returns
+        -------
+        hikari.channels.ThreadMember
+            The deserialized thread member object.
+
+        Raises
+        ------
+        builtins.KeyError
+            If `thread_id` or `user_id` is left as `hikari.undefined.UNDEFINED`
+            when the relevant field isn't present in the passed payload.
+        """
+
+    @abc.abstractmethod
+    def deserialize_guild_thread(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+        member: undefined.UndefinedNoneOr[channel_models.ThreadMember] = undefined.UNDEFINED,
+    ) -> channel_models.GuildThreadChannel:
+        """Parse a raw payload from Discord into a guild thread channel object.
+
+        Parameters
+        ----------
+        guild_id : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
+            The ID of the guild this channel belongs to. If passed then this
+            will be prioritised over `"guild_id"` in the payload.
+
+            !!! note
+                `guild_id` currently only covers the gateway GUILD_CREATE event
+                where `"guild_id"` is not included in the channel's payload.
+        member : hikari.undefined.UndefinedNoneOr[hikari.channels.ThreadMember]
+            The member object for the thread. If passed then this will be
+            prioritised over `"member"` in the payload when passed.
+
+        Returns
+        -------
+        hikari.channels.GuildThreadChannel
+            The deserialized guild thread channel object.
+
+        Raises
+        ------
+        builtins.KeyError
+            If `guild_id` is left as `hikari.undefined.UNDEFINED` when
+            `"guild_id"` is not present in the passed payload.
+        """
+
+    @abc.abstractmethod
+    def deserialize_guild_news_thread(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+        member: undefined.UndefinedNoneOr[channel_models.ThreadMember] = undefined.UNDEFINED,
+    ) -> channel_models.GuildNewsThread:
+        """Parse a raw payload from Discord into a guild news thread object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Other Parameters
+        ----------------
+        guild_id : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
+            The ID of the guild this channel belongs to. This will be
+            prioritised over `"guild_id"` in the payload when passed.
+
+            !!! note
+                `guild_id` currently only covers the gateway GUILD_CREATE event
+                where `"guild_id"` is not included in the channel's payload.
+        member : hikari.undefined.UndefinedNoneOr[hikari.channels.ThreadMember]
+            The member object for the thread. If passed then this will be
+            prioritised over `"member"` in the payload when passed.
+
+        Returns
+        -------
+        hikari.channels.GuildNewsThread
+            The deserialized guild news thread object.
+
+        Raises
+        ------
+        builtins.KeyError
+            If `guild_id` is left as `hikari.undefined.UNDEFINED` when
+            `"guild_id"` is not present in the passed payload.
+        """
+
+    @abc.abstractmethod
+    def deserialize_guild_public_thread(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+        member: undefined.UndefinedNoneOr[channel_models.ThreadMember] = undefined.UNDEFINED,
+    ) -> channel_models.GuildPublicThread:
+        """Parse a raw payload from Discord into a guild public thread object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Other Parameters
+        ----------------
+        guild_id : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
+            The ID of the guild this channel belongs to. This will be
+            prioritised over `"guild_id"` in the payload when passed.
+
+            !!! note
+                `guild_id` currently only covers the gateway GUILD_CREATE event
+                where `"guild_id"` is not included in the channel's payload.
+        member : hikari.undefined.UndefinedNoneOr[hikari.channels.ThreadMember]
+            The member object for the thread. If passed then this will be
+            prioritised over `"member"` in the payload when passed.
+
+        Returns
+        -------
+        hikari.channels.GuildPublicThread
+            The deserialized guild public thread object.
+
+        Raises
+        ------
+        builtins.KeyError
+            If `guild_id` is left as `hikari.undefined.UNDEFINED` when
+            `"guild_id"` is not present in the passed payload.
+        """
+
+    @abc.abstractmethod
+    def deserialize_guild_private_thread(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+        member: undefined.UndefinedNoneOr[channel_models.ThreadMember] = undefined.UNDEFINED,
+    ) -> channel_models.GuildPrivateThread:
+        """Parse a raw payload from Discord into a guild private thread object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Other Parameters
+        ----------------
+        guild_id : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
+            The ID of the guild this channel belongs to. This will be
+            prioritised over `"guild_id"` in the payload when passed.
+
+            !!! note
+                `guild_id` currently only covers the gateway GUILD_CREATE event
+                where `"guild_id"` is not included in the channel's payload.
+        member : hikari.undefined.UndefinedNoneOr[hikari.channels.ThreadMember]
+            The member object for the thread. If passed then this will be
+            prioritised over `"member"` in the payload when passed.
+
+        Returns
+        -------
+        hikari.channels.GuildPrivateThread
+            The deserialized guild private thread object.
 
         Raises
         ------
@@ -532,6 +727,9 @@ class EntityFactory(abc.ABC):
         guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> channel_models.PartialChannel:
         """Parse a raw payload from Discord into a channel object.
+
+        !!! note
+            This also deserializes to thread channels.
 
         Parameters
         ----------
@@ -901,13 +1099,17 @@ class EntityFactory(abc.ABC):
         """
 
     @abc.abstractmethod
-    def deserialize_gateway_guild(self, payload: data_binding.JSONObject) -> GatewayGuildDefinition:
+    def deserialize_gateway_guild(
+        self, payload: data_binding.JSONObject, *, user_id: snowflakes.Snowflake
+    ) -> GatewayGuildDefinition:
         """Parse a raw payload from Discord into a guild object.
 
         Parameters
         ----------
         payload : hikari.internal.data_binding.JSONObject
             The JSON payload to deserialize.
+        user_id : hikari.snowflakes.Snowflake
+            The current user's ID.
 
         Returns
         -------
