@@ -1119,6 +1119,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         role_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
+        flags: typing.Union[undefined.UndefinedType, int, messages_.MessageFlag] = undefined.UNDEFINED,
     ) -> messages_.Message:
         """Create a message in the given channel.
 
@@ -1186,6 +1187,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             `hikari.snowflakes.Snowflake`, or
             `hikari.guilds.PartialRole` derivatives to enforce mentioning
             specific roles.
+        flags : hikari.undefined.UndefinedOr[hikari.messages.MessageFlag]
+            If provided, optional flags to set on the message. If
+            `hikari.undefined.UNDEFINED`, then nothing is changed.
+
+            Note that some flags may not be able to be set. Currently the only
+            flags that can be set are `NONE` and `SUPPRESS_EMBEDS`.
 
         !!! note
             Attachments can be passed as many different things, to aid in
@@ -2340,9 +2347,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The flags to set for this webhook message.
 
             !!! warning
-                As of writing this can only be set for interaction webhooks
-                and the only settable flag is EPHEMERAL; this field is just
-                ignored for non-interaction webhooks.
+                As of writing the only flags which can be passed here are
+                `EPHEMERAL` (if this is an interaction response webhook) and
+                `SUPPRESS_EMBEDS`.
 
         !!! warning
             As of writing, `username` and `avatar_url` are ignored for

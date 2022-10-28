@@ -286,6 +286,7 @@ class TestTextChannel:
             user_mentions=[123, 456],
             role_mentions=[789, 567],
             mentions_reply=True,
+            flags=6969,
         )
 
         model.app.rest.create_message.assert_awaited_once_with(
@@ -303,6 +304,7 @@ class TestTextChannel:
             user_mentions=[123, 456],
             role_mentions=[789, 567],
             mentions_reply=True,
+            flags=6969,
         )
 
     def test_trigger_typing(self, model):
