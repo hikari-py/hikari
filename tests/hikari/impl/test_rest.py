@@ -1995,7 +1995,7 @@ class TestRESTClientImplAsync:
         await rest_client._parse_ratelimits(route, response, live_attributes)
 
         response.json.assert_not_called()
-        assert live_attributes.still_alive.assert_not_called()
+        live_attributes.still_alive.assert_not_called()
 
     async def test__parse_ratelimits_when_ratelimited(self, rest_client, exit_exception, live_attributes):
         class StubResponse:
@@ -2010,7 +2010,7 @@ class TestRESTClientImplAsync:
         with pytest.raises(exit_exception):
             await rest_client._parse_ratelimits(route, StubResponse(), live_attributes)
 
-        assert live_attributes.still_alive.assert_not_called()
+        live_attributes.still_alive.assert_not_called()
 
     async def test__parse_ratelimits_when_unexpected_content_type(self, rest_client, live_attributes):
         class StubResponse:
@@ -2026,7 +2026,7 @@ class TestRESTClientImplAsync:
         with pytest.raises(errors.HTTPResponseError):
             await rest_client._parse_ratelimits(route, StubResponse(), live_attributes)
 
-        assert live_attributes.still_alive.assert_not_called()
+        live_attributes.still_alive.assert_not_called()
 
     async def test__parse_ratelimits_when_global_ratelimit(self, rest_client, live_attributes):
         class StubResponse:
@@ -2061,7 +2061,7 @@ class TestRESTClientImplAsync:
         with pytest.raises(rest._RetryRequest):
             await rest_client._parse_ratelimits(route, StubResponse(), live_attributes)
 
-        assert live_attributes.still_alive.assert_not_called()
+        live_attributes.still_alive.assert_not_called()
 
     async def test__parse_ratelimits_when_retry_after_is_close_enough(self, rest_client, live_attributes):
         class StubResponse:
@@ -2079,7 +2079,7 @@ class TestRESTClientImplAsync:
         with pytest.raises(rest._RetryRequest):
             await rest_client._parse_ratelimits(route, StubResponse(), live_attributes)
 
-        assert live_attributes.still_alive.assert_not_called()
+        live_attributes.still_alive.assert_not_called()
 
     async def test__parse_ratelimits_when_retry_after_is_not_close_enough(self, rest_client, live_attributes):
         class StubResponse:
@@ -2095,7 +2095,7 @@ class TestRESTClientImplAsync:
         with pytest.raises(errors.RateLimitedError):
             await rest_client._parse_ratelimits(route, StubResponse(), live_attributes)
 
-        assert live_attributes.still_alive.assert_not_called()
+        live_attributes.still_alive.assert_not_called()
 
     #############
     # Endpoints #
