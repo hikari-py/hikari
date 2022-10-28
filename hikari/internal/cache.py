@@ -75,7 +75,7 @@ if typing.TYPE_CHECKING:
     from hikari import users as users_
     from hikari.interactions import base_interactions
 
-ChannelT = typing.TypeVar("ChannelT", bound="channels_.GuildChannel")
+ChannelT = typing.TypeVar("ChannelT", bound="channels_.PermissibleGuildChannel")
 DataT = typing.TypeVar("DataT", bound="BaseData[typing.Any]")
 """Type-hint for "data" objects used for storing and building entities."""
 KeyT = typing.TypeVar("KeyT", bound=typing.Hashable)

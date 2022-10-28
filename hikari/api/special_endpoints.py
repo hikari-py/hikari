@@ -621,7 +621,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def attachments(self) -> undefined.UndefinedOr[typing.Sequence[files.Resourceish]]:
+    def attachments(self) -> undefined.UndefinedNoneOr[typing.Sequence[files.Resourceish]]:
         """Sequence of up to 10 attachments to send with the message."""
 
     @property
@@ -689,6 +689,19 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
         Either a sequence of object/IDs of the users mentions should be enabled
         for, `False` or `hikari.undefined.UNDEFINED` to disallow any
         user mentions or `True` to allow all user mentions.
+        """
+
+    @abc.abstractmethod
+    def clear_attachments(self: _T, /) -> _T:
+        """Clear attachments for this response.
+
+        This is only useful for message update responses, where you might want to
+        remove all existing attachments.
+
+        Returns
+        -------
+        InteractionMessageBuilder
+            Object of this builder.
         """
 
     @abc.abstractmethod
@@ -952,7 +965,7 @@ class CommandBuilder(abc.ABC):
 
         Parameters
         ----------
-        name_localizations : hikari.undefined.UndefinedOr[typing.Mapping[typing.Union[hikari.locales.Locale, str], str]]
+        name_localizations : typing.Mapping[typing.Union[hikari.locales.Locale, str], str]
             The name localizations to set for this command.
 
         Returns
@@ -1039,7 +1052,7 @@ class SlashCommandBuilder(CommandBuilder):
 
         Parameters
         ----------
-        description_localizations : hikari.undefined.UndefinedOr[typing.Mapping[typing.Union[hikari.locales.Locale, str], str]]
+        description_localizations : typing.Mapping[typing.Union[hikari.locales.Locale, str], str]
             The description localizations to set for this command.
 
         Returns

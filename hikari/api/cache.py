@@ -310,7 +310,7 @@ class Cache(abc.ABC):
     @abc.abstractmethod
     def get_guild_channel(
         self, channel: snowflakes.SnowflakeishOr[channels.PartialChannel], /
-    ) -> typing.Optional[channels.GuildChannel]:
+    ) -> typing.Optional[channels.PermissibleGuildChannel]:
         """Get a guild channel from the cache.
 
         Parameters
@@ -320,18 +320,18 @@ class Cache(abc.ABC):
 
         Returns
         -------
-        typing.Optional[hikari.channels.GuildChannel]
+        typing.Optional[hikari.channels.PermissibleGuildChannel]
             The object of the guild channel that was found in the cache or
             `None`.
         """
 
     @abc.abstractmethod
-    def get_guild_channels_view(self) -> CacheView[snowflakes.Snowflake, channels.GuildChannel]:
+    def get_guild_channels_view(self) -> CacheView[snowflakes.Snowflake, channels.PermissibleGuildChannel]:
         """Get a view of the guild channels in the cache.
 
         Returns
         -------
-        CacheView[hikari.snowflakes.Snowflake, hikari.channels.GuildChannel]
+        CacheView[hikari.snowflakes.Snowflake, hikari.channels.PermissibleGuildChannel]
             A view of channel IDs to objects of the guild channels found in the
             cache.
         """
@@ -339,7 +339,7 @@ class Cache(abc.ABC):
     @abc.abstractmethod
     def get_guild_channels_view_for_guild(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
-    ) -> CacheView[snowflakes.Snowflake, channels.GuildChannel]:
+    ) -> CacheView[snowflakes.Snowflake, channels.PermissibleGuildChannel]:
         """Get a view of the guild channels in the cache for a specific guild.
 
         Parameters
@@ -349,7 +349,7 @@ class Cache(abc.ABC):
 
         Returns
         -------
-        CacheView[hikari.snowflakes.Snowflake, hikari.channels.GuildChannel]
+        CacheView[hikari.snowflakes.Snowflake, hikari.channels.PermissibleGuildChannel]
             A view of channel IDs to objects of the guild channels found in the
             cache for the specified guild.
         """
@@ -995,12 +995,12 @@ class MutableCache(Cache, abc.ABC):
         """  # noqa E501 - Line too long
 
     @abc.abstractmethod
-    def clear_guild_channels(self) -> CacheView[snowflakes.Snowflake, channels.GuildChannel]:
+    def clear_guild_channels(self) -> CacheView[snowflakes.Snowflake, channels.PermissibleGuildChannel]:
         """Remove all guild channels from the cache.
 
         Returns
         -------
-        CacheView[hikari.snowflakes.Snowflake, hikari.channels.GuildChannel]
+        CacheView[hikari.snowflakes.Snowflake, hikari.channels.PermissibleGuildChannel]
             A view of channel IDs to objects of the guild channels that were
             removed from the cache.
         """
@@ -1008,7 +1008,7 @@ class MutableCache(Cache, abc.ABC):
     @abc.abstractmethod
     def clear_guild_channels_for_guild(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
-    ) -> CacheView[snowflakes.Snowflake, channels.GuildChannel]:
+    ) -> CacheView[snowflakes.Snowflake, channels.PermissibleGuildChannel]:
         """Remove guild channels from the cache for a specific guild.
 
         Parameters
@@ -1018,7 +1018,7 @@ class MutableCache(Cache, abc.ABC):
 
         Returns
         -------
-        CacheView[hikari.snowflakes.Snowflake, hikari.channels.GuildChannel]
+        CacheView[hikari.snowflakes.Snowflake, hikari.channels.PermissibleGuildChannel]
             A view of channel IDs to objects of the guild channels that were
             removed from the cache.
         """
@@ -1026,7 +1026,7 @@ class MutableCache(Cache, abc.ABC):
     @abc.abstractmethod
     def delete_guild_channel(
         self, channel: snowflakes.SnowflakeishOr[channels.PartialChannel], /
-    ) -> typing.Optional[channels.GuildChannel]:
+    ) -> typing.Optional[channels.PermissibleGuildChannel]:
         """Remove a guild channel from the cache.
 
         Parameters
@@ -1036,35 +1036,37 @@ class MutableCache(Cache, abc.ABC):
 
         Returns
         -------
-        typing.Optional[hikari.channels.GuildChannel]
+        typing.Optional[hikari.channels.PermissibleGuildChannel]
             The object of the guild channel that was removed from the cache if
             found, else `None`.
         """
 
     @abc.abstractmethod
-    def set_guild_channel(self, channel: channels.GuildChannel, /) -> None:
+    def set_guild_channel(self, channel: channels.PermissibleGuildChannel, /) -> None:
         """Add a guild channel to the cache.
 
         Parameters
         ----------
-        channel : hikari.channels.GuildChannel
+        channel : hikari.channels.PermissibleGuildChannel
             The guild channel based object to add to the cache.
         """
 
     @abc.abstractmethod
     def update_guild_channel(
-        self, channel: channels.GuildChannel, /
-    ) -> typing.Tuple[typing.Optional[channels.GuildChannel], typing.Optional[channels.GuildChannel]]:
+        self, channel: channels.PermissibleGuildChannel, /
+    ) -> typing.Tuple[
+        typing.Optional[channels.PermissibleGuildChannel], typing.Optional[channels.PermissibleGuildChannel]
+    ]:
         """Update a guild channel in the cache.
 
         Parameters
         ----------
-        channel : hikari.channels.GuildChannel
+        channel : hikari.channels.PermissibleGuildChannel
             The object of the channel to update in the cache.
 
         Returns
         -------
-        typing.Tuple[typing.Optional[hikari.channels.GuildChannel], typing.Optional[hikari.channels.GuildChannel]]
+        typing.Tuple[typing.Optional[hikari.channels.PermissibleGuildChannel], typing.Optional[hikari.channels.PermissibleGuildChannel]]
             A tuple of the old cached guild channel if found (else `None`)
             and the new cached guild channel if it could be cached
             (else `None`).

@@ -12,13 +12,13 @@
 <a href="https://docs.hikari-py.dev/en/stable"><img height="20" alt="Documentation Status" src="https://readthedocs.org/projects/hikari-py/badge/?version=latest"></a>
 </div>
 
-An opinionated, static typed Discord microframework for Python3 and asyncio that supports Discord's V8 REST API and
-Gateway.
+An opinionated, static typed Discord microframework for Python3 and asyncio that supports Discord's v9 REST and
+Gateway APIs.
 
 Built on good intentions and the hope that it will be extendable and reusable, rather than an obstacle for future
 development.
 
-Python 3.8, 3.9 and 3.10 and 3.11-dev are currently supported.
+Python 3.8, 3.9 and 3.10 and 3.11 are currently supported.
 
 ## Installation
 

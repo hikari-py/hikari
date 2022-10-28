@@ -296,6 +296,21 @@ GET_CHANNEL: typing.Final[Route] = Route(GET, "/channels/{channel}")
 PATCH_CHANNEL: typing.Final[Route] = Route(PATCH, "/channels/{channel}")
 DELETE_CHANNEL: typing.Final[Route] = Route(DELETE, "/channels/{channel}")
 
+POST_MESSAGE_THREADS: typing.Final[Route] = Route(POST, "/channels/{channel}/messages/{message}/threads")
+POST_CHANNEL_THREADS: typing.Final[Route] = Route(POST, "/channels/{channel}/threads")
+PUT_MY_THREAD_MEMBER: typing.Final[Route] = Route(PUT, "/channels/{channel}/thread-members/@me")
+PUT_THREAD_MEMBER: typing.Final[Route] = Route(PUT, "/channels/{channel}/thread-members/{user}")
+DELETE_MY_THREAD_MEMBER: typing.Final[Route] = Route(DELETE, "/channels/{channel}/thread-members/@me")
+DELETE_THREAD_MEMBER: typing.Final[Route] = Route(DELETE, "/channels/{channel}/thread-members/{user}")
+GET_THREAD_MEMBER: typing.Final[Route] = Route(GET, "/channels/{channel}/thread-members/{user}")
+GET_THREAD_MEMBERS: typing.Final[Route] = Route(GET, "/channels/{channel}/thread-members")
+GET_ACTIVE_THREADS: typing.Final[Route] = Route(GET, "/guilds/{guild}/threads/active")
+GET_PUBLIC_ARCHIVED_THREADS: typing.Final[Route] = Route(GET, "/channels/{channel}/threads/archived/public")
+GET_PRIVATE_ARCHIVED_THREADS: typing.Final[Route] = Route(GET, "/channels/{channel}/threads/archived/private")
+GET_JOINED_PRIVATE_ARCHIVED_THREADS: typing.Final[Route] = Route(
+    GET, "/channels/{channel}/users/@me/threads/archived/private"
+)
+
 POST_CHANNEL_FOLLOWERS: typing.Final[Route] = Route(POST, "/channels/{channel}/followers")
 
 GET_CHANNEL_INVITES: typing.Final[Route] = Route(GET, "/channels/{channel}/invites")

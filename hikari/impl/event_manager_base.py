@@ -353,13 +353,7 @@ class EventManagerBase(event_manager_.EventManager):
     is the raw event name being dispatched in lower-case.
     """
 
-    __slots__: typing.Sequence[str] = (
-        "_consumers",
-        "_event_factory",
-        "_intents",
-        "_listeners",
-        "_waiters",
-    )
+    __slots__: typing.Sequence[str] = ("_consumers", "_event_factory", "_intents", "_listeners", "_waiters")
 
     def __init__(
         self,

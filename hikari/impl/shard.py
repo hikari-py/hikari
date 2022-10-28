@@ -43,6 +43,7 @@ from hikari import intents as intents_
 from hikari import presences
 from hikari import snowflakes
 from hikari import undefined
+from hikari import urls
 from hikari.api import shard
 from hikari.impl import rate_limits
 from hikari.internal import aio
@@ -100,8 +101,6 @@ _TOTAL_RATELIMIT: typing.Final[typing.Tuple[float, int]] = (60.0, 120)
 # This is done to always allow for HEARTBEAT packages
 # to get around (leaving 3 slots for it).
 _NON_PRIORITY_RATELIMIT: typing.Final[typing.Tuple[float, int]] = (60.0, 117)
-# Supported gateway version
-_VERSION: typing.Final[int] = 8
 # Used to identify the end of a ZLIB payload
 _ZLIB_SUFFIX: typing.Final[bytes] = b"\x00\x00\xff\xff"
 # Close codes which don't invalidate the current session.
@@ -142,7 +141,6 @@ class _GatewayTransport:
         "_log_filterer",
         "_ws",
         "_receive_and_check",
-        "_log_payload",
     )
 
     def __init__(
@@ -154,7 +152,6 @@ class _GatewayTransport:
         log_filterer: typing.Callable[[str], str],
     ) -> None:
         self._logger = logger
-        self._log_payload = self._logger.isEnabledFor(ux.TRACE)
         self._log_filterer = log_filterer
         self._exit_stack = exit_stack
         self._sent_close = False
@@ -189,7 +186,7 @@ class _GatewayTransport:
 
     async def receive_json(self) -> typing.Any:
         pl = await self._receive_and_check()
-        if self._log_payload:
+        if self._logger.isEnabledFor(ux.TRACE):
             filtered = self._log_filterer(pl)
             self._logger.log(ux.TRACE, "received payload with size %s\n    %s", len(pl), filtered)
 
@@ -197,7 +194,7 @@ class _GatewayTransport:
 
     async def send_json(self, data: data_binding.JSONObject) -> None:
         pl = data_binding.dump_json(data)
-        if self._log_payload:
+        if self._logger.isEnabledFor(ux.TRACE):
             filtered = self._log_filterer(pl)
             self._logger.log(ux.TRACE, "sending payload with size %s\n    %s", len(pl), filtered)
 
@@ -776,7 +773,7 @@ class GatewayShardImpl(shard.GatewayShard):
         )
 
         query = dict(urllib.parse.parse_qsl(url_parts.query))
-        query["v"] = str(_VERSION)
+        query["v"] = str(urls.VERSION)
         query["encoding"] = "json"
 
         if self._transport_compression:
