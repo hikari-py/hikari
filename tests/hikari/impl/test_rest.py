@@ -41,6 +41,7 @@ from hikari import files
 from hikari import guilds
 from hikari import invites
 from hikari import locales
+from hikari import messages as message_models
 from hikari import permissions
 from hikari import scheduled_events
 from hikari import snowflakes
@@ -1279,7 +1280,7 @@ class TestRESTClientImpl:
 
     def test__build_message_payload_attachment_content_syntactic_sugar(self, rest_client):
         attachment = mock.Mock(files.Resource)
-        resource_attachment = object()
+        resource_attachment = mock.Mock(filename="attachment.png")
 
         stack = contextlib.ExitStack()
         ensure_resource = stack.enter_context(
@@ -1294,7 +1295,10 @@ class TestRESTClientImpl:
             body, form = rest_client._build_message_payload(content=attachment)
 
         # Returned
-        assert body == {"allowed_mentions": {"allowed_mentions": 1}}
+        assert body == {
+            "allowed_mentions": {"allowed_mentions": 1},
+            "attachments": [{"id": 0, "filename": "attachment.png"}],
+        }
         assert form is url_encoded_form.return_value
 
         # Attachments
@@ -1307,11 +1311,12 @@ class TestRESTClientImpl:
 
         # Form builder
         url_encoded_form.assert_called_once_with(executor=rest_client._executor)
-        url_encoded_form.return_value.add_resource.assert_called_once_with("file0", resource_attachment)
+        url_encoded_form.return_value.add_resource.assert_called_once_with("files[0]", resource_attachment)
 
     def test__build_message_payload_with_singular_args(self, rest_client):
         attachment = object()
-        resource_attachment = object()
+        resource_attachment1 = mock.Mock(filename="attachment.png")
+        resource_attachment2 = mock.Mock(filename="attachment2.png")
         component = mock.Mock(build=mock.Mock(return_value={"component": 1}))
         embed = object()
         embed_attachment = object()
@@ -1322,7 +1327,7 @@ class TestRESTClientImpl:
 
         stack = contextlib.ExitStack()
         ensure_resource = stack.enter_context(
-            mock.patch.object(files, "ensure_resource", return_value=resource_attachment)
+            mock.patch.object(files, "ensure_resource", side_effect=[resource_attachment1, resource_attachment2])
         )
         generate_allowed_mentions = stack.enter_context(
             mock.patch.object(mentions, "generate_allowed_mentions", return_value={"allowed_mentions": 1})
@@ -1336,7 +1341,6 @@ class TestRESTClientImpl:
                 attachment=attachment,
                 component=component,
                 embed=embed,
-                replace_attachments=True,
                 flags=120,
                 tts=True,
                 mentions_everyone=mentions_everyone,
@@ -1352,13 +1356,14 @@ class TestRESTClientImpl:
             "flags": 120,
             "embeds": [{"embed": 1}],
             "components": [{"component": 1}],
-            "attachments": None,
+            "attachments": [{"id": 0, "filename": "attachment.png"}, {"id": 1, "filename": "attachment2.png"}],
             "allowed_mentions": {"allowed_mentions": 1},
         }
         assert form is url_encoded_form.return_value
 
         # Attachments
-        ensure_resource.assert_called_once_with(attachment)
+        assert ensure_resource.call_count == 2
+        ensure_resource.assert_has_calls([mock.call(attachment), mock.call(embed_attachment)])
 
         # Embeds
         rest_client._entity_factory.serialize_embed.assert_called_once_with(embed)
@@ -1375,14 +1380,17 @@ class TestRESTClientImpl:
         url_encoded_form.assert_called_once_with(executor=rest_client._executor)
         assert url_encoded_form.return_value.add_resource.call_count == 2
         url_encoded_form.return_value.add_resource.assert_has_calls(
-            [mock.call("file0", resource_attachment), mock.call("file1", embed_attachment)]
+            [mock.call("files[0]", resource_attachment1), mock.call("files[1]", resource_attachment2)]
         )
 
     def test__build_message_payload_with_plural_args(self, rest_client):
         attachment1 = object()
-        attachment2 = object()
-        resource_attachment1 = object()
-        resource_attachment2 = object()
+        attachment2 = mock.Mock(message_models.Attachment, id=123, filename="attachment123.png")
+        resource_attachment1 = mock.Mock(filename="attachment.png")
+        resource_attachment2 = mock.Mock(filename="attachment2.png")
+        resource_attachment3 = mock.Mock(filename="attachment3.png")
+        resource_attachment4 = mock.Mock(filename="attachment4.png")
+        resource_attachment5 = mock.Mock(filename="attachment5.png")
         component1 = mock.Mock(build=mock.Mock(return_value={"component": 1}))
         component2 = mock.Mock(build=mock.Mock(return_value={"component": 2}))
         embed1 = object()
@@ -1398,7 +1406,17 @@ class TestRESTClientImpl:
 
         stack = contextlib.ExitStack()
         ensure_resource = stack.enter_context(
-            mock.patch.object(files, "ensure_resource", side_effect=[resource_attachment1, resource_attachment2])
+            mock.patch.object(
+                files,
+                "ensure_resource",
+                side_effect=[
+                    resource_attachment1,
+                    resource_attachment2,
+                    resource_attachment3,
+                    resource_attachment4,
+                    resource_attachment5,
+                ],
+            )
         )
         generate_allowed_mentions = stack.enter_context(
             mock.patch.object(mentions, "generate_allowed_mentions", return_value={"allowed_mentions": 1})
@@ -1415,7 +1433,6 @@ class TestRESTClientImpl:
                 attachments=[attachment1, attachment2],
                 components=[component1, component2],
                 embeds=[embed1, embed2],
-                replace_attachments=True,
                 flags=120,
                 tts=True,
                 mentions_everyone=mentions_everyone,
@@ -1431,14 +1448,29 @@ class TestRESTClientImpl:
             "flags": 120,
             "embeds": [{"embed": 1}, {"embed": 2}],
             "components": [{"component": 1}, {"component": 2}],
-            "attachments": None,
+            "attachments": [
+                {"id": 0, "filename": "attachment.png"},
+                {"id": 123, "filename": "attachment123.png"},
+                {"id": 1, "filename": "attachment2.png"},
+                {"id": 2, "filename": "attachment3.png"},
+                {"id": 3, "filename": "attachment4.png"},
+                {"id": 4, "filename": "attachment5.png"},
+            ],
             "allowed_mentions": {"allowed_mentions": 1},
         }
         assert form is url_encoded_form.return_value
 
         # Attachments
-        assert ensure_resource.call_count == 2
-        ensure_resource.assert_has_calls([mock.call(attachment1), mock.call(attachment2)])
+        assert ensure_resource.call_count == 5
+        ensure_resource.assert_has_calls(
+            [
+                mock.call(attachment1),
+                mock.call(embed_attachment1),
+                mock.call(embed_attachment2),
+                mock.call(embed_attachment3),
+                mock.call(embed_attachment4),
+            ]
+        )
 
         # Embeds
         assert rest_client._entity_factory.serialize_embed.call_count == 2
@@ -1455,15 +1487,14 @@ class TestRESTClientImpl:
 
         # Form builder
         url_encoded_form.assert_called_once_with(executor=rest_client._executor)
-        assert url_encoded_form.return_value.add_resource.call_count == 6
+        assert url_encoded_form.return_value.add_resource.call_count == 5
         url_encoded_form.return_value.add_resource.assert_has_calls(
             [
-                mock.call("file0", resource_attachment1),
-                mock.call("file1", resource_attachment2),
-                mock.call("file2", embed_attachment1),
-                mock.call("file3", embed_attachment2),
-                mock.call("file4", embed_attachment3),
-                mock.call("file5", embed_attachment4),
+                mock.call("files[0]", resource_attachment1),
+                mock.call("files[1]", resource_attachment2),
+                mock.call("files[2]", resource_attachment3),
+                mock.call("files[3]", resource_attachment4),
+                mock.call("files[4]", resource_attachment5),
             ]
         )
 
@@ -2592,7 +2623,6 @@ class TestRESTClientImplAsync:
             components=[component_obj2],
             embed=embed_obj,
             embeds=[embed_obj2],
-            replace_attachments=True,
             mentions_everyone=False,
             user_mentions=[9876],
             role_mentions=[1234],
@@ -2609,7 +2639,6 @@ class TestRESTClientImplAsync:
             embed=embed_obj,
             embeds=[embed_obj2],
             flags=120,
-            replace_attachments=True,
             mentions_everyone=False,
             mentions_reply=undefined.UNDEFINED,
             user_mentions=[9876],
@@ -2645,7 +2674,6 @@ class TestRESTClientImplAsync:
             components=[component_obj2],
             embed=embed_obj,
             embeds=[embed_obj2],
-            replace_attachments=True,
             mentions_everyone=False,
             user_mentions=[9876],
             role_mentions=[1234],
@@ -2662,7 +2690,6 @@ class TestRESTClientImplAsync:
             embed=embed_obj,
             embeds=[embed_obj2],
             flags=120,
-            replace_attachments=True,
             mentions_everyone=False,
             mentions_reply=undefined.UNDEFINED,
             user_mentions=[9876],
@@ -3230,7 +3257,6 @@ class TestRESTClientImplAsync:
             components=[component_obj2],
             embed=embed_obj,
             embeds=[embed_obj2],
-            replace_attachments=True,
             mentions_everyone=False,
             user_mentions=[9876],
             role_mentions=[1234],
@@ -3245,7 +3271,6 @@ class TestRESTClientImplAsync:
             components=[component_obj2],
             embed=embed_obj,
             embeds=[embed_obj2],
-            replace_attachments=True,
             mentions_everyone=False,
             user_mentions=[9876],
             role_mentions=[1234],
@@ -3278,7 +3303,6 @@ class TestRESTClientImplAsync:
             components=undefined.UNDEFINED,
             embed=undefined.UNDEFINED,
             embeds=undefined.UNDEFINED,
-            replace_attachments=False,
             mentions_everyone=undefined.UNDEFINED,
             user_mentions=undefined.UNDEFINED,
             role_mentions=undefined.UNDEFINED,
@@ -3316,7 +3340,6 @@ class TestRESTClientImplAsync:
             components=[component_obj2],
             embed=embed_obj,
             embeds=[embed_obj2],
-            replace_attachments=True,
             mentions_everyone=False,
             user_mentions=[9876],
             role_mentions=[1234],
@@ -3331,7 +3354,6 @@ class TestRESTClientImplAsync:
             components=[component_obj2],
             embed=embed_obj,
             embeds=[embed_obj2],
-            replace_attachments=True,
             mentions_everyone=False,
             user_mentions=[9876],
             role_mentions=[1234],
@@ -3362,7 +3384,6 @@ class TestRESTClientImplAsync:
             components=undefined.UNDEFINED,
             embed=undefined.UNDEFINED,
             embeds=undefined.UNDEFINED,
-            replace_attachments=False,
             mentions_everyone=undefined.UNDEFINED,
             user_mentions=undefined.UNDEFINED,
             role_mentions=undefined.UNDEFINED,
@@ -5563,7 +5584,6 @@ class TestRESTClientImplAsync:
             components=[component_obj2],
             embed=embed_obj,
             embeds=[embed_obj2],
-            replace_attachments=True,
             tts=True,
             flags=120,
             mentions_everyone=False,
@@ -5579,7 +5599,6 @@ class TestRESTClientImplAsync:
             components=[component_obj2],
             embed=embed_obj,
             embeds=[embed_obj2],
-            replace_attachments=True,
             tts=True,
             flags=120,
             mentions_everyone=False,
@@ -5615,7 +5634,6 @@ class TestRESTClientImplAsync:
             components=[component_obj2],
             embed=embed_obj,
             embeds=[embed_obj2],
-            replace_attachments=True,
             tts=True,
             flags=120,
             mentions_everyone=False,
@@ -5631,7 +5649,6 @@ class TestRESTClientImplAsync:
             components=[component_obj2],
             embed=embed_obj,
             embeds=[embed_obj2],
-            replace_attachments=True,
             tts=True,
             flags=120,
             mentions_everyone=False,
@@ -5666,7 +5683,6 @@ class TestRESTClientImplAsync:
             components=[component_obj2],
             embed=embed_obj,
             embeds=[embed_obj2],
-            replace_attachments=True,
             mentions_everyone=False,
             user_mentions=[9876],
             role_mentions=[1234],
@@ -5681,7 +5697,6 @@ class TestRESTClientImplAsync:
             components=[component_obj2],
             embed=embed_obj,
             embeds=[embed_obj2],
-            replace_attachments=True,
             mentions_everyone=False,
             user_mentions=[9876],
             role_mentions=[1234],
@@ -5716,7 +5731,6 @@ class TestRESTClientImplAsync:
             components=[component_obj2],
             embed=embed_obj,
             embeds=[embed_obj2],
-            replace_attachments=True,
             mentions_everyone=False,
             user_mentions=[9876],
             role_mentions=[1234],
@@ -5731,7 +5745,6 @@ class TestRESTClientImplAsync:
             components=[component_obj2],
             embed=embed_obj,
             embeds=[embed_obj2],
-            replace_attachments=True,
             mentions_everyone=False,
             user_mentions=[9876],
             role_mentions=[1234],
