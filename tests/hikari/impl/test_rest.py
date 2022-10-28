@@ -2929,6 +2929,21 @@ class TestRESTClientImplAsync:
             [mock.call({"id": "456"}), mock.call({"id": "789"})]
         )
 
+    async def test_fetch_channel_webhooks_ignores_unrecognised_webhook_type(self, rest_client):
+        webhook1 = StubModel(456)
+        expected_route = routes.GET_CHANNEL_WEBHOOKS.compile(channel=123)
+        rest_client._request = mock.AsyncMock(return_value=[{"id": "456"}, {"id": "789"}])
+        rest_client._entity_factory.deserialize_webhook = mock.Mock(
+            side_effect=[errors.UnrecognisedEntityError("yeet"), webhook1]
+        )
+
+        assert await rest_client.fetch_channel_webhooks(StubModel(123)) == [webhook1]
+        rest_client._request.assert_awaited_once_with(expected_route)
+        assert rest_client._entity_factory.deserialize_webhook.call_count == 2
+        rest_client._entity_factory.deserialize_webhook.assert_has_calls(
+            [mock.call({"id": "456"}), mock.call({"id": "789"})]
+        )
+
     async def test_fetch_guild_webhooks(self, rest_client):
         webhook1 = StubModel(456)
         webhook2 = StubModel(789)
@@ -2939,6 +2954,23 @@ class TestRESTClientImplAsync:
         assert await rest_client.fetch_guild_webhooks(StubModel(123)) == [webhook1, webhook2]
         rest_client._request.assert_awaited_once_with(expected_route)
         assert rest_client._entity_factory.deserialize_webhook.call_count == 2
+        rest_client._entity_factory.deserialize_webhook.assert_has_calls(
+            [mock.call({"id": "456"}), mock.call({"id": "789"})]
+        )
+
+    async def test_fetch_guild_webhooks_ignores_unrecognised_webhook_types(self, rest_client):
+        webhook1 = StubModel(456)
+        expected_route = routes.GET_GUILD_WEBHOOKS.compile(guild=123)
+        rest_client._request = mock.AsyncMock(return_value=[{"id": "456"}, {"id": "789"}])
+        rest_client._entity_factory.deserialize_webhook = mock.Mock(
+            side_effect=[errors.UnrecognisedEntityError("meow meow"), webhook1]
+        )
+
+        assert await rest_client.fetch_guild_webhooks(StubModel(123)) == [webhook1]
+        rest_client._request.assert_awaited_once_with(expected_route)
+        assert (
+            rest_client._entity_factory.deserialize_webhook.call_count == 2
+        )  # TODO: remove the call counts tis unnecessary
         rest_client._entity_factory.deserialize_webhook.assert_has_calls(
             [mock.call({"id": "456"}), mock.call({"id": "789"})]
         )
@@ -4106,6 +4138,22 @@ class TestRESTClientImplAsync:
             [mock.call({"id": "456"}), mock.call({"id": "789"})]
         )
 
+    async def test_fetch_guild_channels_ignores_unknown_channel_type(self, rest_client):
+        channel1 = StubModel(456)
+        expected_route = routes.GET_GUILD_CHANNELS.compile(guild=123)
+        rest_client._request = mock.AsyncMock(return_value=[{"id": "456"}, {"id": "789"}])
+        rest_client._entity_factory.deserialize_channel = mock.Mock(
+            side_effect=[errors.UnrecognisedEntityError("echelon"), channel1]
+        )
+
+        assert await rest_client.fetch_guild_channels(StubModel(123)) == [channel1]
+
+        rest_client._request.assert_awaited_once_with(expected_route)
+        assert rest_client._entity_factory.deserialize_channel.call_count == 2
+        rest_client._entity_factory.deserialize_channel.assert_has_calls(
+            [mock.call({"id": "456"}), mock.call({"id": "789"})]
+        )
+
     async def test_create_guild_text_channel(self, rest_client: rest.RESTClientImpl):
         guild = StubModel(123)
         category_channel = StubModel(789)
@@ -5264,6 +5312,23 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route, query={"with_localizations": "true"})
         rest_client._entity_factory.deserialize_command.assert_called_once_with({"id": "34512312"}, guild_id=None)
 
+    async def test_fetch_application_commands_ignores_unknown_command_types(self, rest_client):
+        mock_command = mock.Mock()
+        expected_route = routes.GET_APPLICATION_GUILD_COMMANDS.compile(application=54123, guild=432234)
+        rest_client._entity_factory.deserialize_command.side_effect = [
+            errors.UnrecognisedEntityError("eep"),
+            mock_command,
+        ]
+        rest_client._request = mock.AsyncMock(return_value=[{"id": "541234"}, {"id": "553234"}])
+
+        result = await rest_client.fetch_application_commands(StubModel(54123), StubModel(432234))
+
+        assert result == [mock_command]
+        rest_client._request.assert_awaited_once_with(expected_route, query={"with_localizations": "true"})
+        rest_client._entity_factory.deserialize_command.assert_has_calls(
+            [mock.call({"id": "541234"}, guild_id=432234), mock.call({"id": "553234"}, guild_id=432234)]
+        )
+
     async def test__create_application_command_with_optionals(self, rest_client: rest.RESTClientImpl):
         expected_route = routes.POST_APPLICATION_GUILD_COMMAND.compile(application=4332123, guild=653452134)
         rest_client._request = mock.AsyncMock(return_value={"id": "29393939"})
@@ -5424,6 +5489,30 @@ class TestRESTClientImplAsync:
 
         assert result == [rest_client._entity_factory.deserialize_command.return_value]
         rest_client._entity_factory.deserialize_command.assert_called_once_with({"id": "9459329932"}, guild_id=None)
+        rest_client._request.assert_awaited_once_with(expected_route, json=[mock_command_builder.build.return_value])
+        mock_command_builder.build.assert_called_once_with(rest_client._entity_factory)
+
+    async def test_set_application_commands_without_guild_handles_unknown_command_types(self, rest_client):
+        mock_command = mock.Mock()
+        expected_route = routes.PUT_APPLICATION_GUILD_COMMANDS.compile(application=532123123, guild=453123)
+        rest_client._entity_factory.deserialize_command.side_effect = [
+            errors.UnrecognisedEntityError("meow"),
+            mock_command,
+        ]
+        rest_client._request = mock.AsyncMock(return_value=[{"id": "435765"}, {"id": "4949493933"}])
+        mock_command_builder = mock.Mock()
+
+        result = await rest_client.set_application_commands(
+            StubModel(532123123), [mock_command_builder], StubModel(453123)
+        )
+
+        assert result == [mock_command]
+        rest_client._entity_factory.deserialize_command.assert_has_calls(
+            [
+                mock.call({"id": "435765"}, guild_id=453123),
+                mock.call({"id": "4949493933"}, guild_id=453123),
+            ]
+        )
         rest_client._request.assert_awaited_once_with(expected_route, json=[mock_command_builder.build.return_value])
         mock_command_builder.build.assert_called_once_with(rest_client._entity_factory)
 
@@ -5797,6 +5886,25 @@ class TestRESTClientImplAsync:
         assert result == [rest_client._entity_factory.deserialize_scheduled_event.return_value]
         rest_client._entity_factory.deserialize_scheduled_event.assert_called_once_with(
             {"id": "494920234", "type": "1"}
+        )
+        rest_client._request.assert_awaited_once_with(expected_route, query={"with_user_count": "true"})
+
+    async def test_fetch_scheduled_events_handles_unrecognised_events(self, rest_client: rest.RESTClientImpl):
+        mock_event = mock.Mock()
+        rest_client._entity_factory.deserialize_scheduled_event.side_effect = [
+            errors.UnrecognisedEntityError("evil laugh"),
+            mock_event,
+        ]
+        expected_route = routes.GET_GUILD_SCHEDULED_EVENTS.compile(guild=65234123)
+        rest_client._request = mock.AsyncMock(
+            return_value=[{"id": "432234", "type": "1"}, {"id": "4939394", "type": "494949"}]
+        )
+
+        result = await rest_client.fetch_scheduled_events(StubModel(65234123))
+
+        assert result == [mock_event]
+        rest_client._entity_factory.deserialize_scheduled_event.assert_has_calls(
+            [mock.call({"id": "432234", "type": "1"}), mock.call({"id": "4939394", "type": "494949"})]
         )
         rest_client._request.assert_awaited_once_with(expected_route, query={"with_user_count": "true"})
 
