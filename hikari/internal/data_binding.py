@@ -412,7 +412,7 @@ def cast_enum_array(cast: typing.Callable[[T_co], T], raw_values: typing.Iterabl
     Returns
     -------
     typing.List[T]
-        A list of the casted varients (with any unrecognised types ignored.)
+        A list of the casted variants (with any unrecognised types ignored).
     """
     results: typing.List[T] = []
 
