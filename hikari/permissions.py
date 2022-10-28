@@ -246,6 +246,9 @@ class Permissions(enums.Flag):
         without warning.
     """
 
+    MANAGE_EVENTS = 1 << 33
+    """Allows for creating, editing, and deleting scheduled events	"""
+
     MANAGE_THREADS = 1 << 34
     """Allows for deleting and archiving threads, and viewing all private threads.
 
