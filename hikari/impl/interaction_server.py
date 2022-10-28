@@ -100,9 +100,8 @@ class _Response:
         content_type: typing.Optional[str] = None,
         files: typing.Sequence[files_.Resource[files_.AsyncReader]] = (),
     ) -> None:
-        if payload:
-            if not content_type:
-                content_type = _TEXT_CONTENT_TYPE
+        if payload and not content_type:
+            content_type = _TEXT_CONTENT_TYPE
 
         self._content_type = content_type
         self._files = files
