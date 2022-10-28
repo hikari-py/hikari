@@ -115,7 +115,7 @@ class EventFactory(abc.ABC):
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
         *,
-        old_channel: typing.Optional[channel_models.GuildChannel] = None,
+        old_channel: typing.Optional[channel_models.PermissibleGuildChannel] = None,
     ) -> channel_events.GuildChannelUpdateEvent:
         """Parse a raw payload from Discord into a channel update event object.
 
@@ -128,7 +128,7 @@ class EventFactory(abc.ABC):
 
         Other Parameters
         ----------------
-        old_channel : typing.Optional[hikari.channels.GuildChannel]
+        old_channel : typing.Optional[hikari.channels.PermissibleGuildChannel]
             The guild channel object or `builtins.None`.
 
         Returns
@@ -173,6 +173,120 @@ class EventFactory(abc.ABC):
         -------
         hikari.events.channel_events.PinsUpdateEvent
             The parsed channel pins update event object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_guild_thread_create_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> channel_events.GuildThreadCreateEvent:
+        """Parse a raw payload from Discord into a guild thread create event object.
+
+        Parameters
+        ----------
+        shard : hikari.api.shard.GatewayShard
+            The shard that emitted this event.
+        payload : hikari.internal.data_binding.JSONObject
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.channel_events.GuildThreadCreateEvent
+            The parsed guild thread create event object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_guild_thread_access_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> channel_events.GuildThreadAccessEvent:
+        """Parse a raw payload from Discord into a guild thread access event object.
+
+        Parameters
+        ----------
+        shard : hikari.api.shard.GatewayShard
+            The shard that emitted this event.
+        payload : hikari.internal.data_binding.JSONObject
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.channel_events.GuildThreadAccessEvent
+            The parsed guild thread create event object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_guild_thread_update_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> channel_events.GuildThreadUpdateEvent:
+        """Parse a raw payload from Discord into a guild thread update event object.
+
+        Parameters
+        ----------
+        shard : hikari.api.shard.GatewayShard
+            The shard that emitted this event.
+        payload : hikari.internal.data_binding.JSONObject
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.channel_events.GuildThreadUpdateEvent
+            The parsed guild thread update event object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_guild_thread_delete_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> channel_events.GuildThreadDeleteEvent:
+        """Parse a raw payload from Discord into a guild thread delete event object.
+
+        Parameters
+        ----------
+        shard : hikari.api.shard.GatewayShard
+            The shard that emitted this event.
+        payload : hikari.internal.data_binding.JSONObject
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.channel_events.GuildThreadDeleteEvent
+            The parsed guild thread delete event object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_thread_members_update_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> channel_events.ThreadMembersUpdateEvent:
+        """Parse a raw payload from Discord into a thread members update event object.
+
+        Parameters
+        ----------
+        shard : hikari.api.shard.GatewayShard
+            The shard that emitted this event.
+        payload : hikari.internal.data_binding.JSONObject
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.channel_events.ThreadMembersUpdateEvent
+            The parsed thread members update event object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_thread_list_sync_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> channel_events.ThreadListSyncEvent:
+        """Parse a raw payload from Discord into a thread list sync event object.
+
+        Parameters
+        ----------
+        shard : hikari.api.shard.GatewayShard
+            The shard that emitted this event.
+        payload : hikari.internal.data_binding.JSONObject
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.channel_events.ThreadListSyncEvent
+            The parsed thread member list sync event object.
         """
 
     @abc.abstractmethod

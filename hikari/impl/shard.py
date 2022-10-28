@@ -43,6 +43,7 @@ from hikari import intents as intents_
 from hikari import presences
 from hikari import snowflakes
 from hikari import undefined
+from hikari import urls
 from hikari.api import shard
 from hikari.impl import rate_limits
 from hikari.internal import aio
@@ -100,8 +101,6 @@ _TOTAL_RATELIMIT: typing.Final[typing.Tuple[float, int]] = (60.0, 120)
 # This is done to always allow for HEARTBEAT packages
 # to get around (leaving 3 slots for it).
 _NON_PRIORITY_RATELIMIT: typing.Final[typing.Tuple[float, int]] = (60.0, 117)
-# Supported gateway version
-_VERSION: typing.Final[int] = 8
 # Used to identify the end of a ZLIB payload
 _ZLIB_SUFFIX: typing.Final[bytes] = b"\x00\x00\xff\xff"
 # Close codes which don't invalidate the current session.
@@ -774,7 +773,7 @@ class GatewayShardImpl(shard.GatewayShard):
         )
 
         query = dict(urllib.parse.parse_qsl(url_parts.query))
-        query["v"] = str(_VERSION)
+        query["v"] = str(urls.VERSION)
         query["encoding"] = "json"
 
         if self._transport_compression:

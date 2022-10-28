@@ -173,6 +173,40 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         # TODO: we need a method for this specifically
         await self.dispatch(self._event_factory.deserialize_channel_pins_update_event(shard, payload))
 
+    @event_manager_base.filtered((channel_events.GuildThreadAccessEvent, channel_events.GuildThreadCreateEvent))
+    async def on_thread_create(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
+        """See https://discord.com/developers/docs/topics/gateway#thread-create for more info."""
+        event: typing.Union[channel_events.GuildThreadAccessEvent, channel_events.GuildThreadCreateEvent]
+        if "newly_created" in payload:
+            event = self._event_factory.deserialize_guild_thread_create_event(shard, payload)
+
+        else:
+            event = self._event_factory.deserialize_guild_thread_access_event(shard, payload)
+
+        await self.dispatch(event)
+
+    @event_manager_base.filtered(channel_events.GuildThreadUpdateEvent)
+    async def on_thread_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
+        """See https://discord.com/developers/docs/topics/gateway#thread-update for more info."""
+        await self.dispatch(self._event_factory.deserialize_guild_thread_update_event(shard, payload))
+
+    @event_manager_base.filtered(channel_events.GuildThreadDeleteEvent)
+    async def on_thread_delete(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
+        """See https://discord.com/developers/docs/topics/gateway#thread-delete for more info."""
+        await self.dispatch(self._event_factory.deserialize_guild_thread_delete_event(shard, payload))
+
+    @event_manager_base.filtered(channel_events.ThreadListSyncEvent)
+    async def on_thread_list_sync(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
+        """See https://discord.com/developers/docs/topics/gateway#thread-list-sync for more info."""
+        await self.dispatch(self._event_factory.deserialize_thread_list_sync_event(shard, payload))
+
+    @event_manager_base.filtered(channel_events.ThreadMembersUpdateEvent)
+    async def on_thread_members_update(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> None:
+        """See https://discord.com/developers/docs/topics/gateway#thread-members-update for more info."""
+        await self.dispatch(self._event_factory.deserialize_thread_members_update_event(shard, payload))
+
     # Internal granularity is preferred for GUILD_CREATE over decorator based filtering due to its large scope.
     async def on_guild_create(  # noqa: C901 - Function too complex
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
@@ -209,7 +243,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
 
         elif self._cache:
             _LOGGER.log(ux.TRACE, "Skipping on_guild_create dispatch due to lack of any registered listeners")
-            gd = self._entity_factory.deserialize_gateway_guild(payload)
+            gd = self._entity_factory.deserialize_gateway_guild(payload, user_id=shard.get_user_id())
 
             channels = gd.channels() if self._cache_enabled_for(config.CacheComponents.GUILD_CHANNELS) else None
             emojis = gd.emojis() if self._cache_enabled_for(config.CacheComponents.EMOJIS) else None
@@ -321,7 +355,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
             _LOGGER.log(ux.TRACE, "Skipping on_guild_update raw dispatch due to lack of any registered listeners")
             event = None
 
-            gd = self._entity_factory.deserialize_gateway_guild(payload)
+            gd = self._entity_factory.deserialize_gateway_guild(payload, user_id=shard.get_user_id())
             emojis = gd.emojis() if self._cache_enabled_for(config.CacheComponents.EMOJIS) else None
             stickers = gd.stickers() if self._cache_enabled_for(config.CacheComponents.GUILD_STICKERS) else None
             guild = gd.guild() if self._cache_enabled_for(config.CacheComponents.GUILDS) else None
