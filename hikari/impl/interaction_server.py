@@ -90,7 +90,7 @@ _TEXT_CONTENT_TYPE: typing.Final[str] = "text/plain"
 
 
 class _Response:
-    __slots__: typing.Sequence[str] = ("_content_type", "_charset", "_files", "_payload", "_status_code")
+    __slots__: typing.Sequence[str] = ("_content_type", "_files", "_payload", "_status_code")
 
     def __init__(
         self,
@@ -98,17 +98,13 @@ class _Response:
         payload: typing.Optional[bytes] = None,
         *,
         content_type: typing.Optional[str] = None,
-        charset: typing.Optional[str] = None,
         files: typing.Sequence[files_.Resource[files_.AsyncReader]] = (),
     ) -> None:
         if payload:
             if not content_type:
                 content_type = _TEXT_CONTENT_TYPE
-            if not charset:
-                charset = _UTF_8_CHARSET
 
         self._content_type = content_type
-        self._charset = charset
         self._files = files
         self._payload = payload
         self._status_code = status_code
@@ -119,7 +115,8 @@ class _Response:
 
     @property
     def charset(self) -> typing.Optional[str]:
-        return self._charset
+        # No cases of charset not being UTF-8
+        return _UTF_8_CHARSET if self._payload else None
 
     @property
     def files(self) -> typing.Sequence[files_.Resource[files_.AsyncReader]]:
@@ -140,9 +137,7 @@ class _Response:
 
 # Constant response
 _PONG_RESPONSE: typing.Final[_Response] = _Response(
-    _OK_STATUS,
-    data_binding.dump_json({"type": _PONG_RESPONSE_TYPE}).encode(),
-    content_type=_JSON_CONTENT_TYPE,
+    _OK_STATUS, data_binding.dump_json({"type": _PONG_RESPONSE_TYPE}).encode(), content_type=_JSON_CONTENT_TYPE
 )
 
 
