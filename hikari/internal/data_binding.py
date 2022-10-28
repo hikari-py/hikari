@@ -396,7 +396,7 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
             self[key] = [str(int(value)) for value in values]
 
 
-def cast_enum_array(cast: typing.Callable[[T_co], T], raw_values: typing.Iterable[T_co]) -> typing.List[T]:
+def cast_enum_array(cast: typing.Callable[[T_co], T], raw_values: typing.Iterable[T_co], /) -> typing.List[T]:
     """Cast an array of enum variants while ignoring unrecognised variant types.
 
     Parameters
