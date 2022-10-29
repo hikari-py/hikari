@@ -1119,6 +1119,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         role_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
+        flags: typing.Union[undefined.UndefinedType, int, messages_.MessageFlag] = undefined.UNDEFINED,
     ) -> messages_.Message:
         """Create a message in the given channel.
 
@@ -1142,10 +1143,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        attachment : hikari.undefined.UndefinedOr[hikari.files.Resourceish],
+        attachment : hikari.undefined.UndefinedOr[hikari.files.Resourceish]
             If provided, the message attachment. This can be a resource,
             or string of a path on your computer or a URL.
-        attachments : hikari.undefined.UndefinedOr[typing.Sequence[hikari.files.Resourceish]],
+        attachments : hikari.undefined.UndefinedOr[typing.Sequence[hikari.files.Resourceish]]
             If provided, the message attachments. These can be resources, or
             strings consisting of paths on your computer or URLs.
         component : hikari.undefined.UndefinedOr[hikari.api.special_endpoints.ComponentBuilder]
@@ -1186,6 +1187,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             `hikari.snowflakes.Snowflake`, or
             `hikari.guilds.PartialRole` derivatives to enforce mentioning
             specific roles.
+        flags : hikari.undefined.UndefinedOr[hikari.messages.MessageFlag]
+            If provided, optional flags to set on the message. If
+            `hikari.undefined.UNDEFINED`, then nothing is changed.
+
+            Note that some flags may not be able to be set. Currently the only
+            flags that can be set are `NONE` and `SUPPRESS_EMBEDS`.
 
         !!! note
             Attachments can be passed as many different things, to aid in
@@ -1310,15 +1317,18 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
-        attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
-        attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
+        attachment: undefined.UndefinedNoneOr[
+            typing.Union[files.Resourceish, messages_.Attachment]
+        ] = undefined.UNDEFINED,
+        attachments: undefined.UndefinedNoneOr[
+            typing.Sequence[typing.Union[files.Resourceish, messages_.Attachment]]
+        ] = undefined.UNDEFINED,
         component: undefined.UndefinedNoneOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
         components: undefined.UndefinedNoneOr[
             typing.Sequence[special_endpoints.ComponentBuilder]
         ] = undefined.UNDEFINED,
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
-        replace_attachments: bool = False,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
@@ -1355,13 +1365,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        attachment : hikari.undefined.UndefinedOr[hikari.files.Resourceish]
+        attachment : hikari.undefined.UndefinedNoneOr[typing.Union[hikari.files.Resourceish, hikari.messages.Attachment]]
             If provided, the attachment to set on the message. If
             `hikari.undefined.UNDEFINED`, the previous attachment, if
             present, is not changed. If this is `builtins.None`, then the
             attachment is removed, if present. Otherwise, the new attachment
             that was provided will be attached.
-        attachments : hikari.undefined.UndefinedOr[typing.Sequence[hikari.files.Resourceish]]
+        attachments : hikari.undefined.UndefinedNoneOr[typing.Sequence[typing.Union[hikari.files.Resourceish, hikari.messages.Attachment]]]
             If provided, the attachments to set on the message. If
             `hikari.undefined.UNDEFINED`, the previous attachments, if
             present, are not changed. If this is `builtins.None`, then the
@@ -1388,11 +1398,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If this is `builtins.None` then any present embeds are removed.
             Otherwise, the new embeds that were provided will be used as the
             replacement.
-        replace_attachments: bool
-            Whether to replace the attachments with the provided ones. Defaults
-            to `builtins.False`.
-
-            Note this will also overwrite the embed attachments.
         mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
             If provided, sanitation for `@everyone` mentions. If
             `hikari.undefined.UNDEFINED`, then the previous setting is
@@ -2295,10 +2300,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         avatar_url : typing.Union[hikari.undefined.UndefinedType, builtins.str, hikari.files.URL]
             If provided, the url of an image to override the webhook's
             avatar with for this request.
-        attachment : hikari.undefined.UndefinedOr[hikari.files.Resourceish],
+        attachment : hikari.undefined.UndefinedOr[hikari.files.Resourceish]
             If provided, the message attachment. This can be a resource,
             or string of a path on your computer or a URL.
-        attachments : hikari.undefined.UndefinedOr[typing.Sequence[hikari.files.Resourceish]],
+        attachments : hikari.undefined.UndefinedOr[typing.Sequence[hikari.files.Resourceish]]
             If provided, the message attachments. These can be resources, or
             strings consisting of paths on your computer or URLs.
         component : hikari.undefined.UndefinedOr[hikari.api.special_endpoints.ComponentBuilder]
@@ -2342,9 +2347,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The flags to set for this webhook message.
 
             !!! warning
-                As of writing this can only be set for interaction webhooks
-                and the only settable flag is EPHEMERAL; this field is just
-                ignored for non-interaction webhooks.
+                As of writing the only flags which can be passed here are
+                `EPHEMERAL` (if this is an interaction response webhook) and
+                `SUPPRESS_EMBEDS`.
 
         !!! warning
             As of writing, `username` and `avatar_url` are ignored for
@@ -2485,15 +2490,18 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         thread: typing.Union[
             undefined.UndefinedType, snowflakes.SnowflakeishOr[channels_.GuildThreadChannel]
         ] = undefined.UNDEFINED,
-        attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
-        attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
+        attachment: undefined.UndefinedNoneOr[
+            typing.Union[files.Resourceish, messages_.Attachment]
+        ] = undefined.UNDEFINED,
+        attachments: undefined.UndefinedNoneOr[
+            typing.Sequence[typing.Union[files.Resourceish, messages_.Attachment]]
+        ] = undefined.UNDEFINED,
         component: undefined.UndefinedNoneOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
         components: undefined.UndefinedNoneOr[
             typing.Sequence[special_endpoints.ComponentBuilder]
         ] = undefined.UNDEFINED,
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
-        replace_attachments: bool = False,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
@@ -2536,13 +2544,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             the webhook's target channel.
 
             This is required when trying to edit a thread message.
-        attachment : hikari.undefined.UndefinedOr[hikari.files.Resourceish]
+        attachment : hikari.undefined.UndefinedNoneOr[typing.Union[hikari.files.Resourceish, hikari.messages.Attachment]]
             If provided, the attachment to set on the message. If
             `hikari.undefined.UNDEFINED`, the previous attachment, if
             present, is not changed. If this is `builtins.None`, then the
             attachment is removed, if present. Otherwise, the new attachment
             that was provided will be attached.
-        attachments : hikari.undefined.UndefinedOr[typing.Sequence[hikari.files.Resourceish]]
+        attachments : hikari.undefined.UndefinedNoneOr[typing.Sequence[typing.Union[hikari.files.Resourceish, hikari.messages.Attachment]]]
             If provided, the attachments to set on the message. If
             `hikari.undefined.UNDEFINED`, the previous attachments, if
             present, are not changed. If this is `builtins.None`, then the
@@ -2569,11 +2577,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If this is `builtins.None` then any present embeds are removed.
             Otherwise, the new embeds that were provided will be used as the
             replacement.
-        replace_attachments: bool
-            Whether to replace the attachments with the provided ones. Defaults
-            to `builtins.False`.
-
-            Note this will also overwrite the embed attachments.
         mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
             If provided, sanitation for `@everyone` mentions. If
             `hikari.undefined.UNDEFINED`, then the previous setting is
@@ -8015,13 +8018,14 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         flags: typing.Union[int, messages_.MessageFlag, undefined.UndefinedType] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
-        attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
-        component: undefined.UndefinedOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
-        components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
-        embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
-        embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
-        replace_attachments: bool = False,
+        attachment: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
+        attachments: undefined.UndefinedNoneOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
+        component: undefined.UndefinedNoneOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
+        components: undefined.UndefinedNoneOr[
+            typing.Sequence[special_endpoints.ComponentBuilder]
+        ] = undefined.UNDEFINED,
+        embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
+        embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
@@ -8059,26 +8063,21 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             no `embeds` kwarg is provided, then this will instead
             update the embed. This allows for simpler syntax when
             sending an embed alone.
-        attachment : hikari.undefined.UndefinedOr[hikari.files.Resourceish],
+        attachment : hikari.undefined.UndefinedNoneOr[typing.Union[hikari.files.Resourceish, hikari.messages.Attachment]]
             If provided, the message attachment. This can be a resource,
             or string of a path on your computer or a URL.
-        attachments : hikari.undefined.UndefinedOr[typing.Sequence[hikari.files.Resourceish]],
+        attachments : hikari.undefined.UndefinedNoneOr[typing.Sequence[typing.Union[hikari.files.Resourceish, hikari.messages.Attachment]]]
             If provided, the message attachments. These can be resources, or
             strings consisting of paths on your computer or URLs.
-        component : hikari.undefined.UndefinedOr[hikari.api.special_endpoints.ComponentBuilder]
+        component : hikari.undefined.UndefinedNoneOr[hikari.api.special_endpoints.ComponentBuilder]
             If provided, builder object of the component to include in this message.
-        components : hikari.undefined.UndefinedOr[typing.Sequence[hikari.api.special_endpoints.ComponentBuilder]]
+        components : hikari.undefined.UndefinedNoneOr[typing.Sequence[hikari.api.special_endpoints.ComponentBuilder]]
             If provided, a sequence of the component builder objects to include
             in this message.
-        embed : hikari.undefined.UndefinedOr[hikari.embeds.Embed]
+        embed : hikari.undefined.UndefinedNoneOr[hikari.embeds.Embed]
             If provided, the message embed.
-        embeds : hikari.undefined.UndefinedOr[typing.Sequence[hikari.embeds.Embed]]
+        embeds : hikari.undefined.UndefinedNoneOr[typing.Sequence[hikari.embeds.Embed]]
             If provided, the message embeds.
-        replace_attachments: bool
-            Whether to replace the attachments with the provided ones. Defaults
-            to `builtins.False`. This only effects component interactions.
-
-            Note this will also overwrite the embed attachments.
         flags : typing.Union[builtins.int, hikari.messages.MessageFlag, hikari.undefined.UndefinedType]
             If provided, the message flags this response should have.
 
@@ -8146,15 +8145,18 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         token: str,
         content: undefined.UndefinedNoneOr[typing.Any] = undefined.UNDEFINED,
         *,
-        attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
-        attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
+        attachment: undefined.UndefinedNoneOr[
+            typing.Union[files.Resourceish, messages_.Attachment]
+        ] = undefined.UNDEFINED,
+        attachments: undefined.UndefinedNoneOr[
+            typing.Sequence[typing.Union[files.Resourceish, messages_.Attachment]]
+        ] = undefined.UNDEFINED,
         component: undefined.UndefinedNoneOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
         components: undefined.UndefinedNoneOr[
             typing.Sequence[special_endpoints.ComponentBuilder]
         ] = undefined.UNDEFINED,
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
-        replace_attachments: bool = False,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
@@ -8187,13 +8189,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             `attachments` kwargs are provided, the values will be overwritten.
             This allows for simpler syntax when sending an embed or an
             attachment alone.
-        attachment : hikari.undefined.UndefinedOr[hikari.files.Resourceish]
+        attachment : hikari.undefined.UndefinedNoneOr[typing.Union[hikari.files.Resourceish, hikari.messages.Attachment]]
             If provided, the attachment to set on the message. If
             `hikari.undefined.UNDEFINED`, the previous attachment, if
             present, is not changed. If this is `builtins.None`, then the
             attachment is removed, if present. Otherwise, the new attachment
             that was provided will be attached.
-        attachments : hikari.undefined.UndefinedOr[typing.Sequence[hikari.files.Resourceish]]
+        attachments : hikari.undefined.UndefinedNoneOr[typing.Sequence[typing.Union[hikari.files.Resourceish, hikari.messages.Attachment]]]
             If provided, the attachments to set on the message. If
             `hikari.undefined.UNDEFINED`, the previous attachments, if
             present, are not changed. If this is `builtins.None`, then the
@@ -8220,11 +8222,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If this is `builtins.None` then any present embeds are removed.
             Otherwise, the new embeds that were provided will be used as the
             replacement.
-        replace_attachments: bool
-            Whether to replace the attachments with the provided ones. Defaults
-            to `builtins.False`.
-
-            Note this will also overwrite the embed attachments.
         mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
             If provided, whether the message should parse @everyone/@here
             mentions.
