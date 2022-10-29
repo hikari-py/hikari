@@ -33,6 +33,7 @@ from hikari import _about
 from hikari import errors
 from hikari import intents
 from hikari import presences
+from hikari import urls
 from hikari.impl import config
 from hikari.impl import shard
 from hikari.internal import aio
@@ -987,7 +988,7 @@ class TestGatewayShardImplAsync:
         gateway_transport_connect = stack.enter_context(
             mock.patch.object(shard._GatewayTransport, "connect", return_value=ws)
         )
-        stack.enter_context(mock.patch.object(shard, "_VERSION", new=400))
+        stack.enter_context(mock.patch.object(urls, "VERSION", new=400))
         stack.enter_context(mock.patch.object(platform, "system", return_value="Potato OS"))
         stack.enter_context(mock.patch.object(platform, "architecture", return_value=["ARM64"]))
         stack.enter_context(mock.patch.object(aiohttp, "__version__", new="4.0"))
@@ -1078,7 +1079,7 @@ class TestGatewayShardImplAsync:
         gateway_transport_connect = stack.enter_context(
             mock.patch.object(shard._GatewayTransport, "connect", return_value=ws)
         )
-        stack.enter_context(mock.patch.object(shard, "_VERSION", new=400))
+        stack.enter_context(mock.patch.object(urls, "VERSION", new=400))
 
         with stack:
             assert await client._connect() == (heartbeat_task, poll_events_task)

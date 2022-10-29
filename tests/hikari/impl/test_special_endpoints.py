@@ -793,8 +793,8 @@ class TestInteractionMessageBuilder:
 
     def test_build(self):
         mock_entity_factory = mock.Mock()
-        mock_embed = object()
         mock_component = mock.Mock()
+        mock_embed = object()
         mock_serialized_embed = object()
         mock_entity_factory.serialize_embed.return_value = (mock_serialized_embed, [])
         builder = (
@@ -868,18 +868,48 @@ class TestInteractionMessageBuilder:
         assert attachments == []
 
     def test_build_handles_attachments(self):
-        mock_attachment = mock.Mock()
-        mock_other_attachment = mock.Mock()
         mock_entity_factory = mock.Mock()
-        mock_entity_factory.serialize_embed.return_value = (object(), [mock_other_attachment])
+        mock_message_attachment = mock.Mock(messages.Attachment, id=123, filename="testing")
+        mock_file_attachment = object()
+        mock_embed = object()
+        mock_embed_attachment = object()
+        mock_entity_factory.serialize_embed.return_value = (mock_embed, [mock_embed_attachment])
         builder = (
             special_endpoints.InteractionMessageBuilder(base_interactions.ResponseType.MESSAGE_CREATE)
-            .add_attachment(mock_attachment)
+            .add_attachment(mock_file_attachment)
+            .add_attachment(mock_message_attachment)
             .add_embed(object())
         )
 
-        _, attachments = builder.build(mock_entity_factory)
-        assert attachments == [files.ensure_resource(mock_attachment), mock_other_attachment]
+        with mock.patch.object(files, "ensure_resource") as ensure_resource:
+            result, attachments = builder.build(mock_entity_factory)
+
+        ensure_resource.assert_called_once_with(mock_file_attachment)
+        assert result == {
+            "type": base_interactions.ResponseType.MESSAGE_CREATE,
+            "data": {
+                "attachments": [{"id": 123, "filename": "testing"}],
+                "embeds": [mock_embed],
+                "allowed_mentions": {"parse": []},
+            },
+        }
+
+        assert attachments == [ensure_resource.return_value, mock_embed_attachment]
+
+    def test_build_handles_cleared_attachments(self):
+        mock_entity_factory = mock.Mock()
+        builder = special_endpoints.InteractionMessageBuilder(
+            base_interactions.ResponseType.MESSAGE_UPDATE
+        ).clear_attachments()
+
+        result, attachments = builder.build(mock_entity_factory)
+
+        assert result == {
+            "type": base_interactions.ResponseType.MESSAGE_UPDATE,
+            "data": {"attachments": None},
+        }
+
+        assert attachments == []
 
 
 class TestSlashCommandBuilder:

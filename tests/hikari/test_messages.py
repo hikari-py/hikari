@@ -190,7 +190,6 @@ class TestAsyncMessage:
             attachments=[attachment, attachment],
             component=component,
             components=components,
-            replace_attachments=True,
             mentions_everyone=True,
             mentions_reply=False,
             user_mentions=False,
@@ -207,7 +206,6 @@ class TestAsyncMessage:
             attachments=[attachment, attachment],
             component=component,
             components=components,
-            replace_attachments=True,
             mentions_everyone=True,
             mentions_reply=False,
             user_mentions=False,
@@ -241,6 +239,7 @@ class TestAsyncMessage:
             user_mentions=False,
             role_mentions=roles,
             mentions_reply=True,
+            flags=321123,
         )
         message.app.rest.create_message.assert_awaited_once_with(
             channel=456,
@@ -257,6 +256,7 @@ class TestAsyncMessage:
             user_mentions=False,
             role_mentions=roles,
             mentions_reply=True,
+            flags=321123,
         )
 
     async def test_respond_when_reply_is_True(self, message):
@@ -279,6 +279,7 @@ class TestAsyncMessage:
             user_mentions=undefined.UNDEFINED,
             role_mentions=undefined.UNDEFINED,
             mentions_reply=undefined.UNDEFINED,
+            flags=undefined.UNDEFINED,
         )
 
     async def test_respond_when_reply_is_False(self, message):
@@ -301,6 +302,7 @@ class TestAsyncMessage:
             user_mentions=undefined.UNDEFINED,
             role_mentions=undefined.UNDEFINED,
             mentions_reply=undefined.UNDEFINED,
+            flags=undefined.UNDEFINED,
         )
 
     async def test_delete(self, message):

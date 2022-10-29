@@ -524,6 +524,7 @@ class TextableChannel(PartialChannel):
         role_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
+        flags: typing.Union[undefined.UndefinedType, int, messages.MessageFlag] = undefined.UNDEFINED,
     ) -> messages.Message:
         """Create a message in this channel.
 
@@ -545,10 +546,10 @@ class TextableChannel(PartialChannel):
 
         Other Parameters
         ----------------
-        attachment : hikari.undefined.UndefinedOr[hikari.files.Resourceish],
+        attachment : hikari.undefined.UndefinedOr[hikari.files.Resourceish]
             If provided, the message attachment. This can be a resource,
             or string of a path on your computer or a URL.
-        attachments : hikari.undefined.UndefinedOr[typing.Sequence[hikari.files.Resourceish]],
+        attachments : hikari.undefined.UndefinedOr[typing.Sequence[hikari.files.Resourceish]]
             If provided, the message attachments. These can be resources, or
             strings consisting of paths on your computer or URLs.
         component : hikari.undefined.UndefinedOr[hikari.api.special_endpoints.ComponentBuilder]
@@ -586,6 +587,12 @@ class TextableChannel(PartialChannel):
             `hikari.snowflakes.Snowflake`, or
             `hikari.guilds.PartialRole` derivatives to enforce mentioning
             specific roles.
+        flags : hikari.undefined.UndefinedOr[hikari.messages.MessageFlag]
+            If provided, optional flags to set on the message. If
+            `hikari.undefined.UNDEFINED`, then nothing is changed.
+
+            Note that some flags may not be able to be set. Currently the only
+            flags that can be set are `NONE` and `SUPPRESS_EMBEDS`.
 
         !!! note
             Attachments can be passed as many different things, to aid in
@@ -657,6 +664,7 @@ class TextableChannel(PartialChannel):
             user_mentions=user_mentions,
             role_mentions=role_mentions,
             mentions_reply=mentions_reply,
+            flags=flags,
         )
 
     def trigger_typing(self) -> special_endpoints.TypingIndicator:
