@@ -584,7 +584,8 @@ class ModalResponseMixin(PartialInteraction):
         self,
         title: str,
         custom_id: str,
-        components: typing.Sequence[special_endpoints.ComponentBuilder],
+        component: undefined.UndefinedOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
+        components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
     ) -> None:
         """Create a response by sending a modal.
 
@@ -594,24 +595,29 @@ class ModalResponseMixin(PartialInteraction):
             The title that will show up in the modal.
         custom_id : str
             Developer set custom ID used for identifying interactions with this modal.
-        components : typing.Sequence[special_endpoints.ComponentBuilder]
-            The components to display in the modal.
+
+        Other Parameters
+        ----------------
+        component : hikari.undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]]
+            A component builders to send in this modal.
+        components : hikari.undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]]
+            A sequence of component builders to send in this modal.
+
+        Raises
+        ------
+        ValueError
+            If both `component` and `components` are specified or if none are specified.
         """
         await self.app.rest.create_modal_response(
             self.id,
             self.token,
             title=title,
             custom_id=custom_id,
+            component=component,
             components=components,
         )
 
-    def build_modal_response(
-        self,
-        title: str,
-        custom_id: str,
-        *,
-        components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
-    ) -> special_endpoints.InteractionModalBuilder:
+    def build_modal_response(self, title: str, custom_id: str) -> special_endpoints.InteractionModalBuilder:
         """Create a builder for a modal interaction response.
 
         Parameters
@@ -620,15 +626,13 @@ class ModalResponseMixin(PartialInteraction):
             The title that will show up in the modal.
         custom_id : builtins.str
             Developer set custom ID used for identifying interactions with this modal.
-        components : hikari.undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]]
-            Sequence of component builders to send in this modal.
 
         Returns
         -------
         hikari.api.special_endpoints.InteractionModalBuilder
             The interaction modal response builder object.
         """
-        return self.app.rest.interaction_modal_builder(title=title, custom_id=custom_id, components=components)
+        return self.app.rest.interaction_modal_builder(title=title, custom_id=custom_id)
 
 
 @attr.define(hash=True, kw_only=True, weakref_slot=False)

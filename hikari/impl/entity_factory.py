@@ -37,6 +37,7 @@ from hikari import audit_logs as audit_log_models
 from hikari import channels as channel_models
 from hikari import colors as color_models
 from hikari import commands
+from hikari import components as component_models
 from hikari import embeds as embed_models
 from hikari import emojis as emoji_models
 from hikari import errors
@@ -505,13 +506,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             commands.CommandType.MESSAGE: self.deserialize_context_menu_command,
         }
         self._component_type_mapping = {
-            message_models.ComponentType.ACTION_ROW: self._deserialize_action_row,
-            message_models.ComponentType.BUTTON: self._deserialize_button,
-            message_models.ComponentType.SELECT_MENU: self._deserialize_select_menu,
-        }
-        self._modal_component_type_mapping = {
-            modal_interactions.ModalComponentType.ACTION_ROW: self._deserialize_modal_action_row,
-            modal_interactions.ModalComponentType.TEXT_INPUT: self._deserialize_text_input,
+            component_models.ComponentType.ACTION_ROW: self._deserialize_action_row,
+            component_models.ComponentType.BUTTON: self._deserialize_button,
+            component_models.ComponentType.SELECT_MENU: self._deserialize_select_menu,
+            component_models.ComponentType.TEXT_INPUT: self._deserialize_text_input,
         }
         self._dm_channel_type_mapping = {
             channel_models.ChannelType.DM: self.deserialize_dm,
@@ -2385,7 +2383,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             options=options,
             resolved=resolved,
             target_id=target_id,
-            app_permissions=permission_models.Permissions(app_perms) if app_perms is not None else None,
+            app_permissions=permission_models.Permissions(app_perms) if app_perms else None,
         )
 
     def deserialize_autocomplete_interaction(
@@ -2447,12 +2445,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             member = None
             user = self.deserialize_user(payload["user"])
 
-        app_perms = payload.get("app_permissions")
-
-        components: typing.List[modal_interactions.PartialModalComponent] = []
+        components: typing.List[component_models.PartialComponent] = []
         for component_payload in data_payload["components"]:
             try:
-                components.append(self._deserialize_modal_component(component_payload))
+                components.append(self._deserialize_component(component_payload))
             except errors.UnrecognisedEntityError:
                 pass
 
@@ -2460,13 +2456,14 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if message_payload := payload.get("message"):
             message = self.deserialize_message(message_payload)
 
+        app_perms = payload.get("app_permissions")
         return modal_interactions.ModalInteraction(
             app=self._app,
             application_id=snowflakes.Snowflake(payload["application_id"]),
             id=snowflakes.Snowflake(payload["id"]),
             type=base_interactions.InteractionType(payload["type"]),
             guild_id=guild_id,
-            app_permissions=permission_models.Permissions(app_perms) if app_perms is not None else None,
+            app_permissions=permission_models.Permissions(app_perms) if app_perms else None,
             guild_locale=locales.Locale(payload["guild_locale"]) if "guild_locale" in payload else None,
             locale=locales.Locale(payload["locale"]),
             channel_id=snowflakes.Snowflake(payload["channel_id"]),
@@ -2556,11 +2553,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             values=data_payload.get("values") or (),
             version=payload["version"],
             custom_id=data_payload["custom_id"],
-            component_type=message_models.ComponentType(data_payload["component_type"]),
+            component_type=component_models.ComponentType(data_payload["component_type"]),
             message=self.deserialize_message(payload["message"]),
             locale=locales.Locale(payload["locale"]),
             guild_locale=locales.Locale(payload["guild_locale"]) if "guild_locale" in payload else None,
-            app_permissions=permission_models.Permissions(app_perms) if app_perms is not None else None,
+            app_permissions=permission_models.Permissions(app_perms) if app_perms else None,
         )
 
     ##################
@@ -2616,8 +2613,17 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     # MESSAGE MODELS #
     ##################
 
-    def _deserialize_action_row(self, payload: data_binding.JSONObject) -> message_models.ActionRowComponent:
-        components: typing.List[message_models.PartialComponent] = []
+    def _deserialize_component(self, payload: data_binding.JSONObject) -> component_models.PartialComponent:
+        component_type = component_models.ComponentType(payload["type"])
+
+        if deserialize := self._component_type_mapping.get(component_type):
+            return deserialize(payload)
+
+        _LOGGER.debug("Unknown component type %s", component_type)
+        raise errors.UnrecognisedEntityError(f"Unrecognised component type {component_type}")
+
+    def _deserialize_action_row(self, payload: data_binding.JSONObject) -> component_models.ActionRowComponent:
+        components: typing.List[component_models.PartialComponent] = []
 
         for component_payload in payload["components"]:
             try:
@@ -2626,15 +2632,15 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             except errors.UnrecognisedEntityError:
                 pass
 
-        return message_models.ActionRowComponent(
-            type=message_models.ComponentType(payload["type"]), components=components
+        return component_models.ActionRowComponent(
+            type=component_models.ComponentType(payload["type"]), components=components
         )
 
-    def _deserialize_button(self, payload: data_binding.JSONObject) -> message_models.ButtonComponent:
+    def _deserialize_button(self, payload: data_binding.JSONObject) -> component_models.ButtonComponent:
         emoji_payload = payload.get("emoji")
-        return message_models.ButtonComponent(
-            type=message_models.ComponentType(payload["type"]),
-            style=message_models.ButtonStyle(payload["style"]),
+        return component_models.ButtonComponent(
+            type=component_models.ComponentType(payload["type"]),
+            style=component_models.ButtonStyle(payload["style"]),
             label=payload.get("label"),
             emoji=self.deserialize_emoji(emoji_payload) if emoji_payload else None,
             custom_id=payload.get("custom_id"),
@@ -2642,15 +2648,15 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             is_disabled=payload.get("disabled", False),
         )
 
-    def _deserialize_select_menu(self, payload: data_binding.JSONObject) -> message_models.SelectMenuComponent:
-        options: typing.List[message_models.SelectMenuOption] = []
+    def _deserialize_select_menu(self, payload: data_binding.JSONObject) -> component_models.SelectMenuComponent:
+        options: typing.List[component_models.SelectMenuOption] = []
         for option_payload in payload["options"]:
             emoji = None
             if emoji_payload := option_payload.get("emoji"):
                 emoji = self.deserialize_emoji(emoji_payload)
 
             options.append(
-                message_models.SelectMenuOption(
+                component_models.SelectMenuOption(
                     label=option_payload["label"],
                     value=option_payload["value"],
                     description=option_payload.get("description"),
@@ -2659,8 +2665,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 )
             )
 
-        return message_models.SelectMenuComponent(
-            type=message_models.ComponentType(payload["type"]),
+        return component_models.SelectMenuComponent(
+            type=component_models.ComponentType(payload["type"]),
             custom_id=payload["custom_id"],
             options=options,
             placeholder=payload.get("placeholder"),
@@ -2669,48 +2675,12 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             is_disabled=payload.get("disabled", False),
         )
 
-    def _deserialize_component(self, payload: data_binding.JSONObject) -> message_models.PartialComponent:
-        component_type = message_models.ComponentType(payload["type"])
-
-        if deserialize := self._component_type_mapping.get(component_type):
-            return deserialize(payload)
-
-        _LOGGER.debug("Unknown component type %s", component_type)
-        raise errors.UnrecognisedEntityError(f"Unrecognised component type {component_type}")
-
-    def _deserialize_modal_action_row(
-        self, payload: data_binding.JSONObject
-    ) -> modal_interactions.ModalActionRowComponent:
-        components: typing.List[modal_interactions.PartialModalComponent] = []
-
-        for component_payload in payload["components"]:
-            try:
-                components.append(self._deserialize_modal_component(component_payload))
-
-            except errors.UnrecognisedEntityError:
-                pass
-
-        return modal_interactions.ModalActionRowComponent(
-            type=message_models.ComponentType(payload["type"]), components=components
-        )
-
-    def _deserialize_text_input(self, payload: data_binding.JSONObject) -> modal_interactions.InteractionTextInput:
-        return modal_interactions.InteractionTextInput(
-            type=message_models.ComponentType(payload["type"]),
+    def _deserialize_text_input(self, payload: data_binding.JSONObject) -> component_models.TextInputComponent:
+        return component_models.TextInputComponent(
+            type=component_models.ComponentType(payload["type"]),
             custom_id=payload["custom_id"],
             value=payload["value"],
         )
-
-    def _deserialize_modal_component(
-        self, payload: data_binding.JSONObject
-    ) -> modal_interactions.PartialModalComponent:
-        component_type = modal_interactions.ModalComponentType(payload["type"])
-
-        if deserialize := self._modal_component_type_mapping.get(component_type):
-            return deserialize(payload)
-
-        _LOGGER.debug("Unknown component type %s", component_type)
-        raise errors.UnrecognisedEntityError(f"Unrecognised component type {component_type}")
 
     def _deserialize_message_activity(self, payload: data_binding.JSONObject) -> message_models.MessageActivity:
         return message_models.MessageActivity(
@@ -2848,7 +2818,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if interaction_payload := payload.get("interaction"):
             interaction = self._deserialize_message_interaction(interaction_payload)
 
-        components: undefined.UndefinedOr[typing.List[message_models.PartialComponent]] = undefined.UNDEFINED
+        components: undefined.UndefinedOr[typing.List[component_models.PartialComponent]] = undefined.UNDEFINED
         if component_payloads := payload.get("components"):
             components = []
             for component_payload in component_payloads:
@@ -2964,7 +2934,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if interaction_payload := payload.get("interaction"):
             interaction = self._deserialize_message_interaction(interaction_payload)
 
-        components: typing.List[message_models.PartialComponent] = []
+        components: typing.List[component_models.PartialComponent] = []
         if component_payloads := payload.get("components"):
             for component_payload in component_payloads:
                 try:

@@ -24,6 +24,7 @@ import mock
 import pytest
 
 from hikari import commands
+from hikari import components
 from hikari import emojis
 from hikari import files
 from hikari import locales
@@ -33,7 +34,6 @@ from hikari import snowflakes
 from hikari import undefined
 from hikari.impl import special_endpoints
 from hikari.interactions import base_interactions
-from hikari.interactions import modal_interactions
 from hikari.internal import routes
 from tests.hikari import hikari_test_helpers
 
@@ -1189,7 +1189,7 @@ class Test_ButtonBuilder:
     def button(self):
         return special_endpoints._ButtonBuilder(
             container=mock.Mock(),
-            style=messages.ButtonStyle.DANGER,
+            style=components.ButtonStyle.DANGER,
             custom_id="sfdasdasd",
             url="hi there",
             emoji=543123,
@@ -1200,7 +1200,7 @@ class Test_ButtonBuilder:
         )
 
     def test_style_property(self, button):
-        assert button.style is messages.ButtonStyle.DANGER
+        assert button.style is components.ButtonStyle.DANGER
 
     def test_emoji_property(self, button):
         assert button.emoji == 543123
@@ -1242,7 +1242,7 @@ class Test_ButtonBuilder:
     def test_build(self):
         result = special_endpoints._ButtonBuilder(
             container=object(),
-            style=messages.ButtonStyle.DANGER,
+            style=components.ButtonStyle.DANGER,
             url=undefined.UNDEFINED,
             emoji_id=undefined.UNDEFINED,
             emoji_name="emoji_name",
@@ -1252,8 +1252,8 @@ class Test_ButtonBuilder:
         ).build()
 
         assert result == {
-            "type": messages.ComponentType.BUTTON,
-            "style": messages.ButtonStyle.DANGER,
+            "type": components.ComponentType.BUTTON,
+            "style": components.ButtonStyle.DANGER,
             "emoji": {"name": "emoji_name"},
             "label": "no u",
             "custom_id": "ooga booga",
@@ -1263,7 +1263,7 @@ class Test_ButtonBuilder:
     def test_build_without_optional_fields(self):
         result = special_endpoints._ButtonBuilder(
             container=object(),
-            style=messages.ButtonStyle.LINK,
+            style=components.ButtonStyle.LINK,
             url="OK",
             emoji_id="123321",
             emoji_name=undefined.UNDEFINED,
@@ -1273,8 +1273,8 @@ class Test_ButtonBuilder:
         ).build()
 
         assert result == {
-            "type": messages.ComponentType.BUTTON,
-            "style": messages.ButtonStyle.LINK,
+            "type": components.ComponentType.BUTTON,
+            "style": components.ButtonStyle.LINK,
             "emoji": {"id": "123321"},
             "disabled": False,
             "url": "OK",
@@ -1284,7 +1284,7 @@ class Test_ButtonBuilder:
         mock_container = mock.Mock()
         button = special_endpoints._ButtonBuilder(
             container=mock_container,
-            style=messages.ButtonStyle.DANGER,
+            style=components.ButtonStyle.DANGER,
             url=undefined.UNDEFINED,
             emoji_id=undefined.UNDEFINED,
             emoji_name="emoji_name",
@@ -1302,7 +1302,7 @@ class TestLinkButtonBuilder:
     def test_url_property(self):
         button = special_endpoints.LinkButtonBuilder(
             container=object(),
-            style=messages.ButtonStyle.DANGER,
+            style=components.ButtonStyle.DANGER,
             url="hihihihi",
             emoji_id=undefined.UNDEFINED,
             emoji_name="emoji_name",
@@ -1318,7 +1318,7 @@ class TestInteractiveButtonBuilder:
     def test_custom_id_property(self):
         button = special_endpoints.InteractiveButtonBuilder(
             container=object(),
-            style=messages.ButtonStyle.DANGER,
+            style=components.ButtonStyle.DANGER,
             url="hihihihi",
             emoji_id=undefined.UNDEFINED,
             emoji_name="emoji_name",
@@ -1465,7 +1465,7 @@ class TestSelectMenuBuilder:
         result = special_endpoints.SelectMenuBuilder(container=object(), custom_id="o2o2o2").build()
 
         assert result == {
-            "type": messages.ComponentType.SELECT_MENU,
+            "type": components.ComponentType.SELECT_MENU,
             "custom_id": "o2o2o2",
             "options": [],
             "disabled": False,
@@ -1485,7 +1485,7 @@ class TestSelectMenuBuilder:
         )
 
         assert result == {
-            "type": messages.ComponentType.SELECT_MENU,
+            "type": components.ComponentType.SELECT_MENU,
             "custom_id": "o2o2o2",
             "options": [{"hi": "OK"}],
             "placeholder": "hi",
@@ -1505,8 +1505,8 @@ class TestTextInput:
         )
 
     def test_set_style(self, text_input):
-        assert text_input.set_style(modal_interactions.TextInputStyle.PARAGRAPH) is text_input
-        assert text_input.style == modal_interactions.TextInputStyle.PARAGRAPH
+        assert text_input.set_style(components.TextInputStyle.PARAGRAPH) is text_input
+        assert text_input.style == components.TextInputStyle.PARAGRAPH
 
     def test_set_custom_id(self, text_input):
         assert text_input.set_custom_id("custooom") is text_input
@@ -1548,7 +1548,7 @@ class TestTextInput:
         ).build()
 
         assert result == {
-            "type": modal_interactions.ModalComponentType.TEXT_INPUT,
+            "type": components.ComponentType.TEXT_INPUT,
             "style": 1,
             "custom_id": "o2o2o2",
             "label": "label",
@@ -1570,7 +1570,7 @@ class TestTextInput:
         )
 
         assert result == {
-            "type": modal_interactions.ModalComponentType.TEXT_INPUT,
+            "type": components.ComponentType.TEXT_INPUT,
             "style": 1,
             "custom_id": "o2o2o2",
             "label": "label",
@@ -1582,30 +1582,30 @@ class TestTextInput:
         }
 
 
-class TestActionRowBuilder:
+class TestMessageActionRowBuilder:
     def test_components_property(self):
         mock_component = object()
-        row = special_endpoints.ActionRowBuilder().add_component(mock_component)
+        row = special_endpoints.MessageActionRowBuilder().add_component(mock_component)
         assert row.components == [mock_component]
 
     def test_add_button_for_interactive(self):
-        row = special_endpoints.ActionRowBuilder()
-        button = row.add_button(messages.ButtonStyle.DANGER, "go home")
+        row = special_endpoints.MessageActionRowBuilder()
+        button = row.add_button(components.ButtonStyle.DANGER, "go home")
 
         button.add_to_container()
 
         assert row.components == [button]
 
     def test_add_button_for_link(self):
-        row = special_endpoints.ActionRowBuilder()
-        button = row.add_button(messages.ButtonStyle.LINK, "go home")
+        row = special_endpoints.MessageActionRowBuilder()
+        button = row.add_button(components.ButtonStyle.LINK, "go home")
 
         button.add_to_container()
 
         assert row.components == [button]
 
     def test_add_select_menu(self):
-        row = special_endpoints.ActionRowBuilder()
+        row = special_endpoints.MessageActionRowBuilder()
         menu = row.add_select_menu("hihihi")
 
         menu.add_to_container()
@@ -1616,13 +1616,13 @@ class TestActionRowBuilder:
         mock_component_1 = mock.Mock()
         mock_component_2 = mock.Mock()
 
-        row = special_endpoints.ActionRowBuilder()
+        row = special_endpoints.MessageActionRowBuilder()
         row._components = [mock_component_1, mock_component_2]
 
         result = row.build()
 
         assert result == {
-            "type": messages.ComponentType.ACTION_ROW,
+            "type": components.ComponentType.ACTION_ROW,
             "components": [mock_component_1.build.return_value, mock_component_2.build.return_value],
         }
         mock_component_1.build.assert_called_once_with()

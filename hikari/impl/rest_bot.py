@@ -60,7 +60,7 @@ if typing.TYPE_CHECKING:
         special_endpoints.InteractionDeferredBuilder,
         special_endpoints.InteractionMessageBuilder,
     ]
-    _ModalResponseBuilderT = typing.Union[
+    _ModalOrMessageResponseBuilderT = typing.Union[
         _MessageResponseBuilderT,
         special_endpoints.InteractionModalBuilder,
     ]
@@ -653,7 +653,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
     def get_listener(
         self, interaction_type: typing.Type[command_interactions.CommandInteraction], /
     ) -> typing.Optional[
-        interaction_server_.ListenerT[command_interactions.CommandInteraction, _ModalResponseBuilderT]
+        interaction_server_.ListenerT[command_interactions.CommandInteraction, _ModalOrMessageResponseBuilderT]
     ]:
         ...
 
@@ -661,7 +661,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
     def get_listener(
         self, interaction_type: typing.Type[component_interactions.ComponentInteraction], /
     ) -> typing.Optional[
-        interaction_server_.ListenerT[component_interactions.ComponentInteraction, _ModalResponseBuilderT]
+        interaction_server_.ListenerT[component_interactions.ComponentInteraction, _ModalOrMessageResponseBuilderT]
     ]:
         ...
 
@@ -697,7 +697,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         self,
         interaction_type: typing.Type[command_interactions.CommandInteraction],
         listener: typing.Optional[
-            interaction_server_.ListenerT[command_interactions.CommandInteraction, _ModalResponseBuilderT]
+            interaction_server_.ListenerT[command_interactions.CommandInteraction, _ModalOrMessageResponseBuilderT]
         ],
         /,
         *,
@@ -710,7 +710,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         self,
         interaction_type: typing.Type[component_interactions.ComponentInteraction],
         listener: typing.Optional[
-            interaction_server_.ListenerT[component_interactions.ComponentInteraction, _ModalResponseBuilderT]
+            interaction_server_.ListenerT[component_interactions.ComponentInteraction, _ModalOrMessageResponseBuilderT]
         ],
         /,
         *,

@@ -7955,13 +7955,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    def interaction_modal_builder(
-        self,
-        title: str,
-        custom_id: str,
-        *,
-        components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
-    ) -> special_endpoints.InteractionModalBuilder:
+    def interaction_modal_builder(self, title: str, custom_id: str) -> special_endpoints.InteractionModalBuilder:
         """Create a builder for a modal interaction response.
 
         Parameters
@@ -7970,8 +7964,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The title that will show up in the modal.
         custom_id : builtins.str
             Developer set custom ID used for identifying interactions with this modal.
-        components : hikari.undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]]
-            Sequence of component builders to send in this modal.
 
         Returns
         -------
@@ -8387,7 +8379,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         title: str,
         custom_id: str,
-        components: typing.Sequence[special_endpoints.ComponentBuilder],
+        component: undefined.UndefinedOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
+        components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
     ) -> None:
         """Create a response by sending a modal.
 
@@ -8397,24 +8390,31 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Object or ID of the interaction this response is for.
         token : builtins.str
             The command interaction's token.
-
-        Other Parameters
-        ----------------
         title : str
             The title that will show up in the modal.
         custom_id : str
             Developer set custom ID used for identifying interactions with this modal.
-        components : typing.Sequence[special_endpoints.ComponentBuilder]
+
+        Other Parameters
+        ----------------
+        component : hikari.undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]]
+            A component builders to send in this modal.
+        components : hikari.undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]]
             A sequence of component builders to send in this modal.
+
+        Raises
+        ------
+        ValueError
+            If both `component` and `components` are specified or if none are specified.
         """
 
     @abc.abstractmethod
-    def build_action_row(self) -> special_endpoints.ActionRowBuilder:
-        """Build an action row message component for use in message create and REST calls.
+    def build_message_action_row(self) -> special_endpoints.MessageActionRowBuilder:
+        """Build a message action row message component for use in message create and REST calls.
 
         Returns
         -------
-        hikari.api.special_endpoints.ActionRowBuilder
+        hikari.api.special_endpoints.MessageActionRowBuilder
             The initialised action row builder.
         """
 

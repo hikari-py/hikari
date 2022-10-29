@@ -27,7 +27,6 @@ You should never need to make any of these objects manually.
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
-    "ActionRowBuilder",
     "CommandBuilder",
     "SlashCommandBuilder",
     "ContextMenuCommandBuilder",
@@ -41,6 +40,7 @@ __all__: typing.Sequence[str] = (
     "SelectMenuBuilder",
     "TextInputBuilder",
     "InteractionModalBuilder",
+    "MessageActionRowBuilder",
     "ModalActionRowBuilder",
 )
 
@@ -51,6 +51,7 @@ import attr
 
 from hikari import channels
 from hikari import commands
+from hikari import components as component_models
 from hikari import emojis
 from hikari import errors
 from hikari import files
@@ -61,7 +62,6 @@ from hikari import snowflakes
 from hikari import undefined
 from hikari.api import special_endpoints
 from hikari.interactions import base_interactions
-from hikari.interactions import modal_interactions
 from hikari.internal import attr_extensions
 from hikari.internal import data_binding
 from hikari.internal import mentions
@@ -93,7 +93,7 @@ if typing.TYPE_CHECKING:
         "_InteractionAutocompleteBuilderT", bound="InteractionAutocompleteBuilder"
     )
     _InteractionModalBuilderT = typing.TypeVar("_InteractionModalBuilderT", bound="InteractionModalBuilder")
-    _ActionRowBuilderT = typing.TypeVar("_ActionRowBuilderT", bound="ActionRowBuilder")
+    _MessageActionRowBuilderT = typing.TypeVar("_MessageActionRowBuilderT", bound="MessageActionRowBuilder")
     _ModalActionRowBuilderT = typing.TypeVar("_ModalActionRowBuilderT", bound="ModalActionRowBuilder")
     _ButtonBuilderT = typing.TypeVar("_ButtonBuilderT", bound="_ButtonBuilder[typing.Any]")
     _SelectOptionBuilderT = typing.TypeVar("_SelectOptionBuilderT", bound="_SelectOptionBuilder[typing.Any]")
@@ -1449,7 +1449,7 @@ def _build_emoji(
 @attr.define(kw_only=True, weakref_slot=False)
 class _ButtonBuilder(special_endpoints.ButtonBuilder[_ContainerProtoT]):
     _container: _ContainerProtoT = attr.field()
-    _style: typing.Union[int, messages.ButtonStyle] = attr.field()
+    _style: typing.Union[int, component_models.ButtonStyle] = attr.field()
     _custom_id: undefined.UndefinedOr[str] = attr.field(default=undefined.UNDEFINED)
     _url: undefined.UndefinedOr[str] = attr.field(default=undefined.UNDEFINED)
     _emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType] = attr.field(
@@ -1461,7 +1461,7 @@ class _ButtonBuilder(special_endpoints.ButtonBuilder[_ContainerProtoT]):
     _is_disabled: bool = attr.field(default=False)
 
     @property
-    def style(self) -> typing.Union[int, messages.ButtonStyle]:
+    def style(self) -> typing.Union[int, component_models.ButtonStyle]:
         return self._style
 
     @property
@@ -1500,7 +1500,7 @@ class _ButtonBuilder(special_endpoints.ButtonBuilder[_ContainerProtoT]):
     def build(self) -> typing.MutableMapping[str, typing.Any]:
         data = data_binding.JSONObjectBuilder()
 
-        data["type"] = messages.ComponentType.BUTTON
+        data["type"] = component_models.ComponentType.BUTTON
         data["style"] = self._style
         data["disabled"] = self._is_disabled
         data.put("label", self._label)
@@ -1689,7 +1689,7 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder[_ContainerProtoT]):
     def build(self) -> typing.MutableMapping[str, typing.Any]:
         data = data_binding.JSONObjectBuilder()
 
-        data["type"] = messages.ComponentType.SELECT_MENU
+        data["type"] = component_models.ComponentType.SELECT_MENU
         data["custom_id"] = self._custom_id
         data["options"] = [option.build() for option in self._options]
         data.put("placeholder", self._placeholder)
@@ -1708,7 +1708,7 @@ class TextInputBuilder(special_endpoints.TextInputBuilder[_ContainerProtoT]):
     _custom_id: str = attr.field()
     _label: str = attr.field()
 
-    _style: modal_interactions.TextInputStyle = attr.field(default=modal_interactions.TextInputStyle.SHORT)
+    _style: component_models.TextInputStyle = attr.field(default=component_models.TextInputStyle.SHORT)
     _placeholder: undefined.UndefinedOr[str] = attr.field(default=undefined.UNDEFINED, kw_only=True)
     _value: undefined.UndefinedOr[str] = attr.field(default=undefined.UNDEFINED, kw_only=True)
     _required: undefined.UndefinedOr[bool] = attr.field(default=undefined.UNDEFINED, kw_only=True)
@@ -1724,7 +1724,7 @@ class TextInputBuilder(special_endpoints.TextInputBuilder[_ContainerProtoT]):
         return self._label
 
     @property
-    def style(self) -> modal_interactions.TextInputStyle:
+    def style(self) -> component_models.TextInputStyle:
         return self._style
 
     @property
@@ -1748,9 +1748,9 @@ class TextInputBuilder(special_endpoints.TextInputBuilder[_ContainerProtoT]):
         return self._max_length
 
     def set_style(
-        self: _TextInputBuilderT, style: typing.Union[modal_interactions.TextInputStyle, int], /
+        self: _TextInputBuilderT, style: typing.Union[component_models.TextInputStyle, int], /
     ) -> _TextInputBuilderT:
-        self._style = modal_interactions.TextInputStyle(style)
+        self._style = component_models.TextInputStyle(style)
         return self
 
     def set_custom_id(self: _TextInputBuilderT, custom_id: str, /) -> _TextInputBuilderT:
@@ -1788,7 +1788,7 @@ class TextInputBuilder(special_endpoints.TextInputBuilder[_ContainerProtoT]):
     def build(self) -> typing.MutableMapping[str, typing.Any]:
         data = data_binding.JSONObjectBuilder()
 
-        data["type"] = modal_interactions.ModalComponentType.TEXT_INPUT
+        data["type"] = component_models.ComponentType.TEXT_INPUT
         data["style"] = self._style
         data["custom_id"] = self._custom_id
         data["label"] = self._label
@@ -1802,17 +1802,17 @@ class TextInputBuilder(special_endpoints.TextInputBuilder[_ContainerProtoT]):
 
 
 @attr.define(kw_only=True, weakref_slot=False)
-class ActionRowBuilder(special_endpoints.ActionRowBuilder):
+class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
     """Standard implementation of `hikari.api.special_endpoints.ActionRowBuilder`."""
 
     _components: typing.List[special_endpoints.ComponentBuilder] = attr.field(factory=list)
-    _stored_type: typing.Optional[messages.ComponentType] = attr.field(default=None)
+    _stored_type: typing.Optional[component_models.ComponentType] = attr.field(default=None)
 
     @property
     def components(self) -> typing.Sequence[special_endpoints.ComponentBuilder]:
         return self._components.copy()
 
-    def _assert_can_add_type(self, type_: messages.ComponentType, /) -> None:
+    def _assert_can_add_type(self, type_: component_models.ComponentType, /) -> None:
         if self._stored_type is not None and self._stored_type != type_:
             raise ValueError(
                 f"{type_} component type cannot be added to a container which already holds {self._stored_type}"
@@ -1820,55 +1820,63 @@ class ActionRowBuilder(special_endpoints.ActionRowBuilder):
 
         self._stored_type = type_
 
-    def add_component(self: _ActionRowBuilderT, component: special_endpoints.ComponentBuilder, /) -> _ActionRowBuilderT:
+    def add_component(
+        self: _MessageActionRowBuilderT, component: special_endpoints.ComponentBuilder, /
+    ) -> _MessageActionRowBuilderT:
         self._components.append(component)
         return self
 
     @typing.overload
     def add_button(
-        self: _ActionRowBuilderT, style: messages.InteractiveButtonTypesT, custom_id: str, /
-    ) -> special_endpoints.InteractiveButtonBuilder[_ActionRowBuilderT]:
+        self: _MessageActionRowBuilderT, style: component_models.InteractiveButtonTypesT, custom_id: str, /
+    ) -> special_endpoints.InteractiveButtonBuilder[_MessageActionRowBuilderT]:
         ...
 
     @typing.overload
     def add_button(
-        self: _ActionRowBuilderT,
-        style: typing.Literal[messages.ButtonStyle.LINK, 5],
+        self: _MessageActionRowBuilderT,
+        style: typing.Literal[component_models.ButtonStyle.LINK, 5],
         url: str,
         /,
-    ) -> special_endpoints.LinkButtonBuilder[_ActionRowBuilderT]:
+    ) -> special_endpoints.LinkButtonBuilder[_MessageActionRowBuilderT]:
         ...
 
     @typing.overload
     def add_button(
-        self: _ActionRowBuilderT, style: typing.Union[int, messages.ButtonStyle], url_or_custom_id: str, /
+        self: _MessageActionRowBuilderT,
+        style: typing.Union[int, component_models.ButtonStyle],
+        url_or_custom_id: str,
+        /,
     ) -> typing.Union[
-        special_endpoints.LinkButtonBuilder[_ActionRowBuilderT],
-        special_endpoints.InteractiveButtonBuilder[_ActionRowBuilderT],
+        special_endpoints.LinkButtonBuilder[_MessageActionRowBuilderT],
+        special_endpoints.InteractiveButtonBuilder[_MessageActionRowBuilderT],
     ]:
         ...
 
     def add_button(
-        self: _ActionRowBuilderT, style: typing.Union[int, messages.ButtonStyle], url_or_custom_id: str, /
+        self: _MessageActionRowBuilderT,
+        style: typing.Union[int, component_models.ButtonStyle],
+        url_or_custom_id: str,
+        /,
     ) -> typing.Union[
-        special_endpoints.LinkButtonBuilder[_ActionRowBuilderT],
-        special_endpoints.InteractiveButtonBuilder[_ActionRowBuilderT],
+        special_endpoints.LinkButtonBuilder[_MessageActionRowBuilderT],
+        special_endpoints.InteractiveButtonBuilder[_MessageActionRowBuilderT],
     ]:
-        self._assert_can_add_type(messages.ComponentType.BUTTON)
-        if style in messages.InteractiveButtonTypes:
+        self._assert_can_add_type(component_models.ComponentType.BUTTON)
+        if style in component_models.InteractiveButtonTypes:
             return InteractiveButtonBuilder(container=self, style=style, custom_id=url_or_custom_id)
 
         return LinkButtonBuilder(container=self, style=style, url=url_or_custom_id)
 
     def add_select_menu(
-        self: _ActionRowBuilderT, custom_id: str, /
-    ) -> special_endpoints.SelectMenuBuilder[_ActionRowBuilderT]:
-        self._assert_can_add_type(messages.ComponentType.SELECT_MENU)
+        self: _MessageActionRowBuilderT, custom_id: str, /
+    ) -> special_endpoints.SelectMenuBuilder[_MessageActionRowBuilderT]:
+        self._assert_can_add_type(component_models.ComponentType.SELECT_MENU)
         return SelectMenuBuilder(container=self, custom_id=custom_id)
 
     def build(self) -> typing.MutableMapping[str, typing.Any]:
         return {
-            "type": messages.ComponentType.ACTION_ROW,
+            "type": component_models.ComponentType.ACTION_ROW,
             "components": [component.build() for component in self._components],
         }
 
@@ -1878,13 +1886,13 @@ class ModalActionRowBuilder(special_endpoints.ModalActionRowBuilder):
     """Standard implementation of `hikari.api.special_endpoints.ActionRowBuilder`."""
 
     _components: typing.List[special_endpoints.ComponentBuilder] = attr.field(factory=list)
-    _stored_type: typing.Optional[modal_interactions.ModalComponentType] = attr.field(default=None)
+    _stored_type: typing.Optional[component_models.ComponentType] = attr.field(default=None)
 
     @property
     def components(self) -> typing.Sequence[special_endpoints.ComponentBuilder]:
         return self._components.copy()
 
-    def _assert_can_add_type(self, type_: modal_interactions.ModalComponentType, /) -> None:
+    def _assert_can_add_type(self, type_: component_models.ComponentType, /) -> None:
         if self._stored_type is not None and self._stored_type != type_:
             raise ValueError(
                 f"{type_} component type cannot be added to a container which already holds {self._stored_type}"
@@ -1903,11 +1911,11 @@ class ModalActionRowBuilder(special_endpoints.ModalActionRowBuilder):
         custom_id: str,
         label: str,
     ) -> special_endpoints.TextInputBuilder[_ModalActionRowBuilderT]:
-        self._assert_can_add_type(modal_interactions.ModalComponentType.TEXT_INPUT)
+        self._assert_can_add_type(component_models.ComponentType.TEXT_INPUT)
         return TextInputBuilder(container=self, custom_id=custom_id, label=label)
 
     def build(self) -> typing.MutableMapping[str, typing.Any]:
         return {
-            "type": messages.ComponentType.ACTION_ROW,
+            "type": component_models.ComponentType.ACTION_ROW,
             "components": [component.build() for component in self._components],
         }

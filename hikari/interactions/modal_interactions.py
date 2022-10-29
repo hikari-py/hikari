@@ -27,12 +27,7 @@ from __future__ import annotations
 __all__: typing.List[str] = [
     "ModalResponseTypesT",
     "ModalInteraction",
-    "InteractionTextInput",
     "ModalInteraction",
-    "TextInputStyle",
-    "ModalComponentType",
-    "PartialModalComponent",
-    "ModalActionRowComponent",
 ]
 
 import typing
@@ -47,14 +42,21 @@ from hikari import snowflakes
 from hikari import traits
 from hikari.interactions import base_interactions
 from hikari.internal import attr_extensions
-from hikari.internal import enums
 
 if typing.TYPE_CHECKING:
+    from hikari import components as components_
     from hikari import users as _users
     from hikari.api import special_endpoints
 
 ModalResponseTypesT = typing.Literal[
-    base_interactions.ResponseType.MESSAGE_CREATE, 4, base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE, 5
+    base_interactions.ResponseType.MESSAGE_CREATE,
+    4,
+    base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE,
+    5,
+    base_interactions.ResponseType.MESSAGE_UPDATE,
+    7,
+    base_interactions.ResponseType.DEFERRED_MESSAGE_UPDATE,
+    6,
 ]
 """Type-hint of the response types which are valid for a modal interaction.
 
@@ -62,91 +64,9 @@ The following types are valid for this:
 
 * `hikari.interactions.base_interactions.ResponseType.MESSAGE_CREATE`/`4`
 * `hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE`/`5`
+* `hikari.interactions.base_interactions.ResponseType.MESSAGE_UPDATE`/`7`
+* `hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_UPDATE`/`6`
 """
-
-
-@typing.final
-class ModalComponentType(int, enums.Enum):
-    """Types of components found within Discord."""
-
-    ACTION_ROW = 1
-    """A non-interactive container component for other types of components.
-
-    !!! note
-        As this is a container component it can never be contained within another
-        component and therefore will always be top-level.
-
-    !!! note
-        As of writing this can only contain one component type.
-    """
-
-    TEXT_INPUT = 4
-    """A text input component
-
-    !! note
-        This component may only be used inside a modal container.
-    """
-
-
-class TextInputStyle(int, enums.Enum):
-    """A text input style."""
-
-    SHORT = 1
-    """Intended for short single-line text."""
-
-    PARAGRAPH = 2
-    """Intended for much longer inputs."""
-
-
-@attr.define(kw_only=True, weakref_slot=False)
-class PartialModalComponent:
-    """Base class for all model component entities."""
-
-    type: typing.Union[ModalComponentType, int] = attr.field()
-    """The type of component this is."""
-
-
-@attr.define(weakref_slot=False)
-class ModalActionRowComponent(PartialModalComponent):
-    """Represents a row of components attached to a message.
-
-    !!! note
-        This is a top-level container component and will never be found within
-        another component.
-    """
-
-    components: typing.Sequence[PartialModalComponent] = attr.field()
-    """Sequence of the components contained within this row."""
-
-    @typing.overload
-    def __getitem__(self, index: int, /) -> PartialModalComponent:
-        ...
-
-    @typing.overload
-    def __getitem__(self, slice_: slice, /) -> typing.Sequence[PartialModalComponent]:
-        ...
-
-    def __getitem__(
-        self, index_or_slice: typing.Union[int, slice], /
-    ) -> typing.Union[PartialModalComponent, typing.Sequence[PartialModalComponent]]:
-        return self.components[index_or_slice]
-
-    def __iter__(self) -> typing.Iterator[PartialModalComponent]:
-        return iter(self.components)
-
-    def __len__(self) -> int:
-        return len(self.components)
-
-
-@attr.define(kw_only=True, weakref_slot=False)
-class InteractionTextInput(PartialModalComponent):
-    """A text input component in a modal interaction."""
-
-    custom_id: str = attr.field(repr=True)
-    """Developer set custom ID used for identifying interactions with this modal."""
-
-    value: str = attr.field(repr=True)
-    """Value provided for this text input."""
 
 
 @attr_extensions.with_copy
@@ -201,7 +121,7 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
     app_permissions: typing.Optional[permissions.Permissions] = attr.field(eq=False, hash=False, repr=False)
     """Permissions the bot has in this interaction's channel if it's in a guild."""
 
-    components: typing.Sequence[PartialModalComponent] = attr.field(eq=False, hash=False, repr=True)
+    components: typing.Sequence[components_.PartialComponent] = attr.field(eq=False, hash=False, repr=True)
     """Components in the modal."""
 
     async def fetch_channel(self) -> channels.TextableChannel:
@@ -257,7 +177,7 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
         """
         if isinstance(self.app, traits.CacheAware):
             channel = self.app.cache.get_guild_channel(self.channel_id)
-            assert isinstance(channel, channels.TextableGuildChannel)
+            assert channel is None or isinstance(channel, channels.TextableGuildChannel)
             return channel
 
         return None

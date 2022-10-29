@@ -71,6 +71,7 @@ from hikari.channels import *
 from hikari.colors import *
 from hikari.colours import *
 from hikari.commands import *
+from hikari.components import *
 from hikari.embeds import *
 from hikari.emojis import *
 from hikari.errors import *

@@ -42,7 +42,7 @@ if typing.TYPE_CHECKING:
         special_endpoints.InteractionDeferredBuilder,
         special_endpoints.InteractionMessageBuilder,
     ]
-    _ModalResponseBuilder = typing.Union[
+    _ModalOrMessageResponseBuilder = typing.Union[
         _MessageResponseBuilderT,
         special_endpoints.InteractionModalBuilder,
     ]
@@ -142,14 +142,14 @@ class InteractionServer(abc.ABC):
     @abc.abstractmethod
     def get_listener(
         self, interaction_type: typing.Type[command_interactions.CommandInteraction], /
-    ) -> typing.Optional[ListenerT[command_interactions.CommandInteraction, _ModalResponseBuilder]]:
+    ) -> typing.Optional[ListenerT[command_interactions.CommandInteraction, _ModalOrMessageResponseBuilder]]:
         ...
 
     @typing.overload
     @abc.abstractmethod
     def get_listener(
         self, interaction_type: typing.Type[component_interactions.ComponentInteraction], /
-    ) -> typing.Optional[ListenerT[component_interactions.ComponentInteraction, _ModalResponseBuilder]]:
+    ) -> typing.Optional[ListenerT[component_interactions.ComponentInteraction, _ModalOrMessageResponseBuilder]]:
         ...
 
     @typing.overload
@@ -198,7 +198,7 @@ class InteractionServer(abc.ABC):
     def set_listener(
         self,
         interaction_type: typing.Type[command_interactions.CommandInteraction],
-        listener: typing.Optional[ListenerT[command_interactions.CommandInteraction, _ModalResponseBuilder]],
+        listener: typing.Optional[ListenerT[command_interactions.CommandInteraction, _ModalOrMessageResponseBuilder]],
         /,
         *,
         replace: bool = False,
@@ -210,7 +210,9 @@ class InteractionServer(abc.ABC):
     def set_listener(
         self,
         interaction_type: typing.Type[component_interactions.ComponentInteraction],
-        listener: typing.Optional[ListenerT[component_interactions.ComponentInteraction, _ModalResponseBuilder]],
+        listener: typing.Optional[
+            ListenerT[component_interactions.ComponentInteraction, _ModalOrMessageResponseBuilder]
+        ],
         /,
         *,
         replace: bool = False,

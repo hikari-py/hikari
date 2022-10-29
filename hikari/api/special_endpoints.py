@@ -24,7 +24,6 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
-    "ActionRowBuilder",
     "ButtonBuilder",
     "CommandBuilder",
     "SlashCommandBuilder",
@@ -42,6 +41,7 @@ __all__: typing.Sequence[str] = (
     "SelectOptionBuilder",
     "TextInputBuilder",
     "InteractionModalBuilder",
+    "MessageActionRowBuilder",
     "ModalActionRowBuilder",
 )
 
@@ -56,6 +56,7 @@ if typing.TYPE_CHECKING:
     from hikari import channels
     from hikari import colors
     from hikari import commands
+    from hikari import components as components_
     from hikari import embeds as embeds_
     from hikari import emojis
     from hikari import files
@@ -69,7 +70,6 @@ if typing.TYPE_CHECKING:
     from hikari.api import entity_factory as entity_factory_
     from hikari.api import rest as rest_api
     from hikari.interactions import base_interactions
-    from hikari.interactions import modal_interactions
     from hikari.internal import time
 
     _T = typing.TypeVar("_T")
@@ -1264,7 +1264,7 @@ class ButtonBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
 
     @property
     @abc.abstractmethod
-    def style(self) -> typing.Union[messages.ButtonStyle, int]:
+    def style(self) -> typing.Union[components_.ButtonStyle, int]:
         """Button's style."""
 
     @property
@@ -1642,7 +1642,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
 
     @property
     @abc.abstractmethod
-    def style(self) -> modal_interactions.TextInputStyle:
+    def style(self) -> components_.TextInputStyle:
         """Style to use for the text input."""
 
     @property
@@ -1671,7 +1671,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
         """Maximum length the text should have."""
 
     @abc.abstractmethod
-    def set_style(self: _T, style: typing.Union[modal_interactions.TextInputStyle, int], /) -> _T:
+    def set_style(self: _T, style: typing.Union[components_.TextInputStyle, int], /) -> _T:
         """Set the style to use for the text input.
 
         Parameters
@@ -1801,7 +1801,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
         """
 
 
-class ActionRowBuilder(ComponentBuilder, abc.ABC):
+class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
     """Builder class for action row components."""
 
     __slots__: typing.Sequence[str] = ()
@@ -1838,25 +1838,27 @@ class ActionRowBuilder(ComponentBuilder, abc.ABC):
     @typing.overload
     @abc.abstractmethod
     def add_button(
-        self: _T, style: messages.InteractiveButtonTypesT, custom_id: str, /
+        self: _T, style: components_.InteractiveButtonTypesT, custom_id: str, /
     ) -> InteractiveButtonBuilder[_T]:
         ...
 
     @typing.overload
     @abc.abstractmethod
-    def add_button(self: _T, style: typing.Literal[messages.ButtonStyle.LINK, 5], url: str, /) -> LinkButtonBuilder[_T]:
+    def add_button(
+        self: _T, style: typing.Literal[components_.ButtonStyle.LINK, 5], url: str, /
+    ) -> LinkButtonBuilder[_T]:
         ...
 
     @typing.overload
     @abc.abstractmethod
     def add_button(
-        self: _T, style: typing.Union[int, messages.ButtonStyle], url_or_custom_id: str, /
+        self: _T, style: typing.Union[int, components_.ButtonStyle], url_or_custom_id: str, /
     ) -> typing.Union[LinkButtonBuilder[_T], InteractiveButtonBuilder[_T]]:
         ...
 
     @abc.abstractmethod
     def add_button(
-        self: _T, style: typing.Union[int, messages.ButtonStyle], url_or_custom_id: str, /
+        self: _T, style: typing.Union[int, components_.ButtonStyle], url_or_custom_id: str, /
     ) -> typing.Union[LinkButtonBuilder[_T], InteractiveButtonBuilder[_T]]:
         """Add a button component to this action row builder.
 

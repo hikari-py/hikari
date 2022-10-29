@@ -30,6 +30,7 @@ from hikari import audit_logs as audit_log_models
 from hikari import channels as channel_models
 from hikari import colors as color_models
 from hikari import commands
+from hikari import components as component_models
 from hikari import embeds as embed_models
 from hikari import emojis as emoji_models
 from hikari import errors
@@ -4520,7 +4521,7 @@ class TestEntityFactoryImpl:
         assert interaction.token == "unique_interaction_token"
         assert interaction.version == 1
         assert interaction.channel_id == 345626669114982999
-        assert interaction.component_type is message_models.ComponentType.BUTTON
+        assert interaction.component_type is component_models.ComponentType.BUTTON
         assert interaction.custom_id == "click_one"
         assert interaction.guild_id == 290926798626357999
         assert interaction.message == entity_factory_impl.deserialize_message(message_payload)
@@ -4564,7 +4565,6 @@ class TestEntityFactoryImpl:
 
     @pytest.fixture()
     def modal_interaction_payload(self, interaction_member_payload, message_payload):
-        # taken from ddocs
         return {
             "version": 1,
             "type": 5,
@@ -4611,11 +4611,11 @@ class TestEntityFactoryImpl:
         assert isinstance(interaction, modal_interactions.ModalInteraction)
 
         short_action_row = interaction.components[0]
-        assert isinstance(short_action_row, modal_interactions.ModalActionRowComponent)
+        assert isinstance(short_action_row, component_models.ActionRowComponent)
         short_text_input = short_action_row.components[0]
-        assert isinstance(short_text_input, modal_interactions.InteractionTextInput)
+        assert isinstance(short_text_input, component_models.TextInputComponent)
         assert short_text_input.value == "Wumpus"
-        assert short_text_input.type == modal_interactions.ModalComponentType.TEXT_INPUT
+        assert short_text_input.type == component_models.ComponentType.TEXT_INPUT
         assert short_text_input.custom_id == "name"
 
     def test_deserialize_modal_interaction_with_user(
@@ -5086,7 +5086,7 @@ class TestEntityFactoryImpl:
     def test__deserialize_action_row(self, entity_factory_impl, action_row_payload, button_payload):
         action_row = entity_factory_impl._deserialize_action_row(action_row_payload)
 
-        assert action_row.type is message_models.ComponentType.ACTION_ROW
+        assert action_row.type is component_models.ComponentType.ACTION_ROW
         assert action_row.components == [entity_factory_impl._deserialize_component(button_payload)]
 
     def test__deserialize_action_row_handles_unknown_component_type(self, entity_factory_impl):
@@ -5111,8 +5111,8 @@ class TestEntityFactoryImpl:
     def test_deserialize__deserialize_button(self, entity_factory_impl, button_payload, custom_emoji_payload):
         button = entity_factory_impl._deserialize_button(button_payload)
 
-        assert button.type is message_models.ComponentType.BUTTON
-        assert button.style is message_models.ButtonStyle.PRIMARY
+        assert button.type is component_models.ComponentType.BUTTON
+        assert button.style is component_models.ButtonStyle.PRIMARY
         assert button.label == "Click me!"
         assert button.emoji == entity_factory_impl.deserialize_emoji(custom_emoji_payload)
         assert button.custom_id == "click_one"
@@ -5124,8 +5124,8 @@ class TestEntityFactoryImpl:
     ):
         button = entity_factory_impl._deserialize_button({"type": 2, "style": 5})
 
-        assert button.type is message_models.ComponentType.BUTTON
-        assert button.style is message_models.ButtonStyle.LINK
+        assert button.type is component_models.ComponentType.BUTTON
+        assert button.style is component_models.ButtonStyle.LINK
         assert button.label is None
         assert button.emoji is None
         assert button.custom_id is None
@@ -5155,7 +5155,7 @@ class TestEntityFactoryImpl:
     def test__deserialize_select_menu(self, entity_factory_impl, select_menu_payload, custom_emoji_payload):
         menu = entity_factory_impl._deserialize_select_menu(select_menu_payload)
 
-        assert menu.type is message_models.ComponentType.SELECT_MENU
+        assert menu.type is component_models.ComponentType.SELECT_MENU
         assert menu.custom_id == "Not an ID"
 
         # SelectMenuOption
@@ -5166,7 +5166,7 @@ class TestEntityFactoryImpl:
         assert option.description == "queen"
         assert option.emoji == entity_factory_impl.deserialize_emoji(custom_emoji_payload)
         assert option.is_default is True
-        assert isinstance(option, message_models.SelectMenuOption)
+        assert isinstance(option, component_models.SelectMenuOption)
 
         assert menu.placeholder == "Imagine a place"
         assert menu.min_values == 69

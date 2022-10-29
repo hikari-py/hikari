@@ -35,6 +35,7 @@ from hikari.interactions import base_interactions
 from hikari.internal import deprecation
 
 if typing.TYPE_CHECKING:
+    from hikari import components as components_
     from hikari import guilds
     from hikari import locales
     from hikari import messages
@@ -93,7 +94,7 @@ class ComponentInteraction(
     channel_id: snowflakes.Snowflake = attr.field(eq=False)
     """ID of the channel this interaction was triggered in."""
 
-    component_type: typing.Union[messages.ComponentType, int] = attr.field(eq=False)
+    component_type: typing.Union[components_.ComponentType, int] = attr.field(eq=False)
     """The type of component which triggers this interaction.
 
     !!! note

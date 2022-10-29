@@ -1209,8 +1209,14 @@ class TestRESTClientImpl:
         assert result.type == commands.CommandType.MESSAGE
 
     def test_build_action_row(self, rest_client):
-        with mock.patch.object(special_endpoints, "ActionRowBuilder") as action_row_builder:
+        with mock.patch.object(special_endpoints, "MessageActionRowBuilder") as action_row_builder:
             assert rest_client.build_action_row() is action_row_builder.return_value
+
+        action_row_builder.assert_called_once_with()
+
+    def test_build_message_action_row(self, rest_client):
+        with mock.patch.object(special_endpoints, "MessageActionRowBuilder") as action_row_builder:
+            assert rest_client.build_message_action_row() is action_row_builder.return_value
 
         action_row_builder.assert_called_once_with()
 
@@ -1554,12 +1560,10 @@ class TestRESTClientImpl:
         assert isinstance(result, special_endpoints.InteractionModalBuilder)
 
     def test_interaction_modal_builder_with_components(self, rest_client):
-        component = mock.Mock()
-        result = rest_client.interaction_modal_builder("title", "custom", components=(component,))
+        result = rest_client.interaction_modal_builder("title", "custom")
 
         assert result.type == 9
         assert isinstance(result, special_endpoints.InteractionModalBuilder)
-        assert result.components == [component]
 
     def test_fetch_scheduled_event_users(self, rest_client: rest.RESTClientImpl):
         with mock.patch.object(special_endpoints, "ScheduledEventUserIterator") as iterator_cls:
