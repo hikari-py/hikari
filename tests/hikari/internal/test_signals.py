@@ -30,8 +30,9 @@ from hikari.internal import signals
 
 
 def test__raise_interrupt():
-    with pytest.raises(errors.HikariInterrupt):
-        signals._raise_interrupt(1)
+    with mock.patch.object(signal, "strsignal"):  # signals are not always implemented
+        with pytest.raises(errors.HikariInterrupt):
+            signals._raise_interrupt(1)
 
 
 @pytest.mark.parametrize("trace", [True, False])

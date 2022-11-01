@@ -33,6 +33,7 @@ from hikari import _about
 from hikari import errors
 from hikari import intents
 from hikari import presences
+from hikari import urls
 from hikari.impl import config
 from hikari.impl import shard
 from hikari.internal import aio
@@ -165,7 +166,7 @@ class TestGatewayTransport:
     @pytest.mark.parametrize("trace", [True, False])
     async def test_receive_json(self, transport_impl, trace):
         transport_impl._receive_and_check = mock.AsyncMock()
-        transport_impl._log_payload = trace
+        transport_impl._logger = mock.Mock(enabled_for=mock.Mock(return_value=trace))
 
         with mock.patch.object(data_binding, "load_json") as load_json:
             assert await transport_impl.receive_json() == load_json.return_value
@@ -177,7 +178,7 @@ class TestGatewayTransport:
     @pytest.mark.parametrize("trace", [True, False])
     async def test_send_json(self, transport_impl, trace):
         transport_impl._ws.send_str = mock.AsyncMock()
-        transport_impl._log_payload = trace
+        transport_impl._logger = mock.Mock(enabled_for=mock.Mock(return_value=trace))
 
         with mock.patch.object(data_binding, "dump_json") as dump_json:
             await transport_impl.send_json({"json_send": None})
@@ -987,7 +988,7 @@ class TestGatewayShardImplAsync:
         gateway_transport_connect = stack.enter_context(
             mock.patch.object(shard._GatewayTransport, "connect", return_value=ws)
         )
-        stack.enter_context(mock.patch.object(shard, "_VERSION", new=400))
+        stack.enter_context(mock.patch.object(urls, "VERSION", new=400))
         stack.enter_context(mock.patch.object(platform, "system", return_value="Potato OS"))
         stack.enter_context(mock.patch.object(platform, "architecture", return_value=["ARM64"]))
         stack.enter_context(mock.patch.object(aiohttp, "__version__", new="4.0"))
@@ -1078,7 +1079,7 @@ class TestGatewayShardImplAsync:
         gateway_transport_connect = stack.enter_context(
             mock.patch.object(shard._GatewayTransport, "connect", return_value=ws)
         )
-        stack.enter_context(mock.patch.object(shard, "_VERSION", new=400))
+        stack.enter_context(mock.patch.object(urls, "VERSION", new=400))
 
         with stack:
             assert await client._connect() == (heartbeat_task, poll_events_task)

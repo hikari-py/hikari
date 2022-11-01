@@ -59,6 +59,7 @@ from hikari import files
 from hikari import guilds
 from hikari import iterators
 from hikari import locales
+from hikari import messages as messages_
 from hikari import permissions as permissions_
 from hikari import scheduled_events
 from hikari import snowflakes
@@ -87,7 +88,6 @@ if typing.TYPE_CHECKING:
 
     from hikari import audit_logs
     from hikari import invites
-    from hikari import messages as messages_
     from hikari import sessions
     from hikari import stickers
     from hikari import templates
@@ -112,7 +112,7 @@ _X_RATELIMIT_BUCKET_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Bucket")
 _X_RATELIMIT_LIMIT_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Limit")
 _X_RATELIMIT_REMAINING_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Remaining")
 _X_RATELIMIT_RESET_AFTER_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Reset-After")
-_RETRY_ERROR_CODES: typing.Final[typing.Set[int]] = {500, 502, 503, 504}
+_RETRY_ERROR_CODES: typing.Final[typing.FrozenSet[int]] = frozenset({500, 502, 503, 504})
 _MAX_BACKOFF_DURATION: typing.Final[int] = 16
 
 
@@ -807,7 +807,6 @@ class RESTClientImpl(rest_api.RESTClient):
                 # Attempt to re-auth on UNAUTHORIZED if we are using a TokenStrategy
                 can_re_auth = response.status == 401 and not (auth or no_auth or re_authed)
                 if can_re_auth and isinstance(self._token, rest_api.TokenStrategy):
-                    assert token is not None
                     self._token.invalidate(token)
                     token = await self._token.acquire(self)
                     headers[_AUTHORIZATION_HEADER] = token
@@ -960,6 +959,11 @@ class RESTClientImpl(rest_api.RESTClient):
         parent_category: undefined.UndefinedOr[
             snowflakes.SnowflakeishOr[channels_.GuildCategory]
         ] = undefined.UNDEFINED,
+        default_auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        archived: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        locked: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        invitable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.PartialChannel:
         route = routes.PATCH_CHANNEL.compile(channel=channel)
@@ -979,6 +983,12 @@ class RESTClientImpl(rest_api.RESTClient):
             permission_overwrites,
             conversion=self._entity_factory.serialize_permission_overwrite,
         )
+        body.put("default_auto_archive_duration", default_auto_archive_duration, conversion=time.timespan_to_int)
+        # thread-only fields
+        body.put("archived", archived)
+        body.put("auto_archive_duration", auto_archive_duration, conversion=time.timespan_to_int)
+        body.put("locked", locked)
+        body.put("invitable", invitable)
 
         response = await self._request(route, json=body, reason=reason)
         assert isinstance(response, dict)
@@ -1289,15 +1299,18 @@ class RESTClientImpl(rest_api.RESTClient):
         /,
         *,
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
-        attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
-        attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
+        attachment: undefined.UndefinedNoneOr[
+            typing.Union[files.Resourceish, messages_.Attachment]
+        ] = undefined.UNDEFINED,
+        attachments: undefined.UndefinedNoneOr[
+            typing.Sequence[typing.Union[files.Resourceish, messages_.Attachment]]
+        ] = undefined.UNDEFINED,
         component: undefined.UndefinedNoneOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
         components: undefined.UndefinedNoneOr[
             typing.Sequence[special_endpoints.ComponentBuilder]
         ] = undefined.UNDEFINED,
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
-        replace_attachments: bool = False,
         flags: typing.Union[undefined.UndefinedType, int, messages_.MessageFlag] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -1335,11 +1348,11 @@ class RESTClientImpl(rest_api.RESTClient):
             attachment = content
             content = undefined.UNDEFINED
 
-        final_attachments: typing.List[files.Resource[files.AsyncReader]] = []
-        if attachment is not undefined.UNDEFINED:
-            final_attachments.append(files.ensure_resource(attachment))
-        elif attachments is not undefined.UNDEFINED:
-            final_attachments.extend([files.ensure_resource(a) for a in attachments])
+        final_attachments: typing.List[typing.Union[files.Resourceish, messages_.Attachment]] = []
+        if attachment:
+            final_attachments.append(attachment)
+        elif attachments:
+            final_attachments.extend(attachments)
 
         serialized_components: undefined.UndefinedOr[typing.List[data_binding.JSONObject]] = undefined.UNDEFINED
         if component is not undefined.UNDEFINED:
@@ -1379,23 +1392,36 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("embeds", serialized_embeds)
         body.put("components", serialized_components)
 
-        if replace_attachments:
-            body.put("attachments", None)
-
         if not edit or not undefined.all_undefined(mentions_everyone, mentions_reply, user_mentions, role_mentions):
             body.put(
                 "allowed_mentions",
                 mentions.generate_allowed_mentions(mentions_everyone, mentions_reply, user_mentions, role_mentions),
             )
 
+        form_builder: typing.Optional[data_binding.URLEncodedFormBuilder] = None
         if final_attachments:
-            form_builder = data_binding.URLEncodedFormBuilder(executor=self._executor)
+            attachments_payload = []
+            attachment_id = 0
 
-            for i, attachment in enumerate(final_attachments):
-                form_builder.add_resource(f"file{i}", attachment)
-            return body, form_builder
+            for f in final_attachments:
+                if isinstance(f, messages_.Attachment):
+                    attachments_payload.append({"id": f.id, "filename": f.filename})
+                    continue
 
-        return body, None
+                if not form_builder:
+                    form_builder = data_binding.URLEncodedFormBuilder(executor=self._executor)
+
+                resource = files.ensure_resource(f)
+                attachments_payload.append({"id": attachment_id, "filename": resource.filename})
+                form_builder.add_resource(f"files[{attachment_id}]", resource)
+                attachment_id += 1
+
+            body.put("attachments", attachments_payload)
+
+        elif attachment is None or attachments is None:
+            body.put("attachments", None)
+
+        return body, form_builder
 
     async def create_message(
         self,
@@ -1418,6 +1444,7 @@ class RESTClientImpl(rest_api.RESTClient):
         role_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
+        flags: typing.Union[undefined.UndefinedType, int, messages_.MessageFlag] = undefined.UNDEFINED,
     ) -> messages_.Message:
         route = routes.POST_CHANNEL_MESSAGES.compile(channel=channel)
         body, form_builder = self._build_message_payload(
@@ -1433,6 +1460,7 @@ class RESTClientImpl(rest_api.RESTClient):
             mentions_reply=mentions_reply,
             user_mentions=user_mentions,
             role_mentions=role_mentions,
+            flags=flags,
         )
         body.put("message_reference", reply, conversion=lambda m: {"message_id": str(int(m))})
 
@@ -1463,15 +1491,18 @@ class RESTClientImpl(rest_api.RESTClient):
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
-        attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
-        attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
+        attachment: undefined.UndefinedNoneOr[
+            typing.Union[files.Resourceish, messages_.Attachment]
+        ] = undefined.UNDEFINED,
+        attachments: undefined.UndefinedNoneOr[
+            typing.Sequence[typing.Union[files.Resourceish, messages_.Attachment]]
+        ] = undefined.UNDEFINED,
         component: undefined.UndefinedNoneOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
         components: undefined.UndefinedNoneOr[
             typing.Sequence[special_endpoints.ComponentBuilder]
         ] = undefined.UNDEFINED,
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
-        replace_attachments: bool = False,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
@@ -1491,7 +1522,6 @@ class RESTClientImpl(rest_api.RESTClient):
             components=components,
             embed=embed,
             embeds=embeds,
-            replace_attachments=replace_attachments,
             flags=flags,
             mentions_everyone=mentions_everyone,
             mentions_reply=mentions_reply,
@@ -1787,6 +1817,9 @@ class RESTClientImpl(rest_api.RESTClient):
         token: str,
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
+        thread: typing.Union[
+            undefined.UndefinedType, snowflakes.SnowflakeishOr[channels_.GuildThreadChannel]
+        ] = undefined.UNDEFINED,
         username: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         avatar_url: typing.Union[undefined.UndefinedType, str, files.URL] = undefined.UNDEFINED,
         attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
@@ -1811,6 +1844,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         query = data_binding.StringMapBuilder()
         query.put("wait", True)
+        query.put("thread_id", thread)
 
         body, form_builder = self._build_message_payload(
             content=content,
@@ -1843,11 +1877,17 @@ class RESTClientImpl(rest_api.RESTClient):
         webhook: typing.Union[webhooks.ExecutableWebhook, snowflakes.Snowflakeish],
         token: str,
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
+        *,
+        thread: typing.Union[
+            undefined.UndefinedType, snowflakes.SnowflakeishOr[channels_.GuildThreadChannel]
+        ] = undefined.UNDEFINED,
     ) -> messages_.Message:
         # int(ExecutableWebhook) isn't guaranteed to be valid nor the ID used to execute this entity as a webhook.
         webhook_id = webhook if isinstance(webhook, int) else webhook.webhook_id
         route = routes.GET_WEBHOOK_MESSAGE.compile(webhook=webhook_id, token=token, message=message)
-        response = await self._request(route, no_auth=True)
+        query = data_binding.StringMapBuilder()
+        query.put("thread_id", thread)
+        response = await self._request(route, no_auth=True, query=query)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
 
@@ -1858,15 +1898,21 @@ class RESTClientImpl(rest_api.RESTClient):
         message: snowflakes.SnowflakeishOr[messages_.Message],
         content: undefined.UndefinedNoneOr[typing.Any] = undefined.UNDEFINED,
         *,
-        attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
-        attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
+        thread: typing.Union[
+            undefined.UndefinedType, snowflakes.SnowflakeishOr[channels_.GuildThreadChannel]
+        ] = undefined.UNDEFINED,
+        attachment: undefined.UndefinedNoneOr[
+            typing.Union[files.Resourceish, messages_.Attachment]
+        ] = undefined.UNDEFINED,
+        attachments: undefined.UndefinedNoneOr[
+            typing.Sequence[typing.Union[files.Resourceish, messages_.Attachment]]
+        ] = undefined.UNDEFINED,
         component: undefined.UndefinedNoneOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
         components: undefined.UndefinedNoneOr[
             typing.Sequence[special_endpoints.ComponentBuilder]
         ] = undefined.UNDEFINED,
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
-        replace_attachments: bool = False,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
@@ -1878,6 +1924,8 @@ class RESTClientImpl(rest_api.RESTClient):
         # int(ExecutableWebhook) isn't guaranteed to be valid nor the ID used to execute this entity as a webhook.
         webhook_id = webhook if isinstance(webhook, int) else webhook.webhook_id
         route = routes.PATCH_WEBHOOK_MESSAGE.compile(webhook=webhook_id, token=token, message=message)
+        query = data_binding.StringMapBuilder()
+        query.put("thread_id", thread)
 
         body, form_builder = self._build_message_payload(
             content=content,
@@ -1887,7 +1935,6 @@ class RESTClientImpl(rest_api.RESTClient):
             components=components,
             embed=embed,
             embeds=embeds,
-            replace_attachments=replace_attachments,
             mentions_everyone=mentions_everyone,
             user_mentions=user_mentions,
             role_mentions=role_mentions,
@@ -1896,9 +1943,9 @@ class RESTClientImpl(rest_api.RESTClient):
 
         if form_builder is not None:
             form_builder.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
-            response = await self._request(route, form_builder=form_builder, no_auth=True)
+            response = await self._request(route, form_builder=form_builder, query=query, no_auth=True)
         else:
-            response = await self._request(route, json=body, no_auth=True)
+            response = await self._request(route, json=body, query=query, no_auth=True)
 
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
@@ -1908,11 +1955,17 @@ class RESTClientImpl(rest_api.RESTClient):
         webhook: typing.Union[webhooks.ExecutableWebhook, snowflakes.Snowflakeish],
         token: str,
         message: snowflakes.SnowflakeishOr[messages_.Message],
+        *,
+        thread: typing.Union[
+            undefined.UndefinedType, snowflakes.SnowflakeishOr[channels_.GuildThreadChannel]
+        ] = undefined.UNDEFINED,
     ) -> None:
         # int(ExecutableWebhook) isn't guaranteed to be valid nor the ID used to execute this entity as a webhook.
         webhook_id = webhook if isinstance(webhook, int) else webhook.webhook_id
+        query = data_binding.StringMapBuilder()
+        query.put("thread_id", thread)
         route = routes.DELETE_WEBHOOK_MESSAGE.compile(webhook=webhook_id, token=token, message=message)
-        await self._request(route, no_auth=True)
+        await self._request(route, no_auth=True, query=query)
 
     async def fetch_gateway_url(self) -> str:
         route = routes.GET_GATEWAY.compile()
@@ -2547,6 +2600,7 @@ class RESTClientImpl(rest_api.RESTClient):
             typing.Sequence[channels_.PermissionOverwrite]
         ] = undefined.UNDEFINED,
         category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
+        default_auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.GuildTextChannel:
         response = await self._create_guild_channel(
@@ -2559,6 +2613,7 @@ class RESTClientImpl(rest_api.RESTClient):
             rate_limit_per_user=rate_limit_per_user,
             permission_overwrites=permission_overwrites,
             category=category,
+            default_auto_archive_duration=default_auto_archive_duration,
             reason=reason,
         )
         return self._entity_factory.deserialize_guild_text_channel(response)
@@ -2576,6 +2631,7 @@ class RESTClientImpl(rest_api.RESTClient):
             typing.Sequence[channels_.PermissionOverwrite]
         ] = undefined.UNDEFINED,
         category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
+        default_auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.GuildNewsChannel:
         response = await self._create_guild_channel(
@@ -2588,6 +2644,7 @@ class RESTClientImpl(rest_api.RESTClient):
             rate_limit_per_user=rate_limit_per_user,
             permission_overwrites=permission_overwrites,
             category=category,
+            default_auto_archive_duration=default_auto_archive_duration,
             reason=reason,
         )
         return self._entity_factory.deserialize_guild_news_channel(response)
@@ -2691,6 +2748,7 @@ class RESTClientImpl(rest_api.RESTClient):
         ] = undefined.UNDEFINED,
         region: undefined.UndefinedOr[typing.Union[voices.VoiceRegion, str]] = undefined.UNDEFINED,
         category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
+        default_auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> data_binding.JSONObject:
         route = routes.POST_GUILD_CHANNELS.compile(guild=guild)
@@ -2711,10 +2769,198 @@ class RESTClientImpl(rest_api.RESTClient):
             permission_overwrites,
             conversion=self._entity_factory.serialize_permission_overwrite,
         )
+        body.put("default_auto_archive_duration", default_auto_archive_duration, conversion=time.timespan_to_int)
 
         response = await self._request(route, json=body, reason=reason)
         assert isinstance(response, dict)
         return response
+
+    async def create_message_thread(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
+        message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
+        name: str,
+        /,
+        *,
+        auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = datetime.timedelta(days=1),
+        rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> typing.Union[channels_.GuildPublicThread, channels_.GuildNewsThread]:
+        if auto_archive_duration is not undefined.UNDEFINED and isinstance(auto_archive_duration, datetime.timedelta):
+            auto_archive_duration = round(auto_archive_duration.total_seconds() / 60)
+
+        route = routes.POST_MESSAGE_THREADS.compile(channel=channel, message=message)
+        body = data_binding.JSONObjectBuilder()
+        body.put("name", name)
+        body.put("auto_archive_duration", auto_archive_duration)
+        body.put("rate_limit_per_user", rate_limit_per_user, conversion=time.timespan_to_int)
+
+        response = await self._request(route, json=body, reason=reason)
+
+        assert isinstance(response, dict)
+        channel = self._entity_factory.deserialize_guild_thread(response)
+        assert isinstance(channel, (channels_.GuildPublicThread, channels_.GuildNewsThread))
+        return channel
+
+    async def create_thread(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
+        type: typing.Union[channels_.ChannelType, int],
+        name: str,
+        /,
+        *,
+        auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = datetime.timedelta(days=1),
+        invitable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> channels_.GuildThreadChannel:
+        if auto_archive_duration is not undefined.UNDEFINED and isinstance(auto_archive_duration, datetime.timedelta):
+            auto_archive_duration = round(auto_archive_duration.total_seconds() / 60)
+
+        route = routes.POST_CHANNEL_THREADS.compile(channel=channel)
+        body = data_binding.JSONObjectBuilder()
+        body.put("name", name)
+        body.put("auto_archive_duration", auto_archive_duration)
+        body.put("type", type)
+        body.put("invitable", invitable)
+        body.put("rate_limit_per_user", rate_limit_per_user, conversion=time.timespan_to_int)
+
+        response = await self._request(route, json=body, reason=reason)
+
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_guild_thread(response)
+
+    async def join_thread(self, channel: snowflakes.SnowflakeishOr[channels_.GuildTextChannel], /) -> None:
+        route = routes.PUT_MY_THREAD_MEMBER.compile(channel=channel)
+        await self._request(route)
+
+    async def add_thread_member(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildThreadChannel],
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        /,
+    ) -> None:
+        route = routes.PUT_THREAD_MEMBER.compile(channel=channel, user=user)
+        await self._request(route)
+
+    async def leave_thread(self, channel: snowflakes.SnowflakeishOr[channels_.GuildThreadChannel]) -> None:
+        route = routes.DELETE_MY_THREAD_MEMBER.compile(channel=channel)
+        await self._request(route)
+
+    async def remove_thread_member(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildThreadChannel],
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        /,
+    ) -> None:
+        route = routes.DELETE_THREAD_MEMBER.compile(channel=channel, user=user)
+        await self._request(route)
+
+    async def fetch_thread_member(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildThreadChannel],
+        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        /,
+    ) -> channels_.ThreadMember:
+        route = routes.GET_THREAD_MEMBER.compile(channel=channel, user=user)
+        response = await self._request(route)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_thread_member(response)
+
+    async def fetch_thread_members(
+        self, channel: snowflakes.SnowflakeishOr[channels_.GuildThreadChannel], /
+    ) -> typing.Sequence[channels_.ThreadMember]:
+        route = routes.GET_THREAD_MEMBERS.compile(channel=channel)
+        response = await self._request(route)
+        assert isinstance(response, list)
+        return [self._entity_factory.deserialize_thread_member(member) for member in response]
+
+    async def fetch_active_threads(
+        self, guild: snowflakes.SnowflakeishOr[guilds.Guild], /
+    ) -> typing.Sequence[channels_.GuildThreadChannel]:
+        route = routes.GET_ACTIVE_THREADS.compile(guild=guild)
+        response = await self._request(route)
+        assert isinstance(response, dict)
+        members = {
+            member.thread_id: member
+            for member in map(self._entity_factory.deserialize_thread_member, response["members"])
+        }
+        return [
+            self._entity_factory.deserialize_guild_thread(
+                thread, member=members.get(snowflakes.Snowflake(thread["id"]))
+            )
+            for thread in response["threads"]
+        ]
+
+    def _deserialize_public_thread(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+        member: undefined.UndefinedNoneOr[channels_.ThreadMember] = undefined.UNDEFINED,
+    ) -> typing.Union[channels_.GuildNewsThread, channels_.GuildPublicThread]:
+        channel = self._entity_factory.deserialize_guild_thread(payload, guild_id=guild_id, member=member)
+        assert isinstance(channel, (channels_.GuildNewsThread, channels_.GuildPublicThread))
+        return channel
+
+    def fetch_public_archived_threads(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
+        /,
+        *,
+        before: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
+    ) -> iterators.LazyIterator[typing.Union[channels_.GuildNewsThread, channels_.GuildPublicThread]]:
+        return special_endpoints_impl.GuildThreadIterator(
+            deserialize=self._deserialize_public_thread,
+            entity_factory=self._entity_factory,
+            request_call=self._request,
+            route=routes.GET_PUBLIC_ARCHIVED_THREADS.compile(channel=channel),
+            before=before.isoformat() if before is not undefined.UNDEFINED else undefined.UNDEFINED,
+            before_is_timestamp=True,
+        )
+
+    def fetch_private_archived_threads(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
+        /,
+        *,
+        before: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
+    ) -> iterators.LazyIterator[channels_.GuildPrivateThread]:
+        return special_endpoints_impl.GuildThreadIterator(
+            deserialize=self._entity_factory.deserialize_guild_private_thread,
+            entity_factory=self._entity_factory,
+            request_call=self._request,
+            route=routes.GET_PRIVATE_ARCHIVED_THREADS.compile(channel=channel),
+            before=before.isoformat() if before is not undefined.UNDEFINED else undefined.UNDEFINED,
+            before_is_timestamp=True,
+        )
+
+    def fetch_joined_private_archived_threads(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
+        /,
+        *,
+        before: undefined.UndefinedOr[
+            snowflakes.SearchableSnowflakeishOr[channels_.GuildThreadChannel]
+        ] = undefined.UNDEFINED,
+    ) -> iterators.LazyIterator[channels_.GuildPrivateThread]:
+        if before is undefined.UNDEFINED:
+            start: undefined.UndefinedOr[str] = undefined.UNDEFINED
+
+        elif isinstance(before, datetime.datetime):
+            start = str(snowflakes.Snowflake.from_datetime(before))
+
+        else:
+            start = str(snowflakes.Snowflake(before))
+
+        return special_endpoints_impl.GuildThreadIterator(
+            deserialize=self._entity_factory.deserialize_guild_private_thread,
+            entity_factory=self._entity_factory,
+            request_call=self._request,
+            route=routes.GET_JOINED_PRIVATE_ARCHIVED_THREADS.compile(channel=channel),
+            before=start,
+            before_is_timestamp=False,
+        )
 
     async def reposition_channels(
         self,
@@ -3733,13 +3979,14 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         flags: typing.Union[int, messages_.MessageFlag, undefined.UndefinedType] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
-        attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
-        component: undefined.UndefinedOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
-        components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
-        embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
-        embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
-        replace_attachments: bool = False,
+        attachment: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
+        attachments: undefined.UndefinedNoneOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
+        component: undefined.UndefinedNoneOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
+        components: undefined.UndefinedNoneOr[
+            typing.Sequence[special_endpoints.ComponentBuilder]
+        ] = undefined.UNDEFINED,
+        embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
+        embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
@@ -3758,7 +4005,6 @@ class RESTClientImpl(rest_api.RESTClient):
             components=components,
             embed=embed,
             embeds=embeds,
-            replace_attachments=replace_attachments,
             tts=tts,
             flags=flags,
             mentions_everyone=mentions_everyone,
@@ -3781,15 +4027,18 @@ class RESTClientImpl(rest_api.RESTClient):
         token: str,
         content: undefined.UndefinedNoneOr[typing.Any] = undefined.UNDEFINED,
         *,
-        attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
-        attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
+        attachment: undefined.UndefinedNoneOr[
+            typing.Union[files.Resourceish, messages_.Attachment]
+        ] = undefined.UNDEFINED,
+        attachments: undefined.UndefinedNoneOr[
+            typing.Sequence[typing.Union[files.Resourceish, messages_.Attachment]]
+        ] = undefined.UNDEFINED,
         component: undefined.UndefinedNoneOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
         components: undefined.UndefinedNoneOr[
             typing.Sequence[special_endpoints.ComponentBuilder]
         ] = undefined.UNDEFINED,
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
-        replace_attachments: bool = False,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
@@ -3808,7 +4057,6 @@ class RESTClientImpl(rest_api.RESTClient):
             components=components,
             embed=embed,
             embeds=embeds,
-            replace_attachments=replace_attachments,
             mentions_everyone=mentions_everyone,
             user_mentions=user_mentions,
             role_mentions=role_mentions,

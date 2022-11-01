@@ -214,3 +214,98 @@ class TestWebhookUpdateEvent:
         await event.fetch_guild_webhooks()
 
         event.app.rest.fetch_guild_webhooks.assert_awaited_once_with(456)
+
+
+class TestGuildThreadEvent:
+    @pytest.mark.asyncio()
+    async def test_fetch_channel(self):
+        """Perform an API call to fetch the details about this thread.
+
+        !!! note
+            For `GuildThreadDeleteEvent` events, this will always raise
+            an exception, since the channel will have already been removed.
+
+        Returns
+        -------
+        hikari.channels.GuildThreadChannel
+            A derivative of `hikari.channels.GuildThreadChannel`. The
+            actual type will vary depending on the type of channel this event
+            concerns.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you are missing the `READ_MESSAGES` permission in the channel.
+        hikari.errors.NotFoundError
+            If the channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        mock_app = mock.AsyncMock()
+        mock_app.rest.fetch_channel.return_value = mock.Mock(channels.GuildThreadChannel)
+        event = hikari_test_helpers.mock_class_namespace(
+            channel_events.GuildThreadEvent, app=mock_app, thread_id=123321
+        )()
+
+        result = await event.fetch_channel()
+
+        assert result is mock_app.rest.fetch_channel.return_value
+        mock_app.rest.fetch_channel.assert_awaited_once_with(123321)
+
+
+class TestGuildThreadAccessEvent:
+    @pytest.fixture()
+    def event(self) -> channel_events.GuildThreadAccessEvent:
+        return channel_events.GuildThreadAccessEvent(shard=mock.Mock(), thread=mock.Mock())
+
+    def test_app_property(self, event: channel_events.GuildThreadAccessEvent):
+        assert event.app is event.thread.app
+
+    def test_guild_id(self, event: channel_events.GuildThreadAccessEvent):
+        assert event.guild_id is event.thread.guild_id
+
+    def test_thread_id_property(self, event: channel_events.GuildThreadAccessEvent):
+        assert event.thread_id is event.thread.id
+
+
+class TestGuildThreadCreateEvent:
+    @pytest.fixture()
+    def event(self) -> channel_events.GuildThreadCreateEvent:
+        return channel_events.GuildThreadCreateEvent(shard=mock.Mock(), thread=mock.Mock())
+
+    def test_app_property(self, event: channel_events.GuildThreadCreateEvent):
+        assert event.app is event.thread.app
+
+    def test_guild_id(self, event: channel_events.GuildThreadCreateEvent):
+        assert event.guild_id is event.thread.guild_id
+
+    def test_thread_id_property(self, event: channel_events.GuildThreadCreateEvent):
+        assert event.thread_id is event.thread.id
+
+
+class TestGuildThreadUpdateEvent:
+    @pytest.fixture()
+    def event(self) -> channel_events.GuildThreadUpdateEvent:
+        return channel_events.GuildThreadUpdateEvent(shard=mock.Mock(), thread=mock.Mock())
+
+    def test_app_property(self, event: channel_events.GuildThreadUpdateEvent):
+        assert event.app is event.thread.app
+
+    def test_guild_id(self, event: channel_events.GuildThreadUpdateEvent):
+        assert event.guild_id is event.thread.guild_id
+
+    def test_thread_id_property(self, event: channel_events.GuildThreadUpdateEvent):
+        assert event.thread_id is event.thread.id
