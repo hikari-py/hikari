@@ -845,7 +845,11 @@ class File(Resource[ThreadedFileReader]):
     def __init__(self, path: Pathish, /, filename: typing.Optional[str] = None, *, spoiler: bool = False) -> None:
         self.path = ensure_path(path)
         self.is_spoiler = spoiler
-        self._filename = filename
+
+        filename = filename if filename else self.path.name
+        # Discord replaces spaces with underscores when uploaded, which means that if we dont, an image
+        # with spaces could end up out of the embed it is enclosed in
+        self._filename = filename.replace(" ", "_")
 
     @property
     @typing.final
@@ -854,12 +858,10 @@ class File(Resource[ThreadedFileReader]):
 
     @property
     def filename(self) -> str:
-        filename = self._filename if self._filename else self.path.name
-
         if self.is_spoiler:
-            return SPOILER_TAG + filename
+            return SPOILER_TAG + self._filename
 
-        return filename
+        return self._filename
 
     def stream(
         self,
@@ -1026,7 +1028,9 @@ class Bytes(Resource[IteratorReader]):
         if mimetype is None:
             mimetype = "text/plain;charset=UTF-8"
 
-        self._filename = filename
+        # Discord replaces spaces with underscores when uploaded, which means that if we dont, an image
+        # with spaces could end up out of the embed it is enclosed in
+        self._filename = filename.replace(" ", "_")
         self.mimetype = mimetype
         self.is_spoiler = spoiler
 
