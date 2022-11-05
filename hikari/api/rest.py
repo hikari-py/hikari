@@ -2776,9 +2776,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The invite to fetch. This may be an invite object or
             the code of an existing invite.
         with_counts : builtins.bool
-            Whether the invite should contain approximate member counts.
+            Whether the invite should contain the approximate member counts.
+            
+            Defaults to `builtins.True`.
         with_expiration: builtins.bool
             Whether the invite should contain the expiration date.
+            
+            Defaults to `builtins.True`.
 
         Returns
         -------
