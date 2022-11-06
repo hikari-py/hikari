@@ -6,6 +6,48 @@ This file is updated every release with the use of `towncrier` from the fragment
 
 .. towncrier release notes start
 
+Hikari 2.0.0.dev112 (2022-11-06)
+================================
+
+Breaking Changes
+----------------
+
+- Moved permission overwrite mapping and permission related methods from `GuildChannel` to `PermissibleGuildChannel`. ([#811](https://github.com/hikari-py/hikari/issues/811))
+- Support v10 attachments edits
+
+  This includes breaking changes, features and things to look out for when editing messages:
+  - Modifying attachments in messages that contain embeds with any image attached to them now requires the images of that embed
+    image to be re-passed in the edit or they will be lost.
+  - `attachment` and `attachments` in message edits now support passing an `Attachment` object to keep existing attachments.
+  - `replace_attachments` has been removed, as it is now the default.
+    - `attachment` and `attachments` now supports `None` to replicate the behaviour of fully removing all attachments.
+  - `InteractionMessageBuilder.clear_attachments` has been implemented to remove existing attachments from messages. ([#1260](https://github.com/hikari-py/hikari/issues/1260))
+
+
+Features
+--------
+
+- Thread support for REST requests and gateway events. ([#811](https://github.com/hikari-py/hikari/issues/811))
+- Startup and shutdown callbacks for the RESTBot interface/impl. ([#999](https://github.com/hikari-py/hikari/issues/999))
+- Support for including the `SUPPRESS_EMBEDS` flag while creating a message. ([#1331](https://github.com/hikari-py/hikari/issues/1331))
+- Add `MANAGE_EVENTS` permission to `hikari.Permissions` ([#1334](https://github.com/hikari-py/hikari/issues/1334))
+
+
+Bugfixes
+--------
+
+- Wrong typehint for `InviteGuild.features`. ([#1307](https://github.com/hikari-py/hikari/issues/1307))
+- Fix aiohttp error "charset must not be in content type" when using `InteractionServer` ([#1320](https://github.com/hikari-py/hikari/issues/1320))
+- The REST list methods (e.g. `fetch_channels`) no-longer raise `hikari.errors.UnrecognisedEntityError` when they encounter an unknown type. ([#1337](https://github.com/hikari-py/hikari/issues/1337))
+- Fix deprecation warnings in CPython3.11 in `hikari.internal.ux`. ([#1344](https://github.com/hikari-py/hikari/issues/1344))
+
+
+Documentation Improvements
+--------------------------
+
+- Support specifying `with_counts` and `with_expiration` in `RESTClient.fetch_invite` ([#1330](https://github.com/hikari-py/hikari/issues/1330))
+
+
 Hikari 2.0.0.dev111 (2022-09-26)
 ================================
 
