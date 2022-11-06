@@ -1677,7 +1677,7 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.GET_CHANNEL_WEBHOOKS.compile(channel=channel)
         response = await self._request(route)
         assert isinstance(response, list)
-        return [self._entity_factory.deserialize_webhook(webhook_pl) for webhook_pl in response]
+        return data_binding.cast_variants_array(self._entity_factory.deserialize_webhook, response)
 
     async def fetch_guild_webhooks(
         self,
@@ -1686,7 +1686,7 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.GET_GUILD_WEBHOOKS.compile(guild=guild)
         response = await self._request(route)
         assert isinstance(response, list)
-        return [self._entity_factory.deserialize_webhook(webhook_payload) for webhook_payload in response]
+        return data_binding.cast_variants_array(self._entity_factory.deserialize_webhook, response)
 
     async def edit_webhook(
         self,
@@ -2423,9 +2423,9 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.GET_GUILD_CHANNELS.compile(guild=guild)
         response = await self._request(route)
         assert isinstance(response, list)
-        channel_sequence = [self._entity_factory.deserialize_channel(channel_payload) for channel_payload in response]
+        channels = data_binding.cast_variants_array(self._entity_factory.deserialize_channel, response)
         # Will always be guild channels unless Discord messes up severely on something!
-        return typing.cast("typing.Sequence[channels_.GuildChannel]", channel_sequence)
+        return typing.cast("typing.Sequence[channels_.GuildChannel]", channels)
 
     async def create_guild_text_channel(
         self,
@@ -3375,6 +3375,19 @@ class RESTClientImpl(rest_api.RESTClient):
             response, guild_id=snowflakes.Snowflake(guild) if guild is not undefined.UNDEFINED else None
         )
 
+    def _deserialize_command_list(
+        self, command_payloads: data_binding.JSONArray, guild_id: typing.Optional[snowflakes.Snowflake]
+    ) -> typing.List[commands.PartialCommand]:
+        command_objs: typing.List[commands.PartialCommand] = []
+        for payload in command_payloads:
+            try:
+                command_objs.append(self._entity_factory.deserialize_command(payload, guild_id=guild_id))
+
+            except errors.UnrecognisedEntityError:
+                pass
+
+        return command_objs
+
     async def fetch_application_commands(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
@@ -3392,7 +3405,7 @@ class RESTClientImpl(rest_api.RESTClient):
         response = await self._request(route, query=query)
         assert isinstance(response, list)
         guild_id = snowflakes.Snowflake(guild) if guild is not undefined.UNDEFINED else None
-        return [self._entity_factory.deserialize_command(command, guild_id=guild_id) for command in response]
+        return self._deserialize_command_list(response, guild_id)
 
     async def _create_application_command(
         self,
@@ -3515,7 +3528,7 @@ class RESTClientImpl(rest_api.RESTClient):
         response = await self._request(route, json=[command.build(self._entity_factory) for command in commands])
         assert isinstance(response, list)
         guild_id = snowflakes.Snowflake(guild) if guild is not undefined.UNDEFINED else None
-        return [self._entity_factory.deserialize_command(payload, guild_id=guild_id) for payload in response]
+        return self._deserialize_command_list(response, guild_id)
 
     async def edit_application_command(
         self,
@@ -3786,7 +3799,7 @@ class RESTClientImpl(rest_api.RESTClient):
         response = await self._request(route, query=query)
 
         assert isinstance(response, list)
-        return [self._entity_factory.deserialize_scheduled_event(event) for event in response]
+        return data_binding.cast_variants_array(self._entity_factory.deserialize_scheduled_event, response)
 
     async def _create_or_edit_scheduled_stage(
         self,

@@ -1,1 +1,0 @@
-Startup and shutdown callbacks for the RESTBot interface/impl.

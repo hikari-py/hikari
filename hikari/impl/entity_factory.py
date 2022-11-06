@@ -2560,15 +2560,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     ##################
 
     def _deserialize_action_row(self, payload: data_binding.JSONObject) -> message_models.ActionRowComponent:
-        components: typing.List[message_models.PartialComponent] = []
-
-        for component_payload in payload["components"]:
-            try:
-                components.append(self._deserialize_component(component_payload))
-
-            except errors.UnrecognisedEntityError:
-                pass
-
+        components = data_binding.cast_variants_array(self._deserialize_component, payload["components"])
         return message_models.ActionRowComponent(
             type=message_models.ComponentType(payload["type"]), components=components
         )
@@ -2759,13 +2751,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         components: undefined.UndefinedOr[typing.List[message_models.PartialComponent]] = undefined.UNDEFINED
         if component_payloads := payload.get("components"):
-            components = []
-            for component_payload in component_payloads:
-                try:
-                    components.append(self._deserialize_component(component_payload))
-
-                except errors.UnrecognisedEntityError:
-                    pass
+            components = data_binding.cast_variants_array(self._deserialize_component, component_payloads)
 
         channel_mentions: undefined.UndefinedOr[
             typing.Dict[snowflakes.Snowflake, channel_models.PartialChannel]
@@ -2867,14 +2853,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if interaction_payload := payload.get("interaction"):
             interaction = self._deserialize_message_interaction(interaction_payload)
 
-        components: typing.List[message_models.PartialComponent] = []
         if component_payloads := payload.get("components"):
-            for component_payload in component_payloads:
-                try:
-                    components.append(self._deserialize_component(component_payload))
+            components = data_binding.cast_variants_array(self._deserialize_component, component_payloads)
 
-                except errors.UnrecognisedEntityError:
-                    pass
+        else:
+            components = []
 
         user_mentions = {u.id: u for u in map(self.deserialize_user, payload.get("mentions", ()))}
         role_mention_ids = [snowflakes.Snowflake(i) for i in payload.get("mention_roles", ())]
