@@ -2767,7 +2767,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_role_mention_ids := payload.get("mention_roles"):
             role_mention_ids = [snowflakes.Snowflake(i) for i in raw_role_mention_ids]
 
-        message = message_models.PartialMessage(
+        return message_models.PartialMessage(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
             channel_id=snowflakes.Snowflake(payload["channel_id"]),
@@ -2798,13 +2798,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             user_mentions=user_mentions,
             role_mention_ids=role_mention_ids,
             mentions_everyone=payload.get("mention_everyone", undefined.UNDEFINED),
-            # We initialize these next.
-            mentions=NotImplemented,
         )
-
-        message.mentions = message_models.Mentions(message=message)
-
-        return message
 
     def deserialize_message(
         self, payload: data_binding.JSONObject
@@ -2869,7 +2863,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         role_mention_ids = [snowflakes.Snowflake(i) for i in payload.get("mention_roles", ())]
         channel_mentions = {u.id: u for u in map(self.deserialize_partial_channel, payload.get("mention_channels", ()))}
 
-        message = message_models.Message(
+        return message_models.Message(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
             channel_id=snowflakes.Snowflake(payload["channel_id"]),
@@ -2900,13 +2894,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             channel_mentions=channel_mentions,
             role_mention_ids=role_mention_ids,
             mentions_everyone=payload.get("mention_everyone", False),
-            # We initialize these next.
-            mentions=NotImplemented,
         )
-
-        message.mentions = message_models.Mentions(message=message)
-
-        return message
 
     ###################
     # PRESENCE MODELS #

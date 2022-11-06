@@ -24,7 +24,6 @@ import contextlib
 import datetime
 import http
 import typing
-import warnings
 
 import mock
 import pytest
@@ -1190,15 +1189,6 @@ class TestRESTClientImpl:
         )
         assert iterator is iterator_cls.return_value
 
-    def test_command_builder(self, rest_client):
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", category=DeprecationWarning)
-            result = rest_client.command_builder("a name", description="very very good")
-
-        assert isinstance(result, special_endpoints.SlashCommandBuilder)
-        assert result.name == "a name"
-        assert result.description == "very very good"
-
     def test_slash_command_builder(self, rest_client):
         result = rest_client.slash_command_builder("a name", "a description")
         assert isinstance(result, special_endpoints.SlashCommandBuilder)
@@ -2314,26 +2304,6 @@ class TestRESTClientImplAsync:
             reason="cause why not :)",
         )
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="cause why not :)")
-
-    async def test_edit_permission_overwrites(self, rest_client):
-        with mock.patch.object(rest_client, "edit_permission_overwrite") as edit_permission_overwrite:
-            await rest_client.edit_permission_overwrites(
-                StubModel(123),
-                StubModel(456),
-                target_type=channels.PermissionOverwriteType.MEMBER,
-                allow=permissions.Permissions.BAN_MEMBERS,
-                deny=permissions.Permissions.CREATE_INSTANT_INVITE,
-                reason="cause why not :)",
-            )
-
-        edit_permission_overwrite.assert_awaited_once_with(
-            StubModel(123),
-            StubModel(456),
-            target_type=channels.PermissionOverwriteType.MEMBER,
-            allow=permissions.Permissions.BAN_MEMBERS,
-            deny=permissions.Permissions.CREATE_INSTANT_INVITE,
-            reason="cause why not :)",
-        )
 
     @pytest.mark.parametrize(
         ("target", "expected_type"),
@@ -3757,24 +3727,6 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
         rest_client._entity_factory.deserialize_member.assert_called_once_with({"id": "789"}, guild_id=123)
 
-    async def test_add_user_to_guild_with_deprecated_nick_field(self, rest_client):
-        member = StubModel(789)
-        expected_route = routes.PUT_GUILD_MEMBER.compile(guild=123, user=456)
-        expected_json = {"access_token": "token", "nick": "cool nick2"}
-        rest_client._request = mock.AsyncMock(return_value={"id": "789"})
-        rest_client._entity_factory.deserialize_member = mock.Mock(return_value=member)
-
-        returned = await rest_client.add_user_to_guild(
-            "token",
-            StubModel(123),
-            StubModel(456),
-            nick="cool nick2",
-        )
-
-        assert returned is member
-        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
-        rest_client._entity_factory.deserialize_member.assert_called_once_with({"id": "789"}, guild_id=123)
-
     async def test_add_user_to_guild_when_already_in_guild(self, rest_client):
         expected_route = routes.PUT_GUILD_MEMBER.compile(guild=123, user=456)
         expected_json = {"access_token": "token"}
@@ -4640,20 +4592,6 @@ class TestRESTClientImplAsync:
         )
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="because i can")
 
-    async def test_edit_member_with_deprecated_nick_field(self, rest_client):
-        expected_route = routes.PATCH_GUILD_MEMBER.compile(guild=123, user=456)
-        expected_json = {"nick": "eeeeeestrogen"}
-        rest_client._request = mock.AsyncMock(return_value={"id": "789"})
-
-        result = await rest_client.edit_member(StubModel(123), StubModel(456), nick="eeeeeestrogen")
-
-        assert result is rest_client._entity_factory.deserialize_member.return_value
-
-        rest_client._entity_factory.deserialize_member.assert_called_once_with(
-            rest_client._request.return_value, guild_id=123
-        )
-        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason=undefined.UNDEFINED)
-
     async def test_edit_member_when_voice_channel_is_None(self, rest_client):
         expected_route = routes.PATCH_GUILD_MEMBER.compile(guild=123, user=456)
         expected_json = {"nick": "test", "roles": ["654", "321"], "mute": True, "deaf": False, "channel_id": None}
@@ -4730,19 +4668,6 @@ class TestRESTClientImplAsync:
             rest_client._request.return_value, guild_id=123
         )
         rest_client._request.assert_awaited_once_with(expected_route, json={}, reason=undefined.UNDEFINED)
-
-    async def test_edit_my_nick(self, rest_client):
-        rest_client.edit_my_member = mock.AsyncMock()
-        rest_client._request = mock.AsyncMock()
-
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", category=DeprecationWarning)
-            result = await rest_client.edit_my_nick(123, "hikari is the best", reason="because its true")
-
-        assert result is None
-        rest_client.edit_my_member.assert_awaited_once_with(
-            123, nickname="hikari is the best", reason="because its true"
-        )
 
     async def test_add_role_to_member(self, rest_client):
         expected_route = routes.PUT_GUILD_MEMBER_ROLE.compile(guild=123, user=456, role=789)

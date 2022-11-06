@@ -22,9 +22,7 @@
 import copy
 
 import mock
-import pytest
 
-from hikari import iterators
 from hikari import snowflakes
 from hikari import stickers
 from hikari.internal import cache
@@ -75,28 +73,3 @@ class TestStickerData:
         assert data.user is refcell.return_value
         mock_copy.assert_called_once_with(mock_user)
         refcell.assert_called_once_with(mock_copy.return_value)
-
-
-class TestCacheMappingView:
-    @pytest.fixture()
-    def cache_view(self):
-        return cache.CacheMappingView({"some": "data"})
-
-    def test_iterator(self, cache_view):
-        with mock.patch.object(iterators, "FlatLazyIterator") as flat_lazy_iterator:
-            with mock.patch.object(cache.CacheMappingView, "values") as values:
-                assert cache_view.iterator() is flat_lazy_iterator.return_value
-
-        flat_lazy_iterator.assert_called_once_with(values.return_value)
-
-
-class TestEmptyCacheView:
-    @pytest.fixture()
-    def cache_view(self):
-        return cache.EmptyCacheView()
-
-    def test_iterator(self, cache_view):
-        with mock.patch.object(iterators, "FlatLazyIterator") as flat_lazy_iterator:
-            assert cache_view.iterator() is flat_lazy_iterator.return_value
-
-        flat_lazy_iterator.assert_called_once_with(())

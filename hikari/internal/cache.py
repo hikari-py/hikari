@@ -56,7 +56,6 @@ from hikari import embeds as embeds_
 from hikari import emojis
 from hikari import guilds
 from hikari import invites
-from hikari import iterators
 from hikari import messages
 from hikari import presences
 from hikari import snowflakes
@@ -66,7 +65,6 @@ from hikari import voices
 from hikari.api import cache
 from hikari.internal import attr_extensions
 from hikari.internal import collections
-from hikari.internal import deprecation
 
 if typing.TYPE_CHECKING:
     from hikari import applications
@@ -156,14 +154,6 @@ class CacheMappingView(cache.CacheView[KeyT, ValueT]):
     def get_item_at(self, index: typing.Union[slice, int], /) -> typing.Union[ValueT, typing.Sequence[ValueT]]:
         return collections.get_index_or_slice(self, index)
 
-    def iterator(self) -> iterators.LazyIterator[ValueT]:
-        deprecation.warn_deprecated(
-            "iterator",
-            removal_version="2.0.0.dev113",
-            additional_info="Use the 'itertools' module instead",
-        )
-        return iterators.FlatLazyIterator(self.values())
-
 
 class EmptyCacheView(cache.CacheView[typing.Any, typing.Any]):
     """An empty cache view implementation."""
@@ -184,14 +174,6 @@ class EmptyCacheView(cache.CacheView[typing.Any, typing.Any]):
 
     def get_item_at(self, index: typing.Union[slice, int]) -> typing.NoReturn:
         raise IndexError(index)
-
-    def iterator(self) -> iterators.LazyIterator[ValueT]:
-        deprecation.warn_deprecated(
-            "iterator",
-            removal_version="2.0.0.dev113",
-            additional_info="Use the 'itertools' module instead",
-        )
-        return iterators.FlatLazyIterator(())
 
 
 @attr_extensions.with_copy
@@ -854,7 +836,7 @@ class MessageData(BaseData[messages.Message]):
             else undefined.UNDEFINED
         )
 
-        message = messages.Message(
+        return messages.Message(
             id=self.id,
             app=app,
             channel_id=self.channel_id,
@@ -865,7 +847,6 @@ class MessageData(BaseData[messages.Message]):
             timestamp=self.timestamp,
             edited_timestamp=self.edited_timestamp,
             is_tts=self.is_tts,
-            mentions=NotImplemented,
             user_mentions=user_mentions,
             channel_mentions=channel_mentions,
             role_mention_ids=copy.copy(self.role_mention_ids),
@@ -887,8 +868,6 @@ class MessageData(BaseData[messages.Message]):
             application_id=self.application_id,
             components=self.components,
         )
-        message.mentions = messages.Mentions(message=message)
-        return message
 
     def update(
         self,

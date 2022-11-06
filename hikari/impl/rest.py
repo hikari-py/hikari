@@ -75,7 +75,6 @@ from hikari.impl import rate_limits
 from hikari.impl import special_endpoints as special_endpoints_impl
 from hikari.interactions import base_interactions
 from hikari.internal import data_binding
-from hikari.internal import deprecation
 from hikari.internal import mentions
 from hikari.internal import net
 from hikari.internal import routes
@@ -1088,82 +1087,6 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("deny", deny)
         await self._request(route, json=body, reason=reason)
 
-    async def edit_permission_overwrites(
-        self,
-        channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
-        target: typing.Union[
-            snowflakes.Snowflakeish, users.PartialUser, guilds.PartialRole, channels_.PermissionOverwrite
-        ],
-        *,
-        target_type: undefined.UndefinedOr[typing.Union[channels_.PermissionOverwriteType, int]] = undefined.UNDEFINED,
-        allow: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
-        deny: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
-        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> None:
-        """Edit permissions for a specific entity in the given guild channel.
-
-        .. deprecated:: 2.0.0.dev110
-            Use `RESTClient.edit_permission_overwrite` instead.
-
-        Parameters
-        ----------
-        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildChannel]
-            The channel to edit a permission overwrite in. This may be the
-            object, or the ID of an existing channel.
-        target : typing.Union[hikari.users.PartialUser, hikari.guilds.PartialRole, hikari.channels.PermissionOverwrite, hikari.snowflakes.Snowflakeish]
-            The channel overwrite to edit. This may be the object or the ID of an
-            existing overwrite.
-
-        Other Parameters
-        ----------------
-        target_type : hikari.undefined.UndefinedOr[typing.Union[hikari.channels.PermissionOverwriteType, int]]
-            If provided, the type of the target to update. If unset, will attempt to get
-            the type from `target`.
-        allow : hikari.undefined.UndefinedOr[hikari.permissions.Permissions]
-            If provided, the new value of all allowed permissions.
-        deny : hikari.undefined.UndefinedOr[hikari.permissions.Permissions]
-            If provided, the new value of all disallowed permissions.
-        reason : hikari.undefined.UndefinedOr[builtins.str]
-            If provided, the reason that will be recorded in the audit logs.
-            Maximum of 512 characters.
-
-        Raises
-        ------
-        builtins.TypeError
-            If `target_type` is unset and we were unable to determine the type
-            from `target`.
-        hikari.errors.BadRequestError
-            If any of the fields that are passed have an invalid value.
-        hikari.errors.UnauthorizedError
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.ForbiddenError
-            If you are missing the `MANAGE_PERMISSIONS` permission in the channel.
-        hikari.errors.NotFoundError
-            If the channel is not found or the target is not found if it is
-            a role.
-        hikari.errors.RateLimitTooLongError
-            Raised in the event that a rate limit occurs that is
-            longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
-        hikari.errors.InternalServerError
-            If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
-        deprecation.warn_deprecated(
-            "edit_permission_overwrites",
-            removal_version="2.0.0.dev113",
-            additional_info="Use 'edit_permission_overwrite' instead",
-        )
-        await self.edit_permission_overwrite(
-            channel, target, target_type=target_type, allow=allow, deny=deny, reason=reason
-        )
-
     async def delete_permission_overwrite(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
@@ -2169,92 +2092,6 @@ class RESTClientImpl(rest_api.RESTClient):
         mute: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         deaf: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> typing.Optional[guilds.Member]:
-        """Add a user to a guild.
-
-        !!! note
-            This requires the `access_token` to have the
-            `hikari.applications.OAuth2Scope.GUILDS_JOIN` scope enabled along
-            with the authorization of a Bot which has `MANAGE_INVITES`
-            permission within the target guild.
-
-        Parameters
-        ----------
-        access_token : typing.Union[builtins.str, hikari.applications.PartialOAuth2Token]
-            Object or string of the access token to use for this request.
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
-            The guild to add the user to. This may be the object
-            or the ID of an existing guild.
-        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
-            The user to add to the guild. This may be the object
-            or the ID of an existing user.
-
-        Other Parameters
-        ----------------
-        nickname : hikari.undefined.UndefinedOr[builtins.str]
-            If provided, the nick to add to the user when he joins the guild.
-
-            Requires the `MANAGE_NICKNAMES` permission on the guild.
-        nick : hikari.undefined.UndefinedNoneOr[builtins.str]
-            Deprecated alias for `nickname`.
-
-            .. deprecated:: 2.0.0.dev106
-                Use `nickname` instead.
-        roles : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole]]
-            If provided, the roles to add to the user when he joins the guild.
-            This may be a collection objects or IDs of existing roles.
-
-            Requires the `MANAGE_ROLES` permission on the guild.
-        mute : hikari.undefined.UndefinedOr[builtins.bool]
-            If provided, the mute state to add the user when he joins the guild.
-
-            Requires the `MUTE_MEMBERS` permission on the guild.
-        deaf : hikari.undefined.UndefinedOr[builtins.bool]
-            If provided, the deaf state to add the user when he joins the guild.
-
-            Requires the `DEAFEN_MEMBERS` permission on the guild.
-
-        Returns
-        -------
-        typing.Optional[hikari.guilds.Member]
-            `builtins.None` if the user was already part of the guild, else
-            `hikari.guilds.Member`.
-
-        Raises
-        ------
-        hikari.errors.BadRequestError
-            If any of the fields that are passed have an invalid value.
-        hikari.errors.ForbiddenError
-            If you are not part of the guild you want to add the user to,
-            if you are missing permissions to do one of the things you specified,
-            if you are using an access token for another user, if the token is
-            bound to another bot or if the access token doesn't have the
-            `hikari.applications.OAuth2Scope.GUILDS_JOIN` scope enabled.
-        hikari.errors.UnauthorizedError
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.NotFoundError
-            If you own the guild or the user is not found.
-        hikari.errors.RateLimitTooLongError
-            Raised in the event that a rate limit occurs that is
-            longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
-        hikari.errors.InternalServerError
-            If an internal error occurs on Discord while handling the request.
-        """
-        if nick is not undefined.UNDEFINED:
-            deprecation.warn_deprecated(
-                "nick",
-                removal_version="2.0.0.dev113",
-                additional_info="Use 'nickname' parameter instead",
-            )
-            nickname = nick
-
         route = routes.PUT_GUILD_MEMBER.compile(guild=guild, user=user)
         body = data_binding.JSONObjectBuilder()
         body.put("access_token", str(access_token))
@@ -3028,100 +2865,6 @@ class RESTClientImpl(rest_api.RESTClient):
         communication_disabled_until: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.Member:
-        """Edit a guild member.
-
-        Parameters
-        ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
-            The guild to edit. This may be the object
-            or the ID of an existing guild.
-        user : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
-            The guild to edit. This may be the object
-            or the ID of an existing guild.
-
-        Other Parameters
-        ----------------
-        nickname : hikari.undefined.UndefinedNoneOr[builtins.str]
-            If provided, the new nick for the member. If `builtins.None`,
-            will remove the members nick.
-
-            Requires the `MANAGE_NICKNAMES` permission.
-        nick : hikari.undefined.UndefinedNoneOr[builtins.str]
-            Deprecated alias for `nickname`.
-
-            .. deprecated:: 2.0.0.dev104
-                Use `nickname` instead.
-        roles : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole]]
-            If provided, the new roles for the member.
-
-            Requires the `MANAGE_ROLES` permission.
-        mute : hikari.undefined.UndefinedOr[builtins.bool]
-            If provided, the new server mute state for the member.
-
-            Requires the `MUTE_MEMBERS` permission.
-        deaf : hikari.undefined.UndefinedOr[builtins.bool]
-            If provided, the new server deaf state for the member.
-
-            Requires the `DEAFEN_MEMBERS` permission.
-        voice_channel : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildVoiceChannel]]]
-            If provided, `builtins.None` or the object or the ID of
-            an existing voice channel to move the member to.
-            If `builtins.None`, will disconnect the member from voice.
-
-            Requires the `MOVE_MEMBERS` permission and the `CONNECT`
-            permission in the original voice channel and the target
-            voice channel.
-
-            !!! note
-                If the member is not in a voice channel, this will
-                take no effect.
-        communication_disabled_until : hikari.undefined.UndefinedNoneOr[datetime.datetime]
-            If provided, the datetime when the timeout (disable communication)
-            of the member expires, up to 28 days in the future, or `builtins.None`
-            to remove the timeout from the member.
-
-            Requires the `MODERATE_MEMBERS` permission.
-        reason : hikari.undefined.UndefinedOr[builtins.str]
-            If provided, the reason that will be recorded in the audit logs.
-            Maximum of 512 characters.
-
-        Returns
-        -------
-        hikari.guilds.Member
-            Object of the member that was updated.
-
-        Raises
-        ------
-        hikari.errors.BadRequestError
-            If any of the fields that are passed have an invalid value.
-        hikari.errors.ForbiddenError
-            If you are missing a permission to do an action.
-        hikari.errors.UnauthorizedError
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.NotFoundError
-            If the guild or the user are not found.
-        hikari.errors.RateLimitTooLongError
-            Raised in the event that a rate limit occurs that is
-            longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
-        hikari.errors.InternalServerError
-            If an internal error occurs on Discord while handling the request.
-        """
-        if nick is not undefined.UNDEFINED:
-            deprecation.warn_deprecated(
-                "nick",
-                removal_version="2.0.0.dev113",
-                additional_info="Use 'nickname' parameter instead",
-            )
-            nickname = nick
-
         route = routes.PATCH_GUILD_MEMBER.compile(guild=guild, user=user)
         body = data_binding.JSONObjectBuilder()
         body.put("nick", nickname)
@@ -3157,62 +2900,6 @@ class RESTClientImpl(rest_api.RESTClient):
         response = await self._request(route, json=body, reason=reason)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_member(response, guild_id=snowflakes.Snowflake(guild))
-
-    async def edit_my_nick(
-        self,
-        guild: snowflakes.SnowflakeishOr[guilds.Guild],
-        nick: typing.Optional[str],
-        *,
-        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> None:
-        """Edit the associated token's member nick.
-
-        .. deprecated:: 2.0.0.dev104
-            Use `RESTClient.edit_my_member`'s `nick` argument instead.
-
-        Parameters
-        ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
-            The guild to edit. This may be the object
-            or the ID of an existing guild.
-        nick : typing.Optional[builtins.str]
-            The new nick. If `builtins.None`,
-            will remove the nick.
-
-        Other Parameters
-        ----------------
-        reason : hikari.undefined.UndefinedOr[builtins.str]
-            If provided, the reason that will be recorded in the audit logs.
-            Maximum of 512 characters.
-
-        Raises
-        ------
-        hikari.errors.ForbiddenError
-            If you are missing the `CHANGE_NICKNAME` permission.
-        hikari.errors.UnauthorizedError
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.NotFoundError
-            If the guild is not found.
-        hikari.errors.RateLimitTooLongError
-            Raised in the event that a rate limit occurs that is
-            longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
-        hikari.errors.InternalServerError
-            If an internal error occurs on Discord while handling the request.
-        """
-        deprecation.warn_deprecated(
-            "edit_permission_overwrites",
-            removal_version="2.0.0.dev113",
-            additional_info="Use 'edit_my_member' with the nickname parameter instead.",
-        )
-        await self.edit_my_member(guild, nickname=nick, reason=reason)
 
     async def add_role_to_member(
         self,
@@ -3658,33 +3345,6 @@ class RESTClientImpl(rest_api.RESTClient):
         response = await self._request(route)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_template(response)
-
-    def command_builder(self, name: str, description: str) -> special_endpoints.SlashCommandBuilder:
-        r"""Create a slash command builder to use in `RESTClient.set_application_commands`.
-
-        .. deprecated:: 2.0.0.dev106
-            Use `RESTClient.slash_command_builder` instead.
-
-        Parameters
-        ----------
-        name : builtins.str
-            The command's name. This should match the regex `^[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$` in
-            Unicode mode and be lowercase.
-        description : builtins.str
-            The description to set for the command.
-            This should be inclusively between 1-100 characters in length.
-
-        Returns
-        -------
-        hikari.api.special_endpoints.SlashCommandBuilder
-            The created command builder object.
-        """
-        deprecation.warn_deprecated(
-            "command_builder",
-            removal_version="2.0.0.dev113",
-            additional_info="Use 'slash_command_builder' instead.",
-        )
-        return self.slash_command_builder(name, description)
 
     def slash_command_builder(self, name: str, description: str) -> special_endpoints.SlashCommandBuilder:
         return special_endpoints_impl.SlashCommandBuilder(name, description)
