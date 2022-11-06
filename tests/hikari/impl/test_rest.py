@@ -1362,6 +1362,7 @@ class TestRESTClientImpl:
         assert form is url_encoded_form.return_value
 
         # Attachments
+        assert ensure_resource.call_count == 2
         ensure_resource.assert_has_calls([mock.call(attachment), mock.call(embed_attachment)])
 
         # Embeds
@@ -1377,6 +1378,7 @@ class TestRESTClientImpl:
 
         # Form builder
         url_encoded_form.assert_called_once_with(executor=rest_client._executor)
+        assert url_encoded_form.return_value.add_resource.call_count == 2
         url_encoded_form.return_value.add_resource.assert_has_calls(
             [mock.call("files[0]", resource_attachment1), mock.call("files[1]", resource_attachment2)]
         )
@@ -1459,6 +1461,7 @@ class TestRESTClientImpl:
         assert form is url_encoded_form.return_value
 
         # Attachments
+        assert ensure_resource.call_count == 5
         ensure_resource.assert_has_calls(
             [
                 mock.call(attachment1),
@@ -1470,6 +1473,7 @@ class TestRESTClientImpl:
         )
 
         # Embeds
+        assert rest_client._entity_factory.serialize_embed.call_count == 2
         rest_client._entity_factory.serialize_embed.assert_has_calls([mock.call(embed1), mock.call(embed2)])
 
         # Components
@@ -1483,6 +1487,7 @@ class TestRESTClientImpl:
 
         # Form builder
         url_encoded_form.assert_called_once_with(executor=rest_client._executor)
+        assert url_encoded_form.return_value.add_resource.call_count == 5
         url_encoded_form.return_value.add_resource.assert_has_calls(
             [
                 mock.call("files[0]", resource_attachment1),
@@ -2402,6 +2407,7 @@ class TestRESTClientImplAsync:
 
         assert await rest_client.fetch_channel_invites(StubModel(123)) == [invite1, invite2]
         rest_client._request.assert_awaited_once_with(expected_route)
+        assert rest_client._entity_factory.deserialize_invite_with_metadata.call_count == 2
         rest_client._entity_factory.deserialize_invite_with_metadata.assert_has_calls(
             [mock.call({"id": "456"}), mock.call({"id": "789"})]
         )
@@ -2446,6 +2452,7 @@ class TestRESTClientImplAsync:
 
         assert await rest_client.fetch_pins(StubModel(123)) == [message1, message2]
         rest_client._request.assert_awaited_once_with(expected_route)
+        assert rest_client._entity_factory.deserialize_message.call_count == 2
         rest_client._entity_factory.deserialize_message.assert_has_calls(
             [mock.call({"id": "456"}), mock.call({"id": "789"})]
         )
@@ -2916,6 +2923,7 @@ class TestRESTClientImplAsync:
 
         assert await rest_client.fetch_channel_webhooks(StubModel(123)) == [webhook1, webhook2]
         rest_client._request.assert_awaited_once_with(expected_route)
+        assert rest_client._entity_factory.deserialize_webhook.call_count == 2
         rest_client._entity_factory.deserialize_webhook.assert_has_calls(
             [mock.call({"id": "456"}), mock.call({"id": "789"})]
         )
@@ -2943,6 +2951,7 @@ class TestRESTClientImplAsync:
 
         assert await rest_client.fetch_guild_webhooks(StubModel(123)) == [webhook1, webhook2]
         rest_client._request.assert_awaited_once_with(expected_route)
+        assert rest_client._entity_factory.deserialize_webhook.call_count == 2
         rest_client._entity_factory.deserialize_webhook.assert_has_calls(
             [mock.call({"id": "456"}), mock.call({"id": "789"})]
         )
@@ -3537,6 +3546,7 @@ class TestRESTClientImplAsync:
         assert await rest_client.fetch_my_connections() == [connection1, connection2]
 
         rest_client._request.assert_awaited_once_with(expected_route)
+        assert rest_client._entity_factory.deserialize_own_connection.call_count == 2
         rest_client._entity_factory.deserialize_own_connection.assert_has_calls(
             [mock.call({"id": "123"}), mock.call({"id": "456"})]
         )
@@ -3787,6 +3797,7 @@ class TestRESTClientImplAsync:
         assert await rest_client.fetch_voice_regions() == [voice_region1, voice_region2]
 
         rest_client._request.assert_awaited_once_with(expected_route)
+        assert rest_client._entity_factory.deserialize_voice_region.call_count == 2
         rest_client._entity_factory.deserialize_voice_region.assert_has_calls(
             [mock.call({"id": "123"}), mock.call({"id": "456"})]
         )
@@ -3823,6 +3834,7 @@ class TestRESTClientImplAsync:
         assert await rest_client.fetch_guild_emojis(StubModel(123)) == [emoji1, emoji2]
 
         rest_client._request.assert_awaited_once_with(expected_route)
+        assert rest_client._entity_factory.deserialize_known_custom_emoji.call_count == 2
         rest_client._entity_factory.deserialize_known_custom_emoji.assert_has_calls(
             [mock.call({"id": "456"}, guild_id=123), mock.call({"id": "789"}, guild_id=123)]
         )
@@ -4116,6 +4128,7 @@ class TestRESTClientImplAsync:
         assert await rest_client.fetch_guild_channels(StubModel(123)) == [channel1, channel2]
 
         rest_client._request.assert_awaited_once_with(expected_route)
+        assert rest_client._entity_factory.deserialize_channel.call_count == 2
         rest_client._entity_factory.deserialize_channel.assert_has_calls(
             [mock.call({"id": "456"}), mock.call({"id": "789"})]
         )
@@ -4357,6 +4370,7 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(
             expected_route, json=expected_json, reason="we have got the power"
         )
+        assert rest_client._entity_factory.serialize_permission_overwrite.call_count == 2
         rest_client._entity_factory.serialize_permission_overwrite.assert_has_calls(
             [mock.call(overwrite1), mock.call(overwrite2)]
         )
@@ -4795,6 +4809,7 @@ class TestRESTClientImplAsync:
         assert await rest_client.fetch_roles(StubModel(123)) == [role1, role2]
 
         rest_client._request.assert_awaited_once_with(expected_route)
+        assert rest_client._entity_factory.deserialize_role.call_count == 2
         rest_client._entity_factory.deserialize_role.assert_has_calls(
             [mock.call({"id": "456"}, guild_id=123), mock.call({"id": "789"}, guild_id=123)]
         )
@@ -4967,6 +4982,7 @@ class TestRESTClientImplAsync:
         assert await rest_client.fetch_guild_voice_regions(StubModel(123)) == [voice_region1, voice_region2]
 
         rest_client._request.assert_awaited_once_with(expected_route)
+        assert rest_client._entity_factory.deserialize_voice_region.call_count == 2
         rest_client._entity_factory.deserialize_voice_region.assert_has_calls(
             [mock.call({"id": "456"}), mock.call({"id": "789"})]
         )
@@ -4981,6 +4997,7 @@ class TestRESTClientImplAsync:
         assert await rest_client.fetch_guild_invites(StubModel(123)) == [invite1, invite2]
 
         rest_client._request.assert_awaited_once_with(expected_route)
+        assert rest_client._entity_factory.deserialize_invite_with_metadata.call_count == 2
         rest_client._entity_factory.deserialize_invite_with_metadata.assert_has_calls(
             [mock.call({"id": "456"}), mock.call({"id": "789"})]
         )
@@ -4995,6 +5012,7 @@ class TestRESTClientImplAsync:
         assert await rest_client.fetch_integrations(StubModel(123)) == [integration1, integration2]
 
         rest_client._request.assert_awaited_once_with(expected_route)
+        assert rest_client._entity_factory.deserialize_integration.call_count == 2
         rest_client._entity_factory.deserialize_integration.assert_has_calls(
             [mock.call({"id": "456"}, guild_id=123), mock.call({"id": "789"}, guild_id=123)]
         )

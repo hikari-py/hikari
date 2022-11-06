@@ -396,15 +396,15 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
             self[key] = [str(int(value)) for value in values]
 
 
-def cast_enum_array(cast: typing.Callable[[T_co], T], raw_values: typing.Iterable[T_co], /) -> typing.List[T]:
+def cast_variants_array(cast: typing.Callable[[T_co], T], raw_values: typing.Iterable[T_co], /) -> typing.List[T]:
     """Cast an array of enum variants while ignoring unrecognised variant types.
 
     Parameters
     ----------
     cast : typing.Callable[[T_co], T]
-        Callback to cast each variant with.
+        Callback to cast each variant to.
 
-        This will ignore any variants which raies
+        This will ignore any variants which raises
         `hikari.errors.UnrecognisedEntityError` on cast.
     raw_values : typing.Iterable[T_co]
         Iterable of the raw values to cast.

@@ -1753,7 +1753,7 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.GET_CHANNEL_WEBHOOKS.compile(channel=channel)
         response = await self._request(route)
         assert isinstance(response, list)
-        return data_binding.cast_enum_array(self._entity_factory.deserialize_webhook, response)
+        return data_binding.cast_variants_array(self._entity_factory.deserialize_webhook, response)
 
     async def fetch_guild_webhooks(
         self,
@@ -1762,7 +1762,7 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.GET_GUILD_WEBHOOKS.compile(guild=guild)
         response = await self._request(route)
         assert isinstance(response, list)
-        return data_binding.cast_enum_array(self._entity_factory.deserialize_webhook, response)
+        return data_binding.cast_variants_array(self._entity_factory.deserialize_webhook, response)
 
     async def edit_webhook(
         self,
@@ -2583,7 +2583,7 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.GET_GUILD_CHANNELS.compile(guild=guild)
         response = await self._request(route)
         assert isinstance(response, list)
-        channels = data_binding.cast_enum_array(self._entity_factory.deserialize_channel, response)
+        channels = data_binding.cast_variants_array(self._entity_factory.deserialize_channel, response)
         # Will always be guild channels unless Discord messes up severely on something!
         return typing.cast("typing.Sequence[channels_.GuildChannel]", channels)
 
@@ -4136,7 +4136,7 @@ class RESTClientImpl(rest_api.RESTClient):
         response = await self._request(route, query=query)
 
         assert isinstance(response, list)
-        return data_binding.cast_enum_array(self._entity_factory.deserialize_scheduled_event, response)
+        return data_binding.cast_variants_array(self._entity_factory.deserialize_scheduled_event, response)
 
     async def _create_or_edit_scheduled_stage(
         self,
