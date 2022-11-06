@@ -165,7 +165,7 @@ class TestRedBanner:
         read = object()
 
         with mock.patch.object(sys, "version_info", new=(3, 9)):
-            with mock.patch.object(importlib.resources, "files", return_value=traversable) as read_text:
+            with mock.patch.object(importlib.resources, "files", return_value=traversable, create=True) as read_text:
                 assert ux._read_banner("hikaru") is read
 
         read_text.assert_called_once_with("hikaru")
