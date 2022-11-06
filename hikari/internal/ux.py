@@ -147,6 +147,13 @@ _UNCONDITIONAL_ANSI_FLAGS: typing.Final[typing.FrozenSet[str]] = frozenset(("PYC
 """Set of env variables which always indicate that ANSI flags should be included."""
 
 
+def _read_banner(package: str) -> str:
+    if sys.version_info >= (3, 9):
+        return importlib.resources.files(package).joinpath("banner.txt").open("r").read()
+    else:
+        return importlib.resources.read_text(package, "banner.txt")
+
+
 def print_banner(
     package: typing.Optional[str],
     allow_color: bool,
@@ -188,7 +195,7 @@ def print_banner(
     if package is None:
         return
 
-    raw_banner = importlib.resources.read_text(package, "banner.txt")
+    raw_banner = _read_banner(package)
 
     system_bits = (platform.machine(), platform.system(), platform.release())
     filtered_system_bits = (s.strip() for s in system_bits if s.strip())
