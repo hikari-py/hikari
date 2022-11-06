@@ -902,7 +902,6 @@ class Member(users.User):
         self,
         *,
         nickname: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
-        nick: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
         roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[PartialRole]] = undefined.UNDEFINED,
         mute: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         deaf: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -921,11 +920,6 @@ class Member(users.User):
             will remove the members nick.
 
             Requires the `MANAGE_NICKNAMES` permission.
-        nick : hikari.undefined.UndefinedNoneOr[builtins.str]
-            Deprecated alias for `nickname`.
-
-            .. deprecated:: 2.0.0.dev104
-                Use `nickname` instead.
         roles : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole]]
             If provided, the new roles for the member.
 
@@ -989,14 +983,6 @@ class Member(users.User):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
-        if nick is not undefined.UNDEFINED:
-            deprecation.warn_deprecated(
-                "nick",
-                removal_version="2.0.0.dev113",
-                additional_info="Use 'nickname' parameter instead",
-            )
-            nickname = nick
-
         return await self.user.app.rest.edit_member(
             self.guild_id,
             self.user.id,

@@ -127,7 +127,6 @@ def message():
         timestamp=datetime.datetime.now().astimezone(),
         edited_timestamp=None,
         is_tts=False,
-        mentions=messages.Mentions(message=mock.Mock()),
         user_mentions={},
         role_mention_ids=[],
         channel_mentions={},
