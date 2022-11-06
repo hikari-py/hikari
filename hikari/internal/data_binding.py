@@ -41,6 +41,7 @@ import typing
 import aiohttp
 import multidict
 
+from hikari import errors
 from hikari import files
 from hikari import snowflakes
 from hikari import undefined
@@ -50,6 +51,7 @@ if typing.TYPE_CHECKING:
     import contextlib
 
     T_co = typing.TypeVar("T_co", covariant=True)
+    T = typing.TypeVar("T")
 
 Headers = typing.Mapping[str, str]
 """Type hint for HTTP headers."""
@@ -392,3 +394,33 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
         """  # noqa: E501 - Line too long
         if values is not undefined.UNDEFINED:
             self[key] = [str(int(value)) for value in values]
+
+
+def cast_variants_array(cast: typing.Callable[[T_co], T], raw_values: typing.Iterable[T_co], /) -> typing.List[T]:
+    """Cast an array of enum variants while ignoring unrecognised variant types.
+
+    Parameters
+    ----------
+    cast : typing.Callable[[T_co], T]
+        Callback to cast each variant to.
+
+        This will ignore any variants which raises
+        `hikari.errors.UnrecognisedEntityError` on cast.
+    raw_values : typing.Iterable[T_co]
+        Iterable of the raw values to cast.
+
+    Returns
+    -------
+    typing.List[T]
+        A list of the casted variants (with any unrecognised types ignored).
+    """
+    results: typing.List[T] = []
+
+    for value in raw_values:
+        try:
+            results.append(cast(value))
+
+        except errors.UnrecognisedEntityError:
+            pass
+
+    return results
