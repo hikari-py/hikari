@@ -24,7 +24,6 @@ import contextlib
 import datetime
 import http
 import typing
-import warnings
 
 import mock
 import pytest

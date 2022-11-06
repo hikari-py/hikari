@@ -22,9 +22,7 @@
 import copy
 
 import mock
-import pytest
 
-from hikari import iterators
 from hikari import snowflakes
 from hikari import stickers
 from hikari.internal import cache

@@ -56,7 +56,6 @@ from hikari import embeds as embeds_
 from hikari import emojis
 from hikari import guilds
 from hikari import invites
-from hikari import iterators
 from hikari import messages
 from hikari import presences
 from hikari import snowflakes
@@ -66,7 +65,6 @@ from hikari import voices
 from hikari.api import cache
 from hikari.internal import attr_extensions
 from hikari.internal import collections
-from hikari.internal import deprecation
 
 if typing.TYPE_CHECKING:
     from hikari import applications
