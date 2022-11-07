@@ -20,7 +20,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Implementation of a V8 compatible REST API for Discord.
+"""Implementation of a V10 compatible REST API for Discord.
 
 This also includes implementations designed towards providing
 RESTful functionality.
@@ -495,7 +495,7 @@ class _RetryRequest(RuntimeError):
 
 
 class RESTClientImpl(rest_api.RESTClient):
-    """Implementation of the V8-compatible Discord HTTP API.
+    """Implementation of the V10-compatible Discord HTTP API.
 
     This manages making HTTP/1.1 requests to the API and using the entity
     factory within the passed application instance to deserialize JSON responses
