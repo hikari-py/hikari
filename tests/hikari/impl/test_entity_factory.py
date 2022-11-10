@@ -216,7 +216,7 @@ def user_payload():
         "discriminator": "6127",
         "bot": True,
         "system": True,
-        "public_flags": int(user_models.UserFlag.EARLY_VERIFIED_DEVELOPER),
+        "public_flags": int(user_models.UserFlag.EARLY_VERIFIED_DEVELOPER | user_models.UserFlag.ACTIVE_DEVELOPER),
     }
 
 
@@ -6324,7 +6324,7 @@ class TestEntityFactoryImpl:
         assert user.discriminator == "6127"
         assert user.is_bot is True
         assert user.is_system is True
-        assert user.flags == user_models.UserFlag.EARLY_VERIFIED_DEVELOPER
+        assert user.flags == user_models.UserFlag.EARLY_VERIFIED_DEVELOPER | user_models.UserFlag.ACTIVE_DEVELOPER
         assert isinstance(user, user_models.UserImpl)
 
     def test_deserialize_user_with_unset_fields(self, entity_factory_impl, mock_app, user_payload):
