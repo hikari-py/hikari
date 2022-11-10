@@ -102,6 +102,9 @@ class UserFlag(enums.Flag):
     BOT_HTTP_INTERACTIONS = 1 << 19
     """Bot uses only HTTP interactions and is shown in the active member list."""
 
+    ACTIVE_DEVELOPER = 1 << 22
+    """User is an active bot developer."""
+
 
 @typing.final
 class PremiumType(int, enums.Enum):
