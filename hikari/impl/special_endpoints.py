@@ -107,7 +107,7 @@ if typing.TYPE_CHECKING:
         ) -> typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]:
             ...
 
-    class _ThreadDeserailzeSig(typing.Protocol["_GuildThreadChannelT"]):
+    class _ThreadDeserializeSig(typing.Protocol["_GuildThreadChannelCovT"]):
         def __call__(
             self,
             payload: data_binding.JSONObject,
@@ -115,7 +115,7 @@ if typing.TYPE_CHECKING:
             *,
             guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
             member: undefined.UndefinedNoneOr[channels.ThreadMember] = undefined.UNDEFINED,
-        ) -> _GuildThreadChannelT:
+        ) -> _GuildThreadChannelCovT:
             raise NotImplementedError
 
     # Hack around used to avoid recursive generic types leading to type checker issues in builders
@@ -125,7 +125,8 @@ if typing.TYPE_CHECKING:
 
 
 _ContainerProtoT = typing.TypeVar("_ContainerProtoT", bound="_ContainerProto")
-_GuildThreadChannelT = typing.TypeVar("_GuildThreadChannelT", bound=channels.GuildThreadChannel, covariant=True)
+_GuildThreadChannelT = typing.TypeVar("_GuildThreadChannelT", bound=channels.GuildThreadChannel)
+_GuildThreadChannelCovT = typing.TypeVar("_GuildThreadChannelCovT", bound=channels.GuildThreadChannel, covariant=True)
 
 
 @typing.final
@@ -837,7 +838,7 @@ class GuildThreadIterator(iterators.BufferedLazyIterator[_GuildThreadChannelT]):
 
     def __init__(
         self,
-        deserialize: _ThreadDeserailzeSig[_GuildThreadChannelT],
+        deserialize: _ThreadDeserializeSig[_GuildThreadChannelCovT],
         entity_factory: entity_factory_.EntityFactory,
         request_call: _RequestCallSig,
         route: routes.CompiledRoute,
@@ -853,7 +854,7 @@ class GuildThreadIterator(iterators.BufferedLazyIterator[_GuildThreadChannelT]):
         self._request_call = request_call
         self._route = route
 
-    async def _next_chunk(self) -> typing.Optional[typing.Generator[_GuildThreadChannelT, typing.Any, None]]:
+    async def _next_chunk(self) -> typing.Optional[typing.Generator[_GuildThreadChannelCovT, typing.Any, None]]:
         if not self._has_more:
             return None
 

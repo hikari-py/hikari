@@ -285,4 +285,8 @@ class Permissions(enums.Flag):
         Permissions
             A permissions instance with all the known permissions.
         """
-        return functools.reduce(operator.ior, Permissions)
+        all_perms = Permissions.NONE
+        for perm in Permissions:
+            all_perms |= perm
+
+        return all_perms
