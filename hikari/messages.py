@@ -31,7 +31,6 @@ __all__: typing.Sequence[str] = (
     "Attachment",
     "Reaction",
     "MessageActivity",
-    "Mentions",
     "MessageInteraction",
     "MessageReference",
     "PartialMessage",
@@ -50,7 +49,6 @@ from hikari import traits
 from hikari import undefined
 from hikari import urls
 from hikari.internal import attr_extensions
-from hikari.internal import deprecation
 from hikari.internal import enums
 from hikari.internal import routes
 
@@ -265,137 +263,6 @@ class MessageActivity:
 
 @attr_extensions.with_copy
 @attr.define(hash=False, kw_only=True, weakref_slot=False)
-class Mentions:
-    """Description of mentions that exist in the message."""
-
-    # We refer back to the containing message so that we can provide info about
-    # entities that were not notified, and provide access to cached roles
-    # through this mechanism.
-    _message: PartialMessage = attr.field(repr=False)
-
-    @property
-    def channels(self) -> undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, channels_.PartialChannel]]:
-        """Channel mentions that reference channels in the target crosspost's guild.
-
-        If the message is not crossposted, this will always be empty.
-        """
-        deprecation.warn_deprecated(
-            "channels",
-            removal_version="2.0.0.dev113",
-            additional_info="Use 'channel_mentions' in the base message object instead",
-        )
-        return self._message.channel_mentions
-
-    @property
-    def channels_ids(self) -> undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]]:
-        """Sequence of IDs of the channels that were mentioned in the message."""
-        deprecation.warn_deprecated(
-            "channels_ids",
-            removal_version="2.0.0.dev113",
-            additional_info="Use 'channel_mention_ids' in the base message object instead",
-        )
-        return self._message.channel_mention_ids
-
-    @property
-    def users(self) -> undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, users_.User]]:
-        """Users who were notified by their mention in the message."""
-        deprecation.warn_deprecated(
-            "users",
-            removal_version="2.0.0.dev113",
-            additional_info="Use 'user_mentions' in the base message object instead",
-        )
-        return self._message.user_mentions
-
-    @property
-    def user_ids(self) -> undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]]:
-        """Sequence of IDs of the users that were mentioned in the message."""
-        deprecation.warn_deprecated(
-            "user_ids",
-            removal_version="2.0.0.dev113",
-            additional_info="Use 'user_mentions_ids' in the base message object instead",
-        )
-        return self._message.user_mentions_ids
-
-    @property
-    def role_ids(self) -> undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]]:
-        """Sequence of IDs of roles that were notified by their mention in the message."""
-        deprecation.warn_deprecated(
-            "role_ids",
-            removal_version="2.0.0.dev113",
-            additional_info="Use 'role_mention_ids' in the base message object instead",
-        )
-        return self._message.role_mention_ids
-
-    @property
-    def everyone(self) -> undefined.UndefinedOr[bool]:
-        """Whether the message notifies using `@everyone` or `@here`."""
-        deprecation.warn_deprecated(
-            "everyone",
-            removal_version="2.0.0.dev113",
-            additional_info="Use 'mentions_everyone' in the base message object instead",
-        )
-        return self._message.mentions_everyone
-
-    def get_members(self) -> undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, guilds.Member]]:
-        """Discover any cached members notified by this message.
-
-        If this message was sent in a DM, this will always be empty.
-
-        !!! warning
-            This will only return valid results on gateway events. For REST
-            endpoints, this will potentially be empty. This is a limitation of
-            Discord's API, as they do not consistently notify of the ID of the
-            guild a message was sent in.
-
-        !!! note
-            If you are using a stateless application such as a stateless bot
-            or a REST-only client, this will always be empty. Furthermore,
-            if you are running a stateful bot and have the GUILD_MEMBERS
-            intent disabled, this will also be empty.
-
-            Members that are not cached will not appear in this mapping. This
-            means that there is a very small chance that some users provided
-            in `notified_users` may not be present here.
-        """
-        deprecation.warn_deprecated(
-            "get_members",
-            removal_version="2.0.0.dev113",
-            additional_info="Use 'get_member_mentions' in the base message object instead",
-        )
-        return self._message.get_member_mentions()
-
-    def get_roles(self) -> undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, guilds.Role]]:
-        """Attempt to look up the roles that are notified by this message.
-
-        If this message was sent in a DM, this will always be empty.
-
-        !!! warning
-            This will only return valid results on gateway events. For REST
-            endpoints, this will potentially be empty. This is a limitation of
-            Discord's API, as they do not consistently notify of the ID of the
-            guild a message was sent in.
-
-        !!! note
-            If you are using a stateless application such as a stateless bot
-            or a REST-only client, this will always be empty. Furthermore,
-            if you are running a stateful bot and have the GUILD intent
-            disabled, this will also be empty.
-
-            Roles that are not cached will not appear in this mapping. This
-            means that there is a very small chance that some role IDs provided
-            in `notifies_role_ids` may not be present here. This is a limitation
-            of Discord, again.
-        """
-        deprecation.warn_deprecated(
-            "get_roles",
-            removal_version="2.0.0.dev113",
-            additional_info="Use 'get_role_mentions' in the base message object instead",
-        )
-        return self._message.get_role_mentions()
-
-
-@attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
 class MessageReference:
     """Represents information about a referenced message.
 
@@ -580,16 +447,6 @@ class PartialMessage(snowflakes.Unique):
 
     is_tts: undefined.UndefinedOr[bool] = attr.field(hash=False, eq=False, repr=False)
     """Whether the message is a TTS message."""
-
-    mentions: Mentions = attr.field(hash=False, eq=False, repr=True)
-    """Description of who is mentioned in a message.
-
-    !!! warning
-        If the contents have not mutated and this is a message update event,
-        some fields that are not affected may be empty instead.
-
-        This is a Discord limitation.
-    """
 
     user_mentions: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, users_.User]] = attr.field(
         hash=False, eq=False, repr=False
@@ -1072,6 +929,7 @@ class PartialMessage(snowflakes.Unique):
         role_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
+        flags: typing.Union[undefined.UndefinedType, int, MessageFlag] = undefined.UNDEFINED,
     ) -> Message:
         """Create a message in the channel this message belongs to.
 
@@ -1134,6 +992,12 @@ class PartialMessage(snowflakes.Unique):
             `hikari.snowflakes.Snowflake`, or
             `hikari.guilds.PartialRole` derivatives to enforce mentioning
             specific roles.
+        flags : hikari.undefined.UndefinedOr[hikari.messages.MessageFlag]
+            If provided, optional flags to set on the message. If
+            `hikari.undefined.UNDEFINED`, then nothing is changed.
+
+            Note that some flags may not be able to be set. Currently the only
+            flags that can be set are `NONE` and `SUPPRESS_EMBEDS`.
 
         !!! note
             Attachments can be passed as many different things, to aid in
@@ -1211,6 +1075,7 @@ class PartialMessage(snowflakes.Unique):
             user_mentions=user_mentions,
             role_mentions=role_mentions,
             mentions_reply=mentions_reply,
+            flags=flags,
         )
 
     async def delete(self) -> None:

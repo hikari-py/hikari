@@ -91,9 +91,7 @@ _CONTENT_TYPE_KEY: typing.Final[str] = "Content-Type"
 _USER_AGENT_KEY: typing.Final[str] = "User-Agent"
 _APPLICATION_OCTET_STREAM: typing.Final[str] = "application/octet-stream"
 _JSON_CONTENT_TYPE: typing.Final[str] = "application/json"
-_JSON_TYPE_WITH_CHARSET: typing.Final[str] = f"{_JSON_CONTENT_TYPE}; charset={_UTF_8_CHARSET}"
 _TEXT_CONTENT_TYPE: typing.Final[str] = "text/plain"
-_TEXT_TYPE_WITH_CHARSET: typing.Final[str] = f"{_TEXT_CONTENT_TYPE}; charset={_UTF_8_CHARSET}"
 
 
 class _Response:
@@ -108,7 +106,7 @@ class _Response:
         files: typing.Sequence[files_.Resource[files_.AsyncReader]] = (),
     ) -> None:
         if payload and not content_type:
-            content_type = _TEXT_TYPE_WITH_CHARSET
+            content_type = _TEXT_CONTENT_TYPE
 
         self._content_type = content_type
         self._files = files
@@ -118,6 +116,11 @@ class _Response:
     @property
     def content_type(self) -> typing.Optional[str]:
         return self._content_type
+
+    @property
+    def charset(self) -> typing.Optional[str]:
+        # No cases of charset not being UTF-8
+        return _UTF_8_CHARSET if self._payload else None
 
     @property
     def files(self) -> typing.Sequence[files_.Resource[files_.AsyncReader]]:
@@ -138,7 +141,7 @@ class _Response:
 
 # Constant response
 _PONG_RESPONSE: typing.Final[_Response] = _Response(
-    _OK_STATUS, data_binding.dump_json({"type": _PONG_RESPONSE_TYPE}).encode(), content_type=_JSON_TYPE_WITH_CHARSET
+    _OK_STATUS, data_binding.dump_json({"type": _PONG_RESPONSE_TYPE}).encode(), content_type=_JSON_CONTENT_TYPE
 )
 
 
@@ -350,6 +353,7 @@ class InteractionServer(interaction_server.InteractionServer):
             headers=response.headers,
             body=response.payload,
             content_type=response.content_type,
+            charset=response.charset,
         )
 
     async def close(self) -> None:
@@ -452,7 +456,7 @@ class InteractionServer(interaction_server.InteractionServer):
                 )
                 return _Response(_INTERNAL_SERVER_ERROR_STATUS, b"Exception occurred during interaction dispatch")
 
-            return _Response(_OK_STATUS, payload.encode(), files=files, content_type=_JSON_TYPE_WITH_CHARSET)
+            return _Response(_OK_STATUS, payload.encode(), files=files, content_type=_JSON_CONTENT_TYPE)
 
         _LOGGER.debug(
             "Ignoring interaction %s of type %s without registered listener", interaction.id, interaction.type

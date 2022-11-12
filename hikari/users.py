@@ -102,6 +102,9 @@ class UserFlag(enums.Flag):
     BOT_HTTP_INTERACTIONS = 1 << 19
     """Bot uses only HTTP interactions and is shown in the active member list."""
 
+    ACTIVE_DEVELOPER = 1 << 22
+    """User is an active bot developer."""
+
 
 @typing.final
 class PremiumType(int, enums.Enum):
@@ -284,6 +287,7 @@ class PartialUser(snowflakes.Unique, abc.ABC):
         role_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
+        flags: typing.Union[undefined.UndefinedType, int, messages.MessageFlag] = undefined.UNDEFINED,
     ) -> messages.Message:
         """Send a message to this user in DM's.
 
@@ -350,6 +354,12 @@ class PartialUser(snowflakes.Unique, abc.ABC):
             `hikari.snowflakes.Snowflake`, or
             `hikari.guilds.PartialRole` derivatives to enforce mentioning
             specific roles.
+        flags : hikari.undefined.UndefinedOr[hikari.messages.MessageFlag]
+            If provided, optional flags to set on the message. If
+            `hikari.undefined.UNDEFINED`, then nothing is changed.
+
+            Note that some flags may not be able to be set. Currently the only
+            flags that can be set are `NONE` and `SUPPRESS_EMBEDS`.
 
         !!! note
             Attachments can be passed as many different things, to aid in
@@ -440,6 +450,7 @@ class PartialUser(snowflakes.Unique, abc.ABC):
             user_mentions=user_mentions,
             role_mentions=role_mentions,
             mentions_reply=mentions_reply,
+            flags=flags,
         )
 
 
@@ -835,5 +846,6 @@ class OwnUser(UserImpl):
         role_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
+        flags: typing.Union[undefined.UndefinedType, int, messages.MessageFlag] = undefined.UNDEFINED,
     ) -> typing.NoReturn:
         raise TypeError("Unable to send a DM to yourself")

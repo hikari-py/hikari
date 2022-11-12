@@ -1228,6 +1228,11 @@ class EntityFactory(abc.ABC):
             If `guild_id` is left as `hikari.undefined.UNDEFINED` when
             `"guild_id"` is not present in the passed payload for the payload of
             the integration.
+
+        Raises
+        ------
+        hikari.errors.UnrecognisedEntityError
+            If the command type is unknown.
         """
 
     @abc.abstractmethod
@@ -1625,6 +1630,11 @@ class EntityFactory(abc.ABC):
         -------
         hikari.scheduled_events.ScheduledEvent
             The deserialized scheduled event object.
+
+        Raises
+        ------
+        hikari.errors.UnrecognisedEntityError
+            If the scheduled event type is unknown.
         """
 
     @abc.abstractmethod
@@ -1836,4 +1846,9 @@ class EntityFactory(abc.ABC):
         -------
         hikari.webhooks.PartialWebhook
             The deserialized webhook object.
+
+        Raises
+        ------
+        hikari.errors.UnrecognisedEntityError
+            If the channel type is unknown.
         """
