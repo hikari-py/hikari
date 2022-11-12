@@ -26,8 +26,6 @@ from __future__ import annotations
 
 __all__: typing.Sequence[str] = ("Permissions",)
 
-import functools
-import operator
 import typing
 
 from hikari.internal import enums
