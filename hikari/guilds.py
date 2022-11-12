@@ -2747,7 +2747,7 @@ class Guild(PartialGuild):
     """
 
     rules_channel_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
-    """The ID of the channel where guilds with the `GuildFeature.COMMUNITY` feature display rules and guidelines.
+    """The ID of the channel where rules and guidelines will be displayed.
 
     If the `GuildFeature.COMMUNITY` feature is not defined, then this is `None`.
     """
