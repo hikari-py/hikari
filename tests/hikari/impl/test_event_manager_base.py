@@ -587,6 +587,10 @@ class TestEventManagerBase:
 
     @pytest.mark.asyncio()
     async def test_handle_dispatch_handles_exceptions(self, event_manager, event_loop):
+        mock_task = mock.Mock()
+        # On Cpython 3.12+ Asyncio uses this to get the task's context if set to call the
+        # error handler in. We want to avoid for this test for simplicity.
+        mock_task.get_context.return_value = None
         event_manager._enabled_for_consumer = mock.Mock(return_value=True)
         exc = Exception("aaaa!")
         consumer = mock.Mock(callback=mock.AsyncMock(side_effect=exc))
@@ -595,7 +599,7 @@ class TestEventManagerBase:
         shard = object()
         pl = {"i like": "cats"}
 
-        with mock.patch.object(asyncio, "current_task") as current_task:
+        with mock.patch.object(asyncio, "current_task", return_value=mock_task):
             await event_manager._handle_dispatch(consumer, shard, pl)
 
         error_handler.assert_called_once_with(
@@ -603,7 +607,7 @@ class TestEventManagerBase:
             {
                 "exception": exc,
                 "message": "Exception occurred in raw event dispatch conduit",
-                "task": current_task(),
+                "task": mock_task,
             },
         )
 
