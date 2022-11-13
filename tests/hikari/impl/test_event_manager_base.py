@@ -588,7 +588,7 @@ class TestEventManagerBase:
     @pytest.mark.asyncio()
     async def test_handle_dispatch_handles_exceptions(self, event_manager, event_loop):
         mock_task = mock.Mock()
-        # On Cpython 3.12+ Asyncio uses this to get the task's context if set to call the
+        # On Python 3.12+ Asyncio uses this to get the task's context if set to call the
         # error handler in. We want to avoid for this test for simplicity.
         mock_task.get_context.return_value = None
         event_manager._enabled_for_consumer = mock.Mock(return_value=True)
