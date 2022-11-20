@@ -5075,26 +5075,13 @@ class TestEntityFactoryImpl:
         invite_with_metadata_payload["max_age"] = 0
         assert entity_factory_impl.deserialize_invite_with_metadata(invite_with_metadata_payload).max_age is None
 
-    ##################
-    # MESSAGE MODELS #
-    ##################
+    ####################
+    # COMPONENT MODELS #
+    ####################
 
     @pytest.fixture()
     def action_row_payload(self, button_payload):
         return {"type": 1, "components": [button_payload]}
-
-    def test__deserialize_action_row(self, entity_factory_impl, action_row_payload, button_payload):
-        action_row = entity_factory_impl._deserialize_action_row(action_row_payload)
-
-        assert action_row.type is component_models.ComponentType.ACTION_ROW
-        assert action_row.components == [entity_factory_impl._deserialize_component(button_payload)]
-
-    def test__deserialize_action_row_handles_unknown_component_type(self, entity_factory_impl):
-        action_row = entity_factory_impl._deserialize_action_row(
-            {"type": 1, "components": [{"type": "9494949"}, {"type": "9239292"}]}
-        )
-
-        assert action_row.components == []
 
     @pytest.fixture()
     def button_payload(self, custom_emoji_payload):
@@ -5195,28 +5182,52 @@ class TestEntityFactoryImpl:
         assert menu.is_disabled is False
 
     @pytest.mark.parametrize(
-        ("type_", "fn"),
+        ("type_", "fn", "mapping"),
         [
-            (1, "_deserialize_action_row"),
-            (2, "_deserialize_button"),
-            (3, "_deserialize_select_menu"),
+            (2, "_deserialize_button", "_message_component_type_mapping"),
+            (3, "_deserialize_select_menu", "_message_component_type_mapping"),
+            (4, "_deserialize_text_input", "_modal_component_type_mapping"),
         ],
     )
-    def test__deserialize_component(self, mock_app, type_, fn):
-        payload = {"type": type_}
+    def test__deserialize_components(self, mock_app, type_, fn, mapping):
+        component_payload = {"type": type_}
+        payload = [{"type": 1, "components": [component_payload]}]
 
         with mock.patch.object(entity_factory.EntityFactoryImpl, fn) as expected_fn:
             # We need to instantiate it after the mock so that the functions that are stored in the dicts
             # are the ones we mock
             entity_factory_impl = entity_factory.EntityFactoryImpl(app=mock_app)
 
-            assert entity_factory_impl._deserialize_component(payload) is expected_fn.return_value
+            components = entity_factory_impl._deserialize_components(payload, getattr(entity_factory_impl, mapping))
 
-        expected_fn.assert_called_once_with(payload)
+        expected_fn.assert_called_once_with(component_payload)
+        action_row = components[0]
+        assert isinstance(action_row, component_models.ActionRowComponent)
+        assert action_row.components[0] is expected_fn.return_value
 
-    def test__deserialize_component_handles_unknown_type(self, entity_factory_impl):
-        with pytest.raises(errors.UnrecognisedEntityError):
-            entity_factory_impl._deserialize_component({"type": -9434994})
+    def test__deserialize_components_handles_unknown_top_component_type(self, entity_factory_impl):
+        components = entity_factory_impl._deserialize_components(
+            [
+                # Unknown top-level component
+                {"type": -9434994},
+                {
+                    # Known top-level component
+                    "type": 1,
+                    "components": [
+                        # Unknown components
+                        {"type": 1},
+                        {"type": 1000000},
+                    ],
+                },
+            ],
+            {},
+        )
+
+        assert components == []
+
+    ##################
+    # MESSAGE MODELS #
+    ##################
 
     @pytest.fixture()
     def partial_application_payload(self):
@@ -5452,7 +5463,9 @@ class TestEntityFactoryImpl:
         assert partial_message.interaction.user == entity_factory_impl.deserialize_user(user_payload)
         assert isinstance(partial_message.interaction, message_models.MessageInteraction)
 
-        assert partial_message.components == [entity_factory_impl._deserialize_component(action_row_payload)]
+        assert partial_message.components == entity_factory_impl._deserialize_components(
+            [action_row_payload], entity_factory_impl._message_component_type_mapping
+        )
 
     def test_deserialize_partial_message_with_partial_fields(self, entity_factory_impl, message_payload):
         message_payload["content"] = ""
@@ -5632,7 +5645,9 @@ class TestEntityFactoryImpl:
         assert message.interaction.user == entity_factory_impl.deserialize_user(user_payload)
         assert isinstance(message.interaction, message_models.MessageInteraction)
 
-        assert message.components == [entity_factory_impl._deserialize_component(action_row_payload)]
+        assert message.components == entity_factory_impl._deserialize_components(
+            [action_row_payload], entity_factory_impl._message_component_type_mapping
+        )
 
     def test_deserialize_message_with_unset_sub_fields(self, entity_factory_impl, message_payload):
         del message_payload["application"]["cover_image"]
