@@ -432,7 +432,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         "_audit_log_entry_converters",
         "_audit_log_event_mapping",
         "_command_mapping",
-        "_modal_component_type_mapping",
         "_message_component_type_mapping",
         "_modal_component_type_mapping",
         "_dm_channel_type_mapping",
