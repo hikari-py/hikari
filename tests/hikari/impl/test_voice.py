@@ -347,24 +347,26 @@ class TestVoiceComponentImpl:
     @pytest.mark.asyncio()
     @pytest.mark.parametrize("more_connections", [True, False])
     async def test__on_connection_close(self, voice_client, mock_app, more_connections):
-        mock_other_connection = object()
         mock_shard = mock.AsyncMock()
         mock_app.shards = {69: mock_shard}
-        voice_client._connections = {65234123: mock_other_connection}
-        if mock_other_connection:
-            voice_client._connections[123] = object()
+        voice_client._connections = {65234123: object()}
+        expected_connections = {}
+        if more_connections:
+            mock_connection = object()
+            voice_client._connections[123] = mock_connection
+            expected_connections[123] = mock_connection
 
-        await voice_client._on_connection_close(mock.Mock(guild_id=123123, shard_id=69))
+        await voice_client._on_connection_close(mock.Mock(guild_id=65234123, shard_id=69))
 
-        if mock_other_connection:
+        if more_connections:
             mock_app.event_manager.unsubscribe.assert_not_called()
         else:
             mock_app.event_manager.unsubscribe.assert_called_once_with(
                 voice_events.VoiceEvent, voice_client._on_voice_event
             )
 
-        mock_shard.update_voice_state.assert_awaited_once_with(guild=123123, channel=None)
-        assert voice_client._connections == {65234123: mock_other_connection}
+        mock_shard.update_voice_state.assert_awaited_once_with(guild=65234123, channel=None)
+        assert voice_client._connections == expected_connections
 
     def test__init_state_update_predicate_matches(self, voice_client):
         predicate = voice_client._init_state_update_predicate(42069, 696969)
