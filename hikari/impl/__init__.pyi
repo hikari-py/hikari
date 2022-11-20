@@ -12,5 +12,6 @@ from hikari.impl.interaction_server import *
 from hikari.impl.rate_limits import *
 from hikari.impl.rest import *
 from hikari.impl.rest_bot import *
+from hikari.impl.shard import *
 from hikari.impl.special_endpoints import *
 from hikari.impl.voice import *
