@@ -345,7 +345,6 @@ def _serialize_activity(activity: typing.Optional[presences.Activity]) -> data_b
     return {"name": activity.name, "type": int(activity.type), "url": activity.url}
 
 
-@typing.final
 class GatewayShardImpl(shard.GatewayShard):
     """Implementation of a V10 compatible gateway.
 
