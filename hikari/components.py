@@ -36,6 +36,10 @@ __all__: typing.Sequence[str] = (
     "TextInputComponent",
     "InteractiveButtonTypes",
     "InteractiveButtonTypesT",
+    "MessageComponentTypesT",
+    "ModalComponentTypesT",
+    "MessageActionRowComponentT",
+    "ModalActionRowComponentT",
 )
 
 import typing
@@ -295,7 +299,22 @@ The following values are included in this:
 """
 
 MessageComponentTypesT = typing.Union[ButtonComponent, SelectMenuComponent]
+"""Type hint of the `PartialComponent`s that be contained in a `MessageActionRowComponentT`.
+
+The following values are valid for this:
+
+* `ButtonComponent`
+* `SelectMenuComponent`
+"""
 ModalComponentTypesT = TextInputComponent
+"""Type hint of the `PartialComponent`s that be contained in a `ModalActionRowComponentT`.
+
+The following values are valid for this:
+
+* `TextInputComponent`
+"""
 
 MessageActionRowComponentT = ActionRowComponent[MessageComponentTypesT]
+"""Typehint for a message action row component."""
 ModalActionRowComponentT = ActionRowComponent[ModalComponentTypesT]
+"""Typehint for a modal action row component."""
