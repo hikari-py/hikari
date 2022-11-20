@@ -424,10 +424,10 @@ class TestGatewayBot:
         # Closing components
         ensure_future.assert_has_calls(
             [
+                mock.call(voice.close()),
                 mock.call(shard0.close()),
                 mock.call(shard1.close()),
                 mock.call(shard2.close()),
-                mock.call(voice.close()),
                 mock.call(rest.close()),
             ],
         )
