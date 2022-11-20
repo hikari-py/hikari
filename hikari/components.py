@@ -137,11 +137,14 @@ class PartialComponent:
     """The type of component this is."""
 
 
+AllowedComponentsT = typing.TypeVar("AllowedComponentsT", bound="PartialComponent")
+
+
 @attr.define(weakref_slot=False)
-class ActionRowComponent(PartialComponent):
+class ActionRowComponent(typing.Generic[AllowedComponentsT], PartialComponent):
     """Represents a row of components."""
 
-    components: typing.Sequence[PartialComponent] = attr.field()
+    components: typing.Sequence[AllowedComponentsT] = attr.field()
     """Sequence of the components contained within this row."""
 
     @typing.overload
@@ -149,15 +152,15 @@ class ActionRowComponent(PartialComponent):
         ...
 
     @typing.overload
-    def __getitem__(self, slice_: slice, /) -> typing.Sequence[PartialComponent]:
+    def __getitem__(self, slice_: slice, /) -> typing.Sequence[AllowedComponentsT]:
         ...
 
     def __getitem__(
         self, index_or_slice: typing.Union[int, slice], /
-    ) -> typing.Union[PartialComponent, typing.Sequence[PartialComponent]]:
+    ) -> typing.Union[PartialComponent, typing.Sequence[AllowedComponentsT]]:
         return self.components[index_or_slice]
 
-    def __iter__(self) -> typing.Iterator[PartialComponent]:
+    def __iter__(self) -> typing.Iterator[AllowedComponentsT]:
         return iter(self.components)
 
     def __len__(self) -> int:
@@ -290,3 +293,9 @@ The following values are included in this:
 * `ButtonStyle.SUCCESS`
 * `ButtonStyle.DANGER`
 """
+
+MessageComponentTypesT = typing.Union[ButtonComponent, SelectMenuComponent]
+ModalComponentTypesT = TextInputComponent
+
+MessageActionRowComponentT = ActionRowComponent[MessageComponentTypesT]
+ModalActionRowComponentT = ActionRowComponent[ModalComponentTypesT]

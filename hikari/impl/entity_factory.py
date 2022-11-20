@@ -433,7 +433,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         "_audit_log_event_mapping",
         "_command_mapping",
         "_modal_component_type_mapping",
-        "_component_type_mapping",
+        "_message_component_type_mapping",
+        "_modal_component_type_mapping",
         "_dm_channel_type_mapping",
         "_guild_channel_type_mapping",
         "_thread_channel_type_mapping",
@@ -505,10 +506,15 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             commands.CommandType.USER: self.deserialize_context_menu_command,
             commands.CommandType.MESSAGE: self.deserialize_context_menu_command,
         }
-        self._component_type_mapping = {
-            component_models.ComponentType.ACTION_ROW: self._deserialize_action_row,
+        self._message_component_type_mapping: typing.Dict[
+            int, typing.Callable[[data_binding.JSONObject], component_models.MessageComponentTypesT]
+        ] = {
             component_models.ComponentType.BUTTON: self._deserialize_button,
             component_models.ComponentType.SELECT_MENU: self._deserialize_select_menu,
+        }
+        self._modal_component_type_mapping: typing.Dict[
+            int, typing.Callable[[data_binding.JSONObject], component_models.ModalComponentTypesT]
+        ] = {
             component_models.ComponentType.TEXT_INPUT: self._deserialize_text_input,
         }
         self._dm_channel_type_mapping = {
@@ -2445,13 +2451,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             member = None
             user = self.deserialize_user(payload["user"])
 
-        components: typing.List[component_models.PartialComponent] = []
-        for component_payload in data_payload["components"]:
-            try:
-                components.append(self._deserialize_component(component_payload))
-            except errors.UnrecognisedEntityError:
-                pass
-
         message: typing.Optional[message_models.Message] = None
         if message_payload := payload.get("message"):
             message = self.deserialize_message(message_payload)
@@ -2472,7 +2471,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             token=payload["token"],
             version=payload["version"],
             custom_id=data_payload["custom_id"],
-            components=components,
+            components=self._deserialize_modal_components(data_payload["components"]),
             message=message,
         )
 
@@ -2609,24 +2608,67 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             user=self.deserialize_user(payload["user"]) if "user" in payload else None,
         )
 
-    ##################
-    # MESSAGE MODELS #
-    ##################
+    ####################
+    # COMPONENT MODELS #
+    ####################
 
-    def _deserialize_component(self, payload: data_binding.JSONObject) -> component_models.PartialComponent:
+    def _deserialize_message_component(
+        self, payload: data_binding.JSONObject
+    ) -> component_models.MessageComponentTypesT:
         component_type = component_models.ComponentType(payload["type"])
 
-        if deserialize := self._component_type_mapping.get(component_type):
+        if deserialize := self._message_component_type_mapping.get(component_type):
             return deserialize(payload)
 
-        _LOGGER.debug("Unknown component type %s", component_type)
-        raise errors.UnrecognisedEntityError(f"Unrecognised component type {component_type}")
+        _LOGGER.debug("Unknown message component type %s", component_type)
+        raise errors.UnrecognisedEntityError(f"Unrecognised message component type {component_type}")
 
-    def _deserialize_action_row(self, payload: data_binding.JSONObject) -> component_models.ActionRowComponent:
-        components = data_binding.cast_variants_array(self._deserialize_component, payload["components"])
-        return component_models.ActionRowComponent(
-            type=component_models.ComponentType(payload["type"]), components=components
-        )
+    def _deserialize_modal_component(self, payload: data_binding.JSONObject) -> component_models.ModalComponentTypesT:
+        component_type = component_models.ComponentType(payload["type"])
+
+        if deserialize := self._modal_component_type_mapping.get(component_type):
+            return deserialize(payload)
+
+        _LOGGER.debug("Unknown modal component type %s", component_type)
+        raise errors.UnrecognisedEntityError(f"Unrecognised modal component type {component_type}")
+
+    def _deserialize_message_components(
+        self, payloads: data_binding.JSONArray
+    ) -> typing.List[component_models.MessageActionRowComponentT]:
+        top_level_components = []
+
+        for payload in payloads:
+            top_level_component_type = component_models.ComponentType(payload["type"])
+
+            if top_level_component_type != component_models.ComponentType.ACTION_ROW:
+                _LOGGER.debug("Unknown top-level message component type %s", top_level_component_type)
+                continue
+
+            components = data_binding.cast_variants_array(self._deserialize_message_component, payload["components"])
+            top_level_components.append(
+                component_models.ActionRowComponent(type=top_level_component_type, components=components)
+            )
+
+        return top_level_components
+
+    def _deserialize_modal_components(
+        self, payloads: data_binding.JSONArray
+    ) -> typing.List[component_models.ModalActionRowComponentT]:
+        top_level_components = []
+
+        for payload in payloads:
+            top_level_component_type = component_models.ComponentType(payload["type"])
+
+            if top_level_component_type != component_models.ComponentType.ACTION_ROW:
+                _LOGGER.debug("Unknown top-level modal component type %s", top_level_component_type)
+                continue
+
+            components = data_binding.cast_variants_array(self._deserialize_modal_component, payload["components"])
+            top_level_components.append(
+                component_models.ActionRowComponent(type=top_level_component_type, components=components)
+            )
+
+        return top_level_components
 
     def _deserialize_button(self, payload: data_binding.JSONObject) -> component_models.ButtonComponent:
         emoji_payload = payload.get("emoji")
@@ -2673,6 +2715,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             custom_id=payload["custom_id"],
             value=payload["value"],
         )
+
+    ##################
+    # MESSAGE MODELS #
+    ##################
 
     def _deserialize_message_activity(self, payload: data_binding.JSONObject) -> message_models.MessageActivity:
         return message_models.MessageActivity(
@@ -2810,9 +2856,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if interaction_payload := payload.get("interaction"):
             interaction = self._deserialize_message_interaction(interaction_payload)
 
-        components: undefined.UndefinedOr[typing.List[component_models.PartialComponent]] = undefined.UNDEFINED
+        components: undefined.UndefinedOr[
+            typing.List[component_models.MessageActionRowComponentT]
+        ] = undefined.UNDEFINED
         if component_payloads := payload.get("components"):
-            components = data_binding.cast_variants_array(self._deserialize_component, component_payloads)
+            components = self._deserialize_message_components(component_payloads)
 
         channel_mentions: undefined.UndefinedOr[
             typing.Dict[snowflakes.Snowflake, channel_models.PartialChannel]
@@ -2914,9 +2962,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if interaction_payload := payload.get("interaction"):
             interaction = self._deserialize_message_interaction(interaction_payload)
 
-        components: typing.List[component_models.PartialComponent] = []
+        components: typing.List[component_models.MessageActionRowComponentT]
         if component_payloads := payload.get("components"):
-            components = data_binding.cast_variants_array(self._deserialize_component, component_payloads)
+            components = self._deserialize_message_components(component_payloads)
 
         else:
             components = []
