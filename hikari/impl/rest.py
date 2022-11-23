@@ -1327,7 +1327,7 @@ class RESTClientImpl(rest_api.RESTClient):
             attachment_id = 0
 
             for f in final_attachments:
-                if isinstance(f, messages_.Attachment):
+                if edit and isinstance(f, messages_.Attachment):
                     attachments_payload.append({"id": f.id, "filename": f.filename})
                     continue
 
