@@ -723,6 +723,10 @@ class URL(WebResource):
     ----------
     url : builtins.str
         The URL of the resource.
+    filename : typing.Optional[builtins.str]
+        The filename for the resource.
+
+        If not specified, it will be gotten from the url.
 
     !!! note
         Some components may choose to not upload this resource directly and
@@ -733,10 +737,11 @@ class URL(WebResource):
         a `builtins.bytes` and pass that instead in these cases.
     """
 
-    __slots__: typing.Sequence[str] = ("_url",)
+    __slots__: typing.Sequence[str] = ("_url", "_filename")
 
-    def __init__(self, url: str) -> None:
+    def __init__(self, url: str, filename: typing.Optional[str] = None) -> None:
         self._url = url
+        self._filename = filename
 
     @property
     def url(self) -> str:
@@ -744,6 +749,9 @@ class URL(WebResource):
 
     @property
     def filename(self) -> str:
+        if self._filename:
+            return self._filename
+
         url = urllib.parse.urlparse(self._url)
         return os.path.basename(url.path)
 
