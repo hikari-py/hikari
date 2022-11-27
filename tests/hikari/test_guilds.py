@@ -622,11 +622,22 @@ class TestPartialGuild:
         model.app.rest.kick_user.assert_awaited_once_with(90210, 4321, reason="Go away!")
 
     @pytest.mark.asyncio()
-    async def test_ban(self, model):
+    async def test_ban_seconds_int(self, model):
         model.app.rest.ban_user = mock.AsyncMock()
         await model.ban(4321, delete_message_seconds=864000, reason="Go away!")
 
         model.app.rest.ban_user.assert_awaited_once_with(90210, 4321, delete_message_seconds=864000, reason="Go away!")
+
+    @pytest.mark.asyncio()
+    async def test_ban_seconds_timedelta(self, model):
+        model.app.rest.ban_user = mock.AsyncMock()
+
+        duration = datetime.timedelta(days=5)
+        await model.ban(4321, delete_message_seconds=duration, reason="Go away!")
+
+        model.app.rest.ban_user.assert_awaited_once_with(
+            90210, 4321, delete_message_seconds=duration, reason="Go away!"
+        )
 
     @pytest.mark.asyncio()
     async def test_unban(self, model):
