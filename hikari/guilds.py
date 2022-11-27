@@ -697,7 +697,7 @@ class Member(users.User):
         self,
         *,
         delete_message_days: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-        delete_message_seconds: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        delete_message_seconds: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         """Ban this member from this guild.
@@ -710,9 +710,10 @@ class Member(users.User):
 
             .. deprecated:: 2.0.0.dev113
                 Use `delete_message_seconds` instead.
-        delete_message_seconds : hikari.undefined.UndefinedNoneOr[builtins.int]
+        delete_message_seconds : hikari.undefined.UndefinedNoneOr[hikari.internal.time.Intervalish]
             If provided, the number of seconds to delete messages for.
-            This must be between 0 and 604800 (7 days).
+            This can be represented as either an int/float between 0 and 604800 (7 days), or
+            a datetime.timedelta object.
         reason : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -1496,7 +1497,7 @@ class PartialGuild(snowflakes.Unique):
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         *,
         delete_message_days: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-        delete_message_seconds: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        delete_message_seconds: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         """Ban the given user from this guild.
@@ -1514,9 +1515,10 @@ class PartialGuild(snowflakes.Unique):
 
             .. deprecated:: 2.0.0.dev113
                 Use `delete_message_seconds` instead.
-        delete_message_seconds : hikari.undefined.UndefinedNoneOr[builtins.int]
+        delete_message_seconds : hikari.undefined.UndefinedNoneOr[hikari.internal.time.Intervalish]
             If provided, the number of seconds to delete messages for.
-            This must be between 0 and 604800 (7 days).
+            This can be represented as either an int/float between 0 and 604800 (7 days), or
+            a datetime.timedelta object.
         reason : hikari.undefined.UndefinedOr[builtins.str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.

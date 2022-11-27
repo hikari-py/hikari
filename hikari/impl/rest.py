@@ -2949,7 +2949,7 @@ class RESTClientImpl(rest_api.RESTClient):
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         *,
         delete_message_days: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-        delete_message_seconds: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        delete_message_seconds: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         if delete_message_days is not undefined.UNDEFINED:
@@ -2976,7 +2976,7 @@ class RESTClientImpl(rest_api.RESTClient):
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         *,
         delete_message_days: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-        delete_message_seconds: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        delete_message_seconds: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> typing.Coroutine[typing.Any, typing.Any, None]:
         return self.ban_user(guild, user, delete_message_seconds=delete_message_seconds, reason=reason)
