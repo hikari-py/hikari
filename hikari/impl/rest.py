@@ -75,6 +75,7 @@ from hikari.impl import rate_limits
 from hikari.impl import special_endpoints as special_endpoints_impl
 from hikari.interactions import base_interactions
 from hikari.internal import data_binding
+from hikari.internal import deprecation
 from hikari.internal import mentions
 from hikari.internal import net
 from hikari.internal import routes
@@ -2948,10 +2949,24 @@ class RESTClientImpl(rest_api.RESTClient):
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         *,
         delete_message_days: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        delete_message_seconds: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
+        if delete_message_days is not undefined.UNDEFINED:
+            deprecation.warn_deprecated(
+                "delete_message_days",
+                removal_version="2.0.0.dev116",
+                additional_info="'delete_message_seconds' should be used instead.",
+            )
+            if delete_message_days:
+                raise ValueError(
+                    "You may only specify one of 'delete_message_days' or 'delete_message_seconds', not both"
+                )
+
+            delete_message_seconds = delete_message_days * 24 * 60**2
+
         body = data_binding.JSONObjectBuilder()
-        body.put("delete_message_days", delete_message_days)
+        body.put("delete_message_seconds", delete_message_seconds)
         route = routes.PUT_GUILD_BAN.compile(guild=guild, user=user)
         await self._request(route, json=body, reason=reason)
 
@@ -2961,9 +2976,10 @@ class RESTClientImpl(rest_api.RESTClient):
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         *,
         delete_message_days: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        delete_message_seconds: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> typing.Coroutine[typing.Any, typing.Any, None]:
-        return self.ban_user(guild, user, delete_message_days=delete_message_days, reason=reason)
+        return self.ban_user(guild, user, delete_message_seconds=delete_message_seconds, reason=reason)
 
     async def unban_user(
         self,
