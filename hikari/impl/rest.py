@@ -2965,6 +2965,9 @@ class RESTClientImpl(rest_api.RESTClient):
 
             delete_message_seconds = delete_message_days * 24 * 60**2
 
+        if isinstance(delete_message_seconds, datetime.timedelta):
+            delete_message_seconds = delete_message_seconds.total_seconds()
+
         body = data_binding.JSONObjectBuilder()
         body.put("delete_message_seconds", delete_message_seconds)
         route = routes.PUT_GUILD_BAN.compile(guild=guild, user=user)
