@@ -10,10 +10,7 @@ ignore =
     D105,      # Magic methods not having a docstring.
     D412,      # No blank lines allowed between a section header and its content
     E402,      # Module level import not at top of file (isn't compatible with our import style).
-    IFSTMT001  # "use a oneliner here".
     T101,      # TO-DO comment detection (T102 is FIX-ME and T103 is XXX).
-    W503,      # line break before binary operator.
-    W504,      # line break before binary operator (again, I guess).
     S101,      # Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
 
 # F401: unused import.
