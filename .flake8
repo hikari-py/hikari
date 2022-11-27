@@ -11,6 +11,8 @@ count = true
 # E402: Module level import not at top of file (isn't compatible with our import style).
 # T101: TO-DO comment detection (T102 is FIX-ME and T103 is XXX).
 # S101:  Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+# W503:  line break before binary operator (too many false positives and doesnt match our style)
+# W504:  line break after binary operator (too many false positives and doesnt match our style)
 ignore =
     A002,
     A003,
@@ -22,6 +24,8 @@ ignore =
     E402,
     T101,
     S101,
+    W503,
+    W504,
 
 # F401: unused import.
 # F403: cannot detect unused vars if we use starred import
