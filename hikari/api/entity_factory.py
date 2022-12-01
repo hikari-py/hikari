@@ -737,7 +737,7 @@ class EntityFactory(abc.ABC):
             for DM and group DM channels and will be prioritised over
             `"guild_id"` in the payload when passed.
 
-            This is necesary in GUILD_CREATE events, where `"guild_id"` is not
+            This is necessary in GUILD_CREATE events, where `"guild_id"` is not
             included in the channel's payload
 
         Returns
