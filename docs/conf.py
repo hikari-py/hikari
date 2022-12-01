@@ -65,7 +65,6 @@ extensions = [
     "sphinxext.opengraph",
     "sphinx_copybutton",
     "sphinxcontrib.towncrier.ext",
-    "sphinx_search.extension",
 ]
 
 templates_path = ["_templates"]
