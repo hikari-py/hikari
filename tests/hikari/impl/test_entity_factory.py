@@ -216,7 +216,7 @@ def user_payload():
         "discriminator": "6127",
         "bot": True,
         "system": True,
-        "public_flags": int(user_models.UserFlag.EARLY_VERIFIED_DEVELOPER),
+        "public_flags": int(user_models.UserFlag.EARLY_VERIFIED_DEVELOPER | user_models.UserFlag.ACTIVE_DEVELOPER),
     }
 
 
@@ -5313,10 +5313,10 @@ class TestEntityFactoryImpl:
             2020, 4, 21, 21, 20, 16, 510000, tzinfo=datetime.timezone.utc
         )
         assert partial_message.is_tts is True
-        assert partial_message.mentions.everyone is True
-        assert partial_message.mentions.user_ids == [5678]
-        assert partial_message.mentions.role_ids == [987]
-        assert partial_message.mentions.channels_ids == [456]
+        assert partial_message.mentions_everyone is True
+        assert partial_message.user_mentions_ids == [5678]
+        assert partial_message.role_mention_ids == [987]
+        assert partial_message.channel_mention_ids == [456]
         assert partial_message.attachments == [entity_factory_impl._deserialize_message_attachment(attachment_payload)]
 
         expected_embed = entity_factory_impl.deserialize_embed(embed_payload)
@@ -5410,10 +5410,10 @@ class TestEntityFactoryImpl:
         assert partial_message.timestamp is undefined.UNDEFINED
         assert partial_message.edited_timestamp is undefined.UNDEFINED
         assert partial_message.is_tts is undefined.UNDEFINED
-        assert partial_message.mentions.everyone is undefined.UNDEFINED
-        assert partial_message.mentions.user_ids is undefined.UNDEFINED
-        assert partial_message.mentions.role_ids is undefined.UNDEFINED
-        assert partial_message.mentions.channels_ids is undefined.UNDEFINED
+        assert partial_message.mentions_everyone is undefined.UNDEFINED
+        assert partial_message.user_mentions_ids is undefined.UNDEFINED
+        assert partial_message.role_mention_ids is undefined.UNDEFINED
+        assert partial_message.channel_mention_ids is undefined.UNDEFINED
         assert partial_message.attachments is undefined.UNDEFINED
         assert partial_message.embeds is undefined.UNDEFINED
         assert partial_message.reactions is undefined.UNDEFINED
@@ -5479,10 +5479,11 @@ class TestEntityFactoryImpl:
             2020, 4, 21, 21, 20, 16, 510000, tzinfo=datetime.timezone.utc
         )
         assert message.is_tts is True
-        assert message.mentions.everyone is True
-        assert message.mentions.user_ids == [5678]
-        assert message.mentions.role_ids == [987]
-        assert message.mentions.channels_ids == [456]
+        assert message.mentions_everyone is True
+        assert message.user_mentions_ids == [5678]
+        assert message.role_mention_ids == [987]
+        assert message.channel_mention_ids == [456]
+
         # Attachment
         assert len(message.attachments) == 1
         attachment = message.attachments[0]
@@ -5498,6 +5499,7 @@ class TestEntityFactoryImpl:
 
         expected_embed = entity_factory_impl.deserialize_embed(embed_payload)
         assert message.embeds == [expected_embed]
+
         # Reaction
         reaction = message.reactions[0]
         assert reaction.count == 100
@@ -5562,7 +5564,7 @@ class TestEntityFactoryImpl:
 
         message = entity_factory_impl.deserialize_message(message_payload)
 
-        assert message.mentions.channels == {}
+        assert message.channel_mentions == {}
 
         # Activity
         assert message.activity.party_id is None
@@ -5615,10 +5617,10 @@ class TestEntityFactoryImpl:
         assert message.guild_id is None
         assert message.member is None
         assert message.edited_timestamp is None
-        assert message.mentions.everyone is True
-        assert message.mentions.user_ids == []
-        assert message.mentions.role_ids == []
-        assert message.mentions.channels_ids == []
+        assert message.mentions_everyone is True
+        assert message.user_mentions_ids == []
+        assert message.role_mention_ids == []
+        assert message.channel_mention_ids == []
         assert message.attachments == []
         assert message.embeds == []
         assert message.reactions == []
@@ -6322,7 +6324,7 @@ class TestEntityFactoryImpl:
         assert user.discriminator == "6127"
         assert user.is_bot is True
         assert user.is_system is True
-        assert user.flags == user_models.UserFlag.EARLY_VERIFIED_DEVELOPER
+        assert user.flags == user_models.UserFlag.EARLY_VERIFIED_DEVELOPER | user_models.UserFlag.ACTIVE_DEVELOPER
         assert isinstance(user, user_models.UserImpl)
 
     def test_deserialize_user_with_unset_fields(self, entity_factory_impl, mock_app, user_payload):

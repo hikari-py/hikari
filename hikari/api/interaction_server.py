@@ -74,6 +74,11 @@ class Response(typing.Protocol):
         raise NotImplementedError
 
     @property
+    def charset(self) -> typing.Optional[str]:
+        """Charset of the response's payload, if applicable."""
+        raise NotImplementedError
+
+    @property
     def files(self) -> typing.Sequence[files_.Resource[files_.AsyncReader]]:
         """Up to 10 files that should be included alongside a JSON response."""
         raise NotImplementedError

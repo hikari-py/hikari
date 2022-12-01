@@ -20,7 +20,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Single-shard implementation for the V8 event gateway for Discord."""
+"""Single-shard implementation for the V10 event gateway for Discord."""
 
 from __future__ import annotations
 
@@ -345,9 +345,8 @@ def _serialize_activity(activity: typing.Optional[presences.Activity]) -> data_b
     return {"name": activity.name, "type": int(activity.type), "url": activity.url}
 
 
-@typing.final
 class GatewayShardImpl(shard.GatewayShard):
-    """Implementation of a V8 compatible gateway.
+    """Implementation of a V10 compatible gateway.
 
     .. note::
         If all four of `initial_activity`, `initial_idle_since`,

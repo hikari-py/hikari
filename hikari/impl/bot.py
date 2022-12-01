@@ -441,12 +441,13 @@ class GatewayBot(traits.GatewayBotAware):
                     }
                 )
 
+        await handle("voice handler", self._voice.close())
+
         shards = tuple((handle(f"shard {s.id}", s.close()) for s in self._shards.values() if s.is_alive))
 
         for coro in asyncio.as_completed(shards):
             await coro
 
-        await handle("voice handler", self._voice.close())
         await handle("rest", self._rest.close())
 
         # Clear out cache and shard map

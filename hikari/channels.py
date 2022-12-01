@@ -507,6 +507,7 @@ class TextableChannel(PartialChannel):
         role_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
+        flags: typing.Union[undefined.UndefinedType, int, messages.MessageFlag] = undefined.UNDEFINED,
     ) -> messages.Message:
         """Create a message in this channel.
 
@@ -595,6 +596,12 @@ class TextableChannel(PartialChannel):
             `hikari.snowflakes.Snowflake`, or
             `hikari.guilds.PartialRole` derivatives to enforce mentioning
             specific roles.
+        flags : hikari.undefined.UndefinedOr[hikari.messages.MessageFlag]
+            If provided, optional flags to set on the message. If
+            `hikari.undefined.UNDEFINED`, then nothing is changed.
+
+            Note that some flags may not be able to be set. Currently the only
+            flags that can be set are `NONE` and `SUPPRESS_EMBEDS`.
 
         Returns
         -------
@@ -639,6 +646,7 @@ class TextableChannel(PartialChannel):
             user_mentions=user_mentions,
             role_mentions=role_mentions,
             mentions_reply=mentions_reply,
+            flags=flags,
         )
 
     def trigger_typing(self) -> special_endpoints.TypingIndicator:

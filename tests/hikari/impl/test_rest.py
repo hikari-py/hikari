@@ -1381,6 +1381,7 @@ class TestRESTClientImpl:
         resource_attachment3 = mock.Mock(filename="attachment3.png")
         resource_attachment4 = mock.Mock(filename="attachment4.png")
         resource_attachment5 = mock.Mock(filename="attachment5.png")
+        resource_attachment6 = mock.Mock(filename="attachment6.png")
         component1 = mock.Mock(build=mock.Mock(return_value={"component": 1}))
         component2 = mock.Mock(build=mock.Mock(return_value={"component": 2}))
         embed1 = object()
@@ -1405,6 +1406,7 @@ class TestRESTClientImpl:
                     resource_attachment3,
                     resource_attachment4,
                     resource_attachment5,
+                    resource_attachment6,
                 ],
             )
         )
@@ -1440,21 +1442,22 @@ class TestRESTClientImpl:
             "components": [{"component": 1}, {"component": 2}],
             "attachments": [
                 {"id": 0, "filename": "attachment.png"},
-                {"id": 123, "filename": "attachment123.png"},
                 {"id": 1, "filename": "attachment2.png"},
                 {"id": 2, "filename": "attachment3.png"},
                 {"id": 3, "filename": "attachment4.png"},
                 {"id": 4, "filename": "attachment5.png"},
+                {"id": 5, "filename": "attachment6.png"},
             ],
             "allowed_mentions": {"allowed_mentions": 1},
         }
         assert form is url_encoded_form.return_value
 
         # Attachments
-        assert ensure_resource.call_count == 5
+        assert ensure_resource.call_count == 6
         ensure_resource.assert_has_calls(
             [
                 mock.call(attachment1),
+                mock.call(attachment2),
                 mock.call(embed_attachment1),
                 mock.call(embed_attachment2),
                 mock.call(embed_attachment3),
@@ -1473,6 +1476,103 @@ class TestRESTClientImpl:
         # Generate allowed mentions
         generate_allowed_mentions.assert_called_once_with(
             mentions_everyone, mentions_reply, user_mentions, role_mentions
+        )
+
+        # Form builder
+        url_encoded_form.assert_called_once_with(executor=rest_client._executor)
+        assert url_encoded_form.return_value.add_resource.call_count == 6
+        url_encoded_form.return_value.add_resource.assert_has_calls(
+            [
+                mock.call("files[0]", resource_attachment1),
+                mock.call("files[1]", resource_attachment2),
+                mock.call("files[2]", resource_attachment3),
+                mock.call("files[3]", resource_attachment4),
+                mock.call("files[4]", resource_attachment5),
+                mock.call("files[5]", resource_attachment6),
+            ]
+        )
+
+    def test__build_message_payload_with_edit_and_attachment_object_passed(self, rest_client):
+        attachment1 = object()
+        attachment2 = mock.Mock(message_models.Attachment, id=123, filename="attachment123.png")
+        resource_attachment1 = mock.Mock(filename="attachment.png")
+        resource_attachment2 = mock.Mock(filename="attachment2.png")
+        resource_attachment3 = mock.Mock(filename="attachment3.png")
+        resource_attachment4 = mock.Mock(filename="attachment4.png")
+        resource_attachment5 = mock.Mock(filename="attachment5.png")
+        component1 = mock.Mock(build=mock.Mock(return_value={"component": 1}))
+        component2 = mock.Mock(build=mock.Mock(return_value={"component": 2}))
+        embed1 = object()
+        embed2 = object()
+        embed_attachment1 = object()
+        embed_attachment2 = object()
+        embed_attachment3 = object()
+        embed_attachment4 = object()
+
+        stack = contextlib.ExitStack()
+        ensure_resource = stack.enter_context(
+            mock.patch.object(
+                files,
+                "ensure_resource",
+                side_effect=[
+                    resource_attachment1,
+                    resource_attachment2,
+                    resource_attachment3,
+                    resource_attachment4,
+                    resource_attachment5,
+                ],
+            )
+        )
+        url_encoded_form = stack.enter_context(mock.patch.object(data_binding, "URLEncodedFormBuilder"))
+        rest_client._entity_factory.serialize_embed.side_effect = [
+            ({"embed": 1}, [embed_attachment1, embed_attachment2]),
+            ({"embed": 2}, [embed_attachment3, embed_attachment4]),
+        ]
+
+        with stack:
+            body, form = rest_client._build_message_payload(
+                content=987654321,
+                attachments=[attachment1, attachment2],
+                components=[component1, component2],
+                embeds=[embed1, embed2],
+                flags=120,
+                tts=True,
+                mentions_everyone=None,
+                mentions_reply=None,
+                user_mentions=None,
+                role_mentions=None,
+                edit=True,
+            )
+
+        # Returned
+        assert body == {
+            "content": "987654321",
+            "tts": True,
+            "flags": 120,
+            "embeds": [{"embed": 1}, {"embed": 2}],
+            "components": [{"component": 1}, {"component": 2}],
+            "attachments": [
+                {"id": 0, "filename": "attachment.png"},
+                {"id": 123, "filename": "attachment123.png"},
+                {"id": 1, "filename": "attachment2.png"},
+                {"id": 2, "filename": "attachment3.png"},
+                {"id": 3, "filename": "attachment4.png"},
+                {"id": 4, "filename": "attachment5.png"},
+            ],
+            "allowed_mentions": {"parse": []},
+        }
+        assert form is url_encoded_form.return_value
+
+        # Attachments
+        assert ensure_resource.call_count == 5
+        ensure_resource.assert_has_calls(
+            [
+                mock.call(attachment1),
+                mock.call(embed_attachment1),
+                mock.call(embed_attachment2),
+                mock.call(embed_attachment3),
+                mock.call(embed_attachment4),
+            ]
         )
 
         # Form builder
@@ -1969,7 +2069,6 @@ class TestRESTClientImplAsync:
 
         await rest_client._parse_ratelimits(route, response, live_attributes)
 
-        assert live_attributes.still_alive.call_count == 1
         live_attributes.buckets.update_rate_limits.assert_called_once_with(
             compiled_route=route,
             bucket_header="bucket_header",
@@ -1991,7 +2090,7 @@ class TestRESTClientImplAsync:
         await rest_client._parse_ratelimits(route, response, live_attributes)
 
         response.json.assert_not_called()
-        assert live_attributes.still_alive.call_count == 0
+        live_attributes.still_alive.assert_not_called()
 
     async def test__parse_ratelimits_when_ratelimited(self, rest_client, exit_exception, live_attributes):
         class StubResponse:
@@ -2006,7 +2105,7 @@ class TestRESTClientImplAsync:
         with pytest.raises(exit_exception):
             await rest_client._parse_ratelimits(route, StubResponse(), live_attributes)
 
-        assert live_attributes.still_alive.call_count == 0
+        live_attributes.still_alive.assert_not_called()
 
     async def test__parse_ratelimits_when_unexpected_content_type(self, rest_client, live_attributes):
         class StubResponse:
@@ -2022,7 +2121,7 @@ class TestRESTClientImplAsync:
         with pytest.raises(errors.HTTPResponseError):
             await rest_client._parse_ratelimits(route, StubResponse(), live_attributes)
 
-        assert live_attributes.still_alive.call_count == 0
+        live_attributes.still_alive.assert_not_called()
 
     async def test__parse_ratelimits_when_global_ratelimit(self, rest_client, live_attributes):
         class StubResponse:
@@ -2057,7 +2156,7 @@ class TestRESTClientImplAsync:
         with pytest.raises(rest._RetryRequest):
             await rest_client._parse_ratelimits(route, StubResponse(), live_attributes)
 
-        assert live_attributes.still_alive.call_count == 0
+        live_attributes.still_alive.assert_not_called()
 
     async def test__parse_ratelimits_when_retry_after_is_close_enough(self, rest_client, live_attributes):
         class StubResponse:
@@ -2075,7 +2174,7 @@ class TestRESTClientImplAsync:
         with pytest.raises(rest._RetryRequest):
             await rest_client._parse_ratelimits(route, StubResponse(), live_attributes)
 
-        assert live_attributes.still_alive.call_count == 0
+        live_attributes.still_alive.assert_not_called()
 
     async def test__parse_ratelimits_when_retry_after_is_not_close_enough(self, rest_client, live_attributes):
         class StubResponse:
@@ -2091,7 +2190,7 @@ class TestRESTClientImplAsync:
         with pytest.raises(errors.RateLimitedError):
             await rest_client._parse_ratelimits(route, StubResponse(), live_attributes)
 
-        assert live_attributes.still_alive.call_count == 0
+        live_attributes.still_alive.assert_not_called()
 
     #############
     # Endpoints #
@@ -2306,26 +2405,6 @@ class TestRESTClientImplAsync:
         )
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="cause why not :)")
 
-    async def test_edit_permission_overwrites(self, rest_client):
-        with mock.patch.object(rest_client, "edit_permission_overwrite") as edit_permission_overwrite:
-            await rest_client.edit_permission_overwrites(
-                StubModel(123),
-                StubModel(456),
-                target_type=channels.PermissionOverwriteType.MEMBER,
-                allow=permissions.Permissions.BAN_MEMBERS,
-                deny=permissions.Permissions.CREATE_INSTANT_INVITE,
-                reason="cause why not :)",
-            )
-
-        edit_permission_overwrite.assert_awaited_once_with(
-            StubModel(123),
-            StubModel(456),
-            target_type=channels.PermissionOverwriteType.MEMBER,
-            allow=permissions.Permissions.BAN_MEMBERS,
-            deny=permissions.Permissions.CREATE_INSTANT_INVITE,
-            reason="cause why not :)",
-        )
-
     @pytest.mark.parametrize(
         ("target", "expected_type"),
         [
@@ -2500,6 +2579,7 @@ class TestRESTClientImplAsync:
             user_mentions=[9876],
             role_mentions=[1234],
             reply=StubModel(987654321),
+            flags=54123,
         )
         assert returned is rest_client._entity_factory.deserialize_message.return_value
 
@@ -2516,6 +2596,7 @@ class TestRESTClientImplAsync:
             mentions_reply=undefined.UNDEFINED,
             user_mentions=[9876],
             role_mentions=[1234],
+            flags=54123,
         )
         mock_form.add_field.assert_called_once_with(
             "payload_json",
@@ -2552,6 +2633,7 @@ class TestRESTClientImplAsync:
             user_mentions=[9876],
             role_mentions=[1234],
             reply=StubModel(987654321),
+            flags=6643,
         )
         assert returned is rest_client._entity_factory.deserialize_message.return_value
 
@@ -2568,6 +2650,7 @@ class TestRESTClientImplAsync:
             mentions_reply=undefined.UNDEFINED,
             user_mentions=[9876],
             role_mentions=[1234],
+            flags=6643,
         )
         rest_client._request.assert_awaited_once_with(
             expected_route,
@@ -2915,6 +2998,20 @@ class TestRESTClientImplAsync:
             [mock.call({"id": "456"}), mock.call({"id": "789"})]
         )
 
+    async def test_fetch_channel_webhooks_ignores_unrecognised_webhook_type(self, rest_client):
+        webhook1 = StubModel(456)
+        expected_route = routes.GET_CHANNEL_WEBHOOKS.compile(channel=123)
+        rest_client._request = mock.AsyncMock(return_value=[{"id": "456"}, {"id": "789"}])
+        rest_client._entity_factory.deserialize_webhook = mock.Mock(
+            side_effect=[errors.UnrecognisedEntityError("yeet"), webhook1]
+        )
+
+        assert await rest_client.fetch_channel_webhooks(StubModel(123)) == [webhook1]
+        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._entity_factory.deserialize_webhook.assert_has_calls(
+            [mock.call({"id": "456"}), mock.call({"id": "789"})]
+        )
+
     async def test_fetch_guild_webhooks(self, rest_client):
         webhook1 = StubModel(456)
         webhook2 = StubModel(789)
@@ -2925,6 +3022,20 @@ class TestRESTClientImplAsync:
         assert await rest_client.fetch_guild_webhooks(StubModel(123)) == [webhook1, webhook2]
         rest_client._request.assert_awaited_once_with(expected_route)
         assert rest_client._entity_factory.deserialize_webhook.call_count == 2
+        rest_client._entity_factory.deserialize_webhook.assert_has_calls(
+            [mock.call({"id": "456"}), mock.call({"id": "789"})]
+        )
+
+    async def test_fetch_guild_webhooks_ignores_unrecognised_webhook_types(self, rest_client):
+        webhook1 = StubModel(456)
+        expected_route = routes.GET_GUILD_WEBHOOKS.compile(guild=123)
+        rest_client._request = mock.AsyncMock(return_value=[{"id": "456"}, {"id": "789"}])
+        rest_client._entity_factory.deserialize_webhook = mock.Mock(
+            side_effect=[errors.UnrecognisedEntityError("meow meow"), webhook1]
+        )
+
+        assert await rest_client.fetch_guild_webhooks(StubModel(123)) == [webhook1]
+        rest_client._request.assert_awaited_once_with(expected_route)
         rest_client._entity_factory.deserialize_webhook.assert_has_calls(
             [mock.call({"id": "456"}), mock.call({"id": "789"})]
         )
@@ -3428,10 +3539,9 @@ class TestRESTClientImplAsync:
         rest_client._request = mock.AsyncMock(return_value={"code": "Jx4cNGG"})
         rest_client._entity_factory.deserialize_invite = mock.Mock(return_value=return_invite)
 
-        assert await rest_client.fetch_invite(input_invite) == return_invite
-
+        assert await rest_client.fetch_invite(input_invite, with_counts=True, with_expiration=False) == return_invite
         rest_client._request.assert_awaited_once_with(
-            expected_route, query={"with_counts": "true", "with_expiration": "true"}
+            expected_route, query={"with_counts": "true", "with_expiration": "false"}
         )
         rest_client._entity_factory.deserialize_invite.assert_called_once_with({"code": "Jx4cNGG"})
 
@@ -3714,24 +3824,6 @@ class TestRESTClientImplAsync:
         )
         assert returned is member
 
-        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
-        rest_client._entity_factory.deserialize_member.assert_called_once_with({"id": "789"}, guild_id=123)
-
-    async def test_add_user_to_guild_with_deprecated_nick_field(self, rest_client):
-        member = StubModel(789)
-        expected_route = routes.PUT_GUILD_MEMBER.compile(guild=123, user=456)
-        expected_json = {"access_token": "token", "nick": "cool nick2"}
-        rest_client._request = mock.AsyncMock(return_value={"id": "789"})
-        rest_client._entity_factory.deserialize_member = mock.Mock(return_value=member)
-
-        returned = await rest_client.add_user_to_guild(
-            "token",
-            StubModel(123),
-            StubModel(456),
-            nick="cool nick2",
-        )
-
-        assert returned is member
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
         rest_client._entity_factory.deserialize_member.assert_called_once_with({"id": "789"}, guild_id=123)
 
@@ -4088,6 +4180,21 @@ class TestRESTClientImplAsync:
 
         rest_client._request.assert_awaited_once_with(expected_route)
         assert rest_client._entity_factory.deserialize_channel.call_count == 2
+        rest_client._entity_factory.deserialize_channel.assert_has_calls(
+            [mock.call({"id": "456"}), mock.call({"id": "789"})]
+        )
+
+    async def test_fetch_guild_channels_ignores_unknown_channel_type(self, rest_client):
+        channel1 = StubModel(456)
+        expected_route = routes.GET_GUILD_CHANNELS.compile(guild=123)
+        rest_client._request = mock.AsyncMock(return_value=[{"id": "456"}, {"id": "789"}])
+        rest_client._entity_factory.deserialize_channel = mock.Mock(
+            side_effect=[errors.UnrecognisedEntityError("echelon"), channel1]
+        )
+
+        assert await rest_client.fetch_guild_channels(StubModel(123)) == [channel1]
+
+        rest_client._request.assert_awaited_once_with(expected_route)
         rest_client._entity_factory.deserialize_channel.assert_has_calls(
             [mock.call({"id": "456"}), mock.call({"id": "789"})]
         )
@@ -4584,20 +4691,6 @@ class TestRESTClientImplAsync:
             rest_client._request.return_value, guild_id=123
         )
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="because i can")
-
-    async def test_edit_member_with_deprecated_nick_field(self, rest_client):
-        expected_route = routes.PATCH_GUILD_MEMBER.compile(guild=123, user=456)
-        expected_json = {"nick": "eeeeeestrogen"}
-        rest_client._request = mock.AsyncMock(return_value={"id": "789"})
-
-        result = await rest_client.edit_member(StubModel(123), StubModel(456), nick="eeeeeestrogen")
-
-        assert result is rest_client._entity_factory.deserialize_member.return_value
-
-        rest_client._entity_factory.deserialize_member.assert_called_once_with(
-            rest_client._request.return_value, guild_id=123
-        )
-        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason=undefined.UNDEFINED)
 
     async def test_edit_member_when_voice_channel_is_None(self, rest_client):
         expected_route = routes.PATCH_GUILD_MEMBER.compile(guild=123, user=456)
@@ -5237,6 +5330,23 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route, query={"with_localizations": "true"})
         rest_client._entity_factory.deserialize_command.assert_called_once_with({"id": "34512312"}, guild_id=None)
 
+    async def test_fetch_application_commands_ignores_unknown_command_types(self, rest_client):
+        mock_command = mock.Mock()
+        expected_route = routes.GET_APPLICATION_GUILD_COMMANDS.compile(application=54123, guild=432234)
+        rest_client._entity_factory.deserialize_command.side_effect = [
+            errors.UnrecognisedEntityError("eep"),
+            mock_command,
+        ]
+        rest_client._request = mock.AsyncMock(return_value=[{"id": "541234"}, {"id": "553234"}])
+
+        result = await rest_client.fetch_application_commands(StubModel(54123), StubModel(432234))
+
+        assert result == [mock_command]
+        rest_client._request.assert_awaited_once_with(expected_route, query={"with_localizations": "true"})
+        rest_client._entity_factory.deserialize_command.assert_has_calls(
+            [mock.call({"id": "541234"}, guild_id=432234), mock.call({"id": "553234"}, guild_id=432234)]
+        )
+
     async def test__create_application_command_with_optionals(self, rest_client: rest.RESTClientImpl):
         expected_route = routes.POST_APPLICATION_GUILD_COMMAND.compile(application=4332123, guild=653452134)
         rest_client._request = mock.AsyncMock(return_value={"id": "29393939"})
@@ -5397,6 +5507,30 @@ class TestRESTClientImplAsync:
 
         assert result == [rest_client._entity_factory.deserialize_command.return_value]
         rest_client._entity_factory.deserialize_command.assert_called_once_with({"id": "9459329932"}, guild_id=None)
+        rest_client._request.assert_awaited_once_with(expected_route, json=[mock_command_builder.build.return_value])
+        mock_command_builder.build.assert_called_once_with(rest_client._entity_factory)
+
+    async def test_set_application_commands_without_guild_handles_unknown_command_types(self, rest_client):
+        mock_command = mock.Mock()
+        expected_route = routes.PUT_APPLICATION_GUILD_COMMANDS.compile(application=532123123, guild=453123)
+        rest_client._entity_factory.deserialize_command.side_effect = [
+            errors.UnrecognisedEntityError("meow"),
+            mock_command,
+        ]
+        rest_client._request = mock.AsyncMock(return_value=[{"id": "435765"}, {"id": "4949493933"}])
+        mock_command_builder = mock.Mock()
+
+        result = await rest_client.set_application_commands(
+            StubModel(532123123), [mock_command_builder], StubModel(453123)
+        )
+
+        assert result == [mock_command]
+        rest_client._entity_factory.deserialize_command.assert_has_calls(
+            [
+                mock.call({"id": "435765"}, guild_id=453123),
+                mock.call({"id": "4949493933"}, guild_id=453123),
+            ]
+        )
         rest_client._request.assert_awaited_once_with(expected_route, json=[mock_command_builder.build.return_value])
         mock_command_builder.build.assert_called_once_with(rest_client._entity_factory)
 
@@ -5770,6 +5904,25 @@ class TestRESTClientImplAsync:
         assert result == [rest_client._entity_factory.deserialize_scheduled_event.return_value]
         rest_client._entity_factory.deserialize_scheduled_event.assert_called_once_with(
             {"id": "494920234", "type": "1"}
+        )
+        rest_client._request.assert_awaited_once_with(expected_route, query={"with_user_count": "true"})
+
+    async def test_fetch_scheduled_events_handles_unrecognised_events(self, rest_client: rest.RESTClientImpl):
+        mock_event = mock.Mock()
+        rest_client._entity_factory.deserialize_scheduled_event.side_effect = [
+            errors.UnrecognisedEntityError("evil laugh"),
+            mock_event,
+        ]
+        expected_route = routes.GET_GUILD_SCHEDULED_EVENTS.compile(guild=65234123)
+        rest_client._request = mock.AsyncMock(
+            return_value=[{"id": "432234", "type": "1"}, {"id": "4939394", "type": "494949"}]
+        )
+
+        result = await rest_client.fetch_scheduled_events(StubModel(65234123))
+
+        assert result == [mock_event]
+        rest_client._entity_factory.deserialize_scheduled_event.assert_has_calls(
+            [mock.call({"id": "432234", "type": "1"}), mock.call({"id": "4939394", "type": "494949"})]
         )
         rest_client._request.assert_awaited_once_with(expected_route, query={"with_user_count": "true"})
 

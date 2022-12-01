@@ -54,7 +54,14 @@ class VoiceComponentImpl(voice.VoiceComponent):
     voice channels with.
     """
 
-    __slots__: typing.Sequence[str] = ("_app", "_connections", "connections", "_is_alive", "_is_closing")
+    __slots__: typing.Sequence[str] = (
+        "_app",
+        "_connections",
+        "connections",
+        "_is_alive",
+        "_is_closing",
+        "_voice_listener",
+    )
 
     _connections: typing.Dict[snowflakes.Snowflake, voice.VoiceConnection]
     connections: typing.Mapping[snowflakes.Snowflake, voice.VoiceConnection]
@@ -65,6 +72,7 @@ class VoiceComponentImpl(voice.VoiceComponent):
         self.connections = types.MappingProxyType(self._connections)
         self._is_alive = False
         self._is_closing = False
+        self._voice_listener = False
 
     @property
     def is_alive(self) -> bool:
@@ -101,7 +109,9 @@ class VoiceComponentImpl(voice.VoiceComponent):
     async def close(self) -> None:
         self._check_if_alive()
         self._is_closing = True
-        self._app.event_manager.unsubscribe(voice_events.VoiceEvent, self._on_voice_event)
+
+        if self._voice_listener:
+            self._app.event_manager.unsubscribe(voice_events.VoiceEvent, self._on_voice_event)
 
         if self._connections:
             _LOGGER.info("shutting down %s active voice connection(s)", len(self._connections))
@@ -109,6 +119,7 @@ class VoiceComponentImpl(voice.VoiceComponent):
 
         self._is_alive = False
         self._is_closing = False
+        self._voice_listener = False
 
     def start(self) -> None:
         """Start this voice component."""
@@ -116,7 +127,7 @@ class VoiceComponentImpl(voice.VoiceComponent):
             raise errors.ComponentStateConflictError("Cannot start a voice component which is already running")
 
         self._is_alive = True
-        self._app.event_manager.subscribe(voice_events.VoiceEvent, self._on_voice_event)
+        self._voice_listener = False
 
     async def connect_to(
         self,
@@ -216,6 +227,10 @@ class VoiceComponentImpl(voice.VoiceComponent):
 
             raise
 
+        if not self._voice_listener:
+            self._app.event_manager.subscribe(voice_events.VoiceEvent, self._on_voice_event)
+            self._voice_listener = True
+
         self._connections[guild_id] = voice_connection
         return voice_connection
 
@@ -241,6 +256,10 @@ class VoiceComponentImpl(voice.VoiceComponent):
     async def _on_connection_close(self, connection: voice.VoiceConnection) -> None:
         try:
             del self._connections[connection.guild_id]
+
+            if not self._connections:
+                self._app.event_manager.unsubscribe(voice_events.VoiceEvent, self._on_voice_event)
+                self._voice_listener = False
 
             # Leave the voice channel explicitly, otherwise we will just appear to
             # not leave properly.

@@ -110,10 +110,40 @@ jobs:
             exit 1
           fi
 
-      - name: Linting
+      - name: Safety
         if: always()
         run: |
-          nox -s safety mypy verify-types flake8 slotscheck codespell check-trailing-whitespaces
+          nox -s safety
+
+      - name: Mypy
+        if: always()
+        run: |
+          nox -s mypy
+
+      - name: Verify types
+        if: always()
+        run: |
+          nox -s verify-types
+
+      - name: Flake8
+        if: always()
+        run: |
+          nox -s flake8
+
+      - name: Slotscheck
+        if: always()
+        run: |
+          nox -s slotscheck
+
+      - name: Codespell
+        if: always()
+        run: |
+          nox -s codespell
+
+      - name: Check trailing whitespaces
+        if: always()
+        run: |
+          nox -s check-trailing-whitespaces
 
   twemoji:
     runs-on: ubuntu-latest

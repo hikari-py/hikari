@@ -2560,15 +2560,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     ##################
 
     def _deserialize_action_row(self, payload: data_binding.JSONObject) -> message_models.ActionRowComponent:
-        components: typing.List[message_models.PartialComponent] = []
-
-        for component_payload in payload["components"]:
-            try:
-                components.append(self._deserialize_component(component_payload))
-
-            except errors.UnrecognisedEntityError:
-                pass
-
+        components = data_binding.cast_variants_array(self._deserialize_component, payload["components"])
         return message_models.ActionRowComponent(
             type=message_models.ComponentType(payload["type"]), components=components
         )
@@ -2759,13 +2751,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         components: undefined.UndefinedOr[typing.List[message_models.PartialComponent]] = undefined.UNDEFINED
         if component_payloads := payload.get("components"):
-            components = []
-            for component_payload in component_payloads:
-                try:
-                    components.append(self._deserialize_component(component_payload))
-
-                except errors.UnrecognisedEntityError:
-                    pass
+            components = data_binding.cast_variants_array(self._deserialize_component, component_payloads)
 
         channel_mentions: undefined.UndefinedOr[
             typing.Dict[snowflakes.Snowflake, channel_models.PartialChannel]
@@ -2781,7 +2767,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_role_mention_ids := payload.get("mention_roles"):
             role_mention_ids = [snowflakes.Snowflake(i) for i in raw_role_mention_ids]
 
-        message = message_models.PartialMessage(
+        return message_models.PartialMessage(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
             channel_id=snowflakes.Snowflake(payload["channel_id"]),
@@ -2812,13 +2798,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             user_mentions=user_mentions,
             role_mention_ids=role_mention_ids,
             mentions_everyone=payload.get("mention_everyone", undefined.UNDEFINED),
-            # We initialize these next.
-            mentions=NotImplemented,
         )
-
-        message.mentions = message_models.Mentions(message=message)
-
-        return message
 
     def deserialize_message(
         self, payload: data_binding.JSONObject
@@ -2873,20 +2853,17 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if interaction_payload := payload.get("interaction"):
             interaction = self._deserialize_message_interaction(interaction_payload)
 
-        components: typing.List[message_models.PartialComponent] = []
         if component_payloads := payload.get("components"):
-            for component_payload in component_payloads:
-                try:
-                    components.append(self._deserialize_component(component_payload))
+            components = data_binding.cast_variants_array(self._deserialize_component, component_payloads)
 
-                except errors.UnrecognisedEntityError:
-                    pass
+        else:
+            components = []
 
         user_mentions = {u.id: u for u in map(self.deserialize_user, payload.get("mentions", ()))}
         role_mention_ids = [snowflakes.Snowflake(i) for i in payload.get("mention_roles", ())]
         channel_mentions = {u.id: u for u in map(self.deserialize_partial_channel, payload.get("mention_channels", ()))}
 
-        message = message_models.Message(
+        return message_models.Message(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
             channel_id=snowflakes.Snowflake(payload["channel_id"]),
@@ -2917,13 +2894,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             channel_mentions=channel_mentions,
             role_mention_ids=role_mention_ids,
             mentions_everyone=payload.get("mention_everyone", False),
-            # We initialize these next.
-            mentions=NotImplemented,
         )
-
-        message.mentions = message_models.Mentions(message=message)
-
-        return message
 
     ###################
     # PRESENCE MODELS #

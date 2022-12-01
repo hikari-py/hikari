@@ -112,33 +112,45 @@ class TestVoiceComponentImpl:
         voice_client._disconnect_all.assert_awaited_once_with()
 
     @pytest.mark.asyncio()
-    async def test_close(self, voice_client, mock_app):
+    @pytest.mark.parametrize("voice_listener", [True, False])
+    async def test_close(self, voice_client, mock_app, voice_listener):
         voice_client._disconnect_all = mock.AsyncMock()
         voice_client._connections = {123: None}
         voice_client._check_if_alive = mock.Mock()
+        voice_client._voice_listener = voice_listener
 
         await voice_client.close()
 
+        if voice_listener:
+            mock_app.event_manager.unsubscribe.assert_called_once_with(
+                voice_events.VoiceEvent, voice_client._on_voice_event
+            )
+        else:
+            mock_app.event_manager.unsubscribe.assert_not_called()
+
         voice_client._check_if_alive.assert_called_once_with()
-        mock_app.event_manager.unsubscribe.assert_called_once_with(
-            voice_events.VoiceEvent, voice_client._on_voice_event
-        )
         voice_client._disconnect_all.assert_awaited_once_with()
         assert voice_client._is_alive is False
         assert voice_client._is_closing is False
 
     @pytest.mark.asyncio()
-    async def test_close_when_no_connections(self, voice_client, mock_app):
+    @pytest.mark.parametrize("voice_listener", [True, False])
+    async def test_close_when_no_connections(self, voice_client, mock_app, voice_listener):
         voice_client._disconnect_all = mock.AsyncMock()
         voice_client._connections = {}
         voice_client._check_if_alive = mock.Mock()
+        voice_client._voice_listener = voice_listener
 
         await voice_client.close()
 
+        if voice_listener:
+            mock_app.event_manager.unsubscribe.assert_called_once_with(
+                voice_events.VoiceEvent, voice_client._on_voice_event
+            )
+        else:
+            mock_app.event_manager.unsubscribe.assert_not_called()
+
         voice_client._check_if_alive.assert_called_once_with()
-        mock_app.event_manager.unsubscribe.assert_called_once_with(
-            voice_events.VoiceEvent, voice_client._on_voice_event
-        )
         voice_client._disconnect_all.assert_not_called()
         assert voice_client._is_alive is False
         assert voice_client._is_closing is False
@@ -148,7 +160,6 @@ class TestVoiceComponentImpl:
 
         voice_client.start()
 
-        mock_app.event_manager.subscribe.assert_called_once_with(voice_events.VoiceEvent, voice_client._on_voice_event)
         assert voice_client._is_alive is True
 
     @pytest.mark.asyncio()
@@ -159,7 +170,8 @@ class TestVoiceComponentImpl:
             await voice_client.start()
 
     @pytest.mark.asyncio()
-    async def test_connect_to(self, voice_client, mock_app):
+    @pytest.mark.parametrize("voice_listener", [True, False])
+    async def test_connect_to(self, voice_client, mock_app, voice_listener):
         voice_client._init_state_update_predicate = mock.Mock()
         voice_client._init_server_update_predicate = mock.Mock()
         mock_other_connection = object()
@@ -170,6 +182,7 @@ class TestVoiceComponentImpl:
         mock_app.shards = {0: mock_shard}
         mock_connection_type = mock.AsyncMock()
         voice_client._check_if_alive = mock.Mock()
+        voice_client._voice_listener = voice_listener
 
         result = await voice_client.connect_to(123, 4532, mock_connection_type, deaf=False, mute=True, timeout=None)
 
@@ -192,6 +205,14 @@ class TestVoiceComponentImpl:
         mock_app.cache.get_me.assert_called_once_with()
         voice_client._init_state_update_predicate.assert_called_once_with(123, mock_app.cache.get_me.return_value.id)
         voice_client._init_server_update_predicate.assert_called_once_with(123)
+        if voice_listener:
+            mock_app.event_manager.subscribe.assert_not_called()
+        else:
+            mock_app.event_manager.subscribe.assert_called_once_with(
+                voice_events.VoiceEvent, voice_client._on_voice_event
+            )
+
+        assert voice_client._voice_listener is True
         mock_shard.update_voice_state.assert_awaited_once_with(
             123,
             4532,
@@ -324,16 +345,28 @@ class TestVoiceComponentImpl:
         asyncio_wait_for.assert_awaited_once_with(update_voice_state_call_2.return_value, timeout=5.0)
 
     @pytest.mark.asyncio()
-    async def test__on_connection_close(self, voice_client, mock_app):
-        mock_other_connection = object()
+    @pytest.mark.parametrize("more_connections", [True, False])
+    async def test__on_connection_close(self, voice_client, mock_app, more_connections):
         mock_shard = mock.AsyncMock()
         mock_app.shards = {69: mock_shard}
-        voice_client._connections = {65234123: mock_other_connection, 123123: object()}
+        voice_client._connections = {65234123: object()}
+        expected_connections = {}
+        if more_connections:
+            mock_connection = object()
+            voice_client._connections[123] = mock_connection
+            expected_connections[123] = mock_connection
 
-        await voice_client._on_connection_close(mock.Mock(guild_id=123123, shard_id=69))
+        await voice_client._on_connection_close(mock.Mock(guild_id=65234123, shard_id=69))
 
-        mock_shard.update_voice_state.assert_awaited_once_with(guild=123123, channel=None)
-        assert voice_client._connections == {65234123: mock_other_connection}
+        if more_connections:
+            mock_app.event_manager.unsubscribe.assert_not_called()
+        else:
+            mock_app.event_manager.unsubscribe.assert_called_once_with(
+                voice_events.VoiceEvent, voice_client._on_voice_event
+            )
+
+        mock_shard.update_voice_state.assert_awaited_once_with(guild=65234123, channel=None)
+        assert voice_client._connections == expected_connections
 
     def test__init_state_update_predicate_matches(self, voice_client):
         predicate = voice_client._init_state_update_predicate(42069, 696969)

@@ -26,8 +26,6 @@ from __future__ import annotations
 
 __all__: typing.Sequence[str] = ("Permissions",)
 
-import functools
-import operator
 import typing
 
 from hikari.internal import enums
@@ -250,6 +248,9 @@ class Permissions(enums.Flag):
         without warning.
     """
 
+    MANAGE_EVENTS = 1 << 33
+    """Allows for creating, editing, and deleting scheduled events	"""
+
     MANAGE_THREADS = 1 << 34
     """Allows for deleting and archiving threads, and viewing all private threads.
 
@@ -286,4 +287,8 @@ class Permissions(enums.Flag):
         Permissions
             A permissions instance with all the known permissions.
         """
-        return functools.reduce(operator.ior, Permissions)
+        all_perms = Permissions.NONE
+        for perm in Permissions:
+            all_perms |= perm
+
+        return all_perms

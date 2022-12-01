@@ -1102,6 +1102,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         role_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
+        flags: typing.Union[undefined.UndefinedType, int, messages_.MessageFlag] = undefined.UNDEFINED,
     ) -> messages_.Message:
         """Create a message in the given channel.
 
@@ -1195,6 +1196,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             `hikari.snowflakes.Snowflake`, or
             `hikari.guilds.PartialRole` derivatives to enforce mentioning
             specific roles.
+        flags : hikari.undefined.UndefinedOr[hikari.messages.MessageFlag]
+            If provided, optional flags to set on the message. If
+            `hikari.undefined.UNDEFINED`, then nothing is changed.
+
+            Note that some flags may not be able to be set. Currently the only
+            flags that can be set are `NONE` and `SUPPRESS_EMBEDS`.
 
         Returns
         -------
@@ -2336,7 +2343,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
             .. warning::
                 As of writing this can only be set for interaction webhooks
-                and the only settable flag is EPHEMERAL; this field is just
+                and the only settable flag is `EPHEMERAL`; this field is just
                 ignored for non-interaction webhooks.
 
         Returns
@@ -2714,7 +2721,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def fetch_invite(self, invite: typing.Union[invites.InviteCode, str]) -> invites.Invite:
+    async def fetch_invite(
+        self, invite: typing.Union[invites.InviteCode, str], with_counts: bool = True, with_expiration: bool = True
+    ) -> invites.Invite:
         """Fetch an existing invite.
 
         Parameters
@@ -2722,6 +2731,14 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         invite : typing.Union[hikari.invites.InviteCode, str]
             The invite to fetch. This may be an invite object or
             the code of an existing invite.
+        with_counts : builtins.bool
+            Whether the invite should contain the approximate member counts.
+
+            Defaults to `builtins.True`.
+        with_expiration: builtins.bool
+            Whether the invite should contain the expiration date.
+
+            Defaults to `builtins.True`.
 
         Returns
         -------
