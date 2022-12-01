@@ -964,6 +964,7 @@ class TestSlashCommandBuilder:
             .set_id(3412312)
             .set_default_member_permissions(permissions.Permissions.ADMINISTRATOR)
             .set_is_dm_enabled(True)
+            .set_is_nsfw(True)
         )
 
         result = builder.build(mock_entity_factory)
@@ -974,6 +975,7 @@ class TestSlashCommandBuilder:
             "description": "one",
             "type": 1,
             "dm_permission": True,
+            "nsfw": True,
             "default_member_permissions": 8,
             "options": [mock_entity_factory.serialize_command_option.return_value],
             "id": "3412312",
@@ -1005,6 +1007,7 @@ class TestSlashCommandBuilder:
             .set_description_localizations({locales.Locale.TR: "bir"})
             .set_default_member_permissions(permissions.Permissions.BAN_MEMBERS)
             .set_is_dm_enabled(True)
+            .set_is_nsfw(True)
         )
         mock_rest = mock.AsyncMock()
 
@@ -1021,6 +1024,7 @@ class TestSlashCommandBuilder:
             description_localizations={locales.Locale.TR: "bir"},
             default_member_permissions=permissions.Permissions.BAN_MEMBERS,
             dm_enabled=True,
+            nsfw=True,
         )
 
     @pytest.mark.asyncio()
@@ -1029,6 +1033,7 @@ class TestSlashCommandBuilder:
             special_endpoints.SlashCommandBuilder("we are number", "one")
             .set_default_member_permissions(permissions.Permissions.BAN_MEMBERS)
             .set_is_dm_enabled(True)
+            .set_is_nsfw(True)
         )
         mock_rest = mock.AsyncMock()
 
@@ -1048,6 +1053,7 @@ class TestSlashCommandBuilder:
             description_localizations={locales.Locale.TR: "bir"},
             default_member_permissions=permissions.Permissions.BAN_MEMBERS,
             dm_enabled=True,
+            nsfw=True,
         )
 
 
@@ -1062,6 +1068,7 @@ class TestContextMenuBuilder:
             .set_name_localizations({locales.Locale.TR: "merhaba"})
             .set_default_member_permissions(permissions.Permissions.ADMINISTRATOR)
             .set_is_dm_enabled(True)
+            .set_is_nsfw(True)
         )
 
         result = builder.build(mock.Mock())
@@ -1070,6 +1077,7 @@ class TestContextMenuBuilder:
             "name": "we are number",
             "type": 2,
             "dm_permission": True,
+            "nsfw": True,
             "default_member_permissions": 8,
             "id": "3412312",
             "name_localizations": {locales.Locale.TR: "merhaba"},
@@ -1089,6 +1097,7 @@ class TestContextMenuBuilder:
             .set_default_member_permissions(permissions.Permissions.BAN_MEMBERS)
             .set_name_localizations({"meow": "nyan"})
             .set_is_dm_enabled(True)
+            .set_is_nsfw(True)
         )
         mock_rest = mock.AsyncMock()
 
@@ -1103,6 +1112,7 @@ class TestContextMenuBuilder:
             default_member_permissions=permissions.Permissions.BAN_MEMBERS,
             name_localizations={"meow": "nyan"},
             dm_enabled=True,
+            nsfw=True,
         )
 
     @pytest.mark.asyncio()
@@ -1112,6 +1122,7 @@ class TestContextMenuBuilder:
             .set_default_member_permissions(permissions.Permissions.BAN_MEMBERS)
             .set_name_localizations({"en-ghibli": "meow"})
             .set_is_dm_enabled(True)
+            .set_is_nsfw(True)
         )
         mock_rest = mock.AsyncMock()
 
@@ -1126,6 +1137,7 @@ class TestContextMenuBuilder:
             default_member_permissions=permissions.Permissions.BAN_MEMBERS,
             name_localizations={"en-ghibli": "meow"},
             dm_enabled=True,
+            nsfw=True,
         )
 
 
