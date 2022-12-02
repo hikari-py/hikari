@@ -4472,7 +4472,7 @@ class TestEntityFactoryImpl:
         assert command.type == commands.CommandType.USER
         assert command.name == "good name"
         assert command.default_member_permissions == permission_models.Permissions.ADMINISTRATOR
-        assert command.is_dm_enabled is True
+        assert command.is_dm_enabled is False
         assert command.is_nsfw is False
         assert command.version == 123321123
 
