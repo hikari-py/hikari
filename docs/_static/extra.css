@@ -1,3 +1,15 @@
 html {
     word-wrap: anywhere;
 }
+
+/* Fit all the long names in the TOC drawer */
+.toc-drawer {
+    width: initial;
+    padding-right: 0;
+}
+
+@media (max-width: 82em) {
+    .toc-drawer {
+        right: -20em;
+    }
+}

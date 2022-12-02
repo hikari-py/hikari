@@ -1221,9 +1221,6 @@ class EntityFactory(abc.ABC):
             If `guild_id` is left as `hikari.undefined.UNDEFINED` when
             `"guild_id"` is not present in the passed payload for the payload of
             the integration.
-
-        Raises
-        ------
         hikari.errors.UnrecognisedEntityError
             If the command type is unknown.
         """

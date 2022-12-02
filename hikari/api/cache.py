@@ -897,13 +897,13 @@ class MutableCache(Cache, abc.ABC):
     ) -> typing.Optional[stickers.GuildSticker]:
         """Remove a sticker from the cache.
 
+        .. note::
+            This will not delete stickers that are being kept alive by a reference.
+
         Parameters
         ----------
         sticker : hikari.snowflakes.SnowflakeishOr[hikari.stickers.GuildSticker]
             Object or ID of the sticker to remove from the cache.
-
-        .. note::
-            This will not delete stickers that are being kept alive by a reference.
 
         Returns
         -------
