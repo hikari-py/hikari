@@ -3750,7 +3750,8 @@ class TestEntityFactoryImpl:
             "name": "good name",
             "description": "very good description",
             "default_member_permissions": 8,
-            "dm_permission": True,
+            "dm_permission": False,
+            "nsfw": True,
             "options": [
                 {
                     "type": 1,
@@ -3783,7 +3784,8 @@ class TestEntityFactoryImpl:
         assert command.name == "good name"
         assert command.description == "very good description"
         assert command.default_member_permissions == permission_models.Permissions.ADMINISTRATOR
-        assert command.is_dm_enabled is True
+        assert command.is_dm_enabled is False
+        assert command.is_nsfw is True
         assert command.version == 123321123
 
         # CommandOption
@@ -3857,6 +3859,7 @@ class TestEntityFactoryImpl:
 
         assert command.options is None
         assert command.is_dm_enabled is True
+        assert command.is_nsfw is False
         assert isinstance(command, commands.SlashCommand)
 
     def test_deserialize_slash_command_standardizes_default_member_permissions(
@@ -4436,7 +4439,8 @@ class TestEntityFactoryImpl:
             "type": 2,
             "name": "good name",
             "default_member_permissions": 8,
-            "dm_permission": True,
+            "dm_permission": False,
+            "nsfw": True,
             "version": "123321123",
         }
 
@@ -4450,7 +4454,8 @@ class TestEntityFactoryImpl:
         assert command.type == commands.CommandType.USER
         assert command.name == "good name"
         assert command.default_member_permissions == permission_models.Permissions.ADMINISTRATOR
-        assert command.is_dm_enabled is True
+        assert command.is_dm_enabled is False
+        assert command.is_nsfw is True
         assert command.version == 123321123
 
     def test_deserialize_context_menu_command_with_guild_id(
@@ -4468,6 +4473,7 @@ class TestEntityFactoryImpl:
         assert command.name == "good name"
         assert command.default_member_permissions == permission_models.Permissions.ADMINISTRATOR
         assert command.is_dm_enabled is True
+        assert command.is_nsfw is False
         assert command.version == 123321123
 
     def test_deserialize_context_menu_command_with_with_null_and_unset_values(
