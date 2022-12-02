@@ -4473,18 +4473,21 @@ class TestEntityFactoryImpl:
         assert command.name == "good name"
         assert command.default_member_permissions == permission_models.Permissions.ADMINISTRATOR
         assert command.is_dm_enabled is False
-        assert command.is_nsfw is False
+        assert command.is_nsfw is True
         assert command.version == 123321123
 
     def test_deserialize_context_menu_command_with_with_null_and_unset_values(
         self, entity_factory_impl, context_menu_command_payload
     ):
         del context_menu_command_payload["dm_permission"]
+        del context_menu_command_payload["nsfw"]
+
 
         command = entity_factory_impl.deserialize_context_menu_command(context_menu_command_payload)
         assert isinstance(command, commands.ContextMenuCommand)
 
         assert command.is_dm_enabled is True
+        assert command.is_nsfw is False
 
     def test_deserialize_context_menu_command_default_member_permissions(
         self, entity_factory_impl, context_menu_command_payload
