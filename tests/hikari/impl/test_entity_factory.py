@@ -4482,7 +4482,6 @@ class TestEntityFactoryImpl:
         del context_menu_command_payload["dm_permission"]
         del context_menu_command_payload["nsfw"]
 
-
         command = entity_factory_impl.deserialize_context_menu_command(context_menu_command_payload)
         assert isinstance(command, commands.ContextMenuCommand)
 
