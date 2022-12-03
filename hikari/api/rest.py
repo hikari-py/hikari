@@ -7450,6 +7450,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             undefined.UndefinedType, int, permissions_.Permissions
         ] = undefined.UNDEFINED,
         dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.SlashCommand:
         r"""Create an application command.
 
@@ -7485,6 +7486,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Whether this command is enabled in DMs with the bot.
 
             This can only be applied to non-guild commands.
+        nsfw : hikari.undefined.UndefinedOr[builtins.bool]
+            Whether this command should be age-restricted.
 
         Returns
         -------
@@ -7531,6 +7534,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             undefined.UndefinedType, int, permissions_.Permissions
         ] = undefined.UNDEFINED,
         dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.ContextMenuCommand:
         r"""Create an application command.
 
@@ -7563,6 +7567,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Whether this command is enabled in DMs with the bot.
 
             This can only be applied to non-guild commands.
+        nsfw : hikari.undefined.UndefinedOr[builtins.bool]
+            Whether this command should be age-restricted.
 
         Returns
         -------

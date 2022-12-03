@@ -1008,6 +1008,11 @@ class CommandBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
+    def is_nsfw(self) -> undefined.UndefinedOr[bool]:
+        """Whether this command age-restricted."""
+
+    @property
+    @abc.abstractmethod
     def name_localizations(self) -> typing.Mapping[typing.Union[locales.Locale, str], str]:
         """Name localizations set for this command."""
 
@@ -1054,6 +1059,21 @@ class CommandBuilder(abc.ABC):
         ----------
         state : hikari.undefined.UndefinedOr[builtins.bool]
             Whether this command is enabled in DMs with the bot.
+
+        Returns
+        -------
+        CommandBuilder
+            Object of this command builder for chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_is_nsfw(self: _T, state: undefined.UndefinedOr[bool], /) -> _T:
+        """Set whether this command will be age-restricted.
+
+        Parameters
+        ----------
+        state : hikari.undefined.UndefinedOr[builtins.bool]
+            Whether this command is age-restricted.
 
         Returns
         -------

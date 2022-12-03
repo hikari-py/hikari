@@ -5361,6 +5361,7 @@ class TestRESTClientImplAsync:
             options=[mock_option],
             default_member_permissions=permissions.Permissions.ADMINISTRATOR,
             dm_enabled=False,
+            nsfw=True,
         )
 
         assert result is rest_client._request.return_value
@@ -5374,6 +5375,7 @@ class TestRESTClientImplAsync:
                 "options": [rest_client._entity_factory.serialize_command_option.return_value],
                 "default_member_permissions": 8,
                 "dm_permission": False,
+                "nsfw": True,
             },
         )
 
@@ -5436,6 +5438,7 @@ class TestRESTClientImplAsync:
             description_localizations={locales.Locale.TR: "jello"},
             default_member_permissions=permissions.Permissions.ADMINISTRATOR,
             dm_enabled=False,
+            nsfw=True,
         )
 
         assert result is rest_client._entity_factory.deserialize_slash_command.return_value
@@ -5453,6 +5456,7 @@ class TestRESTClientImplAsync:
             description_localizations={"tr": "jello"},
             default_member_permissions=permissions.Permissions.ADMINISTRATOR,
             dm_enabled=False,
+            nsfw=True,
         )
 
     async def test_create_context_menu_command(self, rest_client: rest.RESTClientImpl):
@@ -5467,6 +5471,7 @@ class TestRESTClientImplAsync:
             guild=mock_guild,
             default_member_permissions=permissions.Permissions.ADMINISTRATOR,
             dm_enabled=False,
+            nsfw=True,
             name_localizations={locales.Locale.TR: "hhh"},
         )
 
@@ -5481,6 +5486,7 @@ class TestRESTClientImplAsync:
             guild=mock_guild,
             default_member_permissions=permissions.Permissions.ADMINISTRATOR,
             dm_enabled=False,
+            nsfw=True,
             name_localizations={"tr": "hhh"},
         )
 

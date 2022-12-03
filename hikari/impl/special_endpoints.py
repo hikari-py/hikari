@@ -1196,6 +1196,7 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         default=undefined.UNDEFINED, kw_only=True
     )
     _is_dm_enabled: undefined.UndefinedOr[bool] = attr.field(default=undefined.UNDEFINED, kw_only=True)
+    _is_nsfw: undefined.UndefinedOr[bool] = attr.field(default=undefined.UNDEFINED, kw_only=True)
 
     _name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attr.field(factory=dict, kw_only=True)
 
@@ -1209,6 +1210,10 @@ class CommandBuilder(special_endpoints.CommandBuilder):
 
     @property
     def is_dm_enabled(self) -> undefined.UndefinedOr[bool]:
+        return self._is_dm_enabled
+
+    @property
+    def is_nsfw(self) -> undefined.UndefinedOr[bool]:
         return self._is_dm_enabled
 
     @property
@@ -1231,6 +1236,10 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         self._is_dm_enabled = state
         return self
 
+    def set_is_nsfw(self: _CommandBuilderT, state: undefined.UndefinedOr[bool], /) -> _CommandBuilderT:
+        self._is_nsfw = state
+        return self
+
     @property
     def name_localizations(self) -> typing.Mapping[typing.Union[locales.Locale, str], str]:
         return self._name_localizations
@@ -1250,6 +1259,7 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         data.put_snowflake("id", self._id)
         data.put("name_localizations", self._name_localizations)
         data.put("dm_permission", self._is_dm_enabled)
+        data.put("nsfw", self._is_nsfw)
 
         # Discord considers 0 the same thing as ADMINISTRATORS, but we make it nicer to work with
         # by using it correctly.
@@ -1329,6 +1339,7 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
             description_localizations=self._description_localizations,
             default_member_permissions=self._default_member_permissions,
             dm_enabled=self._is_dm_enabled,
+            nsfw=self._is_nsfw,
         )
 
 
@@ -1361,6 +1372,7 @@ class ContextMenuCommandBuilder(CommandBuilder, special_endpoints.ContextMenuCom
             name_localizations=self._name_localizations,
             default_member_permissions=self._default_member_permissions,
             dm_enabled=self._is_dm_enabled,
+            nsfw=self.is_nsfw,
         )
 
 
