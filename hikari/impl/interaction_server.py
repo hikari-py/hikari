@@ -26,6 +26,7 @@ from __future__ import annotations
 __all__: typing.Sequence[str] = ("InteractionServer",)
 
 import asyncio
+import inspect
 import logging
 import typing
 
@@ -159,6 +160,23 @@ class _FilePayload(aiohttp.Payload):
         async with self._value.stream(executor=self._executor) as data:
             async for chunk in data:
                 await writer.write(chunk)
+
+
+async def _consume_generator_handler(generator: typing.AsyncGenerator):
+    try:
+        await generator.__anext__()
+
+        # We expect only one!
+        exc = RuntimeError("Generator listener yielded more than once, expected only one yield")
+        await generator.athrow(exc)
+
+    except StopAsyncIteration:
+        pass
+
+    except Exception as exc:
+        asyncio.get_running_loop().call_exception_handler(
+            {"message": "Exception occurred during interaction post dispatch", "exception": exc}
+        )
 
 
 class InteractionServer(interaction_server.InteractionServer):
@@ -441,7 +459,15 @@ class InteractionServer(interaction_server.InteractionServer):
         if listener := self._listeners.get(type(interaction)):
             _LOGGER.debug("Dispatching interaction %s", interaction.id)
             try:
-                result = await listener(interaction)
+                call = listener(interaction)
+
+                if inspect.isasyncgen(call):
+                    result = await call.__anext__()
+                    asyncio.create_task(_consume_generator_handler(call))
+
+                else:
+                    result = await call
+
                 raw_payload, files = result.build(self._entity_factory)
                 payload = self._dumps(raw_payload)
 

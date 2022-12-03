@@ -43,7 +43,10 @@ if typing.TYPE_CHECKING:
     ]
 
 
-ListenerT = typing.Callable[["_InteractionT_co"], typing.Awaitable["_ResponseT_co"]]
+ListenerT = typing.Union[
+    typing.Callable[["_InteractionT_co"], typing.Awaitable["_ResponseT_co"]],
+    typing.Callable[["_InteractionT_co"], typing.AsyncGenerator["_ResponseT_co", None]],
+]
 """Type hint of a Interaction server's listener callback.
 
 This should be an async callback which takes in one positional argument which
