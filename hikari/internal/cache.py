@@ -754,7 +754,7 @@ class MessageData(BaseData[messages.Message]):
     referenced_message: typing.Optional[RefCell[MessageData]] = attr.field()
     interaction: typing.Optional[MessageInteractionData] = attr.field()
     application_id: typing.Optional[snowflakes.Snowflake] = attr.field()
-    components: typing.Tuple[components_.MessageActionRowComponentT, ...] = attr.field()
+    components: typing.Tuple[components_.MessageActionRowComponent, ...] = attr.field()
 
     @classmethod
     def build_from_entity(

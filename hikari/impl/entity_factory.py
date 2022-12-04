@@ -2616,7 +2616,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         self,
         payloads: data_binding.JSONArray,
         mapping: typing.Dict[int, typing.Callable[[data_binding.JSONObject], component_models.MessageComponentTypesT]],
-    ) -> typing.List[component_models.MessageActionRowComponentT]:
+    ) -> typing.List[component_models.MessageActionRowComponent]:
         ...
 
     @typing.overload
@@ -2624,7 +2624,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         self,
         payloads: data_binding.JSONArray,
         mapping: typing.Dict[int, typing.Callable[[data_binding.JSONObject], component_models.ModalComponentTypesT]],
-    ) -> typing.List[component_models.ModalActionRowComponentT]:
+    ) -> typing.List[component_models.ModalActionRowComponent]:
         ...
 
     def _deserialize_components(
@@ -2847,9 +2847,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if interaction_payload := payload.get("interaction"):
             interaction = self._deserialize_message_interaction(interaction_payload)
 
-        components: undefined.UndefinedOr[
-            typing.List[component_models.MessageActionRowComponentT]
-        ] = undefined.UNDEFINED
+        components: undefined.UndefinedOr[typing.List[component_models.MessageActionRowComponent]] = undefined.UNDEFINED
         if component_payloads := payload.get("components"):
             components = self._deserialize_components(component_payloads, self._message_component_type_mapping)
 
@@ -2953,7 +2951,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if interaction_payload := payload.get("interaction"):
             interaction = self._deserialize_message_interaction(interaction_payload)
 
-        components: typing.List[component_models.MessageActionRowComponentT]
+        components: typing.List[component_models.MessageActionRowComponent]
         if component_payloads := payload.get("components"):
             components = self._deserialize_components(component_payloads, self._message_component_type_mapping)
 

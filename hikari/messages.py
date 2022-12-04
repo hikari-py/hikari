@@ -565,7 +565,7 @@ class PartialMessage(snowflakes.Unique):
         This will only be provided for interaction messages.
     """
 
-    components: undefined.UndefinedOr[typing.Sequence[component_models.MessageActionRowComponentT]] = attr.field(
+    components: undefined.UndefinedOr[typing.Sequence[component_models.MessageActionRowComponent]] = attr.field(
         hash=False, eq=False, repr=False
     )
     """Sequence of the components attached to this message."""
@@ -1410,7 +1410,7 @@ class Message(PartialMessage):
         This will only be provided for interaction messages.
     """
 
-    components: typing.Sequence[component_models.MessageActionRowComponentT] = attr.field(
+    components: typing.Sequence[component_models.MessageActionRowComponent] = attr.field(
         hash=False, eq=False, repr=False
     )
     """Sequence of the components attached to this message."""

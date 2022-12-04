@@ -121,7 +121,7 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
     app_permissions: typing.Optional[permissions.Permissions] = attr.field(eq=False, hash=False, repr=False)
     """Permissions the bot has in this interaction's channel if it's in a guild."""
 
-    components: typing.Sequence[components_.ModalActionRowComponentT] = attr.field(eq=False, hash=False, repr=True)
+    components: typing.Sequence[components_.ModalActionRowComponent] = attr.field(eq=False, hash=False, repr=True)
     """Components in the modal."""
 
     async def fetch_channel(self) -> channels.TextableChannel:
