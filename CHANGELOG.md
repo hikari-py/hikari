@@ -1,3 +1,44 @@
+## 2.0.0.dev113 (2022-12-04)
+
+### Breaking Changes
+
+- Remove previously deprecated functionality.
+
+  This includes:
+  - `Message.mentions`
+  - `nick` argument in rest methods
+  - `edit_permission_overwrites`, `edit_my_nick` and `command_builder` rest methods
+  - `CacheView.iterator` ([#1347](https://github.com/hikari-py/hikari/issues/1347))
+
+### Deprecation
+
+- Deprecate `RESTClientImpl.build_action_row` in favour of `RESTClientImpl.build_message_action_row`. ([#1002](https://github.com/hikari-py/hikari/issues/1002))
+
+### Features
+
+- Implement modal interactions.
+  - Additionally, it is now guaranteed (typing-wise) that top level components will be an action row ([#1002](https://github.com/hikari-py/hikari/issues/1002))
+- Add new `UserFlag.ACTIVE_DEVELOPER`. ([#1355](https://github.com/hikari-py/hikari/issues/1355))
+- Allow specifying a filename to `hikari.files.URL`. ([#1368](https://github.com/hikari-py/hikari/issues/1368))
+- Only subscribe to voice events when needed in the voice manager. ([#1369](https://github.com/hikari-py/hikari/issues/1369))
+- Add functionality to create and deserialize age-restricted (NSFW) commands. ([#1382](https://github.com/hikari-py/hikari/issues/1382))
+- Threads cache. ([#1384](https://github.com/hikari-py/hikari/issues/1384))
+
+### Bugfixes
+
+- Allow re-uploading attachments when creating messages ([#1367](https://github.com/hikari-py/hikari/issues/1367))
+- Fix error caused when disconnecting the bot and having active voice connections. ([#1369](https://github.com/hikari-py/hikari/issues/1369))
+- Remove incorrect `is_nsfw` field from threads.
+  - The "NSFW" status is inherited from the parent object and not sent for threads.
+  - This also involved moving the base attribute from `GuildChannel` to `PermissibleGuildChannel`. ([#1386](https://github.com/hikari-py/hikari/issues/1386))
+
+### Documentation Improvements
+
+- Documentation overhaul and move to docs.hikari-py.dev domain. ([#1118](https://github.com/hikari-py/hikari/issues/1118))
+
+---
+
+
 ## 2.0.0.dev112 (2022-11-06)
 
 ### Breaking Changes
