@@ -248,7 +248,7 @@ class InteractionServer(abc.ABC):
             An asynchronous listener can be either a normal coroutine or an
             async generator which should yield exactly once. This allows
             sending an initial response to the request, while still
-            later executing futher logic.
+            later executing further logic.
 
         Other Parameters
         ----------------

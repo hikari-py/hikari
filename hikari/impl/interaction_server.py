@@ -251,7 +251,7 @@ class InteractionServer(interaction_server.InteractionServer):
         self._rest_client = rest_client
         self._server: typing.Optional[aiohttp.web_runner.AppRunner] = None
         self._public_key = nacl.signing.VerifyKey(public_key) if public_key is not None else None
-        self._running_generator_listeners: typing.List[asyncio.Task] = []
+        self._running_generator_listeners: typing.List[asyncio.Task[None]] = []
 
     @property
     def is_alive(self) -> bool:
