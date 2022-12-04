@@ -257,7 +257,7 @@ class TestEventManagerImpl:
         await event_manager_impl.on_thread_create(shard, mock_payload)
 
         event = event_factory.deserialize_guild_thread_create_event.return_value
-        event_manager_impl._cache.set_guild_thread.assert_called_once_with(event.thread)
+        event_manager_impl._cache.set_thread.assert_called_once_with(event.thread)
         event_manager_impl.dispatch.assert_awaited_once_with(event)
         event_factory.deserialize_guild_thread_create_event.assert_called_once_with(shard, mock_payload)
 
@@ -287,7 +287,7 @@ class TestEventManagerImpl:
         await event_manager_impl.on_thread_create(shard, mock_payload)
 
         event = event_factory.deserialize_guild_thread_access_event.return_value
-        event_manager_impl._cache.set_guild_thread.assert_called_once_with(event.thread)
+        event_manager_impl._cache.set_thread.assert_called_once_with(event.thread)
         event_manager_impl.dispatch.assert_awaited_once_with(event)
         event_factory.deserialize_guild_thread_access_event.assert_called_once_with(shard, mock_payload)
 
@@ -317,7 +317,7 @@ class TestEventManagerImpl:
         await event_manager_impl.on_thread_update(shard, mock_payload)
 
         event = event_factory.deserialize_guild_thread_update_event.return_value
-        event_manager_impl._cache.update_guild_thread.assert_called_once_with(event.thread)
+        event_manager_impl._cache.update_thread.assert_called_once_with(event.thread)
         event_manager_impl.dispatch.assert_awaited_once_with(event)
         event_factory.deserialize_guild_thread_update_event.assert_called_once_with(shard, mock_payload)
 
@@ -347,7 +347,7 @@ class TestEventManagerImpl:
         await event_manager_impl.on_thread_delete(shard, mock_payload)
 
         event = event_factory.deserialize_guild_thread_delete_event.return_value
-        event_manager_impl._cache.delete_guild_thread.assert_called_once_with(event.thread_id)
+        event_manager_impl._cache.delete_thread.assert_called_once_with(event.thread_id)
         event_manager_impl.dispatch.assert_awaited_once_with(event)
         event_factory.deserialize_guild_thread_delete_event.assert_called_once_with(shard, mock_payload)
 
@@ -380,10 +380,8 @@ class TestEventManagerImpl:
         mock_payload = mock.Mock()
         await event_manager_impl.on_thread_list_sync(shard, mock_payload)
 
-        event_manager_impl._cache.clear_guild_threads_for_channels.assert_called_once_with(
-            event.guild_id, event.channel_ids
-        )
-        event_manager_impl._cache.set_guild_thread("thread1")
+        event_manager_impl._cache.clear_threads_for_channel.assert_called_once_with(event.guild_id, event.channel_ids)
+        event_manager_impl._cache.set_thread("thread1")
         event_manager_impl.dispatch.assert_awaited_once_with(event)
         event_factory.deserialize_thread_list_sync_event.assert_called_once_with(shard, mock_payload)
 
@@ -401,8 +399,8 @@ class TestEventManagerImpl:
         mock_payload = mock.Mock()
         await event_manager_impl.on_thread_list_sync(shard, mock_payload)
 
-        event_manager_impl._cache.clear_guild_threads_for_guild.assert_called_once_with(event.guild_id)
-        event_manager_impl._cache.set_guild_thread("thread1")
+        event_manager_impl._cache.clear_threads_for_guild.assert_called_once_with(event.guild_id)
+        event_manager_impl._cache.set_thread("thread1")
         event_manager_impl.dispatch.assert_awaited_once_with(event)
         event_factory.deserialize_thread_list_sync_event.assert_called_once_with(shard, mock_payload)
 
@@ -434,7 +432,7 @@ class TestEventManagerImpl:
         mock_payload = mock.Mock()
         await event_manager_impl.on_thread_members_update(shard, mock_payload)
 
-        event_manager_impl._cache.delete_guild_thread.assert_called_once_with(event.thread_id)
+        event_manager_impl._cache.delete_thread.assert_called_once_with(event.thread_id)
         event_manager_impl.dispatch.assert_awaited_once_with(event)
         event_factory.deserialize_thread_members_update_event.assert_called_once_with(shard, mock_payload)
 
@@ -451,7 +449,7 @@ class TestEventManagerImpl:
         mock_payload = mock.Mock()
         await event_manager_impl.on_thread_members_update(shard, mock_payload)
 
-        event_manager_impl._cache.delete_guild_thread.assert_not_called()
+        event_manager_impl._cache.delete_thread.assert_not_called()
         event_manager_impl.dispatch.assert_awaited_once_with(event)
         event_factory.deserialize_thread_members_update_event.assert_called_once_with(shard, mock_payload)
 
@@ -529,8 +527,8 @@ class TestEventManagerImpl:
         event_manager_impl._cache.update_guild.assert_not_called()
         event_manager_impl._cache.clear_guild_channels_for_guild.assert_not_called()
         event_manager_impl._cache.set_guild_channel.assert_not_called()
-        event_manager_impl._cache.clear_guild_threads_for_guild.assert_not_called()
-        event_manager_impl._cache.set_guild_thread.assert_not_called()
+        event_manager_impl._cache.clear_threads_for_guild.assert_not_called()
+        event_manager_impl._cache.set_thread.assert_not_called()
         event_manager_impl._cache.clear_emojis_for_guild.assert_not_called()
         event_manager_impl._cache.set_emoji.assert_not_called()
         event_manager_impl._cache.clear_stickers_for_guild.assert_not_called()
@@ -573,8 +571,8 @@ class TestEventManagerImpl:
         event_manager_impl._cache.update_guild.assert_not_called()
         event_manager_impl._cache.clear_guild_channels_for_guild.assert_not_called()
         event_manager_impl._cache.set_guild_channel.assert_not_called()
-        event_manager_impl._cache.clear_guild_threads_for_guild.assert_not_called()
-        event_manager_impl._cache.set_guild_thread.assert_not_called()
+        event_manager_impl._cache.clear_threads_for_guild.assert_not_called()
+        event_manager_impl._cache.set_thread.assert_not_called()
         event_manager_impl._cache.clear_emojis_for_guild.assert_not_called()
         event_manager_impl._cache.set_emoji.assert_not_called()
         event_manager_impl._cache.clear_stickers_for_guild.assert_not_called()
@@ -627,8 +625,8 @@ class TestEventManagerImpl:
         event_manager_impl._cache.update_guild.assert_called_once_with(gateway_guild.guild.return_value)
         event_manager_impl._cache.clear_guild_channels_for_guild.assert_called_once_with(gateway_guild.id)
         event_manager_impl._cache.set_guild_channel.assert_has_calls([mock.call("channel1"), mock.call("channel2")])
-        event_manager_impl._cache.clear_guild_threads_for_guild.assert_called_once_with(gateway_guild.id)
-        event_manager_impl._cache.set_guild_thread.assert_has_calls([mock.call("thread1"), mock.call("thread2")])
+        event_manager_impl._cache.clear_threads_for_guild.assert_called_once_with(gateway_guild.id)
+        event_manager_impl._cache.set_thread.assert_has_calls([mock.call("thread1"), mock.call("thread2")])
         event_manager_impl._cache.clear_emojis_for_guild.assert_called_once_with(gateway_guild.id)
         event_manager_impl._cache.set_emoji.assert_has_calls([mock.call("emoji1"), mock.call("emoji2")])
         event_manager_impl._cache.clear_stickers_for_guild.assert_called_once_with(gateway_guild.id)
@@ -894,7 +892,7 @@ class TestEventManagerImpl:
         event_manager_impl._cache.clear_members_for_guild.assert_called_once_with(123)
         event_manager_impl._cache.clear_presences_for_guild.assert_called_once_with(123)
         event_manager_impl._cache.clear_guild_channels_for_guild.assert_called_once_with(123)
-        event_manager_impl._cache.clear_guild_threads_for_guild.assert_called_once_with(123)
+        event_manager_impl._cache.clear_threads_for_guild.assert_called_once_with(123)
         event_manager_impl._cache.clear_emojis_for_guild.assert_called_once_with(123)
         event_manager_impl._cache.clear_stickers_for_guild.assert_called_once_with(123)
         event_manager_impl._cache.clear_roles_for_guild.assert_called_once_with(123)

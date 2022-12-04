@@ -157,13 +157,17 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
 
         await self.dispatch(event)
 
-    @event_manager_base.filtered(channel_events.GuildChannelDeleteEvent, config.CacheComponents.GUILD_CHANNELS)
+    @event_manager_base.filtered(
+        channel_events.GuildChannelDeleteEvent,
+        config.CacheComponents.GUILD_CHANNELS | config.CacheComponents.GUILD_THREADS,
+    )
     async def on_channel_delete(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway-events#channel-delete for more info."""
         event = self._event_factory.deserialize_guild_channel_delete_event(shard, payload)
 
         if self._cache:
             self._cache.delete_guild_channel(event.channel.id)
+            self._cache.clear_threads_for_channel(event.guild_id, event.channel.id)
 
         await self.dispatch(event)
 
@@ -187,7 +191,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
             event = self._event_factory.deserialize_guild_thread_access_event(shard, payload)
 
         if self._cache:
-            self._cache.set_guild_thread(event.thread)
+            self._cache.set_thread(event.thread)
 
         await self.dispatch(event)
 
@@ -197,7 +201,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         event = self._event_factory.deserialize_guild_thread_update_event(shard, payload)
 
         if self._cache:
-            self._cache.update_guild_thread(event.thread)
+            self._cache.update_thread(event.thread)
 
         await self.dispatch(event)
 
@@ -207,7 +211,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         event = self._event_factory.deserialize_guild_thread_delete_event(shard, payload)
 
         if self._cache:
-            self._cache.delete_guild_thread(event.thread_id)
+            self._cache.delete_thread(event.thread_id)
 
         await self.dispatch(event)
 
@@ -218,13 +222,14 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
 
         if self._cache:
             if event.channel_ids:
-                self._cache.clear_guild_threads_for_channels(event.guild_id, event.channel_ids)
+                for channel_id in event.channel_ids:
+                    self._cache.clear_threads_for_channel(event.guild_id, channel_id)
 
             else:
-                self._cache.clear_guild_threads_for_guild(event.guild_id)
+                self._cache.clear_threads_for_guild(event.guild_id)
 
             for thread in event.threads.values():
-                self._cache.set_guild_thread(thread)
+                self._cache.set_thread(thread)
 
         await self.dispatch(event)
 
@@ -241,7 +246,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
             # We only care about us being removed here. When we are added, we will receive a THREAD_CREATE with
             # all the other info.
             if user_id in event.removed_member_ids:
-                self._cache.delete_guild_thread(event.thread_id)
+                self._cache.delete_thread(event.thread_id)
 
         await self.dispatch(event)
 
@@ -352,9 +357,9 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
                     self._cache.set_voice_state(voice_state)
 
             if threads:
-                self._cache.clear_guild_threads_for_guild(guild_id)
+                self._cache.clear_threads_for_guild(guild_id)
                 for thread in threads.values():
-                    self._cache.set_guild_thread(thread)
+                    self._cache.set_thread(thread)
 
         presences_declared = self._intents & intents_.Intents.GUILD_PRESENCES
 
@@ -468,7 +473,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
                 self._cache.clear_members_for_guild(guild_id)
                 self._cache.clear_presences_for_guild(guild_id)
                 self._cache.clear_guild_channels_for_guild(guild_id)
-                self._cache.clear_guild_threads_for_guild(guild_id)
+                self._cache.clear_threads_for_guild(guild_id)
                 self._cache.clear_emojis_for_guild(guild_id)
                 self._cache.clear_stickers_for_guild(guild_id)
                 self._cache.clear_roles_for_guild(guild_id)

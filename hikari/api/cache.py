@@ -355,7 +355,7 @@ class Cache(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_guild_thread(
+    def get_thread(
         self, thread: snowflakes.SnowflakeishOr[channels.PartialChannel], /
     ) -> typing.Optional[channels.GuildThreadChannel]:
         """Get a thread channel from the cache.
@@ -373,7 +373,7 @@ class Cache(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_guild_threads_view(self) -> CacheView[snowflakes.Snowflake, channels.GuildThreadChannel]:
+    def get_threads_view(self) -> CacheView[snowflakes.Snowflake, channels.GuildThreadChannel]:
         """Get a view of the thread channels in the cache.
 
         Returns
@@ -384,7 +384,7 @@ class Cache(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_guild_threads_view_for_channel(
+    def get_threads_view_for_channel(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         channel: snowflakes.SnowflakeishOr[channels.PartialChannel],
@@ -407,7 +407,7 @@ class Cache(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_guild_threads_view_for_guild(
+    def get_threads_view_for_guild(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
     ) -> CacheView[snowflakes.Snowflake, channels.GuildThreadChannel]:
         """Get a view of the thread channels in the cache for a specific guild.
@@ -1143,7 +1143,7 @@ class MutableCache(Cache, abc.ABC):
         """  # noqa E501 - Line too long
 
     @abc.abstractmethod
-    def clear_guild_threads(self) -> CacheView[snowflakes.Snowflake, channels.GuildThreadChannel]:
+    def clear_threads(self) -> CacheView[snowflakes.Snowflake, channels.GuildThreadChannel]:
         """Remove all thread channels from the cache.
 
         Returns
@@ -1154,10 +1154,10 @@ class MutableCache(Cache, abc.ABC):
         """
 
     @abc.abstractmethod
-    def clear_guild_threads_for_channels(
+    def clear_threads_for_channel(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        channels: typing.Sequence[snowflakes.SnowflakeishOr[channels.PartialChannel]],
+        channel: snowflakes.SnowflakeishOr[channels.PartialChannel],
         /,
     ) -> CacheView[snowflakes.Snowflake, channels.GuildThreadChannel]:
         """Remove thread channels from the cache for a specific channel.
@@ -1166,8 +1166,8 @@ class MutableCache(Cache, abc.ABC):
         ----------
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             Object or ID of the guild to remove cached threads for.
-        channels : typing.Sequence[hikari.snowflakes.SnowflakeishOr[hikari.channels.PartialChannel]]
-            Objects or IDs of the channels to remove cached threads for.
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.PartialChannel]
+            Object or ID of the channel to remove cached threads for.
 
         Returns
         -------
@@ -1177,7 +1177,7 @@ class MutableCache(Cache, abc.ABC):
         """
 
     @abc.abstractmethod
-    def clear_guild_threads_for_guild(
+    def clear_threads_for_guild(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
     ) -> CacheView[snowflakes.Snowflake, channels.GuildThreadChannel]:
         """Remove thread channels from the cache for a specific guild.
@@ -1195,7 +1195,7 @@ class MutableCache(Cache, abc.ABC):
         """
 
     @abc.abstractmethod
-    def delete_guild_thread(
+    def delete_thread(
         self, thread: snowflakes.SnowflakeishOr[channels.PartialChannel], /
     ) -> typing.Optional[channels.GuildThreadChannel]:
         """Remove a thread channel from the cache.
@@ -1213,7 +1213,7 @@ class MutableCache(Cache, abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_guild_thread(self, channel: channels.GuildThreadChannel, /) -> None:
+    def set_thread(self, channel: channels.GuildThreadChannel, /) -> None:
         """Add a thread channel to the cache.
 
         Parameters
@@ -1223,7 +1223,7 @@ class MutableCache(Cache, abc.ABC):
         """
 
     @abc.abstractmethod
-    def update_guild_thread(
+    def update_thread(
         self, thread: channels.GuildThreadChannel, /
     ) -> typing.Tuple[typing.Optional[channels.GuildThreadChannel], typing.Optional[channels.GuildThreadChannel]]:
         """Update a thread channel in the cache,
