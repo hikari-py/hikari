@@ -184,7 +184,7 @@ class InteractionServer(abc.ABC):
         typing.Optional[ListenersT[hikari.interactions.base_interactions.PartialInteraction, hikari.api.special_endpoints.InteractionResponseBuilder]
             The callback registered for the provided interaction type if found,
             else `builtins.None`.
-        """  # noqa E501 - Line too long
+        """  # noqa: E501 - Line too long
 
     @typing.overload
     @abc.abstractmethod
@@ -254,4 +254,4 @@ class InteractionServer(abc.ABC):
         ------
         builtins.TypeError
             If `replace` is `builtins.False` when a listener is already set.
-        """  # noqa E501 - Line too long
+        """  # noqa: E501 - Line too long

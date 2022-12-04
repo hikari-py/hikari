@@ -383,7 +383,7 @@ class GuildBuilder(abc.ABC):
 
             When the guild is created, this will be replaced with a different
             ID.
-        """  # noqa: E501 - Line too long
+        """
 
     @abc.abstractmethod
     def add_text_channel(
@@ -434,7 +434,7 @@ class GuildBuilder(abc.ABC):
 
             When the guild is created, this will be replaced with a different
             ID.
-        """  # noqa: E501 - Line too long
+        """
 
     @abc.abstractmethod
     def add_voice_channel(
@@ -492,7 +492,7 @@ class GuildBuilder(abc.ABC):
 
             When the guild is created, this will be replaced with a different
             ID.
-        """  # noqa: E501 - Line too long
+        """
 
     @abc.abstractmethod
     def add_stage_channel(
@@ -1384,7 +1384,7 @@ class ButtonBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
         -------
         ButtonBuilder
             The builder object to enable chained calls.
-        """  # noqa E501 - Line too long
+        """
 
     @abc.abstractmethod
     def set_label(self: _T, label: undefined.UndefinedOr[str], /) -> _T:
@@ -1560,7 +1560,7 @@ class SelectOptionBuilder(ComponentBuilder, abc.ABC, typing.Generic[_SelectMenuB
         -------
         SelectOptionBuilder
             The builder object to enable chained calls.
-        """  # noqa E501 - Line too long
+        """
 
     @abc.abstractmethod
     def set_is_default(self: _T, state: bool, /) -> _T:

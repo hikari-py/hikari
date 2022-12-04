@@ -451,7 +451,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             audit_log_models.AuditLogChangeKey.VERIFICATION_LEVEL: guild_models.GuildVerificationLevel,
             audit_log_models.AuditLogChangeKey.EXPLICIT_CONTENT_FILTER: guild_models.GuildExplicitContentFilterLevel,
             audit_log_models.AuditLogChangeKey.DEFAULT_MESSAGE_NOTIFICATIONS: guild_models.GuildMessageNotificationsLevel,
-            # noqa: E501 - Line too long
             audit_log_models.AuditLogChangeKey.PRUNE_DELETE_DAYS: _deserialize_day_timedelta,
             audit_log_models.AuditLogChangeKey.WIDGET_CHANNEL_ID: snowflakes.Snowflake,
             audit_log_models.AuditLogChangeKey.POSITION: int,
@@ -2671,7 +2670,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             user=self.deserialize_user(payload["user"]),
         )
 
-    def deserialize_partial_message(  # noqa CFQ001 - Function too long
+    def deserialize_partial_message(  # noqa: C901 - Too complex
         self, payload: data_binding.JSONObject
     ) -> message_models.PartialMessage:
         author: undefined.UndefinedOr[user_models.User] = undefined.UNDEFINED
@@ -2802,9 +2801,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             mentions_everyone=payload.get("mention_everyone", undefined.UNDEFINED),
         )
 
-    def deserialize_message(
-        self, payload: data_binding.JSONObject
-    ) -> message_models.Message:  # noqa CFQ001 - Function too long
+    def deserialize_message(self, payload: data_binding.JSONObject) -> message_models.Message:
         author = self.deserialize_user(payload["author"])
 
         guild_id: typing.Optional[snowflakes.Snowflake] = None
@@ -2902,7 +2899,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     # PRESENCE MODELS #
     ###################
 
-    def deserialize_member_presence(  # noqa: CFQ001 - Max function length
+    def deserialize_member_presence(
         self,
         payload: data_binding.JSONObject,
         *,

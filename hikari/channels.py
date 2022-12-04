@@ -462,7 +462,7 @@ class TextableChannel(PartialChannel):
             be raised once the result is awaited or interacted with. Invoking
             this function itself will not raise anything (other than
             `builtins.TypeError`).
-        """  # noqa: E501 - Line too long
+        """
         return self.app.rest.fetch_messages(self.id, before=before, after=after, around=around)
 
     async def fetch_message(self, message: snowflakes.SnowflakeishOr[messages.PartialMessage]) -> messages.Message:
@@ -1113,7 +1113,7 @@ class GuildChannel(PartialChannel):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
+        """
         return await self.app.rest.edit_channel(
             self.id,
             name=name,
