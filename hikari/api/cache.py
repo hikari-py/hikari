@@ -1226,7 +1226,7 @@ class MutableCache(Cache, abc.ABC):
     def update_thread(
         self, thread: channels.GuildThreadChannel, /
     ) -> typing.Tuple[typing.Optional[channels.GuildThreadChannel], typing.Optional[channels.GuildThreadChannel]]:
-        """Update a thread channel in the cache,
+        """Update a thread channel in the cache.
 
         Parameters
         ----------
@@ -1239,7 +1239,7 @@ class MutableCache(Cache, abc.ABC):
             A tuple of the old cached thread channel if found (else `builtins.None`)
             and the new cached thread channel if it could be cached
             (else `builtins.None`).
-        """  # noqa E501 - Line too long
+        """
 
     @abc.abstractmethod
     def clear_invites(self) -> CacheView[str, invites.InviteWithMetadata]:
