@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -20,10 +19,31 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Models and enums related to Discord's interactions system."""
-from __future__ import annotations
+from hikari import components
 
-from hikari.interactions.base_interactions import *
-from hikari.interactions.command_interactions import *
-from hikari.interactions.component_interactions import *
-from hikari.interactions.modal_interactions import *
+
+class TestActionRowComponent:
+    def test_getitem_operator_with_index(self):
+        mock_component = object()
+        row = components.ActionRowComponent(type=1, components=[object(), mock_component, object()])
+
+        assert row[1] is mock_component
+
+    def test_getitem_operator_with_slice(self):
+        mock_component_1 = object()
+        mock_component_2 = object()
+        row = components.ActionRowComponent(type=1, components=[object(), mock_component_1, object(), mock_component_2])
+
+        assert row[1:4:2] == [mock_component_1, mock_component_2]
+
+    def test_iter_operator(self):
+        mock_component_1 = object()
+        mock_component_2 = object()
+        row = components.ActionRowComponent(type=1, components=[mock_component_1, mock_component_2])
+
+        assert list(row) == [mock_component_1, mock_component_2]
+
+    def test_len_operator(self):
+        row = components.ActionRowComponent(type=1, components=[object(), object()])
+
+        assert len(row) == 2
