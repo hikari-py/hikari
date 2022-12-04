@@ -207,6 +207,13 @@ class GuildRecord:
     `typing.MutableSet[hikari.snowflakes.Snowflake]` of channel IDs.
     """
 
+    threads: typing.Optional[typing.MutableSet[snowflakes.Snowflake]] = attr.field(default=None)
+    """A set of the IDs of the guild threads cached for this guild.
+
+    This will be `builtins.None` if no threads are cached for this guild else
+    `typing.MutableSet[hikari.snowflakes.Snowflake]` of thread IDs.
+    """
+
     emojis: typing.Optional[typing.MutableSet[snowflakes.Snowflake]] = attr.field(default=None)
     """A set of the IDs of the emojis cached for this guild.
 

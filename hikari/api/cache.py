@@ -355,6 +355,76 @@ class Cache(abc.ABC):
         """
 
     @abc.abstractmethod
+    def get_thread(
+        self, thread: snowflakes.SnowflakeishOr[channels.PartialChannel], /
+    ) -> typing.Optional[channels.GuildThreadChannel]:
+        """Get a thread channel from the cache.
+
+        Parameters
+        ----------
+        thread : hikari.snowflakes.SnowflakeishOr[hikari.channels.PartialChannel]
+            Object or ID of the thread to get from the cache.
+
+        Returns
+        -------
+        typing.Optional[hikari.channels.GuildThreadChannel]
+            The object of the thread that was found in the cache
+            or `builtins.None`.
+        """
+
+    @abc.abstractmethod
+    def get_threads_view(self) -> CacheView[snowflakes.Snowflake, channels.GuildThreadChannel]:
+        """Get a view of the thread channels in the cache.
+
+        Returns
+        -------
+        CacheView[hikari.snowflakes.Snowflake, hikari.channels.GuildThreadChannel]
+            A view of channel IDs to objects of the thread channels found in the
+            cache.
+        """
+
+    @abc.abstractmethod
+    def get_threads_view_for_channel(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        channel: snowflakes.SnowflakeishOr[channels.PartialChannel],
+        /,
+    ) -> CacheView[snowflakes.Snowflake, channels.GuildThreadChannel]:
+        """Get a view of the thread channels in the cache for a specific guild.
+
+        Parameters
+        ----------
+        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+            Object or ID of the guild to get the cached thread channels for.
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.PartialChannel]
+            Object or ID of the channel to get the cached thread channels for.
+
+        Returns
+        -------
+        CacheView[hikari.snowflakes.Snowflake, hikari.channels.GuildThreadChannel]
+            A view of channel IDs to objects of the thread channels found in the
+            cache for the specified channel.
+        """
+
+    @abc.abstractmethod
+    def get_threads_view_for_guild(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
+    ) -> CacheView[snowflakes.Snowflake, channels.GuildThreadChannel]:
+        """Get a view of the thread channels in the cache for a specific guild.
+
+        Parameters
+        ----------
+        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+            Object or ID of the guild to get the cached thread channels for.
+
+        Returns
+        -------
+        CacheView[hikari.snowflakes.Snowflake, hikari.channels.GuildThreadChannel]
+            A view of channel IDs to objects of the thread channels found in the
+            cache for the specified guild.
+        """
+
+    @abc.abstractmethod
     def get_invite(self, code: typing.Union[invites.InviteCode, str], /) -> typing.Optional[invites.InviteWithMetadata]:
         """Get an invite object from the cache.
 
@@ -1071,6 +1141,105 @@ class MutableCache(Cache, abc.ABC):
             and the new cached guild channel if it could be cached
             (else `None`).
         """  # noqa: E501 - Line too long
+
+    @abc.abstractmethod
+    def clear_threads(self) -> CacheView[snowflakes.Snowflake, channels.GuildThreadChannel]:
+        """Remove all thread channels from the cache.
+
+        Returns
+        -------
+        CacheView[hikari.snowflakes.Snowflake, hikari.channels.GuildThreadChannel]
+            A view of channel IDs to objects of the thread channels that were
+            removed from the cache.
+        """
+
+    @abc.abstractmethod
+    def clear_threads_for_channel(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        channel: snowflakes.SnowflakeishOr[channels.PartialChannel],
+        /,
+    ) -> CacheView[snowflakes.Snowflake, channels.GuildThreadChannel]:
+        """Remove thread channels from the cache for a specific channel.
+
+        Parameters
+        ----------
+        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+            Object or ID of the guild to remove cached threads for.
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.PartialChannel]
+            Object or ID of the channel to remove cached threads for.
+
+        Returns
+        -------
+        CacheView[hikari.snowflakes.Snowflake, hikari.channels.GuildThreadChannel]
+            A view of channel IDs to objects of the thread channels that were
+            removed from the cache.
+        """
+
+    @abc.abstractmethod
+    def clear_threads_for_guild(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
+    ) -> CacheView[snowflakes.Snowflake, channels.GuildThreadChannel]:
+        """Remove thread channels from the cache for a specific guild.
+
+        Parameters
+        ----------
+        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+            Object or ID of the guild to remove cached threads for.
+
+        Returns
+        -------
+        CacheView[hikari.snowflakes.Snowflake, hikari.channels.GuildThreadChannel]
+            A view of channel IDs to objects of the thread channels that were
+            removed from the cache.
+        """
+
+    @abc.abstractmethod
+    def delete_thread(
+        self, thread: snowflakes.SnowflakeishOr[channels.PartialChannel], /
+    ) -> typing.Optional[channels.GuildThreadChannel]:
+        """Remove a thread channel from the cache.
+
+        Parameters
+        ----------
+        thread : hikari.snowflakes.SnowflakeishOr[hikari.channels.PartialChannel]
+            Object or ID of the thread to remove from the cache.
+
+        Returns
+        -------
+        typing.Optional[hikari.channels.GuildThreadChannel]
+            The object of the thread that was removed from the cache if
+            found, else `builtins.None`.
+        """
+
+    @abc.abstractmethod
+    def set_thread(self, channel: channels.GuildThreadChannel, /) -> None:
+        """Add a thread channel to the cache.
+
+        Parameters
+        ----------
+        channel : hikari.channels.GuildThreadChannel
+            The thread channel based object to add to the cache.
+        """
+
+    @abc.abstractmethod
+    def update_thread(
+        self, thread: channels.GuildThreadChannel, /
+    ) -> typing.Tuple[typing.Optional[channels.GuildThreadChannel], typing.Optional[channels.GuildThreadChannel]]:
+        """Update a thread channel in the cache.
+
+        Parameters
+        ----------
+        thread : hikari.channels.GuildThreadChannel
+            The object of the thread channel to update in the cache.
+
+        Returns
+        -------
+        typing.Tuple[typing.Optional[hikari.channels.GuildThreadChannel], typing.Optional[hikari.channels.GuildThreadChannel]]
+            A tuple of the old cached thread channel if found (else `builtins.None`)
+            and the new cached thread channel if it could be cached
+            (else `builtins.None`).
+        """
 
     @abc.abstractmethod
     def clear_invites(self) -> CacheView[str, invites.InviteWithMetadata]:
