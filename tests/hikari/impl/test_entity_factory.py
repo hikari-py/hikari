@@ -1670,7 +1670,7 @@ class TestEntityFactoryImpl:
             }
         )
         assert guild_category.parent_id is None
-        assert guild_category.is_nsfw is None
+        assert guild_category.is_nsfw is False
 
     def test_deserialize_guild_category_with_null_fields(self, entity_factory_impl, permission_overwrite_payload):
         guild_category = entity_factory_impl.deserialize_guild_category(
@@ -1723,7 +1723,7 @@ class TestEntityFactoryImpl:
                 "guild_id": "123123123",
             }
         )
-        assert guild_text_channel.is_nsfw is None
+        assert guild_text_channel.is_nsfw is False
         assert guild_text_channel.rate_limit_per_user.total_seconds() == 0
         assert guild_text_channel.last_pin_timestamp is None
         assert guild_text_channel.parent_id is None
@@ -1787,7 +1787,7 @@ class TestEntityFactoryImpl:
                 "guild_id": "4123",
             }
         )
-        assert news_channel.is_nsfw is None
+        assert news_channel.is_nsfw is False
         assert news_channel.parent_id is None
         assert news_channel.last_pin_timestamp is None
         assert news_channel.last_message_id is None
@@ -1869,7 +1869,7 @@ class TestEntityFactoryImpl:
         )
         assert voice_channel.video_quality_mode is channel_models.VideoQualityMode.AUTO
         assert voice_channel.parent_id is None
-        assert voice_channel.is_nsfw is None
+        assert voice_channel.is_nsfw is False
         assert voice_channel.region is None
 
     @pytest.fixture()
@@ -1941,7 +1941,7 @@ class TestEntityFactoryImpl:
             }
         )
         assert voice_channel.parent_id is None
-        assert voice_channel.is_nsfw is None
+        assert voice_channel.is_nsfw is False
 
     def test_deserialize_thread_member(
         self, entity_factory_impl: entity_factory.EntityFactoryImpl, thread_member_payload: typing.Dict[str, typing.Any]

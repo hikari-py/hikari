@@ -110,7 +110,6 @@ class _GuildChannelFields:
     name: typing.Optional[str] = attr.field()
     type: typing.Union[channel_models.ChannelType, int] = attr.field()
     guild_id: snowflakes.Snowflake = attr.field()
-    is_nsfw: typing.Optional[bool] = attr.field()
     parent_id: typing.Optional[snowflakes.Snowflake] = attr.field()
 
 
@@ -930,7 +929,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=payload.get("name"),
             type=channel_models.ChannelType(payload["type"]),
             guild_id=guild_id,
-            is_nsfw=payload.get("nsfw"),
             parent_id=parent_id,
         )
 
@@ -952,7 +950,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
             permission_overwrites=permission_overwrites,
-            is_nsfw=channel_fields.is_nsfw,
+            is_nsfw=payload.get("nsfw", False),
             parent_id=None,
             position=int(payload["position"]),
         )
@@ -987,7 +985,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
             permission_overwrites=permission_overwrites,
-            is_nsfw=channel_fields.is_nsfw,
+            is_nsfw=payload.get("nsfw", False),
             parent_id=channel_fields.parent_id,
             topic=payload["topic"],
             last_message_id=last_message_id,
@@ -1030,7 +1028,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
             permission_overwrites=permission_overwrites,
-            is_nsfw=channel_fields.is_nsfw,
+            is_nsfw=payload.get("nsfw", False),
             parent_id=channel_fields.parent_id,
             topic=payload["topic"],
             last_message_id=last_message_id,
@@ -1064,7 +1062,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
             permission_overwrites=permission_overwrites,
-            is_nsfw=channel_fields.is_nsfw,
+            is_nsfw=payload.get("nsfw", False),
             parent_id=channel_fields.parent_id,
             # There seems to be an edge case where rtc_region won't be included in gateway events (e.g. GUILD_CREATE)
             # for a voice channel that just hasn't been touched since this was introduced (e.g. has been archived).
@@ -1094,7 +1092,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
             permission_overwrites=permission_overwrites,
-            is_nsfw=channel_fields.is_nsfw,
+            is_nsfw=payload.get("nsfw", False),
             parent_id=channel_fields.parent_id,
             region=payload["rtc_region"],
             bitrate=int(payload["bitrate"]),
@@ -1164,7 +1162,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=channel_fields.name,
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
-            is_nsfw=channel_fields.is_nsfw,
             parent_id=channel_fields.parent_id,
             last_message_id=last_message_id,
             last_pin_timestamp=last_pin_timestamp,
@@ -1213,7 +1210,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=channel_fields.name,
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
-            is_nsfw=channel_fields.is_nsfw,
             parent_id=channel_fields.parent_id,
             last_message_id=last_message_id,
             last_pin_timestamp=last_pin_timestamp,
@@ -1262,7 +1258,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=channel_fields.name,
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
-            is_nsfw=channel_fields.is_nsfw,
             parent_id=channel_fields.parent_id,
             last_message_id=last_message_id,
             last_pin_timestamp=last_pin_timestamp,

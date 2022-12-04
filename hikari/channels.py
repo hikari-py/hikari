@@ -956,14 +956,6 @@ class GuildChannel(PartialChannel):
     guild_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
     """The ID of the guild the channel belongs to."""
 
-    is_nsfw: typing.Optional[bool] = attr.field(eq=False, hash=False, repr=False)
-    """Whether the channel is marked as NSFW.
-
-    !!! warning
-        This will be `builtins.None` when received over the gateway in certain events
-        (e.g Guild Create).
-    """
-
     parent_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=True)
     """The ID of the parent channel the channel belongs to.
 
@@ -1146,6 +1138,9 @@ class PermissibleGuildChannel(GuildChannel):
 
     Higher numbers appear further down the channel list.
     """
+
+    is_nsfw: bool = attr.field(eq=False, hash=False, repr=False)
+    """Whether the channel is marked as NSFW."""
 
     permission_overwrites: typing.Mapping[snowflakes.Snowflake, PermissionOverwrite] = attr.field(
         eq=False, hash=False, repr=False
