@@ -416,6 +416,15 @@ class CommandInteraction(BaseCommandInteraction, base_interactions.MessageRespon
             the result of this call can be returned as is without any modifications
             being made to it.
 
+        Examples
+        --------
+        ```py
+        async def handle_command_interaction(interaction: CommandInteraction) -> InteractionMessageBuilder:
+            yield interaction.build_deferred_response()
+
+            await interaction.edit_initial_response("Pong!")
+        ```
+
         Returns
         -------
         hikari.api.special_endpoints.InteractionMessageBuilder

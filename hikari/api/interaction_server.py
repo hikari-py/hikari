@@ -243,8 +243,12 @@ class InteractionServer(abc.ABC):
         interaction_type : typing.Type[hikari.interactions.base_interactions.PartialInteraction]
             The type of interaction this listener should be registered for.
         listener : typing.Optional[ListenerT[hikari.interactions.base_interactions.PartialInteraction, hikari.api.special_endpoints.InteractionResponseBuilder]]
-            The asynchronous listener callback to set or `builtins.None` to
-            unset the previous listener.
+            The asynchronous listener callback to set or `builtins.None` to unset the previous listener.
+
+            An asynchronous listener can be either a normal coroutine or an
+            async generator which should yield exactly once. This allows
+            sending an initial response to the request, while still
+            later executing futher logic.
 
         Other Parameters
         ----------------
