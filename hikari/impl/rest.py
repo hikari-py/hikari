@@ -3793,7 +3793,7 @@ class RESTClientImpl(rest_api.RESTClient):
         components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
     ) -> None:
         if undefined.all_undefined(component, components) or not undefined.any_undefined(component, components):
-            raise ValueError("Must specify exactly only one of component or components")
+            raise ValueError("Must specify exactly only one of 'component' or 'components'")
 
         route = routes.POST_INTERACTION_RESPONSE.compile(interaction=interaction, token=token)
 

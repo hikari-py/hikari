@@ -5955,7 +5955,7 @@ class TestRESTClientImplAsync:
         )
 
     async def test_create_modal_response_when_both_component_and_components_passed(self, rest_client):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="Must specify exactly only one of 'component' or 'components'"):
             await rest_client.create_modal_response(
                 StubModel(1235431), "snek", title="title", custom_id="idd", component="not none", components=[]
             )
