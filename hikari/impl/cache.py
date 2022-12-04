@@ -629,7 +629,7 @@ class CacheImpl(cache.MutableCache):
         return cache_utility.CacheMappingView(threads)
 
     def delete_guild_thread(
-        self, thread: snowflakes.SnowflakeishOr[channels_.GuildThreadChannel], /
+        self, thread: snowflakes.SnowflakeishOr[channels_.PartialChannel], /
     ) -> typing.Optional[channels_.GuildThreadChannel]:
         if not self._is_cache_enabled_for(config_api.CacheComponents.GUILD_THREADS):
             return None
@@ -650,7 +650,7 @@ class CacheImpl(cache.MutableCache):
         return thread
 
     def get_guild_thread(
-        self, thread: snowflakes.SnowflakeishOr[channels_.GuildThreadChannel], /
+        self, thread: snowflakes.SnowflakeishOr[channels_.PartialChannel], /
     ) -> typing.Optional[channels_.GuildThreadChannel]:
         if not self._is_cache_enabled_for(config_api.CacheComponents.GUILD_THREADS):
             return None

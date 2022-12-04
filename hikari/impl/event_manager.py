@@ -243,10 +243,10 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
             if user_id in event.removed_member_ids:
                 self._cache.delete_guild_thread(event.thread_id)
 
-        await self.dispatch(self._event_factory.deserialize_thread_members_update_event(shard, payload))
+        await self.dispatch(event)
 
     # Internal granularity is preferred for GUILD_CREATE over decorator based filtering due to its large scope.
-    async def on_guild_create(  # noqa: C901 - Function too complex
+    async def on_guild_create(  # noqa: C901, CFQ001 - Function too complex and too long
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> None:
         """See https://discord.com/developers/docs/topics/gateway-events#guild-create for more info."""
@@ -472,7 +472,6 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
                 self._cache.clear_emojis_for_guild(guild_id)
                 self._cache.clear_stickers_for_guild(guild_id)
                 self._cache.clear_roles_for_guild(guild_id)
-                self._cache.clear_guild_threads_for_guild(guild_id)
 
             event = self._event_factory.deserialize_guild_leave_event(shard, payload, old_guild=old)
 

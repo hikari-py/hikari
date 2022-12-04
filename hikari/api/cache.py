@@ -1224,13 +1224,13 @@ class MutableCache(Cache, abc.ABC):
 
     @abc.abstractmethod
     def update_guild_thread(
-        self, channel: channels.GuildThreadChannel, /
+        self, thread: channels.GuildThreadChannel, /
     ) -> typing.Tuple[typing.Optional[channels.GuildThreadChannel], typing.Optional[channels.GuildThreadChannel]]:
         """Update a thread channel in the cache,
 
         Parameters
         ----------
-        channel : hikari.channels.GuildThreadChannel
+        thread : hikari.channels.GuildThreadChannel
             The object of the thread channel to update in the cache.
 
         Returns
