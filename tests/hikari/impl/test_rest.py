@@ -1210,6 +1210,12 @@ class TestRESTClientImpl:
 
         action_row_builder.assert_called_once_with()
 
+    def test_build_modal_action_row(self, rest_client):
+        with mock.patch.object(special_endpoints, "ModalActionRowBuilder") as action_row_builder:
+            assert rest_client.build_modal_action_row() is action_row_builder.return_value
+
+        action_row_builder.assert_called_once_with()
+
     def test__build_message_payload_with_undefined_args(self, rest_client):
         with mock.patch.object(
             mentions, "generate_allowed_mentions", return_value={"allowed_mentions": 1}
@@ -5900,11 +5906,11 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route, no_auth=True)
 
     async def test_create_autocomplete_response(self, rest_client):
-        expected_route = routes.POST_INTERACTION_RESPONSE.compile(interaction=1235431, token="dissssnake")
+        expected_route = routes.POST_INTERACTION_RESPONSE.compile(interaction=1235431, token="snek")
         rest_client._request = mock.AsyncMock()
 
         choices = [commands.CommandChoice(name="a", value="b"), commands.CommandChoice(name="foo", value="bar")]
-        await rest_client.create_autocomplete_response(StubModel(1235431), "dissssnake", choices)
+        await rest_client.create_autocomplete_response(StubModel(1235431), "snek", choices)
 
         rest_client._request.assert_awaited_once_with(
             expected_route,
@@ -5913,18 +5919,46 @@ class TestRESTClientImplAsync:
         )
 
     async def test_create_modal_response(self, rest_client):
-        expected_route = routes.POST_INTERACTION_RESPONSE.compile(interaction=1235431, token="dissssnake")
+        expected_route = routes.POST_INTERACTION_RESPONSE.compile(interaction=1235431, token="snek")
         rest_client._request = mock.AsyncMock()
+        component = mock.Mock()
 
         await rest_client.create_modal_response(
-            StubModel(1235431), "dissssnake", title="title", custom_id="idd", components=[]
+            StubModel(1235431), "snek", title="title", custom_id="idd", component=component
         )
 
         rest_client._request.assert_awaited_once_with(
             expected_route,
-            json={"type": 9, "data": {"title": "title", "custom_id": "idd", "components": []}},
+            json={
+                "type": 9,
+                "data": {"title": "title", "custom_id": "idd", "components": [component.build.return_value]},
+            },
             no_auth=True,
         )
+
+    async def test_create_modal_response_with_plural_args(self, rest_client):
+        expected_route = routes.POST_INTERACTION_RESPONSE.compile(interaction=1235431, token="snek")
+        rest_client._request = mock.AsyncMock()
+        component = mock.Mock()
+
+        await rest_client.create_modal_response(
+            StubModel(1235431), "snek", title="title", custom_id="idd", components=[component]
+        )
+
+        rest_client._request.assert_awaited_once_with(
+            expected_route,
+            json={
+                "type": 9,
+                "data": {"title": "title", "custom_id": "idd", "components": [component.build.return_value]},
+            },
+            no_auth=True,
+        )
+
+    async def test_create_modal_response_when_both_component_and_components_passed(self, rest_client):
+        with pytest.raises(ValueError):
+            await rest_client.create_modal_response(
+                StubModel(1235431), "snek", title="title", custom_id="idd", component="not none", components=[]
+            )
 
     async def test_fetch_scheduled_event(self, rest_client: rest.RESTClientImpl):
         expected_route = routes.GET_GUILD_SCHEDULED_EVENT.compile(guild=453123, scheduled_event=222332323)
