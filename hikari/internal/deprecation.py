@@ -40,6 +40,9 @@ def warn_deprecated(name: str, /, *, removal_version: str, additional_info: str,
     ----------
     name : str
         What is being deprecated.
+
+    Other Parameters
+    ----------------
     removal_version : str
         The version it will be removed in.
     additional_info : str

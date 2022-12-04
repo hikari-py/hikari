@@ -85,7 +85,7 @@ class TypingIndicator(abc.ABC):
     the typing indicator once, or an async context manager to keep triggering
     the typing indicator repeatedly until the context finishes.
 
-    !!! note
+    .. note::
         This is a helper class that is used by `hikari.api.rest.RESTClient`.
         You should only ever need to use instances of this class that are
         produced by that API.
@@ -118,70 +118,63 @@ class GuildBuilder(abc.ABC):
     the logic behind creating a guild on an API level is somewhat confusing
     and detailed.
 
-    !!! note
-        This is a helper class that is used by `hikari.api.rest.RESTClient`.
-        You should only ever need to use instances of this class that are
-        produced by that API, thus, any details about the constructor are
-        omitted from the following examples for brevity.
-
-    Examples
-    --------
-    Creating an empty guild.
-
-    ```py
-    guild = await rest.guild_builder("My Server!").create()
-    ```
-
-    Creating a guild with an icon
-
-    ```py
-    from hikari.files import WebResourceStream
-
-    guild_builder = rest.guild_builder("My Server!")
-    guild_builder.icon = WebResourceStream("cat.png", "http://...")
-    guild = await guild_builder.create()
-    ```
-
-    Adding roles to your guild.
-
-    ```py
-    from hikari.permissions import Permissions
-
-    guild_builder = rest.guild_builder("My Server!")
-
-    everyone_role_id = guild_builder.add_role("@everyone")
-    admin_role_id = guild_builder.add_role("Admins", permissions=Permissions.ADMINISTRATOR)
-
-    await guild_builder.create()
-    ```
-
-    !!! warning
-        The first role must always be the `@everyone` role.
-
-    !!! note
-        If you call `add_role`, the default roles provided by discord will
+    .. note::
+        If you call `add_role`, the default roles provided by Discord will
         be created. This also applies to the `add_` functions for
         text channels/voice channels/categories.
 
-    !!! note
+    .. note::
         Functions that return a `hikari.snowflakes.Snowflake` do
         **not** provide the final ID that the object will have once the
         API call is made. The returned IDs are only able to be used to
-        re-reference particular objects while building the guild format.
-
-        This is provided to allow creation of channels within categories,
+        re-reference particular objects while building the guild format
+        to allow for the creation of channels within categories,
         and to provide permission overwrites.
 
-    Adding a text channel to your guild.
+    Examples
+    --------
+    Creating an empty guild:
 
-    ```py
-    guild_builder = rest.guild_builder("My Server!")
+    .. code-block:: python
 
-    category_id = guild_builder.add_category("My safe place")
-    channel_id = guild_builder.add_text_channel("general", parent_id=category_id)
+        guild = await rest.guild_builder("My Server!").create()
 
-    await guild_builder.create()
-    ```
+    Creating a guild with an icon:
+
+    .. code-block:: python
+
+        from hikari.files import WebResourceStream
+
+        guild_builder = rest.guild_builder("My Server!")
+        guild_builder.icon = WebResourceStream("cat.png", "http://...")
+        guild = await guild_builder.create()
+
+    Adding roles to your guild:
+
+    .. code-block:: python
+
+        from hikari.permissions import Permissions
+
+        guild_builder = rest.guild_builder("My Server!")
+
+        everyone_role_id = guild_builder.add_role("@everyone")
+        admin_role_id = guild_builder.add_role("Admins", permissions=Permissions.ADMINISTRATOR)
+
+        await guild_builder.create()
+
+    .. warning::
+        The first role must always be the `@everyone` role.
+
+    Adding a text channel to your guild:
+
+    .. code-block:: python
+
+        guild_builder = rest.guild_builder("My Server!")
+
+        category_id = guild_builder.add_category("My safe place")
+        channel_id = guild_builder.add_text_channel("general", parent_id=category_id)
+
+        await guild_builder.create()
     """
 
     __slots__: typing.Sequence[str] = ()
@@ -234,10 +227,7 @@ class GuildBuilder(abc.ABC):
     @property
     @abc.abstractmethod
     def verification_level(self) -> undefined.UndefinedOr[typing.Union[guilds.GuildVerificationLevel, int]]:
-        """Verification level required to join the guild that can be overwritten.
-
-        If not overridden, the guild will use the default verification level for
-        """
+        """Verification level required to join the guild."""
 
     @verification_level.setter
     def verification_level(
@@ -285,12 +275,12 @@ class GuildBuilder(abc.ABC):
     ) -> snowflakes.Snowflake:
         """Create a role.
 
-        !!! warning
+        .. warning::
             The first role you create must always be the `@everyone` role.
 
         Parameters
         ----------
-        name : builtins.str
+        name : str
             The role's name.
 
         Other Parameters
@@ -301,13 +291,10 @@ class GuildBuilder(abc.ABC):
             If provided, the role's color.
         colour : hikari.undefined.UndefinedOr[hikari.colors.Colorish]
             An alias for `color`.
-        hoist : hikari.undefined.UndefinedOr[builtins.bool]
+        hoist : hikari.undefined.UndefinedOr[bool]
             If provided, whether to hoist the role.
-        mentionable : hikari.undefined.UndefinedOr[builtins.bool]
+        mentionable : hikari.undefined.UndefinedOr[bool]
             If provided, whether to make the role mentionable.
-        reason : hikari.undefined.UndefinedOr[builtins.str]
-            If provided, the reason that will be recorded in the audit logs.
-            Maximum of 512 characters.
 
         Returns
         -------
@@ -320,9 +307,9 @@ class GuildBuilder(abc.ABC):
 
         Raises
         ------
-        builtins.ValueError
+        ValueError
             If you are defining the first role, but did not name it `@everyone`.
-        builtins.TypeError
+        TypeError
             If you specify both `color` and `colour` together or if you try to
             specify `color`, `colour`, `hoisted`, `mentionable` or `position` for
             the `@everyone` role.
@@ -343,12 +330,12 @@ class GuildBuilder(abc.ABC):
 
         Parameters
         ----------
-        name : builtins.str
+        name : str
             The channels name. Must be between 2 and 1000 characters.
 
         Other Parameters
         ----------------
-        position : hikari.undefined.UndefinedOr[builtins.int]
+        position : hikari.undefined.UndefinedOr[int]
             If provided, the position of the category.
         permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
             If provided, the permission overwrites for the category.
@@ -382,27 +369,26 @@ class GuildBuilder(abc.ABC):
 
         Parameters
         ----------
-        name : builtins.str
+        name : str
             The channels name. Must be between 2 and 1000 characters.
 
         Other Parameters
         ----------------
-        position : hikari.undefined.UndefinedOr[builtins.int]
+        position : hikari.undefined.UndefinedOr[int]
             If provided, the position of the channel (relative to the
             category, if any).
-        topic : hikari.undefined.UndefinedOr[builtins.str]
+        topic : hikari.undefined.UndefinedOr[str]
             If provided, the channels topic. Maximum 1024 characters.
-        nsfw : hikari.undefined.UndefinedOr[builtins.bool]
+        nsfw : hikari.undefined.UndefinedOr[bool]
             If provided, whether to mark the channel as NSFW.
-        rate_limit_per_user : hikari.undefined.UndefinedOr[builtins.int]
+        rate_limit_per_user : hikari.undefined.UndefinedOr[int]
             If provided, the amount of seconds a user has to wait
             before being able to send another message in the channel.
             Maximum 21600 seconds.
         permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
             If provided, the permission overwrites for the channel.
-        category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
-            The category to create the channel under. This may be the
-            object or the ID of an existing category.
+        parent_id : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
+            The ID of the category to create the channel under.
 
         Returns
         -------
@@ -434,33 +420,32 @@ class GuildBuilder(abc.ABC):
 
         Parameters
         ----------
-        name : builtins.str
+        name : str
             The channels name. Must be between 2 and 1000 characters.
 
         Other Parameters
         ----------------
-        position : hikari.undefined.UndefinedOr[builtins.int]
+        position : hikari.undefined.UndefinedOr[int]
             If provided, the position of the channel (relative to the
             category, if any).
-        user_limit : hikari.undefined.UndefinedOr[builtins.int]
+        user_limit : hikari.undefined.UndefinedOr[int]
             If provided, the maximum users in the channel at once.
             Must be between 0 and 99 with 0 meaning no limit.
-        bitrate : hikari.undefined.UndefinedOr[builtins.int]
+        bitrate : hikari.undefined.UndefinedOr[int]
             If provided, the bitrate for the channel. Must be
             between 8000 and 96000 or 8000 and 128000 for VIP
             servers.
-        video_quality_mode: hikari.undefined.UndefinedOr[typing.Union[hikari.channels.VideoQualityMode, builtins.int]]
+        video_quality_mode : hikari.undefined.UndefinedOr[typing.Union[hikari.channels.VideoQualityMode, int]]
             If provided, the new video quality mode for the channel.
         permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
             If provided, the permission overwrites for the channel.
-        region : hikari.undefined.UndefinedOr[typing.Union[hikari.voices.VoiceRegion, builtins.str]]
+        region : hikari.undefined.UndefinedOr[typing.Union[hikari.voices.VoiceRegion, str]]
              If provided, the voice region to for this channel. Passing
-             `builtins.None` here will set it to "auto" mode where the used
+             `None` here will set it to "auto" mode where the used
              region will be decided based on the first person who connects to it
              when it's empty.
-        category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
-            The category to create the channel under. This may be the
-            object or the ID of an existing category.
+        parent_id : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
+            The ID of the category to create the channel under.
 
         Returns
         -------
@@ -491,31 +476,30 @@ class GuildBuilder(abc.ABC):
 
         Parameters
         ----------
-        name : builtins.str
+        name : str
             The channels name. Must be between 2 and 1000 characters.
 
         Other Parameters
         ----------------
-        position : hikari.undefined.UndefinedOr[builtins.int]
+        position : hikari.undefined.UndefinedOr[int]
             If provided, the position of the channel (relative to the
             category, if any).
-        user_limit : hikari.undefined.UndefinedOr[builtins.int]
+        user_limit : hikari.undefined.UndefinedOr[int]
             If provided, the maximum users in the channel at once.
             Must be between 0 and 99 with 0 meaning no limit.
-        bitrate : hikari.undefined.UndefinedOr[builtins.int]
+        bitrate : hikari.undefined.UndefinedOr[int]
             If provided, the bitrate for the channel. Must be
             between 8000 and 96000 or 8000 and 128000 for VIP
             servers.
         permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
             If provided, the permission overwrites for the channel.
-        region : hikari.undefined.UndefinedOr[typing.Union[hikari.voices.VoiceRegion, builtins.str]]
+        region : hikari.undefined.UndefinedOr[typing.Union[hikari.voices.VoiceRegion, str]]
              If provided, the voice region to for this channel. Passing
-             `builtins.None` here will set it to "auto" mode where the used
+             `None` here will set it to "auto" mode where the used
              region will be decided based on the first person who connects to it
              when it's empty.
-        category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
-            The category to create the channel under. This may be the
-            object or the ID of an existing category.
+        parent_id : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
+            The ID of the category to create the channel under.
 
         Returns
         -------
@@ -572,7 +556,7 @@ class InteractionDeferredBuilder(InteractionResponseBuilder, abc.ABC):
     def flags(self) -> typing.Union[undefined.UndefinedType, int, messages.MessageFlag]:
         """Message flags this response should have.
 
-        !!! note
+        .. note::
             As of writing the only message flag which can be set here is
             `hikari.messages.MessageFlag.EPHEMERAL`.
         """
@@ -581,12 +565,12 @@ class InteractionDeferredBuilder(InteractionResponseBuilder, abc.ABC):
     def set_flags(self: _T, flags: typing.Union[undefined.UndefinedType, int, messages.MessageFlag], /) -> _T:
         """Set message flags for this response.
 
-        !!! note
-            As of writing, the only message flag which can be set is EPHEMERAL.
+        .. note::
+            As of writing, the only message flag which can be set is `hikari.messages.MessageFlag.EPHEMERAL`.
 
         Parameters
         ----------
-        flags : typing.Union[hikari.undefined.UndefinedType, builtins.int, hikari.messages.MessageFlag]
+        flags : typing.Union[hikari.undefined.UndefinedType, int, hikari.messages.MessageFlag]
             The message flags to set for this response.
 
         Returns
@@ -663,7 +647,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
     def flags(self) -> typing.Union[undefined.UndefinedType, int, messages.MessageFlag]:
         """Message flags this response should have.
 
-        !!! note
+        .. note::
             As of writing the only message flag which can be set here is
             `hikari.messages.MessageFlag.EPHEMERAL`.
         """
@@ -685,13 +669,10 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
     ) -> undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]]:
         """Whether and what role mentions should be enabled for this response.
 
-        Returns
-        -------
-        hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], builtins.bool]]
-            Either a sequence of object/IDs of the roles mentions should be enabled for,
-            `builtins.False` or `hikari.undefined.UNDEFINED` to disallow any role
-            mentions or `True` to allow all role mentions.
-        """  # noqa: E501 - Line too long
+        Either a sequence of object/IDs of the roles mentions should be enabled
+        for, `False` or `hikari.undefined.UNDEFINED` to disallow any
+        role mentions or `True` to allow all role mentions.
+        """
 
     @property
     @abc.abstractmethod
@@ -700,13 +681,10 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
     ) -> undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]]:
         """Whether and what user mentions should be enabled for this response.
 
-        Returns
-        -------
-        hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], builtins.bool]]
-            Either a sequence of object/IDs of the users mentions should be enabled for,
-            `builtins.False` or `hikari.undefined.UNDEFINED` to disallow any user
-            mentions or `True` to allow all user mentions.
-        """  # noqa: E501 - Line too long
+        Either a sequence of object/IDs of the users mentions should be enabled
+        for, `False` or `hikari.undefined.UNDEFINED` to disallow any
+        user mentions or `True` to allow all user mentions.
+        """
 
     @abc.abstractmethod
     def clear_attachments(self: _T, /) -> _T:
@@ -763,7 +741,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
         Returns
         -------
         InteractionMessageBuilder
-            Object of this builder.
+            Object of this builder to allow for chained calls.
         """
 
     @abc.abstractmethod
@@ -772,31 +750,32 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
         Parameters
         ----------
-        content : hikari.undefined.UndefinedOr[builtins.str]
+        content : hikari.undefined.UndefinedOr[str]
             The message content to set for this response.
 
         Returns
         -------
         InteractionMessageBuilder
-            Object of this builder.
+            Object of this builder to allow for chained calls.
         """
 
     @abc.abstractmethod
     def set_flags(self: _T, flags: typing.Union[undefined.UndefinedType, int, messages.MessageFlag], /) -> _T:
         """Set message flags for this response.
 
-        !!! note
-            As of writing, the only message flag which can be set is EPHEMERAL.
+        .. note::
+            As of writing, the only message flag which can be set is
+            `hikari.messages.MessageFlag.EPHEMERAL`..
 
         Parameters
         ----------
-        flags : typing.Union[hikari.undefined.UndefinedType, builtins.int, hikari.messages.MessageFlag]
+        flags : typing.Union[hikari.undefined.UndefinedType, int, hikari.messages.MessageFlag]
             The message flags to set for this response.
 
         Returns
         -------
         InteractionMessageBuilder
-            Object of this builder.
+            Object of this builder to allow for chained calls.
         """
 
     @abc.abstractmethod
@@ -805,12 +784,13 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
         Parameters
         ----------
-        tts : Whether this response should trigger text-to-speech processing.
+        tts : bool
+            Whether this response should trigger text-to-speech processing.
 
         Returns
         -------
         InteractionMessageBuilder
-            Object of this builder.
+            Object of this builder to allow for chained calls.
         """
 
     @abc.abstractmethod
@@ -819,13 +799,13 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
         Parameters
         ----------
-        mentions : hikari.undefined.UndefinedOr[builtins.bool]
+        mentions : hikari.undefined.UndefinedOr[bool]
             Whether this response should be able to mention @everyone/@here.
 
         Returns
         -------
         InteractionMessageBuilder
-            Object of this builder.
+            Object of this builder to allow for chained calls.
         """
 
     @abc.abstractmethod
@@ -840,15 +820,15 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
         Parameters
         ----------
-        mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], builtins.bool]]
+        mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
             Either a sequence of object/IDs of the roles mentions should be enabled for,
-            `builtins.False` or `hikari.undefined.UNDEFINED` to disallow any role
+            `False` or `hikari.undefined.UNDEFINED` to disallow any role
             mentions or `True` to allow all role mentions.
 
         Returns
         -------
         InteractionMessageBuilder
-            Object of this builder.
+            Object of this builder to allow for chained calls.
         """  # noqa: E501 - Line too long
 
     @abc.abstractmethod
@@ -863,15 +843,15 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
         Parameters
         ----------
-        mentions: hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], builtins.bool]]
+        mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
             Either a sequence of object/IDs of the users mentions should be enabled for,
-            `builtins.False` or `hikari.undefined.UNDEFINED` to disallow any user
+            `False` or `hikari.undefined.UNDEFINED` to disallow any user
             mentions or `True` to allow all user mentions.
 
         Returns
         -------
         InteractionMessageBuilder
-            Object of this builder.
+            Object of this builder to allow for chained calls.
         """  # noqa: E501 - Line too long
 
 
@@ -946,14 +926,9 @@ class CommandBuilder(abc.ABC):
     def name(self) -> str:
         r"""Name to set for this command.
 
-        !!! warning
+        .. warning::
             This should match the regex `^[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$` in Unicode mode
             and must be lowercase.
-
-        Returns
-        -------
-        builtins.str
-            The name to set for this command.
         """
 
     @property
@@ -1005,7 +980,7 @@ class CommandBuilder(abc.ABC):
         Returns
         -------
         CommandBuilder
-            Object of this command builder.
+            Object of this command builder to allow for chained calls.
         """
 
     @abc.abstractmethod
@@ -1016,7 +991,7 @@ class CommandBuilder(abc.ABC):
 
         Parameters
         ----------
-        default_member_permissions : hikari.undefined.UndefinedOr[builtins.bool]
+        default_member_permissions : hikari.undefined.UndefinedOr[bool]
             The default member permissions to utilize this command by default.
 
             If `0`, then it will be available for all members. Note that this doesn't affect
@@ -1034,13 +1009,13 @@ class CommandBuilder(abc.ABC):
 
         Parameters
         ----------
-        state : hikari.undefined.UndefinedOr[builtins.bool]
+        state : hikari.undefined.UndefinedOr[bool]
             Whether this command is enabled in DMs with the bot.
 
         Returns
         -------
         CommandBuilder
-            Object of this command builder for chained calls.
+            Object of this command builder to allow for chained calls.
         """
 
     @abc.abstractmethod
@@ -1130,11 +1105,11 @@ class SlashCommandBuilder(CommandBuilder):
     @property
     @abc.abstractmethod
     def description(self) -> str:
-        """Description to set for this command.
+        """Command's description.
 
-        !!! warning
+        .. warning::
             This should be inclusively between 1-100 characters in length.
-        """  # noqa: D401 - Imperative mood
+        """
 
     @property
     @abc.abstractmethod
@@ -1171,7 +1146,7 @@ class SlashCommandBuilder(CommandBuilder):
     def add_option(self: _T, option: commands.CommandOption) -> _T:
         """Add an option to this command.
 
-        !!! note
+        .. note::
             A command can have up to 25 options.
 
         Parameters
@@ -1182,7 +1157,7 @@ class SlashCommandBuilder(CommandBuilder):
         Returns
         -------
         CommandBuilder
-            Object of this command builder.
+            Object of this command builder to allow for chained calls.
         """
 
     @abc.abstractmethod
@@ -1297,7 +1272,7 @@ class ButtonBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
     def label(self) -> undefined.UndefinedOr[str]:
         """Text label which should appear on this button.
 
-        !!! note
+        .. note::
             The text label to that should appear on this button. This may be
             up to 80 characters long.
         """
@@ -1305,11 +1280,7 @@ class ButtonBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
     @property
     @abc.abstractmethod
     def is_disabled(self) -> bool:
-        """Whether the button should be marked as disabled.
-
-        !!! note
-            Defaults to `builtins.False`.
-        """
+        """Whether the button should be marked as disabled."""
 
     @abc.abstractmethod
     def set_emoji(
@@ -1319,7 +1290,7 @@ class ButtonBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
 
         Parameters
         ----------
-        emoji : typing.Union[hikari.snowflakes.Snowflakeish, hikari.emojis.Emoji, builtins.str, hikari.undefined.UndefinedType]
+        emoji : typing.Union[hikari.snowflakes.Snowflakeish, hikari.emojis.Emoji, str, hikari.undefined.UndefinedType]
             Object, ID or raw string of the emoji which should be displayed on
             this button.
 
@@ -1335,7 +1306,7 @@ class ButtonBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
 
         Parameters
         ----------
-        label : hikari.undefined.UndefinedOr[builtins.str]
+        label : hikari.undefined.UndefinedOr[str]
             The text label to show on this button.
 
             This may be up to 80 characters long.
@@ -1382,7 +1353,7 @@ class LinkButtonBuilder(ButtonBuilder[_ContainerT], abc.ABC):
     @property
     @abc.abstractmethod
     def url(self) -> str:
-        """Url this button should link to when pressed."""
+        """URL this button should link to when pressed."""
 
 
 class InteractiveButtonBuilder(ButtonBuilder[_ContainerT], abc.ABC):
@@ -1424,10 +1395,7 @@ class SelectOptionBuilder(ComponentBuilder, abc.ABC, typing.Generic[_SelectMenuB
     @property
     @abc.abstractmethod
     def is_default(self) -> bool:
-        """Whether this option should be marked as selected by default.
-
-        Defaults to `builtins.False`.
-        """
+        """Whether this option should be marked as selected by default."""
 
     @abc.abstractmethod
     def set_description(self: _T, value: undefined.UndefinedOr[str], /) -> _T:
@@ -1435,7 +1403,7 @@ class SelectOptionBuilder(ComponentBuilder, abc.ABC, typing.Generic[_SelectMenuB
 
         Parameters
         ----------
-        value : hikari.undefined.UndefinedOr[builtins.str]
+        value : hikari.undefined.UndefinedOr[str]
             Description to set for this option. This can be up to 100 characters
             long.
 
@@ -1453,7 +1421,7 @@ class SelectOptionBuilder(ComponentBuilder, abc.ABC, typing.Generic[_SelectMenuB
 
         Parameters
         ----------
-        emoji : typing.Union[hikari.snowflakes.Snowflakeish, hikari.emojis.Emoji, builtins.str, hikari.undefined.UndefinedType]
+        emoji : typing.Union[hikari.snowflakes.Snowflakeish, hikari.emojis.Emoji, str, hikari.undefined.UndefinedType]
             Object, ID or raw string of the emoji which should be displayed on
             this option.
 
@@ -1469,7 +1437,7 @@ class SelectOptionBuilder(ComponentBuilder, abc.ABC, typing.Generic[_SelectMenuB
 
         Parameters
         ----------
-        state : builtins.bool
+        state : bool
             Whether this option should be selected by default.
 
         Returns
@@ -1504,11 +1472,7 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
     @property
     @abc.abstractmethod
     def is_disabled(self) -> bool:
-        """Whether the select menu should be marked as disabled.
-
-        !!! note
-            Defaults to `builtins.False`.
-        """
+        """Whether the select menu should be marked as disabled."""
 
     @property
     @abc.abstractmethod
@@ -1544,29 +1508,32 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
     def add_option(self: _SelectMenuBuilderT, label: str, value: str, /) -> SelectOptionBuilder[_SelectMenuBuilderT]:
         """Add an option to this menu.
 
+        .. note::
+            Setup should be finalised by calling `add_to_menu` in the builder
+            returned.
+
         Parameters
         ----------
-        label : builtins.str
+        label : str
             The user-facing name of this option, max 100 characters.
-        value : builtins.str
+        value : str
             The developer defined value of this option, max 100 characters.
 
         Returns
         -------
-        SelectOptionBuilder[Self]
+        SelectOptionBuilder[SelectMenuBuilder]
             Option builder object.
-            This should be finalised by calling `SelectOptionBuilder.add_to_menu`.
         """
 
     @abc.abstractmethod
     def set_is_disabled(self: _T, state: bool, /) -> _T:
         """Set whether this option is disabled.
 
-        Defaults to `builtins.False`.
+        Defaults to `False`.
 
         Parameters
         ----------
-        state : builtins.bool
+        state : bool
             Whether this option is disabled.
 
         Returns
@@ -1581,7 +1548,7 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
 
         Parameters
         ----------
-        value : hikari.undefined.UndefinedOr[builtins.str]
+        value : hikari.undefined.UndefinedOr[str]
             Place-holder text to be displayed when no option is selected.
             Max 100 characters.
 
@@ -1595,13 +1562,13 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
     def set_min_values(self: _T, value: int, /) -> _T:
         """Set the minimum amount of options which need to be selected for this menu.
 
-        !!! note
+        .. note::
             This defaults to 1 if not set and must be greater than or equal to 0
             and less than or equal to `SelectMenuBuilder.max_values`.
 
         Parameters
         ----------
-        value : builtins.int
+        value : int
             The minimum amount of options which need to be selected for this menu.
 
         Returns
@@ -1614,13 +1581,13 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
     def set_max_values(self: _T, value: int, /) -> _T:
         """Set the maximum amount of options which can be selected for this menu.
 
-        !!! note
+        .. note::
             This defaults to 1 if not set and must be less than or equal to 25
             and greater than or equal to `SelectMenuBuilder.min_values`.
 
         Parameters
         ----------
-        value : builtins.int
+        value : int
             The maximum amount of options which can selected for this menu.
 
         Returns
@@ -1650,7 +1617,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
     def custom_id(self) -> str:
         """Developer set custom ID used for identifying this text input.
 
-        !!! note
+        .. note::
             This custom_id is never used in component interaction events.
             It is meant to be used purely for resolving components modal interactions.
         """
@@ -1839,7 +1806,7 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
     ) -> _T:
         """Add a component to this action row builder.
 
-        !!! warning
+        .. warning::
             It is generally better to use `ActionRowBuilder.add_button`
             and `ActionRowBuilder.add_select_menu` to add your
             component to the builder. Those methods utilize this one.
@@ -1884,9 +1851,9 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
 
         Parameters
         ----------
-        style : typing.Union[builtins.int, hikari.messages.ButtonStyle]
+        style : typing.Union[int, hikari.messages.ButtonStyle]
             The button's style.
-        url_or_custom_id : builtins.str
+        url_or_custom_id : str
             For interactive button styles this is a developer-defined custom
             identifier used to identify which button triggered component interactions.
 
@@ -1907,7 +1874,7 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
 
         Parameters
         ----------
-        custom_id : builtins.str
+        custom_id : str
             A developer-defined custom identifier used to identify which menu
             triggered component interactions.
 
@@ -1938,7 +1905,7 @@ class ModalActionRowBuilder(ComponentBuilder, abc.ABC):
     ) -> _T:
         """Add a component to this action row builder.
 
-        !!! warning
+        .. warning::
             It is generally better to use `ActionRowBuilder.add_button`
             and `ActionRowBuilder.add_select_menu` to add your
             component to the builder. Those methods utilize this one.

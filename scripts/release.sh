@@ -30,10 +30,6 @@ env | grep -oP "^[^=]+" | sort
 
 if [ -z ${VERSION+x} ]; then echo '$VERSION environment variable is missing' && exit 1; fi
 if [ -z "${VERSION}" ]; then echo '$VERSION environment variable is empty' && exit 1; fi
-if [ -z ${REF+x} ]; then echo '$REF environment variable is missing' && exit 1; fi
-if [ -z "${REF}" ]; then echo '$REF environment variable is empty' && exit 1; fi
-if [ -z ${GITHUB_TOKEN+x} ]; then echo '$GITHUB_TOKEN environment variable is missing' && exit 1; fi
-if [ -z "${GITHUB_TOKEN}" ]; then echo '$GITHUB_TOKEN environment variable is empty' && exit 1; fi
 if [ -z ${DEPLOY_WEBHOOK_URL+x} ]; then echo '$DEPLOY_WEBHOOK_URL environment variable is missing' && exit 1; fi
 if [ -z "${DEPLOY_WEBHOOK_URL}" ]; then echo '$DEPLOY_WEBHOOK_URL environment variable is empty' && exit 1; fi
 if [ -z ${TWINE_USERNAME+x} ]; then echo '$TWINE_USERNAME environment variable is missing' && exit 1; fi
@@ -44,7 +40,7 @@ if [ -z "${TWINE_PASSWORD}" ]; then echo '$TWINE_PASSWORD environment variable i
 regex='__version__: typing\.Final\[str\] = "([^"]*)"'
 if [[ $(cat hikari/_about.py) =~ $regex ]]; then
   if [ "${BASH_REMATCH[1]}" != "${VERSION}" ]; then
-    echo "Variable '__version__' does not match the version this deploy is for!" && exit 1
+    echo "Variable '__version__' does not match the version this release is for! [__version__='${BASH_REMATCH[1]}'; VERSION='${VERSION}']" && exit 1
   fi
 else
   echo "Variable '__version__' not found in about!" && exit 1
@@ -53,11 +49,15 @@ fi
 echo "===== INSTALLING DEPENDENCIES ====="
 pip install -r requirements.txt -r dev-requirements/release.txt -r dev-requirements/nox.txt
 
+REF=$(git rev-parse HEAD)
+
 echo "===== DEPLOYING TO PYPI ====="
 echo "-- Setting __git_sha1__ (ref: ${REF}) --"
 sed "/^__git_sha1__.*/, \${s||__git_sha1__: typing.Final[str] = \"${REF}\"|g; b}; \$q1" -i hikari/_about.py || (echo "Variable '__git_sha1__' not found in about!" && exit 1)
 echo "=========================================================================="
 cat hikari/_about.py
+echo "=========================================================================="
+python -m hikari
 echo "=========================================================================="
 
 python setup.py sdist bdist_wheel
@@ -73,11 +73,8 @@ echo
 echo "-- Uploading to PyPI --"
 python -m twine upload --disable-progress-bar --skip-existing dist/* --non-interactive --repository-url https://upload.pypi.org/legacy/
 
-echo "===== DEPLOYING PAGES ====="
-bash scripts/deploy-pages.sh
-
 echo "===== SENDING WEBHOOK ====="
-bash scripts/deploy-webhook.sh
+bash scripts/release-webhook.sh
 
 echo "===== UPDATING VERSION IN REPOSITORY ====="
 NEW_VERSION=$(python scripts/increase_version_number.py "${VERSION}")
@@ -88,6 +85,7 @@ git checkout -f master
 
 echo "-- Bumping to development version (${NEW_VERSION}) --"
 sed "/^__version__.*/, \${s||__version__: typing.Final[str] = \"${NEW_VERSION}\"|g; b}; \$q1" -i hikari/_about.py || (echo "Variable '__version__' not found in about!" && exit 1)
+sed "/^__docs__.*/, \${s||__docs__: typing.Final[str] = \"https://docs.hikari-py.dev/en/master\"|g; b}; \$q1" -i hikari/_about.py || (echo "Variable '__docs__' not found in about!" && exit 1)
 
 echo "-- Pushing to repository --"
 git commit -am "Bump to development version (${NEW_VERSION})"

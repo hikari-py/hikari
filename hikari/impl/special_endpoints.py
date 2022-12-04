@@ -144,7 +144,7 @@ class TypingIndicator(special_endpoints.TypingIndicator):
     the typing indicator once, or an async context manager to keep triggering
     the typing indicator repeatedly until the context finishes.
 
-    !!! note
+    .. note::
         This is a helper class that is used by `hikari.api.rest.RESTClient`.
         You should only ever need to use instances of this class that are
         produced by that API.
@@ -226,70 +226,63 @@ class GuildBuilder(special_endpoints.GuildBuilder):
     the logic behind creating a guild on an API level is somewhat confusing
     and detailed.
 
-    !!! note
-        This is a helper class that is used by `hikari.api.rest.RESTClient`.
-        You should only ever need to use instances of this class that are
-        produced by that API, thus, any details about the constructor are
-        omitted from the following examples for brevity.
-
-    Examples
-    --------
-    Creating an empty guild.
-
-    ```py
-    guild = await rest.guild_builder("My Server!").create()
-    ```
-
-    Creating a guild with an icon
-
-    ```py
-    from hikari.files import WebResourceStream
-
-    guild_builder = rest.guild_builder("My Server!")
-    guild_builder.icon = WebResourceStream("cat.png", "http://...")
-    guild = await guild_builder.create()
-    ```
-
-    Adding roles to your guild.
-
-    ```py
-    from hikari.permissions import Permissions
-
-    guild_builder = rest.guild_builder("My Server!")
-
-    everyone_role_id = guild_builder.add_role("@everyone")
-    admin_role_id = guild_builder.add_role("Admins", permissions=Permissions.ADMINISTRATOR)
-
-    await guild_builder.create()
-    ```
-
-    !!! warning
-        The first role must always be the `@everyone` role.
-
-    !!! note
-        If you call `add_role`, the default roles provided by discord will
+    .. note::
+        If you call `add_role`, the default roles provided by Discord will
         be created. This also applies to the `add_` functions for
         text channels/voice channels/categories.
 
-    !!! note
+    .. note::
         Functions that return a `hikari.snowflakes.Snowflake` do
         **not** provide the final ID that the object will have once the
         API call is made. The returned IDs are only able to be used to
-        re-reference particular objects while building the guild format.
-
-        This is provided to allow creation of channels within categories,
+        re-reference particular objects while building the guild format
+        to allow for the creation of channels within categories,
         and to provide permission overwrites.
 
-    Adding a text channel to your guild.
+    Examples
+    --------
+    Creating an empty guild:
 
-    ```py
-    guild_builder = rest.guild_builder("My Server!")
+    .. code-block:: python
 
-    category_id = guild_builder.add_category("My safe place")
-    channel_id = guild_builder.add_text_channel("general", parent_id=category_id)
+        guild = await rest.guild_builder("My Server!").create()
 
-    await guild_builder.create()
-    ```
+    Creating a guild with an icon:
+
+    .. code-block:: python
+
+        from hikari.files import WebResourceStream
+
+        guild_builder = rest.guild_builder("My Server!")
+        guild_builder.icon = WebResourceStream("cat.png", "http://...")
+        guild = await guild_builder.create()
+
+    Adding roles to your guild:
+
+    .. code-block:: python
+
+        from hikari.permissions import Permissions
+
+        guild_builder = rest.guild_builder("My Server!")
+
+        everyone_role_id = guild_builder.add_role("@everyone")
+        admin_role_id = guild_builder.add_role("Admins", permissions=Permissions.ADMINISTRATOR)
+
+        await guild_builder.create()
+
+    .. warning::
+        The first role must always be the `@everyone` role.
+
+    Adding a text channel to your guild:
+
+    .. code-block:: python
+
+        guild_builder = rest.guild_builder("My Server!")
+
+        category_id = guild_builder.add_category("My safe place")
+        channel_id = guild_builder.add_text_channel("general", parent_id=category_id)
+
+        await guild_builder.create()
     """
 
     # Required arguments.
@@ -703,8 +696,8 @@ class MemberIterator(iterators.BufferedLazyIterator["guilds.Member"]):
         self._route = routes.GET_GUILD_MEMBERS.compile(guild=guild)
         self._request_call = request_call
         self._entity_factory = entity_factory
-        # This starts at the default provided by discord instead of the max snowflake
-        # because that caused discord to take about 2 seconds more to return the first response.
+        # This starts at the default provided by Discord instead of the max snowflake
+        # because that caused Discord to take about 2 seconds more to return the first response.
         self._first_id = undefined.UNDEFINED
 
     async def _next_chunk(self) -> typing.Optional[typing.Generator[guilds.Member, typing.Any, None]]:
@@ -997,7 +990,7 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
 
     Other Parameters
     ----------------
-    content : hikari.undefined.UndefinedOr[builtins.str]
+    content : hikari.undefined.UndefinedOr[str]
         The content of this response, if supplied. This follows the same rules
         as "content" on create message.
     """
@@ -1439,12 +1432,12 @@ def _build_emoji(
 
     Parameters
     ----------
-    emoji : typing.Union[hikari.snowflakes.Snowflakeish, hikari.emojis.Emoji, builtins.str, hikari.undefined.UndefinedType]
+    emoji : typing.Union[hikari.snowflakes.Snowflakeish, hikari.emojis.Emoji, str, hikari.undefined.UndefinedType]
         The ID, object or raw string of an emoji to set on a component.
 
     Returns
     -------
-    typing.Tuple[hikari.undefined.UndefinedOr[builtins.str], hikari.undefined.UndefinedOr[builtins.str]]
+    typing.Tuple[hikari.undefined.UndefinedOr[str], hikari.undefined.UndefinedOr[str]]
         A union of the custom emoji's id if defined (index 0) or the unicode
         emoji's string representation (index 1).
     """
@@ -1819,7 +1812,7 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
     """Standard implementation of `hikari.api.special_endpoints.ActionRowBuilder`."""
 
     _components: typing.List[special_endpoints.ComponentBuilder] = attr.field(factory=list)
-    _stored_type: typing.Optional[component_models.ComponentType] = attr.field(default=None)
+    _stored_type: typing.Optional[component_models.ComponentType] = attr.field(default=None, init=False)
 
     @property
     def components(self) -> typing.Sequence[special_endpoints.ComponentBuilder]:

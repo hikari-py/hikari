@@ -25,29 +25,36 @@ import shutil
 
 from pipelines import nox
 
-TRASH = [
+DIRECTORIES_TO_DELETE = [
     ".nox",
     "build",
     "dist",
     "hikari.egg-info",
     "public",
-    ".coverage",
     ".pytest_cache",
     ".mypy_cache",
     "node_modules",
+]
+
+FILES_TO_DELETE = [
+    ".coverage",
     "package-lock.json",
+]
+
+TO_DELETE = [
+    (shutil.rmtree, DIRECTORIES_TO_DELETE),
+    (os.remove, FILES_TO_DELETE),
 ]
 
 
 @nox.session(reuse_venv=False, venv_backend="none")
-def purge(_: nox.Session) -> None:
+def purge(session: nox.Session) -> None:
     """Delete any nox-generated files."""
-    for trash in TRASH:
-        print("Removing", trash)
-        try:
-            os.remove(trash)
-        except:
-            # Ignore errors
-            pass
-
-        shutil.rmtree(trash, ignore_errors=True)
+    for func, trash_list in TO_DELETE:
+        for trash in trash_list:
+            try:
+                func(trash)
+            except Exception as exc:
+                session.warn(f"[ FAIL ] Failed to remove {trash!r}: {exc!s}")
+            else:
+                session.log(f"[  OK  ] Removed {trash!r}")

@@ -1,0 +1,17 @@
+{{index}}
+{{summary}}
+{{extended_summary}}
+{{warns}}
+{{warnings}}
+{{notes}}
+{{parameters}}
+{{other_parameters}}
+{{returns}}
+{{yields}}
+{{receives}}
+{{raises}}
+{{see_also}}
+{{references}}
+{{examples}}
+{{attributes}}
+{{methods}}

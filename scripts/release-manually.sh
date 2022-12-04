@@ -1,3 +1,4 @@
+#!/bin/sh
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -18,21 +19,18 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+posix_read() {
+    prompt="${1}"
+    var_name="${2}"
+    printf "%s: " "${prompt}"
+    read -r "${var_name?}"
+    export "${var_name?}"
+    return ${?}
+}
 
-curl \
-  -X POST \
-  -H "Content-Type: application/json" \
-  "${DEPLOY_WEBHOOK_URL}" \
-  -d '{
-        "username": "Github Actions",
-        "embeds": [
-          {
-            "title": "'"${VERSION} has been deployed to PyPI"'",
-            "color": 6697881,
-            "description": "'"Install it now by executing: \`\`\`pip install hikari==${VERSION}\`\`\`"'",
-            "footer": {
-              "text": "'"SHA: ${REF}"'"
-            }
-          }
-        ]
-    }'
+posix_read "Tag" VERSION
+posix_read "Twine username" TWINE_USERNAME
+posix_read "Twine password" TWINE_PASSWORD
+posix_read "Discord deployment webhook URL" DEPLOY_WEBHOOK_URL
+
+bash scripts/release.sh

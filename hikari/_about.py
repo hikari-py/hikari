@@ -26,15 +26,15 @@ from __future__ import annotations
 import typing
 
 # DO NOT CHANGE THE TYPE HINTS FOR THESE FIELDS. THESE ARE AUTOMATICALLY UPDATED
-# FROM THE CI SCRIPT AND DOING THIS MAY LEAD TO THE DEPLOY PROCESS FAILING.
+# FROM THE CI SCRIPT AND DOING THIS MAY LEAD TO THE RELEASE PROCESS FAILING.
 
 __author__: typing.Final[str] = "Nekokatt"
 __maintainer__: typing.Final[str] = "davfsa"
 __ci__: typing.Final[str] = "https://github.com/hikari-py/hikari/actions"
-__copyright__: typing.Final[str] = "© 2021-present davfsa"
+__copyright__: typing.Final[str] = "2021-present, davfsa"
 __coverage__: typing.Final[str] = "https://codeclimate.com/github/hikari-py/hikari"
 __discord_invite__: typing.Final[str] = "https://discord.gg/Jx4cNGG"
-__docs__: typing.Final[str] = "https://hikari-py.dev/hikari"
+__docs__: typing.Final[str] = "https://docs.hikari-py.dev/en/master"
 __email__: typing.Final[str] = "davfsa@gmail.com"
 __issue_tracker__: typing.Final[str] = "https://github.com/hikari-py/hikari/issues"
 __license__: typing.Final[str] = "MIT"

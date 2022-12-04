@@ -57,18 +57,18 @@ class ComponentType(int, enums.Enum):
     ACTION_ROW = 1
     """A non-interactive container component for other types of components.
 
-    !!! note
+    .. note::
         As this is a container component it can never be contained within another
         component and therefore will always be top-level.
 
-    !!! note
+    .. note::
         As of writing this can only contain one component type.
     """
 
     BUTTON = 2
     """A button component.
 
-    !!! note
+    .. note::
         This cannot be top-level and must be within a container component such
         as `ComponentType.ACTION_ROW`.
     """
@@ -76,7 +76,7 @@ class ComponentType(int, enums.Enum):
     SELECT_MENU = 3
     """A select menu component.
 
-    !!! note
+    .. note::
         This cannot be top-level and must be within a container component such
         as `ComponentType.ACTION_ROW`.
     """
@@ -87,7 +87,7 @@ class ComponentType(int, enums.Enum):
     !! note
         This component may only be used inside a modal container.
 
-    !!! note
+    .. note::
         This cannot be top-level and must be within a container component such
         as `ComponentType.ACTION_ROW`.
     """
@@ -116,7 +116,7 @@ class ButtonStyle(int, enums.Enum):
     LINK = 5
     """A grey button which navigates to a URL.
 
-    !!! warning
+    .. warning::
         Unlike the other button styles, clicking this one will not trigger an
         interaction and custom_id shouldn't be included for this style.
     """
@@ -187,7 +187,7 @@ class ButtonComponent(PartialComponent):
     custom_id: typing.Optional[str] = attr.field(hash=True)
     """Developer defined identifier for this button (will be <= 100 characters).
 
-    !!! note
+    .. note::
         This is required for the following button styles:
 
         * `ButtonStyle.PRIMARY`

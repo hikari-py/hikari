@@ -46,19 +46,19 @@ def generate_allowed_mentions(
 
     Parameters
     ----------
-    mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
+    mentions_everyone : hikari.undefined.UndefinedOr[bool]
         Whether @everyone and @here mentions are enabled. If
-        `hikari.undefined.UNDEFINED` or `builtins.False` then this will be disabled.
-    mentions_reply : hikari.undefined.UndefinedOr[builtins.bool]
+        `hikari.undefined.UNDEFINED` or `False` then this will be disabled.
+    mentions_reply : hikari.undefined.UndefinedOr[bool]
         Whether the reply mention should be enabled. If `hikari.undefined.UNDEFINED`
-        or `builtins.False` then this will be disabled.
-    user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], builtins.bool]]
+        or `False` then this will be disabled.
+    user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
         Either a sequence of objects/IDs of the users to enabled mentions for,
-        `True` to allow all mentions or `builtins.False`/`hikari.undefined.UNDEFINED`
+        `True` to allow all mentions or `False`/`hikari.undefined.UNDEFINED`
         to disable all user mentions.
-    role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], builtins.bool]]
+    role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], bool]]
         Either a sequence of objects/IDs of the roles to enabled mentions for,
-        `True` to allow all mentions or `builtins.False`/`hikari.undefined.UNDEFINED`
+        `True` to allow all mentions or `False`/`hikari.undefined.UNDEFINED`
         to disable all user mentions.
 
     Returns
@@ -78,14 +78,14 @@ def generate_allowed_mentions(
     if user_mentions is True:
         parsed_mentions.append("users")
     elif isinstance(user_mentions, typing.Collection):
-        # Duplicates will cause discord to error.
+        # Duplicates will cause Discord to error.
         ids = {str(int(u)) for u in user_mentions}
         allowed_mentions["users"] = list(ids)
 
     if role_mentions is True:
         parsed_mentions.append("roles")
     elif isinstance(role_mentions, typing.Collection):
-        # Duplicates will cause discord to error.
+        # Duplicates will cause Discord to error.
         ids = {str(int(r)) for r in role_mentions}
         allowed_mentions["roles"] = list(ids)
 

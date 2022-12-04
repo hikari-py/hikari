@@ -96,7 +96,6 @@ norecursedirs = [
 filterwarnings = [
     "error", # Treat warnings as errors
     "ignore:.*assertions not in test modules or plugins will be ignored .*:pytest.PytestConfigWarning",
-    "ignore::pytest.PytestUnraisableExceptionWarning",
 ]
 required_plugins = ["pytest-asyncio"]
 
@@ -104,14 +103,17 @@ required_plugins = ["pytest-asyncio"]
 package = "hikari"
 package_dir = "hikari"
 directory = "changes"
+template = "changes/.template.rst"
 filename = "CHANGELOG.md"
 issue_format = "[#{issue}](https://github.com/hikari-py/hikari/issues/{issue})"
+# We use this differently in the template
+underlines = [2, 3]
 type = [
-    { name = "Breaking Changes",            directory = "breaking",     showcontent = true },
-    { name = "Deprecation",                 directory = "deprecation",  showcontent = true },
-    { name = "Features",                    directory = "feature",      showcontent = true },
-    { name = "Bugfixes",                    directory = "bugfix",       showcontent = true },
-    { name = "Documentation Improvements",  directory = "doc",          showcontent = true },
+    { name = "Breaking Changes",            directory = "breaking",      showcontent = true },
+    { name = "Deprecation",                 directory = "deprecation",   showcontent = true },
+    { name = "Features",                    directory = "feature",       showcontent = true },
+    { name = "Bugfixes",                    directory = "bugfix",        showcontent = true },
+    { name = "Documentation Improvements",  directory = "documentation", showcontent = true },
 ]
 
 [tool.isort]

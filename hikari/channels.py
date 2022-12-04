@@ -143,31 +143,13 @@ class ChannelFollow:
     app: traits.RESTAware = attr.field(
         repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
     )
-    """Return the client application that models may use for procedures.
-
-    Returns
-    -------
-    hikari.traits.RESTAware
-        The REST-aware application object.
-    """
+    """Client application that models may use for procedures."""
 
     channel_id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
-    """Return the channel ID of the channel being followed.
-
-    Returns
-    -------
-    hikari.snowflakes.Snowflake
-        The channel ID for the channel being followed.
-    """
+    """Return the channel ID of the channel being followed."""
 
     webhook_id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
-    """Return the ID of the webhook for this follow.
-
-    Returns
-    -------
-    hikari.snowflakes.Snowflake
-        The ID of the webhook that was created for this follow.
-    """
+    """Return the ID of the webhook for this follow."""
 
     async def fetch_channel(self) -> typing.Union[GuildNewsChannel, GuildTextChannel]:
         """Fetch the object of the guild channel being followed.
@@ -175,9 +157,10 @@ class ChannelFollow:
         Returns
         -------
         typing.Union[hikari.channels.GuildNewsChannel, hikari.channels.GuildTextChannel]
-            The channel being followed. While this will usually be
-            `GuildNewsChannel`, if the channel's news status has been removed
-            then this will be a `GuildTextChannel`
+            The channel being followed.
+
+            While this will usually be `GuildNewsChannel`, if the channel's
+            news status has been removed then this will be a `GuildTextChannel`.
 
         Raises
         ------
@@ -243,16 +226,16 @@ class ChannelFollow:
     def get_channel(self) -> typing.Union[GuildNewsChannel, GuildTextChannel, None]:
         """Get the channel being followed from the cache.
 
-        !!! warning
-            This will always be `builtins.None` if you are not
+        .. warning::
+            This will always be `None` if you are not
             in the guild that this channel exists in.
 
         Returns
         -------
-        typing.Union[hikari.channels.GuildNewsChannel, hikari.channels.GuildTextChannel, builtins.None]
+        typing.Union[hikari.channels.GuildNewsChannel, hikari.channels.GuildTextChannel, None]
             The object of the guild channel that was found in the cache or
-            `builtins.None`. While this will usually be `GuildNewsChannel` or
-            `builtins.None`, if the channel referenced has since lost it's news
+            `None`. While this will usually be `GuildNewsChannel` or
+            `None`, if the channel referenced has since lost it's news
             status then this will return a `GuildTextChannel`.
         """
         if not isinstance(self.app, traits.CacheAware):
@@ -282,25 +265,25 @@ class PermissionOverwrite:
     You may sometimes need to make instances of this object to add/edit
     permission overwrites on channels.
 
-    Example
-    -------
+    Examples
+    --------
     Creating a permission overwrite.
 
-    ```py
-    overwrite = PermissionOverwrite(
-        id=163979124820541440,
-        type=PermissionOverwriteType.MEMBER,
-        allow=(
-            Permissions.VIEW_CHANNEL
-            | Permissions.READ_MESSAGE_HISTORY
-            | Permissions.SEND_MESSAGES
-        ),
-        deny=(
-            Permissions.MANAGE_MESSAGES
-            | Permissions.SPEAK
-        ),
-    )
-    ```
+    .. code-block:: python
+
+        overwrite = PermissionOverwrite(
+            id=163979124820541440,
+            type=PermissionOverwriteType.MEMBER,
+            allow=(
+                Permissions.VIEW_CHANNEL
+                | Permissions.READ_MESSAGE_HISTORY
+                | Permissions.SEND_MESSAGES
+            ),
+            deny=(
+                Permissions.MANAGE_MESSAGES
+                | Permissions.SPEAK
+            ),
+        )
     """
 
     id: snowflakes.Snowflake = attr.field(converter=snowflakes.Snowflake, repr=True)
@@ -337,7 +320,7 @@ class PartialChannel(snowflakes.Unique):
     app: traits.RESTAware = attr.field(
         repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
     )
-    """The client application that models may use for procedures."""
+    """Client application that models may use for procedures."""
 
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
     """The ID of this entity."""
@@ -352,14 +335,14 @@ class PartialChannel(snowflakes.Unique):
     def mention(self) -> str:
         """Return a raw mention string for the channel.
 
-        !!! note
+        .. note::
             There are platform specific inconsistencies with mentions of
             GuildCategories, GroupDMChannels and DMChannels showing
             the correct name but not being interactable.
 
         Returns
         -------
-        builtins.str
+        str
             The mention string to use.
         """
         return f"<#{self.id}>"
@@ -369,6 +352,10 @@ class PartialChannel(snowflakes.Unique):
 
     async def delete(self) -> PartialChannel:
         """Delete a channel in a guild, or close a DM.
+
+        .. note::
+            For Public servers, the set 'Rules' or 'Guidelines' channels and the
+            'Public Server Updates' channel cannot be deleted.
 
         Returns
         -------
@@ -396,10 +383,6 @@ class PartialChannel(snowflakes.Unique):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-
-        !!! note
-            For Public servers, the set 'Rules' or 'Guidelines' channels and the
-            'Public Server Updates' channel cannot be deleted.
         """
         return await self.app.rest.delete_channel(self.id)
 
@@ -419,6 +402,12 @@ class TextableChannel(PartialChannel):
         around: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[snowflakes.Unique]] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[messages.Message]:
         """Browse the message history for a given text channel.
+
+        .. note::
+            This call is not a coroutine function, it returns a special type of
+            lazy iterator that will perform API calls as you iterate across it,
+            thus any errors documented below will happen then.
+            See `hikari.iterators` for the full API for this iterator type.
 
         Other Parameters
         ----------------
@@ -445,7 +434,7 @@ class TextableChannel(PartialChannel):
 
         Raises
         ------
-        builtins.TypeError
+        TypeError
             If you specify more than one of `before`, `after`, `about`.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
@@ -456,12 +445,6 @@ class TextableChannel(PartialChannel):
             If the channel is not found.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-
-        !!! note
-            The exceptions on this endpoint (other than `builtins.TypeError`) will only
-            be raised once the result is awaited or interacted with. Invoking
-            this function itself will not raise anything (other than
-            `builtins.TypeError`).
         """
         return self.app.rest.fetch_messages(self.id, before=before, after=after, around=around)
 
@@ -534,7 +517,7 @@ class TextableChannel(PartialChannel):
             If provided, the message contents. If
             `hikari.undefined.UNDEFINED`, then nothing will be sent
             in the content. Any other value here will be cast to a
-            `builtins.str`.
+            `str`.
 
             If this is a `hikari.embeds.Embed` and no `embed` nor `embeds` kwarg
             is provided, then this will instead update the embed. This allows
@@ -549,6 +532,32 @@ class TextableChannel(PartialChannel):
         attachment : hikari.undefined.UndefinedOr[hikari.files.Resourceish]
             If provided, the message attachment. This can be a resource,
             or string of a path on your computer or a URL.
+
+            Attachments can be passed as many different things, to aid in
+            convenience.
+
+            - If a `pathlib.PurePath` or `str` to a valid URL, the
+                resource at the given URL will be streamed to Discord when
+                sending the message. Subclasses of
+                `hikari.files.WebResource` such as
+                `hikari.files.URL`,
+                `hikari.messages.Attachment`,
+                `hikari.emojis.Emoji`,
+                `EmbedResource`, etc will also be uploaded this way.
+                This will use bit-inception, so only a small percentage of the
+                resource will remain in memory at any one time, thus aiding in
+                scalability.
+            - If a `hikari.files.Bytes` is passed, or a `str`
+                that contains a valid data URI is passed, then this is uploaded
+                with a randomized file name if not provided.
+            - If a `hikari.files.File`, `pathlib.PurePath` or
+                `str` that is an absolute or relative path to a file
+                on your file system is passed, then this resource is uploaded
+                as an attachment using non-blocking code internally and streamed
+                using bit-inception where possible. This depends on the
+                type of `concurrent.futures.Executor` that is being used for
+                the application (default is a thread pool which supports this
+                behaviour).
         attachments : hikari.undefined.UndefinedOr[typing.Sequence[hikari.files.Resourceish]]
             If provided, the message attachments. These can be resources, or
             strings consisting of paths on your computer or URLs.
@@ -561,28 +570,28 @@ class TextableChannel(PartialChannel):
             If provided, the message embed.
         embeds : hikari.undefined.UndefinedOr[typing.Sequence[hikari.embeds.Embed]]
             If provided, the message embeds.
-        tts : hikari.undefined.UndefinedOr[builtins.bool]
+        tts : hikari.undefined.UndefinedOr[bool]
             If provided, whether the message will be TTS (Text To Speech).
         reply : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]]
             If provided, the message to reply to.
-        mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
+        mentions_everyone : hikari.undefined.UndefinedOr[bool]
             If provided, whether the message should parse @everyone/@here
             mentions.
-        mentions_reply : hikari.undefined.UndefinedOr[builtins.bool]
+        mentions_reply : hikari.undefined.UndefinedOr[bool]
             If provided, whether to mention the author of the message
             that is being replied to.
 
             This will not do anything if not being used with `reply`.
-        user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], builtins.bool]]
-            If provided, and `builtins.True`, all mentions will be parsed.
-            If provided, and `builtins.False`, no mentions will be parsed.
+        user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
+            If provided, and `True`, all mentions will be parsed.
+            If provided, and `False`, no mentions will be parsed.
             Alternatively this may be a collection of
             `hikari.snowflakes.Snowflake`, or
             `hikari.users.PartialUser` derivatives to enforce mentioning
             specific users.
-        role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], builtins.bool]]
-            If provided, and `builtins.True`, all mentions will be parsed.
-            If provided, and `builtins.False`, no mentions will be parsed.
+        role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], bool]]
+            If provided, and `True`, all mentions will be parsed.
+            If provided, and `False`, no mentions will be parsed.
             Alternatively this may be a collection of
             `hikari.snowflakes.Snowflake`, or
             `hikari.guilds.PartialRole` derivatives to enforce mentioning
@@ -593,33 +602,6 @@ class TextableChannel(PartialChannel):
 
             Note that some flags may not be able to be set. Currently the only
             flags that can be set are `NONE` and `SUPPRESS_EMBEDS`.
-
-        !!! note
-            Attachments can be passed as many different things, to aid in
-            convenience.
-
-            - If a `pathlib.PurePath` or `builtins.str` to a valid URL, the
-                resource at the given URL will be streamed to Discord when
-                sending the message. Subclasses of
-                `hikari.files.WebResource` such as
-                `hikari.files.URL`,
-                `hikari.messages.Attachment`,
-                `hikari.emojis.Emoji`,
-                `EmbedResource`, etc will also be uploaded this way.
-                This will use bit-inception, so only a small percentage of the
-                resource will remain in memory at any one time, thus aiding in
-                scalability.
-            - If a `hikari.files.Bytes` is passed, or a `builtins.str`
-                that contains a valid data URI is passed, then this is uploaded
-                with a randomized file name if not provided.
-            - If a `hikari.files.File`, `pathlib.PurePath` or
-                `builtins.str` that is an absolute or relative path to a file
-                on your file system is passed, then this resource is uploaded
-                as an attachment using non-blocking code internally and streamed
-                using bit-inception where possible. This depends on the
-                type of `concurrent.futures.Executor` that is being used for
-                the application (default is a thread pool which supports this
-                behaviour).
 
         Returns
         -------
@@ -643,10 +625,10 @@ class TextableChannel(PartialChannel):
             If the channel is not found.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        builtins.ValueError
+        ValueError
             If more than 100 unique objects/entities are passed for
             `role_mentions` or `user_mentions`.
-        builtins.TypeError
+        TypeError
             If both `attachment` and `attachments` are specified.
         """  # noqa: E501 - Line too long
         return await self.app.rest.create_message(
@@ -670,18 +652,18 @@ class TextableChannel(PartialChannel):
     def trigger_typing(self) -> special_endpoints.TypingIndicator:
         """Trigger typing in a given channel.
 
-        This returns an object that can either be `await`ed to trigger typing
+        This returns an object that can either be awaited to trigger typing
         once, or used as an async context manager to keep typing until the
         block completes.
 
-        ```py
-        await channel.trigger_typing()   # type for 10s
+        .. code-block:: python
 
-        async with channel.trigger_typing():
-            await asyncio.sleep(35)            # keep typing until this finishes
-        ```
+            await channel.trigger_typing()   # type for 10s
 
-        !!! note
+            async with channel.trigger_typing():
+                await asyncio.sleep(35)            # keep typing until this finishes
+
+        .. note::
             Sending a message to this channel will stop the typing indicator. If
             using an `async with`, it will start up again after a few seconds.
             This is a limitation of Discord's API.
@@ -804,18 +786,7 @@ class TextableChannel(PartialChannel):
     ) -> None:
         """Bulk-delete messages from the channel.
 
-        Parameters
-        ----------
-        messages : typing.Union[hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage], hikari.snowflakes.SnowflakeishIterable[hikari.messages.PartialMessage]]
-            Either the object/ID of an existing message to delete or an iterable
-            of the objects and/or IDs of existing messages to delete.
-
-        Other Parameters
-        ----------------
-        *other_messages : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
-            The objects and/or IDs of other existing messages to delete.
-
-        !!! note
+        .. note::
             This API endpoint will only be able to delete 100 messages
             at a time. For anything more than this, multiple requests will
             be executed one-after-the-other, since the rate limits for this
@@ -827,21 +798,32 @@ class TextableChannel(PartialChannel):
             of this is that the `delete_message` endpoint is ratelimited
             by a different bucket with different usage rates.
 
-        !!! warning
+        .. warning::
             This endpoint is not atomic. If an error occurs midway through
             a bulk delete, you will **not** be able to revert any changes made
             up to this point.
 
-        !!! warning
+        .. warning::
             Specifying any messages more than 14 days old will cause the call
             to fail, potentially with partial completion.
+
+        Parameters
+        ----------
+        messages : typing.Union[hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage], hikari.snowflakes.SnowflakeishIterable[hikari.messages.PartialMessage]]
+            Either the object/ID of an existing message to delete or an iterable
+            of the objects and/or IDs of existing messages to delete.
+
+        Other Parameters
+        ----------------
+        *other_messages : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
+            The objects and/or IDs of other existing messages to delete.
 
         Raises
         ------
         hikari.errors.BulkDeleteError
             An error containing the messages successfully deleted, and the
             messages that were not removed. The
-            `builtins.BaseException.__cause__` of the exception will be the
+            `BaseException.__cause__` of the exception will be the
             original error that terminated this process.
         """  # noqa: E501 - Line too long
         return await self.app.rest.delete_messages(self.id, messages, *other_messages)
@@ -854,7 +836,7 @@ class PrivateChannel(PartialChannel):
     last_message_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
     """The ID of the last message sent in this channel.
 
-    !!! warning
+    .. warning::
         This might point to an invalid or deleted message. Do not assume that
         this will always be valid.
     """
@@ -880,7 +862,7 @@ class DMChannel(PrivateChannel, TextableChannel):
 class GroupDMChannel(PrivateChannel):
     """Represents a group direct message channel.
 
-    !!! note
+    .. note::
         This doesn't have the methods found on `TextableChannel` as bots cannot
         interact with a group DM that they own by sending or seeing messages in
         it.
@@ -901,7 +883,7 @@ class GroupDMChannel(PrivateChannel):
     application_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
     """The ID of the application that created the group DM.
 
-    If the group DM was not created by a bot, this will be `builtins.None`.
+    If the group DM was not created by a bot, this will be `None`.
     """
 
     def __str__(self) -> str:
@@ -920,21 +902,21 @@ class GroupDMChannel(PrivateChannel):
 
         Parameters
         ----------
-        ext : builtins.str
+        ext : str
             The extension to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : builtins.int
+        size : int
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL, or `builtins.None` if no icon is present.
+            The URL, or `None` if no icon is present.
 
         Raises
         ------
-        builtins.ValueError
+        ValueError
             If `size` is not a power of two between 16 and 4096 (inclusive).
         """
         if self.icon_hash is None:
@@ -961,15 +943,15 @@ class GuildChannel(PartialChannel):
 
     For thread channels this will refer to the parent textable guild channel.
     For other guild channel types this will refer to the parent category and
-    if no parent category is set for the channel, this will be `builtins.None`.
-    For guild categories this will always be `builtins.None`.
+    if no parent category is set for the channel, this will be `None`.
+    For guild categories this will always be `None`.
     """
 
     @property
     def shard_id(self) -> typing.Optional[int]:
         """Return the shard ID for the shard.
 
-        This may be `builtins.None` if the shard count is not known.
+        This may be `None` if the shard count is not known.
         """
         if isinstance(self.app, traits.ShardAware):
             return snowflakes.calculate_shard_id(self.app, self.guild_id)
@@ -982,7 +964,7 @@ class GuildChannel(PartialChannel):
         Returns
         -------
         typing.Optional[hikari.guilds.Guild]
-            The linked guild object or `builtins.None` if it's not cached.
+            The linked guild object or `None` if it's not cached.
         """
         if not isinstance(self.app, traits.CacheAware):
             return None
@@ -1042,25 +1024,25 @@ class GuildChannel(PartialChannel):
 
         Other Parameters
         ----------------
-        name : hikari.undefined.UndefinedOr[[builtins.str]
+        name : hikari.undefined.UndefinedOr[[str]
             If provided, the new name for the channel.
-        position : hikari.undefined.UndefinedOr[[builtins.int]
+        position : hikari.undefined.UndefinedOr[[int]
             If provided, the new position for the channel.
-        topic : hikari.undefined.UndefinedOr[builtins.str]
+        topic : hikari.undefined.UndefinedOr[str]
             If provided, the new topic for the channel.
-        nsfw : hikari.undefined.UndefinedOr[builtins.bool]
+        nsfw : hikari.undefined.UndefinedOr[bool]
             If provided, whether the channel should be marked as NSFW or not.
-        bitrate : hikari.undefined.UndefinedOr[builtins.int]
+        bitrate : hikari.undefined.UndefinedOr[int]
             If provided, the new bitrate for the channel.
-        video_quality_mode: hikari.undefined.UndefinedOr[typing.Union[hikari.channels.VideoQualityMode, builtins.int]]
+        video_quality_mode: hikari.undefined.UndefinedOr[typing.Union[hikari.channels.VideoQualityMode, int]]
             If provided, the new video quality mode for the channel.
-        user_limit : hikari.undefined.UndefinedOr[builtins.int]
+        user_limit : hikari.undefined.UndefinedOr[int]
             If provided, the new user limit in the channel.
         rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
             If provided, the new rate limit per user in the channel.
-        region : hikari.undefined.UndefinedOr[typing.Union[hikari.voices.VoiceRegion, builtins.str]]
+        region : hikari.undefined.UndefinedOr[typing.Union[hikari.voices.VoiceRegion, str]]
             If provided, the voice region to set for this channel. Passing
-            `builtins.None` here will set it to "auto" mode where the used
+            `None` here will set it to "auto" mode where the used
             region will be decided based on the first person who connects to it
             when it's empty.
         permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
@@ -1073,7 +1055,7 @@ class GuildChannel(PartialChannel):
 
             This should be either 60, 1440, 4320 or 10080 seconds and, as of
             writing.
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -1128,7 +1110,7 @@ class GuildChannel(PartialChannel):
 class PermissibleGuildChannel(GuildChannel):
     """Base class for all guild channels which have permission overwrites.
 
-    !!! note
+    .. note::
         This doesn't apply to thread channels as they implicitly inherit
         permissions from their parent channel.
     """
@@ -1178,13 +1160,13 @@ class PermissibleGuildChannel(GuildChannel):
             If provided, the new value of all allowed permissions.
         deny : hikari.undefined.UndefinedOr[hikari.permissions.Permissions]
             If provided, the new value of all disallowed permissions.
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
         Raises
         ------
-        builtins.TypeError
+        TypeError
             If `target_type` is unset and we were unable to determine the type
             from `target`.
         hikari.errors.BadRequestError
@@ -1274,7 +1256,7 @@ class GuildCategory(PermissibleGuildChannel):
     parent_id: None = attr.field(eq=False, hash=False, repr=True)
     """The ID of the parent channel the channel belongs to.
 
-    This is always `builtins.None` for categories.
+    This is always `None` for categories.
     """
 
 
@@ -1288,7 +1270,7 @@ class GuildTextChannel(PermissibleGuildChannel, TextableGuildChannel):
     last_message_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
     """The ID of the last message sent in this channel.
 
-    !!! warning
+    .. warning::
         This might point to an invalid or deleted message. Do not assume that
         this will always be valid.
     """
@@ -1298,7 +1280,7 @@ class GuildTextChannel(PermissibleGuildChannel, TextableGuildChannel):
 
     If there is no rate limit, this will be 0 seconds.
 
-    !!! note
+    .. note::
         Any user that has permissions allowing `MANAGE_MESSAGES`,
         `MANAGE_CHANNEL`, `ADMINISTRATOR` will not be limited. Likewise, bots
         will not be affected by this rate limit.
@@ -1307,8 +1289,8 @@ class GuildTextChannel(PermissibleGuildChannel, TextableGuildChannel):
     last_pin_timestamp: typing.Optional[datetime.datetime] = attr.field(eq=False, hash=False, repr=False)
     """The timestamp of the last-pinned message.
 
-    !!! note
-        This may be `builtins.None` in several cases; Discord does not document what
+    .. note::
+        This may be `None` in several cases; Discord does not document what
         these cases are. Trust no one!
     """
 
@@ -1329,7 +1311,7 @@ class GuildNewsChannel(PermissibleGuildChannel, TextableGuildChannel):
     last_message_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
     """The ID of the last message sent in this channel.
 
-    !!! warning
+    .. warning::
         This might point to an invalid or deleted message. Do not assume that
         this will always be valid.
     """
@@ -1337,8 +1319,8 @@ class GuildNewsChannel(PermissibleGuildChannel, TextableGuildChannel):
     last_pin_timestamp: typing.Optional[datetime.datetime] = attr.field(eq=False, hash=False, repr=False)
     """The timestamp of the last-pinned message.
 
-    !!! note
-        This may be `builtins.None` in several cases; Discord does not document what
+    .. note::
+        This may be `None` in several cases; Discord does not document what
         these cases are. Trust no one!
     """
 
@@ -1359,7 +1341,7 @@ class GuildVoiceChannel(PermissibleGuildChannel, TextableGuildChannel):
     region: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
     """ID of the voice region for this voice channel.
 
-    If set to `builtins.None` then this is set to "auto" mode where the used
+    If set to `None` then this is set to "auto" mode where the used
     region will be decided based on the first person who connects to it when
     it's empty.
     """
@@ -1376,7 +1358,7 @@ class GuildVoiceChannel(PermissibleGuildChannel, TextableGuildChannel):
     last_message_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
     """The ID of the last message sent in this channel.
 
-    !!! warning
+    .. warning::
         This might point to an invalid or deleted message. Do not assume that
         this will always be valid.
     """
@@ -1392,7 +1374,7 @@ class GuildStageChannel(PermissibleGuildChannel):
     region: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
     """ID of the voice region for this stage channel.
 
-    If set to `builtins.None` then this is set to "auto" mode where the used
+    If set to `None` then this is set to "auto" mode where the used
     region will be decided based on the first person who connects to it when
     it's empty.
     """
@@ -1436,8 +1418,8 @@ class ThreadMember:
     user_id: snowflakes.Snowflake = attr.field(eq=True, repr=True)
     """The member's user ID.
 
-    !!! note
-        This will only ever be `builtins.None` on thread members attached to
+    .. note::
+        This will only ever be `None` on thread members attached to
         guild create events, where this is the current bot's user.
     """
 
@@ -1447,7 +1429,7 @@ class ThreadMember:
     flags: int = attr.field(eq=True, repr=True)
     """Bitfield flag of the user's settings for the thread.
 
-    !!! note
+    .. note::
         As of writing, the values of this field's are undocumented.
     """
 
@@ -1459,7 +1441,7 @@ class GuildThreadChannel(TextableGuildChannel):
     last_message_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
     """The ID of the last message sent in this channel.
 
-    !!! warning
+    .. warning::
         This might point to an invalid or deleted message. Do not assume that
         this will always be valid.
     """
@@ -1467,8 +1449,8 @@ class GuildThreadChannel(TextableGuildChannel):
     last_pin_timestamp: typing.Optional[datetime.datetime] = attr.field(eq=False, hash=False, repr=False)
     """The timestamp of the last-pinned message.
 
-    !!! note
-        This may be `builtins.None` in several cases; Discord does not document what
+    .. note::
+        This may be `None` in several cases; Discord does not document what
         these cases are. Trust no one!
     """
 
@@ -1477,7 +1459,7 @@ class GuildThreadChannel(TextableGuildChannel):
 
     If there is no rate limit, this will be 0 seconds.
 
-    !!! note
+    .. note::
         Any user that has permissions allowing `MANAGE_MESSAGES`,
         `MANAGE_CHANNEL`, `ADMINISTRATOR` will not be limited. Likewise, bots
         will not be affected by this rate limit.
@@ -1486,14 +1468,14 @@ class GuildThreadChannel(TextableGuildChannel):
     approximate_message_count: int = attr.field(eq=False, hash=False, repr=True)
     """Approximate number of messages in the thread channel.
 
-    !!! warning
+    .. warning::
         This stops counting at 50 for threads created before 2022/06/01.
     """
 
     approximate_member_count: int = attr.field(eq=False, hash=False, repr=True)
     """Approximate count of members in the thread channel.
 
-    !!! warning
+    .. warning::
         This stop counting at 50.
     """
 
@@ -1509,7 +1491,7 @@ class GuildThreadChannel(TextableGuildChannel):
     archive_timestamp: datetime.datetime = attr.field(eq=False, hash=False, repr=True)
     """When the thread's archived state was last changed.
 
-    !!! note
+    .. note::
         If the thread has never been archived then this will be the thread's
         creation date and this will be changed when a thread is unarchived.
     """
@@ -1524,7 +1506,7 @@ class GuildThreadChannel(TextableGuildChannel):
     member: typing.Optional[ThreadMember] = attr.field(eq=False, hash=False, repr=True)
     """Thread member object for the current user, if they are in the thread.
 
-    !!! note
+    .. note::
         This is only returned by some endpoints and on private thread
         access events.
     """

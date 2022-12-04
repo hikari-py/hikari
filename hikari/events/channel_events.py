@@ -83,19 +83,13 @@ class ChannelEvent(shard_events.ShardEvent, abc.ABC):
     @property
     @abc.abstractmethod
     def channel_id(self) -> snowflakes.Snowflake:
-        """ID of the channel the event relates to.
-
-        Returns
-        -------
-        hikari.snowflakes.Snowflake
-            The ID of the channel this event relates to.
-        """
+        """ID of the channel the event relates to."""
 
     @abc.abstractmethod
     async def fetch_channel(self) -> channels.PartialChannel:
         """Perform an API call to fetch the details about this channel.
 
-        !!! note
+        .. note::
             For `GuildChannelDeleteEvent` events, this will always raise
             an exception, since the channel will have already been removed.
 
@@ -138,24 +132,18 @@ class GuildChannelEvent(ChannelEvent, abc.ABC):
     @property
     @abc.abstractmethod
     def guild_id(self) -> snowflakes.Snowflake:
-        """ID of the guild that this event relates to.
-
-        Returns
-        -------
-        hikari.snowflakes.Snowflake
-            The ID of the guild that relates to this event.
-        """
+        """ID of the guild that this event relates to."""
 
     def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
         """Get the cached guild that this event relates to, if known.
 
-        If not, return `builtins.None`.
+        If not, return `None`.
 
         Returns
         -------
         typing.Optional[hikari.guilds.GatewayGuild]
             The gateway guild this event relates to, if known. Otherwise
-            this will return `builtins.None`.
+            this will return `None`.
         """
         if not isinstance(self.app, traits.CacheAware):
             return None
@@ -197,13 +185,13 @@ class GuildChannelEvent(ChannelEvent, abc.ABC):
     def get_channel(self) -> typing.Optional[channels.PermissibleGuildChannel]:
         """Get the cached channel that this event relates to, if known.
 
-        If not, return `builtins.None`.
+        If not, return `None`.
 
         Returns
         -------
         typing.Optional[hikari.channels.GuildChannel]
             The cached channel this event relates to. If not known, this
-            will return `builtins.None` instead.
+            will return `None` instead.
         """
         if not isinstance(self.app, traits.CacheAware):
             return None
@@ -213,7 +201,7 @@ class GuildChannelEvent(ChannelEvent, abc.ABC):
     async def fetch_channel(self) -> channels.GuildChannel:
         """Perform an API call to fetch the details about this channel.
 
-        !!! note
+        .. note::
             For `GuildChannelDeleteEvent` events, this will always raise
             an exception, since the channel will have already been removed.
 
@@ -259,7 +247,7 @@ class DMChannelEvent(ChannelEvent, abc.ABC):
     async def fetch_channel(self) -> channels.PrivateChannel:
         """Perform an API call to fetch the details about this channel.
 
-        !!! note
+        .. note::
             For `GuildChannelDeleteEvent` events, this will always raise
             an exception, since the channel will have already been removed.
 
@@ -307,13 +295,7 @@ class GuildChannelCreateEvent(GuildChannelEvent):
     # <<inherited docstring from ShardEvent>>.
 
     channel: channels.PermissibleGuildChannel = attr.field(repr=True)
-    """Guild channel that this event represents.
-
-    Returns
-    -------
-    hikari.channels.GuildChannel
-        The guild channel that was created.
-    """
+    """Guild channel that this event represents."""
 
     @property
     def app(self) -> traits.RESTAware:
@@ -343,17 +325,11 @@ class GuildChannelUpdateEvent(GuildChannelEvent):
     old_channel: typing.Optional[channels.PermissibleGuildChannel] = attr.field(repr=True)
     """The old guild channel object.
 
-    This will be `builtins.None` if the channel missing from the cache.
+    This will be `None` if the channel missing from the cache.
     """
 
     channel: channels.PermissibleGuildChannel = attr.field(repr=True)
-    """Guild channel that this event represents.
-
-    Returns
-    -------
-    hikari.channels.PermissibleGuildChannel
-        The guild channel that was updated.
-    """
+    """Guild channel that this event represents."""
 
     @property
     def app(self) -> traits.RESTAware:
@@ -381,13 +357,7 @@ class GuildChannelDeleteEvent(GuildChannelEvent):
     # <<inherited docstring from ShardEvent>>.
 
     channel: channels.PermissibleGuildChannel = attr.field(repr=True)
-    """Guild channel that this event represents.
-
-    Returns
-    -------
-    hikari.channels.PermissibleGuildChannel
-        The guild channel that was deleted.
-    """
+    """Guild channel that this event represents."""
 
     @property
     def app(self) -> traits.RESTAware:
@@ -421,14 +391,8 @@ class PinsUpdateEvent(ChannelEvent, abc.ABC):
     def last_pin_timestamp(self) -> typing.Optional[datetime.datetime]:
         """Datetime of when the most recent message was pinned in the channel.
 
-        Will be `builtins.None` if nothing is pinned or the information is
+        Will be `None` if nothing is pinned or the information is
         unavailable.
-
-        Returns
-        -------
-        typing.Optional[datetime.datetime]
-            The datetime of the most recent pinned message in the channel,
-            or `builtins.None` if no pins are available.
         """
 
     @abc.abstractmethod
@@ -478,13 +442,13 @@ class GuildPinsUpdateEvent(PinsUpdateEvent, GuildChannelEvent):
     def get_channel(self) -> typing.Optional[channels.PermissibleGuildChannel]:
         """Get the cached channel that this event relates to, if known.
 
-        If not, return `builtins.None`.
+        If not, return `None`.
 
         Returns
         -------
         typing.Optional[hikari.channels.TextableGuildChannel]
             The cached channel this event relates to. If not known, this
-            will return `builtins.None` instead.
+            will return `None` instead.
         """
         channel = super().get_channel()
         assert channel is None or isinstance(channel, channels.PermissibleGuildChannel)
@@ -587,13 +551,7 @@ class InviteEvent(GuildChannelEvent, abc.ABC):
     @property
     @abc.abstractmethod
     def code(self) -> str:
-        """Code that is used in the URL for the invite.
-
-        Returns
-        -------
-        builtins.str
-            The invite code.
-        """
+        """Code that is used in the URL for the invite."""
 
     async def fetch_invite(self) -> invites.Invite:
         """Perform an API call to retrieve an up-to-date image of this invite.
@@ -636,13 +594,7 @@ class InviteCreateEvent(InviteEvent):
     # <<inherited docstring from ShardEvent>>.
 
     invite: invites.InviteWithMetadata = attr.field()
-    """Invite that was created.
-
-    Returns
-    -------
-    hikari.invites.InviteWithMetadata
-        The created invite object.
-    """
+    """Invite that was created."""
 
     @property
     def app(self) -> traits.RESTAware:
@@ -691,7 +643,7 @@ class InviteDeleteEvent(InviteEvent):
     old_invite: typing.Optional[invites.InviteWithMetadata] = attr.field()
     """Object of the old cached invite.
 
-    This will be `builtins.None` if the invite is missing from the cache.
+    This will be `None` if the invite is missing from the cache.
     """
 
     if typing.TYPE_CHECKING:
@@ -808,7 +760,7 @@ class GuildThreadEvent(shard_events.ShardEvent, abc.ABC):
     async def fetch_channel(self) -> channels.GuildThreadChannel:
         """Perform an API call to fetch the details about this thread.
 
-        !!! note
+        .. note::
             For `GuildThreadDeleteEvent` events, this will always raise
             an exception, since the channel will have already been removed.
 
@@ -980,7 +932,7 @@ class ThreadMembersUpdateEvent(GuildThreadEvent):
     approximate_member_count: int = attr.field(eq=False, hash=False, repr=True)
     """Approximate count of members in the thread channel.
 
-    !!! warning
+    .. warning::
         This stops counting at 50 for threads created before 2022/06/01.
     """
 
@@ -1021,7 +973,7 @@ class ThreadListSyncEvent(shard_events.ShardEvent):
     channel_ids: typing.Optional[typing.Sequence[snowflakes.Snowflake]] = attr.field()
     """IDs of the text channels threads are being synced for.
 
-    If this is `builtins.None` then threads are being synced for all text
+    If this is `None` then threads are being synced for all text
     channels in the guild.
 
     This may contain channels that have no active threads as well to allow for
