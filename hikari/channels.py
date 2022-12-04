@@ -462,7 +462,7 @@ class TextableChannel(PartialChannel):
             be raised once the result is awaited or interacted with. Invoking
             this function itself will not raise anything (other than
             `builtins.TypeError`).
-        """  # noqa: E501 - Line too long
+        """
         return self.app.rest.fetch_messages(self.id, before=before, after=after, around=around)
 
     async def fetch_message(self, message: snowflakes.SnowflakeishOr[messages.PartialMessage]) -> messages.Message:
@@ -956,14 +956,6 @@ class GuildChannel(PartialChannel):
     guild_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
     """The ID of the guild the channel belongs to."""
 
-    is_nsfw: typing.Optional[bool] = attr.field(eq=False, hash=False, repr=False)
-    """Whether the channel is marked as NSFW.
-
-    !!! warning
-        This will be `builtins.None` when received over the gateway in certain events
-        (e.g Guild Create).
-    """
-
     parent_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=True)
     """The ID of the parent channel the channel belongs to.
 
@@ -1113,7 +1105,7 @@ class GuildChannel(PartialChannel):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
+        """
         return await self.app.rest.edit_channel(
             self.id,
             name=name,
@@ -1146,6 +1138,9 @@ class PermissibleGuildChannel(GuildChannel):
 
     Higher numbers appear further down the channel list.
     """
+
+    is_nsfw: bool = attr.field(eq=False, hash=False, repr=False)
+    """Whether the channel is marked as NSFW."""
 
     permission_overwrites: typing.Mapping[snowflakes.Snowflake, PermissionOverwrite] = attr.field(
         eq=False, hash=False, repr=False

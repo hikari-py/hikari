@@ -761,7 +761,7 @@ class IncomingWebhook(PartialWebhook, ExecutableWebhook):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
+        """
         token: undefined.UndefinedOr[str] = undefined.UNDEFINED
         if use_token:
             if self.token is None:
@@ -963,7 +963,7 @@ class ChannelFollowerWebhook(PartialWebhook):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
+        """
         webhook = await self.app.rest.edit_webhook(
             self.id,
             name=name,
