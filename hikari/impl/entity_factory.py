@@ -112,7 +112,6 @@ class _GuildChannelFields:
     name: typing.Optional[str] = attr.field()
     type: typing.Union[channel_models.ChannelType, int] = attr.field()
     guild_id: snowflakes.Snowflake = attr.field()
-    is_nsfw: typing.Optional[bool] = attr.field()
     parent_id: typing.Optional[snowflakes.Snowflake] = attr.field()
 
 
@@ -454,7 +453,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             audit_log_models.AuditLogChangeKey.VERIFICATION_LEVEL: guild_models.GuildVerificationLevel,
             audit_log_models.AuditLogChangeKey.EXPLICIT_CONTENT_FILTER: guild_models.GuildExplicitContentFilterLevel,
             audit_log_models.AuditLogChangeKey.DEFAULT_MESSAGE_NOTIFICATIONS: guild_models.GuildMessageNotificationsLevel,
-            # noqa: E501 - Line too long
             audit_log_models.AuditLogChangeKey.PRUNE_DELETE_DAYS: _deserialize_day_timedelta,
             audit_log_models.AuditLogChangeKey.WIDGET_CHANNEL_ID: snowflakes.Snowflake,
             audit_log_models.AuditLogChangeKey.POSITION: int,
@@ -940,7 +938,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=payload.get("name"),
             type=channel_models.ChannelType(payload["type"]),
             guild_id=guild_id,
-            is_nsfw=payload.get("nsfw"),
             parent_id=parent_id,
         )
 
@@ -962,7 +959,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
             permission_overwrites=permission_overwrites,
-            is_nsfw=channel_fields.is_nsfw,
+            is_nsfw=payload.get("nsfw", False),
             parent_id=None,
             position=int(payload["position"]),
         )
@@ -997,7 +994,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
             permission_overwrites=permission_overwrites,
-            is_nsfw=channel_fields.is_nsfw,
+            is_nsfw=payload.get("nsfw", False),
             parent_id=channel_fields.parent_id,
             topic=payload["topic"],
             last_message_id=last_message_id,
@@ -1040,7 +1037,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
             permission_overwrites=permission_overwrites,
-            is_nsfw=channel_fields.is_nsfw,
+            is_nsfw=payload.get("nsfw", False),
             parent_id=channel_fields.parent_id,
             topic=payload["topic"],
             last_message_id=last_message_id,
@@ -1074,7 +1071,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
             permission_overwrites=permission_overwrites,
-            is_nsfw=channel_fields.is_nsfw,
+            is_nsfw=payload.get("nsfw", False),
             parent_id=channel_fields.parent_id,
             # There seems to be an edge case where rtc_region won't be included in gateway events (e.g. GUILD_CREATE)
             # for a voice channel that just hasn't been touched since this was introduced (e.g. has been archived).
@@ -1104,7 +1101,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
             permission_overwrites=permission_overwrites,
-            is_nsfw=channel_fields.is_nsfw,
+            is_nsfw=payload.get("nsfw", False),
             parent_id=channel_fields.parent_id,
             region=payload["rtc_region"],
             bitrate=int(payload["bitrate"]),
@@ -1174,7 +1171,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=channel_fields.name,
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
-            is_nsfw=channel_fields.is_nsfw,
             parent_id=channel_fields.parent_id,
             last_message_id=last_message_id,
             last_pin_timestamp=last_pin_timestamp,
@@ -1223,7 +1219,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=channel_fields.name,
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
-            is_nsfw=channel_fields.is_nsfw,
             parent_id=channel_fields.parent_id,
             last_message_id=last_message_id,
             last_pin_timestamp=last_pin_timestamp,
@@ -1272,7 +1267,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=channel_fields.name,
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
-            is_nsfw=channel_fields.is_nsfw,
             parent_id=channel_fields.parent_id,
             last_message_id=last_message_id,
             last_pin_timestamp=last_pin_timestamp,
@@ -2103,6 +2097,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             options=options,
             default_member_permissions=default_member_permissions,
             is_dm_enabled=payload.get("dm_permission", True),
+            is_nsfw=payload.get("nsfw", False),
             guild_id=guild_id,
             version=snowflakes.Snowflake(payload["version"]),
             name_localizations=name_localizations,
@@ -2141,6 +2136,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=payload["name"],
             default_member_permissions=default_member_permissions,
             is_dm_enabled=payload.get("dm_permission", True),
+            is_nsfw=payload.get("nsfw", False),
             guild_id=guild_id,
             version=snowflakes.Snowflake(payload["version"]),
             name_localizations=name_localizations,
@@ -2767,7 +2763,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             user=self.deserialize_user(payload["user"]),
         )
 
-    def deserialize_partial_message(  # noqa CFQ001 - Function too long
+    def deserialize_partial_message(  # noqa: C901 - Too complex
         self, payload: data_binding.JSONObject
     ) -> message_models.PartialMessage:
         author: undefined.UndefinedOr[user_models.User] = undefined.UNDEFINED
@@ -2898,9 +2894,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             mentions_everyone=payload.get("mention_everyone", undefined.UNDEFINED),
         )
 
-    def deserialize_message(
-        self, payload: data_binding.JSONObject
-    ) -> message_models.Message:  # noqa CFQ001 - Function too long
+    def deserialize_message(self, payload: data_binding.JSONObject) -> message_models.Message:
         author = self.deserialize_user(payload["author"])
 
         guild_id: typing.Optional[snowflakes.Snowflake] = None
@@ -2999,7 +2993,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     # PRESENCE MODELS #
     ###################
 
-    def deserialize_member_presence(  # noqa: CFQ001 - Max function length
+    def deserialize_member_presence(
         self,
         payload: data_binding.JSONObject,
         *,

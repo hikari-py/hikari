@@ -193,6 +193,8 @@ class Attachment(snowflakes.Unique, files.WebResource):
 
     You can use this object in the same way as a `hikari.files.WebResource`,
     by passing it as an attached file when creating a message, etc.
+
+    It can also be used when editing a message to keep a previous attachment.
     """
 
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)

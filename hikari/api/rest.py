@@ -315,7 +315,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
+        """
 
     @abc.abstractmethod
     async def follow_channel(
@@ -787,7 +787,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
+        """
 
     @abc.abstractmethod
     def trigger_typing(
@@ -1049,7 +1049,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             be raised once the result is awaited or iterated over. Invoking
             this function itself will not raise anything (other than
             `builtins.TypeError`).
-        """  # noqa: E501 - Line too long
+        """
 
     @abc.abstractmethod
     async def fetch_message(
@@ -5315,7 +5315,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
+        """
 
     @abc.abstractmethod
     def fetch_private_archived_threads(
@@ -5375,7 +5375,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
+        """
 
     @abc.abstractmethod
     def fetch_joined_private_archived_threads(
@@ -5436,7 +5436,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
+        """
 
     @abc.abstractmethod
     async def reposition_channels(
@@ -6540,7 +6540,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
+        """
 
     @abc.abstractmethod
     async def begin_guild_prune(
@@ -6605,7 +6605,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
+        """
 
     @abc.abstractmethod
     async def fetch_guild_voice_regions(
@@ -7450,6 +7450,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             undefined.UndefinedType, int, permissions_.Permissions
         ] = undefined.UNDEFINED,
         dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.SlashCommand:
         r"""Create an application command.
 
@@ -7485,6 +7486,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Whether this command is enabled in DMs with the bot.
 
             This can only be applied to non-guild commands.
+        nsfw : hikari.undefined.UndefinedOr[builtins.bool]
+            Whether this command should be age-restricted.
 
         Returns
         -------
@@ -7531,6 +7534,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             undefined.UndefinedType, int, permissions_.Permissions
         ] = undefined.UNDEFINED,
         dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.ContextMenuCommand:
         r"""Create an application command.
 
@@ -7563,6 +7567,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Whether this command is enabled in DMs with the bot.
 
             This can only be applied to non-guild commands.
+        nsfw : hikari.undefined.UndefinedOr[builtins.bool]
+            Whether this command should be age-restricted.
 
         Returns
         -------
@@ -8387,7 +8393,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
+        """
 
     async def create_modal_response(
         self,

@@ -361,7 +361,7 @@ class GuildBuilder(abc.ABC):
 
             When the guild is created, this will be replaced with a different
             ID.
-        """  # noqa: E501 - Line too long
+        """
 
     @abc.abstractmethod
     def add_text_channel(
@@ -412,7 +412,7 @@ class GuildBuilder(abc.ABC):
 
             When the guild is created, this will be replaced with a different
             ID.
-        """  # noqa: E501 - Line too long
+        """
 
     @abc.abstractmethod
     def add_voice_channel(
@@ -470,7 +470,7 @@ class GuildBuilder(abc.ABC):
 
             When the guild is created, this will be replaced with a different
             ID.
-        """  # noqa: E501 - Line too long
+        """
 
     @abc.abstractmethod
     def add_stage_channel(
@@ -985,6 +985,11 @@ class CommandBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
+    def is_nsfw(self) -> undefined.UndefinedOr[bool]:
+        """Whether this command age-restricted."""
+
+    @property
+    @abc.abstractmethod
     def name_localizations(self) -> typing.Mapping[typing.Union[locales.Locale, str], str]:
         """Name localizations set for this command."""
 
@@ -1031,6 +1036,21 @@ class CommandBuilder(abc.ABC):
         ----------
         state : hikari.undefined.UndefinedOr[builtins.bool]
             Whether this command is enabled in DMs with the bot.
+
+        Returns
+        -------
+        CommandBuilder
+            Object of this command builder for chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_is_nsfw(self: _T, state: undefined.UndefinedOr[bool], /) -> _T:
+        """Set whether this command will be age-restricted.
+
+        Parameters
+        ----------
+        state : hikari.undefined.UndefinedOr[builtins.bool]
+            Whether this command is age-restricted.
 
         Returns
         -------
@@ -1307,7 +1327,7 @@ class ButtonBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
         -------
         ButtonBuilder
             The builder object to enable chained calls.
-        """  # noqa E501 - Line too long
+        """
 
     @abc.abstractmethod
     def set_label(self: _T, label: undefined.UndefinedOr[str], /) -> _T:
@@ -1441,7 +1461,7 @@ class SelectOptionBuilder(ComponentBuilder, abc.ABC, typing.Generic[_SelectMenuB
         -------
         SelectOptionBuilder
             The builder object to enable chained calls.
-        """  # noqa E501 - Line too long
+        """
 
     @abc.abstractmethod
     def set_is_default(self: _T, state: bool, /) -> _T:

@@ -84,7 +84,7 @@ class TestHandleInterrupt:
 
     def test_when_propagate_interrupt(self):
         with mock.patch.object(signal, "signal"):
-            with pytest.raises(errors.HikariInterrupt):  # noqa:  PT012 - raises block should contain a single statement
+            with pytest.raises(errors.HikariInterrupt):  # noqa: PT012 - raises block should contain a single statement
                 with signals.handle_interrupts(True, object(), True):
                     raise errors.HikariInterrupt(1, "t")
 

@@ -1328,7 +1328,7 @@ class RESTClientImpl(rest_api.RESTClient):
             attachment_id = 0
 
             for f in final_attachments:
-                if isinstance(f, messages_.Attachment):
+                if edit and isinstance(f, messages_.Attachment):
                     attachments_payload.append({"id": f.id, "filename": f.filename})
                     continue
 
@@ -3426,6 +3426,7 @@ class RESTClientImpl(rest_api.RESTClient):
             undefined.UndefinedType, int, permissions_.Permissions
         ] = undefined.UNDEFINED,
         dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> data_binding.JSONObject:
         if guild is undefined.UNDEFINED:
             route = routes.POST_APPLICATION_COMMAND.compile(application=application)
@@ -3440,6 +3441,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put_array("options", options, conversion=self._entity_factory.serialize_command_option)
         body.put("name_localizations", name_localizations)
         body.put("description_localizations", description_localizations)
+        body.put("nsfw", nsfw)
 
         # Discord has some funky behaviour around what 0 means. They consider it to be the same as ADMINISTRATOR,
         # but we consider it to be the same as None for developer sanity reasons
@@ -3468,6 +3470,7 @@ class RESTClientImpl(rest_api.RESTClient):
             undefined.UndefinedType, int, permissions_.Permissions
         ] = undefined.UNDEFINED,
         dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.SlashCommand:
         response = await self._create_application_command(
             application=application,
@@ -3480,6 +3483,7 @@ class RESTClientImpl(rest_api.RESTClient):
             description_localizations=description_localizations,
             default_member_permissions=default_member_permissions,
             dm_enabled=dm_enabled,
+            nsfw=nsfw,
         )
         return self._entity_factory.deserialize_slash_command(
             response, guild_id=snowflakes.Snowflake(guild) if guild is not undefined.UNDEFINED else None
@@ -3499,6 +3503,7 @@ class RESTClientImpl(rest_api.RESTClient):
             undefined.UndefinedType, int, permissions_.Permissions
         ] = undefined.UNDEFINED,
         dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.ContextMenuCommand:
         response = await self._create_application_command(
             application=application,
@@ -3508,6 +3513,7 @@ class RESTClientImpl(rest_api.RESTClient):
             name_localizations=name_localizations,
             default_member_permissions=default_member_permissions,
             dm_enabled=dm_enabled,
+            nsfw=nsfw,
         )
         return self._entity_factory.deserialize_context_menu_command(
             response, guild_id=snowflakes.Snowflake(guild) if guild is not undefined.UNDEFINED else None
@@ -3543,6 +3549,7 @@ class RESTClientImpl(rest_api.RESTClient):
             undefined.UndefinedType, int, permissions_.Permissions
         ] = undefined.UNDEFINED,
         dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.PartialCommand:
         if guild is undefined.UNDEFINED:
             route = routes.PATCH_APPLICATION_COMMAND.compile(application=application, command=command)
@@ -3556,6 +3563,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("name", name)
         body.put("description", description)
         body.put_array("options", options, conversion=self._entity_factory.serialize_command_option)
+        body.put("nsfw", nsfw)
         # Discord has some funky behaviour around what 0 means. They consider it to be the same as ADMINISTRATOR,
         # but we consider it to be the same as None for developer sanity reasons
         body.put("default_member_permissions", None if default_member_permissions == 0 else default_member_permissions)
