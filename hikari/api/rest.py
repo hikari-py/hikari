@@ -315,7 +315,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
+        """
 
     @abc.abstractmethod
     async def follow_channel(
@@ -787,7 +787,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
+        """
 
     @abc.abstractmethod
     def trigger_typing(
@@ -1049,7 +1049,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             be raised once the result is awaited or iterated over. Invoking
             this function itself will not raise anything (other than
             `builtins.TypeError`).
-        """  # noqa: E501 - Line too long
+        """
 
     @abc.abstractmethod
     async def fetch_message(
@@ -5315,7 +5315,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
+        """
 
     @abc.abstractmethod
     def fetch_private_archived_threads(
@@ -5375,7 +5375,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
+        """
 
     @abc.abstractmethod
     def fetch_joined_private_archived_threads(
@@ -5436,7 +5436,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
+        """
 
     @abc.abstractmethod
     async def reposition_channels(
@@ -6540,7 +6540,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
+        """
 
     @abc.abstractmethod
     async def begin_guild_prune(
@@ -6605,7 +6605,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
+        """
 
     @abc.abstractmethod
     async def fetch_guild_voice_regions(
@@ -8376,7 +8376,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
+        """
 
     @abc.abstractmethod
     def build_action_row(self) -> special_endpoints.ActionRowBuilder:

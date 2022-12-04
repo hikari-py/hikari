@@ -391,7 +391,7 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
         values : hikari.undefined.UndefinedOr[typing.Iterable[hikari.snowflakes.SnowflakeishOr[hikari.snowflakes.Unique]]]
             The JSON snowflakes to put. This may alternatively be undefined.
             In the latter case, nothing is performed.
-        """  # noqa: E501 - Line too long
+        """
         if values is not undefined.UNDEFINED:
             self[key] = [str(int(value)) for value in values]
 

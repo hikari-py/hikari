@@ -749,7 +749,7 @@ class UserImpl(PartialUserImpl, User):
     """The custom banner color for the user, if set.
 
     The official client will decide the default color if not set.
-    """  # noqa: D401 - Imperative mood
+    """
 
     is_bot: bool = attr.field(eq=False, hash=False, repr=True)
     """`builtins.True` if this user is a bot account, `builtins.False` otherwise."""

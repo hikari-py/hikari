@@ -223,9 +223,8 @@ class Color(int):
         components = self.rgb
         return "".join(hex(c)[2:].zfill(2) for c in components).upper()
 
-    # Ignore docstring not starting in an imperative mood
     @property
-    def is_web_safe(self) -> bool:  # noqa: D401
+    def is_web_safe(self) -> bool:
         """`builtins.True` if the color is web safe, `builtins.False` otherwise."""
         return not (((self & 0xFF0000) % 0x110000) or ((self & 0xFF00) % 0x1100) or ((self & 0xFF) % 0x11))
 

@@ -1391,7 +1391,7 @@ def _build_emoji(
     typing.Tuple[hikari.undefined.UndefinedOr[builtins.str], hikari.undefined.UndefinedOr[builtins.str]]
         A union of the custom emoji's id if defined (index 0) or the unicode
         emoji's string representation (index 1).
-    """  # noqa E501 - Line too long
+    """
     # Since these builder classes may be re-used, this method should be called when the builder is being constructed.
     if emoji is not undefined.UNDEFINED:
         if isinstance(emoji, (int, emojis.CustomEmoji)):

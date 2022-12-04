@@ -462,7 +462,7 @@ class Cache(abc.ABC):
         CacheView[hikari.snowflakes.Snowflake, CacheView[hikari.snowflakes.Snowflake, hikari.guilds.Member]]
             A view of guild IDs to views of user IDs to objects of the members
             that were found from the cache.
-        """  # noqa E501 - Line too long
+        """
 
     @abc.abstractmethod
     def get_members_view_for_guild(
@@ -665,7 +665,7 @@ class Cache(abc.ABC):
         CacheView[hikari.snowflakes.Snowflake, CacheView[hikari.snowflakes.Snowflake, hikari.voices.VoiceState]]
             A view of guild IDs to views of user IDs to objects of the voice
             states that were found in the cache,
-        """  # noqa E501 - Line too long
+        """
 
     @abc.abstractmethod
     def get_voice_states_view_for_channel(
@@ -992,7 +992,7 @@ class MutableCache(Cache, abc.ABC):
             A tuple of the old cached guild object if found (else `builtins.None`)
             and the object of the guild that was added to the cache if it could
             be added (else `builtins.None`).
-        """  # noqa E501 - Line too long
+        """
 
     @abc.abstractmethod
     def clear_guild_channels(self) -> CacheView[snowflakes.Snowflake, channels.PermissibleGuildChannel]:
@@ -1057,7 +1057,7 @@ class MutableCache(Cache, abc.ABC):
     ) -> typing.Tuple[
         typing.Optional[channels.PermissibleGuildChannel], typing.Optional[channels.PermissibleGuildChannel]
     ]:
-        """Update a guild channel in the cache,
+        """Update a guild channel in the cache.
 
         Parameters
         ----------
@@ -1070,7 +1070,7 @@ class MutableCache(Cache, abc.ABC):
             A tuple of the old cached guild channel if found (else `builtins.None`)
             and the new cached guild channel if it could be cached
             (else `builtins.None`).
-        """  # noqa E501 - Line too long
+        """  # noqa: E501 - Line too long
 
     @abc.abstractmethod
     def clear_invites(self) -> CacheView[str, invites.InviteWithMetadata]:
@@ -1169,7 +1169,7 @@ class MutableCache(Cache, abc.ABC):
             A tuple of the old cached invite object if found (else
             `builtins.None`) and the new cached invite object if it could be
             cached (else `builtins.None`).
-        """  # noqa E501 - Line too long
+        """
 
     @abc.abstractmethod
     def delete_me(self) -> typing.Optional[users.OwnUser]:
@@ -1220,7 +1220,7 @@ class MutableCache(Cache, abc.ABC):
         CacheView[hikari.snowflakes.Snowflake, CacheView[hikari.snowflakes.Snowflake, hikari.guilds.Member]]
             A view of guild IDs to views of user IDs to objects of the members
             that were removed from the cache.
-        """  # noqa E501 - Line too long
+        """
 
     @abc.abstractmethod
     def clear_members_for_guild(
@@ -1382,7 +1382,7 @@ class MutableCache(Cache, abc.ABC):
             A tuple of the old cached invite object if found (else `builtins.None`
             and the new cached invite object if it could be cached ( else
             `builtins.None`).
-        """  # noqa E501 - Line too long
+        """
 
     @abc.abstractmethod
     def clear_roles(self) -> CacheView[snowflakes.Snowflake, guilds.Role]:
@@ -1467,7 +1467,7 @@ class MutableCache(Cache, abc.ABC):
         CacheView[hikari.snowflakes.Snowflake, CacheView[hikari.snowflakes.Snowflake, hikari.voices.VoiceState]]
             A view of guild IDs to views of user IDs to objects of the voice
             states that were removed from the states.
-        """  # noqa E501 - Line too long
+        """
 
     @abc.abstractmethod
     def clear_voice_states_for_guild(

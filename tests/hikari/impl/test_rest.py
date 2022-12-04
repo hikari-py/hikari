@@ -168,7 +168,7 @@ class TestClientCredentialsStrategy:
             client=3412321, client_secret="54123123", scopes=("applications.commands.update", "identify")
         )
         assert new_token != token
-        assert new_token == "Bearer okokok.fofofo.ddd"  # noqa S105: Possible Hardcoded password
+        assert new_token == "Bearer okokok.fofofo.ddd"
 
     @pytest.mark.asyncio()
     async def test_acquire_handles_token_being_set_before_lock_is_acquired(self, mock_token):
@@ -215,7 +215,7 @@ class TestClientCredentialsStrategy:
             client=123, client_secret="123456", scopes=("applications.commands.update", "identify")
         )
         assert new_token != token
-        assert new_token == "Bearer okokok.fofofo.ddd"  # noqa S105: Possible Hardcoded password
+        assert new_token == "Bearer okokok.fofofo.ddd"
 
     @pytest.mark.asyncio()
     async def test_acquire_uses_newly_cached_token_after_acquiring_lock(self):
@@ -749,7 +749,7 @@ class TestRESTClientImpl:
     def test__transform_emoji_to_url_format_with_id(self, rest_client):
         assert rest_client._transform_emoji_to_url_format("rooYay", 123) == "rooYay:123"
 
-    @pytest.mark.parametrize(  # noqa: PT014 - Duplicate test cases (false positive)
+    @pytest.mark.parametrize(
         "emoji",
         [
             emojis.CustomEmoji(id=123, name="rooYay", is_animated=False),
