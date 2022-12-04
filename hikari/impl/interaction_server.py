@@ -162,7 +162,7 @@ class _FilePayload(aiohttp.Payload):
                 await writer.write(chunk)
 
 
-async def _consume_generator_handler(generator: typing.AsyncGenerator[typing.Any, None]) -> None:
+async def _consume_generator_listener(generator: typing.AsyncGenerator[typing.Any, None]) -> None:
     try:
         await generator.__anext__()
 
@@ -214,6 +214,7 @@ class InteractionServer(interaction_server.InteractionServer):
         "_public_key",
         "_rest_client",
         "_server",
+        "_running_generator_listeners",
     )
 
     def __init__(
@@ -250,6 +251,7 @@ class InteractionServer(interaction_server.InteractionServer):
         self._rest_client = rest_client
         self._server: typing.Optional[aiohttp.web_runner.AppRunner] = None
         self._public_key = nacl.signing.VerifyKey(public_key) if public_key is not None else None
+        self._running_generator_listeners: typing.List[asyncio.Task] = []
 
     @property
     def is_alive(self) -> bool:
@@ -384,6 +386,16 @@ class InteractionServer(interaction_server.InteractionServer):
         await self._server.cleanup()
         self._server = None
         self._application_fetch_lock = None
+
+        for task in self._running_generator_listeners:
+            if not task.done() and not task.cancelled():
+                task.cancel()
+
+                try:
+                    await task
+                except asyncio.CancelledError:
+                    pass
+
         self._close_event.set()
         self._close_event = None
         self._is_closing = False
@@ -463,7 +475,9 @@ class InteractionServer(interaction_server.InteractionServer):
 
                 if inspect.isasyncgen(call):
                     result = await call.__anext__()
-                    asyncio.create_task(_consume_generator_handler(call))
+                    task = asyncio.create_task(_consume_generator_listener(call))
+                    self._running_generator_listeners.append(task)
+                    task.add_done_callback(self._running_generator_listeners.remove)
 
                 else:
                     result = await call
