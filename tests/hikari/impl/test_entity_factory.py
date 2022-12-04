@@ -30,6 +30,7 @@ from hikari import audit_logs as audit_log_models
 from hikari import channels as channel_models
 from hikari import colors as color_models
 from hikari import commands
+from hikari import components as component_models
 from hikari import embeds as embed_models
 from hikari import emojis as emoji_models
 from hikari import errors
@@ -53,6 +54,7 @@ from hikari.impl import entity_factory
 from hikari.interactions import base_interactions
 from hikari.interactions import command_interactions
 from hikari.interactions import component_interactions
+from hikari.interactions import modal_interactions
 from tests.hikari import hikari_test_helpers
 
 
@@ -1670,7 +1672,7 @@ class TestEntityFactoryImpl:
             }
         )
         assert guild_category.parent_id is None
-        assert guild_category.is_nsfw is None
+        assert guild_category.is_nsfw is False
 
     def test_deserialize_guild_category_with_null_fields(self, entity_factory_impl, permission_overwrite_payload):
         guild_category = entity_factory_impl.deserialize_guild_category(
@@ -1723,7 +1725,7 @@ class TestEntityFactoryImpl:
                 "guild_id": "123123123",
             }
         )
-        assert guild_text_channel.is_nsfw is None
+        assert guild_text_channel.is_nsfw is False
         assert guild_text_channel.rate_limit_per_user.total_seconds() == 0
         assert guild_text_channel.last_pin_timestamp is None
         assert guild_text_channel.parent_id is None
@@ -1787,7 +1789,7 @@ class TestEntityFactoryImpl:
                 "guild_id": "4123",
             }
         )
-        assert news_channel.is_nsfw is None
+        assert news_channel.is_nsfw is False
         assert news_channel.parent_id is None
         assert news_channel.last_pin_timestamp is None
         assert news_channel.last_message_id is None
@@ -1869,7 +1871,7 @@ class TestEntityFactoryImpl:
         )
         assert voice_channel.video_quality_mode is channel_models.VideoQualityMode.AUTO
         assert voice_channel.parent_id is None
-        assert voice_channel.is_nsfw is None
+        assert voice_channel.is_nsfw is False
         assert voice_channel.region is None
 
     @pytest.fixture()
@@ -1941,7 +1943,7 @@ class TestEntityFactoryImpl:
             }
         )
         assert voice_channel.parent_id is None
-        assert voice_channel.is_nsfw is None
+        assert voice_channel.is_nsfw is False
 
     def test_deserialize_thread_member(
         self, entity_factory_impl: entity_factory.EntityFactoryImpl, thread_member_payload: typing.Dict[str, typing.Any]
@@ -3750,7 +3752,8 @@ class TestEntityFactoryImpl:
             "name": "good name",
             "description": "very good description",
             "default_member_permissions": 8,
-            "dm_permission": True,
+            "dm_permission": False,
+            "nsfw": True,
             "options": [
                 {
                     "type": 1,
@@ -3783,7 +3786,8 @@ class TestEntityFactoryImpl:
         assert command.name == "good name"
         assert command.description == "very good description"
         assert command.default_member_permissions == permission_models.Permissions.ADMINISTRATOR
-        assert command.is_dm_enabled is True
+        assert command.is_dm_enabled is False
+        assert command.is_nsfw is True
         assert command.version == 123321123
 
         # CommandOption
@@ -3857,6 +3861,7 @@ class TestEntityFactoryImpl:
 
         assert command.options is None
         assert command.is_dm_enabled is True
+        assert command.is_nsfw is False
         assert isinstance(command, commands.SlashCommand)
 
     def test_deserialize_slash_command_standardizes_default_member_permissions(
@@ -4436,7 +4441,8 @@ class TestEntityFactoryImpl:
             "type": 2,
             "name": "good name",
             "default_member_permissions": 8,
-            "dm_permission": True,
+            "dm_permission": False,
+            "nsfw": True,
             "version": "123321123",
         }
 
@@ -4450,7 +4456,8 @@ class TestEntityFactoryImpl:
         assert command.type == commands.CommandType.USER
         assert command.name == "good name"
         assert command.default_member_permissions == permission_models.Permissions.ADMINISTRATOR
-        assert command.is_dm_enabled is True
+        assert command.is_dm_enabled is False
+        assert command.is_nsfw is True
         assert command.version == 123321123
 
     def test_deserialize_context_menu_command_with_guild_id(
@@ -4467,18 +4474,21 @@ class TestEntityFactoryImpl:
         assert command.type == commands.CommandType.USER
         assert command.name == "good name"
         assert command.default_member_permissions == permission_models.Permissions.ADMINISTRATOR
-        assert command.is_dm_enabled is True
+        assert command.is_dm_enabled is False
+        assert command.is_nsfw is True
         assert command.version == 123321123
 
     def test_deserialize_context_menu_command_with_with_null_and_unset_values(
         self, entity_factory_impl, context_menu_command_payload
     ):
         del context_menu_command_payload["dm_permission"]
+        del context_menu_command_payload["nsfw"]
 
         command = entity_factory_impl.deserialize_context_menu_command(context_menu_command_payload)
         assert isinstance(command, commands.ContextMenuCommand)
 
         assert command.is_dm_enabled is True
+        assert command.is_nsfw is False
 
     def test_deserialize_context_menu_command_default_member_permissions(
         self, entity_factory_impl, context_menu_command_payload
@@ -4519,7 +4529,7 @@ class TestEntityFactoryImpl:
         assert interaction.token == "unique_interaction_token"
         assert interaction.version == 1
         assert interaction.channel_id == 345626669114982999
-        assert interaction.component_type is message_models.ComponentType.BUTTON
+        assert interaction.component_type is component_models.ComponentType.BUTTON
         assert interaction.custom_id == "click_one"
         assert interaction.guild_id == 290926798626357999
         assert interaction.message == entity_factory_impl.deserialize_message(message_payload)
@@ -4560,6 +4570,83 @@ class TestEntityFactoryImpl:
         assert interaction.guild_locale is None
         assert interaction.app_permissions is None
         assert isinstance(interaction, component_interactions.ComponentInteraction)
+
+    @pytest.fixture()
+    def modal_interaction_payload(self, interaction_member_payload, message_payload):
+        return {
+            "version": 1,
+            "type": 5,
+            "token": "unique_interaction_token",
+            "message": message_payload,
+            "member": interaction_member_payload,
+            "id": "846462639134605312",
+            "guild_id": "290926798626357999",
+            "data": {
+                "custom_id": "modaltest",
+                "components": [
+                    {"type": 1, "components": [{"value": "Wumpus", "type": 4, "custom_id": "name"}]},
+                    {"type": 1, "components": [{"value": "Longer Text", "type": 4, "custom_id": "about"}]},
+                ],
+            },
+            "channel_id": "345626669114982999",
+            "application_id": "290926444748734465",
+            "locale": "en-US",
+            "guild_locale": "es-ES",
+        }
+
+    def test_deserialize_modal_interaction(
+        self,
+        entity_factory_impl,
+        mock_app,
+        modal_interaction_payload,
+        interaction_member_payload,
+        message_payload,
+    ):
+        interaction = entity_factory_impl.deserialize_modal_interaction(modal_interaction_payload)
+        assert interaction.app is mock_app
+        assert interaction.id == 846462639134605312
+        assert interaction.application_id == 290926444748734465
+        assert interaction.type is base_interactions.InteractionType.MODAL_SUBMIT
+        assert interaction.token == "unique_interaction_token"
+        assert interaction.version == 1
+        assert interaction.channel_id == 345626669114982999
+        assert interaction.guild_id == 290926798626357999
+        assert interaction.message == entity_factory_impl.deserialize_message(message_payload)
+        assert interaction.member == entity_factory_impl._deserialize_interaction_member(
+            interaction_member_payload, guild_id=290926798626357999
+        )
+        assert interaction.user is interaction.member.user
+        assert isinstance(interaction, modal_interactions.ModalInteraction)
+
+        short_action_row = interaction.components[0]
+        assert isinstance(short_action_row, component_models.ActionRowComponent)
+        short_text_input = short_action_row.components[0]
+        assert isinstance(short_text_input, component_models.TextInputComponent)
+        assert short_text_input.value == "Wumpus"
+        assert short_text_input.type == component_models.ComponentType.TEXT_INPUT
+        assert short_text_input.custom_id == "name"
+
+    def test_deserialize_modal_interaction_with_user(
+        self,
+        entity_factory_impl,
+        modal_interaction_payload,
+        user_payload,
+    ):
+        modal_interaction_payload["member"] = None
+        modal_interaction_payload["user"] = user_payload
+
+        interaction = entity_factory_impl.deserialize_modal_interaction(modal_interaction_payload)
+        assert interaction.user.id == 115590097100865541
+
+    def test_deserialize_modal_interaction_with_unrecognized_component(
+        self,
+        entity_factory_impl,
+        modal_interaction_payload,
+    ):
+        modal_interaction_payload["data"]["components"] = [{"type": 0}]
+
+        interaction = entity_factory_impl.deserialize_modal_interaction(modal_interaction_payload)
+        assert len(interaction.components) == 0
 
     ##################
     # STICKER MODELS #
@@ -4996,26 +5083,13 @@ class TestEntityFactoryImpl:
         invite_with_metadata_payload["max_age"] = 0
         assert entity_factory_impl.deserialize_invite_with_metadata(invite_with_metadata_payload).max_age is None
 
-    ##################
-    # MESSAGE MODELS #
-    ##################
+    ####################
+    # COMPONENT MODELS #
+    ####################
 
     @pytest.fixture()
     def action_row_payload(self, button_payload):
         return {"type": 1, "components": [button_payload]}
-
-    def test__deserialize_action_row(self, entity_factory_impl, action_row_payload, button_payload):
-        action_row = entity_factory_impl._deserialize_action_row(action_row_payload)
-
-        assert action_row.type is message_models.ComponentType.ACTION_ROW
-        assert action_row.components == [entity_factory_impl._deserialize_component(button_payload)]
-
-    def test__deserialize_action_row_handles_unknown_component_type(self, entity_factory_impl):
-        action_row = entity_factory_impl._deserialize_action_row(
-            {"type": 1, "components": [{"type": "9494949"}, {"type": "9239292"}]}
-        )
-
-        assert action_row.components == []
 
     @pytest.fixture()
     def button_payload(self, custom_emoji_payload):
@@ -5032,8 +5106,8 @@ class TestEntityFactoryImpl:
     def test_deserialize__deserialize_button(self, entity_factory_impl, button_payload, custom_emoji_payload):
         button = entity_factory_impl._deserialize_button(button_payload)
 
-        assert button.type is message_models.ComponentType.BUTTON
-        assert button.style is message_models.ButtonStyle.PRIMARY
+        assert button.type is component_models.ComponentType.BUTTON
+        assert button.style is component_models.ButtonStyle.PRIMARY
         assert button.label == "Click me!"
         assert button.emoji == entity_factory_impl.deserialize_emoji(custom_emoji_payload)
         assert button.custom_id == "click_one"
@@ -5045,8 +5119,8 @@ class TestEntityFactoryImpl:
     ):
         button = entity_factory_impl._deserialize_button({"type": 2, "style": 5})
 
-        assert button.type is message_models.ComponentType.BUTTON
-        assert button.style is message_models.ButtonStyle.LINK
+        assert button.type is component_models.ComponentType.BUTTON
+        assert button.style is component_models.ButtonStyle.LINK
         assert button.label is None
         assert button.emoji is None
         assert button.custom_id is None
@@ -5076,7 +5150,7 @@ class TestEntityFactoryImpl:
     def test__deserialize_select_menu(self, entity_factory_impl, select_menu_payload, custom_emoji_payload):
         menu = entity_factory_impl._deserialize_select_menu(select_menu_payload)
 
-        assert menu.type is message_models.ComponentType.SELECT_MENU
+        assert menu.type is component_models.ComponentType.SELECT_MENU
         assert menu.custom_id == "Not an ID"
 
         # SelectMenuOption
@@ -5087,7 +5161,7 @@ class TestEntityFactoryImpl:
         assert option.description == "queen"
         assert option.emoji == entity_factory_impl.deserialize_emoji(custom_emoji_payload)
         assert option.is_default is True
-        assert isinstance(option, message_models.SelectMenuOption)
+        assert isinstance(option, component_models.SelectMenuOption)
 
         assert menu.placeholder == "Imagine a place"
         assert menu.min_values == 69
@@ -5116,28 +5190,52 @@ class TestEntityFactoryImpl:
         assert menu.is_disabled is False
 
     @pytest.mark.parametrize(
-        ("type_", "fn"),
+        ("type_", "fn", "mapping"),
         [
-            (1, "_deserialize_action_row"),
-            (2, "_deserialize_button"),
-            (3, "_deserialize_select_menu"),
+            (2, "_deserialize_button", "_message_component_type_mapping"),
+            (3, "_deserialize_select_menu", "_message_component_type_mapping"),
+            (4, "_deserialize_text_input", "_modal_component_type_mapping"),
         ],
     )
-    def test__deserialize_component(self, mock_app, type_, fn):
-        payload = {"type": type_}
+    def test__deserialize_components(self, mock_app, type_, fn, mapping):
+        component_payload = {"type": type_}
+        payload = [{"type": 1, "components": [component_payload]}]
 
         with mock.patch.object(entity_factory.EntityFactoryImpl, fn) as expected_fn:
             # We need to instantiate it after the mock so that the functions that are stored in the dicts
             # are the ones we mock
             entity_factory_impl = entity_factory.EntityFactoryImpl(app=mock_app)
 
-            assert entity_factory_impl._deserialize_component(payload) is expected_fn.return_value
+            components = entity_factory_impl._deserialize_components(payload, getattr(entity_factory_impl, mapping))
 
-        expected_fn.assert_called_once_with(payload)
+        expected_fn.assert_called_once_with(component_payload)
+        action_row = components[0]
+        assert isinstance(action_row, component_models.ActionRowComponent)
+        assert action_row.components[0] is expected_fn.return_value
 
-    def test__deserialize_component_handles_unknown_type(self, entity_factory_impl):
-        with pytest.raises(errors.UnrecognisedEntityError):
-            entity_factory_impl._deserialize_component({"type": -9434994})
+    def test__deserialize_components_handles_unknown_top_component_type(self, entity_factory_impl):
+        components = entity_factory_impl._deserialize_components(
+            [
+                # Unknown top-level component
+                {"type": -9434994},
+                {
+                    # Known top-level component
+                    "type": 1,
+                    "components": [
+                        # Unknown components
+                        {"type": 1},
+                        {"type": 1000000},
+                    ],
+                },
+            ],
+            {},
+        )
+
+        assert components == []
+
+    ##################
+    # MESSAGE MODELS #
+    ##################
 
     @pytest.fixture()
     def partial_application_payload(self):
@@ -5373,7 +5471,9 @@ class TestEntityFactoryImpl:
         assert partial_message.interaction.user == entity_factory_impl.deserialize_user(user_payload)
         assert isinstance(partial_message.interaction, message_models.MessageInteraction)
 
-        assert partial_message.components == [entity_factory_impl._deserialize_component(action_row_payload)]
+        assert partial_message.components == entity_factory_impl._deserialize_components(
+            [action_row_payload], entity_factory_impl._message_component_type_mapping
+        )
 
     def test_deserialize_partial_message_with_partial_fields(self, entity_factory_impl, message_payload):
         message_payload["content"] = ""
@@ -5553,7 +5653,9 @@ class TestEntityFactoryImpl:
         assert message.interaction.user == entity_factory_impl.deserialize_user(user_payload)
         assert isinstance(message.interaction, message_models.MessageInteraction)
 
-        assert message.components == [entity_factory_impl._deserialize_component(action_row_payload)]
+        assert message.components == entity_factory_impl._deserialize_components(
+            [action_row_payload], entity_factory_impl._message_component_type_mapping
+        )
 
     def test_deserialize_message_with_unset_sub_fields(self, entity_factory_impl, message_payload):
         del message_payload["application"]["cover_image"]

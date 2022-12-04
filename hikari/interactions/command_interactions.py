@@ -363,7 +363,11 @@ class BaseCommandInteraction(base_interactions.PartialInteraction):
 
 @attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
-class CommandInteraction(BaseCommandInteraction, base_interactions.MessageResponseMixin[CommandResponseTypesT]):
+class CommandInteraction(
+    BaseCommandInteraction,
+    base_interactions.MessageResponseMixin[CommandResponseTypesT],
+    base_interactions.ModalResponseMixin,
+):
     """Represents a command interaction on Discord."""
 
     app_permissions: typing.Optional[permissions_.Permissions] = attr.field(eq=False, hash=False, repr=False)

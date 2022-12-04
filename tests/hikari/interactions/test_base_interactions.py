@@ -196,3 +196,36 @@ class TestMessageResponseMixin:
         await mock_message_response_mixin.delete_initial_response()
 
         mock_app.rest.delete_interaction_response.assert_awaited_once_with(651231, "399393939doodsodso")
+
+
+class TestModalResponseMixin:
+    @pytest.fixture()
+    def mock_modal_response_mixin(self, mock_app):
+        return base_interactions.ModalResponseMixin(
+            app=mock_app,
+            id=34123,
+            application_id=651231,
+            type=base_interactions.InteractionType.APPLICATION_COMMAND,
+            token="399393939doodsodso",
+            version=3122312,
+        )
+
+    @pytest.mark.asyncio()
+    async def test_create_modal_response(self, mock_modal_response_mixin, mock_app):
+        await mock_modal_response_mixin.create_modal_response("title", "custom_id", None, [])
+
+        mock_app.rest.create_modal_response.assert_awaited_once_with(
+            34123,
+            "399393939doodsodso",
+            title="title",
+            custom_id="custom_id",
+            component=None,
+            components=[],
+        )
+
+    def test_build_response(self, mock_modal_response_mixin, mock_app):
+        mock_app.rest.interaction_modal_builder = mock.Mock()
+        builder = mock_modal_response_mixin.build_modal_response("title", "custom_id")
+
+        assert builder is mock_app.rest.interaction_modal_builder.return_value
+        mock_app.rest.interaction_modal_builder.assert_called_once_with(title="title", custom_id="custom_id")

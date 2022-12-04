@@ -502,7 +502,7 @@ class ExponentialBackOff:
             # If this happened then we can be sure that we've passed maximum.
             value = self.maximum
 
-        return value + random.random() * self.jitter_multiplier  # nosec  # noqa S311 rng for cryptography
+        return value + random.random() * self.jitter_multiplier  # noqa: S311 - rng for cryptography
 
     def __iter__(self) -> ExponentialBackOff:
         """Return this object, as it is an iterator."""

@@ -53,6 +53,7 @@ if typing.TYPE_CHECKING:
     from hikari.interactions import base_interactions
     from hikari.interactions import command_interactions
     from hikari.interactions import component_interactions
+    from hikari.interactions import modal_interactions
     from hikari.internal import data_binding
 
 
@@ -1304,6 +1305,21 @@ class EntityFactory(abc.ABC):
         -------
         hikari.interactions.command_interactions.AutocompleteInteraction
             The deserialized autocomplete interaction object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_modal_interaction(self, payload: data_binding.JSONObject) -> modal_interactions.ModalInteraction:
+        """Parse a raw payload from Discord into a modal interaction object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.interactions.modal_interactions.ModalInteraction
+            The deserialized modal interaction object.
         """
 
     @abc.abstractmethod

@@ -56,11 +56,16 @@ if typing.TYPE_CHECKING:
     from hikari.api import rest as rest_api
     from hikari.interactions import command_interactions
     from hikari.interactions import component_interactions
+    from hikari.interactions import modal_interactions
 
     _InteractionT_co = typing.TypeVar("_InteractionT_co", bound=base_interactions.PartialInteraction, covariant=True)
     _MessageResponseBuilderT = typing.Union[
         special_endpoints.InteractionDeferredBuilder,
         special_endpoints.InteractionMessageBuilder,
+    ]
+    _ModalOrMessageResponseBuilderT = typing.Union[
+        _MessageResponseBuilderT,
+        special_endpoints.InteractionModalBuilder,
     ]
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.interaction_server")
@@ -561,7 +566,7 @@ class InteractionServer(interaction_server.InteractionServer):
     def get_listener(
         self, interaction_type: typing.Type[command_interactions.CommandInteraction], /
     ) -> typing.Optional[
-        interaction_server.ListenerT[command_interactions.CommandInteraction, _MessageResponseBuilderT]
+        interaction_server.ListenerT[command_interactions.CommandInteraction, _ModalOrMessageResponseBuilderT]
     ]:
         ...
 
@@ -569,7 +574,7 @@ class InteractionServer(interaction_server.InteractionServer):
     def get_listener(
         self, interaction_type: typing.Type[component_interactions.ComponentInteraction], /
     ) -> typing.Optional[
-        interaction_server.ListenerT[component_interactions.ComponentInteraction, _MessageResponseBuilderT]
+        interaction_server.ListenerT[component_interactions.ComponentInteraction, _ModalOrMessageResponseBuilderT]
     ]:
         ...
 
@@ -581,6 +586,12 @@ class InteractionServer(interaction_server.InteractionServer):
             command_interactions.AutocompleteInteraction, special_endpoints.InteractionAutocompleteBuilder
         ]
     ]:
+        ...
+
+    @typing.overload
+    def get_listener(
+        self, interaction_type: typing.Type[modal_interactions.ModalInteraction], /
+    ) -> typing.Optional[interaction_server.ListenerT[modal_interactions.ModalInteraction, _MessageResponseBuilderT]]:
         ...
 
     @typing.overload
@@ -599,7 +610,7 @@ class InteractionServer(interaction_server.InteractionServer):
         self,
         interaction_type: typing.Type[command_interactions.CommandInteraction],
         listener: typing.Optional[
-            interaction_server.ListenerT[command_interactions.CommandInteraction, _MessageResponseBuilderT]
+            interaction_server.ListenerT[command_interactions.CommandInteraction, _ModalOrMessageResponseBuilderT]
         ],
         /,
         *,
@@ -612,7 +623,7 @@ class InteractionServer(interaction_server.InteractionServer):
         self,
         interaction_type: typing.Type[component_interactions.ComponentInteraction],
         listener: typing.Optional[
-            interaction_server.ListenerT[component_interactions.ComponentInteraction, _MessageResponseBuilderT]
+            interaction_server.ListenerT[component_interactions.ComponentInteraction, _ModalOrMessageResponseBuilderT]
         ],
         /,
         *,
@@ -628,6 +639,19 @@ class InteractionServer(interaction_server.InteractionServer):
             interaction_server.ListenerT[
                 command_interactions.AutocompleteInteraction, special_endpoints.InteractionAutocompleteBuilder
             ]
+        ],
+        /,
+        *,
+        replace: bool = False,
+    ) -> None:
+        ...
+
+    @typing.overload
+    def set_listener(
+        self,
+        interaction_type: typing.Type[modal_interactions.ModalInteraction],
+        listener: typing.Optional[
+            interaction_server.ListenerT[modal_interactions.ModalInteraction, _MessageResponseBuilderT]
         ],
         /,
         *,

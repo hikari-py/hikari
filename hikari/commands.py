@@ -237,6 +237,9 @@ class PartialCommand(snowflakes.Unique):
     is_dm_enabled: bool = attr.field(eq=False, hash=False, repr=True)
     """Whether this command is enabled in DMs with the bot."""
 
+    is_nsfw: bool = attr.field(eq=False, hash=False, repr=True)
+    """Whether this command is age-restricted."""
+
     guild_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
     """ID of the guild this command is in.
 

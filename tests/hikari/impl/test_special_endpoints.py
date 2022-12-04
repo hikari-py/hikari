@@ -24,6 +24,7 @@ import mock
 import pytest
 
 from hikari import commands
+from hikari import components
 from hikari import emojis
 from hikari import files
 from hikari import locales
@@ -912,6 +913,40 @@ class TestInteractionMessageBuilder:
         assert attachments == []
 
 
+class TestInteractionModalBuilder:
+    def test_type_property(self):
+        builder = special_endpoints.InteractionModalBuilder("title", "custom_id")
+        assert builder.type == 9
+
+    def test_title_property(self):
+        builder = special_endpoints.InteractionModalBuilder("title", "custom_id").set_title("title2")
+        assert builder.title == "title2"
+
+    def test_custom_id_property(self):
+        builder = special_endpoints.InteractionModalBuilder("title", "custom_id").set_custom_id("better_custom_id")
+        assert builder.custom_id == "better_custom_id"
+
+    def test_components_property(self):
+        component = mock.Mock()
+        builder = special_endpoints.InteractionModalBuilder("title", "custom_id").add_component(component)
+        assert builder.components == [component]
+
+    def test_build(self):
+        component = mock.Mock()
+        builder = special_endpoints.InteractionModalBuilder("title", "custom_id").add_component(component)
+
+        result, attachments = builder.build(mock.Mock())
+        assert result == {
+            "type": 9,
+            "data": {
+                "title": "title",
+                "custom_id": "custom_id",
+                "components": [component.build.return_value],
+            },
+        }
+        assert attachments == ()
+
+
 class TestSlashCommandBuilder:
     def test_description_property(self):
         builder = special_endpoints.SlashCommandBuilder("ok", "NO")
@@ -964,6 +999,7 @@ class TestSlashCommandBuilder:
             .set_id(3412312)
             .set_default_member_permissions(permissions.Permissions.ADMINISTRATOR)
             .set_is_dm_enabled(True)
+            .set_is_nsfw(True)
         )
 
         result = builder.build(mock_entity_factory)
@@ -974,6 +1010,7 @@ class TestSlashCommandBuilder:
             "description": "one",
             "type": 1,
             "dm_permission": True,
+            "nsfw": True,
             "default_member_permissions": 8,
             "options": [mock_entity_factory.serialize_command_option.return_value],
             "id": "3412312",
@@ -1005,6 +1042,7 @@ class TestSlashCommandBuilder:
             .set_description_localizations({locales.Locale.TR: "bir"})
             .set_default_member_permissions(permissions.Permissions.BAN_MEMBERS)
             .set_is_dm_enabled(True)
+            .set_is_nsfw(True)
         )
         mock_rest = mock.AsyncMock()
 
@@ -1021,6 +1059,7 @@ class TestSlashCommandBuilder:
             description_localizations={locales.Locale.TR: "bir"},
             default_member_permissions=permissions.Permissions.BAN_MEMBERS,
             dm_enabled=True,
+            nsfw=True,
         )
 
     @pytest.mark.asyncio()
@@ -1029,6 +1068,7 @@ class TestSlashCommandBuilder:
             special_endpoints.SlashCommandBuilder("we are number", "one")
             .set_default_member_permissions(permissions.Permissions.BAN_MEMBERS)
             .set_is_dm_enabled(True)
+            .set_is_nsfw(True)
         )
         mock_rest = mock.AsyncMock()
 
@@ -1048,6 +1088,7 @@ class TestSlashCommandBuilder:
             description_localizations={locales.Locale.TR: "bir"},
             default_member_permissions=permissions.Permissions.BAN_MEMBERS,
             dm_enabled=True,
+            nsfw=True,
         )
 
 
@@ -1062,6 +1103,7 @@ class TestContextMenuBuilder:
             .set_name_localizations({locales.Locale.TR: "merhaba"})
             .set_default_member_permissions(permissions.Permissions.ADMINISTRATOR)
             .set_is_dm_enabled(True)
+            .set_is_nsfw(True)
         )
 
         result = builder.build(mock.Mock())
@@ -1070,6 +1112,7 @@ class TestContextMenuBuilder:
             "name": "we are number",
             "type": 2,
             "dm_permission": True,
+            "nsfw": True,
             "default_member_permissions": 8,
             "id": "3412312",
             "name_localizations": {locales.Locale.TR: "merhaba"},
@@ -1089,6 +1132,7 @@ class TestContextMenuBuilder:
             .set_default_member_permissions(permissions.Permissions.BAN_MEMBERS)
             .set_name_localizations({"meow": "nyan"})
             .set_is_dm_enabled(True)
+            .set_is_nsfw(True)
         )
         mock_rest = mock.AsyncMock()
 
@@ -1103,6 +1147,7 @@ class TestContextMenuBuilder:
             default_member_permissions=permissions.Permissions.BAN_MEMBERS,
             name_localizations={"meow": "nyan"},
             dm_enabled=True,
+            nsfw=True,
         )
 
     @pytest.mark.asyncio()
@@ -1112,6 +1157,7 @@ class TestContextMenuBuilder:
             .set_default_member_permissions(permissions.Permissions.BAN_MEMBERS)
             .set_name_localizations({"en-ghibli": "meow"})
             .set_is_dm_enabled(True)
+            .set_is_nsfw(True)
         )
         mock_rest = mock.AsyncMock()
 
@@ -1126,6 +1172,7 @@ class TestContextMenuBuilder:
             default_member_permissions=permissions.Permissions.BAN_MEMBERS,
             name_localizations={"en-ghibli": "meow"},
             dm_enabled=True,
+            nsfw=True,
         )
 
 
@@ -1154,7 +1201,7 @@ class Test_ButtonBuilder:
     def button(self):
         return special_endpoints._ButtonBuilder(
             container=mock.Mock(),
-            style=messages.ButtonStyle.DANGER,
+            style=components.ButtonStyle.DANGER,
             custom_id="sfdasdasd",
             url="hi there",
             emoji=543123,
@@ -1165,7 +1212,7 @@ class Test_ButtonBuilder:
         )
 
     def test_style_property(self, button):
-        assert button.style is messages.ButtonStyle.DANGER
+        assert button.style is components.ButtonStyle.DANGER
 
     def test_emoji_property(self, button):
         assert button.emoji == 543123
@@ -1207,7 +1254,7 @@ class Test_ButtonBuilder:
     def test_build(self):
         result = special_endpoints._ButtonBuilder(
             container=object(),
-            style=messages.ButtonStyle.DANGER,
+            style=components.ButtonStyle.DANGER,
             url=undefined.UNDEFINED,
             emoji_id=undefined.UNDEFINED,
             emoji_name="emoji_name",
@@ -1217,8 +1264,8 @@ class Test_ButtonBuilder:
         ).build()
 
         assert result == {
-            "type": messages.ComponentType.BUTTON,
-            "style": messages.ButtonStyle.DANGER,
+            "type": components.ComponentType.BUTTON,
+            "style": components.ButtonStyle.DANGER,
             "emoji": {"name": "emoji_name"},
             "label": "no u",
             "custom_id": "ooga booga",
@@ -1228,7 +1275,7 @@ class Test_ButtonBuilder:
     def test_build_without_optional_fields(self):
         result = special_endpoints._ButtonBuilder(
             container=object(),
-            style=messages.ButtonStyle.LINK,
+            style=components.ButtonStyle.LINK,
             url="OK",
             emoji_id="123321",
             emoji_name=undefined.UNDEFINED,
@@ -1238,8 +1285,8 @@ class Test_ButtonBuilder:
         ).build()
 
         assert result == {
-            "type": messages.ComponentType.BUTTON,
-            "style": messages.ButtonStyle.LINK,
+            "type": components.ComponentType.BUTTON,
+            "style": components.ButtonStyle.LINK,
             "emoji": {"id": "123321"},
             "disabled": False,
             "url": "OK",
@@ -1249,7 +1296,7 @@ class Test_ButtonBuilder:
         mock_container = mock.Mock()
         button = special_endpoints._ButtonBuilder(
             container=mock_container,
-            style=messages.ButtonStyle.DANGER,
+            style=components.ButtonStyle.DANGER,
             url=undefined.UNDEFINED,
             emoji_id=undefined.UNDEFINED,
             emoji_name="emoji_name",
@@ -1267,7 +1314,7 @@ class TestLinkButtonBuilder:
     def test_url_property(self):
         button = special_endpoints.LinkButtonBuilder(
             container=object(),
-            style=messages.ButtonStyle.DANGER,
+            style=components.ButtonStyle.DANGER,
             url="hihihihi",
             emoji_id=undefined.UNDEFINED,
             emoji_name="emoji_name",
@@ -1283,7 +1330,7 @@ class TestInteractiveButtonBuilder:
     def test_custom_id_property(self):
         button = special_endpoints.InteractiveButtonBuilder(
             container=object(),
-            style=messages.ButtonStyle.DANGER,
+            style=components.ButtonStyle.DANGER,
             url="hihihihi",
             emoji_id=undefined.UNDEFINED,
             emoji_name="emoji_name",
@@ -1430,7 +1477,7 @@ class TestSelectMenuBuilder:
         result = special_endpoints.SelectMenuBuilder(container=object(), custom_id="o2o2o2").build()
 
         assert result == {
-            "type": messages.ComponentType.SELECT_MENU,
+            "type": components.ComponentType.SELECT_MENU,
             "custom_id": "o2o2o2",
             "options": [],
             "disabled": False,
@@ -1450,7 +1497,7 @@ class TestSelectMenuBuilder:
         )
 
         assert result == {
-            "type": messages.ComponentType.SELECT_MENU,
+            "type": components.ComponentType.SELECT_MENU,
             "custom_id": "o2o2o2",
             "options": [{"hi": "OK"}],
             "placeholder": "hi",
@@ -1460,30 +1507,117 @@ class TestSelectMenuBuilder:
         }
 
 
-class TestActionRowBuilder:
+class TestTextInput:
+    @pytest.fixture()
+    def text_input(self):
+        return special_endpoints.TextInputBuilder(
+            container=mock.Mock(),
+            custom_id="o2o2o2",
+            label="label",
+        )
+
+    def test_set_style(self, text_input):
+        assert text_input.set_style(components.TextInputStyle.PARAGRAPH) is text_input
+        assert text_input.style == components.TextInputStyle.PARAGRAPH
+
+    def test_set_custom_id(self, text_input):
+        assert text_input.set_custom_id("custooom") is text_input
+        assert text_input.custom_id == "custooom"
+
+    def test_set_label(self, text_input):
+        assert text_input.set_label("labeeeel") is text_input
+        assert text_input.label == "labeeeel"
+
+    def test_set_placeholder(self, text_input):
+        assert text_input.set_placeholder("place") is text_input
+        assert text_input.placeholder == "place"
+
+    def test_set_required(self, text_input):
+        assert text_input.set_required(True) is text_input
+        assert text_input.required is True
+
+    def test_set_value(self, text_input):
+        assert text_input.set_value("valueeeee") is text_input
+        assert text_input.value == "valueeeee"
+
+    def test_set_min_length_(self, text_input):
+        assert text_input.set_min_length(10) is text_input
+        assert text_input.min_length == 10
+
+    def test_set_max_length(self, text_input):
+        assert text_input.set_max_length(250) is text_input
+        assert text_input.max_length == 250
+
+    def test_add_to_container(self, text_input):
+        assert text_input.add_to_container() is text_input._container
+        text_input._container.add_component.assert_called_once_with(text_input)
+
+    def test_build(self):
+        result = special_endpoints.TextInputBuilder(
+            container=object(),
+            custom_id="o2o2o2",
+            label="label",
+        ).build()
+
+        assert result == {
+            "type": components.ComponentType.TEXT_INPUT,
+            "style": 1,
+            "custom_id": "o2o2o2",
+            "label": "label",
+        }
+
+    def test_build_partial(self):
+        result = (
+            special_endpoints.TextInputBuilder(
+                container=object(),
+                custom_id="o2o2o2",
+                label="label",
+            )
+            .set_placeholder("placeholder")
+            .set_value("value")
+            .set_required(False)
+            .set_min_length(10)
+            .set_max_length(250)
+            .build()
+        )
+
+        assert result == {
+            "type": components.ComponentType.TEXT_INPUT,
+            "style": 1,
+            "custom_id": "o2o2o2",
+            "label": "label",
+            "placeholder": "placeholder",
+            "value": "value",
+            "required": False,
+            "min_length": 10,
+            "max_length": 250,
+        }
+
+
+class TestMessageActionRowBuilder:
     def test_components_property(self):
         mock_component = object()
-        row = special_endpoints.ActionRowBuilder().add_component(mock_component)
+        row = special_endpoints.MessageActionRowBuilder().add_component(mock_component)
         assert row.components == [mock_component]
 
     def test_add_button_for_interactive(self):
-        row = special_endpoints.ActionRowBuilder()
-        button = row.add_button(messages.ButtonStyle.DANGER, "go home")
+        row = special_endpoints.MessageActionRowBuilder()
+        button = row.add_button(components.ButtonStyle.DANGER, "go home")
 
         button.add_to_container()
 
         assert row.components == [button]
 
     def test_add_button_for_link(self):
-        row = special_endpoints.ActionRowBuilder()
-        button = row.add_button(messages.ButtonStyle.LINK, "go home")
+        row = special_endpoints.MessageActionRowBuilder()
+        button = row.add_button(components.ButtonStyle.LINK, "go home")
 
         button.add_to_container()
 
         assert row.components == [button]
 
     def test_add_select_menu(self):
-        row = special_endpoints.ActionRowBuilder()
+        row = special_endpoints.MessageActionRowBuilder()
         menu = row.add_select_menu("hihihi")
 
         menu.add_to_container()
@@ -1494,14 +1628,24 @@ class TestActionRowBuilder:
         mock_component_1 = mock.Mock()
         mock_component_2 = mock.Mock()
 
-        row = special_endpoints.ActionRowBuilder()
+        row = special_endpoints.MessageActionRowBuilder()
         row._components = [mock_component_1, mock_component_2]
 
         result = row.build()
 
         assert result == {
-            "type": messages.ComponentType.ACTION_ROW,
+            "type": components.ComponentType.ACTION_ROW,
             "components": [mock_component_1.build.return_value, mock_component_2.build.return_value],
         }
         mock_component_1.build.assert_called_once_with()
         mock_component_2.build.assert_called_once_with()
+
+
+class TestModalActionRow:
+    def test_add_text_input(self):
+        row = special_endpoints.ModalActionRowBuilder()
+        menu = row.add_text_input("hihihi", "label")
+
+        menu.add_to_container()
+
+        assert row.components == [menu]

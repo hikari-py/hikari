@@ -226,7 +226,7 @@ class ShardAware(
         """Average heartbeat latency of all started shards.
 
         If no shards are started, this will return `float('nan')`.
-        """  # noqa: D401 - Imperative mood
+        """
         raise NotImplementedError
 
     @property

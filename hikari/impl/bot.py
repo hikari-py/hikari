@@ -255,7 +255,7 @@ class GatewayBot(traits.GatewayBotAware):
 
     If the application has not started, it is acceptable to assume the
     result of this call will be an empty mapping.
-    """  # noqa: D401 - Imperative mood
+    """
 
     __slots__: typing.Sequence[str] = (
         "_cache",

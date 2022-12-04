@@ -69,6 +69,7 @@ from hikari.internal import collections
 if typing.TYPE_CHECKING:
     from hikari import applications
     from hikari import channels as channels_
+    from hikari import components as components_
     from hikari import traits
     from hikari import users as users_
     from hikari.interactions import base_interactions
@@ -755,7 +756,7 @@ class MessageData(BaseData[messages.Message]):
     referenced_message: typing.Optional[RefCell[MessageData]] = attr.field()
     interaction: typing.Optional[MessageInteractionData] = attr.field()
     application_id: typing.Optional[snowflakes.Snowflake] = attr.field()
-    components: typing.Tuple[messages.PartialComponent, ...] = attr.field()
+    components: typing.Tuple[components_.MessageActionRowComponent, ...] = attr.field()
 
     @classmethod
     def build_from_entity(

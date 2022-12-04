@@ -34,12 +34,17 @@ if typing.TYPE_CHECKING:
     from hikari.interactions import base_interactions
     from hikari.interactions import command_interactions
     from hikari.interactions import component_interactions
+    from hikari.interactions import modal_interactions
 
     _InteractionT_co = typing.TypeVar("_InteractionT_co", bound=base_interactions.PartialInteraction, covariant=True)
     _ResponseT_co = typing.TypeVar("_ResponseT_co", bound=special_endpoints.InteractionResponseBuilder, covariant=True)
     _MessageResponseBuilderT = typing.Union[
         special_endpoints.InteractionDeferredBuilder,
         special_endpoints.InteractionMessageBuilder,
+    ]
+    _ModalOrMessageResponseBuilder = typing.Union[
+        _MessageResponseBuilderT,
+        special_endpoints.InteractionModalBuilder,
     ]
 
 
@@ -131,14 +136,14 @@ class InteractionServer(abc.ABC):
     @abc.abstractmethod
     def get_listener(
         self, interaction_type: typing.Type[command_interactions.CommandInteraction], /
-    ) -> typing.Optional[ListenerT[command_interactions.CommandInteraction, _MessageResponseBuilderT]]:
+    ) -> typing.Optional[ListenerT[command_interactions.CommandInteraction, _ModalOrMessageResponseBuilder]]:
         ...
 
     @typing.overload
     @abc.abstractmethod
     def get_listener(
         self, interaction_type: typing.Type[component_interactions.ComponentInteraction], /
-    ) -> typing.Optional[ListenerT[component_interactions.ComponentInteraction, _MessageResponseBuilderT]]:
+    ) -> typing.Optional[ListenerT[component_interactions.ComponentInteraction, _ModalOrMessageResponseBuilder]]:
         ...
 
     @typing.overload
@@ -148,6 +153,13 @@ class InteractionServer(abc.ABC):
     ) -> typing.Optional[
         ListenerT[command_interactions.AutocompleteInteraction, special_endpoints.InteractionAutocompleteBuilder]
     ]:
+        ...
+
+    @typing.overload
+    @abc.abstractmethod
+    def get_listener(
+        self, interaction_type: typing.Type[modal_interactions.ModalInteraction], /
+    ) -> typing.Optional[ListenerT[modal_interactions.ModalInteraction, _MessageResponseBuilderT]]:
         ...
 
     @typing.overload
@@ -173,14 +185,14 @@ class InteractionServer(abc.ABC):
         typing.Optional[ListenersT[hikari.interactions.base_interactions.PartialInteraction, hikari.api.special_endpoints.InteractionResponseBuilder]
             The callback registered for the provided interaction type if found,
             else `None`.
-        """  # noqa E501 - Line too long
+        """  # noqa: E501 - Line too long
 
     @typing.overload
     @abc.abstractmethod
     def set_listener(
         self,
         interaction_type: typing.Type[command_interactions.CommandInteraction],
-        listener: typing.Optional[ListenerT[command_interactions.CommandInteraction, _MessageResponseBuilderT]],
+        listener: typing.Optional[ListenerT[command_interactions.CommandInteraction, _ModalOrMessageResponseBuilder]],
         /,
         *,
         replace: bool = False,
@@ -192,7 +204,9 @@ class InteractionServer(abc.ABC):
     def set_listener(
         self,
         interaction_type: typing.Type[component_interactions.ComponentInteraction],
-        listener: typing.Optional[ListenerT[component_interactions.ComponentInteraction, _MessageResponseBuilderT]],
+        listener: typing.Optional[
+            ListenerT[component_interactions.ComponentInteraction, _ModalOrMessageResponseBuilder]
+        ],
         /,
         *,
         replace: bool = False,
@@ -207,6 +221,18 @@ class InteractionServer(abc.ABC):
         listener: typing.Optional[
             ListenerT[command_interactions.AutocompleteInteraction, special_endpoints.InteractionAutocompleteBuilder]
         ],
+        /,
+        *,
+        replace: bool = False,
+    ) -> None:
+        ...
+
+    @typing.overload
+    @abc.abstractmethod
+    def set_listener(
+        self,
+        interaction_type: typing.Type[modal_interactions.ModalInteraction],
+        listener: typing.Optional[ListenerT[modal_interactions.ModalInteraction, _MessageResponseBuilderT]],
         /,
         *,
         replace: bool = False,
@@ -243,4 +269,4 @@ class InteractionServer(abc.ABC):
         ------
         TypeError
             If `replace` is `False` when a listener is already set.
-        """  # noqa E501 - Line too long
+        """  # noqa: E501 - Line too long
