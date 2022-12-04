@@ -380,7 +380,10 @@ class TestEventManagerImpl:
         mock_payload = mock.Mock()
         await event_manager_impl.on_thread_list_sync(shard, mock_payload)
 
-        event_manager_impl._cache.clear_threads_for_channel.assert_called_once_with(event.guild_id, event.channel_ids)
+        assert event_manager_impl._cache.clear_threads_for_channel.call_count == 2
+        event_manager_impl._cache.clear_threads_for_channel.assert_has_calls(
+            [mock.call(event.guild_id, "1"), mock.call(event.guild_id, "2")]
+        )
         event_manager_impl._cache.set_thread("thread1")
         event_manager_impl.dispatch.assert_awaited_once_with(event)
         event_factory.deserialize_thread_list_sync_event.assert_called_once_with(shard, mock_payload)
