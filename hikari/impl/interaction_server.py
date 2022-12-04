@@ -396,6 +396,8 @@ class InteractionServer(interaction_server.InteractionServer):
                 except asyncio.CancelledError:
                     pass
 
+        self._running_generator_listeners = []
+
         self._close_event.set()
         self._close_event = None
         self._is_closing = False
