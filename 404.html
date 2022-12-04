@@ -1,0 +1,43 @@
+---
+# Custom 404 page for jekyll
+# We do not like to flashbang people when something goes wrong, which is why this exists
+
+permalink: /404.html
+layout: default
+---
+<style>
+  :root {
+    --dark-bg: #212529;
+    --light-fg: #C66CB7;
+  }
+
+  html {
+    background-color: var(--dark-bg);
+    color: rgba(255, 255, 255, 255);
+  }
+
+  .container {
+    margin: 15% auto;
+    min-width: 100%;
+    text-align: center;
+  }
+
+  h1 {
+    color: var(--light-fg);
+    margin: 30px 0;
+    font-size: 9em;
+    line-height: 1;
+    letter-spacing: -1px;
+  }
+</style>
+
+<head>
+  <title>Page not found - Hikari.py</title>
+</head>
+
+<div class="container">
+  <h1>404</h1>
+
+  <p><strong>Page not found :(</strong></p>
+  <p>The requested page could not be found.</p>
+</div>
