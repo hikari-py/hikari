@@ -886,7 +886,7 @@ class GatewayShardImpl(shard.GatewayShard):
             except errors.GatewayServerClosedConnectionError as ex:
                 if not ex.can_reconnect:
                     self._logger.info(
-                        "server has closed the connection permanently [code:%s, reason:%]",
+                        "server has closed the connection permanently [code:%s, reason:%s]",
                         ex.code,
                         ex.reason,
                     )
