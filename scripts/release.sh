@@ -49,7 +49,7 @@ fi
 echo "===== INSTALLING DEPENDENCIES ====="
 pip install -r requirements.txt -r dev-requirements/release.txt -r dev-requirements/nox.txt
 
-REF=$(git rev-parse HEAD)
+export REF=$(git rev-parse HEAD)
 
 echo "===== DEPLOYING TO PYPI ====="
 echo "-- Setting __git_sha1__ (ref: ${REF}) --"
