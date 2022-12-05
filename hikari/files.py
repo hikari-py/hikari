@@ -730,9 +730,9 @@ class URL(WebResource):
 
     Parameters
     ----------
-    url : builtins.str
+    url : str
         The URL of the resource.
-    filename : typing.Optional[builtins.str]
+    filename : typing.Optional[str]
         The filename for the resource.
 
         If not specified, it will be obtained from the url.

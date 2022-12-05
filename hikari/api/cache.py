@@ -369,7 +369,7 @@ class Cache(abc.ABC):
         -------
         typing.Optional[hikari.channels.GuildThreadChannel]
             The object of the thread that was found in the cache
-            or `builtins.None`.
+            or `None`.
         """
 
     @abc.abstractmethod
@@ -1209,7 +1209,7 @@ class MutableCache(Cache, abc.ABC):
         -------
         typing.Optional[hikari.channels.GuildThreadChannel]
             The object of the thread that was removed from the cache if
-            found, else `builtins.None`.
+            found, else `None`.
         """
 
     @abc.abstractmethod
@@ -1236,9 +1236,9 @@ class MutableCache(Cache, abc.ABC):
         Returns
         -------
         typing.Tuple[typing.Optional[hikari.channels.GuildThreadChannel], typing.Optional[hikari.channels.GuildThreadChannel]]
-            A tuple of the old cached thread channel if found (else `builtins.None`)
+            A tuple of the old cached thread channel if found (else `None`)
             and the new cached thread channel if it could be cached
-            (else `builtins.None`).
+            (else `None`).
         """
 
     @abc.abstractmethod
