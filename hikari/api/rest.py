@@ -2731,14 +2731,14 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         invite : typing.Union[hikari.invites.InviteCode, str]
             The invite to fetch. This may be an invite object or
             the code of an existing invite.
-        with_counts : builtins.bool
+        with_counts : bool
             Whether the invite should contain the approximate member counts.
 
-            Defaults to `builtins.True`.
-        with_expiration: builtins.bool
+            Defaults to `True`.
+        with_expiration: bool
             Whether the invite should contain the expiration date.
 
-            Defaults to `builtins.True`.
+            Defaults to `True`.
 
         Returns
         -------
@@ -7432,7 +7432,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Whether this command is enabled in DMs with the bot.
 
             This can only be applied to non-guild commands.
-        nsfw : hikari.undefined.UndefinedOr[builtins.bool]
+        nsfw : hikari.undefined.UndefinedOr[bool]
             Whether this command should be age-restricted.
 
         Returns
@@ -7513,7 +7513,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Whether this command is enabled in DMs with the bot.
 
             This can only be applied to non-guild commands.
-        nsfw : hikari.undefined.UndefinedOr[builtins.bool]
+        nsfw : hikari.undefined.UndefinedOr[bool]
             Whether this command should be age-restricted.
 
         Returns
@@ -7929,9 +7929,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        title : builtins.str
+        title : str
             The title that will show up in the modal.
-        custom_id : builtins.str
+        custom_id : str
             Developer set custom ID used for identifying interactions with this modal.
 
         Returns
@@ -8357,7 +8357,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------
         interaction : hikari.snowflakes.SnowflakeishOr[hikari.interactions.base_interactions.PartialInteraction]
             Object or ID of the interaction this response is for.
-        token : builtins.str
+        token : str
             The command interaction's token.
         title : str
             The title that will show up in the modal.

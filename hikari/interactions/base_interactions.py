@@ -623,9 +623,9 @@ class ModalResponseMixin(PartialInteraction):
 
         Parameters
         ----------
-        title : builtins.str
+        title : str
             The title that will show up in the modal.
-        custom_id : builtins.str
+        custom_id : str
             Developer set custom ID used for identifying interactions with this modal.
 
         Returns

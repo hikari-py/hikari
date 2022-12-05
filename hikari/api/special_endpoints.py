@@ -891,7 +891,7 @@ class InteractionModalBuilder(InteractionResponseBuilder, abc.ABC):
 
         Parameters
         ----------
-        title : builtins.str
+        title : str
             The title that will show up in the modal.
         """
 
@@ -901,7 +901,7 @@ class InteractionModalBuilder(InteractionResponseBuilder, abc.ABC):
 
         Parameters
         ----------
-        custom_id : builtins.str
+        custom_id : str
             The developer set custom ID used for identifying interactions with this modal.
         """
 
@@ -1024,7 +1024,7 @@ class CommandBuilder(abc.ABC):
 
         Parameters
         ----------
-        state : hikari.undefined.UndefinedOr[builtins.bool]
+        state : hikari.undefined.UndefinedOr[bool]
             Whether this command is age-restricted.
 
         Returns
@@ -1678,7 +1678,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
 
         Parameters
         ----------
-        custom_id : builtins.str
+        custom_id : str
             Developer set custom ID used for identifying this text input.
 
         Returns
@@ -1693,7 +1693,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
 
         Parameters
         ----------
-        label : builtins.str
+        label : str
             Label above this text input.
 
         Returns
@@ -1708,7 +1708,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
 
         Parameters
         ----------
-        placeholder : builtins.str:
+        placeholder : str:
             Placeholder text that will disappear when the user types anything.
 
         Returns
@@ -1723,7 +1723,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
 
         Parameters
         ----------
-        value : builtins.str
+        value : str
             Pre-filled text that will be sent if the user does not write anything.
 
         Returns
@@ -1738,7 +1738,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
 
         Parameters
         ----------
-        required : builtins.bool
+        required : bool
             Whether this text input is required to be filled-in.
 
         Returns
@@ -1753,7 +1753,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
 
         Parameters
         ----------
-        min_length : builtins.int
+        min_length : int
             The minimum length the text should have.
 
         Returns
@@ -1768,7 +1768,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
 
         Parameters
         ----------
-        max_length : builtins.int
+        max_length : int
             The maximum length the text should have.
 
         Returns
@@ -1931,9 +1931,9 @@ class ModalActionRowBuilder(ComponentBuilder, abc.ABC):
 
         Parameters
         ----------
-        custom_id : builtins.str
+        custom_id : str
             Developer set custom ID used for identifying this text input.
-        label : builtins.str
+        label : str
             Label above this text input.
 
         Returns
