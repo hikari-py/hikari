@@ -2,14 +2,27 @@ html {
     word-wrap: anywhere;
 }
 
-/* Fit all the long names in the TOC drawer */
-.toc-drawer {
-    width: initial;
-    padding-right: 0;
+.icon {
+    user-select: none;
 }
 
 @media (max-width: 82em) {
+    body {
+        font-size: 0.7em;
+    }
+
+    .toc-tree {
+        padding-left: 0;
+    }
+
     .toc-drawer {
+        width: inherit;
+        max-width: 20em;
+        padding-right: 0;
         right: -20em;
+    }
+
+    .sidebar-brand-text {
+        font-size: 1rem;
     }
 }

@@ -288,7 +288,7 @@ The following values are valid for this:
 InteractiveButtonTypes: typing.AbstractSet[InteractiveButtonTypesT] = frozenset(
     [ButtonStyle.PRIMARY, ButtonStyle.SECONDARY, ButtonStyle.SUCCESS, ButtonStyle.DANGER]
 )
-"""Set of the `ButtonType`s which are valid for interactive buttons.
+"""Set of the `ButtonType` which are valid for interactive buttons.
 
 The following values are included in this:
 
@@ -299,7 +299,7 @@ The following values are included in this:
 """
 
 MessageComponentTypesT = typing.Union[ButtonComponent, SelectMenuComponent]
-"""Type hint of the `PartialComponent`s that be contained in a `MessageActionRowComponent`.
+"""Type hint of the `PartialComponent` that be contained in a `MessageActionRowComponent`.
 
 The following values are valid for this:
 
@@ -307,7 +307,7 @@ The following values are valid for this:
 * `SelectMenuComponent`
 """
 ModalComponentTypesT = TextInputComponent
-"""Type hint of the `PartialComponent`s that be contained in a `ModalActionRowComponent`.
+"""Type hint of the `PartialComponent` that be contained in a `ModalActionRowComponent`.
 
 The following values are valid for this:
 
