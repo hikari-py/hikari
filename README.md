@@ -160,6 +160,11 @@ Hikari does not include a command framework by default, so you will want to pick
 - [`tanjun`](https://github.com/FasterSpeeding/Tanjun) - a flexible command framework designed to extend Hikari.
 - [`crescent`](https://github.com/magpie-dev/hikari-crescent) - a command handler for Hikari that keeps your project neat and tidy.
 
+There are also third party libraries to help you manage components:
+
+- [`miru`](https://github.com/HyperGH/hikari-miru) -  An optional component handler for hikari, inspired by discord.py's views. 
+- [`flare`](https://github.com/brazier-dev/hikari-flare/) - A component manager designed to write simple & persistent buttons.
+
 ---
 
 ## Making your application more efficient
