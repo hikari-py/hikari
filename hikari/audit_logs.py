@@ -71,73 +71,203 @@ class AuditLogChangeKey(str, enums.Enum):
     """
 
     NAME = "name"
+    """Name."""
+
     DESCRIPTION = "description"
+    """Description."""
+
     ICON_HASH = "icon_hash"
+    """Icon Hash."""
+
     SPLASH_HASH = "splash_hash"
+    """Splash Hash."""
+
     DISCOVERY_SPLASH_HASH = "discovery_splash_hash"
+    """Discovery Splash Hash."""
+
     BANNER_HASH = "banner_hash"
+    """Banner Hash."""
+
     OWNER_ID = "owner_id"
+    """Owner ID."""
+
     REGION = "region"  # TODO: remove when this disappears for the most part
+    """Region."""
+
     PREFERRED_LOCALE = "preferred_locale"
+    """Preferred Locale."""
+
     RTC_REGION = "rtc_region"
+    """RTC Region."""
+
     AFK_CHANNEL_ID = "afk_channel_id"
+    """Afk Channel ID."""
+
     AFK_TIMEOUT = "afk_timeout"
+    """Afk Timeout."""
+
     RULES_CHANNEL_ID = "rules_channel_id"
+    """Rules Channel ID."""
+
     PUBLIC_UPDATES_CHANNEL_ID = "public_updates_channel_id"
+    """Public Updates Channel ID."""
+
     MFA_LEVEL = "mfa_level"
+    """Mfa Level."""
+
     VERIFICATION_LEVEL = "verification_level"
+    """Verification Level."""
+
     EXPLICIT_CONTENT_FILTER = "explicit_content_filter"
+    """Explicit Content Filter."""
+
     DEFAULT_MESSAGE_NOTIFICATIONS = "default_message_notifications"
+    """Default Message Notifications."""
+
     VANITY_URL_CODE = "vanity_url_code"
+    """Vanity Url Code."""
+
     PRUNE_DELETE_DAYS = "prune_delete_days"
+    """Prune Delete Days."""
+
     WIDGET_ENABLED = "widget_enabled"
+    """Widget Enabled."""
+
     WIDGET_CHANNEL_ID = "widget_channel_id"
+    """Widget Channel ID."""
+
     POSITION = "position"
+    """Position."""
+
     TOPIC = "topic"
+    """Topic."""
+
     BITRATE = "bitrate"
+    """Bitrate."""
+
     DEFAULT_AUTO_ARCHIVE_DURATION = "default_auto_archive_duration"
+    """Default Auto Archive Duration."""
+
     PERMISSION_OVERWRITES = "permission_overwrites"
+    """Permission Overwrites."""
+
     NSFW = "nsfw"
+    """Nsfw."""
+
     APPLICATION_ID = "application_id"
+    """Application ID."""
+
     ARCHIVED = "archived"
+    """Archived."""
+
     AUTO_ARCHIVE_DURATION = "auto_archive_duration"
+    """Auto Archive Duration."""
+
     PERMISSIONS = "permissions"
+    """Permissions."""
+
     USER_LIMIT = "user_limit"
+    """User Limit."""
+
     COLOR = "color"
+    """Color."""
+
     COMMAND_ID = "command_id"
+    """Command ID."""
+
     HOIST = "hoist"
+    """Hoist."""
+
     MENTIONABLE = "mentionable"
+    """Mentionable."""
+
     ALLOW = "allow"
+    """Allow."""
+
     DENY = "deny"
+    """Deny."""
+
     INVITE_CODE = "code"
+    """Code."""
+
     CHANNEL_ID = "channel_id"
+    """Channel ID."""
+
     INVITER_ID = "inviter_id"
+    """Inviter ID."""
+
     MAX_USES = "max_uses"
+    """Max Uses."""
+
     USES = "uses"
+    """Uses."""
+
     MAX_AGE = "max_age"
+    """Max Age."""
+
     TEMPORARY = "temporary"
+    """Temporary."""
+
     DEAF = "deaf"
+    """Deaf."""
+
     MUTE = "mute"
+    """Mute."""
+
     NICK = "nick"
+    """Nick."""
+
     AVATAR_HASH = "avatar_hash"
+    """Avatar Hash."""
+
     ID = "id"
+    """ID."""
+
     INVITABLE = "invitable"
+    """Invitable."""
+
     LOCKED = "locked"
+    """Locked."""
+
     TYPE = "type"
+    """Type."""
+
     ENABLE_EMOTICONS = "enable_emoticons"
+    """Enable Emoticons."""
+
     EXPIRE_BEHAVIOR = "expire_behavior"
+    """Expire Behavior."""
+
     EXPIRE_GRACE_PERIOD = "expire_grace_period"
+    """Expire Grace Period."""
+
     RATE_LIMIT_PER_USER = "rate_limit_per_user"
+    """Rate Limit Per User."""
+
     SYSTEM_CHANNEL_ID = "system_channel_id"
+    """System Channel ID."""
+
     TAGS = "tags"
+    """Tags."""
+
     FORMAT_TYPE = "format_type"
+    """Format Type."""
+
     ASSETS = "asset"
+    """Asset."""
+
     AVAILABLE = "available"
+    """Available."""
+
     GUILD_ID = "guild_id"
+    """Guild ID."""
 
     # Who needs consistency?
     ADD_ROLE_TO_MEMBER = "$add"
+    """Role added to a member."""
+
     REMOVE_ROLE_FROM_MEMBER = "$remove"
+    """Role removed from a member."""
 
     COLOUR = COLOR
     """Alias for `COLOR`."""

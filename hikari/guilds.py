@@ -2790,6 +2790,8 @@ class Guild(PartialGuild):
     def get_members(self) -> typing.Mapping[snowflakes.Snowflake, Member]:
         """Get the members cached for the guild.
 
+        Returns
+        -------
         typing.Mapping[hikari.snowflakes.Snowflake, Member]
             A mapping of user IDs to objects of the members cached for the guild.
         """
@@ -2801,6 +2803,8 @@ class Guild(PartialGuild):
     def get_presences(self) -> typing.Mapping[snowflakes.Snowflake, presences_.MemberPresence]:
         """Get the presences cached for the guild.
 
+        Returns
+        -------
         typing.Mapping[hikari.snowflakes.Snowflake, hikari.presences.MemberPresence]
             A mapping of user IDs to objects of the presences cached for the
             guild.

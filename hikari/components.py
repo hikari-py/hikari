@@ -84,7 +84,7 @@ class ComponentType(int, enums.Enum):
     TEXT_INPUT = 4
     """A text input component.
 
-    !! note
+    .. note::
         This component may only be used inside a modal container.
 
     .. note::
@@ -98,7 +98,7 @@ class ButtonStyle(int, enums.Enum):
     """Enum of the available button styles.
 
     More information, such as how these look, can be found at
-    https://discord.com/developers/docs/interactions/message-components#buttons-button-styles
+    https://discord.com/developers/docs/interactions/message-components#button-object-button-styles
     """
 
     PRIMARY = 1
