@@ -19,7 +19,7 @@ body {
 }
 
 .toc-drawer {
-    width: inherit;
+    width: initial;
     max-width: 20em;
     right: -20em;
 }
