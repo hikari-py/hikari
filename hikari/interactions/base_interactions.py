@@ -600,7 +600,7 @@ class ModalResponseMixin(PartialInteraction):
         Other Parameters
         ----------------
         component : hikari.undefined.UndefinedOr[typing.Sequence[hikari.api.special_endpoints.ComponentBuilder]]
-            A component builders to send in this modal.
+            A component builder to send in this modal.
         components : hikari.undefined.UndefinedOr[typing.Sequence[hikari.api.special_endpoints.ComponentBuilder]]
             A sequence of component builders to send in this modal.
 
