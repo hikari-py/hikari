@@ -4,6 +4,6 @@ include setup.py
 include README.md
 include requirements.txt
 include server-requirements.txt
-inlcude speedup-requirements.txt
+include speedup-requirements.txt
 include pyproject.toml
 global-exclude *.py[cod]
