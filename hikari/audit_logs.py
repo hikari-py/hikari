@@ -95,9 +95,12 @@ class AuditLogChangeKey(str, enums.Enum):
     POSITION = "position"
     TOPIC = "topic"
     BITRATE = "bitrate"
+    DEFAULT_AUTO_ARCHIVE_DURATION = "default_auto_archive_duration"
     PERMISSION_OVERWRITES = "permission_overwrites"
     NSFW = "nsfw"
     APPLICATION_ID = "application_id"
+    ARCHIVED = "archived"
+    AUTO_ARCHIVE_DURATION = "auto_archive_duration"
     PERMISSIONS = "permissions"
     USER_LIMIT = "user_limit"
     COLOR = "color"
@@ -118,6 +121,8 @@ class AuditLogChangeKey(str, enums.Enum):
     NICK = "nick"
     AVATAR_HASH = "avatar_hash"
     ID = "id"
+    INVITABLE = "invitable"
+    LOCKED = "locked"
     TYPE = "type"
     ENABLE_EMOTICONS = "enable_emoticons"
     EXPIRE_BEHAVIOR = "expire_behavior"
@@ -135,7 +140,7 @@ class AuditLogChangeKey(str, enums.Enum):
     REMOVE_ROLE_FROM_MEMBER = "$remove"
 
     COLOUR = COLOR
-    """Alias for "COLOR"""
+    """Alias for `COLOR`."""
 
 
 @attr_extensions.with_copy
@@ -206,7 +211,7 @@ class BaseAuditLogEntryInfo(abc.ABC):
     """A base object that all audit log entry info objects will inherit from."""
 
     app: traits.RESTAware = attr.field(repr=False, eq=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    """The client application that models may use for procedures."""
+    """Client application that models may use for procedures."""
 
 
 @attr_extensions.with_copy
@@ -388,7 +393,7 @@ class MemberMoveEntryInfo(MemberDisconnectEntryInfo):
     """Extra information for the voice chat based member move entry."""
 
     channel_id: snowflakes.Snowflake = attr.field(repr=True)
-    """The channel that the member(s) have been moved to"""
+    """The channel that the member(s) have been moved to."""
 
     async def fetch_channel(self) -> channels.GuildVoiceChannel:
         """Fetch the guild voice based channel where the member(s) have been moved to.
@@ -433,7 +438,7 @@ class AuditLogEntry(snowflakes.Unique):
     app: traits.RESTAware = attr.field(
         repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
     )
-    """The client application that models may use for procedures."""
+    """Client application that models may use for procedures."""
 
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
     """The ID of this entity."""
@@ -499,6 +504,9 @@ class AuditLog(typing.Sequence[AuditLogEntry]):
 
     integrations: typing.Mapping[snowflakes.Snowflake, guilds.PartialIntegration] = attr.field(repr=False)
     """A mapping of the partial objects of integrations found in this audit log."""
+
+    threads: typing.Mapping[snowflakes.Snowflake, channels.GuildThreadChannel] = attr.field(repr=False)
+    """A mapping of the objects of threads found in this audit log."""
 
     users: typing.Mapping[snowflakes.Snowflake, users_.User] = attr.field(repr=False)
     """A mapping of the objects of users found in this audit log."""

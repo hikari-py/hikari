@@ -119,7 +119,7 @@ def _generate_weak_listener(
 class EventStream(event_manager_.EventStream[base_events.EventT]):
     """An implementation of an event `EventStream` class.
 
-    !!! note
+    .. note::
         While calling `EventStream.filter` on an active "opened" event stream
         will return a wrapping lazy iterator, calling it on an inactive "closed"
         event stream will return the event stream and add the given predicates
@@ -353,13 +353,7 @@ class EventManagerBase(event_manager_.EventManager):
     is the raw event name being dispatched in lower-case.
     """
 
-    __slots__: typing.Sequence[str] = (
-        "_consumers",
-        "_event_factory",
-        "_intents",
-        "_listeners",
-        "_waiters",
-    )
+    __slots__: typing.Sequence[str] = ("_consumers", "_event_factory", "_intents", "_listeners", "_waiters")
 
     def __init__(
         self,
@@ -494,7 +488,7 @@ class EventManagerBase(event_manager_.EventManager):
         if items := self._listeners.get(event_type):
             return items.copy()
 
-        return []
+        return ()
 
     # Yes, this is not generic. The reason for this is MyPy complains about
     # using ABCs that are not concrete in generic types passed to functions.

@@ -30,10 +30,7 @@ import asyncio
 import datetime
 import logging
 import math
-import signal
 import sys
-import threading
-import traceback
 import types
 import typing
 import warnings
@@ -54,6 +51,7 @@ from hikari.impl import rest as rest_impl
 from hikari.impl import shard as shard_impl
 from hikari.impl import voice as voice_impl
 from hikari.internal import aio
+from hikari.internal import signals
 from hikari.internal import time
 from hikari.internal import ux
 
@@ -73,58 +71,6 @@ if typing.TYPE_CHECKING:
     from hikari.events import base_events
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.bot")
-
-
-async def _gather(coros: typing.Iterator[typing.Awaitable[typing.Any]]) -> None:
-    # Calling asyncio.gather outside of a running event loop isn't safe and
-    # will lead to RuntimeErrors in later versions of python, so this call is
-    # kept within a coroutine function.
-    await asyncio.gather(*coros)
-
-
-def _destroy_loop(loop: asyncio.AbstractEventLoop) -> None:
-    async def murder(future: asyncio.Future[typing.Any]) -> None:
-        # These include _GatheringFuture which must be awaited if the children
-        # throw an asyncio.CancelledError, otherwise it will spam logs with warnings
-        # about exceptions not being retrieved before GC.
-        try:
-            _LOGGER.log(ux.TRACE, "killing %s", future)
-            future.cancel()
-            await future
-        except asyncio.CancelledError:
-            pass
-        except Exception as ex:
-            loop.call_exception_handler(
-                {
-                    "message": "Future raised unexpected exception after requesting cancellation",
-                    "exception": ex,
-                    "future": future,
-                }
-            )
-
-    remaining_tasks = [t for t in asyncio.all_tasks(loop) if not t.done()]
-
-    if remaining_tasks:
-        _LOGGER.debug("terminating %s remaining tasks forcefully", len(remaining_tasks))
-        loop.run_until_complete(_gather((murder(task) for task in remaining_tasks)))
-    else:
-        _LOGGER.debug("No remaining tasks exist, good job!")
-
-    if sys.version_info >= (3, 9):
-        _LOGGER.debug("shutting down default executor")
-        try:
-            # This seems to raise a NotImplementedError when running with uvloop.
-            loop.run_until_complete(loop.shutdown_default_executor())
-        except NotImplementedError:
-            pass
-
-    _LOGGER.debug("shutting down asyncgens")
-    loop.run_until_complete(loop.shutdown_asyncgens())
-
-    _LOGGER.debug("closing event loop")
-    loop.close()
-    # Closed loops cannot be re-used so it should also be un-set.
-    asyncio.set_event_loop(None)
 
 
 def _validate_activity(activity: undefined.UndefinedNoneOr[presences.Activity]) -> None:
@@ -157,15 +103,22 @@ class GatewayBot(traits.GatewayBotAware):
     This is the class you will want to use to start, control, and build a bot
     with.
 
+    .. note::
+        Settings that control the gateway session are provided to the
+        `GatewayBot.run` and `GatewayBot.start` functions in this class. This is done
+        to allow you to contextually customise details such as sharding
+        configuration without having to re-initialize the entire application
+        each time.
+
     Parameters
     ----------
-    token : builtins.str
+    token : str
         The bot token to sign in with.
 
     Other Parameters
     ----------------
-    allow_color : builtins.bool
-        Defaulting to `builtins.True`, this will enable coloured console logs
+    allow_color : bool
+        Defaulting to `True`, this will enable coloured console logs
         on any platform that is a TTY.
         Setting a `"CLICOLOR"` environment variable to any **non `0`** value
         will override this setting.
@@ -175,12 +128,12 @@ class GatewayBot(traits.GatewayBotAware):
         awkward or not support features in a standard way, the option to
         explicitly disable this is provided. See `force_color` for an
         alternative.
-    banner : typing.Optional[builtins.str]
+    banner : typing.Optional[str]
         The package to search for a `banner.txt` in. Defaults to `"hikari"` for
         the `"hikari/banner.txt"` banner.
-        Setting this to `builtins.None` will disable the banner being shown.
+        Setting this to `None` will disable the banner being shown.
     executor : typing.Optional[concurrent.futures.Executor]
-        Defaults to `builtins.None`. If non-`builtins.None`, then this executor
+        Defaults to `None`. If non-`None`, then this executor
         is used instead of the `concurrent.futures.ThreadPoolExecutor` attached
         to the `asyncio.AbstractEventLoop` that the bot will run on. This
         executor is used primarily for file-IO.
@@ -188,14 +141,16 @@ class GatewayBot(traits.GatewayBotAware):
         While mainly supporting the `concurrent.futures.ThreadPoolExecutor`
         implementation in the standard lib, Hikari's file handling systems
         should also work with `concurrent.futures.ProcessPoolExecutor`, which
-        relies on all objects used in IPC to be `pickle`able. Many third-party
+        relies on all objects used in IPC to be pickleable. Many third-party
         libraries will not support this fully though, so your mileage may vary
         on using ProcessPoolExecutor implementations with this parameter.
-    force_color : builtins.bool
-        Defaults to `builtins.False`. If `builtins.True`, then this application
+    force_color : bool
+        Defaults to `False`. If `True`, then this application
         will __force__ colour to be used in console-based output. Specifying a
         `"CLICOLOR_FORCE"` environment variable with a non-`"0"` value will
         override this setting.
+
+        This will take precedence over `allow_color` if both are specified.
     cache_settings : typing.Optional[hikari.impl.config.CacheSettings]
         Optional cache settings. If unspecified, will use the defaults.
     http_settings : typing.Optional[hikari.impl.config.HTTPSettings]
@@ -207,23 +162,23 @@ class GatewayBot(traits.GatewayBotAware):
         Defaults to `hikari.intents.Intents.ALL_UNPRIVILEGED`. This allows you
         to change which intents your application will use on the gateway. This
         can be used to control and change the types of events you will receive.
-    auto_chunk_members : builtins.bool
-        Defaults to `builtins.True`. If `builtins.False`, then no member chunks
+    auto_chunk_members : bool
+        Defaults to `True`. If `False`, then no member chunks
         will be requested automatically, even if there are reasons to do so.
 
         All following statements must be true to automatically request chunks:
 
-        1. `auto_chunk_members` is `builtins.True`.
+        1. `auto_chunk_members` is `True`.
         2. The members intent is enabled.
         3. The server is marked as "large" or the presences intent is not enabled
-            (since Discord only sends other members when presences are declared,
-            we should also chunk small guilds if the presences are not declared).
+           (since Discord only sends other members when presences are declared,
+           we should also chunk small guilds if the presences are not declared).
         4. The members cache is enabled or there are listeners for the
-        `MemberChunkEvent`.
-    logs : typing.Union[builtins.None, LoggerLevel, typing.Dict[str, typing.Any]]
+           `MemberChunkEvent`.
+    logs : typing.Union[None, LoggerLevel, typing.Dict[str, typing.Any]]
         Defaults to `"INFO"`.
 
-        If `builtins.None`, then the Python logging system is left uninitialized
+        If `None`, then the Python logging system is left uninitialized
         on startup, and you will need to configure it manually to view most
         logs that are output by components of this library.
 
@@ -244,7 +199,7 @@ class GatewayBot(traits.GatewayBotAware):
 
         Note that `"TRACE_HIKARI"` is a library-specific logging level
         which is expected to be more verbose than `"DEBUG"`.
-    max_rate_limit : builtins.float
+    max_rate_limit : float
         The max number of seconds to backoff for when rate limited. Anything
         greater than this will instead raise an error.
 
@@ -257,50 +212,49 @@ class GatewayBot(traits.GatewayBotAware):
         Note that this only applies to the REST API component that communicates
         with Discord, and will not affect sharding or third party HTTP endpoints
         that may be in use.
-    max_retries : typing.Optional[builtins.int]
+    max_retries : typing.Optional[int]
         Maximum number of times a request will be retried if
-        it fails with a `5xx` status. Defaults to 3 if set to `builtins.None`.
+        it fails with a `5xx` status. Defaults to 3 if set to `None`.
     proxy_settings : typing.Optional[hikari.impl.config.ProxySettings]
         Custom proxy settings to use with network-layer logic
         in your application to get through an HTTP-proxy.
-    rest_url : typing.Optional[builtins.str]
-        Defaults to the Discord REST API URL if `builtins.None`. Can be
+    rest_url : typing.Optional[str]
+        Defaults to the Discord REST API URL if `None`. Can be
         overridden if you are attempting to point to an unofficial endpoint, or
         if you are attempting to mock/stub the Discord API for any reason.
         Generally you do not want to change this.
 
-    !!! note
-        `force_color` will always take precedence over `allow_color`.
-
-    !!! note
-        Settings that control the gateway session are provided to the
-        `GatewayBot.run` and `GatewayBot.start` functions in this class. This is done
-        to allow you to contextually customise details such as sharding
-        configuration without having to re-initialize the entire application
-        each time.
-
-    Example
-    -------
+    Examples
+    --------
     Setting up logging using a dictionary configuration:
 
-    ```py
-    import os
+    .. code-block:: python
 
-    import hikari
+        import os
 
-    # We want to make gateway logs output as DEBUG, and TRACE for all ratelimit content.
-    bot = hikari.GatewayBot(
-        token=os.environ["BOT_TOKEN"],
-        logs={
-            "version": 1,
-            "incremental": True,
-            "loggers": {
-                "hikari.gateway": {"level": "DEBUG"},
-                "hikari.ratelimits": {"level": "TRACE_HIKARI"},
+        import hikari
+
+        # We want to make gateway logs output as DEBUG, and TRACE for all ratelimit content.
+        bot = hikari.GatewayBot(
+            token=os.environ["BOT_TOKEN"],
+            logs={
+                "version": 1,
+                "incremental": True,
+                "loggers": {
+                    "hikari.gateway": {"level": "DEBUG"},
+                    "hikari.ratelimits": {"level": "TRACE_HIKARI"},
+                },
             },
-        },
-    )
-    ```
+        )
+    """
+
+    shards: typing.Mapping[int, gateway_shard.GatewayShard]
+    """Mapping of shards in this application instance.
+
+    Each shard ID is mapped to the corresponding shard instance.
+
+    If the application has not started, it is acceptable to assume the
+    result of this call will be an empty mapping.
     """
 
     __slots__: typing.Sequence[str] = (
@@ -313,7 +267,6 @@ class GatewayBot(traits.GatewayBotAware):
         "_executor",
         "_http_settings",
         "_intents",
-        "_is_alive",
         "_proxy_settings",
         "_rest",
         "_shards",
@@ -345,9 +298,8 @@ class GatewayBot(traits.GatewayBotAware):
         self.print_banner(banner, allow_color, force_color)
 
         # Settings and state
-        self._closing_event: typing.Optional[asyncio.Event] = None
         self._closed_event: typing.Optional[asyncio.Event] = None
-        self._is_alive = False
+        self._closing_event: typing.Optional[asyncio.Event] = None
         self._executor = executor
         self._http_settings = http_settings if http_settings is not None else config_impl.HTTPSettings()
         self._intents = intents
@@ -393,7 +345,7 @@ class GatewayBot(traits.GatewayBotAware):
         # We populate these on startup instead, as we need to possibly make some
         # HTTP requests to determine what to put in this mapping.
         self._shards: typing.Dict[int, gateway_shard.GatewayShard] = {}
-        self.shards: typing.Mapping[int, gateway_shard.GatewayShard] = types.MappingProxyType(self._shards)
+        self.shards = types.MappingProxyType(self._shards)
 
     @property
     def cache(self) -> cache_.Cache:
@@ -450,32 +402,28 @@ class GatewayBot(traits.GatewayBotAware):
 
     @property
     def is_alive(self) -> bool:
-        return self._is_alive
+        return self._closed_event is not None
 
     def _check_if_alive(self) -> None:
-        if not self._is_alive:
+        if not self._closed_event:
             raise errors.ComponentStateConflictError("bot is not running so it cannot be interacted with")
 
     def get_me(self) -> typing.Optional[users_.OwnUser]:
         return self._cache.get_me()
 
     async def close(self) -> None:
-        self._check_if_alive()
-        await self._close()
+        if not self._closed_event or not self._closing_event:
+            raise errors.ComponentStateConflictError("Cannot close an inactive bot")
 
-    async def _close(self) -> None:
-        if self._closed_event:  # Closing is in progress from another call, wait for that to complete.
-            await self._closed_event.wait()
+        if self._closing_event.is_set():
+            await self.join()
             return
 
-        if self._closing_event is None:  # If closing event is None then this is already closed.
-            return
-
-        _LOGGER.debug("bot requested to shutdown")
-        self._closed_event = asyncio.Event()
+        _LOGGER.info("bot requested to shut down")
         self._closing_event.set()
-        self._closing_event = None
-        dispatch_events = self._is_alive
+
+        await self._event_manager.dispatch(self._event_factory.deserialize_stopping_event())
+        _LOGGER.log(ux.TRACE, "StoppingEvent dispatch completed, now beginning termination")
 
         loop = asyncio.get_running_loop()
 
@@ -487,36 +435,32 @@ class GatewayBot(traits.GatewayBotAware):
             except Exception as ex:
                 loop.call_exception_handler(
                     {
-                        "message": f"{name} raised an exception during shutdown",
+                        "message": f"{name} raised an exception during shut down",
                         "future": future,
                         "exception": ex,
                     }
                 )
 
-        if dispatch_events:
-            await self._event_manager.dispatch(self._event_factory.deserialize_stopping_event())
+        await handle("voice handler", self._voice.close())
 
-        _LOGGER.log(ux.TRACE, "StoppingEvent dispatch completed, now beginning termination")
+        shards = tuple((handle(f"shard {s.id}", s.close()) for s in self._shards.values() if s.is_alive))
 
-        calls = [
-            ("rest", self._rest.close()),
-            ("voice handler", self._voice.close()),
-            *((f"shard {s.id}", s.close()) for s in self._shards.values()),
-        ]
-
-        for coro in asyncio.as_completed([handle(*pair) for pair in calls]):
+        for coro in asyncio.as_completed(shards):
             await coro
+
+        await handle("rest", self._rest.close())
 
         # Clear out cache and shard map
         self._cache.clear()
         self._shards.clear()
-        self._is_alive = False
 
-        if dispatch_events:
-            await self._event_manager.dispatch(self._event_factory.deserialize_stopped_event())
+        await self._event_manager.dispatch(self._event_factory.deserialize_stopped_event())
 
         self._closed_event.set()
         self._closed_event = None
+        self._closing_event = None
+
+        _LOGGER.info("bot shut down successfully")
 
     def dispatch(self, event: base_events.Event) -> asyncio.Future[typing.Any]:
         """Dispatch an event.
@@ -526,62 +470,62 @@ class GatewayBot(traits.GatewayBotAware):
         event : hikari.events.base_events.Event
             The event to dispatch.
 
-        Example
-        -------
+        Examples
+        --------
         We can dispatch custom events by first defining a class that
         derives from `hikari.events.base_events.Event`.
 
-        ```py
-        import attr
+        .. code-block:: python
 
-        from hikari.traits import RESTAware
-        from hikari.events.base_events import Event
-        from hikari.users import User
-        from hikari.snowflakes import Snowflake
+            import attr
 
-        @attr.define()
-        class EveryoneMentionedEvent(Event):
-            app: RESTAware = attr.field()
+            from hikari.traits import RESTAware
+            from hikari.events.base_events import Event
+            from hikari.users import User
+            from hikari.snowflakes import Snowflake
 
-            author: User = attr.field()
-            '''The user who mentioned everyone.'''
+            @attr.define()
+            class EveryoneMentionedEvent(Event):
+                app: RESTAware = attr.field()
 
-            content: str = attr.field()
-            '''The message that was sent.'''
+                author: User = attr.field()
+                '''The user who mentioned everyone.'''
 
-            message_id: Snowflake = attr.field()
-            '''The message ID.'''
+                content: str = attr.field()
+                '''The message that was sent.'''
 
-            channel_id: Snowflake = attr.field()
-            '''The channel ID.'''
-        ```
+                message_id: Snowflake = attr.field()
+                '''The message ID.'''
+
+                channel_id: Snowflake = attr.field()
+                '''The channel ID.'''
 
         We can then dispatch our event as we see fit.
 
-        ```py
-        from hikari.events.messages import MessageCreateEvent
+        .. code-block:: python
 
-        @bot.listen(MessageCreateEvent)
-        async def on_message(event):
-            if "@everyone" in event.content or "@here" in event.content:
-                event = EveryoneMentionedEvent(
-                    author=event.author,
-                    content=event.content,
-                    message_id=event.id,
-                    channel_id=event.channel_id,
-                )
+            from hikari.events.messages import MessageCreateEvent
 
-                bot.dispatch(event)
-        ```
+            @bot.listen(MessageCreateEvent)
+            async def on_message(event):
+                if "@everyone" in event.content or "@here" in event.content:
+                    event = EveryoneMentionedEvent(
+                        author=event.author,
+                        content=event.content,
+                        message_id=event.id,
+                        channel_id=event.channel_id,
+                    )
+
+                    bot.dispatch(event)
 
         This event can be listened to elsewhere by subscribing to it with
-        `EventManager.subscribe`.
+        `hikari.impl.event_manager_base.EventManager.subscribe`.
 
-        ```py
-        @bot.listen(EveryoneMentionedEvent)
-        async def on_everyone_mentioned(event):
-            print(event.user, "just pinged everyone in", event.channel_id)
-        ```
+        .. code-block:: python
+
+            @bot.listen(EveryoneMentionedEvent)
+            async def on_everyone_mentioned(event):
+                print(event.user, "just pinged everyone in", event.channel_id)
 
         Returns
         -------
@@ -593,11 +537,11 @@ class GatewayBot(traits.GatewayBotAware):
 
         See Also
         --------
-        Listen: `hikari.impl.bot.GatewayBot.listen`
-        Stream: `hikari.impl.bot.GatewayBot.stream`
-        Subscribe: `hikari.impl.bot.GatewayBot.subscribe`
-        Unsubscribe: `hikari.impl.bot.GatewayBot.unsubscribe`
-        Wait_for: `hikari.impl.bot.GatewayBot.wait_for`
+        Listen : `hikari.impl.bot.GatewayBot.listen`.
+        Stream : `hikari.impl.bot.GatewayBot.stream`.
+        Subscribe : `hikari.impl.bot.GatewayBot.subscribe`.
+        Unsubscribe : `hikari.impl.bot.GatewayBot.unsubscribe`.
+        Wait_for : `hikari.impl.bot.GatewayBot.wait_for`.
         """
         return self._event_manager.dispatch(event)
 
@@ -611,30 +555,25 @@ class GatewayBot(traits.GatewayBotAware):
         event_type : typing.Type[EventT]
             The event type to look for.
             `EventT` must be a subclass of `hikari.events.base_events.Event`.
-        polymorphic : builtins.bool
-            If `builtins.True`, this will also return the listeners of the
-            subclasses of the given event type. If `builtins.False`, then
+        polymorphic : bool
+            If `True`, this will also return the listeners of the
+            subclasses of the given event type. If `False`, then
             only listeners for this class specifically are returned. The
-            default is `builtins.True`.
+            default is `True`.
 
         Returns
         -------
-        typing.Collection[typing.Callable[[EventT], typing.Coroutine[typing.Any, typing.Any, builtins.None]]
+        typing.Collection[typing.Callable[[EventT], typing.Coroutine[typing.Any, typing.Any, None]]]
             A copy of the collection of listeners for the event. Will return
             an empty collection if nothing is registered.
-
-            `EventT` must be a subclass of `hikari.events.base_events.Event`.
         """
         return self._event_manager.get_listeners(event_type, polymorphic=polymorphic)
 
-    async def join(self, until_close: bool = True) -> None:
-        self._check_if_alive()
+    async def join(self) -> None:
+        if not self._closed_event:
+            raise errors.ComponentStateConflictError("Cannot wait for an inactive bot to join")
 
-        awaitables: typing.List[typing.Awaitable[typing.Any]] = [s.join() for s in self._shards.values()]
-        if until_close and self._closing_event:  # If closing event is None then this is already closing.
-            awaitables.append(self._closing_event.wait())
-
-        await aio.first_completed(*awaitables)
+        await aio.first_completed(self._closed_event.wait(), *(s.join() for s in self._shards.values()))
 
     def listen(
         self,
@@ -662,11 +601,11 @@ class GatewayBot(traits.GatewayBotAware):
 
         See Also
         --------
-        Dispatch: `hikari.impl.bot.GatewayBot.dispatch`
-        Stream: `hikari.impl.bot.GatewayBot.stream`
-        Subscribe: `hikari.impl.bot.GatewayBot.subscribe`
-        Unsubscribe: `hikari.impl.bot.GatewayBot.unsubscribe`
-        Wait_for: `hikari.impl.bot.GatewayBot.wait_for`
+        Dispatch : `hikari.impl.bot.GatewayBot.dispatch`.
+        Stream : `hikari.impl.bot.GatewayBot.stream`.
+        Subscribe : `hikari.impl.bot.GatewayBot.subscribe`.
+        Unsubscribe : `hikari.impl.bot.GatewayBot.unsubscribe`.
+        Wait_for : `hikari.impl.bot.GatewayBot.wait_for`.
         """
         return self._event_manager.listen(*event_types)
 
@@ -688,26 +627,25 @@ class GatewayBot(traits.GatewayBotAware):
 
         Parameters
         ----------
-        banner : typing.Optional[builtins.str]
+        banner : typing.Optional[str]
             The package to find a `banner.txt` in.
-        allow_color : builtins.bool
+        allow_color : bool
             A flag that allows advising whether to allow color if supported or
             not. Can be overridden by setting a `"CLICOLOR"` environment
             variable to a non-`"0"` string.
-        force_color : builtins.bool
+        force_color : bool
             A flag that allows forcing color to always be output, even if the
             terminal device may not support it. Setting the `"CLICOLOR_FORCE"`
             environment variable to a non-`"0"` string will override this.
 
-        !!! note
-            `force_color` will always take precedence over `allow_color`.
-        extra_args : typing.Optional[typing.Dict[builtins.str, builtins.str]]
+            This will take precedence over `allow_color` if both are specified.
+        extra_args : typing.Optional[typing.Dict[str, str]]
             If provided, extra $-substitutions to use when printing the banner.
             Default substitutions can not be overwritten.
 
         Raises
         ------
-        builtins.ValueError
+        ValueError
             If `extra_args` contains a default $-substitution.
         """
         ux.print_banner(banner, allow_color, force_color, extra_args=extra_args)
@@ -728,7 +666,7 @@ class GatewayBot(traits.GatewayBotAware):
         large_threshold: int = 250,
         propagate_interrupts: bool = False,
         status: presences.Status = presences.Status.ONLINE,
-        shard_ids: typing.Optional[typing.AbstractSet[int]] = None,
+        shard_ids: typing.Optional[typing.Sequence[int]] = None,
         shard_count: typing.Optional[int] = None,
     ) -> None:
         """Start the bot, wait for all shards to become ready, and then return.
@@ -737,44 +675,44 @@ class GatewayBot(traits.GatewayBotAware):
         ----------------
         activity : typing.Optional[hikari.presences.Activity]
             The initial activity to display in the bot user presence, or
-            `builtins.None` (default) to not show any.
-        afk : builtins.bool
+            `None` (default) to not show any.
+        afk : bool
             The initial AFK state to display in the bot user presence, or
-            `builtins.False` (default) to not show any.
-        asyncio_debug : builtins.bool
-            Defaults to `builtins.False`. If `builtins.True`, then debugging is
+            `False` (default) to not show any.
+        asyncio_debug : bool
+            Defaults to `False`. If `True`, then debugging is
             enabled for the asyncio event loop in use.
-        check_for_updates : builtins.bool
-            Defaults to `builtins.True`. If `builtins.True`, will check for
+        check_for_updates : bool
+            Defaults to `True`. If `True`, will check for
             newer versions of `hikari` on PyPI and notify if available.
-        close_passed_executor : builtins.bool
-            Defaults to `builtins.False`. If `builtins.True`, any custom
+        close_passed_executor : bool
+            Defaults to `False`. If `True`, any custom
             `concurrent.futures.Executor` passed to the constructor will be
             shut down when the application terminates. This does not affect the
             default executor associated with the event loop, and will not
             do anything if you do not provide a custom executor to the
             constructor.
-        close_loop : builtins.bool
-            Defaults to `builtins.True`. If `builtins.True`, then once the bot
+        close_loop : bool
+            Defaults to `True`. If `True`, then once the bot
             enters a state where all components have shut down permanently
-            during application shutdown, then all asyncgens and background tasks
+            during application shut down, then all asyncgens and background tasks
             will be destroyed, and the event loop will be shut down.
 
             This will wait until all `hikari`-owned `aiohttp` connectors have
             had time to attempt to shut down correctly (around 250ms), and on
             Python 3.9 and newer, will also shut down the default event loop
             executor too.
-        coroutine_tracking_depth : typing.Optional[builtins.int]
-            Defaults to `builtins.None`. If an integer value and supported by
+        coroutine_tracking_depth : typing.Optional[int]
+            Defaults to `None`. If an integer value and supported by
             the interpreter, then this many nested coroutine calls will be
             tracked with their call origin state. This allows you to determine
             where non-awaited coroutines may originate from, but generally you
             do not want to leave this enabled for performance reasons.
-        enable_signal_handlers : typing.Optional[builtins.bool]
-            Defaults to `builtins.True` if this is started in the main thread.
+        enable_signal_handlers : typing.Optional[bool]
+            Defaults to `True` if this is started in the main thread.
 
-            If on a __non-Windows__ OS with builtin support for kernel-level
-            POSIX signals, then setting this to `builtins.True` will allow
+            If on a non-Windows OS with builtin support for kernel-level
+            POSIX signals, then setting this to `True` will allow
             treating keyboard interrupts and other OS signals to safely shut
             down the application as calls to shut down the application properly
             rather than just killing the process in a dirty state immediately.
@@ -782,34 +720,36 @@ class GatewayBot(traits.GatewayBotAware):
             signal handling yourself.
         idle_since : typing.Optional[datetime.datetime]
             The `datetime.datetime` the user should be marked as being idle
-            since, or `builtins.None` (default) to not show this.
-        ignore_session_start_limit : builtins.bool
-            Defaults to `builtins.False`. If `builtins.False`, then attempting
+            since, or `None` (default) to not show this.
+        ignore_session_start_limit : bool
+            Defaults to `False`. If `False`, then attempting
             to start more sessions than you are allowed in a 24 hour window
-            will throw a `hikari.errors.GatewayError` rather than going ahead
+            will throw a `RuntimeError` rather than going ahead
             and hitting the IDENTIFY limit, which may result in your token
-            being reset. Setting to `builtins.True` disables this behavior.
-        large_threshold : builtins.int
+            being reset. Setting to `True` disables this behavior.
+        large_threshold : int
             Threshold for members in a guild before it is treated as being
             "large" and no longer sending member details in the `GUILD CREATE`
             event. Defaults to `250`.
-        propagate_interrupts : builtins.bool
-            Defaults to `builtins.False`. If set to `builtins.True`, then any
+        propagate_interrupts : bool
+            Defaults to `False`. If set to `True`, then any
             internal `hikari.errors.HikariInterrupt` that is raises as a
             result of catching an OS level signal will result in the
             exception being rethrown once the application has closed. This can
             allow you to use hikari signal handlers and still be able to
             determine what kind of interrupt the application received after
-            it closes. When `builtins.False`, nothing is raised and the call
+            it closes. When `False`, nothing is raised and the call
             will terminate cleanly and silently where possible instead.
-        shard_ids : typing.Optional[typing.AbstractSet[builtins.int]]
-            The shard IDs to create shards for. If not `builtins.None`, then
+        shard_ids : typing.Optional[typing.Sequence[int]]
+            The shard IDs to create shards for. If not `None`, then
             a non-`None` `shard_count` must ALSO be provided. Defaults to
-            `builtins.None`, which means the Discord-recommended count is used
+            `None`, which means the Discord-recommended count is used
             for your application instead.
-        shard_count : typing.Optional[builtins.int]
+
+            Note that the sequence will be de-duplicated.
+        shard_count : typing.Optional[int]
             The number of shards to use in the entire distributed application.
-            Defaults to `builtins.None` which results in the count being
+            Defaults to `None` which results in the count being
             determined dynamically on startup.
         status : hikari.presences.Status
             The initial status to show for the user presence on startup.
@@ -819,17 +759,16 @@ class GatewayBot(traits.GatewayBotAware):
         ------
         hikari.errors.ComponentStateConflictError
             If bot is already running.
-        builtins.TypeError
+        TypeError
             If `shard_ids` is passed without `shard_count`.
         """
-        if self._is_alive:
+        if self._closed_event:
             raise errors.ComponentStateConflictError("bot is already running")
 
         if shard_ids is not None and shard_count is None:
             raise TypeError("'shard_ids' must be passed with 'shard_count'")
 
         loop = aio.get_or_make_loop()
-        signals = ("SIGINT", "SIGTERM")
 
         if asyncio_debug:
             loop.set_debug(True)
@@ -841,100 +780,44 @@ class GatewayBot(traits.GatewayBotAware):
             except AttributeError:
                 _LOGGER.log(ux.TRACE, "cannot set coroutine tracking depth for sys, no functionality exists for this")
 
-        # Throwing this in the handler will lead to lots of fun OS specific shenanigans. So, lets just
-        # cache it for later, I guess.
-        interrupt: typing.Optional[errors.HikariInterrupt] = None
-        loop_thread_id = threading.get_native_id()
-
-        def handle_os_interrupt(signum: int, frame: typing.Optional[types.FrameType]) -> None:
-            # If we use a POSIX system, then raising an exception in here works perfectly and shuts the loop down
-            # with an exception, which is good.
-            # Windows, however, is special on this front. On Windows, the exception is caught by whatever was
-            # currently running on the event loop at the time, which is annoying for us, as this could be fired into
-            # the task for an event dispatch, for example, which is a guarded call that is never waited for by design.
-
-            # We can't always safely intercept this either, as Windows does not allow us to use asyncio loop
-            # signal listeners (since Windows doesn't have kernel-level signals, only emulated system calls
-            # for a remote few standard C signal types). Thus, the best solution here is to set the close bit
-            # instead, which will let the bot start to clean itself up as if the user closed it manually via a call
-            # to `bot.close()`.
-            nonlocal interrupt
-            signame = signal.strsignal(signum)
-            assert signame is not None  # Will always be True
-
-            interrupt = errors.HikariInterrupt(signum, signame)
-            # The loop may or may not be running, depending on the state of the application when this occurs.
-            # Signals on POSIX only occur on the main thread usually, too, so we need to ensure this is
-            # threadsafe if we want the user's application to still shut down if on a separate thread.
-            # We log native thread IDs purely for debugging purposes.
-            if _LOGGER.isEnabledFor(ux.TRACE):
-                _LOGGER.log(
-                    ux.TRACE,
-                    "interrupt %s occurred on thread %s, bot on thread %s will be notified to shut down shortly\n"
-                    "Stacktrace for developer sanity:\n%s",
-                    signum,
-                    threading.get_native_id(),
-                    loop_thread_id,
-                    "".join(traceback.format_stack(frame)),
-                )
-
-            asyncio.run_coroutine_threadsafe(self._set_close_flag(signame, signum), loop)
-
-        if enable_signal_handlers is None:
-            # Signal handlers can only be registered on the main thread so we
-            # only default to True if this is the case.
-            enable_signal_handlers = threading.current_thread() is threading.main_thread()
-
-        if enable_signal_handlers:
-            for sig in signals:
-                try:
-                    signum = getattr(signal, sig)
-                    signal.signal(signum, handle_os_interrupt)
-                except AttributeError:
-                    _LOGGER.log(ux.TRACE, "signal %s is not implemented on your platform", sig)
-
         try:
-            loop.run_until_complete(
-                self.start(
-                    activity=activity,
-                    afk=afk,
-                    check_for_updates=check_for_updates,
-                    idle_since=idle_since,
-                    ignore_session_start_limit=ignore_session_start_limit,
-                    large_threshold=large_threshold,
-                    shard_ids=shard_ids,
-                    shard_count=shard_count,
-                    status=status,
+            with signals.handle_interrupts(
+                enabled=enable_signal_handlers,
+                loop=loop,
+                propagate_interrupts=propagate_interrupts,
+            ):
+                loop.run_until_complete(
+                    self.start(
+                        activity=activity,
+                        afk=afk,
+                        check_for_updates=check_for_updates,
+                        idle_since=idle_since,
+                        ignore_session_start_limit=ignore_session_start_limit,
+                        large_threshold=large_threshold,
+                        shard_ids=shard_ids,
+                        shard_count=shard_count,
+                        status=status,
+                    )
                 )
-            )
 
-            loop.run_until_complete(self.join())
+                loop.run_until_complete(self.join())
 
         finally:
-            try:
-                loop.run_until_complete(self._close())
+            if self._closing_event:
+                if self._closing_event.is_set():
+                    loop.run_until_complete(self._closing_event.wait())
+                else:
+                    loop.run_until_complete(self.close())
 
-                if close_passed_executor and self._executor is not None:
-                    _LOGGER.debug("shutting down executor %s", self._executor)
-                    self._executor.shutdown(wait=True)
-                    self._executor = None
-            finally:
-                if enable_signal_handlers:
-                    for sig in signals:
-                        try:
-                            signum = getattr(signal, sig)
-                            signal.signal(signum, signal.SIG_DFL)
-                        except AttributeError:
-                            # Signal not implemented probably. We should have logged this earlier.
-                            pass
+            if close_passed_executor and self._executor is not None:
+                _LOGGER.debug("shutting down executor %s", self._executor)
+                self._executor.shutdown(wait=True)
+                self._executor = None
 
-                if close_loop:
-                    _destroy_loop(loop)
+            if close_loop:
+                aio.destroy_loop(loop, _LOGGER)
 
-                _LOGGER.info("successfully terminated")
-
-                if propagate_interrupts and interrupt is not None:
-                    raise interrupt
+            _LOGGER.info("successfully terminated")
 
     async def start(
         self,
@@ -945,7 +828,7 @@ class GatewayBot(traits.GatewayBotAware):
         idle_since: typing.Optional[datetime.datetime] = None,
         ignore_session_start_limit: bool = False,
         large_threshold: int = 250,
-        shard_ids: typing.Optional[typing.AbstractSet[int]] = None,
+        shard_ids: typing.Optional[typing.Sequence[int]] = None,
         shard_count: typing.Optional[int] = None,
         status: presences.Status = presences.Status.ONLINE,
     ) -> None:
@@ -955,34 +838,36 @@ class GatewayBot(traits.GatewayBotAware):
         ----------------
         activity : typing.Optional[hikari.presences.Activity]
             The initial activity to display in the bot user presence, or
-            `builtins.None` (default) to not show any.
-        afk : builtins.bool
+            `None` (default) to not show any.
+        afk : bool
             The initial AFK state to display in the bot user presence, or
-            `builtins.False` (default) to not show any.
-        check_for_updates : builtins.bool
-            Defaults to `builtins.True`. If `builtins.True`, will check for
+            `False` (default) to not show any.
+        check_for_updates : bool
+            Defaults to `True`. If `True`, will check for
             newer versions of `hikari` on PyPI and notify if available.
         idle_since : typing.Optional[datetime.datetime]
             The `datetime.datetime` the user should be marked as being idle
-            since, or `builtins.None` (default) to not show this.
-        ignore_session_start_limit : builtins.bool
-            Defaults to `builtins.False`. If `builtins.False`, then attempting
+            since, or `None` (default) to not show this.
+        ignore_session_start_limit : bool
+            Defaults to `False`. If `False`, then attempting
             to start more sessions than you are allowed in a 24 hour window
-            will throw a `hikari.errors.GatewayError` rather than going ahead
+            will throw a `RuntimeError` rather than going ahead
             and hitting the IDENTIFY limit, which may result in your token
-            being reset. Setting to `builtins.True` disables this behavior.
-        large_threshold : builtins.int
+            being reset. Setting to `True` disables this behavior.
+        large_threshold : int
             Threshold for members in a guild before it is treated as being
             "large" and no longer sending member details in the `GUILD CREATE`
             event. Defaults to `250`.
-        shard_ids : typing.Optional[typing.AbstractSet[builtins.int]]
-            The shard IDs to create shards for. If not `builtins.None`, then
+        shard_ids : typing.Optional[typing.Sequence[int]]
+            The shard IDs to create shards for. If not `None`, then
             a non-`None` `shard_count` must ALSO be provided. Defaults to
-            `builtins.None`, which means the Discord-recommended count is used
+            `None`, which means the Discord-recommended count is used
             for your application instead.
-        shard_count : typing.Optional[builtins.int]
+
+            Note that the sequence will be de-duplicated.
+        shard_count : typing.Optional[int]
             The number of shards to use in the entire distributed application.
-            Defaults to `builtins.None` which results in the count being
+            Defaults to `None` which results in the count being
             determined dynamically on startup.
         status : hikari.presences.Status
             The initial status to show for the user presence on startup.
@@ -990,12 +875,12 @@ class GatewayBot(traits.GatewayBotAware):
 
         Raises
         ------
+        TypeError
+            If `shard_ids` is passed without `shard_count`.
         hikari.errors.ComponentStateConflictError
             If bot is already running.
-        builtins.TypeError
-            If `shard_ids` is passed without `shard_count`.
         """
-        if self._is_alive:
+        if self._closed_event:
             raise errors.ComponentStateConflictError("bot is already running")
 
         if shard_ids is not None and shard_count is None:
@@ -1004,10 +889,8 @@ class GatewayBot(traits.GatewayBotAware):
         _validate_activity(activity)
 
         start_time = time.monotonic()
-        self._rest.start()
-        self._voice.start()
+        self._closed_event = asyncio.Event()
         self._closing_event = asyncio.Event()
-        self._is_alive = True
 
         if check_for_updates:
             asyncio.create_task(
@@ -1015,13 +898,18 @@ class GatewayBot(traits.GatewayBotAware):
                 name="check for package updates",
             )
 
-        requirements = await self._rest.fetch_gateway_bot_info()
+        self._rest.start()
+        self._voice.start()
+
         await self._event_manager.dispatch(self._event_factory.deserialize_starting_event())
+        requirements = await self._rest.fetch_gateway_bot_info()
 
         if shard_count is None:
             shard_count = requirements.shard_count
         if shard_ids is None:
-            shard_ids = set(range(shard_count))
+            shard_ids = tuple(range(shard_count))
+        else:
+            shard_ids = tuple(dict.fromkeys(shard_ids))
 
         if requirements.session_start_limit.remaining < len(shard_ids) and not ignore_session_start_limit:
             _LOGGER.critical(
@@ -1034,7 +922,7 @@ class GatewayBot(traits.GatewayBotAware):
                 "s" if requirements.session_start_limit.remaining != 1 else "",
                 requirements.session_start_limit.reset_at,
             )
-            raise errors.GatewayError("Attempted to start more sessions than were allowed in the given time-window")
+            raise RuntimeError("Attempted to start more sessions than were allowed in the given time-window")
 
         _LOGGER.info(
             "you can start %s session%s before the next window which starts at %s; planning to start %s session%s... ",
@@ -1045,50 +933,29 @@ class GatewayBot(traits.GatewayBotAware):
             "s" if len(shard_ids) != 1 else "",
         )
 
-        for window_start in range(0, shard_count, requirements.session_start_limit.max_concurrency):
-            window = [
-                candidate_shard_id
-                for candidate_shard_id in range(
-                    window_start, window_start + requirements.session_start_limit.max_concurrency
-                )
-                if candidate_shard_id in shard_ids
-            ]
+        max_concurrency = requirements.session_start_limit.max_concurrency
+        while shard_ids:
+            window = shard_ids[:max_concurrency]
+            shard_ids = shard_ids[max_concurrency:]
 
-            if not window:
-                continue
             if self._shards:
-                close_waiter = asyncio.create_task(self._closing_event.wait())
-                shard_joiners = [s.join() for s in self._shards.values()]
+                _LOGGER.info("the next startup window is in 5 seconds, please wait...")
 
                 try:
-                    # Attempt to wait for all started shards, for 5 seconds, along with the close
-                    # waiter.
-                    # If the close flag is set (i.e. user invoked bot.close), or one or more shards
-                    # die in this time, we shut down immediately.
-                    # If we time out, the joining tasks get discarded and we spin up the next
-                    # block of shards, if applicable.
-                    _LOGGER.info("the next startup window is in 5 seconds, please wait...")
-                    await aio.first_completed(aio.all_of(*shard_joiners, timeout=5), close_waiter)
+                    await aio.first_completed(
+                        self._closing_event.wait(), *(shard.join() for shard in self._shards.values()), timeout=5
+                    )
 
-                    if not close_waiter.cancelled():
-                        _LOGGER.info("requested to shut down during startup of shards")
-                    else:
-                        _LOGGER.critical("one or more shards shut down unexpectedly during bot startup")
-                    return
-
-                except asyncio.TimeoutError:
-                    # If any shards stopped silently, we should close.
-                    if any(not s.is_alive for s in self._shards.values()):
-                        _LOGGER.warning("one of the shards has been manually shut down (no error), will now shut down")
-                        await self._close()
+                    if self._closing_event.is_set():
                         return
+
+                    _LOGGER.critical("one or more shards closed while starting; shutting down")
+                    raise RuntimeError("One or more shards closed while starting")
+                except asyncio.TimeoutError:
                     # new window starts.
+                    pass
 
-                except Exception as ex:
-                    _LOGGER.critical("an exception occurred in one of the started shards during bot startup: %r", ex)
-                    raise
-
-            await aio.all_of(
+            gather = asyncio.gather(
                 *(
                     self._start_one_shard(
                         activity=activity,
@@ -1096,15 +963,15 @@ class GatewayBot(traits.GatewayBotAware):
                         idle_since=idle_since,
                         status=status,
                         large_threshold=large_threshold,
-                        shard_id=candidate_shard_id,
+                        shard_id=shard_id,
                         shard_count=shard_count,
                         url=requirements.url,
-                        closing_event=self._closing_event,
                     )
-                    for candidate_shard_id in window
-                    if candidate_shard_id in shard_ids
+                    for shard_id in window
                 )
             )
+
+            await aio.first_completed(self._closing_event.wait(), gather)
 
         await self._event_manager.dispatch(self._event_factory.deserialize_started_event())
 
@@ -1119,18 +986,23 @@ class GatewayBot(traits.GatewayBotAware):
     ) -> event_manager_.EventStream[base_events.EventT]:
         """Return a stream iterator for the given event and sub-events.
 
+        .. warning::
+            If you use `stream.open()` to start the stream then you must
+            also close it with `stream.close()` otherwise it may queue
+            events in memory indefinitely.
+
         Parameters
         ----------
         event_type : typing.Type[hikari.events.base_events.Event]
             The event type to listen for. This will listen for subclasses of
             this type additionally.
-        timeout : typing.Optional[builtins.int, builtins.float]
+        timeout : typing.Optional[int, float]
             How long this streamer should wait for the next event before
-            ending the iteration. If `builtins.None` then this will continue
+            ending the iteration. If `None` then this will continue
             until explicitly broken from.
-        limit : typing.Optional[builtins.int]
+        limit : typing.Optional[int]
             The limit for how many events this should queue at one time before
-            dropping extra incoming events, leave this as `builtins.None` for
+            dropping extra incoming events, leave this as `None` for
             the cache size to be unlimited.
 
         Returns
@@ -1140,39 +1012,33 @@ class GatewayBot(traits.GatewayBotAware):
             with `with stream:` or `stream.open()` before
             asynchronously iterating over it.
 
-        !!! warning
-            If you use `stream.open()` to start the stream then you must
-            also close it with `stream.close()` otherwise it may queue
-            events in memory indefinitely.
-
         Examples
         --------
+        .. code-block:: python
 
-        ```py
-        with bot.stream(events.ReactionAddEvent, timeout=30).filter(("message_id", message.id)) as stream:
-            async for user_id in stream.map("user_id").limit(50):
-                ...
-        ```
+            with bot.stream(events.ReactionAddEvent, timeout=30).filter(("message_id", message.id)) as stream:
+                async for user_id in stream.map("user_id").limit(50):
+                    ...
 
         or using `open()` and `close()`
 
-        ```py
-        stream = bot.stream(events.ReactionAddEvent, timeout=30).filter(("message_id", message.id))
-        stream.open()
+        .. code-block:: python
 
-        async for user_id in stream.map("user_id").limit(50)
-            ...
+            stream = bot.stream(events.ReactionAddEvent, timeout=30).filter(("message_id", message.id))
+            stream.open()
 
-        stream.close()
-        ```
+            async for user_id in stream.map("user_id").limit(50)
+                ...
+
+            stream.close()
 
         See Also
         --------
-        Dispatch: `hikari.impl.bot.GatewayBot.dispatch`
-        Listen: `hikari.impl.bot.GatewayBot.listen`
-        Subscribe: `hikari.impl.bot.GatewayBot.subscribe`
-        Unsubscribe: `hikari.impl.bot.GatewayBot.unsubscribe`
-        Wait_for: `hikari.impl.bot.GatewayBot.wait_for`
+        Dispatch : `hikari.impl.bot.GatewayBot.dispatch`.
+        Listen : `hikari.impl.bot.GatewayBot.listen`.
+        Subscribe : `hikari.impl.bot.GatewayBot.subscribe`.
+        Unsubscribe : `hikari.impl.bot.GatewayBot.unsubscribe`.
+        Wait_for : `hikari.impl.bot.GatewayBot.wait_for`.
         """
         self._check_if_alive()
         return self._event_manager.stream(event_type, timeout=timeout, limit=limit)
@@ -1195,27 +1061,27 @@ class GatewayBot(traits.GatewayBotAware):
             consume an instance of the given event, or an instance of a valid
             subclass if one exists. Any result is discarded.
 
-        Example
-        -------
+        Examples
+        --------
         The following demonstrates subscribing a callback to message creation
         events.
 
-        ```py
-        from hikari.events.messages import MessageCreateEvent
+        .. code-block:: python
 
-        async def on_message(event):
-            ...
+            from hikari.events.messages import MessageCreateEvent
 
-        bot.subscribe(MessageCreateEvent, on_message)
-        ```
+            async def on_message(event):
+                ...
+
+            bot.subscribe(MessageCreateEvent, on_message)
 
         See Also
         --------
-        Dispatch: `hikari.impl.bot.GatewayBot.dispatch`
-        Listen: `hikari.impl.bot.GatewayBot.listen`
-        Stream: `hikari.impl.bot.GatewayBot.stream`
-        Unsubscribe: `hikari.impl.bot.GatewayBot.unsubscribe`
-        Wait_for: `hikari.impl.bot.GatewayBot.wait_for`
+        Dispatch : `hikari.impl.bot.GatewayBot.dispatch`.
+        Listen : `hikari.impl.bot.GatewayBot.listen`.
+        Stream : `hikari.impl.bot.GatewayBot.stream`.
+        Unsubscribe : `hikari.impl.bot.GatewayBot.unsubscribe`.
+        Wait_for : `hikari.impl.bot.GatewayBot.wait_for`.
         """
         self._event_manager.subscribe(event_type, callback)
 
@@ -1235,27 +1101,27 @@ class GatewayBot(traits.GatewayBotAware):
         callback
             The callback to unsubscribe.
 
-        Example
-        -------
+        Examples
+        --------
         The following demonstrates unsubscribing a callback from a message
         creation event.
 
-        ```py
-        from hikari.events.messages import MessageCreateEvent
+        .. code-block:: python
 
-        async def on_message(event):
-            ...
+            from hikari.events.messages import MessageCreateEvent
 
-        bot.unsubscribe(MessageCreateEvent, on_message)
-        ```
+            async def on_message(event):
+                ...
+
+            bot.unsubscribe(MessageCreateEvent, on_message)
 
         See Also
         --------
-        Dispatch: `hikari.impl.bot.GatewayBot.dispatch`
-        Listen: `hikari.impl.bot.GatewayBot.listen`
-        Stream: `hikari.impl.bot.GatewayBot.stream`
-        Subscribe: `hikari.impl.bot.GatewayBot.subscribe`
-        Wait_for: `hikari.impl.bot.GatewayBot.wait_for`
+        Dispatch : `hikari.impl.bot.GatewayBot.dispatch`.
+        Listen : `hikari.impl.bot.GatewayBot.listen`.
+        Stream : `hikari.impl.bot.GatewayBot.stream`.
+        Subscribe : `hikari.impl.bot.GatewayBot.subscribe`.
+        Wait_for : `hikari.impl.bot.GatewayBot.wait_for`.
         """
         self._event_manager.unsubscribe(event_type, callback)
 
@@ -1268,6 +1134,9 @@ class GatewayBot(traits.GatewayBotAware):
     ) -> base_events.EventT:
         """Wait for a given event to occur once, then return the event.
 
+        .. warning::
+            Async predicates are not supported.
+
         Parameters
         ----------
         event_type : typing.Type[hikari.events.base_events.Event]
@@ -1275,17 +1144,14 @@ class GatewayBot(traits.GatewayBotAware):
             this type additionally.
         predicate
             A function taking the event as the single parameter.
-            This should return `builtins.True` if the event is one you want to
-            return, or `builtins.False` if the event should not be returned.
+            This should return `True` if the event is one you want to
+            return, or `False` if the event should not be returned.
             If left as `None` (the default), then the first matching event type
             that the bot receives (or any subtype) will be the one returned.
-
-            !!! warning
-                Async predicates are not supported.
-        timeout : typing.Union[builtins.float, builtins.int, builtins.None]
+        timeout : typing.Union[float, int, None]
             The amount of time to wait before raising an `asyncio.TimeoutError`
             and giving up instead. This is measured in seconds. If
-            `builtins.None`, then no timeout will be waited for (no timeout can
+            `None`, then no timeout will be waited for (no timeout can
             result in "leaking" of coroutines that never complete if called in
             an uncontrolled way, so is not recommended).
 
@@ -1297,16 +1163,16 @@ class GatewayBot(traits.GatewayBotAware):
         Raises
         ------
         asyncio.TimeoutError
-            If the timeout is not `builtins.None` and is reached before an
-            event is received that the predicate returns `builtins.True` for.
+            If the timeout is not `None` and is reached before an
+            event is received that the predicate returns `True` for.
 
         See Also
         --------
-        Dispatch: `hikari.impl.bot.GatewayBot.dispatch`
-        Listen: `hikari.impl.bot.GatewayBot.listen`
-        Stream: `hikari.impl.bot.GatewayBot.stream`
-        Subscribe: `hikari.impl.bot.GatewayBot.subscribe`
-        Unsubscribe: `hikari.impl.bot.GatewayBot.unsubscribe`
+        Dispatch : `hikari.impl.bot.GatewayBot.dispatch`.
+        Listen : `hikari.impl.bot.GatewayBot.listen`.
+        Stream : `hikari.impl.bot.GatewayBot.stream`.
+        Subscribe : `hikari.impl.bot.GatewayBot.subscribe`.
+        Unsubscribe : `hikari.impl.bot.GatewayBot.unsubscribe`.
         """
         self._check_if_alive()
         return await self._event_manager.wait_for(event_type, timeout=timeout, predicate=predicate)
@@ -1364,16 +1230,6 @@ class GatewayBot(traits.GatewayBotAware):
             guild=guild, include_presences=include_presences, query=query, limit=limit, users=users, nonce=nonce
         )
 
-    async def _set_close_flag(self, signame: str, signum: int) -> None:
-        # This needs to be a coroutine, as the closing event is not threadsafe, so we have no way to set this
-        # from a Unix system call handler if we are running on a thread that isn't the main application thread
-        # without getting undefined behaviour. We do however have `asyncio.run_coroutine_threadsafe` which can
-        # run a coroutine function on the event loop from a completely different thread, so this is the safest
-        # solution.
-        _LOGGER.debug("received interrupt %s (%s), will start shutting down shortly", signame, signum)
-
-        await self._close()
-
     async def _start_one_shard(
         self,
         activity: typing.Optional[presences.Activity],
@@ -1384,8 +1240,7 @@ class GatewayBot(traits.GatewayBotAware):
         shard_id: int,
         shard_count: int,
         url: str,
-        closing_event: asyncio.Event,
-    ) -> shard_impl.GatewayShardImpl:
+    ) -> None:
         new_shard = shard_impl.GatewayShardImpl(
             http_settings=self._http_settings,
             proxy_settings=self._proxy_settings,
@@ -1402,14 +1257,20 @@ class GatewayBot(traits.GatewayBotAware):
             token=self._token,
             url=url,
         )
-        self._shards[shard_id] = new_shard
+        try:
+            start = time.monotonic()
+            await new_shard.start()
+            end = time.monotonic()
 
-        start = time.monotonic()
-        await aio.first_completed(new_shard.start(), closing_event.wait())
-        end = time.monotonic()
+            if new_shard.is_alive:
+                _LOGGER.debug("shard %s started successfully in %.1fms", shard_id, (end - start) * 1_000)
+                self._shards[shard_id] = new_shard
+                return
 
-        if new_shard.is_alive:
-            _LOGGER.debug("shard %s started successfully in %.1fms", shard_id, (end - start) * 1_000)
-            return new_shard
+            raise RuntimeError(f"shard {shard_id} shut down immediately when starting")
 
-        raise errors.GatewayError(f"shard {shard_id} shut down immediately when starting")
+        except Exception:
+            if new_shard.is_alive:
+                await new_shard.close()
+
+            raise

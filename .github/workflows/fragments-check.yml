@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v3
         with:
           # `towncrier check` runs `git diff --name-only origin/main...`, which
@@ -30,7 +30,7 @@ jobs:
 
       - name: Check if changelog fragment was added
         run: |
-          pip install towncrier
+          pip install -r dev-requirements/towncrier.txt
 
           if ! towncrier check --compare-with origin/${{ github.base_ref }}; then
             echo "----------------------------------------------------"

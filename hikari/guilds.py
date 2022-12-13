@@ -66,7 +66,6 @@ from hikari import undefined
 from hikari import urls
 from hikari import users
 from hikari.internal import attr_extensions
-from hikari.internal import deprecation
 from hikari.internal import enums
 from hikari.internal import routes
 from hikari.internal import time
@@ -277,7 +276,7 @@ class GuildWidget:
     app: traits.RESTAware = attr.field(
         repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
     )
-    """The client application that models may use for procedures."""
+    """Client application that models may use for procedures."""
 
     channel_id: typing.Optional[snowflakes.Snowflake] = attr.field(repr=True)
     """The ID of the channel the invite for this embed targets, if enabled."""
@@ -288,7 +287,7 @@ class GuildWidget:
     async def fetch_channel(self) -> typing.Optional[channels_.GuildChannel]:
         """Fetch the widget channel.
 
-        This will be `builtins.None` if not set.
+        This will be `None` if not set.
 
         Returns
         -------
@@ -296,7 +295,7 @@ class GuildWidget:
             The requested channel.
 
             You can check the type of the channel by
-            using `builtins.isinstance`.
+            using `isinstance`.
 
         Raises
         ------
@@ -338,14 +337,14 @@ class Member(users.User):
     """The ID of the guild this member belongs to."""
 
     is_deaf: undefined.UndefinedOr[bool] = attr.field(repr=False)
-    """`builtins.True` if this member is deafened in the current voice channel.
+    """`True` if this member is deafened in the current voice channel.
 
     This will be `hikari.undefined.UNDEFINED` if it's state is
     unknown.
     """
 
     is_mute: undefined.UndefinedOr[bool] = attr.field(repr=False)
-    """`builtins.True` if this member is muted in the current voice channel.
+    """`True` if this member is muted in the current voice channel.
 
     This will be `hikari.undefined.UNDEFINED` if it's state is unknown.
     """
@@ -362,21 +361,21 @@ class Member(users.User):
     nickname: typing.Optional[str] = attr.field(repr=True)
     """This member's nickname.
 
-    This will be `builtins.None` if not set.
+    This will be `None` if not set.
     """
 
     premium_since: typing.Optional[datetime.datetime] = attr.field(repr=False)
     """The datetime of when this member started "boosting" this guild.
 
-    Will be `builtins.None` if the member is not a premium user.
+    Will be `None` if the member is not a premium user.
     """
 
     raw_communication_disabled_until: typing.Optional[datetime.datetime] = attr.field(repr=False)
     """The datetime when this member's timeout will expire.
 
-     Will be `builtins.None` if the member is not timed out.
+     Will be `None` if the member is not timed out.
 
-     !!! note
+     .. note::
         The datetime might be in the past, so it is recommended to use
         `communication_disabled_until` method to check if the member is timed
         out at the time of the call.
@@ -395,9 +394,9 @@ class Member(users.User):
     """This member's corresponding user object."""
 
     guild_avatar_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
-    """Hash of the member's guild avatar guild if set, else `builtins.None`.
+    """Hash of the member's guild avatar guild if set, else `None`.
 
-    !!! note
+    .. note::
         This takes precedence over `Member.avatar_hash`.
     """
 
@@ -418,7 +417,7 @@ class Member(users.User):
     def guild_avatar_url(self) -> typing.Optional[files.URL]:
         """Guild Avatar URL for the user, if they have one set.
 
-        May be `builtins.None` if no guild avatar is set. In this case, you
+        May be `None` if no guild avatar is set. In this case, you
         should use `avatar_hash` or `default_avatar_url` instead.
         """
         return self.make_guild_avatar_url()
@@ -454,15 +453,10 @@ class Member(users.User):
         If the member has a nickname, this will return that nickname.
         Otherwise, it will return the username instead.
 
-        Returns
-        -------
-        builtins.str
-            The member display name.
-
         See Also
         --------
-        Nickname: `Member.nickname`
-        Username: `Member.username`
+        Nickname: `Member.nickname`.
+        Username: `Member.username`.
         """
         return self.nickname if isinstance(self.nickname, str) else self.username
 
@@ -490,9 +484,9 @@ class Member(users.User):
         """Return when the timeout for this member ends.
 
         Unlike `raw_communication_disabled_until`, this will always be
-        `builtins.None` if the member is not currently timed out.
+        `None` if the member is not currently timed out.
 
-        !!! note
+        .. note::
             The output of this function can depend based on when
             the function is called.
         """
@@ -509,7 +503,7 @@ class Member(users.User):
         Returns
         -------
         typing.Optional[hikari.guilds.Guild]
-            The linked guild object or `builtins.None` if it's not cached.
+            The linked guild object or `None` if it's not cached.
         """
         if not isinstance(self.user.app, traits.CacheAware):
             return None
@@ -526,7 +520,7 @@ class Member(users.User):
         Returns
         -------
         typing.Optional[hikari.presences.MemberPresence]
-            The member presence, or `builtins.None` if not known.
+            The member presence, or `None` if not known.
         """
         if not isinstance(self.user.app, traits.CacheAware):
             return None
@@ -560,7 +554,7 @@ class Member(users.User):
         Returns
         -------
         typing.Optional[hikari.guilds.Role]
-            `builtins.None` if the cache is missing the roles information or
+            `None` if the cache is missing the roles information or
             the highest role the user has.
         """
         roles = sorted(self.get_roles(), key=lambda r: r.position, reverse=True)
@@ -582,21 +576,21 @@ class Member(users.User):
     ) -> typing.Optional[files.URL]:
         """Generate the guild specific avatar url for this member, if set.
 
-        If no guild avatar is set, this returns `builtins.None`. You can then
+        If no guild avatar is set, this returns `None`. You can then
         use the `make_avatar_url` to get their global custom avatar or
         `default_avatar_url` if they have no custom avatar set.
 
         Parameters
         ----------
-        ext : typing.Optional[builtins.str]
+        ext : typing.Optional[str]
             The ext to use for this URL, defaults to `png` or `gif`.
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
             animated). Will be ignored for default avatars which can only be
             `png`.
 
-            If `builtins.None`, then the correct default extension is
+            If `None`, then the correct default extension is
             determined based on whether the icon is animated or not.
-        size : builtins.int
+        size : int
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
             Will be ignored for default avatars.
@@ -604,11 +598,11 @@ class Member(users.User):
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL to the avatar, or `builtins.None` if not present.
+            The URL to the avatar, or `None` if not present.
 
         Raises
         ------
-        builtins.ValueError
+        ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.guild_avatar_hash is None:
@@ -703,10 +697,10 @@ class Member(users.User):
 
         Other Parameters
         ----------------
-        delete_message_days : hikari.undefined.UndefinedNoneOr[builtins.int]
+        delete_message_days : hikari.undefined.UndefinedOr[int]
             If provided, the number of days to delete messages for.
             This must be between 0 and 7.
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -747,7 +741,7 @@ class Member(users.User):
 
         Other Parameters
         ----------------
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -786,7 +780,7 @@ class Member(users.User):
 
         Other Parameters
         ----------------
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -829,7 +823,7 @@ class Member(users.User):
 
         Other Parameters
         ----------------
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -870,7 +864,7 @@ class Member(users.User):
 
         Other Parameters
         ----------------
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -902,7 +896,6 @@ class Member(users.User):
         self,
         *,
         nickname: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
-        nick: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
         roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[PartialRole]] = undefined.UNDEFINED,
         mute: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         deaf: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -916,44 +909,42 @@ class Member(users.User):
 
         Other Parameters
         ----------------
-        nickname : hikari.undefined.UndefinedNoneOr[builtins.str]
-            If provided, the new nick for the member. If `builtins.None`,
+        nickname : hikari.undefined.UndefinedNoneOr[str]
+            If provided, the new nick for the member. If `None`,
             will remove the members nick.
 
             Requires the `MANAGE_NICKNAMES` permission.
-        nick : hikari.undefined.UndefinedNoneOr[builtins.str]
-            Deprecated alias for `nickname`.
         roles : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole]]
             If provided, the new roles for the member.
 
             Requires the `MANAGE_ROLES` permission.
-        mute : hikari.undefined.UndefinedOr[builtins.bool]
+        mute : hikari.undefined.UndefinedOr[bool]
             If provided, the new server mute state for the member.
 
             Requires the `MUTE_MEMBERS` permission.
-        deaf : hikari.undefined.UndefinedOr[builtins.bool]
+        deaf : hikari.undefined.UndefinedOr[bool]
             If provided, the new server deaf state for the member.
 
             Requires the `DEAFEN_MEMBERS` permission.
         voice_channel : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildVoiceChannel]]]
-            If provided, `builtins.None` or the object or the ID of
+            If provided, `None` or the object or the ID of
             an existing voice channel to move the member to.
-            If `builtins.None`, will disconnect the member from voice.
+            If `None`, will disconnect the member from voice.
 
             Requires the `MOVE_MEMBERS` permission and the `CONNECT`
             permission in the original voice channel and the target
             voice channel.
 
-            !!! note
+            .. note::
                 If the member is not in a voice channel, this will
                 take no effect.
         communication_disabled_until : hikari.undefined.UndefinedNoneOr[datetime.datetime]
             If provided, the datetime when the timeout (disable communication)
-            of the member expires, up to 28 days in the future, or `builtins.None`
+            of the member expires, up to 28 days in the future, or `None`
             to remove the timeout from the member.
 
             Requires the `MODERATE_MEMBERS` permission.
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -986,10 +977,6 @@ class Member(users.User):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
-        if nick is not undefined.UNDEFINED:
-            deprecation.warn_deprecated("nick", alternative="nickname")
-            nickname = nick
-
         return await self.user.app.rest.edit_member(
             self.guild_id,
             self.user.id,
@@ -1015,12 +1002,12 @@ class Member(users.User):
 @attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
 class PartialRole(snowflakes.Unique):
-    """Represents a partial guild bound Role object."""
+    """Represents a partial guild bound role object."""
 
     app: traits.RESTAware = attr.field(
         repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
     )
-    """The client application that models may use for procedures."""
+    """Client application that models may use for procedures."""
 
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
     """The ID of this entity."""
@@ -1030,13 +1017,7 @@ class PartialRole(snowflakes.Unique):
 
     @property
     def mention(self) -> str:
-        """Return a raw mention string for the role.
-
-        Returns
-        -------
-        builtins.str
-            The mention string to use.
-        """
+        """Return a raw mention string for the role."""
         return f"<@&{self.id}>"
 
     def __str__(self) -> str:
@@ -1054,19 +1035,19 @@ class Role(PartialRole):
     """
 
     guild_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
-    """The ID of the guild this role belongs to"""
+    """The ID of the guild this role belongs to."""
 
     is_hoisted: bool = attr.field(eq=False, hash=False, repr=True)
     """Whether this role is hoisting the members it's attached to in the member list.
 
-    members will be hoisted under their highest role where this is set to `builtins.True`.
+    Members will be hoisted under their highest role where this is set to `True`.
     """
 
     icon_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
-    """Hash of the role's icon if set, else `builtins.None`."""
+    """Hash of the role's icon if set, else `None`."""
 
     unicode_emoji: typing.Optional[emojis_.UnicodeEmoji] = attr.field(eq=False, hash=False, repr=False)
-    """Role's icon as an unicode emoji if set, else `builtins.None`."""
+    """Role's icon as an unicode emoji if set, else `None`."""
 
     is_managed: bool = attr.field(eq=False, hash=False, repr=False)
     """Whether this role is managed by an integration."""
@@ -1075,7 +1056,7 @@ class Role(PartialRole):
     """Whether this role can be mentioned by all regardless of permissions."""
 
     permissions: permissions_.Permissions = attr.field(eq=False, hash=False, repr=False)
-    """The guild wide permissions this role gives to the members it's attached to,
+    """The guild wide permissions this role gives to the members it's attached to.
 
     This may be overridden by channel overwrites.
     """
@@ -1090,13 +1071,13 @@ class Role(PartialRole):
     bot_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=True)
     """The ID of the bot this role belongs to.
 
-    If `builtins.None`, this is not a bot role.
+    If `None`, this is not a bot role.
     """
 
     integration_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=True)
     """The ID of the integration this role belongs to.
 
-    If `builtins.None`, this is not a integration role.
+    If `None`, this is not a integration role.
     """
 
     is_premium_subscriber_role: bool = attr.field(eq=False, hash=False, repr=True)
@@ -1109,37 +1090,31 @@ class Role(PartialRole):
 
     @property
     def icon_url(self) -> typing.Optional[files.URL]:
-        """Role icon URL, if there is one.
-
-        Returns
-        -------
-        typing.Optional[hikari.files.URL]
-            The URL, or `builtins.None` if no icon exists.
-        """
+        """Role icon URL, if there is one."""
         return self.make_icon_url()
 
     def make_icon_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the icon URL for this role, if set.
 
-        If no role icon is set, this returns `builtins.None`.
+        If no role icon is set, this returns `None`.
 
         Parameters
         ----------
-        ext : builtins.str
+        ext : str
             The extension to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : builtins.int
+        size : int
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL to the icon, or `builtins.None` if not present.
+            The URL to the icon, or `None` if not present.
 
         Raises
         ------
-        builtins.ValueError
+        ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.icon_hash is None:
@@ -1214,13 +1189,7 @@ class PartialApplication(snowflakes.Unique):
 
     @property
     def icon_url(self) -> typing.Optional[files.URL]:
-        """Team icon URL, if there is one.
-
-        Returns
-        -------
-        typing.Optional[hikari.files.URL]
-            The URL, or `builtins.None` if no icon exists.
-        """
+        """Team icon URL, if there is one."""
         return self.make_icon_url()
 
     def make_icon_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
@@ -1228,21 +1197,21 @@ class PartialApplication(snowflakes.Unique):
 
         Parameters
         ----------
-        ext : builtins.str
+        ext : str
             The extension to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : builtins.int
+        size : int
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL, or `builtins.None` if no icon exists.
+            The URL, or `None` if no icon exists.
 
         Raises
         ------
-        builtins.ValueError
+        ValueError
             If the size is not an integer power of 2 between 16 and 4096
             (inclusive).
         """
@@ -1301,16 +1270,15 @@ class Integration(PartialIntegration):
     This will not be enacted until after `GuildIntegration.expire_grace_period`
     passes.
 
-    !!! note
-        This will always be `builtins.None` for Discord integrations.
+    .. note::
+        This will always be `None` for Discord integrations.
     """
 
     expire_grace_period: typing.Optional[datetime.timedelta] = attr.field(eq=False, hash=False, repr=False)
-    """How many days users with expired subscriptions are given until
-    `GuildIntegration.expire_behavior` is enacted out on them.
+    """How many days users with expired subscriptions are given until the expire behavior is enacted out on them.
 
-    !!! note
-        This will always be `builtins.None` for Discord integrations.
+    .. note::
+        This will always be `None` for Discord integrations.
     """
 
     is_enabled: bool = attr.field(eq=False, hash=False, repr=True)
@@ -1340,7 +1308,7 @@ class Integration(PartialIntegration):
     application: typing.Optional[IntegrationApplication] = attr.field(eq=False, hash=False, repr=False)
     """The bot/OAuth2 application associated with this integration.
 
-    !!! note
+    .. note::
         This is only available for Discord integrations.
     """
 
@@ -1361,7 +1329,7 @@ class WelcomeChannel:
     )
     """The emoji shown in the welcome screen channel if set to a unicode emoji.
 
-    !!! warning
+    .. warning::
         While it may also be present for custom emojis, this is neither guaranteed
         to be provided nor accurate.
     """
@@ -1388,7 +1356,7 @@ class GuildBan:
     """Used to represent guild bans."""
 
     reason: typing.Optional[str] = attr.field(repr=True)
-    """The reason for this ban, will be `builtins.None` if no reason was given."""
+    """The reason for this ban, will be `None` if no reason was given."""
 
     user: users.User = attr.field(repr=True)
     """The object of the user this ban targets."""
@@ -1402,7 +1370,7 @@ class PartialGuild(snowflakes.Unique):
     app: traits.RESTAware = attr.field(
         repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
     )
-    """The client application that models may use for procedures."""
+    """Client application that models may use for procedures."""
 
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
     """The ID of this entity."""
@@ -1418,7 +1386,7 @@ class PartialGuild(snowflakes.Unique):
 
     @property
     def icon_url(self) -> typing.Optional[files.URL]:
-        """Icon URL for the guild, if set; otherwise `builtins.None`."""
+        """Icon URL for the guild, if set; otherwise `None`."""
         return self.make_icon_url()
 
     @property
@@ -1440,25 +1408,25 @@ class PartialGuild(snowflakes.Unique):
 
         Parameters
         ----------
-        ext : typing.Optional[builtins.str]
+        ext : typing.Optional[str]
             The extension to use for this URL, defaults to `png` or `gif`.
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
             animated).
 
-            If `builtins.None`, then the correct default extension is
+            If `None`, then the correct default extension is
             determined based on whether the icon is animated or not.
-        size : builtins.int
+        size : int
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL to the resource, or `builtins.None` if no icon is set.
+            The URL to the resource, or `None` if no icon is set.
 
         Raises
         ------
-        builtins.ValueError
+        ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.icon_hash is None:
@@ -1489,15 +1457,15 @@ class PartialGuild(snowflakes.Unique):
 
         Parameters
         ----------
-        user: hikari.snowflakes.Snowflakeish[hikari.users.PartialUser]
-            The user to ban from the guild
+        user : hikari.snowflakes.Snowflakeish[hikari.users.PartialUser]
+            The user to ban from the guild.
 
         Other Parameters
         ----------------
-        delete_message_days : hikari.undefined.UndefinedNoneOr[builtins.int]
+        delete_message_days : hikari.undefined.UndefinedOr[int]
             If provided, the number of days to delete messages for.
             This must be between 0 and 7.
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -1537,12 +1505,12 @@ class PartialGuild(snowflakes.Unique):
 
         Parameters
         ----------
-        user: hikari.snowflakes.Snowflakeish[hikari.users.PartialUser]
-            The user to unban from the guild
+        user : hikari.snowflakes.Snowflakeish[hikari.users.PartialUser]
+            The user to unban from the guild.
 
         Other Parameters
         ----------------
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -1578,16 +1546,16 @@ class PartialGuild(snowflakes.Unique):
         *,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
-        """Kicks the given user from this guild.
+        """Kick the given user from this guild.
 
         Parameters
         ----------
-        user: hikari.snowflakes.Snowflakeish[hikari.users.PartialUser]
-            The user to kick from the guild
+        user : hikari.snowflakes.Snowflakeish[hikari.users.PartialUser]
+            The user to kick from the guild.
 
         Other Parameters
         ----------------
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -1644,11 +1612,11 @@ class PartialGuild(snowflakes.Unique):
         preferred_locale: undefined.UndefinedOr[typing.Union[str, locales.Locale]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> RESTGuild:
-        """Edits the guild.
+        """Edit the guild.
 
         Parameters
         ----------
-        name : hikari.undefined.UndefinedOr[builtins.str]
+        name : hikari.undefined.UndefinedOr[str]
             If provided, the new name for the guild.
         verification_level : hikari.undefined.UndefinedOr[hikari.guilds.GuildVerificationLevel]
             If provided, the new verification level.
@@ -1667,7 +1635,7 @@ class PartialGuild(snowflakes.Unique):
         owner : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]]]
             If provided, the new guild owner.
 
-            !!! warning
+            .. warning::
                 You need to be the owner of the server to use this.
         splash : hikari.undefined.UndefinedNoneOr[hikari.files.Resourceish]
             If provided, the new guild splash. Must be a 16:9 image and the
@@ -1681,9 +1649,9 @@ class PartialGuild(snowflakes.Unique):
             If provided, the new rules channel.
         public_updates_channel : hikari.undefined.UndefinedNoneOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildTextChannel]]
             If provided, the new public updates channel.
-        preferred_locale : hikari.undefined.UndefinedNoneOr[builtins.str]
+        preferred_locale : hikari.undefined.UndefinedNoneOr[str]
             If provided, the new preferred locale.
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -1884,25 +1852,25 @@ class PartialGuild(snowflakes.Unique):
     ) -> stickers.GuildSticker:
         """Create a sticker in a guild.
 
+        .. note::
+            Lottie support is only available for verified and partnered
+            servers.
+
         Parameters
         ----------
-        name : builtins.str
+        name : str
             The name for the sticker.
-        tag : builtins.str
+        tag : str
             The tag for the sticker.
         image : hikari.files.Resourceish
             The 320x320 image for the sticker. Maximum upload size is 500kb.
             This can be a still or an animated PNG or a Lottie.
 
-            !!! note
-                Lottie support is only available for verified and partnered
-                servers.
-
         Other Parameters
         ----------------
-        description: hikari.undefined.UndefinedOr[builtins.str]
+        description : hikari.undefined.UndefinedOr[str]
             If provided, the description of the sticker.
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -1957,13 +1925,13 @@ class PartialGuild(snowflakes.Unique):
 
         Other Parameters
         ----------------
-        name : hikari.undefined.UndefinedOr[builtins.str]
+        name : hikari.undefined.UndefinedOr[str]
             If provided, the new name for the sticker.
-        description : hikari.undefined.UndefinedOr[builtins.str]
+        description : hikari.undefined.UndefinedOr[str]
             If provided, the new description for the sticker.
-        tag : hikari.undefined.UndefinedOr[builtins.str]
+        tag : hikari.undefined.UndefinedOr[str]
             If provided, the new sticker tag.
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -2016,7 +1984,7 @@ class PartialGuild(snowflakes.Unique):
 
         Other Parameters
         ----------------
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -2058,16 +2026,16 @@ class PartialGuild(snowflakes.Unique):
 
         Parameters
         ----------
-        name : builtins.str
+        name : str
             The channels name. Must be between 2 and 1000 characters.
 
         Other Parameters
         ----------------
-        position : hikari.undefined.UndefinedOr[builtins.int]
+        position : hikari.undefined.UndefinedOr[int]
             If provided, the position of the category.
         permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
             If provided, the permission overwrites for the category.
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -2122,17 +2090,17 @@ class PartialGuild(snowflakes.Unique):
 
         Parameters
         ----------
-        name : builtins.str
+        name : str
             The channels name. Must be between 2 and 1000 characters.
 
         Other Parameters
         ----------------
-        position : hikari.undefined.UndefinedOr[builtins.int]
+        position : hikari.undefined.UndefinedOr[int]
             If provided, the position of the channel (relative to the
             category, if any).
-        topic : hikari.undefined.UndefinedOr[builtins.str]
+        topic : hikari.undefined.UndefinedOr[str]
             If provided, the channels topic. Maximum 1024 characters.
-        nsfw : hikari.undefined.UndefinedOr[builtins.bool]
+        nsfw : hikari.undefined.UndefinedOr[bool]
             If provided, whether to mark the channel as NSFW.
         rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
             If provided, the amount of seconds a user has to wait
@@ -2143,7 +2111,7 @@ class PartialGuild(snowflakes.Unique):
         category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
             The category to create the channel under. This may be the
             object or the ID of an existing category.
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -2206,17 +2174,17 @@ class PartialGuild(snowflakes.Unique):
 
         Parameters
         ----------
-        name : builtins.str
+        name : str
             The channels name. Must be between 2 and 1000 characters.
 
         Other Parameters
         ----------------
-        position : hikari.undefined.UndefinedOr[builtins.int]
+        position : hikari.undefined.UndefinedOr[int]
             If provided, the position of the channel (relative to the
             category, if any).
-        topic : hikari.undefined.UndefinedOr[builtins.str]
+        topic : hikari.undefined.UndefinedOr[str]
             If provided, the channels topic. Maximum 1024 characters.
-        nsfw : hikari.undefined.UndefinedOr[builtins.bool]
+        nsfw : hikari.undefined.UndefinedOr[bool]
             If provided, whether to mark the channel as NSFW.
         rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
             If provided, the amount of seconds a user has to wait
@@ -2227,7 +2195,7 @@ class PartialGuild(snowflakes.Unique):
         category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
             The category to create the channel under. This may be the
             object or the ID of an existing category.
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -2291,37 +2259,34 @@ class PartialGuild(snowflakes.Unique):
 
         Parameters
         ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
-            The guild to create the channel in. This may be the
-            object or the ID of an existing guild.
-        name : builtins.str
+        name : str
             The channels name. Must be between 2 and 1000 characters.
 
         Other Parameters
         ----------------
-        position : hikari.undefined.UndefinedOr[builtins.int]
+        position : hikari.undefined.UndefinedOr[int]
             If provided, the position of the channel (relative to the
             category, if any).
-        user_limit : hikari.undefined.UndefinedOr[builtins.int]
+        user_limit : hikari.undefined.UndefinedOr[int]
             If provided, the maximum users in the channel at once.
             Must be between 0 and 99 with 0 meaning no limit.
-        bitrate : hikari.undefined.UndefinedOr[builtins.int]
+        bitrate : hikari.undefined.UndefinedOr[int]
             If provided, the bitrate for the channel. Must be
             between 8000 and 96000 or 8000 and 128000 for VIP
             servers.
-        video_quality_mode: hikari.undefined.UndefinedOr[typing.Union[hikari.channels.VideoQualityMode, builtins.int]]
+        video_quality_mode : hikari.undefined.UndefinedOr[typing.Union[hikari.channels.VideoQualityMode, int]]
             If provided, the new video quality mode for the channel.
         permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
             If provided, the permission overwrites for the channel.
-        region : hikari.undefined.UndefinedOr[typing.Union[hikari.voices.VoiceRegion, builtins.str]]
+        region : hikari.undefined.UndefinedOr[typing.Union[hikari.voices.VoiceRegion, str]]
             If provided, the voice region to for this channel. Passing
-            `builtins.None` here will set it to "auto" mode where the used
+            `None` here will set it to "auto" mode where the used
             region will be decided based on the first person who connects to it
             when it's empty.
         category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
             The category to create the channel under. This may be the
             object or the ID of an existing category.
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -2385,32 +2350,32 @@ class PartialGuild(snowflakes.Unique):
 
         Parameters
         ----------
-        name : builtins.str
+        name : str
             The channel's name. Must be between 2 and 1000 characters.
 
         Other Parameters
         ----------------
-        position : hikari.undefined.UndefinedOr[builtins.int]
+        position : hikari.undefined.UndefinedOr[int]
             If provided, the position of the channel (relative to the
             category, if any).
-        user_limit : hikari.undefined.UndefinedOr[builtins.int]
+        user_limit : hikari.undefined.UndefinedOr[int]
             If provided, the maximum users in the channel at once.
             Must be between 0 and 99 with 0 meaning no limit.
-        bitrate : hikari.undefined.UndefinedOr[builtins.int]
+        bitrate : hikari.undefined.UndefinedOr[int]
             If provided, the bitrate for the channel. Must be
             between 8000 and 96000 or 8000 and 128000 for VIP
             servers.
         permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
             If provided, the permission overwrites for the channel.
-        region : hikari.undefined.UndefinedOr[typing.Union[hikari.voices.VoiceRegion, builtins.str]]
+        region : hikari.undefined.UndefinedOr[typing.Union[hikari.voices.VoiceRegion, str]]
             If provided, the voice region to for this channel. Passing
-            `builtins.None` here will set it to "auto" mode where the used
+            `None` here will set it to "auto" mode where the used
             region will be decided based on the first person who connects to it
             when it's empty.
         category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
             The category to create the channel under. This may be the
             object or the ID of an existing category.
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -2460,8 +2425,12 @@ class PartialGuild(snowflakes.Unique):
     ) -> channels_.GuildChannel:
         """Delete a channel in the guild.
 
-        !!! note
+        .. note::
             This method can also be used for deleting guild categories as well.
+
+        .. note::
+            For Public servers, the set 'Rules' or 'Guidelines' channels and the
+            'Public Server Updates' channel cannot be deleted.
 
         Parameters
         ----------
@@ -2495,10 +2464,6 @@ class PartialGuild(snowflakes.Unique):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-
-        !!! note
-            For Public servers, the set 'Rules' or 'Guidelines' channels and the
-            'Public Server Updates' channel cannot be deleted.
         """
         deleted_channel = await self.app.rest.delete_channel(channel)
         assert isinstance(deleted_channel, channels_.GuildChannel)
@@ -2549,8 +2514,8 @@ class PartialGuild(snowflakes.Unique):
         ------
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
-            hikari.errors.NotFoundError
-                If the guild is not found.
+        hikari.errors.NotFoundError
+            If the guild is not found.
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
@@ -2610,10 +2575,10 @@ class GuildPreview(PartialGuild):
 
         Parameters
         ----------
-        ext : builtins.str
+        ext : str
             The extension to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : builtins.int
+        size : int
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
 
@@ -2624,7 +2589,7 @@ class GuildPreview(PartialGuild):
 
         Raises
         ------
-        builtins.ValueError
+        ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.discovery_splash_hash is None:
@@ -2643,21 +2608,21 @@ class GuildPreview(PartialGuild):
 
         Parameters
         ----------
-        ext : builtins.str
+        ext : str
             The extension to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : builtins.int
+        size : int
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL to the splash, or `builtins.None` if not set.
+            The URL to the splash, or `None` if not set.
 
         Raises
         ------
-        builtins.ValueError
+        ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.splash_hash is None:
@@ -2682,13 +2647,13 @@ class Guild(PartialGuild):
     application_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
     """The ID of the application that created this guild.
 
-    This will always be `builtins.None` for guilds that weren't created by a bot.
+    This will always be `None` for guilds that weren't created by a bot.
     """
 
     afk_channel_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
     """The ID for the channel that AFK voice users get sent to.
 
-    If `builtins.None`, then no AFK channel is set up for this guild.
+    If `None`, then no AFK channel is set up for this guild.
     """
 
     afk_timeout: datetime.timedelta = attr.field(eq=False, hash=False, repr=False)
@@ -2702,7 +2667,7 @@ class Guild(PartialGuild):
     """The hash for the guild's banner.
 
     This is only present if the guild has `GuildFeature.BANNER` in
-    `Guild.features` for this guild. For all other purposes, it is `builtins.None`.
+    `Guild.features` for this guild. For all other purposes, it is `None`.
     """
 
     default_message_notifications: typing.Union[GuildMessageNotificationsLevel, int] = attr.field(
@@ -2714,7 +2679,7 @@ class Guild(PartialGuild):
     """The guild's description.
 
     This is only present if certain `GuildFeature`'s are set in
-    `Guild.features` for this guild. Otherwise, this will always be `builtins.None`.
+    `Guild.features` for this guild. Otherwise, this will always be `None`.
     """
 
     discovery_splash_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
@@ -2728,13 +2693,13 @@ class Guild(PartialGuild):
     is_widget_enabled: typing.Optional[bool] = attr.field(eq=False, hash=False, repr=False)
     """Describes whether the guild widget is enabled or not.
 
-    If this information is not present, this will be `builtins.None`.
+    If this information is not present, this will be `None`.
     """
 
     max_video_channel_users: typing.Optional[int] = attr.field(eq=False, hash=False, repr=False)
     """The maximum number of users allowed in a video channel together.
 
-    This information may not be present, in which case, it will be `builtins.None`.
+    This information may not be present, in which case, it will be `None`.
     """
 
     mfa_level: typing.Union[GuildMFALevel, int] = attr.field(eq=False, hash=False, repr=False)
@@ -2753,25 +2718,23 @@ class Guild(PartialGuild):
     premium_subscription_count: typing.Optional[int] = attr.field(eq=False, hash=False, repr=False)
     """The number of nitro boosts that the server currently has.
 
-    This information may not be present, in which case, it will be `builtins.None`.
+    This information may not be present, in which case, it will be `None`.
     """
 
     premium_tier: typing.Union[GuildPremiumTier, int] = attr.field(eq=False, hash=False, repr=False)
     """The premium tier for this guild."""
 
     public_updates_channel_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
-    """The channel ID of the channel where admins and moderators receive notices
-    from Discord.
+    """The channel ID of the channel where admins and moderators receive notices from Discord.
 
     This is only present if `GuildFeature.COMMUNITY` is in `Guild.features` for
-    this guild. For all other purposes, it should be considered to be `builtins.None`.
+    this guild. For all other purposes, it should be considered to be `None`.
     """
 
     rules_channel_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
-    """The ID of the channel where guilds with the `GuildFeature.COMMUNITY`
-    `features` display rules and guidelines.
+    """The ID of the channel where rules and guidelines will be displayed.
 
-    If the `GuildFeature.COMMUNITY` feature is not defined, then this is `builtins.None`.
+    If the `GuildFeature.COMMUNITY` feature is not defined, then this is `None`.
     """
 
     splash_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
@@ -2781,15 +2744,10 @@ class Guild(PartialGuild):
     """Return flags for the guild system channel.
 
     These are used to describe which notifications are suppressed.
-
-    Returns
-    -------
-    GuildSystemChannelFlag
-        The system channel flags for this channel.
     """
 
     system_channel_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
-    """The ID of the system channel or `builtins.None` if it is not enabled.
+    """The ID of the system channel or `None` if it is not enabled.
 
     Welcome messages and Nitro boost messages may be sent to this channel.
     """
@@ -2798,7 +2756,7 @@ class Guild(PartialGuild):
     """The vanity URL code for the guild's vanity URL.
 
     This is only present if `GuildFeature.VANITY_URL` is in `Guild.features` for
-    this guild. If not, this will always be `builtins.None`.
+    this guild. If not, this will always be `None`.
     """
 
     verification_level: typing.Union[GuildVerificationLevel, int] = attr.field(eq=False, hash=False, repr=False)
@@ -2808,7 +2766,7 @@ class Guild(PartialGuild):
     """The channel ID that the widget's generated invite will send the user to.
 
     If this information is unavailable or this is not enabled for the guild then
-    this will be `builtins.None`.
+    this will be `None`.
     """
 
     nsfw_level: GuildNSFWLevel = attr.field(eq=False, hash=False, repr=False)
@@ -2852,7 +2810,7 @@ class Guild(PartialGuild):
 
         return self.app.cache.get_presences_view_for_guild(self.id)
 
-    def get_channels(self) -> typing.Mapping[snowflakes.Snowflake, channels_.GuildChannel]:
+    def get_channels(self) -> typing.Mapping[snowflakes.Snowflake, channels_.PermissibleGuildChannel]:
         """Get the channels cached for the guild.
 
         Returns
@@ -2924,25 +2882,25 @@ class Guild(PartialGuild):
 
         Parameters
         ----------
-        ext : typing.Optional[builtins.str]
+        ext : typing.Optional[str]
             The ext to use for this URL, defaults to `png` or `gif`.
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
             animated).
 
-            If `builtins.None`, then the correct default extension is
+            If `None`, then the correct default extension is
             determined based on whether the banner is animated or not.
-        size : builtins.int
+        size : int
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL of the banner, or `builtins.None` if no banner is set.
+            The URL of the banner, or `None` if no banner is set.
 
         Raises
         ------
-        builtins.ValueError
+        ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.banner_hash is None:
@@ -2968,10 +2926,10 @@ class Guild(PartialGuild):
 
         Parameters
         ----------
-        ext : builtins.str
+        ext : str
             The extension to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : builtins.int
+        size : int
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
 
@@ -2982,7 +2940,7 @@ class Guild(PartialGuild):
 
         Raises
         ------
-        builtins.ValueError
+        ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.discovery_splash_hash is None:
@@ -3001,21 +2959,21 @@ class Guild(PartialGuild):
 
         Parameters
         ----------
-        ext : builtins.str
+        ext : str
             The extension to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : builtins.int
+        size : int
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL to the splash, or `builtins.None` if not set.
+            The URL to the splash, or `None` if not set.
 
         Raises
         ------
-        builtins.ValueError
+        ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
         if self.splash_hash is None:
@@ -3032,7 +2990,7 @@ class Guild(PartialGuild):
     def get_channel(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.PartialChannel],
-    ) -> typing.Optional[channels_.GuildChannel]:
+    ) -> typing.Optional[channels_.PermissibleGuildChannel]:
         """Get a cached channel that belongs to the guild by it's ID or object.
 
         Parameters
@@ -3043,7 +3001,7 @@ class Guild(PartialGuild):
         Returns
         -------
         typing.Optional[hikari.channels.GuildChannel]
-            The object of the guild channel found in cache or `builtins.None.
+            The object of the guild channel found in cache or `None`.
         """
         if not isinstance(self.app, traits.CacheAware):
             return None
@@ -3061,7 +3019,7 @@ class Guild(PartialGuild):
         Returns
         -------
         typing.Optional[Member]
-            The cached member object if found, else `builtins.None`.
+            The cached member object if found, else `None`.
         """
         if not isinstance(self.app, traits.CacheAware):
             return None
@@ -3074,7 +3032,7 @@ class Guild(PartialGuild):
         Returns
         -------
         typing.Optional[Member]
-            The cached member for this guild, or `builtins.None` if not known.
+            The cached member for this guild, or `None` if not known.
         """
         if not isinstance(self.app, traits.ShardAware):
             return None
@@ -3098,7 +3056,7 @@ class Guild(PartialGuild):
         Returns
         -------
         typing.Optional[hikari.presences.MemberPresence]
-            The cached presence object if found, else `builtins.None`.
+            The cached presence object if found, else `None`.
         """
         if not isinstance(self.app, traits.CacheAware):
             return None
@@ -3118,7 +3076,7 @@ class Guild(PartialGuild):
         Returns
         -------
         typing.Optional[hikari.voices.VoiceState]
-            The cached voice state object if found, else `builtins.None`.
+            The cached voice state object if found, else `None`.
         """
         if not isinstance(self.app, traits.CacheAware):
             return None
@@ -3139,7 +3097,7 @@ class Guild(PartialGuild):
         -------
         typing.Optional[hikari.emojis.KnownCustomEmoji]
             The object of the custom emoji if found in cache, else
-            `builtins.None`.
+            `None`.
         """
         if not isinstance(self.app, traits.CacheAware):
             return None
@@ -3160,7 +3118,7 @@ class Guild(PartialGuild):
         -------
         typing.Optional[hikari.stickers.GuildSticker]
             The object of the sticker if found in cache, else
-            `builtins.None`.
+            `None`.
         """
         if not isinstance(self.app, traits.CacheAware):
             return None
@@ -3178,7 +3136,7 @@ class Guild(PartialGuild):
         Returns
         -------
         typing.Optional[Role]
-            The object of the role found in cache, else `builtins.None`.
+            The object of the role found in cache, else `None`.
         """
         if not isinstance(self.app, traits.CacheAware):
             return None
@@ -3218,12 +3176,12 @@ class Guild(PartialGuild):
     async def fetch_widget_channel(self) -> typing.Optional[channels_.GuildChannel]:
         """Fetch the widget channel.
 
-        This will be `builtins.None` if not set.
+        This will be `None` if not set.
 
         Returns
         -------
         typing.Optional[hikari.channels.GuildChannel]
-            The channel the widget is linked to or else `builtins.None`.
+            The channel the widget is linked to or else `None`.
 
         Raises
         ------
@@ -3260,7 +3218,7 @@ class Guild(PartialGuild):
         Returns
         -------
         typing.Optional[hikari.channels.GuildVoiceChannel]
-            The AFK channel or `builtins.None` if not enabled.
+            The AFK channel or `None` if not enabled.
 
         Raises
         ------
@@ -3297,7 +3255,7 @@ class Guild(PartialGuild):
         Returns
         -------
         typing.Optional[hikari.channels.GuildTextChannel]
-            The system channel for this guild or `builtins.None` if not
+            The system channel for this guild or `None` if not
             enabled.
 
         Raises
@@ -3332,12 +3290,12 @@ class Guild(PartialGuild):
     async def fetch_rules_channel(self) -> typing.Optional[channels_.GuildTextChannel]:
         """Fetch the channel where guilds display rules and guidelines.
 
-        If the `GuildFeature.COMMUNITY` feature is not defined, then this is `builtins.None`.
+        If the `GuildFeature.COMMUNITY` feature is not defined, then this is `None`.
 
         Returns
         -------
         typing.Optional[hikari.channels.GuildTextChannel]
-            The channel where the rules of the guild are specified or else `builtins.None`.
+            The channel where the rules of the guild are specified or else `None`.
 
         Raises
         ------
@@ -3372,7 +3330,7 @@ class Guild(PartialGuild):
         """Fetch channel ID of the channel where admins and moderators receive notices from Discord.
 
         This is only present if `GuildFeature.COMMUNITY` is in `Guild.features` for
-        this guild. For all other purposes, it should be considered to be `builtins.None`.
+        this guild. For all other purposes, it should be considered to be `None`.
 
         Returns
         -------
@@ -3427,19 +3385,19 @@ class RESTGuild(Guild):
     approximate_active_member_count: typing.Optional[int] = attr.field(eq=False, hash=False, repr=False)
     """The approximate number of members in the guild that are not offline.
 
-    This will be `builtins.None` when creating a guild.
+    This will be `None` when creating a guild.
     """
 
     approximate_member_count: typing.Optional[int] = attr.field(eq=False, hash=False, repr=False)
     """The approximate number of members in the guild.
 
-    This will be `builtins.None` when creating a guild.
+    This will be `None` when creating a guild.
     """
 
     max_presences: typing.Optional[int] = attr.field(eq=False, hash=False, repr=False)
     """The maximum number of presences for the guild.
 
-    If `builtins.None`, then there is no limit.
+    If `None`, then there is no limit.
     """
 
     max_members: int = attr.field(eq=False, hash=False, repr=False)
@@ -3455,7 +3413,7 @@ class GatewayGuild(Guild):
 
     This information is only available if the guild was sent via a `GUILD_CREATE`
     event. If the guild is received from any other place, this will always be
-    `builtins.None`.
+    `None`.
 
     The implications of a large guild are that presence information will not be
     sent about members who are offline or invisible.
@@ -3466,7 +3424,7 @@ class GatewayGuild(Guild):
 
     This information is only available if the guild was sent via a `GUILD_CREATE`
     event. If the guild is received from any other place, this will always be
-    `builtins.None`.
+    `None`.
     """
 
     member_count: typing.Optional[int] = attr.field(eq=False, hash=False, repr=False)
@@ -3474,5 +3432,5 @@ class GatewayGuild(Guild):
 
     This information is only available if the guild was sent via a `GUILD_CREATE`
     event. If the guild is received from any other place, this will always be
-    `builtins.None`.
+    `None`.
     """

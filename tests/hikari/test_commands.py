@@ -45,6 +45,7 @@ class TestPartialCommand:
             name="Name",
             default_member_permissions=None,
             is_dm_enabled=False,
+            is_nsfw=True,
             guild_id=snowflakes.Snowflake(31231235),
             version=snowflakes.Snowflake(43123123),
         )

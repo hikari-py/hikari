@@ -36,7 +36,6 @@ __all__: typing.Sequence[str] = (
     "AsyncReaderContextManager",
     "Resource",
     "File",
-    "FileReader",
     "WebResource",
     "URL",
     "WebReader",
@@ -48,13 +47,11 @@ import abc
 import asyncio
 import base64
 import concurrent.futures
-import errno
 import inspect
 import io
 import mimetypes
 import os
 import pathlib
-import stat
 import typing
 import urllib.parse
 import urllib.request
@@ -80,7 +77,7 @@ Pathish = typing.Union["os.PathLike[str]", str]
 
 This may be one of:
 
-- `builtins.str` path.
+- `str` path.
 - `os.PathLike` derivative, such as `pathlib.PurePath` and `pathlib.Path`.
 """
 
@@ -136,7 +133,7 @@ Resourceish = typing.Union["Resource[typing.Any]", Pathish, Rawish]
 This may be one of:
 
 - `Resource` or a derivative.
-- `builtins.str` path.
+- `str` path.
 - `os.PathLike` derivative, such as `pathlib.PurePath` and `pathlib.Path`.
 - `bytes`
 - `bytearray`
@@ -171,7 +168,7 @@ def ensure_resource(url_or_resource: Resourceish, /) -> Resource[AsyncReader]:
     Parameters
     ----------
     url_or_resource : Resourceish
-        The item to convert. Ff a `Resource` is passed, it is
+        The item to convert. If a `Resource` is passed, it is
         simply returned again. Anything else is converted to a `Resource` first.
 
     Returns
@@ -207,13 +204,13 @@ def guess_mimetype_from_filename(name: str, /) -> typing.Optional[str]:
 
     Parameters
     ----------
-    name : builtins.bytes
+    name : bytes
         The filename to inspect.
 
     Returns
     -------
-    typing.Optional[builtins.str]
-        The closest guess to the given filename. May be `builtins.None` if
+    typing.Optional[str]
+        The closest guess to the given filename. May be `None` if
         no match was found.
     """
     guess, _ = mimetypes.guess_type(name)
@@ -223,20 +220,20 @@ def guess_mimetype_from_filename(name: str, /) -> typing.Optional[str]:
 def guess_mimetype_from_data(data: bytes, /) -> typing.Optional[str]:
     """Guess the mimetype of some data from the header.
 
-    !!! warning
+    .. warning::
         This function only detects valid image headers that Discord allows
         the use of. Anything else will go undetected.
 
     Parameters
     ----------
-    data : builtins.bytes
+    data : bytes
         The byte content to inspect.
 
     Returns
     -------
-    typing.Optional[builtins.str]
+    typing.Optional[str]
         The mimetype, if it was found. If the header is unrecognised, then
-        `builtins.None` is returned.
+        `None` is returned.
     """
     if data.startswith(b"\211PNG\r\n\032\n"):
         return "image/png"
@@ -254,21 +251,21 @@ def guess_file_extension(mimetype: str) -> typing.Optional[str]:
 
     Parameters
     ----------
-    mimetype : builtins.str
+    mimetype : str
         The mimetype to guess the extension for.
 
-    Example
-    -------
-    ```py
-    >>> guess_file_extension("image/png")
-    ".png"
-    ```
+    Examples
+    --------
+    .. code-block:: python
+
+        >>> guess_file_extension("image/png")
+        ".png"
 
     Returns
     -------
-    typing.Optional[builtins.str]
+    typing.Optional[str]
         The file extension, prepended with a `.`. If no match was found,
-        return `builtins.None`.
+        return `None`.
     """
     return mimetypes.guess_extension(mimetype)
 
@@ -283,16 +280,16 @@ def generate_filename_from_details(
 
     Parameters
     ----------
-    mimetype : typing.Optional[builtins.str]
-        The mimetype of the content, or `builtins.None` if not known.
-    extension : typing.Optional[builtins.str]
-        The file extension to use, or `builtins.None` if not known.
-    data : typing.Optional[builtins.bytes]
-        The data to inspect, or `builtins.None` if not known.
+    mimetype : typing.Optional[str]
+        The mimetype of the content, or `None` if not known.
+    extension : typing.Optional[str]
+        The file extension to use, or `None` if not known.
+    data : typing.Optional[bytes]
+        The data to inspect, or `None` if not known.
 
     Returns
     -------
-    builtins.str
+    str
         A generated quasi-unique filename.
     """
     if data is not None and mimetype is None:
@@ -315,14 +312,14 @@ def to_data_uri(data: bytes, mimetype: typing.Optional[str]) -> str:
 
     Parameters
     ----------
-    data : builtins.bytes
+    data : bytes
         The data to encode as base64.
-    mimetype : typing.Optional[builtins.str]
-        The mimetype, or `builtins.None` if we should attempt to guess it.
+    mimetype : typing.Optional[str]
+        The mimetype, or `None` if we should attempt to guess it.
 
     Returns
     -------
-    builtins.str
+    str
         A data URI string.
     """
     if mimetype is None:
@@ -347,7 +344,7 @@ class AsyncReader(typing.AsyncIterable[bytes], abc.ABC):
     """The filename of the resource."""
 
     mimetype: typing.Optional[str] = attr.field(repr=True)
-    """The mimetype of the resource. May be `builtins.None` if not known."""
+    """The mimetype of the resource. May be `None` if not known."""
 
     async def data_uri(self) -> str:
         """Fetch the data URI.
@@ -357,7 +354,7 @@ class AsyncReader(typing.AsyncIterable[bytes], abc.ABC):
         return to_data_uri(await self.read(), self.mimetype)
 
     async def read(self) -> bytes:
-        """Read the rest of the resource and return it in a `builtins.bytes` object."""
+        """Read the rest of the resource and return it in a `bytes` object."""
         buff = bytearray()
         async for chunk in self:
             buff.extend(chunk)
@@ -444,14 +441,14 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
     ) -> bytes:
         """Read the entire resource at once into memory.
 
-        ```py
-        data = await resource.read(...)
-        # ^-- This is a shortcut for the following --v
-        async with resource.stream(...) as reader:
-            data = await reader.read()
-        ```
+        .. code-block:: python
 
-        !!! warning
+            data = await resource.read(...)
+            # ^-- This is a shortcut for the following --v
+            async with resource.stream(...) as reader:
+                data = await reader.read()
+
+        .. warning::
             If you simply wish to re-upload this resource to Discord via
             any endpoint in Hikari, you should opt to just pass this
             resource object directly. This way, Hikari can perform byte
@@ -462,12 +459,12 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
         ----------
         executor : typing.Optional[concurrent.futures.Executor]
             The executor to run in for blocking operations.
-            If `builtins.None`, then the default executor is used for the
+            If `None`, then the default executor is used for the
             current event loop.
 
         Returns
         -------
-        builtins.bytes
+        bytes
             The entire resource.
         """
         async with self.stream(executor=executor) as reader:
@@ -486,10 +483,10 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
         ----------
         executor : typing.Optional[concurrent.futures.Executor]
             The executor to run in for blocking operations.
-            If `builtins.None`, then the default executor is used for the
+            If `None`, then the default executor is used for the
             current event loop.
-        head_only : builtins.bool
-            Defaults to `builtins.False`. If `builtins.True`, then the
+        head_only : bool
+            Defaults to `False`. If `True`, then the
             implementation may only retrieve HEAD information if supported.
             This currently only has any effect for web requests. This will
             fetch the headers for the HTTP resource this object points to
@@ -547,7 +544,7 @@ class WebReader(AsyncReader):
     """The size of the resource, if known."""
 
     head_only: bool = attr.field()
-    """If `builtins.True`, then only the HEAD was requested.
+    """If `True`, then only the HEAD was requested.
 
     In this case, neither `__aiter__` nor `read` would return anything other
     than an empty byte string.
@@ -633,16 +630,12 @@ class WebResource(Resource[WebReader], abc.ABC):
     The logic for identifying this resource is left to each implementation
     to define.
 
-    !!! info
-        For a usable concrete implementation, use `URL` instead.
+    For a usable concrete implementation, use `URL` instead.
 
-    !!! note
         Some components may choose to not upload this resource directly and
         instead simply refer to the URL as needed. The main place this will
-        occur is within embeds.
-
-        If you need to re-upload the resource, you should download it into
-        a `builtins.bytes` and pass that instead in these cases.
+        occur is within embeds. If you need to re-upload the resource, you
+        should download it into a `bytes` and pass that instead in these cases.
     """
 
     __slots__: typing.Sequence[str] = ()
@@ -662,35 +655,40 @@ class WebResource(Resource[WebReader], abc.ABC):
         ----------
         executor : typing.Optional[concurrent.futures.Executor]
             Not used. Provided only to match the underlying interface.
-        head_only : builtins.bool
-            Defaults to `builtins.False`. If `builtins.True`, then the
+        head_only : bool
+            Defaults to `False`. If `True`, then the
             implementation may only retrieve HEAD information if supported.
             This currently only has any effect for web requests.
 
         Examples
         --------
         Downloading an entire resource at once into memory:
-        ```py
-        async with obj.stream() as stream:
-            data = await stream.read()
-        ```
-        Checking the metadata:
-        ```py
-        async with obj.stream() as stream:
-            mimetype = stream.mimetype
 
-        if mimetype is None:
-            ...
-        elif mimetype not in whitelisted_mimetypes:
-            ...
-        else:
-            ...
-        ```
+        .. code-block:: python
+
+            async with obj.stream() as stream:
+                data = await stream.read()
+
+        Checking the metadata:
+
+        .. code-block:: python
+
+            async with obj.stream() as stream:
+                mimetype = stream.mimetype
+
+            if mimetype is None:
+                ...
+            elif mimetype not in whitelisted_mimetypes:
+                ...
+            else:
+                ...
+
         Fetching the data-uri of a resource:
-        ```py
-        async with obj.stream() as stream:
-            data_uri = await stream.data_uri()
-        ```
+
+        .. code-block:: python
+
+            async with obj.stream() as stream:
+                data_uri = await stream.data_uri()
 
         Returns
         -------
@@ -722,24 +720,29 @@ class WebResource(Resource[WebReader], abc.ABC):
 class URL(WebResource):
     """A URL that represents a web resource.
 
-    Parameters
-    ----------
-    url : builtins.str
-        The URL of the resource.
-
-    !!! note
+    .. note::
         Some components may choose to not upload this resource directly and
         instead simply refer to the URL as needed. The main place this will
         occur is within embeds.
 
         If you need to re-upload the resource, you should download it into
-        a `builtins.bytes` and pass that instead in these cases.
+        a `bytes` and pass that instead in these cases.
+
+    Parameters
+    ----------
+    url : str
+        The URL of the resource.
+    filename : typing.Optional[str]
+        The filename for the resource.
+
+        If not specified, it will be obtained from the url.
     """
 
-    __slots__: typing.Sequence[str] = ("_url",)
+    __slots__: typing.Sequence[str] = ("_url", "_filename")
 
-    def __init__(self, url: str) -> None:
+    def __init__(self, url: str, filename: typing.Optional[str] = None) -> None:
         self._url = url
+        self._filename = filename
 
     @property
     def url(self) -> str:
@@ -747,6 +750,9 @@ class URL(WebResource):
 
     @property
     def filename(self) -> str:
+        if self._filename:
+            return self._filename
+
         url = urllib.parse.urlparse(self._url)
         return os.path.basename(url.path)
 
@@ -757,40 +763,34 @@ class URL(WebResource):
 
 
 @attr.define(weakref_slot=False)
-class FileReader(AsyncReader, abc.ABC):
-    """Abstract base for a file reader object.
+class ThreadedFileReader(AsyncReader):
+    """Asynchronous file reader that reads a resource from local storage.
 
-    Various implementations have to exist in order to cater for situations
-    where we cannot pass IO objects around (e.g. ProcessPoolExecutors, since
-    they pickle things).
+    This implementation works with pools that exist in the same interpreter
+    instance as the caller, namely thread pool executors, where objects
+    do not need to be pickled to be communicated.
     """
 
-    executor: typing.Optional[concurrent.futures.Executor] = attr.field()
-    """The associated `concurrent.futures.Executor` to use for blocking IO."""
+    _executor: typing.Optional[concurrent.futures.ThreadPoolExecutor] = attr.field()
+    _pointer: typing.BinaryIO = attr.field()
 
-    path: pathlib.Path = attr.field(converter=ensure_path)
-    """The path to the resource to read."""
+    async def __aiter__(self) -> typing.AsyncGenerator[typing.Any, bytes]:
+        loop = asyncio.get_running_loop()
+
+        while True:
+            chunk = await loop.run_in_executor(self._executor, self._pointer.read, _MAGIC)
+            yield chunk
+            if len(chunk) < _MAGIC:
+                break
 
 
-def _stat(path: pathlib.Path) -> pathlib.Path:
-    # While paths will be implicitly resolved, we still need to explicitly
-    # call expanduser to deal with a ~ base.
-    try:
-        path = path.expanduser()
-    except RuntimeError:
-        pass  # A home directory couldn't be resolved, so we'll just use the path as-is.
-
-    # path.stat() will raise FileNotFoundError if the file doesn't exist
-    # (unlike is_dir) which is what we want here.
-    if stat.S_ISDIR(path.stat().st_mode):
-        raise IsADirectoryError(errno.EISDIR, "Cannot open the path specified as it is a directory", str(path))
-
-    return path
+def _open_path(path: pathlib.Path) -> typing.BinaryIO:
+    return path.expanduser().open("rb")
 
 
 @attr.define(weakref_slot=False)
 @typing.final
-class _ThreadedFileReaderContextManagerImpl(AsyncReaderContextManager[FileReader]):
+class _ThreadedFileReaderContextManagerImpl(AsyncReaderContextManager[ThreadedFileReader]):
     executor: typing.Optional[concurrent.futures.ThreadPoolExecutor] = attr.field()
     file: typing.Optional[typing.BinaryIO] = attr.field(default=None, init=False)
     filename: str = attr.field()
@@ -801,9 +801,9 @@ class _ThreadedFileReaderContextManagerImpl(AsyncReaderContextManager[FileReader
             raise RuntimeError("File is already open")
 
         loop = asyncio.get_running_loop()
-        self.path = await loop.run_in_executor(self.executor, _stat, self.path)
-        self.file = typing.cast(io.BufferedReader, await loop.run_in_executor(self.executor, self.path.open, "rb"))
-        return ThreadedFileReader(self.filename, None, self.executor, self.path, self.file)
+        file = await loop.run_in_executor(self.executor, _open_path, self.path)
+        self.file = file
+        return ThreadedFileReader(self.filename, None, self.executor, file)
 
     async def __aexit__(
         self,
@@ -815,103 +815,29 @@ class _ThreadedFileReaderContextManagerImpl(AsyncReaderContextManager[FileReader
             raise RuntimeError("File isn't open")
 
         loop = asyncio.get_running_loop()
-        file = self.file
+        await loop.run_in_executor(self.executor, self.file.close)
         self.file = None
-        await loop.run_in_executor(self.executor, file.close)
 
 
-@attr.define(weakref_slot=False)
-class ThreadedFileReader(FileReader):
-    """Asynchronous file reader that reads a resource from local storage.
-
-    This implementation works with pools that exist in the same interpreter
-    instance as the caller, namely thread pool executors, where objects
-    do not need to be pickled to be communicated.
-    """
-
-    _pointer: typing.BinaryIO = attr.field()
-
-    async def __aiter__(self) -> typing.AsyncGenerator[typing.Any, bytes]:
-        loop = asyncio.get_running_loop()
-
-        while True:
-            chunk = await loop.run_in_executor(self.executor, self._pointer.read, _MAGIC)
-            yield chunk
-            if len(chunk) < _MAGIC:
-                break
-
-
-@attr.define(weakref_slot=False)
-@typing.final
-class _MultiProcessingFileReaderContextManagerImpl(AsyncReaderContextManager[FileReader]):
-    executor: concurrent.futures.ProcessPoolExecutor = attr.field()
-    file: typing.Optional[typing.BinaryIO] = attr.field(default=None, init=False)
-    filename: str = attr.field()
-    path: pathlib.Path = attr.field()
-
-    async def __aenter__(self) -> MultiprocessingFileReader:
-        loop = asyncio.get_running_loop()
-
-        path = await loop.run_in_executor(self.executor, _stat, self.path)
-        return MultiprocessingFileReader(self.filename, None, self.executor, path)
-
-    async def __aexit__(
-        self,
-        exc_type: typing.Optional[typing.Type[BaseException]],
-        exc: typing.Optional[BaseException],
-        exc_tb: typing.Optional[types.TracebackType],
-    ) -> None:
-        pass
-
-
-def _read_all(path: pathlib.Path) -> bytes:
-    with path.open("rb") as file:
-        return file.read()
-
-
-@attr.define(slots=False, weakref_slot=False)  # Do not slot (pickle)
-class MultiprocessingFileReader(FileReader):
-    """Asynchronous file reader that reads a resource from local storage.
-
-    This implementation works with pools that exist in a different interpreter
-    instance to the caller. Currently this only includes ProcessPoolExecutors
-    and custom implementations where objects have to be pickled to be used
-    by the pool.
-    """
-
-    async def __aiter__(self) -> typing.AsyncGenerator[typing.Any, bytes]:
-        yield await asyncio.get_running_loop().run_in_executor(self.executor, _read_all, self.path)
-
-    def __getstate__(self) -> typing.Dict[str, typing.Any]:
-        return {"path": self.path, "filename": self.filename}
-
-    def __setstate__(self, state: typing.Dict[str, typing.Any]) -> None:
-        self.path: pathlib.Path = state["path"]
-        self.filename: str = state["filename"]
-        self.executor: typing.Optional[concurrent.futures.Executor] = None
-        self.mimetype: typing.Optional[str] = None
-
-
-class File(Resource[FileReader]):
+class File(Resource[ThreadedFileReader]):
     """A resource that exists on the local machine's storage to be uploaded.
 
     Parameters
     ----------
-    path : typing.Union[builtins.str, os.PathLike, pathlib.Path]
+    path : typing.Union[str, os.PathLike, pathlib.Path]
         The path to use.
 
-        !!! note
-            If passing a `pathlib.Path`, this must not be a `pathlib.PurePath`
-            directly, as it will be used to expand tokens such as `~` that
-            denote the home directory, and `..` for relative paths.
+        If passing a `pathlib.Path`, this must not be a `pathlib.PurePath`
+        directly, as it will be used to expand tokens such as `~` that
+        denote the home directory, and `..` for relative paths.
 
-            This will all be performed as required in an executor to prevent
-            blocking the event loop.
-    filename : typing.Optional[builtins.str]
-        The filename to use. If this is `builtins.None`, the name of the file is taken
+        This will all be performed as required in an executor to prevent
+        blocking the event loop.
+    filename : typing.Optional[str]
+        The filename to use. If this is `None`, the name of the file is taken
         from the path instead.
     spoiler : bool
-        Whether to mark the file as a spoiler in Discord. Defaults to `builtins.False`.
+        Whether to mark the file as a spoiler in Discord. Defaults to `False`.
     """
 
     __slots__: typing.Sequence[str] = ("path", "_filename", "is_spoiler")
@@ -948,21 +874,23 @@ class File(Resource[FileReader]):
         *,
         executor: typing.Optional[concurrent.futures.Executor] = None,
         head_only: bool = False,
-    ) -> AsyncReaderContextManager[FileReader]:
+    ) -> AsyncReaderContextManager[ThreadedFileReader]:
         """Start streaming the resource using a thread pool executor.
 
         Parameters
         ----------
         executor : typing.Optional[concurrent.futures.Executor]
-            The executor to run the blocking read operations in. If
-            `builtins.None`, the default executor for the running event loop
+            The thread executor to run the blocking read operations in. If
+            `None`, the default executor for the running event loop
             will be used instead.
-        head_only : builtins.bool
+
+            Only `concurrent.futures.TheadPoolExecutor` is supported.
+        head_only : bool
             Not used. Provided only to match the underlying interface.
 
         Returns
         -------
-        AsyncReaderContextManager[FileReader]
+        AsyncReaderContextManager[ThreadedFileReader]
             An async context manager that when entered, produces the
             data stream.
 
@@ -973,15 +901,12 @@ class File(Resource[FileReader]):
         FileNotFoundError
             If the file doesn't exist.
         """
-        # asyncio forces the default executor when this is None to always be a thread pool executor anyway,
-        # so this is safe enough to do.:
         if executor is None or isinstance(executor, concurrent.futures.ThreadPoolExecutor):
+            # asyncio forces the default executor when this is None to always be a thread pool executor anyway,
+            # so this is safe enough to do:
             return _ThreadedFileReaderContextManagerImpl(executor, self.filename, self.path)
 
-        if not isinstance(executor, concurrent.futures.ProcessPoolExecutor):
-            raise TypeError("The executor must be a ProcessPoolExecutor, ThreadPoolExecutor, or `builtins.None`.")
-
-        return _MultiProcessingFileReaderContextManagerImpl(executor, self.filename, self.path)
+        raise TypeError("The executor must be a ThreadPoolExecutor or None")
 
 
 ########################################################################
@@ -1068,14 +993,14 @@ class Bytes(Resource[IteratorReader]):
     ----------
     data : typing.Union[Rawish, LazyByteIteratorish]
         The raw data.
-    filename : builtins.str
+    filename : str
         The filename to use.
-    mimetype : typing.Optional[builtins.str]
-        The mimetype, or `builtins.None` if you do not wish to specify this.
+    mimetype : typing.Optional[str]
+        The mimetype, or `None` if you do not wish to specify this.
         If not provided, then this will be generated from the file extension
         of the filename instead.
     spoiler : bool
-        Whether to mark the file as a spoiler in Discord. Defaults to `builtins.False`.
+        Whether to mark the file as a spoiler in Discord. Defaults to `False`.
     """
 
     __slots__: typing.Sequence[str] = ("data", "_filename", "mimetype", "is_spoiler")
@@ -1084,7 +1009,7 @@ class Bytes(Resource[IteratorReader]):
     """The raw data/provider of raw data to upload."""
 
     mimetype: typing.Optional[str]
-    """The provided mimetype, if provided. Otherwise `builtins.None`."""
+    """The provided mimetype, if provided. Otherwise `None`."""
 
     is_spoiler: bool
     """Whether the file will be marked as a spoiler."""
@@ -1136,7 +1061,7 @@ class Bytes(Resource[IteratorReader]):
         ----------
         executor : typing.Optional[concurrent.futures.Executor]
             Not used. Provided only to match the underlying interface.
-        head_only : builtins.bool
+        head_only : bool
             Not used. Provided only to match the underlying interface.
 
         Returns
@@ -1153,9 +1078,9 @@ class Bytes(Resource[IteratorReader]):
 
         Parameters
         ----------
-        data_uri : builtins.str
+        data_uri : str
             The data URI to parse.
-        filename : typing.Optional[builtins.str]
+        filename : typing.Optional[str]
             Filename to use. If this is not provided, then this is generated
             instead.
 
@@ -1166,7 +1091,7 @@ class Bytes(Resource[IteratorReader]):
 
         Raises
         ------
-        builtins.ValueError
+        ValueError
             If the parsed argument is not a data URI.
         """
         if not data_uri.startswith("data:"):

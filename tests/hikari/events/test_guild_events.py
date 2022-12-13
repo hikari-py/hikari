@@ -88,6 +88,7 @@ class TestGuildAvailableEvent:
             members={},
             presences={},
             voice_states={},
+            threads={},
         )
 
     def test_app_property(self, event):
@@ -171,9 +172,10 @@ class TestGuildStickersUpdateEvent:
             stickers=(mock.Mock(), mock.Mock(), mock.Mock()),
         )
 
+    @pytest.mark.asyncio()
     async def test_fetch_stickers(self, event):
-        event.app.rest.fetch_stickers = mock.AsyncMock()
-        stickers = await event.fetch_stickers()
+        event.app.rest.fetch_guild_stickers = mock.AsyncMock()
 
-        event.app.rest.fetch_stickers.assert_awaited_once_with(event.guild_id)
-        assert stickers is event.app.rest.fetch_stickers.return_value
+        assert await event.fetch_stickers() is event.app.rest.fetch_guild_stickers.return_value
+
+        event.app.rest.fetch_guild_stickers.assert_awaited_once_with(event.guild_id)

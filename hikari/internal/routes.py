@@ -78,12 +78,12 @@ class CompiledRoute:
 
         Parameters
         ----------
-        base_url : builtins.str
+        base_url : str
             The base of the URL to prepend to the compiled path.
 
         Returns
         -------
-        builtins.str
+        str
             The full URL for the route.
         """
         return base_url + self.compiled_path
@@ -96,13 +96,13 @@ class CompiledRoute:
 
         Parameters
         ----------
-        initial_bucket_hash : builtins.str
+        initial_bucket_hash : str
             The initial bucket hash provided by Discord in the HTTP headers
             for a given response.
 
         Returns
         -------
-        builtins.str
+        str
             The input hash amalgamated with a hash code produced by the
             major parameters in this compiled route instance.
         """
@@ -123,9 +123,9 @@ class Route:
 
     Parameters
     ----------
-    method : builtins.str
-        The HTTP method
-    path_template : builtins.str
+    method : str
+        The HTTP method.
+    path_template : str
         The template string for the path to use.
     """
 
@@ -192,10 +192,7 @@ class CDNRoute:
     """Template string for this endpoint."""
 
     valid_formats: typing.AbstractSet[str] = attr.field(
-        converter=_cdn_valid_formats_converter,
-        eq=False,
-        hash=False,
-        repr=False,
+        converter=_cdn_valid_formats_converter, eq=False, hash=False, repr=False
     )
     """Valid file formats for this endpoint."""
 
@@ -204,8 +201,8 @@ class CDNRoute:
         if not values:
             raise ValueError(f"{self.path_template} must have at least one valid format set")
 
-    sizable: bool = attr.field(default=True, kw_only=True, repr=False, hash=False, eq=False)
-    """`builtins.True` if a `size` param can be specified, or `builtins.False` otherwise."""
+    is_sizable: bool = attr.field(default=True, kw_only=True, repr=False, hash=False, eq=False)
+    """Whether a `size` param can be specified."""
 
     def compile(
         self,
@@ -219,30 +216,29 @@ class CDNRoute:
 
         Parameters
         ----------
-        base_url : builtins.str
+        base_url : str
             The base URL for the CDN. The generated route is concatenated onto
             this.
-        file_format : builtins.str
+        file_format : str
             The file format to use for the asset.
-        size : typing.Optional[builtins.int]
-            The custom size query parameter to set. If `builtins.None`,
+        size : typing.Optional[int]
+            The custom size query parameter to set. If `None`,
             it is not passed.
         **kwargs : typing.Any
             Parameters to interpolate into the path template.
 
         Returns
         -------
-        builtins.str
+        str
             The full asset URL.
 
         Raises
         ------
-        builtins.TypeError
+        TypeError
             If a GIF is requested, but the asset is not animated;
             if an invalid file format for the endpoint is passed; or if a `size`
-            is passed but the route is not `sizable`.
-
-        builtins.ValueError
+            is passed but the route is not sizable.
+        ValueError
             If `size` is specified, but is not an integer power of `2` between
             `16` and `4096` inclusive or is negative.
         """
@@ -262,7 +258,7 @@ class CDNRoute:
         url = base_url + self.path_template.format(**kwargs) + f".{file_format}"
 
         if size is not None:
-            if not self.sizable:
+            if not self.is_sizable:
                 raise TypeError("This asset cannot be resized.")
 
             if size < 0:
@@ -299,6 +295,21 @@ PUT: typing.Final[str] = "PUT"
 GET_CHANNEL: typing.Final[Route] = Route(GET, "/channels/{channel}")
 PATCH_CHANNEL: typing.Final[Route] = Route(PATCH, "/channels/{channel}")
 DELETE_CHANNEL: typing.Final[Route] = Route(DELETE, "/channels/{channel}")
+
+POST_MESSAGE_THREADS: typing.Final[Route] = Route(POST, "/channels/{channel}/messages/{message}/threads")
+POST_CHANNEL_THREADS: typing.Final[Route] = Route(POST, "/channels/{channel}/threads")
+PUT_MY_THREAD_MEMBER: typing.Final[Route] = Route(PUT, "/channels/{channel}/thread-members/@me")
+PUT_THREAD_MEMBER: typing.Final[Route] = Route(PUT, "/channels/{channel}/thread-members/{user}")
+DELETE_MY_THREAD_MEMBER: typing.Final[Route] = Route(DELETE, "/channels/{channel}/thread-members/@me")
+DELETE_THREAD_MEMBER: typing.Final[Route] = Route(DELETE, "/channels/{channel}/thread-members/{user}")
+GET_THREAD_MEMBER: typing.Final[Route] = Route(GET, "/channels/{channel}/thread-members/{user}")
+GET_THREAD_MEMBERS: typing.Final[Route] = Route(GET, "/channels/{channel}/thread-members")
+GET_ACTIVE_THREADS: typing.Final[Route] = Route(GET, "/guilds/{guild}/threads/active")
+GET_PUBLIC_ARCHIVED_THREADS: typing.Final[Route] = Route(GET, "/channels/{channel}/threads/archived/public")
+GET_PRIVATE_ARCHIVED_THREADS: typing.Final[Route] = Route(GET, "/channels/{channel}/threads/archived/private")
+GET_JOINED_PRIVATE_ARCHIVED_THREADS: typing.Final[Route] = Route(
+    GET, "/channels/{channel}/users/@me/threads/archived/private"
+)
 
 POST_CHANNEL_FOLLOWERS: typing.Final[Route] = Route(POST, "/channels/{channel}/followers")
 
@@ -548,7 +559,7 @@ CDN_GUILD_DISCOVERY_SPLASH: typing.Final[CDNRoute] = CDNRoute(
 )
 CDN_GUILD_BANNER: typing.Final[CDNRoute] = CDNRoute("/banners/{guild_id}/{hash}", {PNG, *JPEG_JPG, WEBP, GIF})
 
-CDN_DEFAULT_USER_AVATAR: typing.Final[CDNRoute] = CDNRoute("/embed/avatars/{discriminator}", {PNG}, sizable=False)
+CDN_DEFAULT_USER_AVATAR: typing.Final[CDNRoute] = CDNRoute("/embed/avatars/{discriminator}", {PNG}, is_sizable=False)
 CDN_USER_AVATAR: typing.Final[CDNRoute] = CDNRoute("/avatars/{user_id}/{hash}", {PNG, *JPEG_JPG, WEBP, GIF})
 CDN_USER_BANNER: typing.Final[CDNRoute] = CDNRoute("/banners/{user_id}/{hash}", {PNG, *JPEG_JPG, WEBP, GIF})
 CDN_MEMBER_AVATAR: typing.Final[CDNRoute] = CDNRoute(
@@ -568,7 +579,7 @@ CDN_TEAM_ICON: typing.Final[CDNRoute] = CDNRoute("/team-icons/{team_id}/{hash}",
 # undocumented on the Discord docs.
 CDN_CHANNEL_ICON: typing.Final[CDNRoute] = CDNRoute("/channel-icons/{channel_id}/{hash}", {PNG, *JPEG_JPG, WEBP})
 
-CDN_STICKER: typing.Final[CDNRoute] = CDNRoute("/stickers/{sticker_id}", {PNG, LOTTIE}, sizable=False)
+CDN_STICKER: typing.Final[CDNRoute] = CDNRoute("/stickers/{sticker_id}", {PNG, LOTTIE}, is_sizable=False)
 CDN_STICKER_PACK_BANNER: typing.Final[CDNRoute] = CDNRoute(
     "/app-assets/710982414301790216/store/{hash}", {PNG, *JPEG_JPG, WEBP}
 )

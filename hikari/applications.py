@@ -111,31 +111,31 @@ class OAuth2Scope(str, enums.Enum):
     ACTIVITIES_READ = "activities.read"
     """Enables fetching the "Now Playing/Recently Played" list.
 
-    !!! note
+    .. note::
         You must be whitelisted to use this scope.
     """
 
     ACTIVITIES_WRITE = "activities.write"
     """Enables updating a user's activity.
 
-    !!! note
+    .. note::
         You must be whitelisted to use this scope.
 
-    !!! note
+    .. note::
         This is not required to use the GameSDK activity manager.
     """
 
     APPLICATIONS_BUILDS_READ = "applications.builds.read"
     """Enables reading build data for a user's applications.
 
-    !!! note
+    .. note::
         You must be whitelisted to use this scope.
     """
 
     APPLICATIONS_BUILDS_UPLOAD = "applications.builds.upload"
     """Enables uploading/updating builds for a user's applications.
 
-    !!! note
+    .. note::
         You must be whitelisted to use this scope.
     """
 
@@ -161,14 +161,14 @@ class OAuth2Scope(str, enums.Enum):
 
     This includes store listings, achievements, SKU's, etc.
 
-    !!! note
+    .. note::
         The store API is deprecated and may be removed in the future.
     """
 
     BOT = "bot"
     """Enables adding a bot application to a guild.
 
-    !!! note
+    .. note::
         This requires you to have set up a bot account for your application.
     """
 
@@ -181,7 +181,7 @@ class OAuth2Scope(str, enums.Enum):
     GROUP_DM_JOIN = "gdm.join"
     """Enables joining users into a group DM.
 
-    !!! warning
+    .. warning::
         This cannot add the bot to a group DM.
     """
 
@@ -191,14 +191,14 @@ class OAuth2Scope(str, enums.Enum):
     GUILDS_JOIN = "guilds.join"
     """Enables adding the user to a specific guild.
 
-    !!! note
+    .. note::
         This requires you to have set up a bot account for your application.
     """
 
     IDENTIFY = "identify"
     """Enables viewing info about itself.
 
-    !!! note
+    .. note::
         This does not include email address info. Use the `EMAIL` scope instead
         to retrieve this information.
     """
@@ -206,14 +206,14 @@ class OAuth2Scope(str, enums.Enum):
     RELATIONSHIPS_READ = "relationships.read"
     """Enables viewing a user's friend list.
 
-    !!! note
+    .. note::
         You must be whitelisted to use this scope.
     """
 
     RPC = "rpc"
     """Enables the RPC application to control the local user's Discord client.
 
-    !!! note
+    .. note::
         You must be whitelisted to use this scope.
     """
 
@@ -223,7 +223,7 @@ class OAuth2Scope(str, enums.Enum):
     RPC_NOTIFICATIONS_READ = "rpc.notifications.read"
     """Enables the RPC application to read  from all channels the user is in.
 
-    !!! note
+    .. note::
         You must be whitelisted to use this scope.
     """
 
@@ -259,7 +259,7 @@ class OwnConnection:
     id: str = attr.field(hash=True, repr=True)
     """The string ID of the third party connected account.
 
-    !!! warning
+    .. warning::
         Seeing as this is a third party ID, it will not be a snowflakes.
     """
 
@@ -270,19 +270,19 @@ class OwnConnection:
     """The type of service this connection is for."""
 
     is_revoked: bool = attr.field(eq=False, hash=False, repr=False)
-    """`builtins.True` if the connection has been revoked."""
+    """`True` if the connection has been revoked."""
 
     integrations: typing.Sequence[guilds.PartialIntegration] = attr.field(eq=False, hash=False, repr=False)
     """A sequence of the partial guild integration objects this connection has."""
 
     is_verified: bool = attr.field(eq=False, hash=False, repr=False)
-    """`builtins.True` if the connection has been verified."""
+    """`True` if the connection has been verified."""
 
     is_friend_sync_enabled: bool = attr.field(eq=False, hash=False, repr=False)
-    """`builtins.True` if friends should be added based on this connection."""
+    """`True` if friends should be added based on this connection."""
 
     is_activity_visible: bool = attr.field(eq=False, hash=False, repr=False)
-    """`builtins.True` if this connection's activities are shown in the user's presence."""
+    """`True` if this connection's activities are shown in the user's presence."""
 
     visibility: typing.Union[ConnectionVisibility, int] = attr.field(eq=False, hash=False, repr=True)
     """The visibility of the connection."""
@@ -296,7 +296,7 @@ class OwnGuild(guilds.PartialGuild):
     """A list of the features in this guild."""
 
     is_owner: bool = attr.field(eq=False, hash=False, repr=True)
-    """`builtins.True` when the current user owns this guild."""
+    """`True` when the current user owns this guild."""
 
     my_permissions: permissions_.Permissions = attr.field(eq=False, hash=False, repr=False)
     """The guild-level permissions that apply to the current user or bot."""
@@ -324,7 +324,7 @@ class TeamMember(users.User):
     permissions: typing.Sequence[str] = attr.field(repr=False)
     """This member's permissions within a team.
 
-    At the time of writing, this will always be a sequence of one `builtins.str`,
+    At the time of writing, this will always be a sequence of one `str`,
     which will always be `"*"`. This may change in the future, however.
     """
 
@@ -409,7 +409,7 @@ class Team(snowflakes.Unique):
     app: traits.RESTAware = attr.field(
         repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
     )
-    """The client application that models may use for procedures."""
+    """Client application that models may use for procedures."""
 
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
     """The ID of this entity."""
@@ -420,7 +420,7 @@ class Team(snowflakes.Unique):
     icon_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
     """The CDN hash of this team's icon.
 
-    If no icon is provided, this will be `builtins.None`.
+    If no icon is provided, this will be `None`.
     """
 
     members: typing.Mapping[snowflakes.Snowflake, TeamMember] = attr.field(eq=False, hash=False, repr=False)
@@ -438,13 +438,7 @@ class Team(snowflakes.Unique):
 
     @property
     def icon_url(self) -> typing.Optional[files.URL]:
-        """Team icon URL.
-
-        Returns
-        -------
-        typing.Optional[hikari.files.URL]
-            The URL, or `builtins.None` if no icon exists.
-        """
+        """Icon URL, or `None` if no icon exists."""
         return self.make_icon_url()
 
     def make_icon_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
@@ -452,21 +446,21 @@ class Team(snowflakes.Unique):
 
         Parameters
         ----------
-        ext : builtins.str
+        ext : str
             The extension to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : builtins.int
+        size : int
             The size to set for the URL, defaults to `4096`. Can be any power
             of two between `16` and `4096` inclusive.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL, or `builtins.None` if no icon exists.
+            The URL, or `None` if no icon exists.
 
         Raises
         ------
-        builtins.ValueError
+        ValueError
             If the size is not an integer power of 2 between 16 and 4096
             (inclusive).
         """
@@ -490,7 +484,7 @@ class InviteApplication(guilds.PartialApplication):
     app: traits.RESTAware = attr.field(
         repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
     )
-    """The client application that models may use for procedures."""
+    """Client application that models may use for procedures."""
 
     cover_image_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
     """The CDN's hash of this application's default rich presence invite cover image."""
@@ -500,13 +494,7 @@ class InviteApplication(guilds.PartialApplication):
 
     @property
     def cover_image_url(self) -> typing.Optional[files.URL]:
-        """Rich presence cover image URL for this application, if set.
-
-        Returns
-        -------
-        typing.Optional[hikari.files.URL]
-            The URL, or `builtins.None` if no cover image exists.
-        """
+        """Rich presence cover image URL for this application, if set."""
         return self.make_cover_image_url()
 
     def make_cover_image_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
@@ -514,21 +502,21 @@ class InviteApplication(guilds.PartialApplication):
 
         Parameters
         ----------
-        ext : builtins.str
+        ext : str
             The extension to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : builtins.int
+        size : int
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL, or `builtins.None` if no cover image exists.
+            The URL, or `None` if no cover image exists.
 
         Raises
         ------
-        builtins.ValueError
+        ValueError
             If the size is not an integer power of 2 between 16 and 4096
             (inclusive).
         """
@@ -552,13 +540,13 @@ class Application(guilds.PartialApplication):
     app: traits.RESTAware = attr.field(
         repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
     )
-    """The client application that models may use for procedures."""
+    """Client application that models may use for procedures."""
 
     is_bot_public: bool = attr.field(eq=False, hash=False, repr=True)
-    """`builtins.True` if the bot associated with this application is public."""
+    """`True` if the bot associated with this application is public."""
 
     is_bot_code_grant_required: bool = attr.field(eq=False, hash=False, repr=False)
-    """`builtins.True` if this application's bot is requiring code grant for invites."""
+    """`True` if this application's bot is requiring code grant for invites."""
 
     owner: users.User = attr.field(eq=False, hash=False, repr=True)
     """The application's owner."""
@@ -575,7 +563,7 @@ class Application(guilds.PartialApplication):
     team: typing.Optional[Team] = attr.field(eq=False, hash=False, repr=False)
     """The team this application belongs to.
 
-    If the application is not part of a team, this will be `builtins.None`.
+    If the application is not part of a team, this will be `None`.
     """
 
     cover_image_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
@@ -589,13 +577,7 @@ class Application(guilds.PartialApplication):
 
     @property
     def cover_image_url(self) -> typing.Optional[files.URL]:
-        """Rich presence cover image URL for this application, if set.
-
-        Returns
-        -------
-        typing.Optional[hikari.files.URL]
-            The URL, or `builtins.None` if no cover image exists.
-        """
+        """Rich presence cover image URL for this application, if set."""
         return self.make_cover_image_url()
 
     def make_cover_image_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
@@ -603,21 +585,21 @@ class Application(guilds.PartialApplication):
 
         Parameters
         ----------
-        ext : builtins.str
+        ext : str
             The extension to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : builtins.int
+        size : int
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL, or `builtins.None` if no cover image exists.
+            The URL, or `None` if no cover image exists.
 
         Raises
         ------
-        builtins.ValueError
+        ValueError
             If the size is not an integer power of 2 between 16 and 4096
             (inclusive).
         """
@@ -642,15 +624,15 @@ class AuthorizationApplication(guilds.PartialApplication):
     """The key used for verifying interaction and GameSDK payload signatures."""
 
     is_bot_public: typing.Optional[bool] = attr.field(eq=False, hash=False, repr=True)
-    """`builtins.True` if the bot associated with this application is public.
+    """`True` if the bot associated with this application is public.
 
-    Will be `builtins.None` if this application doesn't have an associated bot.
+    Will be `None` if this application doesn't have an associated bot.
     """
 
     is_bot_code_grant_required: typing.Optional[bool] = attr.field(eq=False, hash=False, repr=False)
-    """`builtins.True` if this application's bot is requiring code grant for invites.
+    """`True` if this application's bot is requiring code grant for invites.
 
-    Will be `builtins.None` if this application doesn't have a bot.
+    Will be `None` if this application doesn't have a bot.
     """
 
     terms_of_service_url: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
@@ -715,14 +697,14 @@ class OAuth2AuthorizationToken(PartialOAuth2Token):
     """Object of the webhook that was created.
 
     This will only be present if this token was authorized with the
-    `webhooks.incoming` scope, otherwise this will be `builtins.None`.
+    `webhooks.incoming` scope, otherwise this will be `None`.
     """
 
     guild: typing.Optional[guilds.RESTGuild] = attr.field(eq=False, hash=False, repr=True)
     """Object of the guild the user was added to.
 
     This will only be present if this token was authorized with the
-    `bot` scope, otherwise this will be `builtins.None`.
+    `bot` scope, otherwise this will be `None`.
     """
 
 
@@ -759,7 +741,7 @@ def get_token_id(token: str) -> snowflakes.Snowflake:
 
     Raises
     ------
-    builtins.ValueError
+    ValueError
         If the passed token has an unexpected format.
     """
     try:

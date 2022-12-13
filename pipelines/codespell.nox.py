@@ -22,9 +22,21 @@
 from pipelines import config
 from pipelines import nox
 
+IGNORED_WORDS = [
+    "ro",
+    "falsy",
+]
+
 
 @nox.session(reuse_venv=True)
 def codespell(session: nox.Session) -> None:
     """Run codespell to check for spelling mistakes."""
-    session.install("-r", "dev-requirements.txt")
-    session.run("codespell", *config.FULL_REFORMATTING_PATHS)
+    session.install(*nox.dev_requirements("codespell"))
+    session.run(
+        "codespell",
+        "--builtin",
+        "clear,rare,code",
+        "--ignore-words-list",
+        ",".join(IGNORED_WORDS),
+        *config.FULL_REFORMATTING_PATHS,
+    )

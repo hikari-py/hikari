@@ -162,6 +162,14 @@ class TestRESTBucketManager:
             assert mgr.gc_task is not None
 
     @pytest.mark.asyncio()
+    async def test_start_when_already_started(self):
+        with buckets.RESTBucketManager(max_rate_limit=float("inf")) as mgr:
+            mock_task = mock.Mock()
+            mgr.gc_task = mock_task
+            mgr.start()
+            assert mgr.gc_task is mock_task
+
+    @pytest.mark.asyncio()
     async def test_exit_closes(self):
         with mock.patch.object(buckets.RESTBucketManager, "close") as close:
             with mock.patch.object(buckets.RESTBucketManager, "gc") as gc:

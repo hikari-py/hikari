@@ -81,6 +81,7 @@ class TestPartialUser:
             user_mentions=user_mentions,
             role_mentions=role_mentions,
             mentions_reply=mentions_reply,
+            flags=34123342,
         )
 
         assert returned is obj.app.rest.create_message.return_value
@@ -102,6 +103,7 @@ class TestPartialUser:
             user_mentions=user_mentions,
             role_mentions=role_mentions,
             mentions_reply=mentions_reply,
+            flags=34123342,
         )
 
     @pytest.mark.asyncio()
@@ -132,6 +134,7 @@ class TestPartialUser:
             user_mentions=undefined.UNDEFINED,
             role_mentions=undefined.UNDEFINED,
             mentions_reply=undefined.UNDEFINED,
+            flags=undefined.UNDEFINED,
         )
 
     @pytest.mark.asyncio()
@@ -160,6 +163,7 @@ class TestPartialUser:
             user_mentions=undefined.UNDEFINED,
             role_mentions=undefined.UNDEFINED,
             mentions_reply=undefined.UNDEFINED,
+            flags=undefined.UNDEFINED,
         )
 
     @pytest.mark.asyncio()
