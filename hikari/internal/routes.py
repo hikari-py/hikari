@@ -88,7 +88,7 @@ class CompiledRoute:
         """
         return base_url + self.compiled_path
 
-    def create_real_bucket_hash(self, initial_bucket_hash: str) -> str:
+    def create_real_bucket_hash(self, initial_bucket_hash: str, authentication_hash: str) -> str:
         """Create a full bucket hash from a given initial hash.
 
         The result of this hash will be decided by the value of the major
@@ -99,6 +99,8 @@ class CompiledRoute:
         initial_bucket_hash : str
             The initial bucket hash provided by Discord in the HTTP headers
             for a given response.
+        authentication_hash : str
+            The token hash.
 
         Returns
         -------
@@ -106,7 +108,7 @@ class CompiledRoute:
             The input hash amalgamated with a hash code produced by the
             major parameters in this compiled route instance.
         """
-        return initial_bucket_hash + HASH_SEPARATOR + self.major_param_hash
+        return initial_bucket_hash + HASH_SEPARATOR + authentication_hash + HASH_SEPARATOR + self.major_param_hash
 
     def __str__(self) -> str:
         return f"{self.method} {self.compiled_path}"

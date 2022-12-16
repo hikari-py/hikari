@@ -227,10 +227,25 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
     which allows dynamically changing the enforced rate limits at any time.
     """
 
-    __slots__: typing.Sequence[str] = ("_compiled_route", "_max_rate_limit", "_lock")
+    __slots__: typing.Sequence[str] = (
+        "_active_ratelimits",
+        "_authentication_hash",
+        "_compiled_route",
+        "_max_rate_limit",
+        "_lock",
+    )
 
-    def __init__(self, name: str, compiled_route: routes.CompiledRoute, max_rate_limit: float) -> None:
+    def __init__(
+        self,
+        name: str,
+        compiled_route: routes.CompiledRoute,
+        authentication_hash: str,
+        active_ratelimits: typing.Mapping[str, rate_limits.ManualRateLimiter],
+        max_rate_limit: float,
+    ) -> None:
         super().__init__(name, 1, 1)
+        self._active_ratelimits = active_ratelimits
+        self._authentication_hash = authentication_hash
         self._compiled_route = compiled_route
         self._max_rate_limit = max_rate_limit
         self._lock = asyncio.Lock()
@@ -290,6 +305,9 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
 
         await super().acquire()
 
+        if ratelimiter := self._active_ratelimits.get(self._authentication_hash):
+            await ratelimiter.acquire()
+
     def update_rate_limit(self, remaining: int, limit: int, reset_at: float) -> None:
         """Update the rate limit information.
 
@@ -330,8 +348,12 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
         self.name: str = real_bucket_hash
 
 
-def _create_unknown_hash(route: routes.CompiledRoute) -> str:
-    return UNKNOWN_HASH + routes.HASH_SEPARATOR + str(hash(route))
+def _create_authentication_hash(authentication: typing.Optional[str]) -> str:
+    return str(hash(authentication))
+
+
+def _create_unknown_hash(route: routes.CompiledRoute, authentication_hash: str) -> str:
+    return UNKNOWN_HASH + routes.HASH_SEPARATOR + authentication_hash + routes.HASH_SEPARATOR + str(hash(route))
 
 
 class RESTBucketManager:
@@ -349,52 +371,30 @@ class RESTBucketManager:
     """
 
     __slots__: typing.Sequence[str] = (
-        "routes_to_hashes",
-        "real_hashes_to_buckets",
-        "closed_event",
-        "gc_task",
-        "max_rate_limit",
+        "_routes_to_hashes",
+        "_real_hashes_to_buckets",
+        "_authentication_hash_to_ratelimit",
+        "_closed_event",
+        "_gc_task",
+        "_max_rate_limit",
     )
 
-    routes_to_hashes: typing.Final[typing.MutableMapping[routes.Route, str]]
-    """Maps routes to their `X-RateLimit-Bucket` header being used."""
-
-    real_hashes_to_buckets: typing.Final[typing.MutableMapping[str, RESTBucket]]
-    """Maps full bucket hashes to their corresponding rate limiters.
-
-    The full bucket hash consists of `X-RateLimit-Bucket` appended with a hash of
-    major parameters used in that compiled route.
-    """
-
-    closed_event: typing.Final[asyncio.Event]
-    """An internal event that is set when the object is shut down."""
-
-    gc_task: typing.Optional[asyncio.Task[None]]
-    """The internal garbage collector task."""
-
-    max_rate_limit: float
-    """The max number of seconds to backoff for when rate limited.
-
-    Anything greater than this will instead raise an error.
-    """
-
     def __init__(self, max_rate_limit: float) -> None:
-        self.routes_to_hashes = {}
-        self.real_hashes_to_buckets = {}
-        self.closed_event: asyncio.Event = asyncio.Event()
-        self.gc_task: typing.Optional[asyncio.Task[None]] = None
-        self.max_rate_limit = max_rate_limit
+        self._routes_to_hashes: typing.Dict[routes.Route, str] = {}
+        self._real_hashes_to_buckets: typing.Dict[str, RESTBucket] = {}
+        self._authentication_hash_to_ratelimit: typing.Dict[str, rate_limits.ManualRateLimiter] = {}
+        self._closed_event: typing.Optional[asyncio.Event] = None
+        self._gc_task: typing.Optional[asyncio.Task[None]] = None
+        self._max_rate_limit = max_rate_limit
 
-    def __enter__(self) -> RESTBucketManager:
-        return self
+    @property
+    def is_alive(self) -> bool:
+        """Whether the component is alive."""
+        return self._closed_event is not None
 
-    def __exit__(
-        self,
-        exc_type: typing.Optional[typing.Type[Exception]],
-        exc_val: typing.Optional[Exception],
-        exc_tb: typing.Optional[types.TracebackType],
-    ) -> None:
-        self.close()
+    def _check_if_alive(self) -> None:
+        if not self._closed_event:
+            raise errors.ComponentStateConflictError("Cannot interact with an inactive bucket manager")
 
     def start(self, poll_period: float = 20.0, expire_after: float = 10.0) -> None:
         """Start this ratelimiter up.
@@ -415,27 +415,38 @@ class RESTBucketManager:
             result. Using `0` will make the bucket get garbage collected as soon
             as the rate limit has reset. Defaults to `10` seconds.
         """
-        if not self.gc_task:
-            self.gc_task = asyncio.create_task(self.gc(poll_period, expire_after))
+        if self._closed_event:
+            raise errors.ComponentStateConflictError("Cannot start an active bucket manager")
+
+        # Assert is in running loop
+        asyncio.get_running_loop()
+
+        self._closed_event = asyncio.Event()
+        self._gc_task = asyncio.create_task(self._gc(poll_period, expire_after))
 
     def close(self) -> None:
-        """Close the garbage collector and kill any tasks waiting on ratelimits.
+        """Close the garbage collector and kill any tasks waiting on ratelimits."""
+        self._check_if_alive()
+        assert self._closed_event is not None
 
-        Once this has been called, this object is considered to be effectively
-        dead. To reuse it, one should create a new instance.
-        """
-        self.closed_event.set()
-        for bucket in self.real_hashes_to_buckets.values():
+        for bucket in self._real_hashes_to_buckets.values():
             bucket.close()
-        self.real_hashes_to_buckets.clear()
-        self.routes_to_hashes.clear()
 
-        if self.gc_task is not None:
-            self.gc_task.cancel()
-            self.gc_task = None
+        for ratelimit in self._authentication_hash_to_ratelimit.values():
+            ratelimit.close()
 
-    # Ignore docstring not starting in an imperative mood
-    async def gc(self, poll_period: float, expire_after: float) -> None:
+        self._real_hashes_to_buckets.clear()
+        self._authentication_hash_to_ratelimit.clear()
+        self._routes_to_hashes.clear()
+
+        if self._gc_task is not None:
+            self._gc_task.cancel()
+            self._gc_task = None
+
+        self._closed_event.set()
+        self._closed_event = None
+
+    async def _gc(self, poll_period: float, expire_after: float) -> None:
         """Run the garbage collector loop.
 
         This is designed to run in the background and manage removing unused
@@ -463,15 +474,15 @@ class RESTBucketManager:
         # Prevent filling memory increasingly until we run out by removing dead buckets every 20s
         # Allocations are somewhat cheap if we only do them every so-many seconds, after all.
         _LOGGER.log(ux.TRACE, "rate limit garbage collector started")
-        while not self.closed_event.is_set():
-            try:
-                await asyncio.wait_for(self.closed_event.wait(), timeout=poll_period)
-            except asyncio.TimeoutError:
-                _LOGGER.log(ux.TRACE, "performing rate limit garbage collection pass")
-                self.do_gc_pass(expire_after)
-        self.gc_task = None
 
-    def do_gc_pass(self, expire_after: float) -> None:
+        assert self._closed_event is not None
+        while not self._closed_event.is_set():
+            try:
+                await asyncio.wait_for(self._closed_event.wait(), timeout=poll_period)
+            except asyncio.TimeoutError:
+                self._do_gc_pass(expire_after)
+
+    def _do_gc_pass(self, expire_after: float) -> None:
         """Perform a single garbage collection pass.
 
         This will assess any routes stored in the internal mappings of this
@@ -494,6 +505,11 @@ class RESTBucketManager:
             retain unneeded ratelimit info for longer, but may produce more
             effective ratelimiting logic as a result.
         """
+        _LOGGER.log(ux.TRACE, "performing rate limit garbage collection pass")
+        self._purge_stale_buckets(expire_after)
+        self._purge_stale_ratelimiters()
+
+    def _purge_stale_buckets(self, expire_after: float) -> None:
         buckets_to_purge: typing.List[str] = []
 
         now = time.monotonic()
@@ -505,7 +521,7 @@ class RESTBucketManager:
         active = 0
 
         # Discover and purge
-        bucket_pairs = self.real_hashes_to_buckets.items()
+        bucket_pairs = self._real_hashes_to_buckets.items()
 
         for full_hash, bucket in bucket_pairs:
             if bucket.is_empty and bucket.reset_at + expire_after < now:
@@ -521,12 +537,38 @@ class RESTBucketManager:
         survival = total - active - dead
 
         for full_hash in buckets_to_purge:
-            self.real_hashes_to_buckets[full_hash].close()
-            del self.real_hashes_to_buckets[full_hash]
+            self._real_hashes_to_buckets[full_hash].close()
+            del self._real_hashes_to_buckets[full_hash]
 
-        _LOGGER.log(ux.TRACE, "purged %s stale buckets, %s remain in survival, %s active", dead, survival, active)
+        if dead:
+            _LOGGER.debug("purged %s stale buckets, %s remain in survival, %s active", dead, survival, active)
+        else:
+            _LOGGER.log(ux.TRACE, "no buckets purged, %s remain in survival, %s active", survival, active)
 
-    def acquire(self, compiled_route: routes.CompiledRoute) -> RESTBucket:
+    def _purge_stale_ratelimiters(self) -> None:
+        ratelimits_to_purge: typing.List[str] = []
+
+        # Discover and purge
+        ratelimit_pairs = self._authentication_hash_to_ratelimit.items()
+
+        for full_hash, ratelimit in ratelimit_pairs:
+            if not ratelimit.throttle_task:
+                ratelimits_to_purge.append(full_hash)
+
+        dead = len(ratelimits_to_purge)
+        total = len(ratelimit_pairs)
+        active = total - dead
+
+        for full_hash in ratelimits_to_purge:
+            self._authentication_hash_to_ratelimit[full_hash].close()
+            del self._authentication_hash_to_ratelimit[full_hash]
+
+        if dead:
+            _LOGGER.debug("purged %s stale rate limiters, %s active", dead, active)
+        else:
+            _LOGGER.log(ux.TRACE, "no purged rate limiters, %s active", active)
+
+    def acquire(self, compiled_route: routes.CompiledRoute, authentication: typing.Optional[str]) -> RESTBucket:
         """Acquire a bucket for the given route.
 
         .. note::
@@ -538,31 +580,44 @@ class RESTBucketManager:
         ----------
         compiled_route : hikari.internal.routes.CompiledRoute
             The route to get the bucket for.
+        authentication : typing.Optional[str]
+            The authentication that will be used in the request.
 
         Returns
         -------
         hikari.impl.RESTBucket
             The bucket for this route.
         """
-        try:
-            bucket_hash = self.routes_to_hashes[compiled_route.route]
-            real_bucket_hash = compiled_route.create_real_bucket_hash(bucket_hash)
-        except KeyError:
-            real_bucket_hash = _create_unknown_hash(compiled_route)
+        self._check_if_alive()
+
+        authentication_hash = _create_authentication_hash(authentication)
 
         try:
-            bucket = self.real_hashes_to_buckets[real_bucket_hash]
+            bucket_hash = self._routes_to_hashes[compiled_route.route]
+            real_bucket_hash = compiled_route.create_real_bucket_hash(bucket_hash, authentication_hash)
+        except KeyError:
+            real_bucket_hash = _create_unknown_hash(compiled_route, authentication_hash)
+
+        try:
+            bucket = self._real_hashes_to_buckets[real_bucket_hash]
             _LOGGER.debug("%s is being mapped to existing bucket %s", compiled_route, real_bucket_hash)
         except KeyError:
             _LOGGER.debug("%s is being mapped to new bucket %s", compiled_route, real_bucket_hash)
-            bucket = RESTBucket(real_bucket_hash, compiled_route, self.max_rate_limit)
-            self.real_hashes_to_buckets[real_bucket_hash] = bucket
+            bucket = RESTBucket(
+                real_bucket_hash,
+                compiled_route,
+                authentication_hash,
+                self._authentication_hash_to_ratelimit,
+                self._max_rate_limit,
+            )
+            self._real_hashes_to_buckets[real_bucket_hash] = bucket
 
         return bucket
 
     def update_rate_limits(
         self,
         compiled_route: routes.CompiledRoute,
+        authentication: typing.Optional[str],
         bucket_header: str,
         remaining_header: int,
         limit_header: int,
@@ -574,6 +629,8 @@ class RESTBucketManager:
         ----------
         compiled_route : hikari.internal.routes.CompiledRoute
             The compiled route to get the bucket for.
+        authentication : typing.Optional[str]
+            The authentication that was used in the request.
         bucket_header : typing.Optional[str]
             The `X-RateLimit-Bucket` header that was provided in the response.
         remaining_header : int
@@ -583,10 +640,14 @@ class RESTBucketManager:
         reset_after : float
             The `X-RateLimit-Reset-After` header cast to a `float`.
         """
-        self.routes_to_hashes[compiled_route.route] = bucket_header
-        real_bucket_hash = compiled_route.create_real_bucket_hash(bucket_header)
+        self._check_if_alive()
 
-        if bucket := self.real_hashes_to_buckets.get(real_bucket_hash):
+        authentication_hash = _create_authentication_hash(authentication)
+
+        self._routes_to_hashes[compiled_route.route] = bucket_header
+        real_bucket_hash = compiled_route.create_real_bucket_hash(bucket_header, authentication_hash)
+
+        if bucket := self._real_hashes_to_buckets.get(real_bucket_hash):
             _LOGGER.debug(
                 "updating %s with bucket %s [reset-after:%ss, limit:%s, remaining:%s]",
                 compiled_route,
@@ -596,9 +657,9 @@ class RESTBucketManager:
                 remaining_header,
             )
         else:
-            unknown_bucket_hash = _create_unknown_hash(compiled_route)
+            unknown_bucket_hash = _create_unknown_hash(compiled_route, authentication_hash)
 
-            if bucket := self.real_hashes_to_buckets.pop(unknown_bucket_hash, None):
+            if bucket := self._real_hashes_to_buckets.pop(unknown_bucket_hash, None):
                 bucket.resolve(real_bucket_hash)
                 _LOGGER.debug(
                     "remapping %s with existing bucket %s [reset-after:%ss, limit:%s, remaining:%s]",
@@ -617,14 +678,38 @@ class RESTBucketManager:
                     limit_header,
                     remaining_header,
                 )
-                bucket = RESTBucket(real_bucket_hash, compiled_route, self.max_rate_limit)
 
-            self.real_hashes_to_buckets[real_bucket_hash] = bucket
+                bucket = RESTBucket(
+                    real_bucket_hash,
+                    compiled_route,
+                    authentication_hash,
+                    self._authentication_hash_to_ratelimit,
+                    self._max_rate_limit,
+                )
+
+            self._real_hashes_to_buckets[real_bucket_hash] = bucket
 
         reset_at_monotonic = time.monotonic() + reset_after
         bucket.update_rate_limit(remaining_header, limit_header, reset_at_monotonic)
 
-    @property
-    def is_started(self) -> bool:
-        """Return `True` if the rate limiter GC task is started."""
-        return self.gc_task is not None
+    def throttle_authentication(self, authentication: typing.Optional[str], retry_after: float) -> None:
+        """Throttle the buckets for a given authentication.
+
+        Parameters
+        ----------
+        authentication : typing.Optional[str]
+            The authentication to throttle for.
+        retry_after : float
+            How long to throttle for.
+        """
+        self._check_if_alive()
+
+        authentication_hash = _create_authentication_hash(authentication)
+
+        # We might get here before the next GC pass (highly unlikely, but better safe than sorry)
+        # In that case, just throttle the existing ManualRateLimiter
+        if not (ratelimit := self._authentication_hash_to_ratelimit.get(authentication_hash)):
+            ratelimit = rate_limits.ManualRateLimiter(authentication_hash)
+            self._authentication_hash_to_ratelimit[authentication_hash] = ratelimit
+
+        ratelimit.throttle(retry_after)

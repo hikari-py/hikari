@@ -284,7 +284,6 @@ class _GatewayTransport:
                         http_settings=http_settings,
                         raise_for_status=True,
                         trust_env=proxy_settings.trust_env,
-                        default_headers={},
                     )
                 )
 

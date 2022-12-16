@@ -315,7 +315,7 @@ class Test_LiveAttributes:
         assert attributes.is_closing is False
         assert attributes.buckets is bucket_manager.return_value
         assert attributes.client_session is create_client_session.return_value
-        assert isinstance(attributes.closed_event, asyncio.Event)
+        assert isinstance(attributes._closed_event, asyncio.Event)
         assert attributes.global_rate_limit is manual_rate_limiter.return_value
         assert attributes.tcp_connector is create_tcp_connector.return_value
 
@@ -349,7 +349,7 @@ class Test_LiveAttributes:
         assert attributes.is_closing is True
         attributes.buckets.close.assert_called_once_with()
         attributes.client_session.close.assert_awaited_once_with()
-        attributes.closed_event.set.assert_called_once_with()
+        attributes._closed_event.set.assert_called_once_with()
         attributes.global_rate_limit.close.assert_called_once_with()
         attributes.tcp_connector.close.assert_awaited_once_with()
 

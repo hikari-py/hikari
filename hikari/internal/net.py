@@ -90,13 +90,13 @@ def create_tcp_connector(
 
     Optional Parameters
     -------------------
-    dns_cache: typing.Union[None, bool, int]
+    dns_cache : typing.Union[None, bool, int]
         If `True`, DNS caching is used with a default TTL of 10 seconds.
         If `False`, DNS caching is disabled. If an `int` is
         given, then DNS caching is enabled with an explicit TTL set. If
         `None`, the cache will be enabled and never invalidate.
     limit : int
-        Number of connections to allow in the pool at a maximum.
+        Number of connections to allow in the pool at any given time.
 
     Returns
     -------
@@ -119,7 +119,6 @@ def create_client_session(
     http_settings: config.HTTPSettings,
     raise_for_status: bool,
     trust_env: bool,
-    default_headers: typing.Optional[typing.Mapping[str, str]] = None,
 ) -> aiohttp.ClientSession:
     """Generate a client session using the given settings.
 
@@ -147,8 +146,6 @@ def create_client_session(
     trust_env : bool
         `True` to trust anything in environment variables
         and the `netrc` file, `False` to ignore it.
-    default_headers : typing.Optional[typing.Mapping[str, str]]
-        If provided, the default headers to use for every request.
 
     Returns
     -------
@@ -166,6 +163,5 @@ def create_client_session(
             total=http_settings.timeouts.total,
         ),
         trust_env=trust_env,
-        headers=default_headers,
         version=aiohttp.HttpVersion11,
     )

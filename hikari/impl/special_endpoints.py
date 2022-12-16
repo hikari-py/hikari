@@ -109,8 +109,7 @@ if typing.TYPE_CHECKING:
             form_builder: typing.Optional[data_binding.URLEncodedFormBuilder] = None,
             json: typing.Union[data_binding.JSONObjectBuilder, data_binding.JSONArray, None] = None,
             reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-            no_auth: bool = False,
-            auth: typing.Optional[str] = None,
+            auth: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
         ) -> typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]:
             ...
 
