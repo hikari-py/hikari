@@ -1,5 +1,4 @@
-.. TODO: Remove once https://github.com/readthedocs/sphinx-autoapi/pull/353 is merged
-
+{# TODO: Remove once https://github.com/readthedocs/sphinx-autoapi/pull/353 is merged #}
 {% if obj.display %}
 .. py:{{ obj.type }}:: {{ obj.name }}
    {%- if obj.annotation is not none %}

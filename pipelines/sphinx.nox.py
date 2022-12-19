@@ -50,6 +50,18 @@ def sphinx(session: nox.Session):
     )
 
 
+class RequestHandler(http.server.SimpleHTTPRequestHandler):
+    def __init__(self, *args, **kwargs):
+        directory = os.path.join(config.ARTIFACT_DIRECTORY, "docs", "dirhtml")
+        super().__init__(directory=directory, *args, **kwargs)
+
+    def end_headers(self):
+        self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+        self.send_header("Pragma", "no-cache")
+        self.send_header("Expires", "0")
+        super().end_headers()
+
+
 class HTTPServerThread(threading.Thread):
     def __init__(self) -> None:
         logging.basicConfig(level="INFO")
@@ -61,9 +73,7 @@ class HTTPServerThread(threading.Thread):
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             self.host, self.port = sock.getsockname()
 
-        directory = os.path.join(config.ARTIFACT_DIRECTORY, "docs", "dirhtml")
-        handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=directory)
-        self.server = http.server.HTTPServer((self.host, self.port), handler)
+        self.server = http.server.HTTPServer((self.host, self.port), RequestHandler)
 
     def run(self) -> None:
         self.server.serve_forever()
