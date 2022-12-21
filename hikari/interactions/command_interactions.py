@@ -424,12 +424,12 @@ class CommandInteraction(
 
         Examples
         --------
-        ```py
-        async def handle_command_interaction(interaction: CommandInteraction) -> InteractionMessageBuilder:
-            yield interaction.build_deferred_response()
+        .. code-block:: python
 
-            await interaction.edit_initial_response("Pong!")
-        ```
+            async def handle_command_interaction(interaction: CommandInteraction) -> InteractionMessageBuilder:
+                yield interaction.build_deferred_response()
+
+                await interaction.edit_initial_response("Pong!")
 
         Returns
         -------
