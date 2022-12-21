@@ -1,0 +1,17 @@
+sphinx==5.3.0
+
+# Theme
+furo==2022.12.7
+
+# Autodocumentation
+#sphinx-autoapi==2.0.0
+git+https://github.com/readthedocs/sphinx-autoapi.git@94295a48cdcec75a057b50d1c3d2ced21f10f2a6
+numpydoc==1.5.0
+
+# Static files
+myst-parser==0.18.1
+
+# Misc extensions
+sphinxext.opengraph==0.7.4
+sphinx-copybutton==0.5.1
+sphinxcontrib-towncrier==0.3.1a3

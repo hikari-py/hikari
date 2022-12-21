@@ -74,7 +74,7 @@ class HikariError(RuntimeError):
 
     Any exceptions should derive from this.
 
-    !!! note
+    .. note::
         You should never initialize this exception directly.
     """
 
@@ -87,7 +87,7 @@ class HikariWarning(RuntimeWarning):
 
     Any warnings should derive from this.
 
-    !!! note
+    .. note::
         You should never initialize this warning directly.
     """
 
@@ -169,7 +169,7 @@ class ShardCloseCode(int, enums.Enum):
 
     @property
     def is_standard(self) -> bool:
-        """Return `builtins.True` if this is a standard code."""
+        """Return `True` if this is a standard code."""
         return (self.value // 1000) == 1
 
 
@@ -186,30 +186,15 @@ class GatewayServerClosedConnectionError(GatewayError):
     """An exception raised when the server closes the connection."""
 
     code: typing.Union[ShardCloseCode, int, None] = attr.field(default=None)
-    """Return the close code that was received, if there is one.
-
-    Returns
-    -------
-    typing.Union[ShardCloseCode, builtins.int, builtins.None]
-        The shard close code if there was one. Will be a `ShardCloseCode`
-        if the definition is known. Undocumented close codes may instead be
-        an `builtins.int` instead.
-
-        If no close code was received, this will be `builtins.None`.
-    """
+    """Return the close code that was received, if there is one."""
 
     can_reconnect: bool = attr.field(default=False)
-    """Return `builtins.True` if we can recover from this closure.
+    """Return `True` if we can recover from this closure.
 
-    If `builtins.True`, it will try to reconnect after this is raised rather
-    than it being propagated to the caller. If `builtins.False`, this will
+    If `True`, it will try to reconnect after this is raised rather
+    than it being propagated to the caller. If `False`, this will
     be raised, thus stopping the application unless handled explicitly by the
     user.
-
-    Returns
-    -------
-    builtins.bool
-        Whether the closure can be recovered from via a reconnect.
     """
 
     def __str__(self) -> str:
@@ -315,7 +300,7 @@ class BadRequestError(ClientHTTPResponseError):
     """Dict of top level field names to field specific error paths.
 
     For more information, this error format is loosely defined at
-    https://discord.com/developers/docs/reference#error-messages and is commonly
+    <https://discord.com/developers/docs/reference#error-messages> and is commonly
     returned for 50035 errors.
     """
 
@@ -447,15 +432,10 @@ class RateLimitTooLongError(HTTPError):
     # only.
     @property
     def remaining(self) -> typing.Literal[0]:
-        """The number of requests remaining in this window.
+        """Remaining requests in this window.
 
         This will always be `0` symbolically.
-
-        Returns
-        -------
-        builtins.int
-            The number of requests remaining. Always `0`.
-        """  # noqa: D401 - Imperative mood
+        """
         return 0
 
     def __str__(self) -> str:
@@ -495,13 +475,7 @@ class BulkDeleteError(HikariError):
 
     @property
     def percentage_completion(self) -> float:
-        """Return the percentage completion of the bulk delete before it failed.
-
-        Returns
-        -------
-        builtins.float
-            A percentage completion between 0 and 100 inclusive.
-        """
+        """Return the percentage completion of the bulk delete before it failed."""
         deleted = len(self.messages_deleted)
         total = deleted + len(self.messages_skipped)
         return 100 * deleted / total

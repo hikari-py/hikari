@@ -44,13 +44,13 @@ if typing.TYPE_CHECKING:
 @attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
 class StartingEvent(base_events.Event):
-    """Event that is triggered before the application connects to discord.
+    """Event that is triggered before the application connects to Discord.
 
     This will only fire once per `bot.run` / `bot.start`, so is suitable for
     opening database connections and other resources that need to be
     initialized within a coroutine function.
 
-    !!! warning
+    .. warning::
         The application will not proceed to connect to Discord until all event
         handlers for this event have completed/terminated. This prevents the
         risk of race conditions occurring (e.g. allowing message events
@@ -92,7 +92,7 @@ class StoppingEvent(base_events.Event):
     closing database connections and other resources that need to be
     closed within a coroutine function.
 
-    !!! warning
+    .. warning::
         The application will not proceed to disconnect from Discord until all
         event handlers for this event have completed/terminated. This
         prevents the risk of race conditions occurring from code that relies
@@ -115,14 +115,14 @@ class StoppedEvent(base_events.Event):
     closing database connections and other resources that need to be
     closed within a coroutine function.
 
-    !!! warning
+    .. warning::
         The application will not proceed to leave the `bot.run` call until all
         event handlers for this event have completed/terminated. This
         prevents the risk of race conditions occurring where a script may
         terminate the process before a callback can occur.
 
     If you want to do something when the application is preparing to shut down,
-    but _before_ any connection to discord is closed, you should consider using
+    but _before_ any connection to Discord is closed, you should consider using
     `StoppingEvent` instead.
     """
 

@@ -168,7 +168,7 @@ class TestClientCredentialsStrategy:
             client=3412321, client_secret="54123123", scopes=("applications.commands.update", "identify")
         )
         assert new_token != token
-        assert new_token == "Bearer okokok.fofofo.ddd"  # noqa S105: Possible Hardcoded password
+        assert new_token == "Bearer okokok.fofofo.ddd"
 
     @pytest.mark.asyncio()
     async def test_acquire_handles_token_being_set_before_lock_is_acquired(self, mock_token):
@@ -215,7 +215,7 @@ class TestClientCredentialsStrategy:
             client=123, client_secret="123456", scopes=("applications.commands.update", "identify")
         )
         assert new_token != token
-        assert new_token == "Bearer okokok.fofofo.ddd"  # noqa S105: Possible Hardcoded password
+        assert new_token == "Bearer okokok.fofofo.ddd"
 
     @pytest.mark.asyncio()
     async def test_acquire_uses_newly_cached_token_after_acquiring_lock(self):
@@ -749,7 +749,7 @@ class TestRESTClientImpl:
     def test__transform_emoji_to_url_format_with_id(self, rest_client):
         assert rest_client._transform_emoji_to_url_format("rooYay", 123) == "rooYay:123"
 
-    @pytest.mark.parametrize(  # noqa: PT014 - Duplicate test cases (false positive)
+    @pytest.mark.parametrize(
         "emoji",
         [
             emojis.CustomEmoji(id=123, name="rooYay", is_animated=False),
@@ -1199,8 +1199,20 @@ class TestRESTClientImpl:
         assert result.type == commands.CommandType.MESSAGE
 
     def test_build_action_row(self, rest_client):
-        with mock.patch.object(special_endpoints, "ActionRowBuilder") as action_row_builder:
+        with mock.patch.object(special_endpoints, "MessageActionRowBuilder") as action_row_builder:
             assert rest_client.build_action_row() is action_row_builder.return_value
+
+        action_row_builder.assert_called_once_with()
+
+    def test_build_message_action_row(self, rest_client):
+        with mock.patch.object(special_endpoints, "MessageActionRowBuilder") as action_row_builder:
+            assert rest_client.build_message_action_row() is action_row_builder.return_value
+
+        action_row_builder.assert_called_once_with()
+
+    def test_build_modal_action_row(self, rest_client):
+        with mock.patch.object(special_endpoints, "ModalActionRowBuilder") as action_row_builder:
+            assert rest_client.build_modal_action_row() is action_row_builder.return_value
 
         action_row_builder.assert_called_once_with()
 
@@ -1633,6 +1645,21 @@ class TestRESTClientImpl:
 
         assert result.type == 4
         assert isinstance(result, special_endpoints.InteractionMessageBuilder)
+
+    def test_interaction_modal_builder(self, rest_client):
+        result = rest_client.interaction_modal_builder("title", "custom")
+        result.add_component(
+            special_endpoints.ModalActionRowBuilder().add_text_input("idd", "labell").add_to_container()
+        )
+
+        assert result.type == 9
+        assert isinstance(result, special_endpoints.InteractionModalBuilder)
+
+    def test_interaction_modal_builder_with_components(self, rest_client):
+        result = rest_client.interaction_modal_builder("title", "custom")
+
+        assert result.type == 9
+        assert isinstance(result, special_endpoints.InteractionModalBuilder)
 
     def test_fetch_scheduled_event_users(self, rest_client: rest.RESTClientImpl):
         with mock.patch.object(special_endpoints, "ScheduledEventUserIterator") as iterator_cls:
@@ -5879,17 +5906,59 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route, no_auth=True)
 
     async def test_create_autocomplete_response(self, rest_client):
-        expected_route = routes.POST_INTERACTION_RESPONSE.compile(interaction=1235431, token="dissssnake")
+        expected_route = routes.POST_INTERACTION_RESPONSE.compile(interaction=1235431, token="snek")
         rest_client._request = mock.AsyncMock()
 
         choices = [commands.CommandChoice(name="a", value="b"), commands.CommandChoice(name="foo", value="bar")]
-        await rest_client.create_autocomplete_response(StubModel(1235431), "dissssnake", choices)
+        await rest_client.create_autocomplete_response(StubModel(1235431), "snek", choices)
 
         rest_client._request.assert_awaited_once_with(
             expected_route,
             json={"type": 8, "data": {"choices": [{"name": "a", "value": "b"}, {"name": "foo", "value": "bar"}]}},
             no_auth=True,
         )
+
+    async def test_create_modal_response(self, rest_client):
+        expected_route = routes.POST_INTERACTION_RESPONSE.compile(interaction=1235431, token="snek")
+        rest_client._request = mock.AsyncMock()
+        component = mock.Mock()
+
+        await rest_client.create_modal_response(
+            StubModel(1235431), "snek", title="title", custom_id="idd", component=component
+        )
+
+        rest_client._request.assert_awaited_once_with(
+            expected_route,
+            json={
+                "type": 9,
+                "data": {"title": "title", "custom_id": "idd", "components": [component.build.return_value]},
+            },
+            no_auth=True,
+        )
+
+    async def test_create_modal_response_with_plural_args(self, rest_client):
+        expected_route = routes.POST_INTERACTION_RESPONSE.compile(interaction=1235431, token="snek")
+        rest_client._request = mock.AsyncMock()
+        component = mock.Mock()
+
+        await rest_client.create_modal_response(
+            StubModel(1235431), "snek", title="title", custom_id="idd", components=[component]
+        )
+
+        rest_client._request.assert_awaited_once_with(
+            expected_route,
+            json={
+                "type": 9,
+                "data": {"title": "title", "custom_id": "idd", "components": [component.build.return_value]},
+            },
+            no_auth=True,
+        )
+
+    async def test_create_modal_response_when_both_component_and_components_passed(self, rest_client):
+        with pytest.raises(ValueError, match="Must specify exactly only one of 'component' or 'components'"):
+            await rest_client.create_modal_response(
+                StubModel(1235431), "snek", title="title", custom_id="idd", component="not none", components=[]
+            )
 
     async def test_fetch_scheduled_event(self, rest_client: rest.RESTClientImpl):
         expected_route = routes.GET_GUILD_SCHEDULED_EVENT.compile(guild=453123, scheduled_event=222332323)

@@ -27,7 +27,6 @@ You should never need to make any of these objects manually.
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
-    "ActionRowBuilder",
     "CommandBuilder",
     "SlashCommandBuilder",
     "ContextMenuCommandBuilder",
@@ -39,6 +38,10 @@ __all__: typing.Sequence[str] = (
     "InteractiveButtonBuilder",
     "LinkButtonBuilder",
     "SelectMenuBuilder",
+    "TextInputBuilder",
+    "InteractionModalBuilder",
+    "MessageActionRowBuilder",
+    "ModalActionRowBuilder",
 )
 
 import asyncio
@@ -48,6 +51,7 @@ import attr
 
 from hikari import channels
 from hikari import commands
+from hikari import components as component_models
 from hikari import emojis
 from hikari import errors
 from hikari import files
@@ -88,10 +92,13 @@ if typing.TYPE_CHECKING:
     _InteractionAutocompleteBuilderT = typing.TypeVar(
         "_InteractionAutocompleteBuilderT", bound="InteractionAutocompleteBuilder"
     )
-    _ActionRowBuilderT = typing.TypeVar("_ActionRowBuilderT", bound="ActionRowBuilder")
+    _InteractionModalBuilderT = typing.TypeVar("_InteractionModalBuilderT", bound="InteractionModalBuilder")
+    _MessageActionRowBuilderT = typing.TypeVar("_MessageActionRowBuilderT", bound="MessageActionRowBuilder")
+    _ModalActionRowBuilderT = typing.TypeVar("_ModalActionRowBuilderT", bound="ModalActionRowBuilder")
     _ButtonBuilderT = typing.TypeVar("_ButtonBuilderT", bound="_ButtonBuilder[typing.Any]")
     _SelectOptionBuilderT = typing.TypeVar("_SelectOptionBuilderT", bound="_SelectOptionBuilder[typing.Any]")
     _SelectMenuBuilderT = typing.TypeVar("_SelectMenuBuilderT", bound="SelectMenuBuilder[typing.Any]")
+    _TextInputBuilderT = typing.TypeVar("_TextInputBuilderT", bound="TextInputBuilder[typing.Any]")
 
     class _RequestCallSig(typing.Protocol):
         async def __call__(
@@ -137,7 +144,7 @@ class TypingIndicator(special_endpoints.TypingIndicator):
     the typing indicator once, or an async context manager to keep triggering
     the typing indicator repeatedly until the context finishes.
 
-    !!! note
+    .. note::
         This is a helper class that is used by `hikari.api.rest.RESTClient`.
         You should only ever need to use instances of this class that are
         produced by that API.
@@ -219,70 +226,63 @@ class GuildBuilder(special_endpoints.GuildBuilder):
     the logic behind creating a guild on an API level is somewhat confusing
     and detailed.
 
-    !!! note
-        This is a helper class that is used by `hikari.api.rest.RESTClient`.
-        You should only ever need to use instances of this class that are
-        produced by that API, thus, any details about the constructor are
-        omitted from the following examples for brevity.
-
-    Examples
-    --------
-    Creating an empty guild.
-
-    ```py
-    guild = await rest.guild_builder("My Server!").create()
-    ```
-
-    Creating a guild with an icon
-
-    ```py
-    from hikari.files import WebResourceStream
-
-    guild_builder = rest.guild_builder("My Server!")
-    guild_builder.icon = WebResourceStream("cat.png", "http://...")
-    guild = await guild_builder.create()
-    ```
-
-    Adding roles to your guild.
-
-    ```py
-    from hikari.permissions import Permissions
-
-    guild_builder = rest.guild_builder("My Server!")
-
-    everyone_role_id = guild_builder.add_role("@everyone")
-    admin_role_id = guild_builder.add_role("Admins", permissions=Permissions.ADMINISTRATOR)
-
-    await guild_builder.create()
-    ```
-
-    !!! warning
-        The first role must always be the `@everyone` role.
-
-    !!! note
-        If you call `add_role`, the default roles provided by discord will
+    .. note::
+        If you call `add_role`, the default roles provided by Discord will
         be created. This also applies to the `add_` functions for
         text channels/voice channels/categories.
 
-    !!! note
+    .. note::
         Functions that return a `hikari.snowflakes.Snowflake` do
         **not** provide the final ID that the object will have once the
         API call is made. The returned IDs are only able to be used to
-        re-reference particular objects while building the guild format.
-
-        This is provided to allow creation of channels within categories,
+        re-reference particular objects while building the guild format
+        to allow for the creation of channels within categories,
         and to provide permission overwrites.
 
-    Adding a text channel to your guild.
+    Examples
+    --------
+    Creating an empty guild:
 
-    ```py
-    guild_builder = rest.guild_builder("My Server!")
+    .. code-block:: python
 
-    category_id = guild_builder.add_category("My safe place")
-    channel_id = guild_builder.add_text_channel("general", parent_id=category_id)
+        guild = await rest.guild_builder("My Server!").create()
 
-    await guild_builder.create()
-    ```
+    Creating a guild with an icon:
+
+    .. code-block:: python
+
+        from hikari.files import WebResourceStream
+
+        guild_builder = rest.guild_builder("My Server!")
+        guild_builder.icon = WebResourceStream("cat.png", "http://...")
+        guild = await guild_builder.create()
+
+    Adding roles to your guild:
+
+    .. code-block:: python
+
+        from hikari.permissions import Permissions
+
+        guild_builder = rest.guild_builder("My Server!")
+
+        everyone_role_id = guild_builder.add_role("@everyone")
+        admin_role_id = guild_builder.add_role("Admins", permissions=Permissions.ADMINISTRATOR)
+
+        await guild_builder.create()
+
+    .. warning::
+        The first role must always be the `@everyone` role.
+
+    Adding a text channel to your guild:
+
+    .. code-block:: python
+
+        guild_builder = rest.guild_builder("My Server!")
+
+        category_id = guild_builder.add_category("My safe place")
+        channel_id = guild_builder.add_text_channel("general", parent_id=category_id)
+
+        await guild_builder.create()
     """
 
     # Required arguments.
@@ -696,8 +696,8 @@ class MemberIterator(iterators.BufferedLazyIterator["guilds.Member"]):
         self._route = routes.GET_GUILD_MEMBERS.compile(guild=guild)
         self._request_call = request_call
         self._entity_factory = entity_factory
-        # This starts at the default provided by discord instead of the max snowflake
-        # because that caused discord to take about 2 seconds more to return the first response.
+        # This starts at the default provided by Discord instead of the max snowflake
+        # because that caused Discord to take about 2 seconds more to return the first response.
         self._first_id = undefined.UNDEFINED
 
     async def _next_chunk(self) -> typing.Optional[typing.Generator[guilds.Member, typing.Any, None]]:
@@ -990,7 +990,7 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
 
     Other Parameters
     ----------------
-    content : hikari.undefined.UndefinedOr[builtins.str]
+    content : hikari.undefined.UndefinedOr[str]
         The content of this response, if supplied. This follows the same rules
         as "content" on create message.
     """
@@ -1183,6 +1183,55 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
             )
 
         return {"type": self._type, "data": data}, final_attachments
+
+
+@attr.define(kw_only=False, weakref_slot=False)
+class InteractionModalBuilder(special_endpoints.InteractionModalBuilder):
+    """Standard implementation of `hikari.api.special_endpoints.InteractionModalBuilder`."""
+
+    _title: str = attr.field()
+    _custom_id: str = attr.field()
+    _components: typing.List[special_endpoints.ComponentBuilder] = attr.field(factory=list)
+
+    @property
+    def type(self) -> typing.Literal[base_interactions.ResponseType.MODAL]:
+        return base_interactions.ResponseType.MODAL
+
+    @property
+    def title(self) -> str:
+        return self._title
+
+    @property
+    def custom_id(self) -> str:
+        return self._custom_id
+
+    @property
+    def components(self) -> typing.Sequence[special_endpoints.ComponentBuilder]:
+        return self._components
+
+    def set_title(self: _InteractionModalBuilderT, title: str, /) -> _InteractionModalBuilderT:
+        self._title = title
+        return self
+
+    def set_custom_id(self: _InteractionModalBuilderT, custom_id: str, /) -> _InteractionModalBuilderT:
+        self._custom_id = custom_id
+        return self
+
+    def add_component(
+        self: _InteractionModalBuilderT, component: special_endpoints.ComponentBuilder, /
+    ) -> _InteractionModalBuilderT:
+        self._components.append(component)
+        return self
+
+    def build(
+        self, entity_factory: entity_factory_.EntityFactory, /
+    ) -> typing.Tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
+        data = data_binding.JSONObjectBuilder()
+        data.put("title", self._title)
+        data.put("custom_id", self._custom_id)
+        data.put_array("components", self._components, conversion=lambda component: component.build())
+
+        return {"type": self.type, "data": data}, ()
 
 
 @attr.define(kw_only=False, weakref_slot=False)
@@ -1383,15 +1432,15 @@ def _build_emoji(
 
     Parameters
     ----------
-    emoji : typing.Union[hikari.snowflakes.Snowflakeish, hikari.emojis.Emoji, builtins.str, hikari.undefined.UndefinedType]
+    emoji : typing.Union[hikari.snowflakes.Snowflakeish, hikari.emojis.Emoji, str, hikari.undefined.UndefinedType]
         The ID, object or raw string of an emoji to set on a component.
 
     Returns
     -------
-    typing.Tuple[hikari.undefined.UndefinedOr[builtins.str], hikari.undefined.UndefinedOr[builtins.str]]
+    typing.Tuple[hikari.undefined.UndefinedOr[str], hikari.undefined.UndefinedOr[str]]
         A union of the custom emoji's id if defined (index 0) or the unicode
         emoji's string representation (index 1).
-    """  # noqa E501 - Line too long
+    """
     # Since these builder classes may be re-used, this method should be called when the builder is being constructed.
     if emoji is not undefined.UNDEFINED:
         if isinstance(emoji, (int, emojis.CustomEmoji)):
@@ -1406,7 +1455,7 @@ def _build_emoji(
 @attr.define(kw_only=True, weakref_slot=False)
 class _ButtonBuilder(special_endpoints.ButtonBuilder[_ContainerProtoT]):
     _container: _ContainerProtoT = attr.field()
-    _style: typing.Union[int, messages.ButtonStyle] = attr.field()
+    _style: typing.Union[int, component_models.ButtonStyle] = attr.field()
     _custom_id: undefined.UndefinedOr[str] = attr.field(default=undefined.UNDEFINED)
     _url: undefined.UndefinedOr[str] = attr.field(default=undefined.UNDEFINED)
     _emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType] = attr.field(
@@ -1418,7 +1467,7 @@ class _ButtonBuilder(special_endpoints.ButtonBuilder[_ContainerProtoT]):
     _is_disabled: bool = attr.field(default=False)
 
     @property
-    def style(self) -> typing.Union[int, messages.ButtonStyle]:
+    def style(self) -> typing.Union[int, component_models.ButtonStyle]:
         return self._style
 
     @property
@@ -1457,7 +1506,7 @@ class _ButtonBuilder(special_endpoints.ButtonBuilder[_ContainerProtoT]):
     def build(self) -> typing.MutableMapping[str, typing.Any]:
         data = data_binding.JSONObjectBuilder()
 
-        data["type"] = messages.ComponentType.BUTTON
+        data["type"] = component_models.ComponentType.BUTTON
         data["style"] = self._style
         data["disabled"] = self._is_disabled
         data.put("label", self._label)
@@ -1646,7 +1695,7 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder[_ContainerProtoT]):
     def build(self) -> typing.MutableMapping[str, typing.Any]:
         data = data_binding.JSONObjectBuilder()
 
-        data["type"] = messages.ComponentType.SELECT_MENU
+        data["type"] = component_models.ComponentType.SELECT_MENU
         data["custom_id"] = self._custom_id
         data["options"] = [option.build() for option in self._options]
         data.put("placeholder", self._placeholder)
@@ -1656,18 +1705,120 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder[_ContainerProtoT]):
         return data
 
 
+@attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
-class ActionRowBuilder(special_endpoints.ActionRowBuilder):
+class TextInputBuilder(special_endpoints.TextInputBuilder[_ContainerProtoT]):
+    """Standard implementation of `hikari.api.special_endpoints.TextInputBuilder`."""
+
+    _container: _ContainerProtoT = attr.field()
+    _custom_id: str = attr.field()
+    _label: str = attr.field()
+
+    _style: component_models.TextInputStyle = attr.field(default=component_models.TextInputStyle.SHORT)
+    _placeholder: undefined.UndefinedOr[str] = attr.field(default=undefined.UNDEFINED, kw_only=True)
+    _value: undefined.UndefinedOr[str] = attr.field(default=undefined.UNDEFINED, kw_only=True)
+    _required: undefined.UndefinedOr[bool] = attr.field(default=undefined.UNDEFINED, kw_only=True)
+    _min_length: undefined.UndefinedOr[int] = attr.field(default=undefined.UNDEFINED, kw_only=True)
+    _max_length: undefined.UndefinedOr[int] = attr.field(default=undefined.UNDEFINED, kw_only=True)
+
+    @property
+    def custom_id(self) -> str:
+        return self._custom_id
+
+    @property
+    def label(self) -> str:
+        return self._label
+
+    @property
+    def style(self) -> component_models.TextInputStyle:
+        return self._style
+
+    @property
+    def placeholder(self) -> undefined.UndefinedOr[str]:
+        return self._placeholder
+
+    @property
+    def value(self) -> undefined.UndefinedOr[str]:
+        return self._value
+
+    @property
+    def required(self) -> undefined.UndefinedOr[bool]:
+        return self._required
+
+    @property
+    def min_length(self) -> undefined.UndefinedOr[int]:
+        return self._min_length
+
+    @property
+    def max_length(self) -> undefined.UndefinedOr[int]:
+        return self._max_length
+
+    def set_style(
+        self: _TextInputBuilderT, style: typing.Union[component_models.TextInputStyle, int], /
+    ) -> _TextInputBuilderT:
+        self._style = component_models.TextInputStyle(style)
+        return self
+
+    def set_custom_id(self: _TextInputBuilderT, custom_id: str, /) -> _TextInputBuilderT:
+        self._custom_id = custom_id
+        return self
+
+    def set_label(self: _TextInputBuilderT, label: str, /) -> _TextInputBuilderT:
+        self._label = label
+        return self
+
+    def set_placeholder(self: _TextInputBuilderT, placeholder: str, /) -> _TextInputBuilderT:
+        self._placeholder = placeholder
+        return self
+
+    def set_value(self: _TextInputBuilderT, value: str, /) -> _TextInputBuilderT:
+        self._value = value
+        return self
+
+    def set_required(self: _TextInputBuilderT, required: bool, /) -> _TextInputBuilderT:
+        self._required = required
+        return self
+
+    def set_min_length(self: _TextInputBuilderT, min_length: int, /) -> _TextInputBuilderT:
+        self._min_length = min_length
+        return self
+
+    def set_max_length(self: _TextInputBuilderT, max_length: int, /) -> _TextInputBuilderT:
+        self._max_length = max_length
+        return self
+
+    def add_to_container(self) -> _ContainerProtoT:
+        self._container.add_component(self)
+        return self._container
+
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        data = data_binding.JSONObjectBuilder()
+
+        data["type"] = component_models.ComponentType.TEXT_INPUT
+        data["style"] = self._style
+        data["custom_id"] = self._custom_id
+        data["label"] = self._label
+        data.put("placeholder", self._placeholder)
+        data.put("value", self._value)
+        data.put("required", self._required)
+        data.put("min_length", self._min_length)
+        data.put("max_length", self._max_length)
+
+        return data
+
+
+@attr.define(kw_only=True, weakref_slot=False)
+class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
     """Standard implementation of `hikari.api.special_endpoints.ActionRowBuilder`."""
 
     _components: typing.List[special_endpoints.ComponentBuilder] = attr.field(factory=list)
-    _stored_type: typing.Optional[messages.ComponentType] = attr.field(default=None)
+    _stored_type: typing.Optional[component_models.ComponentType] = attr.field(default=None, init=False)
 
     @property
     def components(self) -> typing.Sequence[special_endpoints.ComponentBuilder]:
         return self._components.copy()
 
-    def _assert_can_add_type(self, type_: messages.ComponentType, /) -> None:
+    def _assert_can_add_type(self, type_: component_models.ComponentType, /) -> None:
         if self._stored_type is not None and self._stored_type != type_:
             raise ValueError(
                 f"{type_} component type cannot be added to a container which already holds {self._stored_type}"
@@ -1675,54 +1826,102 @@ class ActionRowBuilder(special_endpoints.ActionRowBuilder):
 
         self._stored_type = type_
 
-    def add_component(self: _ActionRowBuilderT, component: special_endpoints.ComponentBuilder, /) -> _ActionRowBuilderT:
+    def add_component(
+        self: _MessageActionRowBuilderT, component: special_endpoints.ComponentBuilder, /
+    ) -> _MessageActionRowBuilderT:
         self._components.append(component)
         return self
 
     @typing.overload
     def add_button(
-        self: _ActionRowBuilderT, style: messages.InteractiveButtonTypesT, custom_id: str, /
-    ) -> special_endpoints.InteractiveButtonBuilder[_ActionRowBuilderT]:
+        self: _MessageActionRowBuilderT, style: component_models.InteractiveButtonTypesT, custom_id: str, /
+    ) -> special_endpoints.InteractiveButtonBuilder[_MessageActionRowBuilderT]:
         ...
 
     @typing.overload
     def add_button(
-        self: _ActionRowBuilderT,
-        style: typing.Literal[messages.ButtonStyle.LINK, 5],
+        self: _MessageActionRowBuilderT,
+        style: typing.Literal[component_models.ButtonStyle.LINK, 5],
         url: str,
         /,
-    ) -> special_endpoints.LinkButtonBuilder[_ActionRowBuilderT]:
+    ) -> special_endpoints.LinkButtonBuilder[_MessageActionRowBuilderT]:
         ...
 
     @typing.overload
     def add_button(
-        self: _ActionRowBuilderT, style: typing.Union[int, messages.ButtonStyle], url_or_custom_id: str, /
+        self: _MessageActionRowBuilderT,
+        style: typing.Union[int, component_models.ButtonStyle],
+        url_or_custom_id: str,
+        /,
     ) -> typing.Union[
-        special_endpoints.LinkButtonBuilder[_ActionRowBuilderT],
-        special_endpoints.InteractiveButtonBuilder[_ActionRowBuilderT],
+        special_endpoints.LinkButtonBuilder[_MessageActionRowBuilderT],
+        special_endpoints.InteractiveButtonBuilder[_MessageActionRowBuilderT],
     ]:
         ...
 
     def add_button(
-        self: _ActionRowBuilderT, style: typing.Union[int, messages.ButtonStyle], url_or_custom_id: str, /
+        self: _MessageActionRowBuilderT,
+        style: typing.Union[int, component_models.ButtonStyle],
+        url_or_custom_id: str,
+        /,
     ) -> typing.Union[
-        special_endpoints.LinkButtonBuilder[_ActionRowBuilderT],
-        special_endpoints.InteractiveButtonBuilder[_ActionRowBuilderT],
+        special_endpoints.LinkButtonBuilder[_MessageActionRowBuilderT],
+        special_endpoints.InteractiveButtonBuilder[_MessageActionRowBuilderT],
     ]:
-        self._assert_can_add_type(messages.ComponentType.BUTTON)
-        if style in messages.InteractiveButtonTypes:
+        self._assert_can_add_type(component_models.ComponentType.BUTTON)
+        if style in component_models.InteractiveButtonTypes:
             return InteractiveButtonBuilder(container=self, style=style, custom_id=url_or_custom_id)
 
         return LinkButtonBuilder(container=self, style=style, url=url_or_custom_id)
 
     def add_select_menu(
-        self: _ActionRowBuilderT, custom_id: str, /
-    ) -> special_endpoints.SelectMenuBuilder[_ActionRowBuilderT]:
-        self._assert_can_add_type(messages.ComponentType.SELECT_MENU)
+        self: _MessageActionRowBuilderT, custom_id: str, /
+    ) -> special_endpoints.SelectMenuBuilder[_MessageActionRowBuilderT]:
+        self._assert_can_add_type(component_models.ComponentType.SELECT_MENU)
         return SelectMenuBuilder(container=self, custom_id=custom_id)
 
     def build(self) -> typing.MutableMapping[str, typing.Any]:
         return {
-            "type": messages.ComponentType.ACTION_ROW,
+            "type": component_models.ComponentType.ACTION_ROW,
+            "components": [component.build() for component in self._components],
+        }
+
+
+@attr.define(kw_only=True, weakref_slot=False)
+class ModalActionRowBuilder(special_endpoints.ModalActionRowBuilder):
+    """Standard implementation of `hikari.api.special_endpoints.ActionRowBuilder`."""
+
+    _components: typing.List[special_endpoints.ComponentBuilder] = attr.field(factory=list)
+    _stored_type: typing.Optional[component_models.ComponentType] = attr.field(default=None)
+
+    @property
+    def components(self) -> typing.Sequence[special_endpoints.ComponentBuilder]:
+        return self._components.copy()
+
+    def _assert_can_add_type(self, type_: component_models.ComponentType, /) -> None:
+        if self._stored_type is not None and self._stored_type != type_:
+            raise ValueError(
+                f"{type_} component type cannot be added to a container which already holds {self._stored_type}"
+            )
+
+        self._stored_type = type_
+
+    def add_component(
+        self: _ModalActionRowBuilderT, component: special_endpoints.ComponentBuilder, /
+    ) -> _ModalActionRowBuilderT:
+        self._components.append(component)
+        return self
+
+    def add_text_input(
+        self: _ModalActionRowBuilderT,
+        custom_id: str,
+        label: str,
+    ) -> special_endpoints.TextInputBuilder[_ModalActionRowBuilderT]:
+        self._assert_can_add_type(component_models.ComponentType.TEXT_INPUT)
+        return TextInputBuilder(container=self, custom_id=custom_id, label=label)
+
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        return {
+            "type": component_models.ComponentType.ACTION_ROW,
             "components": [component.build() for component in self._components],
         }

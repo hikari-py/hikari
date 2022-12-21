@@ -34,6 +34,7 @@ from hikari import traits
 from hikari.interactions import base_interactions
 
 if typing.TYPE_CHECKING:
+    from hikari import components as components_
     from hikari import guilds
     from hikari import locales
     from hikari import messages
@@ -83,16 +84,19 @@ The following types are valid for this:
 
 
 @attr.define(hash=True, weakref_slot=False)
-class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentResponseTypesT]):
+class ComponentInteraction(
+    base_interactions.MessageResponseMixin[ComponentResponseTypesT],
+    base_interactions.ModalResponseMixin,
+):
     """Represents a component interaction on Discord."""
 
     channel_id: snowflakes.Snowflake = attr.field(eq=False)
     """ID of the channel this interaction was triggered in."""
 
-    component_type: typing.Union[messages.ComponentType, int] = attr.field(eq=False)
+    component_type: typing.Union[components_.ComponentType, int] = attr.field(eq=False)
     """The type of component which triggers this interaction.
 
-    !!! note
+    .. note::
         This will never be `ButtonStyle.LINK` as link buttons don't trigger
         interactions.
     """
@@ -106,15 +110,15 @@ class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentRespo
     guild_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False)
     """ID of the guild this interaction was triggered in.
 
-    This will be `builtins.None` for component interactions triggered in DMs.
+    This will be `None` for component interactions triggered in DMs.
     """
 
     guild_locale: typing.Optional[typing.Union[str, locales.Locale]] = attr.field(eq=False, hash=False, repr=True)
     """The preferred language of the guild this component interaction was triggered in.
 
-    This will be `builtins.None` for component interactions triggered in DMs.
+    This will be `None` for component interactions triggered in DMs.
 
-    !!! note
+    .. note::
         This value can usually only be changed if `COMMUNITY` is in `hikari.guilds.Guild.features`
         for the guild and will otherwise default to `en-US`.
     """
@@ -125,9 +129,9 @@ class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentRespo
     member: typing.Optional[base_interactions.InteractionMember] = attr.field(eq=False, hash=False, repr=True)
     """The member who triggered this interaction.
 
-    This will be `builtins.None` for interactions triggered in DMs.
+    This will be `None` for interactions triggered in DMs.
 
-    !!! note
+    .. note::
         This member object comes with the extra field `permissions` which
         contains the member's permissions in the current channel.
     """
@@ -144,14 +148,14 @@ class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentRespo
     def build_response(self, type_: _ImmediateTypesT, /) -> special_endpoints.InteractionMessageBuilder:
         """Get a message response builder for use in the REST server flow.
 
-        !!! note
+        .. note::
             For interactions received over the gateway
             `ComponentInteraction.create_initial_response` should be used to set
             the interaction response message.
 
         Parameters
         ----------
-        type_ : typing.Union[builtins.int, hikari.interactions.base_interactions.ResponseType]
+        type_ : typing.Union[int, hikari.interactions.base_interactions.ResponseType]
             The type of immediate response this should be.
 
             This may be one of the following:
@@ -161,15 +165,15 @@ class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentRespo
 
         Examples
         --------
-        ```py
-        async def handle_component_interaction(interaction: ComponentInteraction) -> InteractionMessageBuilder:
-            return (
-                interaction
-                .build_response(ResponseType.MESSAGE_UPDATE)
-                .add_embed(Embed(description="Hi there"))
-                .set_content("Konnichiwa")
-            )
-        ```
+        .. code-block:: python
+
+            async def handle_component_interaction(interaction: ComponentInteraction) -> InteractionMessageBuilder:
+                return (
+                    interaction
+                    .build_response(ResponseType.MESSAGE_UPDATE)
+                    .add_embed(Embed(description="Hi there"))
+                    .set_content("Konnichiwa")
+                )
 
         Returns
         -------
@@ -184,19 +188,19 @@ class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentRespo
     def build_deferred_response(self, type_: _DeferredTypesT, /) -> special_endpoints.InteractionDeferredBuilder:
         """Get a deferred message response builder for use in the REST server flow.
 
-        !!! note
+        .. note::
             For interactions received over the gateway
             `ComponentInteraction.create_initial_response` should be used to set
             the interaction response message.
 
-        !!! note
+        .. note::
             Unlike `hikari.api.special_endpoints.InteractionMessageBuilder`,
             the result of this call can be returned as is without any modifications
             being made to it.
 
         Parameters
         ----------
-        type_ : typing.Union[builtins.int, hikari.interactions.base_interactions.ResponseType]
+        type_ : typing.Union[int, hikari.interactions.base_interactions.ResponseType]
             The type of deferred response this should be.
 
             This may be one of the following:
@@ -254,15 +258,15 @@ class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentRespo
     def get_channel(self) -> typing.Union[channels.GuildTextChannel, channels.GuildNewsChannel, None]:
         """Get the guild channel this interaction occurred in.
 
-        !!! note
-            This will always return `builtins.None` for interactions triggered
+        .. note::
+            This will always return `None` for interactions triggered
             in a DM channel.
 
         Returns
         -------
-        typing.Union[hikari.channels.GuildTextChannel, hikari.channels.GuildNewsChannel, builtins.None]
+        typing.Union[hikari.channels.GuildTextChannel, hikari.channels.GuildNewsChannel, None]
             The object of the guild channel that was found in the cache or
-            `builtins.None`.
+            `None`.
         """
         if isinstance(self.app, traits.CacheAware):
             channel = self.app.cache.get_guild_channel(self.channel_id)
@@ -277,7 +281,7 @@ class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentRespo
         Returns
         -------
         typing.Optional[hikari.guilds.RESTGuild]
-            Object of the guild this interaction happened in or `builtins.None`
+            Object of the guild this interaction happened in or `None`
             if this occurred within a DM channel.
 
         Raises
@@ -308,59 +312,14 @@ class ComponentInteraction(base_interactions.MessageResponseMixin[ComponentRespo
         return await self.app.rest.fetch_guild(self.guild_id)
 
     def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
-        """Get the object of this interaction's guild guild from the cache.
+        """Get the object of this interaction's guild from the cache.
 
         Returns
         -------
         typing.Optional[hikari.guilds.GatewayGuild]
-            The object of the guild if found, else `builtins.None`.
+            The object of the guild if found, else `None`.
         """
         if self.guild_id and isinstance(self.app, traits.CacheAware):
             return self.app.cache.get_guild(self.guild_id)
-
-        return None
-
-    async def fetch_parent_message(self) -> messages.Message:
-        """Fetch the message which this interaction was triggered on.
-
-        Returns
-        -------
-        hikari.messages.Message
-            The requested message.
-
-        Raises
-        ------
-        builtins.ValueError
-            If `token` is not available.
-        hikari.errors.UnauthorizedError
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.NotFoundError
-            If the webhook is not found or the webhook's message wasn't found.
-        hikari.errors.RateLimitTooLongError
-            Raised in the event that a rate limit occurs that is
-            longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
-        hikari.errors.InternalServerError
-            If an internal error occurs on Discord while handling the request.
-        """
-        return await self.fetch_message(self.message.id)
-
-    def get_parent_message(self) -> typing.Optional[messages.PartialMessage]:
-        """Get the message which this interaction was triggered on from the cache.
-
-        Returns
-        -------
-        typing.Optional[hikari.messages.Message]
-            The object of the message found in the cache or `builtins.None`.
-        """
-        if isinstance(self.app, traits.CacheAware):
-            return self.app.cache.get_message(self.message.id)
 
         return None
