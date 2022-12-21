@@ -231,7 +231,7 @@ class EmbedField:
     value: str = attr.field(repr=True)
     """The value of the field."""
 
-    _inline: bool = attr.field(default=False, repr=True)
+    _inline: bool = attr.field(alias="inline", default=False, repr=True)
 
     # Use a property since we then keep the consistency of not using `is_`
     # in the constructor for `_inline`.

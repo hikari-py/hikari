@@ -771,8 +771,8 @@ class ThreadedFileReader(AsyncReader):
     do not need to be pickled to be communicated.
     """
 
-    _executor: typing.Optional[concurrent.futures.ThreadPoolExecutor] = attr.field()
-    _pointer: typing.BinaryIO = attr.field()
+    _executor: typing.Optional[concurrent.futures.ThreadPoolExecutor] = attr.field(alias="executor")
+    _pointer: typing.BinaryIO = attr.field(alias="pointer")
 
     async def __aiter__(self) -> typing.AsyncGenerator[typing.Any, bytes]:
         loop = asyncio.get_running_loop()
