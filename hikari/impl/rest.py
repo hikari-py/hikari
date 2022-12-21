@@ -1472,9 +1472,10 @@ class RESTClientImpl(rest_api.RESTClient):
 
         iterator: iterators.LazyIterator[snowflakes.SnowflakeishOr[messages_.PartialMessage]]
         if isinstance(messages, typing.AsyncIterable):
-            iterator = iterators.NOOPLazyIterator(messages)
             if other_messages:
                 raise TypeError("Cannot use *args with an async iterable.")
+
+            iterator = iterators.NOOPLazyIterator(messages)
         else:
             messages = tuple(messages) if isinstance(messages, typing.Iterable) else (messages,)
             iterator = iterators.FlatLazyIterator(messages + other_messages)
@@ -1493,7 +1494,7 @@ class RESTClientImpl(rest_api.RESTClient):
             # This kind of defeats the point of asynchronously gathering any of these
             # in the first place really. To save clogging up the event loop
             # (albeit at a cost of maybe a couple-dozen milliseconds per call),
-            # I am just gonna invoke these sequentially instead.
+            # we will invoke them sequentially instead.
             try:
                 if len(chunk) == 1:
                     message = chunk[0]
@@ -1514,11 +1515,7 @@ class RESTClientImpl(rest_api.RESTClient):
                     deleted += chunk
 
             except Exception as ex:
-                skipped = list(chunk)
-                if isinstance(iterator, iterators.FlatLazyIterator):
-                    skipped += await iterator
-
-                raise errors.BulkDeleteError(deleted, skipped) from ex
+                raise errors.BulkDeleteError(deleted) from ex
 
     @staticmethod
     def _transform_emoji_to_url_format(

@@ -228,13 +228,10 @@ class TestRateLimitTooLongError:
 class TestBulkDeleteError:
     @pytest.fixture()
     def error(self):
-        return errors.BulkDeleteError(range(10), range(10))
-
-    def test_percentage_completion_property(self, error):
-        assert error.percentage_completion == 50
+        return errors.BulkDeleteError(range(10))
 
     def test_str(self, error):
-        assert str(error) == "Error encountered when bulk deleting messages (10/20 messages deleted)"
+        assert str(error) == "Error encountered when bulk deleting messages (10 messages deleted)"
 
 
 class TestMissingIntentError:
