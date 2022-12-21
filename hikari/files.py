@@ -264,7 +264,7 @@ def guess_file_extension(mimetype: str) -> typing.Optional[str]:
     Returns
     -------
     typing.Optional[str]
-        The file extension, prepended with a `.`. If no match was found,
+        The file extension, prepended with a ``.``. If no match was found,
         return `None`.
     """
     return mimetypes.guess_extension(mimetype)
