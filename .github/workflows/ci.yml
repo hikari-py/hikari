@@ -4,6 +4,10 @@ on:
   push:
   pull_request:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     strategy:
@@ -11,22 +15,22 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: [3.8, 3.9, "3.10"]
+        python-version: [3.8, 3.9, "3.10", 3.11]
 
     runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Setup python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Test Installation
         run: |
-          pip install wheel
+          pip install -r dev-requirements/build.txt
 
           pip install .
           pip uninstall -y hikari
@@ -36,10 +40,11 @@ jobs:
 
       - name: Run tests
         run: |
-          pip install nox
+          pip install -r dev-requirements/nox.txt
           nox -s pytest
           nox -s pytest-all-features -- --cov-append
 
+          python scripts/normalize_coverage.py
           mv .coverage .coverage.${{ matrix.os }}.${{ matrix.python-version }}
 
       - name: Upload coverage
@@ -56,13 +61,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Setup python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
-          python-version: 3.8
+          python-version: "3.10"
 
       - name: Download coverage
         uses: actions/download-artifact@v3
@@ -71,12 +76,13 @@ jobs:
 
       - name: Combine coverage
         run: |
-          pip install -r dev-requirements.txt
+          pip install -r dev-requirements/coverage.txt
           coverage combine
-          coverage xml -i
+          coverage xml
+          coverage report
 
       - name: Upload coverage to codeclimate
-        uses: paambaati/codeclimate-action@v3.0.0
+        uses: paambaati/codeclimate-action@v3.2.0
         env:
           CC_TEST_REPORTER_ID: d40e64ea0ff74713f79365fea4378ab51a2141ad4fcf0fb118496bbf560d4192
         with:
@@ -86,94 +92,119 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Setup python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: 3.8
 
       - name: Check stubs
         if: always()
         run: |
-          pip install nox
+          pip install -r dev-requirements/nox.txt
           nox -s generate-stubs
           if [ "$(git status --short)" ]; then
             echo "Stubs were not updated accordingly to the changes. Please run 'nox -s generate-stubs' and commit the changes to fix this."
             exit 1
           fi
 
-      - name: Linting
+      - name: Safety
         if: always()
         run: |
-          nox -s safety mypy verify-types flake8 slotscheck codespell check-trailing-whitespaces
+          nox -s safety
+
+      - name: Mypy
+        if: always()
+        run: |
+          nox -s mypy
+
+      - name: Verify types
+        if: always()
+        run: |
+          nox -s verify-types
+
+      - name: Flake8
+        if: always()
+        run: |
+          nox -s flake8
+
+      - name: Slotscheck
+        if: always()
+        run: |
+          nox -s slotscheck
+
+      - name: Codespell
+        if: always()
+        run: |
+          nox -s codespell
+
+      - name: Check trailing whitespaces
+        if: always()
+        run: |
+          nox -s check-trailing-whitespaces
 
   twemoji:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Setup python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: 3.8
 
       - name: Test twemoji mapping
         run: |
-          pip install nox
+          pip install -r dev-requirements/nox.txt
           nox -s twemoji-test
 
-  pages:
+  docs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Setup python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: 3.8
 
       - name: Setup node
         uses: actions/setup-node@v3
 
-      - name: Build pages
+      - name: Build documentation
         run: |
-          pip install nox
-          nox -s pages
+          pip install -r dev-requirements/nox.txt
+          nox -s sphinx
 
       - name: Upload artifacts
-        if: github.event_name != 'release'
+        if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v3
         with:
-          name: pages
-          path: public
+          name: docs
+          path: public/docs
           retention-days: 2
           if-no-files-found: error
 
-  # Allows us to add this as a required check in Github branch rules, as all the
-  # other jobs are subject to change
+  # Allows us to add this as a required check in Github branch rules, as all the other jobs are subject to change
   ci-done:
-    needs: [upload-coverage, linting, twemoji, pages]
-    if: always()
+    needs: [upload-coverage, linting, twemoji, docs]
+    if: always() && !cancelled()
 
     runs-on: ubuntu-latest
 
     steps:
-      - name: Mark status based on past job status
+      - name: Set status based on required jobs
         env:
-          # All new need jobs need to be added here with the prefix "RESULT_"
-          RESULT_UPLOAD_COVERAGE: ${{ needs.upload-coverage.result }}
-          RESULT_LINTING: ${{ needs.linting.result }}
-          RESULT_TWEMOJI: ${{ needs.twemoji.result }}
-          RESULT_PAGES: ${{ needs.pages.result }}
+          RESULTS: ${{ join(needs.*.result, ' ') }}
         run: |
-          if [ "$(env | grep 'RESULT_')" = "$(env | grep "RESULT_" | grep '=success')" ]; then
-            exit 0
-          else
-            exit 1
-          fi
+          for result in $RESULTS; do
+            if [ "$result" != "success" ]; then
+              exit 1
+            fi
+          done

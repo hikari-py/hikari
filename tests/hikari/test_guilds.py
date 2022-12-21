@@ -452,29 +452,6 @@ class TestMember:
 
         assert edit == model.app.rest.edit_member.return_value
 
-    @pytest.mark.asyncio()
-    async def test_edit_when_deprecated_nick_field(self, model):
-        model.app.rest.edit_member = mock.AsyncMock()
-
-        with pytest.warns(
-            DeprecationWarning,
-            match="'nick' is deprecated and will be removed in a following version. You can use 'nickname' instead.",
-        ):
-            edit = await model.edit(nick="meow")
-
-        model.app.rest.edit_member.assert_awaited_once_with(
-            456,
-            123,
-            nickname="meow",
-            roles=undefined.UNDEFINED,
-            mute=undefined.UNDEFINED,
-            deaf=undefined.UNDEFINED,
-            voice_channel=undefined.UNDEFINED,
-            communication_disabled_until=undefined.UNDEFINED,
-            reason=undefined.UNDEFINED,
-        )
-        assert edit == model.app.rest.edit_member.return_value
-
     def test_default_avatar_url_property(self, model, mock_user):
         assert model.default_avatar_url is mock_user.default_avatar_url
 
@@ -485,11 +462,7 @@ class TestMember:
         model.nickname = None
         assert model.display_name is mock_user.username
 
-    def test_mention_property_when_nickname(self, model):
-        assert model.mention == "<@!123>"
-
-    def test_mention_property_when_no_nickname(self, model, mock_user):
-        model.nickname = None
+    def test_mention_property(self, model, mock_user):
         assert model.mention == mock_user.mention
 
     def test_get_guild(self, model):
@@ -1057,6 +1030,22 @@ class TestGuild:
         model.app = object()
         assert model.get_emojis() == {}
 
+    def test_get_sticker(self, model):
+        assert model.get_sticker(456) is model.app.cache.get_sticker.return_value
+        model.app.cache.get_sticker.assert_called_once_with(456)
+
+    def test_get_sticker_when_no_cache_trait(self, model):
+        model.app = object()
+        assert model.get_sticker(1234) is None
+
+    def test_get_stickers(self, model):
+        assert model.get_stickers() is model.app.cache.get_stickers_view_for_guild.return_value
+        model.app.cache.get_stickers_view_for_guild.assert_called_once_with(123)
+
+    def test_get_stickers_when_no_cache_trait(self, model):
+        model.app = object()
+        assert model.get_stickers() == {}
+
     def test_roles(self, model):
         assert model.get_roles() is model.app.cache.get_roles_view_for_guild.return_value
         model.app.cache.get_roles_view_for_guild.assert_called_once_with(123)
@@ -1353,6 +1342,7 @@ class TestRestGuild:
             widget_channel_id=None,
             system_channel_flags=guilds.GuildSystemChannelFlag.SUPPRESS_PREMIUM_SUBSCRIPTION,
             emojis={},
+            stickers={},
             roles={},
             approximate_active_member_count=1000,
             approximate_member_count=100,

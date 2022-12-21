@@ -72,7 +72,7 @@ class ExtendedMutableMapping(typing.MutableMapping[KeyT, ValueT], abc.ABC):
         This may look like calling `dict.copy` and wrapping the result in a
         mapped collection.
 
-        !!! note
+        .. note::
             Any removal policy on this mapped collection will be copied over.
 
         Returns
@@ -89,7 +89,7 @@ class ExtendedMutableMapping(typing.MutableMapping[KeyT, ValueT], abc.ABC):
         around how the data is being stored to allow for a more efficient copy.
         This may look like calling `dict.copy`.
 
-        !!! note
+        .. note::
             Unlike `ExtendedMutableMapping.copy`, this should return a pure
             mapping with no removal policy at all.
 
@@ -142,18 +142,15 @@ class LimitedCapacityCacheMap(ExtendedMutableMapping[KeyT, ValueT]):
 
     Parameters
     ----------
+    source : typing.Optional[typing.Dict[KeyT, ValueT]]
+        A source dictionary of keys to values to create this from.
     limit : int
         The limit for how many objects should be stored by this mapping before
         it starts removing the oldest entries.
-
-    Other Parameters
-    ----------------
-    source : typing.Optional[typing.Dict[KeyT, ValueT]]
-        A source dictionary of keys to values to create this from.
     on_expire : typing.Optional[typing.Callable[[ValueT], None]]
         A function to call each time an item is garbage collected from this
         map. This should take one positional argument of the same type stored
-        in this mapping as the value and should return `builtins.None.
+        in this mapping as the value and should return `None`.
 
         This will always be called after the entry has been removed.
     """
@@ -231,20 +228,20 @@ class SnowflakeSet(typing.MutableSet[snowflakes.Snowflake]):
     $$ \mathcal{O} \left( \log n \right) $$ and best case will be
     $$ \Omega \left\( k \right) $$
 
-    !!! warning
+    .. warning::
         This is not thread-safe and must not be iterated across whilst being
         concurrently modified.
 
     Other Parameters
     ----------------
-    *ids : builtins.int
+    *ids : int
         The IDs to fill this table with.
     """
 
     __slots__: typing.Sequence[str] = ("_ids",)
 
     def __init__(self, *ids: int) -> None:
-        self._ids: array.array[int] = array.array(_LONG_LONG_UNSIGNED)
+        self._ids: typing.MutableSequence[int] = array.array(_LONG_LONG_UNSIGNED)
 
         if ids:
             self.add_all(ids)

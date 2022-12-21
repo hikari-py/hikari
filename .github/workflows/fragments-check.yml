@@ -6,13 +6,17 @@ on:
     branches:
       - master
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   check-fragment-added:
     if: github.event.pull_request.user.type != 'Bot' && !contains(github.event.pull_request.labels.*.name, 'skip-fragment-check')
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v3
         with:
           # `towncrier check` runs `git diff --name-only origin/main...`, which
@@ -20,13 +24,13 @@ jobs:
           fetch-depth: 0
 
       - name: Setup python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: 3.8
 
       - name: Check if changelog fragment was added
         run: |
-          pip install towncrier
+          pip install -r dev-requirements/towncrier.txt
 
           if ! towncrier check --compare-with origin/${{ github.base_ref }}; then
             echo "----------------------------------------------------"

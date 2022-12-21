@@ -26,8 +26,6 @@ from __future__ import annotations
 
 __all__: typing.Sequence[str] = ("Permissions",)
 
-import functools
-import operator
 import typing
 
 from hikari.internal import enums
@@ -37,52 +35,51 @@ from hikari.internal import enums
 class Permissions(enums.Flag):
     """Represents the permissions available in a given channel or guild.
 
-    This enum is an `enum.IntFlag`. This means that you can **combine multiple
-    permissions together** into one value using the bitwise-OR operator (`|`).
+    This enum is an `enum.IntFlag`, which means that it is stored as a bit field
+    where each bit represents a permission. You can use bitwise operators
+    to efficiently manipulate and compare permissions.
 
-        my_perms = Permissions.MANAGE_CHANNELS | Permissions.MANAGE_GUILD
+    Examples
+    --------
+    You can create an enum which combines multiple permissions using the bitwise OR operator (`|`):
 
-        your_perms = (
-            Permissions.CREATE_INSTANT_INVITE
-            | Permissions.KICK_MEMBERS
-            | Permissions.BAN_MEMBERS
-            | Permissions.MANAGE_GUILD
-        )
+    .. code-block:: python
 
-    You can **check if a permission is present** in a set of combined
-    permissions by using the bitwise-AND operator (`&`). This will return
-    the int-value of the permission if it is present, or `0` if not present.
+       my_perms = Permissions.MANAGE_CHANNELS | Permissions.MANAGE_GUILD
 
-        my_perms = Permissions.MANAGE_CHANNELS | Permissions.MANAGE_GUILD
+       required_perms = (
+           Permissions.CREATE_INSTANT_INVITE
+           | Permissions.KICK_MEMBERS
+           | Permissions.BAN_MEMBERS
+           | Permissions.MANAGE_GUILD
+       )
 
-        if my_perms & Permissions.MANAGE_CHANNELS:
-            if my_perms & Permissions.MANAGE_GUILD:
-                print("I have the permission to both manage the guild and the channels in it!")
-            else:
-                print("I have the permission to manage channels!")
-        else:
-            print("I don't have the permission to manage channels!")
+    To find the intersection of two sets of permissions, use the bitwise AND
+    operator (`&`) between them. By then applying the `==` operator, you can check if all
+    permissions from one set are present in another set. This is useful, for instance,
+    for checking if a user has all the required permissions
 
-        # Or you could simplify it:
+    .. code-block:: python
 
-        if my_perms & (Permissions.MANAGE_CHANNELS | Permissions.MANAGE_GUILD):
-            print("I have the permission to both manage the guild and the channels in it!")
-        elif my_perms & Permissions.MANAGE_CHANNELS:
-            print("I have the permission to manage channels!")
-        else:
-            print("I don't have the permission to manage channels!")
+       if (my_perms & required_perms) == required_perms:
+           print("I have all of the required permissions!")
+       else:
+           print("I am missing at least one required permission!")
 
-    If you need to **check that a permission is not present**, you can use the
-    bitwise-XOR operator (`^`) to check. If the permission is not present, it
-    will return a non-zero value, otherwise if it is present, it will return `0`.
+    To determine which permissions from one set are missing from another, you can use the
+    bitwise equivalent of the set difference operation, as shown below. This can be used,
+    for instance, to find which of a user's permissions are missing from the required permissions.
 
-        my_perms = Permissions.MANAGE_CHANNELS | Permissions.MANAGE_GUILD
+    .. code-block:: python
 
-        if my_perms ^ Permissions.MANAGE_CHANNELS:
-            print("Please give me the MANAGE_CHANNELS permission!")
+       missing_perms = ~my_perms & required_perms
+       if (missing_perms):
+           print(f"I'm missing these permissions: {missing_perms}")
 
-    Lastly, if you need all the permissions set except the permission you want,
-    you can use the inversion operator (`~`) to do that.
+    Lastly, if you need all the permissions from a set except for a few,
+    you can use the bitwise NOT operator (`~`).
+
+    .. code-block:: python
 
         # All permissions except ADMINISTRATOR.
         my_perms = ~Permissions.ADMINISTRATOR
@@ -98,7 +95,7 @@ class Permissions(enums.Flag):
     KICK_MEMBERS = 1 << 1
     """Allows kicking members.
 
-    !!! note
+    .. note::
         In guilds with server-wide 2FA enabled this permission can only be used
         by users who have two-factor authentication enabled on their account
         (or their owner's account in the case of bot users) and the guild owner.
@@ -107,7 +104,7 @@ class Permissions(enums.Flag):
     BAN_MEMBERS = 1 << 2
     """Allows banning members.
 
-    !!! note
+    .. note::
         In guilds with server-wide 2FA enabled this permission can only be used
         by users who have two-factor authentication enabled on their account
         (or their owner's account in the case of bot users) and the guild owner.
@@ -116,7 +113,7 @@ class Permissions(enums.Flag):
     ADMINISTRATOR = 1 << 3
     """Allows all permissions and bypasses channel permission overwrites.
 
-    !!! note
+    .. note::
         In guilds with server-wide 2FA enabled this permission can only be used
         by users who have two-factor authentication enabled on their account
         (or their owner's account in the case of bot users) and the guild owner.
@@ -125,7 +122,7 @@ class Permissions(enums.Flag):
     MANAGE_CHANNELS = 1 << 4
     """Allows management and editing of channels.
 
-    !!! note
+    .. note::
         In guilds with server-wide 2FA enabled this permission can only be used
         by users who have two-factor authentication enabled on their account
         (or their owner's account in the case of bot users) and the guild owner.
@@ -134,7 +131,7 @@ class Permissions(enums.Flag):
     MANAGE_GUILD = 1 << 5
     """Allows management and editing of the guild.
 
-    !!! note
+    .. note::
         In guilds with server-wide 2FA enabled this permission can only be used
         by users who have two-factor authentication enabled on their account
         (or their owner's account in the case of bot users) and the guild owner.
@@ -164,7 +161,7 @@ class Permissions(enums.Flag):
     MANAGE_MESSAGES = 1 << 13
     """Allows for deletion of other users messages.
 
-    !!! note
+    .. note::
         In guilds with server-wide 2FA enabled this permission can only be used
         by users who have two-factor authentication enabled on their account
         (or their owner's account in the case of bot users) and the guild owner.
@@ -180,11 +177,7 @@ class Permissions(enums.Flag):
     """Allows for reading of message history."""
 
     MENTION_ROLES = 1 << 17
-    """Allows for using the `@everyone` tag to notify all users in a channel,
-    and the `@here` tag to notify all online users in a channel, and the
-    `@role` tag (even if the role is not mentionable) to notify all users with
-    that role in a channel.
-    """
+    """Allows for using the `@everyone`, `@here` and `@role` (regardless of its mention status) tag to notify users."""
 
     USE_EXTERNAL_EMOJIS = 1 << 18
     """Allows the usage of custom emojis from other guilds."""
@@ -219,7 +212,7 @@ class Permissions(enums.Flag):
     MANAGE_ROLES = 1 << 28
     """Allows management and editing of roles.
 
-    !!! note
+    .. note::
         In guilds with server-wide 2FA enabled this permission can only be used
         by users who have two-factor authentication enabled on their account
         (or their owner's account in the case of bot users) and the guild owner.
@@ -228,7 +221,7 @@ class Permissions(enums.Flag):
     MANAGE_WEBHOOKS = 1 << 29
     """Allows management and editing of webhooks.
 
-    !!! note
+    .. note::
         In guilds with server-wide 2FA enabled this permission can only be used
         by users who have two-factor authentication enabled on their account
         (or their owner's account in the case of bot users) and the guild owner.
@@ -237,7 +230,7 @@ class Permissions(enums.Flag):
     MANAGE_EMOJIS_AND_STICKERS = 1 << 30
     """Allows management and editing of emojis and stickers.
 
-    !!! note
+    .. note::
         In guilds with server-wide 2FA enabled this permission can only be used
         by users who have two-factor authentication enabled on their account
         (or their owner's account in the case of bot users) and the guild owner.
@@ -249,16 +242,19 @@ class Permissions(enums.Flag):
     REQUEST_TO_SPEAK = 1 << 32
     """Allows for requesting to speak in stage channels.
 
-    !!! warning
+    .. warning::
         This permissions is currently defined as being "under active
         development" by Discord meaning that "it may be changed or removed"
         without warning.
     """
 
+    MANAGE_EVENTS = 1 << 33
+    """Allows for creating, editing, and deleting scheduled events	"""
+
     MANAGE_THREADS = 1 << 34
     """Allows for deleting and archiving threads, and viewing all private threads.
 
-     !!! note
+     .. note::
         In guilds with server-wide 2FA enabled this permission can only be used
         by users who have two-factor authentication enabled on their account
         (or their owner's account in the case of bot users) and the guild owner.
@@ -291,4 +287,8 @@ class Permissions(enums.Flag):
         Permissions
             A permissions instance with all the known permissions.
         """
-        return functools.reduce(operator.ior, Permissions)
+        all_perms = Permissions.NONE
+        for perm in Permissions:
+            all_perms |= perm
+
+        return all_perms

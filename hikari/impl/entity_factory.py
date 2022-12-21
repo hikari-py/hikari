@@ -37,6 +37,7 @@ from hikari import audit_logs as audit_log_models
 from hikari import channels as channel_models
 from hikari import colors as color_models
 from hikari import commands
+from hikari import components as component_models
 from hikari import embeds as embed_models
 from hikari import emojis as emoji_models
 from hikari import errors
@@ -61,6 +62,7 @@ from hikari.api import entity_factory
 from hikari.interactions import base_interactions
 from hikari.interactions import command_interactions
 from hikari.interactions import component_interactions
+from hikari.interactions import modal_interactions
 from hikari.internal import attr_extensions
 from hikari.internal import data_binding
 from hikari.internal import time
@@ -110,9 +112,6 @@ class _GuildChannelFields:
     name: typing.Optional[str] = attr.field()
     type: typing.Union[channel_models.ChannelType, int] = attr.field()
     guild_id: snowflakes.Snowflake = attr.field()
-    position: int = attr.field()
-    permission_overwrites: typing.Dict[snowflakes.Snowflake, channel_models.PermissionOverwrite] = attr.field()
-    is_nsfw: typing.Optional[bool] = attr.field()
     parent_id: typing.Optional[snowflakes.Snowflake] = attr.field()
 
 
@@ -239,17 +238,21 @@ class _UserFields:
 
 
 @attr_extensions.with_copy
-@attr.define(weakref_slot=False)
+@attr.define(kw_only=True, weakref_slot=False)
 class _GatewayGuildDefinition(entity_factory.GatewayGuildDefinition):
     id: snowflakes.Snowflake = attr.field()
     _payload: data_binding.JSONObject = attr.field()
     _entity_factory: EntityFactoryImpl = attr.field()
+    _user_id: snowflakes.Snowflake = attr.field()
     # These will get deserialized as needed
-    _channels: UndefinedSnowflakeMapping[channel_models.GuildChannel] = attr.field(
+    _channels: UndefinedSnowflakeMapping[channel_models.PermissibleGuildChannel] = attr.field(
         init=False, default=undefined.UNDEFINED
     )
     _guild: undefined.UndefinedOr[guild_models.GatewayGuild] = attr.field(init=False, default=undefined.UNDEFINED)
     _emojis: UndefinedSnowflakeMapping[emoji_models.KnownCustomEmoji] = attr.field(
+        init=False, default=undefined.UNDEFINED
+    )
+    _stickers: UndefinedSnowflakeMapping[sticker_models.GuildSticker] = attr.field(
         init=False, default=undefined.UNDEFINED
     )
     _members: UndefinedSnowflakeMapping[guild_models.Member] = attr.field(init=False, default=undefined.UNDEFINED)
@@ -257,11 +260,14 @@ class _GatewayGuildDefinition(entity_factory.GatewayGuildDefinition):
         init=False, default=undefined.UNDEFINED
     )
     _roles: UndefinedSnowflakeMapping[guild_models.Role] = attr.field(init=False, default=undefined.UNDEFINED)
+    _threads: UndefinedSnowflakeMapping[channel_models.GuildThreadChannel] = attr.field(
+        init=False, default=undefined.UNDEFINED
+    )
     _voice_states: UndefinedSnowflakeMapping[voice_models.VoiceState] = attr.field(
         init=False, default=undefined.UNDEFINED
     )
 
-    def channels(self) -> typing.Mapping[snowflakes.Snowflake, channel_models.GuildChannel]:
+    def channels(self) -> typing.Mapping[snowflakes.Snowflake, channel_models.PermissibleGuildChannel]:
         if self._channels is undefined.UNDEFINED:
             if "channels" not in self._payload:
                 raise LookupError("'channels' not in payload")
@@ -275,7 +281,7 @@ class _GatewayGuildDefinition(entity_factory.GatewayGuildDefinition):
                     # Ignore the channel, this has already been logged
                     continue
 
-                assert isinstance(channel, channel_models.GuildChannel)
+                assert isinstance(channel, channel_models.PermissibleGuildChannel)
                 self._channels[channel.id] = channel
 
         return self._channels
@@ -288,6 +294,15 @@ class _GatewayGuildDefinition(entity_factory.GatewayGuildDefinition):
             }
 
         return self._emojis
+
+    def stickers(self) -> typing.Mapping[snowflakes.Snowflake, sticker_models.GuildSticker]:
+        if self._stickers is undefined.UNDEFINED:
+            self._stickers = {
+                snowflakes.Snowflake(s["id"]): self._entity_factory.deserialize_guild_sticker(s)
+                for s in self._payload["stickers"]
+            }
+
+        return self._stickers
 
     def guild(self) -> guild_models.GatewayGuild:
         if self._guild is undefined.UNDEFINED:
@@ -367,6 +382,26 @@ class _GatewayGuildDefinition(entity_factory.GatewayGuildDefinition):
 
         return self._roles
 
+    def threads(self) -> typing.Mapping[snowflakes.Snowflake, channel_models.GuildThreadChannel]:
+        if self._threads is undefined.UNDEFINED:
+            if "threads" not in self._payload:
+                raise LookupError("'threads' not in payload")
+
+            self._threads = {}
+
+            for thread_payload in self._payload["threads"]:
+                try:
+                    thread = self._entity_factory.deserialize_guild_thread(
+                        thread_payload, guild_id=self.id, user_id=self._user_id
+                    )
+                except errors.UnrecognisedEntityError:
+                    # Ignore the channel, this has already been logged
+                    continue
+
+                self._threads[thread.id] = thread
+
+        return self._threads
+
     def voice_states(self) -> typing.Mapping[snowflakes.Snowflake, voice_models.VoiceState]:
         if self._voice_states is undefined.UNDEFINED:
             if "voice_states" not in self._payload:
@@ -396,9 +431,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         "_audit_log_entry_converters",
         "_audit_log_event_mapping",
         "_command_mapping",
-        "_component_type_mapping",
+        "_message_component_type_mapping",
+        "_modal_component_type_mapping",
         "_dm_channel_type_mapping",
         "_guild_channel_type_mapping",
+        "_thread_channel_type_mapping",
         "_interaction_type_mapping",
         "_scheduled_event_type_mapping",
         "_webhook_type_mapping",
@@ -416,14 +453,16 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             audit_log_models.AuditLogChangeKey.VERIFICATION_LEVEL: guild_models.GuildVerificationLevel,
             audit_log_models.AuditLogChangeKey.EXPLICIT_CONTENT_FILTER: guild_models.GuildExplicitContentFilterLevel,
             audit_log_models.AuditLogChangeKey.DEFAULT_MESSAGE_NOTIFICATIONS: guild_models.GuildMessageNotificationsLevel,
-            # noqa: E501 - Line too long
             audit_log_models.AuditLogChangeKey.PRUNE_DELETE_DAYS: _deserialize_day_timedelta,
             audit_log_models.AuditLogChangeKey.WIDGET_CHANNEL_ID: snowflakes.Snowflake,
             audit_log_models.AuditLogChangeKey.POSITION: int,
             audit_log_models.AuditLogChangeKey.BITRATE: int,
+            audit_log_models.AuditLogChangeKey.DEFAULT_AUTO_ARCHIVE_DURATION: lambda v: datetime.timedelta(minutes=v),
+            audit_log_models.AuditLogChangeKey.AUTO_ARCHIVE_DURATION: lambda v: datetime.timedelta(minutes=v),
             audit_log_models.AuditLogChangeKey.APPLICATION_ID: snowflakes.Snowflake,
             audit_log_models.AuditLogChangeKey.PERMISSIONS: _with_int_cast(permission_models.Permissions),
             audit_log_models.AuditLogChangeKey.COLOR: color_models.Color,
+            audit_log_models.AuditLogChangeKey.COMMAND_ID: snowflakes.Snowflake,
             audit_log_models.AuditLogChangeKey.ALLOW: _with_int_cast(permission_models.Permissions),
             audit_log_models.AuditLogChangeKey.DENY: _with_int_cast(permission_models.Permissions),
             audit_log_models.AuditLogChangeKey.CHANNEL_ID: snowflakes.Snowflake,
@@ -464,10 +503,16 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             commands.CommandType.USER: self.deserialize_context_menu_command,
             commands.CommandType.MESSAGE: self.deserialize_context_menu_command,
         }
-        self._component_type_mapping = {
-            message_models.ComponentType.ACTION_ROW: self._deserialize_action_row,
-            message_models.ComponentType.BUTTON: self._deserialize_button,
-            message_models.ComponentType.SELECT_MENU: self._deserialize_select_menu,
+        self._message_component_type_mapping: typing.Dict[
+            int, typing.Callable[[data_binding.JSONObject], component_models.MessageComponentTypesT]
+        ] = {
+            component_models.ComponentType.BUTTON: self._deserialize_button,
+            component_models.ComponentType.SELECT_MENU: self._deserialize_select_menu,
+        }
+        self._modal_component_type_mapping: typing.Dict[
+            int, typing.Callable[[data_binding.JSONObject], component_models.ModalComponentTypesT]
+        ] = {
+            component_models.ComponentType.TEXT_INPUT: self._deserialize_text_input,
         }
         self._dm_channel_type_mapping = {
             channel_models.ChannelType.DM: self.deserialize_dm,
@@ -480,12 +525,18 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             channel_models.ChannelType.GUILD_VOICE: self.deserialize_guild_voice_channel,
             channel_models.ChannelType.GUILD_STAGE: self.deserialize_guild_stage_channel,
         }
+        self._thread_channel_type_mapping = {
+            channel_models.ChannelType.GUILD_NEWS_THREAD: self.deserialize_guild_news_thread,
+            channel_models.ChannelType.GUILD_PUBLIC_THREAD: self.deserialize_guild_public_thread,
+            channel_models.ChannelType.GUILD_PRIVATE_THREAD: self.deserialize_guild_private_thread,
+        }
         self._interaction_type_mapping: typing.Dict[
             int, typing.Callable[[data_binding.JSONObject], base_interactions.PartialInteraction]
         ] = {
             base_interactions.InteractionType.APPLICATION_COMMAND: self.deserialize_command_interaction,
             base_interactions.InteractionType.MESSAGE_COMPONENT: self.deserialize_component_interaction,
             base_interactions.InteractionType.AUTOCOMPLETE: self.deserialize_autocomplete_interaction,
+            base_interactions.InteractionType.MODAL_SUBMIT: self.deserialize_modal_interaction,
         }
         self._scheduled_event_type_mapping = {
             scheduled_events_models.ScheduledEventType.STAGE_INSTANCE: self.deserialize_scheduled_stage_event,
@@ -767,6 +818,16 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         }
         users = {snowflakes.Snowflake(user["id"]): self.deserialize_user(user) for user in payload["users"]}
 
+        threads: typing.Dict[snowflakes.Snowflake, channel_models.GuildThreadChannel] = {}
+        for thread_payload in payload["threads"]:
+            try:
+                thread = self.deserialize_guild_thread(thread_payload)
+
+            except errors.UnrecognisedEntityError:
+                continue
+
+            threads[thread.id] = thread
+
         webhooks: typing.Dict[snowflakes.Snowflake, webhook_models.PartialWebhook] = {}
         for webhook_payload in payload["webhooks"]:
             try:
@@ -777,7 +838,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
             webhooks[webhook.id] = webhook
 
-        return audit_log_models.AuditLog(entries=entries, integrations=integrations, users=users, webhooks=webhooks)
+        return audit_log_models.AuditLog(
+            entries=entries, integrations=integrations, threads=threads, users=users, webhooks=webhooks
+        )
 
     ##################
     # CHANNEL MODELS #
@@ -866,11 +929,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if guild_id is undefined.UNDEFINED:
             guild_id = snowflakes.Snowflake(payload["guild_id"])
 
-        permission_overwrites = {
-            snowflakes.Snowflake(overwrite["id"]): self.deserialize_permission_overwrite(overwrite)
-            for overwrite in payload["permission_overwrites"]
-        }
-
         parent_id: typing.Optional[snowflakes.Snowflake] = None
         if (raw_parent_id := payload.get("parent_id")) is not None:
             parent_id = snowflakes.Snowflake(raw_parent_id)
@@ -880,9 +938,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=payload.get("name"),
             type=channel_models.ChannelType(payload["type"]),
             guild_id=guild_id,
-            position=int(payload["position"]),
-            permission_overwrites=permission_overwrites,
-            is_nsfw=payload.get("nsfw"),
             parent_id=parent_id,
         )
 
@@ -893,16 +948,20 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> channel_models.GuildCategory:
         channel_fields = self._set_guild_channel_attributes(payload, guild_id=guild_id)
+        permission_overwrites = {
+            snowflakes.Snowflake(overwrite["id"]): self.deserialize_permission_overwrite(overwrite)
+            for overwrite in payload["permission_overwrites"]
+        }
         return channel_models.GuildCategory(
             app=self._app,
             id=channel_fields.id,
             name=channel_fields.name,
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
-            position=channel_fields.position,
-            permission_overwrites=channel_fields.permission_overwrites,
-            is_nsfw=channel_fields.is_nsfw,
-            parent_id=channel_fields.parent_id,
+            permission_overwrites=permission_overwrites,
+            is_nsfw=payload.get("nsfw", False),
+            parent_id=None,
+            position=int(payload["position"]),
         )
 
     def deserialize_guild_text_channel(
@@ -912,6 +971,13 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> channel_models.GuildTextChannel:
         channel_fields = self._set_guild_channel_attributes(payload, guild_id=guild_id)
+        # As of present this isn't included in the payloads of old channels where it hasn't been explicitly set.
+        # In this case it's 1440 minutes.
+        default_auto_archive_duration = datetime.timedelta(minutes=payload.get("default_auto_archive_duration", 1440))
+        permission_overwrites = {
+            snowflakes.Snowflake(overwrite["id"]): self.deserialize_permission_overwrite(overwrite)
+            for overwrite in payload["permission_overwrites"]
+        }
 
         last_message_id: typing.Optional[snowflakes.Snowflake] = None
         if (raw_last_message_id := payload.get("last_message_id")) is not None:
@@ -927,9 +993,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=channel_fields.name,
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
-            position=channel_fields.position,
-            permission_overwrites=channel_fields.permission_overwrites,
-            is_nsfw=channel_fields.is_nsfw,
+            permission_overwrites=permission_overwrites,
+            is_nsfw=payload.get("nsfw", False),
             parent_id=channel_fields.parent_id,
             topic=payload["topic"],
             last_message_id=last_message_id,
@@ -938,6 +1003,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             # at all if they have never had the rate limit changed...
             rate_limit_per_user=datetime.timedelta(seconds=payload.get("rate_limit_per_user", 0)),
             last_pin_timestamp=last_pin_timestamp,
+            default_auto_archive_duration=default_auto_archive_duration,
+            position=int(payload["position"]),
         )
 
     def deserialize_guild_news_channel(
@@ -947,6 +1014,13 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> channel_models.GuildNewsChannel:
         channel_fields = self._set_guild_channel_attributes(payload, guild_id=guild_id)
+        # As of present this isn't included in the payloads of old channels where it hasn't been explicitly set.
+        # In this case it's 1440 minutes.
+        default_auto_archive_duration = datetime.timedelta(minutes=payload.get("default_auto_archive_duration", 1440))
+        permission_overwrites = {
+            snowflakes.Snowflake(overwrite["id"]): self.deserialize_permission_overwrite(overwrite)
+            for overwrite in payload["permission_overwrites"]
+        }
 
         last_message_id: typing.Optional[snowflakes.Snowflake] = None
         if (raw_last_message_id := payload.get("last_message_id")) is not None:
@@ -962,13 +1036,14 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=channel_fields.name,
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
-            position=channel_fields.position,
-            permission_overwrites=channel_fields.permission_overwrites,
-            is_nsfw=channel_fields.is_nsfw,
+            permission_overwrites=permission_overwrites,
+            is_nsfw=payload.get("nsfw", False),
             parent_id=channel_fields.parent_id,
             topic=payload["topic"],
             last_message_id=last_message_id,
             last_pin_timestamp=last_pin_timestamp,
+            default_auto_archive_duration=default_auto_archive_duration,
+            position=int(payload["position"]),
         )
 
     def deserialize_guild_voice_channel(
@@ -978,17 +1053,25 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> channel_models.GuildVoiceChannel:
         channel_fields = self._set_guild_channel_attributes(payload, guild_id=guild_id)
+        permission_overwrites = {
+            snowflakes.Snowflake(overwrite["id"]): self.deserialize_permission_overwrite(overwrite)
+            for overwrite in payload["permission_overwrites"]
+        }
         # Discord seems to be only returning this after it's been initially PATCHed in for older channels.
         video_quality_mode = payload.get("video_quality_mode", channel_models.VideoQualityMode.AUTO)
+
+        last_message_id: typing.Optional[snowflakes.Snowflake] = None
+        if (raw_last_message_id := payload.get("last_message_id")) is not None:
+            last_message_id = snowflakes.Snowflake(raw_last_message_id)
+
         return channel_models.GuildVoiceChannel(
             app=self._app,
             id=channel_fields.id,
             name=channel_fields.name,
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
-            position=channel_fields.position,
-            permission_overwrites=channel_fields.permission_overwrites,
-            is_nsfw=channel_fields.is_nsfw,
+            permission_overwrites=permission_overwrites,
+            is_nsfw=payload.get("nsfw", False),
             parent_id=channel_fields.parent_id,
             # There seems to be an edge case where rtc_region won't be included in gateway events (e.g. GUILD_CREATE)
             # for a voice channel that just hasn't been touched since this was introduced (e.g. has been archived).
@@ -996,6 +1079,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             bitrate=int(payload["bitrate"]),
             user_limit=int(payload["user_limit"]),
             video_quality_mode=channel_models.VideoQualityMode(int(video_quality_mode)),
+            last_message_id=last_message_id,
+            position=int(payload["position"]),
         )
 
     def deserialize_guild_stage_channel(
@@ -1005,19 +1090,197 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> channel_models.GuildStageChannel:
         channel_fields = self._set_guild_channel_attributes(payload, guild_id=guild_id)
+        permission_overwrites = {
+            snowflakes.Snowflake(overwrite["id"]): self.deserialize_permission_overwrite(overwrite)
+            for overwrite in payload["permission_overwrites"]
+        }
         return channel_models.GuildStageChannel(
             app=self._app,
             id=channel_fields.id,
             name=channel_fields.name,
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
-            position=channel_fields.position,
-            permission_overwrites=channel_fields.permission_overwrites,
-            is_nsfw=channel_fields.is_nsfw,
+            permission_overwrites=permission_overwrites,
+            is_nsfw=payload.get("nsfw", False),
             parent_id=channel_fields.parent_id,
             region=payload["rtc_region"],
             bitrate=int(payload["bitrate"]),
             user_limit=int(payload["user_limit"]),
+            position=int(payload["position"]),
+        )
+
+    def deserialize_thread_member(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        thread_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+        user_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+    ) -> channel_models.ThreadMember:
+        return channel_models.ThreadMember(
+            thread_id=thread_id or snowflakes.Snowflake(payload["id"]),
+            user_id=user_id or snowflakes.Snowflake(payload["user_id"]),
+            joined_at=time.iso8601_datetime_string_to_datetime(payload["join_timestamp"]),
+            flags=int(payload["flags"]),
+        )
+
+    def deserialize_guild_thread(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+        member: undefined.UndefinedNoneOr[channel_models.ThreadMember] = undefined.UNDEFINED,
+        user_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+    ) -> channel_models.GuildThreadChannel:
+        channel_type = channel_models.ChannelType(payload["type"])
+        if deserialize := self._thread_channel_type_mapping.get(channel_type):
+            return deserialize(payload, guild_id=guild_id, member=member, user_id=user_id)
+
+        _LOGGER.debug(f"Unrecognised thread channel type {channel_type}")
+        raise errors.UnrecognisedEntityError(f"Unrecognised thread channel type {channel_type}")
+
+    def deserialize_guild_news_thread(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+        member: undefined.UndefinedNoneOr[channel_models.ThreadMember] = undefined.UNDEFINED,
+        user_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+    ) -> channel_models.GuildNewsThread:
+        channel_fields = self._set_guild_channel_attributes(payload, guild_id=guild_id)
+        last_message_id: typing.Optional[snowflakes.Snowflake] = None
+        if (raw_last_message_id := payload.get("last_message_id")) is not None:
+            last_message_id = snowflakes.Snowflake(raw_last_message_id)
+
+        last_pin_timestamp: typing.Optional[datetime.datetime] = None
+        if (raw_last_pin_timestamp := payload.get("last_pin_timestamp")) is not None:
+            last_pin_timestamp = time.iso8601_datetime_string_to_datetime(raw_last_pin_timestamp)
+
+        metadata = payload["thread_metadata"]
+        actual_member = member if member is not undefined.UNDEFINED else None
+        if member_payload := payload.get("member"):
+            actual_member = self.deserialize_thread_member(member_payload, thread_id=channel_fields.id, user_id=user_id)
+
+        thread_created_at: typing.Optional[datetime.datetime] = None
+        if raw_thread_created_at := metadata.get("create_timestamp"):
+            thread_created_at = time.iso8601_datetime_string_to_datetime(raw_thread_created_at)
+
+        assert channel_fields.parent_id is not None
+        return channel_models.GuildNewsThread(
+            app=self._app,
+            id=channel_fields.id,
+            name=channel_fields.name,
+            type=channel_fields.type,
+            guild_id=channel_fields.guild_id,
+            parent_id=channel_fields.parent_id,
+            last_message_id=last_message_id,
+            last_pin_timestamp=last_pin_timestamp,
+            rate_limit_per_user=datetime.timedelta(seconds=payload.get("rate_limit_per_user", 0)),
+            approximate_member_count=int(payload["member_count"]),
+            approximate_message_count=int(payload["message_count"]),
+            is_archived=metadata["archived"],
+            auto_archive_duration=datetime.timedelta(minutes=metadata["auto_archive_duration"]),
+            archive_timestamp=time.iso8601_datetime_string_to_datetime(metadata["archive_timestamp"]),
+            is_locked=metadata["locked"],
+            member=actual_member,
+            owner_id=snowflakes.Snowflake(payload["owner_id"]),
+            thread_created_at=thread_created_at,
+        )
+
+    def deserialize_guild_public_thread(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+        member: undefined.UndefinedNoneOr[channel_models.ThreadMember] = undefined.UNDEFINED,
+        user_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+    ) -> channel_models.GuildPublicThread:
+        channel_fields = self._set_guild_channel_attributes(payload, guild_id=guild_id)
+        last_message_id: typing.Optional[snowflakes.Snowflake] = None
+        if (raw_last_message_id := payload.get("last_message_id")) is not None:
+            last_message_id = snowflakes.Snowflake(raw_last_message_id)
+
+        last_pin_timestamp: typing.Optional[datetime.datetime] = None
+        if (raw_last_pin_timestamp := payload.get("last_pin_timestamp")) is not None:
+            last_pin_timestamp = time.iso8601_datetime_string_to_datetime(raw_last_pin_timestamp)
+
+        metadata = payload["thread_metadata"]
+        actual_member = member if member is not undefined.UNDEFINED else None
+        if member_payload := payload.get("member"):
+            actual_member = self.deserialize_thread_member(member_payload, thread_id=channel_fields.id, user_id=user_id)
+
+        thread_created_at: typing.Optional[datetime.datetime] = None
+        if raw_thread_created_at := metadata.get("create_timestamp"):
+            thread_created_at = time.iso8601_datetime_string_to_datetime(raw_thread_created_at)
+
+        assert channel_fields.parent_id is not None
+        return channel_models.GuildPublicThread(
+            app=self._app,
+            id=channel_fields.id,
+            name=channel_fields.name,
+            type=channel_fields.type,
+            guild_id=channel_fields.guild_id,
+            parent_id=channel_fields.parent_id,
+            last_message_id=last_message_id,
+            last_pin_timestamp=last_pin_timestamp,
+            rate_limit_per_user=datetime.timedelta(seconds=payload.get("rate_limit_per_user", 0)),
+            approximate_member_count=int(payload["member_count"]),
+            approximate_message_count=int(payload["message_count"]),
+            is_archived=metadata["archived"],
+            auto_archive_duration=datetime.timedelta(minutes=metadata["auto_archive_duration"]),
+            archive_timestamp=time.iso8601_datetime_string_to_datetime(metadata["archive_timestamp"]),
+            is_locked=metadata["locked"],
+            member=actual_member,
+            owner_id=snowflakes.Snowflake(payload["owner_id"]),
+            thread_created_at=thread_created_at,
+        )
+
+    def deserialize_guild_private_thread(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+        member: undefined.UndefinedNoneOr[channel_models.ThreadMember] = undefined.UNDEFINED,
+        user_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+    ) -> channel_models.GuildPrivateThread:
+        channel_fields = self._set_guild_channel_attributes(payload, guild_id=guild_id)
+        last_message_id: typing.Optional[snowflakes.Snowflake] = None
+        if (raw_last_message_id := payload.get("last_message_id")) is not None:
+            last_message_id = snowflakes.Snowflake(raw_last_message_id)
+
+        last_pin_timestamp: typing.Optional[datetime.datetime] = None
+        if (raw_last_pin_timestamp := payload.get("last_pin_timestamp")) is not None:
+            last_pin_timestamp = time.iso8601_datetime_string_to_datetime(raw_last_pin_timestamp)
+
+        metadata = payload["thread_metadata"]
+        actual_member = member if member is not undefined.UNDEFINED else None
+        if member_payload := payload.get("member"):
+            actual_member = self.deserialize_thread_member(member_payload, thread_id=channel_fields.id, user_id=user_id)
+
+        thread_created_at: typing.Optional[datetime.datetime] = None
+        if raw_thread_created_at := metadata.get("create_timestamp"):
+            thread_created_at = time.iso8601_datetime_string_to_datetime(raw_thread_created_at)
+
+        assert channel_fields.parent_id is not None
+        return channel_models.GuildPrivateThread(
+            app=self._app,
+            id=channel_fields.id,
+            name=channel_fields.name,
+            type=channel_fields.type,
+            guild_id=channel_fields.guild_id,
+            parent_id=channel_fields.parent_id,
+            last_message_id=last_message_id,
+            last_pin_timestamp=last_pin_timestamp,
+            rate_limit_per_user=datetime.timedelta(seconds=payload.get("rate_limit_per_user", 0)),
+            approximate_member_count=int(payload["member_count"]),
+            approximate_message_count=int(payload["message_count"]),
+            is_archived=metadata["archived"],
+            auto_archive_duration=datetime.timedelta(minutes=metadata["auto_archive_duration"]),
+            archive_timestamp=time.iso8601_datetime_string_to_datetime(metadata["archive_timestamp"]),
+            is_locked=metadata["locked"],
+            member=actual_member,
+            owner_id=snowflakes.Snowflake(payload["owner_id"]),
+            is_invitable=metadata["invitable"],
+            thread_created_at=thread_created_at,
         )
 
     def deserialize_channel(
@@ -1029,6 +1292,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         channel_type = channel_models.ChannelType(payload["type"])
         if guild_channel_model := self._guild_channel_type_mapping.get(channel_type):
             return guild_channel_model(payload, guild_id=guild_id)
+
+        if thread_channel_deserialize := self._thread_channel_type_mapping.get(channel_type):
+            return thread_channel_deserialize(payload, guild_id=guild_id)
 
         if dm_channel_model := self._dm_channel_type_mapping.get(channel_type):
             return dm_channel_model(payload)
@@ -1049,7 +1315,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         timestamp = time.iso8601_datetime_string_to_datetime(payload["timestamp"]) if "timestamp" in payload else None
         fields: typing.Optional[typing.List[embed_models.EmbedField]] = None
 
-        image: typing.Optional[embed_models.EmbedImage[files.AsyncReader]] = None
+        image: typing.Optional[embed_models.EmbedImage] = None
         if (image_payload := payload.get("image")) and "url" in image_payload:
             proxy = files.ensure_resource(image_payload["proxy_url"]) if "proxy_url" in image_payload else None
             image = embed_models.EmbedImage(
@@ -1059,7 +1325,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 width=image_payload.get("width"),
             )
 
-        thumbnail: typing.Optional[embed_models.EmbedImage[files.AsyncReader]] = None
+        thumbnail: typing.Optional[embed_models.EmbedImage] = None
         if (thumbnail_payload := payload.get("thumbnail")) and "url" in thumbnail_payload:
             proxy = files.ensure_resource(thumbnail_payload["proxy_url"]) if "proxy_url" in thumbnail_payload else None
             thumbnail = embed_models.EmbedImage(
@@ -1069,7 +1335,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 width=thumbnail_payload.get("width"),
             )
 
-        video: typing.Optional[embed_models.EmbedVideo[files.AsyncReader]] = None
+        video: typing.Optional[embed_models.EmbedVideo] = None
         if (video_payload := payload.get("video")) and "url" in video_payload:
             raw_proxy_url = video_payload.get("proxy_url")
             video = embed_models.EmbedVideo(
@@ -1083,7 +1349,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if provider_payload := payload.get("provider"):
             provider = embed_models.EmbedProvider(name=provider_payload.get("name"), url=provider_payload.get("url"))
 
-        icon: typing.Optional[embed_models.EmbedResourceWithProxy[files.AsyncReader]]
+        icon: typing.Optional[embed_models.EmbedResourceWithProxy]
         author: typing.Optional[embed_models.EmbedAuthor] = None
         if author_payload := payload.get("author"):
             icon = None
@@ -1138,11 +1404,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     def serialize_embed(  # noqa: C901 - Function too complex
-        self,
-        embed: embed_models.Embed,
+        self, embed: embed_models.Embed
     ) -> typing.Tuple[data_binding.JSONObject, typing.List[files.Resource[files.AsyncReader]]]:
 
-        payload: data_binding.JSONObject = {}
+        payload: typing.Dict[str, typing.Any] = {}
         uploads: typing.List[files.Resource[files.AsyncReader]] = []
 
         if embed.title is not None:
@@ -1161,7 +1426,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             payload["color"] = int(embed.color)
 
         if embed.footer is not None:
-            footer_payload: data_binding.JSONObject = {}
+            footer_payload: typing.MutableMapping[str, typing.Any] = {}
 
             if embed.footer.text is not None:
                 footer_payload["text"] = embed.footer.text
@@ -1175,7 +1440,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             payload["footer"] = footer_payload
 
         if embed.image is not None:
-            image_payload: data_binding.JSONObject = {}
+            image_payload: typing.MutableMapping[str, typing.Any] = {}
 
             if not isinstance(embed.image.resource, files.WebResource):
                 uploads.append(embed.image.resource)
@@ -1184,7 +1449,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             payload["image"] = image_payload
 
         if embed.thumbnail is not None:
-            thumbnail_payload: data_binding.JSONObject = {}
+            thumbnail_payload: typing.MutableMapping[str, typing.Any] = {}
 
             if not isinstance(embed.thumbnail.resource, files.WebResource):
                 uploads.append(embed.thumbnail.resource)
@@ -1193,7 +1458,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             payload["thumbnail"] = thumbnail_payload
 
         if embed.author is not None:
-            author_payload: data_binding.JSONObject = {}
+            author_payload: typing.MutableMapping[str, typing.Any] = {}
 
             if embed.author.name is not None:
                 author_payload["name"] = embed.author.name
@@ -1209,7 +1474,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             payload["author"] = author_payload
 
         if embed.fields:
-            field_payloads: data_binding.JSONArray = []
+            field_payloads: typing.List[data_binding.JSONObject] = []
             for i, field in enumerate(embed.fields):
 
                 # Yep, these are technically two unreachable branches. However, this is an incredibly
@@ -1339,7 +1604,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         return guild_models.WelcomeScreen(description=payload["description"], channels=channels)
 
     def serialize_welcome_channel(self, welcome_channel: guild_models.WelcomeChannel) -> data_binding.JSONObject:
-        payload: data_binding.JSONObject = {
+        payload: typing.Dict[str, typing.Any] = {
             "channel_id": str(welcome_channel.channel_id),
             "description": welcome_channel.description,
         }
@@ -1563,6 +1828,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             snowflakes.Snowflake(emoji["id"]): self.deserialize_known_custom_emoji(emoji, guild_id=guild_fields.id)
             for emoji in payload["emojis"]
         }
+        stickers = {
+            snowflakes.Snowflake(sticker["id"]): self.deserialize_guild_sticker(sticker)
+            for sticker in payload["stickers"]
+        }
         return guild_models.RESTGuild(
             app=self._app,
             id=guild_fields.id,
@@ -1599,11 +1868,14 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             approximate_active_member_count=approximate_active_member_count,
             roles=roles,
             emojis=emojis,
+            stickers=stickers,
         )
 
-    def deserialize_gateway_guild(self, payload: data_binding.JSONObject) -> entity_factory.GatewayGuildDefinition:
+    def deserialize_gateway_guild(
+        self, payload: data_binding.JSONObject, *, user_id: snowflakes.Snowflake
+    ) -> entity_factory.GatewayGuildDefinition:
         guild_id = snowflakes.Snowflake(payload["id"])
-        return _GatewayGuildDefinition(id=guild_id, payload=payload, entity_factory=self)
+        return _GatewayGuildDefinition(id=guild_id, payload=payload, entity_factory=self, user_id=user_id)
 
     #################
     # INVITE MODELS #
@@ -1748,6 +2020,20 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_channel_types := payload.get("channel_types"):
             channel_types = [channel_models.ChannelType(channel_type) for channel_type in raw_channel_types]
 
+        name_localizations: typing.Mapping[str, str]
+        if raw_name_localizations := payload.get("name_localizations"):
+            name_localizations = {locales.Locale(k): raw_name_localizations[k] for k in raw_name_localizations}
+        else:
+            name_localizations = {}
+
+        description_localizations: typing.Mapping[str, str]
+        if raw_description_localizations := payload.get("description_localizations"):
+            description_localizations = {
+                locales.Locale(k): raw_description_localizations[k] for k in raw_description_localizations
+            }
+        else:
+            description_localizations = {}
+
         return commands.CommandOption(
             type=commands.OptionType(payload["type"]),
             name=payload["name"],
@@ -1759,6 +2045,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             autocomplete=payload.get("autocomplete", False),
             min_value=payload.get("min_value"),
             max_value=payload.get("max_value"),
+            name_localizations=name_localizations,
+            description_localizations=description_localizations,
+            min_length=payload.get("min_length"),
+            max_length=payload.get("max_length"),
         )
 
     def deserialize_slash_command(
@@ -1775,6 +2065,28 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_options := payload.get("options"):
             options = [self._deserialize_command_option(option) for option in raw_options]
 
+        name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str]
+        if raw_name_localizations := payload.get("name_localizations"):
+            name_localizations = {locales.Locale(k): raw_name_localizations[k] for k in raw_name_localizations}
+        else:
+            name_localizations = {}
+
+        description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str]
+        if raw_description_localizations := payload.get("description_localizations"):
+            description_localizations = {
+                locales.Locale(k): raw_description_localizations[k] for k in raw_description_localizations
+            }
+        else:
+            description_localizations = {}
+
+        # Discord considers 0 the same thing as ADMINISTRATORS, but we make it nicer to work with
+        # by setting it correctly.
+        default_member_permissions = payload["default_member_permissions"]
+        if default_member_permissions == 0:
+            default_member_permissions = permission_models.Permissions.ADMINISTRATOR
+        else:
+            default_member_permissions = permission_models.Permissions(default_member_permissions or 0)
+
         return commands.SlashCommand(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
@@ -1783,9 +2095,13 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=payload["name"],
             description=payload["description"],
             options=options,
-            default_permission=payload.get("default_permission", True),
+            default_member_permissions=default_member_permissions,
+            is_dm_enabled=payload.get("dm_permission", True),
+            is_nsfw=payload.get("nsfw", False),
             guild_id=guild_id,
             version=snowflakes.Snowflake(payload["version"]),
+            name_localizations=name_localizations,
+            description_localizations=description_localizations,
         )
 
     def deserialize_context_menu_command(
@@ -1798,15 +2114,32 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             raw_guild_id = payload["guild_id"]
             guild_id = snowflakes.Snowflake(raw_guild_id) if raw_guild_id is not None else None
 
+        name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str]
+        if raw_name_localizations := payload.get("name_localizations"):
+            name_localizations = {locales.Locale(k): raw_name_localizations[k] for k in raw_name_localizations}
+        else:
+            name_localizations = {}
+
+        # Discord considers 0 the same thing as ADMINISTRATORS, but we make it nicer to work with
+        # by setting it correctly.
+        default_member_permissions = payload["default_member_permissions"]
+        if default_member_permissions == 0:
+            default_member_permissions = permission_models.Permissions.ADMINISTRATOR
+        else:
+            default_member_permissions = permission_models.Permissions(default_member_permissions or 0)
+
         return commands.ContextMenuCommand(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
             type=commands.CommandType(payload["type"]),
             application_id=snowflakes.Snowflake(payload["application_id"]),
             name=payload["name"],
-            default_permission=payload.get("default_permission", True),
+            default_member_permissions=default_member_permissions,
+            is_dm_enabled=payload.get("dm_permission", True),
+            is_nsfw=payload.get("nsfw", False),
             guild_id=guild_id,
             version=snowflakes.Snowflake(payload["version"]),
+            name_localizations=name_localizations,
         )
 
     def deserialize_command(
@@ -1835,6 +2168,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             for perm in payload["permissions"]
         ]
         return commands.GuildCommandPermissions(
+            id=snowflakes.Snowflake(payload["id"]),
             application_id=snowflakes.Snowflake(payload["application_id"]),
             command_id=snowflakes.Snowflake(payload["id"]),
             guild_id=snowflakes.Snowflake(payload["guild_id"]),
@@ -2030,6 +2364,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_target_id := data_payload.get("target_id"):
             target_id = snowflakes.Snowflake(raw_target_id)
 
+        app_perms = payload.get("app_permissions")
         return command_interactions.CommandInteraction(
             app=self._app,
             application_id=snowflakes.Snowflake(payload["application_id"]),
@@ -2049,6 +2384,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             options=options,
             resolved=resolved,
             target_id=target_id,
+            app_permissions=permission_models.Permissions(app_perms) if app_perms else None,
         )
 
     def deserialize_autocomplete_interaction(
@@ -2073,10 +2409,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             member = None
             user = self.deserialize_user(payload["user"])
 
-        resolved: typing.Optional[command_interactions.ResolvedOptionData] = None
-        if resolved_payload := data_payload.get("resolved"):
-            resolved = self._deserialize_resolved_option_data(resolved_payload, guild_id=guild_id)
-
         return command_interactions.AutocompleteInteraction(
             app=self._app,
             application_id=snowflakes.Snowflake(payload["application_id"]),
@@ -2092,9 +2424,50 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             command_name=data_payload["name"],
             command_type=commands.CommandType(data_payload.get("type", commands.CommandType.SLASH)),
             options=options,
-            resolved=resolved,
             locale=locales.Locale(payload["locale"]),
             guild_locale=locales.Locale(payload["guild_locale"]) if "guild_locale" in payload else None,
+        )
+
+    def deserialize_modal_interaction(self, payload: data_binding.JSONObject) -> modal_interactions.ModalInteraction:
+        data_payload = payload["data"]
+
+        guild_id: typing.Optional[snowflakes.Snowflake] = None
+        if raw_guild_id := payload.get("guild_id"):
+            guild_id = snowflakes.Snowflake(raw_guild_id)
+
+        member: typing.Optional[base_interactions.InteractionMember]
+        if member_payload := payload.get("member"):
+            assert guild_id is not None
+            member = self._deserialize_interaction_member(member_payload, guild_id=guild_id)
+            # See https://github.com/discord/discord-api-docs/pull/2568
+            user = member.user
+
+        else:
+            member = None
+            user = self.deserialize_user(payload["user"])
+
+        message: typing.Optional[message_models.Message] = None
+        if message_payload := payload.get("message"):
+            message = self.deserialize_message(message_payload)
+
+        app_perms = payload.get("app_permissions")
+        return modal_interactions.ModalInteraction(
+            app=self._app,
+            application_id=snowflakes.Snowflake(payload["application_id"]),
+            id=snowflakes.Snowflake(payload["id"]),
+            type=base_interactions.InteractionType(payload["type"]),
+            guild_id=guild_id,
+            app_permissions=permission_models.Permissions(app_perms) if app_perms else None,
+            guild_locale=locales.Locale(payload["guild_locale"]) if "guild_locale" in payload else None,
+            locale=locales.Locale(payload["locale"]),
+            channel_id=snowflakes.Snowflake(payload["channel_id"]),
+            member=member,
+            user=user,
+            token=payload["token"],
+            version=payload["version"],
+            custom_id=data_payload["custom_id"],
+            components=self._deserialize_components(data_payload["components"], self._modal_component_type_mapping),
+            message=message,
         )
 
     def deserialize_interaction(self, payload: data_binding.JSONObject) -> base_interactions.PartialInteraction:
@@ -2107,11 +2480,13 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         raise errors.UnrecognisedEntityError(f"Unrecognised interaction type {interaction_type}")
 
     def serialize_command_option(self, option: commands.CommandOption) -> data_binding.JSONObject:
-        payload: data_binding.JSONObject = {
+        payload: typing.MutableMapping[str, typing.Any] = {
             "type": option.type,
             "name": option.name,
             "description": option.description,
             "required": option.is_required,
+            "name_localizations": option.name_localizations,
+            "description_localizations": option.description_localizations,
         }
 
         if option.channel_types is not None:
@@ -2130,6 +2505,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             payload["min_value"] = option.min_value
         if option.max_value is not None:
             payload["max_value"] = option.max_value
+
+        if option.min_length is not None:
+            payload["min_length"] = option.min_length
+        if option.max_length is not None:
+            payload["max_length"] = option.max_length
 
         return payload
 
@@ -2153,6 +2533,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             member = None
             user = self.deserialize_user(payload["user"])
 
+        app_perms = payload.get("app_permissions")
         return component_interactions.ComponentInteraction(
             app=self._app,
             application_id=snowflakes.Snowflake(payload["application_id"]),
@@ -2166,10 +2547,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             values=data_payload.get("values") or (),
             version=payload["version"],
             custom_id=data_payload["custom_id"],
-            component_type=message_models.ComponentType(data_payload["component_type"]),
+            component_type=component_models.ComponentType(data_payload["component_type"]),
             message=self.deserialize_message(payload["message"]),
             locale=locales.Locale(payload["locale"]),
             guild_locale=locales.Locale(payload["guild_locale"]) if "guild_locale" in payload else None,
+            app_permissions=permission_models.Permissions(app_perms) if app_perms else None,
         )
 
     ##################
@@ -2221,29 +2603,65 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             user=self.deserialize_user(payload["user"]) if "user" in payload else None,
         )
 
-    ##################
-    # MESSAGE MODELS #
-    ##################
+    ####################
+    # COMPONENT MODELS #
+    ####################
 
-    def _deserialize_action_row(self, payload: data_binding.JSONObject) -> message_models.ActionRowComponent:
-        components: typing.List[message_models.PartialComponent] = []
+    @typing.overload
+    def _deserialize_components(
+        self,
+        payloads: data_binding.JSONArray,
+        mapping: typing.Dict[int, typing.Callable[[data_binding.JSONObject], component_models.MessageComponentTypesT]],
+    ) -> typing.List[component_models.MessageActionRowComponent]:
+        ...
 
-        for component_payload in payload["components"]:
-            try:
-                components.append(self._deserialize_component(component_payload))
+    @typing.overload
+    def _deserialize_components(
+        self,
+        payloads: data_binding.JSONArray,
+        mapping: typing.Dict[int, typing.Callable[[data_binding.JSONObject], component_models.ModalComponentTypesT]],
+    ) -> typing.List[component_models.ModalActionRowComponent]:
+        ...
 
-            except errors.UnrecognisedEntityError:
-                pass
+    def _deserialize_components(
+        self,
+        payloads: data_binding.JSONArray,
+        mapping: typing.Dict[int, typing.Callable[[data_binding.JSONObject], typing.Any]],
+    ) -> typing.List[component_models.ActionRowComponent[typing.Any]]:
+        top_level_components = []
 
-        return message_models.ActionRowComponent(
-            type=message_models.ComponentType(payload["type"]), components=components
-        )
+        for payload in payloads:
+            top_level_component_type = component_models.ComponentType(payload["type"])
 
-    def _deserialize_button(self, payload: data_binding.JSONObject) -> message_models.ButtonComponent:
+            if top_level_component_type != component_models.ComponentType.ACTION_ROW:
+                _LOGGER.debug("Unknown top-level message component type %s", top_level_component_type)
+                continue
+
+            components = []
+
+            for component_payload in payload["components"]:
+                component_type = component_models.ComponentType(component_payload["type"])
+
+                if (deserializer := mapping.get(component_type)) is None:
+                    _LOGGER.debug("Unknown component type %s", component_type)
+                    continue
+
+                components.append(deserializer(component_payload))
+
+            if components:
+                # If we somehow get a top-level component full of unknown components, ignore the top-level
+                # component all-together
+                top_level_components.append(
+                    component_models.ActionRowComponent(type=top_level_component_type, components=components)
+                )
+
+        return top_level_components
+
+    def _deserialize_button(self, payload: data_binding.JSONObject) -> component_models.ButtonComponent:
         emoji_payload = payload.get("emoji")
-        return message_models.ButtonComponent(
-            type=message_models.ComponentType(payload["type"]),
-            style=message_models.ButtonStyle(payload["style"]),
+        return component_models.ButtonComponent(
+            type=component_models.ComponentType(payload["type"]),
+            style=component_models.ButtonStyle(payload["style"]),
             label=payload.get("label"),
             emoji=self.deserialize_emoji(emoji_payload) if emoji_payload else None,
             custom_id=payload.get("custom_id"),
@@ -2251,15 +2669,15 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             is_disabled=payload.get("disabled", False),
         )
 
-    def _deserialize_select_menu(self, payload: data_binding.JSONObject) -> message_models.SelectMenuComponent:
-        options: typing.List[message_models.SelectMenuOption] = []
+    def _deserialize_select_menu(self, payload: data_binding.JSONObject) -> component_models.SelectMenuComponent:
+        options: typing.List[component_models.SelectMenuOption] = []
         for option_payload in payload["options"]:
             emoji = None
             if emoji_payload := option_payload.get("emoji"):
                 emoji = self.deserialize_emoji(emoji_payload)
 
             options.append(
-                message_models.SelectMenuOption(
+                component_models.SelectMenuOption(
                     label=option_payload["label"],
                     value=option_payload["value"],
                     description=option_payload.get("description"),
@@ -2268,8 +2686,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 )
             )
 
-        return message_models.SelectMenuComponent(
-            type=message_models.ComponentType(payload["type"]),
+        return component_models.SelectMenuComponent(
+            type=component_models.ComponentType(payload["type"]),
             custom_id=payload["custom_id"],
             options=options,
             placeholder=payload.get("placeholder"),
@@ -2278,14 +2696,16 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             is_disabled=payload.get("disabled", False),
         )
 
-    def _deserialize_component(self, payload: data_binding.JSONObject) -> message_models.PartialComponent:
-        component_type = message_models.ComponentType(payload["type"])
+    def _deserialize_text_input(self, payload: data_binding.JSONObject) -> component_models.TextInputComponent:
+        return component_models.TextInputComponent(
+            type=component_models.ComponentType(payload["type"]),
+            custom_id=payload["custom_id"],
+            value=payload["value"],
+        )
 
-        if deserialize := self._component_type_mapping.get(component_type):
-            return deserialize(payload)
-
-        _LOGGER.debug("Unknown component type %s", component_type)
-        raise errors.UnrecognisedEntityError(f"Unrecognised component type {component_type}")
+    ##################
+    # MESSAGE MODELS #
+    ##################
 
     def _deserialize_message_activity(self, payload: data_binding.JSONObject) -> message_models.MessageActivity:
         return message_models.MessageActivity(
@@ -2343,7 +2763,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             user=self.deserialize_user(payload["user"]),
         )
 
-    def deserialize_partial_message(  # noqa CFQ001 - Function too long
+    def deserialize_partial_message(  # noqa: C901 - Too complex
         self, payload: data_binding.JSONObject
     ) -> message_models.PartialMessage:
         author: undefined.UndefinedOr[user_models.User] = undefined.UNDEFINED
@@ -2423,17 +2843,25 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if interaction_payload := payload.get("interaction"):
             interaction = self._deserialize_message_interaction(interaction_payload)
 
-        components: undefined.UndefinedOr[typing.List[message_models.PartialComponent]] = undefined.UNDEFINED
+        components: undefined.UndefinedOr[typing.List[component_models.MessageActionRowComponent]] = undefined.UNDEFINED
         if component_payloads := payload.get("components"):
-            components = []
-            for component_payload in component_payloads:
-                try:
-                    components.append(self._deserialize_component(component_payload))
+            components = self._deserialize_components(component_payloads, self._message_component_type_mapping)
 
-                except errors.UnrecognisedEntityError:
-                    pass
+        channel_mentions: undefined.UndefinedOr[
+            typing.Dict[snowflakes.Snowflake, channel_models.PartialChannel]
+        ] = undefined.UNDEFINED
+        if raw_channel_mentions := payload.get("mention_channels"):
+            channel_mentions = {c.id: c for c in map(self.deserialize_partial_channel, raw_channel_mentions)}
 
-        message = message_models.PartialMessage(
+        user_mentions: undefined.UndefinedOr[typing.Dict[snowflakes.Snowflake, user_models.User]] = undefined.UNDEFINED
+        if raw_user_mentions := payload.get("mentions"):
+            user_mentions = {u.id: u for u in map(self.deserialize_user, raw_user_mentions)}
+
+        role_mention_ids: undefined.UndefinedOr[typing.List[snowflakes.Snowflake]] = undefined.UNDEFINED
+        if raw_role_mention_ids := payload.get("mention_roles"):
+            role_mention_ids = [snowflakes.Snowflake(i) for i in raw_role_mention_ids]
+
+        return message_models.PartialMessage(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
             channel_id=snowflakes.Snowflake(payload["channel_id"]),
@@ -2460,39 +2888,13 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             application_id=application_id,
             interaction=interaction,
             components=components,
-            # We initialize these next.
-            mentions=NotImplemented,
+            channel_mentions=channel_mentions,
+            user_mentions=user_mentions,
+            role_mention_ids=role_mention_ids,
+            mentions_everyone=payload.get("mention_everyone", undefined.UNDEFINED),
         )
 
-        channels: undefined.UndefinedOr[typing.Dict[snowflakes.Snowflake, channel_models.PartialChannel]]
-        channels = undefined.UNDEFINED
-        if raw_channels := payload.get("mention_channels"):
-            channels = {c.id: c for c in map(self.deserialize_partial_channel, raw_channels)}
-
-        users: undefined.UndefinedOr[typing.Dict[snowflakes.Snowflake, user_models.User]]
-        users = undefined.UNDEFINED
-        if raw_users := payload.get("mentions"):
-            users = {u.id: u for u in map(self.deserialize_user, raw_users)}
-
-        role_ids: undefined.UndefinedOr[typing.List[snowflakes.Snowflake]] = undefined.UNDEFINED
-        if raw_role_ids := payload.get("mention_roles"):
-            role_ids = [snowflakes.Snowflake(i) for i in raw_role_ids]
-
-        everyone = payload.get("mention_everyone", undefined.UNDEFINED)
-
-        message.mentions = message_models.Mentions(
-            message=message,
-            users=users,
-            role_ids=role_ids,
-            channels=channels,
-            everyone=everyone,
-        )
-
-        return message
-
-    def deserialize_message(
-        self, payload: data_binding.JSONObject
-    ) -> message_models.Message:  # noqa CFQ001 - Function too long
+    def deserialize_message(self, payload: data_binding.JSONObject) -> message_models.Message:
         author = self.deserialize_user(payload["author"])
 
         guild_id: typing.Optional[snowflakes.Snowflake] = None
@@ -2524,9 +2926,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if "message_reference" in payload:
             message_reference = self._deserialize_message_reference(payload["message_reference"])
 
-        referenced_message: typing.Optional[message_models.Message] = None
+        referenced_message: typing.Optional[message_models.PartialMessage] = None
         if referenced_message_payload := payload.get("referenced_message"):
-            referenced_message = self.deserialize_message(referenced_message_payload)
+            referenced_message = self.deserialize_partial_message(referenced_message_payload)
 
         application: typing.Optional[message_models.MessageApplication] = None
         if "application" in payload:
@@ -2543,16 +2945,18 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if interaction_payload := payload.get("interaction"):
             interaction = self._deserialize_message_interaction(interaction_payload)
 
-        components: typing.List[message_models.PartialComponent] = []
+        components: typing.List[component_models.MessageActionRowComponent]
         if component_payloads := payload.get("components"):
-            for component_payload in component_payloads:
-                try:
-                    components.append(self._deserialize_component(component_payload))
+            components = self._deserialize_components(component_payloads, self._message_component_type_mapping)
 
-                except errors.UnrecognisedEntityError:
-                    pass
+        else:
+            components = []
 
-        message = message_models.Message(
+        user_mentions = {u.id: u for u in map(self.deserialize_user, payload.get("mentions", ()))}
+        role_mention_ids = [snowflakes.Snowflake(i) for i in payload.get("mention_roles", ())]
+        channel_mentions = {u.id: u for u in map(self.deserialize_partial_channel, payload.get("mention_channels", ()))}
+
+        return message_models.Message(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
             channel_id=snowflakes.Snowflake(payload["channel_id"]),
@@ -2579,45 +2983,17 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             application_id=snowflakes.Snowflake(payload["application_id"]) if "application_id" in payload else None,
             interaction=interaction,
             components=components,
-            # We initialize these next.
-            mentions=NotImplemented,
+            user_mentions=user_mentions,
+            channel_mentions=channel_mentions,
+            role_mention_ids=role_mention_ids,
+            mentions_everyone=payload.get("mention_everyone", False),
         )
-
-        if raw_channels := payload.get("mention_channels"):
-            channels = {c.id: c for c in map(self.deserialize_partial_channel, raw_channels)}
-
-        else:
-            channels = {}
-
-        if raw_users := payload.get("mentions"):
-            users = {u.id: u for u in map(self.deserialize_user, raw_users)}
-
-        else:
-            users = {}
-
-        if raw_role_ids := payload.get("mention_roles"):
-            role_ids = [snowflakes.Snowflake(i) for i in raw_role_ids]
-
-        else:
-            role_ids = []
-
-        everyone = payload.get("mention_everyone", False)
-
-        message.mentions = message_models.Mentions(
-            message=message,
-            users=users,
-            role_ids=role_ids,
-            channels=channels,
-            everyone=everyone,
-        )
-
-        return message
 
     ###################
     # PRESENCE MODELS #
     ###################
 
-    def deserialize_member_presence(  # noqa: CFQ001 - Max function length
+    def deserialize_member_presence(
         self,
         payload: data_binding.JSONObject,
         *,

@@ -22,13 +22,12 @@
 # SOFTWARE.
 """A sane Python framework for writing modern Discord bots.
 
-To get started, you will want to initialize an instance of `GatewayBot`
-for writing a bot, or `RESTApp` if you only need to use the REST API.
+To get started, you will want to initialize an instance of `hikari.impl.bot.GatewayBot`
+for writing a gateway based bot, `hikari.impl.rest_bot.RESTBot` for a REST based bot,
+or `hikari.impl.rest.RESTApp` if you only need to use the REST API.
 """
 
 from __future__ import annotations
-
-import os as _os
 
 from hikari import api
 from hikari import applications
@@ -41,11 +40,14 @@ from hikari import undefined
 from hikari._about import __author__
 from hikari._about import __ci__
 from hikari._about import __copyright__
+from hikari._about import __coverage__
 from hikari._about import __discord_invite__
 from hikari._about import __docs__
 from hikari._about import __email__
+from hikari._about import __git_sha1__
 from hikari._about import __issue_tracker__
 from hikari._about import __license__
+from hikari._about import __maintainer__
 from hikari._about import __url__
 from hikari._about import __version__
 from hikari.applications import Application
@@ -68,6 +70,7 @@ from hikari.channels import *
 from hikari.colors import *
 from hikari.colours import *
 from hikari.commands import *
+from hikari.components import *
 from hikari.embeds import *
 from hikari.emojis import *
 from hikari.errors import *
@@ -102,6 +105,7 @@ from hikari.intents import *
 from hikari.interactions.base_interactions import *
 from hikari.interactions.command_interactions import *
 from hikari.interactions.component_interactions import *
+from hikari.interactions.modal_interactions import *
 from hikari.invites import *
 from hikari.iterators import *
 from hikari.locales import *
@@ -127,9 +131,3 @@ from hikari.undefined import UndefinedType
 from hikari.users import *
 from hikari.voices import *
 from hikari.webhooks import *
-
-# Only expose this during documentation, as we need it to make anything visible.
-if _os.getenv("PDOC3_GENERATING") == "1":  # pragma: no cover
-    __all__ = [name for name in dir() if not name.startswith("_")]
-
-del _os

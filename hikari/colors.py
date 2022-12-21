@@ -66,7 +66,7 @@ class Color(int):
 
     This value is immutable.
 
-    This is a specialization of `builtins.int` which provides alternative overrides for
+    This is a specialization of `int` which provides alternative overrides for
     common methods and color system conversions.
 
     This currently supports:
@@ -82,80 +82,80 @@ class Color(int):
     --------
     Examples of conversions to given formats include:
 
-    ```py
-    >>> c = Color(0xFF051A)
-    Color(r=0xff, g=0x5, b=0x1a)
+    .. code-block:: python
 
-    >>> hex(c)
-    0xff051a
+        >>> c = Color(0xFF051A)
+        Color(r=0xff, g=0x5, b=0x1a)
 
-    >>> c.hex_code
-    #FF051A
+        >>> hex(c)
+        0xff051a
 
-    >>> str(c)
-    #FF051A
+        >>> c.hex_code
+        #FF051A
 
-    >>> int(c)
-    16712986
+        >>> str(c)
+        #FF051A
 
-    >>> c.rgb
-    (255, 5, 26)
+        >>> int(c)
+        16712986
 
-    >>> c.rgb_float
-    (1.0, 0.0196078431372549, 0.10196078431372549)
-    ```
+        >>> c.rgb
+        (255, 5, 26)
+
+        >>> c.rgb_float
+        (1.0, 0.0196078431372549, 0.10196078431372549)
 
     Alternatively, if you have an arbitrary input in one of the above formats
     that you wish to become a color, you can use `Color.of` on the class itself
     to automatically attempt to resolve the color:
 
-    ```py
-    >>> Color.of(0xFF051A)
-    Color(r=0xff, g=0x5, b=0x1a)
+    .. code-block:: python
 
-    >>> Color.of(16712986)
-    Color(r=0xff, g=0x5, b=0x1a)
+        >>> Color.of(0xFF051A)
+        Color(r=0xff, g=0x5, b=0x1a)
 
-    >>> c = Color.of((255, 5, 26))
-    Color(r=0xff, g=0x5, b=1xa)
+        >>> Color.of(16712986)
+        Color(r=0xff, g=0x5, b=0x1a)
 
-    >>> c = Color.of(255, 5, 26)
-    Color(r=0xff, g=0x5, b=1xa)
+        >>> c = Color.of((255, 5, 26))
+        Color(r=0xff, g=0x5, b=1xa)
 
-    >>> c = Color.of([0xFF, 0x5, 0x1a])
-    Color(r=0xff, g=0x5, b=1xa)
+        >>> c = Color.of(255, 5, 26)
+        Color(r=0xff, g=0x5, b=1xa)
 
-    >>> c = Color.of("#1a2b3c")
-    Color(r=0x1a, g=0x2b, b=0x3c)
+        >>> c = Color.of([0xFF, 0x5, 0x1a])
+        Color(r=0xff, g=0x5, b=1xa)
 
-    >>> c = Color.of("#1AB")
-    Color(r=0x11, g=0xaa, b=0xbb)
+        >>> c = Color.of("#1a2b3c")
+        Color(r=0x1a, g=0x2b, b=0x3c)
 
-    >>> c = Color.of((1.0, 0.0196078431372549, 0.10196078431372549))
-    Color(r=0xff, g=0x5, b=0x1a)
+        >>> c = Color.of("#1AB")
+        Color(r=0x11, g=0xaa, b=0xbb)
 
-    >>> c = Color.of([1.0, 0.0196078431372549, 0.10196078431372549])
-    Color(r=0xff, g=0x5, b=0x1a)
-    ```
+        >>> c = Color.of((1.0, 0.0196078431372549, 0.10196078431372549))
+        Color(r=0xff, g=0x5, b=0x1a)
+
+        >>> c = Color.of([1.0, 0.0196078431372549, 0.10196078431372549])
+        Color(r=0xff, g=0x5, b=0x1a)
 
     Examples of initialization of Color objects from given formats include:
 
-    ```py
-    >>> c = Color(16712986)
-    Color(r=0xff, g=0x5, b=0x1a)
+    .. code-block:: python
 
-    >>> c = Color.from_rgb(255, 5, 26)
-    Color(r=0xff, g=0x5, b=1xa)
+        >>> c = Color(16712986)
+        Color(r=0xff, g=0x5, b=0x1a)
 
-    >>> c = Color.from_hex_code("#1a2b3c")
-    Color(r=0x1a, g=0x2b, b=0x3c)
+        >>> c = Color.from_rgb(255, 5, 26)
+        Color(r=0xff, g=0x5, b=1xa)
 
-    >>> c = Color.from_hex_code("#1AB")
-    Color(r=0x11, g=0xaa, b=0xbb)
+        >>> c = Color.from_hex_code("#1a2b3c")
+        Color(r=0x1a, g=0x2b, b=0x3c)
 
-    >>> c = Color.from_rgb_float(1.0, 0.0196078431372549, 0.10196078431372549)
-    Color(r=0xff, g=0x5, b=0x1a)
-    ```
+        >>> c = Color.from_hex_code("#1AB")
+        Color(r=0x11, g=0xaa, b=0xbb)
+
+        >>> c = Color.from_rgb_float(1.0, 0.0196078431372549, 0.10196078431372549)
+        Color(r=0xff, g=0x5, b=0x1a)
     """
 
     __slots__: typing.Sequence[str] = ()
@@ -163,7 +163,7 @@ class Color(int):
     def __init__(self, raw_rgb: typing.SupportsInt) -> None:
         if not (0 <= int(raw_rgb) <= 0xFFFFFF):
             raise ValueError(f"raw_rgb must be in the exclusive range of 0 and {0xFF_FF_FF}")
-        # The __new__ for `builtins.int` initializes the value for us, this super-call does nothing other
+        # The __new__ for `int` initializes the value for us, this super-call does nothing other
         # than keeping the linter happy.
         super().__init__()
 
@@ -181,8 +181,8 @@ class Color(int):
         Represented as a tuple of R, G, B. Each value is
         in the range [0, 0xFF].
 
-        Example
-        -------
+        Examples
+        --------
         `(123, 234, 47)`
         """  # noqa: D401 - Imperative mood
         return (self >> 16) & 0xFF, (self >> 8) & 0xFF, self & 0xFF
@@ -193,8 +193,8 @@ class Color(int):
 
         Represented as a tuple of R, G, B. Each value is in the range [0, 1].
 
-        Example
-        -------
+        Examples
+        --------
         `(0.1, 0.2, 0.76)`
         """
         r, g, b = self.rgb
@@ -206,8 +206,8 @@ class Color(int):
 
         This is prepended with a `#` symbol, and will be in upper case.
 
-        Example
-        -------
+        Examples
+        --------
         `#1A2B3C`
         """
         return "#" + self.raw_hex_code
@@ -216,17 +216,16 @@ class Color(int):
     def raw_hex_code(self) -> str:
         """Raw hex code.
 
-        Example
-        -------
+        Examples
+        --------
         `1A2B3C`
         """
         components = self.rgb
         return "".join(hex(c)[2:].zfill(2) for c in components).upper()
 
-    # Ignore docstring not starting in an imperative mood
     @property
-    def is_web_safe(self) -> bool:  # noqa: D401
-        """`builtins.True` if the color is web safe, `builtins.False` otherwise."""
+    def is_web_safe(self) -> bool:
+        """Whether this color is web safe."""
         return not (((self & 0xFF0000) % 0x110000) or ((self & 0xFF00) % 0x1100) or ((self & 0xFF) % 0x11))
 
     @classmethod
@@ -237,11 +236,11 @@ class Color(int):
 
         Parameters
         ----------
-        red : builtins.int
+        red : int
             Red channel.
-        green : builtins.int
+        green : int
             Green channel.
-        blue : builtins.int
+        blue : int
             Blue channel.
 
         Returns
@@ -251,7 +250,7 @@ class Color(int):
 
         Raises
         ------
-        builtins.ValueError
+        ValueError
             If red, green, or blue are outside the range [0x0, 0xFF].
         """
         if not 0 <= red <= 0xFF:
@@ -271,11 +270,11 @@ class Color(int):
 
         Parameters
         ----------
-        red : builtins.float
+        red : float
             Red channel.
-        green : builtins.float
+        green : float
             Green channel.
-        blue : builtins.float
+        blue : float
             Blue channel.
 
         Returns
@@ -285,7 +284,7 @@ class Color(int):
 
         Raises
         ------
-        builtins.ValueError
+        ValueError
             If red, green or blue are outside the range [0, 1].
         """
         if not 0 <= red <= 1:
@@ -306,7 +305,7 @@ class Color(int):
 
         Parameters
         ----------
-        hex_code : builtins.str
+        hex_code : str
             A hexadecimal color code to parse. This may optionally start with
             a case insensitive `0x` or `#`.
 
@@ -317,7 +316,7 @@ class Color(int):
 
         Raises
         ------
-        builtins.ValueError
+        ValueError
             If `hex_code` is not a hexadecimal or is a invalid length.
         """
         if hex_code.startswith("#"):
@@ -370,31 +369,31 @@ class Color(int):
 
         Examples
         --------
-        ```py
-        # Floats
-        "1.0 1.0 1.0"
-        "(1.0 1.0 1.0)"
-        "[1.0 1.0 1.0]"
-        "{1.0 1.0 1.0}"
-        "1.0, 1.0, 1.0"
-        "(1.0, 1.0, 1.0)"
-        "[1.0, 1.0, 1.0]"
-        "{1.0, 1.0, 1.0}"
+        .. code-block:: python
 
-        # Ints
-        "252 252 252"
-        "(252 252 252)"
-        "[252 252 252]"
-        "{252 252 252}"
-        "252, 252, 252"
-        "(252, 252, 252)"
-        "[252, 252, 252]"
-        "{252, 252, 252}"
-        ```
+            # Floats
+            "1.0 1.0 1.0"
+            "(1.0 1.0 1.0)"
+            "[1.0 1.0 1.0]"
+            "{1.0 1.0 1.0}"
+            "1.0, 1.0, 1.0"
+            "(1.0, 1.0, 1.0)"
+            "[1.0, 1.0, 1.0]"
+            "{1.0, 1.0, 1.0}"
+
+            # Ints
+            "252 252 252"
+            "(252 252 252)"
+            "[252 252 252]"
+            "{252 252 252}"
+            "252, 252, 252"
+            "(252, 252, 252)"
+            "[252, 252, 252]"
+            "{252, 252, 252}"
 
         Parameters
         ----------
-        tuple_str : builtins.str
+        tuple_str : str
             The string to parse.
 
         Returns
@@ -424,34 +423,6 @@ class Color(int):
         else:
             return cls.from_rgb(_to_rgb_int(r, "red"), _to_rgb_int(g, "green"), _to_rgb_int(b, "blue"))
 
-    # Partially chose to override these as the docstrings contain typos according to Sphinx.
-    @classmethod
-    def from_bytes(
-        cls,
-        bytes_: typing.Union[typing.Iterable[typing.SupportsIndex], typing.SupportsBytes],
-        byteorder: typing.Literal["little", "big"],
-        *,
-        signed: bool = True,
-    ) -> Color:
-        """Convert the bytes to a `Color`.
-
-        Parameters
-        ----------
-        bytes_ : typing.Iterable[builtins.int]
-            A iterable of int byte values.
-        byteorder : builtins.str
-            The endianness of the value represented by the bytes.
-            Can be `"big"` endian or `"little"` endian.
-        signed : builtins.bool
-            Whether the value is signed or unsigned.
-
-        Returns
-        -------
-        Color
-            The Color object.
-        """
-        return Color(int.from_bytes(bytes_, byteorder, signed=signed))
-
     @classmethod
     def of(cls, value: Colorish, /) -> Color:
         """Convert the value to a `Color`.
@@ -466,43 +437,43 @@ class Color(int):
 
         Examples
         --------
-        ```py
-        >>> Color.of(0xFF051A)
-        Color(r=0xff, g=0x5, b=0x1a)
+        .. code-block:: python
 
-        >>> Color.of(16712986)
-        Color(r=0xff, g=0x5, b=0x1a)
+            >>> Color.of(0xFF051A)
+            Color(r=0xff, g=0x5, b=0x1a)
 
-        >>> c = Color.of((255, 5, 26))
-        Color(r=0xff, g=0x5, b=1xa)
+            >>> Color.of(16712986)
+            Color(r=0xff, g=0x5, b=0x1a)
 
-        >>> c = Color.of([0xFF, 0x5, 0x1a])
-        Color(r=0xff, g=0x5, b=1xa)
+            >>> c = Color.of((255, 5, 26))
+            Color(r=0xff, g=0x5, b=1xa)
 
-        >>> c = Color.of("#1a2b3c")
-        Color(r=0x1a, g=0x2b, b=0x3c)
+            >>> c = Color.of([0xFF, 0x5, 0x1a])
+            Color(r=0xff, g=0x5, b=1xa)
 
-        >>> c = Color.of("#1AB")
-        Color(r=0x11, g=0xaa, b=0xbb)
+            >>> c = Color.of("#1a2b3c")
+            Color(r=0x1a, g=0x2b, b=0x3c)
 
-        >>> c = Color.of((1.0, 0.0196078431372549, 0.10196078431372549))
-        Color(r=0xff, g=0x5, b=0x1a)
+            >>> c = Color.of("#1AB")
+            Color(r=0x11, g=0xaa, b=0xbb)
 
-        >>> c = Color.of([1.0, 0.0196078431372549, 0.10196078431372549])
-        Color(r=0xff, g=0x5, b=0x1a)
+            >>> c = Color.of((1.0, 0.0196078431372549, 0.10196078431372549))
+            Color(r=0xff, g=0x5, b=0x1a)
 
-        # Commas and brackets are optional, whitespace is ignored, and these
-        # are compatible with all-ints between 0-255 or all-floats between
-        # 0.0 and 1.0 only.
-        >>> c = Color.of("5, 22, 33")
-        Color(r=0x5, g=0x16, b=0x21)
-        >>> c = Color.of("(5, 22, 33)")
-        Color(r=0x5, g=0x16, b=0x21)
-        >>> c = Color.of("[5, 22, 33]")
-        Color(r=0x5, g=0x16, b=0x21)
-        >>> c = Color.of("{5, 22, 33}")
-        Color(r=0x5, g=0x16, b=0x21)
-        ```
+            >>> c = Color.of([1.0, 0.0196078431372549, 0.10196078431372549])
+            Color(r=0xff, g=0x5, b=0x1a)
+
+            # Commas and brackets are optional, whitespace is ignored, and these
+            # are compatible with all-ints between 0-255 or all-floats between
+            # 0.0 and 1.0 only.
+            >>> c = Color.of("5, 22, 33")
+            Color(r=0x5, g=0x16, b=0x21)
+            >>> c = Color.of("(5, 22, 33)")
+            Color(r=0x5, g=0x16, b=0x21)
+            >>> c = Color.of("[5, 22, 33]")
+            Color(r=0x5, g=0x16, b=0x21)
+            >>> c = Color.of("{5, 22, 33}")
+            Color(r=0x5, g=0x16, b=0x21)
 
         Returns
         -------
@@ -547,17 +518,17 @@ class Color(int):
 
         Parameters
         ----------
-        length : builtins.int
+        length : int
             The number of bytes to produce. Should be around `3`, but not less.
-        byteorder : builtins.str
+        byteorder : str
             The endianness of the value represented by the bytes.
             Can be `"big"` endian or `"little"` endian.
-        signed : builtins.bool
+        signed : bool
             Whether the value is signed or unsigned.
 
         Returns
         -------
-        builtins.bytes
+        bytes
             The bytes representation of the Color.
         """
         return int(self).to_bytes(length, byteorder, signed=signed)
@@ -578,12 +549,12 @@ This may be:
 
 1. `hikari.colors.Color`
 2. `hikari.colours.Colour` (an alias for `hikari.colors.Color`).
-3. A value that can be cast to an `builtins.int` (RGB hex-code).
-4. a 3-`builtins.tuple` of `builtins.int` (RGB integers in range 0 through 255).
-5. a 3-`builtins.tuple` of `builtins.float` (RGB floats in range 0 through 1).
-6. a list of `builtins.int`.
-7. a list of `builtins.float`.
-8. a `builtins.str` hex colour code.
+3. A value that can be cast to an `int` (RGB hex-code).
+4. a 3-`tuple` of `int` (RGB integers in range 0 through 255).
+5. a 3-`tuple` of `float` (RGB floats in range 0 through 1).
+6. a list of `int`.
+7. a list of `float`.
+8. a `str` hex colour code.
 
 A hex colour code is expected to be in one of the following formats. Each of the
 following examples means the same thing semantically.

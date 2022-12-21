@@ -27,7 +27,6 @@ from hikari import snowflakes
 from hikari import traits
 from hikari.interactions import base_interactions
 from hikari.interactions import component_interactions
-from tests.hikari import hikari_test_helpers
 
 
 @pytest.fixture()
@@ -55,6 +54,7 @@ class TestComponentInteraction:
             message=object(),
             locale="es-ES",
             guild_locale="en-US",
+            app_permissions=123321,
         )
 
     def test_build_response(self, mock_component_interaction, mock_app):
@@ -91,6 +91,13 @@ class TestComponentInteraction:
         mock_app.cache.get_guild_channel.return_value = mock.Mock(channels.GuildTextChannel)
 
         assert mock_component_interaction.get_channel() is mock_app.cache.get_guild_channel.return_value
+
+        mock_app.cache.get_guild_channel.assert_called_once_with(3123123)
+
+    def test_get_channel_when_not_cached(self, mock_component_interaction, mock_app):
+        mock_app.cache.get_guild_channel.return_value = None
+
+        assert mock_component_interaction.get_channel() is None
 
         mock_app.cache.get_guild_channel.assert_called_once_with(3123123)
 
@@ -136,28 +143,3 @@ class TestComponentInteraction:
         assert mock_component_interaction.get_guild() is None
 
         mock_app.cache.get_guild.assert_not_called()
-
-    @pytest.mark.asyncio()
-    async def test_fetch_parent_message(self):
-        stub_interaction = hikari_test_helpers.mock_class_namespace(
-            component_interactions.ComponentInteraction, fetch_message=mock.AsyncMock(), init_=False
-        )()
-        stub_interaction.message = mock.Mock(id=3421)
-
-        assert await stub_interaction.fetch_parent_message() is stub_interaction.fetch_message.return_value
-
-        stub_interaction.fetch_message.assert_awaited_once_with(3421)
-
-    def test_get_parent_message(self, mock_component_interaction, mock_app):
-        mock_component_interaction.message = mock.Mock(id=321655)
-
-        assert mock_component_interaction.get_parent_message() is mock_app.cache.get_message.return_value
-
-        mock_app.cache.get_message.assert_called_once_with(321655)
-
-    def test_get_parent_message_when_cacheless(self, mock_component_interaction, mock_app):
-        mock_component_interaction.app = mock.Mock(traits.RESTAware)
-
-        assert mock_component_interaction.get_parent_message() is None
-
-        mock_app.cache.get_message.assert_not_called()

@@ -56,6 +56,7 @@ class TestCommandInteraction:
             resolved=None,
             locale="es-ES",
             guild_locale="en-US",
+            app_permissions=543123,
         )
 
     def test_build_response(self, mock_command_interaction, mock_app):
@@ -87,6 +88,12 @@ class TestCommandInteraction:
         assert mock_command_interaction.get_channel() is mock_app.cache.get_guild_channel.return_value
         mock_app.cache.get_guild_channel.assert_called_once_with(3123123)
 
+    def test_get_channel_when_not_cached(self, mock_command_interaction, mock_app):
+        mock_app.cache.get_guild_channel.return_value = None
+
+        assert mock_command_interaction.get_channel() is None
+        mock_app.cache.get_guild_channel.assert_called_once_with(3123123)
+
     def test_get_channel_without_cache(self, mock_command_interaction):
         mock_command_interaction.app = mock.Mock(traits.RESTAware)
 
@@ -113,7 +120,6 @@ class TestAutocompleteInteraction:
             command_name="OKOKOK",
             command_type=1,
             options=[],
-            resolved=None,
         )
 
     @pytest.fixture()

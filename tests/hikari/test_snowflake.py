@@ -88,14 +88,10 @@ class TestSnowflake:
         assert isinstance(result, snowflakes.Snowflake)
 
     def test_min(self):
-        sf = snowflakes.Snowflake.min()
-        assert sf == 0
-        assert snowflakes.Snowflake.min() is sf
+        assert snowflakes.Snowflake.min() == 0
 
     def test_max(self):
-        sf = snowflakes.Snowflake.max()
-        assert sf == (1 << 63) - 1
-        assert snowflakes.Snowflake.max() is sf
+        assert snowflakes.Snowflake.max() == (1 << 63) - 1
 
 
 class TestUnique:

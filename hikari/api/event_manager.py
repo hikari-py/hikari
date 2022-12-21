@@ -59,29 +59,29 @@ class EventStream(iterators.LazyIterator[base_events.EventT], abc.ABC):
     where `EventStream.open` and `EventStream.close` are implicitly called based on
     context.
 
-    ```py
-    with EventStream(app, EventType, timeout=50) as stream:
-        async for entry in stream:
-            ...
-    ```
+    .. code-block:: python
+
+        with EventStream(app, EventType, timeout=50) as stream:
+            async for entry in stream:
+                ...
 
     A streamer may also be directly started and closed using the `EventStream.close`
     and `EventStream.open`. Note that if you don't call `EventStream.close` after
     opening a streamer when you're finished with it then it may queue events
     events in memory indefinitely.
 
-    ```py
-    stream = EventStream(app, EventType, timeout=50)
-    await stream.open()
-    async for event in stream:
-        ...
+    .. code-block:: python
 
-    await stream.close()
-    ```
+        stream = EventStream(app, EventType, timeout=50)
+        await stream.open()
+        async for event in stream:
+            ...
+
+        await stream.close()
 
     See Also
     --------
-    LazyIterator: `hikari.iterators.LazyIterator`
+    LazyIterator : `hikari.iterators.LazyIterator`.
     """
 
     __slots__: typing.Sequence[str] = ()
@@ -92,7 +92,7 @@ class EventStream(iterators.LazyIterator[base_events.EventT], abc.ABC):
 
         If called on an already closed streamer then this will do nothing.
 
-        !!! note
+        .. note::
             `with streamer` may be used as a short-cut for opening and
             closing a streamer.
         """
@@ -103,7 +103,7 @@ class EventStream(iterators.LazyIterator[base_events.EventT], abc.ABC):
 
         If called on an already started streamer then this will do nothing.
 
-        !!! note
+        .. note::
             `with streamer` may be used as a short-cut for opening and
             closing a stream.
         """
@@ -119,17 +119,17 @@ class EventStream(iterators.LazyIterator[base_events.EventT], abc.ABC):
         Each condition is treated as a predicate, being called with each item
         that this iterator would return when it is requested.
 
-        All conditions must evaluate to `builtins.True` for the item to be
+        All conditions must evaluate to `True` for the item to be
         returned. If this is not met, then the item is discarded and ignored,
         the next matching item will be returned instead, if there is one.
 
         Parameters
         ----------
-        *predicates : typing.Union[typing.Callable[[ValueT], builtins.bool], typing.Tuple[builtins.str, typing.Any]]
+        *predicates : typing.Union[typing.Callable[[ValueT], bool], typing.Tuple[str, typing.Any]]
             Predicates to invoke. These are functions that take a value and
-            return `builtins.True` if it is of interest, or `builtins.False`
-            otherwise. These may instead include 2-`builtins.tuple` objects
-            consisting of a `builtins.str` attribute name (nested attributes
+            return `True` if it is of interest, or `False`
+            otherwise. These may instead include 2-`tuple` objects
+            consisting of a `str` attribute name (nested attributes
             are referred to using the `.` operator), and values to compare for
             equality. This allows you to specify conditions such as
             `members.filter(("user.bot", True))`.
@@ -184,7 +184,7 @@ class EventManager(abc.ABC):
 
         Raises
         ------
-        builtins.LookupError
+        LookupError
             If there is no consumer for the event.
         """
 
@@ -197,62 +197,62 @@ class EventManager(abc.ABC):
         event : hikari.events.base_events.Event
             The event to dispatch.
 
-        Example
-        -------
+        Examples
+        --------
         We can dispatch custom events by first defining a class that
         derives from `hikari.events.base_events.Event`.
 
-        ```py
-        import attr
+        .. code-block:: python
 
-        from hikari.traits import RESTAware
-        from hikari.events.base_events import Event
-        from hikari.users import User
-        from hikari.snowflakes import Snowflake
+            import attr
 
-        @attr.define()
-        class EveryoneMentionedEvent(Event):
-            app: RESTAware = attr.field()
+            from hikari.traits import RESTAware
+            from hikari.events.base_events import Event
+            from hikari.users import User
+            from hikari.snowflakes import Snowflake
 
-            author: User = attr.field()
-            '''The user who mentioned everyone.'''
+            @attr.define()
+            class EveryoneMentionedEvent(Event):
+                app: RESTAware = attr.field()
 
-            content: str = attr.field()
-            '''The message that was sent.'''
+                author: User = attr.field()
+                '''The user who mentioned everyone.'''
 
-            message_id: Snowflake = attr.field()
-            '''The message ID.'''
+                content: str = attr.field()
+                '''The message that was sent.'''
 
-            channel_id: Snowflake = attr.field()
-            '''The channel ID.'''
-        ```
+                message_id: Snowflake = attr.field()
+                '''The message ID.'''
+
+                channel_id: Snowflake = attr.field()
+                '''The channel ID.'''
 
         We can then dispatch our event as we see fit.
 
-        ```py
-        from hikari.events.messages import MessageCreateEvent
+        .. code-block:: python
 
-        @bot.listen(MessageCreateEvent)
-        async def on_message(event):
-            if "@everyone" in event.content or "@here" in event.content:
-                event = EveryoneMentionedEvent(
-                    author=event.author,
-                    content=event.content,
-                    message_id=event.id,
-                    channel_id=event.channel_id,
-                )
+            from hikari.events.messages import MessageCreateEvent
 
-                bot.dispatch(event)
-        ```
+            @bot.listen(MessageCreateEvent)
+            async def on_message(event):
+                if "@everyone" in event.content or "@here" in event.content:
+                    event = EveryoneMentionedEvent(
+                        author=event.author,
+                        content=event.content,
+                        message_id=event.id,
+                        channel_id=event.channel_id,
+                    )
+
+                    bot.dispatch(event)
 
         This event can be listened to elsewhere by subscribing to it with
         `EventManager.subscribe`.
 
-        ```py
-        @bot.listen(EveryoneMentionedEvent)
-        async def on_everyone_mentioned(event):
-            print(event.user, "just pinged everyone in", event.channel_id)
-        ```
+        .. code-block:: python
+
+            @bot.listen(EveryoneMentionedEvent)
+            async def on_everyone_mentioned(event):
+                print(event.user, "just pinged everyone in", event.channel_id)
 
         Returns
         -------
@@ -264,11 +264,11 @@ class EventManager(abc.ABC):
 
         See Also
         --------
-        Listen: `hikari.api.event_manager.EventManager.listen`
-        Stream: `hikari.api.event_manager.EventManager.stream`
-        Subscribe: `hikari.api.event_manager.EventManager.subscribe`
-        Unsubscribe: `hikari.api.event_manager.EventManager.unsubscribe`
-        Wait_for: `hikari.api.event_manager.EventManager.wait_for`
+        Listen : `hikari.api.event_manager.EventManager.listen`.
+        Stream : `hikari.api.event_manager.EventManager.stream`.
+        Subscribe : `hikari.api.event_manager.EventManager.subscribe`.
+        Unsubscribe : `hikari.api.event_manager.EventManager.unsubscribe`.
+        Wait_for: `hikari.api.event_manager.EventManager.wait_for`.
         """
 
     # Yes, this is not generic. The reason for this is MyPy complains about
@@ -290,27 +290,27 @@ class EventManager(abc.ABC):
             consume an instance of the given event, or an instance of a valid
             subclass if one exists. Any result is discarded.
 
-        Example
-        -------
+        Examples
+        --------
         The following demonstrates subscribing a callback to message creation
         events.
 
-        ```py
-        from hikari.events.messages import MessageCreateEvent
+        .. code-block:: python
 
-        async def on_message(event):
-            ...
+            from hikari.events.messages import MessageCreateEvent
 
-        bot.subscribe(MessageCreateEvent, on_message)
-        ```
+            async def on_message(event):
+                ...
+
+            bot.subscribe(MessageCreateEvent, on_message)
 
         See Also
         --------
-        Dispatch: `hikari.api.event_manager.EventManager.dispatch`
-        Listen: `hikari.api.event_manager.EventManager.listen`
-        Stream: `hikari.api.event_manager.EventManager.stream`
-        Unsubscribe: `hikari.api.event_manager.EventManager.unsubscribe`
-        Wait_for: `hikari.api.event_manager.EventManager.wait_for`
+        Dispatch : `hikari.api.event_manager.EventManager.dispatch`.
+        Listen : `hikari.api.event_manager.EventManager.listen`.
+        Stream : `hikari.api.event_manager.EventManager.stream`.
+        Unsubscribe : `hikari.api.event_manager.EventManager.unsubscribe`.
+        Wait_for : `hikari.api.event_manager.EventManager.wait_for`.
         """
 
     # Yes, this is not generic. The reason for this is MyPy complains about
@@ -330,27 +330,27 @@ class EventManager(abc.ABC):
         callback
             The callback to unsubscribe.
 
-        Example
-        -------
+        Examples
+        --------
         The following demonstrates unsubscribing a callback from a message
         creation event.
 
-        ```py
-        from hikari.events.messages import MessageCreateEvent
+        .. code-block:: python
 
-        async def on_message(event):
-            ...
+            from hikari.events.messages import MessageCreateEvent
 
-        bot.unsubscribe(MessageCreateEvent, on_message)
-        ```
+            async def on_message(event):
+                ...
+
+            bot.unsubscribe(MessageCreateEvent, on_message)
 
         See Also
         --------
-        Dispatch: `hikari.api.event_manager.EventManager.dispatch`
-        Listen: `hikari.api.event_manager.EventManager.listen`
-        Stream: `hikari.api.event_manager.EventManager.stream`
-        Subscribe: `hikari.api.event_manager.EventManager.subscribe`
-        Wait_for: `hikari.api.event_manager.EventManager.wait_for`
+        Dispatch : `hikari.api.event_manager.EventManager.dispatch`.
+        Listen : `hikari.api.event_manager.EventManager.listen`.
+        Stream : `hikari.api.event_manager.EventManager.stream`.
+        Subscribe : `hikari.api.event_manager.EventManager.subscribe`.
+        Wait_for : `hikari.api.event_manager.EventManager.wait_for`.
         """
 
     @abc.abstractmethod
@@ -368,23 +368,17 @@ class EventManager(abc.ABC):
         event_type : typing.Type[T]
             The event type to look for.
             `T` must be a subclass of `hikari.events.base_events.Event`.
-        polymorphic : builtins.bool
-            If `builtins.True`, this will also return the listeners for all the
-            event types `event_type` will dispatch. If `builtins.False`, then
+        polymorphic : bool
+            If `True`, this will also return the listeners for all the
+            event types `event_type` will dispatch. If `False`, then
             only listeners for this class specifically are returned. The
-            default is `builtins.True`.
+            default is `True`.
 
         Returns
         -------
-        typing.Collection[typing.Callable[[T], typing.Coroutine[typing.Any, typing.Any, builtins.None]]
+        typing.Collection[typing.Callable[[T], typing.Coroutine[typing.Any, typing.Any, None]]]
             A copy of the collection of listeners for the event. Will return
             an empty collection if nothing is registered.
-
-            `T` must be a subclass of `hikari.events.base_events.Event`.
-
-        See Also
-        --------
-        Has listener: `hikari.api.event_manager.EventManager.has_listener`
         """
 
     @abc.abstractmethod
@@ -402,7 +396,6 @@ class EventManager(abc.ABC):
             The event types to subscribe to. The implementation may allow this
             to be undefined. If this is the case, the event type will be inferred
             instead from the type hints on the function signature.
-
             `T` must be a subclass of `hikari.events.base_events.Event`.
 
         Returns
@@ -414,11 +407,11 @@ class EventManager(abc.ABC):
 
         See Also
         --------
-        Dispatch: `hikari.api.event_manager.EventManager.dispatch`
-        Stream: `hikari.api.event_manager.EventManager.stream`
-        Subscribe: `hikari.api.event_manager.EventManager.subscribe`
-        Unsubscribe: `hikari.api.event_manager.EventManager.unsubscribe`
-        Wait_for: `hikari.api.event_manager.EventManager.wait_for`
+        Dispatch : `hikari.api.event_manager.EventManager.dispatch`.
+        Stream : `hikari.api.event_manager.EventManager.stream`.
+        Subscribe : `hikari.api.event_manager.EventManager.subscribe`.
+        Unsubscribe : `hikari.api.event_manager.EventManager.unsubscribe`.
+        Wait_for : `hikari.api.event_manager.EventManager.wait_for`.
         """
 
     @abc.abstractmethod
@@ -431,18 +424,23 @@ class EventManager(abc.ABC):
     ) -> EventStream[base_events.EventT]:
         """Return a stream iterator for the given event and sub-events.
 
+        .. warning::
+            If you use `await stream.open()` to start the stream then you must
+            also close it with `await stream.close()` otherwise it may queue
+            events in memory indefinitely.
+
         Parameters
         ----------
         event_type : typing.Type[hikari.events.base_events.Event]
             The event type to listen for. This will listen for subclasses of
             this type additionally.
-        timeout : typing.Optional[builtins.int, builtins.float]
+        timeout : typing.Optional[int, float]
             How long this streamer should wait for the next event before
-            ending the iteration. If `builtins.None` then this will continue
+            ending the iteration. If `None` then this will continue
             until explicitly broken from.
-        limit : typing.Optional[builtins.int]
+        limit : typing.Optional[int]
             The limit for how many events this should queue at one time before
-            dropping extra incoming events, leave this as `builtins.None` for
+            dropping extra incoming events, leave this as `None` for
             the cache size to be unlimited.
 
         Returns
@@ -452,39 +450,33 @@ class EventManager(abc.ABC):
             with `with stream:` or `stream.open()` before
             asynchronously iterating over it.
 
-        !!! warning
-            If you use `stream.open()` to start the stream then you must
-            also close it with `stream.close()` otherwise it may queue
-            events in memory indefinitely.
-
         Examples
         --------
+        .. code-block:: python
 
-        ```py
-        with bot.stream(events.ReactionAddEvent, timeout=30).filter(("message_id", message.id)) as stream:
-            async for user_id in stream.map("user_id").limit(50):
-                ...
-        ```
+            with bot.stream(events.ReactionAddEvent, timeout=30).filter(("message_id", message.id)) as stream:
+                async for user_id in stream.map("user_id").limit(50):
+                    ...
 
         or using `open()` and `close()`
 
-        ```py
-        stream = bot.stream(events.ReactionAddEvent, timeout=30).filter(("message_id", message.id))
-        stream.open()
+        .. code-block:: python
 
-        async for user_id in stream.map("user_id").limit(50)
-            ...
+            stream = bot.stream(events.ReactionAddEvent, timeout=30).filter(("message_id", message.id))
+            stream.open()
 
-        stream.close()
-        ```
+            async for user_id in stream.map("user_id").limit(50)
+                ...
+
+            stream.close()
 
         See Also
         --------
-        Dispatch: `hikari.api.event_manager.EventManager.dispatch`
-        Listen: `hikari.api.event_manager.EventManager.listen`
-        Subscribe: `hikari.api.event_manager.EventManager.subscribe`
-        Unsubscribe: `hikari.api.event_manager.EventManager.unsubscribe`
-        Wait_for: `hikari.api.event_manager.EventManager.wait_for`
+        Dispatch : `hikari.api.event_manager.EventManager.dispatch`.
+        Listen : `hikari.api.event_manager.EventManager.listen`.
+        Subscribe : `hikari.api.event_manager.EventManager.subscribe`.
+        Unsubscribe : `hikari.api.event_manager.EventManager.unsubscribe`.
+        Wait_for : `hikari.api.event_manager.EventManager.wait_for`.
         """
 
     @abc.abstractmethod
@@ -497,6 +489,9 @@ class EventManager(abc.ABC):
     ) -> base_events.EventT:
         """Wait for a given event to occur once, then return the event.
 
+        .. warning::
+            Async predicates are not supported.
+
         Parameters
         ----------
         event_type : typing.Type[hikari.events.base_events.Event]
@@ -504,17 +499,14 @@ class EventManager(abc.ABC):
             this type additionally.
         predicate
             A function taking the event as the single parameter.
-            This should return `builtins.True` if the event is one you want to
-            return, or `builtins.False` if the event should not be returned.
+            This should return `True` if the event is one you want to
+            return, or `False` if the event should not be returned.
             If left as `None` (the default), then the first matching event type
             that the bot receives (or any subtype) will be the one returned.
-
-            !!! warning
-                Async predicates are not supported.
-        timeout : typing.Union[builtins.float, builtins.int, builtins.None]
+        timeout : typing.Union[float, int, None]
             The amount of time to wait before raising an `asyncio.TimeoutError`
             and giving up instead. This is measured in seconds. If
-            `builtins.None`, then no timeout will be waited for (no timeout can
+            `None`, then no timeout will be waited for (no timeout can
             result in "leaking" of coroutines that never complete if called in
             an uncontrolled way, so is not recommended).
 
@@ -526,14 +518,14 @@ class EventManager(abc.ABC):
         Raises
         ------
         asyncio.TimeoutError
-            If the timeout is not `builtins.None` and is reached before an
-            event is received that the predicate returns `builtins.True` for.
+            If the timeout is not `None` and is reached before an
+            event is received that the predicate returns `True` for.
 
         See Also
         --------
-        Dispatch: `hikari.api.event_manager.EventManager.dispatch`
-        Listen: `hikari.api.event_manager.EventManager.listen`
-        Stream: `hikari.api.event_manager.EventManager.stream`
-        Subscribe: `hikari.api.event_manager.EventManager.subscribe`
-        Unsubscribe: `hikari.api.event_manager.EventManager.unsubscribe`
+        Dispatch : `hikari.api.event_manager.EventManager.dispatch`.
+        Listen : `hikari.api.event_manager.EventManager.listen`.
+        Stream : `hikari.api.event_manager.EventManager.stream`.
+        Subscribe : `hikari.api.event_manager.EventManager.subscribe`.
+        Unsubscribe : `hikari.api.event_manager.EventManager.unsubscribe`.
         """

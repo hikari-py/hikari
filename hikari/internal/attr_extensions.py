@@ -73,7 +73,7 @@ def get_fields_definition(
 
     Returns
     -------
-    typing.Sequence[typing.Tuple[builtins.str, builtins.str]]
+    typing.Sequence[typing.Tuple[str, str]]
         A sequence of tuples of string attribute names to string key-word names.
     """
     init_results: typing.List[typing.Tuple[attr.Attribute[typing.Any], str]] = []
@@ -223,17 +223,17 @@ def get_or_generate_deep_copier(
 def deep_copy_attrs(model: ModelT, memo: typing.Optional[typing.MutableMapping[int, typing.Any]] = None) -> ModelT:
     """Deep copy an attrs model with `init` enabled.
 
+    .. note::
+        This won't deep copy attributes where "skip_deep_copy" is set to
+        `True` in their metadata.
+
     Parameters
     ----------
     model : ModelT
         The attrs model to deep copy.
-    memo : typing.Optional[typing.MutableMapping[builtins.int, typing.Any]]
+    memo : typing.Optional[typing.MutableMapping[int, typing.Any]]
         A memo dictionary of objects already copied during the current copying
-        pass, see https://docs.python.org/3/library/copy.html for more details.
-
-    !!! note
-        This won't deep copy attributes where "skip_deep_copy" is set to
-        `builtins.True` in their metadata.
+        pass, see <https://docs.python.org/3/library/copy.html> for more details.
 
     Returns
     -------
@@ -252,7 +252,7 @@ def deep_copy_attrs(model: ModelT, memo: typing.Optional[typing.MutableMapping[i
 def with_copy(cls: typing.Type[ModelT]) -> typing.Type[ModelT]:
     """Add a custom implementation for copying attrs models to a class.
 
-    !!! note
+    .. note::
         This will only work if the class has an attrs generated init.
     """
     cls.__copy__ = copy_attrs  # type: ignore[attr-defined]

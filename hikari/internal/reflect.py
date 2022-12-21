@@ -41,15 +41,15 @@ EMPTY: typing.Final[typing.Any] = inspect.Parameter.empty
 def resolve_signature(func: typing.Callable[..., typing.Any]) -> inspect.Signature:
     """Get the `inspect.Signature` of `func` with resolved forward annotations.
 
+    .. warning::
+        This will use `eval` to resolve string type-hints and forward
+        references. This has a slight performance overhead, so attempt to cache
+        this info as much as possible.
+
     Parameters
     ----------
     func : typing.Callable[..., typing.Any]
         The function to get the resolved annotations from.
-
-    !!! warning
-        This will use `builtins.eval` to resolve string type-hints and forward
-        references. This has a slight performance overhead, so attempt to cache
-        this info as much as possible.
 
     Returns
     -------
@@ -84,7 +84,7 @@ def profiled(call: typing.Callable[..., _T]) -> typing.Callable[..., _T]:  # pra
 
     Profile results are dumped to stdout.
 
-    !!! warning
+    .. warning::
         This is NOT part of the public API. It should be considered to be
         internal detail and will likely be removed without prior warning in
         the future. You have been warned!
@@ -98,7 +98,7 @@ def profiled(call: typing.Callable[..., _T]) -> typing.Callable[..., _T]:  # pra
 
     @functools.wraps(call)
     def wrapped(*args: typing.Any, **kwargs: typing.Any) -> typing.Any:
-        print("Profiling", call.__module__ + "." + call.__qualname__)  # noqa: T001 print disallowed.
+        print("Profiling", call.__module__ + "." + call.__qualname__)  # noqa: T201 print disallowed.
         cProfile.runctx(invoker, globals=globals(), locals=locals(), filename=None, sort=1)
         return locals()["result"]
 

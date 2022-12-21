@@ -24,9 +24,12 @@ import mock
 import pytest
 
 from hikari import commands
+from hikari import components
 from hikari import emojis
 from hikari import files
+from hikari import locales
 from hikari import messages
+from hikari import permissions
 from hikari import snowflakes
 from hikari import undefined
 from hikari.impl import special_endpoints
@@ -432,6 +435,255 @@ class TestScheduledEventUserIterator:
         mock_request.assert_awaited_once_with(compiled_route=expected_route, query=query)
 
 
+@pytest.mark.asyncio()
+class TestGuildThreadIterator:
+    @pytest.mark.parametrize("before_is_timestamp", [True, False])
+    @pytest.mark.asyncio()
+    async def test_aiter_when_empty_chunk(self, before_is_timestamp: bool):
+        mock_deserialize = mock.Mock()
+        mock_entity_factory = mock.Mock()
+        mock_request = mock.AsyncMock(return_value={"threads": [], "has_more": False})
+        mock_route = mock.Mock()
+
+        results = await special_endpoints.GuildThreadIterator(
+            deserialize=mock_deserialize,
+            entity_factory=mock_entity_factory,
+            request_call=mock_request,
+            route=mock_route,
+            before_is_timestamp=before_is_timestamp,
+            before="123321",
+        )
+
+        assert results == []
+        mock_request.assert_awaited_once_with(compiled_route=mock_route, query={"before": "123321", "limit": "100"})
+        mock_entity_factory.deserialize_thread_member.assert_not_called()
+        mock_deserialize.assert_not_called()
+
+    @pytest.mark.asyncio()
+    async def test_aiter_when_before_is_timestamp(self):
+        mock_payload_1 = {"id": "9494949", "thread_metadata": {"archive_timestamp": "2022-02-28T11:33:09.220087+00:00"}}
+        mock_payload_2 = {"id": "6576234", "thread_metadata": {"archive_timestamp": "2022-02-21T11:33:09.220087+00:00"}}
+        mock_payload_3 = {
+            "id": "1236524143",
+            "thread_metadata": {"archive_timestamp": "2022-02-10T11:33:09.220087+00:00"},
+        }
+        mock_payload_4 = {
+            "id": "12365241663",
+            "thread_metadata": {"archive_timestamp": "2022-02-11T11:33:09.220087+00:00"},
+        }
+        mock_thread_1 = mock.Mock(id=9494949)
+        mock_thread_2 = mock.Mock(id=6576234)
+        mock_thread_3 = mock.Mock(id=1236524143)
+        mock_thread_4 = mock.Mock(id=12365241663)
+        mock_member_payload_1 = {"id": "9494949", "user_id": "4884844"}
+        mock_member_payload_2 = {"id": "6576234", "user_id": "9030920932908"}
+        mock_member_payload_3 = {"id": "1236524143", "user_id": "9549494934"}
+        mock_member_1 = mock.Mock(thread_id=9494949)
+        mock_member_2 = mock.Mock(thread_id=6576234)
+        mock_member_3 = mock.Mock(thread_id=1236524143)
+        mock_deserialize = mock.Mock(side_effect=[mock_thread_1, mock_thread_2, mock_thread_3, mock_thread_4])
+        mock_entity_factory = mock.Mock()
+        mock_entity_factory.deserialize_thread_member.side_effect = [mock_member_1, mock_member_2, mock_member_3]
+        mock_request = mock.AsyncMock(
+            side_effect=[
+                {
+                    "threads": [mock_payload_1, mock_payload_2],
+                    "members": [mock_member_payload_1, mock_member_payload_2],
+                    "has_more": True,
+                },
+                {"threads": [mock_payload_3, mock_payload_4], "members": [mock_member_payload_3], "has_more": False},
+            ]
+        )
+        mock_route = mock.Mock()
+        thread_iterator = special_endpoints.GuildThreadIterator(
+            mock_deserialize,
+            mock_entity_factory,
+            mock_request,
+            mock_route,
+            "eatmyshinymetal",
+            before_is_timestamp=True,
+        )
+
+        results = await thread_iterator
+
+        mock_request.assert_has_awaits(
+            [
+                mock.call(compiled_route=mock_route, query={"limit": "100", "before": "eatmyshinymetal"}),
+                mock.call(
+                    compiled_route=mock_route, query={"limit": "100", "before": "2022-02-21T11:33:09.220087+00:00"}
+                ),
+            ]
+        )
+        assert results == [mock_thread_1, mock_thread_2, mock_thread_3, mock_thread_4]
+        mock_entity_factory.deserialize_thread_member.assert_has_calls(
+            [mock.call(mock_member_payload_1), mock.call(mock_member_payload_2), mock.call(mock_member_payload_3)]
+        )
+        mock_deserialize.assert_has_calls(
+            [
+                mock.call(mock_payload_1, member=mock_member_1),
+                mock.call(mock_payload_2, member=mock_member_2),
+                mock.call(mock_payload_3, member=mock_member_3),
+                mock.call(mock_payload_4, member=None),
+            ]
+        )
+
+    async def test_aiter_when_before_is_timestamp_and_undefined(self):
+        mock_payload_1 = {"id": "9494949", "thread_metadata": {"archive_timestamp": "2022-02-21T11:33:09.220087+00:00"}}
+        mock_payload_2 = {"id": "6576234", "thread_metadata": {"archive_timestamp": "2022-02-08T11:33:09.220087+00:00"}}
+        mock_payload_3 = {
+            "id": "1236524143",
+            "thread_metadata": {"archive_timestamp": "2022-02-28T11:33:09.220087+00:00"},
+        }
+        mock_member_payload_1 = {"id": "9494949", "user_id": "4884844"}
+        mock_member_payload_2 = {"id": "6576234", "user_id": "9030920932908"}
+        mock_member_payload_3 = {"id": "1236524143", "user_id": "9549494934"}
+        mock_thread_1 = mock.Mock(id=9494949)
+        mock_thread_2 = mock.Mock(id=6576234)
+        mock_thread_3 = mock.Mock(id=1236524143)
+        mock_member_1 = mock.Mock(thread_id=9494949)
+        mock_member_2 = mock.Mock(thread_id=6576234)
+        mock_member_3 = mock.Mock(thread_id=1236524143)
+        mock_deserialize = mock.Mock(side_effect=[mock_thread_1, mock_thread_2, mock_thread_3])
+        mock_entity_factory = mock.Mock()
+        mock_entity_factory.deserialize_thread_member.side_effect = [mock_member_1, mock_member_2, mock_member_3]
+        mock_request = mock.AsyncMock(
+            return_value={
+                "threads": [mock_payload_1, mock_payload_2, mock_payload_3],
+                "members": [mock_member_payload_3, mock_member_payload_1, mock_member_payload_2],
+                "has_more": False,
+            }
+        )
+        mock_route = mock.Mock()
+        thread_iterator = special_endpoints.GuildThreadIterator(
+            mock_deserialize,
+            mock_entity_factory,
+            mock_request,
+            mock_route,
+            undefined.UNDEFINED,
+            before_is_timestamp=True,
+        )
+
+        result = await thread_iterator
+
+        assert result == [mock_thread_1, mock_thread_2, mock_thread_3]
+        mock_entity_factory.deserialize_thread_member.assert_has_calls(
+            [mock.call(mock_member_payload_1), mock.call(mock_member_payload_2), mock.call(mock_member_payload_3)]
+        )
+        mock_request.assert_awaited_once_with(compiled_route=mock_route, query={"limit": "100"})
+        mock_deserialize.assert_has_calls(
+            [
+                mock.call(mock_payload_1, member=mock_member_1),
+                mock.call(mock_payload_2, member=mock_member_2),
+                mock.call(mock_payload_3, member=mock_member_3),
+            ]
+        )
+
+    async def test_aiter_when_before_is_id(self):
+        mock_payload_1 = {"id": "9494949", "thread_metadata": {"archive_timestamp": "2022-02-21T11:33:09.220087+00:00"}}
+        mock_payload_2 = {"id": "6576234", "thread_metadata": {"archive_timestamp": "2022-02-10T11:33:09.220087+00:00"}}
+        mock_payload_3 = {
+            "id": "1236524143",
+            "thread_metadata": {"archive_timestamp": "2022-02-28T11:33:09.220087+00:00"},
+        }
+        mock_member_payload_1 = {"id": "9494949", "user_id": "4884844"}
+        mock_member_payload_2 = {"id": "6576234", "user_id": "9030920932908"}
+        mock_member_payload_3 = {"id": "1236524143", "user_id": "9549494934"}
+        mock_member_1 = mock.Mock(thread_id=9494949)
+        mock_member_2 = mock.Mock(thread_id=6576234)
+        mock_member_3 = mock.Mock(thread_id=1236524143)
+        mock_thread_1 = mock.Mock(id=9494949)
+        mock_thread_2 = mock.Mock(id=6576234)
+        mock_thread_3 = mock.Mock(id=1236524143)
+        mock_deserialize = mock.Mock(side_effect=[mock_thread_1, mock_thread_2, mock_thread_3])
+        mock_entity_factory = mock.Mock()
+        mock_entity_factory.deserialize_thread_member.side_effect = [mock_member_1, mock_member_3, mock_member_2]
+
+        mock_request = mock.AsyncMock(
+            return_value={
+                "threads": [mock_payload_1, mock_payload_2, mock_payload_3],
+                "members": [mock_member_payload_3, mock_member_payload_1, mock_member_payload_2],
+                "has_more": False,
+            }
+        )
+        mock_route = mock.Mock()
+        thread_iterator = special_endpoints.GuildThreadIterator(
+            mock_deserialize,
+            mock_entity_factory,
+            mock_request,
+            mock_route,
+            "3451231231231",
+            before_is_timestamp=False,
+        )
+
+        result = await thread_iterator
+
+        assert result == [mock_thread_1, mock_thread_2, mock_thread_3]
+        mock_request.assert_awaited_once_with(
+            compiled_route=mock_route, query={"limit": "100", "before": "3451231231231"}
+        )
+        mock_deserialize.assert_has_calls(
+            [
+                mock.call(mock_payload_1, member=mock_member_1),
+                mock.call(mock_payload_2, member=mock_member_3),
+                mock.call(mock_payload_3, member=mock_member_2),
+            ]
+        )
+        mock_entity_factory.deserialize_thread_member.assert_has_calls(
+            [mock.call(mock_member_payload_1), mock.call(mock_member_payload_2), mock.call(mock_member_payload_3)]
+        )
+
+    async def test_aiter_when_before_is_id_and_undefined(self):
+        mock_payload_1 = {"id": "9494949", "thread_metadata": {"archive_timestamp": "2022-02-21T11:33:09.220087+00:00"}}
+        mock_payload_2 = {"id": "6576234", "thread_metadata": {"archive_timestamp": "2022-02-08T11:33:09.220087+00:00"}}
+        mock_payload_3 = {
+            "id": "1236524143",
+            "thread_metadata": {"archive_timestamp": "2022-02-28T11:33:09.220087+00:00"},
+        }
+        mock_member_payload_1 = {"id": "9494949", "user_id": "4884844"}
+        mock_member_payload_2 = {"id": "6576234", "user_id": "9030920932908"}
+        mock_member_payload_3 = {"id": "1236524143", "user_id": "9549494934"}
+        mock_thread_1 = mock.Mock(id=9494949)
+        mock_thread_2 = mock.Mock(id=6576234)
+        mock_thread_3 = mock.Mock(id=1236524143)
+        mock_member_1 = mock.Mock(thread_id=9494949)
+        mock_member_2 = mock.Mock(thread_id=6576234)
+        mock_member_3 = mock.Mock(thread_id=1236524143)
+        mock_deserialize = mock.Mock(side_effect=[mock_thread_1, mock_thread_2, mock_thread_3])
+        mock_entity_factory = mock.Mock()
+        mock_entity_factory.deserialize_thread_member.side_effect = [mock_member_1, mock_member_2, mock_member_3]
+        mock_request = mock.AsyncMock(
+            return_value={
+                "threads": [mock_payload_1, mock_payload_2, mock_payload_3],
+                "members": [mock_member_payload_3, mock_member_payload_1, mock_member_payload_2],
+                "has_more": False,
+            }
+        )
+        mock_route = mock.Mock()
+        thread_iterator = special_endpoints.GuildThreadIterator(
+            mock_deserialize,
+            mock_entity_factory,
+            mock_request,
+            mock_route,
+            undefined.UNDEFINED,
+            before_is_timestamp=False,
+        )
+
+        result = await thread_iterator
+
+        assert result == [mock_thread_1, mock_thread_2, mock_thread_3]
+        mock_entity_factory.deserialize_thread_member.assert_has_calls(
+            [mock.call(mock_member_payload_1), mock.call(mock_member_payload_2), mock.call(mock_member_payload_3)]
+        )
+        mock_request.assert_awaited_once_with(compiled_route=mock_route, query={"limit": "100"})
+        mock_deserialize.assert_has_calls(
+            [
+                mock.call(mock_payload_1, member=mock_member_1),
+                mock.call(mock_payload_2, member=mock_member_2),
+                mock.call(mock_payload_3, member=mock_member_3),
+            ]
+        )
+
+
 class TestInteractionDeferredBuilder:
     def test_type_property(self):
         builder = special_endpoints.InteractionDeferredBuilder(5)
@@ -542,8 +794,8 @@ class TestInteractionMessageBuilder:
 
     def test_build(self):
         mock_entity_factory = mock.Mock()
-        mock_embed = object()
         mock_component = mock.Mock()
+        mock_embed = object()
         mock_serialized_embed = object()
         mock_entity_factory.serialize_embed.return_value = (mock_serialized_embed, [])
         builder = (
@@ -617,18 +869,82 @@ class TestInteractionMessageBuilder:
         assert attachments == []
 
     def test_build_handles_attachments(self):
-        mock_attachment = mock.Mock()
-        mock_other_attachment = mock.Mock()
         mock_entity_factory = mock.Mock()
-        mock_entity_factory.serialize_embed.return_value = (object(), [mock_other_attachment])
+        mock_message_attachment = mock.Mock(messages.Attachment, id=123, filename="testing")
+        mock_file_attachment = object()
+        mock_embed = object()
+        mock_embed_attachment = object()
+        mock_entity_factory.serialize_embed.return_value = (mock_embed, [mock_embed_attachment])
         builder = (
             special_endpoints.InteractionMessageBuilder(base_interactions.ResponseType.MESSAGE_CREATE)
-            .add_attachment(mock_attachment)
+            .add_attachment(mock_file_attachment)
+            .add_attachment(mock_message_attachment)
             .add_embed(object())
         )
 
-        _, attachments = builder.build(mock_entity_factory)
-        assert attachments == [files.ensure_resource(mock_attachment), mock_other_attachment]
+        with mock.patch.object(files, "ensure_resource") as ensure_resource:
+            result, attachments = builder.build(mock_entity_factory)
+
+        ensure_resource.assert_called_once_with(mock_file_attachment)
+        assert result == {
+            "type": base_interactions.ResponseType.MESSAGE_CREATE,
+            "data": {
+                "attachments": [{"id": 123, "filename": "testing"}],
+                "embeds": [mock_embed],
+                "allowed_mentions": {"parse": []},
+            },
+        }
+
+        assert attachments == [ensure_resource.return_value, mock_embed_attachment]
+
+    def test_build_handles_cleared_attachments(self):
+        mock_entity_factory = mock.Mock()
+        builder = special_endpoints.InteractionMessageBuilder(
+            base_interactions.ResponseType.MESSAGE_UPDATE
+        ).clear_attachments()
+
+        result, attachments = builder.build(mock_entity_factory)
+
+        assert result == {
+            "type": base_interactions.ResponseType.MESSAGE_UPDATE,
+            "data": {"attachments": None},
+        }
+
+        assert attachments == []
+
+
+class TestInteractionModalBuilder:
+    def test_type_property(self):
+        builder = special_endpoints.InteractionModalBuilder("title", "custom_id")
+        assert builder.type == 9
+
+    def test_title_property(self):
+        builder = special_endpoints.InteractionModalBuilder("title", "custom_id").set_title("title2")
+        assert builder.title == "title2"
+
+    def test_custom_id_property(self):
+        builder = special_endpoints.InteractionModalBuilder("title", "custom_id").set_custom_id("better_custom_id")
+        assert builder.custom_id == "better_custom_id"
+
+    def test_components_property(self):
+        component = mock.Mock()
+        builder = special_endpoints.InteractionModalBuilder("title", "custom_id").add_component(component)
+        assert builder.components == [component]
+
+    def test_build(self):
+        component = mock.Mock()
+        builder = special_endpoints.InteractionModalBuilder("title", "custom_id").add_component(component)
+
+        result, attachments = builder.build(mock.Mock())
+        assert result == {
+            "type": 9,
+            "data": {
+                "title": "title",
+                "custom_id": "custom_id",
+                "components": [component.build.return_value],
+            },
+        }
+        assert attachments == ()
 
 
 class TestSlashCommandBuilder:
@@ -657,19 +973,33 @@ class TestSlashCommandBuilder:
 
         assert builder.id == 3212123
 
-    def test_default_permission(self):
-        builder = special_endpoints.SlashCommandBuilder("oksksksk", "kfdkodfokfd").set_default_permission(True)
+    def test_default_member_permissions(self):
+        builder = special_endpoints.SlashCommandBuilder("oksksksk", "kfdkodfokfd").set_default_member_permissions(
+            permissions.Permissions.ADMINISTRATOR
+        )
 
-        assert builder.default_permission is True
+        assert builder.default_member_permissions == permissions.Permissions.ADMINISTRATOR
+
+    def test_is_dm_enabled(self):
+        builder = special_endpoints.SlashCommandBuilder("oksksksk", "kfdkodfokfd").set_is_dm_enabled(True)
+
+        assert builder.is_dm_enabled is True
 
     def test_build_with_optional_data(self):
         mock_entity_factory = mock.Mock()
         mock_option = object()
         builder = (
-            special_endpoints.SlashCommandBuilder("we are number", "one")
+            special_endpoints.SlashCommandBuilder(
+                "we are number",
+                "one",
+                name_localizations={locales.Locale.TR: "merhaba"},
+                description_localizations={locales.Locale.TR: "bir"},
+            )
             .add_option(mock_option)
             .set_id(3412312)
-            .set_default_permission(False)
+            .set_default_member_permissions(permissions.Permissions.ADMINISTRATOR)
+            .set_is_dm_enabled(True)
+            .set_is_nsfw(True)
         )
 
         result = builder.build(mock_entity_factory)
@@ -679,17 +1009,28 @@ class TestSlashCommandBuilder:
             "name": "we are number",
             "description": "one",
             "type": 1,
-            "default_permission": False,
+            "dm_permission": True,
+            "nsfw": True,
+            "default_member_permissions": 8,
             "options": [mock_entity_factory.serialize_command_option.return_value],
             "id": "3412312",
+            "name_localizations": {locales.Locale.TR: "merhaba"},
+            "description_localizations": {locales.Locale.TR: "bir"},
         }
 
     def test_build_without_optional_data(self):
-        builder = special_endpoints.SlashCommandBuilder("we are numberr", "oner")
+        builder = special_endpoints.SlashCommandBuilder("we are number", "oner")
 
         result = builder.build(mock.Mock())
 
-        assert result == {"type": 1, "name": "we are numberr", "description": "oner", "options": []}
+        assert result == {
+            "type": 1,
+            "name": "we are number",
+            "description": "oner",
+            "options": [],
+            "name_localizations": {},
+            "description_localizations": {},
+        }
 
     @pytest.mark.asyncio()
     async def test_create(self):
@@ -697,7 +1038,11 @@ class TestSlashCommandBuilder:
             special_endpoints.SlashCommandBuilder("we are number", "one")
             .add_option(mock.Mock())
             .set_id(3412312)
-            .set_default_permission(False)
+            .set_name_localizations({locales.Locale.TR: "sayı"})
+            .set_description_localizations({locales.Locale.TR: "bir"})
+            .set_default_member_permissions(permissions.Permissions.BAN_MEMBERS)
+            .set_is_dm_enabled(True)
+            .set_is_nsfw(True)
         )
         mock_rest = mock.AsyncMock()
 
@@ -709,14 +1054,26 @@ class TestSlashCommandBuilder:
             builder.name,
             builder.description,
             guild=undefined.UNDEFINED,
-            default_permission=builder.default_permission,
             options=builder.options,
+            name_localizations={locales.Locale.TR: "sayı"},
+            description_localizations={locales.Locale.TR: "bir"},
+            default_member_permissions=permissions.Permissions.BAN_MEMBERS,
+            dm_enabled=True,
+            nsfw=True,
         )
 
     @pytest.mark.asyncio()
     async def test_create_with_guild(self):
-        builder = special_endpoints.SlashCommandBuilder("we are number", "one")
+        builder = (
+            special_endpoints.SlashCommandBuilder("we are number", "one")
+            .set_default_member_permissions(permissions.Permissions.BAN_MEMBERS)
+            .set_is_dm_enabled(True)
+            .set_is_nsfw(True)
+        )
         mock_rest = mock.AsyncMock()
+
+        builder.set_name_localizations({locales.Locale.TR: "sayı"})
+        builder.set_description_localizations({locales.Locale.TR: "bir"})
 
         result = await builder.create(mock_rest, 54455445, guild=54123123321)
 
@@ -726,17 +1083,27 @@ class TestSlashCommandBuilder:
             builder.name,
             builder.description,
             guild=54123123321,
-            default_permission=builder.default_permission,
             options=builder.options,
+            name_localizations={locales.Locale.TR: "sayı"},
+            description_localizations={locales.Locale.TR: "bir"},
+            default_member_permissions=permissions.Permissions.BAN_MEMBERS,
+            dm_enabled=True,
+            nsfw=True,
         )
 
 
 class TestContextMenuBuilder:
     def test_build_with_optional_data(self):
         builder = (
-            special_endpoints.ContextMenuCommandBuilder(commands.CommandType.USER, "we are number")
+            special_endpoints.ContextMenuCommandBuilder(
+                commands.CommandType.USER,
+                "we are number",
+            )
             .set_id(3412312)
-            .set_default_permission(False)
+            .set_name_localizations({locales.Locale.TR: "merhaba"})
+            .set_default_member_permissions(permissions.Permissions.ADMINISTRATOR)
+            .set_is_dm_enabled(True)
+            .set_is_nsfw(True)
         )
 
         result = builder.build(mock.Mock())
@@ -744,8 +1111,11 @@ class TestContextMenuBuilder:
         assert result == {
             "name": "we are number",
             "type": 2,
-            "default_permission": False,
+            "dm_permission": True,
+            "nsfw": True,
+            "default_member_permissions": 8,
             "id": "3412312",
+            "name_localizations": {locales.Locale.TR: "merhaba"},
         }
 
     def test_build_without_optional_data(self):
@@ -753,14 +1123,16 @@ class TestContextMenuBuilder:
 
         result = builder.build(mock.Mock())
 
-        assert result == {"type": 3, "name": "nameeeee"}
+        assert result == {"type": 3, "name": "nameeeee", "name_localizations": {}}
 
     @pytest.mark.asyncio()
     async def test_create(self):
         builder = (
             special_endpoints.ContextMenuCommandBuilder(commands.CommandType.USER, "we are number")
-            .set_id(3412312)
-            .set_default_permission(False)
+            .set_default_member_permissions(permissions.Permissions.BAN_MEMBERS)
+            .set_name_localizations({"meow": "nyan"})
+            .set_is_dm_enabled(True)
+            .set_is_nsfw(True)
         )
         mock_rest = mock.AsyncMock()
 
@@ -772,12 +1144,21 @@ class TestContextMenuBuilder:
             builder.type,
             builder.name,
             guild=undefined.UNDEFINED,
-            default_permission=builder.default_permission,
+            default_member_permissions=permissions.Permissions.BAN_MEMBERS,
+            name_localizations={"meow": "nyan"},
+            dm_enabled=True,
+            nsfw=True,
         )
 
     @pytest.mark.asyncio()
     async def test_create_with_guild(self):
-        builder = special_endpoints.ContextMenuCommandBuilder(commands.CommandType.MESSAGE, "we are number")
+        builder = (
+            special_endpoints.ContextMenuCommandBuilder(commands.CommandType.USER, "we are number")
+            .set_default_member_permissions(permissions.Permissions.BAN_MEMBERS)
+            .set_name_localizations({"en-ghibli": "meow"})
+            .set_is_dm_enabled(True)
+            .set_is_nsfw(True)
+        )
         mock_rest = mock.AsyncMock()
 
         result = await builder.create(mock_rest, 4444444, guild=765234123)
@@ -788,7 +1169,10 @@ class TestContextMenuBuilder:
             builder.type,
             builder.name,
             guild=765234123,
-            default_permission=builder.default_permission,
+            default_member_permissions=permissions.Permissions.BAN_MEMBERS,
+            name_localizations={"en-ghibli": "meow"},
+            dm_enabled=True,
+            nsfw=True,
         )
 
 
@@ -817,7 +1201,7 @@ class Test_ButtonBuilder:
     def button(self):
         return special_endpoints._ButtonBuilder(
             container=mock.Mock(),
-            style=messages.ButtonStyle.DANGER,
+            style=components.ButtonStyle.DANGER,
             custom_id="sfdasdasd",
             url="hi there",
             emoji=543123,
@@ -828,7 +1212,7 @@ class Test_ButtonBuilder:
         )
 
     def test_style_property(self, button):
-        assert button.style is messages.ButtonStyle.DANGER
+        assert button.style is components.ButtonStyle.DANGER
 
     def test_emoji_property(self, button):
         assert button.emoji == 543123
@@ -870,7 +1254,7 @@ class Test_ButtonBuilder:
     def test_build(self):
         result = special_endpoints._ButtonBuilder(
             container=object(),
-            style=messages.ButtonStyle.DANGER,
+            style=components.ButtonStyle.DANGER,
             url=undefined.UNDEFINED,
             emoji_id=undefined.UNDEFINED,
             emoji_name="emoji_name",
@@ -880,8 +1264,8 @@ class Test_ButtonBuilder:
         ).build()
 
         assert result == {
-            "type": messages.ComponentType.BUTTON,
-            "style": messages.ButtonStyle.DANGER,
+            "type": components.ComponentType.BUTTON,
+            "style": components.ButtonStyle.DANGER,
             "emoji": {"name": "emoji_name"},
             "label": "no u",
             "custom_id": "ooga booga",
@@ -891,7 +1275,7 @@ class Test_ButtonBuilder:
     def test_build_without_optional_fields(self):
         result = special_endpoints._ButtonBuilder(
             container=object(),
-            style=messages.ButtonStyle.LINK,
+            style=components.ButtonStyle.LINK,
             url="OK",
             emoji_id="123321",
             emoji_name=undefined.UNDEFINED,
@@ -901,8 +1285,8 @@ class Test_ButtonBuilder:
         ).build()
 
         assert result == {
-            "type": messages.ComponentType.BUTTON,
-            "style": messages.ButtonStyle.LINK,
+            "type": components.ComponentType.BUTTON,
+            "style": components.ButtonStyle.LINK,
             "emoji": {"id": "123321"},
             "disabled": False,
             "url": "OK",
@@ -912,7 +1296,7 @@ class Test_ButtonBuilder:
         mock_container = mock.Mock()
         button = special_endpoints._ButtonBuilder(
             container=mock_container,
-            style=messages.ButtonStyle.DANGER,
+            style=components.ButtonStyle.DANGER,
             url=undefined.UNDEFINED,
             emoji_id=undefined.UNDEFINED,
             emoji_name="emoji_name",
@@ -930,7 +1314,7 @@ class TestLinkButtonBuilder:
     def test_url_property(self):
         button = special_endpoints.LinkButtonBuilder(
             container=object(),
-            style=messages.ButtonStyle.DANGER,
+            style=components.ButtonStyle.DANGER,
             url="hihihihi",
             emoji_id=undefined.UNDEFINED,
             emoji_name="emoji_name",
@@ -946,7 +1330,7 @@ class TestInteractiveButtonBuilder:
     def test_custom_id_property(self):
         button = special_endpoints.InteractiveButtonBuilder(
             container=object(),
-            style=messages.ButtonStyle.DANGER,
+            style=components.ButtonStyle.DANGER,
             url="hihihihi",
             emoji_id=undefined.UNDEFINED,
             emoji_name="emoji_name",
@@ -1093,7 +1477,7 @@ class TestSelectMenuBuilder:
         result = special_endpoints.SelectMenuBuilder(container=object(), custom_id="o2o2o2").build()
 
         assert result == {
-            "type": messages.ComponentType.SELECT_MENU,
+            "type": components.ComponentType.SELECT_MENU,
             "custom_id": "o2o2o2",
             "options": [],
             "disabled": False,
@@ -1113,7 +1497,7 @@ class TestSelectMenuBuilder:
         )
 
         assert result == {
-            "type": messages.ComponentType.SELECT_MENU,
+            "type": components.ComponentType.SELECT_MENU,
             "custom_id": "o2o2o2",
             "options": [{"hi": "OK"}],
             "placeholder": "hi",
@@ -1123,30 +1507,117 @@ class TestSelectMenuBuilder:
         }
 
 
-class TestActionRowBuilder:
+class TestTextInput:
+    @pytest.fixture()
+    def text_input(self):
+        return special_endpoints.TextInputBuilder(
+            container=mock.Mock(),
+            custom_id="o2o2o2",
+            label="label",
+        )
+
+    def test_set_style(self, text_input):
+        assert text_input.set_style(components.TextInputStyle.PARAGRAPH) is text_input
+        assert text_input.style == components.TextInputStyle.PARAGRAPH
+
+    def test_set_custom_id(self, text_input):
+        assert text_input.set_custom_id("custooom") is text_input
+        assert text_input.custom_id == "custooom"
+
+    def test_set_label(self, text_input):
+        assert text_input.set_label("labeeeel") is text_input
+        assert text_input.label == "labeeeel"
+
+    def test_set_placeholder(self, text_input):
+        assert text_input.set_placeholder("place") is text_input
+        assert text_input.placeholder == "place"
+
+    def test_set_required(self, text_input):
+        assert text_input.set_required(True) is text_input
+        assert text_input.required is True
+
+    def test_set_value(self, text_input):
+        assert text_input.set_value("valueeeee") is text_input
+        assert text_input.value == "valueeeee"
+
+    def test_set_min_length_(self, text_input):
+        assert text_input.set_min_length(10) is text_input
+        assert text_input.min_length == 10
+
+    def test_set_max_length(self, text_input):
+        assert text_input.set_max_length(250) is text_input
+        assert text_input.max_length == 250
+
+    def test_add_to_container(self, text_input):
+        assert text_input.add_to_container() is text_input._container
+        text_input._container.add_component.assert_called_once_with(text_input)
+
+    def test_build(self):
+        result = special_endpoints.TextInputBuilder(
+            container=object(),
+            custom_id="o2o2o2",
+            label="label",
+        ).build()
+
+        assert result == {
+            "type": components.ComponentType.TEXT_INPUT,
+            "style": 1,
+            "custom_id": "o2o2o2",
+            "label": "label",
+        }
+
+    def test_build_partial(self):
+        result = (
+            special_endpoints.TextInputBuilder(
+                container=object(),
+                custom_id="o2o2o2",
+                label="label",
+            )
+            .set_placeholder("placeholder")
+            .set_value("value")
+            .set_required(False)
+            .set_min_length(10)
+            .set_max_length(250)
+            .build()
+        )
+
+        assert result == {
+            "type": components.ComponentType.TEXT_INPUT,
+            "style": 1,
+            "custom_id": "o2o2o2",
+            "label": "label",
+            "placeholder": "placeholder",
+            "value": "value",
+            "required": False,
+            "min_length": 10,
+            "max_length": 250,
+        }
+
+
+class TestMessageActionRowBuilder:
     def test_components_property(self):
         mock_component = object()
-        row = special_endpoints.ActionRowBuilder().add_component(mock_component)
+        row = special_endpoints.MessageActionRowBuilder().add_component(mock_component)
         assert row.components == [mock_component]
 
     def test_add_button_for_interactive(self):
-        row = special_endpoints.ActionRowBuilder()
-        button = row.add_button(messages.ButtonStyle.DANGER, "go home")
+        row = special_endpoints.MessageActionRowBuilder()
+        button = row.add_button(components.ButtonStyle.DANGER, "go home")
 
         button.add_to_container()
 
         assert row.components == [button]
 
     def test_add_button_for_link(self):
-        row = special_endpoints.ActionRowBuilder()
-        button = row.add_button(messages.ButtonStyle.LINK, "go home")
+        row = special_endpoints.MessageActionRowBuilder()
+        button = row.add_button(components.ButtonStyle.LINK, "go home")
 
         button.add_to_container()
 
         assert row.components == [button]
 
     def test_add_select_menu(self):
-        row = special_endpoints.ActionRowBuilder()
+        row = special_endpoints.MessageActionRowBuilder()
         menu = row.add_select_menu("hihihi")
 
         menu.add_to_container()
@@ -1157,14 +1628,24 @@ class TestActionRowBuilder:
         mock_component_1 = mock.Mock()
         mock_component_2 = mock.Mock()
 
-        row = special_endpoints.ActionRowBuilder()
+        row = special_endpoints.MessageActionRowBuilder()
         row._components = [mock_component_1, mock_component_2]
 
         result = row.build()
 
         assert result == {
-            "type": messages.ComponentType.ACTION_ROW,
+            "type": components.ComponentType.ACTION_ROW,
             "components": [mock_component_1.build.return_value, mock_component_2.build.return_value],
         }
         mock_component_1.build.assert_called_once_with()
         mock_component_2.build.assert_called_once_with()
+
+
+class TestModalActionRow:
+    def test_add_text_input(self):
+        row = special_endpoints.ModalActionRowBuilder()
+        menu = row.add_text_input("hihihi", "label")
+
+        menu.add_to_container()
+
+        assert row.components == [menu]

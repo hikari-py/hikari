@@ -144,6 +144,42 @@ class TestInitLogging:
         supports_color.assert_called_once_with(True, False)
 
 
+class TestRedBanner:
+    def test_when_above_3_9(self):
+        class MockTraversable:
+            joint_path = None
+            open_mode = None
+
+            def joinpath(self, path):
+                self.joint_path = path
+                return self
+
+            def open(self, mode):
+                self.open_mode = mode
+                return self
+
+            def read(self):
+                return read
+
+        traversable = MockTraversable()
+        read = object()
+
+        with mock.patch.object(sys, "version_info", new=(3, 9)):
+            with mock.patch.object(importlib.resources, "files", return_value=traversable, create=True) as read_text:
+                assert ux._read_banner("hikaru") is read
+
+        read_text.assert_called_once_with("hikaru")
+        assert traversable.joint_path == "banner.txt"
+        assert traversable.open_mode == "r"
+
+    def test_when_bellow_3_9(self):
+        with mock.patch.object(sys, "version_info", new=(2, 7)):
+            with mock.patch.object(importlib.resources, "read_text") as read_text:
+                assert ux._read_banner("hikaru") is read_text.return_value
+
+        read_text.assert_called_once_with("hikaru", "banner.txt")
+
+
 class TestPrintBanner:
     def test_when_package_is_none(self):
         with mock.patch.object(sys.stdout, "write") as write:
@@ -162,7 +198,7 @@ class TestPrintBanner:
 
         stack.enter_context(mock.patch.object(_about, "__version__", new="2.2.2"))
         stack.enter_context(mock.patch.object(_about, "__git_sha1__", new="12345678901234567890"))
-        stack.enter_context(mock.patch.object(_about, "__copyright__", new="© 2020 Nekokatt"))
+        stack.enter_context(mock.patch.object(_about, "__copyright__", new="2020, Nekokatt"))
         stack.enter_context(mock.patch.object(_about, "__license__", new="MIT"))
         stack.enter_context(mock.patch.object(_about, "__file__", new="~/hikari"))
         stack.enter_context(mock.patch.object(_about, "__docs__", new="https://nekokatt.github.io/hikari/docs"))
@@ -179,7 +215,7 @@ class TestPrintBanner:
         )
         stack.enter_context(mock.patch.object(time, "sleep"))
         supports_color = stack.enter_context(mock.patch.object(ux, "supports_color", return_value=True))
-        read_text = stack.enter_context(mock.patch.object(importlib.resources, "read_text"))
+        read_banner = stack.enter_context(mock.patch.object(ux, "_read_banner"))
         template = stack.enter_context(mock.patch.object(string, "Template"))
         builtins_open = stack.enter_context(mock.patch.object(builtins, "open"))
         abspath = stack.enter_context(mock.patch.object(os.path, "abspath", return_value="some path"))
@@ -187,13 +223,13 @@ class TestPrintBanner:
         fileno = stack.enter_context(mock.patch.object(sys.stdout, "fileno"))
 
         with stack:
-            ux.print_banner("hikari", True, False)
+            ux.print_banner("hikaru", True, False)
 
         args = {
             # Hikari stuff.
             "hikari_version": "2.2.2",
             "hikari_git_sha1": "12345678",
-            "hikari_copyright": "© 2020 Nekokatt",
+            "hikari_copyright": "2020, Nekokatt",
             "hikari_license": "MIT",
             "hikari_install_location": "some path",
             "hikari_documentation_url": "https://nekokatt.github.io/hikari/docs",
@@ -207,7 +243,8 @@ class TestPrintBanner:
             "blue": 2,
         }
 
-        template.assert_called_once_with(read_text())
+        read_banner.assert_called_once_with("hikaru")
+        template.assert_called_once_with(read_banner.return_value)
         template().safe_substitute.assert_called_once_with(args)
         builtins_open.assert_called_once_with(fileno.return_value, "w", encoding="utf-8", closefd=False)
         builtins_open.return_value.__enter__.return_value.write.assert_called_once_with(template().safe_substitute())
@@ -222,7 +259,7 @@ class TestPrintBanner:
         )
         stack.enter_context(mock.patch.object(time, "sleep"))
         supports_color = stack.enter_context(mock.patch.object(ux, "supports_color", return_value=False))
-        read_text = stack.enter_context(mock.patch.object(importlib.resources, "read_text"))
+        read_banner = stack.enter_context(mock.patch.object(ux, "_read_banner"))
         template = stack.enter_context(mock.patch.object(string, "Template"))
         abspath = stack.enter_context(mock.patch.object(os.path, "abspath", return_value="some path"))
         dirname = stack.enter_context(mock.patch.object(os.path, "dirname"))
@@ -230,13 +267,13 @@ class TestPrintBanner:
         fileno = stack.enter_context(mock.patch.object(sys.stdout, "fileno"))
 
         with stack:
-            ux.print_banner("hikari", True, False)
+            ux.print_banner("hikaru", True, False)
 
         args = {
             # Hikari stuff.
             "hikari_version": "2.2.2",
             "hikari_git_sha1": "12345678",
-            "hikari_copyright": "© 2020 Nekokatt",
+            "hikari_copyright": "2020, Nekokatt",
             "hikari_license": "MIT",
             "hikari_install_location": "some path",
             "hikari_documentation_url": "https://nekokatt.github.io/hikari/docs",
@@ -250,7 +287,7 @@ class TestPrintBanner:
             "blue": "",
         }
 
-        template.assert_called_once_with(read_text())
+        template.assert_called_once_with(read_banner.return_value)
         template().safe_substitute.assert_called_once_with(args)
         dirname.assert_called_once_with("~/hikari")
         abspath.assert_called_once_with(dirname())
@@ -262,7 +299,7 @@ class TestPrintBanner:
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(colorlog.escape_codes, "escape_codes", new={}))
         stack.enter_context(mock.patch.object(time, "sleep"))
-        read_text = stack.enter_context(mock.patch.object(importlib.resources, "read_text"))
+        read_banner = stack.enter_context(mock.patch.object(ux, "_read_banner"))
         template = stack.enter_context(mock.patch.object(string, "Template"))
         builtins_open = stack.enter_context(mock.patch.object(builtins, "open"))
         stack.enter_context(mock.patch.object(os.path, "abspath", return_value="some path"))
@@ -274,13 +311,13 @@ class TestPrintBanner:
         }
 
         with stack:
-            ux.print_banner("hikari", True, False, extra_args=extra_args)
+            ux.print_banner("hikaru", True, False, extra_args=extra_args)
 
         args = {
             # Hikari stuff.
             "hikari_version": "2.2.2",
             "hikari_git_sha1": "12345678",
-            "hikari_copyright": "© 2020 Nekokatt",
+            "hikari_copyright": "2020, Nekokatt",
             "hikari_license": "MIT",
             "hikari_install_location": "some path",
             "hikari_documentation_url": "https://nekokatt.github.io/hikari/docs",
@@ -293,7 +330,8 @@ class TestPrintBanner:
 
         args.update(extra_args)
 
-        template.assert_called_once_with(read_text())
+        read_banner.assert_called_once_with("hikaru")
+        template.assert_called_once_with(read_banner.return_value)
         template().safe_substitute.assert_called_once_with(args)
         builtins_open.assert_called_once_with(fileno.return_value, "w", encoding="utf-8", closefd=False)
         builtins_open.return_value.__enter__.return_value.write.assert_called_once_with(template().safe_substitute())
@@ -302,7 +340,7 @@ class TestPrintBanner:
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(time, "sleep"))
         stack.enter_context(mock.patch.object(colorlog.escape_codes, "escape_codes", new={}))
-        stack.enter_context(mock.patch.object(importlib.resources, "read_text"))
+        stack.enter_context(mock.patch.object(ux, "_read_banner"))
         stack.enter_context(mock.patch.object(string, "Template"))
         stack.enter_context(mock.patch.object(sys.stdout, "write"))
         stack.enter_context(mock.patch.object(os.path, "abspath", return_value="some path"))
@@ -596,10 +634,10 @@ class TestCheckForUpdates:
     async def test_check_for_updates(self, v, http_settings, proxy_settings):
         data = {
             "releases": {
-                "0.1.0": [{"yanked": False}],
+                v: [{"yanked": False}, {"yanked": True}],
                 "1.0.0": [{"yanked": False}],
                 "1.0.0.dev1": [{"yanked": False}],
-                v: [{"yanked": False}, {"yanked": True}],
+                "0.1.0": [{"yanked": False}],
                 "1.0.2": [{"yanked": True}],
             }
         }

@@ -28,6 +28,7 @@ include = ".*pyi?$"
 target-version = ["py38"]
 
 [tool.coverage.run]
+relative_files = true
 parallel = true
 branch = true
 timid = false
@@ -92,21 +93,27 @@ norecursedirs = [
     "public",
     "ci",
 ]
-filterwarnings = ["ignore:.*assertions not in test modules or plugins will be ignored because assert statements are not executed by the underlying Python interpreter.*:pytest.PytestConfigWarning"]
+filterwarnings = [
+    "error", # Treat warnings as errors
+    "ignore:.*assertions not in test modules or plugins will be ignored .*:pytest.PytestConfigWarning",
+]
 required_plugins = ["pytest-asyncio"]
 
 [tool.towncrier]
 package = "hikari"
 package_dir = "hikari"
 directory = "changes"
+template = "changes/.template.rst"
 filename = "CHANGELOG.md"
 issue_format = "[#{issue}](https://github.com/hikari-py/hikari/issues/{issue})"
+# We use this differently in the template
+underlines = [2, 3]
 type = [
-    { name = "Breaking Changes",            directory = "breaking",     showcontent = true },
-    { name = "Deprecation",                 directory = "deprecation",  showcontent = true },
-    { name = "Features",                    directory = "feature",      showcontent = true },
-    { name = "Bugfixes",                    directory = "bugfix",       showcontent = true },
-    { name = "Documentation Improvements",  directory = "doc",          showcontent = true },
+    { name = "Breaking Changes",            directory = "breaking",      showcontent = true },
+    { name = "Deprecation",                 directory = "deprecation",   showcontent = true },
+    { name = "Features",                    directory = "feature",       showcontent = true },
+    { name = "Bugfixes",                    directory = "bugfix",        showcontent = true },
+    { name = "Documentation Improvements",  directory = "documentation", showcontent = true },
 ]
 
 [tool.isort]
@@ -155,6 +162,5 @@ require-subclass = true
 exclude-classes = """
 (
     ^hikari\\.internal\\.enums:(Enum|Flag|_EnumMeta|_FlagMeta)$
-    |^hikari\\.files:MultiprocessingFileReader$
 )
 """

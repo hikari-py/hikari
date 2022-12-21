@@ -28,7 +28,6 @@ from hikari import channels
 from hikari import files
 from hikari import permissions
 from hikari import snowflakes
-from hikari import undefined
 from hikari import users
 from hikari import webhooks
 from tests.hikari import hikari_test_helpers
@@ -111,6 +110,9 @@ class TestPartialChannel:
     def test_str_operator_when_name_is_None(self, model):
         model.name = None
         assert str(model) == "Unnamed PartialChannel ID 1234567"
+
+    def test_mention_property(self, model):
+        assert model.mention == "<#1234567>"
 
     @pytest.mark.asyncio()
     async def test_delete(self, model):
@@ -223,7 +225,7 @@ class TestTextChannel:
     async def test_fetch_message(self, model):
         model.app.rest.fetch_message = mock.AsyncMock()
 
-        assert await model.fetch_message(133742069) == model.app.rest.fetch_message.return_value
+        assert await model.fetch_message(133742069) is model.app.rest.fetch_message.return_value
 
         model.app.rest.fetch_message.assert_awaited_once_with(12345679, 133742069)
 
@@ -239,7 +241,7 @@ class TestTextChannel:
     async def test_pin_message(self, model):
         model.app.rest.pin_message = mock.AsyncMock()
 
-        assert await model.pin_message(77790) == model.app.rest.pin_message.return_value
+        assert await model.pin_message(77790) is model.app.rest.pin_message.return_value
 
         model.app.rest.pin_message.assert_awaited_once_with(12345679, 77790)
 
@@ -247,7 +249,7 @@ class TestTextChannel:
     async def test_unpin_message(self, model):
         model.app.rest.unpin_message = mock.AsyncMock()
 
-        assert await model.unpin_message(77790) == model.app.rest.unpin_message.return_value
+        assert await model.unpin_message(77790) is model.app.rest.unpin_message.return_value
 
         model.app.rest.unpin_message.assert_awaited_once_with(12345679, 77790)
 
@@ -284,6 +286,7 @@ class TestTextChannel:
             user_mentions=[123, 456],
             role_mentions=[789, 567],
             mentions_reply=True,
+            flags=6969,
         )
 
         model.app.rest.create_message.assert_awaited_once_with(
@@ -301,6 +304,7 @@ class TestTextChannel:
             user_mentions=[123, 456],
             role_mentions=[789, 567],
             mentions_reply=True,
+            flags=6969,
         )
 
     def test_trigger_typing(self, model):
@@ -320,9 +324,6 @@ class TestGuildChannel:
             name="foo1",
             type=channels.ChannelType.GUILD_VOICE,
             guild_id=snowflakes.Snowflake(123456789),
-            position=12,
-            permission_overwrites={},
-            is_nsfw=True,
             parent_id=None,
         )
 
@@ -335,12 +336,71 @@ class TestGuildChannel:
         model.app.shard_count = 3
         assert model.shard_id == 2
 
-    def test_mention_property(self, model):
-        assert model.mention == "<#69420>"
+    @pytest.mark.asyncio()
+    async def test_fetch_guild(self, model):
+        model.app.rest.fetch_guild = mock.AsyncMock()
+
+        assert await model.fetch_guild() is model.app.rest.fetch_guild.return_value
+
+        model.app.rest.fetch_guild.assert_awaited_once_with(123456789)
+
+    @pytest.mark.asyncio()
+    async def test_edit(self, model):
+        model.app.rest.edit_channel = mock.AsyncMock()
+
+        result = await model.edit(
+            name="Supa fast boike",
+            bitrate=420,
+            reason="left right",
+            default_auto_archive_duration=123312,
+            position=4423,
+            topic="hi",
+            nsfw=True,
+            video_quality_mode=channels.VideoQualityMode.AUTO,
+            user_limit=123321,
+            rate_limit_per_user=54123123,
+            region="us-west",
+            parent_category=341123123123,
+            permission_overwrites={123: "123"},
+        )
+
+        assert result is model.app.rest.edit_channel.return_value
+        model.app.rest.edit_channel.assert_awaited_once_with(
+            69420,
+            name="Supa fast boike",
+            position=4423,
+            topic="hi",
+            nsfw=True,
+            bitrate=420,
+            video_quality_mode=channels.VideoQualityMode.AUTO,
+            user_limit=123321,
+            rate_limit_per_user=54123123,
+            region="us-west",
+            permission_overwrites={123: "123"},
+            parent_category=341123123123,
+            default_auto_archive_duration=123312,
+            reason="left right",
+        )
+
+
+class TestPermissibleGuildChannel:
+    @pytest.fixture()
+    def model(self, mock_app):
+        return hikari_test_helpers.mock_class_namespace(channels.PermissibleGuildChannel)(
+            app=mock_app,
+            id=snowflakes.Snowflake(69420),
+            name="foo1",
+            type=channels.ChannelType.GUILD_VOICE,
+            guild_id=snowflakes.Snowflake(123456789),
+            is_nsfw=True,
+            parent_id=None,
+            position=54,
+            permission_overwrites=[],
+        )
 
     @pytest.mark.asyncio()
     async def test_edit_overwrite(self, model):
-        model.app.rest.edit_permission_overwrites = mock.AsyncMock()
+        model.app.rest.edit_permission_overwrite = mock.AsyncMock()
         user = mock.Mock(users.PartialUser)
         await model.edit_overwrite(
             333,
@@ -350,7 +410,7 @@ class TestGuildChannel:
             reason="vrooom vroom",
         )
 
-        model.app.rest.edit_permission_overwrites.assert_called_once_with(
+        model.app.rest.edit_permission_overwrite.assert_called_once_with(
             69420,
             333,
             target_type=user,
@@ -361,13 +421,13 @@ class TestGuildChannel:
 
     @pytest.mark.asyncio()
     async def test_edit_overwrite_target_type_none(self, model):
-        model.app.rest.edit_permission_overwrites = mock.AsyncMock()
+        model.app.rest.edit_permission_overwrite = mock.AsyncMock()
         user = mock.Mock(users.PartialUser)
         await model.edit_overwrite(
             user, allow=permissions.Permissions.BAN_MEMBERS, deny=permissions.Permissions.CONNECT, reason="vrooom vroom"
         )
 
-        model.app.rest.edit_permission_overwrites.assert_called_once_with(
+        model.app.rest.edit_permission_overwrite.assert_called_once_with(
             69420,
             user,
             allow=permissions.Permissions.BAN_MEMBERS,
@@ -413,28 +473,3 @@ class TestGuildChannel:
         assert await model.fetch_guild() == model.app.rest.fetch_guild.return_value
 
         model.app.rest.fetch_guild.assert_awaited_once_with(123456789)
-
-    @pytest.mark.asyncio()
-    async def test_edit(self, model):
-        model.app.rest.edit_channel = mock.AsyncMock()
-
-        assert (
-            await model.edit(name="Supa fast boike", bitrate=420, reason="left right")
-            == model.app.rest.edit_channel.return_value
-        )
-
-        model.app.rest.edit_channel.assert_awaited_once_with(
-            69420,
-            name="Supa fast boike",
-            position=undefined.UNDEFINED,
-            topic=undefined.UNDEFINED,
-            nsfw=undefined.UNDEFINED,
-            bitrate=420,
-            video_quality_mode=undefined.UNDEFINED,
-            user_limit=undefined.UNDEFINED,
-            rate_limit_per_user=undefined.UNDEFINED,
-            region=undefined.UNDEFINED,
-            permission_overwrites=undefined.UNDEFINED,
-            parent_category=undefined.UNDEFINED,
-            reason="left right",
-        )

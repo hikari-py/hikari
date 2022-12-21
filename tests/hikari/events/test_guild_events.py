@@ -82,11 +82,13 @@ class TestGuildAvailableEvent:
             shard=object(),
             guild=mock.Mock(guilds.Guild),
             emojis={},
+            stickers={},
             roles={},
             channels={},
             members={},
             presences={},
             voice_states={},
+            threads={},
         )
 
     def test_app_property(self, event):
@@ -105,6 +107,7 @@ class TestGuildUpdateEvent:
             guild=mock.Mock(guilds.Guild),
             old_guild=mock.Mock(guilds.Guild),
             emojis={},
+            stickers={},
             roles={},
         )
 
@@ -156,3 +159,23 @@ class TestPresenceUpdateEvent:
 
         assert event.old_presence.id == 123
         assert event.old_presence.guild_id == 456
+
+
+class TestGuildStickersUpdateEvent:
+    @pytest.fixture()
+    def event(self):
+        return guild_events.StickersUpdateEvent(
+            app=mock.Mock(),
+            shard=mock.Mock(),
+            guild_id=snowflakes.Snowflake(690),
+            old_stickers=(mock.Mock(), mock.Mock()),
+            stickers=(mock.Mock(), mock.Mock(), mock.Mock()),
+        )
+
+    @pytest.mark.asyncio()
+    async def test_fetch_stickers(self, event):
+        event.app.rest.fetch_guild_stickers = mock.AsyncMock()
+
+        assert await event.fetch_stickers() is event.app.rest.fetch_guild_stickers.return_value
+
+        event.app.rest.fetch_guild_stickers.assert_awaited_once_with(event.guild_id)

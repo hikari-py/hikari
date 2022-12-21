@@ -41,7 +41,7 @@ class Intents(enums.Flag):
     Any events not in an intent category will be fired regardless of what
     intents you provide.
 
-    !!! info
+    .. note::
         Discord now places limits on certain events you can receive without
         whitelisting your bot first. On the `Bot` tab in the developer's portal
         for your bot, you should now have the option to enable functionality
@@ -51,7 +51,7 @@ class Intents(enums.Flag):
         your bot for, you will be disconnected on startup with a `4014` closure
         code.
 
-    !!! warning
+    .. warning::
         If you are using the V7 Gateway, you will be REQUIRED to provide some
         form of intent value when you connect. Failure to do so may result in
         immediate termination of the session server-side.
@@ -62,29 +62,29 @@ class Intents(enums.Flag):
     For example, if we wish to only refer to the `GUILDS` intent, then it is
     simply a case of accessing it normally.
 
-    ```py
-    my_intents = Intents.GUILDS
-    ```
+    .. code-block:: python
+
+        my_intents = Intents.GUILDS
 
     If we wanted to have several intents grouped together, we would use the
     bitwise-or operator to combine them (`|`). This can be done in-place
     with the `|=` operator if needed.
 
-    ```py
-    # One or two values that fit on one line.
-    my_intents = Intents.GUILD_MESSAGES | Intents.PRIVATE_MESSAGES
+    .. code-block:: python
 
-    # Several intents together. You may find it useful to format these like
-    # so to keep your code readable.
-    my_intents = (
-        Intents.GUILDS             |
-        Intents.GUILD_BANS         |
-        Intents.GUILD_EMOJIS       |
-        Intents.GUILD_INTEGRATIONS |
-        Intents.GUILD_MESSAGES     |
-        Intents.PRIVATE_MESSAGES
-    )
-    ```
+        # One or two values that fit on one line.
+        my_intents = Intents.GUILD_MESSAGES | Intents.PRIVATE_MESSAGES
+
+        # Several intents together. You may find it useful to format these like
+        # so to keep your code readable.
+        my_intents = (
+            Intents.GUILDS             |
+            Intents.GUILD_BANS         |
+            Intents.GUILD_EMOJIS       |
+            Intents.GUILD_INTEGRATIONS |
+            Intents.GUILD_MESSAGES     |
+            Intents.PRIVATE_MESSAGES
+        )
 
     To check if an intent **is present** in a given intents bitfield, you can
     use the bitwise-and operator (`&`) to check. This returns the "intersection"
@@ -92,36 +92,36 @@ class Intents(enums.Flag):
     use the `==` operator to check that specific values are present. You can
     check in-place with the `&=` operator if needed.
 
-    ```py
-    # Check if an intent is set:
-    if (my_intents & Intents.GUILD_MESSAGES) == Intents.GUILD_MESSAGES:
-        print("Guild messages are enabled")
+    .. code-block:: python
 
-    # Checking if ALL in a combination are set:
-    expected_intents = (Intents.GUILD_MESSAGES | Intents.PRIVATE_MESSAGES)
-    if (my_intents & expected_intents) == expected_intents:
-        print("Messages are enabled in guilds and private messages.")
+        # Check if an intent is set:
+        if (my_intents & Intents.GUILD_MESSAGES) == Intents.GUILD_MESSAGES:
+            print("Guild messages are enabled")
 
-    # Checking if AT LEAST ONE in a combination is set:
-    expected_intents = (Intents.GUILD_MESSAGES | Intents.PRIVATE_MESSAGES)
-    if my_intents & expected_intents:
-        print("Messages are enabled in guilds or private messages.")
-    ```
+        # Checking if ALL in a combination are set:
+        expected_intents = (Intents.GUILD_MESSAGES | Intents.PRIVATE_MESSAGES)
+        if (my_intents & expected_intents) == expected_intents:
+            print("Messages are enabled in guilds and private messages.")
+
+        # Checking if AT LEAST ONE in a combination is set:
+        expected_intents = (Intents.GUILD_MESSAGES | Intents.PRIVATE_MESSAGES)
+        if my_intents & expected_intents:
+            print("Messages are enabled in guilds or private messages.")
 
     Removing one or more intents from a combination can be done with the
     bitwise-xor (`^`) operator. The `^=` operator can do this in-place.
 
-    ```py
-    # Remove GUILD_MESSAGES
-    my_intents = my_intents ^ Intents.GUILD_MESSAGES
-    # or, simplifying:
-    my_intents ^= Intents.GUILD_MESSAGES
+    .. code-block:: python
 
-    # Remove all messages events.
-    my_intents = my_intents ^ (Intents.GUILD_MESSAGES | Intents.PRIVATE_MESSAGES)
-    # or, simplifying
-    my_intents ^= (Intents.GUILD_MESSAGES | Intents.PRIVATE_MESSAGES)
-    ```
+        # Remove GUILD_MESSAGES
+        my_intents = my_intents ^ Intents.GUILD_MESSAGES
+        # or, simplifying:
+        my_intents ^= Intents.GUILD_MESSAGES
+
+        # Remove all messages events.
+        my_intents = my_intents ^ (Intents.GUILD_MESSAGES | Intents.PRIVATE_MESSAGES)
+        # or, simplifying
+        my_intents ^= (Intents.GUILD_MESSAGES | Intents.PRIVATE_MESSAGES)
 
     What is and is not covered by intents?
     --------------------------------------
@@ -146,6 +146,12 @@ class Intents(enums.Flag):
     - `CHANNEL_UPDATE`
     - `CHANNEL_DELETE`
     - `CHANNEL_PINS_UPDATE (guilds only)`
+    - `THREAD_CREATE`
+    - `THREAD_UPDATE`
+    - `THREAD_DELETE`
+    - `THREAD_LIST_SYNC`
+    - `THREAD_MEMBER_UPDATE`
+    - `THREAD_MEMBERS_UPDATE`
     - `MESSAGE_CREATE`
     - `MESSAGE_UPDATE`
     - `MESSAGE_DELETE`
@@ -173,7 +179,7 @@ class Intents(enums.Flag):
     """Represents no intents."""
 
     GUILDS = 1 << 0
-    """Subscribes to the following events:
+    """Subscribes to the events listed below.
 
     * `GUILD_CREATE`
     * `GUILD_UPDATE`
@@ -185,34 +191,49 @@ class Intents(enums.Flag):
     * `CHANNEL_UPDATE`
     * `CHANNEL_DELETE`
     * `CHANNEL_PINS_UPDATE`
+    * `THREAD_CREATE`
+    * `THREAD_UPDATE`
+    * `THREAD_DELETE`
+    * `THREAD_LIST_SYNC`
+    * `THREAD_MEMBER_UPDATE`
+    * `THREAD_MEMBERS_UPDATE`
+
+    .. note::
+        Both `GUILDS` and `GUILD_MEMBERS` are required to receive
+        `THREAD_MEMBERS_UPDATE`.
     """
 
     GUILD_MEMBERS = 1 << 1
-    """Subscribes to the following events:
+    """Subscribes to the events listed below.
 
     * `GUILD_MEMBER_ADD`
     * `GUILD_MEMBER_UPDATE`
     * `GUILD_MEMBER_REMOVE`
+    * `THREAD_MEMBERS_UPDATE`
 
-    !!! warning
+    .. note::
+        Both `GUILDS` and `GUILD_MEMBERS` are required to receive
+        `THREAD_MEMBERS_UPDATE`.
+
+    .. warning::
         This intent is privileged, and requires enabling/whitelisting to use.
     """
 
     GUILD_BANS = 1 << 2
-    """Subscribes to the following events:
+    """Subscribes to the events listed below.
 
     * `GUILD_BAN_ADD`
     * `GUILD_BAN_REMOVE`
     """
 
     GUILD_EMOJIS = 1 << 3
-    """Subscribes to the following events:
+    """Subscribes to the events listed below.
 
     * `GUILD_EMOJIS_UPDATE`
     """
 
     GUILD_INTEGRATIONS = 1 << 4
-    """Subscribes to the following events:
+    """Subscribes to the events listed below.
 
     * `INTEGRATION_CREATE`
     * `INTEGRATION_DELETE`
@@ -220,34 +241,35 @@ class Intents(enums.Flag):
     """
 
     GUILD_WEBHOOKS = 1 << 5
-    """Subscribes to the following events:
+    """Subscribes to the events listed below.
 
     * `WEBHOOKS_UPDATE`
     """
 
     GUILD_INVITES = 1 << 6
-    """Subscribes to the following events:
+    """Subscribes to the events listed below.
 
     * `INVITE_CREATE`
     * `INVITE_DELETE`
     """
 
     GUILD_VOICE_STATES = 1 << 7
-    """Subscribes to the following events:
+    """Subscribes to the events listed below.
 
     * `VOICE_STATE_UPDATE`
     """
 
     GUILD_PRESENCES = 1 << 8
-    """Subscribes to the following events:
+    """Subscribes to the events listed below.
 
     * `PRESENCE_UPDATE`
 
-    !!! warning
-        This intent is privileged, and requires enabling/whitelisting to use."""
+    .. warning::
+        This intent is privileged, and requires enabling/whitelisting to use.
+    """
 
     GUILD_MESSAGES = 1 << 9
-    """Subscribes to the following events:
+    """Subscribes to the events listed below.
 
     * `MESSAGE_CREATE` (in guilds only)
     * `MESSAGE_UPDATE` (in guilds only)
@@ -256,7 +278,7 @@ class Intents(enums.Flag):
     """
 
     GUILD_MESSAGE_REACTIONS = 1 << 10
-    """Subscribes to the following events:
+    """Subscribes to the events listed below.
 
     * `MESSAGE_REACTION_ADD` (in guilds only)
     * `MESSAGE_REACTION_REMOVE` (in guilds only)
@@ -265,13 +287,13 @@ class Intents(enums.Flag):
     """
 
     GUILD_MESSAGE_TYPING = 1 << 11
-    """Subscribes to the following events:
+    """Subscribes to the events listed below.
 
     * `TYPING_START` (in guilds only)
     """
 
     DM_MESSAGES = 1 << 12
-    """Subscribes to the following events:
+    """Subscribes to the events listed below.
 
     * `MESSAGE_CREATE` (in private message channels (non-guild bound) only)
     * `MESSAGE_UPDATE` (in private message channels (non-guild bound) only)
@@ -279,7 +301,7 @@ class Intents(enums.Flag):
     """
 
     DM_MESSAGE_REACTIONS = 1 << 13
-    """Subscribes to the following events:
+    """Subscribes to the events listed below.
 
     * `MESSAGE_REACTION_ADD` (in private message channels (non-guild bound) only)
     * `MESSAGE_REACTION_REMOVE` (in private message channels (non-guild bound) only)
@@ -288,7 +310,7 @@ class Intents(enums.Flag):
     """
 
     DM_MESSAGE_TYPING = 1 << 14
-    """Subscribes to the following events:
+    """Subscribes to the events listed below.
 
     * `TYPING_START` (in private message channels (non-guild bound) only)
     """
@@ -298,12 +320,12 @@ class Intents(enums.Flag):
 
     DM's to the bot and messages that mention it are exempt from this.
 
-    !!! warning
+    .. warning::
         This intent is privileged, and requires enabling/whitelisting to use.
     """
 
     GUILD_SCHEDULED_EVENTS = 1 << 16
-    """Subscribes to the following events:
+    """Subscribes to the events listed below.
 
     * `GUILD_SCHEDULED_EVENT_CREATE`
     * `GUILD_SCHEDULED_EVENT_UPDATE`
@@ -335,7 +357,7 @@ class Intents(enums.Flag):
     ALL_GUILDS_PRIVILEGED = GUILD_MEMBERS | GUILD_PRESENCES
     """All privileged guild intents.
 
-    !!! warning
+    .. warning::
         This set of intent is privileged, and requires enabling/whitelisting to
         use.
     """
@@ -346,7 +368,7 @@ class Intents(enums.Flag):
     This combines `Intents.ALL_GUILDS_UNPRIVILEGED` and
     `Intents.ALL_GUILDS_PRIVILEGED`.
 
-    !!! warning
+    .. warning::
         This set of intent is privileged, and requires enabling/whitelisting to
         use.
     """
@@ -369,7 +391,7 @@ class Intents(enums.Flag):
     ALL_PRIVILEGED = ALL_GUILDS_PRIVILEGED | MESSAGE_CONTENT
     """All privileged intents.
 
-    !!! warning
+    .. warning::
         This set of intent is privileged, and requires enabling/whitelisting to
         use.
     """
@@ -377,7 +399,7 @@ class Intents(enums.Flag):
     ALL = ALL_UNPRIVILEGED | ALL_PRIVILEGED
     """All unprivileged and privileged intents.
 
-    !!! warning
+    .. warning::
         This set of intent is privileged, and requires enabling/whitelisting to
         use.
     """
@@ -386,7 +408,7 @@ class Intents(enums.Flag):
     def is_privileged(self) -> bool:
         """Determine whether the intent requires elevated privileges.
 
-        If this is `builtins.True`, you will be required to opt-in to using
+        If this is `True`, you will be required to opt-in to using
         this intent on the Discord Developer Portal before you can utilise it
         in your application.
         """

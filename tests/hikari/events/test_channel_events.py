@@ -214,3 +214,63 @@ class TestWebhookUpdateEvent:
         await event.fetch_guild_webhooks()
 
         event.app.rest.fetch_guild_webhooks.assert_awaited_once_with(456)
+
+
+class TestGuildThreadEvent:
+    @pytest.mark.asyncio()
+    async def test_fetch_channel(self):
+        mock_app = mock.AsyncMock()
+        mock_app.rest.fetch_channel.return_value = mock.Mock(channels.GuildThreadChannel)
+        event = hikari_test_helpers.mock_class_namespace(
+            channel_events.GuildThreadEvent, app=mock_app, thread_id=123321
+        )()
+
+        result = await event.fetch_channel()
+
+        assert result is mock_app.rest.fetch_channel.return_value
+        mock_app.rest.fetch_channel.assert_awaited_once_with(123321)
+
+
+class TestGuildThreadAccessEvent:
+    @pytest.fixture()
+    def event(self) -> channel_events.GuildThreadAccessEvent:
+        return channel_events.GuildThreadAccessEvent(shard=mock.Mock(), thread=mock.Mock())
+
+    def test_app_property(self, event: channel_events.GuildThreadAccessEvent):
+        assert event.app is event.thread.app
+
+    def test_guild_id(self, event: channel_events.GuildThreadAccessEvent):
+        assert event.guild_id is event.thread.guild_id
+
+    def test_thread_id_property(self, event: channel_events.GuildThreadAccessEvent):
+        assert event.thread_id is event.thread.id
+
+
+class TestGuildThreadCreateEvent:
+    @pytest.fixture()
+    def event(self) -> channel_events.GuildThreadCreateEvent:
+        return channel_events.GuildThreadCreateEvent(shard=mock.Mock(), thread=mock.Mock())
+
+    def test_app_property(self, event: channel_events.GuildThreadCreateEvent):
+        assert event.app is event.thread.app
+
+    def test_guild_id(self, event: channel_events.GuildThreadCreateEvent):
+        assert event.guild_id is event.thread.guild_id
+
+    def test_thread_id_property(self, event: channel_events.GuildThreadCreateEvent):
+        assert event.thread_id is event.thread.id
+
+
+class TestGuildThreadUpdateEvent:
+    @pytest.fixture()
+    def event(self) -> channel_events.GuildThreadUpdateEvent:
+        return channel_events.GuildThreadUpdateEvent(shard=mock.Mock(), thread=mock.Mock())
+
+    def test_app_property(self, event: channel_events.GuildThreadUpdateEvent):
+        assert event.app is event.thread.app
+
+    def test_guild_id(self, event: channel_events.GuildThreadUpdateEvent):
+        assert event.guild_id is event.thread.guild_id
+
+    def test_thread_id_property(self, event: channel_events.GuildThreadUpdateEvent):
+        assert event.thread_id is event.thread.id

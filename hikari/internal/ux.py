@@ -72,28 +72,28 @@ def init_logging(
 
     Parameters
     ----------
-    flavor : typing.Optional[builtins.None, builtins.str, typing.Dict[builtins.str, typing.Any]]
+    flavor : typing.Optional[None, str, typing.Dict[str, typing.Any]]
         The hint for configuring logging.
 
-        This can be `builtins.None` to not enable logging automatically.
+        This can be `None` to not enable logging automatically.
 
-        If you pass a `builtins.str` or a `builtins.int`, it is interpreted as
+        If you pass a `str` or a `int`, it is interpreted as
         the global logging level to use, and should match one of `"DEBUG"`,
-        `"INFO"`, `"WARNING"`, `"ERROR"` or `"CRITICAL"`, if `builtins.str`.
+        `"INFO"`, `"WARNING"`, `"ERROR"` or `"CRITICAL"`, if `str`.
         The configuration will be set up to use a `colorlog` coloured logger,
         and to use a sane logging format strategy. The output will be written
         to `sys.stderr` using this configuration.
 
-        If you pass a `builtins.dict`, it is treated as the mapping to pass to
+        If you pass a `dict`, it is treated as the mapping to pass to
         `logging.config.dictConfig`. If the dict defines any handlers, default
         handlers will not be setup.
-    allow_color : builtins.bool
-        If `builtins.False`, no colour is allowed. If `builtins.True`, the
-        output device must be supported for this to return `builtins.True`.
-    force_color : builtins.bool
-        If `builtins.True`, return `builtins.True` always, otherwise only
-        return `builtins.True` if the device supports colour output and the
-        `allow_color` flag is not `builtins.False`.
+    allow_color : bool
+        If `False`, no colour is allowed. If `True`, the
+        output device must be supported for this to return `True`.
+    force_color : bool
+        If `True`, return `True` always, otherwise only
+        return `True` if the device supports colour output and the
+        `allow_color` flag is not `False`.
     """
     # One observation that has been repeatedly made from seeing beginners writing
     # bots in Python is that most people seem to have no idea what logging is or
@@ -147,6 +147,13 @@ _UNCONDITIONAL_ANSI_FLAGS: typing.Final[typing.FrozenSet[str]] = frozenset(("PYC
 """Set of env variables which always indicate that ANSI flags should be included."""
 
 
+def _read_banner(package: str) -> str:
+    if sys.version_info >= (3, 9):
+        return importlib.resources.files(package).joinpath("banner.txt").open("r").read()
+    else:
+        return importlib.resources.read_text(package, "banner.txt")
+
+
 def print_banner(
     package: typing.Optional[str],
     allow_color: bool,
@@ -158,37 +165,37 @@ def print_banner(
     Inspired by Spring Boot, we display an ASCII logo on startup. This is styled
     to grab the user's attention, and contains info such as the library version,
     the Python interpreter, the OS, and links to our Discord server and
-    documentation. Users can override this by placing a `banner.txt' in some
+    documentation. Users can override this by placing a `banner.txt` in some
     package and referencing it in this call.
+
+    .. note::
+        The `banner.txt` must be in the root folder of the package.
 
     Parameters
     ----------
-    package : typing.Optional[builtins.str]
-        The package to find the `banner.txt` in, or `builtins.None` if no
+    package : typing.Optional[str]
+        The package to find the `banner.txt` in, or `None` if no
         banner should be shown.
-
-        !!! note
-            The `banner.txt` must be in the root folder of the package.
-    allow_color : builtins.bool
-        If `builtins.False`, no colour is allowed. If `builtins.True`, the
-        output device must be supported for this to return `builtins.True`.
-    force_color : builtins.bool
-        If `builtins.True`, return `builtins.True` always, otherwise only
-        return `builtins.True` if the device supports colour output and the
-        `allow_color` flag is not `builtins.False`.
-    extra_args : typing.Optional[typing.Dict[builtins.str, builtins.str]]
+    allow_color : bool
+        If `False`, no colour is allowed. If `True`, the
+        output device must be supported for this to return `True`.
+    force_color : bool
+        If `True`, return `True` always, otherwise only
+        return `True` if the device supports colour output and the
+        `allow_color` flag is not `False`.
+    extra_args : typing.Optional[typing.Dict[str, str]]
         If provided, extra $-substitutions to use when printing the banner.
         Default substitutions can not be overwritten.
 
     Raises
     ------
-    builtins.ValueError
+    ValueError
         If `extra_args` contains a default $-substitution.
     """
     if package is None:
         return
 
-    raw_banner = importlib.resources.read_text(package, "banner.txt")
+    raw_banner = _read_banner(package)
 
     system_bits = (platform.machine(), platform.system(), platform.release())
     filtered_system_bits = (s.strip() for s in system_bits if s.strip())
@@ -227,23 +234,23 @@ def print_banner(
 
 
 def supports_color(allow_color: bool, force_color: bool) -> bool:
-    """Return `builtins.True` if the terminal device supports color output.
+    """Return `True` if the terminal device supports color output.
 
     Parameters
     ----------
-    allow_color : builtins.bool
-        If `builtins.False`, no color is allowed. If `builtins.True`, the
-        output device must be supported for this to return `builtins.True`.
-    force_color : builtins.bool
-        If `builtins.True`, return `builtins.True` always, otherwise only
-        return `builtins.True` if the device supports color output and the
-        `allow_color` flag is not `builtins.False`.
+    allow_color : bool
+        If `False`, no color is allowed. If `True`, the
+        output device must be supported for this to return `True`.
+    force_color : bool
+        If `True`, return `True` always, otherwise only
+        return `True` if the device supports color output and the
+        `allow_color` flag is not `False`.
 
     Returns
     -------
-    builtins.bool
-        `builtins.True` if color is allowed on the output terminal, or
-        `builtins.False` otherwise.
+    bool
+        `True` if color is allowed on the output terminal, or
+        `False` otherwise.
     """
     if not allow_color:
         return False
@@ -367,22 +374,21 @@ async def check_for_updates(http_settings: config.HTTPSettings, proxy_settings: 
 
         this_version = HikariVersion(about.__version__)
         is_dev = this_version.prerelease is not None
-        newer_releases: typing.List[HikariVersion] = []
+        newest_version: typing.Optional[HikariVersion] = None
 
         for release_string, artifacts in data["releases"].items():
             if not all(artifact["yanked"] for artifact in artifacts):
                 v = HikariVersion(release_string)
-                if v.prerelease is not None and not is_dev:
-                    # Don't encourage the user to upgrade from a stable to a dev release...
+                if (v.prerelease is not None and not is_dev) or v <= this_version:
+                    # Don't encourage the user to upgrade from a stable to a dev release, nor a lower version...
                     continue
 
-                if v == this_version:
+                if newest_version is not None and newest_version > v:
                     continue
 
-                if v > this_version:
-                    newer_releases.append(v)
-        if newer_releases:
-            newest = max(newer_releases)
-            _LOGGER.info("A newer version of hikari is available, consider upgrading to %s", newest)
+                newest_version = v
+
+        if newest_version:
+            _LOGGER.info("A newer version of hikari is available, consider upgrading to %s", newest_version)
     except Exception as ex:
         _LOGGER.debug("Failed to fetch hikari version details", exc_info=ex)

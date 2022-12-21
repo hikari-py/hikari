@@ -41,6 +41,13 @@ __all__: typing.Sequence[str] = (
     "InviteCreateEvent",
     "InviteDeleteEvent",
     "WebhookUpdateEvent",
+    "GuildThreadEvent",
+    "GuildThreadAccessEvent",
+    "GuildThreadCreateEvent",
+    "GuildThreadUpdateEvent",
+    "GuildThreadDeleteEvent",
+    "ThreadMembersUpdateEvent",
+    "ThreadListSyncEvent",
 )
 
 import abc
@@ -61,6 +68,7 @@ if typing.TYPE_CHECKING:
     from hikari import guilds
     from hikari import invites
     from hikari import messages
+    from hikari import presences
     from hikari import snowflakes
     from hikari import webhooks
     from hikari.api import shard as gateway_shard
@@ -75,28 +83,21 @@ class ChannelEvent(shard_events.ShardEvent, abc.ABC):
     @property
     @abc.abstractmethod
     def channel_id(self) -> snowflakes.Snowflake:
-        """ID of the channel the event relates to.
-
-        Returns
-        -------
-        hikari.snowflakes.Snowflake
-            The ID of the channel this event relates to.
-        """
+        """ID of the channel the event relates to."""
 
     @abc.abstractmethod
     async def fetch_channel(self) -> channels.PartialChannel:
         """Perform an API call to fetch the details about this channel.
 
-        !!! note
+        .. note::
             For `GuildChannelDeleteEvent` events, this will always raise
             an exception, since the channel will have already been removed.
 
         Returns
         -------
         hikari.channels.PartialChannel
-            A derivative of `hikari.channels.PartialChannel`. The actual
-            type will vary depending on the type of channel this event
-            concerns.
+            A derivative of `hikari.channels.PartialChannel`. The actual type
+            will vary depending on the type of channel this event concerns.
 
         Raises
         ------
@@ -131,24 +132,18 @@ class GuildChannelEvent(ChannelEvent, abc.ABC):
     @property
     @abc.abstractmethod
     def guild_id(self) -> snowflakes.Snowflake:
-        """ID of the guild that this event relates to.
-
-        Returns
-        -------
-        hikari.snowflakes.Snowflake
-            The ID of the guild that relates to this event.
-        """
+        """ID of the guild that this event relates to."""
 
     def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
         """Get the cached guild that this event relates to, if known.
 
-        If not, return `builtins.None`.
+        If not, return `None`.
 
         Returns
         -------
         typing.Optional[hikari.guilds.GatewayGuild]
             The gateway guild this event relates to, if known. Otherwise
-            this will return `builtins.None`.
+            this will return `None`.
         """
         if not isinstance(self.app, traits.CacheAware):
             return None
@@ -187,16 +182,16 @@ class GuildChannelEvent(ChannelEvent, abc.ABC):
         """
         return await self.app.rest.fetch_guild(self.guild_id)
 
-    def get_channel(self) -> typing.Optional[channels.GuildChannel]:
+    def get_channel(self) -> typing.Optional[channels.PermissibleGuildChannel]:
         """Get the cached channel that this event relates to, if known.
 
-        If not, return `builtins.None`.
+        If not, return `None`.
 
         Returns
         -------
         typing.Optional[hikari.channels.GuildChannel]
             The cached channel this event relates to. If not known, this
-            will return `builtins.None` instead.
+            will return `None` instead.
         """
         if not isinstance(self.app, traits.CacheAware):
             return None
@@ -206,15 +201,15 @@ class GuildChannelEvent(ChannelEvent, abc.ABC):
     async def fetch_channel(self) -> channels.GuildChannel:
         """Perform an API call to fetch the details about this channel.
 
-        !!! note
+        .. note::
             For `GuildChannelDeleteEvent` events, this will always raise
             an exception, since the channel will have already been removed.
 
         Returns
         -------
         hikari.channels.GuildChannel
-            A derivative of `hikari.channels.GuildChannel`. The actual
-            type will vary depending on the type of channel this event
+            A derivative of `hikari.channels.GuildChannel`. The
+            actual type will vary depending on the type of channel this event
             concerns.
 
         Raises
@@ -252,7 +247,7 @@ class DMChannelEvent(ChannelEvent, abc.ABC):
     async def fetch_channel(self) -> channels.PrivateChannel:
         """Perform an API call to fetch the details about this channel.
 
-        !!! note
+        .. note::
             For `GuildChannelDeleteEvent` events, this will always raise
             an exception, since the channel will have already been removed.
 
@@ -299,14 +294,8 @@ class GuildChannelCreateEvent(GuildChannelEvent):
     shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    channel: channels.GuildChannel = attr.field(repr=True)
-    """Guild channel that this event represents.
-
-    Returns
-    -------
-    hikari.channels.GuildChannel
-        The guild channel that was created.
-    """
+    channel: channels.PermissibleGuildChannel = attr.field(repr=True)
+    """Guild channel that this event represents."""
 
     @property
     def app(self) -> traits.RESTAware:
@@ -333,20 +322,14 @@ class GuildChannelUpdateEvent(GuildChannelEvent):
     shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    old_channel: typing.Optional[channels.GuildChannel] = attr.field(repr=True)
+    old_channel: typing.Optional[channels.PermissibleGuildChannel] = attr.field(repr=True)
     """The old guild channel object.
 
-    This will be `builtins.None` if the channel missing from the cache.
+    This will be `None` if the channel missing from the cache.
     """
 
-    channel: channels.GuildChannel = attr.field(repr=True)
-    """Guild channel that this event represents.
-
-    Returns
-    -------
-    hikari.channels.GuildChannel
-        The guild channel that was updated.
-    """
+    channel: channels.PermissibleGuildChannel = attr.field(repr=True)
+    """Guild channel that this event represents."""
 
     @property
     def app(self) -> traits.RESTAware:
@@ -373,14 +356,8 @@ class GuildChannelDeleteEvent(GuildChannelEvent):
     shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    channel: channels.GuildChannel = attr.field(repr=True)
-    """Guild channel that this event represents.
-
-    Returns
-    -------
-    hikari.channels.GuildChannel
-        The guild channel that was deleted.
-    """
+    channel: channels.PermissibleGuildChannel = attr.field(repr=True)
+    """Guild channel that this event represents."""
 
     @property
     def app(self) -> traits.RESTAware:
@@ -414,14 +391,8 @@ class PinsUpdateEvent(ChannelEvent, abc.ABC):
     def last_pin_timestamp(self) -> typing.Optional[datetime.datetime]:
         """Datetime of when the most recent message was pinned in the channel.
 
-        Will be `builtins.None` if nothing is pinned or the information is
+        Will be `None` if nothing is pinned or the information is
         unavailable.
-
-        Returns
-        -------
-        typing.Optional[datetime.datetime]
-            The datetime of the most recent pinned message in the channel,
-            or `builtins.None` if no pins are available.
         """
 
     @abc.abstractmethod
@@ -468,19 +439,19 @@ class GuildPinsUpdateEvent(PinsUpdateEvent, GuildChannelEvent):
     last_pin_timestamp: typing.Optional[datetime.datetime] = attr.field(repr=True)
     # <<inherited docstring from ChannelPinsUpdateEvent>>.
 
-    def get_channel(self) -> typing.Optional[channels.TextableGuildChannel]:
+    def get_channel(self) -> typing.Optional[channels.PermissibleGuildChannel]:
         """Get the cached channel that this event relates to, if known.
 
-        If not, return `builtins.None`.
+        If not, return `None`.
 
         Returns
         -------
         typing.Optional[hikari.channels.TextableGuildChannel]
             The cached channel this event relates to. If not known, this
-            will return `builtins.None` instead.
+            will return `None` instead.
         """
         channel = super().get_channel()
-        assert channel is None or isinstance(channel, channels.TextableGuildChannel)
+        assert channel is None or isinstance(channel, channels.PermissibleGuildChannel)
         return channel
 
     async def fetch_channel(self) -> channels.TextableGuildChannel:
@@ -516,7 +487,7 @@ class GuildPinsUpdateEvent(PinsUpdateEvent, GuildChannelEvent):
             If an internal error occurs on Discord while handling the request.
         """
         channel = await self.app.rest.fetch_channel(self.channel_id)
-        assert isinstance(channel, channels.GuildTextChannel)
+        assert isinstance(channel, channels.TextableGuildChannel)
         return channel
 
 
@@ -580,13 +551,7 @@ class InviteEvent(GuildChannelEvent, abc.ABC):
     @property
     @abc.abstractmethod
     def code(self) -> str:
-        """Code that is used in the URL for the invite.
-
-        Returns
-        -------
-        builtins.str
-            The invite code.
-        """
+        """Code that is used in the URL for the invite."""
 
     async def fetch_invite(self) -> invites.Invite:
         """Perform an API call to retrieve an up-to-date image of this invite.
@@ -629,13 +594,7 @@ class InviteCreateEvent(InviteEvent):
     # <<inherited docstring from ShardEvent>>.
 
     invite: invites.InviteWithMetadata = attr.field()
-    """Invite that was created.
-
-    Returns
-    -------
-    hikari.invites.InviteWithMetadata
-        The created invite object.
-    """
+    """Invite that was created."""
 
     @property
     def app(self) -> traits.RESTAware:
@@ -684,7 +643,7 @@ class InviteDeleteEvent(InviteEvent):
     old_invite: typing.Optional[invites.InviteWithMetadata] = attr.field()
     """Object of the old cached invite.
 
-    This will be `builtins.None` if the invite is missing from the cache.
+    This will be `None` if the invite is missing from the cache.
     """
 
     if typing.TYPE_CHECKING:
@@ -780,3 +739,246 @@ class WebhookUpdateEvent(GuildChannelEvent):
             If an internal error occurs on Discord while handling the request.
         """
         return await self.app.rest.fetch_guild_webhooks(self.guild_id)
+
+
+@base_events.requires_intents(intents.Intents.GUILDS, intents.Intents.GUILDS | intents.Intents.GUILD_MEMBERS)
+class GuildThreadEvent(shard_events.ShardEvent, abc.ABC):
+    """Event base for any event that is related to a guild thread."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def guild_id(self) -> snowflakes.Snowflake:
+        """ID of the guild this event is for."""
+
+    @property
+    @abc.abstractmethod
+    def thread_id(self) -> snowflakes.Snowflake:
+        """ID of the thread this event is for."""
+
+    async def fetch_channel(self) -> channels.GuildThreadChannel:
+        """Perform an API call to fetch the details about this thread.
+
+        .. note::
+            For `GuildThreadDeleteEvent` events, this will always raise
+            an exception, since the channel will have already been removed.
+
+        Returns
+        -------
+        hikari.channels.GuildThreadChannel
+            A derivative of `hikari.channels.GuildThreadChannel`. The
+            actual type will vary depending on the type of channel this event
+            concerns.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you are missing the `READ_MESSAGES` permission in the channel.
+        hikari.errors.NotFoundError
+            If the channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        channel = await self.app.rest.fetch_channel(self.thread_id)
+        assert isinstance(channel, channels.GuildThreadChannel)
+        return channel
+
+
+@base_events.requires_intents(intents.Intents.GUILDS)
+@attr_extensions.with_copy
+@attr.define(kw_only=True, weakref_slot=False)
+class GuildThreadAccessEvent(GuildThreadEvent):
+    """Event fired when you're given access to an existing private thread."""
+
+    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from ShardEvent>>.
+
+    thread: channels.GuildThreadChannel = attr.field()
+    """The thread that you've been given access to."""
+
+    @property
+    def app(self) -> traits.RESTAware:
+        # <<inherited docstring from Event>>.
+        return self.thread.app
+
+    @property
+    def guild_id(self) -> snowflakes.Snowflake:
+        # <<inherited docstring from GuildThreadAccessEvent>>.
+        return self.thread.guild_id
+
+    @property
+    def thread_id(self) -> snowflakes.Snowflake:
+        # <<inherited docstring from GuildThreadAccessEvent>>.
+        return self.thread.id
+
+
+@base_events.requires_intents(intents.Intents.GUILDS)
+@attr_extensions.with_copy
+@attr.define(kw_only=True, weakref_slot=False)
+class GuildThreadCreateEvent(GuildThreadEvent):
+    """Event fired when a new thread is created.
+
+    This event is fired when you create a private thread or anybody creates
+    a public thread in a channel you can access.
+    """
+
+    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from ShardEvent>>.
+
+    thread: channels.GuildThreadChannel = attr.field()
+    """The thread that was created."""
+
+    @property
+    def app(self) -> traits.RESTAware:
+        # <<inherited docstring from Event>>.
+        return self.thread.app
+
+    @property
+    def guild_id(self) -> snowflakes.Snowflake:
+        # <<inherited docstring from GuildThreadEvent>>.
+        return self.thread.guild_id
+
+    @property
+    def thread_id(self) -> snowflakes.Snowflake:
+        # <<inherited docstring from GuildThreadEvent>>.
+        return self.thread.id
+
+
+@base_events.requires_intents(intents.Intents.GUILDS)
+@attr_extensions.with_copy
+@attr.define(kw_only=True, weakref_slot=False)
+class GuildThreadUpdateEvent(GuildThreadEvent):
+    """Event fired when a thread is updated."""
+
+    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from ShardEvent>>.
+
+    thread: channels.GuildThreadChannel = attr.field()
+    """The thread that was updated."""
+
+    @property
+    def app(self) -> traits.RESTAware:
+        # <<inherited docstring from Event>>.
+        return self.thread.app
+
+    @property
+    def guild_id(self) -> snowflakes.Snowflake:
+        # <<inherited docstring from GuildThreadEvent>>.
+        return self.thread.guild_id
+
+    @property
+    def thread_id(self) -> snowflakes.Snowflake:
+        # <<inherited docstring from GuildThreadEvent>>.
+        return self.thread.id
+
+
+@base_events.requires_intents(intents.Intents.GUILDS)
+@attr_extensions.with_copy
+@attr.define(kw_only=True, weakref_slot=False)
+class GuildThreadDeleteEvent(GuildThreadEvent):
+    """Event fired when a thread is deleted."""
+
+    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from ShardEvent>>.
+
+    thread_id: snowflakes.Snowflake = attr.field()
+    # <<inherited docstring from GuildThreadEvent>>.
+
+    guild_id: snowflakes.Snowflake = attr.field()
+    # <<inherited docstring from GuildThreadEvent>>.
+
+    parent_id: snowflakes.Snowflake = attr.field()
+    """The ID of the channel that the thread was deleted from."""
+
+    type: channels.ChannelType = attr.field()
+    """The type of thread that was deleted."""
+
+
+@base_events.requires_intents(intents.Intents.GUILDS)
+@attr_extensions.with_copy
+@attr.define(kw_only=True, weakref_slot=False)
+class ThreadMembersUpdateEvent(GuildThreadEvent):
+    """Event fired when a thread's members are updated."""
+
+    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from ShardEvent>>.
+
+    thread_id: snowflakes.Snowflake = attr.field()
+    # <<inherited docstring from GuildThreadEvent>>.
+
+    guild_id: snowflakes.Snowflake = attr.field()
+    # <<inherited docstring from GuildThreadEvent>>.
+
+    approximate_member_count: int = attr.field(eq=False, hash=False, repr=True)
+    """Approximate count of members in the thread channel.
+
+    .. warning::
+        This stops counting at 50 for threads created before 2022/06/01.
+    """
+
+    added_members: typing.Mapping[snowflakes.Snowflake, channels.ThreadMember] = attr.field()
+    """Mapping of IDs to objects of the members which were added to the thread."""
+
+    removed_member_ids: typing.Sequence[snowflakes.Snowflake] = attr.field()
+    """Sequence of IDs of users which were removed from the thread."""
+
+    guild_members: typing.Mapping[snowflakes.Snowflake, guilds.Member] = attr.field()
+    """Mapping of IDs to guild member objects of the added thread members.
+
+    Will only be filled if the `GUILD_MEMBERS` intent is declared.
+    """
+
+    guild_presences: typing.Mapping[snowflakes.Snowflake, presences.MemberPresence] = attr.field()
+    """Mapping of IDs to guild presence objects of the added members.
+
+    Will only be filled if the `GUILD_PRESENCES` intent is declared.
+    """
+
+
+@base_events.requires_intents(intents.Intents.GUILDS)
+@attr_extensions.with_copy
+@attr.define(kw_only=True, weakref_slot=False)
+class ThreadListSyncEvent(shard_events.ShardEvent):
+    """Event fired to sync threads when the bot gains access to one or more channels."""
+
+    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from ShardEvent>>.
+
+    guild_id: snowflakes.Snowflake = attr.field()
+    # <<inherited docstring from GuildThreadEvent>>.
+
+    channel_ids: typing.Optional[typing.Sequence[snowflakes.Snowflake]] = attr.field()
+    """IDs of the text channels threads are being synced for.
+
+    If this is `None` then threads are being synced for all text
+    channels in the guild.
+
+    This may contain channels that have no active threads as well to allow for
+    clearing stale data.
+    """
+
+    threads: typing.Mapping[snowflakes.Snowflake, channels.GuildThreadChannel] = attr.field()
+    """Mapping of IDs to objects of the active threads in the given channels."""

@@ -27,7 +27,6 @@ You should never need to make any of these objects manually.
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
-    "ActionRowBuilder",
     "CommandBuilder",
     "SlashCommandBuilder",
     "ContextMenuCommandBuilder",
@@ -39,6 +38,10 @@ __all__: typing.Sequence[str] = (
     "InteractiveButtonBuilder",
     "LinkButtonBuilder",
     "SelectMenuBuilder",
+    "TextInputBuilder",
+    "InteractionModalBuilder",
+    "MessageActionRowBuilder",
+    "ModalActionRowBuilder",
 )
 
 import asyncio
@@ -48,10 +51,12 @@ import attr
 
 from hikari import channels
 from hikari import commands
+from hikari import components as component_models
 from hikari import emojis
 from hikari import errors
 from hikari import files
 from hikari import iterators
+from hikari import locales
 from hikari import messages
 from hikari import snowflakes
 from hikari import undefined
@@ -87,10 +92,38 @@ if typing.TYPE_CHECKING:
     _InteractionAutocompleteBuilderT = typing.TypeVar(
         "_InteractionAutocompleteBuilderT", bound="InteractionAutocompleteBuilder"
     )
-    _ActionRowBuilderT = typing.TypeVar("_ActionRowBuilderT", bound="ActionRowBuilder")
+    _InteractionModalBuilderT = typing.TypeVar("_InteractionModalBuilderT", bound="InteractionModalBuilder")
+    _MessageActionRowBuilderT = typing.TypeVar("_MessageActionRowBuilderT", bound="MessageActionRowBuilder")
+    _ModalActionRowBuilderT = typing.TypeVar("_ModalActionRowBuilderT", bound="ModalActionRowBuilder")
     _ButtonBuilderT = typing.TypeVar("_ButtonBuilderT", bound="_ButtonBuilder[typing.Any]")
     _SelectOptionBuilderT = typing.TypeVar("_SelectOptionBuilderT", bound="_SelectOptionBuilder[typing.Any]")
     _SelectMenuBuilderT = typing.TypeVar("_SelectMenuBuilderT", bound="SelectMenuBuilder[typing.Any]")
+    _TextInputBuilderT = typing.TypeVar("_TextInputBuilderT", bound="TextInputBuilder[typing.Any]")
+
+    class _RequestCallSig(typing.Protocol):
+        async def __call__(
+            self,
+            compiled_route: routes.CompiledRoute,
+            *,
+            query: typing.Optional[data_binding.StringMapBuilder] = None,
+            form_builder: typing.Optional[data_binding.URLEncodedFormBuilder] = None,
+            json: typing.Union[data_binding.JSONObjectBuilder, data_binding.JSONArray, None] = None,
+            reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+            no_auth: bool = False,
+            auth: typing.Optional[str] = None,
+        ) -> typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]:
+            ...
+
+    class _ThreadDeserializeSig(typing.Protocol["_GuildThreadChannelCovT"]):
+        def __call__(
+            self,
+            payload: data_binding.JSONObject,
+            /,
+            *,
+            guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+            member: undefined.UndefinedNoneOr[channels.ThreadMember] = undefined.UNDEFINED,
+        ) -> _GuildThreadChannelCovT:
+            raise NotImplementedError
 
     # Hack around used to avoid recursive generic types leading to type checker issues in builders
     class _ContainerProto(typing.Protocol):
@@ -99,6 +132,8 @@ if typing.TYPE_CHECKING:
 
 
 _ContainerProtoT = typing.TypeVar("_ContainerProtoT", bound="_ContainerProto")
+_GuildThreadChannelT = typing.TypeVar("_GuildThreadChannelT", bound=channels.GuildThreadChannel)
+_GuildThreadChannelCovT = typing.TypeVar("_GuildThreadChannelCovT", bound=channels.GuildThreadChannel, covariant=True)
 
 
 @typing.final
@@ -109,7 +144,7 @@ class TypingIndicator(special_endpoints.TypingIndicator):
     the typing indicator once, or an async context manager to keep triggering
     the typing indicator repeatedly until the context finishes.
 
-    !!! note
+    .. note::
         This is a helper class that is used by `hikari.api.rest.RESTClient`.
         You should only ever need to use instances of this class that are
         produced by that API.
@@ -119,9 +154,7 @@ class TypingIndicator(special_endpoints.TypingIndicator):
 
     def __init__(
         self,
-        request_call: typing.Callable[
-            ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
-        ],
+        request_call: _RequestCallSig,
         channel: snowflakes.SnowflakeishOr[channels.TextableChannel],
         rest_closed_event: asyncio.Event,
     ) -> None:
@@ -193,70 +226,63 @@ class GuildBuilder(special_endpoints.GuildBuilder):
     the logic behind creating a guild on an API level is somewhat confusing
     and detailed.
 
-    !!! note
-        This is a helper class that is used by `hikari.api.rest.RESTClient`.
-        You should only ever need to use instances of this class that are
-        produced by that API, thus, any details about the constructor are
-        omitted from the following examples for brevity.
-
-    Examples
-    --------
-    Creating an empty guild.
-
-    ```py
-    guild = await rest.guild_builder("My Server!").create()
-    ```
-
-    Creating a guild with an icon
-
-    ```py
-    from hikari.files import WebResourceStream
-
-    guild_builder = rest.guild_builder("My Server!")
-    guild_builder.icon = WebResourceStream("cat.png", "http://...")
-    guild = await guild_builder.create()
-    ```
-
-    Adding roles to your guild.
-
-    ```py
-    from hikari.permissions import Permissions
-
-    guild_builder = rest.guild_builder("My Server!")
-
-    everyone_role_id = guild_builder.add_role("@everyone")
-    admin_role_id = guild_builder.add_role("Admins", permissions=Permissions.ADMINISTRATOR)
-
-    await guild_builder.create()
-    ```
-
-    !!! warning
-        The first role must always be the `@everyone` role.
-
-    !!! note
-        If you call `add_role`, the default roles provided by discord will
+    .. note::
+        If you call `add_role`, the default roles provided by Discord will
         be created. This also applies to the `add_` functions for
         text channels/voice channels/categories.
 
-    !!! note
+    .. note::
         Functions that return a `hikari.snowflakes.Snowflake` do
         **not** provide the final ID that the object will have once the
         API call is made. The returned IDs are only able to be used to
-        re-reference particular objects while building the guild format.
-
-        This is provided to allow creation of channels within categories,
+        re-reference particular objects while building the guild format
+        to allow for the creation of channels within categories,
         and to provide permission overwrites.
 
-    Adding a text channel to your guild.
+    Examples
+    --------
+    Creating an empty guild:
 
-    ```py
-    guild_builder = rest.guild_builder("My Server!")
+    .. code-block:: python
 
-    category_id = guild_builder.add_category("My safe place")
-    channel_id = guild_builder.add_text_channel("general", parent_id=category_id)
+        guild = await rest.guild_builder("My Server!").create()
 
-    await guild_builder.create()
-    ```
+    Creating a guild with an icon:
+
+    .. code-block:: python
+
+        from hikari.files import WebResourceStream
+
+        guild_builder = rest.guild_builder("My Server!")
+        guild_builder.icon = WebResourceStream("cat.png", "http://...")
+        guild = await guild_builder.create()
+
+    Adding roles to your guild:
+
+    .. code-block:: python
+
+        from hikari.permissions import Permissions
+
+        guild_builder = rest.guild_builder("My Server!")
+
+        everyone_role_id = guild_builder.add_role("@everyone")
+        admin_role_id = guild_builder.add_role("Admins", permissions=Permissions.ADMINISTRATOR)
+
+        await guild_builder.create()
+
+    .. warning::
+        The first role must always be the `@everyone` role.
+
+    Adding a text channel to your guild:
+
+    .. code-block:: python
+
+        guild_builder = rest.guild_builder("My Server!")
+
+        category_id = guild_builder.add_category("My safe place")
+        channel_id = guild_builder.add_text_channel("general", parent_id=category_id)
+
+        await guild_builder.create()
     """
 
     # Required arguments.
@@ -265,9 +291,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         metadata={attr_extensions.SKIP_DEEP_COPY: True}
     )
     _name: str = attr.field()
-    _request_call: typing.Callable[
-        ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
-    ] = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    _request_call: _RequestCallSig = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
 
     # Optional arguments.
     default_message_notifications: undefined.UndefinedOr[guilds.GuildMessageNotificationsLevel] = attr.field(
@@ -496,9 +520,7 @@ class MessageIterator(iterators.BufferedLazyIterator["messages.Message"]):
     def __init__(
         self,
         entity_factory: entity_factory_.EntityFactory,
-        request_call: typing.Callable[
-            ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
-        ],
+        request_call: _RequestCallSig,
         channel: snowflakes.SnowflakeishOr[channels.TextableChannel],
         direction: str,
         first_id: undefined.UndefinedOr[str],
@@ -538,9 +560,7 @@ class ReactorIterator(iterators.BufferedLazyIterator["users.User"]):
     def __init__(
         self,
         entity_factory: entity_factory_.EntityFactory,
-        request_call: typing.Callable[
-            ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
-        ],
+        request_call: _RequestCallSig,
         channel: snowflakes.SnowflakeishOr[channels.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages.PartialMessage],
         emoji: str,
@@ -577,9 +597,7 @@ class OwnGuildIterator(iterators.BufferedLazyIterator["applications.OwnGuild"]):
     def __init__(
         self,
         entity_factory: entity_factory_.EntityFactory,
-        request_call: typing.Callable[
-            ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
-        ],
+        request_call: _RequestCallSig,
         newest_first: bool,
         first_id: str,
     ) -> None:
@@ -627,9 +645,7 @@ class GuildBanIterator(iterators.BufferedLazyIterator["guilds.GuildBan"]):
     def __init__(
         self,
         entity_factory: entity_factory_.EntityFactory,
-        request_call: typing.Callable[
-            ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
-        ],
+        request_call: _RequestCallSig,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         newest_first: bool,
         first_id: str,
@@ -672,9 +688,7 @@ class MemberIterator(iterators.BufferedLazyIterator["guilds.Member"]):
     def __init__(
         self,
         entity_factory: entity_factory_.EntityFactory,
-        request_call: typing.Callable[
-            ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
-        ],
+        request_call: _RequestCallSig,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
     ) -> None:
         super().__init__()
@@ -682,8 +696,8 @@ class MemberIterator(iterators.BufferedLazyIterator["guilds.Member"]):
         self._route = routes.GET_GUILD_MEMBERS.compile(guild=guild)
         self._request_call = request_call
         self._entity_factory = entity_factory
-        # This starts at the default provided by discord instead of the max snowflake
-        # because that caused discord to take about 2 seconds more to return the first response.
+        # This starts at the default provided by Discord instead of the max snowflake
+        # because that caused Discord to take about 2 seconds more to return the first response.
         self._first_id = undefined.UNDEFINED
 
     async def _next_chunk(self) -> typing.Optional[typing.Generator[guilds.Member, typing.Any, None]]:
@@ -720,9 +734,7 @@ class ScheduledEventUserIterator(iterators.BufferedLazyIterator["scheduled_event
     def __init__(
         self,
         entity_factory: entity_factory_.EntityFactory,
-        request_call: typing.Callable[
-            ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
-        ],
+        request_call: _RequestCallSig,
         newest_first: bool,
         first_id: str,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -776,9 +788,7 @@ class AuditLogIterator(iterators.LazyIterator["audit_logs.AuditLog"]):
     def __init__(
         self,
         entity_factory: entity_factory_.EntityFactory,
-        request_call: typing.Callable[
-            ..., typing.Coroutine[None, None, typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]]
-        ],
+        request_call: _RequestCallSig,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         before: undefined.UndefinedOr[str],
         user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]],
@@ -813,6 +823,82 @@ class AuditLogIterator(iterators.LazyIterator["audit_logs.AuditLog"]):
         return log
 
 
+class GuildThreadIterator(iterators.BufferedLazyIterator[_GuildThreadChannelT]):
+    """Iterator implemented for guild thread endpoints."""
+
+    __slots__: typing.Sequence[str] = (
+        "_before_is_timestamp",
+        "_deserialize",
+        "_entity_factory",
+        "_has_more",
+        "_next_before",
+        "_request_call",
+        "_route",
+    )
+
+    def __init__(
+        self,
+        deserialize: _ThreadDeserializeSig[_GuildThreadChannelCovT],
+        entity_factory: entity_factory_.EntityFactory,
+        request_call: _RequestCallSig,
+        route: routes.CompiledRoute,
+        before: undefined.UndefinedOr[str],
+        before_is_timestamp: bool,
+    ) -> None:
+        super().__init__()
+        self._before_is_timestamp = before_is_timestamp
+        self._deserialize = deserialize
+        self._entity_factory = entity_factory
+        self._has_more = True
+        self._next_before = before
+        self._request_call = request_call
+        self._route = route
+
+    async def _next_chunk(self) -> typing.Optional[typing.Generator[_GuildThreadChannelCovT, typing.Any, None]]:
+        if not self._has_more:
+            return None
+
+        query = data_binding.StringMapBuilder()
+        query.put("limit", 100)
+        query.put("before", self._next_before)
+
+        response = await self._request_call(compiled_route=self._route, query=query)
+        assert isinstance(response, dict)
+
+        if not (threads := response["threads"]):
+            # Since GET is idempotent, has_more should always be false if there
+            # are no threads in the current response.
+            self._has_more = False
+            return None
+
+        self._has_more = response["has_more"]
+        members = {int(member["id"]): member for member in response["members"]}
+        if self._before_is_timestamp:
+            self._next_before = (
+                time.iso8601_datetime_string_to_datetime(threads[-1]["thread_metadata"]["archive_timestamp"])
+            ).isoformat()
+
+        else:
+            self._next_before = str(int(threads[-1]["id"]))
+
+        return (
+            self._deserialize(
+                payload,
+                member=_maybe_cast(self._entity_factory.deserialize_thread_member, members.get(int(payload["id"]))),
+            )
+            for payload in threads
+        )
+
+
+def _maybe_cast(
+    callback: typing.Callable[[data_binding.JSONObject], _T], data: typing.Optional[data_binding.JSONObject]
+) -> typing.Optional[_T]:
+    if data:
+        return callback(data)
+
+    return None
+
+
 @attr_extensions.with_copy
 @attr.define(kw_only=False, weakref_slot=False)
 class InteractionAutocompleteBuilder(special_endpoints.InteractionAutocompleteBuilder):
@@ -843,7 +929,7 @@ class InteractionAutocompleteBuilder(special_endpoints.InteractionAutocompleteBu
 
     def build(
         self, _: entity_factory_.EntityFactory, /
-    ) -> typing.Tuple[data_binding.JSONObject, typing.Sequence[files.Resource[files.AsyncReader]]]:
+    ) -> typing.Tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
         data = {"choices": [{"name": choice.name, "value": choice.value} for choice in self._choices]}
         return {"type": self.type, "data": data}, ()
 
@@ -885,7 +971,7 @@ class InteractionDeferredBuilder(special_endpoints.InteractionDeferredBuilder):
 
     def build(
         self, _: entity_factory_.EntityFactory, /
-    ) -> typing.Tuple[data_binding.JSONObject, typing.Sequence[files.Resource[files.AsyncReader]]]:
+    ) -> typing.Tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
         if self._flags is not undefined.UNDEFINED:
             return {"type": self._type, "data": {"flags": self._flags}}, ()
 
@@ -904,7 +990,7 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
 
     Other Parameters
     ----------------
-    content : hikari.undefined.UndefinedOr[builtins.str]
+    content : hikari.undefined.UndefinedOr[str]
         The content of this response, if supplied. This follows the same rules
         as "content" on create message.
     """
@@ -930,7 +1016,7 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
     _user_mentions: undefined.UndefinedOr[
         typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
     ] = attr.field(default=undefined.UNDEFINED, kw_only=True)
-    _attachments: undefined.UndefinedOr[typing.List[files.Resourceish]] = attr.field(
+    _attachments: undefined.UndefinedNoneOr[typing.List[files.Resourceish]] = attr.field(
         default=undefined.UNDEFINED, kw_only=True
     )
     _components: undefined.UndefinedOr[typing.List[special_endpoints.ComponentBuilder]] = attr.field(
@@ -939,8 +1025,8 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
     _embeds: undefined.UndefinedOr[typing.List[embeds_.Embed]] = attr.field(default=undefined.UNDEFINED, kw_only=True)
 
     @property
-    def attachments(self) -> undefined.UndefinedOr[typing.Sequence[files.Resourceish]]:
-        return self._attachments.copy() if self._attachments is not undefined.UNDEFINED else undefined.UNDEFINED
+    def attachments(self) -> undefined.UndefinedNoneOr[typing.Sequence[files.Resourceish]]:
+        return self._attachments.copy() if self._attachments else self._attachments
 
     @property
     def content(self) -> undefined.UndefinedOr[str]:
@@ -982,10 +1068,14 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
     ) -> undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]]:
         return self._user_mentions
 
+    def clear_attachments(self: _InteractionMessageBuilderT, /) -> _InteractionMessageBuilderT:
+        self._attachments = None
+        return self
+
     def add_attachment(
         self: _InteractionMessageBuilderT, attachment: files.Resourceish, /
     ) -> _InteractionMessageBuilderT:
-        if self._attachments is undefined.UNDEFINED:
+        if not self._attachments:
             self._attachments = []
 
         self._attachments.append(attachment)
@@ -1051,15 +1141,26 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
 
     def build(
         self, entity_factory: entity_factory_.EntityFactory, /
-    ) -> typing.Tuple[data_binding.JSONObject, typing.Sequence[files.Resource[files.AsyncReader]]]:
+    ) -> typing.Tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
         data = data_binding.JSONObjectBuilder()
         data.put("content", self.content)
 
+        final_attachments = []
         if self._attachments:
-            final_attachments = [files.ensure_resource(attachment) for attachment in self._attachments]
+            attachments_payload = []
 
-        else:
-            final_attachments = []
+            for f in self._attachments:
+                if isinstance(f, messages.Attachment):
+                    attachments_payload.append({"id": f.id, "filename": f.filename})
+                    continue
+
+                final_attachments.append(files.ensure_resource(f))
+
+            if attachments_payload:
+                data.put("attachments", attachments_payload)
+
+        elif self._attachments is None:
+            data.put("attachments", None)
 
         if self._embeds is not undefined.UNDEFINED:
             embeds: typing.List[data_binding.JSONObject] = []
@@ -1085,21 +1186,84 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
 
 
 @attr.define(kw_only=False, weakref_slot=False)
+class InteractionModalBuilder(special_endpoints.InteractionModalBuilder):
+    """Standard implementation of `hikari.api.special_endpoints.InteractionModalBuilder`."""
+
+    _title: str = attr.field()
+    _custom_id: str = attr.field()
+    _components: typing.List[special_endpoints.ComponentBuilder] = attr.field(factory=list)
+
+    @property
+    def type(self) -> typing.Literal[base_interactions.ResponseType.MODAL]:
+        return base_interactions.ResponseType.MODAL
+
+    @property
+    def title(self) -> str:
+        return self._title
+
+    @property
+    def custom_id(self) -> str:
+        return self._custom_id
+
+    @property
+    def components(self) -> typing.Sequence[special_endpoints.ComponentBuilder]:
+        return self._components
+
+    def set_title(self: _InteractionModalBuilderT, title: str, /) -> _InteractionModalBuilderT:
+        self._title = title
+        return self
+
+    def set_custom_id(self: _InteractionModalBuilderT, custom_id: str, /) -> _InteractionModalBuilderT:
+        self._custom_id = custom_id
+        return self
+
+    def add_component(
+        self: _InteractionModalBuilderT, component: special_endpoints.ComponentBuilder, /
+    ) -> _InteractionModalBuilderT:
+        self._components.append(component)
+        return self
+
+    def build(
+        self, entity_factory: entity_factory_.EntityFactory, /
+    ) -> typing.Tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
+        data = data_binding.JSONObjectBuilder()
+        data.put("title", self._title)
+        data.put("custom_id", self._custom_id)
+        data.put_array("components", self._components, conversion=lambda component: component.build())
+
+        return {"type": self.type, "data": data}, ()
+
+
+@attr.define(kw_only=False, weakref_slot=False)
 class CommandBuilder(special_endpoints.CommandBuilder):
     """Standard implementation of `hikari.api.special_endpoints.CommandBuilder`."""
 
     _name: str = attr.field()
 
     _id: undefined.UndefinedOr[snowflakes.Snowflake] = attr.field(default=undefined.UNDEFINED, kw_only=True)
-    _default_permission: undefined.UndefinedOr[bool] = attr.field(default=undefined.UNDEFINED, kw_only=True)
+    _default_member_permissions: typing.Union[undefined.UndefinedType, int, permissions_.Permissions] = attr.field(
+        default=undefined.UNDEFINED, kw_only=True
+    )
+    _is_dm_enabled: undefined.UndefinedOr[bool] = attr.field(default=undefined.UNDEFINED, kw_only=True)
+    _is_nsfw: undefined.UndefinedOr[bool] = attr.field(default=undefined.UNDEFINED, kw_only=True)
+
+    _name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attr.field(factory=dict, kw_only=True)
 
     @property
     def id(self) -> undefined.UndefinedOr[snowflakes.Snowflake]:
         return self._id
 
     @property
-    def default_permission(self) -> undefined.UndefinedOr[bool]:
-        return self._default_permission
+    def default_member_permissions(self) -> typing.Union[undefined.UndefinedType, permissions_.Permissions, int]:
+        return self._default_member_permissions
+
+    @property
+    def is_dm_enabled(self) -> undefined.UndefinedOr[bool]:
+        return self._is_dm_enabled
+
+    @property
+    def is_nsfw(self) -> undefined.UndefinedOr[bool]:
+        return self._is_dm_enabled
 
     @property
     def name(self) -> str:
@@ -1109,16 +1273,48 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         self._id = snowflakes.Snowflake(id_) if id_ is not undefined.UNDEFINED else undefined.UNDEFINED
         return self
 
-    def set_default_permission(self: _CommandBuilderT, state: undefined.UndefinedOr[bool], /) -> _CommandBuilderT:
-        self._default_permission = state
+    def set_default_member_permissions(
+        self: _CommandBuilderT,
+        default_member_permissions: typing.Union[undefined.UndefinedType, int, permissions_.Permissions],
+        /,
+    ) -> _CommandBuilderT:
+        self._default_member_permissions = default_member_permissions
         return self
 
-    def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObjectBuilder:
+    def set_is_dm_enabled(self: _CommandBuilderT, state: undefined.UndefinedOr[bool], /) -> _CommandBuilderT:
+        self._is_dm_enabled = state
+        return self
+
+    def set_is_nsfw(self: _CommandBuilderT, state: undefined.UndefinedOr[bool], /) -> _CommandBuilderT:
+        self._is_nsfw = state
+        return self
+
+    @property
+    def name_localizations(self) -> typing.Mapping[typing.Union[locales.Locale, str], str]:
+        return self._name_localizations
+
+    def set_name_localizations(
+        self: _CommandBuilderT,
+        name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str],
+        /,
+    ) -> _CommandBuilderT:
+        self._name_localizations = name_localizations
+        return self
+
+    def build(self, _: entity_factory_.EntityFactory, /) -> typing.MutableMapping[str, typing.Any]:
         data = data_binding.JSONObjectBuilder()
         data["name"] = self._name
         data["type"] = self.type
         data.put_snowflake("id", self._id)
-        data.put("default_permission", self._default_permission)
+        data.put("name_localizations", self._name_localizations)
+        data.put("dm_permission", self._is_dm_enabled)
+        data.put("nsfw", self._is_nsfw)
+
+        # Discord considers 0 the same thing as ADMINISTRATORS, but we make it nicer to work with
+        # by using it correctly.
+        if self._default_member_permissions != 0:
+            data.put("default_member_permissions", self._default_member_permissions)
+
         return data
 
 
@@ -1129,6 +1325,9 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
 
     _description: str = attr.field()
     _options: typing.List[commands.CommandOption] = attr.field(factory=list, kw_only=True)
+    _description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attr.field(
+        factory=dict, kw_only=True
+    )
 
     @property
     def description(self) -> str:
@@ -1146,10 +1345,29 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
     def options(self) -> typing.Sequence[commands.CommandOption]:
         return self._options.copy()
 
-    def build(self, entity_factory: entity_factory_.EntityFactory, /) -> data_binding.JSONObjectBuilder:
+    @property
+    def description_localizations(
+        self,
+    ) -> typing.Mapping[typing.Union[locales.Locale, str], str]:
+        return self._description_localizations
+
+    def set_description_localizations(
+        self: _SlashCommandBuilderT,
+        description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str],
+        /,
+    ) -> _SlashCommandBuilderT:
+        self._description_localizations = description_localizations
+        return self
+
+    def build(self, entity_factory: entity_factory_.EntityFactory, /) -> typing.MutableMapping[str, typing.Any]:
         data = super().build(entity_factory)
+        # Under this context we know this'll always be a JSONObjectBuilder but
+        # the return types need to be kept as MutableMapping to avoid exposing an
+        # internal type on the public API.
+        assert isinstance(data, data_binding.JSONObjectBuilder)
         data.put("description", self._description)
         data.put_array("options", self._options, conversion=entity_factory.serialize_command_option)
+        data.put("description_localizations", self._description_localizations)
         return data
 
     async def create(
@@ -1165,8 +1383,12 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
             self._name,
             self._description,
             guild=guild,
-            default_permission=self._default_permission,
             options=self._options,
+            name_localizations=self._name_localizations,
+            description_localizations=self._description_localizations,
+            default_member_permissions=self._default_member_permissions,
+            dm_enabled=self._is_dm_enabled,
+            nsfw=self._is_nsfw,
         )
 
 
@@ -1192,7 +1414,14 @@ class ContextMenuCommandBuilder(CommandBuilder, special_endpoints.ContextMenuCom
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
     ) -> commands.ContextMenuCommand:
         return await rest.create_context_menu_command(
-            application, self._type, self._name, guild=guild, default_permission=self._default_permission
+            application,
+            self._type,
+            self._name,
+            guild=guild,
+            name_localizations=self._name_localizations,
+            default_member_permissions=self._default_member_permissions,
+            dm_enabled=self._is_dm_enabled,
+            nsfw=self.is_nsfw,
         )
 
 
@@ -1203,15 +1432,15 @@ def _build_emoji(
 
     Parameters
     ----------
-    emoji : typing.Union[hikari.snowflakes.Snowflakeish, hikari.emojis.Emoji, builtins.str, hikari.undefined.UndefinedType]
+    emoji : typing.Union[hikari.snowflakes.Snowflakeish, hikari.emojis.Emoji, str, hikari.undefined.UndefinedType]
         The ID, object or raw string of an emoji to set on a component.
 
     Returns
     -------
-    typing.Tuple[hikari.undefined.UndefinedOr[builtins.str], hikari.undefined.UndefinedOr[builtins.str]]
+    typing.Tuple[hikari.undefined.UndefinedOr[str], hikari.undefined.UndefinedOr[str]]
         A union of the custom emoji's id if defined (index 0) or the unicode
         emoji's string representation (index 1).
-    """  # noqa E501 - Line too long
+    """
     # Since these builder classes may be re-used, this method should be called when the builder is being constructed.
     if emoji is not undefined.UNDEFINED:
         if isinstance(emoji, (int, emojis.CustomEmoji)):
@@ -1226,7 +1455,7 @@ def _build_emoji(
 @attr.define(kw_only=True, weakref_slot=False)
 class _ButtonBuilder(special_endpoints.ButtonBuilder[_ContainerProtoT]):
     _container: _ContainerProtoT = attr.field()
-    _style: typing.Union[int, messages.ButtonStyle] = attr.field()
+    _style: typing.Union[int, component_models.ButtonStyle] = attr.field()
     _custom_id: undefined.UndefinedOr[str] = attr.field(default=undefined.UNDEFINED)
     _url: undefined.UndefinedOr[str] = attr.field(default=undefined.UNDEFINED)
     _emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType] = attr.field(
@@ -1238,7 +1467,7 @@ class _ButtonBuilder(special_endpoints.ButtonBuilder[_ContainerProtoT]):
     _is_disabled: bool = attr.field(default=False)
 
     @property
-    def style(self) -> typing.Union[int, messages.ButtonStyle]:
+    def style(self) -> typing.Union[int, component_models.ButtonStyle]:
         return self._style
 
     @property
@@ -1274,10 +1503,10 @@ class _ButtonBuilder(special_endpoints.ButtonBuilder[_ContainerProtoT]):
         self._container.add_component(self)
         return self._container
 
-    def build(self) -> data_binding.JSONObject:
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
         data = data_binding.JSONObjectBuilder()
 
-        data["type"] = messages.ComponentType.BUTTON
+        data["type"] = component_models.ComponentType.BUTTON
         data["style"] = self._style
         data["disabled"] = self._is_disabled
         data.put("label", self._label)
@@ -1375,7 +1604,7 @@ class _SelectOptionBuilder(special_endpoints.SelectOptionBuilder["_SelectMenuBui
         self._menu.add_raw_option(self)
         return self._menu
 
-    def build(self) -> data_binding.JSONObject:
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
         data = data_binding.JSONObjectBuilder()
 
         data["label"] = self._label
@@ -1463,10 +1692,10 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder[_ContainerProtoT]):
         self._container.add_component(self)
         return self._container
 
-    def build(self) -> data_binding.JSONObject:
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
         data = data_binding.JSONObjectBuilder()
 
-        data["type"] = messages.ComponentType.SELECT_MENU
+        data["type"] = component_models.ComponentType.SELECT_MENU
         data["custom_id"] = self._custom_id
         data["options"] = [option.build() for option in self._options]
         data.put("placeholder", self._placeholder)
@@ -1476,18 +1705,120 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder[_ContainerProtoT]):
         return data
 
 
+@attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
-class ActionRowBuilder(special_endpoints.ActionRowBuilder):
+class TextInputBuilder(special_endpoints.TextInputBuilder[_ContainerProtoT]):
+    """Standard implementation of `hikari.api.special_endpoints.TextInputBuilder`."""
+
+    _container: _ContainerProtoT = attr.field()
+    _custom_id: str = attr.field()
+    _label: str = attr.field()
+
+    _style: component_models.TextInputStyle = attr.field(default=component_models.TextInputStyle.SHORT)
+    _placeholder: undefined.UndefinedOr[str] = attr.field(default=undefined.UNDEFINED, kw_only=True)
+    _value: undefined.UndefinedOr[str] = attr.field(default=undefined.UNDEFINED, kw_only=True)
+    _required: undefined.UndefinedOr[bool] = attr.field(default=undefined.UNDEFINED, kw_only=True)
+    _min_length: undefined.UndefinedOr[int] = attr.field(default=undefined.UNDEFINED, kw_only=True)
+    _max_length: undefined.UndefinedOr[int] = attr.field(default=undefined.UNDEFINED, kw_only=True)
+
+    @property
+    def custom_id(self) -> str:
+        return self._custom_id
+
+    @property
+    def label(self) -> str:
+        return self._label
+
+    @property
+    def style(self) -> component_models.TextInputStyle:
+        return self._style
+
+    @property
+    def placeholder(self) -> undefined.UndefinedOr[str]:
+        return self._placeholder
+
+    @property
+    def value(self) -> undefined.UndefinedOr[str]:
+        return self._value
+
+    @property
+    def required(self) -> undefined.UndefinedOr[bool]:
+        return self._required
+
+    @property
+    def min_length(self) -> undefined.UndefinedOr[int]:
+        return self._min_length
+
+    @property
+    def max_length(self) -> undefined.UndefinedOr[int]:
+        return self._max_length
+
+    def set_style(
+        self: _TextInputBuilderT, style: typing.Union[component_models.TextInputStyle, int], /
+    ) -> _TextInputBuilderT:
+        self._style = component_models.TextInputStyle(style)
+        return self
+
+    def set_custom_id(self: _TextInputBuilderT, custom_id: str, /) -> _TextInputBuilderT:
+        self._custom_id = custom_id
+        return self
+
+    def set_label(self: _TextInputBuilderT, label: str, /) -> _TextInputBuilderT:
+        self._label = label
+        return self
+
+    def set_placeholder(self: _TextInputBuilderT, placeholder: str, /) -> _TextInputBuilderT:
+        self._placeholder = placeholder
+        return self
+
+    def set_value(self: _TextInputBuilderT, value: str, /) -> _TextInputBuilderT:
+        self._value = value
+        return self
+
+    def set_required(self: _TextInputBuilderT, required: bool, /) -> _TextInputBuilderT:
+        self._required = required
+        return self
+
+    def set_min_length(self: _TextInputBuilderT, min_length: int, /) -> _TextInputBuilderT:
+        self._min_length = min_length
+        return self
+
+    def set_max_length(self: _TextInputBuilderT, max_length: int, /) -> _TextInputBuilderT:
+        self._max_length = max_length
+        return self
+
+    def add_to_container(self) -> _ContainerProtoT:
+        self._container.add_component(self)
+        return self._container
+
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        data = data_binding.JSONObjectBuilder()
+
+        data["type"] = component_models.ComponentType.TEXT_INPUT
+        data["style"] = self._style
+        data["custom_id"] = self._custom_id
+        data["label"] = self._label
+        data.put("placeholder", self._placeholder)
+        data.put("value", self._value)
+        data.put("required", self._required)
+        data.put("min_length", self._min_length)
+        data.put("max_length", self._max_length)
+
+        return data
+
+
+@attr.define(kw_only=True, weakref_slot=False)
+class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
     """Standard implementation of `hikari.api.special_endpoints.ActionRowBuilder`."""
 
     _components: typing.List[special_endpoints.ComponentBuilder] = attr.field(factory=list)
-    _stored_type: typing.Optional[messages.ComponentType] = attr.field(default=None)
+    _stored_type: typing.Optional[component_models.ComponentType] = attr.field(default=None, init=False)
 
     @property
     def components(self) -> typing.Sequence[special_endpoints.ComponentBuilder]:
         return self._components.copy()
 
-    def _assert_can_add_type(self, type_: messages.ComponentType, /) -> None:
+    def _assert_can_add_type(self, type_: component_models.ComponentType, /) -> None:
         if self._stored_type is not None and self._stored_type != type_:
             raise ValueError(
                 f"{type_} component type cannot be added to a container which already holds {self._stored_type}"
@@ -1495,54 +1826,102 @@ class ActionRowBuilder(special_endpoints.ActionRowBuilder):
 
         self._stored_type = type_
 
-    def add_component(self: _ActionRowBuilderT, component: special_endpoints.ComponentBuilder, /) -> _ActionRowBuilderT:
+    def add_component(
+        self: _MessageActionRowBuilderT, component: special_endpoints.ComponentBuilder, /
+    ) -> _MessageActionRowBuilderT:
         self._components.append(component)
         return self
 
     @typing.overload
     def add_button(
-        self: _ActionRowBuilderT, style: messages.InteractiveButtonTypesT, custom_id: str, /
-    ) -> special_endpoints.InteractiveButtonBuilder[_ActionRowBuilderT]:
+        self: _MessageActionRowBuilderT, style: component_models.InteractiveButtonTypesT, custom_id: str, /
+    ) -> special_endpoints.InteractiveButtonBuilder[_MessageActionRowBuilderT]:
         ...
 
     @typing.overload
     def add_button(
-        self: _ActionRowBuilderT,
-        style: typing.Literal[messages.ButtonStyle.LINK, 5],
+        self: _MessageActionRowBuilderT,
+        style: typing.Literal[component_models.ButtonStyle.LINK, 5],
         url: str,
         /,
-    ) -> special_endpoints.LinkButtonBuilder[_ActionRowBuilderT]:
+    ) -> special_endpoints.LinkButtonBuilder[_MessageActionRowBuilderT]:
         ...
 
     @typing.overload
     def add_button(
-        self: _ActionRowBuilderT, style: typing.Union[int, messages.ButtonStyle], url_or_custom_id: str, /
+        self: _MessageActionRowBuilderT,
+        style: typing.Union[int, component_models.ButtonStyle],
+        url_or_custom_id: str,
+        /,
     ) -> typing.Union[
-        special_endpoints.LinkButtonBuilder[_ActionRowBuilderT],
-        special_endpoints.InteractiveButtonBuilder[_ActionRowBuilderT],
+        special_endpoints.LinkButtonBuilder[_MessageActionRowBuilderT],
+        special_endpoints.InteractiveButtonBuilder[_MessageActionRowBuilderT],
     ]:
         ...
 
     def add_button(
-        self: _ActionRowBuilderT, style: typing.Union[int, messages.ButtonStyle], url_or_custom_id: str, /
+        self: _MessageActionRowBuilderT,
+        style: typing.Union[int, component_models.ButtonStyle],
+        url_or_custom_id: str,
+        /,
     ) -> typing.Union[
-        special_endpoints.LinkButtonBuilder[_ActionRowBuilderT],
-        special_endpoints.InteractiveButtonBuilder[_ActionRowBuilderT],
+        special_endpoints.LinkButtonBuilder[_MessageActionRowBuilderT],
+        special_endpoints.InteractiveButtonBuilder[_MessageActionRowBuilderT],
     ]:
-        self._assert_can_add_type(messages.ComponentType.BUTTON)
-        if style in messages.InteractiveButtonTypes:
+        self._assert_can_add_type(component_models.ComponentType.BUTTON)
+        if style in component_models.InteractiveButtonTypes:
             return InteractiveButtonBuilder(container=self, style=style, custom_id=url_or_custom_id)
 
         return LinkButtonBuilder(container=self, style=style, url=url_or_custom_id)
 
     def add_select_menu(
-        self: _ActionRowBuilderT, custom_id: str, /
-    ) -> special_endpoints.SelectMenuBuilder[_ActionRowBuilderT]:
-        self._assert_can_add_type(messages.ComponentType.SELECT_MENU)
+        self: _MessageActionRowBuilderT, custom_id: str, /
+    ) -> special_endpoints.SelectMenuBuilder[_MessageActionRowBuilderT]:
+        self._assert_can_add_type(component_models.ComponentType.SELECT_MENU)
         return SelectMenuBuilder(container=self, custom_id=custom_id)
 
-    def build(self) -> data_binding.JSONObject:
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
         return {
-            "type": messages.ComponentType.ACTION_ROW,
+            "type": component_models.ComponentType.ACTION_ROW,
+            "components": [component.build() for component in self._components],
+        }
+
+
+@attr.define(kw_only=True, weakref_slot=False)
+class ModalActionRowBuilder(special_endpoints.ModalActionRowBuilder):
+    """Standard implementation of `hikari.api.special_endpoints.ActionRowBuilder`."""
+
+    _components: typing.List[special_endpoints.ComponentBuilder] = attr.field(factory=list)
+    _stored_type: typing.Optional[component_models.ComponentType] = attr.field(default=None)
+
+    @property
+    def components(self) -> typing.Sequence[special_endpoints.ComponentBuilder]:
+        return self._components.copy()
+
+    def _assert_can_add_type(self, type_: component_models.ComponentType, /) -> None:
+        if self._stored_type is not None and self._stored_type != type_:
+            raise ValueError(
+                f"{type_} component type cannot be added to a container which already holds {self._stored_type}"
+            )
+
+        self._stored_type = type_
+
+    def add_component(
+        self: _ModalActionRowBuilderT, component: special_endpoints.ComponentBuilder, /
+    ) -> _ModalActionRowBuilderT:
+        self._components.append(component)
+        return self
+
+    def add_text_input(
+        self: _ModalActionRowBuilderT,
+        custom_id: str,
+        label: str,
+    ) -> special_endpoints.TextInputBuilder[_ModalActionRowBuilderT]:
+        self._assert_can_add_type(component_models.ComponentType.TEXT_INPUT)
+        return TextInputBuilder(container=self, custom_id=custom_id, label=label)
+
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        return {
+            "type": component_models.ComponentType.ACTION_ROW,
             "components": [component.build() for component in self._components],
         }

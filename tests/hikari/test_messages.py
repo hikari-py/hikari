@@ -87,33 +87,6 @@ class TestMessageApplication:
         )
 
 
-class TestActionRowComponent:
-    def test_getitem_operator_with_index(self):
-        mock_component = object()
-        row = messages.ActionRowComponent(type=1, components=[object(), mock_component, object()])
-
-        assert row[1] is mock_component
-
-    def test_getitem_operator_with_slice(self):
-        mock_component_1 = object()
-        mock_component_2 = object()
-        row = messages.ActionRowComponent(type=1, components=[object(), mock_component_1, object(), mock_component_2])
-
-        assert row[1:4:2] == [mock_component_1, mock_component_2]
-
-    def test_iter_operator(self):
-        mock_component_1 = object()
-        mock_component_2 = object()
-        row = messages.ActionRowComponent(type=1, components=[mock_component_1, mock_component_2])
-
-        assert list(row) == [mock_component_1, mock_component_2]
-
-    def test_len_operator(self):
-        row = messages.ActionRowComponent(type=1, components=[object(), object()])
-
-        assert len(row) == 2
-
-
 @pytest.fixture()
 def message():
     return messages.Message(
@@ -127,13 +100,10 @@ def message():
         timestamp=datetime.datetime.now().astimezone(),
         edited_timestamp=None,
         is_tts=False,
-        mentions=messages.Mentions(
-            message=mock.Mock(),
-            users={},
-            role_ids=[],
-            channels={},
-            everyone=False,
-        ),
+        user_mentions={},
+        role_mention_ids=[],
+        channel_mentions={},
+        mentions_everyone=False,
         attachments=(),
         embeds=(),
         reactions=(),
@@ -192,7 +162,6 @@ class TestAsyncMessage:
             attachments=[attachment, attachment],
             component=component,
             components=components,
-            replace_attachments=True,
             mentions_everyone=True,
             mentions_reply=False,
             user_mentions=False,
@@ -209,7 +178,6 @@ class TestAsyncMessage:
             attachments=[attachment, attachment],
             component=component,
             components=components,
-            replace_attachments=True,
             mentions_everyone=True,
             mentions_reply=False,
             user_mentions=False,
@@ -243,6 +211,7 @@ class TestAsyncMessage:
             user_mentions=False,
             role_mentions=roles,
             mentions_reply=True,
+            flags=321123,
         )
         message.app.rest.create_message.assert_awaited_once_with(
             channel=456,
@@ -259,6 +228,7 @@ class TestAsyncMessage:
             user_mentions=False,
             role_mentions=roles,
             mentions_reply=True,
+            flags=321123,
         )
 
     async def test_respond_when_reply_is_True(self, message):
@@ -281,6 +251,7 @@ class TestAsyncMessage:
             user_mentions=undefined.UNDEFINED,
             role_mentions=undefined.UNDEFINED,
             mentions_reply=undefined.UNDEFINED,
+            flags=undefined.UNDEFINED,
         )
 
     async def test_respond_when_reply_is_False(self, message):
@@ -303,6 +274,7 @@ class TestAsyncMessage:
             user_mentions=undefined.UNDEFINED,
             role_mentions=undefined.UNDEFINED,
             mentions_reply=undefined.UNDEFINED,
+            flags=undefined.UNDEFINED,
         )
 
     async def test_delete(self, message):

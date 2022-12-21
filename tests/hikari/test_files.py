@@ -20,17 +20,26 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import base64
-import concurrent.futures
+import asyncio
 import pathlib
-import random
-import tempfile
 
 import mock
 import pytest
 
 from hikari import files
 from tests.hikari import hikari_test_helpers
+
+
+class TestURL:
+    def test_default_filename(self):
+        url = files.URL("https://i.ytimg.com/vi_webp/dQw4w9WgXcQ/maxresdefault.webp")
+
+        assert url.filename == "maxresdefault.webp"
+
+    def test_set_filename(self):
+        url = files.URL("https://i.ytimg.com/vi_webp/dQw4w9WgXcQ/maxresdefault.webp", "yeltsakir.webp")
+
+        assert url.filename == "yeltsakir.webp"
 
 
 class TestAsyncReaderContextManager:
@@ -50,7 +59,16 @@ class TestAsyncReaderContextManager:
             pytest.fail(exc)
 
 
-class Test_ThreadedFileReaderContextManagerImpl:
+def test__open_path():
+    expanded_path = mock.Mock()
+    path = mock.Mock(expanduser=mock.Mock(return_value=expanded_path))
+
+    assert files._open_path(path) is expanded_path.open.return_value
+
+    expanded_path.open.assert_called_once_with("rb")
+
+
+class TestThreadedFileReaderContextManagerImpl:
     @pytest.mark.asyncio()
     async def test_enter_dunder_method_when_already_open(self):
         manager = files._ThreadedFileReaderContextManagerImpl(mock.Mock(), "ea", pathlib.Path("ea"))
@@ -67,138 +85,23 @@ class Test_ThreadedFileReaderContextManagerImpl:
 
     @pytest.mark.asyncio()
     async def test_context_manager(self):
-        executor = concurrent.futures.ThreadPoolExecutor()
-        mock_data = b"meeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" * 50
+        mock_file = mock.Mock()
+        executor = object()
+        path = pathlib.Path("test/path/")
 
-        # A try, finally is used to delete the file rather than relying on delete=True behaviour
-        # as on Windows the file cannot be accessed by other processes if delete is True.
-        file = tempfile.NamedTemporaryFile("wb", delete=False)
-        path = pathlib.Path(file.name)
-        try:
-            with file:
-                file.write(mock_data)
+        loop = mock.Mock(run_in_executor=mock.AsyncMock(side_effect=[mock_file, None]))
 
-            context_manager = files._ThreadedFileReaderContextManagerImpl(executor, "meow.txt", path)
+        context_manager = files._ThreadedFileReaderContextManagerImpl(executor, "meow.txt", path)
 
+        with mock.patch.object(asyncio, "get_running_loop", return_value=loop):
             async with context_manager as reader:
-                data = await reader.read()
+                assert context_manager.file is mock_file
 
                 assert reader.filename == "meow.txt"
-                assert reader.path == path
-                assert reader.executor is executor
-                assert data == mock_data
+                assert reader._executor is executor
 
-        finally:
-            path.unlink()
+                loop.run_in_executor.assert_called_once_with(executor, files._open_path, path)
+                loop.run_in_executor.reset_mock()
 
-    @mock.patch.object(pathlib.Path, "expanduser", side_effect=RuntimeError)
-    @pytest.mark.asyncio()
-    async def test_context_manager_when_expandname_raises_runtime_error(self, expanduser: mock.Mock):
-        # We can't mock patch stuff in other processes easily (if at all) so
-        # for this test we have to cheat and use a thread pool executor.
-        executor = concurrent.futures.ThreadPoolExecutor()
-
-        # A try, finally is used to delete the file rather than relying on delete=True behaviour
-        # as on Windows the file cannot be accessed by other processes if delete is True.
-        with tempfile.NamedTemporaryFile(delete=False) as file:
-            pass
-
-        path = pathlib.Path(file.name)
-        try:
-            context_manager = files._ThreadedFileReaderContextManagerImpl(executor, "filename.txt", path)
-
-            async with context_manager as reader:
-                assert reader.path == path
-
-            expanduser.assert_called_once_with()
-
-        finally:
-            path.unlink()
-
-    @pytest.mark.asyncio()
-    async def test_context_manager_for_unknown_file(self):
-        executor = concurrent.futures.ThreadPoolExecutor()
-        path = pathlib.Path(base64.urlsafe_b64encode(random.getrandbits(512).to_bytes(64, "little")).decode())
-        context_manager = files._ThreadedFileReaderContextManagerImpl(executor, "ea.txt", path)
-
-        with pytest.raises(FileNotFoundError):  # noqa:  PT012 - raises block should contain a single statement
-            async with context_manager:
-                ...
-
-    @pytest.mark.asyncio()
-    async def test_test_context_manager_when_target_is_dir(self):
-        executor = concurrent.futures.ThreadPoolExecutor()
-
-        with tempfile.TemporaryDirectory() as name:
-            path = pathlib.Path(name)
-            context_manager = files._ThreadedFileReaderContextManagerImpl(executor, "meow.txt", path)
-
-            with pytest.raises(IsADirectoryError):  # noqa:  PT012 - raises block should contain a single statement
-                async with context_manager:
-                    ...
-
-
-class Test_MultiProcessingFileReaderContextManagerImpl:
-    @pytest.mark.asyncio()
-    async def test_context_manager(self):
-        executor = concurrent.futures.ProcessPoolExecutor()
-        mock_data = b"kon'nichiwa i am yellow and blue da be meow da bayeet" * 50
-
-        # A try, finally is used to delete the file rather than relying on delete=True behaviour
-        # as on Windows the file cannot be accessed by other processes if delete is True.
-        file = tempfile.NamedTemporaryFile("wb", delete=False)
-        path = pathlib.Path(file.name)
-        try:
-            with file:
-                file.write(mock_data)
-
-            context_manager = files._MultiProcessingFileReaderContextManagerImpl(executor, "filename.txt", path)
-
-            async with context_manager as reader:
-                data = await reader.read()
-
-                assert reader.filename == "filename.txt"
-                assert reader.path == path
-                assert reader.executor is executor
-                assert data == mock_data
-
-        finally:
-            path.unlink()
-
-    @mock.patch.object(pathlib.Path, "expanduser", side_effect=RuntimeError)
-    @pytest.mark.asyncio()
-    async def test_context_manager_when_expandname_raises_runtime_error(self, expanduser: mock.Mock):
-        # We can't mock patch stuff in other processes easily (if at all) so
-        # for this test we have to cheat and use a thread pool executor.
-        executor = concurrent.futures.ThreadPoolExecutor()
-
-        with tempfile.NamedTemporaryFile() as file:
-            path = pathlib.Path(file.name)
-            context_manager = files._MultiProcessingFileReaderContextManagerImpl(executor, "filename.txt", path)
-
-            async with context_manager as reader:
-                assert reader.path == path
-
-        expanduser.assert_called_once_with()
-
-    @pytest.mark.asyncio()
-    async def test_context_manager_for_unknown_file(self):
-        executor = concurrent.futures.ProcessPoolExecutor()
-        path = pathlib.Path(base64.urlsafe_b64encode(random.getrandbits(512).to_bytes(64, "little")).decode())
-        context_manager = files._MultiProcessingFileReaderContextManagerImpl(executor, "ea.txt", path)
-
-        with pytest.raises(FileNotFoundError):  # noqa:  PT012 - raises block should contain a single statement
-            async with context_manager:
-                ...
-
-    @pytest.mark.asyncio()
-    async def test_test_context_manager_when_target_is_dir(self):
-        executor = concurrent.futures.ProcessPoolExecutor()
-
-        with tempfile.TemporaryDirectory() as name:
-            path = pathlib.Path(name)
-            context_manager = files._MultiProcessingFileReaderContextManagerImpl(executor, "meow.txt", path)
-
-            with pytest.raises(IsADirectoryError):  # noqa:  PT012 - raises block should contain a single statement
-                async with context_manager:
-                    ...
+        loop.run_in_executor.assert_called_once_with(executor, mock_file.close)
+        assert context_manager.file is None

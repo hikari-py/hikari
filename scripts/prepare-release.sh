@@ -26,12 +26,9 @@ env | grep -oP "^[^=]+" | sort
 
 if [ -z ${VERSION+x} ]; then echo '$VERSION environment variable is missing' && exit 1; fi
 if [ -z "${VERSION}" ]; then echo '$VERSION environment variable is empty' && exit 1; fi
-if [ -z ${GITHUB_TOKEN+x} ]; then echo '$GITHUB_TOKEN environment variable is missing' && exit 1; fi
-if [ -z "${GITHUB_TOKEN}" ]; then echo '$GITHUB_TOKEN environment variable is empty' && exit 1; fi
 
 echo "===== INSTALLING DEPENDENCIES ====="
-pip install towncrier
-pip install -e .
+pip install -r dev-requirements/towncrier.txt -e .
 
 echo "===== UPDATING INFORMATION ====="
 echo "-- Checkout branch --"
@@ -39,6 +36,7 @@ git checkout -b "task/prepare-release-${VERSION}"
 
 echo "-- Bumping repository version to ${VERSION} --"
 sed "/^__version__.*/, \${s||__version__: typing.Final[str] = \"${VERSION}\"|g; b}; \$q1" -i hikari/_about.py || (echo "Variable '__version__' not found in about!" && exit 1)
+sed "/^__docs__.*/, \${s||__docs__: typing.Final[str] = \"https://docs.hikari-py.dev/en/${VERSION}\"|g; b}; \$q1" -i hikari/_about.py || (echo "Variable '__docs__' not found in about!" && exit 1)
 
 echo "-- Running towncrier --"
 towncrier --yes
