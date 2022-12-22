@@ -292,81 +292,6 @@ class TestClientCredentialsStrategy:
         assert strategy._token is None
 
 
-###################
-# _LiveAttributes #
-###################
-
-
-class Test_LiveAttributes:
-    def test_build(self):
-        stack = contextlib.ExitStack()
-        create_tcp_connector = stack.enter_context(mock.patch.object(net, "create_tcp_connector"))
-        create_client_session = stack.enter_context(mock.patch.object(net, "create_client_session"))
-        bucket_manager = stack.enter_context(mock.patch.object(buckets, "RESTBucketManager"))
-        manual_rate_limiter = stack.enter_context(mock.patch.object(rate_limits, "ManualRateLimiter"))
-        stack.enter_context(mock.patch.object(asyncio, "get_running_loop"))
-        mock_settings = object()
-        mock_proxy_settings = mock.Mock()
-
-        with stack:
-            attributes = rest._LiveAttributes.build(123.321, mock_settings, mock_proxy_settings)
-
-        assert isinstance(attributes, rest._LiveAttributes)
-        assert attributes.is_closing is False
-        assert attributes.buckets is bucket_manager.return_value
-        assert attributes.client_session is create_client_session.return_value
-        assert isinstance(attributes._closed_event, asyncio.Event)
-        assert attributes.global_rate_limit is manual_rate_limiter.return_value
-        assert attributes.tcp_connector is create_tcp_connector.return_value
-
-        bucket_manager.assert_called_once_with(123.321)
-        create_tcp_connector.assert_called_once_with(mock_settings)
-        create_client_session.assert_called_once_with(
-            connector=create_tcp_connector.return_value,
-            connector_owner=False,
-            http_settings=mock_settings,
-            raise_for_status=False,
-            trust_env=mock_proxy_settings.trust_env,
-        )
-        manual_rate_limiter.assert_called_once_with()
-
-    def test_build_when_no_running_loop(self):
-        with pytest.raises(RuntimeError):
-            rest._LiveAttributes.build(123.321, object(), object())
-
-    @pytest.mark.asyncio()
-    async def test_close(self):
-        attributes = rest._LiveAttributes(
-            buckets=mock.Mock(),
-            client_session=mock.AsyncMock(),
-            closed_event=mock.Mock(),
-            global_rate_limit=mock.Mock(),
-            tcp_connector=mock.AsyncMock(),
-        )
-
-        await attributes.close()
-
-        assert attributes.is_closing is True
-        attributes.buckets.close.assert_called_once_with()
-        attributes.client_session.close.assert_awaited_once_with()
-        attributes._closed_event.set.assert_called_once_with()
-        attributes.global_rate_limit.close.assert_called_once_with()
-        attributes.tcp_connector.close.assert_awaited_once_with()
-
-    def test_still_alive_when_alive(self):
-        attributes = hikari_test_helpers.mock_class_namespace(rest._LiveAttributes, init_=False)()
-        attributes.is_closing = False
-
-        assert attributes.still_alive() is attributes
-
-    def test_still_alive_when_closing(self):
-        attributes = hikari_test_helpers.mock_class_namespace(rest._LiveAttributes, init_=False)()
-        attributes.is_closing = True
-
-        with pytest.raises(errors.ComponentStateConflictError):
-            attributes.still_alive()
-
-
 ###########
 # RESTApp #
 ###########
@@ -722,17 +647,6 @@ class TestRESTClientImpl:
 
         with pytest.raises(errors.ComponentStateConflictError):
             rest_client.start()
-
-    def test__get_live_attributes_when_active(self, rest_client):
-        mock_attributes = rest_client._live_attributes = object()
-
-        assert rest_client._get_live_attributes() is mock_attributes
-
-    def test__get_live_attributes_when_inactive(self, rest_client):
-        rest_client._live_attributes = None
-
-        with pytest.raises(errors.ComponentStateConflictError):
-            rest_client._get_live_attributes()
 
     @pytest.mark.parametrize(  # noqa: PT014 - Duplicate test cases (false positive)
         ("emoji", "expected_return"),
@@ -1896,7 +1810,7 @@ class TestRESTClientImplAsync:
         rest_client._token = "token"
 
         with pytest.raises(exit_exception):
-            await rest_client._request(route, no_auth=True)
+            await rest_client._request(route, auth=None)
 
         _, kwargs = mock_session.request.call_args_list[0]
         assert rest._AUTHORIZATION_HEADER not in kwargs["headers"]
@@ -2998,7 +2912,7 @@ class TestRESTClientImplAsync:
         rest_client._entity_factory.deserialize_webhook = mock.Mock(return_value=webhook)
 
         assert await rest_client.fetch_webhook(StubModel(123), token="token") is webhook
-        rest_client._request.assert_awaited_once_with(expected_route, no_auth=True)
+        rest_client._request.assert_awaited_once_with(expected_route, auth=None)
         rest_client._entity_factory.deserialize_webhook.assert_called_once_with({"id": "456"})
 
     async def test_fetch_webhook_without_token(self, rest_client):
@@ -3089,7 +3003,7 @@ class TestRESTClientImplAsync:
         assert returned is webhook
 
         rest_client._request.assert_awaited_once_with(
-            expected_route, json=expected_json, reason="some smart reason to do this", no_auth=True
+            expected_route, json=expected_json, reason="some smart reason to do this", auth=None
         )
         rest_client._entity_factory.deserialize_webhook.assert_called_once_with({"id": "456"})
 
@@ -3127,7 +3041,7 @@ class TestRESTClientImplAsync:
         rest_client._request = mock.AsyncMock(return_value={"id": "456"})
 
         await rest_client.delete_webhook(StubModel(123), token="token")
-        rest_client._request.assert_awaited_once_with(expected_route, no_auth=True)
+        rest_client._request.assert_awaited_once_with(expected_route, auth=None)
 
     async def test_delete_webhook_without_token(self, rest_client):
         expected_route = routes.DELETE_WEBHOOK.compile(webhook=123)
@@ -3200,7 +3114,7 @@ class TestRESTClientImplAsync:
             expected_route,
             form_builder=mock_form,
             query={"wait": "true"},
-            no_auth=True,
+            auth=None,
         )
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
 
@@ -3240,7 +3154,7 @@ class TestRESTClientImplAsync:
             expected_route,
             form_builder=mock_form,
             query={"wait": "true", "thread_id": "1234543123"},
-            no_auth=True,
+            auth=None,
         )
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
 
@@ -3274,7 +3188,7 @@ class TestRESTClientImplAsync:
             expected_route,
             json={"testing": "ensure_in_test"},
             query={"wait": "true", "thread_id": "2134312123"},
-            no_auth=True,
+            auth=None,
         )
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
 
@@ -3329,7 +3243,7 @@ class TestRESTClientImplAsync:
             expected_route,
             json={"testing": "ensure_in_test", "username": "davfsa", "avatar_url": "https://website.com/davfsa_logo"},
             query={"wait": "true"},
-            no_auth=True,
+            auth=None,
         )
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
 
@@ -3342,7 +3256,7 @@ class TestRESTClientImplAsync:
 
         assert await rest_client.fetch_webhook_message(webhook, "hi, im a token", StubModel(456)) is message_obj
 
-        rest_client._request.assert_awaited_once_with(expected_route, no_auth=True, query={})
+        rest_client._request.assert_awaited_once_with(expected_route, auth=None, query={})
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"id": "456"})
 
     async def test_fetch_webhook_message_when_thread(self, rest_client):
@@ -3356,7 +3270,7 @@ class TestRESTClientImplAsync:
         )
 
         assert result is message_obj
-        rest_client._request.assert_awaited_once_with(expected_route, no_auth=True, query={"thread_id": "54123123"})
+        rest_client._request.assert_awaited_once_with(expected_route, auth=None, query={"thread_id": "54123123"})
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"id": "456"})
 
     @pytest.mark.parametrize("webhook", [mock.Mock(webhooks.ExecutableWebhook, webhook_id=432), 432])
@@ -3407,7 +3321,7 @@ class TestRESTClientImplAsync:
         mock_form.add_field.assert_called_once_with(
             "payload_json", '{"testing": "ensure_in_test"}', content_type="application/json"
         )
-        rest_client._request.assert_awaited_once_with(expected_route, form_builder=mock_form, query={}, no_auth=True)
+        rest_client._request.assert_awaited_once_with(expected_route, form_builder=mock_form, query={}, auth=None)
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
 
     async def test_edit_webhook_message_when_form_and_thread(self, rest_client):
@@ -3440,7 +3354,7 @@ class TestRESTClientImplAsync:
             "payload_json", '{"testing": "ensure_in_test"}', content_type="application/json"
         )
         rest_client._request.assert_awaited_once_with(
-            expected_route, form_builder=mock_form, query={"thread_id": "123543123"}, no_auth=True
+            expected_route, form_builder=mock_form, query={"thread_id": "123543123"}, auth=None
         )
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
 
@@ -3488,7 +3402,7 @@ class TestRESTClientImplAsync:
             edit=True,
         )
         rest_client._request.assert_awaited_once_with(
-            expected_route, json={"testing": "ensure_in_test"}, query={}, no_auth=True
+            expected_route, json={"testing": "ensure_in_test"}, query={}, auth=None
         )
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
 
@@ -3518,7 +3432,7 @@ class TestRESTClientImplAsync:
             edit=True,
         )
         rest_client._request.assert_awaited_once_with(
-            expected_route, json={"testing": "ensure_in_test"}, query={"thread_id": "2346523432"}, no_auth=True
+            expected_route, json={"testing": "ensure_in_test"}, query={"thread_id": "2346523432"}, auth=None
         )
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
 
@@ -3529,7 +3443,7 @@ class TestRESTClientImplAsync:
 
         await rest_client.delete_webhook_message(webhook, "token", StubModel(456))
 
-        rest_client._request.assert_awaited_once_with(expected_route, no_auth=True, query={})
+        rest_client._request.assert_awaited_once_with(expected_route, auth=None, query={})
 
     async def test_delete_webhook_message_when_thread(self, rest_client):
         expected_route = routes.DELETE_WEBHOOK_MESSAGE.compile(webhook=123, token="token", message=456)
@@ -3537,7 +3451,7 @@ class TestRESTClientImplAsync:
 
         await rest_client.delete_webhook_message(123, "token", StubModel(456), thread=StubModel(432123))
 
-        rest_client._request.assert_awaited_once_with(expected_route, no_auth=True, query={"thread_id": "432123"})
+        rest_client._request.assert_awaited_once_with(expected_route, auth=None, query={"thread_id": "432123"})
 
     async def test_fetch_gateway_url(self, rest_client):
         expected_route = routes.GET_GATEWAY.compile()
@@ -3545,7 +3459,7 @@ class TestRESTClientImplAsync:
 
         assert await rest_client.fetch_gateway_url() == "wss://some.url"
 
-        rest_client._request.assert_awaited_once_with(expected_route, no_auth=True)
+        rest_client._request.assert_awaited_once_with(expected_route, auth=None)
 
     async def test_fetch_gateway_bot(self, rest_client):
         bot = StubModel(123)
@@ -3973,7 +3887,7 @@ class TestRESTClientImplAsync:
 
         assert await rest_client.fetch_available_sticker_packs() == [pack1, pack2, pack3]
 
-        rest_client._request.assert_awaited_once_with(expected_route, no_auth=True)
+        rest_client._request.assert_awaited_once_with(expected_route, auth=None)
         rest_client._entity_factory.deserialize_sticker_pack.assert_has_calls(
             [mock.call({"id": "123"}), mock.call({"id": "456"}), mock.call({"id": "789"})]
         )
@@ -5701,7 +5615,7 @@ class TestRESTClientImplAsync:
 
         assert result is rest_client._entity_factory.deserialize_message.return_value
         rest_client._entity_factory.deserialize_message.assert_called_once_with(rest_client._request.return_value)
-        rest_client._request.assert_awaited_once_with(expected_route, no_auth=True)
+        rest_client._request.assert_awaited_once_with(expected_route, auth=None)
 
     async def test_create_interaction_response_when_form(self, rest_client):
         attachment_obj = object()
@@ -5752,7 +5666,7 @@ class TestRESTClientImplAsync:
         mock_form.add_field.assert_called_once_with(
             "payload_json", '{"type": 1, "data": {"testing": "ensure_in_test"}}', content_type="application/json"
         )
-        rest_client._request.assert_awaited_once_with(expected_route, form_builder=mock_form, no_auth=True)
+        rest_client._request.assert_awaited_once_with(expected_route, form_builder=mock_form, auth=None)
 
     async def test_create_interaction_response_when_no_form(self, rest_client):
         attachment_obj = object()
@@ -5800,7 +5714,7 @@ class TestRESTClientImplAsync:
             role_mentions=[1234],
         )
         rest_client._request.assert_awaited_once_with(
-            expected_route, json={"type": 1, "data": {"testing": "ensure_in_test"}}, no_auth=True
+            expected_route, json={"type": 1, "data": {"testing": "ensure_in_test"}}, auth=None
         )
 
     async def test_edit_interaction_response_when_form(self, rest_client):
@@ -5849,7 +5763,7 @@ class TestRESTClientImplAsync:
         mock_form.add_field.assert_called_once_with(
             "payload_json", '{"testing": "ensure_in_test"}', content_type="application/json"
         )
-        rest_client._request.assert_awaited_once_with(expected_route, form_builder=mock_form, no_auth=True)
+        rest_client._request.assert_awaited_once_with(expected_route, form_builder=mock_form, auth=None)
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
 
     async def test_edit_interaction_response_when_no_form(self, rest_client):
@@ -5894,7 +5808,7 @@ class TestRESTClientImplAsync:
             role_mentions=[1234],
             edit=True,
         )
-        rest_client._request.assert_awaited_once_with(expected_route, json={"testing": "ensure_in_test"}, no_auth=True)
+        rest_client._request.assert_awaited_once_with(expected_route, json={"testing": "ensure_in_test"}, auth=None)
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
 
     async def test_delete_interaction_response(self, rest_client):
@@ -5903,7 +5817,7 @@ class TestRESTClientImplAsync:
 
         await rest_client.delete_interaction_response(StubModel(1235431), "go homo now")
 
-        rest_client._request.assert_awaited_once_with(expected_route, no_auth=True)
+        rest_client._request.assert_awaited_once_with(expected_route, auth=None)
 
     async def test_create_autocomplete_response(self, rest_client):
         expected_route = routes.POST_INTERACTION_RESPONSE.compile(interaction=1235431, token="snek")
@@ -5915,7 +5829,7 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(
             expected_route,
             json={"type": 8, "data": {"choices": [{"name": "a", "value": "b"}, {"name": "foo", "value": "bar"}]}},
-            no_auth=True,
+            auth=None,
         )
 
     async def test_create_modal_response(self, rest_client):
@@ -5933,7 +5847,7 @@ class TestRESTClientImplAsync:
                 "type": 9,
                 "data": {"title": "title", "custom_id": "idd", "components": [component.build.return_value]},
             },
-            no_auth=True,
+            auth=None,
         )
 
     async def test_create_modal_response_with_plural_args(self, rest_client):
@@ -5951,7 +5865,7 @@ class TestRESTClientImplAsync:
                 "type": 9,
                 "data": {"title": "title", "custom_id": "idd", "components": [component.build.return_value]},
             },
-            no_auth=True,
+            auth=None,
         )
 
     async def test_create_modal_response_when_both_component_and_components_passed(self, rest_client):
