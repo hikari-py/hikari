@@ -8366,9 +8366,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        component : hikari.undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]]
+        component : hikari.undefined.UndefinedOr[typing.Sequence[hikari.api.special_endpoints.ComponentBuilder]]
             A component builders to send in this modal.
-        components : hikari.undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]]
+        components : hikari.undefined.UndefinedOr[typing.Sequence[hikari.api.special_endpoints.ComponentBuilder]]
             A sequence of component builders to send in this modal.
 
         Raises
