@@ -168,9 +168,6 @@ class ManualRateLimiter(BurstRateLimiter):
     throttle_task: typing.Optional[asyncio.Task[typing.Any]]
     # <<inherited docstring from BurstRateLimiter>>.
 
-    def __init__(self, name: str) -> None:
-        super().__init__(name)
-
     async def acquire(self) -> None:
         """Acquire time on this rate limiter.
 
