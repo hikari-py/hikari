@@ -204,7 +204,7 @@ def utc_datetime() -> datetime.datetime:
 # monotonic on ARM64 architectures, but on x86, monotonic is around 1ns faster
 # than monotonic_ns. Just thought that was kind of interesting to note down.
 # (RPi 3B versus i7 6700)
-
+#
 # time.perf_counter and time.perf_counter_ns don't have proper typehints, causing
 # pdoc to not be able to recognise them. This is just a little hack around that.
 def monotonic() -> float:

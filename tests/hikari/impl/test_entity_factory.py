@@ -6223,7 +6223,7 @@ class TestEntityFactoryImpl:
         scheduled_stage_event_payload: typing.Dict[str, typing.Any],
         scheduled_voice_event_payload: typing.Dict[str, typing.Any],
     ):
-        for (cls, payload) in [
+        for cls, payload in [
             (scheduled_event_models.ScheduledExternalEvent, scheduled_external_event_payload),
             (scheduled_event_models.ScheduledStageEvent, scheduled_stage_event_payload),
             (scheduled_event_models.ScheduledVoiceEvent, scheduled_voice_event_payload),

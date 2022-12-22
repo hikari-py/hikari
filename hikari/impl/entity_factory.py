@@ -1406,7 +1406,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     def serialize_embed(  # noqa: C901 - Function too complex
         self, embed: embed_models.Embed
     ) -> typing.Tuple[data_binding.JSONObject, typing.List[files.Resource[files.AsyncReader]]]:
-
         payload: typing.Dict[str, typing.Any] = {}
         uploads: typing.List[files.Resource[files.AsyncReader]] = []
 
@@ -1476,7 +1475,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if embed.fields:
             field_payloads: typing.List[data_binding.JSONObject] = []
             for i, field in enumerate(embed.fields):
-
                 # Yep, these are technically two unreachable branches. However, this is an incredibly
                 # common mistake to make when working with embeds and not using a static type
                 # checker, so I have added these as additional safeguards for UX and ease
