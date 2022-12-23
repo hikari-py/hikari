@@ -241,9 +241,9 @@ class _UserFields:
 @attr.define(kw_only=True, weakref_slot=False)
 class _GatewayGuildDefinition(entity_factory.GatewayGuildDefinition):
     id: snowflakes.Snowflake = attr.field()
-    _payload: data_binding.JSONObject = attr.field()
-    _entity_factory: EntityFactoryImpl = attr.field()
-    _user_id: snowflakes.Snowflake = attr.field()
+    _payload: data_binding.JSONObject = attr.field(alias="payload")
+    _entity_factory: EntityFactoryImpl = attr.field(alias="entity_factory")
+    _user_id: snowflakes.Snowflake = attr.field(alias="user_id")
     # These will get deserialized as needed
     _channels: UndefinedSnowflakeMapping[channel_models.PermissibleGuildChannel] = attr.field(
         init=False, default=undefined.UNDEFINED

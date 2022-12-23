@@ -130,7 +130,7 @@ class EventStream(iterators.LazyIterator[base_events.EventT], abc.ABC):
             return `True` if it is of interest, or `False`
             otherwise. These may instead include 2-`tuple` objects
             consisting of a `str` attribute name (nested attributes
-            are referred to using the `.` operator), and values to compare for
+            are referred to using the ``.`` operator), and values to compare for
             equality. This allows you to specify conditions such as
             `members.filter(("user.bot", True))`.
         **attrs : typing.Any

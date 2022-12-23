@@ -36,7 +36,7 @@ import sys
 import typing
 import warnings
 
-import colorlog
+import colorlog.escape_codes
 
 from hikari import _about as about
 from hikari.internal import net
