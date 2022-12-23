@@ -35,7 +35,6 @@ __all__ = ["Enum", "Flag"]
 import enum as __enum
 from typing import Iterator as __Iterator
 from typing import Sequence as __Sequence
-from typing import Type as __Type
 from typing import TypeVar as __TypeVar
 from typing import Union as __Union
 
