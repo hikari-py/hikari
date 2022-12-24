@@ -324,7 +324,6 @@ class TestGuildChannel:
             name="foo1",
             type=channels.ChannelType.GUILD_VOICE,
             guild_id=snowflakes.Snowflake(123456789),
-            is_nsfw=True,
             parent_id=None,
         )
 

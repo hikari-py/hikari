@@ -133,7 +133,7 @@ class CommandOption:
     name: str = attr.field(repr=True)
     r"""The command option's name.
 
-    !!! note
+    .. note::
         This will match the regex `^[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$` in Unicode mode and will be
         lowercase.
     """
@@ -141,7 +141,7 @@ class CommandOption:
     description: str = attr.field(repr=False)
     """The command option's description.
 
-    !!! note
+    .. note::
         This will be inclusively between 1-100 characters in length.
     """
 
@@ -151,7 +151,7 @@ class CommandOption:
     choices: typing.Optional[typing.Sequence[CommandChoice]] = attr.field(default=None, repr=False)
     """A sequence of up to (and including) 25 choices for this command.
 
-    This will be `builtins.None` if the input values for this option aren't
+    This will be `None` if the input values for this option aren't
     limited to specific values or if it's a subcommand or subcommand-group type
     option.
     """
@@ -164,7 +164,7 @@ class CommandOption:
     )
     """The channel types that this option will accept.
 
-    If `builtins.None`, then all channel types will be accepted.
+    If `None`, then all channel types will be accepted.
     """
 
     autocomplete: bool = attr.field(default=False, repr=False)
@@ -173,15 +173,15 @@ class CommandOption:
     min_value: typing.Union[int, float, None] = attr.field(default=None, repr=False)
     """The minimum value permitted (inclusive).
 
-    This will be `builtins.int` if the type of the option is `hikari.commands.OptionType.INTEGER`
-    and `builtins.float` if the type is `hikari.commands.OptionType.FLOAT`.
+    This will be `int` if the type of the option is `hikari.commands.OptionType.INTEGER`
+    and `float` if the type is `hikari.commands.OptionType.FLOAT`.
     """
 
     max_value: typing.Union[int, float, None] = attr.field(default=None, repr=False)
     """The maximum value permitted (inclusive).
 
-    This will be `builtins.int` if the type of the option is `hikari.commands.OptionType.INTEGER`
-    and `builtins.float` if the type is `hikari.commands.OptionType.FLOAT`.
+    This will be `int` if the type of the option is `hikari.commands.OptionType.INTEGER`
+    and `float` if the type is `hikari.commands.OptionType.FLOAT`.
     """
 
     name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attr.field(factory=dict)
@@ -193,13 +193,13 @@ class CommandOption:
     min_length: typing.Optional[int] = attr.field(default=None, repr=False)
     """The minimum length permitted (inclusive).
 
-    This is only valid for `hikari.commands.OptionType.STRING`, otherwise it will be `builtins.None`.
+    This is only valid for `hikari.commands.OptionType.STRING`, otherwise it will be `None`.
     """
 
     max_length: typing.Optional[int] = attr.field(default=None, repr=False)
     """The maximum length permitted (inclusive).
 
-    This is only valid for `hikari.commands.OptionType.STRING`, otherwise it will be `builtins.None`.
+    This is only valid for `hikari.commands.OptionType.STRING`, otherwise it will be `None`.
     """
 
 
@@ -209,7 +209,7 @@ class PartialCommand(snowflakes.Unique):
     """Represents any application command on Discord."""
 
     app: traits.RESTAware = attr.field(eq=False, hash=False, repr=False)
-    """The client application that models may use for procedures."""
+    """Client application that models may use for procedures."""
 
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
     # <<inherited docstring from Unique>>.
@@ -223,7 +223,7 @@ class PartialCommand(snowflakes.Unique):
     name: str = attr.field(eq=False, hash=False, repr=True)
     r"""The command's name.
 
-    !!! note
+    .. note::
         This will match the regex `^[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$` in Unicode mode and will be
         lowercase.
     """
@@ -237,10 +237,13 @@ class PartialCommand(snowflakes.Unique):
     is_dm_enabled: bool = attr.field(eq=False, hash=False, repr=True)
     """Whether this command is enabled in DMs with the bot."""
 
+    is_nsfw: bool = attr.field(eq=False, hash=False, repr=True)
+    """Whether this command is age-restricted."""
+
     guild_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
     """ID of the guild this command is in.
 
-    This will be `builtins.None` if this is a global command.
+    This will be `None` if this is a global command.
     """
 
     version: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
@@ -298,14 +301,10 @@ class PartialCommand(snowflakes.Unique):
 
         Other Parameters
         ----------------
-        guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
-            Object or ID of the guild to edit a command for if this is a guild
-            specific command. Leave this as `hikari.undefined.UNDEFINED` to delete
-            a global command.
-        name : hikari.undefined.UndefinedOr[builtins.str]
+        name : hikari.undefined.UndefinedOr[str]
             The name to set for the command. Leave as `hikari.undefined.UNDEFINED`
             to not change.
-        description : hikari.undefined.UndefinedOr[builtins.str]
+        description : hikari.undefined.UndefinedOr[str]
             The description to set for the command. Leave as `hikari.undefined.UNDEFINED`
             to not change.
         options : hikari.undefined.UndefinedOr[typing.Sequence[CommandOption]]
@@ -426,7 +425,7 @@ class PartialCommand(snowflakes.Unique):
     ) -> GuildCommandPermissions:
         """Set permissions for this command in a specific guild.
 
-        !!! note
+        .. note::
             This overwrites any previously set permissions.
 
         Parameters
@@ -478,7 +477,7 @@ class SlashCommand(PartialCommand):
 
     None if this command is not a slash command.
 
-    !!! note
+    .. note::
         This will be inclusively between 1-100 characters in length.
     """
 

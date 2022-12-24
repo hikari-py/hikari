@@ -63,12 +63,12 @@ class ActivityType(int, enums.Enum):
     """The activity type."""
 
     PLAYING = 0
-    """Shows up as `Playing <name>`"""
+    """Shows up as `Playing <name>`."""
 
     STREAMING = 1
     """Shows up as `Streaming` and links to a Twitch or YouTube stream/video.
 
-    !!! warning
+    .. warning::
         You **MUST** provide a valid Twitch or YouTube stream URL to the
         activity you create in order for this to be valid. If you fail to
         do this, then the activity **WILL NOT** update.
@@ -86,7 +86,7 @@ class ActivityType(int, enums.Enum):
     To set an emoji with the status, place a unicode emoji or Discord emoji
     (`:smiley:`) as the first part of the status activity name.
 
-    !!! warning
+    .. warning::
         Bots **DO NOT** support setting custom statuses.
     """
 
@@ -129,7 +129,7 @@ _DYNAMIC_URLS = {"mp": urls.MEDIA_PROXY_URL + "/{}"}
 class ActivityAssets:
     """Used to represent possible assets for an activity."""
 
-    _application_id: typing.Optional[snowflakes.Snowflake] = attr.field(repr=False)
+    _application_id: typing.Optional[snowflakes.Snowflake] = attr.field(alias="application_id", repr=False)
 
     large_image: typing.Optional[str] = attr.field(repr=False)
     """The ID of the asset's large image, if set."""
@@ -168,8 +168,8 @@ class ActivityAssets:
     def large_image_url(self) -> typing.Optional[files.URL]:
         """Large image asset URL.
 
-        !!! note
-            This will be `builtins.None` if no large image asset exists or if the
+        .. note::
+            This will be `None` if no large image asset exists or if the
             asset's dynamic URL (indicated by a `{name}:` prefix) is not known.
         """
         try:
@@ -181,30 +181,30 @@ class ActivityAssets:
     def make_large_image_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the large image asset URL for this application.
 
-        !!! note
+        .. note::
             `ext` and `size` are ignored for images hosted outside of Discord
             or on Discord's media proxy.
 
         Parameters
         ----------
-        ext : builtins.str
+        ext : str
             The extension to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : builtins.int
+        size : int
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL, or `builtins.None` if no icon exists.
+            The URL, or `None` if no icon exists.
 
         Raises
         ------
-        builtins.ValueError
+        ValueError
             If the size is not an integer power of 2 between 16 and 4096
             (inclusive).
-        builtins.RuntimeError
+        RuntimeError
             If `ActivityAssets.large_image` points towards an unknown asset type.
         """
         return self._make_asset_url(self.large_image, ext, size)
@@ -213,8 +213,8 @@ class ActivityAssets:
     def small_image_url(self) -> typing.Optional[files.URL]:
         """Small image asset URL.
 
-        !!! note
-            This will be `builtins.None` if no large image asset exists or if the
+        .. note::
+            This will be `None` if no large image asset exists or if the
             asset's dynamic URL (indicated by a `{name}:` prefix) is not known.
         """
         try:
@@ -228,24 +228,24 @@ class ActivityAssets:
 
         Parameters
         ----------
-        ext : builtins.str
+        ext : str
             The extension to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : builtins.int
+        size : int
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL, or `builtins.None` if no icon exists.
+            The URL, or `None` if no icon exists.
 
         Raises
         ------
-        builtins.ValueError
+        ValueError
             If the size is not an integer power of 2 between 16 and 4096
             (inclusive).
-        builtins.RuntimeError
+        RuntimeError
             If `ActivityAssets.small_image` points towards an unknown asset type.
         """
         return self._make_asset_url(self.small_image, ext, size)
@@ -274,22 +274,22 @@ class ActivityFlag(enums.Flag):
     """
 
     INSTANCE = 1 << 0
-    """Instance"""
+    """Instance."""
 
     JOIN = 1 << 1
-    """Join"""
+    """Join."""
 
     SPECTATE = 1 << 2
-    """Spectate"""
+    """Spectate."""
 
     JOIN_REQUEST = 1 << 3
-    """Join Request"""
+    """Join Request."""
 
     SYNC = 1 << 4
-    """Sync"""
+    """Sync."""
 
     PLAY = 1 << 5
-    """Play"""
+    """Play."""
 
     PARTY_PRIVACY_FRIENDS = 1 << 6
     """Party privacy: friends only."""
@@ -328,9 +328,7 @@ class RichActivity(Activity):
     """When this activity was added to the user's session."""
 
     timestamps: typing.Optional[ActivityTimestamps] = attr.field(repr=False)
-    """The timestamps for when this activity's current state will start and
-    end, if applicable.
-    """
+    """The timestamps for when this activity's current state will start and end, if applicable."""
 
     application_id: typing.Optional[snowflakes.Snowflake] = attr.field(repr=False)
     """The ID of the application this activity is for, if applicable."""
@@ -403,7 +401,7 @@ class MemberPresence:
     app: traits.RESTAware = attr.field(
         repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
     )
-    """The client application that models may use for procedures."""
+    """Client application that models may use for procedures."""
 
     user_id: snowflakes.Snowflake = attr.field(repr=True, hash=True)
     """The ID of the user this presence belongs to."""

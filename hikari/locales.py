@@ -34,92 +34,95 @@ from hikari.internal import enums
 class Locale(str, enums.Enum):
     """Possible user/guild locales."""
 
+    ID = "id"
+    """Indonesian."""
+
     DA = "da"
-    """Danish"""
+    """Danish."""
 
     DE = "de"
-    """German"""
+    """German."""
 
     EN_GB = "en-GB"
-    """English, UK"""
+    """English, UK."""
 
     EN_US = "en-US"
-    """English, US"""
+    """English, US."""
 
     ES_ES = "es-ES"
-    """Spanish"""
+    """Spanish."""
 
     FR = "fr"
-    """French"""
+    """French."""
 
     HR = "hr"
-    """Croatian"""
+    """Croatian."""
 
     IT = "it"
-    """Italian"""
+    """Italian."""
 
     LT = "lt"
-    """Lithuanian"""
+    """Lithuanian."""
 
     HU = "hu"
-    """Hungarian"""
+    """Hungarian."""
 
     NL = "nl"
-    """Dutch"""
+    """Dutch."""
 
     NO = "no"
-    """Norwegian"""
+    """Norwegian."""
 
     PL = "pl"
-    """Polish"""
+    """Polish."""
 
     PT_BR = "pt-BR"
-    """Portuguese, Bralizian"""
+    """Portuguese, Bralizian."""
 
     RO = "ro"
-    """Romian"""
+    """Romian."""
 
     FI = "fi"
-    """Finnish"""
+    """Finnish."""
 
     SV_SE = "sv-SE"
-    """Swedish"""
+    """Swedish."""
 
     VI = "vi"
-    """Vietnamese"""
+    """Vietnamese."""
 
     TR = "tr"
-    """Turkish"""
+    """Turkish."""
 
     CS = "cs"
-    """Czech"""
+    """Czech."""
 
     EL = "el"
-    """Greek"""
+    """Greek."""
 
     BG = "bg"
-    """Bulgarian"""
+    """Bulgarian."""
 
     RU = "ru"
-    """Russian"""
+    """Russian."""
 
     UK = "uk"
-    """Ukrainian"""
+    """Ukrainian."""
 
     HI = "hi"
-    """Hindi"""
+    """Hindi."""
 
     TH = "th"
-    """Thai"""
+    """Thai."""
 
     ZH_CN = "zh-CN"
-    """Chinese, China"""
+    """Chinese, China."""
 
     JA = "ja"
-    """Japanese"""
+    """Japanese."""
 
     ZH_TW = "zh-TW"
-    """Chinese, Taiwan"""
+    """Chinese, Taiwan."""
 
     KO = "ko"
-    """Korean"""
+    """Korean."""

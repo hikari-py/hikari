@@ -56,11 +56,16 @@ if typing.TYPE_CHECKING:
     from hikari.api import rest as rest_api
     from hikari.interactions import command_interactions
     from hikari.interactions import component_interactions
+    from hikari.interactions import modal_interactions
 
     _InteractionT_co = typing.TypeVar("_InteractionT_co", bound=base_interactions.PartialInteraction, covariant=True)
     _MessageResponseBuilderT = typing.Union[
         special_endpoints.InteractionDeferredBuilder,
         special_endpoints.InteractionMessageBuilder,
+    ]
+    _ModalOrMessageResponseBuilderT = typing.Union[
+        _MessageResponseBuilderT,
+        special_endpoints.InteractionModalBuilder,
     ]
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.interaction_server")
@@ -175,9 +180,9 @@ class InteractionServer(interaction_server.InteractionServer):
         The JSON encoder this server should use. Defaults to `json.dumps`.
     loads : aiohttp.typedefs.JSONDecoder
         The JSON decoder this server should use. Defaults to `json.loads`.
-    public_key : builtins.bytes
+    public_key : bytes
         The public key this server should use for verifying request payloads from
-        Discord. If left as `builtins.None` then the client will try to work this
+        Discord. If left as `None` then the client will try to work this
         out using `rest_client`.
     rest_client : hikari.api.rest.RESTClient
         The client this should use for making REST requests.
@@ -235,13 +240,7 @@ class InteractionServer(interaction_server.InteractionServer):
 
     @property
     def is_alive(self) -> bool:
-        """Whether this interaction server is active.
-
-        Returns
-        -------
-        builtins.bool
-            Whether this interaction server is active
-        """
+        """Whether this interaction server is active."""
         return self._server is not None
 
     async def _fetch_public_key(self) -> signing.VerifyKey:
@@ -380,18 +379,18 @@ class InteractionServer(interaction_server.InteractionServer):
     async def on_interaction(self, body: bytes, signature: bytes, timestamp: bytes) -> interaction_server.Response:
         """Handle an interaction received from Discord as a REST server.
 
-        !!! note
+        .. note::
             If this server instance is alive then this will be called internally
             by the server but if the instance isn't alive then this may still be
             called externally to trigger interaction dispatch.
 
         Parameters
         ----------
-        body : builtins.bytes
+        body : bytes
             The interaction payload.
-        signature : builtins.bytes
+        signature : bytes
             Value of the `"X-Signature-Ed25519"` header used to verify the body.
-        timestamp : builtins.bytes
+        timestamp : bytes
             Value of the `"X-Signature-Timestamp"` header used to verify the body.
 
         Returns
@@ -472,34 +471,34 @@ class InteractionServer(interaction_server.InteractionServer):
     ) -> None:
         """Start the bot and wait for the internal server to startup then return.
 
+        .. note::
+            For more information on the other parameters such as defaults see
+            AIOHTTP's documentation.
+
         Other Parameters
         ----------------
-        backlog : builtins.int
+        backlog : int
             The number of unaccepted connections that the system will allow before
             refusing new connections.
-        host : typing.Optional[typing.Union[builtins.str, aiohttp.web.HostSequence]]
+        host : typing.Optional[typing.Union[str, aiohttp.web.HostSequence]]
             TCP/IP host or a sequence of hosts for the HTTP server.
-        port : typing.Optional[builtins.int]
+        port : typing.Optional[int]
             TCP/IP port for the HTTP server.
-        path : typing.Optional[builtins.str]
+        path : typing.Optional[str]
             File system path for HTTP server unix domain socket.
-        reuse_address : typing.Optional[builtins.bool]
+        reuse_address : typing.Optional[bool]
             Tells the kernel to reuse a local socket in TIME_WAIT state, without
             waiting for its natural timeout to expire.
-        reuse_port : typing.Optional[builtins.bool]
+        reuse_port : typing.Optional[bool]
             Tells the kernel to allow this endpoint to be bound to the same port
             as other existing endpoints are also bound to.
         socket : typing.Optional[socket.socket]
             A pre-existing socket object to accept connections on.
-        shutdown_timeout : builtins.float
-            A delay to wait for graceful server shut down before forcefully
+        shutdown_timeout : float
+            A delay to wait for graceful server shutdown before forcefully
             disconnecting all open client sockets. This defaults to 60 seconds.
         ssl_context : typing.Optional[ssl.SSLContext]
             SSL context for HTTPS servers.
-
-        !!! note
-            For more information on the other parameters such as defaults see
-            AIOHTTP's documentation.
         """
         if self._server:
             raise errors.ComponentStateConflictError("Cannot start an already active interaction server")
@@ -567,7 +566,7 @@ class InteractionServer(interaction_server.InteractionServer):
     def get_listener(
         self, interaction_type: typing.Type[command_interactions.CommandInteraction], /
     ) -> typing.Optional[
-        interaction_server.ListenerT[command_interactions.CommandInteraction, _MessageResponseBuilderT]
+        interaction_server.ListenerT[command_interactions.CommandInteraction, _ModalOrMessageResponseBuilderT]
     ]:
         ...
 
@@ -575,7 +574,7 @@ class InteractionServer(interaction_server.InteractionServer):
     def get_listener(
         self, interaction_type: typing.Type[component_interactions.ComponentInteraction], /
     ) -> typing.Optional[
-        interaction_server.ListenerT[component_interactions.ComponentInteraction, _MessageResponseBuilderT]
+        interaction_server.ListenerT[component_interactions.ComponentInteraction, _ModalOrMessageResponseBuilderT]
     ]:
         ...
 
@@ -587,6 +586,12 @@ class InteractionServer(interaction_server.InteractionServer):
             command_interactions.AutocompleteInteraction, special_endpoints.InteractionAutocompleteBuilder
         ]
     ]:
+        ...
+
+    @typing.overload
+    def get_listener(
+        self, interaction_type: typing.Type[modal_interactions.ModalInteraction], /
+    ) -> typing.Optional[interaction_server.ListenerT[modal_interactions.ModalInteraction, _MessageResponseBuilderT]]:
         ...
 
     @typing.overload
@@ -605,7 +610,7 @@ class InteractionServer(interaction_server.InteractionServer):
         self,
         interaction_type: typing.Type[command_interactions.CommandInteraction],
         listener: typing.Optional[
-            interaction_server.ListenerT[command_interactions.CommandInteraction, _MessageResponseBuilderT]
+            interaction_server.ListenerT[command_interactions.CommandInteraction, _ModalOrMessageResponseBuilderT]
         ],
         /,
         *,
@@ -618,7 +623,7 @@ class InteractionServer(interaction_server.InteractionServer):
         self,
         interaction_type: typing.Type[component_interactions.ComponentInteraction],
         listener: typing.Optional[
-            interaction_server.ListenerT[component_interactions.ComponentInteraction, _MessageResponseBuilderT]
+            interaction_server.ListenerT[component_interactions.ComponentInteraction, _ModalOrMessageResponseBuilderT]
         ],
         /,
         *,
@@ -634,6 +639,19 @@ class InteractionServer(interaction_server.InteractionServer):
             interaction_server.ListenerT[
                 command_interactions.AutocompleteInteraction, special_endpoints.InteractionAutocompleteBuilder
             ]
+        ],
+        /,
+        *,
+        replace: bool = False,
+    ) -> None:
+        ...
+
+    @typing.overload
+    def set_listener(
+        self,
+        interaction_type: typing.Type[modal_interactions.ModalInteraction],
+        listener: typing.Optional[
+            interaction_server.ListenerT[modal_interactions.ModalInteraction, _MessageResponseBuilderT]
         ],
         /,
         *,

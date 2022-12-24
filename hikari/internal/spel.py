@@ -39,7 +39,7 @@ an example. To do this, we append `()` onto the attribute name. For example,
 applying `author.username.islower()` to a `hikari.messages.Message`
 object.
 
-All expressions may start with a `.`. You can negate the whole expression
+All expressions may start with a ``.``. You can negate the whole expression
 by instead starting them with `!.`.
 
 You may also want to negate a condition. To do this, prepend `!` to the
@@ -65,7 +65,7 @@ class AttrGetter(typing.Generic[InputValueT, ReturnValueT]):
     """An attribute getter that can resolve nested attributes and methods.
 
     This follows the SPEL definition for how to define expressions. Expressions
-    may be preceded with an optional `.` to aid in readability.
+    may be preceded with an optional ``.`` to aid in readability.
     """
 
     __slots__: typing.Sequence[str] = ("pipeline", "invert_all")

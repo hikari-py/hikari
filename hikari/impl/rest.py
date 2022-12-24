@@ -121,10 +121,10 @@ class ClientCredentialsStrategy(rest_api.TokenStrategy):
 
     Parameters
     ----------
-    client: typing.Optional[snowflakes.SnowflakeishOr[guilds.PartialApplication]]
+    client : typing.Optional[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]]
         Object or ID of the application this client credentials strategy should
         authorize as.
-    client_secret : typing.Optional[builtins.str]
+    client_secret : typing.Optional[str]
         Client secret to use when authorizing.
 
     Other Parameters
@@ -163,13 +163,7 @@ class ClientCredentialsStrategy(rest_api.TokenStrategy):
 
     @property
     def client_id(self) -> snowflakes.Snowflake:
-        """ID of the application this token strategy authenticates with.
-
-        Returns
-        -------
-        hikari.snowflakes.Snowflake
-            ID of the application this token strategy authenticates with.
-        """
+        """ID of the application this token strategy authenticates with."""
         return self._client_id
 
     @property
@@ -178,13 +172,7 @@ class ClientCredentialsStrategy(rest_api.TokenStrategy):
 
     @property
     def scopes(self) -> typing.Sequence[typing.Union[applications.OAuth2Scope, str]]:
-        """Scopes this token strategy authenticates for.
-
-        Returns
-        -------
-        typing.Sequence[typing.Union[hikari.applications.OAuth2Scope, builtins.str]]
-            The scopes this token strategy authenticates for.
-        """
+        """Sequence of scopes this token strategy authenticates for."""
         return self._scopes
 
     @property
@@ -270,13 +258,13 @@ class RESTApp(traits.ExecutorAware):
     Parameters
     ----------
     executor : typing.Optional[concurrent.futures.Executor]
-        The executor to use for blocking file IO operations. If `builtins.None`
+        The executor to use for blocking file IO operations. If `None`
         is passed, then the default `concurrent.futures.ThreadPoolExecutor` for
         the `asyncio.AbstractEventLoop` will be used instead.
     http_settings : typing.Optional[hikari.impl.config.HTTPSettings]
         HTTP settings to use. Sane defaults are used if this is
-        `builtins.None`.
-    max_rate_limit : builtins.float
+        `None`.
+    max_rate_limit : float
         Maximum number of seconds to sleep for when rate limited. If a rate
         limit occurs that is longer than this value, then a
         `hikari.errors.RateLimitedError` will be raised instead of waiting.
@@ -285,19 +273,15 @@ class RESTApp(traits.ExecutorAware):
         rate limits.
 
         Defaults to five minutes if unspecified.
-    max_retries : typing.Optional[builtins.int]
+    max_retries : typing.Optional[int]
         Maximum number of times a request will be retried if
-        it fails with a `5xx` status. Defaults to 3 if set to `builtins.None`.
+        it fails with a `5xx` status. Defaults to 3 if set to `None`.
     proxy_settings : typing.Optional[hikari.impl.config.ProxySettings]
-        Proxy settings to use. If `builtins.None` then no proxy configuration
+        Proxy settings to use. If `None` then no proxy configuration
         will be used.
-    url : typing.Optional[builtins.str]
+    url : typing.Optional[str]
         The base URL for the API. You can generally leave this as being
-        `builtins.None` and the correct default API base URL will be generated.
-
-    !!! note
-        This event loop will be bound to a connector when the first call
-        to `acquire` is made.
+        `None` and the correct default API base URL will be generated.
     """
 
     __slots__: typing.Sequence[str] = (
@@ -357,34 +341,34 @@ class RESTApp(traits.ExecutorAware):
     ) -> RESTClientImpl:
         """Acquire an instance of this REST client.
 
-        !!! note
+        .. note::
             The returned REST client should be started before it can be used,
             either by calling `RESTClientImpl.start` or by using it as an
             asynchronous context manager.
 
         Examples
         --------
-        ```py
-        rest_app = RESTApp()
+        .. code-block:: python
 
-        # Using the returned client as a context manager to implicitly start
-        # and stop it.
-        async with rest_app.acquire("A token", "Bot") as client:
-            user = await client.fetch_my_user()
-        ```
+            rest_app = RESTApp()
+
+            # Using the returned client as a context manager to implicitly start
+            # and stop it.
+            async with rest_app.acquire("A token", "Bot") as client:
+                user = await client.fetch_my_user()
 
         Parameters
         ----------
-        token : typing.Union[builtins.str, builtins.None, hikari.api.rest.TokenStrategy]
+        token : typing.Union[str, None, hikari.api.rest.TokenStrategy]
             The bot or bearer token. If no token is to be used,
             this can be undefined.
-        token_type : typing.Union[builtins.str, hikari.applications.TokenType, builtins.None]
-            The type of token in use. This should only be passed when `builtins.str`
+        token_type : typing.Union[str, hikari.applications.TokenType, None]
+            The type of token in use. This should only be passed when `str`
             is passed for `token`, can be `"Bot"` or `"Bearer"` and will be
             defaulted to `"Bearer"` in this situation.
 
-            This should be left as `builtins.None` when either
-            `hikari.api.rest.TokenStrategy` or `builtins.None` is passed for
+            This should be left as `None` when either
+            `hikari.api.rest.TokenStrategy` or `None` is passed for
             `token`.
 
         Returns
@@ -394,7 +378,7 @@ class RESTApp(traits.ExecutorAware):
 
         Raises
         ------
-        builtins.ValueError
+        ValueError
             If `token_type` is provided when a token strategy is passed for `token`.
         """
         # Since we essentially mimic a fake App instance, we need to make a circular provider.
@@ -429,7 +413,7 @@ class RESTApp(traits.ExecutorAware):
 class _LiveAttributes:
     """Fields which are only present within `RESTClientImpl` while it's "alive".
 
-    !!! note
+    .. note::
         This must be started within an active asyncio event loop.
     """
 
@@ -447,7 +431,7 @@ class _LiveAttributes:
     ) -> _LiveAttributes:
         """Build a live attributes object.
 
-        !!! warning
+        .. warning::
             This can only be called when the current thread has an active
             asyncio loop.
         """
@@ -508,37 +492,37 @@ class RESTClientImpl(rest_api.RESTClient):
         The entity factory to use.
     executor : typing.Optional[concurrent.futures.Executor]
         The executor to use for blocking IO. Defaults to the `asyncio` thread
-        pool if set to `builtins.None`.
-    max_rate_limit : builtins.float
+        pool if set to `None`.
+    max_rate_limit : float
         Maximum number of seconds to sleep for when rate limited. If a rate
         limit occurs that is longer than this value, then a
         `hikari.errors.RateLimitedError` will be raised instead of waiting.
 
         This is provided since some endpoints may respond with non-sensible
         rate limits.
-    max_retries : typing.Optional[builtins.int]
+    max_retries : typing.Optional[int]
         Maximum number of times a request will be retried if
-        it fails with a `5xx` status. Defaults to 3 if set to `builtins.None`.
-    token : typing.Union[builtins.str, builtins.None, hikari.api.rest.TokenStrategy]
+        it fails with a `5xx` status. Defaults to 3 if set to `None`.
+    token : typing.Union[str, None, hikari.api.rest.TokenStrategy]
         The bot or bearer token. If no token is to be used,
         this can be undefined.
-    token_type : typing.Union[builtins.str, hikari.applications.TokenType, builtins.None]
-        The type of token in use. This must be passed when a `builtins.str` is
+    token_type : typing.Union[str, hikari.applications.TokenType, None]
+        The type of token in use. This must be passed when a `str` is
         passed for `token` but and can be `"Bot"` or `"Bearer"`.
 
-        This should be left as `builtins.None` when either
-        `hikari.api.rest.TokenStrategy` or `builtins.None` is passed for
+        This should be left as `None` when either
+        `hikari.api.rest.TokenStrategy` or `None` is passed for
         `token`.
-    rest_url : builtins.str
+    rest_url : str
         The HTTP API base URL. This can contain format-string specifiers to
         interpolate information such as API version in use.
 
     Raises
     ------
-    builtins.ValueError
-        * If `token_type` is provided when a token strategy is passed for `token`.
-        * if `token_type` is left as `builtins.None` when a string is passed for `token`.
-        * If the a value more than 5 is provided for `max_retries`
+    ValueError
+        If `token_type` is provided when a token strategy is passed for `token`, if
+        `token_type` is left as `None` when a string is passed for `token` or if a
+        value greater than 5 is provided for `max_retries`.
     """
 
     __slots__: typing.Sequence[str] = (
@@ -632,7 +616,7 @@ class RESTClientImpl(rest_api.RESTClient):
     def start(self) -> None:
         """Start the HTTP client.
 
-        !!! note
+        .. note::
             This must be called within an active event loop.
 
         Raises
@@ -2952,6 +2936,57 @@ class RESTClientImpl(rest_api.RESTClient):
         delete_message_seconds: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
+        """Ban the given user from this guild.
+
+        Parameters
+        ----------
+        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+            The guild to ban the member from. This may be the
+            object or the ID of an existing guild.
+        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
+            The user to kick. This may be the object
+            or the ID of an existing user.
+
+        Other Parameters
+        ----------------
+        delete_message_days : hikari.undefined.UndefinedOr[int]
+            If provided, the number of days to delete messages for.
+            This must be between 0 and 7.
+
+            .. deprecated:: 2.0.0.dev114
+                Use `delete_message_seconds` instead.
+        delete_message_seconds : hikari.undefined.UndefinedNoneOr[hikari.internal.time.Intervalish]
+            If provided, the number of seconds to delete messages for.
+            This can be represented as either an int/float between 0 and 604800 (7 days), or
+            a `datetime.timedelta` object.
+        reason : hikari.undefined.UndefinedOr[str]
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you are missing the `BAN_MEMBERS` permission.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild or user are not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
         if delete_message_days is not undefined.UNDEFINED:
             deprecation.warn_deprecated(
                 "delete_message_days",
@@ -2982,6 +3017,22 @@ class RESTClientImpl(rest_api.RESTClient):
         delete_message_seconds: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> typing.Coroutine[typing.Any, typing.Any, None]:
+        if delete_message_days is not undefined.UNDEFINED:
+            deprecation.warn_deprecated(
+                "delete_message_days",
+                removal_version="2.0.0.dev116",
+                additional_info="'delete_message_seconds' should be used instead.",
+            )
+            if delete_message_days:
+                raise ValueError(
+                    "You may only specify one of 'delete_message_days' or 'delete_message_seconds', not both"
+                )
+
+            delete_message_seconds = delete_message_days * 24 * 60**2
+
+        if isinstance(delete_message_seconds, datetime.timedelta):
+            delete_message_seconds = delete_message_seconds.total_seconds()
+
         return self.ban_user(guild, user, delete_message_seconds=delete_message_seconds, reason=reason)
 
     async def unban_user(
@@ -3444,6 +3495,7 @@ class RESTClientImpl(rest_api.RESTClient):
             undefined.UndefinedType, int, permissions_.Permissions
         ] = undefined.UNDEFINED,
         dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> data_binding.JSONObject:
         if guild is undefined.UNDEFINED:
             route = routes.POST_APPLICATION_COMMAND.compile(application=application)
@@ -3458,6 +3510,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put_array("options", options, conversion=self._entity_factory.serialize_command_option)
         body.put("name_localizations", name_localizations)
         body.put("description_localizations", description_localizations)
+        body.put("nsfw", nsfw)
 
         # Discord has some funky behaviour around what 0 means. They consider it to be the same as ADMINISTRATOR,
         # but we consider it to be the same as None for developer sanity reasons
@@ -3486,6 +3539,7 @@ class RESTClientImpl(rest_api.RESTClient):
             undefined.UndefinedType, int, permissions_.Permissions
         ] = undefined.UNDEFINED,
         dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.SlashCommand:
         response = await self._create_application_command(
             application=application,
@@ -3498,6 +3552,7 @@ class RESTClientImpl(rest_api.RESTClient):
             description_localizations=description_localizations,
             default_member_permissions=default_member_permissions,
             dm_enabled=dm_enabled,
+            nsfw=nsfw,
         )
         return self._entity_factory.deserialize_slash_command(
             response, guild_id=snowflakes.Snowflake(guild) if guild is not undefined.UNDEFINED else None
@@ -3517,6 +3572,7 @@ class RESTClientImpl(rest_api.RESTClient):
             undefined.UndefinedType, int, permissions_.Permissions
         ] = undefined.UNDEFINED,
         dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.ContextMenuCommand:
         response = await self._create_application_command(
             application=application,
@@ -3526,6 +3582,7 @@ class RESTClientImpl(rest_api.RESTClient):
             name_localizations=name_localizations,
             default_member_permissions=default_member_permissions,
             dm_enabled=dm_enabled,
+            nsfw=nsfw,
         )
         return self._entity_factory.deserialize_context_menu_command(
             response, guild_id=snowflakes.Snowflake(guild) if guild is not undefined.UNDEFINED else None
@@ -3561,6 +3618,7 @@ class RESTClientImpl(rest_api.RESTClient):
             undefined.UndefinedType, int, permissions_.Permissions
         ] = undefined.UNDEFINED,
         dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.PartialCommand:
         if guild is undefined.UNDEFINED:
             route = routes.PATCH_APPLICATION_COMMAND.compile(application=application, command=command)
@@ -3574,6 +3632,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("name", name)
         body.put("description", description)
         body.put_array("options", options, conversion=self._entity_factory.serialize_command_option)
+        body.put("nsfw", nsfw)
         # Discord has some funky behaviour around what 0 means. They consider it to be the same as ADMINISTRATOR,
         # but we consider it to be the same as None for developer sanity reasons
         body.put("default_member_permissions", None if default_member_permissions == 0 else default_member_permissions)
@@ -3655,6 +3714,9 @@ class RESTClientImpl(rest_api.RESTClient):
         self, type_: typing.Union[base_interactions.ResponseType, int], /
     ) -> special_endpoints.InteractionMessageBuilder:
         return special_endpoints_impl.InteractionMessageBuilder(type=type_)
+
+    def interaction_modal_builder(self, title: str, custom_id: str) -> special_endpoints.InteractionModalBuilder:
+        return special_endpoints_impl.InteractionModalBuilder(title=title, custom_id=custom_id)
 
     async def fetch_interaction_response(
         self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], token: str
@@ -3789,8 +3851,57 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("data", data)
         await self._request(route, json=body, no_auth=True)
 
-    def build_action_row(self) -> special_endpoints.ActionRowBuilder:
-        return special_endpoints_impl.ActionRowBuilder()
+    async def create_modal_response(
+        self,
+        interaction: snowflakes.SnowflakeishOr[base_interactions.PartialInteraction],
+        token: str,
+        *,
+        title: str,
+        custom_id: str,
+        component: undefined.UndefinedOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
+        components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
+    ) -> None:
+        if undefined.all_undefined(component, components) or not undefined.any_undefined(component, components):
+            raise ValueError("Must specify exactly only one of 'component' or 'components'")
+
+        route = routes.POST_INTERACTION_RESPONSE.compile(interaction=interaction, token=token)
+
+        body = data_binding.JSONObjectBuilder()
+        body.put("type", base_interactions.ResponseType.MODAL)
+
+        data = data_binding.JSONObjectBuilder()
+        data.put("title", title)
+        data.put("custom_id", custom_id)
+
+        if component:
+            components = (component,)
+
+        data.put_array("components", components, conversion=lambda c: c.build())
+
+        body.put("data", data)
+
+        await self._request(route, json=body, no_auth=True)
+
+    def build_action_row(self) -> special_endpoints.MessageActionRowBuilder:
+        """Build a message action row message component for use in message create and REST calls.
+
+        Returns
+        -------
+        hikari.api.special_endpoints.MessageActionRowBuilder
+            The initialised action row builder.
+        """
+        deprecation.warn_deprecated(
+            "build_action_row",
+            removal_version="2.0.0.dev115",
+            additional_info="Use 'build_message_action_row' parameter instead",
+        )
+        return special_endpoints_impl.MessageActionRowBuilder()
+
+    def build_message_action_row(self) -> special_endpoints.MessageActionRowBuilder:
+        return special_endpoints_impl.MessageActionRowBuilder()
+
+    def build_modal_action_row(self) -> special_endpoints.ModalActionRowBuilder:
+        return special_endpoints_impl.ModalActionRowBuilder()
 
     async def fetch_scheduled_event(
         self,

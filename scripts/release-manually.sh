@@ -1,3 +1,4 @@
+#!/bin/sh
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -18,15 +19,18 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-rm public -Rf || true
-mkdir public
-nox --sessions pages
-cd public || exit 1
+posix_read() {
+    prompt="${1}"
+    var_name="${2}"
+    printf "%s: " "${prompt}"
+    read -r "${var_name?}"
+    export "${var_name?}"
+    return ${?}
+}
 
-git init
-git remote add origin "https://git:${GITHUB_TOKEN}@github.com/${GITHUB_REPO_SLUG}"
+posix_read "Tag" VERSION
+posix_read "Twine username" TWINE_USERNAME
+posix_read "Twine password" TWINE_PASSWORD
+posix_read "Discord deployment webhook URL" DEPLOY_WEBHOOK_URL
 
-git checkout -B gh-pages
-git add -Av .
-git commit -am "Deployed documentation for ${VERSION}"
-git push origin gh-pages --force
+bash scripts/release.sh

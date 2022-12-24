@@ -32,6 +32,7 @@ __all__: typing.Sequence[str] = (
     "MESSAGE_RESPONSE_TYPES",
     "MessageResponseTypesT",
     "PartialInteraction",
+    "ModalResponseMixin",
     "ResponseType",
 )
 
@@ -73,6 +74,9 @@ class InteractionType(int, enums.Enum):
 
     AUTOCOMPLETE = 4
     """An interaction triggered by a user typing in a slash command option."""
+
+    MODAL_SUBMIT = 5
+    """An interaction triggered by a user submitting a modal."""
 
 
 @typing.final
@@ -126,6 +130,14 @@ class ResponseType(int, enums.Enum):
     * `InteractionType.AUTOCOMPLETE`
     """
 
+    MODAL = 9
+    """An immediate interaction response with instructions to display a modal.
+
+    This is valid for the following interaction types:
+
+    * `InteractionType.MODAL_SUBMIT`
+    """
+
 
 MESSAGE_RESPONSE_TYPES: typing.Final[typing.AbstractSet[MessageResponseTypesT]] = frozenset(
     [ResponseType.MESSAGE_CREATE, ResponseType.MESSAGE_UPDATE]
@@ -176,7 +188,7 @@ class PartialInteraction(snowflakes.Unique, webhooks.ExecutableWebhook):
     """The base model for all interaction models."""
 
     app: traits.RESTAware = attr.field(repr=False, eq=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
-    """The client application that models may use for procedures."""
+    """Client application that models may use for procedures."""
 
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
     # <<inherited docstring from Unique>>.
@@ -261,7 +273,7 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
     ) -> None:
         """Create the initial response for this interaction.
 
-        !!! warning
+        .. warning::
             Calling this on an interaction which already has an initial
             response will result in this raising a `hikari.errors.NotFoundError`.
             This includes if the REST interaction server has already responded
@@ -269,7 +281,7 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
 
         Parameters
         ----------
-        response_type : typing.Union[builtins.int, CommandResponseTypesT]
+        response_type : typing.Union[int, CommandResponseTypesT]
             The type of interaction response this is.
 
         Other Parameters
@@ -278,7 +290,7 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
             If provided, the message contents. If
             `hikari.undefined.UNDEFINED`, then nothing will be sent
             in the content. Any other value here will be cast to a
-            `builtins.str`.
+            `str`.
 
             If this is a `hikari.embeds.Embed` and no `embed` nor `embeds` kwarg
             is provided, then this will instead update the embed. This allows
@@ -298,28 +310,28 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
             If provided, the message embed.
         embeds : hikari.undefined.UndefinedNoneOr[typing.Sequence[hikari.embeds.Embed]]
             If provided, the message embeds.
-        flags : typing.Union[builtins.int, hikari.messages.MessageFlag, hikari.undefined.UndefinedType]
+        flags : typing.Union[int, hikari.messages.MessageFlag, hikari.undefined.UndefinedType]
             If provided, the message flags this response should have.
 
             As of writing the only message flag which can be set here is
             `hikari.messages.MessageFlag.EPHEMERAL`.
-        tts : hikari.undefined.UndefinedOr[builtins.bool]
+        tts : hikari.undefined.UndefinedOr[bool]
             If provided, whether the message will be read out by a screen
             reader using Discord's TTS (text-to-speech) system.
-        mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
+        mentions_everyone : hikari.undefined.UndefinedOr[bool]
             If provided, whether the message should parse @everyone/@here
             mentions.
-        user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], builtins.bool]]
-            If provided, and `builtins.True`, all user mentions will be detected.
-            If provided, and `builtins.False`, all user mentions will be ignored
+        user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
+            If provided, and `True`, all user mentions will be detected.
+            If provided, and `False`, all user mentions will be ignored
             if appearing in the message body.
             Alternatively this may be a collection of
             `hikari.snowflakes.Snowflake`, or
             `hikari.users.PartialUser` derivatives to enforce mentioning
             specific users.
-        role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], builtins.bool]]
-            If provided, and `builtins.True`, all role mentions will be detected.
-            If provided, and `builtins.False`, all role mentions will be ignored
+        role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], bool]]
+            If provided, and `True`, all role mentions will be detected.
+            If provided, and `False`, all role mentions will be ignored
             if appearing in the message body.
             Alternatively this may be a collection of
             `hikari.snowflakes.Snowflake`, or
@@ -328,10 +340,10 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
 
         Raises
         ------
-        builtins.ValueError
+        ValueError
             If more than 100 unique objects/entities are passed for
             `role_mentions` or `user_mentions`.
-        builtins.TypeError
+        TypeError
             If both `embed` and `embeds` are specified.
         hikari.errors.BadRequestError
             This may be raised in several discrete situations, such as messages
@@ -401,13 +413,28 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
     ) -> messages.Message:
         """Edit the initial response of this command interaction.
 
+        .. note::
+            Mentioning everyone, roles, or users in message edits currently
+            will not send a push notification showing a new mention to people
+            on Discord. It will still highlight in their chat as if they
+            were mentioned, however.
+
+        .. warning::
+            If you specify a text `content`, `mentions_everyone`,
+            `mentions_reply`, `user_mentions`, and `role_mentions` will default
+            to `False` as the message will be re-parsed for mentions. This will
+            also occur if only one of the four are specified
+
+            This is a limitation of Discord's design. If in doubt, specify all
+            four of them each time.
+
         Other Parameters
         ----------------
         content : hikari.undefined.UndefinedNoneOr[typing.Any]
             If provided, the message contents. If
             `hikari.undefined.UNDEFINED`, then nothing will be sent
             in the content. Any other value here will be cast to a
-            `builtins.str`.
+            `str`.
 
             If this is a `hikari.embeds.Embed` and neither the
             `embed` or `embeds` kwargs are provided or if this is a
@@ -422,69 +449,55 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
         attachment : hikari.undefined.UndefinedNoneOr[typing.Union[hikari.files.Resourceish, hikari.messages.Attachment]]
             If provided, the attachment to set on the message. If
             `hikari.undefined.UNDEFINED`, the previous attachment, if
-            present, is not changed. If this is `builtins.None`, then the
+            present, is not changed. If this is `None`, then the
             attachment is removed, if present. Otherwise, the new attachment
             that was provided will be attached.
         attachments : hikari.undefined.UndefinedNoneOr[typing.Sequence[typing.Union[hikari.files.Resourceish, hikari.messages.Attachment]]]
             If provided, the attachments to set on the message. If
             `hikari.undefined.UNDEFINED`, the previous attachments, if
-            present, are not changed. If this is `builtins.None`, then the
+            present, are not changed. If this is `None`, then the
             attachments is removed, if present. Otherwise, the new attachments
             that were provided will be attached.
         component : hikari.undefined.UndefinedNoneOr[hikari.api.special_endpoints.ComponentBuilder]
             If provided, builder object of the component to set for this message.
             This component will replace any previously set components and passing
-            `builtins.None` will remove all components.
+            `None` will remove all components.
         components : hikari.undefined.UndefinedNoneOr[typing.Sequence[hikari.api.special_endpoints.ComponentBuilder]]
             If provided, a sequence of the component builder objects set for
             this message. These components will replace any previously set
-            components and passing `builtins.None` or an empty sequence will
+            components and passing `None` or an empty sequence will
             remove all components.
         embed : hikari.undefined.UndefinedNoneOr[hikari.embeds.Embed]
             If provided, the embed to set on the message. If
             `hikari.undefined.UNDEFINED`, the previous embed(s) are not changed.
-            If this is `builtins.None` then any present embeds are removed.
+            If this is `None` then any present embeds are removed.
             Otherwise, the new embed that was provided will be used as the
             replacement.
         embeds : hikari.undefined.UndefinedNoneOr[typing.Sequence[hikari.embeds.Embed]]
             If provided, the embeds to set on the message. If
             `hikari.undefined.UNDEFINED`, the previous embed(s) are not changed.
-            If this is `builtins.None` then any present embeds are removed.
+            If this is `None` then any present embeds are removed.
             Otherwise, the new embeds that were provided will be used as the
             replacement.
-        mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
+        mentions_everyone : hikari.undefined.UndefinedOr[bool]
             If provided, whether the message should parse @everyone/@here
             mentions.
-        user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], builtins.bool]]
-            If provided, and `builtins.True`, all user mentions will be detected.
-            If provided, and `builtins.False`, all user mentions will be ignored
+        user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
+            If provided, and `True`, all user mentions will be detected.
+            If provided, and `False`, all user mentions will be ignored
             if appearing in the message body.
             Alternatively this may be a collection of
             `hikari.snowflakes.Snowflake`, or
             `hikari.users.PartialUser` derivatives to enforce mentioning
             specific users.
-        role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], builtins.bool]]
-            If provided, and `builtins.True`, all role mentions will be detected.
-            If provided, and `builtins.False`, all role mentions will be ignored
+        role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], bool]]
+            If provided, and `True`, all role mentions will be detected.
+            If provided, and `False`, all role mentions will be ignored
             if appearing in the message body.
             Alternatively this may be a collection of
             `hikari.snowflakes.Snowflake`, or
             `hikari.guilds.PartialRole` derivatives to enforce mentioning
             specific roles.
-
-        !!! note
-            Mentioning everyone, roles, or users in message edits currently
-            will not send a push notification showing a new mention to people
-            on Discord. It will still highlight in their chat as if they
-            were mentioned, however.
-
-        !!! warning
-            If you specify one of `mentions_everyone`, `user_mentions`, or
-            `role_mentions`, then all others will default to `builtins.False`,
-            even if they were enabled previously.
-
-            This is a limitation of Discord's design. If in doubt, specify all three of
-            them each time.
 
         Returns
         -------
@@ -493,10 +506,10 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
 
         Raises
         ------
-        builtins.ValueError
+        ValueError
             If more than 100 unique objects/entities are passed for
             `role_mentions` or `user_mentions`.
-        builtins.TypeError
+        TypeError
             If both `embed` and `embeds` are specified.
         hikari.errors.BadRequestError
             This may be raised in several discrete situations, such as messages
@@ -561,6 +574,66 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
             If an internal error occurs on Discord while handling the request.
         """
         await self.app.rest.delete_interaction_response(self.application_id, self.token)
+
+
+class ModalResponseMixin(PartialInteraction):
+    """Mixin' class for all interaction types which can be responded to with a modal."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    async def create_modal_response(
+        self,
+        title: str,
+        custom_id: str,
+        component: undefined.UndefinedOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
+        components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
+    ) -> None:
+        """Create a response by sending a modal.
+
+        Parameters
+        ----------
+        title : str
+            The title that will show up in the modal.
+        custom_id : str
+            Developer set custom ID used for identifying interactions with this modal.
+
+        Other Parameters
+        ----------------
+        component : hikari.undefined.UndefinedOr[typing.Sequence[hikari.api.special_endpoints.ComponentBuilder]]
+            A component builder to send in this modal.
+        components : hikari.undefined.UndefinedOr[typing.Sequence[hikari.api.special_endpoints.ComponentBuilder]]
+            A sequence of component builders to send in this modal.
+
+        Raises
+        ------
+        ValueError
+            If both `component` and `components` are specified or if none are specified.
+        """
+        await self.app.rest.create_modal_response(
+            self.id,
+            self.token,
+            title=title,
+            custom_id=custom_id,
+            component=component,
+            components=components,
+        )
+
+    def build_modal_response(self, title: str, custom_id: str) -> special_endpoints.InteractionModalBuilder:
+        """Create a builder for a modal interaction response.
+
+        Parameters
+        ----------
+        title : str
+            The title that will show up in the modal.
+        custom_id : str
+            Developer set custom ID used for identifying interactions with this modal.
+
+        Returns
+        -------
+        hikari.api.special_endpoints.InteractionModalBuilder
+            The interaction modal response builder object.
+        """
+        return self.app.rest.interaction_modal_builder(title=title, custom_id=custom_id)
 
 
 @attr.define(hash=True, kw_only=True, weakref_slot=False)

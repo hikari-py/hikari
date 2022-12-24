@@ -34,12 +34,17 @@ if typing.TYPE_CHECKING:
     from hikari.interactions import base_interactions
     from hikari.interactions import command_interactions
     from hikari.interactions import component_interactions
+    from hikari.interactions import modal_interactions
 
     _InteractionT_co = typing.TypeVar("_InteractionT_co", bound=base_interactions.PartialInteraction, covariant=True)
     _ResponseT_co = typing.TypeVar("_ResponseT_co", bound=special_endpoints.InteractionResponseBuilder, covariant=True)
     _MessageResponseBuilderT = typing.Union[
         special_endpoints.InteractionDeferredBuilder,
         special_endpoints.InteractionMessageBuilder,
+    ]
+    _ModalOrMessageResponseBuilder = typing.Union[
+        _MessageResponseBuilderT,
+        special_endpoints.InteractionModalBuilder,
     ]
 
 
@@ -52,7 +57,7 @@ instance of the relevant `hikari.api.special_endpoints.InteractionResponseBuilde
 subclass for the provided interaction type which will instruct the server on how
 to respond.
 
-!!! note
+.. note::
     For the standard implementations of
     `hikari.api.special_endpoints.InteractionResponseBuilder` see
     `hikari.impl.special_endpoints`.
@@ -90,31 +95,20 @@ class Response(typing.Protocol):
 
     @property
     def payload(self) -> typing.Optional[bytes]:
-        """Payload to provide in the response.
-
-        Returns
-        -------
-        typing.Optional[builtins.bytes]
-            The bytes payload to respond with if applicable else `builtins.None`.
-        """
+        """Payload to provide in the response."""
         raise NotImplementedError
 
     @property
     def status_code(self) -> int:
         """Status code that should be used to respond.
 
-        Returns
-        -------
-        builtins.int
-            The response code to use for the response. This should be a valid
-            HTTP status code, for more information see
-            https://developer.mozilla.org/en-US/docs/Web/HTTP/Status.
+        For more information see <https://developer.mozilla.org/en-US/docs/Web/HTTP/Status>.
         """
         raise NotImplementedError
 
 
 class InteractionServer(abc.ABC):
-    """Interface for an implementation of a Interactions compatible REST server."""
+    """Interface for an implementation of an interactions compatible REST server."""
 
     __slots__: typing.Sequence[str] = ()
 
@@ -124,11 +118,11 @@ class InteractionServer(abc.ABC):
 
         Parameters
         ----------
-        body : builtins.bytes
+        body : bytes
             The interaction payload.
-        signature : builtins.bytes
+        signature : bytes
             Value of the `"X-Signature-Ed25519"` header used to verify the body.
-        timestamp : builtins.bytes
+        timestamp : bytes
             Value of the `"X-Signature-Timestamp"` header used to verify the body.
 
         Returns
@@ -142,14 +136,14 @@ class InteractionServer(abc.ABC):
     @abc.abstractmethod
     def get_listener(
         self, interaction_type: typing.Type[command_interactions.CommandInteraction], /
-    ) -> typing.Optional[ListenerT[command_interactions.CommandInteraction, _MessageResponseBuilderT]]:
+    ) -> typing.Optional[ListenerT[command_interactions.CommandInteraction, _ModalOrMessageResponseBuilder]]:
         ...
 
     @typing.overload
     @abc.abstractmethod
     def get_listener(
         self, interaction_type: typing.Type[component_interactions.ComponentInteraction], /
-    ) -> typing.Optional[ListenerT[component_interactions.ComponentInteraction, _MessageResponseBuilderT]]:
+    ) -> typing.Optional[ListenerT[component_interactions.ComponentInteraction, _ModalOrMessageResponseBuilder]]:
         ...
 
     @typing.overload
@@ -159,6 +153,13 @@ class InteractionServer(abc.ABC):
     ) -> typing.Optional[
         ListenerT[command_interactions.AutocompleteInteraction, special_endpoints.InteractionAutocompleteBuilder]
     ]:
+        ...
+
+    @typing.overload
+    @abc.abstractmethod
+    def get_listener(
+        self, interaction_type: typing.Type[modal_interactions.ModalInteraction], /
+    ) -> typing.Optional[ListenerT[modal_interactions.ModalInteraction, _MessageResponseBuilderT]]:
         ...
 
     @typing.overload
@@ -183,15 +184,15 @@ class InteractionServer(abc.ABC):
         -------
         typing.Optional[ListenersT[hikari.interactions.base_interactions.PartialInteraction, hikari.api.special_endpoints.InteractionResponseBuilder]
             The callback registered for the provided interaction type if found,
-            else `builtins.None`.
-        """  # noqa E501 - Line too long
+            else `None`.
+        """  # noqa: E501 - Line too long
 
     @typing.overload
     @abc.abstractmethod
     def set_listener(
         self,
         interaction_type: typing.Type[command_interactions.CommandInteraction],
-        listener: typing.Optional[ListenerT[command_interactions.CommandInteraction, _MessageResponseBuilderT]],
+        listener: typing.Optional[ListenerT[command_interactions.CommandInteraction, _ModalOrMessageResponseBuilder]],
         /,
         *,
         replace: bool = False,
@@ -203,7 +204,9 @@ class InteractionServer(abc.ABC):
     def set_listener(
         self,
         interaction_type: typing.Type[component_interactions.ComponentInteraction],
-        listener: typing.Optional[ListenerT[component_interactions.ComponentInteraction, _MessageResponseBuilderT]],
+        listener: typing.Optional[
+            ListenerT[component_interactions.ComponentInteraction, _ModalOrMessageResponseBuilder]
+        ],
         /,
         *,
         replace: bool = False,
@@ -218,6 +221,18 @@ class InteractionServer(abc.ABC):
         listener: typing.Optional[
             ListenerT[command_interactions.AutocompleteInteraction, special_endpoints.InteractionAutocompleteBuilder]
         ],
+        /,
+        *,
+        replace: bool = False,
+    ) -> None:
+        ...
+
+    @typing.overload
+    @abc.abstractmethod
+    def set_listener(
+        self,
+        interaction_type: typing.Type[modal_interactions.ModalInteraction],
+        listener: typing.Optional[ListenerT[modal_interactions.ModalInteraction, _MessageResponseBuilderT]],
         /,
         *,
         replace: bool = False,
@@ -240,18 +255,18 @@ class InteractionServer(abc.ABC):
         interaction_type : typing.Type[hikari.interactions.base_interactions.PartialInteraction]
             The type of interaction this listener should be registered for.
         listener : typing.Optional[ListenerT[hikari.interactions.base_interactions.PartialInteraction, hikari.api.special_endpoints.InteractionResponseBuilder]]
-            The asynchronous listener callback to set or `builtins.None` to
+            The asynchronous listener callback to set or `None` to
             unset the previous listener.
 
         Other Parameters
         ----------------
-        replace : builtins.bool
+        replace : bool
             Whether this call should replace the previously set listener or not.
-            This call will raise a `builtins.ValueError` if set to `builtins.False`
+            This call will raise a `ValueError` if set to `False`
             when a listener is already set.
 
         Raises
         ------
-        builtins.TypeError
-            If `replace` is `builtins.False` when a listener is already set.
-        """  # noqa E501 - Line too long
+        TypeError
+            If `replace` is `False` when a listener is already set.
+        """  # noqa: E501 - Line too long

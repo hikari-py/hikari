@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -18,21 +19,31 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from hikari import components
 
-curl \
-  -X POST \
-  -H "Content-Type: application/json" \
-  "${DEPLOY_WEBHOOK_URL}" \
-  -d '{
-        "username": "Github Actions",
-        "embeds": [
-          {
-            "title": "'"${VERSION} has been deployed to PyPI"'",
-            "color": 6697881,
-            "description": "'"Install it now by executing: \`\`\`pip install hikari==${VERSION}\`\`\`"'",
-            "footer": {
-              "text": "'"SHA: ${REF}"'"
-            }
-          }
-        ]
-    }'
+
+class TestActionRowComponent:
+    def test_getitem_operator_with_index(self):
+        mock_component = object()
+        row = components.ActionRowComponent(type=1, components=[object(), mock_component, object()])
+
+        assert row[1] is mock_component
+
+    def test_getitem_operator_with_slice(self):
+        mock_component_1 = object()
+        mock_component_2 = object()
+        row = components.ActionRowComponent(type=1, components=[object(), mock_component_1, object(), mock_component_2])
+
+        assert row[1:4:2] == [mock_component_1, mock_component_2]
+
+    def test_iter_operator(self):
+        mock_component_1 = object()
+        mock_component_2 = object()
+        row = components.ActionRowComponent(type=1, components=[mock_component_1, mock_component_2])
+
+        assert list(row) == [mock_component_1, mock_component_2]
+
+    def test_len_operator(self):
+        row = components.ActionRowComponent(type=1, components=[object(), object()])
+
+        assert len(row) == 2

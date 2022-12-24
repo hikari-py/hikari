@@ -219,41 +219,6 @@ class TestWebhookUpdateEvent:
 class TestGuildThreadEvent:
     @pytest.mark.asyncio()
     async def test_fetch_channel(self):
-        """Perform an API call to fetch the details about this thread.
-
-        !!! note
-            For `GuildThreadDeleteEvent` events, this will always raise
-            an exception, since the channel will have already been removed.
-
-        Returns
-        -------
-        hikari.channels.GuildThreadChannel
-            A derivative of `hikari.channels.GuildThreadChannel`. The
-            actual type will vary depending on the type of channel this event
-            concerns.
-
-        Raises
-        ------
-        hikari.errors.UnauthorizedError
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.ForbiddenError
-            If you are missing the `READ_MESSAGES` permission in the channel.
-        hikari.errors.NotFoundError
-            If the channel is not found.
-        hikari.errors.RateLimitTooLongError
-            Raised in the event that a rate limit occurs that is
-            longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
-        hikari.errors.InternalServerError
-            If an internal error occurs on Discord while handling the request.
-        """
         mock_app = mock.AsyncMock()
         mock_app.rest.fetch_channel.return_value = mock.Mock(channels.GuildThreadChannel)
         event = hikari_test_helpers.mock_class_namespace(
