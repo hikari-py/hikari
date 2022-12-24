@@ -132,7 +132,7 @@ class AttrComparator(typing.Generic[ValueT]):
     Parameters
     ----------
     attr_name : str
-        The attribute name. Can be prepended with a `.` optionally.
+        The attribute name. Can be prepended with a ``.`` optionally.
         If the attribute name ends with a `()`, then the call is invoked
         rather than treated as a property (useful for methods like
         `str.isupper`, for example).
@@ -246,7 +246,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
         transformation : typing.Union[typing.Callable[[ValueT], bool], str]
             The function to use to map the attribute. This may alternatively
             be a string attribute name to replace the input value with. You
-            can provide nested attributes using the `.` operator.
+            can provide nested attributes using the ``.`` operator.
 
         Returns
         -------
@@ -288,7 +288,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
             return `True` if it is of interest, or `False`
             otherwise. These may instead include 2-`tuple` objects
             consisting of a `str` attribute name (nested attributes
-            are referred to using the `.` operator), and values to compare for
+            are referred to using the ``.`` operator), and values to compare for
             equality. This allows you to specify conditions such as
             `members.filter(("user.bot", True))`.
         **attrs : typing.Any
@@ -318,7 +318,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
             return `True` if it is of interest, or `False`
             otherwise. These may instead include 2-`tuple` objects
             consisting of a `str` attribute name (nested attributes
-            are referred to using the `.` operator), and values to compare for
+            are referred to using the ``.`` operator), and values to compare for
             equality. This allows you to specify conditions such as
             `members.take_while(("user.bot", True))`.
         **attrs : typing.Any
@@ -348,7 +348,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
             return `True` if it is of interest, or `False`
             otherwise. These may instead include 2-`tuple` objects
             consisting of a `str` attribute name (nested attributes are
-            referred to using the `.` operator), and values to compare for
+            referred to using the ``.`` operator), and values to compare for
             equality. This allows you to specify conditions such as
             `members.take_until(("user.bot", True))`.
         **attrs : typing.Any
@@ -380,7 +380,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
             return `True` if it is of interest, or `False`
             otherwise. These may instead include 2-`tuple` objects
             consisting of a `str` attribute name (nested attributes
-            are referred to using the `.` operator), and values to compare for
+            are referred to using the ``.`` operator), and values to compare for
             equality. This allows you to specify conditions such as
             `members.skip_while(("user.bot", True))`.
         **attrs : typing.Any
@@ -412,7 +412,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
             return `True` if it is of interest, or `False`
             otherwise. These may instead include 2-`tuple` objects
             consisting of a `str` attribute name (nested attributes are
-            referred to using the `.` operator), and values to compare for
+            referred to using the ``.`` operator), and values to compare for
             equality. This allows you to specify conditions such as
             `members.skip_until(("user.bot", True))`.
         **attrs : typing.Any
