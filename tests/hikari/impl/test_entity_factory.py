@@ -948,6 +948,12 @@ class TestEntityFactoryImpl:
             "cover_image": "hashmebaby",
             "privacy_policy_url": "hahaha://hahaha",
             "terms_of_service_url": "haha2:2h2h2h2",
+            "custom_install_url": "https://dontinstallme.com",
+            "tags": ["i", "like", "hikari"],
+            "install_params": {
+                "scopes": ["bot", "applications.commands"],
+                "permissions": 8,
+            },
         }
 
     def test_deserialize_application(
@@ -970,7 +976,16 @@ class TestEntityFactoryImpl:
         assert application.flags == application_models.ApplicationFlags.VERIFICATION_PENDING_GUILD_LIMIT
         assert application.privacy_policy_url == "hahaha://hahaha"
         assert application.terms_of_service_url == "haha2:2h2h2h2"
+        assert application.custom_install_url == "https://dontinstallme.com"
+        assert application.tags == ["i", "like", "hikari"]
         assert application.icon_hash == "iwiwiwiwiw"
+        # Install Parameters
+        assert application.install_parameters.scopes == [
+            application_models.OAuth2Scope.BOT,
+            application_models.OAuth2Scope.APPLICATIONS_COMMANDS,
+        ]
+        assert application.install_parameters.permissions == permission_models.Permissions.ADMINISTRATOR
+        assert isinstance(application.install_parameters, application_models.ApplicationInstallParameters)
         # Team
         assert application.team.id == 202020202
         assert application.team.name == "Hikari Development"
@@ -1028,8 +1043,13 @@ class TestEntityFactoryImpl:
 
         assert application.description is None
         assert application.icon_hash is None
+        assert application.terms_of_service_url is None
+        assert application.privacy_policy_url is None
+        assert application.custom_install_url is None
         assert application.cover_image_hash is None
         assert application.team is None
+        assert application.install_parameters is None
+        assert application.tags == []
 
     @pytest.fixture()
     def invite_application_payload(self):
