@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import gc
 import logging
 import sys
 import typing
@@ -243,6 +244,7 @@ class TestEventStream:
 
         with unittest.TestCase().assertLogs("hikari.event_manager", level=logging.WARNING) as logging_watcher:
             del streamer
+            gc.collect()  # Force a GC collection
 
         assert logging_watcher.output == [
             "WARNING:hikari.event_manager:active 'Event' streamer fell out of scope before being closed"

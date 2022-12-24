@@ -2993,7 +2993,7 @@ class RESTClientImpl(rest_api.RESTClient):
                 removal_version="2.0.0.dev116",
                 additional_info="'delete_message_seconds' should be used instead.",
             )
-            if delete_message_days:
+            if delete_message_seconds:
                 raise ValueError(
                     "You may only specify one of 'delete_message_days' or 'delete_message_seconds', not both"
                 )
@@ -3023,7 +3023,7 @@ class RESTClientImpl(rest_api.RESTClient):
                 removal_version="2.0.0.dev116",
                 additional_info="'delete_message_seconds' should be used instead.",
             )
-            if delete_message_days:
+            if delete_message_seconds:
                 raise ValueError(
                     "You may only specify one of 'delete_message_days' or 'delete_message_seconds', not both"
                 )
