@@ -74,6 +74,75 @@ class MockWriter(aiohttp.abc.AbstractStreamWriter):
         pass
 
 
+@pytest.mark.asyncio()
+class TestConsumeGeneratorListener:
+    async def test_normal_behaviour(self):
+        async def mock_generator_listener():
+            nonlocal g_continued
+
+            yield
+
+            g_continued = True
+
+        g_continued = False
+        generator = mock_generator_listener()
+        # The function expects the generator to have already yielded once
+        await generator.__anext__()
+
+        await interaction_server_impl._consume_generator_listener(generator)
+
+        assert g_continued is True
+
+    async def test_when_more_than_one_yield(self):
+        async def mock_generator_listener():
+            nonlocal g_continued
+
+            yield
+
+            g_continued = True
+
+            yield
+
+        g_continued = False
+        generator = mock_generator_listener()
+        # The function expects the generator to have already yielded once
+        await generator.__anext__()
+
+        loop = mock.Mock()
+        with mock.patch.object(asyncio, "get_running_loop", return_value=loop):
+            await interaction_server_impl._consume_generator_listener(generator)
+
+        assert g_continued is True
+        args, _ = loop.call_exception_handler.call_args_list[0]
+        exception = args[0]["exception"]
+        assert isinstance(exception, RuntimeError)
+        assert exception.args == ("Generator listener yielded more than once, expected only one yield",)
+
+    async def test_when_exception(self):
+        async def mock_generator_listener():
+            nonlocal g_continued, exception
+
+            yield
+
+            g_continued = True
+
+            raise exception
+
+        g_continued = False
+        exception = ValueError("Some random exception")
+        generator = mock_generator_listener()
+        # The function expects the generator to have already yielded once
+        await generator.__anext__()
+
+        loop = mock.Mock()
+        with mock.patch.object(asyncio, "get_running_loop", return_value=loop):
+            await interaction_server_impl._consume_generator_listener(generator)
+
+        assert g_continued is True
+        args, _ = loop.call_exception_handler.call_args_list[0]
+        assert args[0]["exception"] is exception
+
+
 @pytest.fixture()
 def valid_edd25519():
     body = (
@@ -516,11 +585,51 @@ class TestInteractionServer:
 
     @pytest.mark.asyncio()
     async def test_close(self, mock_interaction_server: interaction_server_impl.InteractionServer):
+        class TaskMock:
+            def __init__(self, done, cancelled):
+                self._awaited_count = 0
+                self._done = done
+                self._cancelled = cancelled
+
+                self.cancel = mock.Mock()
+
+            def __await__(self):
+                if False:
+                    yield  # Turns it into a generator
+
+                self._awaited_count += 1
+
+                raise asyncio.CancelledError
+
+            def assert_properly_cancelled(self):
+                self.cancel.assert_called_once_with()
+                assert self._awaited_count == 1
+
+            def assert_not_cancelled(self):
+                self.cancel.assert_not_called()
+                assert self._awaited_count == 0
+
+            def done(self):
+                return self._done
+
+            def cancelled(self):
+                return self._cancelled
+
         mock_runner = mock.AsyncMock()
         mock_event = mock.Mock()
         mock_interaction_server._is_closing = False
         mock_interaction_server._server = mock_runner
         mock_interaction_server._close_event = mock_event
+        generator_listener_1 = TaskMock(False, False)
+        generator_listener_2 = TaskMock(False, True)
+        generator_listener_3 = TaskMock(True, False)
+        generator_listener_4 = TaskMock(True, True)
+        mock_interaction_server._running_generator_listeners = [
+            generator_listener_1,
+            generator_listener_2,
+            generator_listener_3,
+            generator_listener_4,
+        ]
 
         await mock_interaction_server.close()
 
@@ -528,6 +637,11 @@ class TestInteractionServer:
         mock_runner.cleanup.assert_awaited_once()
         mock_event.set.assert_called_once()
         assert mock_interaction_server._is_closing is False
+        assert mock_interaction_server._running_generator_listeners == []
+        generator_listener_1.assert_properly_cancelled()
+        generator_listener_2.assert_not_cancelled()
+        generator_listener_3.assert_not_cancelled()
+        generator_listener_4.assert_not_cancelled()
 
     @pytest.mark.asyncio()
     async def test_close_when_closing(self, mock_interaction_server: interaction_server_impl.InteractionServer):
@@ -537,6 +651,8 @@ class TestInteractionServer:
         mock_interaction_server._close_event = mock_event
         mock_interaction_server._is_closing = True
         mock_interaction_server.join = mock.AsyncMock()
+        mock_listener = object()
+        mock_interaction_server._running_generator_listeners = [mock_listener]
 
         await mock_interaction_server.close()
 
@@ -544,6 +660,7 @@ class TestInteractionServer:
         mock_runner.cleanup.assert_not_called()
         mock_event.set.assert_not_called()
         mock_interaction_server.join.assert_awaited_once()
+        assert mock_interaction_server._running_generator_listeners == [mock_listener]
 
     @pytest.mark.asyncio()
     async def test_close_when_not_running(self, mock_interaction_server: interaction_server_impl.InteractionServer):
@@ -595,6 +712,56 @@ class TestInteractionServer:
         assert result.headers is None
         assert result.payload == b'{"ok": "No boomer"}'
         assert result.status_code == 200
+
+    @pytest.mark.asyncio()
+    async def test_on_interaction_with_generator_listener(
+        self,
+        mock_interaction_server: interaction_server_impl.InteractionServer,
+        mock_entity_factory: entity_factory_impl.EntityFactoryImpl,
+        public_key: bytes,
+        valid_edd25519: bytes,
+        valid_payload: bytes,
+    ):
+        async def mock_generator_listener(event):
+            nonlocal g_called, g_complete
+
+            g_called = True
+            assert event is mock_entity_factory.deserialize_interaction.return_value
+
+            yield mock_builder
+
+            g_complete = True
+
+        mock_interaction_server._public_key = nacl.signing.VerifyKey(public_key)
+        mock_file_1 = mock.Mock()
+        mock_file_2 = mock.Mock()
+        mock_entity_factory.deserialize_interaction.return_value = base_interactions.PartialInteraction(
+            app=None, id=123, application_id=541324, type=2, token="ok", version=1
+        )
+        mock_builder = mock.Mock(build=mock.Mock(return_value=({"ok": "No boomer"}, [mock_file_1, mock_file_2])))
+        g_called = False
+        g_complete = False
+        mock_interaction_server.set_listener(base_interactions.PartialInteraction, mock_generator_listener)
+
+        result = await mock_interaction_server.on_interaction(*valid_edd25519)
+
+        mock_builder.build.assert_called_once_with(mock_entity_factory)
+        mock_entity_factory.deserialize_interaction.assert_called_once_with(valid_payload)
+        assert result.content_type == "application/json"
+        assert result.charset == "UTF-8"
+        assert result.files == [mock_file_1, mock_file_2]
+        assert result.headers is None
+        assert result.payload == b'{"ok": "No boomer"}'
+        assert result.status_code == 200
+
+        assert g_called is True
+        assert g_complete is False
+        assert len(mock_interaction_server._running_generator_listeners) != 0
+        # Give some time for the task to complete
+        await asyncio.sleep(hikari_test_helpers.REASONABLE_QUICK_RESPONSE_TIME)
+
+        assert g_complete is True
+        assert len(mock_interaction_server._running_generator_listeners) == 0
 
     @pytest.mark.asyncio()
     async def test_on_interaction_calls__fetch_public_key(

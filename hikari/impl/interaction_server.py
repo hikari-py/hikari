@@ -171,9 +171,8 @@ async def _consume_generator_listener(generator: typing.AsyncGenerator[typing.An
     try:
         await generator.__anext__()
 
-        # We expect only one!
-        exc = RuntimeError("Generator listener yielded more than once, expected only one yield")
-        await generator.athrow(exc)
+        # We expect only one yield!
+        await generator.athrow(RuntimeError("Generator listener yielded more than once, expected only one yield"))
 
     except StopAsyncIteration:
         pass
@@ -477,8 +476,8 @@ class InteractionServer(interaction_server.InteractionServer):
                 if inspect.isasyncgen(call):
                     result = await call.__anext__()
                     task = asyncio.create_task(_consume_generator_listener(call))
-                    self._running_generator_listeners.append(task)
                     task.add_done_callback(self._running_generator_listeners.remove)
+                    self._running_generator_listeners.append(task)
 
                 else:
                     result = await call
