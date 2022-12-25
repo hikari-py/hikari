@@ -321,12 +321,12 @@ class OwnApplicationRoleConnection:
 
     .. note::
         Unfortunately, these can't be deserialized to their proper types as Discord don't
-        provide a proper way to difference between them.
+        provide a way to difference between them.
 
         You can deserialize them yourself based on what value you expect from the key:
-            - `INTEGER_X`: An integer
-            - `DATETIME_X`: ISO8601 string.
-            - `BOOLEAN_X`: 0 or 1.
+            - `INTEGER_X`: Cast to an `int`.
+            - `DATETIME_X`: Cast to a `datetime.datetime.fromisoformat` or `ciso8601.parse_rfc3339` for speed.
+            - `BOOLEAN_X`: Cast to a `bool`.
     """
 
 
