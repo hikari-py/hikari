@@ -497,11 +497,11 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
         path : typing.Optional[Pathish]
             The path to save this resource to. If this is a string, the
             path will be relative to the current working directory. If
-            `builtins.None`, the resource will be saved as `filename` in
+            `None`, the resource will be saved as `filename` in
             the current working directory.
         executor : typing.Optional[concurrent.futures.Executor]
             The executor to run in for blocking operations.
-            If `builtins.None`, then the default executor is used for
+            If `None`, then the default executor is used for
             the current event loop.
         force : bool
             Whether to overwrite an existing file. Defaults to `False`.
