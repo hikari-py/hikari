@@ -833,6 +833,7 @@ class TestInteractionServer:
         mock_context = object()
         mock_socket = object()
         mock_interaction_server._is_closing = True
+        mock_interaction_server._fetch_public_key = mock.AsyncMock()
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(aiohttp.web, "TCPSite", return_value=mock.AsyncMock()))
         stack.enter_context(mock.patch.object(aiohttp.web, "UnixSite", return_value=mock.AsyncMock()))
@@ -853,6 +854,8 @@ class TestInteractionServer:
                 shutdown_timeout=3232.3232,
                 ssl_context=mock_context,
             )
+
+            mock_interaction_server._fetch_public_key.assert_awaited_once_with()
 
             aiohttp.web.Application.assert_called_once_with()
             aiohttp.web.Application.return_value.add_routes.assert_called_once_with(
