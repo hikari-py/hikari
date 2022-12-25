@@ -185,10 +185,10 @@ class CommandOption:
     """
 
     name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attr.field(factory=dict)
-    """A set of name localizations for this option."""
+    """A mapping of name localizations for this option."""
 
     description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attr.field(factory=dict)
-    """A set of description localizations for this option"""
+    """A mapping of description localizations for this option."""
 
     min_length: typing.Optional[int] = attr.field(default=None, repr=False)
     """The minimum length permitted (inclusive).
@@ -250,10 +250,10 @@ class PartialCommand(snowflakes.Unique):
     """Auto-incrementing version identifier updated during substantial record changes."""
 
     name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attr.field(factory=dict)
-    """A set of name localizations for this command"""
+    """A mapping of name localizations for this command"""
 
     description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attr.field(factory=dict)
-    """A set of description localizations for this command"""
+    """A mapping of description localizations for this command"""
 
     async def fetch_self(self) -> PartialCommand:
         """Fetch an up-to-date version of this command object.
