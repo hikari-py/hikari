@@ -669,7 +669,7 @@ class GatewayBot(traits.GatewayBotAware):
         shard_ids: typing.Optional[typing.Sequence[int]] = None,
         shard_count: typing.Optional[int] = None,
     ) -> None:
-        """Start the bot, wait for all shards to become ready, and then return.
+        """Start the application and block until it's finished running.
 
         Other Parameters
         ----------------
