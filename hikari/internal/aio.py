@@ -38,6 +38,7 @@ import asyncio
 import inspect
 import sys
 import typing
+import warnings
 
 if typing.TYPE_CHECKING:
     import logging
@@ -208,7 +209,9 @@ def get_or_make_loop() -> asyncio.AbstractEventLoop:
     # get_event_loop will error under oddly specific cases such as if set_event_loop has been called before even
     # if it was just called with None or if it's called on a thread which isn't the main Thread.
     try:
-        loop = asyncio.get_event_loop_policy().get_event_loop()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            loop = asyncio.get_event_loop_policy().get_event_loop()
 
         # Closed loops cannot be re-used.
         if not loop.is_closed():
