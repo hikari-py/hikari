@@ -3,7 +3,6 @@
 # We do not like to flashbang people when something goes wrong, which is why this exists
 
 permalink: /404.html
-layout: default
 ---
 <style>
   :root {
@@ -29,6 +28,13 @@ layout: default
     line-height: 1;
     letter-spacing: -1px;
   }
+
+  a,
+  a:focus,
+  a:hover {
+      color: var(--light-fg) !important;
+  }
+
 </style>
 
 <head>
@@ -40,4 +46,6 @@ layout: default
 
   <p><strong>Page not found :(</strong></p>
   <p>The requested page could not be found.</p>
+  <br>
+  <a href="https://www.hikari-py.dev/">Back to home</a>
 </div>
