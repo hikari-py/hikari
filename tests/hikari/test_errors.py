@@ -114,6 +114,9 @@ class TestBadRequestError:
             {},
             "raw body",
             errors={
+                "": [
+                    {"code": "012", "message": "test error"},
+                ],
                 "components": {
                     "0": {
                         "_errors": [
@@ -140,6 +143,9 @@ class TestBadRequestError:
             """
             Bad Request 400: 'raw body' for https://some.url
 
+            root:
+             - test error
+
             components.0:
              - something went wrong
              - but more things too!
@@ -159,6 +165,12 @@ class TestBadRequestError:
             Bad Request 400: 'raw body' for https://some.url
 
             {
+              "": [
+                {
+                  "code": "012",
+                  "message": "test error"
+                }
+              ],
               "components": {
                 "0": {
                   "_errors": [

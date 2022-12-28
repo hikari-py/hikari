@@ -524,6 +524,56 @@ class EntityFactory(abc.ABC):
         """
 
     @abc.abstractmethod
+    def deserialize_guild_forum_channel(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+    ) -> channel_models.GuildForumChannel:
+        """Parse a raw payload from Discord into a guild forum channel object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Other Parameters
+        ----------------
+        guild_id : hikari.snowflakes.Snowflake
+            The ID of the guild this channel belongs to. If passed then this
+            will be prioritised over `"guild_id"` in the payload.
+
+            This currently only covers the gateway `GUILD_CREATE` event,
+            where it is not included in the channel's payload.
+
+        Returns
+        -------
+        hikari.channels.GuildForumChannel
+            The deserialized guild forum channel object.
+
+        Raises
+        ------
+        KeyError
+            If `guild_id` is left as `hikari.undefined.UNDEFINED` when
+            `"guild_id"` is not present in the passed payload.
+        """
+
+    @abc.abstractmethod
+    def serialize_forum_tag(self, tag: channel_models.ForumTag) -> data_binding.JSONObject:
+        """Serialize a forum tag object to a json serializable dict.
+
+        Parameters
+        ----------
+        tag : hikari.channels.ForumTag
+            The forum tag object to serialize.
+
+        Returns
+        -------
+        hikari.internal.data_binding.JSONObject
+            The serialized representation of the forum tag.
+        """
+
+    @abc.abstractmethod
     def deserialize_thread_member(
         self,
         payload: data_binding.JSONObject,

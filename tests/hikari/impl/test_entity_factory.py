@@ -176,7 +176,8 @@ def guild_public_thread_payload(thread_member_payload: typing.Dict[str, typing.A
         "message_count": 1,
         "member_count": 3,
         "rate_limit_per_user": 23,
-        "flags": 0,
+        "flags": 2,
+        "applied_tags": ["123", "456"],
         "member": thread_member_payload,
     }
 
@@ -1945,6 +1946,141 @@ class TestEntityFactoryImpl:
         assert voice_channel.parent_id is None
         assert voice_channel.is_nsfw is False
 
+    @pytest.fixture()
+    def guild_forum_channel_payload(self, permission_overwrite_payload):
+        return {
+            "id": "961367432532987974",
+            "type": 15,
+            "guild_id": "777192995619340299",
+            "topic": "A fun place to discuss fun stuff!",
+            "rate_limit_per_user": 100,
+            "position": 2,
+            "permission_overwrites": [permission_overwrite_payload],
+            "parent_id": "1234567890",
+            "nsfw": True,
+            "name": "testing_forum_channel",
+            "last_message_id": "1057301863181058088",
+            "flags": 16,
+            "default_auto_archive_duration": 101,
+            "default_thread_rate_limit_per_user": 1400,
+            "default_sort_order": 1,
+            "default_forum_layout": 1,
+            "default_reaction_emoji": {
+                "emoji_id": "654395854798716938",
+                "emoji_name": "some_emoji_name",
+            },
+            "available_tags": [
+                {
+                    "id": "924798733516800000",
+                    "name": "First!",
+                    "moderated": True,
+                    "emoji_id": "51685451281621",
+                    "emoji_name": None,
+                },
+                {
+                    "id": "970821992448000000",
+                    "name": "Big!",
+                    "moderated": False,
+                    "emoji_id": None,
+                    "emoji_name": "B",
+                },
+            ],
+        }
+
+    def test_deserialize_guild_forum_channel(
+        self, entity_factory_impl, mock_app, guild_forum_channel_payload, permission_overwrite_payload
+    ):
+        forum_channel = entity_factory_impl.deserialize_guild_forum_channel(guild_forum_channel_payload)
+        assert forum_channel.app is mock_app
+        assert forum_channel.id == 961367432532987974
+        assert forum_channel.name == "testing_forum_channel"
+        assert forum_channel.topic == "A fun place to discuss fun stuff!"
+        assert forum_channel.type == channel_models.ChannelType.GUILD_FORUM
+        assert forum_channel.flags == channel_models.ChannelFlag.REQUIRE_TAG
+        assert forum_channel.guild_id == 777192995619340299
+        assert forum_channel.position == 2
+        assert forum_channel.permission_overwrites == {
+            4242: entity_factory_impl.deserialize_permission_overwrite(permission_overwrite_payload)
+        }
+        assert forum_channel.is_nsfw is True
+        assert forum_channel.parent_id == 1234567890
+        assert forum_channel.last_thread_id == 1057301863181058088
+        assert forum_channel.default_sort_order == channel_models.ForumSortOrderType.CREATION_DATE
+        assert forum_channel.default_layout == channel_models.ForumLayoutType.LIST_VIEW
+        assert forum_channel.rate_limit_per_user.total_seconds() == 100
+        assert forum_channel.default_auto_archive_duration.total_seconds() == 6060
+        assert forum_channel.default_thread_rate_limit_per_user.total_seconds() == 1400
+        assert forum_channel.default_reaction_emoji_id == 654395854798716938
+        assert forum_channel.default_reaction_emoji_name == "some_emoji_name"
+        assert len(forum_channel.available_tags) == 2
+        tag1 = forum_channel.available_tags[0]
+        assert tag1.id == 924798733516800000
+        assert tag1.name == "First!"
+        assert tag1.moderated is True
+        assert tag1.emoji_id == 51685451281621
+        assert tag1.unicode_emoji is None
+        assert isinstance(tag1, channel_models.ForumTag)
+        tag2 = forum_channel.available_tags[1]
+        assert tag2.id == 970821992448000000
+        assert tag2.name == "Big!"
+        assert tag2.moderated is False
+        assert tag2.emoji_id is None
+        assert tag2.unicode_emoji == "B"
+        assert isinstance(tag2, channel_models.ForumTag)
+        assert isinstance(forum_channel, channel_models.GuildForumChannel)
+
+    def test_deserialize_guild_forum_channel_with_null_fields(self, entity_factory_impl, guild_forum_channel_payload):
+        guild_forum_channel_payload["topic"] = None
+        guild_forum_channel_payload["parent_id"] = None
+        guild_forum_channel_payload["last_message_id"] = None
+        guild_forum_channel_payload["default_sort_order"] = None
+        guild_forum_channel_payload["default_reaction_emoji"]["emoji_id"] = None
+        guild_forum_channel_payload["default_reaction_emoji"]["emoji_name"] = None
+
+        forum_channel = entity_factory_impl.deserialize_guild_forum_channel(guild_forum_channel_payload)
+
+        assert forum_channel.parent_id is None
+        assert forum_channel.topic is None
+        assert forum_channel.last_thread_id is None
+        assert forum_channel.default_sort_order == channel_models.ForumSortOrderType.LATEST_ACTIVITY
+        assert forum_channel.default_reaction_emoji_id is None
+        assert forum_channel.default_reaction_emoji_name is None
+
+    def test_deserialize_guild_forum_channel_with_unset_fields(self, entity_factory_impl, guild_forum_channel_payload):
+        del guild_forum_channel_payload["available_tags"]
+        del guild_forum_channel_payload["default_reaction_emoji"]
+        del guild_forum_channel_payload["nsfw"]
+        del guild_forum_channel_payload["last_message_id"]
+        del guild_forum_channel_payload["default_auto_archive_duration"]
+        del guild_forum_channel_payload["default_thread_rate_limit_per_user"]
+        del guild_forum_channel_payload["rate_limit_per_user"]
+
+        forum_channel = entity_factory_impl.deserialize_guild_forum_channel(guild_forum_channel_payload)
+
+        assert forum_channel.available_tags == []
+        assert forum_channel.is_nsfw is False
+        assert forum_channel.last_thread_id is None
+        assert forum_channel.default_reaction_emoji_id is None
+        assert forum_channel.default_reaction_emoji_name is None
+        assert forum_channel.default_auto_archive_duration == datetime.timedelta(minutes=1440)
+        assert forum_channel.default_thread_rate_limit_per_user == datetime.timedelta(minutes=0)
+        assert forum_channel.rate_limit_per_user == datetime.timedelta(minutes=0)
+
+    def test_serialize_forum_tag(self, entity_factory_impl):
+        tag = channel_models.ForumTag(id=snowflakes.Snowflake(123), name="test", moderated=True, emoji=None)
+        unicode_emoji = object()
+        emoji_id = object()
+
+        with mock.patch.object(channel_models.ForumTag, "unicode_emoji", new=unicode_emoji):
+            with mock.patch.object(channel_models.ForumTag, "emoji_id", new=emoji_id):
+                assert entity_factory_impl.serialize_forum_tag(tag) == {
+                    "id": 123,
+                    "name": "test",
+                    "moderated": True,
+                    "emoji_id": emoji_id,
+                    "emoji_name": unicode_emoji,
+                }
+
     def test_deserialize_thread_member(
         self, entity_factory_impl: entity_factory.EntityFactoryImpl, thread_member_payload: typing.Dict[str, typing.Any]
     ):
@@ -2133,6 +2269,7 @@ class TestEntityFactoryImpl:
         assert thread.parent_id == 744183190998089820
         assert thread.owner_id == 115590097100865541
         assert thread.type is channel_models.ChannelType.GUILD_PUBLIC_THREAD
+        assert thread.flags == channel_models.ChannelFlag.PINNED
         assert thread.name == "e"
         assert thread.last_message_id == 947690877000753252
         assert thread.is_archived is False
@@ -2148,6 +2285,7 @@ class TestEntityFactoryImpl:
         assert thread.member == entity_factory_impl.deserialize_thread_member(
             thread_member_payload, thread_id=947643783913308301
         )
+        assert thread.applied_tag_ids == [123, 456]
 
     def test_deserialize_guild_public_thread_when_null_fields(
         self,
@@ -2168,6 +2306,8 @@ class TestEntityFactoryImpl:
         del guild_public_thread_payload["last_message_id"]
         del guild_public_thread_payload["guild_id"]
         del guild_public_thread_payload["member"]
+        del guild_public_thread_payload["flags"]
+        del guild_public_thread_payload["applied_tags"]
         del guild_public_thread_payload["thread_metadata"]["create_timestamp"]
 
         thread = entity_factory_impl.deserialize_guild_public_thread(
@@ -2177,6 +2317,8 @@ class TestEntityFactoryImpl:
         assert thread.last_message_id is None
         assert thread.guild_id == 54123123123
         assert thread.member is None
+        assert thread.flags == channel_models.ChannelFlag.NONE
+        assert thread.applied_tag_ids == []
         assert thread.thread_created_at is None
 
     def test_deserialize_guild_public_thread_when_passed_through_member(
@@ -2303,6 +2445,7 @@ class TestEntityFactoryImpl:
         guild_news_channel_payload: typing.Dict[str, typing.Any],
         guild_voice_channel_payload: typing.Dict[str, typing.Any],
         guild_stage_channel_payload: typing.Dict[str, typing.Any],
+        guild_forum_channel_payload: typing.Dict[str, typing.Any],
         guild_news_thread_payload: typing.Dict[str, typing.Any],
         guild_public_thread_payload: typing.Dict[str, typing.Any],
         guild_private_thread_payload: typing.Dict[str, typing.Any],
@@ -2315,6 +2458,7 @@ class TestEntityFactoryImpl:
             (guild_news_channel_payload, channel_models.GuildNewsChannel),
             (guild_voice_channel_payload, channel_models.GuildVoiceChannel),
             (guild_stage_channel_payload, channel_models.GuildStageChannel),
+            (guild_forum_channel_payload, channel_models.GuildForumChannel),
             (guild_news_thread_payload, channel_models.GuildNewsThread),
             (guild_public_thread_payload, channel_models.GuildPublicThread),
             (guild_private_thread_payload, channel_models.GuildPrivateThread),

@@ -929,6 +929,7 @@ class RESTClientImpl(rest_api.RESTClient):
         /,
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        flags: undefined.UndefinedOr[channels_.ChannelFlag] = undefined.UNDEFINED,
         position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -944,15 +945,30 @@ class RESTClientImpl(rest_api.RESTClient):
             snowflakes.SnowflakeishOr[channels_.GuildCategory]
         ] = undefined.UNDEFINED,
         default_auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        default_thread_rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        default_forum_layout: undefined.UndefinedOr[typing.Union[channels_.ForumLayoutType, int]] = undefined.UNDEFINED,
+        default_sort_order: undefined.UndefinedOr[
+            typing.Union[channels_.ForumSortOrderType, int]
+        ] = undefined.UNDEFINED,
+        available_tags: undefined.UndefinedOr[typing.Sequence[channels_.ForumTag]] = undefined.UNDEFINED,
+        default_reaction_emoji: typing.Union[
+            str, emojis.Emoji, undefined.UndefinedType, snowflakes.Snowflake, None
+        ] = undefined.UNDEFINED,
         archived: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         locked: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         invitable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.PartialChannel:
+        if isinstance(auto_archive_duration, datetime.timedelta):
+            auto_archive_duration = round(auto_archive_duration.total_seconds() / 60)
+        if isinstance(default_auto_archive_duration, datetime.timedelta):
+            default_auto_archive_duration = round(default_auto_archive_duration.total_seconds() / 60)
+
         route = routes.PATCH_CHANNEL.compile(channel=channel)
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
+        body.put("flags", flags)
         body.put("position", position)
         body.put("topic", topic)
         body.put("nsfw", nsfw)
@@ -967,7 +983,27 @@ class RESTClientImpl(rest_api.RESTClient):
             permission_overwrites,
             conversion=self._entity_factory.serialize_permission_overwrite,
         )
-        body.put("default_auto_archive_duration", default_auto_archive_duration, conversion=time.timespan_to_int)
+        body.put("default_auto_archive_duration", default_auto_archive_duration, conversion=int)
+        # forum-only fields
+        body.put(
+            "default_thread_rate_limit_per_user", default_thread_rate_limit_per_user, conversion=time.timespan_to_int
+        )
+        body.put_array("available_tags", available_tags, conversion=self._entity_factory.serialize_forum_tag)
+        body.put("default_forum_layout", default_forum_layout)
+        body.put("default_sort_order", default_sort_order)
+
+        if default_reaction_emoji is not undefined.UNDEFINED:
+            if default_reaction_emoji is None:
+                emoji_id = None
+                emoji_name = None
+            elif isinstance(default_reaction_emoji, (int, emojis.CustomEmoji)):
+                emoji_id = int(default_reaction_emoji)
+                emoji_name = None
+            else:
+                emoji_id = None
+                emoji_name = str(default_reaction_emoji)
+
+            body.put("default_reaction_emoji", {"emoji_id": emoji_id, "emoji_name": emoji_name})
         # thread-only fields
         body.put("archived", archived)
         body.put("auto_archive_duration", auto_archive_duration, conversion=time.timespan_to_int)
@@ -2473,6 +2509,51 @@ class RESTClientImpl(rest_api.RESTClient):
         )
         return self._entity_factory.deserialize_guild_news_channel(response)
 
+    async def create_guild_forum_channel(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        name: str,
+        *,
+        position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
+        permission_overwrites: undefined.UndefinedOr[
+            typing.Sequence[channels_.PermissionOverwrite]
+        ] = undefined.UNDEFINED,
+        topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        default_auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        default_thread_rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        default_forum_layout: undefined.UndefinedOr[typing.Union[channels_.ForumLayoutType, int]] = undefined.UNDEFINED,
+        default_sort_order: undefined.UndefinedOr[
+            typing.Union[channels_.ForumSortOrderType, int]
+        ] = undefined.UNDEFINED,
+        available_tags: undefined.UndefinedOr[typing.Sequence[channels_.ForumTag]] = undefined.UNDEFINED,
+        default_reaction_emoji: typing.Union[
+            str, emojis.Emoji, undefined.UndefinedType, snowflakes.Snowflake
+        ] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> channels_.GuildForumChannel:
+        response = await self._create_guild_channel(
+            guild,
+            name,
+            channels_.ChannelType.GUILD_FORUM,
+            topic=topic,
+            nsfw=nsfw,
+            rate_limit_per_user=rate_limit_per_user,
+            default_auto_archive_duration=default_auto_archive_duration,
+            default_thread_rate_limit_per_user=default_thread_rate_limit_per_user,
+            default_forum_layout=default_forum_layout,
+            default_sort_order=default_sort_order,
+            position=position,
+            permission_overwrites=permission_overwrites,
+            category=category,
+            available_tags=available_tags,
+            default_reaction_emoji=default_reaction_emoji,
+            reason=reason,
+        )
+        return self._entity_factory.deserialize_guild_forum_channel(response)
+
     async def create_guild_voice_channel(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -2573,8 +2654,20 @@ class RESTClientImpl(rest_api.RESTClient):
         region: undefined.UndefinedOr[typing.Union[voices.VoiceRegion, str]] = undefined.UNDEFINED,
         category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
         default_auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        default_thread_rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        default_forum_layout: undefined.UndefinedOr[typing.Union[channels_.ForumLayoutType, int]] = undefined.UNDEFINED,
+        default_sort_order: undefined.UndefinedOr[
+            typing.Union[channels_.ForumSortOrderType, int]
+        ] = undefined.UNDEFINED,
+        available_tags: undefined.UndefinedOr[typing.Sequence[channels_.ForumTag]] = undefined.UNDEFINED,
+        default_reaction_emoji: typing.Union[
+            str, emojis.Emoji, undefined.UndefinedType, snowflakes.Snowflake
+        ] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> data_binding.JSONObject:
+        if isinstance(default_auto_archive_duration, datetime.timedelta):
+            default_auto_archive_duration = round(default_auto_archive_duration.total_seconds() / 60)
+
         route = routes.POST_GUILD_CHANNELS.compile(guild=guild)
         body = data_binding.JSONObjectBuilder()
         body.put("type", type_)
@@ -2593,7 +2686,23 @@ class RESTClientImpl(rest_api.RESTClient):
             permission_overwrites,
             conversion=self._entity_factory.serialize_permission_overwrite,
         )
-        body.put("default_auto_archive_duration", default_auto_archive_duration, conversion=time.timespan_to_int)
+        body.put("default_auto_archive_duration", default_auto_archive_duration, conversion=int)
+        body.put(
+            "default_thread_rate_limit_per_user", default_thread_rate_limit_per_user, conversion=time.timespan_to_int
+        )
+        body.put_array("available_tags", available_tags, conversion=self._entity_factory.serialize_forum_tag)
+        body.put("default_forum_layout", default_forum_layout)
+        body.put("default_sort_order", default_sort_order)
+
+        if default_reaction_emoji:
+            if isinstance(default_reaction_emoji, (int, emojis.CustomEmoji)):
+                emoji_id = int(default_reaction_emoji)
+                emoji_name = None
+            else:
+                emoji_id = None
+                emoji_name = str(default_reaction_emoji)
+
+            body.put("default_reaction_emoji", {"emoji_id": emoji_id, "emoji_name": emoji_name})
 
         response = await self._request(route, json=body, reason=reason)
         assert isinstance(response, dict)
@@ -2610,13 +2719,13 @@ class RESTClientImpl(rest_api.RESTClient):
         rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> typing.Union[channels_.GuildPublicThread, channels_.GuildNewsThread]:
-        if auto_archive_duration is not undefined.UNDEFINED and isinstance(auto_archive_duration, datetime.timedelta):
+        if isinstance(auto_archive_duration, datetime.timedelta):
             auto_archive_duration = round(auto_archive_duration.total_seconds() / 60)
 
         route = routes.POST_MESSAGE_THREADS.compile(channel=channel, message=message)
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
-        body.put("auto_archive_duration", auto_archive_duration)
+        body.put("auto_archive_duration", auto_archive_duration, conversion=time.timespan_to_int)
         body.put("rate_limit_per_user", rate_limit_per_user, conversion=time.timespan_to_int)
 
         response = await self._request(route, json=body, reason=reason)
@@ -2638,13 +2747,13 @@ class RESTClientImpl(rest_api.RESTClient):
         rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.GuildThreadChannel:
-        if auto_archive_duration is not undefined.UNDEFINED and isinstance(auto_archive_duration, datetime.timedelta):
+        if isinstance(auto_archive_duration, datetime.timedelta):
             auto_archive_duration = round(auto_archive_duration.total_seconds() / 60)
 
         route = routes.POST_CHANNEL_THREADS.compile(channel=channel)
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
-        body.put("auto_archive_duration", auto_archive_duration)
+        body.put("auto_archive_duration", auto_archive_duration, conversion=time.timespan_to_int)
         body.put("type", type)
         body.put("invitable", invitable)
         body.put("rate_limit_per_user", rate_limit_per_user, conversion=time.timespan_to_int)
@@ -2653,6 +2762,77 @@ class RESTClientImpl(rest_api.RESTClient):
 
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_guild_thread(response)
+
+    async def create_forum_post(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
+        name: str,
+        /,
+        # Message arguments
+        content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
+        *,
+        attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
+        attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
+        component: undefined.UndefinedOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
+        components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
+        embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
+        embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        user_mentions: undefined.UndefinedOr[
+            typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
+        ] = undefined.UNDEFINED,
+        role_mentions: undefined.UndefinedOr[
+            typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
+        ] = undefined.UNDEFINED,
+        flags: typing.Union[undefined.UndefinedType, int, messages_.MessageFlag] = undefined.UNDEFINED,
+        # Channel arguments
+        auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = datetime.timedelta(days=1),
+        rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        tags: undefined.UndefinedOr[
+            typing.Sequence[snowflakes.SnowflakeishOr[channels_.ForumTag]]
+        ] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> channels_.GuildPublicThread:
+        if isinstance(auto_archive_duration, datetime.timedelta):
+            auto_archive_duration = round(auto_archive_duration.total_seconds() / 60)
+
+        route = routes.POST_CHANNEL_THREADS.compile(channel=channel)
+
+        body = data_binding.JSONObjectBuilder()
+        # Channel arguments
+        body.put("name", name)
+        body.put("auto_archive_duration", auto_archive_duration, conversion=time.timespan_to_int)
+        body.put("rate_limit_per_user", rate_limit_per_user, conversion=time.timespan_to_int)
+        body.put_snowflake_array("applied_tags", tags)
+
+        # Message arguments
+        message_body, form_builder = self._build_message_payload(
+            content=content,
+            attachment=attachment,
+            attachments=attachments,
+            component=component,
+            components=components,
+            embed=embed,
+            embeds=embeds,
+            tts=tts,
+            mentions_everyone=mentions_everyone,
+            mentions_reply=mentions_reply,
+            user_mentions=user_mentions,
+            role_mentions=role_mentions,
+            flags=flags,
+        )
+        body.put("message", message_body)
+
+        if form_builder is not None:
+            form_builder.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
+            response = await self._request(route, form_builder=form_builder, reason=reason)
+        else:
+            response = await self._request(route, json=body, reason=reason)
+
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_guild_public_thread(response)
 
     async def join_thread(self, channel: snowflakes.SnowflakeishOr[channels_.GuildTextChannel], /) -> None:
         route = routes.PUT_MY_THREAD_MEMBER.compile(channel=channel)

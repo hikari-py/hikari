@@ -231,6 +231,7 @@ def print_banner(
 
     with open(sys.stdout.fileno(), "w", encoding="utf-8", closefd=False) as stdout:
         stdout.write(string.Template(raw_banner).safe_substitute(args))
+        stdout.flush()
 
 
 def supports_color(allow_color: bool, force_color: bool) -> bool:
