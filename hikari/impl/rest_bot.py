@@ -262,6 +262,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         # Beautification and logging
         ux.init_logging(logs, allow_color, force_color)
         self.print_banner(banner, allow_color, force_color)
+        ux.warn_if_not_optimized()
 
         # Settings and state
         self._close_event: typing.Optional[asyncio.Event] = None
