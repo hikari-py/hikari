@@ -140,9 +140,17 @@ class Route:
     major_params: typing.Optional[typing.FrozenSet[str]] = attr.field(hash=False, eq=False)
     """The optional major parameter name combination for this endpoint."""
 
-    def __init__(self, method: str, path_template: str) -> None:
+    skip_ratelimit: bool = attr.field(hash=False, eq=False)
+    """Whether to perform ratelimiting on this route.
+    
+    This is useful in specific route with no rate-limits attached to them
+    to prevent high memory usage.    
+    """
+
+    def __init__(self, method: str, path_template: str, *, skip_ratelimit: bool = False) -> None:
         self.method = method
         self.path_template = path_template
+        self.skip_ratelimit = skip_ratelimit
 
         self.major_params = None
         match = PARAM_REGEX.findall(path_template)
@@ -530,7 +538,9 @@ PUT_APPLICATION_GUILD_COMMANDS_PERMISSIONS: typing.Final[Route] = Route(
 # For these endpoints "webhook" is the application ID.
 GET_INTERACTION_RESPONSE: typing.Final[Route] = Route(GET, "/webhooks/{webhook}/{token}/messages/@original")
 PATCH_INTERACTION_RESPONSE: typing.Final[Route] = Route(PATCH, "/webhooks/{webhook}/{token}/messages/@original")
-POST_INTERACTION_RESPONSE: typing.Final[Route] = Route(POST, "/interactions/{interaction}/{token}/callback")
+POST_INTERACTION_RESPONSE: typing.Final[Route] = Route(
+    POST, "/interactions/{interaction}/{token}/callback", skip_ratelimit=True
+)
 DELETE_INTERACTION_RESPONSE: typing.Final[Route] = Route(DELETE, "/webhooks/{webhook}/{token}/messages/@original")
 
 # OAuth2 API

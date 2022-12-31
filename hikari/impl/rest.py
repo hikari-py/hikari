@@ -434,6 +434,19 @@ class RESTApp(traits.ExecutorAware):
         return rest_client
 
 
+def _stringify_http_message(headers: data_binding.Headers, body: typing.Any) -> str:
+    string = "\n".join(
+        f"    {name}: {value}" if name != _AUTHORIZATION_HEADER else f"    {name}: **REDACTED TOKEN**"
+        for name, value in headers.items()
+    )
+
+    if body is not None:
+        string += "\n\n    "
+        string += body.decode("ascii") if isinstance(body, bytes) else str(body)
+
+    return string
+
+
 class RESTClientImpl(rest_api.RESTClient):
     """Implementation of the V10-compatible Discord HTTP API.
 
@@ -722,7 +735,8 @@ class RESTClientImpl(rest_api.RESTClient):
             async with stack:
                 form = await form_builder.build(stack) if form_builder else None
 
-                await stack.enter_async_context(self._bucket_manager.acquire(compiled_route, auth))
+                if not compiled_route.route.skip_ratelimit:
+                    await stack.enter_async_context(self._bucket_manager.acquire(compiled_route, auth))
 
                 if auth:
                     headers[_AUTHORIZATION_HEADER] = auth
@@ -735,7 +749,7 @@ class RESTClientImpl(rest_api.RESTClient):
                         uuid,
                         compiled_route.method,
                         url,
-                        self._stringify_http_message(headers, json),
+                        _stringify_http_message(headers, json),
                     )
                     start = time.monotonic()
 
@@ -762,14 +776,14 @@ class RESTClientImpl(rest_api.RESTClient):
                         response.status,
                         response.reason,
                         time_taken,
-                        self._stringify_http_message(response.headers, await response.read()),
+                        _stringify_http_message(response.headers, await response.read()),
                     )
 
                 # Ensure we are not rate limited, and update rate limiting headers where appropriate.
                 retry = await self._parse_ratelimits(compiled_route, auth, response)
 
-                if retry:
-                    continue
+            if retry:
+                continue
 
             # Don't bother processing any further if we got NO CONTENT. There's not anything
             # to check.
@@ -813,20 +827,6 @@ class RESTClientImpl(rest_api.RESTClient):
                 continue
 
             raise await net.generate_error_response(response)
-
-    @staticmethod
-    @typing.final
-    def _stringify_http_message(headers: data_binding.Headers, body: typing.Any) -> str:
-        string = "\n".join(
-            f"    {name}: {value}" if name != _AUTHORIZATION_HEADER else f"    {name}: **REDACTED TOKEN**"
-            for name, value in headers.items()
-        )
-
-        if body is not None:
-            string += "\n\n    "
-            string += body.decode("ascii") if isinstance(body, bytes) else str(body)
-
-        return string
 
     @typing.final
     async def _parse_ratelimits(

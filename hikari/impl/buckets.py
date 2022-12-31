@@ -592,16 +592,14 @@ class RESTBucketManager:
 
         authentication_hash = _create_authentication_hash(authentication)
 
-        try:
-            bucket_hash = self._routes_to_hashes[compiled_route.route]
+        if bucket_hash := self._routes_to_hashes.get(compiled_route.route):
             real_bucket_hash = compiled_route.create_real_bucket_hash(bucket_hash, authentication_hash)
-        except KeyError:
+        else:
             real_bucket_hash = _create_unknown_hash(compiled_route, authentication_hash)
 
-        try:
-            bucket = self._real_hashes_to_buckets[real_bucket_hash]
+        if bucket := self._real_hashes_to_buckets.get(real_bucket_hash):
             _LOGGER.debug("%s is being mapped to existing bucket %s", compiled_route, real_bucket_hash)
-        except KeyError:
+        else:
             _LOGGER.debug("%s is being mapped to new bucket %s", compiled_route, real_bucket_hash)
             bucket = RESTBucket(
                 real_bucket_hash,
@@ -642,9 +640,8 @@ class RESTBucketManager:
         """
         self._check_if_alive()
 
-        authentication_hash = _create_authentication_hash(authentication)
-
         self._routes_to_hashes[compiled_route.route] = bucket_header
+        authentication_hash = _create_authentication_hash(authentication)
         real_bucket_hash = compiled_route.create_real_bucket_hash(bucket_header, authentication_hash)
 
         if bucket := self._real_hashes_to_buckets.get(real_bucket_hash):
