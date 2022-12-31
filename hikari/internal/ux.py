@@ -149,7 +149,8 @@ _UNCONDITIONAL_ANSI_FLAGS: typing.Final[typing.FrozenSet[str]] = frozenset(("PYC
 
 def _read_banner(package: str) -> str:
     if sys.version_info >= (3, 9):
-        return importlib.resources.files(package).joinpath("banner.txt").open("r").read()
+        with importlib.resources.files(package).joinpath("banner.txt").open("r") as fp:
+            return fp.read()
     else:
         return importlib.resources.read_text(package, "banner.txt")
 
