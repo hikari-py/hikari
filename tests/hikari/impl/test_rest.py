@@ -320,6 +320,7 @@ class Test_LiveAttributes:
         assert attributes.tcp_connector is create_tcp_connector.return_value
 
         bucket_manager.assert_called_once_with(123.321)
+        bucket_manager.return_value.start.assert_called_once_with()
         create_tcp_connector.assert_called_once_with(mock_settings)
         create_client_session.assert_called_once_with(
             connector=create_tcp_connector.return_value,
