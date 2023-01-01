@@ -1054,7 +1054,9 @@ class IteratorReader(AsyncReader):
         return data
 
 
-def _write_bytes(path: Pathish, default_filename: str, force: bool, data: bytes) -> None:
+def _write_bytes(
+    path: Pathish, default_filename: str, force: bool, data: typing.Union[bytearray, bytes, memoryview]
+) -> None:
     path = _to_write_path(path, default_filename, force)
     path.write_bytes(data)
 
