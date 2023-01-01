@@ -168,15 +168,14 @@ class TestResource:
     @pytest.mark.asyncio()
     async def test_save(self, resource):
         executor = object()
-        file_open = hikari_test_helpers.ContextManagerMock()
+        file_open = mock.Mock()
         file_open.write = mock.Mock()
-        loop = mock.Mock(run_in_executor=mock.AsyncMock(side_effect=[file_open, None, None, None, None, None]))
+        loop = mock.Mock(run_in_executor=mock.AsyncMock(side_effect=[file_open, None, None, None, None, None, None]))
 
         with mock.patch.object(asyncio, "get_running_loop", return_value=loop):
             await resource.save("rickroll/lyrics.txt", executor=executor, force=True)
 
-        file_open.assert_used_once()
-        assert loop.run_in_executor.call_count == 6
+        assert loop.run_in_executor.call_count == 7
         loop.run_in_executor.assert_has_calls(
             [
                 mock.call(executor, files._open_write_path, pathlib.Path("rickroll/lyrics.txt"), "lyrics.txt", True),
@@ -185,5 +184,6 @@ class TestResource:
                 mock.call(executor, file_open.write, "give"),
                 mock.call(executor, file_open.write, "you"),
                 mock.call(executor, file_open.write, "up"),
+                mock.call(executor, file_open.close),
             ]
         )
