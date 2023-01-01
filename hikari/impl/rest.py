@@ -2936,57 +2936,6 @@ class RESTClientImpl(rest_api.RESTClient):
         delete_message_seconds: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
-        """Ban the given user from this guild.
-
-        Parameters
-        ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
-            The guild to ban the member from. This may be the
-            object or the ID of an existing guild.
-        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
-            The user to kick. This may be the object
-            or the ID of an existing user.
-
-        Other Parameters
-        ----------------
-        delete_message_days : hikari.undefined.UndefinedOr[int]
-            If provided, the number of days to delete messages for.
-            This must be between 0 and 7.
-
-            .. deprecated:: 2.0.0.dev114
-                Use `delete_message_seconds` instead.
-        delete_message_seconds : hikari.undefined.UndefinedNoneOr[hikari.internal.time.Intervalish]
-            If provided, the number of seconds to delete messages for.
-            This can be represented as either an int/float between 0 and 604800 (7 days), or
-            a `datetime.timedelta` object.
-        reason : hikari.undefined.UndefinedOr[str]
-            If provided, the reason that will be recorded in the audit logs.
-            Maximum of 512 characters.
-
-        Raises
-        ------
-        hikari.errors.BadRequestError
-            If any of the fields that are passed have an invalid value.
-        hikari.errors.ForbiddenError
-            If you are missing the `BAN_MEMBERS` permission.
-        hikari.errors.UnauthorizedError
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.NotFoundError
-            If the guild or user are not found.
-        hikari.errors.RateLimitTooLongError
-            Raised in the event that a rate limit occurs that is
-            longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
-        hikari.errors.InternalServerError
-            If an internal error occurs on Discord while handling the request.
-        """
         if delete_message_days is not undefined.UNDEFINED:
             deprecation.warn_deprecated(
                 "delete_message_days",
