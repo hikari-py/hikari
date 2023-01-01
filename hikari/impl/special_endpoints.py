@@ -1275,7 +1275,7 @@ class CommandBuilder(special_endpoints.CommandBuilder):
 
     @property
     def is_nsfw(self) -> undefined.UndefinedOr[bool]:
-        return self._is_dm_enabled
+        return self._is_nsfw
 
     @property
     def name(self) -> str:
