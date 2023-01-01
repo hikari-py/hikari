@@ -828,6 +828,18 @@ class FlatLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
             self._complete()
 
 
+class NOOPLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
+    """A lazy iterator that uses an underlying async iterator and does nothing."""
+
+    __slots__: typing.Sequence[str] = ("_iterator",)
+
+    def __init__(self, iterator: typing.AsyncIterable[ValueT]) -> None:
+        self._iterator = iterator.__aiter__()
+
+    async def __anext__(self) -> ValueT:
+        return await self._iterator.__anext__()
+
+
 class _EnumeratedLazyIterator(typing.Generic[ValueT], LazyIterator[typing.Tuple[int, ValueT]]):
     __slots__: typing.Sequence[str] = ("_i", "_iterator")
 

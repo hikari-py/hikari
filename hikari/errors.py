@@ -467,23 +467,11 @@ class BulkDeleteError(HikariError):
     and will have a cause containing the initial exception.
     """
 
-    messages_deleted: snowflakes.SnowflakeishSequence[messages.PartialMessage] = attr.field()
+    deleted_messages: snowflakes.SnowflakeishSequence[messages.PartialMessage] = attr.field()
     """Any message objects that were deleted before an exception occurred."""
 
-    messages_skipped: snowflakes.SnowflakeishSequence[messages.PartialMessage] = attr.field()
-    """Any message objects that were skipped due to an exception."""
-
-    @property
-    def percentage_completion(self) -> float:
-        """Return the percentage completion of the bulk delete before it failed."""
-        deleted = len(self.messages_deleted)
-        total = deleted + len(self.messages_skipped)
-        return 100 * deleted / total
-
     def __str__(self) -> str:
-        deleted = len(self.messages_deleted)
-        total = deleted + len(self.messages_skipped)
-        return f"Error encountered when bulk deleting messages ({deleted}/{total} messages deleted)"
+        return f"Error encountered when bulk deleting messages ({len(self.deleted_messages)} messages deleted)"
 
 
 @attr.define(auto_exc=True, repr=False, init=False, slots=False)
