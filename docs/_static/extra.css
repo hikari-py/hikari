@@ -24,6 +24,10 @@ body {
     right: -20em;
 }
 
+.toc-tree ul ul ul ul {
+    border-left: 1px solid var(--color-background-border);
+}
+
 @media (max-width: 82em) {
     body {
         font-size: 0.7em;
