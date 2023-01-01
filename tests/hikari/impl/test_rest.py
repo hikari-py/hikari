@@ -2275,20 +2275,35 @@ class TestRESTClientImplAsync:
         mock_cache.set_dm_channel_id.assert_not_called()
 
     @pytest.mark.parametrize(
+        ("emoji", "expected_emoji_id", "expected_emoji_name"),
+        [(123, 123, None), ("emoji", None, "emoji"), (None, None, None)],
+    )
+    @pytest.mark.parametrize(
         ("auto_archive_duration", "default_auto_archive_duration"),
         [
-            (445123, 123321),
-            (datetime.timedelta(seconds=445123), datetime.timedelta(seconds=123321)),
-            (445123.2, 123321.1),
+            (12322, 445123),
+            (datetime.timedelta(minutes=12322), datetime.timedelta(minutes=445123)),
+            (12322.0, 445123.1),
         ],
     )
-    async def test_edit_channel(self, rest_client, auto_archive_duration, default_auto_archive_duration):
+    async def test_edit_channel(
+        self,
+        rest_client,
+        auto_archive_duration,
+        default_auto_archive_duration,
+        emoji,
+        expected_emoji_id,
+        expected_emoji_name,
+    ):
         expected_route = routes.PATCH_CHANNEL.compile(channel=123)
         mock_object = mock.Mock()
         rest_client._entity_factory.deserialize_channel = mock.Mock(return_value=mock_object)
         rest_client._request = mock.AsyncMock(return_value={"payload": "GO"})
         rest_client._entity_factory.serialize_permission_overwrite = mock.Mock(
             return_value={"type": "member", "allow": 1024, "deny": 8192, "id": "1235431"}
+        )
+        rest_client._entity_factory.serialize_forum_tag = mock.Mock(
+            return_value={"id": 0, "name": "testing", "moderated": True, "emoji_id": None, "emoji_name": None}
         )
         expected_json = {
             "name": "new name",
@@ -2302,11 +2317,19 @@ class TestRESTClientImplAsync:
             "rate_limit_per_user": 30,
             "parent_id": "1234",
             "permission_overwrites": [{"type": "member", "allow": 1024, "deny": 8192, "id": "1235431"}],
-            "default_auto_archive_duration": 123321,
+            "default_auto_archive_duration": 445123,
+            "default_thread_rate_limit_per_user": 40,
+            "default_forum_layout": 1,
+            "default_sort_order": 0,
+            "default_reaction_emoji": {
+                "emoji_id": expected_emoji_id,
+                "emoji_name": expected_emoji_name,
+            },
+            "available_tags": [{"id": 0, "name": "testing", "moderated": True, "emoji_id": None, "emoji_name": None}],
             "archived": True,
             "locked": False,
             "invitable": True,
-            "auto_archive_duration": 445123,
+            "auto_archive_duration": 12322,
         }
 
         result = await rest_client.edit_channel(
@@ -2331,6 +2354,11 @@ class TestRESTClientImplAsync:
             region="ostrich-city",
             reason="some reason :)",
             default_auto_archive_duration=default_auto_archive_duration,
+            default_thread_rate_limit_per_user=40,
+            default_forum_layout=channels.ForumLayoutType.LIST_VIEW,
+            default_sort_order=channels.ForumSortOrderType.LATEST_ACTIVITY,
+            available_tags=[channels.ForumTag(name="testing", moderated=True)],
+            default_reaction_emoji=emoji,
             archived=True,
             locked=False,
             invitable=True,
@@ -4345,6 +4373,56 @@ class TestRESTClientImplAsync:
             rest_client._create_guild_channel.return_value
         )
 
+    async def test_create_guild_forum_channel(self, rest_client: rest.RESTClientImpl):
+        guild = StubModel(123)
+        category_channel = StubModel(789)
+        overwrite1 = StubModel(987)
+        overwrite2 = StubModel(654)
+        tag1 = StubModel(1203)
+        tag2 = StubModel(1204)
+        rest_client._create_guild_channel = mock.AsyncMock()
+
+        returned = await rest_client.create_guild_forum_channel(
+            guild,
+            "help-center",
+            position=1,
+            topic="get help!",
+            nsfw=False,
+            rate_limit_per_user=60,
+            permission_overwrites=[overwrite1, overwrite2],
+            category=category_channel,
+            reason="because we need one",
+            default_auto_archive_duration=5445234,
+            default_thread_rate_limit_per_user=40,
+            default_forum_layout=channels.ForumLayoutType.LIST_VIEW,
+            default_sort_order=channels.ForumSortOrderType.LATEST_ACTIVITY,
+            available_tags=[tag1, tag2],
+            default_reaction_emoji="some reaction",
+        )
+        assert returned is rest_client._entity_factory.deserialize_guild_forum_channel.return_value
+
+        rest_client._create_guild_channel.assert_awaited_once_with(
+            guild,
+            "help-center",
+            channels.ChannelType.GUILD_FORUM,
+            position=1,
+            topic="get help!",
+            nsfw=False,
+            rate_limit_per_user=60,
+            permission_overwrites=[overwrite1, overwrite2],
+            category=category_channel,
+            reason="because we need one",
+            default_auto_archive_duration=5445234,
+            default_thread_rate_limit_per_user=40,
+            default_forum_layout=channels.ForumLayoutType.LIST_VIEW,
+            default_sort_order=channels.ForumSortOrderType.LATEST_ACTIVITY,
+            available_tags=[tag1, tag2],
+            default_reaction_emoji="some reaction",
+        )
+        rest_client._entity_factory.deserialize_guild_forum_channel.assert_called_once_with(
+            rest_client._create_guild_channel.return_value
+        )
+
     async def test_create_guild_voice_channel(self, rest_client: rest.RESTClientImpl):
         guild = StubModel(123)
         category_channel = StubModel(789)
@@ -4446,10 +4524,17 @@ class TestRESTClientImplAsync:
             rest_client._create_guild_channel.return_value
         )
 
-    @pytest.mark.parametrize("default_auto_archive_duration", [12322, datetime.timedelta(seconds=12322), 12322.0])
-    async def test__create_guild_channel(self, rest_client, default_auto_archive_duration):
+    @pytest.mark.parametrize(
+        ("emoji", "expected_emoji_id", "expected_emoji_name"), [(123, 123, None), ("emoji", None, "emoji")]
+    )
+    @pytest.mark.parametrize("default_auto_archive_duration", [12322, (datetime.timedelta(minutes=12322)), 12322.0])
+    async def test__create_guild_channel(
+        self, rest_client, default_auto_archive_duration, emoji, expected_emoji_id, expected_emoji_name
+    ):
         overwrite1 = StubModel(987)
         overwrite2 = StubModel(654)
+        tag1 = StubModel(321)
+        tag2 = StubModel(123)
         expected_route = routes.POST_GUILD_CHANNELS.compile(guild=123)
         expected_json = {
             "type": 0,
@@ -4464,11 +4549,20 @@ class TestRESTClientImplAsync:
             "parent_id": "321",
             "permission_overwrites": [{"id": "987"}, {"id": "654"}],
             "default_auto_archive_duration": 12322,
+            "default_thread_rate_limit_per_user": 40,
+            "default_forum_layout": 1,
+            "default_sort_order": 0,
+            "default_reaction_emoji": {
+                "emoji_id": expected_emoji_id,
+                "emoji_name": expected_emoji_name,
+            },
+            "available_tags": [{"id": "321"}, {"id": "123"}],
         }
         rest_client._request = mock.AsyncMock(return_value={"id": "456"})
         rest_client._entity_factory.serialize_permission_overwrite = mock.Mock(
             side_effect=[{"id": "987"}, {"id": "654"}]
         )
+        rest_client._entity_factory.serialize_forum_tag = mock.Mock(side_effect=[{"id": "321"}, {"id": "123"}])
 
         returned = await rest_client._create_guild_channel(
             StubModel(123),
@@ -4485,6 +4579,11 @@ class TestRESTClientImplAsync:
             category=StubModel(321),
             reason="we have got the power",
             default_auto_archive_duration=default_auto_archive_duration,
+            default_thread_rate_limit_per_user=40,
+            default_forum_layout=channels.ForumLayoutType.LIST_VIEW,
+            default_sort_order=channels.ForumSortOrderType.LATEST_ACTIVITY,
+            available_tags=[tag1, tag2],
+            default_reaction_emoji=emoji,
         )
         assert returned is rest_client._request.return_value
 
@@ -4495,6 +4594,8 @@ class TestRESTClientImplAsync:
         rest_client._entity_factory.serialize_permission_overwrite.assert_has_calls(
             [mock.call(overwrite1), mock.call(overwrite2)]
         )
+        assert rest_client._entity_factory.serialize_forum_tag.call_count == 2
+        rest_client._entity_factory.serialize_forum_tag.assert_has_calls([mock.call(tag1), mock.call(tag2)])
 
     @pytest.mark.parametrize(
         ("auto_archive_duration", "rate_limit_per_user"),
@@ -4556,7 +4657,7 @@ class TestRESTClientImplAsync:
         ("auto_archive_duration", "rate_limit_per_user"),
         [(54123, 101), (datetime.timedelta(minutes=54123), datetime.timedelta(seconds=101)), (54123.0, 101.4)],
     )
-    async def create_thread(
+    async def test_create_thread(
         self,
         rest_client: rest.RESTClientImpl,
         auto_archive_duration: typing.Union[int, datetime.datetime, float],
@@ -4625,6 +4726,151 @@ class TestRESTClientImplAsync:
         assert result is rest_client._entity_factory.deserialize_guild_thread.return_value
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_payload, reason=undefined.UNDEFINED)
         rest_client._entity_factory.deserialize_guild_thread.assert_called_once_with(rest_client._request.return_value)
+
+    @pytest.mark.parametrize(
+        ("auto_archive_duration", "rate_limit_per_user"),
+        [(54123, 101), (datetime.timedelta(minutes=54123), datetime.timedelta(seconds=101)), (54123.0, 101.4)],
+    )
+    async def test_create_forum_post_when_no_form(
+        self,
+        rest_client: rest.RESTClientImpl,
+        auto_archive_duration: typing.Union[int, datetime.datetime, float],
+        rate_limit_per_user: typing.Union[int, datetime.datetime, float],
+    ):
+        attachment_obj = object()
+        attachment_obj2 = object()
+        component_obj = object()
+        component_obj2 = object()
+        embed_obj = object()
+        embed_obj2 = object()
+        mock_body = data_binding.JSONObjectBuilder()
+
+        expected_route = routes.POST_CHANNEL_THREADS.compile(channel=321123)
+        expected_payload = {
+            "name": "Post with secret content!",
+            "auto_archive_duration": 54123,
+            "rate_limit_per_user": 101,
+            "applied_tags": ["12220", "12201"],
+            "message": mock_body,
+        }
+        rest_client._build_message_payload = mock.Mock(return_value=(mock_body, None))
+        rest_client._request = mock.AsyncMock(return_value={"some": "message"})
+
+        result = await rest_client.create_forum_post(
+            StubModel(321123),
+            "Post with secret content!",
+            content="new content",
+            attachment=attachment_obj,
+            attachments=[attachment_obj2],
+            component=component_obj,
+            components=[component_obj2],
+            embed=embed_obj,
+            embeds=[embed_obj2],
+            tts=True,
+            mentions_everyone=False,
+            user_mentions=[9876],
+            role_mentions=[1234],
+            flags=54123,
+            auto_archive_duration=auto_archive_duration,
+            rate_limit_per_user=rate_limit_per_user,
+            tags=[12220, 12201],
+            reason="Secrets!!",
+        )
+
+        rest_client._build_message_payload.assert_called_once_with(
+            content="new content",
+            attachment=attachment_obj,
+            attachments=[attachment_obj2],
+            component=component_obj,
+            components=[component_obj2],
+            embed=embed_obj,
+            embeds=[embed_obj2],
+            tts=True,
+            mentions_everyone=False,
+            mentions_reply=undefined.UNDEFINED,
+            user_mentions=[9876],
+            role_mentions=[1234],
+            flags=54123,
+        )
+
+        assert result is rest_client._entity_factory.deserialize_guild_public_thread.return_value
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_payload, reason="Secrets!!")
+        rest_client._entity_factory.deserialize_guild_public_thread.assert_called_once_with(
+            rest_client._request.return_value
+        )
+
+    @pytest.mark.parametrize(
+        ("auto_archive_duration", "rate_limit_per_user"),
+        [(54123, 101), (datetime.timedelta(minutes=54123), datetime.timedelta(seconds=101)), (54123.0, 101.4)],
+    )
+    async def test_create_forum_post_when_form(
+        self,
+        rest_client: rest.RESTClientImpl,
+        auto_archive_duration: typing.Union[int, datetime.datetime, float],
+        rate_limit_per_user: typing.Union[int, datetime.datetime, float],
+    ):
+        attachment_obj = object()
+        attachment_obj2 = object()
+        component_obj = object()
+        component_obj2 = object()
+        embed_obj = object()
+        embed_obj2 = object()
+        mock_body = {"mock": "message body"}
+        mock_form = mock.Mock()
+
+        expected_route = routes.POST_CHANNEL_THREADS.compile(channel=321123)
+        rest_client._build_message_payload = mock.Mock(return_value=(mock_body, mock_form))
+        rest_client._request = mock.AsyncMock(return_value={"some": "message"})
+
+        result = await rest_client.create_forum_post(
+            StubModel(321123),
+            "Post with secret content!",
+            content="new content",
+            attachment=attachment_obj,
+            attachments=[attachment_obj2],
+            component=component_obj,
+            components=[component_obj2],
+            embed=embed_obj,
+            embeds=[embed_obj2],
+            tts=True,
+            mentions_everyone=False,
+            user_mentions=[9876],
+            role_mentions=[1234],
+            flags=54123,
+            auto_archive_duration=auto_archive_duration,
+            rate_limit_per_user=rate_limit_per_user,
+            tags=[12220, 12201],
+            reason="Secrets!!",
+        )
+
+        rest_client._build_message_payload.assert_called_once_with(
+            content="new content",
+            attachment=attachment_obj,
+            attachments=[attachment_obj2],
+            component=component_obj,
+            components=[component_obj2],
+            embed=embed_obj,
+            embeds=[embed_obj2],
+            tts=True,
+            mentions_everyone=False,
+            mentions_reply=undefined.UNDEFINED,
+            user_mentions=[9876],
+            role_mentions=[1234],
+            flags=54123,
+        )
+
+        mock_form.add_field.assert_called_once_with(
+            "payload_json",
+            '{"name": "Post with secret content!", "auto_archive_duration": 54123, "rate_limit_per_user": 101, '
+            '"applied_tags": ["12220", "12201"], "message": {"mock": "message body"}}',
+            content_type="application/json",
+        )
+
+        assert result is rest_client._entity_factory.deserialize_guild_public_thread.return_value
+        rest_client._request.assert_awaited_once_with(expected_route, form_builder=mock_form, reason="Secrets!!")
+        rest_client._entity_factory.deserialize_guild_public_thread.assert_called_once_with(
+            rest_client._request.return_value
+        )
 
     async def test_join_thread(self, rest_client: rest.RESTClientImpl):
         rest_client._request = mock.AsyncMock()

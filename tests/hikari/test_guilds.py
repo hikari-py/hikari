@@ -847,6 +847,34 @@ class TestPartialGuild:
         assert news_channel is model.app.rest.create_guild_news_channel.return_value
 
     @pytest.mark.asyncio()
+    async def test_create_forum_channel(self, model):
+        model.app.rest.create_guild_forum_channel = mock.AsyncMock()
+
+        forum_channel = await model.create_forum_channel(
+            "cool forum channel", position=1, nsfw=False, rate_limit_per_user=420
+        )
+
+        model.app.rest.create_guild_forum_channel.assert_awaited_once_with(
+            90210,
+            "cool forum channel",
+            position=1,
+            topic=undefined.UNDEFINED,
+            nsfw=False,
+            rate_limit_per_user=420,
+            permission_overwrites=undefined.UNDEFINED,
+            category=undefined.UNDEFINED,
+            reason=undefined.UNDEFINED,
+            default_auto_archive_duration=undefined.UNDEFINED,
+            default_thread_rate_limit_per_user=undefined.UNDEFINED,
+            default_forum_layout=undefined.UNDEFINED,
+            default_sort_order=undefined.UNDEFINED,
+            available_tags=undefined.UNDEFINED,
+            default_reaction_emoji=undefined.UNDEFINED,
+        )
+
+        assert forum_channel is model.app.rest.create_guild_forum_channel.return_value
+
+    @pytest.mark.asyncio()
     async def test_create_voice_channel(self, model):
         model.app.rest.create_guild_voice_channel = mock.AsyncMock()
 

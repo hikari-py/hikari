@@ -274,7 +274,7 @@ def _dump_errors(obj: data_binding.JSONObject, obj_string: str = "") -> str:
     string = ""
     for key, value in obj.items():
         if isinstance(value, typing.Sequence):
-            string += obj_string + ":"
+            string += (obj_string or "root") + ":"
 
             for item in value:
                 string += f"\n - {item['message']}"
