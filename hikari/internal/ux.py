@@ -23,7 +23,14 @@
 """User-experience extensions and utilities."""
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("init_logging", "print_banner", "supports_color", "HikariVersion", "check_for_updates")
+__all__: typing.Sequence[str] = (
+    "init_logging",
+    "print_banner",
+    "warn_if_not_optimized",
+    "supports_color",
+    "HikariVersion",
+    "check_for_updates",
+)
 
 import importlib.resources
 import logging
@@ -232,6 +239,15 @@ def print_banner(
 
     with open(sys.stdout.fileno(), "w", encoding="utf-8", closefd=False) as stdout:
         stdout.write(string.Template(raw_banner).safe_substitute(args))
+
+
+def warn_if_not_optimized() -> None:
+    """Log a warning if not running in optimization mode."""
+    if __debug__:
+        _LOGGER.warning(
+            "You are running on optimization level 0 (no optimizations), which may slow down your application. "
+            "For production, consider using at least level 1 optimization by passing `-O` to the python call."
+        )
 
 
 def supports_color(allow_color: bool, force_color: bool) -> bool:

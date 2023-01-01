@@ -156,6 +156,7 @@ class TestGatewayBot:
         stack.enter_context(mock.patch.object(rest_impl, "RESTClientImpl", return_value=rest))
         stack.enter_context(mock.patch.object(ux, "init_logging"))
         stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "print_banner"))
+        stack.enter_context(mock.patch.object(ux, "warn_if_not_optimized"))
 
         with stack:
             return bot_impl.GatewayBot(
@@ -176,6 +177,7 @@ class TestGatewayBot:
         voice = stack.enter_context(mock.patch.object(voice_impl, "VoiceComponentImpl"))
         rest = stack.enter_context(mock.patch.object(rest_impl, "RESTClientImpl"))
         init_logging = stack.enter_context(mock.patch.object(ux, "init_logging"))
+        warn_if_not_optimized = stack.enter_context(mock.patch.object(ux, "warn_if_not_optimized"))
         print_banner = stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "print_banner"))
         executor = object()
         cache_settings = object()
@@ -235,6 +237,7 @@ class TestGatewayBot:
 
         init_logging.assert_called_once_with("DEBUG", False, True)
         print_banner.assert_called_once_with("testing", False, True)
+        warn_if_not_optimized.assert_called_once_with()
 
     def test_init_when_no_settings(self):
         stack = contextlib.ExitStack()
@@ -246,6 +249,7 @@ class TestGatewayBot:
         stack.enter_context(mock.patch.object(rest_impl, "RESTClientImpl"))
         stack.enter_context(mock.patch.object(ux, "init_logging"))
         stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "print_banner"))
+        stack.enter_context(mock.patch.object(ux, "warn_if_not_optimized"))
         http_settings = stack.enter_context(mock.patch.object(config, "HTTPSettings"))
         proxy_settings = stack.enter_context(mock.patch.object(config, "ProxySettings"))
         cache_settings = stack.enter_context(mock.patch.object(config, "CacheSettings"))
@@ -264,6 +268,7 @@ class TestGatewayBot:
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(ux, "init_logging"))
         stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "print_banner"))
+        stack.enter_context(mock.patch.object(ux, "warn_if_not_optimized"))
 
         with stack:
             bot = bot_impl.GatewayBot(

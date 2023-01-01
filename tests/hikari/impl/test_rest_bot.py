@@ -76,6 +76,7 @@ class TestRESTBot:
     ):
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(ux, "init_logging"))
+        stack.enter_context(mock.patch.object(ux, "warn_if_not_optimized"))
         stack.enter_context(mock.patch.object(rest_bot_impl.RESTBot, "print_banner"))
         stack.enter_context(
             mock.patch.object(entity_factory_impl, "EntityFactoryImpl", return_value=mock_entity_factory)
@@ -102,6 +103,7 @@ class TestRESTBot:
 
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(ux, "init_logging"))
+        stack.enter_context(mock.patch.object(ux, "warn_if_not_optimized"))
         stack.enter_context(mock.patch.object(rest_bot_impl.RESTBot, "print_banner"))
         stack.enter_context(
             mock.patch.object(entity_factory_impl, "EntityFactoryImpl", return_value=mock_entity_factory)
@@ -159,6 +161,7 @@ class TestRESTBot:
 
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(ux, "init_logging"))
+        stack.enter_context(mock.patch.object(ux, "warn_if_not_optimized"))
         stack.enter_context(mock.patch.object(rest_bot_impl.RESTBot, "print_banner"))
         stack.enter_context(mock.patch.object(interaction_server_impl, "InteractionServer"))
 
@@ -174,6 +177,7 @@ class TestRESTBot:
 
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(ux, "init_logging"))
+        stack.enter_context(mock.patch.object(ux, "warn_if_not_optimized"))
         rest_client = stack.enter_context(mock.patch.object(rest_impl, "RESTClientImpl"))
         http_settings = stack.enter_context(mock.patch.object(config, "HTTPSettings"))
         proxy_settings = stack.enter_context(mock.patch.object(config, "ProxySettings"))
@@ -199,6 +203,7 @@ class TestRESTBot:
         cls = hikari_test_helpers.mock_class_namespace(rest_bot_impl.RESTBot, print_banner=mock.Mock())
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(ux, "init_logging"))
+        stack.enter_context(mock.patch.object(ux, "warn_if_not_optimized"))
         stack.enter_context(mock.patch.object(rest_bot_impl.RESTBot, "print_banner"))
         stack.enter_context(mock.patch.object(rest_impl, "RESTClientImpl"))
         stack.enter_context(mock.patch.object(config, "HTTPSettings"))

@@ -372,6 +372,22 @@ class TestPrintBanner:
                 ux.print_banner("hikari", True, False, extra_args=extra_args)
 
 
+class TestWarnIfNotOptimized:
+    @pytest.mark.skipif(not __debug__, reason="Not running in optimized mode")
+    def test_when_not_optimized(self):
+        with mock.patch.object(ux, "_LOGGER") as logger:
+            ux.warn_if_not_optimized()
+
+        logger.warning.assert_called()
+
+    @pytest.mark.skipif(__debug__, reason="Running in optimized mode")
+    def test_when_optimized(self):
+        with mock.patch.object(ux, "_LOGGER") as logger:
+            ux.warn_if_not_optimized()
+
+        logger.warning.assert_not_called()
+
+
 class TestSupportsColor:
     def test_when_not_allow_color(self):
         assert ux.supports_color(False, True) is False
