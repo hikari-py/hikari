@@ -385,15 +385,8 @@ class InteractionServer(interaction_server.InteractionServer):
         self._server = None
         self._application_fetch_lock = None
 
-        for task in self._running_generator_listeners:
-            if not task.done() and not task.cancelled():
-                task.cancel()
-
-                try:
-                    await task
-                except asyncio.CancelledError:
-                    pass
-
+        # Wait for handlers to complete
+        await asyncio.gather(*self._running_generator_listeners)
         self._running_generator_listeners = []
 
         self._close_event.set()

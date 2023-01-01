@@ -585,45 +585,15 @@ class TestInteractionServer:
 
     @pytest.mark.asyncio()
     async def test_close(self, mock_interaction_server: interaction_server_impl.InteractionServer):
-        class TaskMock:
-            def __init__(self, done, cancelled):
-                self._awaited_count = 0
-                self._done = done
-                self._cancelled = cancelled
-
-                self.cancel = mock.Mock()
-
-            def __await__(self):
-                if False:
-                    yield  # Turns it into a generator
-
-                self._awaited_count += 1
-
-                raise asyncio.CancelledError
-
-            def assert_properly_cancelled(self):
-                self.cancel.assert_called_once_with()
-                assert self._awaited_count == 1
-
-            def assert_not_cancelled(self):
-                self.cancel.assert_not_called()
-                assert self._awaited_count == 0
-
-            def done(self):
-                return self._done
-
-            def cancelled(self):
-                return self._cancelled
-
         mock_runner = mock.AsyncMock()
         mock_event = mock.Mock()
         mock_interaction_server._is_closing = False
         mock_interaction_server._server = mock_runner
         mock_interaction_server._close_event = mock_event
-        generator_listener_1 = TaskMock(False, False)
-        generator_listener_2 = TaskMock(False, True)
-        generator_listener_3 = TaskMock(True, False)
-        generator_listener_4 = TaskMock(True, True)
+        generator_listener_1 = mock.Mock()
+        generator_listener_2 = mock.Mock()
+        generator_listener_3 = mock.Mock()
+        generator_listener_4 = mock.Mock()
         mock_interaction_server._running_generator_listeners = [
             generator_listener_1,
             generator_listener_2,
@@ -631,17 +601,20 @@ class TestInteractionServer:
             generator_listener_4,
         ]
 
-        await mock_interaction_server.close()
+        with mock.patch.object(asyncio, "gather", new=mock.AsyncMock()) as gather:
+            await mock_interaction_server.close()
 
         mock_runner.shutdown.assert_awaited_once()
         mock_runner.cleanup.assert_awaited_once()
         mock_event.set.assert_called_once()
         assert mock_interaction_server._is_closing is False
         assert mock_interaction_server._running_generator_listeners == []
-        generator_listener_1.assert_properly_cancelled()
-        generator_listener_2.assert_not_cancelled()
-        generator_listener_3.assert_not_cancelled()
-        generator_listener_4.assert_not_cancelled()
+        gather.assert_awaited_once_with(
+            generator_listener_1,
+            generator_listener_2,
+            generator_listener_3,
+            generator_listener_4,
+        )
 
     @pytest.mark.asyncio()
     async def test_close_when_closing(self, mock_interaction_server: interaction_server_impl.InteractionServer):
