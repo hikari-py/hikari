@@ -388,9 +388,24 @@ class TestMember:
     async def test_ban(self, model):
         model.app.rest.ban_user = mock.AsyncMock()
 
-        await model.ban(delete_message_days=10, reason="bored")
+        await model.ban(delete_message_seconds=600, reason="bored")
 
-        model.app.rest.ban_user.assert_awaited_once_with(456, 123, delete_message_days=10, reason="bored")
+        model.app.rest.ban_user.assert_awaited_once_with(456, 123, delete_message_seconds=600, reason="bored")
+
+    @pytest.mark.asyncio()
+    async def test_ban_deprecated_delete_message_days(self, model):
+        model.app.rest.ban_user = mock.AsyncMock()
+
+        await model.ban(delete_message_days=1, reason="bored")
+
+        model.app.rest.ban_user.assert_awaited_once_with(456, 123, delete_message_seconds=86400, reason="bored")
+
+    @pytest.mark.asyncio()
+    async def test_ban_deprecated_delete_message_days_when_both_passed(self, model):
+        with pytest.raises(
+            ValueError, match="You may only specify one of 'delete_message_days' or 'delete_message_seconds', not both"
+        ):
+            await model.ban(delete_message_days=1, delete_message_seconds=1, reason="bored")
 
     @pytest.mark.asyncio()
     async def test_unban(self, model):
@@ -624,9 +639,25 @@ class TestPartialGuild:
     @pytest.mark.asyncio()
     async def test_ban(self, model):
         model.app.rest.ban_user = mock.AsyncMock()
-        await model.ban(4321, delete_message_days=10, reason="Go away!")
 
-        model.app.rest.ban_user.assert_awaited_once_with(90210, 4321, delete_message_days=10, reason="Go away!")
+        await model.ban(4321, delete_message_seconds=864000, reason="Go away!")
+
+        model.app.rest.ban_user.assert_awaited_once_with(90210, 4321, delete_message_seconds=864000, reason="Go away!")
+
+    @pytest.mark.asyncio()
+    async def test_ban_deprecated_delete_message_days(self, model):
+        model.app.rest.ban_user = mock.AsyncMock()
+
+        await model.ban(4321, delete_message_days=1, reason="Go away!")
+
+        model.app.rest.ban_user.assert_awaited_once_with(90210, 4321, delete_message_seconds=86400, reason="Go away!")
+
+    @pytest.mark.asyncio()
+    async def test_ban_deprecated_delete_message_days_when_both_passed(self, model):
+        with pytest.raises(
+            ValueError, match="You may only specify one of 'delete_message_days' or 'delete_message_seconds', not both"
+        ):
+            await model.ban(4321, delete_message_days=1, delete_message_seconds=1, reason="Go away!")
 
     @pytest.mark.asyncio()
     async def test_unban(self, model):

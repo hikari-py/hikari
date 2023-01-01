@@ -1123,10 +1123,25 @@ class TestRESTClientImpl:
         mock_ban_user = mock.Mock()
         rest_client.ban_user = mock_ban_user
 
-        result = rest_client.ban_member(43123, 54123, delete_message_days=6, reason="wowowowo")
+        result = rest_client.ban_member(43123, 54123, delete_message_seconds=518400, reason="wowowowo")
 
         assert result is mock_ban_user.return_value
-        mock_ban_user.assert_called_once_with(43123, 54123, delete_message_days=6, reason="wowowowo")
+        mock_ban_user.assert_called_once_with(43123, 54123, delete_message_seconds=518400, reason="wowowowo")
+
+    def test_ban_member_deprecated_delete_message_days(self, rest_client):
+        mock_ban_user = mock.Mock()
+        rest_client.ban_user = mock_ban_user
+
+        result = rest_client.ban_member(43123, 54123, delete_message_days=1, reason="wowowowo")
+
+        assert result is mock_ban_user.return_value
+        mock_ban_user.assert_called_once_with(43123, 54123, delete_message_seconds=86400, reason="wowowowo")
+
+    def test_ban_member_deprecated_delete_message_days_when_both_passed(self, rest_client):
+        with pytest.raises(
+            ValueError, match="You may only specify one of 'delete_message_days' or 'delete_message_seconds', not both"
+        ):
+            rest_client.ban_member(43123, 54123, delete_message_days=1, delete_message_seconds=1, reason="wowowowo")
 
     def test_unban_member(self, rest_client):
         mock_unban_user = mock.Mock()
@@ -4825,12 +4840,31 @@ class TestRESTClientImplAsync:
 
     async def test_ban_user(self, rest_client):
         expected_route = routes.PUT_GUILD_BAN.compile(guild=123, user=456)
-        expected_json = {"delete_message_days": 7}
+        expected_json = {"delete_message_seconds": 604800}
         rest_client._request = mock.AsyncMock()
 
-        await rest_client.ban_user(StubModel(123), StubModel(456), delete_message_days=7, reason="because i can")
+        await rest_client.ban_user(
+            StubModel(123), StubModel(456), delete_message_seconds=604800, reason="because i can"
+        )
 
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="because i can")
+
+    async def test_ban_user_deprecated_delete_message_days(self, rest_client):
+        expected_route = routes.PUT_GUILD_BAN.compile(guild=123, user=456)
+        expected_json = {"delete_message_seconds": 86400}
+        rest_client._request = mock.AsyncMock()
+
+        await rest_client.ban_user(StubModel(123), StubModel(456), delete_message_days=1, reason="because i can")
+
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="because i can")
+
+    async def test_ban_user_deprecated_delete_message_days_when_both_passed(self, rest_client):
+        with pytest.raises(
+            ValueError, match="You may only specify one of 'delete_message_days' or 'delete_message_seconds', not both"
+        ):
+            await rest_client.ban_user(
+                43123, 54123, delete_message_seconds=1, delete_message_days=1, reason="because i can"
+            )
 
     async def test_unban_user(self, rest_client):
         expected_route = routes.DELETE_GUILD_BAN.compile(guild=123, user=456)

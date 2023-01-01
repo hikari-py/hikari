@@ -66,6 +66,7 @@ from hikari import undefined
 from hikari import urls
 from hikari import users
 from hikari.internal import attr_extensions
+from hikari.internal import deprecation
 from hikari.internal import enums
 from hikari.internal import routes
 from hikari.internal import time
@@ -691,6 +692,7 @@ class Member(users.User):
         self,
         *,
         delete_message_days: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        delete_message_seconds: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         """Ban this member from this guild.
@@ -700,6 +702,13 @@ class Member(users.User):
         delete_message_days : hikari.undefined.UndefinedOr[int]
             If provided, the number of days to delete messages for.
             This must be between 0 and 7.
+
+            .. deprecated:: 2.0.0.dev114
+                Use `delete_message_seconds` instead.
+        delete_message_seconds : hikari.undefined.UndefinedNoneOr[hikari.internal.time.Intervalish]
+            If provided, the number of seconds to delete messages for.
+            This can be represented as either an int/float between 0 and 604800 (7 days), or
+            a `datetime.timedelta` object.
         reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -728,8 +737,21 @@ class Member(users.User):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
+        if delete_message_days is not undefined.UNDEFINED:
+            deprecation.warn_deprecated(
+                "delete_message_days",
+                removal_version="2.0.0.dev116",
+                additional_info="'delete_message_seconds' should be used instead.",
+            )
+            if delete_message_seconds is not undefined.UNDEFINED:
+                raise ValueError(
+                    "You may only specify one of 'delete_message_days' or 'delete_message_seconds', not both"
+                )
+
+            delete_message_seconds = delete_message_days * 24 * 60**2
+
         await self.user.app.rest.ban_user(
-            self.guild_id, self.user.id, delete_message_days=delete_message_days, reason=reason
+            self.guild_id, self.user.id, delete_message_seconds=delete_message_seconds, reason=reason
         )
 
     async def unban(
@@ -1451,6 +1473,7 @@ class PartialGuild(snowflakes.Unique):
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         *,
         delete_message_days: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        delete_message_seconds: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         """Ban the given user from this guild.
@@ -1465,6 +1488,13 @@ class PartialGuild(snowflakes.Unique):
         delete_message_days : hikari.undefined.UndefinedOr[int]
             If provided, the number of days to delete messages for.
             This must be between 0 and 7.
+
+            .. deprecated:: 2.0.0.dev114
+                Use `delete_message_seconds` instead.
+        delete_message_seconds : hikari.undefined.UndefinedNoneOr[hikari.internal.time.Intervalish]
+            If provided, the number of seconds to delete messages for.
+            This can be represented as either an int/float between 0 and 604800 (7 days), or
+            a `datetime.timedelta` object.
         reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -1493,7 +1523,20 @@ class PartialGuild(snowflakes.Unique):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
-        await self.app.rest.ban_user(self.id, user, delete_message_days=delete_message_days, reason=reason)
+        if delete_message_days is not undefined.UNDEFINED:
+            deprecation.warn_deprecated(
+                "delete_message_days",
+                removal_version="2.0.0.dev116",
+                additional_info="'delete_message_seconds' should be used instead.",
+            )
+            if delete_message_seconds is not undefined.UNDEFINED:
+                raise ValueError(
+                    "You may only specify one of 'delete_message_days' or 'delete_message_seconds', not both"
+                )
+
+            delete_message_seconds = delete_message_days * 24 * 60**2
+
+        await self.app.rest.ban_user(self.id, user, delete_message_seconds=delete_message_seconds, reason=reason)
 
     async def unban(
         self,
