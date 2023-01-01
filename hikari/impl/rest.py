@@ -449,8 +449,10 @@ class _LiveAttributes:
             trust_env=proxy_settings.trust_env,
         )
         _LOGGER.log(ux.TRACE, "acquired new aiohttp client session")
+        buckets = buckets_impl.RESTBucketManager(max_rate_limit)
+        buckets.start()
         return _LiveAttributes(
-            buckets=buckets_impl.RESTBucketManager(max_rate_limit),
+            buckets=buckets,
             client_session=client_session,
             closed_event=asyncio.Event(),
             global_rate_limit=rate_limits.ManualRateLimiter(),
