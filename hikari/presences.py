@@ -129,7 +129,7 @@ _DYNAMIC_URLS = {"mp": urls.MEDIA_PROXY_URL + "/{}"}
 class ActivityAssets:
     """Used to represent possible assets for an activity."""
 
-    _application_id: typing.Optional[snowflakes.Snowflake] = attr.field(repr=False)
+    _application_id: typing.Optional[snowflakes.Snowflake] = attr.field(alias="application_id", repr=False)
 
     large_image: typing.Optional[str] = attr.field(repr=False)
     """The ID of the asset's large image, if set."""
