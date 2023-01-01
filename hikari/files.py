@@ -409,7 +409,8 @@ class _NoOpAsyncReaderContextManagerImpl(AsyncReaderContextManager[ReaderImplT])
         pass
 
 
-def _to_write_path(path: pathlib.Path, default_filename: str, force: bool) -> pathlib.Path:
+def _to_write_path(path: Pathish, default_filename: str, force: bool) -> pathlib.Path:
+    path = ensure_path(path)
     if path.is_dir():
         path = path.joinpath(default_filename)
 
@@ -419,7 +420,7 @@ def _to_write_path(path: pathlib.Path, default_filename: str, force: bool) -> pa
     return path.expanduser()
 
 
-def _open_write_path(path: pathlib.Path, default_filename: str, force: bool) -> typing.BinaryIO:
+def _open_write_path(path: Pathish, default_filename: str, force: bool) -> typing.BinaryIO:
     path = _to_write_path(path, default_filename, force)
     return path.open("wb")
 
@@ -511,8 +512,6 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
             Whether to overwrite an existing file. Defaults to `False`.
         """
         loop = asyncio.get_running_loop()
-        path = ensure_path(path)
-
         file = await loop.run_in_executor(executor, _open_write_path, path, self.filename, force)
 
         try:
@@ -871,7 +870,7 @@ class _ThreadedFileReaderContextManagerImpl(AsyncReaderContextManager[ThreadedFi
         self.file = None
 
 
-def _copy_to_path(current_path: pathlib.Path, copy_to_path: pathlib.Path, default_filename: str, force: bool) -> None:
+def _copy_to_path(current_path: pathlib.Path, copy_to_path: Pathish, default_filename: str, force: bool) -> None:
     copy_to_path = _to_write_path(copy_to_path, default_filename, force)
     shutil.copy2(current_path, copy_to_path)
 
@@ -975,9 +974,7 @@ class File(Resource[ThreadedFileReader]):
         # An optimization can be done here to avoid a lot of thread calls and streaming
         # by just copying the file
         loop = asyncio.get_running_loop()
-        path = ensure_path(path)
-
-        await loop.run_in_executor(executor, _copy_to_path, self.path, path, self._filename, force)
+        await loop.run_in_executor(executor, _copy_to_path, self.path, path, self.filename, force)
 
 
 ########################################################################
@@ -1057,7 +1054,7 @@ class IteratorReader(AsyncReader):
         return data
 
 
-def _write_bytes(path: pathlib.Path, default_filename: str, force: bool, data: bytes) -> None:
+def _write_bytes(path: Pathish, default_filename: str, force: bool, data: bytes) -> None:
     path = _to_write_path(path, default_filename, force)
     path.write_bytes(data)
 
@@ -1105,10 +1102,7 @@ class Bytes(Resource[IteratorReader]):
         self.data = data
 
         if mimetype is None:
-            mimetype = guess_mimetype_from_filename(filename)
-
-        if mimetype is None:
-            mimetype = "text/plain;charset=UTF-8"
+            mimetype = guess_mimetype_from_filename(filename) or "text/plain;charset=UTF-8"
 
         self._filename = filename
         self.mimetype = mimetype
@@ -1155,12 +1149,14 @@ class Bytes(Resource[IteratorReader]):
         executor: typing.Optional[concurrent.futures.Executor] = None,
         force: bool = False,
     ) -> None:
-        # An optimization can be done here to avoid a lot of thread calls and streaming
-        # by just copying the file
-        loop = asyncio.get_running_loop()
-        path = ensure_path(path)
+        if not isinstance(self.data, (bytes, bytearray, memoryview)):
+            await super().save(path, executor=executor, force=force)
+            return
 
-        await loop.run_in_executor(executor, _write_bytes, path, self._filename, force, self.data)
+        # An optimization can be done here to avoid a lot of thread calls and streaming
+        # by just writing the whole data at once
+        loop = asyncio.get_running_loop()
+        await loop.run_in_executor(executor, _write_bytes, path, self.filename, force, self.data)
 
     @staticmethod
     def from_data_uri(data_uri: str, filename: typing.Optional[str] = None) -> Bytes:
