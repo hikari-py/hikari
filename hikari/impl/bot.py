@@ -97,6 +97,21 @@ def _validate_activity(activity: undefined.UndefinedNoneOr[presences.Activity]) 
         )
 
 
+async def _close_resource(name: str, awaitable: typing.Awaitable[typing.Any]) -> None:
+    future = asyncio.ensure_future(awaitable)
+
+    try:
+        await future
+    except Exception as ex:
+        asyncio.get_running_loop().call_exception_handler(
+            {
+                "message": f"{name} raised an exception during shut down",
+                "future": future,
+                "exception": ex,
+            }
+        )
+
+
 class GatewayBot(traits.GatewayBotAware):
     """Basic auto-sharding bot implementation.
 
@@ -288,7 +303,7 @@ class GatewayBot(traits.GatewayBotAware):
         intents: intents_.Intents = intents_.Intents.ALL_UNPRIVILEGED,
         auto_chunk_members: bool = True,
         logs: typing.Union[None, int, str, typing.Dict[str, typing.Any]] = "INFO",
-        max_rate_limit: float = 300,
+        max_rate_limit: float = 300.0,
         max_retries: int = 3,
         proxy_settings: typing.Optional[config_impl.ProxySettings] = None,
         rest_url: typing.Optional[str] = None,
@@ -426,30 +441,14 @@ class GatewayBot(traits.GatewayBotAware):
         await self._event_manager.dispatch(self._event_factory.deserialize_stopping_event())
         _LOGGER.log(ux.TRACE, "StoppingEvent dispatch completed, now beginning termination")
 
-        loop = asyncio.get_running_loop()
+        await _close_resource("voice handler", self._voice.close())
 
-        async def handle(name: str, awaitable: typing.Awaitable[typing.Any]) -> None:
-            future = asyncio.ensure_future(awaitable)
-
-            try:
-                await future
-            except Exception as ex:
-                loop.call_exception_handler(
-                    {
-                        "message": f"{name} raised an exception during shut down",
-                        "future": future,
-                        "exception": ex,
-                    }
-                )
-
-        await handle("voice handler", self._voice.close())
-
-        shards = tuple((handle(f"shard {s.id}", s.close()) for s in self._shards.values() if s.is_alive))
+        shards = tuple(_close_resource(f"shard {s.id}", s.close()) for s in self._shards.values() if s.is_alive)
 
         for coro in asyncio.as_completed(shards):
             await coro
 
-        await handle("rest", self._rest.close())
+        await _close_resource("rest", self._rest.close())
 
         # Clear out cache and shard map
         self._cache.clear()
