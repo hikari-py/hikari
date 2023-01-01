@@ -724,6 +724,16 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
     async def __anext__(self) -> ValueT:
         ...
 
+    # These are only included at runtime in-order to avoid the model being typed as a synchronous iterator.
+    if not typing.TYPE_CHECKING:
+
+        def __next__(self) -> typing.NoReturn:
+            # This is async only.
+            cls = type(self)
+            raise TypeError(
+                f"{cls.__module__}.{cls.__qualname__} is async-only, did you mean 'async for' or `anext`?"
+            ) from None
+
 
 class BufferedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT], abc.ABC):
     """A special kind of lazy iterator that is used by internal components.

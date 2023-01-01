@@ -2145,7 +2145,6 @@ class RESTClientImpl(rest_api.RESTClient):
         user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
         event_type: undefined.UndefinedOr[typing.Union[audit_logs.AuditLogEventType, int]] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[audit_logs.AuditLog]:
-
         timestamp: undefined.UndefinedOr[str]
         if before is undefined.UNDEFINED:
             timestamp = undefined.UNDEFINED
