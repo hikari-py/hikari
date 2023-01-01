@@ -168,6 +168,9 @@ class ManualRateLimiter(BurstRateLimiter):
     throttle_task: typing.Optional[asyncio.Task[typing.Any]]
     # <<inherited docstring from BurstRateLimiter>>.
 
+    def __init__(self) -> None:
+        super().__init__("global")
+
     async def acquire(self) -> None:
         """Acquire time on this rate limiter.
 
@@ -233,7 +236,7 @@ class ManualRateLimiter(BurstRateLimiter):
             How long to sleep for before unlocking and releasing any futures
             in the queue.
         """
-        _LOGGER.warning("you are being rate limited on authentication hash %s for %ss", self.name, retry_after)
+        _LOGGER.warning("you are being globally rate limited for %ss", retry_after)
         await asyncio.sleep(retry_after)
         while self.queue:
             next_future = self.queue.pop(0)

@@ -30,6 +30,7 @@ route_table = web.RouteTableDef()
 
 @route_table.get("/")
 async def oauth(request: web.Request) -> web.Response:
+    """Handle an OAuth request."""
     code = request.query.get("code")
     if not code:
         return web.json_response({"error": "'code' is not provided"}, status=400)
@@ -53,6 +54,7 @@ async def oauth(request: web.Request) -> web.Response:
 
 
 async def start_discord_rest(app: web.Application) -> None:
+    """Start the RESTApp."""
     discord_rest = hikari.RESTApp()
     await discord_rest.start()
 
@@ -60,6 +62,7 @@ async def start_discord_rest(app: web.Application) -> None:
 
 
 async def stop_discord_rest(app: web.Application) -> None:
+    """Stop the RESTApp."""
     discord_rest: hikari.RESTApp = app["discord_rest"]
 
     await discord_rest.close()

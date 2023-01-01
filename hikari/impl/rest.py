@@ -373,11 +373,14 @@ class RESTApp(traits.ExecutorAware):
         .. code-block:: python
 
             rest_app = RESTApp()
+            await rest_app.start()
 
             # Using the returned client as a context manager to implicitly start
             # and stop it.
             async with rest_app.acquire("A token", "Bot") as client:
                 user = await client.fetch_my_user()
+
+            await rest_app.close()
 
         Parameters
         ----------
@@ -403,6 +406,9 @@ class RESTApp(traits.ExecutorAware):
         ValueError
             If `token_type` is provided when a token strategy is passed for `token`.
         """
+        if not self._client_session:
+            raise errors.ComponentStateConflictError("Rest app is not running so it cannot be interacted with")
+
         # Since we essentially mimic a fake App instance, we need to make a circular provider.
         # We can achieve this using a lambda. This allows the entity factory to build models that
         # are also REST-aware
@@ -445,6 +451,23 @@ def _stringify_http_message(headers: data_binding.Headers, body: typing.Any) -> 
         string += body.decode("ascii") if isinstance(body, bytes) else str(body)
 
     return string
+
+
+def _transform_emoji_to_url_format(
+    emoji: typing.Union[str, emojis.Emoji],
+    emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.CustomEmoji]],
+    /,
+) -> str:
+    if isinstance(emoji, emojis.Emoji):
+        if emoji_id is not undefined.UNDEFINED:
+            raise ValueError("emoji_id shouldn't be passed when an Emoji object is passed for emoji")
+
+        return emoji.url_name
+
+    if emoji_id is not undefined.UNDEFINED:
+        return f"{emoji}:{snowflakes.Snowflake(emoji_id)}"
+
+    return emoji
 
 
 class RESTClientImpl(rest_api.RESTClient):
@@ -621,7 +644,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         self._close_event = asyncio.Event()
 
-        if self._client_session is None:
+        if self._client_session_owner:
             self._client_session = net.create_client_session(
                 connector=net.create_tcp_connector(self._http_settings),
                 connector_owner=True,  # Ensure closing the TCP connector
@@ -723,6 +746,9 @@ class RESTClientImpl(rest_api.RESTClient):
             else:
                 auth = self._token
 
+        if auth:
+            headers[_AUTHORIZATION_HEADER] = auth
+
         url = compiled_route.create_url(self._rest_url)
 
         stack = contextlib.AsyncExitStack()
@@ -735,11 +761,8 @@ class RESTClientImpl(rest_api.RESTClient):
             async with stack:
                 form = await form_builder.build(stack) if form_builder else None
 
-                if not compiled_route.route.skip_ratelimit:
-                    await stack.enter_async_context(self._bucket_manager.acquire(compiled_route, auth))
-
-                if auth:
-                    headers[_AUTHORIZATION_HEADER] = auth
+                if compiled_route.route.has_ratelimits:
+                    await stack.enter_async_context(self._bucket_manager.acquire_bucket(compiled_route, auth))
 
                 if trace_logging_enabled:
                     uuid = time.uuid()
@@ -822,7 +845,7 @@ class RESTClientImpl(rest_api.RESTClient):
                 assert isinstance(self._token, rest_api.TokenStrategy)
 
                 self._token.invalidate(auth)
-                auth = await self._token.acquire(self)
+                auth = headers[_AUTHORIZATION_HEADER] = await self._token.acquire(self)
                 can_re_auth = False
                 continue
 
@@ -843,6 +866,17 @@ class RESTClientImpl(rest_api.RESTClient):
         reset_after = float(resp_headers.get(_X_RATELIMIT_RESET_AFTER_HEADER, "0"))
 
         if bucket:
+            if not compiled_route.route.has_ratelimits:
+                # This should theoretically never see the light of day, but it scares me that Discord might
+                # pull a funny one and this may go unnoticed, so better safe to have it!
+                _LOGGER.error(
+                    "Received an unexpected bucket header for %r. "
+                    "The route will be treated as having a ratelimit for the duration of this applications runtime. "
+                    "If you see this, please report it to the maintainers so the route can be updated!",
+                    compiled_route.route,
+                )
+                compiled_route.route.has_ratelimits = True
+
             self._bucket_manager.update_rate_limits(
                 compiled_route=compiled_route,
                 authentication=authentication,
@@ -903,7 +937,7 @@ class RESTClientImpl(rest_api.RESTClient):
                 "rate limited on the global bucket. You should consider lowering the number of requests you make or "
                 "contacting Discord to raise this limit. Backing off and retrying request..."
             )
-            self._bucket_manager.throttle_authentication(authentication, body_retry_after)
+            self._bucket_manager.throttle(body_retry_after)
             return True
 
         # If the values are within 20% of each other by relativistic tolerance, it is probably
@@ -1532,23 +1566,6 @@ class RESTClientImpl(rest_api.RESTClient):
             except Exception as ex:
                 raise errors.BulkDeleteError(deleted, pending) from ex
 
-    @staticmethod
-    def _transform_emoji_to_url_format(
-        emoji: typing.Union[str, emojis.Emoji],
-        emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.CustomEmoji]],
-        /,
-    ) -> str:
-        if isinstance(emoji, emojis.Emoji):
-            if emoji_id is not undefined.UNDEFINED:
-                raise ValueError("emoji_id shouldn't be passed when an Emoji object is passed for emoji")
-
-            return emoji.url_name
-
-        if emoji_id is not undefined.UNDEFINED:
-            return f"{emoji}:{snowflakes.Snowflake(emoji_id)}"
-
-        return emoji
-
     async def add_reaction(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
@@ -1557,7 +1574,7 @@ class RESTClientImpl(rest_api.RESTClient):
         emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.CustomEmoji]] = undefined.UNDEFINED,
     ) -> None:
         route = routes.PUT_MY_REACTION.compile(
-            emoji=self._transform_emoji_to_url_format(emoji, emoji_id),
+            emoji=_transform_emoji_to_url_format(emoji, emoji_id),
             channel=channel,
             message=message,
         )
@@ -1571,7 +1588,7 @@ class RESTClientImpl(rest_api.RESTClient):
         emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.CustomEmoji]] = undefined.UNDEFINED,
     ) -> None:
         route = routes.DELETE_MY_REACTION.compile(
-            emoji=self._transform_emoji_to_url_format(emoji, emoji_id),
+            emoji=_transform_emoji_to_url_format(emoji, emoji_id),
             channel=channel,
             message=message,
         )
@@ -1585,7 +1602,7 @@ class RESTClientImpl(rest_api.RESTClient):
         emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.CustomEmoji]] = undefined.UNDEFINED,
     ) -> None:
         route = routes.DELETE_REACTION_EMOJI.compile(
-            emoji=self._transform_emoji_to_url_format(emoji, emoji_id),
+            emoji=_transform_emoji_to_url_format(emoji, emoji_id),
             channel=channel,
             message=message,
         )
@@ -1600,7 +1617,7 @@ class RESTClientImpl(rest_api.RESTClient):
         emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.CustomEmoji]] = undefined.UNDEFINED,
     ) -> None:
         route = routes.DELETE_REACTION_USER.compile(
-            emoji=self._transform_emoji_to_url_format(emoji, emoji_id),
+            emoji=_transform_emoji_to_url_format(emoji, emoji_id),
             channel=channel,
             message=message,
             user=user,
@@ -1627,7 +1644,7 @@ class RESTClientImpl(rest_api.RESTClient):
             request_call=self._request,
             channel=channel,
             message=message,
-            emoji=self._transform_emoji_to_url_format(emoji, emoji_id),
+            emoji=_transform_emoji_to_url_format(emoji, emoji_id),
         )
 
     async def create_webhook(

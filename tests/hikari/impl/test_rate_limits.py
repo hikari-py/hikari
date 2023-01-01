@@ -102,7 +102,7 @@ class TestBurstRateLimiter:
 class TestManualRateLimiter:
     @pytest.mark.asyncio()
     async def test_acquire_returns_completed_future_if_throttle_task_is_None(self, event_loop):
-        with rate_limits.ManualRateLimiter("global") as limiter:
+        with rate_limits.ManualRateLimiter() as limiter:
             limiter.throttle_task = None
             future = MockFuture()
             event_loop.create_future = mock.Mock(return_value=future)
@@ -112,7 +112,7 @@ class TestManualRateLimiter:
 
     @pytest.mark.asyncio()
     async def test_acquire_returns_incomplete_future_if_throttle_task_is_not_None(self, event_loop):
-        with rate_limits.ManualRateLimiter("global") as limiter:
+        with rate_limits.ManualRateLimiter() as limiter:
             limiter.throttle_task = event_loop.create_future()
             future = MockFuture()
             event_loop.create_future = mock.Mock(return_value=future)
@@ -122,7 +122,7 @@ class TestManualRateLimiter:
 
     @pytest.mark.asyncio()
     async def test_acquire_places_future_on_queue_if_throttle_task_is_not_None(self, event_loop):
-        with rate_limits.ManualRateLimiter("global") as limiter:
+        with rate_limits.ManualRateLimiter() as limiter:
             limiter.throttle_task = event_loop.create_future()
             future = MockFuture()
             event_loop.create_future = mock.Mock(return_value=future)
@@ -137,7 +137,7 @@ class TestManualRateLimiter:
 
     @pytest.mark.asyncio()
     async def test_throttle_cancels_existing_task(self):
-        with rate_limits.ManualRateLimiter("global") as limiter:
+        with rate_limits.ManualRateLimiter() as limiter:
             limiter.throttle_task = asyncio.get_running_loop().create_future()
             old_task = limiter.throttle_task
             limiter.throttle(0)
@@ -146,7 +146,7 @@ class TestManualRateLimiter:
 
     @pytest.mark.asyncio()
     async def test_throttle_schedules_throttle(self):
-        with hikari_test_helpers.mock_class_namespace(rate_limits.ManualRateLimiter, slots_=False)("global") as limiter:
+        with hikari_test_helpers.mock_class_namespace(rate_limits.ManualRateLimiter, slots_=False)() as limiter:
             limiter.unlock_later = mock.AsyncMock()
             limiter.throttle(0)
             await limiter.throttle_task
@@ -154,7 +154,7 @@ class TestManualRateLimiter:
 
     @pytest.mark.asyncio()
     async def test_throttle_chews_queue_completing_futures(self, event_loop):
-        with rate_limits.ManualRateLimiter("global") as limiter:
+        with rate_limits.ManualRateLimiter() as limiter:
             futures = [event_loop.create_future() for _ in range(10)]
             limiter.queue = list(futures)
             await limiter.unlock_later(0.01)
@@ -176,7 +176,7 @@ class TestManualRateLimiter:
                 popped_at.append(time.perf_counter())
                 return event_loop.create_future()
 
-        with hikari_test_helpers.mock_class_namespace(rate_limits.ManualRateLimiter, slots_=False)("global") as limiter:
+        with hikari_test_helpers.mock_class_namespace(rate_limits.ManualRateLimiter, slots_=False)() as limiter:
             with mock.patch("asyncio.sleep", wraps=mock_sleep):
                 limiter.queue = MockList()
 
@@ -189,7 +189,7 @@ class TestManualRateLimiter:
 
     @pytest.mark.asyncio()
     async def test_throttle_clears_throttle_task(self, event_loop):
-        with rate_limits.ManualRateLimiter("global") as limiter:
+        with rate_limits.ManualRateLimiter() as limiter:
             limiter.throttle_task = event_loop.create_future()
             await limiter.unlock_later(0)
         assert limiter.throttle_task is None

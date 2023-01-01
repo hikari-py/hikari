@@ -108,7 +108,7 @@ class CompiledRoute:
             The input hash amalgamated with a hash code produced by the
             major parameters in this compiled route instance.
         """
-        return initial_bucket_hash + HASH_SEPARATOR + authentication_hash + HASH_SEPARATOR + self.major_param_hash
+        return f"{initial_bucket_hash}{HASH_SEPARATOR}{authentication_hash}{HASH_SEPARATOR}{self.major_param_hash}"
 
     def __str__(self) -> str:
         return f"{self.method} {self.compiled_path}"
@@ -137,20 +137,21 @@ class Route:
     path_template: str = attr.field()
     """The template string used for the path."""
 
-    major_params: typing.Optional[typing.FrozenSet[str]] = attr.field(hash=False, eq=False)
+    major_params: typing.Optional[typing.FrozenSet[str]] = attr.field(hash=False, eq=False, repr=False)
     """The optional major parameter name combination for this endpoint."""
 
-    skip_ratelimit: bool = attr.field(hash=False, eq=False)
-    """Whether to perform ratelimiting on this route.
-    
-    This is useful in specific route with no rate-limits attached to them
-    to prevent high memory usage.    
+    has_ratelimits: bool = attr.field(hash=False, eq=False, repr=False)
+    """Whether this route is affected by ratelimits.
+
+    This should be left as `True` (the default) for most routes. This
+    only covers specific routes where no ratelimits exist, so we can
+    be a bit more efficient with them.
     """
 
-    def __init__(self, method: str, path_template: str, *, skip_ratelimit: bool = False) -> None:
+    def __init__(self, method: str, path_template: str, *, has_ratelimits: bool = True) -> None:
         self.method = method
         self.path_template = path_template
-        self.skip_ratelimit = skip_ratelimit
+        self.has_ratelimits = has_ratelimits
 
         self.major_params = None
         match = PARAM_REGEX.findall(path_template)
@@ -539,7 +540,7 @@ PUT_APPLICATION_GUILD_COMMANDS_PERMISSIONS: typing.Final[Route] = Route(
 GET_INTERACTION_RESPONSE: typing.Final[Route] = Route(GET, "/webhooks/{webhook}/{token}/messages/@original")
 PATCH_INTERACTION_RESPONSE: typing.Final[Route] = Route(PATCH, "/webhooks/{webhook}/{token}/messages/@original")
 POST_INTERACTION_RESPONSE: typing.Final[Route] = Route(
-    POST, "/interactions/{interaction}/{token}/callback", skip_ratelimit=True
+    POST, "/interactions/{interaction}/{token}/callback", has_ratelimits=False
 )
 DELETE_INTERACTION_RESPONSE: typing.Final[Route] = Route(DELETE, "/webhooks/{webhook}/{token}/messages/@original")
 
@@ -547,9 +548,8 @@ DELETE_INTERACTION_RESPONSE: typing.Final[Route] = Route(DELETE, "/webhooks/{web
 GET_MY_APPLICATION: typing.Final[Route] = Route(GET, "/oauth2/applications/@me")
 GET_MY_AUTHORIZATION: typing.Final[Route] = Route(GET, "/oauth2/@me")
 
-POST_AUTHORIZE: typing.Final[Route] = Route(POST, "/oauth2/authorize")
-POST_TOKEN: typing.Final[Route] = Route(POST, "/oauth2/token")
-POST_TOKEN_REVOKE: typing.Final[Route] = Route(POST, "/oauth2/token/revoke")
+POST_TOKEN: typing.Final[Route] = Route(POST, "/oauth2/token", has_ratelimits=False)
+POST_TOKEN_REVOKE: typing.Final[Route] = Route(POST, "/oauth2/token/revoke", has_ratelimits=False)
 
 # Gateway
 GET_GATEWAY: typing.Final[Route] = Route(GET, "/gateway")
