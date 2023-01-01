@@ -4040,21 +4040,6 @@ class RESTClientImpl(rest_api.RESTClient):
 
         await self._request(route, json=body, auth=None)
 
-    def build_action_row(self) -> special_endpoints.MessageActionRowBuilder:
-        """Build a message action row message component for use in message create and REST calls.
-
-        Returns
-        -------
-        hikari.api.special_endpoints.MessageActionRowBuilder
-            The initialised action row builder.
-        """
-        deprecation.warn_deprecated(
-            "build_action_row",
-            removal_version="2.0.0.dev115",
-            additional_info="Use 'build_message_action_row' parameter instead",
-        )
-        return special_endpoints_impl.MessageActionRowBuilder()
-
     def build_message_action_row(self) -> special_endpoints.MessageActionRowBuilder:
         return special_endpoints_impl.MessageActionRowBuilder()
 
