@@ -30,6 +30,18 @@ from hikari import files
 from tests.hikari import hikari_test_helpers
 
 
+class TestURL:
+    def test_default_filename(self):
+        url = files.URL("https://i.ytimg.com/vi_webp/dQw4w9WgXcQ/maxresdefault.webp")
+
+        assert url.filename == "maxresdefault.webp"
+
+    def test_set_filename(self):
+        url = files.URL("https://i.ytimg.com/vi_webp/dQw4w9WgXcQ/maxresdefault.webp", "yeltsakir.webp")
+
+        assert url.filename == "yeltsakir.webp"
+
+
 class TestAsyncReaderContextManager:
     @pytest.fixture()
     def reader(self):

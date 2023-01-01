@@ -119,7 +119,7 @@ def _generate_weak_listener(
 class EventStream(event_manager_.EventStream[base_events.EventT]):
     """An implementation of an event `EventStream` class.
 
-    !!! note
+    .. note::
         While calling `EventStream.filter` on an active "opened" event stream
         will return a wrapping lazy iterator, calling it on an inactive "closed"
         event stream will return the event stream and add the given predicates
@@ -161,29 +161,6 @@ class EventStream(event_manager_.EventStream[base_events.EventT]):
         ] = None
         # The registered wrapping function for the weak ref to this class's _listener method.
         self._timeout = timeout
-
-    # These are only included at runtime in-order to avoid the model being typed as an asynchronous context manager.
-    if not typing.TYPE_CHECKING:
-
-        async def __aenter__(self: event_manager_.EventStreamT) -> event_manager_.EventStreamT:
-            # This is sync only.
-            warnings.warn(
-                "Using EventStream as an async context manager has been deprecated since 2.0.0.dev104. "
-                "Please use it as a synchronous context manager (e.g. with bot.stream(...)) instead.",
-                category=DeprecationWarning,
-                stacklevel=2,
-            )
-
-            self.open()
-            return self
-
-        async def __aexit__(
-            self,
-            exc_type: typing.Optional[typing.Type[BaseException]],
-            exc: typing.Optional[BaseException],
-            exc_tb: typing.Optional[types.TracebackType],
-        ) -> None:
-            self.close()
 
     def __enter__(self: _EventStreamT) -> _EventStreamT:
         self.open()

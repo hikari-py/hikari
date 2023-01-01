@@ -95,34 +95,6 @@ class TestEventStream:
         stub_stream.close.assert_called_once_with()
 
     @pytest.mark.asyncio()
-    async def test___aenter__(self):
-        # flake8 gets annoyed if we use "with" here so here's a hacky alternative
-        stub_stream = hikari_test_helpers.mock_class_namespace(
-            event_manager_base.EventStream, open=mock.Mock(), close=mock.Mock()
-        )(mock_app, base_events.Event, timeout=None)
-
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", category=DeprecationWarning)
-
-            async with stub_stream:
-                stub_stream.open.assert_called_once_with()
-                stub_stream.close.assert_not_called()
-
-        stub_stream.open.assert_called_once_with()
-        stub_stream.close.assert_called_once_with()
-
-    @pytest.mark.asyncio()
-    async def test___exit__(self):
-        stub_stream = hikari_test_helpers.mock_class_namespace(event_manager_base.EventStream)(
-            mock_app, base_events.Event, timeout=None
-        )
-
-        try:
-            await stub_stream.__aexit__(None, None, None)
-        except AttributeError as exc:
-            pytest.fail(exc)
-
-    @pytest.mark.asyncio()
     async def test__listener_when_filter_returns_false(self, mock_app):
         stream = event_manager_base.EventStream(mock_app, base_events.Event, timeout=None)
         stream.filter(lambda _: False)

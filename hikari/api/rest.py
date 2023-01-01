@@ -69,21 +69,20 @@ class TokenStrategy(abc.ABC):
     @property
     @abc.abstractmethod
     def token_type(self) -> typing.Union[applications.TokenType, str]:
-        """Type of token this strategy returns.
-
-        Returns
-        -------
-        typing.Union[hikari.applications.TokenType, builtins.str]
-            The type of token this strategy returns.
-        """
+        """Type of token this strategy returns."""
 
     @abc.abstractmethod
     async def acquire(self, client: RESTClient) -> str:
         """Acquire an authorization token (including the prefix).
 
+        Parameters
+        ----------
+        client : hikari.api.rest.RESTClient
+            The rest client to use to acquire the token.
+
         Returns
         -------
-        builtins.str
+        str
             The current authorization token to use for this client and it's
             prefix.
         """
@@ -92,14 +91,14 @@ class TokenStrategy(abc.ABC):
     def invalidate(self, token: typing.Optional[str]) -> None:
         """Invalidate the cached token in this handler.
 
-        !!! note
+        .. note::
             `token` may be provided in-order to avoid newly generated tokens
             from being invalidated due to multiple calls being made by separate
             subroutines which are handling the same token.
 
         Parameters
         ----------
-        token : typing.Optional[builtins.str]
+        token : typing.Optional[str]
             The token to specifically invalidate. If provided then this will only
             invalidate the cached token if it matches this, otherwise it'll be
             invalidated regardless.
@@ -126,13 +125,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     def token_type(self) -> typing.Union[str, applications.TokenType, None]:
         """Type of token this client is using for most requests.
 
-        Returns
-        -------
-        typing.Union[builtins.str, hikari.applications.TokenType, builtins.None]
-            The type of token this client is using for most requests.
-
-            If this is `builtins.None` then this client will likely only work
-            for some endpoints such as public and webhook ones.
+        If this is `None` then this client will likely only work
+        for some endpoints such as public and webhook ones.
         """
 
     @abc.abstractmethod
@@ -171,7 +165,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             `hikari.channels.TextableChannel` can be used to determine
             if the channel provides textual functionality to the application.
 
-            You can check for these using the `builtins.isinstance`
+            You can check for these using the `isinstance`
             builtin function.
 
         Raises
@@ -235,25 +229,25 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        name : hikari.undefined.UndefinedOr[[builtins.str]
+        name : hikari.undefined.UndefinedOr[str]
             If provided, the new name for the channel.
-        position : hikari.undefined.UndefinedOr[[builtins.int]
+        position : hikari.undefined.UndefinedOr[int]
             If provided, the new position for the channel.
-        topic : hikari.undefined.UndefinedOr[builtins.str]
+        topic : hikari.undefined.UndefinedOr[str]
             If provided, the new topic for the channel.
-        nsfw : hikari.undefined.UndefinedOr[builtins.bool]
+        nsfw : hikari.undefined.UndefinedOr[bool]
             If provided, whether the channel should be marked as NSFW or not.
-        bitrate : hikari.undefined.UndefinedOr[builtins.int]
+        bitrate : hikari.undefined.UndefinedOr[int]
             If provided, the new bitrate for the channel.
-        video_quality_mode: hikari.undefined.UndefinedOr[typing.Union[hikari.channels.VideoQualityMode, builtins.int]]
+        video_quality_mode : hikari.undefined.UndefinedOr[typing.Union[hikari.channels.VideoQualityMode, int]]
             If provided, the new video quality mode for the channel.
-        user_limit : hikari.undefined.UndefinedOr[builtins.int]
+        user_limit : hikari.undefined.UndefinedOr[int]
             If provided, the new user limit in the channel.
         rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
             If provided, the new rate limit per user in the channel.
-        region : hikari.undefined.UndefinedOr[typing.Union[builtins.str, hikari.voices.VoiceRegion]]
+        region : hikari.undefined.UndefinedOr[typing.Union[str, hikari.voices.VoiceRegion]]
             If provided, the voice region to set for this channel. Passing
-            `builtins.None` here will set it to "auto" mode where the used
+            `None` here will set it to "auto" mode where the used
             region will be decided based on the first person who connects to it
             when it's empty.
         permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
@@ -267,13 +261,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             This should be either 60, 1440, 4320 or 10080 seconds and, as of
             writing, ignores the parent channel's set default_auto_archive_duration
             when passed as `hikari.undefined.UNDEFINED`.
-        archived : hikari.undefined.UndefinedOr[builtins.bool]
+        archived : hikari.undefined.UndefinedOr[bool]
             If provided, whether to archive or unarchive this thread channel.
-        locked : hikari.undefined.UndefinedOr[builtins.bool]
+        locked : hikari.undefined.UndefinedOr[bool]
             If provided, whether to lock or unlock this thread channel.
 
             If it's locked then only people with `MANAGE_THREADS` can unarchive it.
-        invitable : undefined.UndefinedOr[builtins.bool]
+        invitable : undefined.UndefinedOr[bool]
             If provided, whether non-moderators should be able to add other non-moderators to the thread.
 
             This only applies to private threads.
@@ -283,7 +277,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             This should be either 60, 1440, 4320 or 10080 seconds and, as of
             writing, ignores the parent channel's set default_auto_archive_duration
             when passed as `hikari.undefined.UNDEFINED`.
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -315,7 +309,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
+        """
 
     @abc.abstractmethod
     async def follow_channel(
@@ -372,6 +366,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> channels_.PartialChannel:
         """Delete a channel in a guild, or close a DM.
 
+        .. note::
+            For Public servers, the set 'Rules' or 'Guidelines' channels and the
+            'Public Server Updates' channel cannot be deleted.
+
         Parameters
         ----------
         channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.PartialChannel]
@@ -404,10 +402,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-
-        !!! note
-            For Public servers, the set 'Rules' or 'Guidelines' channels and the
-            'Public Server Updates' channel cannot be deleted.
         """
 
     @abc.abstractmethod
@@ -421,7 +415,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> None:
         """Edit the current user's voice state in a stage channel.
 
-        !!! note
+        .. note::
             The current user has to have already joined the target stage channel
             before any calls can be made to this endpoint.
 
@@ -434,21 +428,18 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        suppress : hikari.undefined.UndefinedOr[builtins.bool]
+        suppress : hikari.undefined.UndefinedOr[bool]
             If specified, whether the user should be allowed to become a speaker
             in the target stage channel with `builtin.True` suppressing them from
             becoming one.
-        request_to_speak : typing.Union[hikari.undefined.UndefinedType, builtins.bool, datetime.datetime]
+        request_to_speak : typing.Union[hikari.undefined.UndefinedType, bool, datetime.datetime]
             Whether to request to speak. This may be one of the following:
 
             * `True` to indicate that the bot wants to speak.
             * `False` to remove any previously set request to speak.
             * `datetime.datetime` to specify when they want their request to
-                speak timestamp to be set to.
-
-            !!! note
-                If a datetime from the past is passed then Discord will use the
-                current time instead.
+                speak timestamp to be set to. If a datetime from the past is
+                passed then Discord will use the current time instead.
 
         Raises
         ------
@@ -486,6 +477,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> None:
         """Edit an existing voice state in a stage channel.
 
+        .. note::
+            The target user must already be present in the stage channel before
+            any calls are made to this endpoint.
+
         Parameters
         ----------
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
@@ -497,13 +492,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        suppress : hikari.undefined.UndefinedOr[builtins.bool]
+        suppress : hikari.undefined.UndefinedOr[bool]
             If defined, whether the user should be allowed to become a speaker
             in the target stage channel.
-
-        !!! note
-            The target user must already be present in the stage channel before
-            any calls are made to this endpoint.
 
         Raises
         ------
@@ -590,13 +581,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the new value of all allowed permissions.
         deny : hikari.undefined.UndefinedOr[hikari.permissions.Permissions]
             If provided, the new value of all disallowed permissions.
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
         Raises
         ------
-        builtins.TypeError
+        TypeError
             If `target_type` is unset and we were unable to determine the type
             from `target`.
         hikari.errors.BadRequestError
@@ -730,13 +721,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        max_age : hikari.undefined.UndefinedOr[typing.Union[datetime.timedelta, builtins.float, builtins.int]]
+        max_age : hikari.undefined.UndefinedOr[typing.Union[datetime.timedelta, float, int]]
             If provided, the duration of the invite before expiry.
-        max_uses : hikari.undefined.UndefinedOr[builtins.int]
+        max_uses : hikari.undefined.UndefinedOr[int]
             If provided, the max uses the invite can have.
-        temporary : hikari.undefined.UndefinedOr[builtins.bool]
+        temporary : hikari.undefined.UndefinedOr[bool]
             If provided, whether the invite only grants temporary membership.
-        unique : hikari.undefined.UndefinedOr[builtins.bool]
+        unique : hikari.undefined.UndefinedOr[bool]
             If provided, whether the invite should be unique.
         target_type : hikari.undefined.UndefinedOr[hikari.invites.TargetType]
             If provided, the target type of this invite.
@@ -744,17 +735,17 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the target user id for this invite. This may be the
             object or the ID of an existing user.
 
-            !!! note
+            .. note::
                 This is required if `target_type` is `STREAM` and the targeted
                 user must be streaming into the channel.
         target_application : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]]
             If provided, the target application id for this invite. This may be
             the object or the ID of an existing application.
 
-            !!! note
+            .. note::
                 This is required if `target_type` is `EMBEDDED_APPLICATION` and
                 the targeted application must have the `EMBEDDED` flag.
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -787,7 +778,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
+        """
 
     @abc.abstractmethod
     def trigger_typing(
@@ -795,22 +786,23 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> special_endpoints.TypingIndicator:
         """Trigger typing in a text channel.
 
-        The result of this call can be awaited to trigger typing once, or
-        can be used as an async context manager to continually type until the
-        context manager is left.
+        .. note::
+            The result of this call can be awaited to trigger typing once, or
+            can be used as an async context manager to continually type until the
+            context manager is left. Any errors documented below will happen then.
 
         Examples
         --------
-        ```py
-        # Trigger typing just once.
-        await rest.trigger_typing(channel)
+        .. code-block:: python
 
-        # Trigger typing repeatedly for 1 minute.
-        async with rest.trigger_typing(channel):
-            await asyncio.sleep(60)
-        ```
+            # Trigger typing just once.
+            await rest.trigger_typing(channel)
 
-        !!! warning
+            # Trigger typing repeatedly for 1 minute.
+            async with rest.trigger_typing(channel):
+                await asyncio.sleep(60)
+
+        .. warning::
             Sending a message to the channel will cause the typing indicator
             to disappear until it is re-triggered.
 
@@ -846,11 +838,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-
-        !!! note
-            The exceptions on this endpoint will only be raised once the result
-            is awaited or iterated over. Invoking this function itself will
-            not raise any of the above types.
         """
 
     @abc.abstractmethod
@@ -986,6 +973,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> iterators.LazyIterator[messages_.Message]:
         """Browse the message history for a given text channel.
 
+        .. note::
+            This call is not a coroutine function, it returns a special type of
+            lazy iterator that will perform API calls as you iterate across it,
+            thus any errors documented below will happen then.
+
+            See `hikari.iterators` for the full API for this iterator type.
+
         Parameters
         ----------
         channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextableChannel]
@@ -1015,14 +1009,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.iterators.LazyIterator[hikari.messages.Message]
             An iterator to fetch the messages.
 
-        !!! note
-            This call is not a coroutine function, it returns a special type of
-            lazy iterator that will perform API calls as you iterate across it.
-            See `hikari.iterators` for the full API for this iterator type.
-
         Raises
         ------
-        builtins.TypeError
+        TypeError
             If you specify more than one of `before`, `after`, `about`.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
@@ -1043,13 +1032,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-
-        !!! note
-            The exceptions on this endpoint (other than `builtins.TypeError`) will only
-            be raised once the result is awaited or iterated over. Invoking
-            this function itself will not raise anything (other than
-            `builtins.TypeError`).
-        """  # noqa: E501 - Line too long
+        """
 
     @abc.abstractmethod
     async def fetch_message(
@@ -1131,7 +1114,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the message contents. If
             `hikari.undefined.UNDEFINED`, then nothing will be sent
             in the content. Any other value here will be cast to a
-            `builtins.str`.
+            `str`.
 
             If this is a `hikari.embeds.Embed` and no `embed` nor `embeds` kwarg
             is provided, then this will instead update the embed. This allows
@@ -1146,6 +1129,32 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         attachment : hikari.undefined.UndefinedOr[hikari.files.Resourceish]
             If provided, the message attachment. This can be a resource,
             or string of a path on your computer or a URL.
+
+            Attachments can be passed as many different things, to aid in
+            convenience.
+
+            - If a `pathlib.PurePath` or `str` to a valid URL, the
+                resource at the given URL will be streamed to Discord when
+                sending the message. Subclasses of
+                `hikari.files.WebResource` such as
+                `hikari.files.URL`,
+                `hikari.messages.Attachment`,
+                `hikari.emojis.Emoji`,
+                `EmbedResource`, etc will also be uploaded this way.
+                This will use bit-inception, so only a small percentage of the
+                resource will remain in memory at any one time, thus aiding in
+                scalability.
+            - If a `hikari.files.Bytes` is passed, or a `str`
+                that contains a valid data URI is passed, then this is uploaded
+                with a randomized file name if not provided.
+            - If a `hikari.files.File`, `pathlib.PurePath` or
+                `str` that is an absolute or relative path to a file
+                on your file system is passed, then this resource is uploaded
+                as an attachment using non-blocking code internally and streamed
+                using bit-inception where possible. This depends on the
+                type of `concurrent.futures.Executor` that is being used for
+                the application (default is a thread pool which supports this
+                behaviour).
         attachments : hikari.undefined.UndefinedOr[typing.Sequence[hikari.files.Resourceish]]
             If provided, the message attachments. These can be resources, or
             strings consisting of paths on your computer or URLs.
@@ -1158,30 +1167,30 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the message embed.
         embeds : hikari.undefined.UndefinedOr[typing.Sequence[hikari.embeds.Embed]]
             If provided, the message embeds.
-        tts : hikari.undefined.UndefinedOr[builtins.bool]
+        tts : hikari.undefined.UndefinedOr[bool]
             If provided, whether the message will be read out by a screen
             reader using Discord's TTS (text-to-speech) system.
         reply : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]]
             If provided, the message to reply to.
-        mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
+        mentions_everyone : hikari.undefined.UndefinedOr[bool]
             If provided, whether the message should parse @everyone/@here
             mentions.
-        mentions_reply : hikari.undefined.UndefinedOr[builtins.bool]
+        mentions_reply : hikari.undefined.UndefinedOr[bool]
             If provided, whether to mention the author of the message
             that is being replied to.
 
             This will not do anything if not being used with `reply`.
-        user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], builtins.bool]]
-            If provided, and `builtins.True`, all user mentions will be detected.
-            If provided, and `builtins.False`, all user mentions will be ignored
+        user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
+            If provided, and `True`, all user mentions will be detected.
+            If provided, and `False`, all user mentions will be ignored
             if appearing in the message body.
             Alternatively this may be a collection of
             `hikari.snowflakes.Snowflake`, or
             `hikari.users.PartialUser` derivatives to enforce mentioning
             specific users.
-        role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], builtins.bool]]
-            If provided, and `builtins.True`, all role mentions will be detected.
-            If provided, and `builtins.False`, all role mentions will be ignored
+        role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], bool]]
+            If provided, and `True`, all role mentions will be detected.
+            If provided, and `False`, all role mentions will be ignored
             if appearing in the message body.
             Alternatively this may be a collection of
             `hikari.snowflakes.Snowflake`, or
@@ -1194,33 +1203,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Note that some flags may not be able to be set. Currently the only
             flags that can be set are `NONE` and `SUPPRESS_EMBEDS`.
 
-        !!! note
-            Attachments can be passed as many different things, to aid in
-            convenience.
-
-            - If a `pathlib.PurePath` or `builtins.str` to a valid URL, the
-                resource at the given URL will be streamed to Discord when
-                sending the message. Subclasses of
-                `hikari.files.WebResource` such as
-                `hikari.files.URL`,
-                `hikari.messages.Attachment`,
-                `hikari.emojis.Emoji`,
-                `EmbedResource`, etc will also be uploaded this way.
-                This will use bit-inception, so only a small percentage of the
-                resource will remain in memory at any one time, thus aiding in
-                scalability.
-            - If a `hikari.files.Bytes` is passed, or a `builtins.str`
-                that contains a valid data URI is passed, then this is uploaded
-                with a randomized file name if not provided.
-            - If a `hikari.files.File`, `pathlib.PurePath` or
-                `builtins.str` that is an absolute or relative path to a file
-                on your file system is passed, then this resource is uploaded
-                as an attachment using non-blocking code internally and streamed
-                using bit-inception where possible. This depends on the
-                type of `concurrent.futures.Executor` that is being used for
-                the application (default is a thread pool which supports this
-                behaviour).
-
         Returns
         -------
         hikari.messages.Message
@@ -1228,7 +1210,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
-        builtins.ValueError
+        ValueError
             If more than 100 unique objects/entities are passed for
             `role_mentions` or `user_mentions` or if both `attachment` and
             `attachments`, `component` and `components` or `embed` and `embeds`
@@ -1341,6 +1323,25 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> messages_.Message:
         """Edit an existing message in a given channel.
 
+        .. warning::
+            If the message was not sent by your user, the only parameter
+            you may provide to this call is the `flags` parameter. Anything
+            else will result in a `hikari.errors.ForbiddenError` being raised.
+
+        .. note::
+            Mentioning everyone, roles, or users in message edits currently
+            will not send a push notification showing a new mention to people
+            on Discord. It will still highlight in their chat as if they
+            were mentioned, however.
+
+            Also important to note that if you specify a text `content`, `mentions_everyone`,
+            `mentions_reply`, `user_mentions`, and `role_mentions` will default
+            to `False` as the message will be re-parsed for mentions. This will
+            also occur if only one of the four are specified
+
+            This is a limitation of Discord's design. If in doubt, specify all
+            four of them each time.
+
         Parameters
         ----------
         channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextableChannel]
@@ -1352,9 +1353,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         content : hikari.undefined.UndefinedOr[typing.Any]
             If provided, the message content to update with. If
             `hikari.undefined.UNDEFINED`, then the content will not
-            be changed. If `builtins.None`, then the content will be removed.
+            be changed. If `None`, then the content will be removed.
 
-            Any other value will be cast to a `builtins.str` before sending.
+            Any other value will be cast to a `str` before sending.
 
             If this is a `hikari.embeds.Embed` and neither the `embed` or
             `embeds` kwargs are provided or if this is a
@@ -1368,62 +1369,62 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         attachment : hikari.undefined.UndefinedNoneOr[typing.Union[hikari.files.Resourceish, hikari.messages.Attachment]]
             If provided, the attachment to set on the message. If
             `hikari.undefined.UNDEFINED`, the previous attachment, if
-            present, is not changed. If this is `builtins.None`, then the
+            present, is not changed. If this is `None`, then the
             attachment is removed, if present. Otherwise, the new attachment
             that was provided will be attached.
         attachments : hikari.undefined.UndefinedNoneOr[typing.Sequence[typing.Union[hikari.files.Resourceish, hikari.messages.Attachment]]]
             If provided, the attachments to set on the message. If
             `hikari.undefined.UNDEFINED`, the previous attachments, if
-            present, are not changed. If this is `builtins.None`, then the
+            present, are not changed. If this is `None`, then the
             attachments is removed, if present. Otherwise, the new attachments
             that were provided will be attached.
         component : hikari.undefined.UndefinedNoneOr[hikari.api.special_endpoints.ComponentBuilder]
             If provided, builder object of the component to set for this message.
             This component will replace any previously set components and passing
-            `builtins.None` will remove all components.
+            `None` will remove all components.
         components : hikari.undefined.UndefinedNoneOr[typing.Sequence[hikari.api.special_endpoints.ComponentBuilder]]
             If provided, a sequence of the component builder objects set for
             this message. These components will replace any previously set
-            components and passing `builtins.None` or an empty sequence will
+            components and passing `None` or an empty sequence will
             remove all components.
         embed : hikari.undefined.UndefinedNoneOr[hikari.embeds.Embed]
             If provided, the embed to set on the message. If
             `hikari.undefined.UNDEFINED`, the previous embed(s) are not changed.
-            If this is `builtins.None` then any present embeds are removed.
+            If this is `None` then any present embeds are removed.
             Otherwise, the new embed that was provided will be used as the
             replacement.
         embeds : hikari.undefined.UndefinedNoneOr[typing.Sequence[hikari.embeds.Embed]]
             If provided, the embeds to set on the message. If
             `hikari.undefined.UNDEFINED`, the previous embed(s) are not changed.
-            If this is `builtins.None` then any present embeds are removed.
+            If this is `None` then any present embeds are removed.
             Otherwise, the new embeds that were provided will be used as the
             replacement.
-        mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
+        mentions_everyone : hikari.undefined.UndefinedOr[bool]
             If provided, sanitation for `@everyone` mentions. If
             `hikari.undefined.UNDEFINED`, then the previous setting is
-            not changed. If `builtins.True`, then `@everyone`/`@here` mentions
+            not changed. If `True`, then `@everyone`/`@here` mentions
             in the message content will show up as mentioning everyone that can
             view the chat.
-        mentions_reply : hikari.undefined.UndefinedOr[builtins.bool]
+        mentions_reply : hikari.undefined.UndefinedOr[bool]
             If provided, whether to mention the author of the message
             that is being replied to.
 
             This will not do anything if `message` is not a reply message.
-        user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], builtins.bool]]
+        user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
             If provided, sanitation for user mentions. If
             `hikari.undefined.UNDEFINED`, then the previous setting is
-            not changed. If `builtins.True`, all valid user mentions will behave
-            as mentions. If `builtins.False`, all valid user mentions will not
+            not changed. If `True`, all valid user mentions will behave
+            as mentions. If `False`, all valid user mentions will not
             behave as mentions.
 
             You may alternatively pass a collection of
             `hikari.snowflakes.Snowflake` user IDs, or
             `hikari.users.PartialUser`-derived objects.
-        role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], builtins.bool]]
+        role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], bool]]
             If provided, sanitation for role mentions. If
             `hikari.undefined.UNDEFINED`, then the previous setting is
-            not changed. If `builtins.True`, all valid role mentions will behave
-            as mentions. If `builtins.False`, all valid role mentions will not
+            not changed. If `True`, all valid role mentions will behave
+            as mentions. If `False`, all valid role mentions will not
             behave as mentions.
 
             You may alternatively pass a collection of
@@ -1438,33 +1439,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             have `MANAGE_MESSAGES` permissions, you can use this call to
             suppress embeds on another user's message.
 
-        !!! note
-            Mentioning everyone, roles, or users in message edits currently
-            will not send a push notification showing a new mention to people
-            on Discord. It will still highlight in their chat as if they
-            were mentioned, however.
-
-        !!! warning
-            If you specify a non-embed `content`, `mentions_everyone`,
-            `mentions_reply`, `user_mentions`, and `role_mentions` will default
-            to `builtins.False` as the message will be re-parsed for mentions.
-
-            This is a limitation of Discord's design. If in doubt, specify all
-            four of them each time.
-
-        !!! warning
-            If you specify one of `mentions_everyone`, `mentions_reply`,
-            `user_mentions`, or `role_mentions`, then all others will default to
-            `builtins.False`, even if they were enabled previously.
-
-            This is a limitation of Discord's design. If in doubt, specify all
-            four of them each time.
-
-        !!! warning
-            If the message was not sent by your user, the only parameter
-            you may provide to this call is the `flags` parameter. Anything
-            else will result in a `hikari.errors.ForbiddenError` being raised.
-
         Returns
         -------
         hikari.messages.Message
@@ -1472,7 +1446,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
-        builtins.ValueError
+        ValueError
             If both `attachment` and `attachments`, `component` and `components`
             or `embed` and `embeds` are specified.
         hikari.errors.BadRequestError
@@ -1558,6 +1532,27 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> None:
         """Bulk-delete messages from the channel.
 
+        .. note::
+            This API endpoint will only be able to delete 100 messages
+            at a time. For anything more than this, multiple requests will
+            be executed one-after-the-other, since the rate limits for this
+            endpoint do not favour more than one request per bucket.
+
+            If one message is left over from chunking per 100 messages, or
+            only one message is passed to this coroutine function, then the
+            logic is expected to defer to `delete_message`. The implication
+            of this is that the `delete_message` endpoint is rate limited
+            by a different bucket with different usage rates.
+
+        .. warning::
+            This endpoint is not atomic. If an error occurs midway through
+            a bulk delete, you will **not** be able to revert any changes made
+            up to this point.
+
+        .. warning::
+            Specifying any messages more than 14 days old will cause the call
+            to fail, potentially with partial completion.
+
         Parameters
         ----------
         channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextableChannel]
@@ -1572,33 +1567,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *other_messages : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
             The objects and/or IDs of other existing messages to delete.
 
-        !!! note
-            This API endpoint will only be able to delete 100 messages
-            at a time. For anything more than this, multiple requests will
-            be executed one-after-the-other, since the rate limits for this
-            endpoint do not favour more than one request per bucket.
-
-            If one message is left over from chunking per 100 messages, or
-            only one message is passed to this coroutine function, then the
-            logic is expected to defer to `delete_message`. The implication
-            of this is that the `delete_message` endpoint is ratelimited
-            by a different bucket with different usage rates.
-
-        !!! warning
-            This endpoint is not atomic. If an error occurs midway through
-            a bulk delete, you will **not** be able to revert any changes made
-            up to this point.
-
-        !!! warning
-            Specifying any messages more than 14 days old will cause the call
-            to fail, potentially with partial completion.
-
         Raises
         ------
         hikari.errors.BulkDeleteError
             An error containing the messages successfully deleted, and the
             messages that were not removed. The
-            `builtins.BaseException.__cause__` of the exception will be the
+            `BaseException.__cause__` of the exception will be the
             original error that terminated this process.
         """  # noqa: E501 - Line too long
 
@@ -1621,7 +1595,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         message : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
             The message to add a reaction to. This may be the
             object or the ID of an existing message.
-        emoji : typing.Union[builtins.str, hikari.emojis.Emoji]
+        emoji : typing.Union[str, hikari.emojis.Emoji]
             Object or name of the emoji to react with.
 
         Other Parameters
@@ -1676,7 +1650,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         message : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
             The message to delete a reaction from. This may be the
             object or the ID of an existing message.
-        emoji : typing.Union[builtins.str, hikari.emojis.Emoji]
+        emoji : typing.Union[str, hikari.emojis.Emoji]
             Object or name of the emoji to remove your reaction for.
 
         Other Parameters
@@ -1728,7 +1702,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         message : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
             The message to delete a reactions from. This may be the
             object or the ID of an existing message.
-        emoji : typing.Union[builtins.str, hikari.emojis.Emoji]
+        emoji : typing.Union[str, hikari.emojis.Emoji]
             Object or name of the emoji to remove all the reactions for.
 
         Other Parameters
@@ -1786,9 +1760,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         message : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
             The message to delete a reaction from. This may be the
             object or the ID of an existing message.
-        user: hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
+        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
             Object or ID of the user to remove the reaction of.
-        emoji : typing.Union[builtins.str, hikari.emojis.Emoji]
+        emoji : typing.Union[str, hikari.emojis.Emoji]
             Object or name of the emoji to react with.
 
         Other Parameters
@@ -1877,6 +1851,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> iterators.LazyIterator[users.User]:
         """Fetch reactions for an emoji from a message.
 
+        .. note::
+            This call is not a coroutine function, it returns a special type of
+            lazy iterator that will perform API calls as you iterate across it,
+            thus any errors documented below will happen then.
+
+            See `hikari.iterators` for the full API for this iterator type.
+
         Parameters
         ----------
         channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextableChannel]
@@ -1885,7 +1866,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         message : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
             The message to delete all reaction from. This may be the
             object or the ID of an existing message.
-        emoji : typing.Union[builtins.str, hikari.emojis.Emoji]
+        emoji : typing.Union[str, hikari.emojis.Emoji]
             Object or name of the emoji to get the reactions for.
 
         Other Parameters
@@ -1899,11 +1880,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         -------
         hikari.iterators.LazyIterator[hikari.users.User]
             An iterator to fetch the users.
-
-        !!! note
-            This call is not a coroutine function, it returns a special type of
-            lazy iterator that will perform API calls as you iterate across it.
-            See `hikari.iterators` for the full API for this iterator type.
 
         Raises
         ------
@@ -1927,11 +1903,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-
-        !!! note
-            The exceptions on this endpoint will only be raised once the
-            result is awaited or iterated over. Invoking this function
-            itself will not raise anything.
         """
 
     @abc.abstractmethod
@@ -1957,7 +1928,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------------
         avatar : typing.Optional[hikari.files.Resourceish]
             If provided, the avatar for the webhook.
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -2008,7 +1979,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        token : hikari.undefined.UndefinedOr[builtins.str]
+        token : hikari.undefined.UndefinedOr[str]
             If provided, the webhook token that will be used to fetch
             the webhook instead of the token the client was initialized with.
 
@@ -2145,17 +2116,17 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        token : hikari.undefined.UndefinedOr[builtins.str]
+        token : hikari.undefined.UndefinedOr[str]
             If provided, the webhook token that will be used to edit
             the webhook instead of the token the client was initialized with.
-        name : hikari.undefined.UndefinedOr[builtins.str]
+        name : hikari.undefined.UndefinedOr[str]
             If provided, the new webhook name.
         avatar : hikari.undefined.UndefinedNoneOr[hikari.files.Resourceish]
-            If provided, the new webhook avatar. If `builtins.None`, will
+            If provided, the new webhook avatar. If `None`, will
             remove the webhook avatar.
         channel : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.WebhookChannelT]]
             If provided, the text channel to move the webhook to.
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -2205,7 +2176,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        token : hikari.undefined.UndefinedOr[builtins.str]
+        token : hikari.undefined.UndefinedOr[str]
             If provided, the webhook token that will be used to delete
             the webhook instead of the token the client was initialized with.
 
@@ -2264,18 +2235,22 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> messages_.Message:
         """Execute a webhook.
 
+        .. warning::
+            As of writing, `username` and `avatar_url` are ignored for
+            interaction webhooks.
+
         Parameters
         ----------
         webhook : typing.Union[hikari.snowflakes.Snowflakeish, hikari.webhooks.ExecutableWebhook]
             The webhook to execute. This may be the object
             or the ID of an existing webhook.
-        token: builtins.str
+        token : str
             The webhook token.
         content : hikari.undefined.UndefinedOr[typing.Any]
             If provided, the message contents. If
             `hikari.undefined.UNDEFINED`, then nothing will be sent
             in the content. Any other value here will be cast to a
-            `builtins.str`.
+            `str`.
 
             If this is a `hikari.embeds.Embed` and no `embed` nor
             no `embeds` kwarg is provided, then this will instead
@@ -2294,15 +2269,41 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             the webhook's target channel.
 
             This is required when trying to create a thread message.
-        username : hikari.undefined.UndefinedOr[builtins.str]
+        username : hikari.undefined.UndefinedOr[str]
             If provided, the username to override the webhook's username
             for this request.
-        avatar_url : typing.Union[hikari.undefined.UndefinedType, builtins.str, hikari.files.URL]
+        avatar_url : typing.Union[hikari.undefined.UndefinedType, hikari.files.URL, str]
             If provided, the url of an image to override the webhook's
             avatar with for this request.
         attachment : hikari.undefined.UndefinedOr[hikari.files.Resourceish]
             If provided, the message attachment. This can be a resource,
             or string of a path on your computer or a URL.
+
+            Attachments can be passed as many different things, to aid in
+            convenience.
+
+            - If a `pathlib.PurePath` or `str` to a valid URL, the
+                resource at the given URL will be streamed to Discord when
+                sending the message. Subclasses of
+                `hikari.files.WebResource` such as
+                `hikari.files.URL`,
+                `hikari.messages.Attachment`,
+                `hikari.emojis.Emoji`,
+                `EmbedResource`, etc will also be uploaded this way.
+                This will use bit-inception, so only a small percentage of the
+                resource will remain in memory at any one time, thus aiding in
+                scalability.
+            - If a `hikari.files.Bytes` is passed, or a `str`
+                that contains a valid data URI is passed, then this is uploaded
+                with a randomized file name if not provided.
+            - If a `hikari.files.File`, `pathlib.PurePath` or
+                `str` that is an absolute or relative path to a file
+                on your file system is passed, then this resource is uploaded
+                as an attachment using non-blocking code internally and streamed
+                using bit-inception where possible. This depends on the
+                type of `concurrent.futures.Executor` that is being used for
+                the application (default is a thread pool which supports this
+                behaviour).
         attachments : hikari.undefined.UndefinedOr[typing.Sequence[hikari.files.Resourceish]]
             If provided, the message attachments. These can be resources, or
             strings consisting of paths on your computer or URLs.
@@ -2315,72 +2316,35 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the message embed.
         embeds : hikari.undefined.UndefinedOr[typing.Sequence[hikari.embeds.Embed]]
             If provided, the message embeds.
-        tts : hikari.undefined.UndefinedOr[builtins.bool]
+        tts : hikari.undefined.UndefinedOr[bool]
             If provided, whether the message will be read out by a screen
             reader using Discord's TTS (text-to-speech) system.
-        nonce : hikari.undefined.UndefinedOr[builtins.str]
-            An arbitrary identifier to associate with the message. This
-            can be used to identify it later in received events. If provided,
-            this must be less than 32 bytes. If not provided, then
-            a null value is placed on the message instead. All users can
-            see this value.
-        mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
+        mentions_everyone : hikari.undefined.UndefinedOr[bool]
             If provided, whether the message should parse @everyone/@here
             mentions.
-        user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], builtins.bool]]
-            If provided, and `builtins.True`, all user mentions will be detected.
-            If provided, and `builtins.False`, all user mentions will be ignored
+        user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
+            If provided, and `True`, all user mentions will be detected.
+            If provided, and `False`, all user mentions will be ignored
             if appearing in the message body.
             Alternatively this may be a collection of
             `hikari.snowflakes.Snowflake`, or
             `hikari.users.PartialUser` derivatives to enforce mentioning
             specific users.
-        role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], builtins.bool]]
-            If provided, and `builtins.True`, all role mentions will be detected.
-            If provided, and `builtins.False`, all role mentions will be ignored
+        role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], bool]]
+            If provided, and `True`, all role mentions will be detected.
+            If provided, and `False`, all role mentions will be ignored
             if appearing in the message body.
             Alternatively this may be a collection of
             `hikari.snowflakes.Snowflake`, or
             `hikari.guilds.PartialRole` derivatives to enforce mentioning
             specific roles.
-        flags : typing.Union[hikari.undefined.UndefinedType, builtins.int, hikari.messages.MessageFlag]
+        flags : typing.Union[hikari.undefined.UndefinedType, int, hikari.messages.MessageFlag]
             The flags to set for this webhook message.
 
-            !!! warning
-                As of writing the only flags which can be passed here are
-                `EPHEMERAL` (if this is an interaction response webhook) and
-                `SUPPRESS_EMBEDS`.
-
-        !!! warning
-            As of writing, `username` and `avatar_url` are ignored for
-            interaction webhooks.
-
-        !!! note
-            Attachments can be passed as many different things, to aid in
-            convenience.
-
-            - If a `pathlib.PurePath` or `builtins.str` to a valid URL, the
-                resource at the given URL will be streamed to Discord when
-                sending the message. Subclasses of
-                `hikari.files.WebResource` such as
-                `hikari.files.URL`,
-                `hikari.messages.Attachment`,
-                `hikari.emojis.Emoji`,
-                `EmbedResource`, etc will also be uploaded this way.
-                This will use bit-inception, so only a small percentage of the
-                resource will remain in memory at any one time, thus aiding in
-                scalability.
-            - If a `hikari.files.Bytes` is passed, or a `builtins.str`
-                that contains a valid data URI is passed, then this is uploaded
-                with a randomized file name if not provided.
-            - If a `hikari.files.File`, `pathlib.PurePath` or
-                `builtins.str` that is an absolute or relative path to a file
-                on your file system is passed, then this resource is uploaded
-                as an attachment using non-blocking code internally and streamed
-                using bit-inception where possible. This depends on the
-                type of `concurrent.futures.Executor` that is being used for
-                the application (default is a thread pool which supports this
-                behaviour).
+            .. warning::
+                As of writing this can only be set for interaction webhooks
+                and the only settable flag is `EPHEMERAL`; this field is just
+                ignored for non-interaction webhooks.
 
         Returns
         -------
@@ -2389,7 +2353,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
-        builtins.ValueError
+        ValueError
             If more than 100 unique objects/entities are passed for
             `role_mentions` or `user_mentions` or if both `attachment` and
             `attachments` or `embed` and `embeds` are specified.
@@ -2437,7 +2401,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         webhook : typing.Union[hikari.snowflakes.Snowflakeish, hikari.webhooks.ExecutableWebhook]
             The webhook to execute. This may be the object
             or the ID of an existing webhook.
-        token: builtins.str
+        token : str
             The webhook token.
         message : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
             The message to fetch. This may be the object or the ID of an
@@ -2512,12 +2476,26 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> messages_.Message:
         """Edit a message sent by a webhook.
 
+         .. note::
+            Mentioning everyone, roles, or users in message edits currently
+            will not send a push notification showing a new mention to people
+            on Discord. It will still highlight in their chat as if they
+            were mentioned, however.
+
+            Also important to note that if you specify a text `content`, `mentions_everyone`,
+            `mentions_reply`, `user_mentions`, and `role_mentions` will default
+            to `False` as the message will be re-parsed for mentions. This will
+            also occur if only one of the four are specified
+
+            This is a limitation of Discord's design. If in doubt, specify all
+            four of them each time.
+
         Parameters
         ----------
         webhook : typing.Union[hikari.snowflakes.Snowflakeish, hikari.webhooks.ExecutableWebhook]
             The webhook to execute. This may be the object
             or the ID of an existing webhook.
-        token: builtins.str
+        token : str
             The webhook token.
         message : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
             The message to delete. This may be the object or the ID of
@@ -2525,9 +2503,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         content : hikari.undefined.UndefinedOr[typing.Any]
             If provided, the message content to update with. If
             `hikari.undefined.UNDEFINED`, then the content will not
-            be changed. If `builtins.None`, then the content will be removed.
+            be changed. If `None`, then the content will be removed.
 
-            Any other value will be cast to a `builtins.str` before sending.
+            Any other value will be cast to a `str` before sending.
 
             If this is a `hikari.embeds.Embed` and neither the
             `embed` or `embeds` kwargs are provided or if this is a
@@ -2547,80 +2525,58 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         attachment : hikari.undefined.UndefinedNoneOr[typing.Union[hikari.files.Resourceish, hikari.messages.Attachment]]
             If provided, the attachment to set on the message. If
             `hikari.undefined.UNDEFINED`, the previous attachment, if
-            present, is not changed. If this is `builtins.None`, then the
+            present, is not changed. If this is `None`, then the
             attachment is removed, if present. Otherwise, the new attachment
             that was provided will be attached.
         attachments : hikari.undefined.UndefinedNoneOr[typing.Sequence[typing.Union[hikari.files.Resourceish, hikari.messages.Attachment]]]
             If provided, the attachments to set on the message. If
             `hikari.undefined.UNDEFINED`, the previous attachments, if
-            present, are not changed. If this is `builtins.None`, then the
+            present, are not changed. If this is `None`, then the
             attachments is removed, if present. Otherwise, the new attachments
             that were provided will be attached.
         component : hikari.undefined.UndefinedNoneOr[hikari.api.special_endpoints.ComponentBuilder]
             If provided, builder object of the component to set for this message.
             This component will replace any previously set components and passing
-            `builtins.None` will remove all components.
+            `None` will remove all components.
         components : hikari.undefined.UndefinedNoneOr[typing.Sequence[hikari.api.special_endpoints.ComponentBuilder]]
             If provided, a sequence of the component builder objects set for
             this message. These components will replace any previously set
-            components and passing `builtins.None` or an empty sequence will
+            components and passing `None` or an empty sequence will
             remove all components.
         embed : hikari.undefined.UndefinedNoneOr[hikari.embeds.Embed]
             If provided, the embed to set on the message. If
             `hikari.undefined.UNDEFINED`, the previous embed(s) are not changed.
-            If this is `builtins.None` then any present embeds are removed.
+            If this is `None` then any present embeds are removed.
             Otherwise, the new embed that was provided will be used as the
             replacement.
         embeds : hikari.undefined.UndefinedNoneOr[typing.Sequence[hikari.embeds.Embed]]
             If provided, the embeds to set on the message. If
             `hikari.undefined.UNDEFINED`, the previous embed(s) are not changed.
-            If this is `builtins.None` then any present embeds are removed.
+            If this is `None` then any present embeds are removed.
             Otherwise, the new embeds that were provided will be used as the
             replacement.
-        mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
+        mentions_everyone : hikari.undefined.UndefinedOr[bool]
             If provided, sanitation for `@everyone` mentions. If
             `hikari.undefined.UNDEFINED`, then the previous setting is
-            not changed. If `builtins.True`, then `@everyone`/`@here` mentions
+            not changed. If `True`, then `@everyone`/`@here` mentions
             in the message content will show up as mentioning everyone that can
             view the chat.
-        user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], builtins.bool]]
-            If provided, and `builtins.True`, all user mentions will be detected.
-            If provided, and `builtins.False`, all user mentions will be ignored
+        user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
+            If provided, and `True`, all user mentions will be detected.
+            If provided, and `False`, all user mentions will be ignored
             if appearing in the message body.
             Alternatively this may be a collection of
             `hikari.snowflakes.Snowflake`, or
             `hikari.users.PartialUser` derivatives to enforce mentioning
             specific users.
-        role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], builtins.bool]]
-            If provided, and `builtins.True`, all role mentions will be detected.
-            If provided, and `builtins.False`, all role mentions will be ignored
+        role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], bool]]
+            If provided, and `True`, all role mentions will be detected.
+            If provided, and `False`, all role mentions will be ignored
             if appearing in the message body.
             Alternatively this may be a collection of
             `hikari.snowflakes.Snowflake`, or
             `hikari.guilds.PartialRole` derivatives to enforce mentioning
             specific roles.
-
-        !!! note
-            Mentioning everyone, roles, or users in message edits currently
-            will not send a push notification showing a new mention to people
-            on Discord. It will still highlight in their chat as if they
-            were mentioned, however.
-
-        !!! warning
-            If you specify a non-embed `content`, `mentions_everyone`,
-            `mentions_reply`, `user_mentions`, and `role_mentions` will default
-            to `builtins.False` as the message will be re-parsed for mentions.
-
-            This is a limitation of Discord's design. If in doubt, specify all
-            three of them each time.
-
-        !!! warning
-            If you specify one of `mentions_everyone`, `mentions_reply`,
-            `user_mentions`, or `role_mentions`, then all others will default to
-            `builtins.False`, even if they were enabled previously.
-
-            This is a limitation of Discord's design. If in doubt, specify all
-            three of them each time.
 
         Returns
         -------
@@ -2629,7 +2585,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
-        builtins.ValueError
+        ValueError
             If both `attachment` and `attachments`, `component` and `components`
             or `embed` and `embeds` are specified.
         hikari.errors.BadRequestError
@@ -2676,7 +2632,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         webhook : typing.Union[hikari.snowflakes.Snowflakeish, hikari.webhooks.ExecutableWebhook]
             The webhook to execute. This may be the object
             or the ID of an existing webhook.
-        token: builtins.str
+        token : str
             The webhook token.
         message : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
             The message to delete. This may be the object or the ID of
@@ -2716,7 +2672,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def fetch_gateway_url(self) -> str:
         """Fetch the gateway url.
 
-        !!! note
+        .. note::
             This endpoint does not require any valid authorization.
 
         Raises
@@ -2738,7 +2694,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_gateway_bot_info(self) -> sessions.GatewayBotInfo:
-        """Fetch the gateway gateway info for the bot.
+        """Fetch the gateway info for the bot.
 
         Returns
         -------
@@ -2765,14 +2721,24 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def fetch_invite(self, invite: typing.Union[invites.InviteCode, str]) -> invites.Invite:
+    async def fetch_invite(
+        self, invite: typing.Union[invites.InviteCode, str], with_counts: bool = True, with_expiration: bool = True
+    ) -> invites.Invite:
         """Fetch an existing invite.
 
         Parameters
         ----------
-        invite : typing.Union[hikari.invites.InviteCode, builtins.str]
+        invite : typing.Union[hikari.invites.InviteCode, str]
             The invite to fetch. This may be an invite object or
             the code of an existing invite.
+        with_counts : bool
+            Whether the invite should contain the approximate member counts.
+
+            Defaults to `True`.
+        with_expiration: bool
+            Whether the invite should contain the expiration date.
+
+            Defaults to `True`.
 
         Returns
         -------
@@ -2806,7 +2772,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        invite : typing.Union[hikari.invites.InviteCode, builtins.str]
+        invite : typing.Union[hikari.invites.InviteCode, str]
             The invite to delete. This may be an invite object or
             the code of an existing invite.
 
@@ -2879,10 +2845,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        username : undefined.UndefinedOr[builtins.str]
+        username : undefined.UndefinedOr[str]
             If provided, the new username.
         avatar : undefined.UndefinedNoneOr[hikari.files.Resourceish]
-            If provided, the new avatar. If `builtins.None`,
+            If provided, the new avatar. If `None`,
             the avatar will be removed.
 
         Returns
@@ -2895,8 +2861,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.BadRequestError
             If any of the fields that are passed have an invalid value.
 
-            Discord also returns this on a ratelimit:
-            https://github.com/discord/discord-api-docs/issues/1462
+            Discord also returns this on a rate limit:
+            <https://github.com/discord/discord-api-docs/issues/1462>
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.InternalServerError
@@ -2940,11 +2906,18 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> iterators.LazyIterator[applications.OwnGuild]:
         """Fetch the token's associated guilds.
 
+        .. note::
+            This call is not a coroutine function, it returns a special type of
+            lazy iterator that will perform API calls as you iterate across it,
+            thus any errors documented below will happen then.
+
+            See `hikari.iterators` for the full API for this iterator type.
+
         Other Parameters
         ----------------
-        newest_first : builtins.bool
+        newest_first : bool
             Whether to fetch the newest first or the oldest first.
-            Defaults to `builtins.False`.
+            Defaults to `False`.
         start_at : hikari.undefined.UndefinedOr[hikari.snowflakes.SearchableSnowflakeishOr[hikari.guilds.PartialGuild]]
             If provided, will start at this snowflake. If you provide
             a datetime object, it will be transformed into a snowflake. This
@@ -2955,11 +2928,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         -------
         hikari.iterators.LazyIterator[hikari.applications.OwnGuild]
             The token's associated guilds.
-
-        !!! note
-            This call is not a coroutine function, it returns a special type of
-            lazy iterator that will perform API calls as you iterate across it.
-            See `hikari.iterators` for the full API for this iterator type.
 
         Raises
         ------
@@ -2980,11 +2948,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-
-        !!! note
-            The exceptions on this endpoint will only be raised once the
-            result is awaited or iterated over. Invoking this function
-            itself will not raise anything.
         """
 
     @abc.abstractmethod
@@ -3054,12 +3017,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If an internal error occurs on Discord while handling the request.
         """
 
-    # THIS IS AN OAUTH2 FLOW BUT CAN BE USED BY BOTS ALSO
+    # THIS IS AN OAUTH2 FLOW BUT CAN ALSO BE USED BY BOTS
     @abc.abstractmethod
     async def fetch_application(self) -> applications.Application:
         """Fetch the token's associated application.
 
-        !!! warning
+        .. warning::
             This endpoint can only be used with a Bot token. Using this with a
             Bearer token will result in a `hikari.errors.UnauthorizedError`.
 
@@ -3092,7 +3055,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def fetch_authorization(self) -> applications.AuthorizationInformation:
         """Fetch the token's authorization information.
 
-        !!! warning
+        .. warning::
             This endpoint can only be used with a Bearer token. Using this
             with a Bot token will result in a `hikari.errors.UnauthorizedError`.
 
@@ -3134,9 +3097,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------
         client : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to authorize as.
-        client_secret : builtins.str
+        client_secret : str
             Secret of the application to authorize as.
-        scopes : typing.Sequence[typing.Union[hikari.applications.OAuth2Scope, builtins.str]]
+        scopes : typing.Sequence[typing.Union[hikari.applications.OAuth2Scope, str]]
             The scopes to authorize for.
 
         Returns
@@ -3179,11 +3142,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------
         client : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to authorize with.
-        client_secret : builtins.str
+        client_secret : str
             Secret of the application to authorize with.
-        code : builtins.str
+        code : str
             The authorization code to exchange for an OAuth2 access token.
-        redirect_uri : builtins.str
+        redirect_uri : str
             The redirect uri that was included in the authorization request.
 
         Returns
@@ -3225,7 +3188,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> applications.OAuth2AuthorizationToken:
         """Refresh an access token.
 
-        !!! warning
+        .. warning::
             As of writing this Discord currently ignores any passed scopes,
             therefore you should use
             `hikari.applications.OAuth2AuthorizationToken.scopes` to validate
@@ -3235,14 +3198,14 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------
         client : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to authorize with.
-        client_secret : builtins.str
+        client_secret : str
             Secret of the application to authorize with.
-        refresh_token : builtins.str
+        refresh_token : str
             The refresh token to use.
 
         Other Parameters
         ----------------
-        scopes : typing.Sequence[typing.Union[hikari.applications.OAuth2Scope, builtins.str]]
+        scopes : typing.Sequence[typing.Union[hikari.applications.OAuth2Scope, str]]
             The scope of the access request.
 
         Returns
@@ -3284,9 +3247,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------
         client : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to authorize with.
-        client_secret : builtins.str
+        client_secret : str
             Secret of the application to authorize with.
-        token : typing.Union[builtins.str, hikari.applications.PartialOAuth2Token]
+        token : typing.Union[str, hikari.applications.PartialOAuth2Token]
             Object or string of the access token to revoke.
 
         Raises
@@ -3323,7 +3286,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> typing.Optional[guilds.Member]:
         """Add a user to a guild.
 
-        !!! note
+        .. note::
             This requires the `access_token` to have the
             `hikari.applications.OAuth2Scope.GUILDS_JOIN` scope enabled along
             with the authorization of a Bot which has `MANAGE_INVITES`
@@ -3331,7 +3294,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        access_token : typing.Union[builtins.str, hikari.applications.PartialOAuth2Token]
+        access_token : typing.Union[str, hikari.applications.PartialOAuth2Token]
             Object or string of the access token to use for this request.
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             The guild to add the user to. This may be the object
@@ -3342,7 +3305,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        nickname : hikari.undefined.UndefinedOr[builtins.str]
+        nickname : hikari.undefined.UndefinedOr[str]
             If provided, the nick to add to the user when he joins the guild.
 
             Requires the `MANAGE_NICKNAMES` permission on the guild.
@@ -3351,11 +3314,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             This may be a collection objects or IDs of existing roles.
 
             Requires the `MANAGE_ROLES` permission on the guild.
-        mute : hikari.undefined.UndefinedOr[builtins.bool]
+        mute : hikari.undefined.UndefinedOr[bool]
             If provided, the mute state to add the user when he joins the guild.
 
             Requires the `MUTE_MEMBERS` permission on the guild.
-        deaf : hikari.undefined.UndefinedOr[builtins.bool]
+        deaf : hikari.undefined.UndefinedOr[bool]
             If provided, the deaf state to add the user when he joins the guild.
 
             Requires the `DEAFEN_MEMBERS` permission on the guild.
@@ -3363,7 +3326,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Returns
         -------
         typing.Optional[hikari.guilds.Member]
-            `builtins.None` if the user was already part of the guild, else
+            `None` if the user was already part of the guild, else
             `hikari.guilds.Member`.
 
         Raises
@@ -3436,7 +3399,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Returns
         -------
         hikari.users.User
-            The requested user
+            The requested user.
 
         Raises
         ------
@@ -3470,6 +3433,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> iterators.LazyIterator[audit_logs.AuditLog]:
         """Fetch pages of the guild's audit log.
 
+        .. note::
+            This call is not a coroutine function, it returns a special type of
+            lazy iterator that will perform API calls as you iterate across it,
+            thus any errors documented below will happen then.
+
+            See `hikari.iterators` for the full API for this iterator type.
+
         Parameters
         ----------
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
@@ -3479,24 +3449,19 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Other Parameters
         ----------------
         before : hikari.undefined.UndefinedOr[hikari.snowflakes.SearchableSnowflakeishOr[hikari.snowflakes.Unique]]
-            If provided, filter to only actions after this snowflake. If you provide
+            If provided, filter to only actions before this snowflake. If you provide
             a datetime object, it will be transformed into a snowflake. This
             may be any other Discord entity that has an ID. In this case, the
             date the object was first created will be used.
         user : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]]
             If provided, the user to filter for.
-        event_type : hikari.undefined.UndefinedOr[typing.Union[hikari.audit_logs.AuditLogEventType, builtins.int]]
+        event_type : hikari.undefined.UndefinedOr[typing.Union[hikari.audit_logs.AuditLogEventType, int]]
             If provided, the event type to filter for.
 
         Returns
         -------
         hikari.iterators.LazyIterator[hikari.audit_logs.AuditLog]
             The guild's audit log.
-
-        !!! note
-            This call is not a coroutine function, it returns a special type of
-            lazy iterator that will perform API calls as you iterate across it.
-            See `hikari.iterators` for the full API for this iterator type.
 
         Raises
         ------
@@ -3519,11 +3484,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-
-        !!! note
-            The exceptions on this endpoint will only be raised once the
-            result is awaited or iterated over. Invoking this function
-            itself will not raise anything.
         """
 
     @abc.abstractmethod
@@ -3624,7 +3584,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             The guild to create the emoji on. This can be a
             guild object or the ID of an existing guild.
-        name : builtins.str
+        name : str
             The name for the emoji.
         image : hikari.files.Resourceish
             The 128x128 image for the emoji. Maximum upload size is 256kb.
@@ -3636,7 +3596,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, a collection of the roles that will be able to
             use this emoji. This can be a `hikari.guilds.PartialRole` or
             the ID of an existing role.
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -3694,13 +3654,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        name : hikari.undefined.UndefinedOr[builtins.str]
+        name : hikari.undefined.UndefinedOr[str]
             If provided, the new name for the emoji.
         roles : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole]]
             If provided, the new collection of roles that will be able to
             use this emoji. This can be a `hikari.guilds.PartialRole` or
             the ID of an existing role.
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -3755,7 +3715,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -3950,23 +3910,23 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             The guild to create the sticker on. This can be a guild object or the
             ID of an existing guild.
-        name : builtins.str
+        name : str
             The name for the sticker.
-        tag : builtins.str
+        tag : str
             The tag for the sticker.
         image : hikari.files.Resourceish
             The 320x320 image for the sticker. Maximum upload size is 500kb.
             This can be a still or an animated PNG or a Lottie.
 
-            !!! note
+            .. note::
                 Lottie support is only available for verified and partnered
                 servers.
 
         Other Parameters
         ----------------
-        description: hikari.undefined.UndefinedOr[builtins.str]
+        description : hikari.undefined.UndefinedOr[str]
             If provided, the description of the sticker.
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -4025,13 +3985,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        name : hikari.undefined.UndefinedOr[builtins.str]
+        name : hikari.undefined.UndefinedOr[str]
             If provided, the new name for the sticker.
-        description : hikari.undefined.UndefinedOr[builtins.str]
+        description : hikari.undefined.UndefinedOr[str]
             If provided, the new description for the sticker.
-        tag : hikari.undefined.UndefinedOr[builtins.str]
+        tag : hikari.undefined.UndefinedOr[str]
             If provided, the new sticker tag.
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -4086,7 +4046,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -4117,9 +4077,19 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     def guild_builder(self, name: str, /) -> special_endpoints.GuildBuilder:
         """Make a guild builder to create a guild with.
 
+        .. note::
+            This endpoint can only be used by bots in less than 10 guilds.
+
+        .. note::
+            This call is not a coroutine function, it returns a special type of
+            lazy iterator that will perform API calls as you iterate across it,
+            thus any errors documented below will happen then.
+
+            See `hikari.iterators` for the full API for this iterator type.
+
         Parameters
         ----------
-        name : builtins.str
+        name : str
             The new guilds name.
 
         Returns
@@ -4127,9 +4097,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.api.special_endpoints.GuildBuilder
             The guild builder to use. This will allow to create a guild
             later with `hikari.api.special_endpoints.GuildBuilder.create`.
-
-        !!! note
-            This endpoint can only be used by bots in less than 10 guilds.
 
         Raises
         ------
@@ -4152,15 +4119,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
 
-        !!! note
-            The exceptions on this endpoint will only be raised once
-            `hikari.api.special_endpoints.GuildBuilder.create` is called.
-            Invoking this function itself will not raise any of
-            the above types.
-
         See Also
         --------
-        Guild builder: `hikari.api.special_endpoints.GuildBuilder`
+        GuildBuilder : `hikari.api.special_endpoints.GuildBuilder`.
         """
 
     @abc.abstractmethod
@@ -4205,6 +4166,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def fetch_guild_preview(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> guilds.GuildPreview:
         """Fetch a guild preview.
 
+        .. note::
+            This will only work for guilds you are a part of or are public.
+
         Parameters
         ----------
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
@@ -4215,9 +4179,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         -------
         hikari.guilds.GuildPreview
             The requested guild preview.
-
-        !!! note
-            This will only work for guilds you are a part of or are public.
 
         Raises
         ------
@@ -4283,7 +4244,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        name : hikari.undefined.UndefinedOr[builtins.str]
+        name : hikari.undefined.UndefinedOr[str]
             If provided, the new name for the guild.
         verification_level : hikari.undefined.UndefinedOr[hikari.guilds.GuildVerificationLevel]
             If provided, the new verification level.
@@ -4302,7 +4263,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         owner : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]]]
             If provided, the new guild owner.
 
-            !!! warning
+            .. warning::
                 You need to be the owner of the server to use this.
         splash : hikari.undefined.UndefinedNoneOr[hikari.files.Resourceish]
             If provided, the new guild splash. Must be a 16:9 image and the
@@ -4316,9 +4277,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the new rules channel.
         public_updates_channel : hikari.undefined.UndefinedNoneOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildTextChannel]]
             If provided, the new public updates channel.
-        preferred_locale : hikari.undefined.UndefinedNoneOr[builtins.str]
+        preferred_locale : hikari.undefined.UndefinedNoneOr[str]
             If provided, the new preferred locale.
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -4449,17 +4410,17 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             The guild to create the channel in. This may be the
             object or the ID of an existing guild.
-        name : builtins.str
+        name : str
             The channels name. Must be between 2 and 1000 characters.
 
         Other Parameters
         ----------------
-        position : hikari.undefined.UndefinedOr[builtins.int]
+        position : hikari.undefined.UndefinedOr[int]
             If provided, the position of the channel (relative to the
             category, if any).
-        topic : hikari.undefined.UndefinedOr[builtins.str]
+        topic : hikari.undefined.UndefinedOr[str]
             If provided, the channels topic. Maximum 1024 characters.
-        nsfw : hikari.undefined.UndefinedOr[builtins.bool]
+        nsfw : hikari.undefined.UndefinedOr[bool]
             If provided, whether to mark the channel as NSFW.
         rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
             If provided, the amount of seconds a user has to wait
@@ -4477,7 +4438,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             This should be either 60, 1440, 4320 or 10080 seconds and, as of
             writing, ignores the parent channel's set default_auto_archive_duration
             when passed as `hikari.undefined.UNDEFINED`.
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -4535,17 +4496,17 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             The guild to create the channel in. This may be the
             object or the ID of an existing guild.
-        name : builtins.str
+        name : str
             The channels name. Must be between 2 and 1000 characters.
 
         Other Parameters
         ----------------
-        position : hikari.undefined.UndefinedOr[builtins.int]
+        position : hikari.undefined.UndefinedOr[int]
             If provided, the position of the channel (relative to the
             category, if any).
-        topic : hikari.undefined.UndefinedOr[builtins.str]
+        topic : hikari.undefined.UndefinedOr[str]
             If provided, the channels topic. Maximum 1024 characters.
-        nsfw : hikari.undefined.UndefinedOr[builtins.bool]
+        nsfw : hikari.undefined.UndefinedOr[bool]
             If provided, whether to mark the channel as NSFW.
         rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
             If provided, the amount of seconds a user has to wait
@@ -4563,7 +4524,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             This should be either 60, 1440, 4320 or 10080 seconds and, as of
             writing, ignores the parent channel's set default_auto_archive_duration
             when passed as `hikari.undefined.UNDEFINED`.
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -4621,34 +4582,34 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             The guild to create the channel in. This may be the
             object or the ID of an existing guild.
-        name : builtins.str
+        name : str
             The channels name. Must be between 2 and 1000 characters.
 
         Other Parameters
         ----------------
-        position : hikari.undefined.UndefinedOr[builtins.int]
+        position : hikari.undefined.UndefinedOr[int]
             If provided, the position of the channel (relative to the
             category, if any).
-        user_limit : hikari.undefined.UndefinedOr[builtins.int]
+        user_limit : hikari.undefined.UndefinedOr[int]
             If provided, the maximum users in the channel at once.
             Must be between 0 and 99 with 0 meaning no limit.
-        bitrate : hikari.undefined.UndefinedOr[builtins.int]
+        bitrate : hikari.undefined.UndefinedOr[int]
             If provided, the bitrate for the channel. Must be
             between 8000 and 96000 or 8000 and 128000 for VIP
             servers.
-        video_quality_mode: hikari.undefined.UndefinedOr[typing.Union[hikari.channels.VideoQualityMode, builtins.int]]
+        video_quality_mode : hikari.undefined.UndefinedOr[typing.Union[hikari.channels.VideoQualityMode, int]]
             If provided, the new video quality mode for the channel.
         permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
             If provided, the permission overwrites for the channel.
-        region : hikari.undefined.UndefinedOr[typing.Union[hikari.voices.VoiceRegion, builtins.str]]
+        region : hikari.undefined.UndefinedOr[typing.Union[hikari.voices.VoiceRegion, str]]
             If provided, the voice region to for this channel. Passing
-            `builtins.None` here will set it to "auto" mode where the used
+            `None` here will set it to "auto" mode where the used
             region will be decided based on the first person who connects to it
             when it's empty.
         category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
             The category to create the channel under. This may be the
             object or the ID of an existing category.
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -4705,32 +4666,32 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             The guild to create the channel in. This may be the
             object or the ID of an existing guild.
-        name : builtins.str
+        name : str
             The channel's name. Must be between 2 and 1000 characters.
 
         Other Parameters
         ----------------
-        position : hikari.undefined.UndefinedOr[builtins.int]
+        position : hikari.undefined.UndefinedOr[int]
             If provided, the position of the channel (relative to the
             category, if any).
-        user_limit : hikari.undefined.UndefinedOr[builtins.int]
+        user_limit : hikari.undefined.UndefinedOr[int]
             If provided, the maximum users in the channel at once.
             Must be between 0 and 99 with 0 meaning no limit.
-        bitrate : hikari.undefined.UndefinedOr[builtins.int]
+        bitrate : hikari.undefined.UndefinedOr[int]
             If provided, the bitrate for the channel. Must be
             between 8000 and 96000 or 8000 and 128000 for VIP
             servers.
         permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
             If provided, the permission overwrites for the channel.
-        region : hikari.undefined.UndefinedOr[typing.Union[hikari.voices.VoiceRegion, builtins.str]]
+        region : hikari.undefined.UndefinedOr[typing.Union[hikari.voices.VoiceRegion, str]]
             If provided, the voice region to for this channel. Passing
-            `builtins.None` here will set it to "auto" mode where the used
+            `None` here will set it to "auto" mode where the used
             region will be decided based on the first person who connects to it
             when it's empty.
         category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
             The category to create the channel under. This may be the
             object or the ID of an existing category.
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -4783,16 +4744,16 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             The guild to create the channel in. This may be the
             object or the ID of an existing guild.
-        name : builtins.str
+        name : str
             The channels name. Must be between 2 and 1000 characters.
 
         Other Parameters
         ----------------
-        position : hikari.undefined.UndefinedOr[builtins.int]
+        position : hikari.undefined.UndefinedOr[int]
             If provided, the position of the category.
         permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
             If provided, the permission overwrites for the category.
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -4842,7 +4803,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> typing.Union[channels_.GuildPublicThread, channels_.GuildNewsThread]:
         """Create a public or news thread on a message in a guild channel.
 
-        !!! note
+        .. note::
             This call may create a public or news thread dependent on the
             target channel's type and cannot create private threads.
 
@@ -4852,7 +4813,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Object or ID of the guild news or text channel to create a public thread in.
         message : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
             Object or ID of the message to attach the created thread to.
-        name : builtins.str
+        name : str
             Name of the thread channel.
 
         Other Parameters
@@ -4914,7 +4875,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> channels_.GuildThreadChannel:
         """Create a thread in a guild channel.
 
-        !!! warning
+        .. warning::
             Private and public threads can only be made in guild text channels,
             and news threads can only be made in guild news channels.
 
@@ -4922,7 +4883,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------
         channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.PermissibleGuildChannel]
             Object or ID of the guild news or text channel to create a thread in.
-        name : builtins.str
+        name : str
             Name of the thread channel.
 
         Other Parameters
@@ -4933,7 +4894,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             This should be either 60, 1440, 4320 or 10080 seconds and, as of
             writing, ignores the parent channel's set default_auto_archive_duration
             when passed as `hikari.undefined.UNDEFINED`.
-        invitable : undefined.UndefinedOr[builtins.bool]
+        invitable : undefined.UndefinedOr[bool]
             If provided, whether non-moderators should be able to add other non-moderators to the thread.
 
             This only applies to private threads.
@@ -5257,7 +5218,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> iterators.LazyIterator[typing.Union[channels_.GuildNewsThread, channels_.GuildPublicThread]]:
         """Fetch a channel's public archived threads.
 
-        !!! note
+        .. note::
             The exceptions on this endpoint will only be raised once the
             result is awaited or iterated over. Invoking this function
             itself will not raise anything.
@@ -5279,7 +5240,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.iterators.LazyIterator[typing.Union[hikari.channels.GuildNewsChannel, hikari.channels.GuildPublicThread]]
             An iterator to fetch the threads.
 
-            !!! note
+            .. note::
                 This call is not a coroutine function, it returns a special type of
                 lazy iterator that will perform API calls as you iterate across it.
                 See `hikari.iterators` for the full API for this iterator type.
@@ -5305,7 +5266,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
+        """
 
     @abc.abstractmethod
     def fetch_private_archived_threads(
@@ -5317,7 +5278,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> iterators.LazyIterator[channels_.GuildPrivateThread]:
         """Fetch a channel's private archived threads.
 
-        !!! note
+        .. note::
             The exceptions on this endpoint will only be raised once the
             result is awaited or iterated over. Invoking this function
             itself will not raise anything.
@@ -5339,7 +5300,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.iterators.LazyIterator[hikari.channels.GuildPrivateThread]
             An iterator to fetch the threads.
 
-            !!! note
+            .. note::
                 This call is not a coroutine function, it returns a special type of
                 lazy iterator that will perform API calls as you iterate across it.
                 See `hikari.iterators` for the full API for this iterator type.
@@ -5365,7 +5326,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
+        """
 
     @abc.abstractmethod
     def fetch_joined_private_archived_threads(
@@ -5379,7 +5340,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> iterators.LazyIterator[channels_.GuildPrivateThread]:
         """Fetch the private archived threads you have joined in a channel.
 
-        !!! note
+        .. note::
             The exceptions on this endpoint will only be raised once the
             result is awaited or iterated over. Invoking this function
             itself will not raise anything.
@@ -5400,7 +5361,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.iterators.LazyIterator[hikari.channels.GuildPrivateThread]
             An iterator to fetch the threads.
 
-            !!! note
+            .. note::
                 This call is not a coroutine function, it returns a special type of
                 lazy iterator that will perform API calls as you iterate across it.
                 See `hikari.iterators` for the full API for this iterator type.
@@ -5426,7 +5387,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
+        """
 
     @abc.abstractmethod
     async def reposition_channels(
@@ -5441,7 +5402,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             The guild to reposition the channels in. This may be the
             object or the ID of an existing guild.
-        positions : typing.Mapping[builtins.int, hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildChannel]]
+        positions : typing.Mapping[int, hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildChannel]]
             A mapping of of the object or the ID of an existing channel to
             the new position, relative to their parent category, if any.
 
@@ -5517,6 +5478,19 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> iterators.LazyIterator[guilds.Member]:
         """Fetch the members from a guild.
 
+        .. warning::
+            This endpoint requires the `GUILD_MEMBERS` intent to be enabled in
+            the dashboard, not necessarily authenticated with it if using the
+            gateway. If you don't have the intents you can use `search_members`
+            which doesn't require any intents.
+
+        .. note::
+            This call is not a coroutine function, it returns a special type of
+            lazy iterator that will perform API calls as you iterate across it,
+            thus any errors documented below will happen then.
+
+            See `hikari.iterators` for the full API for this iterator type.
+
         Parameters
         ----------
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
@@ -5527,11 +5501,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         -------
         hikari.iterators.LazyIterator[hikari.guilds.Member]
             An iterator to fetch the members.
-
-        !!! note
-            This call is not a coroutine function, it returns a special type of
-            lazy iterator that will perform API calls as you iterate across it.
-            See `hikari.iterators` for the full API for this iterator type.
 
         Raises
         ------
@@ -5552,26 +5521,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-
-        !!! note
-            The exceptions on this endpoint will only be raised once the
-            result is awaited or iterated over. Invoking this function
-            itself will not raise anything.
-
-        !!! warning
-            This endpoint requires the `GUILD_MEMBERS` intent to be enabled in
-            the dashboard, not necessarily authenticated with it if using the
-            gateway.
-
-            If you don't have the intents you can use `search_members` which
-            doesn't require any intents.
         """
 
     @abc.abstractmethod
     async def fetch_my_member(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> guilds.Member:
         """Fetch the Oauth token's associated member in a guild.
 
-        !!! warning
+        .. warning::
             This endpoint can only be used with a Bearer token. Using this
             with a Bot token will result in a `hikari.errors.UnauthorizedError`.
 
@@ -5609,6 +5565,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> typing.Sequence[guilds.Member]:
         """Search the members in a guild by nickname and username.
 
+        .. note::
+            Unlike `RESTClient.fetch_members` this endpoint isn't paginated and
+            therefore will return all the members in one go rather than needing
+            to be asynchronously iterated over.
+
         Parameters
         ----------
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
@@ -5640,11 +5601,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-
-        !!! note
-            Unlike `RESTClient.fetch_members` this endpoint isn't paginated and
-            therefore will return all the members in one go rather than needing
-            to be asynchronously iterated over.
         """
 
     @abc.abstractmethod
@@ -5670,14 +5626,14 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             The guild to edit. This may be the object
             or the ID of an existing guild.
-        user : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
-            The guild to edit. This may be the object
-            or the ID of an existing guild.
+        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
+            The user to edit. This may be the object
+            or the ID of an existing user.
 
         Other Parameters
         ----------------
-        nickname : hikari.undefined.UndefinedNoneOr[builtins.str]
-            If provided, the new nick for the member. If `builtins.None`,
+        nickname : hikari.undefined.UndefinedNoneOr[str]
+            If provided, the new nick for the member. If `None`,
             will remove the members nick.
 
             Requires the `MANAGE_NICKNAMES` permission.
@@ -5685,33 +5641,33 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the new roles for the member.
 
             Requires the `MANAGE_ROLES` permission.
-        mute : hikari.undefined.UndefinedOr[builtins.bool]
+        mute : hikari.undefined.UndefinedOr[bool]
             If provided, the new server mute state for the member.
 
             Requires the `MUTE_MEMBERS` permission.
-        deaf : hikari.undefined.UndefinedOr[builtins.bool]
+        deaf : hikari.undefined.UndefinedOr[bool]
             If provided, the new server deaf state for the member.
 
             Requires the `DEAFEN_MEMBERS` permission.
         voice_channel : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildVoiceChannel]]]
-            If provided, `builtins.None` or the object or the ID of
+            If provided, `None` or the object or the ID of
             an existing voice channel to move the member to.
-            If `builtins.None`, will disconnect the member from voice.
+            If `None`, will disconnect the member from voice.
 
             Requires the `MOVE_MEMBERS` permission and the `CONNECT`
             permission in the original voice channel and the target
             voice channel.
 
-            !!! note
+            .. note::
                 If the member is not in a voice channel, this will
                 take no effect.
         communication_disabled_until : hikari.undefined.UndefinedNoneOr[datetime.datetime]
             If provided, the datetime when the timeout (disable communication)
-            of the member expires, up to 28 days in the future, or `builtins.None`
+            of the member expires, up to 28 days in the future, or `None`
             to remove the timeout from the member.
 
             Requires the `MODERATE_MEMBERS` permission.
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -5763,9 +5719,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        nickname : hikari.undefined.UndefinedNoneOr[builtins.str]
+        nickname : hikari.undefined.UndefinedNoneOr[str]
             If provided, the new nickname for the member. If
-            `builtins.None`, will remove the members nickname.
+            `None`, will remove the members nickname.
 
             Requires the `CHANGE_NICKNAME` permission.
             If provided, the reason that will be recorded in the audit logs.
@@ -5826,7 +5782,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -5878,7 +5834,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -5926,7 +5882,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -5961,7 +5917,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
-        """Alias of `RESTClient.kick_user`."""
+        """Alias of `kick_user`."""
 
     @abc.abstractmethod
     async def ban_user(
@@ -5985,10 +5941,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        delete_message_days : hikari.undefined.UndefinedNoneOr[builtins.int]
+        delete_message_days : hikari.undefined.UndefinedOr[int]
             If provided, the number of days to delete messages for.
             This must be between 0 and 7.
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -6026,7 +5982,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         delete_message_days: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
-        """Alias of `RESTClient.ban_user`."""
+        """Alias of `ban_user`."""
 
     @abc.abstractmethod
     async def unban_user(
@@ -6049,7 +6005,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -6084,7 +6040,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
-        """Alias of `RESTClient.unban_user`."""
+        """Alias of `unban_user`."""
 
     @abc.abstractmethod
     async def fetch_ban(
@@ -6143,7 +6099,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> iterators.LazyIterator[guilds.GuildBan]:
         """Fetch the bans of a guild.
 
-        !!! note
+        .. note::
             This call is not a coroutine function, it returns a special type of
             lazy iterator that will perform API calls as you iterate across it.
             See `hikari.iterators` for the full API for this iterator type.
@@ -6156,10 +6112,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        newest_first : builtins.bool
+        newest_first : bool
             Whether to fetch the newest first or the oldest first.
 
-            Defaults to `builtins.False`.
+            Defaults to `False`.
         start_at : undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[users.PartialUser]]
             If provided, will start at this snowflake. If you provide
             a datetime object, it will be transformed into a snowflake. This
@@ -6258,7 +6214,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        name : hikari.undefined.UndefinedOr[builtins.str]
+        name : hikari.undefined.UndefinedOr[str]
             If provided, the name for the role.
         permissions : hikari.undefined.UndefinedOr[hikari.permissions.Permissions]
             The permissions to give the role. This will default to setting
@@ -6269,15 +6225,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the role's color.
         colour : hikari.undefined.UndefinedOr[hikari.colors.Colorish]
             An alias for `color`.
-        hoist : hikari.undefined.UndefinedOr[builtins.bool]
+        hoist : hikari.undefined.UndefinedOr[bool]
             If provided, whether to hoist the role.
         icon : hikari.undefined.UndefinedOr[hikari.files.Resourceish]
             If provided, the role icon. Must be a 64x64 image under 256kb.
-        unicode_emoji : hikari.undefined.UndefinedOr[builtins.str]
+        unicode_emoji : hikari.undefined.UndefinedOr[str]
             If provided, the standard emoji to set as the role icon.
-        mentionable : hikari.undefined.UndefinedOr[builtins.bool]
+        mentionable : hikari.undefined.UndefinedOr[bool]
             If provided, whether to make the role mentionable.
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -6288,7 +6244,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
-        builtins.TypeError
+        TypeError
             If both `color` and `colour` are specified or if both `icon` and
             `unicode_emoji` are specified.
         hikari.errors.BadRequestError
@@ -6327,7 +6283,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             The guild to reposition the roles in. This may be
             the object or the ID of an existing guild.
-        positions : typing.Mapping[builtins.int, hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]]
+        positions : typing.Mapping[int, hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]]
             A mapping of the position to the role.
 
         Raises
@@ -6382,7 +6338,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        name : hikari.undefined.UndefinedOr[builtins.str]
+        name : hikari.undefined.UndefinedOr[str]
             If provided, the new name for the role.
         permissions : hikari.undefined.UndefinedOr[hikari.permissions.Permissions]
             If provided, the new permissions for the role.
@@ -6390,16 +6346,16 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the new color for the role.
         colour : hikari.undefined.UndefinedOr[hikari.colors.Colorish]
             An alias for `color`.
-        hoist : hikari.undefined.UndefinedOr[builtins.bool]
+        hoist : hikari.undefined.UndefinedOr[bool]
             If provided, whether to hoist the role.
         icon : hikari.undefined.UndefinedNoneOr[hikari.files.Resourceish]
             If provided, the new role icon. Must be a 64x64 image
             under 256kb.
-        unicode_emoji : hikari.undefined.UndefinedNoneOr[builtins.str]
+        unicode_emoji : hikari.undefined.UndefinedNoneOr[str]
             If provided, the new unicode emoji to set as the role icon.
-        mentionable : hikari.undefined.UndefinedOr[builtins.bool]
+        mentionable : hikari.undefined.UndefinedOr[bool]
             If provided, whether to make the role mentionable.
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -6410,7 +6366,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
-        builtins.TypeError
+        TypeError
             If both `color` and `colour` are specified or if both `icon` and
             `unicode_emoji` are specified.
         hikari.errors.BadRequestError
@@ -6494,7 +6450,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        days : hikari.undefined.UndefinedOr[builtins.int]
+        days : hikari.undefined.UndefinedOr[int]
             If provided, number of days to count prune for.
         include_roles : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole]]]
             If provided, the role(s) to include. By default, this endpoint will
@@ -6504,7 +6460,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        builtins.int
+        int
             The estimated guild prune count.
 
         Raises
@@ -6530,7 +6486,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
+        """
 
     @abc.abstractmethod
     async def begin_guild_prune(
@@ -6552,9 +6508,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        days : hikari.undefined.UndefinedOr[builtins.int]
+        days : hikari.undefined.UndefinedOr[int]
             If provided, number of days to count prune for.
-        compute_prune_count: hikari.snowflakes.SnowflakeishOr[builtins.bool]
+        compute_prune_count : hikari.snowflakes.SnowflakeishOr[bool]
             If provided, whether to return the prune count. This is discouraged
             for large guilds.
         include_roles : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole]]
@@ -6562,15 +6518,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             not count users with roles. Providing roles using this attribute
             will make members with the specified roles also get included into
             the count.
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
         Returns
         -------
-        typing.Optional[builtins.int]
-            If `compute_prune_count` is not provided or `builtins.True`, the
-            number of members pruned. Else `builtins.None`.
+        typing.Optional[int]
+            If `compute_prune_count` is not provided or `True`, the
+            number of members pruned. Else `None`.
 
         Raises
         ------
@@ -6595,7 +6551,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
+        """
 
     @abc.abstractmethod
     async def fetch_guild_voice_regions(
@@ -6776,11 +6732,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Other Parameters
         ----------------
         channel : hikari.undefined.UndefinedNoneOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildChannel]]
-            If provided, the channel to set the widget to. If `builtins.None`,
+            If provided, the channel to set the widget to. If `None`,
             will not set to any.
-        enabled : hikari.undefined.UndefinedOr[builtins.bool]
+        enabled : hikari.undefined.UndefinedOr[bool]
             If provided, whether to enable the widget.
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -6867,17 +6823,17 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        description : undefined.UndefinedNoneOr[builtins.str]
+        description : undefined.UndefinedNoneOr[str]
             If provided, the description to set for the guild's welcome screen.
-            This may be `builtins.None` to unset the description.
-        enabled : undefined.UndefinedOr[builtins.bool]
+            This may be `None` to unset the description.
+        enabled : undefined.UndefinedOr[bool]
             If provided, Whether the guild's welcome screen should be enabled.
         channels : hikari.undefined.UndefinedNoneOr[typing.Sequence[hikari.guilds.WelcomeChannel]]
             If provided, a sequence of up to 5 public channels to set in this
-            guild's welcome screen. This may be passed as `builtins.None` to
+            guild's welcome screen. This may be passed as `None` to
             remove all welcome channels
 
-            !!! note
+            .. note::
                 Custom emojis may only be included in a guild's welcome channels
                 if it's boost status is tier 2 or above.
 
@@ -6973,7 +6929,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        description : hikari.undefined.UndefinedNoneOr[builtins.str]
+        description : hikari.undefined.UndefinedNoneOr[str]
             The description to set for the template.
 
         Returns
@@ -7015,11 +6971,14 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> guilds.RESTGuild:
         """Make a guild from a template.
 
+        .. note::
+            This endpoint can only be used by bots in less than 10 guilds.
+
         Parameters
         ----------
-        template : typing.Union[builtins.str, hikari.templates.Template]
+        template : typing.Union[str, hikari.templates.Template]
             The object or string code of the template to create a guild based on.
-        name : builtins.str
+        name : str
             The new guilds name.
 
         Other Parameters
@@ -7032,9 +6991,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         -------
         hikari.guilds.RESTGuild
             Object of the created guild.
-
-        !!! note
-            This endpoint can only be used by bots in less than 10 guilds.
 
         Raises
         ------
@@ -7117,14 +7073,14 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             The guild to edit a template in.
-        template : typing.Union[builtins.str, hikari.templates.Template]
+        template : typing.Union[str, hikari.templates.Template]
             Object or string code of the template to modify.
 
         Other Parameters
         ----------------
-        name : hikari.undefined.UndefinedOr[builtins.str]
+        name : hikari.undefined.UndefinedOr[str]
             The name to set for this template.
-        description : hikari.undefined.UndefinedNoneOr[builtins.str]
+        description : hikari.undefined.UndefinedNoneOr[str]
             The description to set for the template.
 
         Returns
@@ -7162,7 +7118,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        template : typing.Union[builtins.str, hikari.templates.Template]
+        template : typing.Union[str, hikari.templates.Template]
             The object or string code of the template to fetch.
 
         Returns
@@ -7243,7 +7199,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             The guild to sync a template in.
-        template : typing.Union[builtins.str, hikari.templates.Template]
+        template : typing.Union[str, hikari.templates.Template]
             Object or code of the template to sync.
 
         Returns
@@ -7285,10 +7241,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        name : builtins.str
+        name : str
             The command's name. This should match the regex `^[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$` in
             Unicode mode and be lowercase.
-        description : builtins.str
+        description : str
             The description to set for the command if this is a slash command.
             This should be inclusively between 1-100 characters in length.
 
@@ -7310,7 +7266,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------
         type : commands.CommandType
             The commands's type.
-        name : builtins.str
+        name : str
             The command's name.
 
         Returns
@@ -7330,9 +7286,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+        application : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to fetch a command for.
-        command: hikari.snowflakes.SnowflakeishOr[hikari.commands.PartialCommand]
+        command : hikari.snowflakes.SnowflakeishOr[hikari.commands.PartialCommand]
             Object or ID of the command to fetch.
 
         Other Parameters
@@ -7380,7 +7336,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+        application : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to fetch the commands for.
 
         Other Parameters
@@ -7440,17 +7396,18 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             undefined.UndefinedType, int, permissions_.Permissions
         ] = undefined.UNDEFINED,
         dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.SlashCommand:
         r"""Create an application command.
 
         Parameters
         ----------
-        application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+        application : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to create a command for.
-        name : builtins.str
-            The command's name. This should match the regex `^[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$` in
+        name : str
+            The command's name. This should match the regex `^[\w-]{1,32}$` in
             Unicode mode and be lowercase.
-        description : builtins.str
+        description : str
             The description to set for the command.
             This should be inclusively between 1-100 characters in length.
 
@@ -7471,10 +7428,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
             If `0`, then it will be available for all members. Note that this doesn't affect
             administrators of the guild and overwrites.
-        dm_enabled : hikari.undefined.UndefinedOr[builtins.bool]
+        dm_enabled : hikari.undefined.UndefinedOr[bool]
             Whether this command is enabled in DMs with the bot.
 
             This can only be applied to non-guild commands.
+        nsfw : hikari.undefined.UndefinedOr[bool]
+            Whether this command should be age-restricted.
 
         Returns
         -------
@@ -7521,18 +7480,19 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             undefined.UndefinedType, int, permissions_.Permissions
         ] = undefined.UNDEFINED,
         dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.ContextMenuCommand:
         r"""Create an application command.
 
         Parameters
         ----------
-        application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+        application : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to create a command for.
-        type : typing.Union[hikari.commands.CommandType, builtins.int]
+        type : typing.Union[hikari.commands.CommandType, int]
             The type of menu command to make.
 
             Only USER and MESSAGE are valid here.
-        name : builtins.str
+        name : str
             The command's name. This should match the regex `^[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$` in
             Unicode mode and be lowercase.
 
@@ -7549,10 +7509,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
             If `0`, then it will be available for all members. Note that this doesn't affect
             administrators of the guild and overwrites.
-        dm_enabled : hikari.undefined.UndefinedOr[builtins.bool]
+        dm_enabled : hikari.undefined.UndefinedOr[bool]
             Whether this command is enabled in DMs with the bot.
 
             This can only be applied to non-guild commands.
+        nsfw : hikari.undefined.UndefinedOr[bool]
+            Whether this command should be age-restricted.
 
         Returns
         -------
@@ -7593,15 +7555,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> typing.Sequence[commands.PartialCommand]:
         """Set the commands for an application.
 
-        !!! warning
+        .. warning::
             Any existing commands not included in the provided commands array
             will be deleted.
 
         Parameters
         ----------
-        application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+        application : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to create a command for.
-        commands: typing.Sequence[hikari.api.special_endpoints.CommandBuilder]
+        commands : typing.Sequence[hikari.api.special_endpoints.CommandBuilder]
             A sequence of up to 100 initialised command builder objects of the
             commands to set for this the application.
 
@@ -7661,7 +7623,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+        application : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to edit a command for.
         command : hikari.snowflakes.SnowflakeishOr[hikari.commands.PartialCommand]
             Object or ID of the command to modify.
@@ -7672,10 +7634,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Object or ID of the guild to edit a command for if this is a guild
             specific command. Leave this as `hikari.undefined.UNDEFINED` to delete
             a global command.
-        name : hikari.undefined.UndefinedOr[builtins.str]
+        name : hikari.undefined.UndefinedOr[str]
             The name to set for the command. Leave as `hikari.undefined.UNDEFINED`
             to not change.
-        description : hikari.undefined.UndefinedOr[builtins.str]
+        description : hikari.undefined.UndefinedOr[str]
             The description to set for the command. Leave as `hikari.undefined.UNDEFINED`
             to not change.
         options : hikari.undefined.UndefinedOr[typing.Sequence[hikari.commands.CommandOption]]
@@ -7686,7 +7648,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
             If `0`, then it will be available for all members. Note that this doesn't affect
             administrators of the guild and overwrites.
-        dm_enabled : hikari.undefined.UndefinedOr[builtins.bool]
+        dm_enabled : hikari.undefined.UndefinedOr[bool]
             Whether this command is enabled in DMs with the bot.
 
             This can only be applied to non-guild commands.
@@ -7732,7 +7694,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+        application : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to delete a command for.
         command : hikari.snowflakes.SnowflakeishOr[hikari.commands.PartialCommand]
             Object or ID of the command to delete.
@@ -7777,7 +7739,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+        application : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to fetch the command permissions for.
         guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
             Object or ID of the guild to fetch the command permissions for.
@@ -7821,11 +7783,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+        application : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to fetch the command permissions for.
         guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
             Object or ID of the guild to fetch the command permissions for.
-        command: hikari.snowflakes.SnowflakeishOr[hikari.commands.PartialCommand]
+        command : hikari.snowflakes.SnowflakeishOr[hikari.commands.PartialCommand]
             Object or ID of the command to fetch the command permissions for.
 
         Returns
@@ -7867,18 +7829,18 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> commands.GuildCommandPermissions:
         """Set permissions for a specific command.
 
-        !!! note
+        .. note::
             This requires the `access_token` to have the
             `hikari.applications.OAuth2Scope.APPLICATIONS_COMMANDS_PERMISSION_UPDATE`
             scope enabled along with the authorization of a Bot which has `MANAGE_INVITES`
             permission within the target guild.
 
-        !!! note
+        .. note::
             This overwrites any previously set permissions.
 
         Parameters
         ----------
-        application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+        application : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to set the command permissions for.
         guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
             Object or ID of the guild to set the command permissions for.
@@ -7923,7 +7885,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        type: typing.Union[hikari.interactions.base_interactions.ResponseType, builtins.int]
+        type : typing.Union[hikari.interactions.base_interactions.ResponseType, int]
             The type of deferred message response this builder is for.
 
         Returns
@@ -7952,13 +7914,30 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        type : typing.Union[hikari.interactions.base_interactions.ResponseType, builtins.int]
+        type : typing.Union[hikari.interactions.base_interactions.ResponseType, int]
             The type of message response this builder is for.
 
         Returns
         -------
         hikari.api.special_endpoints.InteractionMessageBuilder
             The interaction message response builder object.
+        """
+
+    @abc.abstractmethod
+    def interaction_modal_builder(self, title: str, custom_id: str) -> special_endpoints.InteractionModalBuilder:
+        """Create a builder for a modal interaction response.
+
+        Parameters
+        ----------
+        title : str
+            The title that will show up in the modal.
+        custom_id : str
+            Developer set custom ID used for identifying interactions with this modal.
+
+        Returns
+        -------
+        hikari.api.special_endpoints.InteractionModalBuilder
+            The interaction modal response builder object.
         """
 
     @abc.abstractmethod
@@ -7969,9 +7948,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+        application : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to fetch a command for.
-        token: builtins.str
+        token : str
             Token of the interaction to get the initial response for.
 
         Returns
@@ -8030,7 +8009,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> None:
         """Create the initial response for a interaction.
 
-        !!! warning
+        .. warning::
             Calling this with an interaction which already has an initial
             response will result in this raising a `hikari.errors.NotFoundError`.
             This includes if the REST interaction server has already responded
@@ -8040,9 +8019,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------
         interaction : hikari.snowflakes.SnowflakeishOr[hikari.interactions.base_interactions.PartialInteraction]
             Object or ID of the interaction this response is for.
-        token : builtins.str
+        token : str
             The command interaction's token.
-        response_type : typing.Union[builtins.int, hikari.interactions.base_interactions.ResponseType]
+        response_type : typing.Union[int, hikari.interactions.base_interactions.ResponseType]
             The type of interaction response this is.
 
         Other Parameters
@@ -8051,7 +8030,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the message contents. If
             `hikari.undefined.UNDEFINED`, then nothing will be sent
             in the content. Any other value here will be cast to a
-            `builtins.str`.
+            `str`.
 
             If this is a `hikari.embeds.Embed` and no `embed` nor
             no `embeds` kwarg is provided, then this will instead
@@ -8072,28 +8051,28 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the message embed.
         embeds : hikari.undefined.UndefinedNoneOr[typing.Sequence[hikari.embeds.Embed]]
             If provided, the message embeds.
-        flags : typing.Union[builtins.int, hikari.messages.MessageFlag, hikari.undefined.UndefinedType]
+        flags : typing.Union[int, hikari.messages.MessageFlag, hikari.undefined.UndefinedType]
             If provided, the message flags this response should have.
 
             As of writing the only message flag which can be set here is
             `hikari.messages.MessageFlag.EPHEMERAL`.
-        tts : hikari.undefined.UndefinedOr[builtins.bool]
+        tts : hikari.undefined.UndefinedOr[bool]
             If provided, whether the message will be read out by a screen
             reader using Discord's TTS (text-to-speech) system.
-        mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
+        mentions_everyone : hikari.undefined.UndefinedOr[bool]
             If provided, whether the message should parse @everyone/@here
             mentions.
-        user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], builtins.bool]]
-            If provided, and `builtins.True`, all user mentions will be detected.
-            If provided, and `builtins.False`, all user mentions will be ignored
+        user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
+            If provided, and `True`, all user mentions will be detected.
+            If provided, and `False`, all user mentions will be ignored
             if appearing in the message body.
             Alternatively this may be a collection of
             `hikari.snowflakes.Snowflake`, or
             `hikari.users.PartialUser` derivatives to enforce mentioning
             specific users.
-        role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], builtins.bool]]
-            If provided, and `builtins.True`, all role mentions will be detected.
-            If provided, and `builtins.False`, all role mentions will be ignored
+        role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], bool]]
+            If provided, and `True`, all role mentions will be detected.
+            If provided, and `False`, all role mentions will be ignored
             if appearing in the message body.
             Alternatively this may be a collection of
             `hikari.snowflakes.Snowflake`, or
@@ -8102,10 +8081,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
-        builtins.ValueError
+        ValueError
             If more than 100 unique objects/entities are passed for
             `role_mentions` or `user_mentions`.
-        builtins.TypeError
+        TypeError
             If both `embed` and `embeds` are specified.
         hikari.errors.BadRequestError
             This may be raised in several discrete situations, such as messages
@@ -8161,11 +8140,25 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> messages_.Message:
         """Edit the initial response to a command interaction.
 
+        .. note::
+            Mentioning everyone, roles, or users in message edits currently
+            will not send a push notification showing a new mention to people
+            on Discord. It will still highlight in their chat as if they
+            were mentioned, however.
+
+            Also important to note that if you specify a text `content`, `mentions_everyone`,
+            `mentions_reply`, `user_mentions`, and `role_mentions` will default
+            to `False` as the message will be re-parsed for mentions. This will
+            also occur if only one of the four are specified
+
+            This is a limitation of Discord's design. If in doubt, specify all
+            four of them each time.
+
         Parameters
         ----------
-        application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+        application : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to edit a command response for.
-        token : builtins.str
+        token : str
             The interaction's token.
 
         Other Parameters
@@ -8173,9 +8166,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         content : hikari.undefined.UndefinedOr[typing.Any]
             If provided, the message content to update with. If
             `hikari.undefined.UNDEFINED`, then the content will not
-            be changed. If `builtins.None`, then the content will be removed.
+            be changed. If `None`, then the content will be removed.
 
-            Any other value will be cast to a `builtins.str` before sending.
+            Any other value will be cast to a `str` before sending.
 
             If this is a `hikari.embeds.Embed` and neither the
             `embed` or `embeds` kwargs are provided or if this is a
@@ -8186,69 +8179,55 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         attachment : hikari.undefined.UndefinedNoneOr[typing.Union[hikari.files.Resourceish, hikari.messages.Attachment]]
             If provided, the attachment to set on the message. If
             `hikari.undefined.UNDEFINED`, the previous attachment, if
-            present, is not changed. If this is `builtins.None`, then the
+            present, is not changed. If this is `None`, then the
             attachment is removed, if present. Otherwise, the new attachment
             that was provided will be attached.
         attachments : hikari.undefined.UndefinedNoneOr[typing.Sequence[typing.Union[hikari.files.Resourceish, hikari.messages.Attachment]]]
             If provided, the attachments to set on the message. If
             `hikari.undefined.UNDEFINED`, the previous attachments, if
-            present, are not changed. If this is `builtins.None`, then the
+            present, are not changed. If this is `None`, then the
             attachments is removed, if present. Otherwise, the new attachments
             that were provided will be attached.
         component : hikari.undefined.UndefinedNoneOr[hikari.api.special_endpoints.ComponentBuilder]
             If provided, builder object of the component to set for this message.
             This component will replace any previously set components and passing
-            `builtins.None` will remove all components.
+            `None` will remove all components.
         components : hikari.undefined.UndefinedNoneOr[typing.Sequence[hikari.api.special_endpoints.ComponentBuilder]]
             If provided, a sequence of the component builder objects set for
             this message. These components will replace any previously set
-            components and passing `builtins.None` or an empty sequence will
+            components and passing `None` or an empty sequence will
             remove all components.
         embed : hikari.undefined.UndefinedNoneOr[hikari.embeds.Embed]
             If provided, the embed to set on the message. If
             `hikari.undefined.UNDEFINED`, the previous embed(s) are not changed.
-            If this is `builtins.None` then any present embeds are removed.
+            If this is `None` then any present embeds are removed.
             Otherwise, the new embed that was provided will be used as the
             replacement.
         embeds : hikari.undefined.UndefinedNoneOr[typing.Sequence[hikari.embeds.Embed]]
             If provided, the embeds to set on the message. If
             `hikari.undefined.UNDEFINED`, the previous embed(s) are not changed.
-            If this is `builtins.None` then any present embeds are removed.
+            If this is `None` then any present embeds are removed.
             Otherwise, the new embeds that were provided will be used as the
             replacement.
-        mentions_everyone : hikari.undefined.UndefinedOr[builtins.bool]
+        mentions_everyone : hikari.undefined.UndefinedOr[bool]
             If provided, whether the message should parse @everyone/@here
             mentions.
-        user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], builtins.bool]]
-            If provided, and `builtins.True`, all user mentions will be detected.
-            If provided, and `builtins.False`, all user mentions will be ignored
+        user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
+            If provided, and `True`, all user mentions will be detected.
+            If provided, and `False`, all user mentions will be ignored
             if appearing in the message body.
             Alternatively this may be a collection of
             `hikari.snowflakes.Snowflake`, or
             `hikari.users.PartialUser` derivatives to enforce mentioning
             specific users.
-        role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], builtins.bool]]
-            If provided, and `builtins.True`, all role mentions will be detected.
-            If provided, and `builtins.False`, all role mentions will be ignored
+        role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], bool]]
+            If provided, and `True`, all role mentions will be detected.
+            If provided, and `False`, all role mentions will be ignored
             if appearing in the message body.
             Alternatively this may be a collection of
             `hikari.snowflakes.Snowflake`, or
             `hikari.guilds.PartialRole` derivatives to enforce mentioning
             specific roles.
-
-        !!! note
-            Mentioning everyone, roles, or users in message edits currently
-            will not send a push notification showing a new mention to people
-            on Discord. It will still highlight in their chat as if they
-            were mentioned, however.
-
-        !!! warning
-            If you specify one of `mentions_everyone`, `user_mentions`, or
-            `role_mentions`, then all others will default to `builtins.False`,
-            even if they were enabled previously.
-
-            This is a limitation of Discord's design. If in doubt, specify all three of
-            them each time.
 
         Returns
         -------
@@ -8257,7 +8236,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
-        builtins.ValueError
+        ValueError
             If both `attachment` and `attachments`, `component` and `components`
             or `embed` and `embeds` are specified.
         hikari.errors.BadRequestError
@@ -8293,9 +8272,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        application: hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+        application : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             Object or ID of the application to delete a command response for.
-        token : builtins.str
+        token : str
             The interaction's token.
 
         Raises
@@ -8332,7 +8311,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------
         interaction : hikari.snowflakes.SnowflakeishOr[hikari.interactions.base_interactions.PartialInteraction]
             Object or ID of the interaction this response is for.
-        token : builtins.str
+        token : str
             The command interaction's token.
 
         Other Parameters
@@ -8360,15 +8339,61 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
+        """
+
+    async def create_modal_response(
+        self,
+        interaction: snowflakes.SnowflakeishOr[base_interactions.PartialInteraction],
+        token: str,
+        *,
+        title: str,
+        custom_id: str,
+        component: undefined.UndefinedOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
+        components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
+    ) -> None:
+        """Create a response by sending a modal.
+
+        Parameters
+        ----------
+        interaction : hikari.snowflakes.SnowflakeishOr[hikari.interactions.base_interactions.PartialInteraction]
+            Object or ID of the interaction this response is for.
+        token : str
+            The command interaction's token.
+        title : str
+            The title that will show up in the modal.
+        custom_id : str
+            Developer set custom ID used for identifying interactions with this modal.
+
+        Other Parameters
+        ----------------
+        component : hikari.undefined.UndefinedOr[typing.Sequence[hikari.api.special_endpoints.ComponentBuilder]]
+            A component builders to send in this modal.
+        components : hikari.undefined.UndefinedOr[typing.Sequence[hikari.api.special_endpoints.ComponentBuilder]]
+            A sequence of component builders to send in this modal.
+
+        Raises
+        ------
+        ValueError
+            If both `component` and `components` are specified or if none are specified.
+        """
 
     @abc.abstractmethod
-    def build_action_row(self) -> special_endpoints.ActionRowBuilder:
-        """Build an action row message component for use in message create and REST calls.
+    def build_message_action_row(self) -> special_endpoints.MessageActionRowBuilder:
+        """Build a message action row message component for use in message create and REST calls.
 
         Returns
         -------
-        hikari.api.special_endpoints.ActionRowBuilder
+        hikari.api.special_endpoints.MessageActionRowBuilder
+            The initialised action row builder.
+        """
+
+    @abc.abstractmethod
+    def build_modal_action_row(self) -> special_endpoints.ModalActionRowBuilder:
+        """Build an action row modal component for use in interactions and REST calls.
+
+        Returns
+        -------
+        hikari.api.special_endpoints.ModalActionRowBuilder
             The initialised action row builder.
         """
 
@@ -8379,18 +8404,21 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         event: snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent],
         /,
     ) -> scheduled_events.ScheduledEvent:
-        """Fetch a channel.
+        """Fetch a scheduled event.
 
         Parameters
         ----------
-        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.PartialChannel]
-            The channel to fetch. This may be the object or the ID of an
-            existing channel.
+        guild : hikari.snowflakes.SnowflakeishOr[hikari.channels.PartialGuild]
+            The guild the event bellongs to. This may be the object or the
+            ID of an existing guild.
+        event : hikari.snowflakes.SnowflakeishOr[hikari.scheduled_events.ScheduledEvent]
+            The event to fetch. This may be the object or the
+            ID of an existing event.
 
         Returns
         -------
         hikari.scheduled_events.ScheduledEvent
-            The scheduled event
+            The scheduled event.
 
         Raises
         ------
@@ -8424,7 +8452,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> typing.Sequence[scheduled_events.ScheduledEvent]:
         """Fetch the scheduled events for a guild.
 
-        !!! note
+        .. note::
             `VOICE` and `STAGE_CHANNEL` events are only included if the bot has
             `VOICE` or `STAGE_CHANNEL` permissions in the associated channel.
 
@@ -8501,7 +8529,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The event's privacy level.
 
             This effects who can view and subscribe to the event.
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -8580,7 +8608,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The event's privacy level.
 
             This effects who can view and subscribe to the event.
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -8659,7 +8687,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The event's privacy level.
 
             This effects who can view and subscribe to the event.
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -8757,7 +8785,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
             `SCHEDULED` events can be set to `ACTIVE` and `CANCELED`.
             `ACTIVE` events can only be set to `COMPLETED`.
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -8848,6 +8876,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> iterators.LazyIterator[scheduled_events.ScheduledEventUser]:
         """Asynchronously iterate over the users who're subscribed to a scheduled event.
 
+        .. note::
+            This call is not a coroutine function, it returns a special type of
+            lazy iterator that will perform API calls as you iterate across it,
+            thus any errors documented below will happen then.
+
+            See `hikari.iterators` for the full API for this iterator type.
+
         Parameters
         ----------
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
@@ -8857,10 +8892,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        newest_first : builtins.bool
+        newest_first : bool
             Whether to fetch the newest first or the oldest first.
 
-            Defaults to `builtins.False`.
+            Defaults to `False`.
         start_at : hikari.undefined.UndefinedOr[hikari.snowflakes.SearchableSnowflakeishOr[hikari.guilds.PartialGuild]]
             If provided, will start at this snowflake. If you provide
             a datetime object, it will be transformed into a snowflake. This
@@ -8871,11 +8906,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         -------
         hikari.iterators.LazyIterator[hikari.scheduled_events.ScheduledEventUser]
             The token's associated guilds.
-
-        !!! note
-            This call is not a coroutine function, it returns a special type of
-            lazy iterator that will perform API calls as you iterate across it.
-            See `hikari.iterators` for the full API for this iterator type.
 
         Raises
         ------
@@ -8898,9 +8928,4 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-
-        !!! note
-            The exceptions on this endpoint will only be raised once the
-            result is awaited or iterated over. Invoking this function
-            itself will not raise anything.
         """

@@ -1,4 +1,3 @@
-#!/bin/sh
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -19,26 +18,21 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-posix_read() {
-    prompt="${1}"
-    var_name="${2}"
-    printf "%s: " "${prompt}"
-    read -r "${var_name?}"
-    export "${var_name?}"
-    return ${?}
-}
 
-posix_read "Twine username" TWINE_USERNAME
-posix_read "Twine password" TWINE_PASSWORD
-posix_read "GitHub deploy token" GITHUB_TOKEN
-posix_read "Discord deployment webhook URL" DEPLOY_WEBHOOK_URL
-posix_read "Tag" VERSION
-posix_read "Repo slug (e.g. hikari-py/hikari)" GITHUB_REPO_SLUG
-
-git checkout "${GITHUB_TAG}"
-export REF=$(git rev-parse HEAD)
-echo "Detected REF to be ${REF}"
-
-set -x
-rm public -Rf || true
-bash scripts/deploy.sh
+curl \
+  -X POST \
+  -H "Content-Type: application/json" \
+  "${DEPLOY_WEBHOOK_URL}" \
+  -d '{
+        "username": "Github Actions",
+        "embeds": [
+          {
+            "title": "'"${VERSION} has been deployed to PyPI"'",
+            "color": 6697881,
+            "description": "'"Install it now by executing: \`\`\`pip install hikari==${VERSION}\`\`\`\\nDocumentation can be found at https://docs.hikari-py.dev/en/${VERSION}"'",
+            "footer": {
+              "text": "'"SHA: ${REF}"'"
+            }
+          }
+        ]
+    }'

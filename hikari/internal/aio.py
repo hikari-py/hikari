@@ -38,6 +38,7 @@ import asyncio
 import inspect
 import sys
 import typing
+import warnings
 
 if typing.TYPE_CHECKING:
     import logging
@@ -57,8 +58,8 @@ def completed_future(result: typing.Optional[T_inv] = None, /) -> asyncio.Future
     result : T
         The value to set for the result of the future.
         `T` is a generic type placeholder for the type that
-        the future will have set as the result. `T` may be `builtins.None`, in
-        which case, this will return `asyncio.Future[builtins.None]`.
+        the future will have set as the result. `T` may be `None`, in
+        which case, this will return `asyncio.Future[None]`.
 
     Returns
     -------
@@ -78,13 +79,13 @@ def completed_future(result: typing.Optional[T_inv] = None, /) -> asyncio.Future
 # On Python3.8.2, there appears to be a bug with the typing module:
 
 # >>> class Aiterable:
-# ...     async def __aiter__(self):  # noqa: E800
+# ...     async def __aiter__(self):
 # ...         yield ...
 # >>> isinstance(Aiterable(), typing.AsyncIterable)
 # True
 
 # >>> class Aiterator:
-# ...     async def __anext__(self):  # noqa: E800
+# ...     async def __anext__(self):
 # ...         return ...
 # >>> isinstance(Aiterator(), typing.AsyncIterator)
 # False
@@ -118,17 +119,17 @@ async def first_completed(
     If the first awaitable raises an exception, then that exception will be
     propagated.
 
+    .. note::
+        If more than one awaitable is completed before entering this call, then
+        the first future is always returned.
+
     Parameters
     ----------
     *aws : typing.Awaitable[typing.Any]
         Awaitables to wait for.
     timeout : typing.Optional[float]
-        Optional timeout to wait for, or `builtins.None` to not use one.
+        Optional timeout to wait for, or `None` to not use one.
         If the timeout is reached, all awaitables are cancelled immediately.
-
-    !!! note
-        If more than one awaitable is completed before entering this call, then
-        the first future is always returned.
     """
     fs = tuple(map(asyncio.ensure_future, aws))
     iterator = asyncio.as_completed(fs, timeout=timeout)
@@ -163,7 +164,7 @@ async def all_of(
     *aws : typing.Awaitable[T_co]
         Awaitables to wait for.
     timeout : typing.Optional[float]
-        Optional timeout to wait for, or `builtins.None` to not use one.
+        Optional timeout to wait for, or `None` to not use one.
         If the timeout is reached, all awaitables are cancelled immediately.
 
     Returns
@@ -203,11 +204,14 @@ def get_or_make_loop() -> asyncio.AbstractEventLoop:
     Returns
     -------
     asyncio.AbstractEventLoop
+        The requested loop.
     """
     # get_event_loop will error under oddly specific cases such as if set_event_loop has been called before even
     # if it was just called with None or if it's called on a thread which isn't the main Thread.
     try:
-        loop = asyncio.get_event_loop_policy().get_event_loop()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            loop = asyncio.get_event_loop_policy().get_event_loop()
 
         # Closed loops cannot be re-used.
         if not loop.is_closed():

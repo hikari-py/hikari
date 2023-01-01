@@ -28,12 +28,11 @@ EXAMPLE_SCRIPTS = "examples"
 
 # Directories
 ARTIFACT_DIRECTORY = "public"
-PAGES_DIRECTORY = "pages"
 DOCUMENTATION_DIRECTORY = "docs"
 DEV_REQUIREMENTS_DIRECTORY = "dev-requirements"
 
 # Linting and test configs
-FLAKE8_REPORT = "public/flake8"
+FLAKE8_REPORT = _os.path.join(ARTIFACT_DIRECTORY, "flake8")
 PYPROJECT_TOML = "pyproject.toml"
 COVERAGE_HTML_PATH = _os.path.join(ARTIFACT_DIRECTORY, "coverage", "html")
 
@@ -89,7 +88,6 @@ FULL_REFORMATTING_PATHS = (
     *PYTHON_REFORMATTING_PATHS,
     *(f for f in _os.listdir(".") if _os.path.isfile(f) and f.endswith(REFORMATTING_FILE_EXTS)),
     ".github",
-    "pages",
     "docs",
     "changes",
 )

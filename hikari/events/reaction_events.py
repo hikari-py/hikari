@@ -69,24 +69,12 @@ class ReactionEvent(shard_events.ShardEvent, abc.ABC):
     @property
     @abc.abstractmethod
     def channel_id(self) -> snowflakes.Snowflake:
-        """ID of the channel that this event concerns.
-
-        Returns
-        -------
-        hikari.snowflakes.Snowflake
-            The ID of the channel that this event concerns.
-        """
+        """ID of the channel that this event concerns."""
 
     @property
     @abc.abstractmethod
     def message_id(self) -> snowflakes.Snowflake:
-        """ID of the message that this event concerns.
-
-        Returns
-        -------
-        hikari.snowflakes.Snowflake
-            The ID of the message that this event concerns.
-        """
+        """ID of the message that this event concerns."""
 
 
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGE_REACTIONS)
@@ -98,13 +86,7 @@ class GuildReactionEvent(ReactionEvent, abc.ABC):
     @property
     @abc.abstractmethod
     def guild_id(self) -> snowflakes.Snowflake:
-        """ID of the guild that this event concerns.
-
-        Returns
-        -------
-        hikari.snowflakes.Snowflake
-            The ID of the guild that this event concerns.
-        """
+        """ID of the guild that this event concerns."""
 
 
 @base_events.requires_intents(intents.Intents.DM_MESSAGE_REACTIONS)
@@ -123,66 +105,42 @@ class ReactionAddEvent(ReactionEvent, abc.ABC):
     @property
     @abc.abstractmethod
     def user_id(self) -> snowflakes.Snowflake:
-        """ID of the user that added this reaction.
-
-        Returns
-        -------
-        hikari.snowflakes.Snowflake
-            The ID of the user that added this reaction.
-        """
+        """ID of the user that added this reaction."""
 
     @property
     @abc.abstractmethod
     def emoji_name(self) -> typing.Union[emojis.UnicodeEmoji, str, None]:
         """Name of the emoji which was added if known.
 
-        !!! note
-            This will be `builtins.None` when the relevant custom emoji's data
-            is not available (e.g. the emoji has been deleted).
-
-        Returns
-        -------
-        typing.Union[hikari.emojis.UnicodeEmoji, builtins.str, builtins.None]
-            Either the string name of the custom emoji which was added
-            or the object of the `hikari.emojis.UnicodeEmoji` which was added.
+        This can either be the string name of the custom emoji which was added,
+        the object of the `hikari.emojis.UnicodeEmoji` which was added or
+        `None` when the relevant custom emoji's data is not available
+        (e.g. the emoji has been deleted).
         """
 
     @property
     @abc.abstractmethod
     def emoji_id(self) -> typing.Optional[snowflakes.Snowflake]:
-        """ID of the emoji which was added if it is custom.
-
-        Returns
-        -------
-        typing.Optional[hikari.snowflakes.Snowflake]
-            ID of the emoji which was added if it was a custom emoji or
-            `builtins.None`.
-        """
+        """ID of the emoji which was added if it is custom, else `None`."""
 
     @property
     @abc.abstractmethod
     def is_animated(self) -> bool:
-        """Whether the emoji which was added is animated.
-
-        Returns
-        -------
-        builtins.bool
-            Whether the emoji which was added is animated.
-        """
+        """Whether the emoji which was added is animated."""
 
     def is_for_emoji(self, emoji: typing.Union[emojis.Emoji, str], /) -> bool:
         """Get whether the reaction event is for a specific emoji.
 
         Parameters
         ----------
-        emoji : typing.Union[hikari.emojis.Emoji, builtins.str]
+        emoji : typing.Union[hikari.emojis.Emoji, str]
             The emoji to check.
 
-            Passing `builtins.str` here indicates a unicode emoji.
+            Passing `str` here indicates a unicode emoji.
 
         Returns
         -------
-        builtins.bool
+        bool
             Whether the emoji is the one which was added.
         """
         return emoji.id == self.emoji_id if isinstance(emoji, emojis.CustomEmoji) else emoji == self.emoji_name
@@ -197,55 +155,37 @@ class ReactionDeleteEvent(ReactionEvent, abc.ABC):
     @property
     @abc.abstractmethod
     def user_id(self) -> snowflakes.Snowflake:
-        """User ID for the user that added this reaction initially.
-
-        Returns
-        -------
-        hikari.snowflakes.Snowflake
-            The ID of the user that removed this reaction.
-        """
+        """User ID for the user that added this reaction initially."""
 
     @property
     @abc.abstractmethod
     def emoji_name(self) -> typing.Union[emojis.UnicodeEmoji, str, None]:
         """Name of the emoji which was removed.
 
-        !!! note
-            This will be `builtins.None` when the relevant custom emoji's data
-            is not available (e.g. the emoji has been deleted).
-
-        Returns
-        -------
-        typing.Union[hikari.emojis.UnicodeEmoji, builtins.str, builtins.None]
-            Either the string name of the custom emoji which was removed
-            or the object of the `hikari.emojis.UnicodeEmoji` which was removed.
+        Either the string name of the custom emoji which was removed, the object
+        of the `hikari.emojis.UnicodeEmoji` which was removed or `None`
+        when the relevant custom emoji's data is not available (e.g. the emoji
+        has been deleted).
         """
 
     @property
     @abc.abstractmethod
     def emoji_id(self) -> typing.Optional[snowflakes.Snowflake]:
-        """ID of the emoji which was removed if it was custom.
-
-        Returns
-        -------
-        typing.Optional[hikari.snowflakes.Snowflake]
-            ID of the emoji which was removed if it was a custom emoji or
-            `builtins.None`.
-        """
+        """ID of the emoji which was added if it is custom, else `None`."""
 
     def is_for_emoji(self, emoji: typing.Union[emojis.Emoji, str], /) -> bool:
         """Get whether the reaction event is for a specific emoji.
 
         Parameters
         ----------
-        emoji : typing.Union[hikari.emojis.Emoji, builtins.str]
+        emoji : typing.Union[hikari.emojis.Emoji, str]
             The emoji to check.
 
-            Passing `builtins.str` here indicates a unicode emoji.
+            Passing `str` here indicates a unicode emoji.
 
         Returns
         -------
-        builtins.bool
+        bool
             Whether the emoji is the one which was removed.
         """
         return emoji.id == self.emoji_id if isinstance(emoji, emojis.CustomEmoji) else emoji == self.emoji_name
@@ -267,44 +207,32 @@ class ReactionDeleteEmojiEvent(ReactionEvent, abc.ABC):
     @property
     @abc.abstractmethod
     def emoji_name(self) -> typing.Union[emojis.UnicodeEmoji, str, None]:
-        """Name of the emoji which was removed if known.
+        """Name of the emoji which was removed.
 
-        !!! note
-            This will be `builtins.None` when the relevant custom emoji's data
-            is not available (e.g. the emoji has been deleted).
-
-        Returns
-        -------
-        typing.Union[hikari.emojis.UnicodeEmoji, builtins.str, builtins.None]
-            Either the string name of the custom emoji which was removed
-            or the object of the `hikari.emojis.UnicodeEmoji` which was removed.
+        Either the string name of the custom emoji which was removed, the object
+        of the `hikari.emojis.UnicodeEmoji` which was removed or `None`
+        when the relevant custom emoji's data is not available (e.g. the emoji
+        has been deleted).
         """
 
     @property
     @abc.abstractmethod
     def emoji_id(self) -> typing.Optional[snowflakes.Snowflake]:
-        """ID of the emoji which was removed if it was custom.
-
-        Returns
-        -------
-        typing.Optional[hikari.snowflakes.Snowflake]
-            ID of the emoji which was removed if it was a custom emoji or
-            `builtins.None`.
-        """
+        """ID of the emoji which was added if it is custom, else `None`."""
 
     def is_for_emoji(self, emoji: typing.Union[emojis.Emoji, str], /) -> bool:
         """Get whether the reaction event is for a specific emoji.
 
         Parameters
         ----------
-        emoji : typing.Union[hikari.emojis.Emoji, builtins.str]
+        emoji : typing.Union[hikari.emojis.Emoji, str]
             The emoji to check.
 
-            Passing `builtins.str` here indicates a unicode emoji.
+            Passing `str` here indicates a unicode emoji.
 
         Returns
         -------
-        builtins.bool
+        bool
             Whether the emoji is the one which was removed.
         """
         return emoji.id == self.emoji_id if isinstance(emoji, emojis.CustomEmoji) else emoji == self.emoji_name
@@ -320,13 +248,7 @@ class GuildReactionAddEvent(GuildReactionEvent, ReactionAddEvent):
     # <<inherited docstring from ShardEvent>>.
 
     member: guilds.Member = attr.field()
-    """Member that added the reaction.
-
-    Returns
-    -------
-    hikari.guilds.Member
-        The member which added this reaction.
-    """
+    """Member that added the reaction."""
 
     channel_id: snowflakes.Snowflake = attr.field()
     # <<inherited docstring from ReactionEvent>>.

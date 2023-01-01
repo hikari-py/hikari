@@ -9,41 +9,45 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Generate token
+        id: generate_token
+        uses: tibdex/github-app-token@v1
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          private_key: ${{ secrets.PRIVATE_KEY }}
+
+      - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          token: ${{ secrets.PAT_TOKEN }}
-
-      - name: Setup python
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.8
+          token: ${{ steps.generate_token.outputs.token }}
 
       - name: Setup git config
         run: |
           git config --global user.name "hikari-bot"
           git config --global user.email "90276125+hikari-bot[bot]@users.noreply.github.com"
 
-      - name: Temporarily disable "include administrators" branch protection
-        uses: benjefferies/branch-protection-bot@master
+      - name: Setup python
+        uses: actions/setup-python@v4
         with:
-          access_token: ${{ secrets.PAT_TOKEN }}
+          python-version: 3.8
+
+      - name: Temporarily disable "include administrators" branch protection
+        uses: benjefferies/branch-protection-bot@1.0.7
+        with:
+          access_token: ${{ steps.generate_token.outputs.token }}
           enforce_admins: false
 
-      - name: Deploy
+      - name: Release
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
           VERSION: ${{ github.event.release.tag_name }}
-          REF: ${{ github.sha }}
-          GITHUB_REPO_SLUG: ${{ github.repository }}
           DEPLOY_WEBHOOK_URL: ${{ secrets.DEPLOY_WEBHOOK_URL }}
           TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-        run: bash scripts/deploy.sh
+        run: bash scripts/release.sh
 
       - name: Re-enable "include administrators" branch protection
-        uses: benjefferies/branch-protection-bot@master
+        uses: benjefferies/branch-protection-bot@1.0.7
         if: always()
         with:
-          access_token: ${{ secrets.PAT_TOKEN }}
+          access_token: ${{ steps.generate_token.outputs.token }}
           enforce_admins: true

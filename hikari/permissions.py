@@ -26,8 +26,6 @@ from __future__ import annotations
 
 __all__: typing.Sequence[str] = ("Permissions",)
 
-import functools
-import operator
 import typing
 
 from hikari.internal import enums
@@ -45,6 +43,8 @@ class Permissions(enums.Flag):
     --------
     You can create an enum which combines multiple permissions using the bitwise OR operator (`|`):
 
+    .. code-block:: python
+
        my_perms = Permissions.MANAGE_CHANNELS | Permissions.MANAGE_GUILD
 
        required_perms = (
@@ -59,6 +59,8 @@ class Permissions(enums.Flag):
     permissions from one set are present in another set. This is useful, for instance,
     for checking if a user has all the required permissions
 
+    .. code-block:: python
+
        if (my_perms & required_perms) == required_perms:
            print("I have all of the required permissions!")
        else:
@@ -68,12 +70,16 @@ class Permissions(enums.Flag):
     bitwise equivalent of the set difference operation, as shown below. This can be used,
     for instance, to find which of a user's permissions are missing from the required permissions.
 
+    .. code-block:: python
+
        missing_perms = ~my_perms & required_perms
        if (missing_perms):
            print(f"I'm missing these permissions: {missing_perms}")
 
     Lastly, if you need all the permissions from a set except for a few,
     you can use the bitwise NOT operator (`~`).
+
+    .. code-block:: python
 
         # All permissions except ADMINISTRATOR.
         my_perms = ~Permissions.ADMINISTRATOR
@@ -89,7 +95,7 @@ class Permissions(enums.Flag):
     KICK_MEMBERS = 1 << 1
     """Allows kicking members.
 
-    !!! note
+    .. note::
         In guilds with server-wide 2FA enabled this permission can only be used
         by users who have two-factor authentication enabled on their account
         (or their owner's account in the case of bot users) and the guild owner.
@@ -98,7 +104,7 @@ class Permissions(enums.Flag):
     BAN_MEMBERS = 1 << 2
     """Allows banning members.
 
-    !!! note
+    .. note::
         In guilds with server-wide 2FA enabled this permission can only be used
         by users who have two-factor authentication enabled on their account
         (or their owner's account in the case of bot users) and the guild owner.
@@ -107,7 +113,7 @@ class Permissions(enums.Flag):
     ADMINISTRATOR = 1 << 3
     """Allows all permissions and bypasses channel permission overwrites.
 
-    !!! note
+    .. note::
         In guilds with server-wide 2FA enabled this permission can only be used
         by users who have two-factor authentication enabled on their account
         (or their owner's account in the case of bot users) and the guild owner.
@@ -116,7 +122,7 @@ class Permissions(enums.Flag):
     MANAGE_CHANNELS = 1 << 4
     """Allows management and editing of channels.
 
-    !!! note
+    .. note::
         In guilds with server-wide 2FA enabled this permission can only be used
         by users who have two-factor authentication enabled on their account
         (or their owner's account in the case of bot users) and the guild owner.
@@ -125,7 +131,7 @@ class Permissions(enums.Flag):
     MANAGE_GUILD = 1 << 5
     """Allows management and editing of the guild.
 
-    !!! note
+    .. note::
         In guilds with server-wide 2FA enabled this permission can only be used
         by users who have two-factor authentication enabled on their account
         (or their owner's account in the case of bot users) and the guild owner.
@@ -155,7 +161,7 @@ class Permissions(enums.Flag):
     MANAGE_MESSAGES = 1 << 13
     """Allows for deletion of other users messages.
 
-    !!! note
+    .. note::
         In guilds with server-wide 2FA enabled this permission can only be used
         by users who have two-factor authentication enabled on their account
         (or their owner's account in the case of bot users) and the guild owner.
@@ -171,11 +177,7 @@ class Permissions(enums.Flag):
     """Allows for reading of message history."""
 
     MENTION_ROLES = 1 << 17
-    """Allows for using the `@everyone` tag to notify all users in a channel,
-    and the `@here` tag to notify all online users in a channel, and the
-    `@role` tag (even if the role is not mentionable) to notify all users with
-    that role in a channel.
-    """
+    """Allows for using the `@everyone`, `@here` and `@role` (regardless of its mention status) tag to notify users."""
 
     USE_EXTERNAL_EMOJIS = 1 << 18
     """Allows the usage of custom emojis from other guilds."""
@@ -210,7 +212,7 @@ class Permissions(enums.Flag):
     MANAGE_ROLES = 1 << 28
     """Allows management and editing of roles.
 
-    !!! note
+    .. note::
         In guilds with server-wide 2FA enabled this permission can only be used
         by users who have two-factor authentication enabled on their account
         (or their owner's account in the case of bot users) and the guild owner.
@@ -219,7 +221,7 @@ class Permissions(enums.Flag):
     MANAGE_WEBHOOKS = 1 << 29
     """Allows management and editing of webhooks.
 
-    !!! note
+    .. note::
         In guilds with server-wide 2FA enabled this permission can only be used
         by users who have two-factor authentication enabled on their account
         (or their owner's account in the case of bot users) and the guild owner.
@@ -228,7 +230,7 @@ class Permissions(enums.Flag):
     MANAGE_EMOJIS_AND_STICKERS = 1 << 30
     """Allows management and editing of emojis and stickers.
 
-    !!! note
+    .. note::
         In guilds with server-wide 2FA enabled this permission can only be used
         by users who have two-factor authentication enabled on their account
         (or their owner's account in the case of bot users) and the guild owner.
@@ -240,16 +242,19 @@ class Permissions(enums.Flag):
     REQUEST_TO_SPEAK = 1 << 32
     """Allows for requesting to speak in stage channels.
 
-    !!! warning
+    .. warning::
         This permissions is currently defined as being "under active
         development" by Discord meaning that "it may be changed or removed"
         without warning.
     """
 
+    MANAGE_EVENTS = 1 << 33
+    """Allows for creating, editing, and deleting scheduled events	"""
+
     MANAGE_THREADS = 1 << 34
     """Allows for deleting and archiving threads, and viewing all private threads.
 
-     !!! note
+     .. note::
         In guilds with server-wide 2FA enabled this permission can only be used
         by users who have two-factor authentication enabled on their account
         (or their owner's account in the case of bot users) and the guild owner.
@@ -282,4 +287,8 @@ class Permissions(enums.Flag):
         Permissions
             A permissions instance with all the known permissions.
         """
-        return functools.reduce(operator.ior, Permissions)
+        all_perms = Permissions.NONE
+        for perm in Permissions:
+            all_perms |= perm
+
+        return all_perms

@@ -72,7 +72,7 @@ class StickerFormatType(int, enums.Enum):
     LOTTIE = 3
     """A lottie sticker.
 
-    More information can be found here: https://airbnb.io/lottie/
+    More information can be found here: <https://airbnb.io/lottie/>
     """
 
 
@@ -90,7 +90,7 @@ class StickerPack(snowflakes.Unique):
     """The description of the pack."""
 
     cover_sticker_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
-    """The ID of a sticker in the pack which is shown as the pack's icon"""
+    """The ID of a sticker in the pack which is shown as the pack's icon."""
 
     stickers: typing.Sequence[StandardSticker] = attr.field(eq=False, hash=False, repr=False)
     """The stickers that belong to this pack."""
@@ -112,10 +112,10 @@ class StickerPack(snowflakes.Unique):
 
         Parameters
         ----------
-        ext : builtins.str
+        ext : str
             The extension to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : builtins.int
+        size : int
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between 16 and 4096.
 
@@ -126,7 +126,7 @@ class StickerPack(snowflakes.Unique):
 
         Raises
         ------
-        builtins.ValueError
+        ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
         return routes.CDN_STICKER_PACK_BANNER.compile_to_file(
@@ -193,7 +193,7 @@ class GuildSticker(PartialSticker):
     """The description of this sticker."""
 
     guild_id: snowflakes.Snowflake = attr.field(eq=False, hash=False)
-    """The guild this sticker belongs to"""
+    """The guild this sticker belongs to."""
 
     is_available: bool = attr.field(eq=False, hash=False)
     """Whether the sticker can be used."""

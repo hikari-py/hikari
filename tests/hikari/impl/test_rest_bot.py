@@ -373,47 +373,48 @@ class TestRESTBot:
         mock_interaction_server.on_interaction.assert_awaited_once_with(b"1", b"2", b"3")
 
     def test_run(self, mock_rest_bot):
-        # Dependent on test-order the current event loop may be pre-set and closed without pytest.mark.asyncio
-        # therefore we need to ensure there's no pre-set event loop.
-        asyncio.set_event_loop(None)
         mock_socket = object()
         mock_context = object()
         mock_rest_bot._executor = None
-        mock_rest_bot.start = mock.AsyncMock()
-        mock_rest_bot.join = mock.AsyncMock()
+        mock_rest_bot.start = mock.Mock()
+        mock_rest_bot.join = mock.Mock()
 
-        with mock.patch.object(ux, "check_for_updates") as check_for_updates:
-            with mock.patch.object(
-                signals, "handle_interrupts", return_value=hikari_test_helpers.ContextManagerMock()
-            ) as handle_interrupts:
-                mock_rest_bot.run(
-                    asyncio_debug=False,
-                    backlog=321,
-                    check_for_updates=False,
-                    close_loop=False,
-                    close_passed_executor=False,
-                    coroutine_tracking_depth=32123,
-                    enable_signal_handlers=True,
-                    propagate_interrupts=True,
-                    host="192.168.1.102",
-                    path="pathathath",
-                    port=4554,
-                    reuse_address=True,
-                    reuse_port=False,
-                    shutdown_timeout=534.534,
-                    socket=mock_socket,
-                    ssl_context=mock_context,
-                )
+        stack = contextlib.ExitStack()
+        check_for_updates = stack.enter_context(mock.patch.object(ux, "check_for_updates"))
+        handle_interrupts = stack.enter_context(
+            mock.patch.object(signals, "handle_interrupts", return_value=hikari_test_helpers.ContextManagerMock())
+        )
+        get_or_make_loop = stack.enter_context(mock.patch.object(aio, "get_or_make_loop"))
+
+        with stack:
+            mock_rest_bot.run(
+                asyncio_debug=False,
+                backlog=321,
+                check_for_updates=False,
+                close_loop=False,
+                close_passed_executor=False,
+                coroutine_tracking_depth=32123,
+                enable_signal_handlers=True,
+                propagate_interrupts=True,
+                host="192.168.1.102",
+                path="pathathath",
+                port=4554,
+                reuse_address=True,
+                reuse_port=False,
+                shutdown_timeout=534.534,
+                socket=mock_socket,
+                ssl_context=mock_context,
+            )
 
         check_for_updates.assert_not_called()
         handle_interrupts.assert_called_once_with(
             enabled=True,
-            loop=asyncio.get_event_loop_policy().get_event_loop(),
+            loop=get_or_make_loop.return_value,
             propagate_interrupts=True,
         )
         handle_interrupts.return_value.assert_used_once()
 
-        mock_rest_bot.start.assert_awaited_once_with(
+        mock_rest_bot.start.assert_called_once_with(
             backlog=321,
             check_for_updates=False,
             host="192.168.1.102",
@@ -425,8 +426,16 @@ class TestRESTBot:
             shutdown_timeout=534.534,
             ssl_context=mock_context,
         )
-        mock_rest_bot.join.assert_awaited_once()
-        assert asyncio.get_event_loop_policy().get_event_loop().is_closed() is False
+        mock_rest_bot.join.assert_called_once_with()
+
+        assert get_or_make_loop.return_value.run_until_complete.call_count == 2
+        get_or_make_loop.return_value.run_until_complete.assert_has_calls(
+            [
+                mock.call(mock_rest_bot.start.return_value),
+                mock.call(mock_rest_bot.join.return_value),
+            ]
+        )
+        get_or_make_loop.return_value.close.assert_not_called()
 
     def test_run_when_close_loop(self, mock_rest_bot):
         mock_rest_bot.start = mock.Mock()
@@ -434,10 +443,9 @@ class TestRESTBot:
 
         with mock.patch.object(aio, "get_or_make_loop") as get_or_make_loop:
             with mock.patch.object(aio, "destroy_loop") as destroy_loop:
-                with mock.patch.object(rest_bot_impl, "_LOGGER") as logger:
-                    mock_rest_bot.run(close_loop=True)
+                mock_rest_bot.run(close_loop=True)
 
-        destroy_loop.assert_called_once_with(get_or_make_loop.return_value, logger)
+        destroy_loop.assert_called_once_with(get_or_make_loop.return_value, rest_bot_impl._LOGGER)
 
     def test_run_when_asyncio_debug(self, mock_rest_bot):
         mock_rest_bot.start = mock.Mock()
@@ -467,55 +475,54 @@ class TestRESTBot:
             mock_rest_bot.run()
 
     def test_run_closes_executor_when_present(self, mock_rest_bot, mock_executor):
-        mock_rest_bot.join = mock.AsyncMock()
-        # Dependent on test-order the current event loop may be pre-set and closed without pytest.mark.asyncio
-        # therefore we need to ensure there's no pre-set event loop.
-        asyncio.set_event_loop(None)
-        mock_rest_bot.run(
-            asyncio_debug=False,
-            backlog=321,
-            check_for_updates=False,
-            close_loop=False,
-            close_passed_executor=True,
-            coroutine_tracking_depth=32123,
-            enable_signal_handlers=True,
-            host="192.168.1.102",
-            path="pathathath",
-            port=4554,
-            reuse_address=True,
-            reuse_port=False,
-            shutdown_timeout=534.534,
-            socket=object(),
-            ssl_context=object(),
-        )
+        mock_rest_bot.start = mock.Mock()
+        mock_rest_bot.join = mock.Mock()
+
+        with mock.patch.object(aio, "get_or_make_loop"):
+            mock_rest_bot.run(
+                asyncio_debug=False,
+                backlog=321,
+                check_for_updates=False,
+                close_loop=False,
+                close_passed_executor=True,
+                coroutine_tracking_depth=32123,
+                enable_signal_handlers=True,
+                host="192.168.1.102",
+                path="pathathath",
+                port=4554,
+                reuse_address=True,
+                reuse_port=False,
+                shutdown_timeout=534.534,
+                socket=object(),
+                ssl_context=object(),
+            )
 
         mock_executor.shutdown.assert_called_once_with(wait=True)
         assert mock_rest_bot.executor is None
 
     def test_run_ignores_close_executor_when_not_present(self, mock_rest_bot):
-        # Dependent on test-order the current event loop may be pre-filled and closed without pytest.mark.asyncio
-        # therefore we need to ensure there's no pre-set event loop.
-        asyncio.set_event_loop(None)
-        mock_rest_bot.join = mock.AsyncMock()
+        mock_rest_bot.start = mock.Mock()
+        mock_rest_bot.join = mock.Mock()
         mock_rest_bot._executor = None
 
-        mock_rest_bot.run(
-            asyncio_debug=False,
-            backlog=321,
-            check_for_updates=False,
-            close_loop=False,
-            close_passed_executor=True,
-            coroutine_tracking_depth=32123,
-            enable_signal_handlers=True,
-            host="192.168.1.102",
-            path="pathathath",
-            port=4554,
-            reuse_address=True,
-            reuse_port=False,
-            shutdown_timeout=534.534,
-            socket=object(),
-            ssl_context=object(),
-        )
+        with mock.patch.object(aio, "get_or_make_loop"):
+            mock_rest_bot.run(
+                asyncio_debug=False,
+                backlog=321,
+                check_for_updates=False,
+                close_loop=False,
+                close_passed_executor=True,
+                coroutine_tracking_depth=32123,
+                enable_signal_handlers=True,
+                host="192.168.1.102",
+                path="pathathath",
+                port=4554,
+                reuse_address=True,
+                reuse_port=False,
+                shutdown_timeout=534.534,
+                socket=object(),
+                ssl_context=object(),
+            )
 
         assert mock_rest_bot.executor is None
 

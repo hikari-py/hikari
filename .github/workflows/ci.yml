@@ -20,7 +20,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Setup python
@@ -61,7 +61,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Setup python
@@ -92,7 +92,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Setup python
@@ -110,16 +110,46 @@ jobs:
             exit 1
           fi
 
-      - name: Linting
+      - name: Safety
         if: always()
         run: |
-          nox -s safety mypy verify-types flake8 slotscheck codespell check-trailing-whitespaces
+          nox -s safety
+
+      - name: Mypy
+        if: always()
+        run: |
+          nox -s mypy
+
+      - name: Verify types
+        if: always()
+        run: |
+          nox -s verify-types
+
+      - name: Flake8
+        if: always()
+        run: |
+          nox -s flake8
+
+      - name: Slotscheck
+        if: always()
+        run: |
+          nox -s slotscheck
+
+      - name: Codespell
+        if: always()
+        run: |
+          nox -s codespell
+
+      - name: Check trailing whitespaces
+        if: always()
+        run: |
+          nox -s check-trailing-whitespaces
 
   twemoji:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Setup python
@@ -132,11 +162,11 @@ jobs:
           pip install -r dev-requirements/nox.txt
           nox -s twemoji-test
 
-  pages:
+  docs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Setup python
@@ -147,24 +177,23 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v3
 
-      - name: Build pages
+      - name: Build documentation
         run: |
           pip install -r dev-requirements/nox.txt
-          nox -s pages
+          nox -s sphinx
 
       - name: Upload artifacts
-        if: github.event_name != 'release'
+        if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v3
         with:
-          name: pages
-          path: public
+          name: docs
+          path: public/docs
           retention-days: 2
           if-no-files-found: error
 
-  # Allows us to add this as a required check in Github branch rules, as all the
-  # other jobs are subject to change
+  # Allows us to add this as a required check in Github branch rules, as all the other jobs are subject to change
   ci-done:
-    needs: [upload-coverage, linting, twemoji, pages]
+    needs: [upload-coverage, linting, twemoji, docs]
     if: always() && !cancelled()
 
     runs-on: ubuntu-latest

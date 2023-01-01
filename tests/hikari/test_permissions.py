@@ -27,4 +27,4 @@ class TestPermissions:
         all_perms = permissions.Permissions.all_permissions()
 
         assert isinstance(all_perms, permissions.Permissions)
-        assert all_perms == 2190433320959
+        assert all_perms == 2199023255551
