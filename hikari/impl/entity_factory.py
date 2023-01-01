@@ -609,6 +609,13 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 owner_id=snowflakes.Snowflake(team_payload["owner_user_id"]),
             )
 
+        install_parameters: typing.Optional[application_models.ApplicationInstallParameters] = None
+        if (install_payload := payload.get("install_params")) is not None:
+            install_parameters = application_models.ApplicationInstallParameters(
+                scopes=[application_models.OAuth2Scope(scope) for scope in install_payload["scopes"]],
+                permissions=permission_models.Permissions(install_payload["permissions"]),
+            )
+
         return application_models.Application(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
@@ -625,6 +632,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             cover_image_hash=payload.get("cover_image"),
             privacy_policy_url=payload.get("privacy_policy_url"),
             terms_of_service_url=payload.get("terms_of_service_url"),
+            custom_install_url=payload.get("custom_install_url"),
+            tags=payload.get("tags") or [],
+            install_parameters=install_parameters,
         )
 
     def deserialize_authorization_information(
