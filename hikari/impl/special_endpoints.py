@@ -109,8 +109,7 @@ if typing.TYPE_CHECKING:
             form_builder: typing.Optional[data_binding.URLEncodedFormBuilder] = None,
             json: typing.Union[data_binding.JSONObjectBuilder, data_binding.JSONArray, None] = None,
             reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-            no_auth: bool = False,
-            auth: typing.Optional[str] = None,
+            auth: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
         ) -> typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]:
             ...
 
@@ -156,13 +155,13 @@ class TypingIndicator(special_endpoints.TypingIndicator):
         self,
         request_call: _RequestCallSig,
         channel: snowflakes.SnowflakeishOr[channels.TextableChannel],
-        rest_closed_event: asyncio.Event,
+        rest_close_event: asyncio.Event,
     ) -> None:
         self._route = routes.POST_CHANNEL_TYPING.compile(channel=channel)
         self._request_call = request_call
         self._task_name = f"repeatedly trigger typing in {channel}"
         self._task: typing.Optional[asyncio.Task[None]] = None
-        self._rest_close_event = rest_closed_event
+        self._rest_close_event = rest_close_event
 
     def __await__(self) -> typing.Generator[typing.Any, typing.Any, typing.Any]:
         return self._request_call(self._route).__await__()
@@ -1275,7 +1274,7 @@ class CommandBuilder(special_endpoints.CommandBuilder):
 
     @property
     def is_nsfw(self) -> undefined.UndefinedOr[bool]:
-        return self._is_dm_enabled
+        return self._is_nsfw
 
     @property
     def name(self) -> str:

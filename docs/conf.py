@@ -103,6 +103,7 @@ autoapi_template_dir = "_templates"
 autoapi_add_toctree_entry = False
 autoapi_add_objects_to_toctree = False
 autoapi_keep_files = True
+autoapi_member_order = "groupwise"
 
 # -- AutoDoc options ----------------------------------------------------------
 

@@ -146,9 +146,25 @@ class TestInitLogging:
 
 class TestRedBanner:
     def test_when_above_3_9(self):
+        class MockFile:
+            context_entered = 0
+            context_exited = 0
+
+            def __enter__(self):
+                self.context_entered += 1
+                return self
+
+            def __exit__(self, exc_type, exc_val, exc_tb):
+                self.context_exited += 1
+                return None
+
+            def read(self):
+                return read
+
         class MockTraversable:
             joint_path = None
             open_mode = None
+            mock_file = None
 
             def joinpath(self, path):
                 self.joint_path = path
@@ -156,12 +172,10 @@ class TestRedBanner:
 
             def open(self, mode):
                 self.open_mode = mode
-                return self
-
-            def read(self):
-                return read
+                return self.mock_file
 
         traversable = MockTraversable()
+        traversable.mock_file = MockFile()
         read = object()
 
         with mock.patch.object(sys, "version_info", new=(3, 9)):
@@ -171,6 +185,8 @@ class TestRedBanner:
         read_text.assert_called_once_with("hikaru")
         assert traversable.joint_path == "banner.txt"
         assert traversable.open_mode == "r"
+        assert traversable.mock_file.context_entered == 1
+        assert traversable.mock_file.context_exited == 1
 
     def test_when_bellow_3_9(self):
         with mock.patch.object(sys, "version_info", new=(2, 7)):
@@ -354,6 +370,22 @@ class TestPrintBanner:
                 ValueError, match=r"Cannot overwrite \$-substitution `hikari_version`. Please use a different key."
             ):
                 ux.print_banner("hikari", True, False, extra_args=extra_args)
+
+
+class TestWarnIfNotOptimized:
+    @pytest.mark.skipif(not __debug__, reason="Not running in optimized mode")
+    def test_when_not_optimized(self):
+        with mock.patch.object(ux, "_LOGGER") as logger:
+            ux.warn_if_not_optimized()
+
+        logger.warning.assert_called()
+
+    @pytest.mark.skipif(__debug__, reason="Running in optimized mode")
+    def test_when_optimized(self):
+        with mock.patch.object(ux, "_LOGGER") as logger:
+            ux.warn_if_not_optimized()
+
+        logger.warning.assert_not_called()
 
 
 class TestSupportsColor:

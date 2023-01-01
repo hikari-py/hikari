@@ -48,7 +48,10 @@ if typing.TYPE_CHECKING:
     ]
 
 
-ListenerT = typing.Callable[["_InteractionT_co"], typing.Awaitable["_ResponseT_co"]]
+ListenerT = typing.Union[
+    typing.Callable[["_InteractionT_co"], typing.Awaitable["_ResponseT_co"]],
+    typing.Callable[["_InteractionT_co"], typing.AsyncGenerator["_ResponseT_co", None]],
+]
 """Type hint of a Interaction server's listener callback.
 
 This should be an async callback which takes in one positional argument which
@@ -255,8 +258,12 @@ class InteractionServer(abc.ABC):
         interaction_type : typing.Type[hikari.interactions.base_interactions.PartialInteraction]
             The type of interaction this listener should be registered for.
         listener : typing.Optional[ListenerT[hikari.interactions.base_interactions.PartialInteraction, hikari.api.special_endpoints.InteractionResponseBuilder]]
-            The asynchronous listener callback to set or `None` to
-            unset the previous listener.
+            The asynchronous listener callback to set or `None` to unset the previous listener.
+
+            An asynchronous listener can be either a normal coroutine or an
+            async generator which should yield exactly once. This allows
+            sending an initial response to the request, while still
+            later executing further logic.
 
         Other Parameters
         ----------------

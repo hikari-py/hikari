@@ -90,13 +90,13 @@ def create_tcp_connector(
 
     Optional Parameters
     -------------------
-    dns_cache: typing.Union[None, bool, int]
+    dns_cache : typing.Union[None, bool, int]
         If `True`, DNS caching is used with a default TTL of 10 seconds.
         If `False`, DNS caching is disabled. If an `int` is
         given, then DNS caching is enabled with an explicit TTL set. If
         `None`, the cache will be enabled and never invalidate.
     limit : int
-        Number of connections to allow in the pool at a maximum.
+        Number of connections to allow in the pool at any given time.
 
     Returns
     -------

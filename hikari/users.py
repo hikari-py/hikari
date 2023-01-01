@@ -148,14 +148,12 @@ class PartialUser(snowflakes.Unique, abc.ABC):
     @property
     @abc.abstractmethod
     def banner_hash(self) -> undefined.UndefinedNoneOr[str]:
-        """Banner hash for the user, if they have one, otherwise `hikari.undefined.UNDEFINED`."""
+        """Banner hash for the user, if they have one, otherwise `None`."""
 
     @property
     @abc.abstractmethod
     def accent_color(self) -> undefined.UndefinedNoneOr[colors.Color]:
         """Custom banner color for the user if set, else `None`.
-
-        Will be `hikari.undefined.UNDEFINED` if not known.
 
         The official client will decide the default color if not set.
         """  # noqa: D401 - Imperative mood
@@ -489,7 +487,7 @@ class User(PartialUser, abc.ABC):
     @property
     @abc.abstractmethod
     def banner_hash(self) -> typing.Optional[str]:
-        """Banner hash for the user, if they have one, otherwise `hikari.undefined.UNDEFINED`."""
+        """Banner hash for the user, if they have one, otherwise `None`."""
 
     @property
     def banner_url(self) -> typing.Optional[files.URL]:
@@ -652,7 +650,7 @@ class PartialUserImpl(PartialUser):
     """Implementation for partial information about a user.
 
     This is pretty much the same as a normal user, but information may not be
-    present.
+    present, which will be denoted by `hikari.undefined.UNDEFINED`.
     """
 
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)

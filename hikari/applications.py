@@ -562,6 +562,18 @@ class InviteApplication(guilds.PartialApplication):
 
 @attr_extensions.with_copy
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
+class ApplicationInstallParameters:
+    """Represents the application install parameters."""
+
+    scopes: typing.Sequence[str] = attr.field(eq=True, repr=False, hash=True)
+    """The scopes to authorize the bot for."""
+
+    permissions: permissions_.Permissions = attr.field(eq=True, repr=False, hash=True)
+    """The permissions to add the bot to guild with."""
+
+
+@attr_extensions.with_copy
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
 class Application(guilds.PartialApplication):
     """Represents the information of an Oauth2 Application."""
 
@@ -605,6 +617,15 @@ class Application(guilds.PartialApplication):
 
     role_connections_verification_url: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
     """The URL of this application's role connection verification entry point."""
+
+    custom_install_url: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    """The URL of this application's custom authorization link."""
+
+    tags: typing.Sequence[str] = attr.field(eq=False, hash=False, repr=False)
+    """A sequence of tags describing the content and functionality of the application."""
+
+    install_parameters: typing.Optional[ApplicationInstallParameters] = attr.field(eq=False, hash=False, repr=False)
+    """Settings for the application's default in-app authorization link, if enabled."""
 
     @property
     def cover_image_url(self) -> typing.Optional[files.URL]:

@@ -114,6 +114,9 @@ class TestBadRequestError:
             {},
             "raw body",
             errors={
+                "": [
+                    {"code": "012", "message": "test error"},
+                ],
                 "components": {
                     "0": {
                         "_errors": [
@@ -140,6 +143,9 @@ class TestBadRequestError:
             """
             Bad Request 400: 'raw body' for https://some.url
 
+            root:
+             - test error
+
             components.0:
              - something went wrong
              - but more things too!
@@ -159,6 +165,12 @@ class TestBadRequestError:
             Bad Request 400: 'raw body' for https://some.url
 
             {
+              "": [
+                {
+                  "code": "012",
+                  "message": "test error"
+                }
+              ],
               "components": {
                 "0": {
                   "_errors": [
@@ -228,13 +240,10 @@ class TestRateLimitTooLongError:
 class TestBulkDeleteError:
     @pytest.fixture()
     def error(self):
-        return errors.BulkDeleteError(range(10), range(10))
-
-    def test_percentage_completion_property(self, error):
-        assert error.percentage_completion == 50
+        return errors.BulkDeleteError(range(10))
 
     def test_str(self, error):
-        assert str(error) == "Error encountered when bulk deleting messages (10/20 messages deleted)"
+        assert str(error) == "Error encountered when bulk deleting messages (10 messages deleted)"
 
 
 class TestMissingIntentError:
