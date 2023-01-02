@@ -224,7 +224,7 @@ class TestRateLimitTooLongError:
     @pytest.fixture()
     def error(self):
         return errors.RateLimitTooLongError(
-            route="some route", retry_after=0, max_retry_after=60, reset_at=0, limit=0, period=0
+            route="some route", is_global=False, retry_after=0, max_retry_after=60, reset_at=0, limit=0, period=0
         )
 
     def test_remaining(self, error):
@@ -232,8 +232,8 @@ class TestRateLimitTooLongError:
 
     def test_str(self, error):
         assert str(error) == (
-            "The request has been rejected, as you would be waiting for more than"
-            "the max retry-after (60) on route some route"
+            "The request has been rejected, as you would be waiting for more than "
+            "the max retry-after (60) on route 'some route' [is_global=False]"
         )
 
 

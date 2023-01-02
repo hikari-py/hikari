@@ -106,8 +106,23 @@ class TestRESTBucket:
         rl._lock.release.assert_called_once_with()
 
     @pytest.mark.asyncio()
+    async def test_acquire_when_too_long_global_ratelimit(self, compiled_route):
+        global_ratelimit = mock.Mock(reset_at=time.perf_counter() + 999999999999999999999999999)
+
+        with buckets.RESTBucket("spaghetti", compiled_route, global_ratelimit, 1) as rl:
+            rl._lock = mock.Mock(acquire=mock.AsyncMock())
+            with mock.patch.object(rate_limits.WindowedBurstRateLimiter, "acquire") as super_acquire:
+                with pytest.raises(errors.RateLimitTooLongError):
+                    await rl.acquire()
+
+            rl._lock.acquire.assert_awaited_once_with()
+            super_acquire.assert_awaited_once_with()
+            rl._lock.release.assert_called_once_with()
+            global_ratelimit.acquire.assert_not_called()
+
+    @pytest.mark.asyncio()
     async def test_acquire(self, compiled_route):
-        global_ratelimit = mock.AsyncMock()
+        global_ratelimit = mock.Mock(acquire=mock.AsyncMock(), reset_at=None)
 
         with buckets.RESTBucket("spaghetti", compiled_route, global_ratelimit, float("inf")) as rl:
             rl._lock = mock.AsyncMock()

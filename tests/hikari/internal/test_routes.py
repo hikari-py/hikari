@@ -88,7 +88,9 @@ class TestRoute:
         assert route.compile(webhook=123, token="okfdkdfkdf") == expected
 
     def test__str__(self):
-        assert str(routes.Route(method="GET", path_template="/some/endpoint/{channel}")) == "/some/endpoint/{channel}"
+        assert (
+            str(routes.Route(method="GET", path_template="/some/endpoint/{channel}")) == "GET /some/endpoint/{channel}"
+        )
 
 
 class TestCDNRoute:
