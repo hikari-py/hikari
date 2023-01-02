@@ -2074,6 +2074,8 @@ class TestEntityFactoryImpl:
         del guild_forum_channel_payload["default_auto_archive_duration"]
         del guild_forum_channel_payload["default_thread_rate_limit_per_user"]
         del guild_forum_channel_payload["rate_limit_per_user"]
+        del guild_forum_channel_payload["default_sort_order"]
+        del guild_forum_channel_payload["default_forum_layout"]
 
         forum_channel = entity_factory_impl.deserialize_guild_forum_channel(guild_forum_channel_payload)
 
@@ -2085,6 +2087,8 @@ class TestEntityFactoryImpl:
         assert forum_channel.default_auto_archive_duration == datetime.timedelta(minutes=1440)
         assert forum_channel.default_thread_rate_limit_per_user == datetime.timedelta(minutes=0)
         assert forum_channel.rate_limit_per_user == datetime.timedelta(minutes=0)
+        assert forum_channel.default_sort_order == channel_models.ForumSortOrderType.LATEST_ACTIVITY
+        assert forum_channel.default_layout == channel_models.ForumLayoutType.NOT_SET
 
     def test_serialize_forum_tag(self, entity_factory_impl):
         tag = channel_models.ForumTag(id=snowflakes.Snowflake(123), name="test", moderated=True, emoji=None)
