@@ -1191,9 +1191,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             position=int(payload["position"]),
             available_tags=available_tags,
             flags=channel_models.ChannelFlag(payload["flags"]),
-            default_layout=channel_models.ForumLayoutType(payload["default_forum_layout"]),
+            # Discord may send None here for old channels, but they are just NOT_SET
+            default_layout=channel_models.ForumLayoutType(payload.get("default_forum_layout", 0)),
             # Discord may send None here for old channels, but they are just LATEST_ACTIVITY
-            default_sort_order=channel_models.ForumSortOrderType(payload["default_sort_order"] or 0),
+            default_sort_order=channel_models.ForumSortOrderType(payload.get("default_sort_order") or 0),
             default_reaction_emoji_id=reaction_emoji_id,
             default_reaction_emoji_name=reaction_emoji_name,
         )
