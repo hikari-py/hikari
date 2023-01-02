@@ -204,8 +204,22 @@ def utc_datetime() -> datetime.datetime:
 # monotonic on ARM64 architectures, but on x86, monotonic is around 1ns faster
 # than monotonic_ns. Just thought that was kind of interesting to note down.
 # (RPi 3B versus i7 6700)
-monotonic = time.perf_counter
-monotonic_ns = time.perf_counter_ns
+if typing.TYPE_CHECKING:
+
+    def monotonic() -> float:
+        """Performance counter for benchmarking."""  # noqa: D401 - Imperative mood
+        raise NotImplementedError
+
+    def monotonic_ns() -> int:
+        """Performance counter for benchmarking as nanoseconds."""  # noqa: D401 - Imperative mood
+        raise NotImplementedError
+
+else:
+    monotonic = time.perf_counter
+    """Performance counter for benchmarking."""
+
+    monotonic_ns = time.perf_counter_ns
+    """Performance counter for benchmarking as nanoseconds."""
 
 
 def uuid() -> str:
