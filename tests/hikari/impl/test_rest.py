@@ -1176,12 +1176,6 @@ class TestRESTClientImpl:
         assert isinstance(result, special_endpoints.ContextMenuCommandBuilder)
         assert result.type == commands.CommandType.MESSAGE
 
-    def test_build_action_row(self, rest_client):
-        with mock.patch.object(special_endpoints, "MessageActionRowBuilder") as action_row_builder:
-            assert rest_client.build_action_row() is action_row_builder.return_value
-
-        action_row_builder.assert_called_once_with()
-
     def test_build_message_action_row(self, rest_client):
         with mock.patch.object(special_endpoints, "MessageActionRowBuilder") as action_row_builder:
             assert rest_client.build_message_action_row() is action_row_builder.return_value
