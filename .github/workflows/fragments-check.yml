@@ -33,7 +33,16 @@ jobs:
           pip install -r dev-requirements/towncrier.txt
 
           if ! towncrier check --compare-with origin/${{ github.base_ref }}; then
-            echo "----------------------------------------------------"
-            echo "Please refer to CONTRIBUTING.md for more information"
+            exit 1
+          fi
+
+      - name: Check if linked to the correct pull request
+        run: |
+          diff=$(git diff origin/${{ github.base_ref }} HEAD --name-only)
+
+          changelog_fragments=$(echo "$diff" | grep "^changes/")
+          valid_changelog_fragments=$(echo "$diff" | grep "^changes/${{ github.event.number }}\.")
+
+          if [ "$changelog_fragments" != "$valid_changelog_fragments" ]; then
             exit 1
           fi
