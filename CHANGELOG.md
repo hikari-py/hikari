@@ -1,3 +1,18 @@
+## 2.0.0.dev115 (2023-01-03)
+
+### Breaking Changes
+
+- Remove previously deprecated functionality.
+  This includes:
+  - `RESTClient.build_action_row` ([#1438](https://github.com/hikari-py/hikari/issues/1438))
+
+### Bugfixes
+
+- Fix deserializing old forum channels on `GUILD_CREATE` missing some fields. ([#1439](https://github.com/hikari-py/hikari/issues/1439))
+
+---
+
+
 ## 2.0.0.dev114 (2023-01-01)
 
 ### Breaking Changes
