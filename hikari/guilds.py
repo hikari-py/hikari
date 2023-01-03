@@ -740,7 +740,7 @@ class Member(users.User):
         if delete_message_days is not undefined.UNDEFINED:
             deprecation.warn_deprecated(
                 "delete_message_days",
-                removal_version="2.0.0.dev116",
+                removal_version="2.0.0.dev117",
                 additional_info="'delete_message_seconds' should be used instead.",
             )
             if delete_message_seconds is not undefined.UNDEFINED:
@@ -1526,7 +1526,7 @@ class PartialGuild(snowflakes.Unique):
         if delete_message_days is not undefined.UNDEFINED:
             deprecation.warn_deprecated(
                 "delete_message_days",
-                removal_version="2.0.0.dev116",
+                removal_version="2.0.0.dev117",
                 additional_info="'delete_message_seconds' should be used instead.",
             )
             if delete_message_seconds is not undefined.UNDEFINED:
