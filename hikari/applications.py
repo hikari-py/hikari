@@ -42,7 +42,7 @@ __all__: typing.Sequence[str] = (
     "TeamMember",
     "TeamMembershipState",
     "TokenType",
-    "ApplicationRoleConnectionMetadataType",
+    "ApplicationRoleConnectionMetadataRecordType",
     "ApplicationRoleConnectionMetadataRecord",
     "get_token_id",
 )
@@ -784,8 +784,8 @@ class TokenType(str, enums.Enum):
 
 
 @typing.final
-class ApplicationRoleConnectionMetadataType(int, enums.Enum):
-    """Represents possible application role connection metadata types."""
+class ApplicationRoleConnectionMetadataRecordType(int, enums.Enum):
+    """Represents possible application role connection metadata record types."""
 
     INTEGER_LESS_THAN_OR_EQUAL = 1
     """Integer Less Than Or Equal."""
@@ -816,8 +816,8 @@ class ApplicationRoleConnectionMetadataType(int, enums.Enum):
 class ApplicationRoleConnectionMetadataRecord:
     """Represents a role connection metadata record."""
 
-    type: typing.Union[ApplicationRoleConnectionMetadataType, int] = attr.field(eq=False, hash=False, repr=False)
-    """The type of metadata value."""
+    type: typing.Union[ApplicationRoleConnectionMetadataRecordType, int] = attr.field(eq=False, hash=False, repr=False)
+    """The type of metadata value record."""
 
     key: str = attr.field(eq=True, hash=True, repr=False)
     """Dictionary key for the metadata field."""

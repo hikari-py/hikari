@@ -921,6 +921,28 @@ class TestEntityFactoryImpl:
         assert own_guild.icon_hash is None
 
     @pytest.fixture()
+    def role_connection_payload(self):
+        return {
+            "platform_name": "Muck",
+            "platform_username": "Muck Muck Muck",
+            "metadata": {
+                "key": "value",
+                "key2": "value2",
+            },
+        }
+
+    def test_deserialize_own_application_role_connection(self, entity_factory_impl, role_connection_payload):
+        role_connection = entity_factory_impl.deserialize_own_application_role_connection(role_connection_payload)
+
+        assert role_connection.platform_name == "Muck"
+        assert role_connection.platform_username == "Muck Muck Muck"
+        assert role_connection.metadata == {
+            "key": "value",
+            "key2": "value2",
+        }
+        assert isinstance(role_connection, application_models.OwnApplicationRoleConnection)
+
+    @pytest.fixture()
     def owner_payload(self, user_payload):
         return {**user_payload, "flags": 1 << 10}
 
@@ -949,6 +971,7 @@ class TestEntityFactoryImpl:
             "cover_image": "hashmebaby",
             "privacy_policy_url": "hahaha://hahaha",
             "terms_of_service_url": "haha2:2h2h2h2",
+            "role_connections_verification_url": "https://verifymethis.com",
             "custom_install_url": "https://dontinstallme.com",
             "tags": ["i", "like", "hikari"],
             "install_params": {
@@ -977,6 +1000,7 @@ class TestEntityFactoryImpl:
         assert application.flags == application_models.ApplicationFlags.VERIFICATION_PENDING_GUILD_LIMIT
         assert application.privacy_policy_url == "hahaha://hahaha"
         assert application.terms_of_service_url == "haha2:2h2h2h2"
+        assert application.role_connections_verification_url == "https://verifymethis.com"
         assert application.custom_install_url == "https://dontinstallme.com"
         assert application.tags == ["i", "like", "hikari"]
         assert application.icon_hash == "iwiwiwiwiw"
@@ -1025,6 +1049,7 @@ class TestEntityFactoryImpl:
         assert application.cover_image_hash is None
         assert application.privacy_policy_url is None
         assert application.terms_of_service_url is None
+        assert application.role_connections_verification_url is None
 
     def test_deserialize_application_with_null_fields(self, entity_factory_impl, mock_app, owner_payload):
         application = entity_factory_impl.deserialize_application(
@@ -1047,6 +1072,7 @@ class TestEntityFactoryImpl:
         assert application.terms_of_service_url is None
         assert application.privacy_policy_url is None
         assert application.custom_install_url is None
+        assert application.role_connections_verification_url is None
         assert application.cover_image_hash is None
         assert application.team is None
         assert application.install_parameters is None
@@ -1127,6 +1153,85 @@ class TestEntityFactoryImpl:
         assert authorization_information.application.is_bot_code_grant_required is None
         assert authorization_information.application.terms_of_service_url is None
         assert authorization_information.application.privacy_policy_url is None
+
+    @pytest.fixture()
+    def application_connection_metadata_record_payload(self):
+        return {
+            "type": 7,
+            "key": "developer_value",
+            "name": "A thing",
+            "description": "Description of the thing",
+            "name_localizations": {
+                "en-UK": "A thing (but in Bri'ish)",
+                "es": "Una cosa",
+            },
+            "description_localizations": {
+                "en-UK": "Description of the thing (but in Bri'ish)",
+                "es": "Descripción de la cosa",
+            },
+        }
+
+    def test_deserialize_application_connection_metadata_record(
+        self, entity_factory_impl, application_connection_metadata_record_payload
+    ):
+        record = entity_factory_impl.deserialize_application_connection_metadata_record(
+            application_connection_metadata_record_payload
+        )
+
+        assert record.type == application_models.ApplicationRoleConnectionMetadataRecordType.BOOLEAN_EQUAL
+        assert record.key == "developer_value"
+        assert record.name == "A thing"
+        assert record.description == "Description of the thing"
+        assert record.name_localizations == {
+            "en-UK": "A thing (but in Bri'ish)",
+            "es": "Una cosa",
+        }
+        assert record.description_localizations == {
+            "en-UK": "Description of the thing (but in Bri'ish)",
+            "es": "Descripción de la cosa",
+        }
+
+    def test_deserialize_application_connection_metadata_record_with_missing_fields(
+        self, entity_factory_impl, application_connection_metadata_record_payload
+    ):
+        del application_connection_metadata_record_payload["name_localizations"]
+        del application_connection_metadata_record_payload["description_localizations"]
+
+        record = entity_factory_impl.deserialize_application_connection_metadata_record(
+            application_connection_metadata_record_payload
+        )
+
+        assert record.name_localizations == {}
+        assert record.description_localizations == {}
+
+    def test_serialize_application_connection_metadata_record(self, entity_factory_impl):
+        record = application_models.ApplicationRoleConnectionMetadataRecord(
+            type=application_models.ApplicationRoleConnectionMetadataRecordType.BOOLEAN_EQUAL,
+            key="some_key",
+            name="Testing this out",
+            description="Describing this out",
+            name_localizations={
+                "some_language": "Its name localization",
+            },
+            description_localizations={
+                "some_other_language": "Its description localization",
+            },
+        )
+
+        expected_result = {
+            "type": 7,
+            "key": "some_key",
+            "name": "Testing this out",
+            "description": "Describing this out",
+            "name_localizations": {
+                "some_language": "Its name localization",
+            },
+            "description_localizations": {
+                "some_other_language": "Its description localization",
+            },
+        }
+
+        assert entity_factory_impl.serialize_application_connection_metadata_record(record) == expected_result
 
     @pytest.fixture()
     def client_credentials_payload(self):

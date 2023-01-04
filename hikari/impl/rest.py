@@ -2037,7 +2037,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         response = await self._request(route)
         assert isinstance(response, dict)
-        return self._entity_factory.deserialize_own_application_role_connections(response)
+        return self._entity_factory.deserialize_own_application_role_connection(response)
 
     async def set_my_user_application_role_connections(
         self,
@@ -2067,7 +2067,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         response = await self._request(route, json=body)
         assert isinstance(response, dict)
-        return self._entity_factory.deserialize_own_application_role_connections(response)
+        return self._entity_factory.deserialize_own_application_role_connection(response)
 
     async def create_dm_channel(self, user: snowflakes.SnowflakeishOr[users.PartialUser], /) -> channels_.DMChannel:
         route = routes.POST_MY_CHANNELS.compile()

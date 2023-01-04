@@ -28,7 +28,7 @@ from hikari.applications import (
     ApplicationRoleConnectionMetadataRecord as ApplicationRoleConnectionMetadataRecord,
 )
 from hikari.applications import (
-    ApplicationRoleConnectionMetadataType as ApplicationRoleConnectionMetadataType,
+    ApplicationRoleConnectionMetadataRecordType as ApplicationRoleConnectionMetadataRecordType,
 )
 from hikari.applications import AuthorizationApplication as AuthorizationApplication
 from hikari.applications import AuthorizationInformation as AuthorizationInformation

@@ -588,7 +588,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             my_permissions=permission_models.Permissions(int(payload["permissions"])),
         )
 
-    def deserialize_own_application_role_connections(
+    def deserialize_own_application_role_connection(
         self, payload: data_binding.JSONObject
     ) -> application_models.OwnApplicationRoleConnection:
         return application_models.OwnApplicationRoleConnection(
@@ -689,7 +689,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             description_localizations = {}
 
         return application_models.ApplicationRoleConnectionMetadataRecord(
-            type=application_models.ApplicationRoleConnectionMetadataType(payload["type"]),
+            type=application_models.ApplicationRoleConnectionMetadataRecordType(payload["type"]),
             key=payload["key"],
             name=payload["name"],
             description=payload["description"],

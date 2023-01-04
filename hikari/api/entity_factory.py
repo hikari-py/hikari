@@ -157,10 +157,10 @@ class EntityFactory(abc.ABC):
         """
 
     @abc.abstractmethod
-    def deserialize_own_application_role_connections(
+    def deserialize_own_application_role_connection(
         self, payload: data_binding.JSONObject
     ) -> application_models.OwnApplicationRoleConnection:
-        """Parse a raw payload from Discord into an own application role connections object.
+        """Parse a raw payload from Discord into an own application role connection object.
 
         Parameters
         ----------
@@ -170,7 +170,7 @@ class EntityFactory(abc.ABC):
         Returns
         -------
         hikari.applications.OwnApplicationRoleConnection
-            The deserialized "own application role connections" object.
+            The deserialized "own application role connection" object.
         """
 
     @abc.abstractmethod
