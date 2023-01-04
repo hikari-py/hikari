@@ -12,6 +12,6 @@ numpydoc==1.5.0
 myst-parser==0.18.1
 
 # Misc extensions
-sphinxext.opengraph==0.7.4
+sphinxext.opengraph==0.7.5
 sphinx-copybutton==0.5.1
 sphinxcontrib-towncrier==0.3.2a0
