@@ -240,6 +240,9 @@ class OAuth2Scope(str, enums.Enum):
     GUILDS_MEMBERS_READ = "guilds.members.read"
     """Used to read the current user's guild members."""
 
+    ROLE_CONNECTIONS_WRITE = "role_connections.write"
+    """Used to write to the current user's connection and metadata for the app."""
+
 
 @typing.final
 class ConnectionVisibility(int, enums.Enum):

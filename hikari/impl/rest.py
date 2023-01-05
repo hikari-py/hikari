@@ -2030,7 +2030,7 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.DELETE_MY_GUILD.compile(guild=guild)
         await self._request(route)
 
-    async def fetch_my_user_application_role_connections(
+    async def fetch_my_user_application_role_connection(
         self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication]
     ) -> applications.OwnApplicationRoleConnection:
         route = routes.GET_MY_USER_APPLICATION_ROLE_CONNECTIONS.compile(application=application)
@@ -2039,7 +2039,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_own_application_role_connection(response)
 
-    async def set_my_user_application_role_connections(
+    async def set_my_user_application_role_connection(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         platform_name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
