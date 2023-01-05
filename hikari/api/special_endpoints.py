@@ -1460,7 +1460,7 @@ class SelectOptionBuilder(ComponentBuilder, abc.ABC, typing.Generic[_SelectMenuB
 
 
 class SelectMenuBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
-    """Builder class for select menu options."""
+    """Builder class for a select menu."""
 
     __slots__: typing.Sequence[str] = ()
 
@@ -1473,11 +1473,6 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
     @abc.abstractmethod
     def is_disabled(self) -> bool:
         """Whether the select menu should be marked as disabled."""
-
-    @property
-    @abc.abstractmethod
-    def options(self: _SelectMenuBuilderT) -> typing.Sequence[SelectOptionBuilder[_SelectMenuBuilderT]]:
-        """Sequence of the options set for this select menu."""
 
     @property
     @abc.abstractmethod
@@ -1502,27 +1497,6 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
         Defaults to 1.
         Must be greater than or equal to `SelectMenuBuilder.min_values` and
         less than or equal to 25.
-        """
-
-    @abc.abstractmethod
-    def add_option(self: _SelectMenuBuilderT, label: str, value: str, /) -> SelectOptionBuilder[_SelectMenuBuilderT]:
-        """Add an option to this menu.
-
-        .. note::
-            Setup should be finalised by calling `add_to_menu` in the builder
-            returned.
-
-        Parameters
-        ----------
-        label : str
-            The user-facing name of this option, max 100 characters.
-        value : str
-            The developer defined value of this option, max 100 characters.
-
-        Returns
-        -------
-        SelectOptionBuilder[SelectMenuBuilder]
-            Option builder object.
         """
 
     @abc.abstractmethod
@@ -1604,6 +1578,64 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
         -------
         _ContainerT
             The parent container component builder.
+        """
+
+
+class TextSelectMenuBuilder(SelectMenuBuilder[_ContainerT], abc.ABC, typing.Generic[_ContainerT]):
+    """Builder class for a text select menu."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def options(self: _SelectMenuBuilderT) -> typing.Sequence[SelectOptionBuilder[_SelectMenuBuilderT]]:
+        """Sequence of the options set for this select menu."""
+
+    @abc.abstractmethod
+    def add_option(self: _SelectMenuBuilderT, label: str, value: str, /) -> SelectOptionBuilder[_SelectMenuBuilderT]:
+        """Add an option to this menu.
+
+        .. note::
+            Setup should be finalised by calling `add_to_menu` in the builder
+            returned.
+
+        Parameters
+        ----------
+        label : str
+            The user-facing name of this option, max 100 characters.
+        value : str
+            The developer defined value of this option, max 100 characters.
+
+        Returns
+        -------
+        SelectOptionBuilder[SelectMenuBuilder]
+            Option builder object.
+        """
+
+
+class ChannelSelectMenuBuilder(SelectMenuBuilder[_ContainerT], abc.ABC, typing.Generic[_ContainerT]):
+    """Builder class for a channel select menu."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def channel_types(self) -> typing.Sequence[channels.ChannelType]:
+        """The channel types that can be selected in this menu."""
+
+    @abc.abstractmethod
+    def set_channel_types(self: _T, value: typing.Sequence[channels.ChannelType], /) -> _T:
+        """Set the valid channel types for this menu.
+
+        Parameters
+        ----------
+        value : typing.Sequence[hikari.channels.ChannelType]
+            The valid channel types for this menu.
+
+        Returns
+        -------
+        SelectMenuBuilder
+            The builder object to enable chained calls.
         """
 
 
@@ -1868,12 +1900,63 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
             component.
         """
 
+    @typing.overload  # Deprecated overload
     @abc.abstractmethod
-    def add_select_menu(self: _T, custom_id: str, /) -> SelectMenuBuilder[_T]:
+    def add_select_menu(
+        self: _T,
+        custom_id: str,
+        /,
+    ) -> TextSelectMenuBuilder[_T]:
+        ...
+
+    @typing.overload
+    @abc.abstractmethod
+    def add_select_menu(
+        self: _T,
+        type_: typing.Literal[components_.ComponentType.TEXT_SELECT_MENU, 3],
+        custom_id: str,
+        /,
+    ) -> TextSelectMenuBuilder[_T]:
+        ...
+
+    @typing.overload
+    @abc.abstractmethod
+    def add_select_menu(
+        self: _T,
+        type_: typing.Literal[components_.ComponentType.CHANNEL_SELECT_MENU, 8],
+        custom_id: str,
+        /,
+    ) -> ChannelSelectMenuBuilder[_T]:
+        ...
+
+    @typing.overload
+    @abc.abstractmethod
+    def add_select_menu(
+        self: _T,
+        type_: typing.Union[components_.ComponentType, int],
+        custom_id: str,
+        /,
+    ) -> SelectMenuBuilder[_T]:
+        ...
+
+    @abc.abstractmethod
+    def add_select_menu(
+        self: _T,
+        type_: typing.Union[components_.ComponentType, int, str],
+        # These have default during the deprecation period for backwards compatibility, as custom_id
+        # used to come first
+        custom_id: str = "",
+        /,
+    ) -> SelectMenuBuilder[_T]:
         """Add a select menu component to this action row builder.
+
+        .. deprecated:: 2.0.0.dev116
+            `type_` now comes as a positional-only argument before `custom_id`.
 
         Parameters
         ----------
+        type_ : typing.Union[hikari.components.ComponentType, int]
+            The type for the select menu.
         custom_id : str
             A developer-defined custom identifier used to identify which menu
             triggered component interactions.
@@ -1884,6 +1967,11 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
             Select menu builder object.
             `SelectMenuBuilder.add_to_container` should be called to finalise the
             component.
+
+        Raises
+        ------
+        ValueError
+            If an invalid select menu type is passed.
         """
 
 

@@ -107,6 +107,9 @@ class ComponentInteraction(
     values: typing.Sequence[str] = attr.field(eq=False)
     """Sequence of the values which were selected for a select menu component."""
 
+    resolved: typing.Optional[base_interactions.ResolvedOptionData] = attr.field(eq=False, hash=False, repr=False)
+    """Mappings of the objects resolved for the provided command options."""
+
     guild_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False)
     """ID of the guild this interaction was triggered in.
 

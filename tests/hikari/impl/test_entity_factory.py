@@ -4223,7 +4223,7 @@ class TestEntityFactoryImpl:
         assert channel.id == 695382395666300958
         assert channel.name == "discord-announcements"
         assert channel.permissions == permission_models.Permissions(17179869183)
-        assert isinstance(channel, command_interactions.InteractionChannel)
+        assert isinstance(channel, base_interactions.InteractionChannel)
         assert len(resolved.members) == 1
         member = resolved.members[115590097100865541]
         assert member == entity_factory_impl._deserialize_interaction_member(
@@ -4239,7 +4239,7 @@ class TestEntityFactoryImpl:
         assert resolved.users == {115590097100865541: entity_factory_impl.deserialize_user(user_payload)}
         assert resolved.messages == {123: entity_factory_impl.deserialize_message(message_payload)}
 
-        assert isinstance(resolved, command_interactions.ResolvedOptionData)
+        assert isinstance(resolved, base_interactions.ResolvedOptionData)
 
     def test__deserialize_resolved_option_data_with_empty_resolved_resources(self, entity_factory_impl):
         resolved = entity_factory_impl._deserialize_resolved_option_data({})
@@ -4668,7 +4668,9 @@ class TestEntityFactoryImpl:
         assert command.default_member_permissions == permission_models.Permissions.ADMINISTRATOR
 
     @pytest.fixture()
-    def component_interaction_payload(self, interaction_member_payload, message_payload):
+    def component_interaction_payload(
+        self, interaction_member_payload, message_payload, interaction_resolved_data_payload
+    ):
         return {
             "version": 1,
             "type": 3,
@@ -4677,7 +4679,12 @@ class TestEntityFactoryImpl:
             "member": interaction_member_payload,
             "id": "846462639134605312",
             "guild_id": "290926798626357999",
-            "data": {"custom_id": "click_one", "component_type": 2, "values": ["1", "2", "67"]},
+            "data": {
+                "custom_id": "click_one",
+                "component_type": 2,
+                "values": ["1", "2", "67"],
+                "resolved": interaction_resolved_data_payload,
+            },
             "channel_id": "345626669114982999",
             "application_id": "290926444748734465",
             "locale": "es-ES",
@@ -4686,7 +4693,13 @@ class TestEntityFactoryImpl:
         }
 
     def test_deserialize_component_interaction(
-        self, entity_factory_impl, component_interaction_payload, interaction_member_payload, mock_app, message_payload
+        self,
+        entity_factory_impl,
+        component_interaction_payload,
+        interaction_member_payload,
+        mock_app,
+        message_payload,
+        interaction_resolved_data_payload,
     ):
         interaction = entity_factory_impl.deserialize_component_interaction(component_interaction_payload)
 
@@ -4711,6 +4724,10 @@ class TestEntityFactoryImpl:
         assert interaction.guild_locale == "en-US"
         assert interaction.guild_locale is locales.Locale.EN_US
         assert interaction.app_permissions == 5431234
+        # ResolvedData
+        assert interaction.resolved == entity_factory_impl._deserialize_resolved_option_data(
+            interaction_resolved_data_payload, guild_id=290926798626357999
+        )
         assert isinstance(interaction, component_interactions.ComponentInteraction)
 
     def test_deserialize_component_interaction_with_undefined_fields(
@@ -5298,7 +5315,7 @@ class TestEntityFactoryImpl:
     @pytest.fixture()
     def select_menu_payload(self, custom_emoji_payload):
         return {
-            "type": 3,
+            "type": 5,
             "custom_id": "Not an ID",
             "options": [
                 {
@@ -5315,10 +5332,10 @@ class TestEntityFactoryImpl:
             "disabled": True,
         }
 
-    def test__deserialize_select_menu(self, entity_factory_impl, select_menu_payload, custom_emoji_payload):
-        menu = entity_factory_impl._deserialize_select_menu(select_menu_payload)
+    def test__deserialize_text_select_menu(self, entity_factory_impl, select_menu_payload, custom_emoji_payload):
+        menu = entity_factory_impl._deserialize_text_select_menu(select_menu_payload)
 
-        assert menu.type is component_models.ComponentType.SELECT_MENU
+        assert menu.type is component_models.ComponentType.USER_SELECT_MENU
         assert menu.custom_id == "Not an ID"
 
         # SelectMenuOption
@@ -5336,8 +5353,8 @@ class TestEntityFactoryImpl:
         assert menu.max_values == 420
         assert menu.is_disabled is True
 
-    def test__deserialize_select_menu_partial(self, entity_factory_impl):
-        menu = entity_factory_impl._deserialize_select_menu(
+    def test__deserialize_text_select_menu_partial(self, entity_factory_impl):
+        menu = entity_factory_impl._deserialize_text_select_menu(
             {
                 "type": 3,
                 "custom_id": "Not an ID",
@@ -5361,7 +5378,11 @@ class TestEntityFactoryImpl:
         ("type_", "fn", "mapping"),
         [
             (2, "_deserialize_button", "_message_component_type_mapping"),
-            (3, "_deserialize_select_menu", "_message_component_type_mapping"),
+            (3, "_deserialize_text_select_menu", "_message_component_type_mapping"),
+            (5, "_deserialize_select_menu", "_message_component_type_mapping"),
+            (6, "_deserialize_select_menu", "_message_component_type_mapping"),
+            (7, "_deserialize_select_menu", "_message_component_type_mapping"),
+            (8, "_deserialize_channel_select_menu", "_message_component_type_mapping"),
             (4, "_deserialize_text_input", "_modal_component_type_mapping"),
         ],
     )

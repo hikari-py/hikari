@@ -507,7 +507,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             int, typing.Callable[[data_binding.JSONObject], component_models.MessageComponentTypesT]
         ] = {
             component_models.ComponentType.BUTTON: self._deserialize_button,
-            component_models.ComponentType.SELECT_MENU: self._deserialize_select_menu,
+            component_models.ComponentType.TEXT_SELECT_MENU: self._deserialize_text_select_menu,
+            component_models.ComponentType.USER_SELECT_MENU: self._deserialize_select_menu,
+            component_models.ComponentType.ROLE_SELECT_MENU: self._deserialize_select_menu,
+            component_models.ComponentType.MENTIONABLE_SELECT_MENU: self._deserialize_select_menu,
+            component_models.ComponentType.CHANNEL_SELECT_MENU: self._deserialize_channel_select_menu,
         }
         self._modal_component_type_mapping: typing.Dict[
             int, typing.Callable[[data_binding.JSONObject], component_models.ModalComponentTypesT]
@@ -2380,12 +2384,12 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         payload: data_binding.JSONObject,
         *,
         guild_id: typing.Optional[snowflakes.Snowflake] = None,
-    ) -> command_interactions.ResolvedOptionData:
-        channels: typing.Dict[snowflakes.Snowflake, command_interactions.InteractionChannel] = {}
+    ) -> base_interactions.ResolvedOptionData:
+        channels: typing.Dict[snowflakes.Snowflake, base_interactions.InteractionChannel] = {}
         if raw_channels := payload.get("channels"):
             for channel_payload in raw_channels.values():
                 channel_id = snowflakes.Snowflake(channel_payload["id"])
-                channels[channel_id] = command_interactions.InteractionChannel(
+                channels[channel_id] = base_interactions.InteractionChannel(
                     app=self._app,
                     id=channel_id,
                     type=channel_models.ChannelType(channel_payload["type"]),
@@ -2428,7 +2432,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         else:
             attachments = {}
 
-        return command_interactions.ResolvedOptionData(
+        return base_interactions.ResolvedOptionData(
             attachments=attachments,
             channels=channels,
             members=members,
@@ -2461,7 +2465,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             member = None
             user = self.deserialize_user(payload["user"])
 
-        resolved: typing.Optional[command_interactions.ResolvedOptionData] = None
+        resolved: typing.Optional[base_interactions.ResolvedOptionData] = None
         if resolved_payload := data_payload.get("resolved"):
             resolved = self._deserialize_resolved_option_data(resolved_payload, guild_id=guild_id)
 
@@ -2638,6 +2642,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             member = None
             user = self.deserialize_user(payload["user"])
 
+        resolved: typing.Optional[base_interactions.ResolvedOptionData] = None
+        if resolved_payload := data_payload.get("resolved"):
+            resolved = self._deserialize_resolved_option_data(resolved_payload, guild_id=guild_id)
+
         app_perms = payload.get("app_permissions")
         return component_interactions.ComponentInteraction(
             app=self._app,
@@ -2650,6 +2658,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             user=user,
             token=payload["token"],
             values=data_payload.get("values") or (),
+            resolved=resolved,
             version=payload["version"],
             custom_id=data_payload["custom_id"],
             component_type=component_models.ComponentType(data_payload["component_type"]),
@@ -2775,26 +2784,57 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     def _deserialize_select_menu(self, payload: data_binding.JSONObject) -> component_models.SelectMenuComponent:
-        options: typing.List[component_models.SelectMenuOption] = []
-        for option_payload in payload["options"]:
-            emoji = None
-            if emoji_payload := option_payload.get("emoji"):
-                emoji = self.deserialize_emoji(emoji_payload)
-
-            options.append(
-                component_models.SelectMenuOption(
-                    label=option_payload["label"],
-                    value=option_payload["value"],
-                    description=option_payload.get("description"),
-                    emoji=emoji,
-                    is_default=option_payload.get("default", False),
-                )
-            )
-
         return component_models.SelectMenuComponent(
             type=component_models.ComponentType(payload["type"]),
             custom_id=payload["custom_id"],
+            placeholder=payload.get("placeholder"),
+            min_values=payload.get("min_values", 1),
+            max_values=payload.get("max_values", 1),
+            is_disabled=payload.get("disabled", False),
+        )
+
+    def _deserialize_text_select_menu(
+        self, payload: data_binding.JSONObject
+    ) -> component_models.TextSelectMenuComponent:
+        options: typing.List[component_models.SelectMenuOption] = []
+        if "options" in payload:
+            for option_payload in payload["options"]:
+                emoji = None
+                if emoji_payload := option_payload.get("emoji"):
+                    emoji = self.deserialize_emoji(emoji_payload)
+
+                options.append(
+                    component_models.SelectMenuOption(
+                        label=option_payload["label"],
+                        value=option_payload["value"],
+                        description=option_payload.get("description"),
+                        emoji=emoji,
+                        is_default=option_payload.get("default", False),
+                    )
+                )
+
+        return component_models.TextSelectMenuComponent(
+            type=component_models.ComponentType(payload["type"]),
+            custom_id=payload["custom_id"],
             options=options,
+            placeholder=payload.get("placeholder"),
+            min_values=payload.get("min_values", 1),
+            max_values=payload.get("max_values", 1),
+            is_disabled=payload.get("disabled", False),
+        )
+
+    def _deserialize_channel_select_menu(
+        self, payload: data_binding.JSONObject
+    ) -> component_models.ChannelSelectMenuComponent:
+        channel_types: typing.List[typing.Union[int, channel_models.ChannelType]] = []
+        if "channel_types" in payload:
+            for channel_type in payload["channel_types"]:
+                channel_types.append(channel_models.ChannelType(channel_type))
+
+        return component_models.ChannelSelectMenuComponent(
+            type=component_models.ComponentType(payload["type"]),
+            custom_id=payload["custom_id"],
+            channel_types=channel_types,
             placeholder=payload.get("placeholder"),
             min_values=payload.get("min_values", 1),
             max_values=payload.get("max_values", 1),
