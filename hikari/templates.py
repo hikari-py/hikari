@@ -174,5 +174,35 @@ class Template:
     is_unsynced: bool = attr.field(eq=False, hash=False, repr=False)
     """Whether this template is missing changes from it's source guild."""
 
+    async def fetch_self(self) -> Template:
+        """Fetch an up-to-date view of this template from the API.
+
+        Returns
+        -------
+        hikari.templates.Template
+            An up-to-date view of this template.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the template is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        return await self.creator.app.rest.fetch_template(self.code)
+
     def __str__(self) -> str:
         return f"https://discord.new/{self.code}"
