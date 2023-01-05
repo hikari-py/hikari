@@ -244,6 +244,30 @@ class Template:
         If an internal error occurs on Discord while handling the request.
         """
         return await self.creator.app.rest.edit_template(self.source_guild, self, name=name, description=description)
+    
+    async def delete(self) -> None:
+        """Deletes a guild template.
         
+        RAISES:
+        hikari.errors.ForbiddenError
+        If you are not part of the guild.
+
+        hikari.errors.NotFoundError
+        If the guild is not found or you are missing the MANAGE_GUILD permission.
+
+        hikari.errors.UnauthorizedError
+        If you are unauthorized to make the request (invalid/missing token).
+
+        hikari.errors.RateLimitTooLongError
+        Raised in the event that a rate limit occurs that is longer than max_rate_limit when making a request.
+
+        hikari.errors.RateLimitedError
+        Usually, Hikari will handle and retry on hitting rate-limits automatically. This includes most bucket-specific rate-limits and global rate-limits. In some rare edge cases, however, Discord implements other undocumented rules for rate-limiting, such as limits per attribute. These cannot be detected or handled normally by Hikari due to their undocumented nature, and will trigger this exception if they occur.
+
+        hikari.errors.InternalServerError
+        If an internal error occurs on Discord while handling the request.
+        """
+        await self.creator.app.rest.delete_template(self.source_guild, self)
+    
     def __str__(self) -> str:
         return f"https://discord.new/{self.code}"
