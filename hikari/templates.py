@@ -297,5 +297,46 @@ class Template:
         """
         return await self.creator.app.rest.sync_guild_template(self.source_guild, self)
     
+    async def create_guild(
+        self,
+        name: str,
+        *,
+        icon: undefined.UndefinedOr[str]
+    ) -> guilds.RESTGuild:
+        """Make a guild from a template.
+
+        Note
+        This endpoint can only be used by bots in less than 10 guilds.
+        
+        PARAMETERS:
+        name: str
+        The new guilds name.
+
+        OTHER PARAMETERS:
+        icon: hikari.undefined.UndefinedOr[hikari.files.Resourceish]
+        If provided, the guild icon to set. Must be a 1024x1024 image or can be an animated gif when the guild has the ANIMATED_ICON feature.
+
+        RETURNS:
+        hikari.guilds.RESTGuild
+        Object of the created guild.
+
+        RAISES:
+        hikari.errors.BadRequestError
+        If any of the fields that are passed have an invalid value or if you call this as a bot that’s in more than 10 guilds.
+
+        hikari.errors.UnauthorizedError
+        If you are unauthorized to make the request (invalid/missing token).
+
+        hikari.errors.RateLimitTooLongError
+        Raised in the event that a rate limit occurs that is longer than max_rate_limit when making a request.
+
+        hikari.errors.RateLimitedError
+        Usually, Hikari will handle and retry on hitting rate-limits automatically. This includes most bucket-specific rate-limits and global rate-limits. In some rare edge cases, however, Discord implements other undocumented rules for rate-limiting, such as limits per attribute. These cannot be detected or handled normally by Hikari due to their undocumented nature, and will trigger this exception if they occur.
+
+        hikari.errors.InternalServerError
+        If an internal error occurs on Discord while handling the request.
+        """
+        return await self.creator.app.rest.create_guild_from_template(self, name, icon=icon)
+    
     def __str__(self) -> str:
         return f"https://discord.new/{self.code}"
