@@ -23,72 +23,73 @@ import mock
 import pytest
 
 from hikari import templates
-from hikari import users
+from hikari import traits
 
 
 class TestTemplate:
     @pytest.fixture()
-    def mock_user(self):
-        return mock.Mock(return_value=users.User)
+    def mock_app(self):
+        return mock.Mock(spec_set=traits.RESTAware)
 
     @pytest.fixture()
-    def obj(self, mock_user):
+    def obj(self, mock_app):
         return templates.Template(
             code="abc123",
             name="Test Template",
             description="Template used for testing",
             usage_count=101,
-            creator=mock_user,
+            creator=object(),
             created_at=object(),
             updated_at=object(),
             source_guild=object(),
             is_unsynced=True,
+            app=mock_app,
         )
 
     @pytest.mark.asyncio()
     async def test_fetch_self(self, obj):
-        obj.creator.app.rest.fetch_template = mock.AsyncMock()
+        obj.app.rest.fetch_template = mock.AsyncMock()
         fetch_self = await obj.fetch_self()
-        obj.creator.app.rest.fetch_template.assert_awaited_once()
+        obj.app.rest.fetch_template.assert_awaited_once()
 
-        assert fetch_self == obj.creator.app.rest.fetch_template.return_value
+        assert fetch_self == obj.app.rest.fetch_template.return_value
 
     @pytest.mark.asyncio()
     async def test_edit(self, obj):
-        obj.creator.app.rest.edit_template = mock.AsyncMock()
+        obj.app.rest.edit_template = mock.AsyncMock()
         edit = await obj.edit(name="Test Template 2", description="Electric Boogaloo")
-        obj.creator.app.rest.edit_template.assert_awaited_once_with(
+        obj.app.rest.edit_template.assert_awaited_once_with(
             obj.source_guild, obj, name="Test Template 2", description="Electric Boogaloo"
         )
 
-        assert edit == obj.creator.app.rest.edit_template.return_value
+        assert edit == obj.app.rest.edit_template.return_value
 
     @pytest.mark.asyncio()
     async def test_delete(self, obj):
         mock_template = mock.Mock(templates.Template)
-        obj.creator.app.rest.delete_template = mock.AsyncMock(return_value=mock_template)
+        obj.app.rest.delete_template = mock.AsyncMock(return_value=mock_template)
         await obj.delete()
-        obj.creator.app.rest.delete_template.assert_awaited_once_with(obj.source_guild, obj)
+        obj.app.rest.delete_template.assert_awaited_once_with(obj.source_guild, obj)
 
     @pytest.mark.asyncio()
     async def test_sync(self, obj):
-        obj.creator.app.rest.sync_guild_template = mock.AsyncMock()
+        obj.app.rest.sync_guild_template = mock.AsyncMock()
         sync = await obj.sync()
-        obj.creator.app.rest.sync_guild_template.assert_awaited_once()
+        obj.app.rest.sync_guild_template.assert_awaited_once()
 
-        assert sync == obj.creator.app.rest.sync_guild_template.return_value
+        assert sync == obj.app.rest.sync_guild_template.return_value
 
     @pytest.mark.asyncio()
     async def test_create_guild(self, obj):
-        obj.creator.app.rest.create_guild_from_template = mock.AsyncMock()
+        obj.app.rest.create_guild_from_template = mock.AsyncMock()
         create_guild = await obj.create_guild(
             name="Test guild", icon="https://avatars.githubusercontent.com/u/72694042"
         )
-        obj.creator.app.rest.create_guild_from_template.assert_awaited_once_with(
+        obj.app.rest.create_guild_from_template.assert_awaited_once_with(
             obj, "Test guild", icon="https://avatars.githubusercontent.com/u/72694042"
         )
 
-        assert create_guild == obj.creator.app.rest.create_guild_from_template.return_value
+        assert create_guild == obj.app.rest.create_guild_from_template.return_value
 
     def test_str(self, obj):
         assert str(obj) == "https://discord.new/abc123"
