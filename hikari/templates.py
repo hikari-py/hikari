@@ -31,6 +31,7 @@ import typing
 import attr
 
 from hikari import guilds
+from hikari import traits
 from hikari import undefined
 from hikari.internal import attr_extensions
 
@@ -175,6 +176,11 @@ class Template:
     is_unsynced: bool = attr.field(eq=False, hash=False, repr=False)
     """Whether this template is missing changes from it's source guild."""
 
+    app: traits.RESTAware = attr.field(
+        repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
+    )
+    """Client application that models may use for procedures."""
+
     async def fetch_self(self) -> Template:
         """Fetch an up-to-date view of this template from the API.
 
@@ -203,7 +209,7 @@ class Template:
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
-        return await self.creator.app.rest.fetch_template(self.code)
+        return await self.app.rest.fetch_template(self.code)
 
     async def edit(
         self,
@@ -230,7 +236,7 @@ class Template:
         hikari.errors.ForbiddenError
             If you are not part of the guild.
         hikari.errors.NotFoundError
-            If the guild is not found or you are missing the MANAGE_GUILD permission.
+            If the guild is not found or you are missing the `MANAGE_GUILD` permission.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.RateLimitTooLongError
@@ -245,7 +251,7 @@ class Template:
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
-        return await self.creator.app.rest.edit_template(self.source_guild, self, name=name, description=description)
+        return await self.app.rest.edit_template(self.source_guild, self, name=name, description=description)
 
     async def delete(self) -> None:
         """Delete a guild template.
@@ -255,7 +261,7 @@ class Template:
         hikari.errors.ForbiddenError
             If you are not part of the guild.
         hikari.errors.NotFoundError
-            If the guild is not found or you are missing the MANAGE_GUILD permission.
+            If the guild is not found or you are missing the `MANAGE_GUILD` permission.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.RateLimitTooLongError
@@ -270,7 +276,7 @@ class Template:
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
-        await self.creator.app.rest.delete_template(self.source_guild, self)
+        await self.app.rest.delete_template(self.source_guild, self)
 
     async def sync(self) -> Template:
         """Sync a guild template.
@@ -283,7 +289,7 @@ class Template:
         Raises
         ------
         hikari.errors.ForbiddenError
-            If you are not part of the guild or are missing the MANAGE_GUILD permission.
+            If you are not part of the guild or are missing the `MANAGE_GUILD` permission.
         hikari.errors.NotFoundError
             If the guild or template is not found.
         hikari.errors.UnauthorizedError
@@ -300,7 +306,7 @@ class Template:
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
-        return await self.creator.app.rest.sync_guild_template(self.source_guild, self)
+        return await self.app.rest.sync_guild_template(self.source_guild, self)
 
     async def create_guild(self, name: str, *, icon: undefined.UndefinedOr[str]) -> guilds.RESTGuild:
         """Make a guild from a template.
@@ -342,7 +348,7 @@ class Template:
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
-        return await self.creator.app.rest.create_guild_from_template(self, name, icon=icon)
+        return await self.app.rest.create_guild_from_template(self, name, icon=icon)
 
     def __str__(self) -> str:
         return f"https://discord.new/{self.code}"
