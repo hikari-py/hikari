@@ -3388,7 +3388,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             updated_at=time.iso8601_datetime_string_to_datetime(payload["updated_at"]),
             source_guild=source_guild,
             is_unsynced=bool(payload["is_dirty"]),
-            app=self.app,
+            app=self._app,
         )
 
     ###############
