@@ -376,14 +376,21 @@ class TestWarnIfNotOptimized:
     @pytest.mark.skipif(not __debug__, reason="Not running in optimized mode")
     def test_when_not_optimized(self):
         with mock.patch.object(ux, "_LOGGER") as logger:
-            ux.warn_if_not_optimized()
+            ux.warn_if_not_optimized(suppress=False)
 
         logger.warning.assert_called()
 
     @pytest.mark.skipif(__debug__, reason="Running in optimized mode")
     def test_when_optimized(self):
         with mock.patch.object(ux, "_LOGGER") as logger:
-            ux.warn_if_not_optimized()
+            ux.warn_if_not_optimized(suppress=False)
+
+        logger.warning.assert_not_called()
+
+    @pytest.mark.skipif(not __debug__, reason="Not running in optimized mode")
+    def test_when_optimized_and_suppressed(self):
+        with mock.patch.object(ux, "_LOGGER") as logger:
+            ux.warn_if_not_optimized(suppress=True)
 
         logger.warning.assert_not_called()
 
