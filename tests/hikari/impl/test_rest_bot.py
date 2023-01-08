@@ -120,6 +120,7 @@ class TestRESTBot:
                 b"2123123123123132",
                 allow_color=False,
                 banner="a banner",
+                suppress_optimization_warning=True,
                 executor=mock_executor,
                 force_color=True,
                 http_settings=mock_http_settings,
@@ -131,6 +132,7 @@ class TestRESTBot:
             )
 
             ux.init_logging.assert_called_once_with("ERROR", False, True)
+            ux.warn_if_not_optimized.assert_called_once_with(True)
             entity_factory_impl.EntityFactoryImpl.assert_called_once_with(result)
             rest_impl.RESTClientImpl.assert_called_once_with(
                 cache=None,

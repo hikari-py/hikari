@@ -190,6 +190,7 @@ class TestGatewayBot:
                 "token",
                 allow_color=False,
                 banner="testing",
+                suppress_optimization_warning=True,
                 executor=executor,
                 force_color=True,
                 cache_settings=cache_settings,
@@ -237,7 +238,7 @@ class TestGatewayBot:
 
         init_logging.assert_called_once_with("DEBUG", False, True)
         print_banner.assert_called_once_with("testing", False, True)
-        warn_if_not_optimized.assert_called_once_with()
+        warn_if_not_optimized.assert_called_once_with(True)
 
     def test_init_when_no_settings(self):
         stack = contextlib.ExitStack()
