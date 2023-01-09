@@ -109,7 +109,8 @@ else:
 
         JSONDecodeError = json.JSONDecodeError
 
-        def dump_json(obj: typing.Union[JSONArray, JSONObject], **kwargs: typing.Any) -> bytes:
+        def dump_json(obj: typing.Union[JSONArray, JSONObject], **kwargs: typing.Any) -> bytes:  # noqa: D103
+            # First definition already has docstring.
             return json.dumps(obj, **kwargs).encode("UTF-8")
 
         load_json = json.loads
