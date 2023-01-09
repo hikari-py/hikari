@@ -177,13 +177,13 @@ class TestGatewayTransport:
     @pytest.mark.asyncio()
     @pytest.mark.parametrize("trace", [True, False])
     async def test_send_json(self, transport_impl, trace):
-        transport_impl._ws.send_str = mock.AsyncMock()
+        transport_impl._ws.send_bytes = mock.AsyncMock()
         transport_impl._logger = mock.Mock(enabled_for=mock.Mock(return_value=trace))
 
         with mock.patch.object(data_binding, "dump_json") as dump_json:
             await transport_impl.send_json({"json_send": None})
 
-        transport_impl._ws.send_str.assert_awaited_once_with(dump_json.return_value)
+        transport_impl._ws.send_bytes.assert_awaited_once_with(dump_json.return_value)
         dump_json.assert_called_once_with({"json_send": None})
 
     @pytest.mark.asyncio()
