@@ -142,7 +142,7 @@ class _Response:
 
 # Constant response
 _PONG_RESPONSE: typing.Final[_Response] = _Response(
-    _OK_STATUS, data_binding.dump_json({"type": _PONG_RESPONSE_TYPE}).encode(), content_type=_JSON_CONTENT_TYPE
+    _OK_STATUS, data_binding.dump_json({"type": _PONG_RESPONSE_TYPE}), content_type=_JSON_CONTENT_TYPE
 )
 
 
@@ -194,9 +194,11 @@ class InteractionServer(interaction_server.InteractionServer):
     Other Parameters
     ----------------
     dumps : aiohttp.typedefs.JSONEncoder
-        The JSON encoder this server should use. Defaults to `json.dumps`.
+        The JSON encoder this server should use. Defaults to `json.dumps`. If speedups are
+        installed, default to `orjson.dumps`.
     loads : aiohttp.typedefs.JSONDecoder
-        The JSON decoder this server should use. Defaults to `json.loads`.
+        The JSON decoder this server should use. Defaults to `json.loads`. If speedups are
+        installed, default to `orjson.loads`.
     public_key : bytes
         The public key this server should use for verifying request payloads from
         Discord. If left as `None` then the client will try to work this
@@ -224,7 +226,7 @@ class InteractionServer(interaction_server.InteractionServer):
     def __init__(
         self,
         *,
-        dumps: aiohttp.typedefs.JSONEncoder = data_binding.dump_json,
+        dumps: aiohttp.typedefs.JSONEncoder = lambda obj: data_binding.dump_json(obj).decode(),
         entity_factory: entity_factory_api.EntityFactory,
         executor: typing.Optional[concurrent.futures.Executor] = None,
         loads: aiohttp.typedefs.JSONDecoder = data_binding.load_json,

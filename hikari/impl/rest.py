@@ -1457,7 +1457,9 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("message_reference", reply, conversion=lambda m: {"message_id": str(int(m))})
 
         if form_builder is not None:
-            form_builder.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
+            form_builder.add_field(
+                "payload_json", data_binding.dump_json(body).decode(), content_type=_APPLICATION_JSON
+            )
             response = await self._request(route, form_builder=form_builder)
         else:
             response = await self._request(route, json=body)
@@ -1523,7 +1525,9 @@ class RESTClientImpl(rest_api.RESTClient):
         )
 
         if form_builder is not None:
-            form_builder.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
+            form_builder.add_field(
+                "payload_json", data_binding.dump_json(body).decode(), content_type=_APPLICATION_JSON
+            )
             response = await self._request(route, form_builder=form_builder)
         else:
             response = await self._request(route, json=body)
@@ -1838,7 +1842,9 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("avatar_url", avatar_url, conversion=str)
 
         if form_builder is not None:
-            form_builder.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
+            form_builder.add_field(
+                "payload_json", data_binding.dump_json(body).decode(), content_type=_APPLICATION_JSON
+            )
             response = await self._request(route, form_builder=form_builder, query=query, auth=None)
         else:
             response = await self._request(route, json=body, query=query, auth=None)
@@ -1916,7 +1922,9 @@ class RESTClientImpl(rest_api.RESTClient):
         )
 
         if form_builder is not None:
-            form_builder.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
+            form_builder.add_field(
+                "payload_json", data_binding.dump_json(body).decode(), content_type=_APPLICATION_JSON
+            )
             response = await self._request(route, form_builder=form_builder, query=query, auth=None)
         else:
             response = await self._request(route, json=body, query=query, auth=None)
@@ -2855,7 +2863,9 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("message", message_body)
 
         if form_builder is not None:
-            form_builder.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
+            form_builder.add_field(
+                "payload_json", data_binding.dump_json(body).decode(), content_type=_APPLICATION_JSON
+            )
             response = await self._request(route, form_builder=form_builder, reason=reason)
         else:
             response = await self._request(route, json=body, reason=reason)
@@ -3930,7 +3940,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("data", data)
 
         if form is not None:
-            form.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
+            form.add_field("payload_json", data_binding.dump_json(body).decode(), content_type=_APPLICATION_JSON)
             await self._request(route, form_builder=form, auth=None)
         else:
             await self._request(route, json=body, auth=None)
@@ -3978,7 +3988,9 @@ class RESTClientImpl(rest_api.RESTClient):
         )
 
         if form_builder is not None:
-            form_builder.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
+            form_builder.add_field(
+                "payload_json", data_binding.dump_json(body).decode(), content_type=_APPLICATION_JSON
+            )
             response = await self._request(route, form_builder=form_builder, auth=None)
         else:
             response = await self._request(route, json=body, auth=None)

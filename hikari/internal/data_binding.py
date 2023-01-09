@@ -85,8 +85,8 @@ if typing.TYPE_CHECKING:
     JSONDecodeError: typing.Type[Exception] = Exception
     """Exception raised when loading an invalid JSON string."""
 
-    def dump_json(_: typing.Union[JSONArray, JSONObject], /, *, indent: int = ...) -> str:
-        """Convert a Python type to a JSON string."""
+    def dump_json(_: typing.Union[JSONArray, JSONObject], /, *, indent: int = ...) -> bytes:
+        """Convert a Python type to a UTF-8 JSON byte string."""
         raise NotImplementedError
 
     def load_json(_: typing.AnyStr, /) -> typing.Union[JSONArray, JSONObject]:
@@ -94,16 +94,25 @@ if typing.TYPE_CHECKING:
         raise NotImplementedError
 
 else:
-    import json
+    try:
+        # `orjson` is used for faster json decoding if the library is installed.
+        # The end user will install `orjson` will hikari[speedups].
+        import orjson
 
-    dump_json = json.dumps
-    """Convert a Python type to a JSON string."""
+        JSONDecodeError = orjson.JSONDecodeError
+        dump_json = orjson.dumps
+        load_json = orjson.loads
 
-    load_json = json.loads
-    """Convert a JSON string to a Python type."""
+    except ImportError:
+        # If `orjson` is not installed then parsing will be done with the build in json module.
+        import json
 
-    JSONDecodeError = json.JSONDecodeError
-    """Exception raised when loading an invalid JSON string."""
+        JSONDecodeError = json.JSONDecodeError
+
+        def dump_json(obj: typing.Union[JSONArray, JSONObject], **kwargs: typing.Any) -> bytes:
+            return json.dumps(obj, **kwargs).encode("UTF-8")
+
+        load_json = json.loads
 
 
 @typing.final
