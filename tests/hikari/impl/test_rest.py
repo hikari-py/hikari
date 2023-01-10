@@ -3985,7 +3985,6 @@ class TestRESTClientImplAsync:
             description="A sticker",
             reason="blah blah blah",
         )
-
         assert sticker is rest_client.create_sticker.return_value
 
         rest_client.create_sticker.assert_awaited_once_with(

@@ -749,7 +749,6 @@ class TestPartialGuild:
             description="A sticker",
             reason="blah blah blah",
         )
-
         assert sticker is model.app.rest.create_sticker.return_value
 
         model.app.rest.create_sticker.assert_awaited_once_with(
