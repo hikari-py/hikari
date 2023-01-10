@@ -753,7 +753,6 @@ class TestPartialGuild:
         assert sticker is model.app.rest.create_sticker.return_value
 
         model.app.rest.create_sticker.assert_awaited_once_with(
-            90210,
             "NewSticker",
             "funny",
             file,
