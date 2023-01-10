@@ -3973,9 +3973,29 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route)
         rest_client._entity_factory.deserialize_guild_sticker.assert_called_once_with({"id": "123"})
 
-    @pytest.mark.skip("TODO")
     async def test_create_sticker(self, rest_client):
-        ...
+        rest_client.create_sticker = mock.AsyncMock()
+        file = object()
+
+        sticker = await rest_client.create_sticker(
+            90210,
+            "NewSticker",
+            "funny",
+            file,
+            description="A sticker",
+            reason="blah blah blah",
+        )
+
+        assert sticker is rest_client.create_sticker.return_value
+
+        rest_client.create_sticker.assert_awaited_once_with(
+            90210,
+            "NewSticker",
+            "funny",
+            file,
+            description="A sticker",
+            reason="blah blah blah",
+        )
 
     async def test_edit_sticker(self, rest_client):
         expected_route = routes.PATCH_GUILD_STICKER.compile(guild=123, sticker=456)
