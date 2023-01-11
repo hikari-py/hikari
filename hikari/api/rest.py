@@ -3945,7 +3945,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The tag for the sticker.
         image : hikari.files.Resourceish
             The 320x320 image for the sticker. Maximum upload size is 500kb.
-            This can be a still or an animated PNG or a Lottie.
+            This can be a still PNG, an animated PNG, a Lottie, or a GIF.
 
             .. note::
                 Lottie support is only available for verified and partnered

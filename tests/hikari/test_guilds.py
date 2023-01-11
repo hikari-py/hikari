@@ -742,18 +742,23 @@ class TestPartialGuild:
         model.app.rest.create_sticker = mock.AsyncMock()
         file = object()
 
-        sticker = await model.create_sticker("NewSticker", "funny", file)
+        sticker = await model.create_sticker(
+            "NewSticker",
+            "funny",
+            file,
+            description="A sticker",
+            reason="blah blah blah",
+        )
+        assert sticker is model.app.rest.create_sticker.return_value
 
         model.app.rest.create_sticker.assert_awaited_once_with(
             90210,
             "NewSticker",
             "funny",
             file,
-            description=undefined.UNDEFINED,
-            reason=undefined.UNDEFINED,
+            description="A sticker",
+            reason="blah blah blah",
         )
-
-        assert sticker is model.app.rest.create_sticker.return_value
 
     @pytest.mark.asyncio()
     async def test_edit_sticker(self, model):
