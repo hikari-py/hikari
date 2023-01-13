@@ -148,7 +148,7 @@ class TemplateGuild(guilds.PartialGuild):
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
 class Template:
     """Represents a template used for creating guilds."""
-    
+
     app: traits.RESTAware = attr.field(
         repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
     )
