@@ -23,7 +23,6 @@ import mock
 import pytest
 
 from hikari import templates
-from hikari import traits
 
 
 class TestTemplate:
