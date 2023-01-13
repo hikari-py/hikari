@@ -1,1 +1,0 @@
-Move `description_localizations` from `PartialCommand` to `SlashCommand` (removing it from `ContextMenuCommand`).
