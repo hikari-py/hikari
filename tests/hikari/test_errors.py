@@ -249,7 +249,7 @@ class TestBulkDeleteError:
 class TestMissingIntentError:
     @pytest.fixture()
     def error(self):
-        return errors.MissingIntentError(intents.Intents.GUILD_BANS | intents.Intents.GUILD_EMOJIS)
+        return errors.MissingIntentError(intents.Intents.GUILD_MEMBERS | intents.Intents.GUILD_EMOJIS)
 
     def test_str(self, error):
-        assert str(error) == "You are missing the following intent(s): GUILD_BANS, GUILD_EMOJIS"
+        assert str(error) == "You are missing the following intent(s): GUILD_EMOJIS, GUILD_MEMBERS"

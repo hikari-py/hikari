@@ -82,6 +82,7 @@ class TestAuditLogEntry:
             action_type=0,
             options=None,
             reason=None,
+            guild_id=snowflakes.Snowflake(34123123),
         )
 
         assert await model.fetch_user() is None
@@ -99,6 +100,7 @@ class TestAuditLogEntry:
             action_type=0,
             options=None,
             reason=None,
+            guild_id=snowflakes.Snowflake(123321123),
         )
 
         assert await model.fetch_user() is model.app.rest.fetch_user.return_value

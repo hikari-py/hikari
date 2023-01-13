@@ -573,6 +573,9 @@ class AuditLogEntry(snowflakes.Unique):
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
     """The ID of this entity."""
 
+    guild_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
+    """ID of the guild this audit log entry is for."""
+
     target_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=True)
     """The ID of the entity affected by this change, if applicable."""
 

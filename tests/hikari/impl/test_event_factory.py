@@ -746,6 +746,18 @@ class TestEventFactoryImpl:
 
         assert event.presence is mock_app.entity_factory.deserialize_member_presence.return_value
 
+    def test_deserialize_audit_log_entry_create_event(
+        self, event_factory: event_factory_.EventFactoryImpl, mock_app, mock_shard
+    ):
+        payload = {"id": "439034093490"}
+
+        result = event_factory.deserialize_audit_log_entry_create_event(mock_shard, payload)
+
+        mock_app.entity_factory.deserialize_audit_log_entry.assert_called_once_with(payload)
+        assert result.entry is mock_app.entity_factory.deserialize_audit_log_entry.return_value
+        assert result.shard is mock_shard
+        assert isinstance(result, guild_events.AuditLogEntryCreateEvent)
+
     ######################
     # INTERACTION EVENTS #
     ######################

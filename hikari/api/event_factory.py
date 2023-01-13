@@ -674,6 +674,27 @@ class EventFactory(abc.ABC):
             The parsed presence update event object.
         """
 
+    @abc.abstractmethod
+    def deserialize_audit_log_entry_create_event(
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+    ) -> guild_events.AuditLogEntryCreateEvent:
+        """Parse a raw payload from Discord into a audit log entry create event object.
+
+        Parameters
+        ----------
+        shard : hikari.api.shard.GatewayShard
+            The shard that emitted this event.
+        payload : hikari.internal.data_binding.JSONObject
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.guild_events.AuditLogEntryCreateEvent
+            The parsed audit log entry create object.
+        """
+
     ######################
     # INTERACTION EVENTS #
     ######################
