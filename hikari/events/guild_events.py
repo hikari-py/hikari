@@ -25,6 +25,7 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
+    "AuditLogEntryCreateEvent",
     "GuildEvent",
     "GuildVisibilityEvent",
     "GuildAvailableEvent",
@@ -56,6 +57,7 @@ from hikari.events import shard_events
 from hikari.internal import attr_extensions
 
 if typing.TYPE_CHECKING:
+    from hikari import audit_logs
     from hikari import channels as channels_
     from hikari import emojis as emojis_
     from hikari import guilds
@@ -68,7 +70,10 @@ if typing.TYPE_CHECKING:
 
 
 @base_events.requires_intents(
-    intents.Intents.GUILDS, intents.Intents.GUILD_BANS, intents.Intents.GUILD_EMOJIS, intents.Intents.GUILD_PRESENCES
+    intents.Intents.GUILDS,
+    intents.Intents.GUILD_MODERATION,
+    intents.Intents.GUILD_EMOJIS,
+    intents.Intents.GUILD_PRESENCES,
 )
 class GuildEvent(shard_events.ShardEvent, abc.ABC):
     """Event base for any guild-bound event."""
@@ -339,7 +344,7 @@ class GuildUpdateEvent(GuildEvent):
         return self.guild.id
 
 
-@base_events.requires_intents(intents.Intents.GUILD_BANS)
+@base_events.requires_intents(intents.Intents.GUILD_MODERATION)
 class BanEvent(GuildEvent, abc.ABC):
     """Event base for any guild ban or unban."""
 
@@ -373,7 +378,7 @@ class BanEvent(GuildEvent, abc.ABC):
 
 @attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intents.GUILD_BANS)
+@base_events.requires_intents(intents.Intents.GUILD_MODERATION)
 class BanCreateEvent(BanEvent):
     """Event that is fired when a user is banned from a guild."""
 
@@ -402,7 +407,7 @@ class BanCreateEvent(BanEvent):
 
 @attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intents.GUILD_BANS)
+@base_events.requires_intents(intents.Intents.GUILD_MODERATION)
 class BanDeleteEvent(BanEvent):
     """Event that is fired when a user is unbanned from a guild."""
 
@@ -682,3 +687,26 @@ class PresenceUpdateEvent(shard_events.ShardEvent):
             The user affected by this event.
         """
         return await self.app.rest.fetch_user(self.user_id)
+
+
+@attr_extensions.with_copy
+@attr.define(kw_only=True, weakref_slot=False)
+@base_events.requires_intents(intents.Intents.GUILD_MODERATION)
+class AuditLogEntryCreateEvent(GuildEvent):
+    """Event sent when a guild audit log entry was created."""
+
+    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from ShardEvent>>.
+
+    entry: audit_logs.AuditLogEntry = attr.field()
+    """The created entry."""
+
+    @property
+    def app(self) -> traits.RESTAware:
+        # <<inherited docstring from Event>>.
+        return self.entry.app
+
+    @property
+    def guild_id(self) -> snowflakes.Snowflake:
+        # <<inherited docstring from GuildEvent>>.
+        return self.entry.guild_id
