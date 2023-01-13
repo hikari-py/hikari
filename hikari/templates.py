@@ -148,6 +148,11 @@ class TemplateGuild(guilds.PartialGuild):
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
 class Template:
     """Represents a template used for creating guilds."""
+    
+    app: traits.RESTAware = attr.field(
+        repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
+    )
+    """Client application that models may use for procedures."""
 
     code: str = attr.field(hash=True, repr=True)
     """The template's unique ID."""
@@ -175,11 +180,6 @@ class Template:
 
     is_unsynced: bool = attr.field(eq=False, hash=False, repr=False)
     """Whether this template is missing changes from it's source guild."""
-
-    app: traits.RESTAware = attr.field(
-        repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
-    )
-    """Client application that models may use for procedures."""
 
     async def fetch_self(self) -> Template:
         """Fetch an up-to-date view of this template from the API.
