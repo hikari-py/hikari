@@ -23,13 +23,13 @@
 by Discord emojis are actually legitimate URLs, since Discord
 does not map these on a 1-to-1 basis.
 """
+import json
 import pathlib
 import subprocess
 import sys
 import tempfile
 import time
-
-import requests
+import urllib.request
 
 sys.path.append(".")
 
@@ -41,41 +41,42 @@ DISCORD_EMOJI_MAPPING_URL = "https://emzi0767.gl-pages.emzi0767.dev/discord-emoj
 
 
 with tempfile.TemporaryDirectory() as tempdir:
-    start = time.perf_counter()
-    valid_emojis = []
+    tempdir = pathlib.Path(tempdir)
     invalid_emojis = []
+    start = time.perf_counter()
 
-    resp = requests.get(DISCORD_EMOJI_MAPPING_URL)
-    resp.encoding = "utf-8-sig"
-    mapping = resp.json()["emojiDefinitions"]
-
+    print("Cloning twemoji collection")
     subprocess.check_call(f"git clone {TWEMOJI_REPO_BASE_URL} {tempdir} --depth=1", shell=True)
-    known_files = [f.name for f in (pathlib.Path(tempdir) / "assets" / "72x72").iterdir()]
 
-    n = len(mapping)
+    print("Fetching emoji mapping")
+    with urllib.request.urlopen(DISCORD_EMOJI_MAPPING_URL) as request:
+        mapping = json.loads(request.read())["emojiDefinitions"]
+
+    assets_path = tempdir / "assets" / "72x72"
+
+    total = len(mapping)
     for i, emoji in enumerate(mapping, start=1):
-        emoji_surrogates = emoji["surrogates"]
         name = emoji["primaryName"]
+        emoji_surrogates = emoji["surrogates"]
         emoji = emojis.UnicodeEmoji.parse(emoji_surrogates)
-        line_repr = f"{i}/{n} {name} " + " ".join(map(hex, map(ord, emoji_surrogates))) + " " + emoji.url
+        line_repr = f"{i}/{total} {name} {' '.join(map(hex, map(ord, emoji_surrogates)))} {emoji.url}"
 
-        if emoji.filename in known_files:
-            valid_emojis.append((emoji_surrogates, name))
-            print("[  OK  ]", line_repr)
+        if (assets_path / emoji.filename).exists():
+            print(f"[  OK  ] {line_repr}")
         else:
             invalid_emojis.append(line_repr)
-            print("[ FAIL ]", line_repr)
+            print(f"[ FAIL ] {line_repr}")
 
-    print()
+    print("")
     print("Results")
     print("-------")
-    print("Valid emojis:", len(valid_emojis))
-    print("Invalid emojis:", len(invalid_emojis))
+    print(f"Valid emojis: {total - len(invalid_emojis)}")
+    print(f"Invalid emojis: {len(invalid_emojis)}")
 
     for line_repr in invalid_emojis:
-        print(" ", line_repr)
+        print(f"  {line_repr}")
 
-    print("Time taken", time.perf_counter() - start, "seconds")
+    print(f"Took {time.perf_counter() - start} seconds")
 
-    if invalid_emojis or not valid_emojis:
+    if invalid_emojis or total == 0:
         exit(1)
