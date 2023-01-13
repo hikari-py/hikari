@@ -946,10 +946,12 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             webhooks[webhook.id] = webhook
 
         return audit_log_models.AuditLog(
-            entries=entries, integrations=integrations, threads=threads, users=users, webhooks=webhooks
-        )
-        return audit_log_models.AuditLog(
-            auto_mod_rules=auto_mod_rules, entries=entries, integrations=integrations, users=users, webhooks=webhooks
+            auto_mod_rules=auto_mod_rules,
+            entries=entries,
+            integrations=integrations,
+            threads=threads,
+            users=users,
+            webhooks=webhooks,
         )
 
     ##################
