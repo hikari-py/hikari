@@ -6449,7 +6449,7 @@ class TestEntityFactoryImpl:
     ###################
 
     @pytest.fixture()
-    def template_payload(self, guild_text_channel_payload, user_payload, mock_app):
+    def template_payload(self, guild_text_channel_payload, user_payload):
         return {
             "code": "4rDaewUKeYVj",
             "name": "ttt",
@@ -6484,7 +6484,6 @@ class TestEntityFactoryImpl:
                 "system_channel_id": "8",
                 "system_channel_flags": 0,
             },
-            "app": mock_app,
             "is_dirty": True,
         }
 
@@ -6537,7 +6536,7 @@ class TestEntityFactoryImpl:
 
         assert template.is_unsynced is True
 
-    def test_deserialize_template_with_null_fields(self, entity_factory_impl, template_payload, user_payload, mock_app):
+    def test_deserialize_template_with_null_fields(self, entity_factory_impl, template_payload, user_payload):
         template = entity_factory_impl.deserialize_template(
             {
                 "code": "4rDaewUKeYVj",
@@ -6573,7 +6572,6 @@ class TestEntityFactoryImpl:
                     "system_channel_id": None,
                     "system_channel_flags": 0,
                 },
-                "app": mock_app,
                 "is_dirty": None,
             }
         )
