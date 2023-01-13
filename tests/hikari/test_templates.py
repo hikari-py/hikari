@@ -28,12 +28,9 @@ from hikari import traits
 
 class TestTemplate:
     @pytest.fixture()
-    def mock_app(self):
-        return mock.Mock(spec_set=traits.RESTAware)
-
-    @pytest.fixture()
-    def obj(self, mock_app):
+    def obj(self):
         return templates.Template(
+            app=mock.Mock(),
             code="abc123",
             name="Test Template",
             description="Template used for testing",
@@ -43,7 +40,6 @@ class TestTemplate:
             updated_at=object(),
             source_guild=object(),
             is_unsynced=True,
-            app=mock_app,
         )
 
     @pytest.mark.asyncio()
