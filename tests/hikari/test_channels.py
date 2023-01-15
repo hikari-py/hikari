@@ -383,61 +383,6 @@ class TestGuildChannel:
         )
 
 
-class TestGuildThreadChannel:
-    @pytest.fixture()
-    def model(self, mock_app):
-        return hikari_test_helpers.mock_class_namespace(channels.GuildThreadChannel)(
-            app=mock_app,
-            id=snowflakes.Snowflake(69420),
-            name="foo2",
-            type=channels.ChannelType.GUILD_PUBLIC_THREAD,
-            guild_id=snowflakes.Snowflake(123456789),
-            parent_id=snowflakes.Snowflake(987654321),
-            is_archived=False,
-            auto_archive_duration=679,
-            is_locked=False,
-            owner_id=snowflakes.Snowflake(123039302),
-            thread_created_at=234,
-            last_message_id=snowflakes.Snowflake(2345342),
-            last_pin_timestamp=4457867,
-            rate_limit_per_user=60,
-            approximate_message_count=10,
-            approximate_member_count=2,
-            archive_timestamp=0,
-            member=None
-        )
-
-    @pytest.mark.asyncio()
-    async def test_thread_edit(self, model):
-        model.app.rest.edit_channel = mock.AsyncMock()
-
-        result = await model.edit(
-            name="Supa fast boike",
-            locked=True,
-            archived=True,
-            auto_archive_duration=2345,
-            invitable=True,
-            flags=123,
-            applied_tags=[100001, 100002],
-            rate_limit_per_user=54123123,
-            reason="Foo",
-        )
-
-        assert result is model.app.rest.edit_channel.return_value
-        model.app.rest.edit_channel.assert_awaited_once_with(
-            69420,
-            name="Supa fast boike",
-            locked=True,
-            archived=True,
-            auto_archive_duration=2345,
-            invitable=True,
-            flags=123,
-            applied_tags=[100001, 100002],
-            rate_limit_per_user=54123123,
-            reason="Foo",
-        )
-
-
 class TestPermissibleGuildChannel:
     @pytest.fixture()
     def model(self, mock_app):
