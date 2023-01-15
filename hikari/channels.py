@@ -1705,10 +1705,10 @@ class GuildThreadChannel(TextableGuildChannel):
         locked: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         invitable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
-        flags: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-        applied_tags: undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake[ForumTag]]] = undefined.UNDEFINED,
-        reason: hikari.undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        **_
+        flags: undefined.UndefinedOr[ChannelFlag] = undefined.UNDEFINED,
+        applied_tags: undefined.UndefinedOr[typing.Sequence[ForumTag]] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        **_,
     ) -> PartialChannel:
         """Edit the guild thread.
 
@@ -1730,10 +1730,10 @@ class GuildThreadChannel(TextableGuildChannel):
             new members to a private thread.
         rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
             If provided, the new rate limit per user in the thread.
-        flags : hikari.undefined.UndefinedOr[int]
+        flags : hikari.undefined.UndefinedOr[ChannelFlag]
             If provided, the new channel flags to use for the thread. PINNED can
             only be used on threads in forum channels.
-        applied_tags : hikari.undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake[ForumTag]]]
+        applied_tags : hikari.undefined.UndefinedOr[typing.Sequence[ForumTag]]
             If provided, the new tags to use for the thread in a forum channel.
         reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
