@@ -66,7 +66,7 @@ bot.run()
 
 This will only respond to messages created in guilds. You can use `DMMessageCreateEvent` instead to only listen on
 DMs, or `MessageCreateEvent` to listen to both DMs and guild-based messages. A full list of events
-can be found in the [events docs]((https://docs.hikari-py.dev/en/stable/reference/hikari/events/).
+can be found in the [events docs](https://docs.hikari-py.dev/en/stable/reference/hikari/events/).
 
 If you wish to customize the intents being used in order to change which events your bot is notified about, then you
 can pass the `intents` kwarg to the `GatewayBot` constructor:
