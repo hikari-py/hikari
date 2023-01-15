@@ -909,7 +909,7 @@ class PartialMessage(snowflakes.Unique):
         reply: typing.Union[
             undefined.UndefinedType, snowflakes.SnowflakeishOr[PartialMessage], bool
         ] = undefined.UNDEFINED,
-        fail_if_not_exists: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        reply_fail_if_not_exists: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
@@ -986,7 +986,7 @@ class PartialMessage(snowflakes.Unique):
         reply : typing.Union[hikari.undefined.UndefinedType, hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage], bool]
             If provided and `True`, reply to this message.
             If provided and not `bool`, the message to reply to.
-        fail_if_not_exists : hikari.undefined.UndefinedOr[bool]
+        reply_fail_if_not_exists : hikari.undefined.UndefinedOr[bool]
             If provided, whether to error if the message being replied to does
             not exist instead of sending as a normal (non-reply) message.
             Defaults to `True`.
@@ -1065,7 +1065,7 @@ class PartialMessage(snowflakes.Unique):
             embeds=embeds,
             tts=tts,
             reply=reply,
-            fail_if_not_exists=fail_if_not_exists,
+            reply_fail_if_not_exists=reply_fail_if_not_exists,
             mentions_everyone=mentions_everyone,
             user_mentions=user_mentions,
             role_mentions=role_mentions,

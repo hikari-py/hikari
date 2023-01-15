@@ -1428,7 +1428,7 @@ class RESTClientImpl(rest_api.RESTClient):
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reply: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = undefined.UNDEFINED,
-        fail_if_not_exists: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        reply_fail_if_not_exists: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
@@ -1459,7 +1459,7 @@ class RESTClientImpl(rest_api.RESTClient):
         if reply:
             message_reference = data_binding.JSONObjectBuilder()
             message_reference.put("message_id", str(int(reply)))
-            message_reference.put("fail_if_not_exists", fail_if_not_exists)
+            message_reference.put("fail_if_not_exists", reply_fail_if_not_exists)
 
             body.put("message_reference", message_reference)
 

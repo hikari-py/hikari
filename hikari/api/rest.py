@@ -1123,7 +1123,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reply: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = undefined.UNDEFINED,
-        fail_if_not_exists: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        reply_fail_if_not_exists: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
@@ -1202,7 +1202,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             reader using Discord's TTS (text-to-speech) system.
         reply : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]]
             If provided, the message to reply to.
-        fail_if_not_exists : hikari.undefined.UndefinedOr[bool]
+        reply_fail_if_not_exists : hikari.undefined.UndefinedOr[bool]
             If provided, whether to error if the message being replied to does
             not exist instead of sending as a normal (non-reply) message.
             Defaults to `True`.
