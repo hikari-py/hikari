@@ -1050,6 +1050,8 @@ class GuildChannel(PartialChannel):
         permission_overwrites: undefined.UndefinedOr[typing.Sequence[PermissionOverwrite]] = undefined.UNDEFINED,
         parent_category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[GuildCategory]] = undefined.UNDEFINED,
         default_auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        # Forum & Thread-only fields
+        flags: undefined.UndefinedOr[ChannelFlag] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> PartialChannel:
         """Edit the text channel.
@@ -1086,6 +1088,10 @@ class GuildChannel(PartialChannel):
             should default to when creating threads in this channel.
 
             This should be either 60, 1440, 4320 or 10080 seconds and, as of
+        flags : hikari.undefined.UndefinedOr[ChannelFlag]
+            If provided, the new channel flags to use for the channel. This can
+            only be used on a forum channel to apply ChannelFlag.REQUIRE_TAG, or
+            on a forum thread to apply ChannelFlag.PINNED.
             writing.
         reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
@@ -1134,6 +1140,7 @@ class GuildChannel(PartialChannel):
             permission_overwrites=permission_overwrites,
             parent_category=parent_category,
             default_auto_archive_duration=default_auto_archive_duration,
+            flags=flags,
             reason=reason,
         )
 
