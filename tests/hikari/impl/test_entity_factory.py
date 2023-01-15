@@ -6491,6 +6491,7 @@ class TestEntityFactoryImpl:
         self, entity_factory_impl, mock_app, template_payload, user_payload, guild_text_channel_payload
     ):
         template = entity_factory_impl.deserialize_template(template_payload)
+        assert template.app is mock_app
         assert template.code == "4rDaewUKeYVj"
         assert template.name == "ttt"
         assert template.description == "eee"
@@ -6498,7 +6499,6 @@ class TestEntityFactoryImpl:
         assert template.creator == entity_factory_impl.deserialize_user(user_payload)
         assert template.created_at == datetime.datetime(2020, 12, 15, 1, 54, 35, tzinfo=datetime.timezone.utc)
         assert template.updated_at == datetime.datetime(2020, 12, 15, 1, 57, 35, tzinfo=datetime.timezone.utc)
-        assert template.app is mock_app
 
         # TemplateGuild
         assert template.source_guild.app is mock_app
