@@ -243,7 +243,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         name : hikari.undefined.UndefinedOr[str]
             If provided, the new name for the channel.
         flags : hikari.undefined.UndefinedOr[hikari.channels.ChannelFlag]
-            If provided, the new flags for the channel
+            If provided, the new channel flags to use for the channel. This can
+            only be used on a forum channel to apply ChannelFlag.REQUIRE_TAG, or
+            on a forum thread to apply ChannelFlag.PINNED.
         position : hikari.undefined.UndefinedOr[int]
             If provided, the new position for the channel.
         topic : hikari.undefined.UndefinedOr[str]
@@ -292,25 +294,25 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
             This only applies to forum channels.
         archived : hikari.undefined.UndefinedOr[bool]
-            If provided, whether to archive or unarchive this thread channel.
+            If provided, the new archived state for the thread. This only
+            applies to threads.
         locked : hikari.undefined.UndefinedOr[bool]
-            If provided, whether to lock or unlock this thread channel.
+            If provided, the new locked state for the thread. This only applies
+            to threads.
 
             If it's locked then only people with `MANAGE_THREADS` can unarchive it.
         invitable : undefined.UndefinedOr[bool]
-            If provided, whether non-moderators should be able to add other non-moderators to the thread.
-
-            This only applies to private threads.
+            If provided, the new setting for whether non-moderators can invite
+            new members to a private thread. This only applies to threads.
         auto_archive_duration : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
-            If provided, how long the thread should remain inactive until it's archived.
+            If provided, the new auto archive duration for this thread. This
+            only applies to threads.
 
-            This should be either 60, 1440, 4320 or 10080 seconds and, as of
-            writing, ignores the parent channel's set default_auto_archive_duration
-            when passed as `hikari.undefined.UNDEFINED`.
+            This should be either 60, 1440, 4320 or 10080 seconds, as of
+            writing.
         applied_tags : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.ForumTag]]
-            If provided, the new tags to apply to the thread.
-
-            This only applies to threads in a forum channel.
+            If provided, the new tags to apply to the thread. This only applies
+            to threads in a forum channel.
         reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.

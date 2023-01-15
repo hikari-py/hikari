@@ -1111,6 +1111,8 @@ class GuildChannel(PartialChannel):
         locked : hikari.undefined.UndefinedOr[bool]
             If provided, the new locked state for the thread. This only applies
             to threads.
+
+            If it's locked then only people with `MANAGE_THREADS` can unarchive it.
         invitable : hikari.undefined.UndefinedOr[bool]
             If provided, the new setting for whether non-moderators can invite
             new members to a private thread. This only applies to threads.
