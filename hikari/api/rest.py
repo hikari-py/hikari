@@ -308,7 +308,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             writing, ignores the parent channel's set default_auto_archive_duration
             when passed as `hikari.undefined.UNDEFINED`.
         applied_tags : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.ForumTag]]
-            If provided, the new tags applied to the thread.
+            If provided, the new tags to apply to the thread.
 
             This only applies to threads in a forum channel.
         reason : hikari.undefined.UndefinedOr[str]
