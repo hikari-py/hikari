@@ -31,8 +31,6 @@ import typing
 import attr
 
 from hikari import guilds
-from hikari import traits
-from hikari import undefined
 from hikari.internal import attr_extensions
 
 if typing.TYPE_CHECKING:
@@ -43,6 +41,8 @@ if typing.TYPE_CHECKING:
     from hikari import permissions as permissions_
     from hikari import snowflakes
     from hikari import users
+    from hikari import traits
+    from hikari import undefined
 
 
 @attr_extensions.with_copy
