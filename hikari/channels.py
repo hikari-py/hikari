@@ -1708,7 +1708,6 @@ class GuildThreadChannel(TextableGuildChannel):
         flags: undefined.UndefinedOr[ChannelFlag] = undefined.UNDEFINED,
         applied_tags: undefined.UndefinedOr[typing.Sequence[ForumTag]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        **_,
     ) -> PartialChannel:
         """Edit the guild thread.
 
