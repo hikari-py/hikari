@@ -1456,11 +1456,11 @@ class RESTClientImpl(rest_api.RESTClient):
             flags=flags,
         )
 
-        if reply is not undefined.UNDEFINED:
-            message_reference = {
-                "message_id": str(int(reply)),
-                "fail_if_not_exists": True if fail_if_not_exists is undefined.UNDEFINED else fail_if_not_exists,
-            }
+        if reply:
+            message_reference = data_binding.JSONObjectBuilder()
+            message_reference["message_id"] = str(int(reply))
+            message_reference.put("fail_if_not_exists", fail_if_not_exists)
+
             body.put("message_reference", message_reference)
 
         if form_builder is not None:
