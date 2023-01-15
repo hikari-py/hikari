@@ -1428,6 +1428,7 @@ class RESTClientImpl(rest_api.RESTClient):
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reply: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = undefined.UNDEFINED,
+        fail_if_not_exists: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
@@ -1454,7 +1455,13 @@ class RESTClientImpl(rest_api.RESTClient):
             role_mentions=role_mentions,
             flags=flags,
         )
-        body.put("message_reference", reply, conversion=lambda m: {"message_id": str(int(m))})
+
+        if reply is not undefined.UNDEFINED:
+            message_reference = {
+                "message_id": str(int(reply)),
+                "fail_if_not_exists": True if fail_if_not_exists is undefined.UNDEFINED else fail_if_not_exists,
+            }
+            body.put("message_reference", message_reference)
 
         if form_builder is not None:
             form_builder.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
