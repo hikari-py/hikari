@@ -1458,7 +1458,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         if reply:
             message_reference = data_binding.JSONObjectBuilder()
-            message_reference["message_id"] = str(int(reply))
+            message_reference.put("message_id", str(int(reply)))
             message_reference.put("fail_if_not_exists", fail_if_not_exists)
 
             body.put("message_reference", message_reference)

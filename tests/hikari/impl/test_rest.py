@@ -2547,10 +2547,10 @@ class TestRESTClientImplAsync:
         mock_form.add_field.assert_called_once_with(
             "payload_json",
             (
-                '{'
-                '"testing": "ensure_in_test",'
+                "{"
+                '"testing": "ensure_in_test", '
                 '"message_reference": {"message_id": "987654321", "fail_if_not_exists": false}'
-                '}'
+                "}"
             ),
             content_type="application/json",
         )
