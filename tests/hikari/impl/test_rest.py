@@ -2169,6 +2169,7 @@ class TestRESTClientImplAsync:
     ):
         expected_route = routes.PATCH_CHANNEL.compile(channel=123)
         mock_object = mock.Mock()
+        forum_tag = channels.ForumTag(id=snowflakes.Snowflake(123), name="test", moderated=True, emoji=None)
         rest_client._entity_factory.deserialize_channel = mock.Mock(return_value=mock_object)
         rest_client._request = mock.AsyncMock(return_value={"payload": "GO"})
         rest_client._entity_factory.serialize_permission_overwrite = mock.Mock(
@@ -2202,6 +2203,8 @@ class TestRESTClientImplAsync:
             "locked": False,
             "invitable": True,
             "auto_archive_duration": 12322,
+            "flags": 12,
+            "applied_tags": [{"id": 0, "name": "testing", "moderated": True, "emoji_id": None, "emoji_name": None}],
         }
 
         result = await rest_client.edit_channel(
@@ -2235,6 +2238,8 @@ class TestRESTClientImplAsync:
             locked=False,
             invitable=True,
             auto_archive_duration=auto_archive_duration,
+            flags=12,
+            applied_tags=[channels.ForumTag(name="testing", moderated=True)],
         )
 
         assert result == mock_object
