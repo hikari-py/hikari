@@ -40,9 +40,9 @@ if typing.TYPE_CHECKING:
     from hikari import colors
     from hikari import permissions as permissions_
     from hikari import snowflakes
-    from hikari import users
     from hikari import traits
     from hikari import undefined
+    from hikari import users
 
 
 @attr_extensions.with_copy
