@@ -306,7 +306,7 @@ class Template:
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
-        return await self.app.rest.sync_guild_template(self.source_guild, self)
+        return await self.app.rest.sync_guild_template(self.source_guild.id, self.code)
 
     async def create_guild(self, name: str, *, icon: undefined.UndefinedOr[str]) -> guilds.RESTGuild:
         """Make a guild from a template.

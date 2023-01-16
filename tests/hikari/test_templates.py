@@ -37,7 +37,7 @@ class TestTemplate:
             creator=object(),
             created_at=object(),
             updated_at=object(),
-            source_guild=object(),
+            source_guild=mock.Mock(id=123),
             is_unsynced=True,
         )
 
@@ -47,7 +47,7 @@ class TestTemplate:
 
         assert await obj.fetch_self() is obj.app.rest.fetch_template.return_value
 
-        obj.app.rest.fetch_template.assert_awaited_once_with()
+        obj.app.rest.fetch_template.assert_awaited_once_with("abc123")
 
     @pytest.mark.asyncio()
     async def test_edit(self, obj):
@@ -74,7 +74,7 @@ class TestTemplate:
 
         assert await obj.sync() is obj.app.rest.sync_guild_template.return_value
 
-        obj.app.rest.sync_guild_template.assert_awaited_once_with()
+        obj.app.rest.sync_guild_template.assert_awaited_once_with(123, "abc123")
 
     @pytest.mark.asyncio()
     async def test_create_guild(self, obj):
