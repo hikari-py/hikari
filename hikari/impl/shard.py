@@ -193,12 +193,12 @@ class _GatewayTransport:
         return data_binding.load_json(pl)
 
     async def send_json(self, data: data_binding.JSONObject) -> None:
-        pl = data_binding.dump_json(data)
+        pl = data_binding.dump_json(data, encode=True)
         if self._logger.isEnabledFor(ux.TRACE):
-            filtered = self._log_filterer(pl)
+            filtered = self._log_filterer(pl.decode("utf-8"))
             self._logger.log(ux.TRACE, "sending payload with size %s\n    %s", len(pl), filtered)
 
-        await self._ws.send_str(pl)
+        await self._ws.send_bytes(pl)
 
     def _handle_other_message(self, message: aiohttp.WSMessage, /) -> typing.NoReturn:
         if message.type == aiohttp.WSMsgType.TEXT:

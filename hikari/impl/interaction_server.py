@@ -142,7 +142,7 @@ class _Response:
 
 # Constant response
 _PONG_RESPONSE: typing.Final[_Response] = _Response(
-    _OK_STATUS, data_binding.dump_json({"type": _PONG_RESPONSE_TYPE}).encode(), content_type=_JSON_CONTENT_TYPE
+    _OK_STATUS, data_binding.dump_json({"type": _PONG_RESPONSE_TYPE}, encode=True), content_type=_JSON_CONTENT_TYPE
 )
 
 
@@ -208,12 +208,10 @@ class InteractionServer(interaction_server.InteractionServer):
     __slots__: typing.Sequence[str] = (
         "_application_fetch_lock",
         "_close_event",
-        "_dumps",
         "_entity_factory",
         "_executor",
         "_is_closing",
         "_listeners",
-        "_loads",
         "_nacl",
         "_public_key",
         "_rest_client",
@@ -224,10 +222,8 @@ class InteractionServer(interaction_server.InteractionServer):
     def __init__(
         self,
         *,
-        dumps: aiohttp.typedefs.JSONEncoder = data_binding.dump_json,
         entity_factory: entity_factory_api.EntityFactory,
         executor: typing.Optional[concurrent.futures.Executor] = None,
-        loads: aiohttp.typedefs.JSONDecoder = data_binding.load_json,
         rest_client: rest_api.RESTClient,
         public_key: typing.Optional[bytes] = None,
     ) -> None:
@@ -245,12 +241,10 @@ class InteractionServer(interaction_server.InteractionServer):
         self._application_fetch_lock: typing.Optional[asyncio.Lock] = None
         # Building asyncio.Event when there isn't a running loop may lead to runtime errors.
         self._close_event: typing.Optional[asyncio.Event] = None
-        self._dumps = dumps
         self._entity_factory = entity_factory
         self._executor = executor
         self._is_closing = False
         self._listeners: typing.Dict[typing.Type[base_interactions.PartialInteraction], typing.Any] = {}
-        self._loads = loads
         self._nacl = nacl
         self._rest_client = rest_client
         self._server: typing.Optional[aiohttp.web_runner.AppRunner] = None
@@ -433,7 +427,8 @@ class InteractionServer(interaction_server.InteractionServer):
             return _Response(_BAD_REQUEST_STATUS, b"Invalid request signature")
 
         try:
-            payload = self._loads(body.decode("utf-8"))
+            payload = data_binding.load_json(body)
+            assert isinstance(payload, dict)
             interaction_type = int(payload["type"])
 
         except (data_binding.JSONDecodeError, ValueError, TypeError) as exc:
@@ -476,7 +471,7 @@ class InteractionServer(interaction_server.InteractionServer):
                     result = await call
 
                 raw_payload, files = result.build(self._entity_factory)
-                payload = self._dumps(raw_payload)
+                payload = data_binding.dump_json(raw_payload, encode=True)
 
             except Exception as exc:
                 asyncio.get_running_loop().call_exception_handler(
@@ -484,7 +479,7 @@ class InteractionServer(interaction_server.InteractionServer):
                 )
                 return _Response(_INTERNAL_SERVER_ERROR_STATUS, b"Exception occurred during interaction dispatch")
 
-            return _Response(_OK_STATUS, payload.encode(), files=files, content_type=_JSON_CONTENT_TYPE)
+            return _Response(_OK_STATUS, payload, files=files, content_type=_JSON_CONTENT_TYPE)
 
         _LOGGER.debug(
             "Ignoring interaction %s of type %s without registered listener", interaction.id, interaction.type

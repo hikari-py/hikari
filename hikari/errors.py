@@ -317,7 +317,7 @@ class BadRequestError(ClientHTTPResponseError):
             try:
                 value += _dump_errors(self.errors).strip("\n")
             except KeyError:
-                value += data_binding.dump_json(self.errors, indent=2)
+                value += data_binding.dump_json(self.errors, encode=False, indent=True)
 
         self._cached_str = value
         return value

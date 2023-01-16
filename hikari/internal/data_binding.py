@@ -33,10 +33,12 @@ __all__: typing.Sequence[str] = (
     "load_json",
     "JSONDecodeError",
     "JSONObjectBuilder",
+    "JSONPayload",
     "StringMapBuilder",
     "URLEncodedFormBuilder",
 )
 
+import functools
 import typing
 
 import aiohttp
@@ -81,11 +83,38 @@ _StringMapBuilderArg = typing.Union[
 
 _APPLICATION_OCTET_STREAM: typing.Final[str] = "application/octet-stream"
 
-if typing.TYPE_CHECKING:
-    JSONDecodeError: typing.Type[Exception] = Exception
-    """Exception raised when loading an invalid JSON string."""
 
-    def dump_json(_: typing.Union[JSONArray, JSONObject], /, *, indent: int = ...) -> str:
+if typing.TYPE_CHECKING:
+
+    _T = typing.TypeVar("_T")
+
+    @typing.overload
+    def dump_json(
+        obj: typing.Union[JSONArray, JSONObject],
+        /,
+        *,
+        encode: typing.Literal[False],
+        indent: bool = False,
+    ) -> str:
+        ...
+
+    @typing.overload
+    def dump_json(
+        obj: typing.Union[JSONArray, JSONObject],
+        /,
+        *,
+        encode: typing.Literal[True],
+        indent: bool = False,
+    ) -> bytes:
+        ...
+
+    def dump_json(
+        obj: typing.Union[JSONArray, JSONObject],
+        /,
+        *,
+        encode: bool,
+        indent: bool = False,
+    ) -> typing.Union[str, bytes]:
         """Convert a Python type to a JSON string."""
         raise NotImplementedError
 
@@ -93,44 +122,107 @@ if typing.TYPE_CHECKING:
         """Convert a JSON string to a Python type."""
         raise NotImplementedError
 
-else:
-    import json
-
-    dump_json = json.dumps
-    """Convert a Python type to a JSON string."""
-
-    load_json = json.loads
-    """Convert a JSON string to a Python type."""
-
-    JSONDecodeError = json.JSONDecodeError
+    JSONDecodeError: typing.Type[Exception]
     """Exception raised when loading an invalid JSON string."""
+
+    JSONPayload: typing.Type[aiohttp.BytesPayload]
+    """The `aiohttp` payload to use when sending JSON."""
+
+else:
+    try:
+        import orjson
+
+        orjson_present = True
+    except ModuleNotFoundError:
+        import json
+
+        orjson_present = False
+
+    if orjson_present:
+
+        def dump_json(
+            obj: typing.Union[JSONArray, JSONObject],
+            /,
+            *,
+            encode: bool,
+            indent: bool = False,
+        ) -> typing.Union[str, bytes]:
+            """Convert a Python type to a JSON string."""
+            data = orjson.dumps(obj, option=orjson.OPT_INDENT_2 if indent else None)
+            return data if encode else data.decode("utf-8")
+
+        @typing.final
+        class JSONPayload(aiohttp.BytesPayload):
+            def __init__(self, value: typing.Any, *args: typing.Any, **kwargs: typing.Any) -> None:
+                super().__init__(
+                    orjson.dumps(value),
+                    content_type="application/json",
+                    encoding="utf-8",
+                    *args,
+                    **kwargs,
+                )
+
+        load_json = orjson.loads
+        JSONDecodeError = orjson.JSONDecodeError
+
+    else:
+
+        _json_separators = (",", ":")
+
+        def dump_json(
+            obj: typing.Union[JSONArray, JSONObject],
+            /,
+            *,
+            encode: bool,
+            indent: bool = False,
+        ) -> typing.Union[str, bytes]:
+            """Convert a Python type to a JSON string."""
+            data = json.dumps(obj, separators=_json_separators, indent=2 if indent else 0)
+            return data if not encode else data.encode("utf-8")
+
+        @typing.final
+        class JSONPayload(aiohttp.BytesPayload):
+            def __init__(self, value: typing.Any, *args: typing.Any, **kwargs: typing.Any) -> None:
+                super().__init__(
+                    json.dumps(value).encode("utf-8"),
+                    content_type="application/json",
+                    encoding="utf-8",
+                    *args,
+                    **kwargs,
+                )
+
+        load_json = json.loads
+        JSONDecodeError = json.JSONDecodeError
 
 
 @typing.final
 class URLEncodedFormBuilder:
     """Helper class to generate `aiohttp.FormData`."""
 
-    __slots__: typing.Sequence[str] = ("_executor", "_fields", "_resources")
+    __slots__: typing.Sequence[str] = ("_fields", "_resources")
 
-    def __init__(self, executor: typing.Optional[concurrent.futures.Executor] = None) -> None:
-        self._executor = executor
-        self._fields: typing.List[typing.Tuple[str, str, typing.Optional[str]]] = []
+    def __init__(self) -> None:
+        self._fields: typing.List[typing.Tuple[str, typing.Union[str, bytes], typing.Optional[str]]] = []
         self._resources: typing.List[typing.Tuple[str, files.Resource[files.AsyncReader]]] = []
 
-    def add_field(self, name: str, data: str, *, content_type: typing.Optional[str] = None) -> None:
+    def add_field(
+        self, name: str, data: typing.Union[str, bytes], *, content_type: typing.Optional[str] = None
+    ) -> None:
         self._fields.append((name, data, content_type))
 
     def add_resource(self, name: str, resource: files.Resource[files.AsyncReader]) -> None:
         self._resources.append((name, resource))
 
-    async def build(self, stack: contextlib.AsyncExitStack) -> aiohttp.FormData:
+    async def build(
+        self, stack: contextlib.AsyncExitStack, executor: typing.Optional[concurrent.futures.Executor] = None
+    ) -> aiohttp.FormData:
         form = aiohttp.FormData()
 
         for field in self._fields:
             form.add_field(field[0], field[1], content_type=field[2])
 
         for name, resource in self._resources:
-            stream = await stack.enter_async_context(resource.stream(executor=self._executor))
+            stream = await stack.enter_async_context(resource.stream(executor=executor))
             mimetype = stream.mimetype or _APPLICATION_OCTET_STREAM
             form.add_field(name, stream, filename=stream.filename, content_type=mimetype)
 
