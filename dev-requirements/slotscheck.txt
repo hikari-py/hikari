@@ -1,1 +1,1 @@
-slotscheck==0.16.3
+slotscheck==0.16.4
