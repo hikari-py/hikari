@@ -2524,7 +2524,7 @@ class TestRESTClientImplAsync:
             user_mentions=[9876],
             role_mentions=[1234],
             reply=StubModel(987654321),
-            reply_fail_if_not_exists=False,
+            reply_must_exist=False,
             flags=54123,
         )
         assert returned is rest_client._entity_factory.deserialize_message.return_value
@@ -2584,7 +2584,7 @@ class TestRESTClientImplAsync:
             user_mentions=[9876],
             role_mentions=[1234],
             reply=StubModel(987654321),
-            reply_fail_if_not_exists=False,
+            reply_must_exist=False,
             flags=6643,
         )
         assert returned is rest_client._entity_factory.deserialize_message.return_value
