@@ -35,12 +35,13 @@ py -3 -m pip install -U hikari
 ## Bots
 
 Hikari provides two different default bot implementations to suit your needs:
-- [GatewayBot](https://docs.hikari-py.dev/en/stable/reference/hikari/impl/bot/#hikari.impl.bot.GatewayBot)
-- [RESTBot](https://docs.hikari-py.dev/en/stable/reference/hikari/impl/rest_bot/#hikari.impl.rest_bot.RESTBot)
+- [GatewayBot](#GatewayBot)
+- [RESTBot](#RESTBot)
 
 ### GatewayBot
 
-A `GatewayBot` is one which will connect to Discord through the gateway and receive
+A [`GatewayBot`](https://docs.hikari-py.dev/en/stable/reference/hikari/impl/bot/#hikari.impl.bot.GatewayBot)
+is one which will connect to Discord through the gateway and receive
 events through there. A simple startup example could be the following:
 
 ```py
@@ -103,7 +104,8 @@ async def ping(event):
 
 ### RESTBot
 
-Unlike the `GatewayBot`, a `RESTBot` spawns an interaction server to which Discord will **only** send interaction events,
+A [`RESTBot`](https://docs.hikari-py.dev/en/stable/reference/hikari/impl/rest_bot/#hikari.impl.rest_bot.RESTBot)
+spawns an interaction server to which Discord will **only** send interaction events,
 which can be handled and responded to.
 
 An example of a simple `RESTBot` could be the following:
@@ -192,8 +194,8 @@ bot.run(
 
 Many other helpful options exist for you to take advantage of if you wish. Links to the respective docs can be seen
 below:
-- [GatewayBot](https://docs.hikari-py.dev/en/stable/reference/hikari/impl/bot/#hikari.impl.bot.GatewayBot.run)
-- [RESTBot](https://docs.hikari-py.dev/en/stable/reference/hikari/impl/rest_bot/#hikari.impl.rest_bot.RESTBot.run)
+- [GatewayBot.run](https://docs.hikari-py.dev/en/stable/reference/hikari/impl/bot/#hikari.impl.bot.GatewayBot.run)
+- [RESTBot.run](https://docs.hikari-py.dev/en/stable/reference/hikari/impl/rest_bot/#hikari.impl.rest_bot.RESTBot.run)
 
 ---
 
