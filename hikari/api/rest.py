@@ -244,8 +244,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the new name for the channel.
         flags : hikari.undefined.UndefinedOr[hikari.channels.ChannelFlag]
             If provided, the new channel flags to use for the channel. This can
-            only be used on a forum channel to apply ChannelFlag.REQUIRE_TAG, or
-            on a forum thread to apply ChannelFlag.PINNED.
+            only be used on a forum channel to apply `REQUIRE_TAG`, or
+            on a forum thread to apply `PINNED`.
         position : hikari.undefined.UndefinedOr[int]
             If provided, the new position for the channel.
         topic : hikari.undefined.UndefinedOr[str]
