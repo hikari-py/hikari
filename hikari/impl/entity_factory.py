@@ -3524,21 +3524,24 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         self, payload: data_binding.JSONObject
     ) -> webhook_models.ChannelFollowerWebhook:
         application_id: typing.Optional[snowflakes.Snowflake] = None
-        if (raw_application_id := payload.get("application_id")) is not None:
+        if raw_application_id := payload.get("application_id"):
             application_id = snowflakes.Snowflake(raw_application_id)
 
-        raw_source_channel = payload["source_channel"]
-        # In this case the channel type isn't provided as we can safely
-        # assume it's a news channel.
-        raw_source_channel["type"] = channel_models.ChannelType.GUILD_NEWS
-        source_channel = self.deserialize_partial_channel(raw_source_channel)
-        source_guild_payload = payload["source_guild"]
-        source_guild = guild_models.PartialGuild(
-            app=self._app,
-            id=snowflakes.Snowflake(source_guild_payload["id"]),
-            name=source_guild_payload["name"],
-            icon_hash=source_guild_payload.get("icon"),
-        )
+        source_channel: typing.Optional[channel_models.PartialChannel] = None
+        if raw_source_channel := payload.get("source_channel"):
+            # In this case the channel type isn't provided as we can safely
+            # assume it's a news channel.
+            raw_source_channel.setdefault("type", channel_models.ChannelType.GUILD_NEWS)
+            source_channel = self.deserialize_partial_channel(raw_source_channel)
+
+        source_guild: typing.Optional[guild_models.PartialGuild] = None
+        if source_guild_payload := payload.get("source_guild"):
+            source_guild = guild_models.PartialGuild(
+                app=self._app,
+                id=snowflakes.Snowflake(source_guild_payload["id"]),
+                name=source_guild_payload["name"],
+                icon_hash=source_guild_payload.get("icon"),
+            )
 
         return webhook_models.ChannelFollowerWebhook(
             app=self._app,

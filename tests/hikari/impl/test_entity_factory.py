@@ -6870,24 +6870,39 @@ class TestEntityFactoryImpl:
         assert webhook.source_guild.icon_hash == "bb71f469c158984e265093a81b3397fb"
         assert isinstance(webhook.source_guild, guild_models.PartialGuild)
 
-        assert webhook.source_channel == entity_factory_impl.deserialize_partial_channel(
-            {"id": "5618852344134324", "name": "announcements", "type": channel_models.ChannelType.GUILD_NEWS}
-        )
+        assert webhook.source_channel.id == 5618852344134324
+        assert webhook.source_channel.name == "announcements"
+        assert webhook.source_channel.type == channel_models.ChannelType.GUILD_NEWS
+        assert isinstance(webhook.source_channel, channel_models.PartialChannel)
+
         assert webhook.author == entity_factory_impl.deserialize_user(user_payload)
         assert isinstance(webhook, webhook_models.ChannelFollowerWebhook)
 
     def test_deserialize_channel_follower_webhook_without_optional_fields(
-        self, entity_factory_impl, mock_app, follower_webhook_payload, user_payload
+        self, entity_factory_impl, mock_app, follower_webhook_payload
     ):
         follower_webhook_payload["avatar"] = None
         del follower_webhook_payload["user"]
         del follower_webhook_payload["application_id"]
+        del follower_webhook_payload["source_guild"]
+        del follower_webhook_payload["source_channel"]
 
         webhook = entity_factory_impl.deserialize_channel_follower_webhook(follower_webhook_payload)
 
         assert webhook.avatar_hash is None
         assert webhook.application_id is None
         assert webhook.author is None
+        assert webhook.source_guild is None
+        assert webhook.source_channel is None
+
+    def test_deserialize_channel_follower_webhook_doesnt_set_source_channel_type_if_set(
+        self, entity_factory_impl, mock_app, follower_webhook_payload
+    ):
+        follower_webhook_payload["source_channel"]["type"] = channel_models.ChannelType.GUILD_VOICE
+
+        webhook = entity_factory_impl.deserialize_channel_follower_webhook(follower_webhook_payload)
+
+        assert webhook.source_channel.type == channel_models.ChannelType.GUILD_VOICE
 
     def test_deserialize_application_webhook(self, entity_factory_impl, mock_app, application_webhook_payload):
         webhook = entity_factory_impl.deserialize_application_webhook(application_webhook_payload)
