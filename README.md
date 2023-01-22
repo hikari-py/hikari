@@ -162,8 +162,8 @@ Hikari does not include a command framework by default, so you will want to pick
 
 There are also third party libraries to help you manage components:
 
-- [`miru`](https://github.com/HyperGH/hikari-miru) -  An optional component handler for hikari, inspired by discord.py's views. 
-- [`flare`](https://github.com/brazier-dev/hikari-flare/) - A component manager designed to write simple & persistent buttons.
+- [`miru`](https://github.com/HyperGH/hikari-miru) -  A component handler for hikari, inspired by discord.py's views. 
+- [`flare`](https://github.com/brazier-dev/hikari-flare/) - A component manager designed to write simple persistent buttons.
 
 ---
 
