@@ -3379,6 +3379,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
         return template_models.Template(
+            app=self._app,
             code=payload["code"],
             name=payload["name"],
             description=payload["description"],
