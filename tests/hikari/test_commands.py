@@ -48,6 +48,7 @@ class TestPartialCommand:
             is_nsfw=True,
             guild_id=snowflakes.Snowflake(31231235),
             version=snowflakes.Snowflake(43123123),
+            name_localizations={},
         )
 
     @pytest.mark.asyncio()

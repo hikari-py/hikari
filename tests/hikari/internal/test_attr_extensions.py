@@ -46,7 +46,7 @@ def test_get_fields_definition():
         foo: int = attr.field()
         bar: bool = attr.field(init=False)
         bam: bool = attr.field(init=False)
-        _voodoo: str = attr.field()
+        _voodoo: str = attr.field(alias="voodoo")
         Bat: bool = attr.field()
 
     fields = {field.name: field for field in attr.fields(StubModel)}
@@ -60,9 +60,9 @@ def test_get_fields_definition():
 def test_generate_shallow_copier():
     @attr.define()
     class StubModel:
-        _foo: int = attr.field()
+        _foo: int = attr.field(alias="foo")
         baaaa: str = attr.field()
-        _blam: bool = attr.field()
+        _blam: bool = attr.field(alias="blam")
         not_init: int = attr.field(init=False)
         no: bytes = attr.field()
 
@@ -83,9 +83,9 @@ def test_generate_shallow_copier():
 def test_generate_shallow_copier_with_init_only_arguments():
     @attr.define()
     class StubModel:
-        _gfd: int = attr.field()
+        _gfd: int = attr.field(alias="gfd")
         baaaa: str = attr.field()
-        _blambat: bool = attr.field()
+        _blambat: bool = attr.field(alias="blambat")
         no: bytes = attr.field()
 
     old_model = StubModel(gfd=42, baaaa="sheep", blambat=True, no=b"okokokok")
@@ -191,7 +191,7 @@ def test_generate_deep_copier():
     @attr.define
     class StubBaseClass:
         recursor: int = attr.field()
-        _field: bool = attr.field()
+        _field: bool = attr.field(alias="field")
         foo: str = attr.field()
         end: str = attr.field(init=False)
         _blam: bool = attr.field(init=False)
@@ -235,7 +235,7 @@ def test_generate_deep_copier_with_only_init_attributes():
     @attr.define
     class StubBaseClass:
         recursor: int = attr.field()
-        _field: bool = attr.field()
+        _field: bool = attr.field(alias="field")
         foo: str = attr.field()
 
     model = StubBaseClass(recursor=431, field=True, foo="blam")

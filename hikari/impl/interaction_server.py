@@ -26,6 +26,7 @@ from __future__ import annotations
 __all__: typing.Sequence[str] = ("InteractionServer",)
 
 import asyncio
+import inspect
 import logging
 import typing
 
@@ -166,6 +167,22 @@ class _FilePayload(aiohttp.Payload):
                 await writer.write(chunk)
 
 
+async def _consume_generator_listener(generator: typing.AsyncGenerator[typing.Any, None]) -> None:
+    try:
+        await generator.__anext__()
+
+        # We expect only one yield!
+        await generator.athrow(RuntimeError("Generator listener yielded more than once, expected only one yield"))
+
+    except StopAsyncIteration:
+        pass
+
+    except Exception as exc:
+        asyncio.get_running_loop().call_exception_handler(
+            {"message": "Exception occurred during interaction post dispatch", "exception": exc}
+        )
+
+
 class InteractionServer(interaction_server.InteractionServer):
     """Standard implementation of `hikari.api.interaction_server.InteractionServer`.
 
@@ -201,6 +218,7 @@ class InteractionServer(interaction_server.InteractionServer):
         "_public_key",
         "_rest_client",
         "_server",
+        "_running_generator_listeners",
     )
 
     def __init__(
@@ -237,6 +255,7 @@ class InteractionServer(interaction_server.InteractionServer):
         self._rest_client = rest_client
         self._server: typing.Optional[aiohttp.web_runner.AppRunner] = None
         self._public_key = nacl.signing.VerifyKey(public_key) if public_key is not None else None
+        self._running_generator_listeners: typing.List[asyncio.Task[None]] = []
 
     @property
     def is_alive(self) -> bool:
@@ -365,6 +384,11 @@ class InteractionServer(interaction_server.InteractionServer):
         await self._server.cleanup()
         self._server = None
         self._application_fetch_lock = None
+
+        # Wait for handlers to complete
+        await asyncio.gather(*self._running_generator_listeners)
+        self._running_generator_listeners = []
+
         self._close_event.set()
         self._close_event = None
         self._is_closing = False
@@ -440,7 +464,17 @@ class InteractionServer(interaction_server.InteractionServer):
         if listener := self._listeners.get(type(interaction)):
             _LOGGER.debug("Dispatching interaction %s", interaction.id)
             try:
-                result = await listener(interaction)
+                call = listener(interaction)
+
+                if inspect.isasyncgen(call):
+                    result = await call.__anext__()
+                    task = asyncio.create_task(_consume_generator_listener(call))
+                    task.add_done_callback(self._running_generator_listeners.remove)
+                    self._running_generator_listeners.append(task)
+
+                else:
+                    result = await call
+
                 raw_payload, files = result.build(self._entity_factory)
                 payload = self._dumps(raw_payload)
 

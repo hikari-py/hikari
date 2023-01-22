@@ -241,9 +241,9 @@ class _UserFields:
 @attr.define(kw_only=True, weakref_slot=False)
 class _GatewayGuildDefinition(entity_factory.GatewayGuildDefinition):
     id: snowflakes.Snowflake = attr.field()
-    _payload: data_binding.JSONObject = attr.field()
-    _entity_factory: EntityFactoryImpl = attr.field()
-    _user_id: snowflakes.Snowflake = attr.field()
+    _payload: data_binding.JSONObject = attr.field(alias="payload")
+    _entity_factory: EntityFactoryImpl = attr.field(alias="entity_factory")
+    _user_id: snowflakes.Snowflake = attr.field(alias="user_id")
     # These will get deserialized as needed
     _channels: UndefinedSnowflakeMapping[channel_models.PermissibleGuildChannel] = attr.field(
         init=False, default=undefined.UNDEFINED
@@ -524,6 +524,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             channel_models.ChannelType.GUILD_NEWS: self.deserialize_guild_news_channel,
             channel_models.ChannelType.GUILD_VOICE: self.deserialize_guild_voice_channel,
             channel_models.ChannelType.GUILD_STAGE: self.deserialize_guild_stage_channel,
+            channel_models.ChannelType.GUILD_FORUM: self.deserialize_guild_forum_channel,
         }
         self._thread_channel_type_mapping = {
             channel_models.ChannelType.GUILD_NEWS_THREAD: self.deserialize_guild_news_thread,
@@ -609,6 +610,13 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 owner_id=snowflakes.Snowflake(team_payload["owner_user_id"]),
             )
 
+        install_parameters: typing.Optional[application_models.ApplicationInstallParameters] = None
+        if (install_payload := payload.get("install_params")) is not None:
+            install_parameters = application_models.ApplicationInstallParameters(
+                scopes=[application_models.OAuth2Scope(scope) for scope in install_payload["scopes"]],
+                permissions=permission_models.Permissions(install_payload["permissions"]),
+            )
+
         return application_models.Application(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
@@ -625,6 +633,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             cover_image_hash=payload.get("cover_image"),
             privacy_policy_url=payload.get("privacy_policy_url"),
             terms_of_service_url=payload.get("terms_of_service_url"),
+            custom_install_url=payload.get("custom_install_url"),
+            tags=payload.get("tags") or [],
+            install_parameters=install_parameters,
         )
 
     def deserialize_authorization_information(
@@ -1109,6 +1120,94 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             position=int(payload["position"]),
         )
 
+    def deserialize_guild_forum_channel(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+    ) -> channel_models.GuildForumChannel:
+        channel_fields = self._set_guild_channel_attributes(payload, guild_id=guild_id)
+
+        # As of present this isn't included in the payloads of old channels where it hasn't been explicitly set.
+        # In this case it's 1440 minutes.
+        default_auto_archive_duration = datetime.timedelta(minutes=payload.get("default_auto_archive_duration", 1440))
+        default_thread_rate_limit_per_user = datetime.timedelta(
+            seconds=payload.get("default_thread_rate_limit_per_user", 0)
+        )
+
+        permission_overwrites = {
+            snowflakes.Snowflake(overwrite["id"]): self.deserialize_permission_overwrite(overwrite)
+            for overwrite in payload["permission_overwrites"]
+        }
+
+        last_thread_id: typing.Optional[snowflakes.Snowflake] = None
+        if raw_last_thread_id := payload.get("last_message_id"):
+            last_thread_id = snowflakes.Snowflake(raw_last_thread_id)
+
+        available_tags: typing.List[channel_models.ForumTag] = []
+        for tag_payload in payload.get("available_tags", ()):
+            tag_emoji: typing.Union[emoji_models.UnicodeEmoji, snowflakes.Snowflake, None]
+            if tag_emoji := tag_payload["emoji_id"]:
+                tag_emoji = snowflakes.Snowflake(tag_emoji)
+
+            elif tag_emoji := tag_payload["emoji_name"]:
+                tag_emoji = emoji_models.UnicodeEmoji(tag_emoji)
+
+            available_tags.append(
+                channel_models.ForumTag(
+                    id=snowflakes.Snowflake(tag_payload["id"]),
+                    name=tag_payload["name"],
+                    moderated=tag_payload["moderated"],
+                    emoji=tag_emoji,
+                )
+            )
+
+        reaction_emoji_id: typing.Optional[snowflakes.Snowflake] = None
+        reaction_emoji_name: typing.Union[None, emoji_models.UnicodeEmoji, str] = None
+        if reaction_emoji_payload := payload.get("default_reaction_emoji"):
+            if reaction_emoji_id := reaction_emoji_payload["emoji_id"]:
+                reaction_emoji_id = snowflakes.Snowflake(reaction_emoji_id)
+
+            if reaction_emoji_name := reaction_emoji_payload["emoji_name"]:
+                reaction_emoji_name = emoji_models.UnicodeEmoji(reaction_emoji_name)
+
+        return channel_models.GuildForumChannel(
+            app=self._app,
+            id=channel_fields.id,
+            name=channel_fields.name,
+            type=channel_fields.type,
+            guild_id=channel_fields.guild_id,
+            permission_overwrites=permission_overwrites,
+            is_nsfw=payload.get("nsfw", False),
+            parent_id=channel_fields.parent_id,
+            topic=payload["topic"],
+            last_thread_id=last_thread_id,
+            # Usually this is 0 if unset, but some old channels made before the
+            # rate_limit_per_user field was implemented will not have this field
+            # at all if they have never had the rate limit changed...
+            rate_limit_per_user=datetime.timedelta(seconds=payload.get("rate_limit_per_user", 0)),
+            default_thread_rate_limit_per_user=default_thread_rate_limit_per_user,
+            default_auto_archive_duration=default_auto_archive_duration,
+            position=int(payload["position"]),
+            available_tags=available_tags,
+            flags=channel_models.ChannelFlag(payload["flags"]),
+            # Discord may send None here for old channels, but they are just NOT_SET
+            default_layout=channel_models.ForumLayoutType(payload.get("default_forum_layout", 0)),
+            # Discord may send None here for old channels, but they are just LATEST_ACTIVITY
+            default_sort_order=channel_models.ForumSortOrderType(payload.get("default_sort_order") or 0),
+            default_reaction_emoji_id=reaction_emoji_id,
+            default_reaction_emoji_name=reaction_emoji_name,
+        )
+
+    def serialize_forum_tag(self, tag: channel_models.ForumTag) -> data_binding.JSONObject:
+        return {
+            "id": tag.id,
+            "name": tag.name,
+            "moderated": tag.moderated,
+            "emoji_id": tag.emoji_id,
+            "emoji_name": tag.unicode_emoji,
+        }
+
     def deserialize_thread_member(
         self,
         payload: data_binding.JSONObject,
@@ -1195,6 +1294,12 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         user_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> channel_models.GuildPublicThread:
         channel_fields = self._set_guild_channel_attributes(payload, guild_id=guild_id)
+        flags = (
+            channel_models.ChannelFlag(raw_flags)
+            if (raw_flags := payload.get("flags"))
+            else channel_models.ChannelFlag.NONE
+        )
+
         last_message_id: typing.Optional[snowflakes.Snowflake] = None
         if (raw_last_message_id := payload.get("last_message_id")) is not None:
             last_message_id = snowflakes.Snowflake(raw_last_message_id)
@@ -1232,6 +1337,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             member=actual_member,
             owner_id=snowflakes.Snowflake(payload["owner_id"]),
             thread_created_at=thread_created_at,
+            applied_tag_ids=[snowflakes.Snowflake(p) for p in payload.get("applied_tags", ())],
+            flags=flags,
         )
 
     def deserialize_guild_private_thread(
@@ -1406,7 +1513,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     def serialize_embed(  # noqa: C901 - Function too complex
         self, embed: embed_models.Embed
     ) -> typing.Tuple[data_binding.JSONObject, typing.List[files.Resource[files.AsyncReader]]]:
-
         payload: typing.Dict[str, typing.Any] = {}
         uploads: typing.List[files.Resource[files.AsyncReader]] = []
 
@@ -1476,7 +1582,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if embed.fields:
             field_payloads: typing.List[data_binding.JSONObject] = []
             for i, field in enumerate(embed.fields):
-
                 # Yep, these are technically two unreachable branches. However, this is an incredibly
                 # common mistake to make when working with embeds and not using a static type
                 # checker, so I have added these as additional safeguards for UX and ease
@@ -3274,6 +3379,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
         return template_models.Template(
+            app=self._app,
             code=payload["code"],
             name=payload["name"],
             description=payload["description"],

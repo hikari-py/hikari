@@ -75,6 +75,9 @@ class StickerFormatType(int, enums.Enum):
     More information can be found here: <https://airbnb.io/lottie/>
     """
 
+    GIF = 4
+    """A GIF sticker."""
+
 
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
 class StickerPack(snowflakes.Unique):

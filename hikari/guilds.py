@@ -66,6 +66,7 @@ from hikari import undefined
 from hikari import urls
 from hikari import users
 from hikari.internal import attr_extensions
+from hikari.internal import deprecation
 from hikari.internal import enums
 from hikari.internal import routes
 from hikari.internal import time
@@ -691,6 +692,7 @@ class Member(users.User):
         self,
         *,
         delete_message_days: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        delete_message_seconds: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         """Ban this member from this guild.
@@ -700,6 +702,13 @@ class Member(users.User):
         delete_message_days : hikari.undefined.UndefinedOr[int]
             If provided, the number of days to delete messages for.
             This must be between 0 and 7.
+
+            .. deprecated:: 2.0.0.dev114
+                Use `delete_message_seconds` instead.
+        delete_message_seconds : hikari.undefined.UndefinedNoneOr[hikari.internal.time.Intervalish]
+            If provided, the number of seconds to delete messages for.
+            This can be represented as either an int/float between 0 and 604800 (7 days), or
+            a `datetime.timedelta` object.
         reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -728,8 +737,21 @@ class Member(users.User):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
+        if delete_message_days is not undefined.UNDEFINED:
+            deprecation.warn_deprecated(
+                "delete_message_days",
+                removal_version="2.0.0.dev117",
+                additional_info="'delete_message_seconds' should be used instead.",
+            )
+            if delete_message_seconds is not undefined.UNDEFINED:
+                raise ValueError(
+                    "You may only specify one of 'delete_message_days' or 'delete_message_seconds', not both"
+                )
+
+            delete_message_seconds = delete_message_days * 24 * 60**2
+
         await self.user.app.rest.ban_user(
-            self.guild_id, self.user.id, delete_message_days=delete_message_days, reason=reason
+            self.guild_id, self.user.id, delete_message_seconds=delete_message_seconds, reason=reason
         )
 
     async def unban(
@@ -1451,6 +1473,7 @@ class PartialGuild(snowflakes.Unique):
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         *,
         delete_message_days: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        delete_message_seconds: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         """Ban the given user from this guild.
@@ -1465,6 +1488,13 @@ class PartialGuild(snowflakes.Unique):
         delete_message_days : hikari.undefined.UndefinedOr[int]
             If provided, the number of days to delete messages for.
             This must be between 0 and 7.
+
+            .. deprecated:: 2.0.0.dev114
+                Use `delete_message_seconds` instead.
+        delete_message_seconds : hikari.undefined.UndefinedNoneOr[hikari.internal.time.Intervalish]
+            If provided, the number of seconds to delete messages for.
+            This can be represented as either an int/float between 0 and 604800 (7 days), or
+            a `datetime.timedelta` object.
         reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -1493,7 +1523,20 @@ class PartialGuild(snowflakes.Unique):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
-        await self.app.rest.ban_user(self.id, user, delete_message_days=delete_message_days, reason=reason)
+        if delete_message_days is not undefined.UNDEFINED:
+            deprecation.warn_deprecated(
+                "delete_message_days",
+                removal_version="2.0.0.dev117",
+                additional_info="'delete_message_seconds' should be used instead.",
+            )
+            if delete_message_seconds is not undefined.UNDEFINED:
+                raise ValueError(
+                    "You may only specify one of 'delete_message_days' or 'delete_message_seconds', not both"
+                )
+
+            delete_message_seconds = delete_message_days * 24 * 60**2
+
+        await self.app.rest.ban_user(self.id, user, delete_message_seconds=delete_message_seconds, reason=reason)
 
     async def unban(
         self,
@@ -1864,7 +1907,7 @@ class PartialGuild(snowflakes.Unique):
             The tag for the sticker.
         image : hikari.files.Resourceish
             The 320x320 image for the sticker. Maximum upload size is 500kb.
-            This can be a still or an animated PNG or a Lottie.
+            This can be a still PNG, an animated PNG, a Lottie, or a GIF.
 
         Other Parameters
         ----------------
@@ -2238,6 +2281,123 @@ class PartialGuild(snowflakes.Unique):
             permission_overwrites=permission_overwrites,
             category=category,
             reason=reason,
+        )
+
+    async def create_forum_channel(
+        self,
+        name: str,
+        *,
+        position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
+        permission_overwrites: undefined.UndefinedOr[
+            typing.Sequence[channels_.PermissionOverwrite]
+        ] = undefined.UNDEFINED,
+        topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        default_auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        default_thread_rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        default_forum_layout: undefined.UndefinedOr[typing.Union[channels_.ForumLayoutType, int]] = undefined.UNDEFINED,
+        default_sort_order: undefined.UndefinedOr[
+            typing.Union[channels_.ForumSortOrderType, int]
+        ] = undefined.UNDEFINED,
+        available_tags: undefined.UndefinedOr[typing.Sequence[channels_.ForumTag]] = undefined.UNDEFINED,
+        default_reaction_emoji: typing.Union[
+            str, emojis_.Emoji, undefined.UndefinedType, snowflakes.Snowflake
+        ] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> channels_.GuildForumChannel:
+        """Create a forum channel in the guild.
+
+        Parameters
+        ----------
+        name : str
+            The channels name. Must be between 2 and 1000 characters.
+
+        Other Parameters
+        ----------------
+        position : hikari.undefined.UndefinedOr[int]
+            If provided, the position of the category.
+        category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
+            The category to create the channel under. This may be the
+            object or the ID of an existing category.
+        permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
+            If provided, the permission overwrites for the category.
+        topic : hikari.undefined.UndefinedOr[str]
+            If provided, the channels topic. Maximum 1024 characters.
+        nsfw : hikari.undefined.UndefinedOr[bool]
+            If provided, whether to mark the channel as NSFW.
+        rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
+            If provided, the amount of seconds a user has to wait
+            before being able to send another message in the channel.
+            Maximum 21600 seconds.
+        default_auto_archive_duration : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
+            If provided, the auto archive duration Discord's end user client
+            should default to when creating threads in this channel.
+
+            This should be either 60, 1440, 4320 or 10080 seconds and, as of
+            writing, ignores the parent channel's set default_auto_archive_duration
+            when passed as `hikari.undefined.UNDEFINED`.
+        default_thread_rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
+            If provided, the ratelimit that should be set in threads created
+            from the forum.
+        default_forum_layout : hikari.undefined.UndefinedOr[typing.Union[hikari.channels.ForumLayoutType, int]]
+            If provided, the default forum layout to show in the client.
+        default_sort_order : hikari.undefined.UndefinedOr[typing.Union[hikari.channels.ForumSortOrderType, int]]
+            If provided, the default sort order to show in the client.
+        available_tags : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.ForumTag]]
+            If provided, the available tags to select from when creating a thread.
+        default_reaction_emoji : typing.Union[str, hikari.emojis.Emoji, hikari.undefined.UndefinedType, hikari.snowflakes.Snowflake]
+            If provided, the new default reaction emoji for threads created in a forum channel.
+        reason : hikari.undefined.UndefinedOr[str]
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Returns
+        -------
+        hikari.channels.GuildForumChannel
+            The created forum channel.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you are missing the `MANAGE_CHANNEL` permission.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """  # noqa: E501 - Line too long
+        return await self.app.rest.create_guild_forum_channel(
+            self.id,
+            name,
+            position=position,
+            topic=topic,
+            nsfw=nsfw,
+            rate_limit_per_user=rate_limit_per_user,
+            permission_overwrites=permission_overwrites,
+            category=category,
+            reason=reason,
+            default_auto_archive_duration=default_auto_archive_duration,
+            default_thread_rate_limit_per_user=default_thread_rate_limit_per_user,
+            default_forum_layout=default_forum_layout,
+            default_sort_order=default_sort_order,
+            available_tags=available_tags,
+            default_reaction_emoji=default_reaction_emoji,
         )
 
     async def create_voice_channel(
@@ -2790,6 +2950,8 @@ class Guild(PartialGuild):
     def get_members(self) -> typing.Mapping[snowflakes.Snowflake, Member]:
         """Get the members cached for the guild.
 
+        Returns
+        -------
         typing.Mapping[hikari.snowflakes.Snowflake, Member]
             A mapping of user IDs to objects of the members cached for the guild.
         """
@@ -2801,6 +2963,8 @@ class Guild(PartialGuild):
     def get_presences(self) -> typing.Mapping[snowflakes.Snowflake, presences_.MemberPresence]:
         """Get the presences cached for the guild.
 
+        Returns
+        -------
         typing.Mapping[hikari.snowflakes.Snowflake, hikari.presences.MemberPresence]
             A mapping of user IDs to objects of the presences cached for the
             guild.

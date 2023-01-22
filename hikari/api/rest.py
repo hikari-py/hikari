@@ -198,6 +198,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         /,
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        flags: undefined.UndefinedOr[channels_.ChannelFlag] = undefined.UNDEFINED,
         position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -205,7 +206,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         video_quality_mode: undefined.UndefinedOr[typing.Union[channels_.VideoQualityMode, int]] = undefined.UNDEFINED,
         user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
-        region: undefined.UndefinedOr[typing.Union[str, voices.VoiceRegion]] = undefined.UNDEFINED,
+        region: undefined.UndefinedNoneOr[typing.Union[voices.VoiceRegion, str]] = undefined.UNDEFINED,
         permission_overwrites: undefined.UndefinedOr[
             typing.Sequence[channels_.PermissionOverwrite]
         ] = undefined.UNDEFINED,
@@ -213,6 +214,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             snowflakes.SnowflakeishOr[channels_.GuildCategory]
         ] = undefined.UNDEFINED,
         default_auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        default_thread_rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        default_forum_layout: undefined.UndefinedOr[typing.Union[channels_.ForumLayoutType, int]] = undefined.UNDEFINED,
+        default_sort_order: undefined.UndefinedOr[
+            typing.Union[channels_.ForumSortOrderType, int]
+        ] = undefined.UNDEFINED,
+        available_tags: undefined.UndefinedOr[typing.Sequence[channels_.ForumTag]] = undefined.UNDEFINED,
+        default_reaction_emoji: typing.Union[
+            str, emojis.Emoji, undefined.UndefinedType, snowflakes.Snowflake, None
+        ] = undefined.UNDEFINED,
         archived: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         locked: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         invitable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -231,6 +241,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------------
         name : hikari.undefined.UndefinedOr[str]
             If provided, the new name for the channel.
+        flags : hikari.undefined.UndefinedOr[hikari.channels.ChannelFlag]
+            If provided, the new flags for the channel
         position : hikari.undefined.UndefinedOr[int]
             If provided, the new position for the channel.
         topic : hikari.undefined.UndefinedOr[str]
@@ -245,7 +257,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the new user limit in the channel.
         rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
             If provided, the new rate limit per user in the channel.
-        region : hikari.undefined.UndefinedOr[typing.Union[str, hikari.voices.VoiceRegion]]
+        region : hikari.undefined.UndefinedNoneOr[typing.Union[str, hikari.voices.VoiceRegion]]
             If provided, the voice region to set for this channel. Passing
             `None` here will set it to "auto" mode where the used
             region will be decided based on the first person who connects to it
@@ -261,6 +273,23 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             This should be either 60, 1440, 4320 or 10080 seconds and, as of
             writing, ignores the parent channel's set default_auto_archive_duration
             when passed as `hikari.undefined.UNDEFINED`.
+        default_thread_rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
+            If provided, the ratelimit that should be set in threads derived
+            from this channel.
+
+            This only applies to forum channels.
+        default_forum_layout : hikari.undefined.UndefinedOr[typing.Union[hikari.channels.ForumLayoutType, int]]
+            If provided, the default forum layout to show in the client.
+        default_sort_order : hikari.undefined.UndefinedOr[typing.Union[hikari.channels.ForumSortOrderType, int]]
+            If provided, the default sort order to show in the client.
+        available_tags : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.ForumTag]]
+            If provided, the new available tags to select from when creating a thread.
+
+            This only applies to forum channels.
+        default_reaction_emoji : typing.Union[str, hikari.emojis.Emoji, hikari.undefined.UndefinedType, hikari.snowflakes.Snowflake]
+            If provided, the new default reaction emoji for threads created in a forum channel.
+
+            This only applies to forum channels.
         archived : hikari.undefined.UndefinedOr[bool]
             If provided, whether to archive or unarchive this thread channel.
         locked : hikari.undefined.UndefinedOr[bool]
@@ -309,7 +338,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """
+        """  # noqa: E501 - Line too long
 
     @abc.abstractmethod
     async def follow_channel(
@@ -1094,6 +1123,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reply: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = undefined.UNDEFINED,
+        reply_must_exist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
@@ -1172,6 +1202,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             reader using Discord's TTS (text-to-speech) system.
         reply : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]]
             If provided, the message to reply to.
+        reply_must_exist : hikari.undefined.UndefinedOr[bool]
+            If provided, whether to error if the message being replied to does
+            not exist instead of sending as a normal (non-reply) message.
+            Defaults to `True`.
+
+            This will not do anything if not being used with `reply`.
         mentions_everyone : hikari.undefined.UndefinedOr[bool]
             If provided, whether the message should parse @everyone/@here
             mentions.
@@ -3916,7 +3952,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The tag for the sticker.
         image : hikari.files.Resourceish
             The 320x320 image for the sticker. Maximum upload size is 500kb.
-            This can be a still or an animated PNG or a Lottie.
+            This can be a still PNG, an animated PNG, a Lottie, or a GIF.
 
             .. note::
                 Lottie support is only available for verified and partnered
@@ -4559,6 +4595,111 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
+    async def create_guild_forum_channel(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        name: str,
+        *,
+        position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
+        permission_overwrites: undefined.UndefinedOr[
+            typing.Sequence[channels_.PermissionOverwrite]
+        ] = undefined.UNDEFINED,
+        topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        default_auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        default_thread_rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        default_forum_layout: undefined.UndefinedOr[typing.Union[channels_.ForumLayoutType, int]] = undefined.UNDEFINED,
+        default_sort_order: undefined.UndefinedOr[
+            typing.Union[channels_.ForumSortOrderType, int]
+        ] = undefined.UNDEFINED,
+        available_tags: undefined.UndefinedOr[typing.Sequence[channels_.ForumTag]] = undefined.UNDEFINED,
+        default_reaction_emoji: typing.Union[
+            str, emojis.Emoji, undefined.UndefinedType, snowflakes.Snowflake
+        ] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> channels_.GuildForumChannel:
+        """Create a forum channel in a guild.
+
+        Parameters
+        ----------
+        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+            The guild to create the channel in. This may be the
+            object or the ID of an existing guild.
+        name : str
+            The channels name. Must be between 2 and 1000 characters.
+
+        Other Parameters
+        ----------------
+        position : hikari.undefined.UndefinedOr[int]
+            If provided, the position of the category.
+        category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
+            The category to create the channel under. This may be the
+            object or the ID of an existing category.
+        permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
+            If provided, the permission overwrites for the category.
+        topic : hikari.undefined.UndefinedOr[str]
+            If provided, the channels topic. Maximum 1024 characters.
+        nsfw : hikari.undefined.UndefinedOr[bool]
+            If provided, whether to mark the channel as NSFW.
+        rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
+            If provided, the amount of seconds a user has to wait
+            before being able to send another message in the channel.
+            Maximum 21600 seconds.
+        default_auto_archive_duration : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
+            If provided, the auto archive duration Discord's end user client
+            should default to when creating threads in this channel.
+
+            This should be either 60, 1440, 4320 or 10080 seconds and, as of
+            writing, ignores the parent channel's set default_auto_archive_duration
+            when passed as `hikari.undefined.UNDEFINED`.
+        default_thread_rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
+            If provided, the ratelimit that should be set in threads created
+            from the forum.
+        default_forum_layout : hikari.undefined.UndefinedOr[typing.Union[hikari.channels.ForumLayoutType, int]]
+            If provided, the default forum layout to show in the client.
+        default_sort_order : hikari.undefined.UndefinedOr[typing.Union[hikari.channels.ForumSortOrderType, int]]
+            If provided, the default sort order to show in the client.
+        available_tags : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.ForumTag]]
+            If provided, the available tags to select from when creating a thread.
+        default_reaction_emoji : typing.Union[str, hikari.emojis.Emoji, hikari.undefined.UndefinedType, hikari.snowflakes.Snowflake]
+            If provided, the new default reaction emoji for threads created in a forum channel.
+        reason : hikari.undefined.UndefinedOr[str]
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Returns
+        -------
+        hikari.channels.GuildForumChannel
+            The created forum channel.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you are missing the `MANAGE_CHANNEL` permission.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """  # noqa: E501 - Line too long
+
+    @abc.abstractmethod
     async def create_guild_voice_channel(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -4828,6 +4969,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the amount of seconds a user has to wait
             before being able to send another message in the channel.
             Maximum 21600 seconds.
+        reason : hikari.undefined.UndefinedOr[str]
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
 
         Returns
         -------
@@ -4883,6 +5027,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------
         channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.PermissibleGuildChannel]
             Object or ID of the guild news or text channel to create a thread in.
+        type : typing.Union[hikari.channels.ChannelType, int]
+            The thread type to create.
         name : str
             Name of the thread channel.
 
@@ -4902,6 +5048,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the amount of seconds a user has to wait
             before being able to send another message in the channel.
             Maximum 21600 seconds.
+        reason : hikari.undefined.UndefinedOr[str]
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
 
         Returns
         -------
@@ -4931,6 +5080,179 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
+
+    @abc.abstractmethod
+    async def create_forum_post(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
+        name: str,
+        /,
+        # Message arguments
+        content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
+        *,
+        attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
+        attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
+        component: undefined.UndefinedOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
+        components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
+        embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
+        embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        user_mentions: undefined.UndefinedOr[
+            typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
+        ] = undefined.UNDEFINED,
+        role_mentions: undefined.UndefinedOr[
+            typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
+        ] = undefined.UNDEFINED,
+        flags: typing.Union[undefined.UndefinedType, int, messages_.MessageFlag] = undefined.UNDEFINED,
+        # Channel arguments
+        auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = datetime.timedelta(days=1),
+        rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        tags: undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> channels_.GuildPublicThread:
+        """Create a post in a forum channel.
+
+        Parameters
+        ----------
+        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.PermissibleGuildChannel]
+            Object or ID of the forum channel to create a post in.
+        name : str
+            Name of the post.
+        content : hikari.undefined.UndefinedOr[typing.Any]
+            If provided, the message contents. If
+            `hikari.undefined.UNDEFINED`, then nothing will be sent
+            in the content. Any other value here will be cast to a
+            `str`.
+
+            If this is a `hikari.embeds.Embed` and no `embed` nor `embeds` kwarg
+            is provided, then this will instead update the embed. This allows
+            for simpler syntax when sending an embed alone.
+
+            Likewise, if this is a `hikari.files.Resource`, then the
+            content is instead treated as an attachment if no `attachment` and
+            no `attachments` kwargs are provided.
+
+        Other Parameters
+        ----------------
+        attachment : hikari.undefined.UndefinedOr[hikari.files.Resourceish]
+            If provided, the message attachment. This can be a resource,
+            or string of a path on your computer or a URL.
+
+            Attachments can be passed as many different things, to aid in
+            convenience.
+
+            - If a `pathlib.PurePath` or `str` to a valid URL, the
+                resource at the given URL will be streamed to Discord when
+                sending the message. Subclasses of
+                `hikari.files.WebResource` such as
+                `hikari.files.URL`,
+                `hikari.messages.Attachment`,
+                `hikari.emojis.Emoji`,
+                `EmbedResource`, etc will also be uploaded this way.
+                This will use bit-inception, so only a small percentage of the
+                resource will remain in memory at any one time, thus aiding in
+                scalability.
+            - If a `hikari.files.Bytes` is passed, or a `str`
+                that contains a valid data URI is passed, then this is uploaded
+                with a randomized file name if not provided.
+            - If a `hikari.files.File`, `pathlib.PurePath` or
+                `str` that is an absolute or relative path to a file
+                on your file system is passed, then this resource is uploaded
+                as an attachment using non-blocking code internally and streamed
+                using bit-inception where possible. This depends on the
+                type of `concurrent.futures.Executor` that is being used for
+                the application (default is a thread pool which supports this
+                behaviour).
+        attachments : hikari.undefined.UndefinedOr[typing.Sequence[hikari.files.Resourceish]]
+            If provided, the message attachments. These can be resources, or
+            strings consisting of paths on your computer or URLs.
+        component : hikari.undefined.UndefinedOr[hikari.api.special_endpoints.ComponentBuilder]
+            If provided, builder object of the component to include in this message.
+        components : hikari.undefined.UndefinedOr[typing.Sequence[hikari.api.special_endpoints.ComponentBuilder]]
+            If provided, a sequence of the component builder objects to include
+            in this message.
+        embed : hikari.undefined.UndefinedOr[hikari.embeds.Embed]
+            If provided, the message embed.
+        embeds : hikari.undefined.UndefinedOr[typing.Sequence[hikari.embeds.Embed]]
+            If provided, the message embeds.
+        tts : hikari.undefined.UndefinedOr[bool]
+            If provided, whether the message will be read out by a screen
+            reader using Discord's TTS (text-to-speech) system.
+        mentions_everyone : hikari.undefined.UndefinedOr[bool]
+            If provided, whether the message should parse @everyone/@here
+            mentions.
+        mentions_reply : hikari.undefined.UndefinedOr[bool]
+            If provided, whether to mention the author of the message
+            that is being replied to.
+
+            This will not do anything if not being used with `reply`.
+        user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
+            If provided, and `True`, all user mentions will be detected.
+            If provided, and `False`, all user mentions will be ignored
+            if appearing in the message body.
+            Alternatively this may be a collection of
+            `hikari.snowflakes.Snowflake`, or
+            `hikari.users.PartialUser` derivatives to enforce mentioning
+            specific users.
+        role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], bool]]
+            If provided, and `True`, all role mentions will be detected.
+            If provided, and `False`, all role mentions will be ignored
+            if appearing in the message body.
+            Alternatively this may be a collection of
+            `hikari.snowflakes.Snowflake`, or
+            `hikari.guilds.PartialRole` derivatives to enforce mentioning
+            specific roles.
+        flags : hikari.undefined.UndefinedOr[hikari.messages.MessageFlag]
+            If provided, optional flags to set on the message. If
+            `hikari.undefined.UNDEFINED`, then nothing is changed.
+
+            Note that some flags may not be able to be set. Currently the only
+            flags that can be set are `NONE` and `SUPPRESS_EMBEDS`.
+        auto_archive_duration : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
+            If provided, how long the post should remain inactive until it's archived.
+
+            This should be either 60, 1440, 4320 or 10080 seconds and, as of
+            writing, ignores the parent channel's set default_auto_archive_duration
+            when passed as `hikari.undefined.UNDEFINED`.
+        rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
+            If provided, the amount of seconds a user has to wait
+            before being able to send another message in the channel.
+            Maximum 21600 seconds.
+        tags : hikari.undefined.UndefinedOr[typing.Sequence[hikari.snowflakes.SnowflakeishOr[hikari.channels.ForumTag]]]
+            If provided, the tags to add to the created post.
+        reason : hikari.undefined.UndefinedOr[str]
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Returns
+        -------
+        hikari.channels.GuildPublicThread
+            The created post.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you are missing the `SEND_MESSAGES` permission in the channel.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """  # noqa: E501 - Line too long
 
     @abc.abstractmethod
     async def join_thread(self, channel: snowflakes.SnowflakeishOr[channels_.GuildTextChannel], /) -> None:
@@ -5726,6 +6048,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Requires the `CHANGE_NICKNAME` permission.
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
+        reason : hikari.undefined.UndefinedOr[str]
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
 
         Returns
         -------
@@ -5926,9 +6251,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         *,
         delete_message_days: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        delete_message_seconds: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
-        """Ban a member from a guild.
+        """Ban the given user from this guild.
 
         Parameters
         ----------
@@ -5944,6 +6270,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         delete_message_days : hikari.undefined.UndefinedOr[int]
             If provided, the number of days to delete messages for.
             This must be between 0 and 7.
+
+            .. deprecated:: 2.0.0.dev114
+                Use `delete_message_seconds` instead.
+        delete_message_seconds : hikari.undefined.UndefinedNoneOr[hikari.internal.time.Intervalish]
+            If provided, the number of seconds to delete messages for.
+            This can be represented as either an int/float between 0 and 604800 (7 days), or
+            a `datetime.timedelta` object.
         reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -5980,6 +6313,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         *,
         delete_message_days: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        delete_message_seconds: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         """Alias of `ban_user`."""
@@ -8366,9 +8700,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        component : hikari.undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]]
+        component : hikari.undefined.UndefinedOr[typing.Sequence[hikari.api.special_endpoints.ComponentBuilder]]
             A component builders to send in this modal.
-        components : hikari.undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]]
+        components : hikari.undefined.UndefinedOr[typing.Sequence[hikari.api.special_endpoints.ComponentBuilder]]
             A sequence of component builders to send in this modal.
 
         Raises

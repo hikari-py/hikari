@@ -88,7 +88,7 @@ class CompiledRoute:
         """
         return base_url + self.compiled_path
 
-    def create_real_bucket_hash(self, initial_bucket_hash: str) -> str:
+    def create_real_bucket_hash(self, initial_bucket_hash: str, authentication_hash: str) -> str:
         """Create a full bucket hash from a given initial hash.
 
         The result of this hash will be decided by the value of the major
@@ -99,6 +99,8 @@ class CompiledRoute:
         initial_bucket_hash : str
             The initial bucket hash provided by Discord in the HTTP headers
             for a given response.
+        authentication_hash : str
+            The token hash.
 
         Returns
         -------
@@ -106,7 +108,7 @@ class CompiledRoute:
             The input hash amalgamated with a hash code produced by the
             major parameters in this compiled route instance.
         """
-        return initial_bucket_hash + HASH_SEPARATOR + self.major_param_hash
+        return f"{initial_bucket_hash}{HASH_SEPARATOR}{authentication_hash}{HASH_SEPARATOR}{self.major_param_hash}"
 
     def __str__(self) -> str:
         return f"{self.method} {self.compiled_path}"
@@ -135,12 +137,21 @@ class Route:
     path_template: str = attr.field()
     """The template string used for the path."""
 
-    major_params: typing.Optional[typing.FrozenSet[str]] = attr.field(hash=False, eq=False)
+    major_params: typing.Optional[typing.FrozenSet[str]] = attr.field(hash=False, eq=False, repr=False)
     """The optional major parameter name combination for this endpoint."""
 
-    def __init__(self, method: str, path_template: str) -> None:
+    has_ratelimits: bool = attr.field(hash=False, eq=False, repr=False)
+    """Whether this route is affected by ratelimits.
+
+    This should be left as `True` (the default) for most routes. This
+    only covers specific routes where no ratelimits exist, so we can
+    be a bit more efficient with them.
+    """
+
+    def __init__(self, method: str, path_template: str, *, has_ratelimits: bool = True) -> None:
         self.method = method
         self.path_template = path_template
+        self.has_ratelimits = has_ratelimits
 
         self.major_params = None
         match = PARAM_REGEX.findall(path_template)
@@ -528,16 +539,17 @@ PUT_APPLICATION_GUILD_COMMANDS_PERMISSIONS: typing.Final[Route] = Route(
 # For these endpoints "webhook" is the application ID.
 GET_INTERACTION_RESPONSE: typing.Final[Route] = Route(GET, "/webhooks/{webhook}/{token}/messages/@original")
 PATCH_INTERACTION_RESPONSE: typing.Final[Route] = Route(PATCH, "/webhooks/{webhook}/{token}/messages/@original")
-POST_INTERACTION_RESPONSE: typing.Final[Route] = Route(POST, "/interactions/{interaction}/{token}/callback")
+POST_INTERACTION_RESPONSE: typing.Final[Route] = Route(
+    POST, "/interactions/{interaction}/{token}/callback", has_ratelimits=False
+)
 DELETE_INTERACTION_RESPONSE: typing.Final[Route] = Route(DELETE, "/webhooks/{webhook}/{token}/messages/@original")
 
 # OAuth2 API
 GET_MY_APPLICATION: typing.Final[Route] = Route(GET, "/oauth2/applications/@me")
 GET_MY_AUTHORIZATION: typing.Final[Route] = Route(GET, "/oauth2/@me")
 
-POST_AUTHORIZE: typing.Final[Route] = Route(POST, "/oauth2/authorize")
-POST_TOKEN: typing.Final[Route] = Route(POST, "/oauth2/token")
-POST_TOKEN_REVOKE: typing.Final[Route] = Route(POST, "/oauth2/token/revoke")
+POST_TOKEN: typing.Final[Route] = Route(POST, "/oauth2/token", has_ratelimits=False)
+POST_TOKEN_REVOKE: typing.Final[Route] = Route(POST, "/oauth2/token/revoke", has_ratelimits=False)
 
 # Gateway
 GET_GATEWAY: typing.Final[Route] = Route(GET, "/gateway")
@@ -579,7 +591,7 @@ CDN_TEAM_ICON: typing.Final[CDNRoute] = CDNRoute("/team-icons/{team_id}/{hash}",
 # undocumented on the Discord docs.
 CDN_CHANNEL_ICON: typing.Final[CDNRoute] = CDNRoute("/channel-icons/{channel_id}/{hash}", {PNG, *JPEG_JPG, WEBP})
 
-CDN_STICKER: typing.Final[CDNRoute] = CDNRoute("/stickers/{sticker_id}", {PNG, LOTTIE}, is_sizable=False)
+CDN_STICKER: typing.Final[CDNRoute] = CDNRoute("/stickers/{sticker_id}", {PNG, LOTTIE, GIF}, is_sizable=False)
 CDN_STICKER_PACK_BANNER: typing.Final[CDNRoute] = CDNRoute(
     "/app-assets/710982414301790216/store/{hash}", {PNG, *JPEG_JPG, WEBP}
 )

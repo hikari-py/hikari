@@ -35,7 +35,7 @@ REASONABLE_QUICK_RESPONSE_TIME = 0.2
 
 # How long to wait for before considering a test to be jammed in an unbreakable
 # condition, and thus acceptable to terminate the test and fail it.
-REASONABLE_TIMEOUT_AFTER = 10
+REASONABLE_TIMEOUT_AFTER = 5
 
 _T = typing.TypeVar("_T")
 

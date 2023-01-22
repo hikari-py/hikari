@@ -34,6 +34,9 @@ from hikari.internal import enums
 class Locale(str, enums.Enum):
     """Possible user/guild locales."""
 
+    ID = "id"
+    """Indonesian."""
+
     DA = "da"
     """Danish."""
 

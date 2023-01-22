@@ -26,6 +26,7 @@ from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
     "ChannelType",
+    "ChannelFlag",
     "VideoQualityMode",
     "ChannelFollow",
     "PermissionOverwrite",
@@ -45,6 +46,10 @@ __all__: typing.Sequence[str] = (
     "GuildNewsThread",
     "GuildPrivateThread",
     "GuildPublicThread",
+    "ForumSortOrderType",
+    "ForumLayoutType",
+    "ForumTag",
+    "GuildForumChannel",
     "GuildVoiceChannel",
     "GuildStageChannel",
     "WebhookChannelT",
@@ -56,6 +61,7 @@ import typing
 
 import attr
 
+from hikari import emojis
 from hikari import permissions
 from hikari import snowflakes
 from hikari import traits
@@ -118,6 +124,32 @@ class ChannelType(int, enums.Enum):
 
     GUILD_STAGE = 13
     """A few to many voice channel for hosting events."""
+
+    GUILD_FORUM = 15
+    """A channel consisting of a collection of public guild threads."""
+
+
+@typing.final
+class ChannelFlag(enums.Flag):
+    """The flags for a channel."""
+
+    NONE = 0 << 1
+    """None."""
+
+    PINNED = 1 << 1
+    """The thread is pinned in a forum channel.
+
+    .. note::
+        As of writing, this can only be set for threads
+        belonging to a forum channel.
+    """
+
+    REQUIRE_TAG = 1 << 4
+    """Whether a tag is required to be specified when creating a thread in a forum channel
+
+    .. note::
+        As of writing, this can only be set for forum channels.
+    """
 
 
 @typing.final
@@ -499,6 +531,7 @@ class TextableChannel(PartialChannel):
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reply: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages.PartialMessage]] = undefined.UNDEFINED,
+        reply_must_exist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
@@ -574,6 +607,12 @@ class TextableChannel(PartialChannel):
             If provided, whether the message will be TTS (Text To Speech).
         reply : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]]
             If provided, the message to reply to.
+        reply_must_exist : hikari.undefined.UndefinedOr[bool]
+            If provided, whether to error if the message being replied to does
+            not exist instead of sending as a normal (non-reply) message.
+            Defaults to `True`.
+
+            This will not do anything if not being used with `reply`.
         mentions_everyone : hikari.undefined.UndefinedOr[bool]
             If provided, whether the message should parse @everyone/@here
             mentions.
@@ -642,6 +681,7 @@ class TextableChannel(PartialChannel):
             embeds=embeds,
             tts=tts,
             reply=reply,
+            reply_must_exist=reply_must_exist,
             mentions_everyone=mentions_everyone,
             user_mentions=user_mentions,
             role_mentions=role_mentions,
@@ -1386,6 +1426,147 @@ class GuildStageChannel(PermissibleGuildChannel):
     """
 
 
+@typing.final
+class ForumSortOrderType(int, enums.Enum):
+    """The sort order for forum channels."""
+
+    LATEST_ACTIVITY = 0
+    """Latest Activity."""
+
+    CREATION_DATE = 1
+    """Creation Date."""
+
+
+@typing.final
+class ForumLayoutType(int, enums.Enum):
+    """The layout type for forum channels."""
+
+    NOT_SET = 0
+    """Not Set."""
+
+    LIST_VIEW = 1
+    """List View."""
+
+    GALLERY_VIEW = 2
+    """Gallery View."""
+
+
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
+class ForumTag(snowflakes.Unique):
+    """Represents a forum tag."""
+
+    id: snowflakes.Snowflake = attr.field(
+        eq=True, hash=True, repr=True, converter=snowflakes.Snowflake, factory=snowflakes.Snowflake.min
+    )
+    """The ID of the tag.
+
+    When creating tags, this will be `0`.
+    """
+
+    name: str = attr.field(eq=False, hash=False, repr=True)
+    """The name of the tag."""
+
+    moderated: bool = attr.field(eq=False, hash=False, repr=False, default=False)
+    """The whether this flag can only be applied by moderators.
+
+    Moderators are those with `MANAGE_CHANNEL` or `ADMINISTRATOR` permissions.
+    """
+
+    _emoji: typing.Union[str, int, emojis.Emoji, None] = attr.field(alias="emoji", default=None)
+    # Discord will send either emoji_id or emoji_name, never both.
+    # Thus, we can take in a generic "emoji" argument when the user
+    # creates the class and then demystify it later.
+
+    @property
+    def unicode_emoji(self) -> typing.Optional[emojis.UnicodeEmoji]:
+        """Unicode emoji of this tag."""
+        if isinstance(self._emoji, str):
+            return emojis.UnicodeEmoji(self._emoji)
+
+        return None
+
+    @property
+    def emoji_id(self) -> typing.Optional[snowflakes.Snowflake]:
+        """ID of the emoji of this tag."""
+        if isinstance(self._emoji, (int, emojis.CustomEmoji)):
+            return snowflakes.Snowflake(self._emoji)
+
+        return None
+
+
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
+class GuildForumChannel(PermissibleGuildChannel):
+    """Represents a guild forum channel."""
+
+    topic: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    """The guidelines for the channel."""
+
+    last_thread_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
+    """The ID of the last thread created in this channel.
+
+    .. warning::
+        This might point to an invalid or deleted message. Do not assume that
+        this will always be valid.
+    """
+
+    rate_limit_per_user: datetime.timedelta = attr.field(eq=False, hash=False, repr=False)
+    """The delay (in seconds) between a user can create threads in this channel.
+
+    If there is no rate limit, this will be 0 seconds.
+
+    .. note::
+        Any user that has permissions allowing `MANAGE_MESSAGES`,
+        `MANAGE_CHANNEL`, `ADMINISTRATOR` will not be limited. Likewise, bots
+        will not be affected by this rate limit.
+    """
+
+    default_thread_rate_limit_per_user: datetime.timedelta = attr.field(eq=False, hash=False, repr=False)
+    """The default delay (in seconds) between a user can send a message in created threads.
+
+    If there is no rate limit, this will be 0 seconds.
+
+    .. note::
+        Any user that has permissions allowing `MANAGE_MESSAGES`,
+        `MANAGE_CHANNEL`, `ADMINISTRATOR` will not be limited. Likewise, bots
+        will not be affected by this rate limit.
+    """
+
+    default_auto_archive_duration: datetime.timedelta = attr.field(eq=False, hash=False, repr=False)
+    """The auto archive duration Discord's client defaults to for threads in this channel.
+
+    This may be be either 1 hour, 1 day, 3 days or 1 week.
+    """
+
+    flags: ChannelFlag = attr.field(eq=False, hash=False, repr=False)
+    """The channel flags for this channel.
+
+    .. note::
+        As of writing, the only flag that can be set is `ChannelFlag.REQUIRE_TAG`.
+    """
+
+    available_tags: typing.Sequence[ForumTag] = attr.field(eq=False, hash=False, repr=False)
+    """The available tags to select from when creating a thread."""
+
+    default_sort_order: ForumSortOrderType = attr.field(eq=False, hash=False, repr=False)
+    """The default sort order for the forum."""
+
+    default_layout: ForumLayoutType = attr.field(eq=False, hash=False, repr=False)
+    """The default layout for the forum."""
+
+    default_reaction_emoji_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
+    """The ID of the default reaction emoji."""
+
+    default_reaction_emoji_name: typing.Union[str, emojis.UnicodeEmoji, None] = attr.field(
+        eq=False, hash=False, repr=False
+    )
+    """Name of the default reaction emoji.
+
+    Either the string name of the custom emoji, the object
+    of the `hikari.emojis.UnicodeEmoji` or `None` when the relevant
+    custom emoji's data is not available (e.g. the emoji has been deleted).
+    """
+
+
 WebhookChannelT = typing.Union[GuildTextChannel, GuildNewsChannel]
 """Union of the channel types which incoming and follower webhooks can be attached to.
 
@@ -1530,10 +1711,24 @@ class GuildNewsThread(GuildThreadChannel):
     __slots__: typing.Sequence[str] = ()
 
 
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
 class GuildPublicThread(GuildThreadChannel):
     """Represents a non-news guild channel public thread."""
 
-    __slots__: typing.Sequence[str] = ()
+    applied_tag_ids: typing.Sequence[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
+    """The IDs of the applied tags on this thread.
+
+    This will only apply to threads created inside a forum channel.
+    """
+
+    flags: ChannelFlag = attr.field(eq=False, hash=False, repr=False)
+    """The channel flags for this thread.
+
+    This will only apply to threads created inside a forum channel.
+
+    .. note::
+        As of writing, the only flag that can be set is `ChannelFlag.PINNED`.
+    """
 
 
 @attr.define(hash=True, kw_only=True, weakref_slot=False)

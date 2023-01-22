@@ -31,6 +31,7 @@ import typing
 import attr
 
 from hikari import guilds
+from hikari import undefined
 from hikari.internal import attr_extensions
 
 if typing.TYPE_CHECKING:
@@ -40,6 +41,7 @@ if typing.TYPE_CHECKING:
     from hikari import colors
     from hikari import permissions as permissions_
     from hikari import snowflakes
+    from hikari import traits
     from hikari import users
 
 
@@ -147,6 +149,11 @@ class TemplateGuild(guilds.PartialGuild):
 class Template:
     """Represents a template used for creating guilds."""
 
+    app: traits.RESTAware = attr.field(
+        repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
+    )
+    """Client application that models may use for procedures."""
+
     code: str = attr.field(hash=True, repr=True)
     """The template's unique ID."""
 
@@ -173,6 +180,175 @@ class Template:
 
     is_unsynced: bool = attr.field(eq=False, hash=False, repr=False)
     """Whether this template is missing changes from it's source guild."""
+
+    async def fetch_self(self) -> Template:
+        """Fetch an up-to-date view of this template from the API.
+
+        Returns
+        -------
+        hikari.templates.Template
+            An up-to-date view of this template.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the template is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        return await self.app.rest.fetch_template(self.code)
+
+    async def edit(
+        self,
+        *,
+        name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        description: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
+    ) -> Template:
+        """Modify a guild template.
+
+        Parameters
+        ----------
+        name : hikari.undefined.UndefinedOr[str]
+            The name to set for this template.
+        description : hikari.undefined.UndefinedNoneOr[str]
+            The description to set for the template.
+
+        Returns
+        -------
+        hikari.templates.Template
+            The object of the edited template.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you are not part of the guild.
+        hikari.errors.NotFoundError
+            If the guild is not found or you are missing the `MANAGE_GUILD` permission.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is longer than max_rate_limit when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting rate-limits automatically.
+            This includes most bucket-specific rate-limits and global rate-limits.
+            In some rare edge cases, however, Discord implements other undocumented rules for rate-limiting,
+            such as limits per attribute.
+            These cannot be detected or handled normally by Hikari due to their undocumented nature,
+            and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        return await self.app.rest.edit_template(self.source_guild, self, name=name, description=description)
+
+    async def delete(self) -> None:
+        """Delete a guild template.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you are not part of the guild.
+        hikari.errors.NotFoundError
+            If the guild is not found or you are missing the `MANAGE_GUILD` permission.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is longer than max_rate_limit when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting rate-limits automatically.
+            This includes most bucket-specific rate-limits and global rate-limits.
+            In some rare edge cases, however, Discord implements other undocumented rules for rate-limiting,
+            such as limits per attribute.
+            These cannot be detected or handled normally by Hikari due to their undocumented nature,
+            and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        await self.app.rest.delete_template(self.source_guild, self)
+
+    async def sync(self) -> Template:
+        """Sync a guild template.
+
+        Returns
+        -------
+        hikari.templates.Template
+            The object of the synced template.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you are not part of the guild or are missing the `MANAGE_GUILD` permission.
+        hikari.errors.NotFoundError
+            If the guild or template is not found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is longer than max_rate_limit when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting rate-limits automatically.
+            This includes most bucket-specific rate-limits and global rate-limits.
+            In some rare edge cases, however, Discord implements other undocumented rules for rate-limiting,
+            such as limits per attribute.
+            These cannot be detected or handled normally by Hikari due to their undocumented nature,
+            and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        return await self.app.rest.sync_guild_template(self.source_guild.id, self.code)
+
+    async def create_guild(self, name: str, *, icon: undefined.UndefinedOr[str]) -> guilds.RESTGuild:
+        """Make a guild from a template.
+
+        .. note::
+            This endpoint can only be used by bots in less than 10 guilds.
+
+        Parameters
+        ----------
+        name : str
+            The new guilds name.
+
+        Other Parameters
+        ----------------
+        icon : hikari.undefined.UndefinedOr[hikari.files.Resourceish]
+            If provided, the guild icon to set.
+            Must be a 1024x1024 image or can be an animated gif when the guild has the ANIMATED_ICON feature.
+
+        Returns
+        -------
+        hikari.guilds.RESTGuild
+            Object of the created guild.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value or if you call this as a bot that’s in more than 10 guilds.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is longer than max_rate_limit when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting rate-limits automatically.
+            This includes most bucket-specific rate-limits and global rate-limits.
+            In some rare edge cases, however, Discord implements other undocumented rules for rate-limiting,
+            such as limits per attribute.
+            These cannot be detected or handled normally by Hikari due to their undocumented nature,
+            and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        return await self.app.rest.create_guild_from_template(self, name, icon=icon)
 
     def __str__(self) -> str:
         return f"https://discord.new/{self.code}"

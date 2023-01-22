@@ -45,7 +45,6 @@ import typing
 import urllib.parse
 
 import aiohttp
-import attr
 
 from hikari import _about as about
 from hikari import applications
@@ -74,6 +73,7 @@ from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import rate_limits
 from hikari.impl import special_endpoints as special_endpoints_impl
 from hikari.interactions import base_interactions
+from hikari.internal import aio
 from hikari.internal import data_binding
 from hikari.internal import deprecation
 from hikari.internal import mentions
@@ -112,7 +112,7 @@ _X_RATELIMIT_BUCKET_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Bucket")
 _X_RATELIMIT_LIMIT_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Limit")
 _X_RATELIMIT_REMAINING_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Remaining")
 _X_RATELIMIT_RESET_AFTER_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Reset-After")
-_RETRY_ERROR_CODES: typing.Final[typing.FrozenSet[int]] = frozenset({500, 502, 503, 504})
+_RETRY_ERROR_CODES: typing.Final[typing.FrozenSet[int]] = frozenset((500, 502, 503, 504))
 _MAX_BACKOFF_DURATION: typing.Final[int] = 16
 
 
@@ -287,10 +287,11 @@ class RESTApp(traits.ExecutorAware):
     __slots__: typing.Sequence[str] = (
         "_executor",
         "_http_settings",
-        "_max_rate_limit",
         "_max_retries",
         "_proxy_settings",
         "_url",
+        "_bucket_manager",
+        "_client_session",
     )
 
     def __init__(
@@ -298,7 +299,7 @@ class RESTApp(traits.ExecutorAware):
         *,
         executor: typing.Optional[concurrent.futures.Executor] = None,
         http_settings: typing.Optional[config_impl.HTTPSettings] = None,
-        max_rate_limit: float = 300,
+        max_rate_limit: float = 300.0,
         max_retries: int = 3,
         proxy_settings: typing.Optional[config_impl.ProxySettings] = None,
         url: typing.Optional[str] = None,
@@ -306,9 +307,10 @@ class RESTApp(traits.ExecutorAware):
         self._http_settings = config_impl.HTTPSettings() if http_settings is None else http_settings
         self._proxy_settings = config_impl.ProxySettings() if proxy_settings is None else proxy_settings
         self._executor = executor
-        self._max_rate_limit = max_rate_limit
         self._max_retries = max_retries
         self._url = url
+        self._bucket_manager = buckets_impl.RESTBucketManager(max_rate_limit)
+        self._client_session: typing.Optional[aiohttp.ClientSession] = None
 
     @property
     def executor(self) -> typing.Optional[concurrent.futures.Executor]:
@@ -321,6 +323,26 @@ class RESTApp(traits.ExecutorAware):
     @property
     def proxy_settings(self) -> config_impl.ProxySettings:
         return self._proxy_settings
+
+    async def start(self) -> None:
+        if self._client_session:
+            raise errors.ComponentStateConflictError("Rest app has already been started")
+
+        self._bucket_manager.start()
+        self._client_session = net.create_client_session(
+            connector=net.create_tcp_connector(self._http_settings),
+            connector_owner=True,  # Ensure closing the TCP connector
+            http_settings=self._http_settings,
+            raise_for_status=False,
+            trust_env=self._proxy_settings.trust_env,
+        )
+
+    async def close(self) -> None:
+        if self._client_session is None:
+            raise errors.ComponentStateConflictError("Rest app is not running")
+
+        await self._client_session.close()
+        self._bucket_manager.close()
 
     @typing.overload
     def acquire(self, token: typing.Optional[rest_api.TokenStrategy] = None) -> RESTClientImpl:
@@ -351,11 +373,14 @@ class RESTApp(traits.ExecutorAware):
         .. code-block:: python
 
             rest_app = RESTApp()
+            await rest_app.start()
 
             # Using the returned client as a context manager to implicitly start
             # and stop it.
             async with rest_app.acquire("A token", "Bot") as client:
                 user = await client.fetch_my_user()
+
+            await rest_app.close()
 
         Parameters
         ----------
@@ -381,6 +406,9 @@ class RESTApp(traits.ExecutorAware):
         ValueError
             If `token_type` is provided when a token strategy is passed for `token`.
         """
+        if not self._client_session:
+            raise errors.ComponentStateConflictError("Rest app is not running so it cannot be interacted with")
+
         # Since we essentially mimic a fake App instance, we need to make a circular provider.
         # We can achieve this using a lambda. This allows the entity factory to build models that
         # are also REST-aware
@@ -398,85 +426,48 @@ class RESTApp(traits.ExecutorAware):
             entity_factory=entity_factory,
             executor=self._executor,
             http_settings=self._http_settings,
-            max_rate_limit=self._max_rate_limit,
             max_retries=self._max_retries,
             proxy_settings=self._proxy_settings,
             token=token,
             token_type=token_type,
             rest_url=self._url,
+            bucket_manager=self._bucket_manager,
+            bucket_manager_owner=False,
+            client_session=self._client_session,
+            client_session_owner=False,
         )
 
         return rest_client
 
 
-@attr.define()
-class _LiveAttributes:
-    """Fields which are only present within `RESTClientImpl` while it's "alive".
+def _stringify_http_message(headers: data_binding.Headers, body: typing.Any) -> str:
+    string = "\n".join(
+        f"    {name}: {value}" if name != _AUTHORIZATION_HEADER else f"    {name}: **REDACTED TOKEN**"
+        for name, value in headers.items()
+    )
 
-    .. note::
-        This must be started within an active asyncio event loop.
-    """
+    if body is not None:
+        string += "\n\n    "
+        string += body.decode("ascii") if isinstance(body, bytes) else str(body)
 
-    buckets: buckets_impl.RESTBucketManager = attr.field()
-    client_session: aiohttp.ClientSession = attr.field()
-    closed_event: asyncio.Event = attr.field()
-    # We've been told in DAPI that this is per token.
-    global_rate_limit: rate_limits.ManualRateLimiter = attr.field()
-    tcp_connector: aiohttp.TCPConnector = attr.field()
-    is_closing: bool = attr.field(default=False, init=False)
-
-    @classmethod
-    def build(
-        cls, max_rate_limit: float, http_settings: config_impl.HTTPSettings, proxy_settings: config_impl.ProxySettings
-    ) -> _LiveAttributes:
-        """Build a live attributes object.
-
-        .. warning::
-            This can only be called when the current thread has an active
-            asyncio loop.
-        """
-        # This asserts that this is called within an active event loop.
-        asyncio.get_running_loop()
-        tcp_connector = net.create_tcp_connector(http_settings)
-        _LOGGER.log(ux.TRACE, "acquired new tcp connector")
-        client_session = net.create_client_session(
-            connector=tcp_connector,
-            # No, this is correct. We manage closing the connector ourselves in this class.
-            # This works around some other lifespan issues.
-            connector_owner=False,
-            http_settings=http_settings,
-            raise_for_status=False,
-            trust_env=proxy_settings.trust_env,
-        )
-        _LOGGER.log(ux.TRACE, "acquired new aiohttp client session")
-        return _LiveAttributes(
-            buckets=buckets_impl.RESTBucketManager(max_rate_limit),
-            client_session=client_session,
-            closed_event=asyncio.Event(),
-            global_rate_limit=rate_limits.ManualRateLimiter(),
-            tcp_connector=tcp_connector,
-        )
-
-    async def close(self) -> None:
-        self.is_closing = True
-        self.closed_event.set()
-        self.buckets.close()
-        self.global_rate_limit.close()
-        await self.client_session.close()
-        await self.tcp_connector.close()
-
-    def still_alive(self) -> _LiveAttributes:
-        """Chained method used to Check if `close` has been called before using this object's resources."""
-        if self.is_closing:
-            raise errors.ComponentStateConflictError("The REST client was closed mid-request")
-
-        return self
+    return string
 
 
-# The standard exceptions are all unsloted so slotting here would be a waste of time.
-@attr.define(auto_exc=True, repr=False, slots=False)
-class _RetryRequest(RuntimeError):
-    ...
+def _transform_emoji_to_url_format(
+    emoji: typing.Union[str, emojis.Emoji],
+    emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.CustomEmoji]],
+    /,
+) -> str:
+    if isinstance(emoji, emojis.Emoji):
+        if emoji_id is not undefined.UNDEFINED:
+            raise ValueError("emoji_id shouldn't be passed when an Emoji object is passed for emoji")
+
+        return emoji.url_name
+
+    if emoji_id is not undefined.UNDEFINED:
+        return f"{emoji}:{snowflakes.Snowflake(emoji_id)}"
+
+    return emoji
 
 
 class RESTClientImpl(rest_api.RESTClient):
@@ -493,13 +484,6 @@ class RESTClientImpl(rest_api.RESTClient):
     executor : typing.Optional[concurrent.futures.Executor]
         The executor to use for blocking IO. Defaults to the `asyncio` thread
         pool if set to `None`.
-    max_rate_limit : float
-        Maximum number of seconds to sleep for when rate limited. If a rate
-        limit occurs that is longer than this value, then a
-        `hikari.errors.RateLimitedError` will be raised instead of waiting.
-
-        This is provided since some endpoints may respond with non-sensible
-        rate limits.
     max_retries : typing.Optional[int]
         Maximum number of times a request will be retried if
         it fails with a `5xx` status. Defaults to 3 if set to `None`.
@@ -526,17 +510,20 @@ class RESTClientImpl(rest_api.RESTClient):
     """
 
     __slots__: typing.Sequence[str] = (
+        "_bucket_manager",
+        "_bucket_manager_owner",
         "_cache",
         "_entity_factory",
         "_executor",
         "_http_settings",
-        "_live_attributes",
-        "_max_rate_limit",
         "_max_retries",
         "_proxy_settings",
         "_rest_url",
         "_token",
         "_token_type",
+        "_client_session",
+        "_client_session_owner",
+        "_close_event",
     )
 
     def __init__(
@@ -546,7 +533,11 @@ class RESTClientImpl(rest_api.RESTClient):
         entity_factory: entity_factory_.EntityFactory,
         executor: typing.Optional[concurrent.futures.Executor],
         http_settings: config_impl.HTTPSettings,
-        max_rate_limit: float,
+        bucket_manager: typing.Optional[buckets_impl.RESTBucketManager] = None,
+        bucket_manager_owner: bool = True,
+        client_session: typing.Optional[aiohttp.ClientSession] = None,
+        client_session_owner: bool = True,
+        max_rate_limit: float = 300.0,
         max_retries: int = 3,
         proxy_settings: config_impl.ProxySettings,
         token: typing.Union[str, None, rest_api.TokenStrategy],
@@ -556,14 +547,28 @@ class RESTClientImpl(rest_api.RESTClient):
         if max_retries > 5:
             raise ValueError("'max_retries' must be below or equal to 5")
 
+        if client_session_owner is False and client_session is None:
+            raise ValueError(
+                "Cannot delegate ownership of unknown client session [client_session_owner=False, client_session=None]"
+            )
+        if bucket_manager_owner is False and bucket_manager is None:
+            raise ValueError(
+                "Cannot delegate ownership of unknown bucket manager [bucket_manager_owner=False, bucket_manager=None]"
+            )
+
         self._cache = cache
         self._entity_factory = entity_factory
         self._executor = executor
         self._http_settings = http_settings
-        self._live_attributes: typing.Optional[_LiveAttributes] = None
-        self._max_rate_limit = max_rate_limit
         self._max_retries = max_retries
         self._proxy_settings = proxy_settings
+        self._bucket_manager = (
+            buckets_impl.RESTBucketManager(max_rate_limit) if bucket_manager is None else bucket_manager
+        )
+        self._bucket_manager_owner = bucket_manager_owner
+        self._client_session = client_session
+        self._client_session_owner = client_session_owner
+        self._close_event: typing.Optional[asyncio.Event] = None
 
         self._token: typing.Union[str, rest_api.TokenStrategy, None] = None
         self._token_type: typing.Optional[str] = None
@@ -587,7 +592,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     @property
     def is_alive(self) -> bool:
-        return self._live_attributes is not None
+        return self._close_event is not None
 
     @property
     def http_settings(self) -> config_impl.HTTPSettings:
@@ -605,14 +610,21 @@ class RESTClientImpl(rest_api.RESTClient):
     def token_type(self) -> typing.Union[str, applications.TokenType, None]:
         return self._token_type
 
-    @typing.final
     async def close(self) -> None:
         """Close the HTTP client and any open HTTP connections."""
-        live_attributes = self._get_live_attributes()
-        self._live_attributes = None
-        await live_attributes.close()
+        if not self._close_event or not self._client_session:
+            raise errors.ComponentStateConflictError("Cannot close an inactive REST client")
 
-    @typing.final
+        self._close_event.set()
+        self._close_event = None
+
+        if self._client_session_owner:
+            await self._client_session.close()
+            self._client_session = None
+
+        if self._bucket_manager_owner:
+            self._bucket_manager.close()
+
     def start(self) -> None:
         """Start the HTTP client.
 
@@ -624,16 +636,25 @@ class RESTClientImpl(rest_api.RESTClient):
         RuntimeError
             If this is called in an environment without an active event loop.
         """
-        if self._live_attributes:
+        if self._close_event:
             raise errors.ComponentStateConflictError("Cannot start a REST Client which is already alive")
 
-        self._live_attributes = _LiveAttributes.build(self._max_rate_limit, self._http_settings, self._proxy_settings)
+        # Assert is in running loop
+        asyncio.get_running_loop()
 
-    def _get_live_attributes(self) -> _LiveAttributes:
-        if self._live_attributes:
-            return self._live_attributes
+        self._close_event = asyncio.Event()
 
-        raise errors.ComponentStateConflictError("Cannot use an inactive REST client")
+        if self._client_session_owner:
+            self._client_session = net.create_client_session(
+                connector=net.create_tcp_connector(self._http_settings),
+                connector_owner=True,  # Ensure closing the TCP connector
+                http_settings=self._http_settings,
+                raise_for_status=False,
+                trust_env=self._proxy_settings.trust_env,
+            )
+
+        if self._bucket_manager_owner:
+            self._bucket_manager.start()
 
     async def __aenter__(self) -> RESTClientImpl:
         self.start()
@@ -672,159 +693,171 @@ class RESTClientImpl(rest_api.RESTClient):
         form_builder: typing.Optional[data_binding.URLEncodedFormBuilder] = None,
         json: typing.Union[data_binding.JSONObjectBuilder, data_binding.JSONArray, None] = None,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        no_auth: bool = False,
-        auth: typing.Optional[str] = None,
+        auth: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
+    ) -> typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]:
+        if not self._close_event:
+            raise errors.ComponentStateConflictError("Cannot use an inactive REST client")
+
+        request_task = asyncio.create_task(
+            self._perform_request(
+                compiled_route=compiled_route,
+                query=query,
+                form_builder=form_builder,
+                json=json,
+                reason=reason,
+                auth=auth,
+            )
+        )
+
+        await aio.first_completed(request_task, self._close_event.wait())
+
+        if not self._close_event.is_set():
+            return request_task.result()
+
+        raise errors.ComponentStateConflictError("The REST client was closed mid-request")
+
+    @typing.final
+    async def _perform_request(
+        self,
+        compiled_route: routes.CompiledRoute,
+        *,
+        query: typing.Optional[data_binding.StringMapBuilder] = None,
+        form_builder: typing.Optional[data_binding.URLEncodedFormBuilder] = None,
+        json: typing.Union[data_binding.JSONObjectBuilder, data_binding.JSONArray, None] = None,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        auth: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
     ) -> typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]:
         # Make a ratelimit-protected HTTP request to a JSON endpoint and expect some form
         # of JSON response.
-        live_attributes = self._get_live_attributes()
+
+        assert self._client_session is not None  # This will never be None here
+
         headers = data_binding.StringMapBuilder()
-        headers.setdefault(_USER_AGENT_HEADER, _HTTP_USER_AGENT)
-
-        re_authed = False
-        token: typing.Optional[str] = None
-        if auth:
-            headers[_AUTHORIZATION_HEADER] = auth
-
-        elif not no_auth:
-            if isinstance(self._token, str):
-                headers[_AUTHORIZATION_HEADER] = self._token
-
-            elif self._token is not None:
-                token = await self._token.acquire(self)
-                headers[_AUTHORIZATION_HEADER] = token
-
+        headers.put(_USER_AGENT_HEADER, _HTTP_USER_AGENT)
         # As per the docs, UTF-8 characters are only supported here if it's url-encoded.
         headers.put(_X_AUDIT_LOG_REASON_HEADER, reason, conversion=urllib.parse.quote)
 
+        can_re_auth = False
+        if auth is undefined.UNDEFINED:
+            if isinstance(self._token, rest_api.TokenStrategy):
+                auth = await self._token.acquire(self)
+                can_re_auth = True
+
+            else:
+                auth = self._token
+
+        if auth:
+            headers[_AUTHORIZATION_HEADER] = auth
+
         url = compiled_route.create_url(self._rest_url)
 
+        stack = contextlib.AsyncExitStack()
         # This is initiated the first time we hit a 5xx error to save a little memory when nothing goes wrong
         backoff: typing.Optional[rate_limits.ExponentialBackOff] = None
         retry_count = 0
-
-        stack = contextlib.AsyncExitStack()
         trace_logging_enabled = _LOGGER.isEnabledFor(ux.TRACE)
+
         while True:
-            try:
-                uuid = time.uuid()
-                async with stack:
-                    form = await form_builder.build(stack) if form_builder else None
+            async with stack:
+                form = await form_builder.build(stack) if form_builder else None
 
-                    await stack.enter_async_context(live_attributes.still_alive().buckets.acquire(compiled_route))
-                    # Buckets not using authentication still have a global
-                    # rate limit, but it is different from the token one.
-                    if not no_auth:
-                        await live_attributes.still_alive().global_rate_limit.acquire()
+                if compiled_route.route.has_ratelimits:
+                    await stack.enter_async_context(self._bucket_manager.acquire_bucket(compiled_route, auth))
 
-                    if trace_logging_enabled:
-                        _LOGGER.log(
-                            ux.TRACE,
-                            "%s %s %s\n%s",
-                            uuid,
-                            compiled_route.method,
-                            url,
-                            self._stringify_http_message(headers, json),
-                        )
-                        start = time.monotonic()
-
-                    # Make the request.
-                    response = await live_attributes.still_alive().client_session.request(
+                if trace_logging_enabled:
+                    uuid = time.uuid()
+                    _LOGGER.log(
+                        ux.TRACE,
+                        "%s %s %s\n%s",
+                        uuid,
                         compiled_route.method,
                         url,
-                        headers=headers,
-                        params=query,
-                        json=json,
-                        data=form,
-                        allow_redirects=self._http_settings.max_redirects is not None,
-                        max_redirects=self._http_settings.max_redirects,
-                        proxy=self._proxy_settings.url,
-                        proxy_headers=self._proxy_settings.all_headers,
+                        _stringify_http_message(headers, json),
                     )
+                    start = time.monotonic()
 
-                    if trace_logging_enabled:
-                        time_taken = (time.monotonic() - start) * 1_000  # pyright: ignore[reportUnboundVariable]
-                        _LOGGER.log(
-                            ux.TRACE,
-                            "%s %s %s in %sms\n%s",
-                            uuid,
-                            response.status,
-                            response.reason,
-                            time_taken,
-                            self._stringify_http_message(response.headers, await response.read()),
-                        )
+                # Make the request.
+                response = await self._client_session.request(
+                    compiled_route.method,
+                    url,
+                    headers=headers,
+                    params=query,
+                    json=json,
+                    data=form,
+                    allow_redirects=self._http_settings.max_redirects is not None,
+                    max_redirects=self._http_settings.max_redirects,
+                    proxy=self._proxy_settings.url,
+                    proxy_headers=self._proxy_settings.all_headers,
+                )
 
-                    # Ensure we are not rate limited, and update rate limiting headers where appropriate.
-                    await self._parse_ratelimits(compiled_route, response, live_attributes)
-
-                # Don't bother processing any further if we got NO CONTENT. There's not anything
-                # to check.
-                if response.status == http.HTTPStatus.NO_CONTENT:
-                    return None
-
-                # Handle the response when everything went good
-                if 200 <= response.status < 300:
-                    if response.content_type == _APPLICATION_JSON:
-                        # Only deserializing here stops Cloudflare shenanigans messing us around.
-                        return data_binding.load_json(await response.read())
-
-                    real_url = str(response.real_url)
-                    raise errors.HTTPError(f"Expected JSON [{response.content_type=}, {real_url=}]")
-
-                # Handling 5xx errors
-                if response.status in _RETRY_ERROR_CODES and retry_count < self._max_retries:
-                    if backoff is None:
-                        backoff = rate_limits.ExponentialBackOff(maximum=_MAX_BACKOFF_DURATION)
-
-                    sleep_time = next(backoff)
-                    _LOGGER.warning(
-                        "Received status %s on request, backing off for %.2fs and retrying. Retries remaining: %s",
+                if trace_logging_enabled:
+                    time_taken = (time.monotonic() - start) * 1_000  # pyright: ignore[reportUnboundVariable]
+                    _LOGGER.log(
+                        ux.TRACE,
+                        "%s %s %s in %sms\n%s",
+                        uuid,  # pyright: ignore[reportUnboundVariable]
                         response.status,
-                        sleep_time,
-                        self._max_retries - retry_count,
+                        response.reason,
+                        time_taken,
+                        _stringify_http_message(response.headers, await response.read()),
                     )
-                    retry_count += 1
 
-                    await asyncio.sleep(sleep_time)
-                    continue
+                # Ensure we are not rate limited, and update rate limiting headers where appropriate.
+                retry = await self._parse_ratelimits(compiled_route, auth, response)
 
-                # Attempt to re-auth on UNAUTHORIZED if we are using a TokenStrategy
-                can_re_auth = response.status == 401 and not (auth or no_auth or re_authed)
-                if can_re_auth and isinstance(self._token, rest_api.TokenStrategy):
-                    self._token.invalidate(token)
-                    token = await self._token.acquire(self)
-                    headers[_AUTHORIZATION_HEADER] = token
-                    re_authed = True
-                    continue
-
-                await self._handle_error_response(response)
-
-            except _RetryRequest:
+            if retry:
                 continue
 
-    @staticmethod
-    @typing.final
-    def _stringify_http_message(headers: data_binding.Headers, body: typing.Any) -> str:
-        string = "\n".join(
-            f"    {name}: {value}" if name != _AUTHORIZATION_HEADER else f"    {name}: **REDACTED TOKEN**"
-            for name, value in headers.items()
-        )
+            # Don't bother processing any further if we got NO CONTENT. There's not anything
+            # to check.
+            if response.status == http.HTTPStatus.NO_CONTENT:
+                return None
 
-        if body is not None:
-            string += "\n\n    "
-            string += body.decode("ascii") if isinstance(body, bytes) else str(body)
+            # Handle the response when everything went good
+            if 200 <= response.status < 300:
+                if response.content_type == _APPLICATION_JSON:
+                    # Only deserializing here stops Cloudflare shenanigans messing us around.
+                    return data_binding.load_json(await response.read())
 
-        return string
+                real_url = str(response.real_url)
+                raise errors.HTTPError(f"Expected JSON [{response.content_type=}, {real_url=}]")
 
-    @staticmethod
-    @typing.final
-    async def _handle_error_response(response: aiohttp.ClientResponse) -> typing.NoReturn:
-        raise await net.generate_error_response(response)
+            # Handling 5xx errors
+            if response.status in _RETRY_ERROR_CODES and retry_count < self._max_retries:
+                if not backoff:
+                    backoff = rate_limits.ExponentialBackOff(maximum=_MAX_BACKOFF_DURATION)
+
+                sleep_time = next(backoff)
+                retry_count += 1
+                _LOGGER.warning(
+                    "Received status %s on request, backing off for %.2fs and retrying. Retries remaining: %s",
+                    response.status,
+                    sleep_time,
+                    self._max_retries - retry_count,
+                )
+
+                await asyncio.sleep(sleep_time)
+                continue
+
+            # Attempt to re-auth on UNAUTHORIZED if we are using a TokenStrategy
+            if can_re_auth and response.status == 401:
+                # can_re_auth ensures that it is a token strategy
+                assert isinstance(self._token, rest_api.TokenStrategy)
+
+                self._token.invalidate(auth)
+                auth = headers[_AUTHORIZATION_HEADER] = await self._token.acquire(self)
+                can_re_auth = False
+                continue
+
+            raise await net.generate_error_response(response)
 
     @typing.final
     async def _parse_ratelimits(
-        self, compiled_route: routes.CompiledRoute, response: aiohttp.ClientResponse, live_attributes: _LiveAttributes
-    ) -> None:
+        self,
+        compiled_route: routes.CompiledRoute,
+        authentication: typing.Optional[str],
+        response: aiohttp.ClientResponse,
+    ) -> bool:
         # Handle rate limiting.
         resp_headers = response.headers
         limit = int(resp_headers.get(_X_RATELIMIT_LIMIT_HEADER, "1"))
@@ -833,8 +866,20 @@ class RESTClientImpl(rest_api.RESTClient):
         reset_after = float(resp_headers.get(_X_RATELIMIT_RESET_AFTER_HEADER, "0"))
 
         if bucket:
-            live_attributes.still_alive().buckets.update_rate_limits(
+            if not compiled_route.route.has_ratelimits:
+                # This should theoretically never see the light of day, but it scares me that Discord might
+                # pull a funny one and this may go unnoticed, so better safe to have it!
+                _LOGGER.error(
+                    "Received an unexpected bucket header for %r. "
+                    "The route will be treated as having a ratelimit for the duration of this applications runtime. "
+                    "If you see this, please report it to the maintainers so the route can be updated!",
+                    compiled_route.route,
+                )
+                compiled_route.route.has_ratelimits = True
+
+            self._bucket_manager.update_rate_limits(
                 compiled_route=compiled_route,
+                authentication=authentication,
                 bucket_header=bucket,
                 remaining_header=remaining,
                 limit_header=limit,
@@ -842,7 +887,7 @@ class RESTClientImpl(rest_api.RESTClient):
             )
 
         if response.status != http.HTTPStatus.TOO_MANY_REQUESTS:
-            return
+            return False
 
         # Discord have started applying ratelimits to operations on some endpoints
         # based on specific fields used in the JSON body.
@@ -870,7 +915,7 @@ class RESTClientImpl(rest_api.RESTClient):
                 "rate limited on bucket %s, maybe you are running more than one bot on this token? Retrying request...",
                 bucket,
             )
-            raise _RetryRequest
+            return True
 
         if response.content_type != _APPLICATION_JSON:
             # We don't know exactly what this could imply. It is likely Cloudflare interfering
@@ -892,15 +937,15 @@ class RESTClientImpl(rest_api.RESTClient):
                 "rate limited on the global bucket. You should consider lowering the number of requests you make or "
                 "contacting Discord to raise this limit. Backing off and retrying request..."
             )
-            live_attributes.still_alive().global_rate_limit.throttle(body_retry_after)
-            raise _RetryRequest
+            self._bucket_manager.throttle(body_retry_after)
+            return True
 
         # If the values are within 20% of each other by relativistic tolerance, it is probably
         # safe to retry the request, as they are likely the same value just with some
         # measuring difference. 20% was used as a rounded figure.
         if math.isclose(body_retry_after, reset_after, rel_tol=0.20):
             _LOGGER.error("rate limited on a sub bucket on bucket %s, but it is safe to retry", bucket)
-            raise _RetryRequest
+            return True
 
         raise errors.RateLimitedError(
             url=str(response.real_url),
@@ -929,6 +974,7 @@ class RESTClientImpl(rest_api.RESTClient):
         /,
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        flags: undefined.UndefinedOr[channels_.ChannelFlag] = undefined.UNDEFINED,
         position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -944,15 +990,30 @@ class RESTClientImpl(rest_api.RESTClient):
             snowflakes.SnowflakeishOr[channels_.GuildCategory]
         ] = undefined.UNDEFINED,
         default_auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        default_thread_rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        default_forum_layout: undefined.UndefinedOr[typing.Union[channels_.ForumLayoutType, int]] = undefined.UNDEFINED,
+        default_sort_order: undefined.UndefinedOr[
+            typing.Union[channels_.ForumSortOrderType, int]
+        ] = undefined.UNDEFINED,
+        available_tags: undefined.UndefinedOr[typing.Sequence[channels_.ForumTag]] = undefined.UNDEFINED,
+        default_reaction_emoji: typing.Union[
+            str, emojis.Emoji, undefined.UndefinedType, snowflakes.Snowflake, None
+        ] = undefined.UNDEFINED,
         archived: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         locked: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         invitable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.PartialChannel:
+        if isinstance(auto_archive_duration, datetime.timedelta):
+            auto_archive_duration = round(auto_archive_duration.total_seconds() / 60)
+        if isinstance(default_auto_archive_duration, datetime.timedelta):
+            default_auto_archive_duration = round(default_auto_archive_duration.total_seconds() / 60)
+
         route = routes.PATCH_CHANNEL.compile(channel=channel)
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
+        body.put("flags", flags)
         body.put("position", position)
         body.put("topic", topic)
         body.put("nsfw", nsfw)
@@ -967,7 +1028,27 @@ class RESTClientImpl(rest_api.RESTClient):
             permission_overwrites,
             conversion=self._entity_factory.serialize_permission_overwrite,
         )
-        body.put("default_auto_archive_duration", default_auto_archive_duration, conversion=time.timespan_to_int)
+        body.put("default_auto_archive_duration", default_auto_archive_duration, conversion=int)
+        # forum-only fields
+        body.put(
+            "default_thread_rate_limit_per_user", default_thread_rate_limit_per_user, conversion=time.timespan_to_int
+        )
+        body.put_array("available_tags", available_tags, conversion=self._entity_factory.serialize_forum_tag)
+        body.put("default_forum_layout", default_forum_layout)
+        body.put("default_sort_order", default_sort_order)
+
+        if default_reaction_emoji is not undefined.UNDEFINED:
+            if default_reaction_emoji is None:
+                emoji_id = None
+                emoji_name = None
+            elif isinstance(default_reaction_emoji, (int, emojis.CustomEmoji)):
+                emoji_id = int(default_reaction_emoji)
+                emoji_name = None
+            else:
+                emoji_id = None
+                emoji_name = str(default_reaction_emoji)
+
+            body.put("default_reaction_emoji", {"emoji_id": emoji_id, "emoji_name": emoji_name})
         # thread-only fields
         body.put("archived", archived)
         body.put("auto_archive_duration", auto_archive_duration, conversion=time.timespan_to_int)
@@ -1121,8 +1202,11 @@ class RESTClientImpl(rest_api.RESTClient):
     def trigger_typing(
         self, channel: snowflakes.SnowflakeishOr[channels_.TextableChannel]
     ) -> special_endpoints.TypingIndicator:
+        if not self._close_event:
+            raise errors.ComponentStateConflictError("Cannot use an inactive REST client")
+
         return special_endpoints_impl.TypingIndicator(
-            request_call=self._request, channel=channel, rest_closed_event=self._get_live_attributes().closed_event
+            request_call=self._request, channel=channel, rest_close_event=self._close_event
         )
 
     async def fetch_pins(
@@ -1344,6 +1428,7 @@ class RESTClientImpl(rest_api.RESTClient):
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reply: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = undefined.UNDEFINED,
+        reply_must_exist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
@@ -1370,7 +1455,13 @@ class RESTClientImpl(rest_api.RESTClient):
             role_mentions=role_mentions,
             flags=flags,
         )
-        body.put("message_reference", reply, conversion=lambda m: {"message_id": str(int(m))})
+
+        if reply:
+            message_reference = data_binding.JSONObjectBuilder()
+            message_reference.put("message_id", str(int(reply)))
+            message_reference.put("fail_if_not_exists", reply_must_exist)
+
+            body.put("message_reference", message_reference)
 
         if form_builder is not None:
             form_builder.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
@@ -1460,26 +1551,27 @@ class RESTClientImpl(rest_api.RESTClient):
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         messages: typing.Union[
             snowflakes.SnowflakeishOr[messages_.PartialMessage],
-            snowflakes.SnowflakeishIterable[messages_.PartialMessage],
+            typing.Iterable[snowflakes.SnowflakeishOr[messages_.PartialMessage]],
+            typing.AsyncIterable[snowflakes.SnowflakeishOr[messages_.PartialMessage]],
         ],
         /,
         *other_messages: snowflakes.SnowflakeishOr[messages_.PartialMessage],
     ) -> None:
         route = routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel)
 
-        pending: typing.List[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = []
         deleted: typing.List[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = []
 
-        if isinstance(messages, typing.Iterable):  # Syntactic sugar. Allows to use iterables
-            pending.extend(messages)
+        iterator: iterators.LazyIterator[snowflakes.SnowflakeishOr[messages_.PartialMessage]]
+        if isinstance(messages, typing.AsyncIterable):
+            if other_messages:
+                raise TypeError("Cannot use *args with an async iterable.")
 
+            iterator = iterators.NOOPLazyIterator(messages)
         else:
-            pending.append(messages)
+            messages = tuple(messages) if isinstance(messages, typing.Iterable) else (messages,)
+            iterator = iterators.FlatLazyIterator(messages + other_messages)
 
-        # This maintains the order in-order to keep a predictable deletion order.
-        pending.extend(other_messages)
-
-        while pending:
+        async for chunk in iterator.chunk(100):
             # Discord only allows 2-100 messages in the BULK_DELETE endpoint. Because of that,
             # if the user wants 101 messages deleted, we will post 100 messages in bulk delete
             # and then the last message in a normal delete.
@@ -1493,47 +1585,28 @@ class RESTClientImpl(rest_api.RESTClient):
             # This kind of defeats the point of asynchronously gathering any of these
             # in the first place really. To save clogging up the event loop
             # (albeit at a cost of maybe a couple-dozen milliseconds per call),
-            # I am just gonna invoke these sequentially instead.
+            # we will invoke them sequentially instead.
             try:
-                if len(pending) == 1:
-                    message = pending[0]
+                if len(chunk) == 1:
+                    message = chunk[0]
                     try:
                         await self.delete_message(channel, message)
-                    except errors.NotFoundError as exc:
+                    except errors.NotFoundError as ex:
                         # If the message is not found then this error should be suppressed
                         # to keep consistency with how the bulk delete endpoint functions.
-                        if exc.code != 10008:  # Unknown Message
+                        if ex.code != 10008:  # Unknown Message
                             raise
 
                     deleted.append(message)
 
                 else:
                     body = data_binding.JSONObjectBuilder()
-                    chunk = pending[:100]
                     body.put_snowflake_array("messages", chunk)
                     await self._request(route, json=body)
                     deleted += chunk
 
-                pending = pending[100:]
             except Exception as ex:
-                raise errors.BulkDeleteError(deleted, pending) from ex
-
-    @staticmethod
-    def _transform_emoji_to_url_format(
-        emoji: typing.Union[str, emojis.Emoji],
-        emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.CustomEmoji]],
-        /,
-    ) -> str:
-        if isinstance(emoji, emojis.Emoji):
-            if emoji_id is not undefined.UNDEFINED:
-                raise ValueError("emoji_id shouldn't be passed when an Emoji object is passed for emoji")
-
-            return emoji.url_name
-
-        if emoji_id is not undefined.UNDEFINED:
-            return f"{emoji}:{snowflakes.Snowflake(emoji_id)}"
-
-        return emoji
+                raise errors.BulkDeleteError(deleted) from ex
 
     async def add_reaction(
         self,
@@ -1543,7 +1616,7 @@ class RESTClientImpl(rest_api.RESTClient):
         emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.CustomEmoji]] = undefined.UNDEFINED,
     ) -> None:
         route = routes.PUT_MY_REACTION.compile(
-            emoji=self._transform_emoji_to_url_format(emoji, emoji_id),
+            emoji=_transform_emoji_to_url_format(emoji, emoji_id),
             channel=channel,
             message=message,
         )
@@ -1557,7 +1630,7 @@ class RESTClientImpl(rest_api.RESTClient):
         emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.CustomEmoji]] = undefined.UNDEFINED,
     ) -> None:
         route = routes.DELETE_MY_REACTION.compile(
-            emoji=self._transform_emoji_to_url_format(emoji, emoji_id),
+            emoji=_transform_emoji_to_url_format(emoji, emoji_id),
             channel=channel,
             message=message,
         )
@@ -1571,7 +1644,7 @@ class RESTClientImpl(rest_api.RESTClient):
         emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.CustomEmoji]] = undefined.UNDEFINED,
     ) -> None:
         route = routes.DELETE_REACTION_EMOJI.compile(
-            emoji=self._transform_emoji_to_url_format(emoji, emoji_id),
+            emoji=_transform_emoji_to_url_format(emoji, emoji_id),
             channel=channel,
             message=message,
         )
@@ -1586,7 +1659,7 @@ class RESTClientImpl(rest_api.RESTClient):
         emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.CustomEmoji]] = undefined.UNDEFINED,
     ) -> None:
         route = routes.DELETE_REACTION_USER.compile(
-            emoji=self._transform_emoji_to_url_format(emoji, emoji_id),
+            emoji=_transform_emoji_to_url_format(emoji, emoji_id),
             channel=channel,
             message=message,
             user=user,
@@ -1613,7 +1686,7 @@ class RESTClientImpl(rest_api.RESTClient):
             request_call=self._request,
             channel=channel,
             message=message,
-            emoji=self._transform_emoji_to_url_format(emoji, emoji_id),
+            emoji=_transform_emoji_to_url_format(emoji, emoji_id),
         )
 
     async def create_webhook(
@@ -1645,12 +1718,12 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> webhooks.PartialWebhook:
         if token is undefined.UNDEFINED:
             route = routes.GET_WEBHOOK.compile(webhook=webhook)
-            no_auth = False
+            auth = undefined.UNDEFINED
         else:
             route = routes.GET_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
-            no_auth = True
+            auth = None
 
-        response = await self._request(route, no_auth=no_auth)
+        response = await self._request(route, auth=auth)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_webhook(response)
 
@@ -1684,10 +1757,10 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> webhooks.PartialWebhook:
         if token is undefined.UNDEFINED:
             route = routes.PATCH_WEBHOOK.compile(webhook=webhook)
-            no_auth = False
+            auth = undefined.UNDEFINED
         else:
             route = routes.PATCH_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
-            no_auth = True
+            auth = None
 
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
@@ -1700,7 +1773,7 @@ class RESTClientImpl(rest_api.RESTClient):
             async with avatar_resource.stream(executor=self._executor) as stream:
                 body.put("avatar", await stream.data_uri())
 
-        response = await self._request(route, json=body, reason=reason, no_auth=no_auth)
+        response = await self._request(route, json=body, reason=reason, auth=auth)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_webhook(response)
 
@@ -1712,12 +1785,12 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> None:
         if token is undefined.UNDEFINED:
             route = routes.DELETE_WEBHOOK.compile(webhook=webhook)
-            no_auth = False
+            auth = undefined.UNDEFINED
         else:
             route = routes.DELETE_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
-            no_auth = True
+            auth = None
 
-        await self._request(route, no_auth=no_auth)
+        await self._request(route, auth=auth)
 
     async def execute_webhook(
         self,
@@ -1773,9 +1846,9 @@ class RESTClientImpl(rest_api.RESTClient):
 
         if form_builder is not None:
             form_builder.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
-            response = await self._request(route, form_builder=form_builder, query=query, no_auth=True)
+            response = await self._request(route, form_builder=form_builder, query=query, auth=None)
         else:
-            response = await self._request(route, json=body, query=query, no_auth=True)
+            response = await self._request(route, json=body, query=query, auth=None)
 
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
@@ -1795,7 +1868,7 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.GET_WEBHOOK_MESSAGE.compile(webhook=webhook_id, token=token, message=message)
         query = data_binding.StringMapBuilder()
         query.put("thread_id", thread)
-        response = await self._request(route, no_auth=True, query=query)
+        response = await self._request(route, auth=None, query=query)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
 
@@ -1851,9 +1924,9 @@ class RESTClientImpl(rest_api.RESTClient):
 
         if form_builder is not None:
             form_builder.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
-            response = await self._request(route, form_builder=form_builder, query=query, no_auth=True)
+            response = await self._request(route, form_builder=form_builder, query=query, auth=None)
         else:
-            response = await self._request(route, json=body, query=query, no_auth=True)
+            response = await self._request(route, json=body, query=query, auth=None)
 
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
@@ -1873,12 +1946,12 @@ class RESTClientImpl(rest_api.RESTClient):
         query = data_binding.StringMapBuilder()
         query.put("thread_id", thread)
         route = routes.DELETE_WEBHOOK_MESSAGE.compile(webhook=webhook_id, token=token, message=message)
-        await self._request(route, no_auth=True, query=query)
+        await self._request(route, query=query, auth=None)
 
     async def fetch_gateway_url(self) -> str:
         route = routes.GET_GATEWAY.compile()
         # This doesn't need authorization.
-        response = await self._request(route, no_auth=True)
+        response = await self._request(route, auth=None)
         assert isinstance(response, dict)
         url = response["url"]
         assert isinstance(url, str)
@@ -2114,7 +2187,6 @@ class RESTClientImpl(rest_api.RESTClient):
         user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
         event_type: undefined.UndefinedOr[typing.Union[audit_logs.AuditLogEventType, int]] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[audit_logs.AuditLog]:
-
         timestamp: undefined.UndefinedOr[str]
         if before is undefined.UNDEFINED:
             timestamp = undefined.UNDEFINED
@@ -2206,7 +2278,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def fetch_available_sticker_packs(self) -> typing.Sequence[stickers.StickerPack]:
         route = routes.GET_STICKER_PACKS.compile()
-        response = await self._request(route, no_auth=True)
+        response = await self._request(route, auth=None)
         assert isinstance(response, dict)
         return [
             self._entity_factory.deserialize_sticker_pack(sticker_pack_payload)
@@ -2473,6 +2545,51 @@ class RESTClientImpl(rest_api.RESTClient):
         )
         return self._entity_factory.deserialize_guild_news_channel(response)
 
+    async def create_guild_forum_channel(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        name: str,
+        *,
+        position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
+        permission_overwrites: undefined.UndefinedOr[
+            typing.Sequence[channels_.PermissionOverwrite]
+        ] = undefined.UNDEFINED,
+        topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        default_auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        default_thread_rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        default_forum_layout: undefined.UndefinedOr[typing.Union[channels_.ForumLayoutType, int]] = undefined.UNDEFINED,
+        default_sort_order: undefined.UndefinedOr[
+            typing.Union[channels_.ForumSortOrderType, int]
+        ] = undefined.UNDEFINED,
+        available_tags: undefined.UndefinedOr[typing.Sequence[channels_.ForumTag]] = undefined.UNDEFINED,
+        default_reaction_emoji: typing.Union[
+            str, emojis.Emoji, undefined.UndefinedType, snowflakes.Snowflake
+        ] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> channels_.GuildForumChannel:
+        response = await self._create_guild_channel(
+            guild,
+            name,
+            channels_.ChannelType.GUILD_FORUM,
+            topic=topic,
+            nsfw=nsfw,
+            rate_limit_per_user=rate_limit_per_user,
+            default_auto_archive_duration=default_auto_archive_duration,
+            default_thread_rate_limit_per_user=default_thread_rate_limit_per_user,
+            default_forum_layout=default_forum_layout,
+            default_sort_order=default_sort_order,
+            position=position,
+            permission_overwrites=permission_overwrites,
+            category=category,
+            available_tags=available_tags,
+            default_reaction_emoji=default_reaction_emoji,
+            reason=reason,
+        )
+        return self._entity_factory.deserialize_guild_forum_channel(response)
+
     async def create_guild_voice_channel(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -2573,8 +2690,20 @@ class RESTClientImpl(rest_api.RESTClient):
         region: undefined.UndefinedOr[typing.Union[voices.VoiceRegion, str]] = undefined.UNDEFINED,
         category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
         default_auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        default_thread_rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        default_forum_layout: undefined.UndefinedOr[typing.Union[channels_.ForumLayoutType, int]] = undefined.UNDEFINED,
+        default_sort_order: undefined.UndefinedOr[
+            typing.Union[channels_.ForumSortOrderType, int]
+        ] = undefined.UNDEFINED,
+        available_tags: undefined.UndefinedOr[typing.Sequence[channels_.ForumTag]] = undefined.UNDEFINED,
+        default_reaction_emoji: typing.Union[
+            str, emojis.Emoji, undefined.UndefinedType, snowflakes.Snowflake
+        ] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> data_binding.JSONObject:
+        if isinstance(default_auto_archive_duration, datetime.timedelta):
+            default_auto_archive_duration = round(default_auto_archive_duration.total_seconds() / 60)
+
         route = routes.POST_GUILD_CHANNELS.compile(guild=guild)
         body = data_binding.JSONObjectBuilder()
         body.put("type", type_)
@@ -2593,7 +2722,23 @@ class RESTClientImpl(rest_api.RESTClient):
             permission_overwrites,
             conversion=self._entity_factory.serialize_permission_overwrite,
         )
-        body.put("default_auto_archive_duration", default_auto_archive_duration, conversion=time.timespan_to_int)
+        body.put("default_auto_archive_duration", default_auto_archive_duration, conversion=int)
+        body.put(
+            "default_thread_rate_limit_per_user", default_thread_rate_limit_per_user, conversion=time.timespan_to_int
+        )
+        body.put_array("available_tags", available_tags, conversion=self._entity_factory.serialize_forum_tag)
+        body.put("default_forum_layout", default_forum_layout)
+        body.put("default_sort_order", default_sort_order)
+
+        if default_reaction_emoji:
+            if isinstance(default_reaction_emoji, (int, emojis.CustomEmoji)):
+                emoji_id = int(default_reaction_emoji)
+                emoji_name = None
+            else:
+                emoji_id = None
+                emoji_name = str(default_reaction_emoji)
+
+            body.put("default_reaction_emoji", {"emoji_id": emoji_id, "emoji_name": emoji_name})
 
         response = await self._request(route, json=body, reason=reason)
         assert isinstance(response, dict)
@@ -2610,13 +2755,13 @@ class RESTClientImpl(rest_api.RESTClient):
         rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> typing.Union[channels_.GuildPublicThread, channels_.GuildNewsThread]:
-        if auto_archive_duration is not undefined.UNDEFINED and isinstance(auto_archive_duration, datetime.timedelta):
+        if isinstance(auto_archive_duration, datetime.timedelta):
             auto_archive_duration = round(auto_archive_duration.total_seconds() / 60)
 
         route = routes.POST_MESSAGE_THREADS.compile(channel=channel, message=message)
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
-        body.put("auto_archive_duration", auto_archive_duration)
+        body.put("auto_archive_duration", auto_archive_duration, conversion=time.timespan_to_int)
         body.put("rate_limit_per_user", rate_limit_per_user, conversion=time.timespan_to_int)
 
         response = await self._request(route, json=body, reason=reason)
@@ -2638,13 +2783,13 @@ class RESTClientImpl(rest_api.RESTClient):
         rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.GuildThreadChannel:
-        if auto_archive_duration is not undefined.UNDEFINED and isinstance(auto_archive_duration, datetime.timedelta):
+        if isinstance(auto_archive_duration, datetime.timedelta):
             auto_archive_duration = round(auto_archive_duration.total_seconds() / 60)
 
         route = routes.POST_CHANNEL_THREADS.compile(channel=channel)
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
-        body.put("auto_archive_duration", auto_archive_duration)
+        body.put("auto_archive_duration", auto_archive_duration, conversion=time.timespan_to_int)
         body.put("type", type)
         body.put("invitable", invitable)
         body.put("rate_limit_per_user", rate_limit_per_user, conversion=time.timespan_to_int)
@@ -2653,6 +2798,77 @@ class RESTClientImpl(rest_api.RESTClient):
 
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_guild_thread(response)
+
+    async def create_forum_post(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
+        name: str,
+        /,
+        # Message arguments
+        content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
+        *,
+        attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
+        attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
+        component: undefined.UndefinedOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
+        components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
+        embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
+        embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        user_mentions: undefined.UndefinedOr[
+            typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
+        ] = undefined.UNDEFINED,
+        role_mentions: undefined.UndefinedOr[
+            typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
+        ] = undefined.UNDEFINED,
+        flags: typing.Union[undefined.UndefinedType, int, messages_.MessageFlag] = undefined.UNDEFINED,
+        # Channel arguments
+        auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = datetime.timedelta(days=1),
+        rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        tags: undefined.UndefinedOr[
+            typing.Sequence[snowflakes.SnowflakeishOr[channels_.ForumTag]]
+        ] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> channels_.GuildPublicThread:
+        if isinstance(auto_archive_duration, datetime.timedelta):
+            auto_archive_duration = round(auto_archive_duration.total_seconds() / 60)
+
+        route = routes.POST_CHANNEL_THREADS.compile(channel=channel)
+
+        body = data_binding.JSONObjectBuilder()
+        # Channel arguments
+        body.put("name", name)
+        body.put("auto_archive_duration", auto_archive_duration, conversion=time.timespan_to_int)
+        body.put("rate_limit_per_user", rate_limit_per_user, conversion=time.timespan_to_int)
+        body.put_snowflake_array("applied_tags", tags)
+
+        # Message arguments
+        message_body, form_builder = self._build_message_payload(
+            content=content,
+            attachment=attachment,
+            attachments=attachments,
+            component=component,
+            components=components,
+            embed=embed,
+            embeds=embeds,
+            tts=tts,
+            mentions_everyone=mentions_everyone,
+            mentions_reply=mentions_reply,
+            user_mentions=user_mentions,
+            role_mentions=role_mentions,
+            flags=flags,
+        )
+        body.put("message", message_body)
+
+        if form_builder is not None:
+            form_builder.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
+            response = await self._request(route, form_builder=form_builder, reason=reason)
+        else:
+            response = await self._request(route, json=body, reason=reason)
+
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_guild_public_thread(response)
 
     async def join_thread(self, channel: snowflakes.SnowflakeishOr[channels_.GuildTextChannel], /) -> None:
         route = routes.PUT_MY_THREAD_MEMBER.compile(channel=channel)
@@ -2933,10 +3149,27 @@ class RESTClientImpl(rest_api.RESTClient):
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         *,
         delete_message_days: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        delete_message_seconds: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
+        if delete_message_days is not undefined.UNDEFINED:
+            deprecation.warn_deprecated(
+                "delete_message_days",
+                removal_version="2.0.0.dev117",
+                additional_info="'delete_message_seconds' should be used instead.",
+            )
+            if delete_message_seconds:
+                raise ValueError(
+                    "You may only specify one of 'delete_message_days' or 'delete_message_seconds', not both"
+                )
+
+            delete_message_seconds = delete_message_days * 24 * 60**2
+
+        if isinstance(delete_message_seconds, datetime.timedelta):
+            delete_message_seconds = delete_message_seconds.total_seconds()
+
         body = data_binding.JSONObjectBuilder()
-        body.put("delete_message_days", delete_message_days)
+        body.put("delete_message_seconds", delete_message_seconds)
         route = routes.PUT_GUILD_BAN.compile(guild=guild, user=user)
         await self._request(route, json=body, reason=reason)
 
@@ -2946,9 +3179,26 @@ class RESTClientImpl(rest_api.RESTClient):
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         *,
         delete_message_days: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        delete_message_seconds: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> typing.Coroutine[typing.Any, typing.Any, None]:
-        return self.ban_user(guild, user, delete_message_days=delete_message_days, reason=reason)
+        if delete_message_days is not undefined.UNDEFINED:
+            deprecation.warn_deprecated(
+                "delete_message_days",
+                removal_version="2.0.0.dev117",
+                additional_info="'delete_message_seconds' should be used instead.",
+            )
+            if delete_message_seconds:
+                raise ValueError(
+                    "You may only specify one of 'delete_message_days' or 'delete_message_seconds', not both"
+                )
+
+            delete_message_seconds = delete_message_days * 24 * 60**2
+
+        if isinstance(delete_message_seconds, datetime.timedelta):
+            delete_message_seconds = delete_message_seconds.total_seconds()
+
+        return self.ban_user(guild, user, delete_message_seconds=delete_message_seconds, reason=reason)
 
     async def unban_user(
         self,
@@ -3637,7 +3887,7 @@ class RESTClientImpl(rest_api.RESTClient):
         self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], token: str
     ) -> messages_.Message:
         route = routes.GET_INTERACTION_RESPONSE.compile(webhook=application, token=token)
-        response = await self._request(route, no_auth=True)
+        response = await self._request(route, auth=None)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
 
@@ -3688,9 +3938,9 @@ class RESTClientImpl(rest_api.RESTClient):
 
         if form is not None:
             form.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
-            await self._request(route, form_builder=form, no_auth=True)
+            await self._request(route, form_builder=form, auth=None)
         else:
-            await self._request(route, json=body, no_auth=True)
+            await self._request(route, json=body, auth=None)
 
     async def edit_interaction_response(
         self,
@@ -3736,9 +3986,9 @@ class RESTClientImpl(rest_api.RESTClient):
 
         if form_builder is not None:
             form_builder.add_field("payload_json", data_binding.dump_json(body), content_type=_APPLICATION_JSON)
-            response = await self._request(route, form_builder=form_builder, no_auth=True)
+            response = await self._request(route, form_builder=form_builder, auth=None)
         else:
-            response = await self._request(route, json=body, no_auth=True)
+            response = await self._request(route, json=body, auth=None)
 
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
@@ -3747,7 +3997,7 @@ class RESTClientImpl(rest_api.RESTClient):
         self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], token: str
     ) -> None:
         route = routes.DELETE_INTERACTION_RESPONSE.compile(webhook=application, token=token)
-        await self._request(route, no_auth=True)
+        await self._request(route, auth=None)
 
     async def create_autocomplete_response(
         self,
@@ -3764,7 +4014,7 @@ class RESTClientImpl(rest_api.RESTClient):
         data.put("choices", [{"name": choice.name, "value": choice.value} for choice in choices])
 
         body.put("data", data)
-        await self._request(route, json=body, no_auth=True)
+        await self._request(route, json=body, auth=None)
 
     async def create_modal_response(
         self,
@@ -3795,22 +4045,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         body.put("data", data)
 
-        await self._request(route, json=body, no_auth=True)
-
-    def build_action_row(self) -> special_endpoints.MessageActionRowBuilder:
-        """Build a message action row message component for use in message create and REST calls.
-
-        Returns
-        -------
-        hikari.api.special_endpoints.MessageActionRowBuilder
-            The initialised action row builder.
-        """
-        deprecation.warn_deprecated(
-            "build_action_row",
-            removal_version="2.0.0.dev115",
-            additional_info="Use 'build_message_action_row' parameter instead",
-        )
-        return special_endpoints_impl.MessageActionRowBuilder()
+        await self._request(route, json=body, auth=None)
 
     def build_message_action_row(self) -> special_endpoints.MessageActionRowBuilder:
         return special_endpoints_impl.MessageActionRowBuilder()

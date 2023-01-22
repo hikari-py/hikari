@@ -148,14 +148,12 @@ class PartialUser(snowflakes.Unique, abc.ABC):
     @property
     @abc.abstractmethod
     def banner_hash(self) -> undefined.UndefinedNoneOr[str]:
-        """Banner hash for the user, if they have one, otherwise `hikari.undefined.UNDEFINED`."""
+        """Banner hash for the user, if they have one, otherwise `None`."""
 
     @property
     @abc.abstractmethod
     def accent_color(self) -> undefined.UndefinedNoneOr[colors.Color]:
         """Custom banner color for the user if set, else `None`.
-
-        Will be `hikari.undefined.UNDEFINED` if not known.
 
         The official client will decide the default color if not set.
         """  # noqa: D401 - Imperative mood
@@ -273,6 +271,7 @@ class PartialUser(snowflakes.Unique, abc.ABC):
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reply: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages.PartialMessage]] = undefined.UNDEFINED,
+        reply_must_exist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
@@ -349,6 +348,12 @@ class PartialUser(snowflakes.Unique, abc.ABC):
             reader using Discord's TTS (text-to-speech) system.
         reply : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]]
             If provided, the message to reply to.
+        reply_must_exist : hikari.undefined.UndefinedOr[bool]
+            If provided, whether to error if the message being replied to does
+            not exist instead of sending as a normal (non-reply) message.
+            Defaults to `True`.
+
+            This will not do anything if not being used with `reply`.
         mentions_everyone : hikari.undefined.UndefinedOr[bool]
             If provided, whether the message should parse @everyone/@here
             mentions.
@@ -438,6 +443,7 @@ class PartialUser(snowflakes.Unique, abc.ABC):
             embeds=embeds,
             tts=tts,
             reply=reply,
+            reply_must_exist=reply_must_exist,
             mentions_everyone=mentions_everyone,
             user_mentions=user_mentions,
             role_mentions=role_mentions,
@@ -489,7 +495,7 @@ class User(PartialUser, abc.ABC):
     @property
     @abc.abstractmethod
     def banner_hash(self) -> typing.Optional[str]:
-        """Banner hash for the user, if they have one, otherwise `hikari.undefined.UNDEFINED`."""
+        """Banner hash for the user, if they have one, otherwise `None`."""
 
     @property
     def banner_url(self) -> typing.Optional[files.URL]:
@@ -652,7 +658,7 @@ class PartialUserImpl(PartialUser):
     """Implementation for partial information about a user.
 
     This is pretty much the same as a normal user, but information may not be
-    present.
+    present, which will be denoted by `hikari.undefined.UNDEFINED`.
     """
 
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
@@ -818,6 +824,7 @@ class OwnUser(UserImpl):
         nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reply: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages.PartialMessage]] = undefined.UNDEFINED,
+        reply_must_exist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[

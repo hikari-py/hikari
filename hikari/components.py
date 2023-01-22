@@ -84,7 +84,7 @@ class ComponentType(int, enums.Enum):
     TEXT_INPUT = 4
     """A text input component.
 
-    !! note
+    .. note::
         This component may only be used inside a modal container.
 
     .. note::
@@ -98,7 +98,7 @@ class ButtonStyle(int, enums.Enum):
     """Enum of the available button styles.
 
     More information, such as how these look, can be found at
-    https://discord.com/developers/docs/interactions/message-components#buttons-button-styles
+    https://discord.com/developers/docs/interactions/message-components#button-object-button-styles
     """
 
     PRIMARY = 1
@@ -288,7 +288,7 @@ The following values are valid for this:
 InteractiveButtonTypes: typing.AbstractSet[InteractiveButtonTypesT] = frozenset(
     [ButtonStyle.PRIMARY, ButtonStyle.SECONDARY, ButtonStyle.SUCCESS, ButtonStyle.DANGER]
 )
-"""Set of the `ButtonType`s which are valid for interactive buttons.
+"""Set of the `ButtonType` which are valid for interactive buttons.
 
 The following values are included in this:
 
@@ -299,7 +299,7 @@ The following values are included in this:
 """
 
 MessageComponentTypesT = typing.Union[ButtonComponent, SelectMenuComponent]
-"""Type hint of the `PartialComponent`s that be contained in a `MessageActionRowComponent`.
+"""Type hint of the `PartialComponent` that be contained in a `MessageActionRowComponent`.
 
 The following values are valid for this:
 
@@ -307,7 +307,7 @@ The following values are valid for this:
 * `SelectMenuComponent`
 """
 ModalComponentTypesT = TextInputComponent
-"""Type hint of the `PartialComponent`s that be contained in a `ModalActionRowComponent`.
+"""Type hint of the `PartialComponent` that be contained in a `ModalActionRowComponent`.
 
 The following values are valid for this:
 

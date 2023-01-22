@@ -388,9 +388,24 @@ class TestMember:
     async def test_ban(self, model):
         model.app.rest.ban_user = mock.AsyncMock()
 
-        await model.ban(delete_message_days=10, reason="bored")
+        await model.ban(delete_message_seconds=600, reason="bored")
 
-        model.app.rest.ban_user.assert_awaited_once_with(456, 123, delete_message_days=10, reason="bored")
+        model.app.rest.ban_user.assert_awaited_once_with(456, 123, delete_message_seconds=600, reason="bored")
+
+    @pytest.mark.asyncio()
+    async def test_ban_deprecated_delete_message_days(self, model):
+        model.app.rest.ban_user = mock.AsyncMock()
+
+        await model.ban(delete_message_days=1, reason="bored")
+
+        model.app.rest.ban_user.assert_awaited_once_with(456, 123, delete_message_seconds=86400, reason="bored")
+
+    @pytest.mark.asyncio()
+    async def test_ban_deprecated_delete_message_days_when_both_passed(self, model):
+        with pytest.raises(
+            ValueError, match="You may only specify one of 'delete_message_days' or 'delete_message_seconds', not both"
+        ):
+            await model.ban(delete_message_days=1, delete_message_seconds=1, reason="bored")
 
     @pytest.mark.asyncio()
     async def test_unban(self, model):
@@ -624,9 +639,25 @@ class TestPartialGuild:
     @pytest.mark.asyncio()
     async def test_ban(self, model):
         model.app.rest.ban_user = mock.AsyncMock()
-        await model.ban(4321, delete_message_days=10, reason="Go away!")
 
-        model.app.rest.ban_user.assert_awaited_once_with(90210, 4321, delete_message_days=10, reason="Go away!")
+        await model.ban(4321, delete_message_seconds=864000, reason="Go away!")
+
+        model.app.rest.ban_user.assert_awaited_once_with(90210, 4321, delete_message_seconds=864000, reason="Go away!")
+
+    @pytest.mark.asyncio()
+    async def test_ban_deprecated_delete_message_days(self, model):
+        model.app.rest.ban_user = mock.AsyncMock()
+
+        await model.ban(4321, delete_message_days=1, reason="Go away!")
+
+        model.app.rest.ban_user.assert_awaited_once_with(90210, 4321, delete_message_seconds=86400, reason="Go away!")
+
+    @pytest.mark.asyncio()
+    async def test_ban_deprecated_delete_message_days_when_both_passed(self, model):
+        with pytest.raises(
+            ValueError, match="You may only specify one of 'delete_message_days' or 'delete_message_seconds', not both"
+        ):
+            await model.ban(4321, delete_message_days=1, delete_message_seconds=1, reason="Go away!")
 
     @pytest.mark.asyncio()
     async def test_unban(self, model):
@@ -711,18 +742,23 @@ class TestPartialGuild:
         model.app.rest.create_sticker = mock.AsyncMock()
         file = object()
 
-        sticker = await model.create_sticker("NewSticker", "funny", file)
+        sticker = await model.create_sticker(
+            "NewSticker",
+            "funny",
+            file,
+            description="A sticker",
+            reason="blah blah blah",
+        )
+        assert sticker is model.app.rest.create_sticker.return_value
 
         model.app.rest.create_sticker.assert_awaited_once_with(
             90210,
             "NewSticker",
             "funny",
             file,
-            description=undefined.UNDEFINED,
-            reason=undefined.UNDEFINED,
+            description="A sticker",
+            reason="blah blah blah",
         )
-
-        assert sticker is model.app.rest.create_sticker.return_value
 
     @pytest.mark.asyncio()
     async def test_edit_sticker(self, model):
@@ -814,6 +850,34 @@ class TestPartialGuild:
         )
 
         assert news_channel is model.app.rest.create_guild_news_channel.return_value
+
+    @pytest.mark.asyncio()
+    async def test_create_forum_channel(self, model):
+        model.app.rest.create_guild_forum_channel = mock.AsyncMock()
+
+        forum_channel = await model.create_forum_channel(
+            "cool forum channel", position=1, nsfw=False, rate_limit_per_user=420
+        )
+
+        model.app.rest.create_guild_forum_channel.assert_awaited_once_with(
+            90210,
+            "cool forum channel",
+            position=1,
+            topic=undefined.UNDEFINED,
+            nsfw=False,
+            rate_limit_per_user=420,
+            permission_overwrites=undefined.UNDEFINED,
+            category=undefined.UNDEFINED,
+            reason=undefined.UNDEFINED,
+            default_auto_archive_duration=undefined.UNDEFINED,
+            default_thread_rate_limit_per_user=undefined.UNDEFINED,
+            default_forum_layout=undefined.UNDEFINED,
+            default_sort_order=undefined.UNDEFINED,
+            available_tags=undefined.UNDEFINED,
+            default_reaction_emoji=undefined.UNDEFINED,
+        )
+
+        assert forum_channel is model.app.rest.create_guild_forum_channel.return_value
 
     @pytest.mark.asyncio()
     async def test_create_voice_channel(self, model):

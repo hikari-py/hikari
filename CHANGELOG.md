@@ -1,3 +1,66 @@
+## 2.0.0.dev115 (2023-01-03)
+
+### Breaking Changes
+
+- Remove previously deprecated functionality.
+  This includes:
+  - `RESTClient.build_action_row` ([#1438](https://github.com/hikari-py/hikari/issues/1438))
+
+### Bugfixes
+
+- Fix deserializing old forum channels on `GUILD_CREATE` missing some fields. ([#1439](https://github.com/hikari-py/hikari/issues/1439))
+
+---
+
+
+## 2.0.0.dev114 (2023-01-01)
+
+### Breaking Changes
+
+- `BulkDeleteError`:
+  - No longer contains a `messages_skipped` attribute.
+  - `messages_deleted` renamed to `deleted_messages`. ([#1134](https://github.com/hikari-py/hikari/issues/1134))
+- `RESTApp` and `RESTBucketManager` now need to be started and stopped by using `.start` and `.close`. ([#1230](https://github.com/hikari-py/hikari/issues/1230))
+- Remove long deprecated `async with` support for `EventStream`. ([#1426](https://github.com/hikari-py/hikari/issues/1426))
+
+### Deprecation
+
+- Deprecate the `delete_message_days` parameter for PartialGuild.ban and Member.ban. ([#1378](https://github.com/hikari-py/hikari/issues/1378))
+
+### Features
+
+- Allow async iterators in `RESTClient.delete_messages`. ([#1134](https://github.com/hikari-py/hikari/issues/1134))
+- `RESTClientImpl` improvements:
+   - You can now share client sessions and bucket managers across these objects or have them created for you.
+   - Speedup of request lifetime
+   - No-ratelimit routes no longer attempt to acquire rate limits
+     - Just for safety, a check is in place to treat the route as a rate limited route if a bucket is ever received for it and a error log is emitted. If you spot it around, please inform us! ([#1230](https://github.com/hikari-py/hikari/issues/1230))
+- Add `save()` method to `Resource`. ([#1272](https://github.com/hikari-py/hikari/issues/1272))
+- Allow specifying the `delete_message_seconds` parameter for PartialGuild.ban and Member.ban.
+  - This parameter can be specified as either an int, a float, or a datetime.timedelta object. ([#1378](https://github.com/hikari-py/hikari/issues/1378))
+- Support yielding in interaction listeners. ([#1383](https://github.com/hikari-py/hikari/issues/1383))
+- Add Indonesian locale as `hikari.Locale.ID`. ([#1404](https://github.com/hikari-py/hikari/issues/1404))
+- Improve pyright support ([#1412](https://github.com/hikari-py/hikari/issues/1412))
+- Improve error raised when attempting to use an asynchronous iterator synchronously. ([#1419](https://github.com/hikari-py/hikari/issues/1419))
+- Add missing `Application` fields:
+  - `Application.custom_install_url`
+  - `Application.tags`
+  - `Application.install_parameters` ([#1420](https://github.com/hikari-py/hikari/issues/1420))
+- Add support for guild forum channels. ([#1430](https://github.com/hikari-py/hikari/issues/1430))
+- Add a warning when not running in (at least) level 1 optimization mode. ([#1431](https://github.com/hikari-py/hikari/issues/1431))
+
+### Bugfixes
+
+- Buckets across different authentications are not shared any more, which would lead to incorrect rate limiting. ([#1230](https://github.com/hikari-py/hikari/issues/1230))
+- Suppress incorrect deprecation warning regarding event loops. ([#1425](https://github.com/hikari-py/hikari/issues/1425))
+- Properly close unclosed file descriptor when reading banner.
+  - This only affects versions of Python >= 3.9. ([#1434](https://github.com/hikari-py/hikari/issues/1434))
+- Start GC of bucket manager when creating a rest client. ([#1435](https://github.com/hikari-py/hikari/issues/1435))
+- Fix incorrect value in `CommandBuilder.is_nsfw`. ([#1436](https://github.com/hikari-py/hikari/issues/1436))
+
+---
+
+
 ## 2.0.0.dev113 (2022-12-04)
 
 ### Breaking Changes

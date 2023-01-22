@@ -282,6 +282,7 @@ class TestTextChannel:
             embed=mock_embed,
             embeds=mock_embeds,
             reply=mock_reply,
+            reply_must_exist=False,
             mentions_everyone=False,
             user_mentions=[123, 456],
             role_mentions=[789, 567],
@@ -300,6 +301,7 @@ class TestTextChannel:
             embed=mock_embed,
             embeds=mock_embeds,
             reply=mock_reply,
+            reply_must_exist=False,
             mentions_everyone=False,
             user_mentions=[123, 456],
             role_mentions=[789, 567],
@@ -473,3 +475,19 @@ class TestPermissibleGuildChannel:
         assert await model.fetch_guild() == model.app.rest.fetch_guild.return_value
 
         model.app.rest.fetch_guild.assert_awaited_once_with(123456789)
+
+
+class TestForumTag:
+    @pytest.mark.parametrize(
+        ("emoji", "expected_unicode_emoji", "expected_emoji_id"),
+        [
+            (123, None, 123),
+            ("emoji", "emoji", None),
+            (None, None, None),
+        ],
+    )
+    def test_emoji_parameters(self, emoji, expected_emoji_id, expected_unicode_emoji):
+        tag = channels.ForumTag(name="testing", emoji=emoji)
+
+        assert tag.emoji_id == expected_emoji_id
+        assert tag.unicode_emoji == expected_unicode_emoji

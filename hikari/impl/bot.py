@@ -97,6 +97,21 @@ def _validate_activity(activity: undefined.UndefinedNoneOr[presences.Activity]) 
         )
 
 
+async def _close_resource(name: str, awaitable: typing.Awaitable[typing.Any]) -> None:
+    future = asyncio.ensure_future(awaitable)
+
+    try:
+        await future
+    except Exception as ex:
+        asyncio.get_running_loop().call_exception_handler(
+            {
+                "message": f"{name} raised an exception during shut down",
+                "future": future,
+                "exception": ex,
+            }
+        )
+
+
 class GatewayBot(traits.GatewayBotAware):
     """Basic auto-sharding bot implementation.
 
@@ -132,6 +147,10 @@ class GatewayBot(traits.GatewayBotAware):
         The package to search for a `banner.txt` in. Defaults to `"hikari"` for
         the `"hikari/banner.txt"` banner.
         Setting this to `None` will disable the banner being shown.
+    suppress_optimization_warning : bool
+        Defaults to `False`. By default, Hikari warns you if you are not running
+        your bot using optimizations (`-O` or `-OO`). If this is `True`, you won't
+        receive these warnings, even if you are not running using optimizations.
     executor : typing.Optional[concurrent.futures.Executor]
         Defaults to `None`. If non-`None`, then this executor
         is used instead of the `concurrent.futures.ThreadPoolExecutor` attached
@@ -281,6 +300,7 @@ class GatewayBot(traits.GatewayBotAware):
         *,
         allow_color: bool = True,
         banner: typing.Optional[str] = "hikari",
+        suppress_optimization_warning: bool = False,
         executor: typing.Optional[concurrent.futures.Executor] = None,
         force_color: bool = False,
         cache_settings: typing.Optional[config_impl.CacheSettings] = None,
@@ -288,7 +308,7 @@ class GatewayBot(traits.GatewayBotAware):
         intents: intents_.Intents = intents_.Intents.ALL_UNPRIVILEGED,
         auto_chunk_members: bool = True,
         logs: typing.Union[None, int, str, typing.Dict[str, typing.Any]] = "INFO",
-        max_rate_limit: float = 300,
+        max_rate_limit: float = 300.0,
         max_retries: int = 3,
         proxy_settings: typing.Optional[config_impl.ProxySettings] = None,
         rest_url: typing.Optional[str] = None,
@@ -296,6 +316,7 @@ class GatewayBot(traits.GatewayBotAware):
         # Beautification and logging
         ux.init_logging(logs, allow_color, force_color)
         self.print_banner(banner, allow_color, force_color)
+        ux.warn_if_not_optimized(suppress_optimization_warning)
 
         # Settings and state
         self._closed_event: typing.Optional[asyncio.Event] = None
@@ -425,30 +446,14 @@ class GatewayBot(traits.GatewayBotAware):
         await self._event_manager.dispatch(self._event_factory.deserialize_stopping_event())
         _LOGGER.log(ux.TRACE, "StoppingEvent dispatch completed, now beginning termination")
 
-        loop = asyncio.get_running_loop()
+        await _close_resource("voice handler", self._voice.close())
 
-        async def handle(name: str, awaitable: typing.Awaitable[typing.Any]) -> None:
-            future = asyncio.ensure_future(awaitable)
-
-            try:
-                await future
-            except Exception as ex:
-                loop.call_exception_handler(
-                    {
-                        "message": f"{name} raised an exception during shut down",
-                        "future": future,
-                        "exception": ex,
-                    }
-                )
-
-        await handle("voice handler", self._voice.close())
-
-        shards = tuple((handle(f"shard {s.id}", s.close()) for s in self._shards.values() if s.is_alive))
+        shards = tuple(_close_resource(f"shard {s.id}", s.close()) for s in self._shards.values() if s.is_alive)
 
         for coro in asyncio.as_completed(shards):
             await coro
 
-        await handle("rest", self._rest.close())
+        await _close_resource("rest", self._rest.close())
 
         # Clear out cache and shard map
         self._cache.clear()
@@ -669,7 +674,7 @@ class GatewayBot(traits.GatewayBotAware):
         shard_ids: typing.Optional[typing.Sequence[int]] = None,
         shard_count: typing.Optional[int] = None,
     ) -> None:
-        """Start the bot, wait for all shards to become ready, and then return.
+        """Start the application and block until it's finished running.
 
         Other Parameters
         ----------------

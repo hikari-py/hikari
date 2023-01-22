@@ -41,7 +41,7 @@ class TestCompiledRoute:
         assert compiled_route.create_url("https://some.url/api") == "https://some.url/api/some/endpoint"
 
     def test_create_real_bucket_hash(self, compiled_route):
-        assert compiled_route.create_real_bucket_hash("UNKNOWN") == "UNKNOWN;abc123"
+        assert compiled_route.create_real_bucket_hash("UNKNOWN", "AUTH_HASH") == "UNKNOWN;AUTH_HASH;abc123"
 
     def test__str__(self, compiled_route):
         assert str(compiled_route) == "GET /some/endpoint"

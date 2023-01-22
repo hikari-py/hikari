@@ -132,7 +132,7 @@ class AttrComparator(typing.Generic[ValueT]):
     Parameters
     ----------
     attr_name : str
-        The attribute name. Can be prepended with a `.` optionally.
+        The attribute name. Can be prepended with a ``.`` optionally.
         If the attribute name ends with a `()`, then the call is invoked
         rather than treated as a property (useful for methods like
         `str.isupper`, for example).
@@ -246,7 +246,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
         transformation : typing.Union[typing.Callable[[ValueT], bool], str]
             The function to use to map the attribute. This may alternatively
             be a string attribute name to replace the input value with. You
-            can provide nested attributes using the `.` operator.
+            can provide nested attributes using the ``.`` operator.
 
         Returns
         -------
@@ -288,7 +288,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
             return `True` if it is of interest, or `False`
             otherwise. These may instead include 2-`tuple` objects
             consisting of a `str` attribute name (nested attributes
-            are referred to using the `.` operator), and values to compare for
+            are referred to using the ``.`` operator), and values to compare for
             equality. This allows you to specify conditions such as
             `members.filter(("user.bot", True))`.
         **attrs : typing.Any
@@ -318,7 +318,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
             return `True` if it is of interest, or `False`
             otherwise. These may instead include 2-`tuple` objects
             consisting of a `str` attribute name (nested attributes
-            are referred to using the `.` operator), and values to compare for
+            are referred to using the ``.`` operator), and values to compare for
             equality. This allows you to specify conditions such as
             `members.take_while(("user.bot", True))`.
         **attrs : typing.Any
@@ -348,7 +348,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
             return `True` if it is of interest, or `False`
             otherwise. These may instead include 2-`tuple` objects
             consisting of a `str` attribute name (nested attributes are
-            referred to using the `.` operator), and values to compare for
+            referred to using the ``.`` operator), and values to compare for
             equality. This allows you to specify conditions such as
             `members.take_until(("user.bot", True))`.
         **attrs : typing.Any
@@ -380,7 +380,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
             return `True` if it is of interest, or `False`
             otherwise. These may instead include 2-`tuple` objects
             consisting of a `str` attribute name (nested attributes
-            are referred to using the `.` operator), and values to compare for
+            are referred to using the ``.`` operator), and values to compare for
             equality. This allows you to specify conditions such as
             `members.skip_while(("user.bot", True))`.
         **attrs : typing.Any
@@ -412,7 +412,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
             return `True` if it is of interest, or `False`
             otherwise. These may instead include 2-`tuple` objects
             consisting of a `str` attribute name (nested attributes are
-            referred to using the `.` operator), and values to compare for
+            referred to using the ``.`` operator), and values to compare for
             equality. This allows you to specify conditions such as
             `members.skip_until(("user.bot", True))`.
         **attrs : typing.Any
@@ -724,6 +724,16 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
     async def __anext__(self) -> ValueT:
         ...
 
+    # These are only included at runtime in-order to avoid the model being typed as a synchronous iterator.
+    if not typing.TYPE_CHECKING:
+
+        def __next__(self) -> typing.NoReturn:
+            # This is async only.
+            cls = type(self)
+            raise TypeError(
+                f"{cls.__module__}.{cls.__qualname__} is async-only, did you mean 'async for' or `anext`?"
+            ) from None
+
 
 class BufferedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT], abc.ABC):
     """A special kind of lazy iterator that is used by internal components.
@@ -816,6 +826,18 @@ class FlatLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
             return next(self._iter)
         except StopIteration:
             self._complete()
+
+
+class NOOPLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
+    """A lazy iterator that uses an underlying async iterator and does nothing."""
+
+    __slots__: typing.Sequence[str] = ("_iterator",)
+
+    def __init__(self, iterator: typing.AsyncIterable[ValueT]) -> None:
+        self._iterator = iterator.__aiter__()
+
+    async def __anext__(self) -> ValueT:
+        return await self._iterator.__anext__()
 
 
 class _EnumeratedLazyIterator(typing.Generic[ValueT], LazyIterator[typing.Tuple[int, ValueT]]):

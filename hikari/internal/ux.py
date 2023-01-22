@@ -23,7 +23,14 @@
 """User-experience extensions and utilities."""
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("init_logging", "print_banner", "supports_color", "HikariVersion", "check_for_updates")
+__all__: typing.Sequence[str] = (
+    "init_logging",
+    "print_banner",
+    "warn_if_not_optimized",
+    "supports_color",
+    "HikariVersion",
+    "check_for_updates",
+)
 
 import importlib.resources
 import logging
@@ -36,7 +43,7 @@ import sys
 import typing
 import warnings
 
-import colorlog
+import colorlog.escape_codes
 
 from hikari import _about as about
 from hikari.internal import net
@@ -149,7 +156,8 @@ _UNCONDITIONAL_ANSI_FLAGS: typing.Final[typing.FrozenSet[str]] = frozenset(("PYC
 
 def _read_banner(package: str) -> str:
     if sys.version_info >= (3, 9):
-        return importlib.resources.files(package).joinpath("banner.txt").open("r").read()
+        with importlib.resources.files(package).joinpath("banner.txt").open("r") as fp:
+            return fp.read()
     else:
         return importlib.resources.read_text(package, "banner.txt")
 
@@ -231,6 +239,16 @@ def print_banner(
 
     with open(sys.stdout.fileno(), "w", encoding="utf-8", closefd=False) as stdout:
         stdout.write(string.Template(raw_banner).safe_substitute(args))
+        stdout.flush()
+
+
+def warn_if_not_optimized(suppress: bool) -> None:
+    """Log a warning if not running in optimization mode."""
+    if __debug__ and not suppress:
+        _LOGGER.warning(
+            "You are running on optimization level 0 (no optimizations), which may slow down your application. "
+            "For production, consider using at least level 1 optimization by passing `-O` to the python call."
+        )
 
 
 def supports_color(allow_color: bool, force_color: bool) -> bool:

@@ -52,6 +52,7 @@ import io
 import mimetypes
 import os
 import pathlib
+import shutil
 import typing
 import urllib.parse
 import urllib.request
@@ -264,7 +265,7 @@ def guess_file_extension(mimetype: str) -> typing.Optional[str]:
     Returns
     -------
     typing.Optional[str]
-        The file extension, prepended with a `.`. If no match was found,
+        The file extension, prepended with a ``.``. If no match was found,
         return `None`.
     """
     return mimetypes.guess_extension(mimetype)
@@ -408,6 +409,22 @@ class _NoOpAsyncReaderContextManagerImpl(AsyncReaderContextManager[ReaderImplT])
         pass
 
 
+def _to_write_path(path: Pathish, default_filename: str, force: bool) -> pathlib.Path:
+    path = ensure_path(path)
+    if path.is_dir():
+        path = path.joinpath(default_filename)
+
+    if not force and path.exists():
+        raise FileExistsError(f"file {path!r} already exists; use `force=True` to overwrite")
+
+    return path.expanduser()
+
+
+def _open_write_path(path: Pathish, default_filename: str, force: bool) -> typing.BinaryIO:
+    path = _to_write_path(path, default_filename, force)
+    return path.open("wb")
+
+
 class Resource(typing.Generic[ReaderImplT], abc.ABC):
     """Base for any uploadable or downloadable representation of information.
 
@@ -469,6 +486,40 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
         """
         async with self.stream(executor=executor) as reader:
             return await reader.read()
+
+    async def save(
+        self,
+        path: Pathish,
+        *,
+        executor: typing.Optional[concurrent.futures.Executor] = None,
+        force: bool = False,
+    ) -> None:
+        """Save this resource to disk.
+
+        This writes the resource file in chunks, and so does not load
+        the entire resource into memory.
+
+        Parameters
+        ----------
+        path : Pathish
+            The path to save this resource to. If this is a string, the
+            path will be relative to the current working directory.
+        executor : typing.Optional[concurrent.futures.Executor]
+            The executor to run in for blocking operations.
+            If `None`, then the default executor is used for
+            the current event loop.
+        force : bool
+            Whether to overwrite an existing file. Defaults to `False`.
+        """
+        loop = asyncio.get_running_loop()
+        file = await loop.run_in_executor(executor, _open_write_path, path, self.filename, force)
+
+        try:
+            async with self.stream(executor=executor) as reader:
+                async for chunk in reader:
+                    await loop.run_in_executor(executor, file.write, chunk)
+        finally:
+            await loop.run_in_executor(executor, file.close)
 
     @abc.abstractmethod
     def stream(
@@ -771,8 +822,8 @@ class ThreadedFileReader(AsyncReader):
     do not need to be pickled to be communicated.
     """
 
-    _executor: typing.Optional[concurrent.futures.ThreadPoolExecutor] = attr.field()
-    _pointer: typing.BinaryIO = attr.field()
+    _executor: typing.Optional[concurrent.futures.ThreadPoolExecutor] = attr.field(alias="executor")
+    _pointer: typing.BinaryIO = attr.field(alias="pointer")
 
     async def __aiter__(self) -> typing.AsyncGenerator[typing.Any, bytes]:
         loop = asyncio.get_running_loop()
@@ -784,7 +835,7 @@ class ThreadedFileReader(AsyncReader):
                 break
 
 
-def _open_path(path: pathlib.Path) -> typing.BinaryIO:
+def _open_read_path(path: pathlib.Path) -> typing.BinaryIO:
     return path.expanduser().open("rb")
 
 
@@ -801,7 +852,7 @@ class _ThreadedFileReaderContextManagerImpl(AsyncReaderContextManager[ThreadedFi
             raise RuntimeError("File is already open")
 
         loop = asyncio.get_running_loop()
-        file = await loop.run_in_executor(self.executor, _open_path, self.path)
+        file = await loop.run_in_executor(self.executor, _open_read_path, self.path)
         self.file = file
         return ThreadedFileReader(self.filename, None, self.executor, file)
 
@@ -817,6 +868,11 @@ class _ThreadedFileReaderContextManagerImpl(AsyncReaderContextManager[ThreadedFi
         loop = asyncio.get_running_loop()
         await loop.run_in_executor(self.executor, self.file.close)
         self.file = None
+
+
+def _copy_to_path(current_path: pathlib.Path, copy_to_path: Pathish, default_filename: str, force: bool) -> None:
+    copy_to_path = _to_write_path(copy_to_path, default_filename, force)
+    shutil.copy2(current_path, copy_to_path)
 
 
 class File(Resource[ThreadedFileReader]):
@@ -908,6 +964,18 @@ class File(Resource[ThreadedFileReader]):
 
         raise TypeError("The executor must be a ThreadPoolExecutor or None")
 
+    async def save(
+        self,
+        path: Pathish,
+        *,
+        executor: typing.Optional[concurrent.futures.Executor] = None,
+        force: bool = False,
+    ) -> None:
+        # An optimization can be done here to avoid a lot of thread calls and streaming
+        # by just copying the file
+        loop = asyncio.get_running_loop()
+        await loop.run_in_executor(executor, _copy_to_path, self.path, path, self.filename, force)
+
 
 ########################################################################
 # RAW BYTE, ASYNC ITERATOR, ASYNC ITERABLE, ITERATOR, ITERABLE READERS #
@@ -986,6 +1054,13 @@ class IteratorReader(AsyncReader):
         return data
 
 
+def _write_bytes(
+    path: Pathish, default_filename: str, force: bool, data: typing.Union[bytearray, bytes, memoryview]
+) -> None:
+    path = _to_write_path(path, default_filename, force)
+    path.write_bytes(data)
+
+
 class Bytes(Resource[IteratorReader]):
     """Representation of in-memory data to upload.
 
@@ -1029,10 +1104,7 @@ class Bytes(Resource[IteratorReader]):
         self.data = data
 
         if mimetype is None:
-            mimetype = guess_mimetype_from_filename(filename)
-
-        if mimetype is None:
-            mimetype = "text/plain;charset=UTF-8"
+            mimetype = guess_mimetype_from_filename(filename) or "text/plain;charset=UTF-8"
 
         self._filename = filename
         self.mimetype = mimetype
@@ -1071,6 +1143,22 @@ class Bytes(Resource[IteratorReader]):
             data stream.
         """
         return _NoOpAsyncReaderContextManagerImpl(IteratorReader(self.filename, self.mimetype, self.data))
+
+    async def save(
+        self,
+        path: Pathish,
+        *,
+        executor: typing.Optional[concurrent.futures.Executor] = None,
+        force: bool = False,
+    ) -> None:
+        if not isinstance(self.data, (bytes, bytearray, memoryview)):
+            await super().save(path, executor=executor, force=force)
+            return
+
+        # An optimization can be done here to avoid a lot of thread calls and streaming
+        # by just writing the whole data at once
+        loop = asyncio.get_running_loop()
+        await loop.run_in_executor(executor, _write_bytes, path, self.filename, force, self.data)
 
     @staticmethod
     def from_data_uri(data_uri: str, filename: typing.Optional[str] = None) -> Bytes:

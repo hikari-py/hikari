@@ -29,12 +29,7 @@ from hikari.events import base_events
 
 
 @base_events.requires_intents(intents.Intents.GUILDS)
-@attr.define(
-    eq=False,
-    hash=False,
-    init=False,
-    kw_only=True,
-)
+@attr.define(eq=False, hash=False, init=False, kw_only=True)
 class DummyGuildEvent(base_events.Event):
     pass
 
@@ -52,12 +47,7 @@ class DummyPresenceEvent(base_events.Event):
 
 
 @base_events.no_recursive_throw()
-@attr.define(
-    eq=False,
-    hash=False,
-    init=False,
-    kw_only=True,
-)
+@attr.define(eq=False, hash=False, init=False, kw_only=True)
 class ErrorEvent(base_events.Event):
     pass
 
@@ -72,12 +62,7 @@ class DummyGuildDerivedEvent(DummyGuildEvent):
     pass
 
 
-@attr.define(
-    eq=False,
-    hash=False,
-    init=False,
-    kw_only=True,
-)
+@attr.define(eq=False, hash=False, init=False, kw_only=True)
 class DummyPresenceDerivedEvent(DummyPresenceEvent):
     pass
 
