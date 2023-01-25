@@ -9,7 +9,7 @@ flake8-builtins==2.1.0                  # builtin shadowing checks
 flake8-coding==1.3.2                    # coding magic-comment detection
 flake8-comprehensions==3.10.1           # comprehension checks
 flake8-docstrings==1.6.0                # pydocstyle support
-flake8-executable==2.1.2                # shebangs
+flake8-executable==2.1.3                # shebangs
 flake8-fixme==1.1.1                     # "fix me" counter
 flake8-functions==0.0.7                 # function linting
 flake8-html==0.4.3                      # html output
