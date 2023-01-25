@@ -109,7 +109,9 @@ try:
 except ModuleNotFoundError:
     import json
 
-    default_json_dumps = functools.partial(json.dumps, separatators=(",", ":"))
+    def default_json_dumps(obj: typing.Union[JSONArray, JSONObject]) -> str:
+        return json.dumps(obj, separators=(",", ":"))
+
     default_json_loads = json.loads
 
 
