@@ -318,6 +318,7 @@ class BadRequestError(ClientHTTPResponseError):
             try:
                 value += _dump_errors(self.errors).strip("\n")
             except KeyError:
+                # Use the stdlib json.dumps here to be able to indent
                 value += json.dumps(self.errors, indent=2)
 
         self._cached_str = value
