@@ -231,6 +231,8 @@ class TestGatewayBot:
             max_rate_limit=200,
             max_retries=0,
             proxy_settings=bot._proxy_settings,
+            dumps=bot._dumps,
+            loads=bot._loads,
             rest_url="somewhere.com",
             token="token",
             token_type=applications.TokenType.BOT,
@@ -979,6 +981,8 @@ class TestGatewayBot:
             large_threshold=1000,
             shard_id=1,
             shard_count=3,
+            loads=bot._loads,
+            dumps=bot._dumps,
             token=bot._token,
             url="https://some.website",
         )

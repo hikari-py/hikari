@@ -193,10 +193,10 @@ class InteractionServer(interaction_server.InteractionServer):
 
     Other Parameters
     ----------------
-    dumps : aiohttp.typedefs.JSONEncoder
-        The JSON encoder this server should use. Defaults to `json.dumps`.
-    loads : aiohttp.typedefs.JSONDecoder
-        The JSON decoder this server should use. Defaults to `json.loads`.
+    dumps : hikari.internal.data_binding.JSONEncoder
+        The JSON encoder this server should use. Defaults to `hikari.internal.data_binding.default_json_dumps`.
+    loads : hikari.internal.data_binding.JSONDecoder
+        The JSON decoder this server should use. Defaults to `hikari.internal.data_binding.default_json_loads`.
     public_key : bytes
         The public key this server should use for verifying request payloads from
         Discord. If left as `None` then the client will try to work this
@@ -208,10 +208,12 @@ class InteractionServer(interaction_server.InteractionServer):
     __slots__: typing.Sequence[str] = (
         "_application_fetch_lock",
         "_close_event",
+        "_dumps",
         "_entity_factory",
         "_executor",
         "_is_closing",
         "_listeners",
+        "_loads",
         "_nacl",
         "_public_key",
         "_rest_client",
@@ -222,8 +224,10 @@ class InteractionServer(interaction_server.InteractionServer):
     def __init__(
         self,
         *,
+        dumps: data_binding.JSONEncoder = data_binding.default_json_dumps,
         entity_factory: entity_factory_api.EntityFactory,
         executor: typing.Optional[concurrent.futures.Executor] = None,
+        loads: data_binding.JSONDecoder = data_binding.default_json_loads,
         rest_client: rest_api.RESTClient,
         public_key: typing.Optional[bytes] = None,
     ) -> None:
@@ -241,10 +245,12 @@ class InteractionServer(interaction_server.InteractionServer):
         self._application_fetch_lock: typing.Optional[asyncio.Lock] = None
         # Building asyncio.Event when there isn't a running loop may lead to runtime errors.
         self._close_event: typing.Optional[asyncio.Event] = None
+        self._dumps = dumps
         self._entity_factory = entity_factory
         self._executor = executor
         self._is_closing = False
         self._listeners: typing.Dict[typing.Type[base_interactions.PartialInteraction], typing.Any] = {}
+        self._loads = loads
         self._nacl = nacl
         self._rest_client = rest_client
         self._server: typing.Optional[aiohttp.web_runner.AppRunner] = None
@@ -427,11 +433,11 @@ class InteractionServer(interaction_server.InteractionServer):
             return _Response(_BAD_REQUEST_STATUS, b"Invalid request signature")
 
         try:
-            payload = data_binding.load_json(body)
+            payload = self._loads(body)
             assert isinstance(payload, dict)
             interaction_type = int(payload["type"])
 
-        except (data_binding.JSONDecodeError, ValueError, TypeError) as exc:
+        except (ValueError, TypeError) as exc:
             _LOGGER.error("Received a request with an invalid JSON body", exc_info=exc)
             return _Response(_BAD_REQUEST_STATUS, b"Invalid JSON body")
 
@@ -471,7 +477,7 @@ class InteractionServer(interaction_server.InteractionServer):
                     result = await call
 
                 raw_payload, files = result.build(self._entity_factory)
-                payload = data_binding.dump_json(raw_payload, encode=True)
+                payload = data_binding.dump_json(raw_payload, encode=True, json_dumps=self._dumps)
 
             except Exception as exc:
                 asyncio.get_running_loop().call_exception_handler(

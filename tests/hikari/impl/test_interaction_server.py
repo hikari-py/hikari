@@ -683,7 +683,7 @@ class TestInteractionServer:
         assert result.charset == "UTF-8"
         assert result.files == [mock_file_1, mock_file_2]
         assert result.headers is None
-        assert result.payload == b'{"ok": "No boomer"}'
+        assert result.payload == b'{"ok":"No boomer"}'
         assert result.status_code == 200
 
     @pytest.mark.asyncio()
@@ -724,7 +724,7 @@ class TestInteractionServer:
         assert result.charset == "UTF-8"
         assert result.files == [mock_file_1, mock_file_2]
         assert result.headers is None
-        assert result.payload == b'{"ok": "No boomer"}'
+        assert result.payload == b'{"ok":"No boomer"}'
         assert result.status_code == 200
 
         assert g_called is True
@@ -810,13 +810,13 @@ class TestInteractionServer:
     async def test_on_interaction_on_ping(self, mock_interaction_server: interaction_server_impl.InteractionServer):
         mock_interaction_server._public_key = mock.Mock()
 
-        result = await mock_interaction_server.on_interaction(b'{"type": 1}', b"signature", b"timestamp")
+        result = await mock_interaction_server.on_interaction(b'{"type":1}', b"signature", b"timestamp")
 
         assert result.content_type == "application/json"
         assert result.charset == "UTF-8"
         assert result.files == ()
         assert result.headers is None
-        assert result.payload == b'{"type": 1}'
+        assert result.payload == b'{"type":1}'
         assert result.status_code == 200
 
     @pytest.mark.asyncio()

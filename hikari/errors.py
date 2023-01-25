@@ -51,6 +51,7 @@ __all__: typing.Sequence[str] = (
 )
 
 import http
+import json
 import typing
 
 import attr
@@ -317,7 +318,7 @@ class BadRequestError(ClientHTTPResponseError):
             try:
                 value += _dump_errors(self.errors).strip("\n")
             except KeyError:
-                value += data_binding.dump_json(self.errors, encode=False, indent=True)
+                value += json.dumps(self.errors, indent=2)
 
         self._cached_str = value
         return value

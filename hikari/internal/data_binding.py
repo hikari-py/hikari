@@ -30,8 +30,8 @@ __all__: typing.Sequence[str] = (
     "JSONArray",
     "JSONish",
     "dump_json",
-    "load_json",
-    "JSONDecodeError",
+    "default_json_loads",
+    "default_json_dumps",
     "JSONObjectBuilder",
     "JSONPayload",
     "StringMapBuilder",
@@ -77,122 +77,94 @@ JSONish = typing.Union[str, int, float, bool, None, JSONArray, JSONObject]
 Stringish = typing.Union[str, int, bool, undefined.UndefinedType, None, snowflakes.Unique]
 """Type hint for any valid that can be put in a StringMapBuilder"""
 
+JSONEncoder = typing.Callable[[typing.Union[JSONArray, JSONObject]], typing.Union[str, bytes]]
+"""Type hint for hikari-valid JSON encoders.
+
+A hikari-valid JSON encoder is one which will take in a JSON-ish object and output either `str`
+or `bytes`.
+"""
+
+JSONDecoder = typing.Callable[[typing.Union[str, bytes]], typing.Union[JSONArray, JSONObject]]
+"""Type hint for hikari-valid JSON decoder.
+
+A hikari-valid JSON decoder is one which will take either a `str` or `bytes` and outputs
+the JSON-ish object, as well as raises a `ValueError` on an incorrect JSON payload being passed in.
+"""
+
 _StringMapBuilderArg = typing.Union[
     typing.Mapping[str, str], multidict.MultiMapping[str], typing.Iterable[typing.Tuple[str, str]]
 ]
 
 _APPLICATION_OCTET_STREAM: typing.Final[str] = "application/octet-stream"
+_JSON_CONTENT_TYPE: typing.Final[str] = "application/json"
+_UTF_8: typing.Final[str] = "utf-8"
+
+default_json_dumps: JSONEncoder
+default_json_loads: JSONDecoder
+try:
+    import orjson
+
+    default_json_dumps = orjson.dumps
+    default_json_loads = orjson.loads
+except ModuleNotFoundError:
+    import json
+
+    default_json_dumps = functools.partial(json.dumps, separatators=(",", ":"))
+    default_json_loads = json.loads
 
 
-if typing.TYPE_CHECKING:
+@typing.overload  # noqa: D103 - Missing docstring
+def dump_json(
+    obj: typing.Union[JSONArray, JSONObject],
+    /,
+    *,
+    encode: typing.Literal[False],
+    json_dumps: JSONEncoder = default_json_dumps,
+) -> str:
+    ...
 
-    _T = typing.TypeVar("_T")
 
-    @typing.overload
-    def dump_json(
-        obj: typing.Union[JSONArray, JSONObject],
-        /,
-        *,
-        encode: typing.Literal[False],
-        indent: bool = False,
-    ) -> str:
-        ...
+@typing.overload  # noqa: D103 - Missing docstring
+def dump_json(
+    obj: typing.Union[JSONArray, JSONObject],
+    /,
+    *,
+    encode: typing.Literal[True],
+    json_dumps: JSONEncoder = default_json_dumps,
+) -> bytes:
+    ...
 
-    @typing.overload
-    def dump_json(
-        obj: typing.Union[JSONArray, JSONObject],
-        /,
-        *,
-        encode: typing.Literal[True],
-        indent: bool = False,
-    ) -> bytes:
-        ...
 
-    def dump_json(
-        obj: typing.Union[JSONArray, JSONObject],
-        /,
-        *,
-        encode: bool,
-        indent: bool = False,
-    ) -> typing.Union[str, bytes]:
-        """Convert a Python type to a JSON string."""
-        raise NotImplementedError
+def dump_json(
+    obj: typing.Union[JSONArray, JSONObject],
+    /,
+    *,
+    encode: bool,
+    json_dumps: JSONEncoder = default_json_dumps,
+) -> typing.Union[str, bytes]:
+    """Convert a Python type to a JSON string or bytes."""
+    data = json_dumps(obj)
 
-    def load_json(_: typing.AnyStr, /) -> typing.Union[JSONArray, JSONObject]:
-        """Convert a JSON string to a Python type."""
-        raise NotImplementedError
+    if encode:
+        return data if isinstance(data, bytes) else data.encode(_UTF_8)
 
-    JSONDecodeError: typing.Type[Exception]
-    """Exception raised when loading an invalid JSON string."""
+    return data if isinstance(data, str) else data.decode(_UTF_8)
 
-    JSONPayload: typing.Type[aiohttp.BytesPayload]
-    """The `aiohttp` payload to use when sending JSON."""
 
-else:
-    try:
-        import orjson
+@typing.final
+class JSONPayload(aiohttp.BytesPayload):
+    """A JSON payload to use in an aiohttp request."""
 
-        orjson_present = True
-    except ModuleNotFoundError:
-        import json
-
-        orjson_present = False
-
-    if orjson_present:
-
-        def dump_json(
-            obj: typing.Union[JSONArray, JSONObject],
-            /,
-            *,
-            encode: bool,
-            indent: bool = False,
-        ) -> typing.Union[str, bytes]:
-            """Convert a Python type to a JSON string."""
-            data = orjson.dumps(obj, option=orjson.OPT_INDENT_2 if indent else None)
-            return data if encode else data.decode("utf-8")
-
-        @typing.final
-        class JSONPayload(aiohttp.BytesPayload):
-            def __init__(self, value: typing.Any, *args: typing.Any, **kwargs: typing.Any) -> None:
-                super().__init__(
-                    orjson.dumps(value),
-                    content_type="application/json",
-                    encoding="utf-8",
-                    *args,
-                    **kwargs,
-                )
-
-        load_json = orjson.loads
-        JSONDecodeError = orjson.JSONDecodeError
-
-    else:
-
-        _json_separators = (",", ":")
-
-        def dump_json(
-            obj: typing.Union[JSONArray, JSONObject],
-            /,
-            *,
-            encode: bool,
-            indent: bool = False,
-        ) -> typing.Union[str, bytes]:
-            """Convert a Python type to a JSON string."""
-            data = json.dumps(obj, separators=_json_separators, indent=2 if indent else 0)
-            return data if not encode else data.encode("utf-8")
-
-        @typing.final
-        class JSONPayload(aiohttp.BytesPayload):
-            def __init__(self, value: typing.Any, *args: typing.Any, **kwargs: typing.Any) -> None:
-                super().__init__(
-                    json.dumps(value).encode("utf-8"),
-                    content_type="application/json",
-                    encoding="utf-8",
-                    *args,
-                    **kwargs,
-                )
-
-        load_json = json.loads
-        JSONDecodeError = json.JSONDecodeError
+    def __init__(
+        self, value: typing.Any, json_dumps: JSONEncoder = default_json_dumps, *args: typing.Any, **kwargs: typing.Any
+    ) -> None:
+        super().__init__(
+            dump_json(value, encode=True, json_dumps=json_dumps),
+            content_type=_JSON_CONTENT_TYPE,
+            encoding=_UTF_8,
+            *args,
+            **kwargs,
+        )
 
 
 @typing.final

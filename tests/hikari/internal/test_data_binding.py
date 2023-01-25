@@ -61,15 +61,15 @@ class TestURLEncodedFormBuilder:
         stream1 = mock.Mock(filename="testing1", mimetype="text")
         stream2 = mock.Mock(filename="testing2", mimetype=None)
         mock_stack = mock.AsyncMock(enter_async_context=mock.AsyncMock(side_effect=[stream1, stream2]))
-        form_builder._executor = object()
+        executor = object()
         form_builder._fields = [("test_name", "test_data", "mimetype"), ("test_name2", "test_data2", "mimetype2")]
         form_builder._resources = [("aye", resource1), ("lmao", resource2)]
 
         with mock.patch.object(aiohttp, "FormData") as mock_form_class:
-            assert await form_builder.build(mock_stack) is mock_form_class.return_value
+            assert await form_builder.build(mock_stack, executor) is mock_form_class.return_value
 
-        resource1.stream.assert_called_once_with(executor=form_builder._executor)
-        resource2.stream.assert_called_once_with(executor=form_builder._executor)
+        resource1.stream.assert_called_once_with(executor=executor)
+        resource2.stream.assert_called_once_with(executor=executor)
         mock_stack.enter_async_context.assert_has_awaits(
             [mock.call(resource1.stream.return_value), mock.call(resource2.stream.return_value)]
         )

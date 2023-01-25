@@ -97,7 +97,7 @@ try:
     # See https://tools.ietf.org/html/rfc3339#section-5.6
     fast_iso8601_datetime_string_to_datetime = ciso8601.parse_rfc3339
 
-except ImportError:
+except ModuleNotFoundError:
     fast_iso8601_datetime_string_to_datetime = None
 
 iso8601_datetime_string_to_datetime: typing.Callable[[str], datetime.datetime] = (
