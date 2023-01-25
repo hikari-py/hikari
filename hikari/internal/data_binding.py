@@ -38,7 +38,6 @@ __all__: typing.Sequence[str] = (
     "URLEncodedFormBuilder",
 )
 
-import functools
 import typing
 
 import aiohttp
@@ -100,7 +99,11 @@ _JSON_CONTENT_TYPE: typing.Final[str] = "application/json"
 _UTF_8: typing.Final[str] = "utf-8"
 
 default_json_dumps: JSONEncoder
+"""Default json encoder to use."""
+
 default_json_loads: JSONDecoder
+"""Default json decoder to use."""
+
 try:
     import orjson
 
@@ -110,13 +113,14 @@ except ModuleNotFoundError:
     import json
 
     def default_json_dumps(obj: typing.Union[JSONArray, JSONObject]) -> str:
+        """Encode a JSON object to a `str`."""
         return json.dumps(obj, separators=(",", ":"))
 
     default_json_loads = json.loads
 
 
-@typing.overload  # noqa: D103 - Missing docstring
-def dump_json(
+@typing.overload
+def dump_json(  # noqa: D103 - Missing docstring
     obj: typing.Union[JSONArray, JSONObject],
     /,
     *,
@@ -126,8 +130,8 @@ def dump_json(
     ...
 
 
-@typing.overload  # noqa: D103 - Missing docstring
-def dump_json(
+@typing.overload
+def dump_json(  # noqa: D103 - Missing docstring
     obj: typing.Union[JSONArray, JSONObject],
     /,
     *,
