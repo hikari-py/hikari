@@ -745,7 +745,7 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         query: typing.Optional[data_binding.StringMapBuilder] = None,
         form_builder: typing.Optional[data_binding.URLEncodedFormBuilder] = None,
-        json: typing.Union[data_binding.JSONObjectBuilder, data_binding.JSONArray, None] = None,
+        json: typing.Union[data_binding.JSONObject, data_binding.JSONArray, None] = None,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         auth: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
     ) -> typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]:
@@ -772,8 +772,8 @@ class RESTClientImpl(rest_api.RESTClient):
             headers[_AUTHORIZATION_HEADER] = auth
 
         data: typing.Union[None, aiohttp.BytesPayload, aiohttp.FormData] = None
-        if json is not undefined.UNDEFINED:
-            if form_builder is not undefined.UNDEFINED:
+        if json is not None:
+            if form_builder:
                 raise ValueError("Can only provide one of 'json' or 'form_builder', not both")
 
             data = data_binding.JSONPayload(json, json_dumps=self._dumps)
