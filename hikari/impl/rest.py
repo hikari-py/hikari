@@ -772,8 +772,8 @@ class RESTClientImpl(rest_api.RESTClient):
             headers[_AUTHORIZATION_HEADER] = auth
 
         data: typing.Union[None, aiohttp.BytesPayload, aiohttp.FormData] = None
-        if json:
-            if form_builder:
+        if json is not undefined.UNDEFINED:
+            if form_builder is not undefined.UNDEFINED:
                 raise ValueError("Can only provide one of 'json' or 'form_builder', not both")
 
             data = data_binding.JSONPayload(json, json_dumps=self._dumps)

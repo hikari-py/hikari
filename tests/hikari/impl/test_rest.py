@@ -1720,6 +1720,27 @@ class TestRESTClientImplAsync:
         rest_client.close.assert_awaited_once_with()
 
     @hikari_test_helpers.timeout()
+    async def test_perform_request_errors_if_both_json_and_form_builder_passed(self, rest_client):
+        route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
+
+        with pytest.raises(ValueError):
+            await rest_client._perform_request(route, json=object(), form_builder=object())
+
+    @hikari_test_helpers.timeout()
+    async def test_perform_request_builds_json_when_passed(self, rest_client, exit_exception):
+        route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
+        rest_client._client_session.request.side_effect = exit_exception
+        rest_client._token = None
+
+        with mock.patch.object(data_binding, "JSONPayload") as json_payload:
+            with pytest.raises(exit_exception):
+                await rest_client._perform_request(route, json={"some": "data"})
+
+        json_payload.assert_called_once_with({"some": "data"}, json_dumps=rest_client._dumps)
+        _, kwargs = rest_client._client_session.request.call_args_list[0]
+        assert kwargs["data"] is json_payload.return_value
+
+    @hikari_test_helpers.timeout()
     async def test_perform_request_builds_form_when_passed(self, rest_client, exit_exception):
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         rest_client._client_session.request.side_effect = exit_exception
