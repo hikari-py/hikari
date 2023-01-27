@@ -77,16 +77,16 @@ Stringish = typing.Union[str, int, bool, undefined.UndefinedType, None, snowflak
 """Type hint for any valid that can be put in a StringMapBuilder"""
 
 JSONEncoder = typing.Callable[[typing.Union[JSONArray, JSONObject]], typing.Union[str, bytes]]
-"""Type hint for hikari-valid JSON encoders.
+"""Type hint for hikari-compatible JSON encoders.
 
-A hikari-valid JSON encoder is one which will take in a JSON-ish object and output either `str`
+A hikari-compatible JSON encoder is one which will take in a JSON-ish object and output either `str`
 or `bytes`.
 """
 
 JSONDecoder = typing.Callable[[typing.Union[str, bytes]], typing.Union[JSONArray, JSONObject]]
-"""Type hint for hikari-valid JSON decoder.
+"""Type hint for hikari-compatible JSON decoder.
 
-A hikari-valid JSON decoder is one which will take either a `str` or `bytes` and outputs
+A hikari-compatible JSON decoder is one which will take either a `str` or `bytes` and outputs
 the JSON-ish object, as well as raises a `ValueError` on an incorrect JSON payload being passed in.
 """
 
