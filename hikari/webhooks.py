@@ -549,7 +549,7 @@ class PartialWebhook(snowflakes.Unique):
 
     @property
     def default_avatar_url(self) -> files_.URL:
-        """Default avatar URL for the user."""  # noqa: D401 - Imperative mood
+        """Default avatar URL for the user."""
         return routes.CDN_DEFAULT_USER_AVATAR.compile_to_file(
             urls.CDN_URL,
             discriminator=0,
