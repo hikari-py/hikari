@@ -184,7 +184,7 @@ class Color(int):
         Examples
         --------
         `(123, 234, 47)`
-        """  # noqa: D401 - Imperative mood
+        """
         return (self >> 16) & 0xFF, (self >> 8) & 0xFF, self & 0xFF
 
     @property
