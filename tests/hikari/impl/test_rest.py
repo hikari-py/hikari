@@ -1723,7 +1723,7 @@ class TestRESTClientImplAsync:
     async def test_perform_request_errors_if_both_json_and_form_builder_passed(self, rest_client):
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="Can only provide one of 'json' or 'form_builder', not both"):
             await rest_client._perform_request(route, json=object(), form_builder=object())
 
     @hikari_test_helpers.timeout()
