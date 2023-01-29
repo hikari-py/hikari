@@ -156,7 +156,7 @@ class PartialUser(snowflakes.Unique, abc.ABC):
         """Custom banner color for the user if set, else `None`.
 
         The official client will decide the default color if not set.
-        """  # noqa: D401 - Imperative mood
+        """
 
     @property
     def accent_colour(self) -> undefined.UndefinedNoneOr[colors.Color]:
@@ -471,7 +471,7 @@ class User(PartialUser, abc.ABC):
         """The custom banner color for the user, if set else `None`.
 
         The official client will decide the default color if not set.
-        """  # noqa: D401 - Imperative mood
+        """
 
     @property
     def accent_colour(self) -> typing.Optional[colors.Color]:
@@ -507,7 +507,7 @@ class User(PartialUser, abc.ABC):
 
     @property
     def default_avatar_url(self) -> files.URL:
-        """Default avatar URL for this user."""  # noqa: D401 - Imperative mood
+        """Default avatar URL for this user."""
         return routes.CDN_DEFAULT_USER_AVATAR.compile_to_file(
             urls.CDN_URL,
             discriminator=int(self.discriminator) % 5,
