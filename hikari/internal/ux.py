@@ -46,6 +46,7 @@ import warnings
 import colorlog.escape_codes
 
 from hikari import _about as about
+from hikari.internal import data_binding
 from hikari.internal import net
 
 if typing.TYPE_CHECKING:
@@ -388,7 +389,7 @@ async def check_for_updates(http_settings: config.HTTPSettings, proxy_settings: 
                 proxy=proxy_settings.url,
                 proxy_headers=proxy_settings.all_headers,
             ) as resp:
-                data = await resp.json()
+                data = data_binding.default_json_loads(await resp.read())
 
         this_version = HikariVersion(about.__version__)
         is_dev = this_version.prerelease is not None
@@ -409,4 +410,4 @@ async def check_for_updates(http_settings: config.HTTPSettings, proxy_settings: 
         if newest_version:
             _LOGGER.info("A newer version of hikari is available, consider upgrading to %s", newest_version)
     except Exception as ex:
-        _LOGGER.debug("Failed to fetch hikari version details", exc_info=ex)
+        _LOGGER.warning("Failed to fetch hikari version details", exc_info=ex)
