@@ -499,6 +499,7 @@ class TextableChannel(PartialChannel):
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reply: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages.PartialMessage]] = undefined.UNDEFINED,
+        reply_must_exist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
@@ -574,6 +575,12 @@ class TextableChannel(PartialChannel):
             If provided, whether the message will be TTS (Text To Speech).
         reply : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]]
             If provided, the message to reply to.
+        reply_must_exist : hikari.undefined.UndefinedOr[bool]
+            If provided, whether to error if the message being replied to does
+            not exist instead of sending as a normal (non-reply) message.
+            Defaults to `True`.
+
+            This will not do anything if not being used with `reply`.
         mentions_everyone : hikari.undefined.UndefinedOr[bool]
             If provided, whether the message should parse @everyone/@here
             mentions.
@@ -642,6 +649,7 @@ class TextableChannel(PartialChannel):
             embeds=embeds,
             tts=tts,
             reply=reply,
+            reply_must_exist=reply_must_exist,
             mentions_everyone=mentions_everyone,
             user_mentions=user_mentions,
             role_mentions=role_mentions,

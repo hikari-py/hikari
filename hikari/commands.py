@@ -184,10 +184,14 @@ class CommandOption:
     and `float` if the type is `hikari.commands.OptionType.FLOAT`.
     """
 
-    name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attr.field(factory=dict)
+    name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attr.field(
+        eq=False, factory=dict, hash=False, repr=False
+    )
     """A set of name localizations for this option."""
 
-    description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attr.field(factory=dict)
+    description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attr.field(
+        eq=False, factory=dict, hash=False, repr=False
+    )
     """A set of description localizations for this option"""
 
     min_length: typing.Optional[int] = attr.field(default=None, repr=False)
@@ -249,11 +253,10 @@ class PartialCommand(snowflakes.Unique):
     version: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
     """Auto-incrementing version identifier updated during substantial record changes."""
 
-    name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attr.field(factory=dict)
+    name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attr.field(
+        eq=False, hash=False, repr=False
+    )
     """A set of name localizations for this command"""
-
-    description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attr.field(factory=dict)
-    """A set of description localizations for this command"""
 
     async def fetch_self(self) -> PartialCommand:
         """Fetch an up-to-date version of this command object.
@@ -440,6 +443,11 @@ class SlashCommand(PartialCommand):
     .. note::
         This will be inclusively between 1-100 characters in length.
     """
+
+    description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attr.field(
+        eq=False, hash=False, repr=False
+    )
+    """A set of description localizations for this command"""
 
     options: typing.Optional[typing.Sequence[CommandOption]] = attr.field(eq=False, hash=False, repr=False)
     """Sequence of up to (and including) 25 of the options for this command."""

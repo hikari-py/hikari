@@ -708,7 +708,7 @@ class Member(users.User):
         if delete_message_days is not undefined.UNDEFINED:
             deprecation.warn_deprecated(
                 "delete_message_days",
-                removal_version="2.0.0.dev116",
+                removal_version="2.0.0.dev117",
                 additional_info="'delete_message_seconds' should be used instead.",
             )
             if delete_message_seconds is not undefined.UNDEFINED:
@@ -1446,7 +1446,7 @@ class PartialGuild(snowflakes.Unique):
         if delete_message_days is not undefined.UNDEFINED:
             deprecation.warn_deprecated(
                 "delete_message_days",
-                removal_version="2.0.0.dev116",
+                removal_version="2.0.0.dev117",
                 additional_info="'delete_message_seconds' should be used instead.",
             )
             if delete_message_seconds is not undefined.UNDEFINED:
@@ -1771,7 +1771,7 @@ class PartialGuild(snowflakes.Unique):
             The tag for the sticker.
         image : hikari.files.Resourceish
             The 320x320 image for the sticker. Maximum upload size is 500kb.
-            This can be a still or an animated PNG or a Lottie.
+            This can be a still PNG, an animated PNG, a Lottie, or a GIF.
 
         Other Parameters
         ----------------

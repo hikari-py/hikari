@@ -188,7 +188,7 @@ class TestRedBanner:
         assert traversable.mock_file.context_entered == 1
         assert traversable.mock_file.context_exited == 1
 
-    def test_when_bellow_3_9(self):
+    def test_when_below_3_9(self):
         with mock.patch.object(sys, "version_info", new=(2, 7)):
             with mock.patch.object(importlib.resources, "read_text") as read_text:
                 assert ux._read_banner("hikaru") is read_text.return_value
@@ -376,14 +376,21 @@ class TestWarnIfNotOptimized:
     @pytest.mark.skipif(not __debug__, reason="Not running in optimized mode")
     def test_when_not_optimized(self):
         with mock.patch.object(ux, "_LOGGER") as logger:
-            ux.warn_if_not_optimized()
+            ux.warn_if_not_optimized(suppress=False)
 
         logger.warning.assert_called()
 
     @pytest.mark.skipif(__debug__, reason="Running in optimized mode")
     def test_when_optimized(self):
         with mock.patch.object(ux, "_LOGGER") as logger:
-            ux.warn_if_not_optimized()
+            ux.warn_if_not_optimized(suppress=False)
+
+        logger.warning.assert_not_called()
+
+    @pytest.mark.skipif(not __debug__, reason="Not running in optimized mode")
+    def test_when_optimized_and_suppressed(self):
+        with mock.patch.object(ux, "_LOGGER") as logger:
+            ux.warn_if_not_optimized(suppress=True)
 
         logger.warning.assert_not_called()
 

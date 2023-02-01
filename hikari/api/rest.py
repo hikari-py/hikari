@@ -995,6 +995,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reply: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = undefined.UNDEFINED,
+        reply_must_exist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
@@ -1073,6 +1074,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             reader using Discord's TTS (text-to-speech) system.
         reply : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]]
             If provided, the message to reply to.
+        reply_must_exist : hikari.undefined.UndefinedOr[bool]
+            If provided, whether to error if the message being replied to does
+            not exist instead of sending as a normal (non-reply) message.
+            Defaults to `True`.
+
+            This will not do anything if not being used with `reply`.
         mentions_everyone : hikari.undefined.UndefinedOr[bool]
             If provided, whether the message should parse @everyone/@here
             mentions.
@@ -3433,7 +3440,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The tag for the sticker.
         image : hikari.files.Resourceish
             The 320x320 image for the sticker. Maximum upload size is 500kb.
-            This can be a still or an animated PNG or a Lottie.
+            This can be a still PNG, an animated PNG, a Lottie, or a GIF.
 
             .. note::
                 Lottie support is only available for verified and partnered

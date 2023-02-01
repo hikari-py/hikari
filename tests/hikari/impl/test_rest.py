@@ -2526,6 +2526,7 @@ class TestRESTClientImplAsync:
             user_mentions=[9876],
             role_mentions=[1234],
             reply=StubModel(987654321),
+            reply_must_exist=False,
             flags=54123,
         )
         assert returned is rest_client._entity_factory.deserialize_message.return_value
@@ -2547,7 +2548,12 @@ class TestRESTClientImplAsync:
         )
         mock_form.add_field.assert_called_once_with(
             "payload_json",
-            '{"testing": "ensure_in_test", "message_reference": {"message_id": "987654321"}}',
+            (
+                "{"
+                '"testing": "ensure_in_test", '
+                '"message_reference": {"message_id": "987654321", "fail_if_not_exists": false}'
+                "}"
+            ),
             content_type="application/json",
         )
         rest_client._request.assert_awaited_once_with(expected_route, form_builder=mock_form)
@@ -2580,6 +2586,7 @@ class TestRESTClientImplAsync:
             user_mentions=[9876],
             role_mentions=[1234],
             reply=StubModel(987654321),
+            reply_must_exist=False,
             flags=6643,
         )
         assert returned is rest_client._entity_factory.deserialize_message.return_value
@@ -2601,7 +2608,10 @@ class TestRESTClientImplAsync:
         )
         rest_client._request.assert_awaited_once_with(
             expected_route,
-            json={"testing": "ensure_in_test", "message_reference": {"message_id": "987654321"}},
+            json={
+                "testing": "ensure_in_test",
+                "message_reference": {"message_id": "987654321", "fail_if_not_exists": False},
+            },
         )
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
 
@@ -3975,9 +3985,28 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route)
         rest_client._entity_factory.deserialize_guild_sticker.assert_called_once_with({"id": "123"})
 
-    @pytest.mark.skip("TODO")
     async def test_create_sticker(self, rest_client):
-        ...
+        rest_client.create_sticker = mock.AsyncMock()
+        file = object()
+
+        sticker = await rest_client.create_sticker(
+            90210,
+            "NewSticker",
+            "funny",
+            file,
+            description="A sticker",
+            reason="blah blah blah",
+        )
+        assert sticker is rest_client.create_sticker.return_value
+
+        rest_client.create_sticker.assert_awaited_once_with(
+            90210,
+            "NewSticker",
+            "funny",
+            file,
+            description="A sticker",
+            reason="blah blah blah",
+        )
 
     async def test_edit_sticker(self, rest_client):
         expected_route = routes.PATCH_GUILD_STICKER.compile(guild=123, sticker=456)

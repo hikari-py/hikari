@@ -218,7 +218,7 @@ class ShardAware(
         """Mapping of shard ID to heartbeat latency.
 
         Any shards that are not yet started will be `float('nan')`.
-        """  # noqa: D401 - Imperative mood
+        """
         raise NotImplementedError
 
     @property
@@ -237,7 +237,7 @@ class ShardAware(
 
         If the application has not started, it is acceptable to assume the
         result of this call will be an empty mapping.
-        """  # noqa: D401 - Imperative mood
+        """
         raise NotImplementedError
 
     @property
@@ -246,7 +246,7 @@ class ShardAware(
 
         This may not be the same as the size of `shards`. If the application
         is auto-sharded, this may be `0` until the shards are started.
-        """  # noqa: D401 - Imperative mood
+        """
         raise NotImplementedError
 
     def get_me(self) -> typing.Optional[users_.OwnUser]:

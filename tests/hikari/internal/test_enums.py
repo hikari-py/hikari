@@ -21,10 +21,12 @@
 # SOFTWARE.
 import builtins
 import operator
+import warnings
 
 import mock
 import pytest
 
+from hikari.internal import deprecation
 from hikari.internal import enums
 
 
@@ -1285,3 +1287,31 @@ class TestIntFlag:
                 return 855555
 
         assert int(TestFlag.FOO | TestFlag.BAR) == 855555
+
+
+def test_deprecated():
+    with mock.patch.object(deprecation, "check_if_past_removal"):
+
+        class Enum(int, enums.Enum):
+            OK_VALUE = 1
+            DEPRECATED = enums.deprecated(OK_VALUE, removal_version="4.0.0")
+
+        with mock.patch.object(warnings, "warn") as warn:
+            assert Enum.DEPRECATED == Enum.OK_VALUE
+            warn.assert_called_once()
+            warn.reset_mock()
+
+            assert Enum["DEPRECATED"] == Enum.OK_VALUE
+            warn.assert_called_once()
+            warn.reset_mock()
+
+            assert Enum.DEPRECATED.value == Enum.OK_VALUE.value
+            warn.assert_called_once()
+            warn.reset_mock()
+
+            # Ensure we didn't break any other attributes
+            assert Enum(1) == Enum.OK_VALUE
+            warn.assert_not_called()
+
+            Enum.OK_VALUE
+            warn.assert_not_called()
