@@ -155,6 +155,11 @@ class TestRESTBucketManager:
 
         return manager
 
+    def test_max_rate_limit_property(self, bucket_manager):
+        bucket_manager._max_rate_limit = object()
+
+        assert bucket_manager.max_rate_limit is bucket_manager._max_rate_limit
+
     @pytest.mark.asyncio()
     async def test_close_closes_all_buckets(self, bucket_manager):
         buckets_array = [mock.Mock() for _ in range(30)]
