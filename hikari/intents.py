@@ -345,7 +345,6 @@ class Intents(enums.Flag):
 
     ALL_GUILDS_UNPRIVILEGED = (
         GUILDS
-        | GUILD_BANS
         | GUILD_EMOJIS
         | GUILD_INTEGRATIONS
         | GUILD_WEBHOOKS
@@ -354,6 +353,7 @@ class Intents(enums.Flag):
         | GUILD_MESSAGES
         | GUILD_MESSAGE_REACTIONS
         | GUILD_MESSAGE_TYPING
+        | GUILD_MODERATION
         | GUILD_SCHEDULED_EVENTS
     )
     """All unprivileged guild-related intents."""
