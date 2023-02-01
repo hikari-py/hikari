@@ -6516,6 +6516,7 @@ class TestEntityFactoryImpl:
         self, entity_factory_impl, mock_app, template_payload, user_payload, guild_text_channel_payload
     ):
         template = entity_factory_impl.deserialize_template(template_payload)
+        assert template.app is mock_app
         assert template.code == "4rDaewUKeYVj"
         assert template.name == "ttt"
         assert template.description == "eee"

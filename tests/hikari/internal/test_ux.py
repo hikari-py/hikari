@@ -188,7 +188,7 @@ class TestRedBanner:
         assert traversable.mock_file.context_entered == 1
         assert traversable.mock_file.context_exited == 1
 
-    def test_when_bellow_3_9(self):
+    def test_when_below_3_9(self):
         with mock.patch.object(sys, "version_info", new=(2, 7)):
             with mock.patch.object(importlib.resources, "read_text") as read_text:
                 assert ux._read_banner("hikaru") is read_text.return_value
