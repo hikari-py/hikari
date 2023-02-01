@@ -379,7 +379,7 @@ class RateLimitTooLongError(HTTPError):
     reset_at: float = attr.field()
     """UNIX timestamp of when this limit will be lifted."""
 
-    limit: typing.Optional[float] = attr.field()
+    limit: typing.Optional[int] = attr.field()
     """The maximum number of calls per window for this rate limit, if known."""
 
     period: typing.Optional[float] = attr.field()
