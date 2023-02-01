@@ -184,13 +184,11 @@ class TestGatewayTransport:
     async def test_send_json(self, transport_impl, trace):
         transport_impl._ws.send_bytes = mock.AsyncMock()
         transport_impl._logger = mock.Mock(enabled_for=mock.Mock(return_value=trace))
-        transport_impl._dumps = mock.Mock(return_value="some data")
+        transport_impl._dumps = mock.Mock(return_value=b"some data")
 
-        with mock.patch.object(data_binding, "dump_json") as dump_json:
-            await transport_impl.send_json({"json_send": None})
+        await transport_impl.send_json({"json_send": None})
 
-        transport_impl._ws.send_bytes.assert_awaited_once_with(dump_json.return_value)
-        dump_json.assert_called_once_with({"json_send": None}, encode=True, json_dumps=transport_impl._dumps)
+        transport_impl._ws.send_bytes.assert_awaited_once_with(b"some data")
 
     @pytest.mark.asyncio()
     async def test__handle_other_message_when_TEXT(self, transport_impl):
