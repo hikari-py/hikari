@@ -29,7 +29,6 @@ __all__: typing.Sequence[str] = (
     "JSONObject",
     "JSONArray",
     "JSONish",
-    "dump_json",
     "default_json_loads",
     "default_json_dumps",
     "JSONObjectBuilder",
@@ -76,7 +75,7 @@ JSONish = typing.Union[str, int, float, bool, None, JSONArray, JSONObject]
 Stringish = typing.Union[str, int, bool, undefined.UndefinedType, None, snowflakes.Unique]
 """Type hint for any valid that can be put in a StringMapBuilder"""
 
-JSONEncoder = typing.Callable[[typing.Union[JSONArray, JSONObject]], typing.Union[str, bytes]]
+JSONEncoder = typing.Callable[[typing.Union[JSONArray, JSONObject]], bytes]
 """Type hint for hikari-compatible JSON encoders.
 
 A hikari-compatible JSON encoder is one which will take in a JSON-ish object and output either `str`
@@ -112,49 +111,11 @@ try:
 except ModuleNotFoundError:
     import json
 
-    def default_json_dumps(obj: typing.Union[JSONArray, JSONObject]) -> str:
+    def default_json_dumps(obj: typing.Union[JSONArray, JSONObject]) -> bytes:
         """Encode a JSON object to a `str`."""
-        return json.dumps(obj, separators=(",", ":"))
+        return json.dumps(obj, separators=(",", ":")).encode()
 
     default_json_loads = json.loads
-
-
-@typing.overload
-def dump_json(  # noqa: D103 - Missing docstring
-    obj: typing.Union[JSONArray, JSONObject],
-    /,
-    *,
-    encode: typing.Literal[False],
-    json_dumps: JSONEncoder = default_json_dumps,
-) -> str:
-    ...
-
-
-@typing.overload
-def dump_json(  # noqa: D103 - Missing docstring
-    obj: typing.Union[JSONArray, JSONObject],
-    /,
-    *,
-    encode: typing.Literal[True],
-    json_dumps: JSONEncoder = default_json_dumps,
-) -> bytes:
-    ...
-
-
-def dump_json(
-    obj: typing.Union[JSONArray, JSONObject],
-    /,
-    *,
-    encode: bool,
-    json_dumps: JSONEncoder = default_json_dumps,
-) -> typing.Union[str, bytes]:
-    """Convert a Python type to a JSON string or bytes."""
-    data = json_dumps(obj)
-
-    if encode:
-        return data if isinstance(data, bytes) else data.encode(_UTF_8)
-
-    return data if isinstance(data, str) else data.decode(_UTF_8)
 
 
 @typing.final
@@ -162,15 +123,9 @@ class JSONPayload(aiohttp.BytesPayload):
     """A JSON payload to use in an aiohttp request."""
 
     def __init__(
-        self, value: typing.Any, json_dumps: JSONEncoder = default_json_dumps, *args: typing.Any, **kwargs: typing.Any
+        self, value: typing.Any, dumps: JSONEncoder = default_json_dumps, *args: typing.Any, **kwargs: typing.Any
     ) -> None:
-        super().__init__(
-            dump_json(value, encode=True, json_dumps=json_dumps),
-            content_type=_JSON_CONTENT_TYPE,
-            encoding=_UTF_8,
-            *args,
-            **kwargs,
-        )
+        super().__init__(dumps(value), content_type=_JSON_CONTENT_TYPE, encoding=_UTF_8)
 
 
 @typing.final

@@ -142,7 +142,7 @@ class _Response:
 
 # Constant response
 _PONG_RESPONSE: typing.Final[_Response] = _Response(
-    _OK_STATUS, data_binding.dump_json({"type": _PONG_RESPONSE_TYPE}, encode=True), content_type=_JSON_CONTENT_TYPE
+    _OK_STATUS, data_binding.default_json_dumps({"type": _PONG_RESPONSE_TYPE}), content_type=_JSON_CONTENT_TYPE
 )
 
 
@@ -477,7 +477,7 @@ class InteractionServer(interaction_server.InteractionServer):
                     result = await call
 
                 raw_payload, files = result.build(self._entity_factory)
-                payload = data_binding.dump_json(raw_payload, encode=True, json_dumps=self._dumps)
+                payload = self._dumps(raw_payload)
 
             except Exception as exc:
                 asyncio.get_running_loop().call_exception_handler(

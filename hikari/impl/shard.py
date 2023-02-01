@@ -199,7 +199,7 @@ class _GatewayTransport:
         return self._loads(pl)
 
     async def send_json(self, data: data_binding.JSONObject) -> None:
-        pl = data_binding.dump_json(data, encode=True, json_dumps=self._dumps)
+        pl = self._dumps(data)
         if self._logger.isEnabledFor(ux.TRACE):
             filtered = self._log_filterer(pl.decode("utf-8"))
             self._logger.log(ux.TRACE, "sending payload with size %s\n    %s", len(pl), filtered)
