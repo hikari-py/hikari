@@ -111,9 +111,11 @@ try:
 except ModuleNotFoundError:
     import json
 
+    _json_separators = (",", ":")
+
     def default_json_dumps(obj: typing.Union[JSONArray, JSONObject]) -> bytes:
         """Encode a JSON object to a `str`."""
-        return json.dumps(obj, separators=(",", ":")).encode(_UTF_8)
+        return json.dumps(obj, separators=_json_separators).encode(_UTF_8)
 
     default_json_loads = json.loads
 
