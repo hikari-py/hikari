@@ -35,6 +35,7 @@ import pytest
 
 from hikari import _about
 from hikari.impl import config
+from hikari.internal import data_binding
 from hikari.internal import net
 from hikari.internal import ux
 from tests.hikari import hikari_test_helpers
@@ -601,7 +602,7 @@ class TestCheckForUpdates:
         with stack:
             await ux.check_for_updates(http_settings=http_settings, proxy_settings=proxy_settings)
 
-        logger.debug.assert_not_called()
+        logger.warning.assert_not_called()
         logger.info.assert_not_called()
         create_client_session.assert_not_called()
 
@@ -616,7 +617,7 @@ class TestCheckForUpdates:
         with stack:
             await ux.check_for_updates(http_settings=http_settings, proxy_settings=proxy_settings)
 
-        logger.debug.assert_called_once_with("Failed to fetch hikari version details", exc_info=ex)
+        logger.warning.assert_called_once_with("Failed to fetch hikari version details", exc_info=ex)
         create_tcp_connector.assert_called_once_with(dns_cache=False, limit=1, http_settings=http_settings)
         create_client_session.assert_called_once_with(
             connector=create_tcp_connector(),
@@ -636,11 +637,12 @@ class TestCheckForUpdates:
             }
         }
         _request = hikari_test_helpers.AsyncContextManagerMock()
-        _request.json = mock.AsyncMock(return_value=data)
+        _request.read = mock.AsyncMock(return_value=data)
         _client_session = hikari_test_helpers.AsyncContextManagerMock()
         _client_session.get = mock.Mock(return_value=_request)
         stack = contextlib.ExitStack()
         logger = stack.enter_context(mock.patch.object(ux, "_LOGGER"))
+        json_loads = stack.enter_context(mock.patch.object(data_binding, "default_json_loads", return_value=data))
         create_client_session = stack.enter_context(
             mock.patch.object(net, "create_client_session", return_value=_client_session)
         )
@@ -651,8 +653,10 @@ class TestCheckForUpdates:
         with stack:
             await ux.check_for_updates(http_settings=http_settings, proxy_settings=proxy_settings)
 
-        logger.debug.assert_not_called()
+        logger.warning.assert_not_called()
         logger.info.assert_not_called()
+
+        json_loads.assert_called_once_with(_request.read.return_value)
         create_tcp_connector.assert_called_once_with(dns_cache=False, limit=1, http_settings=http_settings)
         create_client_session.assert_called_once_with(
             connector=create_tcp_connector(),
@@ -681,11 +685,12 @@ class TestCheckForUpdates:
             }
         }
         _request = hikari_test_helpers.AsyncContextManagerMock()
-        _request.json = mock.AsyncMock(return_value=data)
+        _request.read = mock.AsyncMock()
         _client_session = hikari_test_helpers.AsyncContextManagerMock()
         _client_session.get = mock.Mock(return_value=_request)
         stack = contextlib.ExitStack()
         logger = stack.enter_context(mock.patch.object(ux, "_LOGGER"))
+        json_loads = stack.enter_context(mock.patch.object(data_binding, "default_json_loads", return_value=data))
         create_client_session = stack.enter_context(
             mock.patch.object(net, "create_client_session", return_value=_client_session)
         )
@@ -696,10 +701,11 @@ class TestCheckForUpdates:
         with stack:
             await ux.check_for_updates(http_settings=http_settings, proxy_settings=proxy_settings)
 
-        logger.debug.assert_not_called()
+        logger.warning.assert_not_called()
         logger.info.assert_called_once_with(
             "A newer version of hikari is available, consider upgrading to %s", ux.HikariVersion(v)
         )
+        json_loads.assert_called_once_with(_request.read.return_value)
         create_tcp_connector.assert_called_once_with(dns_cache=False, limit=1, http_settings=http_settings)
         create_client_session.assert_called_once_with(
             connector=create_tcp_connector(),

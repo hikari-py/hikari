@@ -390,6 +390,7 @@ async def check_for_updates(http_settings: config.HTTPSettings, proxy_settings: 
                 proxy_headers=proxy_settings.all_headers,
             ) as resp:
                 data = data_binding.default_json_loads(await resp.read())
+                assert isinstance(data, dict)
 
         this_version = HikariVersion(about.__version__)
         is_dev = this_version.prerelease is not None
