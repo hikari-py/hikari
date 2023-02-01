@@ -37,7 +37,6 @@ from hikari import urls
 from hikari.impl import config
 from hikari.impl import shard
 from hikari.internal import aio
-from hikari.internal import data_binding
 from hikari.internal import net
 from hikari.internal import time
 from hikari.internal import ux

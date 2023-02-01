@@ -28,7 +28,6 @@ import pytest
 
 from hikari import errors
 from hikari import intents
-from hikari.internal import data_binding
 
 
 class TestShardCloseCode:
