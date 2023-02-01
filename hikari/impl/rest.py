@@ -112,6 +112,7 @@ _X_RATELIMIT_BUCKET_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Bucket")
 _X_RATELIMIT_LIMIT_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Limit")
 _X_RATELIMIT_REMAINING_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Remaining")
 _X_RATELIMIT_RESET_AFTER_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Reset-After")
+_X_RATELIMIT_SCOPE_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Scope")
 _RETRY_ERROR_CODES: typing.Final[typing.FrozenSet[int]] = frozenset((500, 502, 503, 504))
 _MAX_BACKOFF_DURATION: typing.Final[int] = 16
 
@@ -945,8 +946,9 @@ class RESTClientImpl(rest_api.RESTClient):
             return 0
 
         _LOGGER.error(
-            "rate limited on a sub bucket on bucket %s. You should consider lowering the number of requests "
+            "rate limited on a %s sub bucket on bucket %s. You should consider lowering the number of requests "
             "you make to '%s'. Backing off and retrying request...",
+            resp_headers.get(_X_RATELIMIT_SCOPE_HEADER, "route"),
             bucket,
             compiled_route.route,
         )
