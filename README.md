@@ -34,6 +34,16 @@ py -3 -m pip install -U hikari
 
 ## Bots
 
+Hikari provides two different default bot implementations to suit your needs:
+- [GatewayBot](#GatewayBot)
+- [RESTBot](#RESTBot)
+
+### GatewayBot
+
+A [`GatewayBot`](https://docs.hikari-py.dev/en/stable/reference/hikari/impl/bot/#hikari.impl.bot.GatewayBot)
+is one which will connect to Discord through the gateway and receive
+events through there. A simple startup example could be the following:
+
 ```py
 import hikari
 
@@ -56,17 +66,15 @@ bot.run()
 ```
 
 This will only respond to messages created in guilds. You can use `DMMessageCreateEvent` instead to only listen on
-DMs, or `MessageCreateEvent` to listen to both DMs and guild-based messages.
-
-[Logging](https://docs.python.org/3/library/logging.html) will be automatically configured for you if you do not
-enable it manually. This has been implemented after seeing a large number of new bot developers struggle with
-writing their first bot in other frameworks simply because of working blind after not understanding or knowing how
-to set up standard logging messages.
+DMs, or `MessageCreateEvent` to listen to both DMs and guild-based messages. A full list of events
+can be found in the [events docs](https://docs.hikari-py.dev/en/stable/reference/hikari/events/).
 
 If you wish to customize the intents being used in order to change which events your bot is notified about, then you
 can pass the `intents` kwarg to the `GatewayBot` constructor:
 
 ```py
+import hikari
+
 # the default is to enable all unprivileged intents (all events that do not target the
 # presence, activity of a specific member nor message content).
 bot = hikari.GatewayBot(intents=hikari.Intents.ALL, token="...")
@@ -74,30 +82,15 @@ bot = hikari.GatewayBot(intents=hikari.Intents.ALL, token="...")
 
 The above example would enable all intents, thus enabling events relating to member presences to be received
 (you'd need to whitelist your application first to be able to start the bot if you do this).
-[Other options also exist](https://docs.hikari-py.dev/en/stable/reference/hikari/impl/bot/#hikari.impl.bot.GatewayBot)
-such as [customizing timeouts for requests](https://docs.hikari-py.dev/en/stable/reference/hikari/impl/config/#hikari.impl.config.HTTPSettings.timeouts)
-and [enabling a proxy](https://docs.hikari-py.dev/en/stable/reference/hikari/impl/config/#hikari.impl.config.ProxySettings).
-
-Also note that you could pass extra options to `bot.run` during development, for example:
-
-```py
-bot.run(
-    asyncio_debug=True,             # enable asyncio debug to detect blocking and slow code.
-
-    coroutine_tracking_depth=20,    # enable tracking of coroutines, makes some asyncio
-                                    # errors clearer.
-
-    propagate_interrupts=True,      # Any OS interrupts get rethrown as errors.
-)
-```
-
-[Many other helpful options](https://docs.hikari-py.dev/en/stable/reference/hikari/impl/bot/#hikari.impl.bot.GatewayBot.run)
-exist for you to take advantage of if you wish.
 
 Events are determined by the type annotation on the event parameter, or alternatively as a type passed to the
 `@bot.listen()` decorator, if you do not want to use type hints.
 
 ```py
+import hikari
+
+bot = hikari.GatewayBot("...")
+
 @bot.listen()
 async def ping(event: hikari.MessageCreateEvent):
     ...
@@ -109,6 +102,101 @@ async def ping(event):
     ...
 ```
 
+### RESTBot
+
+A [`RESTBot`](https://docs.hikari-py.dev/en/stable/reference/hikari/impl/rest_bot/#hikari.impl.rest_bot.RESTBot)
+spawns an interaction server to which Discord will **only** send interaction events,
+which can be handled and responded to.
+
+An example of a simple `RESTBot` could be the following:
+
+```py
+import asyncio
+
+import hikari
+
+
+# This function will handle the interactions received
+async def handle_command(interaction: hikari.CommandInteraction):
+    # Create an initial response to be able to take longer to respond
+    yield interaction.build_deferred_response()
+
+    await asyncio.sleep(5)
+
+    # Edit the initial response
+    await interaction.edit_initial_response("Edit after 5 seconds!")
+
+
+# Register the commands on startup.
+#
+# Note that this is not a nice way to manage this, as it is quite spammy
+# to do it every time the bot is started. You can either use a command handler
+# or only run this code in a script using `RESTApp` or add checks to not update
+# the commands if there were no changes
+async def create_commands(bot: hikari.RESTBot):
+    application = await bot.rest.fetch_application()
+
+    await bot.rest.set_application_commands(
+        application=application.id,
+        commands=[
+            bot.rest.slash_command_builder("test", "My first test command!"),
+        ],
+    )
+
+
+bot = hikari.RESTBot(
+    token="...",
+    token_type="...",
+    public_key="...",
+)
+
+bot.add_startup_callback(create_commands)
+bot.set_listener(hikari.CommandInteraction, handle_command)
+
+bot.run()
+```
+
+Unlike `GatewayBot`, registering listeners is done through `.set_listener`, and it takes in an interaction type
+that the handler will take in.
+
+Note that a bit of a setup is required to get the above code to work. You will need to host the project to
+the World Wide Web (scary!) and then register the URL on the [Discord application portal](https://discord.com/developers/applications)
+for your application under "Interactions Endpoint URL".
+
+A quick way you can get your bot onto the internet and reachable by Discord (**for development environment only**) is
+through a tool like [ngrok](https://ngrok.com/) or [localhost.run](https://localhost.run/). More information on how to
+use them can be found in their respective websites.
+
+### Common helpful features
+
+Both implementations take in helpful arguments such as [customizing timeouts for requests](https://docs.hikari-py.dev/en/stable/reference/hikari/impl/config/#hikari.impl.config.HTTPSettings.timeouts)
+and [enabling a proxy](https://docs.hikari-py.dev/en/stable/reference/hikari/impl/config/#hikari.impl.config.ProxySettings),
+which are passed directly into the bot during initialization.
+
+Also note that you could pass extra options to `bot.run` during development, for example:
+
+```py
+import hikari
+
+bot = hikari.GatewayBot("...")
+# or
+bot = hikari.RESTBot("...", "...")
+
+bot.run(
+    asyncio_debug=True,             # enable asyncio debug to detect blocking and slow code.
+
+    coroutine_tracking_depth=20,    # enable tracking of coroutines, makes some asyncio
+                                    # errors clearer.
+
+    propagate_interrupts=True,      # Any OS interrupts get rethrown as errors.
+)
+```
+
+Many other helpful options exist for you to take advantage of if you wish. Links to the respective docs can be seen
+below:
+- [GatewayBot.run](https://docs.hikari-py.dev/en/stable/reference/hikari/impl/bot/#hikari.impl.bot.GatewayBot.run)
+- [RESTBot.run](https://docs.hikari-py.dev/en/stable/reference/hikari/impl/rest_bot/#hikari.impl.rest_bot.RESTBot.run)
+
 ---
 
 ## REST-only applications
@@ -118,15 +206,22 @@ You may only want to integrate with the REST API, for example if writing a web d
 This is relatively simple to do:
 
 ```py
+import hikari
+import asyncio
+
 rest = hikari.RESTApp()
 
 async def print_my_user(token):
+    await rest.start()
+  
     # We acquire a client with a given token. This allows one REST app instance
     # with one internal connection pool to be reused.
     async with rest.acquire(token) as client:
         my_user = await client.fetch_my_user()
         print(my_user)
 
+    await rest.close()
+        
 asyncio.run(print_my_user("user token acquired through OAuth here"))
 ```
 
@@ -192,14 +287,13 @@ and then amend your script to be something similar to the following example to u
 
 ```py
 import os
-import hikari
 
 if os.name != "nt":
     import uvloop
     uvloop.install()
 
-bot = hikari.GatewayBot(...)
-...
+
+# Your code goes here
 ```
 
 ### Compiled extensions
