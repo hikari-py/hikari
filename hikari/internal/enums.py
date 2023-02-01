@@ -402,7 +402,10 @@ class _FlagMeta(type):
                 return pseudomember
 
     def __getitem__(cls, name: str) -> typing.Any:
-        return cls._name_to_member_map_[name]
+        if member := getattr(cls, name, None):
+            return member
+
+        raise KeyError(name)
 
     def __iter__(cls) -> typing.Iterator[typing.Any]:
         yield from cls._name_to_member_map_.values()
@@ -466,21 +469,24 @@ class _FlagMeta(type):
         cls = super().__new__(mcs, name, (int, *bases), new_namespace)
 
         for name, value in namespace.names_to_values.items():
-            # Patching the member init call is around 100ns faster per call than
-            # using the default type.__call__ which would make us do the lookup
-            # in cls.__new__. Reason for this is that python will also always
-            # invoke cls.__init__ if we do this, so we end up with two function
-            # calls.
-            member = cls.__new__(cls, value)
-            member._name_ = name
-            member._value_ = value
-            name_to_member[name] = member
-            value_to_member[value] = member
-            member_names.append(name)
-            setattr(cls, name, member)
+            member = new_namespace.get(name)
+            if not isinstance(member, _DeprecatedAlias):
+                # Patching the member init call is around 100ns faster per call than
+                # using the default type.__call__ which would make us do the lookup
+                # in cls.__new__. Reason for this is that python will also always
+                # invoke cls.__init__ if we do this, so we end up with two function
+                # calls.
+                member = cls.__new__(cls, value)
+                member._name_ = name
+                member._value_ = value
+                setattr(cls, name, member)
 
-            if not (value & value - 1):
-                powers_of_2_map[value] = member
+                if not (value & value - 1):
+                    powers_of_2_map[value] = member
+
+            name_to_member[name] = member
+            value_to_member.setdefault(value, member)
+            member_names.append(name)
 
         all_bits = functools.reduce(operator.or_, value_to_member.keys())
         all_bits_member = cls.__new__(cls, all_bits)
