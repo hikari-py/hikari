@@ -191,7 +191,6 @@ import logging
 import typing
 
 from hikari import errors
-from hikari import undefined
 from hikari.impl import rate_limits
 from hikari.internal import routes
 from hikari.internal import time
@@ -314,8 +313,8 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
                 retry_after=global_ratelimit.reset_at - now,
                 max_retry_after=self._max_rate_limit,
                 reset_at=global_ratelimit.reset_at,
-                limit=undefined.UNDEFINED,
-                period=undefined.UNDEFINED,
+                limit=None,
+                period=None,
             )
 
         await global_ratelimit.acquire()

@@ -958,8 +958,8 @@ class RESTClientImpl(rest_api.RESTClient):
                 retry_after=body_retry_after,
                 max_retry_after=self._bucket_manager.max_rate_limit,
                 reset_at=time.monotonic() + body_retry_after,
-                limit=undefined.UNDEFINED,
-                period=undefined.UNDEFINED,
+                limit=None,
+                period=None,
             )
 
         return body_retry_after

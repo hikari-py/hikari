@@ -54,7 +54,6 @@ import typing
 
 import attr
 
-from hikari import undefined
 from hikari.internal import attr_extensions
 from hikari.internal import data_binding
 from hikari.internal import enums
@@ -380,10 +379,10 @@ class RateLimitTooLongError(HTTPError):
     reset_at: float = attr.field()
     """UNIX timestamp of when this limit will be lifted."""
 
-    limit: undefined.UndefinedOr[float] = attr.field()
+    limit: typing.Optional[float] = attr.field()
     """The maximum number of calls per window for this rate limit, if known."""
 
-    period: undefined.UndefinedOr[float] = attr.field()
+    period: typing.Optional[float] = attr.field()
     """How long the rate limit window lasts for from start to end, if known."""
 
     message: str = attr.field(init=False)
