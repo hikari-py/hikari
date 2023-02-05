@@ -2573,7 +2573,7 @@ class TestRESTClientImplAsync:
         )
         mock_form.add_field.assert_called_once_with(
             "payload_json",
-            b'{"testing":"ensure_in_test","message_reference":{"message_id":"987654321","fail_if_not_exists":false}}',
+            '{"testing":"ensure_in_test","message_reference":{"message_id":"987654321","fail_if_not_exists":false}}',
             content_type="application/json",
         )
         rest_client._request.assert_awaited_once_with(expected_route, form_builder=mock_form)
@@ -2696,7 +2696,7 @@ class TestRESTClientImplAsync:
             edit=True,
         )
         mock_form.add_field.assert_called_once_with(
-            "payload_json", b'{"testing":"ensure_in_test"}', content_type="application/json"
+            "payload_json", '{"testing":"ensure_in_test"}', content_type="application/json"
         )
         rest_client._request.assert_awaited_once_with(expected_route, form_builder=mock_form)
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
@@ -3172,7 +3172,7 @@ class TestRESTClientImplAsync:
         )
         mock_form.add_field.assert_called_once_with(
             "payload_json",
-            b'{"testing":"ensure_in_test","username":"davfsa","avatar_url":"https://website.com/davfsa_logo"}',
+            '{"testing":"ensure_in_test","username":"davfsa","avatar_url":"https://website.com/davfsa_logo"}',
             content_type="application/json",
         )
         rest_client._request.assert_awaited_once_with(
@@ -3211,7 +3211,7 @@ class TestRESTClientImplAsync:
             role_mentions=undefined.UNDEFINED,
         )
         mock_form.add_field.assert_called_once_with(
-            "payload_json", b'{"testing":"ensure_in_test"}', content_type="application/json"
+            "payload_json", '{"testing":"ensure_in_test"}', content_type="application/json"
         )
         rest_client._request.assert_awaited_once_with(
             expected_route,
@@ -3382,7 +3382,7 @@ class TestRESTClientImplAsync:
             edit=True,
         )
         mock_form.add_field.assert_called_once_with(
-            "payload_json", b'{"testing":"ensure_in_test"}', content_type="application/json"
+            "payload_json", '{"testing":"ensure_in_test"}', content_type="application/json"
         )
         rest_client._request.assert_awaited_once_with(expected_route, form_builder=mock_form, query={}, auth=None)
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
@@ -3414,7 +3414,7 @@ class TestRESTClientImplAsync:
             edit=True,
         )
         mock_form.add_field.assert_called_once_with(
-            "payload_json", b'{"testing":"ensure_in_test"}', content_type="application/json"
+            "payload_json", '{"testing":"ensure_in_test"}', content_type="application/json"
         )
         rest_client._request.assert_awaited_once_with(
             expected_route, form_builder=mock_form, query={"thread_id": "123543123"}, auth=None
@@ -4786,8 +4786,8 @@ class TestRESTClientImplAsync:
 
         mock_form.add_field.assert_called_once_with(
             "payload_json",
-            b'{"name":"Post with secret content!","auto_archive_duration":54123,"rate_limit_per_user":101,'
-            b'"applied_tags":["12220","12201"],"message":{"mock":"message body"}}',
+            '{"name":"Post with secret content!","auto_archive_duration":54123,"rate_limit_per_user":101,'
+            '"applied_tags":["12220","12201"],"message":{"mock":"message body"}}',
             content_type="application/json",
         )
 
@@ -5983,7 +5983,7 @@ class TestRESTClientImplAsync:
             role_mentions=[1234],
         )
         mock_form.add_field.assert_called_once_with(
-            "payload_json", b'{"type":1,"data":{"testing":"ensure_in_test"}}', content_type="application/json"
+            "payload_json", '{"type":1,"data":{"testing":"ensure_in_test"}}', content_type="application/json"
         )
         rest_client._request.assert_awaited_once_with(expected_route, form_builder=mock_form, auth=None)
 
@@ -6080,7 +6080,7 @@ class TestRESTClientImplAsync:
             edit=True,
         )
         mock_form.add_field.assert_called_once_with(
-            "payload_json", b'{"testing":"ensure_in_test"}', content_type="application/json"
+            "payload_json", '{"testing":"ensure_in_test"}', content_type="application/json"
         )
         rest_client._request.assert_awaited_once_with(expected_route, form_builder=mock_form, auth=None)
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
