@@ -588,6 +588,15 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             my_permissions=permission_models.Permissions(int(payload["permissions"])),
         )
 
+    def deserialize_own_application_role_connection(
+        self, payload: data_binding.JSONObject
+    ) -> application_models.OwnApplicationRoleConnection:
+        return application_models.OwnApplicationRoleConnection(
+            platform_name=payload.get("platform_name"),
+            platform_username=payload.get("platform_username"),
+            metadata=payload.get("metadata") or {},
+        )
+
     def deserialize_application(self, payload: data_binding.JSONObject) -> application_models.Application:
         team: typing.Optional[application_models.Team] = None
         if (team_payload := payload.get("team")) is not None:
@@ -633,6 +642,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             cover_image_hash=payload.get("cover_image"),
             privacy_policy_url=payload.get("privacy_policy_url"),
             terms_of_service_url=payload.get("terms_of_service_url"),
+            role_connections_verification_url=payload.get("role_connections_verification_url"),
             custom_install_url=payload.get("custom_install_url"),
             tags=payload.get("tags") or [],
             install_parameters=install_parameters,
@@ -660,6 +670,44 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             expires_at=time.iso8601_datetime_string_to_datetime(payload["expires"]),
             user=self.deserialize_user(payload["user"]) if "user" in payload else None,
         )
+
+    def deserialize_application_connection_metadata_record(
+        self, payload: data_binding.JSONObject
+    ) -> application_models.ApplicationRoleConnectionMetadataRecord:
+        name_localizations: typing.Mapping[str, str]
+        if raw_name_localizations := payload.get("name_localizations"):
+            name_localizations = {locales.Locale(k): raw_name_localizations[k] for k in raw_name_localizations}
+        else:
+            name_localizations = {}
+
+        description_localizations: typing.Mapping[str, str]
+        if raw_description_localizations := payload.get("description_localizations"):
+            description_localizations = {
+                locales.Locale(k): raw_description_localizations[k] for k in raw_description_localizations
+            }
+        else:
+            description_localizations = {}
+
+        return application_models.ApplicationRoleConnectionMetadataRecord(
+            type=application_models.ApplicationRoleConnectionMetadataRecordType(payload["type"]),
+            key=payload["key"],
+            name=payload["name"],
+            description=payload["description"],
+            name_localizations=name_localizations,
+            description_localizations=description_localizations,
+        )
+
+    def serialize_application_connection_metadata_record(
+        self, record: application_models.ApplicationRoleConnectionMetadataRecord
+    ) -> data_binding.JSONObject:
+        return {
+            "type": int(record.type),
+            "key": record.key,
+            "name": record.name,
+            "description": record.description,
+            "name_localizations": record.name_localizations,
+            "description_localizations": record.description_localizations,
+        }
 
     def deserialize_partial_token(self, payload: data_binding.JSONObject) -> application_models.PartialOAuth2Token:
         return application_models.PartialOAuth2Token(

@@ -157,6 +157,23 @@ class EntityFactory(abc.ABC):
         """
 
     @abc.abstractmethod
+    def deserialize_own_application_role_connection(
+        self, payload: data_binding.JSONObject
+    ) -> application_models.OwnApplicationRoleConnection:
+        """Parse a raw payload from Discord into an own application role connection object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.applications.OwnApplicationRoleConnection
+            The deserialized "own application role connection" object.
+        """
+
+    @abc.abstractmethod
     def deserialize_application(self, payload: data_binding.JSONObject) -> application_models.Application:
         """Parse a raw payload from Discord into an application object.
 
@@ -186,6 +203,40 @@ class EntityFactory(abc.ABC):
         -------
         hikari.applications.AuthorizationInformation
             The deserialized authorization information object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_application_connection_metadata_record(
+        self, payload: data_binding.JSONObject
+    ) -> application_models.ApplicationRoleConnectionMetadataRecord:
+        """Parse a raw payload from Discord into an application connection metadata record object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.applications.ApplicationRoleConnectionMetadataRecord
+            The deserialized "application connection metadata record" object.
+        """
+
+    @abc.abstractmethod
+    def serialize_application_connection_metadata_record(
+        self, record: application_models.ApplicationRoleConnectionMetadataRecord
+    ) -> data_binding.JSONObject:
+        """Serialize an application connection metadata record object to a json serializable dict.
+
+        Parameters
+        ----------
+        record : hikari.applications.ApplicationRoleConnectionMetadataRecord
+            The record object to serialize.
+
+        Returns
+        -------
+        hikari.internal.data_binding.JSONObject
+            The serialized representation of the record object.
         """
 
     @abc.abstractmethod

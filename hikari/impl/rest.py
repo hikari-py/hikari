@@ -2080,6 +2080,45 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.DELETE_MY_GUILD.compile(guild=guild)
         await self._request(route)
 
+    async def fetch_my_user_application_role_connection(
+        self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication]
+    ) -> applications.OwnApplicationRoleConnection:
+        route = routes.GET_MY_USER_APPLICATION_ROLE_CONNECTIONS.compile(application=application)
+
+        response = await self._request(route)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_own_application_role_connection(response)
+
+    async def set_my_user_application_role_connection(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        platform_name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        platform_username: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        metadata: undefined.UndefinedOr[
+            typing.Mapping[str, typing.Union[str, int, bool, datetime.datetime]]
+        ] = undefined.UNDEFINED,
+    ) -> applications.OwnApplicationRoleConnection:
+        route = routes.PUT_MY_USER_APPLICATION_ROLE_CONNECTIONS.compile(application=application)
+        body = data_binding.JSONObjectBuilder()
+        body.put("platform_name", platform_name)
+        body.put("platform_username", platform_username)
+
+        if metadata is not undefined.UNDEFINED:
+            # Syntactic sugar for metadata to allow booleans and datetime.datetime
+            metadata = dict(metadata)
+
+            for key, value in metadata.items():
+                if isinstance(value, bool):
+                    metadata[key] = int(value)
+                elif isinstance(value, datetime.datetime):
+                    metadata[key] = value.isoformat()
+
+            body.put("metadata", metadata)
+
+        response = await self._request(route, json=body)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_own_application_role_connection(response)
+
     async def create_dm_channel(self, user: snowflakes.SnowflakeishOr[users.PartialUser], /) -> channels_.DMChannel:
         route = routes.POST_MY_CHANNELS.compile()
         body = data_binding.JSONObjectBuilder()
@@ -2104,6 +2143,28 @@ class RESTClientImpl(rest_api.RESTClient):
         response = await self._request(route)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_authorization_information(response)
+
+    async def fetch_application_role_connection_metadata_records(
+        self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication]
+    ) -> typing.Sequence[applications.ApplicationRoleConnectionMetadataRecord]:
+        route = routes.GET_APPLICATION_ROLE_CONNECTION_METADATA_RECORDS.compile(application=application)
+
+        response = await self._request(route)
+        assert isinstance(response, list)
+        return [self._entity_factory.deserialize_application_connection_metadata_record(r) for r in response]
+
+    async def set_application_role_connection_metadata_records(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        records: typing.Sequence[applications.ApplicationRoleConnectionMetadataRecord],
+    ) -> typing.Sequence[applications.ApplicationRoleConnectionMetadataRecord]:
+        route = routes.PUT_APPLICATION_ROLE_CONNECTION_METADATA_RECORDS.compile(application=application)
+
+        body = [self._entity_factory.serialize_application_connection_metadata_record(r) for r in records]
+
+        response = await self._request(route, json=body)
+        assert isinstance(response, list)
+        return [self._entity_factory.deserialize_application_connection_metadata_record(r) for r in response]
 
     @staticmethod
     def _gen_oauth2_token(client: snowflakes.SnowflakeishOr[guilds.PartialApplication], client_secret: str) -> str:

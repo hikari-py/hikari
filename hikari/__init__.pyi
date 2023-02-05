@@ -24,12 +24,21 @@ from hikari._about import __url__ as __url__
 from hikari._about import __version__ as __version__
 from hikari.applications import Application as Application
 from hikari.applications import ApplicationFlags as ApplicationFlags
+from hikari.applications import (
+    ApplicationRoleConnectionMetadataRecord as ApplicationRoleConnectionMetadataRecord,
+)
+from hikari.applications import (
+    ApplicationRoleConnectionMetadataRecordType as ApplicationRoleConnectionMetadataRecordType,
+)
 from hikari.applications import AuthorizationApplication as AuthorizationApplication
 from hikari.applications import AuthorizationInformation as AuthorizationInformation
 from hikari.applications import ConnectionVisibility as ConnectionVisibility
 from hikari.applications import OAuth2AuthorizationToken as OAuth2AuthorizationToken
 from hikari.applications import OAuth2ImplicitToken as OAuth2ImplicitToken
 from hikari.applications import OAuth2Scope as OAuth2Scope
+from hikari.applications import (
+    OwnApplicationRoleConnection as OwnApplicationRoleConnection,
+)
 from hikari.applications import OwnConnection as OwnConnection
 from hikari.applications import OwnGuild as OwnGuild
 from hikari.applications import PartialOAuth2Token as PartialOAuth2Token

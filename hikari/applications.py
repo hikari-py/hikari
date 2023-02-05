@@ -36,11 +36,14 @@ __all__: typing.Sequence[str] = (
     "OAuth2Scope",
     "OwnConnection",
     "OwnGuild",
+    "OwnApplicationRoleConnection",
     "PartialOAuth2Token",
     "Team",
     "TeamMember",
     "TeamMembershipState",
     "TokenType",
+    "ApplicationRoleConnectionMetadataRecordType",
+    "ApplicationRoleConnectionMetadataRecord",
     "get_token_id",
 )
 
@@ -50,6 +53,7 @@ import typing
 import attr
 
 from hikari import guilds
+from hikari import locales
 from hikari import snowflakes
 from hikari import urls
 from hikari import users
@@ -236,6 +240,9 @@ class OAuth2Scope(str, enums.Enum):
     GUILDS_MEMBERS_READ = "guilds.members.read"
     """Used to read the current user's guild members."""
 
+    ROLE_CONNECTIONS_WRITE = "role_connections.write"
+    """Used to write to the current user's connection and metadata for the app."""
+
 
 @typing.final
 class ConnectionVisibility(int, enums.Enum):
@@ -300,6 +307,30 @@ class OwnGuild(guilds.PartialGuild):
 
     my_permissions: permissions_.Permissions = attr.field(eq=False, hash=False, repr=False)
     """The guild-level permissions that apply to the current user or bot."""
+
+
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
+class OwnApplicationRoleConnection:
+    """Represents an own application role connection."""
+
+    platform_name: typing.Optional[str] = attr.field(eq=True, hash=True, repr=True)
+    """The name of the platform."""
+
+    platform_username: typing.Optional[str] = attr.field(eq=True, hash=True, repr=True)
+    """The users name in the platform."""
+
+    metadata: typing.Mapping[str, str] = attr.field(eq=False, hash=False, repr=False)
+    """Mapping application role connection metadata keys to their value.
+
+    .. note::
+        Unfortunately, these can't be deserialized to their proper types as Discord don't
+        provide a way to difference between them.
+
+        You can deserialize them yourself based on what value you expect from the key:
+            - `INTEGER_X`: Cast to an `int`.
+            - `DATETIME_X`: Cast to a `datetime.datetime.fromisoformat` or `ciso8601.parse_rfc3339` for speed.
+            - `BOOLEAN_X`: Cast to a `bool`.
+    """
 
 
 @typing.final
@@ -587,6 +618,9 @@ class Application(guilds.PartialApplication):
     privacy_policy_url: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
     """The URL of this application's privacy policy."""
 
+    role_connections_verification_url: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    """The URL of this application's role connection verification entry point."""
+
     custom_install_url: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
     """The URL of this application's custom authorization link."""
 
@@ -750,6 +784,68 @@ class TokenType(str, enums.Enum):
 
     BEARER = "Bearer"
     """OAuth2 bearer token type."""
+
+
+@typing.final
+class ApplicationRoleConnectionMetadataRecordType(int, enums.Enum):
+    """Represents possible application role connection metadata record types."""
+
+    INTEGER_LESS_THAN_OR_EQUAL = 1
+    """Integer Less Than Or Equal."""
+
+    INTEGER_GREATER_THAN_OR_EQUAL = 2
+    """Integer Greater Than Or Equal."""
+
+    INTEGER_EQUAL = 3
+    """Integer Equal."""
+
+    INTEGER_NOT_EQUAL = 4
+    """Integer Not Equal."""
+
+    DATETIME_LESS_THAN_OR_EQUAL = 5
+    """Datetime Less Than Or Equal."""
+
+    DATETIME_GREATER_THAN_OR_EQUAL = 6
+    """Datetime Greater Than Or Equal."""
+
+    BOOLEAN_EQUAL = 7
+    """Boolean Equal."""
+
+    BOOLEAN_NOT_EQUAL = 8
+    """Boolean Not Equal."""
+
+
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
+class ApplicationRoleConnectionMetadataRecord:
+    """Represents a role connection metadata record."""
+
+    type: typing.Union[ApplicationRoleConnectionMetadataRecordType, int] = attr.field(eq=False, hash=False, repr=False)
+    """The type of metadata value record."""
+
+    key: str = attr.field(eq=True, hash=True, repr=False)
+    """Dictionary key for the metadata field."""
+
+    name: str = attr.field(eq=False, hash=False, repr=True)
+    """The metadata's field name."""
+
+    description: str = attr.field(eq=False, hash=False, repr=True)
+    """The metadata's field description."""
+
+    name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attr.field(
+        eq=False,
+        hash=False,
+        repr=False,
+        factory=dict,
+    )
+    """A mapping of name localizations for this metadata field."""
+
+    description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attr.field(
+        eq=False,
+        hash=False,
+        repr=False,
+        factory=dict,
+    )
+    """A mapping of description localizations for this metadata field."""
 
 
 def get_token_id(token: str) -> snowflakes.Snowflake:

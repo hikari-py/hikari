@@ -469,9 +469,15 @@ GET_USER: typing.Final[Route] = Route(GET, "/users/{user}")
 
 # @me
 POST_MY_CHANNELS: typing.Final[Route] = Route(POST, "/users/@me/channels")
-GET_MY_CONNECTIONS: typing.Final[Route] = Route(GET, "/users/@me/connections")  # OAuth2 only
-GET_MY_GUILD_MEMBER: typing.Final[Route] = Route(GET, "/users/@me/guilds/{guild}/member")  # OAuth2 only
+GET_MY_CONNECTIONS: typing.Final[Route] = Route(GET, "/users/@me/connections")  # OAuth2
+GET_MY_GUILD_MEMBER: typing.Final[Route] = Route(GET, "/users/@me/guilds/{guild}/member")  # OAuth2
 DELETE_MY_GUILD: typing.Final[Route] = Route(DELETE, "/users/@me/guilds/{guild}")
+GET_MY_USER_APPLICATION_ROLE_CONNECTIONS: typing.Final[Route] = Route(
+    GET, "/users/@me/applications/{application}/role-connection"
+)  # OAuth2
+PUT_MY_USER_APPLICATION_ROLE_CONNECTIONS: typing.Final[Route] = Route(
+    PUT, "/users/@me/applications/{application}/role-connection"
+)  # OAuth2
 
 GET_MY_GUILDS: typing.Final[Route] = Route(GET, "/users/@me/guilds")
 
@@ -531,8 +537,12 @@ GET_APPLICATION_COMMAND_PERMISSIONS: typing.Final[Route] = Route(
 PUT_APPLICATION_COMMAND_PERMISSIONS: typing.Final[Route] = Route(
     PUT, "/applications/{application}/guilds/{guild}/commands/{command}/permissions"
 )
-PUT_APPLICATION_GUILD_COMMANDS_PERMISSIONS: typing.Final[Route] = Route(
-    PUT, "/applications/{application}/guilds/{guild}/commands/permissions"
+
+GET_APPLICATION_ROLE_CONNECTION_METADATA_RECORDS: typing.Final[Route] = Route(
+    GET, "/applications/{application}/role-connections/metadata"
+)
+PUT_APPLICATION_ROLE_CONNECTION_METADATA_RECORDS: typing.Final[Route] = Route(
+    PUT, "/applications/{application}/role-connections/metadata"
 )
 
 # Interactions
