@@ -855,11 +855,19 @@ class ChannelFollowerWebhook(PartialWebhook):
         This will be `None` when received within an audit log.
     """
 
-    source_channel: channels_.PartialChannel = attr.field(eq=False, hash=False, repr=True)
-    """The partial object of the channel this webhook is following."""
+    source_channel: typing.Optional[channels_.PartialChannel] = attr.field(eq=False, hash=False, repr=True)
+    """The partial object of the channel this webhook is following.
 
-    source_guild: guilds_.PartialGuild = attr.field(eq=False, hash=False, repr=True)
-    """The partial object of the guild this webhook is following."""
+    This will be `None` when the user that followed the channel is no
+    longer in the source guild or has lost access to the source channel.
+    """
+
+    source_guild: typing.Optional[guilds_.PartialGuild] = attr.field(eq=False, hash=False, repr=True)
+    """The partial object of the guild this webhook is following.
+
+    This will be `None` when the user that followed the channel is no
+    longer in the source guild or has lost access to the source channel.
+    """
 
     async def delete(self) -> None:
         """Delete this webhook.
