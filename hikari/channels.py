@@ -994,6 +994,14 @@ class GuildChannel(PartialChannel):
         permission_overwrites: undefined.UndefinedOr[typing.Sequence[PermissionOverwrite]] = undefined.UNDEFINED,
         parent_category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[GuildCategory]] = undefined.UNDEFINED,
         default_auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        # Forum & Thread-only fields
+        flags: undefined.UndefinedOr[ChannelFlag] = undefined.UNDEFINED,
+        # Thread-only fields
+        archived: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        locked: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        invitable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        applied_tags: undefined.UndefinedOr[typing.Sequence[ForumTag]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> PartialChannel:
         """Edit the text channel.
@@ -1029,8 +1037,32 @@ class GuildChannel(PartialChannel):
             If provided, the auto archive duration Discord's end user client
             should default to when creating threads in this channel.
 
-            This should be either 60, 1440, 4320 or 10080 seconds and, as of
+            This should be either 60, 1440, 4320 or 10080 seconds, as of
             writing.
+        flags : hikari.undefined.UndefinedOr[ChannelFlag]
+            If provided, the new channel flags to use for the channel. This can
+            only be used on a forum channel to apply ChannelFlag.REQUIRE_TAG, or
+            on a forum thread to apply ChannelFlag.PINNED.
+        archived : hikari.undefined.UndefinedOr[bool]
+            If provided, the new archived state for the thread. This only
+            applies to threads.
+        auto_archive_duration : hikari.undefined.UndefinedOr[time.Intervalish]
+            If provided, the new auto archive duration for this thread. This
+            only applies to threads.
+
+            This should be either 60, 1440, 4320 or 10080 seconds, as of
+            writing.
+        locked : hikari.undefined.UndefinedOr[bool]
+            If provided, the new locked state for the thread. This only applies
+            to threads.
+
+            If it's locked then only people with `MANAGE_THREADS` can unarchive it.
+        invitable : hikari.undefined.UndefinedOr[bool]
+            If provided, the new setting for whether non-moderators can invite
+            new members to a private thread. This only applies to threads.
+        applied_tags : hikari.undefined.UndefinedOr[typing.Sequence[ForumTag]]
+            If provided, the new tags to apply to the thread. This only applies
+            to threads in a forum channel.
         reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -1070,6 +1102,12 @@ class GuildChannel(PartialChannel):
             permission_overwrites=permission_overwrites,
             parent_category=parent_category,
             default_auto_archive_duration=default_auto_archive_duration,
+            flags=flags,
+            archived=archived,
+            auto_archive_duration=auto_archive_duration,
+            locked=locked,
+            invitable=invitable,
+            applied_tags=applied_tags,
             reason=reason,
         )
 

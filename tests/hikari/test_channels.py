@@ -364,6 +364,12 @@ class TestGuildChannel:
             region="us-west",
             parent_category=341123123123,
             permission_overwrites={123: "123"},
+            flags=12,
+            archived=True,
+            auto_archive_duration=1234,
+            locked=True,
+            invitable=True,
+            applied_tags=[12345, 54321],
         )
 
         assert result is model.app.rest.edit_channel.return_value
@@ -381,6 +387,12 @@ class TestGuildChannel:
             permission_overwrites={123: "123"},
             parent_category=341123123123,
             default_auto_archive_duration=123312,
+            flags=12,
+            archived=True,
+            auto_archive_duration=1234,
+            locked=True,
+            invitable=True,
+            applied_tags=[12345, 54321],
             reason="left right",
         )
 
