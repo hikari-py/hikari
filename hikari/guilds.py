@@ -976,7 +976,7 @@ class PartialRole(snowflakes.Unique):
 
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
 class Role(PartialRole):
-    """Represents a guild bound Role object."""
+    """Represents a guild bound role object."""
 
     color: colors.Color = attr.field(eq=False, hash=False, repr=True)
     """The colour of this role.
@@ -1084,10 +1084,13 @@ class IntegrationType(str, enums.Enum):
     """The integration type."""
 
     TWITCH = "twitch"
+    "Twitch."
 
     YOUTUBE = "youtube"
+    "Youtube."
 
     DISCORD_BOT = "discord"
+    "Discord bot."
 
 
 @typing.final

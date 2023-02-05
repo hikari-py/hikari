@@ -1907,7 +1907,9 @@ class ModalActionRowBuilder(special_endpoints.ModalActionRowBuilder):
     """Standard implementation of `hikari.api.special_endpoints.ActionRowBuilder`."""
 
     _components: typing.List[special_endpoints.ComponentBuilder] = attr.field(alias="components", factory=list)
-    _stored_type: typing.Optional[component_models.ComponentType] = attr.field(alias="stored_type", default=None)
+    _stored_type: typing.Optional[component_models.ComponentType] = attr.field(
+        alias="stored_type", init=False, default=None
+    )
 
     @property
     def components(self) -> typing.Sequence[special_endpoints.ComponentBuilder]:
