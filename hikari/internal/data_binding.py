@@ -40,7 +40,6 @@ __all__: typing.Sequence[str] = (
 import typing
 
 import aiohttp
-import aiohttp.abc
 import multidict
 
 from hikari import errors
@@ -50,6 +49,8 @@ from hikari import undefined
 
 if typing.TYPE_CHECKING:
     import concurrent.futures
+
+    import aiohttp.abc
 
     T_co = typing.TypeVar("T_co", covariant=True)
     T = typing.TypeVar("T")
