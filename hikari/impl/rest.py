@@ -32,7 +32,6 @@ __all__: typing.Sequence[str] = ("ClientCredentialsStrategy", "RESTApp", "RESTCl
 
 import asyncio
 import base64
-import contextlib
 import copy
 import datetime
 import http
@@ -482,6 +481,21 @@ def _transform_emoji_to_url_format(
     return emoji
 
 
+class _NoOpContext:
+    __slots__ = ()
+
+    async def __aenter__(self) -> None:
+        ...
+
+    async def __aexit__(
+        self,
+        exc_type: typing.Optional[typing.Type[BaseException]],
+        exc: typing.Optional[BaseException],
+        exc_tb: typing.Optional[types.TracebackType],
+    ) -> None:
+        ...
+
+
 class RESTClientImpl(rest_api.RESTClient):
     """Implementation of the V10-compatible Discord HTTP API.
 
@@ -771,7 +785,7 @@ class RESTClientImpl(rest_api.RESTClient):
         if auth:
             headers[_AUTHORIZATION_HEADER] = auth
 
-        data: typing.Union[None, aiohttp.BytesPayload, aiohttp.FormData] = None
+        data: typing.Union[None, aiohttp.BytesPayload, aiohttp.MultipartWriter] = None
         if json is not None:
             if form_builder:
                 raise ValueError("Can only provide one of 'json' or 'form_builder', not both")
@@ -780,19 +794,20 @@ class RESTClientImpl(rest_api.RESTClient):
 
         url = compiled_route.create_url(self._rest_url)
 
-        stack = contextlib.AsyncExitStack()
         # This is initiated the first time we hit a 5xx error to save a little memory when nothing goes wrong
         backoff: typing.Optional[rate_limits.ExponentialBackOff] = None
         retry_count = 0
         trace_logging_enabled = _LOGGER.isEnabledFor(ux.TRACE)
 
         while True:
-            async with stack:
-                if form_builder:
-                    data = await form_builder.build(stack, executor=self._executor)
+            if compiled_route.route.has_ratelimits:
+                bucket_acquire = self._bucket_manager.acquire_bucket(compiled_route, auth)
+            else:
+                bucket_acquire = _NoOpContext()
 
-                if compiled_route.route.has_ratelimits:
-                    await stack.enter_async_context(self._bucket_manager.acquire_bucket(compiled_route, auth))
+            async with bucket_acquire:
+                if form_builder:
+                    data = await form_builder.build(executor=self._executor)
 
                 if trace_logging_enabled:
                     uuid = time.uuid()
@@ -2178,8 +2193,8 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> applications.PartialOAuth2Token:
         route = routes.POST_TOKEN.compile()
         form_builder = data_binding.URLEncodedFormBuilder()
-        form_builder.add_field("grant_type", "client_credentials")
-        form_builder.add_field("scope", " ".join(scopes))
+        form_builder.add_field("grant_type", b"client_credentials")
+        form_builder.add_field("scope", " ".join(scopes).encode())
 
         response = await self._request(
             route, form_builder=form_builder, auth=self._gen_oauth2_token(client, client_secret)
@@ -2196,9 +2211,9 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> applications.OAuth2AuthorizationToken:
         route = routes.POST_TOKEN.compile()
         form_builder = data_binding.URLEncodedFormBuilder()
-        form_builder.add_field("grant_type", "authorization_code")
-        form_builder.add_field("code", code)
-        form_builder.add_field("redirect_uri", redirect_uri)
+        form_builder.add_field("grant_type", b"authorization_code")
+        form_builder.add_field("code", code.encode())
+        form_builder.add_field("redirect_uri", redirect_uri.encode())
 
         response = await self._request(
             route, form_builder=form_builder, auth=self._gen_oauth2_token(client, client_secret)
@@ -2218,11 +2233,11 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> applications.OAuth2AuthorizationToken:
         route = routes.POST_TOKEN.compile()
         form_builder = data_binding.URLEncodedFormBuilder()
-        form_builder.add_field("grant_type", "refresh_token")
-        form_builder.add_field("refresh_token", refresh_token)
+        form_builder.add_field("grant_type", b"refresh_token")
+        form_builder.add_field("refresh_token", refresh_token.encode())
 
         if scopes is not undefined.UNDEFINED:
-            form_builder.add_field("scope", " ".join(scopes))
+            form_builder.add_field("scope", " ".join(scopes).encode())
 
         response = await self._request(
             route, form_builder=form_builder, auth=self._gen_oauth2_token(client, client_secret)
@@ -2236,9 +2251,12 @@ class RESTClientImpl(rest_api.RESTClient):
         client_secret: str,
         token: typing.Union[str, applications.PartialOAuth2Token],
     ) -> None:
+        if isinstance(token, applications.PartialOAuth2Token):
+            token = token.access_token
+
         route = routes.POST_TOKEN_REVOKE.compile()
         form_builder = data_binding.URLEncodedFormBuilder()
-        form_builder.add_field("token", str(token))
+        form_builder.add_field("token", token.encode())
         await self._request(route, form_builder=form_builder, auth=self._gen_oauth2_token(client, client_secret))
 
     async def add_user_to_guild(
@@ -2433,9 +2451,9 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> stickers.GuildSticker:
         route = routes.POST_GUILD_STICKERS.compile(guild=guild)
         form = data_binding.URLEncodedFormBuilder()
-        form.add_field("name", name)
-        form.add_field("tags", tag)
-        form.add_field("description", description or "")
+        form.add_field("name", name.encode())
+        form.add_field("tags", tag.encode())
+        form.add_field("description", description.encode() if description else b"")
         form.add_resource("file", files.ensure_resource(image))
 
         response = await self._request(route, form_builder=form, reason=reason)

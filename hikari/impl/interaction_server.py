@@ -146,27 +146,6 @@ _PONG_RESPONSE: typing.Final[_Response] = _Response(
 )
 
 
-class _FilePayload(aiohttp.Payload):
-    _value: files_.Resource[files_.AsyncReader]
-
-    def __init__(
-        self,
-        value: files_.Resource[files_.AsyncReader],
-        content_type: str,
-        /,
-        *,
-        executor: typing.Optional[concurrent.futures.Executor] = None,
-        headers: typing.Optional[typing.Dict[str, str]] = None,
-    ) -> None:
-        super().__init__(value=value, headers=headers, content_type=content_type)
-        self._executor = executor
-
-    async def write(self, writer: aiohttp.abc.AbstractStreamWriter) -> None:
-        async with self._value.stream(executor=self._executor) as data:
-            async for chunk in data:
-                await writer.write(chunk)
-
-
 async def _consume_generator_listener(generator: typing.AsyncGenerator[typing.Any, None]) -> None:
     try:
         await generator.__anext__()
@@ -345,21 +324,14 @@ class InteractionServer(interaction_server.InteractionServer):
         response = await self.on_interaction(body=body, signature=signature_header, timestamp=timestamp_header)
 
         if response.files:
-            multipart = aiohttp.MultipartWriter(subtype="form-data")
+            form = data_binding.URLEncodedFormBuilder()
             if response.payload:
-                body_payload = aiohttp.BytesPayload(response.payload, content_type=response.content_type)
-                body_payload.set_content_disposition("form-data", name="payload_json")
-                multipart.append_payload(body_payload)
+                form.add_field("payload_json", response.payload, content_type=response.content_type)
 
             for index, file_ in enumerate(response.files):
-                async with file_.stream(head_only=True) as stream:
-                    mimetype = stream.mimetype or _APPLICATION_OCTET_STREAM
+                form.add_resource(f"files[{index}]", file_)
 
-                payload = _FilePayload(file_, mimetype, executor=self._executor)
-                payload.set_content_disposition("form-data", name=f"files[{index}]", filename=file_.filename)
-                multipart.append_payload(payload)
-
-            return aiohttp.web.Response(status=response.status_code, headers=response.headers, body=multipart)
+            return aiohttp.web.Response(status=response.status_code, headers=response.headers, body=await form.build())
 
         return aiohttp.web.Response(
             status=response.status_code,

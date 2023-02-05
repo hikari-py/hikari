@@ -40,6 +40,7 @@ __all__: typing.Sequence[str] = (
 import typing
 
 import aiohttp
+import aiohttp.abc
 import multidict
 
 from hikari import errors
@@ -49,7 +50,6 @@ from hikari import undefined
 
 if typing.TYPE_CHECKING:
     import concurrent.futures
-    import contextlib
 
     T_co = typing.TypeVar("T_co", covariant=True)
     T = typing.TypeVar("T")
@@ -129,6 +129,27 @@ class JSONPayload(aiohttp.BytesPayload):
         super().__init__(dumps(value), content_type=_JSON_CONTENT_TYPE, encoding=_UTF_8)
 
 
+class _FilePayload(aiohttp.Payload):
+    _value: files.Resource[files.AsyncReader]
+
+    def __init__(
+        self,
+        value: files.Resource[files.AsyncReader],
+        content_type: str,
+        /,
+        *,
+        executor: typing.Optional[concurrent.futures.Executor] = None,
+        headers: typing.Optional[typing.Dict[str, str]] = None,
+    ) -> None:
+        super().__init__(value=value, headers=headers, content_type=content_type)
+        self._executor = executor
+
+    async def write(self, writer: aiohttp.abc.AbstractStreamWriter) -> None:
+        async with self._value.stream(executor=self._executor) as data:
+            async for chunk in data:
+                await writer.write(chunk)
+
+
 @typing.final
 class URLEncodedFormBuilder:
     """Helper class to generate `aiohttp.FormData`."""
@@ -136,29 +157,30 @@ class URLEncodedFormBuilder:
     __slots__: typing.Sequence[str] = ("_fields", "_resources")
 
     def __init__(self) -> None:
-        self._fields: typing.List[typing.Tuple[str, typing.Union[str, bytes], typing.Optional[str]]] = []
+        self._fields: typing.List[typing.Tuple[str, bytes, typing.Optional[str]]] = []
         self._resources: typing.List[typing.Tuple[str, files.Resource[files.AsyncReader]]] = []
 
-    def add_field(
-        self, name: str, data: typing.Union[str, bytes], *, content_type: typing.Optional[str] = None
-    ) -> None:
+    def add_field(self, name: str, data: bytes, *, content_type: typing.Optional[str] = None) -> None:
         self._fields.append((name, data, content_type))
 
     def add_resource(self, name: str, resource: files.Resource[files.AsyncReader]) -> None:
         self._resources.append((name, resource))
 
-    async def build(
-        self, stack: contextlib.AsyncExitStack, executor: typing.Optional[concurrent.futures.Executor] = None
-    ) -> aiohttp.FormData:
-        form = aiohttp.FormData()
+    async def build(self, executor: typing.Optional[concurrent.futures.Executor] = None) -> aiohttp.MultipartWriter:
+        form = aiohttp.MultipartWriter(subtype="form-data")
 
         for field in self._fields:
-            form.add_field(field[0], field[1], content_type=field[2], content_transfer_encoding=_BINARY)
+            body_payload = aiohttp.BytesPayload(field[1], content_type=field[2])
+            body_payload.set_content_disposition("form-data", name=field[0])
+            form.append_payload(body_payload)
 
         for name, resource in self._resources:
-            stream = await stack.enter_async_context(resource.stream(executor=executor))
-            mimetype = stream.mimetype or _APPLICATION_OCTET_STREAM
-            form.add_field(name, stream, filename=stream.filename, content_type=mimetype)
+            async with resource.stream(executor=executor, head_only=True) as stream:
+                content_type = stream.mimetype or _APPLICATION_OCTET_STREAM
+
+            payload = _FilePayload(resource, content_type, executor=executor)
+            payload.set_content_disposition("form-data", name=name, filename=resource.filename)
+            form.append_payload(payload)
 
         return form
 
