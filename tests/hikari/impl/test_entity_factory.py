@@ -1578,6 +1578,7 @@ class TestEntityFactoryImpl:
     def audit_log_payload(
         self,
         audit_log_entry_payload,
+        auto_mod_rule_payload,
         user_payload,
         incoming_webhook_payload,
         application_webhook_payload,
@@ -1589,6 +1590,7 @@ class TestEntityFactoryImpl:
     ):
         return {
             "audit_log_entries": [audit_log_entry_payload],
+            "auto_moderation_rules": [auto_mod_rule_payload],
             "integrations": [partial_integration_payload],
             "threads": [guild_public_thread_payload, guild_private_thread_payload, guild_news_thread_payload],
             "users": [user_payload],
