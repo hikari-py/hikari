@@ -1403,14 +1403,15 @@ class RESTClientImpl(rest_api.RESTClient):
         attachments, content = _to_list(attachment, attachments, content, _ATTACHMENT_TYPES, "attachment")
         components, content = _to_list(component, components, content, special_endpoints.ComponentBuilder, "attachment")
         embeds, content = _to_list(embed, embeds, content, embeds_.Embed, "embed")
+        # MyPy messes up the types for attachments.
+        attachments_ = typing.cast(
+            "undefined.UndefinedNoneOr[typing.Sequence[typing.Union[files.Resourceish, messages_.Attachment]]]",
+            attachments,
+        )
         body, to_upload = message_utils.build_message_payload(
             self.entity_factory,
             content=content,
-            # MyPy messes up the types here.
-            attachments=typing.cast(
-                "undefined.UndefinedNoneOr[typing.Sequence[typing.Union[files.Resourceish, messages_.Attachment]]]",
-                attachments,
-            ),
+            attachments=attachments_,
             components=components,
             embeds=embeds,
             flags=flags,

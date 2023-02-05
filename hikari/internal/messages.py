@@ -152,7 +152,7 @@ def build_message_payload(
 def build_form_builder(
     to_upload: typing.Mapping[int, files.Resource[typing.Any]], /
 ) -> data_binding.URLEncodedFormBuilder:
-    """Create a URLEncodedFormBuidder from a list of attachments to upload."""
+    """Create a `hikari.data_binding.URLEncodedFormBuidder` from a list of attachments to upload."""
     form_builder = data_binding.URLEncodedFormBuilder()
 
     for attachment_id, resource in to_upload.items():
