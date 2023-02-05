@@ -32,6 +32,7 @@ __all__: typing.Sequence[str] = ("ClientCredentialsStrategy", "RESTApp", "RESTCl
 
 import asyncio
 import base64
+import contextlib
 import copy
 import datetime
 import http
@@ -481,19 +482,9 @@ def _transform_emoji_to_url_format(
     return emoji
 
 
-class _NoOpContext:
-    __slots__ = ()
-
-    async def __aenter__(self) -> None:
-        ...
-
-    async def __aexit__(
-        self,
-        exc_type: typing.Optional[typing.Type[BaseException]],
-        exc: typing.Optional[BaseException],
-        exc_tb: typing.Optional[types.TracebackType],
-    ) -> None:
-        ...
+@contextlib.asynccontextmanager
+async def _anullcontext() -> typing.AsyncGenerator[None, None]:
+    yield  # contextlib.nullcontext only works as an async context manager in 3.10+.
 
 
 class RESTClientImpl(rest_api.RESTClient):
@@ -803,7 +794,7 @@ class RESTClientImpl(rest_api.RESTClient):
             if compiled_route.route.has_ratelimits:
                 bucket_acquire = self._bucket_manager.acquire_bucket(compiled_route, auth)
             else:
-                bucket_acquire = _NoOpContext()
+                bucket_acquire = _anullcontext()
 
             async with bucket_acquire:
                 if form_builder:
