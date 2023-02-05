@@ -66,7 +66,7 @@ from hikari.api import special_endpoints
 from hikari.interactions import base_interactions
 from hikari.internal import attr_extensions
 from hikari.internal import data_binding
-from hikari.internal import mentions
+from hikari.internal import messages as message_utils
 from hikari.internal import routes
 from hikari.internal import time
 
@@ -921,9 +921,9 @@ class InteractionAutocompleteBuilder(special_endpoints.InteractionAutocompleteBu
 
     def build(
         self, _: entity_factory_.EntityFactory, /
-    ) -> typing.Tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
+    ) -> typing.Tuple[typing.MutableMapping[str, typing.Any], typing.Mapping[int, files.Resource[files.AsyncReader]]]:
         data = {"choices": [{"name": choice.name, "value": choice.value} for choice in self._choices]}
-        return {"type": self.type, "data": data}, ()
+        return {"type": self.type, "data": data}, {}
 
 
 @attr_extensions.with_copy
@@ -962,11 +962,11 @@ class InteractionDeferredBuilder(special_endpoints.InteractionDeferredBuilder):
 
     def build(
         self, _: entity_factory_.EntityFactory, /
-    ) -> typing.Tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
+    ) -> typing.Tuple[typing.MutableMapping[str, typing.Any], typing.Mapping[int, files.Resource[files.AsyncReader]]]:
         if self._flags is not undefined.UNDEFINED:
-            return {"type": self._type, "data": {"flags": self._flags}}, ()
+            return {"type": self._type, "data": {"flags": self._flags}}, {}
 
-        return {"type": self._type}, ()
+        return {"type": self._type}, {}
 
 
 @attr_extensions.with_copy
@@ -1127,48 +1127,21 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
 
     def build(
         self, entity_factory: entity_factory_.EntityFactory, /
-    ) -> typing.Tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
-        data = data_binding.JSONObjectBuilder()
-        data.put("content", self.content)
+    ) -> typing.Tuple[typing.MutableMapping[str, typing.Any], typing.Mapping[int, files.Resource[files.AsyncReader]]]:
+        data, to_upload = message_utils.build_message_payload(
+            entity_factory,
+            content=self._content,
+            attachments=self._attachments,
+            embeds=self._embeds,
+            components=self._components,
+            flags=self._flags,
+            tts=self._is_tts,
+            user_mentions=self._user_mentions,
+            role_mentions=self._role_mentions,
+            mentions_everyone=self._mentions_everyone,
+        )
 
-        final_attachments = []
-        if self._attachments:
-            attachments_payload = []
-
-            for f in self._attachments:
-                if isinstance(f, messages.Attachment):
-                    attachments_payload.append({"id": f.id, "filename": f.filename})
-                    continue
-
-                final_attachments.append(files.ensure_resource(f))
-
-            if attachments_payload:
-                data.put("attachments", attachments_payload)
-
-        elif self._attachments is None:
-            data.put("attachments", None)
-
-        if self._embeds is not undefined.UNDEFINED:
-            embeds: typing.List[data_binding.JSONObject] = []
-            for embed, attachments in map(entity_factory.serialize_embed, self._embeds):
-                final_attachments.extend(attachments)
-                embeds.append(embed)
-
-            data["embeds"] = embeds
-
-        data.put_array("components", self._components, conversion=lambda component: component.build())
-        data.put("flags", self.flags)
-        data.put("tts", self.is_tts)
-
-        if (
-            not undefined.all_undefined(self.mentions_everyone, self.user_mentions, self.role_mentions)
-            or self.type is base_interactions.ResponseType.MESSAGE_CREATE
-        ):
-            data["allowed_mentions"] = mentions.generate_allowed_mentions(
-                self.mentions_everyone, undefined.UNDEFINED, self.user_mentions, self.role_mentions
-            )
-
-        return {"type": self._type, "data": data}, final_attachments
+        return {"type": self._type, "data": data}, to_upload
 
 
 @attr.define(kw_only=False, weakref_slot=False)
@@ -1209,13 +1182,13 @@ class InteractionModalBuilder(special_endpoints.InteractionModalBuilder):
 
     def build(
         self, entity_factory: entity_factory_.EntityFactory, /
-    ) -> typing.Tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
+    ) -> typing.Tuple[typing.MutableMapping[str, typing.Any], typing.Mapping[int, files.Resource[files.AsyncReader]]]:
         data = data_binding.JSONObjectBuilder()
         data.put("title", self._title)
         data.put("custom_id", self._custom_id)
         data.put_array("components", self._components, conversion=lambda component: component.build())
 
-        return {"type": self.type, "data": data}, ()
+        return {"type": self.type, "data": data}, {}
 
 
 @attr.define(kw_only=False, weakref_slot=False)

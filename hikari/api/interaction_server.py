@@ -87,7 +87,7 @@ class Response(typing.Protocol):
         raise NotImplementedError
 
     @property
-    def files(self) -> typing.Sequence[files_.Resource[files_.AsyncReader]]:
+    def files(self) -> typing.Mapping[int, files_.Resource[files_.AsyncReader]]:
         """Up to 10 files that should be included alongside a JSON response."""
         raise NotImplementedError
 

@@ -23,7 +23,7 @@
 import pytest
 
 from hikari import undefined
-from hikari.internal import mentions
+from hikari.internal import messages
 
 
 @pytest.mark.parametrize(
@@ -41,7 +41,7 @@ from hikari.internal import mentions
     ],
 )
 def test_generate_allowed_mentions(function_input, expected_output):
-    returned = mentions.generate_allowed_mentions(*function_input)
+    returned = messages.generate_allowed_mentions(*function_input)
     for k, v in expected_output.items():
         if isinstance(v, list):
             returned[k] = sorted(v)

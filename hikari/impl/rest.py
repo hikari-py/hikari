@@ -75,7 +75,7 @@ from hikari.impl import special_endpoints as special_endpoints_impl
 from hikari.interactions import base_interactions
 from hikari.internal import aio
 from hikari.internal import data_binding
-from hikari.internal import mentions
+from hikari.internal import messages as message_utils
 from hikari.internal import net
 from hikari.internal import routes
 from hikari.internal import time
@@ -96,6 +96,10 @@ if typing.TYPE_CHECKING:
     from hikari.api import entity_factory as entity_factory_
     from hikari.api import special_endpoints
 
+    _T = typing.TypeVar("_T")
+    _OtherT = typing.TypeVar("_OtherT")
+
+
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.rest")
 
 _APPLICATION_JSON: typing.Final[str] = "application/json"
@@ -114,6 +118,11 @@ _X_RATELIMIT_RESET_AFTER_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Res
 _X_RATELIMIT_SCOPE_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Scope")
 _RETRY_ERROR_CODES: typing.Final[typing.FrozenSet[int]] = frozenset((500, 502, 503, 504))
 _MAX_BACKOFF_DURATION: typing.Final[int] = 16
+_ATTACHMENT_TYPES: typing.Tuple[typing.Type[files.Resourceish], ...] = (
+    files.Resource,
+    *files.RAWISH_TYPES,
+    os.PathLike[str],
+)
 
 
 class ClientCredentialsStrategy(rest_api.TokenStrategy):
@@ -485,6 +494,34 @@ def _transform_emoji_to_url_format(
 @contextlib.asynccontextmanager
 async def _anullcontext() -> typing.AsyncGenerator[None, None]:
     yield  # contextlib.nullcontext only works as an async context manager in 3.10+.
+
+
+def _to_list(
+    singular: undefined.UndefinedNoneOr[_T],
+    plural: undefined.UndefinedNoneOr[typing.Sequence[_T]],
+    other: undefined.UndefinedNoneOr[_OtherT],
+    type_: typing.Union[typing.Type[_T], typing.Tuple[typing.Type[_T], ...]],
+    name: str,
+    /,
+) -> typing.Tuple[undefined.UndefinedNoneOr[typing.Sequence[_T]], undefined.UndefinedNoneOr[_OtherT]]:
+    if singular is not undefined.UNDEFINED and plural is not undefined.UNDEFINED:
+        raise ValueError(f"You may only specify one of '{name}' or '{name}s', not both")
+
+    if singular is None:
+        return None, other
+
+    if singular is not undefined.UNDEFINED:
+        return [singular], other
+
+    if plural is None or plural is not undefined.UNDEFINED:
+        return plural, other
+
+    # Syntactic sugar, common mistake to accidentally send a value like this
+    # as the content, so let's detect this and fix it for the user.
+    if other and isinstance(other, type_):
+        return [typing.cast("_T", other)], undefined.UNDEFINED
+
+    return undefined.UNDEFINED, other
 
 
 class RESTClientImpl(rest_api.RESTClient):
@@ -1334,7 +1371,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
 
-    def _build_message_payload(  # noqa: C901- Function too complex
+    def _build_message_payload(
         self,
         /,
         *,
@@ -1363,104 +1400,29 @@ class RESTClientImpl(rest_api.RESTClient):
         ] = undefined.UNDEFINED,
         edit: bool = False,
     ) -> typing.Tuple[data_binding.JSONObjectBuilder, typing.Optional[data_binding.URLEncodedFormBuilder]]:
-        if not undefined.any_undefined(attachment, attachments):
-            raise ValueError("You may only specify one of 'attachment' or 'attachments', not both")
+        attachments, content = _to_list(attachment, attachments, content, _ATTACHMENT_TYPES, "attachment")
+        components, content = _to_list(component, components, content, special_endpoints.ComponentBuilder, "attachment")
+        embeds, content = _to_list(embed, embeds, content, embeds_.Embed, "embed")
+        body, to_upload = message_utils.build_message_payload(
+            self.entity_factory,
+            content=content,
+            # MyPy messes up the types here.
+            attachments=typing.cast(
+                "undefined.UndefinedNoneOr[typing.Sequence[typing.Union[files.Resourceish, messages_.Attachment]]]",
+                attachments,
+            ),
+            components=components,
+            embeds=embeds,
+            flags=flags,
+            tts=tts,
+            mentions_everyone=mentions_everyone,
+            mentions_reply=mentions_reply,
+            user_mentions=user_mentions,
+            role_mentions=role_mentions,
+            edit=edit,
+        )
 
-        if not undefined.any_undefined(component, components):
-            raise ValueError("You may only specify one of 'component' or 'components', not both")
-
-        if not undefined.any_undefined(embed, embeds):
-            raise ValueError("You may only specify one of 'embed' or 'embeds', not both")
-
-        if undefined.all_undefined(embed, embeds) and isinstance(content, embeds_.Embed):
-            # Syntactic sugar, common mistake to accidentally send an embed
-            # as the content, so let's detect this and fix it for the user.
-            embed = content
-            content = undefined.UNDEFINED
-
-        elif undefined.all_undefined(attachment, attachments) and isinstance(
-            content, (files.Resource, files.RAWISH_TYPES, os.PathLike)
-        ):
-            # Syntactic sugar, common mistake to accidentally send an attachment
-            # as the content, so let's detect this and fix it for the user. This
-            # will still then work with normal implicit embed attachments as
-            # we work this out later.
-            attachment = content
-            content = undefined.UNDEFINED
-
-        final_attachments: typing.List[typing.Union[files.Resourceish, messages_.Attachment]] = []
-        if attachment:
-            final_attachments.append(attachment)
-        elif attachments:
-            final_attachments.extend(attachments)
-
-        serialized_components: undefined.UndefinedOr[typing.List[data_binding.JSONObject]] = undefined.UNDEFINED
-        if component is not undefined.UNDEFINED:
-            if component is not None:
-                serialized_components = [component.build()]
-            else:
-                serialized_components = []
-
-        elif components is not undefined.UNDEFINED:
-            if components is not None:
-                serialized_components = [component.build() for component in components]
-            else:
-                serialized_components = []
-
-        serialized_embeds: undefined.UndefinedOr[data_binding.JSONArray] = undefined.UNDEFINED
-        if embed is not undefined.UNDEFINED:
-            if embed is not None:
-                embed_payload, embed_attachments = self._entity_factory.serialize_embed(embed)
-                final_attachments.extend(embed_attachments)
-                serialized_embeds = [embed_payload]
-
-            else:
-                serialized_embeds = []
-
-        elif embeds is not undefined.UNDEFINED:
-            serialized_embeds = []
-            if embeds is not None:
-                for e in embeds:
-                    embed_payload, embed_attachments = self._entity_factory.serialize_embed(e)
-                    final_attachments.extend(embed_attachments)
-                    serialized_embeds.append(embed_payload)
-
-        body = data_binding.JSONObjectBuilder()
-        body.put("content", content, conversion=lambda v: v if v is None else str(v))
-        body.put("tts", tts)
-        body.put("flags", flags)
-        body.put("embeds", serialized_embeds)
-        body.put("components", serialized_components)
-
-        if not edit or not undefined.all_undefined(mentions_everyone, mentions_reply, user_mentions, role_mentions):
-            body.put(
-                "allowed_mentions",
-                mentions.generate_allowed_mentions(mentions_everyone, mentions_reply, user_mentions, role_mentions),
-            )
-
-        form_builder: typing.Optional[data_binding.URLEncodedFormBuilder] = None
-        if final_attachments:
-            attachments_payload = []
-            attachment_id = 0
-
-            for f in final_attachments:
-                if edit and isinstance(f, messages_.Attachment):
-                    attachments_payload.append({"id": f.id, "filename": f.filename})
-                    continue
-
-                if not form_builder:
-                    form_builder = data_binding.URLEncodedFormBuilder()
-
-                resource = files.ensure_resource(f)
-                attachments_payload.append({"id": attachment_id, "filename": resource.filename})
-                form_builder.add_resource(f"files[{attachment_id}]", resource)
-                attachment_id += 1
-
-            body.put("attachments", attachments_payload)
-
-        elif attachment is None or attachments is None:
-            body.put("attachments", None)
-
+        form_builder = message_utils.build_form_builder(to_upload) if to_upload else None
         return body, form_builder
 
     async def create_message(
@@ -3999,7 +3961,7 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> None:
         route = routes.POST_INTERACTION_RESPONSE.compile(interaction=interaction, token=token)
 
-        data, form = self._build_message_payload(
+        data, form_builder = self._build_message_payload(
             content=content,
             attachment=attachment,
             attachments=attachments,
@@ -4017,9 +3979,9 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("type", response_type)
         body.put("data", data)
 
-        if form is not None:
-            form.add_field("payload_json", self._dumps(body), content_type=_APPLICATION_JSON)
-            await self._request(route, form_builder=form, auth=None)
+        if form_builder is not None:
+            form_builder.add_field("payload_json", self._dumps(body), content_type=_APPLICATION_JSON)
+            await self._request(route, form_builder=form_builder, auth=None)
         else:
             await self._request(route, json=body, auth=None)
 

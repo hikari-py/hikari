@@ -26,8 +26,8 @@ from __future__ import annotations
 __all__: typing.Sequence[str] = ("InteractionServer",)
 
 import asyncio
-import inspect
 import logging
+import types
 import typing
 
 import aiohttp
@@ -40,6 +40,7 @@ from hikari.api import interaction_server
 from hikari.api import special_endpoints
 from hikari.interactions import base_interactions
 from hikari.internal import data_binding
+from hikari.internal import messages as message_utils
 
 if typing.TYPE_CHECKING:
     import concurrent.futures
@@ -104,13 +105,13 @@ class _Response:
         payload: typing.Optional[bytes] = None,
         *,
         content_type: typing.Optional[str] = None,
-        files: typing.Sequence[files_.Resource[files_.AsyncReader]] = (),
+        files: typing.Optional[typing.Mapping[int, files_.Resource[files_.AsyncReader]]] = None,
     ) -> None:
         if payload and not content_type:
             content_type = _TEXT_CONTENT_TYPE
 
         self._content_type = content_type
-        self._files = files
+        self._files = files or {}
         self._payload = payload
         self._status_code = status_code
 
@@ -124,7 +125,7 @@ class _Response:
         return _UTF_8_CHARSET if self._payload else None
 
     @property
-    def files(self) -> typing.Sequence[files_.Resource[files_.AsyncReader]]:
+    def files(self) -> typing.Mapping[int, files_.Resource[files_.AsyncReader]]:
         return self._files
 
     @property
@@ -324,14 +325,12 @@ class InteractionServer(interaction_server.InteractionServer):
         response = await self.on_interaction(body=body, signature=signature_header, timestamp=timestamp_header)
 
         if response.files:
-            form = data_binding.URLEncodedFormBuilder()
+            form_builder = message_utils.build_form_builder(response.files)
             if response.payload:
-                form.add_field("payload_json", response.payload, content_type=response.content_type)
+                form_builder.add_field("payload_json", response.payload, content_type=response.content_type)
 
-            for index, file_ in enumerate(response.files):
-                form.add_resource(f"files[{index}]", file_)
-
-            return aiohttp.web.Response(status=response.status_code, headers=response.headers, body=await form.build())
+            form = await form_builder.build(executor=self._executor)
+            return aiohttp.web.Response(status=response.status_code, headers=response.headers, body=form)
 
         return aiohttp.web.Response(
             status=response.status_code,
@@ -439,7 +438,8 @@ class InteractionServer(interaction_server.InteractionServer):
             try:
                 call = listener(interaction)
 
-                if inspect.isasyncgen(call):
+                # This is the same as using inspect.isasyncgen but handles the generics properly.
+                if isinstance(call, types.AsyncGeneratorType):
                     result = await call.__anext__()
                     task = asyncio.create_task(_consume_generator_listener(call))
                     task.add_done_callback(self._running_generator_listeners.remove)

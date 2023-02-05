@@ -57,7 +57,7 @@ from hikari.impl import rate_limits
 from hikari.impl import rest
 from hikari.impl import special_endpoints
 from hikari.internal import data_binding
-from hikari.internal import mentions
+from hikari.internal import messages as messages_util
 from hikari.internal import net
 from hikari.internal import routes
 from hikari.internal import time
@@ -1180,7 +1180,7 @@ class TestRESTClientImpl:
 
     def test__build_message_payload_with_undefined_args(self, rest_client):
         with mock.patch.object(
-            mentions, "generate_allowed_mentions", return_value={"allowed_mentions": 1}
+            messages_util, "generate_allowed_mentions", return_value={"allowed_mentions": 1}
         ) as generate_allowed_mentions:
             body, form = rest_client._build_message_payload()
 
@@ -1198,7 +1198,7 @@ class TestRESTClientImpl:
             kwargs[arg] = None
 
         with mock.patch.object(
-            mentions, "generate_allowed_mentions", return_value={"allowed_mentions": 1}
+            messages_util, "generate_allowed_mentions", return_value={"allowed_mentions": 1}
         ) as generate_allowed_mentions:
             body, form = rest_client._build_message_payload(**kwargs)
 
@@ -1210,7 +1210,7 @@ class TestRESTClientImpl:
         )
 
     def test__build_message_payload_with_edit_and_all_mentions_undefined(self, rest_client):
-        with mock.patch.object(mentions, "generate_allowed_mentions") as generate_allowed_mentions:
+        with mock.patch.object(messages_util, "generate_allowed_mentions") as generate_allowed_mentions:
             body, form = rest_client._build_message_payload(edit=True)
 
         assert body == {}
@@ -1223,7 +1223,7 @@ class TestRESTClientImpl:
 
         stack = contextlib.ExitStack()
         generate_allowed_mentions = stack.enter_context(
-            mock.patch.object(mentions, "generate_allowed_mentions", return_value={"allowed_mentions": 1})
+            mock.patch.object(messages_util, "generate_allowed_mentions", return_value={"allowed_mentions": 1})
         )
         rest_client._entity_factory.serialize_embed.return_value = ({"embed": 1}, [])
 
@@ -1251,7 +1251,7 @@ class TestRESTClientImpl:
             mock.patch.object(files, "ensure_resource", return_value=resource_attachment)
         )
         generate_allowed_mentions = stack.enter_context(
-            mock.patch.object(mentions, "generate_allowed_mentions", return_value={"allowed_mentions": 1})
+            mock.patch.object(messages_util, "generate_allowed_mentions", return_value={"allowed_mentions": 1})
         )
         url_encoded_form = stack.enter_context(mock.patch.object(data_binding, "URLEncodedFormBuilder"))
 
@@ -1294,7 +1294,7 @@ class TestRESTClientImpl:
             mock.patch.object(files, "ensure_resource", side_effect=[resource_attachment1, resource_attachment2])
         )
         generate_allowed_mentions = stack.enter_context(
-            mock.patch.object(mentions, "generate_allowed_mentions", return_value={"allowed_mentions": 1})
+            mock.patch.object(messages_util, "generate_allowed_mentions", return_value={"allowed_mentions": 1})
         )
         url_encoded_form = stack.enter_context(mock.patch.object(data_binding, "URLEncodedFormBuilder"))
         rest_client._entity_factory.serialize_embed.return_value = ({"embed": 1}, [embed_attachment])
@@ -1385,7 +1385,7 @@ class TestRESTClientImpl:
             )
         )
         generate_allowed_mentions = stack.enter_context(
-            mock.patch.object(mentions, "generate_allowed_mentions", return_value={"allowed_mentions": 1})
+            mock.patch.object(messages_util, "generate_allowed_mentions", return_value={"allowed_mentions": 1})
         )
         url_encoded_form = stack.enter_context(mock.patch.object(data_binding, "URLEncodedFormBuilder"))
         rest_client._entity_factory.serialize_embed.side_effect = [

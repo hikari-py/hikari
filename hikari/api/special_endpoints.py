@@ -527,7 +527,7 @@ class InteractionResponseBuilder(abc.ABC):
     @abc.abstractmethod
     def build(
         self, entity_factory: entity_factory_.EntityFactory, /
-    ) -> typing.Tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
+    ) -> typing.Tuple[typing.MutableMapping[str, typing.Any], typing.Mapping[int, files.Resource[files.AsyncReader]]]:
         """Build a JSON object from this builder.
 
         Parameters
