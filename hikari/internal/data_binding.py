@@ -95,6 +95,7 @@ _StringMapBuilderArg = typing.Union[
 
 _APPLICATION_OCTET_STREAM: typing.Final[str] = "application/octet-stream"
 _JSON_CONTENT_TYPE: typing.Final[str] = "application/json"
+_BINARY: typing.Final[str] = "binary"
 _UTF_8: typing.Final[str] = "utf-8"
 
 default_json_dumps: JSONEncoder
@@ -124,9 +125,7 @@ except ModuleNotFoundError:
 class JSONPayload(aiohttp.BytesPayload):
     """A JSON payload to use in an aiohttp request."""
 
-    def __init__(
-        self, value: typing.Any, dumps: JSONEncoder = default_json_dumps, *args: typing.Any, **kwargs: typing.Any
-    ) -> None:
+    def __init__(self, value: typing.Any, dumps: JSONEncoder = default_json_dumps) -> None:
         super().__init__(dumps(value), content_type=_JSON_CONTENT_TYPE, encoding=_UTF_8)
 
 
@@ -154,7 +153,7 @@ class URLEncodedFormBuilder:
         form = aiohttp.FormData()
 
         for field in self._fields:
-            form.add_field(field[0], field[1], content_type=field[2])
+            form.add_field(field[0], field[1], content_type=field[2], content_transfer_encoding=_BINARY)
 
         for name, resource in self._resources:
             stream = await stack.enter_async_context(resource.stream(executor=executor))

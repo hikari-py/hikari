@@ -777,7 +777,7 @@ class RESTClientImpl(rest_api.RESTClient):
             if form_builder:
                 raise ValueError("Can only provide one of 'json' or 'form_builder', not both")
 
-            data = data_binding.JSONPayload(json, json_dumps=self._dumps)
+            data = data_binding.JSONPayload(json, dumps=self._dumps)
 
         url = compiled_route.create_url(self._rest_url)
 
