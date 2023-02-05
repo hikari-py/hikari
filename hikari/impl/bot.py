@@ -51,6 +51,7 @@ from hikari.impl import rest as rest_impl
 from hikari.impl import shard as shard_impl
 from hikari.impl import voice as voice_impl
 from hikari.internal import aio
+from hikari.internal import data_binding
 from hikari.internal import signals
 from hikari.internal import time
 from hikari.internal import ux
@@ -238,6 +239,10 @@ class GatewayBot(traits.GatewayBotAware):
     proxy_settings : typing.Optional[hikari.impl.config.ProxySettings]
         Custom proxy settings to use with network-layer logic
         in your application to get through an HTTP-proxy.
+    dumps : hikari.internal.data_binding.JSONEncoder
+        The JSON encoder this application should use. Defaults to `hikari.internal.data_binding.default_json_dumps`.
+    loads : hikari.internal.data_binding.JSONDecoder
+        The JSON decoder this application should use. Defaults to `hikari.internal.data_binding.default_json_loads`.
     rest_url : typing.Optional[str]
         Defaults to the Discord REST API URL if `None`. Can be
         overridden if you are attempting to point to an unofficial endpoint, or
@@ -303,6 +308,8 @@ class GatewayBot(traits.GatewayBotAware):
         "_shards",
         "_token",
         "_voice",
+        "_loads",
+        "_dumps",
         "shards",
     )
 
@@ -317,6 +324,8 @@ class GatewayBot(traits.GatewayBotAware):
         force_color: bool = False,
         cache_settings: typing.Optional[config_impl.CacheSettings] = None,
         http_settings: typing.Optional[config_impl.HTTPSettings] = None,
+        dumps: data_binding.JSONEncoder = data_binding.default_json_dumps,
+        loads: data_binding.JSONDecoder = data_binding.default_json_loads,
         intents: intents_.Intents = intents_.Intents.ALL_UNPRIVILEGED,
         auto_chunk_members: bool = True,
         logs: typing.Union[None, str, int, typing.Dict[str, typing.Any], os.PathLike[str]] = "INFO",
@@ -338,6 +347,8 @@ class GatewayBot(traits.GatewayBotAware):
         self._intents = intents
         self._proxy_settings = proxy_settings if proxy_settings is not None else config_impl.ProxySettings()
         self._token = token.strip()
+        self._dumps = dumps
+        self._loads = loads
 
         # Caching
         cache_settings = cache_settings if cache_settings is not None else config_impl.CacheSettings()
@@ -369,6 +380,8 @@ class GatewayBot(traits.GatewayBotAware):
             http_settings=self._http_settings,
             max_rate_limit=max_rate_limit,
             proxy_settings=self._proxy_settings,
+            dumps=dumps,
+            loads=loads,
             rest_url=rest_url,
             max_retries=max_retries,
             token=token,
@@ -1264,6 +1277,8 @@ class GatewayBot(traits.GatewayBotAware):
             event_manager=self._event_manager,
             event_factory=self._event_factory,
             intents=self._intents,
+            dumps=self._dumps,
+            loads=self._loads,
             initial_activity=activity,
             initial_is_afk=afk,
             initial_idle_since=idle_since,

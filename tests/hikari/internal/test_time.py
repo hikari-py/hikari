@@ -99,7 +99,7 @@ def test_speedup_replaces_python_version_when_available():
 
         assert time.fast_iso8601_datetime_string_to_datetime is ciso8601.parse_rfc3339
         assert time.iso8601_datetime_string_to_datetime is ciso8601.parse_rfc3339
-    except ImportError:
+    except ModuleNotFoundError:
         # No speedups, test pure version has been setup correctly
 
         assert time.fast_iso8601_datetime_string_to_datetime is None

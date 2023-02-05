@@ -141,6 +141,8 @@ class _GatewayTransport:
         "_log_filterer",
         "_ws",
         "_receive_and_check",
+        "_loads",
+        "_dumps",
     )
 
     def __init__(
@@ -150,6 +152,8 @@ class _GatewayTransport:
         exit_stack: contextlib.AsyncExitStack,
         logger: logging.Logger,
         log_filterer: typing.Callable[[str], str],
+        dumps: data_binding.JSONEncoder,
+        loads: data_binding.JSONDecoder,
     ) -> None:
         self._logger = logger
         self._log_filterer = log_filterer
@@ -157,6 +161,8 @@ class _GatewayTransport:
         self._sent_close = False
         self._ws = ws
         self._zlib = zlib.decompressobj()
+        self._loads = loads
+        self._dumps = dumps
 
         if transport_compression:
             self._receive_and_check = self._receive_and_check_zlib
@@ -190,15 +196,15 @@ class _GatewayTransport:
             filtered = self._log_filterer(pl)
             self._logger.log(ux.TRACE, "received payload with size %s\n    %s", len(pl), filtered)
 
-        return data_binding.load_json(pl)
+        return self._loads(pl)
 
     async def send_json(self, data: data_binding.JSONObject) -> None:
-        pl = data_binding.dump_json(data)
+        pl = self._dumps(data)
         if self._logger.isEnabledFor(ux.TRACE):
-            filtered = self._log_filterer(pl)
+            filtered = self._log_filterer(pl.decode("utf-8"))
             self._logger.log(ux.TRACE, "sending payload with size %s\n    %s", len(pl), filtered)
 
-        await self._ws.send_str(pl)
+        await self._ws.send_bytes(pl)
 
     def _handle_other_message(self, message: aiohttp.WSMessage, /) -> typing.NoReturn:
         if message.type == aiohttp.WSMsgType.TEXT:
@@ -264,6 +270,8 @@ class _GatewayTransport:
         logger: logging.Logger,
         proxy_settings: config.ProxySettings,
         log_filterer: typing.Callable[[str], str],
+        dumps: data_binding.JSONEncoder,
+        loads: data_binding.JSONDecoder,
         transport_compression: bool,
         url: str,
     ) -> _GatewayTransport:
@@ -304,6 +312,8 @@ class _GatewayTransport:
                     exit_stack=exit_stack,
                     logger=logger,
                     log_filterer=log_filterer,
+                    loads=loads,
+                    dumps=dumps,
                 )
 
             except (aiohttp.ClientConnectionError, aiohttp.ClientResponseError, asyncio.TimeoutError) as ex:
@@ -376,6 +386,10 @@ class GatewayShardImpl(shard.GatewayShard):
     compression : typing.Optional[str]
         Compression format to use for the shard. Only supported values are
         `"transport_zlib_stream"` or `None` to disable it.
+    dumps : hikari.internal.data_binding.JSONEncoder
+        The JSON encoder this application should use. Defaults to `hikari.internal.data_binding.default_json_dumps`.
+    loads : hikari.internal.data_binding.JSONDecoder
+        The JSON decoder this application should use. Defaults to `hikari.internal.data_binding.default_json_loads`.
     initial_activity : typing.Optional[hikari.presences.Activity]
         The initial activity to appear to have for this shard, or
         `None` if no activity should be set initially. This is the
@@ -402,12 +416,12 @@ class GatewayShardImpl(shard.GatewayShard):
     proxy_settings : hikari.impl.config.ProxySettings
         The proxy settings to use while negotiating a websocket.
     data_format : str
-        Data format to use for inbound data. Only supported format is
-        `"json"`.
+        Data format to use for inbound data. Only supported format is `"json"`.
     """
 
     __slots__: typing.Sequence[str] = (
         "_activity",
+        "_dumps",
         "_event_manager",
         "_event_factory",
         "_gateway_url",
@@ -422,6 +436,7 @@ class GatewayShardImpl(shard.GatewayShard):
         "_large_threshold",
         "_last_heartbeat_ack_received",
         "_last_heartbeat_sent",
+        "_loads",
         "_logger",
         "_non_priority_rate_limit",
         "_proxy_settings",
@@ -442,6 +457,8 @@ class GatewayShardImpl(shard.GatewayShard):
         self,
         *,
         compression: typing.Optional[str] = shard.GatewayCompression.TRANSPORT_ZLIB_STREAM,
+        dumps: data_binding.JSONEncoder = data_binding.default_json_dumps,
+        loads: data_binding.JSONDecoder = data_binding.default_json_loads,
         initial_activity: typing.Optional[presences.Activity] = None,
         initial_idle_since: typing.Optional[datetime.datetime] = None,
         initial_is_afk: bool = False,
@@ -495,6 +512,8 @@ class GatewayShardImpl(shard.GatewayShard):
             f"shard {shard_id} total rate limit", *_TOTAL_RATELIMIT
         )
         self._transport_compression = compression is not None
+        self._dumps = dumps
+        self._loads = loads
         self._user_id: typing.Optional[snowflakes.Snowflake] = None
         self._ws: typing.Optional[_GatewayTransport] = None
 
@@ -795,6 +814,8 @@ class GatewayShardImpl(shard.GatewayShard):
             logger=self._logger,
             proxy_settings=self._proxy_settings,
             transport_compression=self._transport_compression,
+            loads=self._loads,
+            dumps=self._dumps,
             url=url,
         )
         self._event_manager.dispatch(self._event_factory.deserialize_connected_event(self))

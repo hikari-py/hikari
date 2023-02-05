@@ -28,7 +28,6 @@ import pytest
 
 from hikari import errors
 from hikari import intents
-from hikari.internal import data_binding
 
 
 class TestShardCloseCode:
@@ -136,10 +135,7 @@ class TestBadRequestError:
         )
 
     def test_str(self, error):
-        with mock.patch.object(data_binding, "dump_json") as dump_json:
-            string = str(error)
-
-        assert string == inspect.cleandoc(
+        assert str(error) == inspect.cleandoc(
             """
             Bad Request 400: 'raw body' for https://some.url
 
@@ -154,7 +150,6 @@ class TestBadRequestError:
              - at this point, all wrong!
             """
         )
-        dump_json.assert_not_called()
 
     def test_str_when_dump_error_errors(self, error):
         with mock.patch.object(errors, "_dump_errors", side_effect=KeyError):
@@ -202,22 +197,18 @@ class TestBadRequestError:
     def test_str_when_cached(self, error):
         error._cached_str = "ok"
 
-        with mock.patch.object(data_binding, "dump_json") as dump_json:
-            with mock.patch.object(errors, "_dump_errors") as dump_errors:
-                assert str(error) == "ok"
+        with mock.patch.object(errors, "_dump_errors") as dump_errors:
+            assert str(error) == "ok"
 
         dump_errors.assert_not_called()
-        dump_json.assert_not_called()
 
     def test_str_when_no_errors(self, error):
         error.errors = None
 
-        with mock.patch.object(data_binding, "dump_json") as dump_json:
-            with mock.patch.object(errors, "_dump_errors") as dump_errors:
-                assert str(error) == "Bad Request 400: 'raw body' for https://some.url"
+        with mock.patch.object(errors, "_dump_errors") as dump_errors:
+            assert str(error) == "Bad Request 400: 'raw body' for https://some.url"
 
         dump_errors.assert_not_called()
-        dump_json.assert_not_called()
 
 
 class TestRateLimitTooLongError:

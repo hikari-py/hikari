@@ -342,6 +342,8 @@ class TestRESTApp:
             http_settings=rest_app._http_settings,
             max_retries=0,
             proxy_settings=rest_app._proxy_settings,
+            dumps=rest_app._dumps,
+            loads=rest_app._loads,
             token="token",
             token_type="Type",
             rest_url=rest_app._url,
@@ -373,6 +375,8 @@ class TestRESTApp:
             http_settings=rest_app._http_settings,
             max_retries=0,
             proxy_settings=rest_app._proxy_settings,
+            dumps=rest_app._dumps,
+            loads=rest_app._loads,
             token="token",
             token_type=applications.TokenType.BEARER,
             rest_url=rest_app._url,
@@ -1284,7 +1288,7 @@ class TestRESTClientImpl:
         )
 
         # Form builder
-        url_encoded_form.assert_called_once_with(executor=rest_client._executor)
+        url_encoded_form.assert_called_once_with()
         url_encoded_form.return_value.add_resource.assert_called_once_with("files[0]", resource_attachment)
 
     def test__build_message_payload_with_singular_args(self, rest_client):
@@ -1351,7 +1355,7 @@ class TestRESTClientImpl:
         )
 
         # Form builder
-        url_encoded_form.assert_called_once_with(executor=rest_client._executor)
+        url_encoded_form.assert_called_once_with()
         assert url_encoded_form.return_value.add_resource.call_count == 2
         url_encoded_form.return_value.add_resource.assert_has_calls(
             [mock.call("files[0]", resource_attachment1), mock.call("files[1]", resource_attachment2)]
@@ -1463,7 +1467,7 @@ class TestRESTClientImpl:
         )
 
         # Form builder
-        url_encoded_form.assert_called_once_with(executor=rest_client._executor)
+        url_encoded_form.assert_called_once_with()
         assert url_encoded_form.return_value.add_resource.call_count == 6
         url_encoded_form.return_value.add_resource.assert_has_calls(
             [
@@ -1560,7 +1564,7 @@ class TestRESTClientImpl:
         )
 
         # Form builder
-        url_encoded_form.assert_called_once_with(executor=rest_client._executor)
+        url_encoded_form.assert_called_once_with()
         assert url_encoded_form.return_value.add_resource.call_count == 5
         url_encoded_form.return_value.add_resource.assert_has_calls(
             [
@@ -1716,6 +1720,27 @@ class TestRESTClientImplAsync:
         rest_client.close.assert_awaited_once_with()
 
     @hikari_test_helpers.timeout()
+    async def test_perform_request_errors_if_both_json_and_form_builder_passed(self, rest_client):
+        route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
+
+        with pytest.raises(ValueError, match="Can only provide one of 'json' or 'form_builder', not both"):
+            await rest_client._perform_request(route, json=object(), form_builder=object())
+
+    @hikari_test_helpers.timeout()
+    async def test_perform_request_builds_json_when_passed(self, rest_client, exit_exception):
+        route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
+        rest_client._client_session.request.side_effect = exit_exception
+        rest_client._token = None
+
+        with mock.patch.object(data_binding, "JSONPayload") as json_payload:
+            with pytest.raises(exit_exception):
+                await rest_client._perform_request(route, json={"some": "data"})
+
+        json_payload.assert_called_once_with({"some": "data"}, json_dumps=rest_client._dumps)
+        _, kwargs = rest_client._client_session.request.call_args_list[0]
+        assert kwargs["data"] is json_payload.return_value
+
+    @hikari_test_helpers.timeout()
     async def test_perform_request_builds_form_when_passed(self, rest_client, exit_exception):
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         rest_client._client_session.request.side_effect = exit_exception
@@ -1729,7 +1754,7 @@ class TestRESTClientImplAsync:
                 await rest_client._perform_request(route, form_builder=mock_form)
 
         _, kwargs = rest_client._client_session.request.call_args_list[0]
-        mock_form.build.assert_awaited_once_with(exit_stack.return_value)
+        mock_form.build.assert_awaited_once_with(exit_stack.return_value, executor=rest_client._executor)
         assert kwargs["data"] is mock_form.build.return_value
 
     @hikari_test_helpers.timeout()
@@ -2029,7 +2054,7 @@ class TestRESTClientImplAsync:
             content_type = rest._APPLICATION_JSON
             headers = {}
 
-            async def json(self):
+            async def read(self):
                 raise exit_exception
 
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
@@ -2057,8 +2082,8 @@ class TestRESTClientImplAsync:
             headers = {}
             real_url = "https://some.url"
 
-            async def json(self):
-                return {"global": True, "retry_after": "2"}
+            async def read(self):
+                return '{"global": true, "retry_after": "2"}'
 
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         assert (await rest_client._parse_ratelimits(route, "auth", StubResponse())) is True
@@ -2089,8 +2114,8 @@ class TestRESTClientImplAsync:
             }
             real_url = "https://some.url"
 
-            async def json(self):
-                return {"retry_after": "0.002"}
+            async def read(self):
+                return '{"retry_after": "0.002"}'
 
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         assert await rest_client._parse_ratelimits(route, "some auth", StubResponse()) is True
@@ -2102,8 +2127,8 @@ class TestRESTClientImplAsync:
             headers = {}
             real_url = "https://some.url"
 
-            async def json(self):
-                return {"retry_after": "4"}
+            async def read(self):
+                return '{"retry_after": "4"}'
 
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         with pytest.raises(errors.RateLimitedError):
@@ -2546,12 +2571,7 @@ class TestRESTClientImplAsync:
         )
         mock_form.add_field.assert_called_once_with(
             "payload_json",
-            (
-                "{"
-                '"testing": "ensure_in_test", '
-                '"message_reference": {"message_id": "987654321", "fail_if_not_exists": false}'
-                "}"
-            ),
+            b'{"testing":"ensure_in_test","message_reference":{"message_id":"987654321","fail_if_not_exists":false}}',
             content_type="application/json",
         )
         rest_client._request.assert_awaited_once_with(expected_route, form_builder=mock_form)
@@ -2674,7 +2694,7 @@ class TestRESTClientImplAsync:
             edit=True,
         )
         mock_form.add_field.assert_called_once_with(
-            "payload_json", '{"testing": "ensure_in_test"}', content_type="application/json"
+            "payload_json", b'{"testing":"ensure_in_test"}', content_type="application/json"
         )
         rest_client._request.assert_awaited_once_with(expected_route, form_builder=mock_form)
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
@@ -3150,7 +3170,7 @@ class TestRESTClientImplAsync:
         )
         mock_form.add_field.assert_called_once_with(
             "payload_json",
-            '{"testing": "ensure_in_test", "username": "davfsa", "avatar_url": "https://website.com/davfsa_logo"}',
+            b'{"testing":"ensure_in_test","username":"davfsa","avatar_url":"https://website.com/davfsa_logo"}',
             content_type="application/json",
         )
         rest_client._request.assert_awaited_once_with(
@@ -3189,9 +3209,7 @@ class TestRESTClientImplAsync:
             role_mentions=undefined.UNDEFINED,
         )
         mock_form.add_field.assert_called_once_with(
-            "payload_json",
-            '{"testing": "ensure_in_test"}',
-            content_type="application/json",
+            "payload_json", b'{"testing":"ensure_in_test"}', content_type="application/json"
         )
         rest_client._request.assert_awaited_once_with(
             expected_route,
@@ -3362,7 +3380,7 @@ class TestRESTClientImplAsync:
             edit=True,
         )
         mock_form.add_field.assert_called_once_with(
-            "payload_json", '{"testing": "ensure_in_test"}', content_type="application/json"
+            "payload_json", b'{"testing":"ensure_in_test"}', content_type="application/json"
         )
         rest_client._request.assert_awaited_once_with(expected_route, form_builder=mock_form, query={}, auth=None)
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
@@ -3394,7 +3412,7 @@ class TestRESTClientImplAsync:
             edit=True,
         )
         mock_form.add_field.assert_called_once_with(
-            "payload_json", '{"testing": "ensure_in_test"}', content_type="application/json"
+            "payload_json", b'{"testing":"ensure_in_test"}', content_type="application/json"
         )
         rest_client._request.assert_awaited_once_with(
             expected_route, form_builder=mock_form, query={"thread_id": "123543123"}, auth=None
@@ -4766,8 +4784,8 @@ class TestRESTClientImplAsync:
 
         mock_form.add_field.assert_called_once_with(
             "payload_json",
-            '{"name": "Post with secret content!", "auto_archive_duration": 54123, "rate_limit_per_user": 101, '
-            '"applied_tags": ["12220", "12201"], "message": {"mock": "message body"}}',
+            b'{"name":"Post with secret content!","auto_archive_duration":54123,"rate_limit_per_user":101,'
+            b'"applied_tags":["12220","12201"],"message":{"mock":"message body"}}',
             content_type="application/json",
         )
 
@@ -5963,7 +5981,7 @@ class TestRESTClientImplAsync:
             role_mentions=[1234],
         )
         mock_form.add_field.assert_called_once_with(
-            "payload_json", '{"type": 1, "data": {"testing": "ensure_in_test"}}', content_type="application/json"
+            "payload_json", b'{"type":1,"data":{"testing":"ensure_in_test"}}', content_type="application/json"
         )
         rest_client._request.assert_awaited_once_with(expected_route, form_builder=mock_form, auth=None)
 
@@ -6060,7 +6078,7 @@ class TestRESTClientImplAsync:
             edit=True,
         )
         mock_form.add_field.assert_called_once_with(
-            "payload_json", '{"testing": "ensure_in_test"}', content_type="application/json"
+            "payload_json", b'{"testing":"ensure_in_test"}', content_type="application/json"
         )
         rest_client._request.assert_awaited_once_with(expected_route, form_builder=mock_form, auth=None)
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
