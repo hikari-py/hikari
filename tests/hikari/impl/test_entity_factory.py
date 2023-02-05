@@ -1382,6 +1382,15 @@ class TestEntityFactoryImpl:
         role.id == 123123123312312
         role.name == "aRole"
 
+    def test_deserialize_audit_log_entry_when_guild_id_in_payload(
+        self, entity_factory_impl, audit_log_entry_payload, mock_app
+    ):
+        audit_log_entry_payload["guild_id"] = 431123123
+
+        entry = entity_factory_impl.deserialize_audit_log_entry(audit_log_entry_payload)
+
+        assert entry.guild_id == 431123123
+
     def test_deserialize_audit_log_entry_with_unset_or_unknown_fields(
         self, entity_factory_impl, audit_log_entry_payload
     ):

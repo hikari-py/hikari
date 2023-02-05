@@ -1692,7 +1692,7 @@ class TestEventManagerImpl:
         )
 
     @pytest.mark.asyncio()
-    async def on_guild_audit_log_entry_create(
+    async def test_on_guild_audit_log_entry_create(
         self,
         event_manager_impl: event_manager.EventManagerImpl,
         shard: mock.Mock,
