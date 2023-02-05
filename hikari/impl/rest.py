@@ -513,7 +513,7 @@ def _to_list(
     if singular is not undefined.UNDEFINED:
         return [singular], other
 
-    if plural is None or plural is not undefined.UNDEFINED:
+    if plural is not undefined.UNDEFINED:
         return plural, other
 
     # Syntactic sugar, common mistake to accidentally send a value like this
