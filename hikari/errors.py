@@ -31,7 +31,6 @@ __all__: typing.Sequence[str] = (
     "ComponentStateConflictError",
     "UnrecognisedEntityError",
     "NotFoundError",
-    "RateLimitedError",
     "RateLimitTooLongError",
     "UnauthorizedError",
     "ForbiddenError",
@@ -355,40 +354,6 @@ class NotFoundError(ClientHTTPResponseError):
 
 
 @attr.define(auto_exc=True, kw_only=True, repr=False, slots=False)
-class RateLimitedError(ClientHTTPResponseError):
-    """Raised when a non-global rate limit that cannot be handled occurs.
-
-    If you receive one of these, you should NOT try again until the given
-    time has passed, either discarding the operation you performed, or waiting
-    until the given time has passed first. Note that it may still be valid to
-    send requests with different attributes in them.
-
-    A use case for this by Discord appears to be to stop abuse from bots that
-    change channel names, etc, regularly. This kind of action allegedly causes
-    a fair amount of overhead internally for Discord. In the case you encounter
-    this, you may be able to send different requests that manipulate the same
-    entities (in this case editing the same channel) that do not use the same
-    collection of attributes as the previous request.
-    """
-
-    route: routes.CompiledRoute = attr.field()
-    """The route that produced this error."""
-
-    retry_after: float = attr.field()
-    """How many seconds to wait before you can reuse the route with the specific request."""
-
-    status: http.HTTPStatus = attr.field(default=http.HTTPStatus.TOO_MANY_REQUESTS, init=False)
-    """The HTTP status code for the response."""
-
-    message: str = attr.field(init=False)
-    """The error message."""
-
-    @message.default
-    def _(self) -> str:
-        return f"You are being rate-limited for {self.retry_after:,} seconds on route {self.route}. Please slow down!"
-
-
-@attr.define(auto_exc=True, kw_only=True, repr=False, slots=False)
 class RateLimitTooLongError(HTTPError):
     """Internal error raised if the wait for a rate limit is too long.
 
@@ -404,6 +369,9 @@ class RateLimitTooLongError(HTTPError):
     route: routes.CompiledRoute = attr.field()
     """The route that produced this error."""
 
+    is_global: bool = attr.field()
+    """Whether the ratelimit is global."""
+
     retry_after: float = attr.field()
     """How many seconds to wait before you can retry this specific request."""
 
@@ -413,11 +381,11 @@ class RateLimitTooLongError(HTTPError):
     reset_at: float = attr.field()
     """UNIX timestamp of when this limit will be lifted."""
 
-    limit: int = attr.field()
-    """The maximum number of calls per window for this rate limit."""
+    limit: typing.Optional[int] = attr.field()
+    """The maximum number of calls per window for this rate limit, if known."""
 
-    period: float = attr.field()
-    """How long the rate limit window lasts for from start to end."""
+    period: typing.Optional[float] = attr.field()
+    """How long the rate limit window lasts for from start to end, if known."""
 
     message: str = attr.field(init=False)
     """The error message."""
@@ -425,8 +393,9 @@ class RateLimitTooLongError(HTTPError):
     @message.default
     def _(self) -> str:
         return (
-            "The request has been rejected, as you would be waiting for more than"
-            f"the max retry-after ({self.max_retry_after}) on route {self.route}"
+            "The request has been rejected, as you would be waiting for more than "
+            f"the max retry-after ({self.max_retry_after}) on route '{self.route}' "
+            f"[is_global={self.is_global}]"
         )
 
     # This may support other types of limits in the future, this currently

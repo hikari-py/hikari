@@ -1901,7 +1901,7 @@ class TestRESTClientImplAsync:
 
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         rest_client._client_session.request.return_value = StubResponse()
-        rest_client._parse_ratelimits = mock.AsyncMock(return_value=False)
+        rest_client._parse_ratelimits = mock.AsyncMock(return_value=None)
 
         assert (await rest_client._perform_request(route)) is None
 
@@ -1918,7 +1918,7 @@ class TestRESTClientImplAsync:
 
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         rest_client._client_session.request.return_value = StubResponse()
-        rest_client._parse_ratelimits = mock.AsyncMock(return_value=False)
+        rest_client._parse_ratelimits = mock.AsyncMock(return_value=None)
 
         assert (await rest_client._perform_request(route)) == {"something": None}
 
@@ -1932,7 +1932,7 @@ class TestRESTClientImplAsync:
 
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         rest_client._client_session.request.return_value = StubResponse()
-        rest_client._parse_ratelimits = mock.AsyncMock(return_value=False)
+        rest_client._parse_ratelimits = mock.AsyncMock(return_value=None)
 
         with pytest.raises(errors.HTTPError):
             await rest_client._perform_request(route)
@@ -1947,7 +1947,7 @@ class TestRESTClientImplAsync:
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         rest_client._client_session.request.return_value = StubResponse()
 
-        rest_client._parse_ratelimits = mock.AsyncMock(return_value=False)
+        rest_client._parse_ratelimits = mock.AsyncMock(return_value=None)
 
         with mock.patch.object(net, "generate_error_response", return_value=exit_exception):
             with pytest.raises(exit_exception):
@@ -1963,7 +1963,7 @@ class TestRESTClientImplAsync:
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         rest_client._client_session.request.return_value = StubResponse()
         rest_client._max_retries = 3
-        rest_client._parse_ratelimits = mock.AsyncMock(return_value=False)
+        rest_client._parse_ratelimits = mock.AsyncMock(return_value=None)
 
         stack = contextlib.ExitStack()
         stack.enter_context(pytest.raises(exit_exception))
@@ -2000,7 +2000,7 @@ class TestRESTClientImplAsync:
 
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         rest_client._client_session.request.return_value = StubResponse()
-        rest_client._parse_ratelimits = mock.AsyncMock(return_value=False)
+        rest_client._parse_ratelimits = mock.AsyncMock(return_value=None)
 
         with mock.patch.object(rest, "_LOGGER", new=mock.Mock(isEnabledFor=mock.Mock(return_value=enabled))) as logger:
             await rest_client._perform_request(route)
@@ -2023,7 +2023,7 @@ class TestRESTClientImplAsync:
         response = StubResponse()
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
 
-        await rest_client._parse_ratelimits(route, "auth", response)
+        assert await rest_client._parse_ratelimits(route, "auth", response) is None
 
         rest_client._bucket_manager.update_rate_limits.assert_called_once_with(
             compiled_route=route,
@@ -2086,7 +2086,7 @@ class TestRESTClientImplAsync:
                 return '{"global": true, "retry_after": "2"}'
 
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
-        assert (await rest_client._parse_ratelimits(route, "auth", StubResponse())) is True
+        assert (await rest_client._parse_ratelimits(route, "auth", StubResponse())) == 0
 
         rest_client._bucket_manager.throttle.assert_called_once_with(2.0)
 
@@ -2103,24 +2103,24 @@ class TestRESTClientImplAsync:
                 return {"retry_after": "2", "global": False}
 
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
-        assert await rest_client._parse_ratelimits(route, "some auth", StubResponse()) is True
+        assert await rest_client._parse_ratelimits(route, "some auth", StubResponse()) == 0
 
-    async def test__parse_ratelimits_when_retry_after_is_close_enough(self, rest_client):
+    async def test__parse_ratelimits_when_retry_after_is_not_too_long(self, rest_client):
         class StubResponse:
             status = http.HTTPStatus.TOO_MANY_REQUESTS
             content_type = rest._APPLICATION_JSON
-            headers = {
-                rest._X_RATELIMIT_RESET_AFTER_HEADER: "0.002",
-            }
+            headers = {}
             real_url = "https://some.url"
 
             async def read(self):
                 return '{"retry_after": "0.002"}'
 
-        route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
-        assert await rest_client._parse_ratelimits(route, "some auth", StubResponse()) is True
+        rest_client._bucket_manager.max_rate_limit = 10
 
-    async def test__parse_ratelimits_when_retry_after_is_not_close_enough(self, rest_client):
+        route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
+        assert await rest_client._parse_ratelimits(route, "some auth", StubResponse()) == 0.002
+
+    async def test__parse_ratelimits_when_retry_after_is_too_long(self, rest_client):
         class StubResponse:
             status = http.HTTPStatus.TOO_MANY_REQUESTS
             content_type = rest._APPLICATION_JSON
@@ -2130,8 +2130,10 @@ class TestRESTClientImplAsync:
             async def read(self):
                 return '{"retry_after": "4"}'
 
+        rest_client._bucket_manager.max_rate_limit = 3
+
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
-        with pytest.raises(errors.RateLimitedError):
+        with pytest.raises(errors.RateLimitTooLongError):
             await rest_client._parse_ratelimits(route, "auth", StubResponse())
 
     #############

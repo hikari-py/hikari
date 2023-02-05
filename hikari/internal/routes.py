@@ -186,7 +186,7 @@ class Route:
         )
 
     def __str__(self) -> str:
-        return self.path_template
+        return self.method + " " + self.path_template
 
 
 def _cdn_valid_formats_converter(values: typing.AbstractSet[str]) -> typing.FrozenSet[str]:

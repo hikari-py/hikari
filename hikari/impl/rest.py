@@ -112,6 +112,7 @@ _X_RATELIMIT_BUCKET_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Bucket")
 _X_RATELIMIT_LIMIT_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Limit")
 _X_RATELIMIT_REMAINING_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Remaining")
 _X_RATELIMIT_RESET_AFTER_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Reset-After")
+_X_RATELIMIT_SCOPE_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Scope")
 _RETRY_ERROR_CODES: typing.Final[typing.FrozenSet[int]] = frozenset((500, 502, 503, 504))
 _MAX_BACKOFF_DURATION: typing.Final[int] = 16
 
@@ -197,7 +198,7 @@ class ClientCredentialsStrategy(rest_api.TokenStrategy):
                 )
 
             except errors.ClientHTTPResponseError as exc:
-                if not isinstance(exc, errors.RateLimitedError):
+                if not isinstance(exc, errors.RateLimitTooLongError):
                     # If we don't copy the exception then python keeps adding onto the stack each time it's raised.
                     self._exception = copy.copy(exc)
 
@@ -271,7 +272,7 @@ class RESTApp(traits.ExecutorAware):
     max_rate_limit : float
         Maximum number of seconds to sleep for when rate limited. If a rate
         limit occurs that is longer than this value, then a
-        `hikari.errors.RateLimitedError` will be raised instead of waiting.
+        `hikari.errors.RateLimitTooLongError` will be raised instead of waiting.
 
         This is provided since some endpoints may respond with non-sensible
         rate limits.
@@ -832,9 +833,10 @@ class RESTClientImpl(rest_api.RESTClient):
                     )
 
                 # Ensure we are not rate limited, and update rate limiting headers where appropriate.
-                retry = await self._parse_ratelimits(compiled_route, auth, response)
+                time_before_retry = await self._parse_ratelimits(compiled_route, auth, response)
 
-            if retry:
+            if time_before_retry is not None:
+                await asyncio.sleep(time_before_retry)
                 continue
 
             # Don't bother processing any further if we got NO CONTENT. There's not anything
@@ -886,8 +888,11 @@ class RESTClientImpl(rest_api.RESTClient):
         compiled_route: routes.CompiledRoute,
         authentication: typing.Optional[str],
         response: aiohttp.ClientResponse,
-    ) -> bool:
+    ) -> typing.Optional[float]:
         # Handle rate limiting.
+        #
+        # If returns a `float`, the time to wait before retrying the request. If `None`, the request
+        # does not need to be retried.
         resp_headers = response.headers
         limit = int(resp_headers.get(_X_RATELIMIT_LIMIT_HEADER, "1"))
         remaining = int(resp_headers.get(_X_RATELIMIT_REMAINING_HEADER, "1"))
@@ -899,7 +904,7 @@ class RESTClientImpl(rest_api.RESTClient):
                 # This should theoretically never see the light of day, but it scares me that Discord might
                 # pull a funny one and this may go unnoticed, so better safe to have it!
                 _LOGGER.error(
-                    "Received an unexpected bucket header for %r. "
+                    "Received an unexpected bucket header for '%s'. "
                     "The route will be treated as having a ratelimit for the duration of this applications runtime. "
                     "If you see this, please report it to the maintainers so the route can be updated!",
                     compiled_route.route,
@@ -916,7 +921,7 @@ class RESTClientImpl(rest_api.RESTClient):
             )
 
         if response.status != http.HTTPStatus.TOO_MANY_REQUESTS:
-            return False
+            return None
 
         # Discord have started applying ratelimits to operations on some endpoints
         # based on specific fields used in the JSON body.
@@ -944,7 +949,7 @@ class RESTClientImpl(rest_api.RESTClient):
                 "rate limited on bucket %s, maybe you are running more than one bot on this token? Retrying request...",
                 bucket,
             )
-            return True
+            return 0
 
         if response.content_type != _APPLICATION_JSON:
             # We don't know exactly what this could imply. It is likely Cloudflare interfering
@@ -968,22 +973,28 @@ class RESTClientImpl(rest_api.RESTClient):
                 "contacting Discord to raise this limit. Backing off and retrying request..."
             )
             self._bucket_manager.throttle(body_retry_after)
-            return True
+            return 0
 
-        # If the values are within 20% of each other by relativistic tolerance, it is probably
-        # safe to retry the request, as they are likely the same value just with some
-        # measuring difference. 20% was used as a rounded figure.
-        if math.isclose(body_retry_after, reset_after, rel_tol=0.20):
-            _LOGGER.error("rate limited on a sub bucket on bucket %s, but it is safe to retry", bucket)
-            return True
-
-        raise errors.RateLimitedError(
-            url=str(response.real_url),
-            route=compiled_route,
-            headers=response.headers,
-            raw_body=body,
-            retry_after=body_retry_after,
+        _LOGGER.error(
+            "rate limited on a %s sub bucket on bucket %s. You should consider lowering the number of requests "
+            "you make to '%s'. Backing off and retrying request...",
+            resp_headers.get(_X_RATELIMIT_SCOPE_HEADER, "route"),
+            bucket,
+            compiled_route.route,
         )
+
+        if body_retry_after > self._bucket_manager.max_rate_limit:
+            raise errors.RateLimitTooLongError(
+                route=compiled_route,
+                is_global=False,
+                retry_after=body_retry_after,
+                max_retry_after=self._bucket_manager.max_rate_limit,
+                reset_at=time.monotonic() + body_retry_after,
+                limit=None,
+                period=None,
+            )
+
+        return body_retry_after
 
     async def fetch_channel(
         self, channel: snowflakes.SnowflakeishOr[channels_.PartialChannel]
