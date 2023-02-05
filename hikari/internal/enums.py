@@ -23,7 +23,7 @@
 """Implementation of parts of Python's `enum` protocol to be more performant."""
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("Enum", "Flag")
+__all__: typing.Sequence[str] = ("deprecated", "Enum", "Flag")
 
 import functools
 import operator
@@ -35,6 +35,42 @@ _T = typing.TypeVar("_T")
 _MAX_CACHED_MEMBERS: typing.Final[int] = 1 << 12
 
 
+class _DeprecatedAlias(typing.Generic[_T]):
+    __slots__ = ("_name", "_alias", "_removal_version")
+
+    def __init__(self, name: str, alias: str, removal_version: str) -> None:
+        self._name = name
+        self._alias = alias
+        self._removal_version = removal_version
+
+        # Import kept in-line due to circular import issues
+        from hikari.internal import deprecation
+
+        deprecation.check_if_past_removal(self._name, removal_version=removal_version)
+
+    def __get__(self, instance: typing.Optional[_T], owner_enum: _T) -> _T:
+        # Import kept in-line due to circular import issues
+        from hikari.internal import deprecation
+
+        deprecation.warn_deprecated(
+            self._name,
+            removal_version=self._removal_version,
+            additional_info=f"Use '{self._alias}' instead.",
+        )
+
+        return owner_enum[self._alias]
+
+
+class deprecated:
+    """Used to denote that an enum member is a deprecated alias of another."""
+
+    __slots__ = ("value", "removal_version")
+
+    def __init__(self, value: typing.Any, /, *, removal_version: str) -> None:
+        self.value = value
+        self.removal_version = removal_version
+
+
 class _EnumNamespace(typing.Dict[str, typing.Any]):
     __slots__: typing.Sequence[str] = ("base", "names_to_values", "values_to_names")
 
@@ -42,7 +78,7 @@ class _EnumNamespace(typing.Dict[str, typing.Any]):
         super().__init__()
         self.base = base
         self.names_to_values: typing.Dict[str, typing.Any] = {}
-        self.values_to_names: typing.Dict[str, typing.Any] = {}
+        self.values_to_names: typing.Dict[typing.Any, str] = {}
         self["__doc__"] = "An enumeration."
 
     def __getitem__(self, name: str) -> typing.Any:
@@ -58,16 +94,28 @@ class _EnumNamespace(typing.Dict[str, typing.Any]):
         if name == "" or name == "mro":
             raise TypeError(f"Invalid enum member name: {name!r}")
 
-        if name.startswith("_"):
+        if isinstance(value, deprecated):
+            real_value = value.value
+
+            if (alias := self.values_to_names.get(real_value)) is None:
+                raise ValueError("`deprecated` must be used on an existing value")
+
+            member = _DeprecatedAlias(name, alias, value.removal_version)
+            super().__setitem__(name, member)
+
+            # Unpack for down below
+            value = real_value
+
+        elif name.startswith("_"):
             # Dunder/sunder, so skip.
             super().__setitem__(name, value)
             return
 
-        if hasattr(value, "__get__") or hasattr(value, "__set__") or hasattr(value, "__del__"):
+        elif hasattr(value, "__get__") or hasattr(value, "__set__") or hasattr(value, "__del__"):
             super().__setitem__(name, value)
             return
 
-        if not isinstance(value, self.base):
+        elif not isinstance(value, self.base):
             raise TypeError(f"Expected member {name} to be of type {self.base.__name__} but was {type(value).__name__}")
 
         name = sys.intern(name)
@@ -83,13 +131,9 @@ class _EnumNamespace(typing.Dict[str, typing.Any]):
 
         if name in self.names_to_values:
             raise TypeError(f"Cannot define {name!r} name multiple times")
-        if value in self.values_to_names:
-            # We must have defined some alias, so just register the name
-            self.names_to_values[name] = value
-            return
 
         self.names_to_values[name] = value
-        self.values_to_names[value] = name
+        self.values_to_names.setdefault(value, name)
 
 
 # We refer to these from the metaclasses, but obviously this won't work
@@ -102,14 +146,13 @@ _Enum = NotImplemented
 class _EnumMeta(type):
     def __call__(cls, value: typing.Any) -> typing.Any:
         """Cast a value to the enum, returning the raw value that was passed if value not found."""
-        try:
-            return cls._value_to_member_map_[value]
-        except KeyError:
-            # If we can't find the value, just return what got casted in
-            return value
+        return cls._value_to_member_map_.get(value, value)
 
     def __getitem__(cls, name: str) -> typing.Any:
-        return cls._name_to_member_map_[name]
+        if member := getattr(cls, name, None):
+            return member
+
+        raise KeyError(name)
 
     def __contains__(cls, item: typing.Any) -> bool:
         return item in cls._value_to_member_map_
@@ -158,18 +201,21 @@ class _EnumMeta(type):
         cls = super().__new__(mcs, name, bases, new_namespace)
 
         for name, value in namespace.names_to_values.items():
-            # Patching the member init call is around 100ns faster per call than
-            # using the default type.__call__ which would make us do the lookup
-            # in cls.__new__. Reason for this is that python will also always
-            # invoke cls.__init__ if we do this, so we end up with two function
-            # calls.
-            member = cls.__new__(cls, value)
-            member._name_ = name
-            member._value_ = value
+            member = new_namespace.get(name)
+            if not isinstance(member, _DeprecatedAlias):
+                # Patching the member init call is around 100ns faster per call than
+                # using the default type.__call__ which would make us do the lookup
+                # in cls.__new__. Reason for this is that python will also always
+                # invoke cls.__init__ if we do this, so we end up with two function
+                # calls.
+                member = cls.__new__(cls, value)
+                member._name_ = name
+                member._value_ = value
+                setattr(cls, name, member)
+
             name_to_member[name] = member
-            value_to_member[value] = member
+            value_to_member.setdefault(value, member)
             member_names.append(name)
-            setattr(cls, name, member)
 
         return cls
 
@@ -356,7 +402,10 @@ class _FlagMeta(type):
                 return pseudomember
 
     def __getitem__(cls, name: str) -> typing.Any:
-        return cls._name_to_member_map_[name]
+        if member := getattr(cls, name, None):
+            return member
+
+        raise KeyError(name)
 
     def __iter__(cls) -> typing.Iterator[typing.Any]:
         yield from cls._name_to_member_map_.values()
@@ -420,21 +469,24 @@ class _FlagMeta(type):
         cls = super().__new__(mcs, name, (int, *bases), new_namespace)
 
         for name, value in namespace.names_to_values.items():
-            # Patching the member init call is around 100ns faster per call than
-            # using the default type.__call__ which would make us do the lookup
-            # in cls.__new__. Reason for this is that python will also always
-            # invoke cls.__init__ if we do this, so we end up with two function
-            # calls.
-            member = cls.__new__(cls, value)
-            member._name_ = name
-            member._value_ = value
-            name_to_member[name] = member
-            value_to_member[value] = member
-            member_names.append(name)
-            setattr(cls, name, member)
+            member = new_namespace.get(name)
+            if not isinstance(member, _DeprecatedAlias):
+                # Patching the member init call is around 100ns faster per call than
+                # using the default type.__call__ which would make us do the lookup
+                # in cls.__new__. Reason for this is that python will also always
+                # invoke cls.__init__ if we do this, so we end up with two function
+                # calls.
+                member = cls.__new__(cls, value)
+                member._name_ = name
+                member._value_ = value
+                setattr(cls, name, member)
 
-            if not (value & value - 1):
-                powers_of_2_map[value] = member
+                if not (value & value - 1):
+                    powers_of_2_map[value] = member
+
+            name_to_member[name] = member
+            value_to_member.setdefault(value, member)
+            member_names.append(name)
 
         all_bits = functools.reduce(operator.or_, value_to_member.keys())
         all_bits_member = cls.__new__(cls, all_bits)

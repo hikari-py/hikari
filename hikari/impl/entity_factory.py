@@ -815,61 +815,81 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             app=self._app, channel_id=snowflakes.Snowflake(payload["channel_id"]), count=int(payload["count"])
         )
 
-    def deserialize_audit_log(self, payload: data_binding.JSONObject) -> audit_log_models.AuditLog:
+    def deserialize_audit_log_entry(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+    ) -> audit_log_models.AuditLogEntry:
+        if guild_id is undefined.UNDEFINED:
+            guild_id = snowflakes.Snowflake(payload["guild_id"])
+
+        entry_id = snowflakes.Snowflake(payload["id"])
+
+        changes: typing.List[audit_log_models.AuditLogChange] = []
+        if (change_payloads := payload.get("changes")) is not None:
+            for change_payload in change_payloads:
+                key: typing.Union[audit_log_models.AuditLogChangeKey, str] = audit_log_models.AuditLogChangeKey(
+                    change_payload["key"]
+                )
+
+                new_value = change_payload.get("new_value")
+                old_value = change_payload.get("old_value")
+                if value_converter := self._audit_log_entry_converters.get(key):
+                    new_value = value_converter(new_value) if new_value is not None else None
+                    old_value = value_converter(old_value) if old_value is not None else None
+
+                elif not isinstance(
+                    key, audit_log_models.AuditLogChangeKey
+                ):  # pyright: ignore [reportUnnecessaryIsInstance]
+                    _LOGGER.debug("Unknown audit log change key found %r", key)
+
+                changes.append(audit_log_models.AuditLogChange(key=key, new_value=new_value, old_value=old_value))
+
+        target_id: typing.Optional[snowflakes.Snowflake] = None
+        if (raw_target_id := payload["target_id"]) is not None:
+            target_id = snowflakes.Snowflake(raw_target_id)
+
+        user_id: typing.Optional[snowflakes.Snowflake] = None
+        if (raw_user_id := payload["user_id"]) is not None:
+            user_id = snowflakes.Snowflake(raw_user_id)
+
+        action_type: typing.Union[audit_log_models.AuditLogEventType, int]
+        action_type = audit_log_models.AuditLogEventType(payload["action_type"])
+
+        options: typing.Optional[audit_log_models.BaseAuditLogEntryInfo] = None
+        if (raw_option := payload.get("options")) is not None:
+            if option_converter := self._audit_log_event_mapping.get(action_type):
+                options = option_converter(raw_option)
+
+            else:
+                raise errors.UnrecognisedEntityError(f"Unknown audit log action type found {action_type!r}")
+
+        return audit_log_models.AuditLogEntry(
+            app=self._app,
+            id=entry_id,
+            target_id=target_id,
+            changes=changes,
+            user_id=user_id,
+            action_type=action_type,
+            options=options,
+            reason=payload.get("reason"),
+            guild_id=guild_id,
+        )
+
+    def deserialize_audit_log(
+        self, payload: data_binding.JSONObject, *, guild_id: snowflakes.Snowflake
+    ) -> audit_log_models.AuditLog:
         entries = {}
         for entry_payload in payload["audit_log_entries"]:
-            entry_id = snowflakes.Snowflake(entry_payload["id"])
+            try:
+                entry = self.deserialize_audit_log_entry(entry_payload, guild_id=guild_id)
 
-            changes: typing.List[audit_log_models.AuditLogChange] = []
-            if (change_payloads := entry_payload.get("changes")) is not None:
-                for change_payload in change_payloads:
-                    key: typing.Union[audit_log_models.AuditLogChangeKey, str] = audit_log_models.AuditLogChangeKey(
-                        change_payload["key"]
-                    )
+            except errors.UnrecognisedEntityError as exc:
+                _LOGGER.debug(exc.reason)
 
-                    new_value = change_payload.get("new_value")
-                    old_value = change_payload.get("old_value")
-                    if value_converter := self._audit_log_entry_converters.get(key):
-                        new_value = value_converter(new_value) if new_value is not None else None
-                        old_value = value_converter(old_value) if old_value is not None else None
-
-                    elif not isinstance(
-                        key, audit_log_models.AuditLogChangeKey
-                    ):  # pyright: ignore [reportUnnecessaryIsInstance]
-                        _LOGGER.debug("Unknown audit log change key found %r", key)
-
-                    changes.append(audit_log_models.AuditLogChange(key=key, new_value=new_value, old_value=old_value))
-
-            target_id: typing.Optional[snowflakes.Snowflake] = None
-            if (raw_target_id := entry_payload["target_id"]) is not None:
-                target_id = snowflakes.Snowflake(raw_target_id)
-
-            user_id: typing.Optional[snowflakes.Snowflake] = None
-            if (raw_user_id := entry_payload["user_id"]) is not None:
-                user_id = snowflakes.Snowflake(raw_user_id)
-
-            action_type: typing.Union[audit_log_models.AuditLogEventType, int]
-            action_type = audit_log_models.AuditLogEventType(entry_payload["action_type"])
-
-            options: typing.Optional[audit_log_models.BaseAuditLogEntryInfo] = None
-            if (raw_option := entry_payload.get("options")) is not None:
-                if option_converter := self._audit_log_event_mapping.get(action_type):
-                    options = option_converter(raw_option)
-
-                else:
-                    _LOGGER.debug("Unknown audit log action type found %r", action_type)
-                    continue
-
-            entries[entry_id] = audit_log_models.AuditLogEntry(
-                app=self._app,
-                id=entry_id,
-                target_id=target_id,
-                changes=changes,
-                user_id=user_id,
-                action_type=action_type,
-                options=options,
-                reason=entry_payload.get("reason"),
-            )
+            else:
+                entries[entry.id] = entry
 
         integrations = {
             snowflakes.Snowflake(integration["id"]): self.deserialize_partial_integration(integration)
@@ -3427,6 +3447,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
         return template_models.Template(
+            app=self._app,
             code=payload["code"],
             name=payload["name"],
             description=payload["description"],
@@ -3571,21 +3592,24 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         self, payload: data_binding.JSONObject
     ) -> webhook_models.ChannelFollowerWebhook:
         application_id: typing.Optional[snowflakes.Snowflake] = None
-        if (raw_application_id := payload.get("application_id")) is not None:
+        if raw_application_id := payload.get("application_id"):
             application_id = snowflakes.Snowflake(raw_application_id)
 
-        raw_source_channel = payload["source_channel"]
-        # In this case the channel type isn't provided as we can safely
-        # assume it's a news channel.
-        raw_source_channel["type"] = channel_models.ChannelType.GUILD_NEWS
-        source_channel = self.deserialize_partial_channel(raw_source_channel)
-        source_guild_payload = payload["source_guild"]
-        source_guild = guild_models.PartialGuild(
-            app=self._app,
-            id=snowflakes.Snowflake(source_guild_payload["id"]),
-            name=source_guild_payload["name"],
-            icon_hash=source_guild_payload.get("icon"),
-        )
+        source_channel: typing.Optional[channel_models.PartialChannel] = None
+        if raw_source_channel := payload.get("source_channel"):
+            # In this case the channel type isn't provided as we can safely
+            # assume it's a news channel.
+            raw_source_channel.setdefault("type", channel_models.ChannelType.GUILD_NEWS)
+            source_channel = self.deserialize_partial_channel(raw_source_channel)
+
+        source_guild: typing.Optional[guild_models.PartialGuild] = None
+        if source_guild_payload := payload.get("source_guild"):
+            source_guild = guild_models.PartialGuild(
+                app=self._app,
+                id=snowflakes.Snowflake(source_guild_payload["id"]),
+                name=source_guild_payload["name"],
+                icon_hash=source_guild_payload.get("icon"),
+            )
 
         return webhook_models.ChannelFollowerWebhook(
             app=self._app,

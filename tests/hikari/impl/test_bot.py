@@ -190,6 +190,7 @@ class TestGatewayBot:
                 "token",
                 allow_color=False,
                 banner="testing",
+                suppress_optimization_warning=True,
                 executor=executor,
                 force_color=True,
                 cache_settings=cache_settings,
@@ -230,6 +231,8 @@ class TestGatewayBot:
             max_rate_limit=200,
             max_retries=0,
             proxy_settings=bot._proxy_settings,
+            dumps=bot._dumps,
+            loads=bot._loads,
             rest_url="somewhere.com",
             token="token",
             token_type=applications.TokenType.BOT,
@@ -237,7 +240,7 @@ class TestGatewayBot:
 
         init_logging.assert_called_once_with("DEBUG", False, True)
         print_banner.assert_called_once_with("testing", False, True)
-        warn_if_not_optimized.assert_called_once_with()
+        warn_if_not_optimized.assert_called_once_with(True)
 
     def test_init_when_no_settings(self):
         stack = contextlib.ExitStack()
@@ -978,6 +981,8 @@ class TestGatewayBot:
             large_threshold=1000,
             shard_id=1,
             shard_count=3,
+            loads=bot._loads,
+            dumps=bot._dumps,
             token=bot._token,
             url="https://some.website",
         )

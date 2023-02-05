@@ -29,6 +29,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Test Installation
+        shell: bash
         run: |
           pip install -r dev-requirements/build.txt
 
@@ -39,6 +40,7 @@ jobs:
           pip uninstall -y hikari
 
       - name: Run tests
+        shell: bash
         run: |
           pip install -r dev-requirements/nox.txt
           nox -s pytest

@@ -342,6 +342,8 @@ class TestRESTApp:
             http_settings=rest_app._http_settings,
             max_retries=0,
             proxy_settings=rest_app._proxy_settings,
+            dumps=rest_app._dumps,
+            loads=rest_app._loads,
             token="token",
             token_type="Type",
             rest_url=rest_app._url,
@@ -373,6 +375,8 @@ class TestRESTApp:
             http_settings=rest_app._http_settings,
             max_retries=0,
             proxy_settings=rest_app._proxy_settings,
+            dumps=rest_app._dumps,
+            loads=rest_app._loads,
             token="token",
             token_type=applications.TokenType.BEARER,
             rest_url=rest_app._url,
@@ -1284,7 +1288,7 @@ class TestRESTClientImpl:
         )
 
         # Form builder
-        url_encoded_form.assert_called_once_with(executor=rest_client._executor)
+        url_encoded_form.assert_called_once_with()
         url_encoded_form.return_value.add_resource.assert_called_once_with("files[0]", resource_attachment)
 
     def test__build_message_payload_with_singular_args(self, rest_client):
@@ -1351,7 +1355,7 @@ class TestRESTClientImpl:
         )
 
         # Form builder
-        url_encoded_form.assert_called_once_with(executor=rest_client._executor)
+        url_encoded_form.assert_called_once_with()
         assert url_encoded_form.return_value.add_resource.call_count == 2
         url_encoded_form.return_value.add_resource.assert_has_calls(
             [mock.call("files[0]", resource_attachment1), mock.call("files[1]", resource_attachment2)]
@@ -1463,7 +1467,7 @@ class TestRESTClientImpl:
         )
 
         # Form builder
-        url_encoded_form.assert_called_once_with(executor=rest_client._executor)
+        url_encoded_form.assert_called_once_with()
         assert url_encoded_form.return_value.add_resource.call_count == 6
         url_encoded_form.return_value.add_resource.assert_has_calls(
             [
@@ -1560,7 +1564,7 @@ class TestRESTClientImpl:
         )
 
         # Form builder
-        url_encoded_form.assert_called_once_with(executor=rest_client._executor)
+        url_encoded_form.assert_called_once_with()
         assert url_encoded_form.return_value.add_resource.call_count == 5
         url_encoded_form.return_value.add_resource.assert_has_calls(
             [
@@ -1716,6 +1720,27 @@ class TestRESTClientImplAsync:
         rest_client.close.assert_awaited_once_with()
 
     @hikari_test_helpers.timeout()
+    async def test_perform_request_errors_if_both_json_and_form_builder_passed(self, rest_client):
+        route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
+
+        with pytest.raises(ValueError, match="Can only provide one of 'json' or 'form_builder', not both"):
+            await rest_client._perform_request(route, json=object(), form_builder=object())
+
+    @hikari_test_helpers.timeout()
+    async def test_perform_request_builds_json_when_passed(self, rest_client, exit_exception):
+        route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
+        rest_client._client_session.request.side_effect = exit_exception
+        rest_client._token = None
+
+        with mock.patch.object(data_binding, "JSONPayload") as json_payload:
+            with pytest.raises(exit_exception):
+                await rest_client._perform_request(route, json={"some": "data"})
+
+        json_payload.assert_called_once_with({"some": "data"}, json_dumps=rest_client._dumps)
+        _, kwargs = rest_client._client_session.request.call_args_list[0]
+        assert kwargs["data"] is json_payload.return_value
+
+    @hikari_test_helpers.timeout()
     async def test_perform_request_builds_form_when_passed(self, rest_client, exit_exception):
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         rest_client._client_session.request.side_effect = exit_exception
@@ -1729,7 +1754,7 @@ class TestRESTClientImplAsync:
                 await rest_client._perform_request(route, form_builder=mock_form)
 
         _, kwargs = rest_client._client_session.request.call_args_list[0]
-        mock_form.build.assert_awaited_once_with(exit_stack.return_value)
+        mock_form.build.assert_awaited_once_with(exit_stack.return_value, executor=rest_client._executor)
         assert kwargs["data"] is mock_form.build.return_value
 
     @hikari_test_helpers.timeout()
@@ -1876,7 +1901,7 @@ class TestRESTClientImplAsync:
 
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         rest_client._client_session.request.return_value = StubResponse()
-        rest_client._parse_ratelimits = mock.AsyncMock(return_value=False)
+        rest_client._parse_ratelimits = mock.AsyncMock(return_value=None)
 
         assert (await rest_client._perform_request(route)) is None
 
@@ -1893,7 +1918,7 @@ class TestRESTClientImplAsync:
 
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         rest_client._client_session.request.return_value = StubResponse()
-        rest_client._parse_ratelimits = mock.AsyncMock(return_value=False)
+        rest_client._parse_ratelimits = mock.AsyncMock(return_value=None)
 
         assert (await rest_client._perform_request(route)) == {"something": None}
 
@@ -1907,7 +1932,7 @@ class TestRESTClientImplAsync:
 
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         rest_client._client_session.request.return_value = StubResponse()
-        rest_client._parse_ratelimits = mock.AsyncMock(return_value=False)
+        rest_client._parse_ratelimits = mock.AsyncMock(return_value=None)
 
         with pytest.raises(errors.HTTPError):
             await rest_client._perform_request(route)
@@ -1922,7 +1947,7 @@ class TestRESTClientImplAsync:
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         rest_client._client_session.request.return_value = StubResponse()
 
-        rest_client._parse_ratelimits = mock.AsyncMock(return_value=False)
+        rest_client._parse_ratelimits = mock.AsyncMock(return_value=None)
 
         with mock.patch.object(net, "generate_error_response", return_value=exit_exception):
             with pytest.raises(exit_exception):
@@ -1938,7 +1963,7 @@ class TestRESTClientImplAsync:
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         rest_client._client_session.request.return_value = StubResponse()
         rest_client._max_retries = 3
-        rest_client._parse_ratelimits = mock.AsyncMock(return_value=False)
+        rest_client._parse_ratelimits = mock.AsyncMock(return_value=None)
 
         stack = contextlib.ExitStack()
         stack.enter_context(pytest.raises(exit_exception))
@@ -1975,7 +2000,7 @@ class TestRESTClientImplAsync:
 
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         rest_client._client_session.request.return_value = StubResponse()
-        rest_client._parse_ratelimits = mock.AsyncMock(return_value=False)
+        rest_client._parse_ratelimits = mock.AsyncMock(return_value=None)
 
         with mock.patch.object(rest, "_LOGGER", new=mock.Mock(isEnabledFor=mock.Mock(return_value=enabled))) as logger:
             await rest_client._perform_request(route)
@@ -1998,7 +2023,7 @@ class TestRESTClientImplAsync:
         response = StubResponse()
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
 
-        await rest_client._parse_ratelimits(route, "auth", response)
+        assert await rest_client._parse_ratelimits(route, "auth", response) is None
 
         rest_client._bucket_manager.update_rate_limits.assert_called_once_with(
             compiled_route=route,
@@ -2029,7 +2054,7 @@ class TestRESTClientImplAsync:
             content_type = rest._APPLICATION_JSON
             headers = {}
 
-            async def json(self):
+            async def read(self):
                 raise exit_exception
 
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
@@ -2057,11 +2082,11 @@ class TestRESTClientImplAsync:
             headers = {}
             real_url = "https://some.url"
 
-            async def json(self):
-                return {"global": True, "retry_after": "2"}
+            async def read(self):
+                return '{"global": true, "retry_after": "2"}'
 
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
-        assert (await rest_client._parse_ratelimits(route, "auth", StubResponse())) is True
+        assert (await rest_client._parse_ratelimits(route, "auth", StubResponse())) == 0
 
         rest_client._bucket_manager.throttle.assert_called_once_with(2.0)
 
@@ -2078,35 +2103,37 @@ class TestRESTClientImplAsync:
                 return {"retry_after": "2", "global": False}
 
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
-        assert await rest_client._parse_ratelimits(route, "some auth", StubResponse()) is True
+        assert await rest_client._parse_ratelimits(route, "some auth", StubResponse()) == 0
 
-    async def test__parse_ratelimits_when_retry_after_is_close_enough(self, rest_client):
-        class StubResponse:
-            status = http.HTTPStatus.TOO_MANY_REQUESTS
-            content_type = rest._APPLICATION_JSON
-            headers = {
-                rest._X_RATELIMIT_RESET_AFTER_HEADER: "0.002",
-            }
-            real_url = "https://some.url"
-
-            async def json(self):
-                return {"retry_after": "0.002"}
-
-        route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
-        assert await rest_client._parse_ratelimits(route, "some auth", StubResponse()) is True
-
-    async def test__parse_ratelimits_when_retry_after_is_not_close_enough(self, rest_client):
+    async def test__parse_ratelimits_when_retry_after_is_not_too_long(self, rest_client):
         class StubResponse:
             status = http.HTTPStatus.TOO_MANY_REQUESTS
             content_type = rest._APPLICATION_JSON
             headers = {}
             real_url = "https://some.url"
 
-            async def json(self):
-                return {"retry_after": "4"}
+            async def read(self):
+                return '{"retry_after": "0.002"}'
+
+        rest_client._bucket_manager.max_rate_limit = 10
 
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
-        with pytest.raises(errors.RateLimitedError):
+        assert await rest_client._parse_ratelimits(route, "some auth", StubResponse()) == 0.002
+
+    async def test__parse_ratelimits_when_retry_after_is_too_long(self, rest_client):
+        class StubResponse:
+            status = http.HTTPStatus.TOO_MANY_REQUESTS
+            content_type = rest._APPLICATION_JSON
+            headers = {}
+            real_url = "https://some.url"
+
+            async def read(self):
+                return '{"retry_after": "4"}'
+
+        rest_client._bucket_manager.max_rate_limit = 3
+
+        route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
+        with pytest.raises(errors.RateLimitTooLongError):
             await rest_client._parse_ratelimits(route, "auth", StubResponse())
 
     #############
@@ -2202,6 +2229,8 @@ class TestRESTClientImplAsync:
             "locked": False,
             "invitable": True,
             "auto_archive_duration": 12322,
+            "flags": 12,
+            "applied_tags": [{"id": 0, "name": "testing", "moderated": True, "emoji_id": None, "emoji_name": None}],
         }
 
         result = await rest_client.edit_channel(
@@ -2235,6 +2264,8 @@ class TestRESTClientImplAsync:
             locked=False,
             invitable=True,
             auto_archive_duration=auto_archive_duration,
+            flags=12,
+            applied_tags=[channels.ForumTag(name="testing", moderated=True)],
         )
 
         assert result == mock_object
@@ -2524,6 +2555,7 @@ class TestRESTClientImplAsync:
             user_mentions=[9876],
             role_mentions=[1234],
             reply=StubModel(987654321),
+            reply_must_exist=False,
             flags=54123,
         )
         assert returned is rest_client._entity_factory.deserialize_message.return_value
@@ -2545,7 +2577,7 @@ class TestRESTClientImplAsync:
         )
         mock_form.add_field.assert_called_once_with(
             "payload_json",
-            '{"testing": "ensure_in_test", "message_reference": {"message_id": "987654321"}}',
+            b'{"testing":"ensure_in_test","message_reference":{"message_id":"987654321","fail_if_not_exists":false}}',
             content_type="application/json",
         )
         rest_client._request.assert_awaited_once_with(expected_route, form_builder=mock_form)
@@ -2578,6 +2610,7 @@ class TestRESTClientImplAsync:
             user_mentions=[9876],
             role_mentions=[1234],
             reply=StubModel(987654321),
+            reply_must_exist=False,
             flags=6643,
         )
         assert returned is rest_client._entity_factory.deserialize_message.return_value
@@ -2599,7 +2632,10 @@ class TestRESTClientImplAsync:
         )
         rest_client._request.assert_awaited_once_with(
             expected_route,
-            json={"testing": "ensure_in_test", "message_reference": {"message_id": "987654321"}},
+            json={
+                "testing": "ensure_in_test",
+                "message_reference": {"message_id": "987654321", "fail_if_not_exists": False},
+            },
         )
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
 
@@ -2664,7 +2700,7 @@ class TestRESTClientImplAsync:
             edit=True,
         )
         mock_form.add_field.assert_called_once_with(
-            "payload_json", '{"testing": "ensure_in_test"}', content_type="application/json"
+            "payload_json", b'{"testing":"ensure_in_test"}', content_type="application/json"
         )
         rest_client._request.assert_awaited_once_with(expected_route, form_builder=mock_form)
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
@@ -3140,7 +3176,7 @@ class TestRESTClientImplAsync:
         )
         mock_form.add_field.assert_called_once_with(
             "payload_json",
-            '{"testing": "ensure_in_test", "username": "davfsa", "avatar_url": "https://website.com/davfsa_logo"}',
+            b'{"testing":"ensure_in_test","username":"davfsa","avatar_url":"https://website.com/davfsa_logo"}',
             content_type="application/json",
         )
         rest_client._request.assert_awaited_once_with(
@@ -3179,9 +3215,7 @@ class TestRESTClientImplAsync:
             role_mentions=undefined.UNDEFINED,
         )
         mock_form.add_field.assert_called_once_with(
-            "payload_json",
-            '{"testing": "ensure_in_test"}',
-            content_type="application/json",
+            "payload_json", b'{"testing":"ensure_in_test"}', content_type="application/json"
         )
         rest_client._request.assert_awaited_once_with(
             expected_route,
@@ -3352,7 +3386,7 @@ class TestRESTClientImplAsync:
             edit=True,
         )
         mock_form.add_field.assert_called_once_with(
-            "payload_json", '{"testing": "ensure_in_test"}', content_type="application/json"
+            "payload_json", b'{"testing":"ensure_in_test"}', content_type="application/json"
         )
         rest_client._request.assert_awaited_once_with(expected_route, form_builder=mock_form, query={}, auth=None)
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
@@ -3384,7 +3418,7 @@ class TestRESTClientImplAsync:
             edit=True,
         )
         mock_form.add_field.assert_called_once_with(
-            "payload_json", '{"testing": "ensure_in_test"}', content_type="application/json"
+            "payload_json", b'{"testing":"ensure_in_test"}', content_type="application/json"
         )
         rest_client._request.assert_awaited_once_with(
             expected_route, form_builder=mock_form, query={"thread_id": "123543123"}, auth=None
@@ -3973,9 +4007,28 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route)
         rest_client._entity_factory.deserialize_guild_sticker.assert_called_once_with({"id": "123"})
 
-    @pytest.mark.skip("TODO")
     async def test_create_sticker(self, rest_client):
-        ...
+        rest_client.create_sticker = mock.AsyncMock()
+        file = object()
+
+        sticker = await rest_client.create_sticker(
+            90210,
+            "NewSticker",
+            "funny",
+            file,
+            description="A sticker",
+            reason="blah blah blah",
+        )
+        assert sticker is rest_client.create_sticker.return_value
+
+        rest_client.create_sticker.assert_awaited_once_with(
+            90210,
+            "NewSticker",
+            "funny",
+            file,
+            description="A sticker",
+            reason="blah blah blah",
+        )
 
     async def test_edit_sticker(self, rest_client):
         expected_route = routes.PATCH_GUILD_STICKER.compile(guild=123, sticker=456)
@@ -4737,8 +4790,8 @@ class TestRESTClientImplAsync:
 
         mock_form.add_field.assert_called_once_with(
             "payload_json",
-            '{"name": "Post with secret content!", "auto_archive_duration": 54123, "rate_limit_per_user": 101, '
-            '"applied_tags": ["12220", "12201"], "message": {"mock": "message body"}}',
+            b'{"name":"Post with secret content!","auto_archive_duration":54123,"rate_limit_per_user":101,'
+            b'"applied_tags":["12220","12201"],"message":{"mock":"message body"}}',
             content_type="application/json",
         )
 
@@ -5934,7 +5987,7 @@ class TestRESTClientImplAsync:
             role_mentions=[1234],
         )
         mock_form.add_field.assert_called_once_with(
-            "payload_json", '{"type": 1, "data": {"testing": "ensure_in_test"}}', content_type="application/json"
+            "payload_json", b'{"type":1,"data":{"testing":"ensure_in_test"}}', content_type="application/json"
         )
         rest_client._request.assert_awaited_once_with(expected_route, form_builder=mock_form, auth=None)
 
@@ -6031,7 +6084,7 @@ class TestRESTClientImplAsync:
             edit=True,
         )
         mock_form.add_field.assert_called_once_with(
-            "payload_json", '{"testing": "ensure_in_test"}', content_type="application/json"
+            "payload_json", b'{"testing":"ensure_in_test"}', content_type="application/json"
         )
         rest_client._request.assert_awaited_once_with(expected_route, form_builder=mock_form, auth=None)
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})

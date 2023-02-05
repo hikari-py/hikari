@@ -844,3 +844,10 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
     ) -> None:
         """See https://discord.com/developers/docs/topics/gateway-events#guild-scheduled-event-user-remove for more info."""
         await self.dispatch(self._event_factory.deserialize_scheduled_event_user_remove_event(shard, payload))
+
+    @event_manager_base.filtered(guild_events.AuditLogEntryCreateEvent)
+    async def on_guild_audit_log_entry_create(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> None:
+        """See https://discord.com/developers/docs/topics/gateway-events#guild-audit-log-entry-create for more info."""
+        await self.dispatch(self._event_factory.deserialize_audit_log_entry_create_event(shard, payload))

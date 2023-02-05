@@ -28,7 +28,6 @@ import pytest
 
 from hikari import errors
 from hikari import intents
-from hikari.internal import data_binding
 
 
 class TestShardCloseCode:
@@ -136,10 +135,7 @@ class TestBadRequestError:
         )
 
     def test_str(self, error):
-        with mock.patch.object(data_binding, "dump_json") as dump_json:
-            string = str(error)
-
-        assert string == inspect.cleandoc(
+        assert str(error) == inspect.cleandoc(
             """
             Bad Request 400: 'raw body' for https://some.url
 
@@ -154,7 +150,6 @@ class TestBadRequestError:
              - at this point, all wrong!
             """
         )
-        dump_json.assert_not_called()
 
     def test_str_when_dump_error_errors(self, error):
         with mock.patch.object(errors, "_dump_errors", side_effect=KeyError):
@@ -202,29 +197,25 @@ class TestBadRequestError:
     def test_str_when_cached(self, error):
         error._cached_str = "ok"
 
-        with mock.patch.object(data_binding, "dump_json") as dump_json:
-            with mock.patch.object(errors, "_dump_errors") as dump_errors:
-                assert str(error) == "ok"
+        with mock.patch.object(errors, "_dump_errors") as dump_errors:
+            assert str(error) == "ok"
 
         dump_errors.assert_not_called()
-        dump_json.assert_not_called()
 
     def test_str_when_no_errors(self, error):
         error.errors = None
 
-        with mock.patch.object(data_binding, "dump_json") as dump_json:
-            with mock.patch.object(errors, "_dump_errors") as dump_errors:
-                assert str(error) == "Bad Request 400: 'raw body' for https://some.url"
+        with mock.patch.object(errors, "_dump_errors") as dump_errors:
+            assert str(error) == "Bad Request 400: 'raw body' for https://some.url"
 
         dump_errors.assert_not_called()
-        dump_json.assert_not_called()
 
 
 class TestRateLimitTooLongError:
     @pytest.fixture()
     def error(self):
         return errors.RateLimitTooLongError(
-            route="some route", retry_after=0, max_retry_after=60, reset_at=0, limit=0, period=0
+            route="some route", is_global=False, retry_after=0, max_retry_after=60, reset_at=0, limit=0, period=0
         )
 
     def test_remaining(self, error):
@@ -232,8 +223,8 @@ class TestRateLimitTooLongError:
 
     def test_str(self, error):
         assert str(error) == (
-            "The request has been rejected, as you would be waiting for more than"
-            "the max retry-after (60) on route some route"
+            "The request has been rejected, as you would be waiting for more than "
+            "the max retry-after (60) on route 'some route' [is_global=False]"
         )
 
 
@@ -249,7 +240,7 @@ class TestBulkDeleteError:
 class TestMissingIntentError:
     @pytest.fixture()
     def error(self):
-        return errors.MissingIntentError(intents.Intents.GUILD_BANS | intents.Intents.GUILD_EMOJIS)
+        return errors.MissingIntentError(intents.Intents.GUILD_MEMBERS | intents.Intents.GUILD_EMOJIS)
 
     def test_str(self, error):
-        assert str(error) == "You are missing the following intent(s): GUILD_BANS, GUILD_EMOJIS"
+        assert str(error) == "You are missing the following intent(s): GUILD_EMOJIS, GUILD_MEMBERS"

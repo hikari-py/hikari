@@ -293,6 +293,7 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
             self._lock.release()
             raise errors.RateLimitTooLongError(
                 route=self._compiled_route,
+                is_global=False,
                 retry_after=retry_after,
                 max_retry_after=self._max_rate_limit,
                 reset_at=self.reset_at,
@@ -302,13 +303,27 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
 
         await super().acquire()
 
-        await self._global_ratelimit.acquire()
+        global_ratelimit = self._global_ratelimit
+        if global_ratelimit.reset_at and (global_ratelimit.reset_at - now) > self._max_rate_limit:
+            # Release lock before we error
+            self._lock.release()
+            raise errors.RateLimitTooLongError(
+                route=self._compiled_route,
+                is_global=True,
+                retry_after=global_ratelimit.reset_at - now,
+                max_retry_after=self._max_rate_limit,
+                reset_at=global_ratelimit.reset_at,
+                limit=None,
+                period=None,
+            )
+
+        await global_ratelimit.acquire()
 
     def update_rate_limit(self, remaining: int, limit: int, reset_at: float) -> None:
         """Update the rate limit information.
 
         .. note::
-            The `reset_at` epoch is expected to be a `time.monotonic_timestamp`
+            The `reset_at` epoch is expected to be a `time.monotonic`
             monotonic epoch, rather than a `time.time` date-based epoch.
 
         Parameters
@@ -382,6 +397,10 @@ class RESTBucketManager:
         self._gc_task: typing.Optional[asyncio.Task[None]] = None
         self._max_rate_limit = max_rate_limit
         self._global_ratelimit = rate_limits.ManualRateLimiter()
+
+    @property
+    def max_rate_limit(self) -> float:
+        return self._max_rate_limit
 
     @property
     def is_alive(self) -> bool:

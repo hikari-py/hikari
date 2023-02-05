@@ -37,7 +37,6 @@ from hikari import urls
 from hikari.impl import config
 from hikari.impl import shard
 from hikari.internal import aio
-from hikari.internal import data_binding
 from hikari.internal import net
 from hikari.internal import time
 from hikari.internal import ux
@@ -103,6 +102,8 @@ class TestGatewayTransport:
             exit_stack=mock.AsyncMock(),
             logger=mock.Mock(),
             log_filterer=mock.Mock(),
+            loads=mock.Mock(),
+            dumps=mock.Mock(),
             transport_compression=True,
         )
 
@@ -112,6 +113,8 @@ class TestGatewayTransport:
             exit_stack=mock.AsyncMock(),
             logger=mock.Mock(),
             log_filterer=mock.Mock(),
+            loads=mock.Mock(),
+            dumps=mock.Mock(),
             transport_compression=True,
         )
 
@@ -123,6 +126,8 @@ class TestGatewayTransport:
             exit_stack=mock.AsyncMock(),
             logger=mock.Mock(isEnabledFor=mock.Mock(return_value=False)),
             log_filterer=mock.Mock(),
+            loads=mock.Mock(),
+            dumps=mock.Mock(),
             transport_compression=False,
         )
 
@@ -168,23 +173,21 @@ class TestGatewayTransport:
         transport_impl._receive_and_check = mock.AsyncMock()
         transport_impl._logger = mock.Mock(enabled_for=mock.Mock(return_value=trace))
 
-        with mock.patch.object(data_binding, "load_json") as load_json:
-            assert await transport_impl.receive_json() == load_json.return_value
+        assert await transport_impl.receive_json() == transport_impl._loads.return_value
 
         transport_impl._receive_and_check.assert_awaited_once_with()
-        load_json.assert_called_once_with(transport_impl._receive_and_check.return_value)
+        transport_impl._loads.assert_called_once_with(transport_impl._receive_and_check.return_value)
 
     @pytest.mark.asyncio()
     @pytest.mark.parametrize("trace", [True, False])
     async def test_send_json(self, transport_impl, trace):
-        transport_impl._ws.send_str = mock.AsyncMock()
+        transport_impl._ws.send_bytes = mock.AsyncMock()
         transport_impl._logger = mock.Mock(enabled_for=mock.Mock(return_value=trace))
+        transport_impl._dumps = mock.Mock(return_value=b"some data")
 
-        with mock.patch.object(data_binding, "dump_json") as dump_json:
-            await transport_impl.send_json({"json_send": None})
+        await transport_impl.send_json({"json_send": None})
 
-        transport_impl._ws.send_str.assert_awaited_once_with(dump_json.return_value)
-        dump_json.assert_called_once_with({"json_send": None})
+        transport_impl._ws.send_bytes.assert_awaited_once_with(b"some data")
 
     @pytest.mark.asyncio()
     async def test__handle_other_message_when_TEXT(self, transport_impl):
@@ -362,6 +365,8 @@ class TestGatewayTransport:
         log_filterer = mock.Mock()
         client_session = mock.Mock()
         websocket = mock.Mock()
+        loads = mock.Mock()
+        dumps = mock.Mock()
         exit_stack = mock.AsyncMock(enter_async_context=mock.AsyncMock(side_effect=[client_session, websocket]))
 
         stack = contextlib.ExitStack()
@@ -377,6 +382,8 @@ class TestGatewayTransport:
                 logger=logger,
                 url="testing.com",
                 log_filterer=log_filterer,
+                loads=loads,
+                dumps=dumps,
                 transport_compression=transport_compression,
             )
 
@@ -385,6 +392,8 @@ class TestGatewayTransport:
         assert ws._exit_stack is exit_stack
         assert ws._logger is logger
         assert ws._log_filterer is log_filterer
+        assert ws._loads is loads
+        assert ws._dumps is dumps
 
         if transport_compression:
             assert ws._receive_and_check == ws._receive_and_check_zlib
@@ -435,6 +444,8 @@ class TestGatewayTransport:
                 logger=logger,
                 url="https://some.url",
                 log_filterer=log_filterer,
+                loads=object(),
+                dumps=object(),
                 transport_compression=True,
             )
 
@@ -477,6 +488,8 @@ class TestGatewayTransport:
                 url="https://some.url",
                 log_filterer=log_filterer,
                 transport_compression=True,
+                loads=object(),
+                dumps=object(),
             )
 
         exit_stack.aclose.assert_awaited_once_with()
@@ -1004,6 +1017,8 @@ class TestGatewayShardImplAsync:
             logger=client._logger,
             proxy_settings=proxy_settings,
             transport_compression=False,
+            loads=client._loads,
+            dumps=client._dumps,
             url="wss://somewhere.com?somewhere=true&v=400&encoding=json",
         )
         client._event_factory.deserialize_connected_event.assert_called_once_with(client)
@@ -1090,6 +1105,8 @@ class TestGatewayShardImplAsync:
             log_filterer=log_filterer.return_value,
             logger=client._logger,
             proxy_settings=proxy_settings,
+            loads=client._loads,
+            dumps=client._dumps,
             transport_compression=True,
             url="wss://notsomewhere.com?somewhere=true&v=400&encoding=json&compress=zlib-stream",
         )

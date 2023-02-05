@@ -32,10 +32,10 @@ import typing
 import aiohttp
 
 from hikari import errors
+from hikari.internal import data_binding
 
 if typing.TYPE_CHECKING:
     from hikari.impl import config
-    from hikari.internal import data_binding
 
 
 async def generate_error_response(response: aiohttp.ClientResponse) -> errors.HTTPError:
@@ -46,11 +46,12 @@ async def generate_error_response(response: aiohttp.ClientResponse) -> errors.HT
     # Little hack to stop mypy from complaining when using `*args`
     args: typing.List[typing.Any] = [real_url, response.headers, raw_body]
     try:
-        json_body = await response.json()
+        json_body = data_binding.default_json_loads(await response.read())
+        assert isinstance(json_body, dict)
         args.append(json_body.get("message", ""))
         args.append(json_body.get("code", 0))
         raw_error_array: typing.Optional[data_binding.JSONObject] = json_body.get("errors")
-    except aiohttp.ContentTypeError:
+    except ValueError:
         raw_error_array = None
 
     if response.status == http.HTTPStatus.BAD_REQUEST:

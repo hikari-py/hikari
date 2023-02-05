@@ -33,6 +33,8 @@
 __all__ = ["Enum", "Flag"]
 
 import enum as __enum
+from typing import Any as __Any
+from typing import Generic as __Generic
 from typing import Iterator as __Iterator
 from typing import Sequence as __Sequence
 from typing import TypeVar as __TypeVar
@@ -64,3 +66,7 @@ class Flag(__enum.IntFlag):
     def issubset(self: __FlagT, other: __Union[int, __FlagT]) -> bool: ...  # is_subset
     # '__invert__' is explicitly defined as a special case because it is typed as returning 'int' in typeshed
     def __invert__(self: __FlagT) -> __FlagT: ...  # invert
+
+_V = __TypeVar("_V")
+
+def deprecated(value: _V, /, *, removal_version: str) -> _V: ...

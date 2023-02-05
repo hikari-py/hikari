@@ -19,11 +19,12 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-import builtins
 import contextlib
 import importlib
 import logging
+import logging.config
 import os
+import pathlib
 import platform
 import string
 import sys
@@ -35,6 +36,7 @@ import pytest
 
 from hikari import _about
 from hikari.impl import config
+from hikari.internal import data_binding
 from hikari.internal import net
 from hikari.internal import ux
 from tests.hikari import hikari_test_helpers
@@ -46,102 +48,168 @@ class TestInitLogging:
         stack.enter_context(mock.patch.object(logging, "root", handlers=[None]))
         logging_dict_config = stack.enter_context(mock.patch.object(logging.config, "dictConfig"))
         logging_basic_config = stack.enter_context(mock.patch.object(logging, "basicConfig"))
-        colorlog_basic_config = stack.enter_context(mock.patch.object(colorlog, "basicConfig"))
+        colored_formatter = stack.enter_context(mock.patch.object(colorlog.formatter, "ColoredFormatter"))
 
         with stack:
             ux.init_logging("LOGGING_LEVEL", True, False)
 
         logging_dict_config.assert_not_called()
         logging_basic_config.assert_not_called()
-        colorlog_basic_config.assert_not_called()
+        colored_formatter.assert_not_called()
 
     def test_when_handlers_specify_not_to_set_up(self):
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(logging, "root", handlers=[]))
         logging_dict_config = stack.enter_context(mock.patch.object(logging.config, "dictConfig"))
         logging_basic_config = stack.enter_context(mock.patch.object(logging, "basicConfig"))
-        colorlog_basic_config = stack.enter_context(mock.patch.object(colorlog, "basicConfig"))
+        colored_formatter = stack.enter_context(mock.patch.object(colorlog.formatter, "ColoredFormatter"))
 
         with stack:
             ux.init_logging(None, True, False)
 
         logging_dict_config.assert_not_called()
         logging_basic_config.assert_not_called()
-        colorlog_basic_config.assert_not_called()
+        colored_formatter.assert_not_called()
 
-    def test_when_flavour_is_a_dict_and_doesnt_define_handlers(self):
+    def test_when_flavour_is_a_dict_and_is_not_incremental(self):
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(logging, "root", handlers=[]))
         stack.enter_context(mock.patch.object(ux, "supports_color", return_value=False))
         logging_dict_config = stack.enter_context(mock.patch.object(logging.config, "dictConfig"))
+        logging_file_config = stack.enter_context(mock.patch.object(logging.config, "fileConfig"))
         logging_basic_config = stack.enter_context(mock.patch.object(logging, "basicConfig"))
-        colorlog_basic_config = stack.enter_context(mock.patch.object(colorlog, "basicConfig"))
+        colored_formatter = stack.enter_context(mock.patch.object(colorlog.formatter, "ColoredFormatter"))
 
         with stack:
             ux.init_logging({"hikari": {"level": "INFO"}}, True, False)
 
+        logging_file_config.assert_not_called()
         logging_dict_config.assert_called_once_with({"hikari": {"level": "INFO"}})
-        logging_basic_config.assert_called_once_with(
-            level=None,
-            format="%(levelname)-1.1s %(asctime)23.23s %(name)s: %(message)s",
-            stream=sys.stderr,
-        )
-        colorlog_basic_config.assert_not_called()
+        logging_basic_config.assert_not_called()
+        colored_formatter.assert_not_called()
 
-    def test_when_flavour_is_a_dict_and_defines_handlers(self):
+    def test_when_flavour_is_a_dict_and_is_incremental(self):
+        # This will emulate it being populated during the basicConfig call
+        def _basicConfig(*args, **kwargs):
+            logging_basic_config(*args, **kwargs)
+            stack.enter_context(mock.patch.object(logging.root, "handlers", new=[handler]))
+
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(logging, "root", handlers=[]))
+        stack.enter_context(mock.patch.object(ux, "supports_color", return_value=False))
         logging_dict_config = stack.enter_context(mock.patch.object(logging.config, "dictConfig"))
-        logging_basic_config = stack.enter_context(mock.patch.object(logging, "basicConfig"))
-        colorlog_basic_config = stack.enter_context(mock.patch.object(colorlog, "basicConfig"))
+        logging_file_config = stack.enter_context(mock.patch.object(logging.config, "fileConfig"))
+        handler = mock.Mock()
+        logging_basic_config = mock.Mock()
+        stack.enter_context(mock.patch.object(logging, "basicConfig", new=_basicConfig))
+        colored_formatter = stack.enter_context(mock.patch.object(colorlog.formatter, "ColoredFormatter"))
 
         with stack:
-            ux.init_logging({"hikari": {"level": "INFO"}, "handlers": {"some_handler": {}}}, True, False)
+            ux.init_logging({"incremental": True, "hikari": {"level": "INFO"}}, True, False)
 
-        logging_dict_config.assert_called_once_with({"hikari": {"level": "INFO"}, "handlers": {"some_handler": {}}})
-        logging_basic_config.assert_not_called()
-        colorlog_basic_config.assert_not_called()
+        logging_file_config.assert_not_called()
+        logging_dict_config.assert_called_once_with({"incremental": True, "hikari": {"level": "INFO"}})
+        logging_basic_config.assert_called_once_with(
+            level=None,
+            stream=sys.stdout,
+            format="%(levelname)-1.1s %(asctime)23.23s %(name)s: %(message)s",
+        )
+        colored_formatter.assert_not_called()
+        handler.setFormatter.assert_not_called()
 
     def test_when_supports_color(self):
+        # This will emulate it being populated during the basicConfig call
+        def _basicConfig(*args, **kwargs):
+            logging_basic_config(*args, **kwargs)
+            stack.enter_context(mock.patch.object(logging.root, "handlers", new=[handler]))
+
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(logging, "root", handlers=[]))
         logging_dict_config = stack.enter_context(mock.patch.object(logging.config, "dictConfig"))
-        logging_basic_config = stack.enter_context(mock.patch.object(logging, "basicConfig"))
-        colorlog_basic_config = stack.enter_context(mock.patch.object(colorlog, "basicConfig"))
+        logging_file_config = stack.enter_context(mock.patch.object(logging.config, "fileConfig"))
+        handler = mock.Mock()
+        logging_basic_config = mock.Mock()
+        stack.enter_context(mock.patch.object(logging, "basicConfig", new=_basicConfig))
+        colored_formatter = stack.enter_context(mock.patch.object(colorlog.formatter, "ColoredFormatter"))
         supports_color = stack.enter_context(mock.patch.object(ux, "supports_color", return_value=True))
 
         with stack:
             ux.init_logging("LOGGING_LEVEL", True, False)
 
+        logging_file_config.assert_not_called()
         logging_dict_config.assert_not_called()
-        logging_basic_config.assert_not_called()
-        colorlog_basic_config.assert_called_once_with(
-            level="LOGGING_LEVEL",
-            format="%(log_color)s%(bold)s%(levelname)-1.1s%(thin)s %(asctime)23.23s %(bold)s%(name)s: "
+        logging_basic_config.assert_called_once_with(level="LOGGING_LEVEL", stream=sys.stdout)
+        colored_formatter.assert_called_once_with(
+            fmt="%(log_color)s%(bold)s%(levelname)-1.1s%(thin)s %(asctime)23.23s %(bold)s%(name)s: "
             "%(thin)s%(message)s%(reset)s",
-            stream=sys.stderr,
+            force_color=True,
         )
         supports_color.assert_called_once_with(True, False)
+        handler.setFormatter.assert_called_once_with(colored_formatter.return_value)
 
     def test_when_doesnt_support_color(self):
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(logging, "root", handlers=[]))
         logging_dict_config = stack.enter_context(mock.patch.object(logging.config, "dictConfig"))
         logging_basic_config = stack.enter_context(mock.patch.object(logging, "basicConfig"))
-        colorlog_basic_config = stack.enter_context(mock.patch.object(colorlog, "basicConfig"))
+        logging_file_config = stack.enter_context(mock.patch.object(logging.config, "fileConfig"))
+        colored_formatter = stack.enter_context(mock.patch.object(colorlog.formatter, "ColoredFormatter"))
         supports_color = stack.enter_context(mock.patch.object(ux, "supports_color", return_value=False))
 
         with stack:
             ux.init_logging("LOGGING_LEVEL", True, False)
 
         logging_dict_config.assert_not_called()
+        logging_file_config.assert_not_called()
         logging_basic_config.assert_called_once_with(
             level="LOGGING_LEVEL",
             format="%(levelname)-1.1s %(asctime)23.23s %(name)s: %(message)s",
-            stream=sys.stderr,
+            stream=sys.stdout,
         )
-        colorlog_basic_config.assert_not_called()
+        colored_formatter.assert_not_called()
         supports_color.assert_called_once_with(True, False)
+
+    def test_when_flavour_is_pathlike(self):
+        path = pathlib.Path("some/path/to/somewhere.ini")
+
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(logging, "root", handlers=[]))
+        pathlib_path = stack.enter_context(mock.patch.object(pathlib, "Path"))
+        logging_dict_config = stack.enter_context(mock.patch.object(logging.config, "dictConfig"))
+        logging_basic_config = stack.enter_context(mock.patch.object(logging, "basicConfig"))
+        logging_file_config = stack.enter_context(mock.patch.object(logging.config, "fileConfig"))
+        colored_formatter = stack.enter_context(mock.patch.object(colorlog.formatter, "ColoredFormatter"))
+        supports_color = stack.enter_context(mock.patch.object(ux, "supports_color", return_value=False))
+
+        with stack:
+            ux.init_logging(path, True, False)
+
+        pathlib_path.assert_not_called()
+        logging_dict_config.assert_not_called()
+        logging_file_config.assert_called_once_with(path)
+        logging_basic_config.assert_not_called()
+        colored_formatter.assert_not_called()
+        supports_color.assert_not_called()
+
+    def test_when_flavour_is_an_existing_path(self):
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(logging, "root", handlers=[]))
+        pathlib_path = stack.enter_context(mock.patch.object(pathlib, "Path"))
+        logging_dict_config = stack.enter_context(mock.patch.object(logging.config, "dictConfig"))
+        logging_basic_config = stack.enter_context(mock.patch.object(logging, "basicConfig"))
+        logging_file_config = stack.enter_context(mock.patch.object(logging.config, "fileConfig"))
+        colored_formatter = stack.enter_context(mock.patch.object(colorlog.formatter, "ColoredFormatter"))
+        supports_color = stack.enter_context(mock.patch.object(ux, "supports_color", return_value=False))
+
+        with stack:
+            ux.init_logging("some/path/to/somewhere.ini", True, False)
+
+        pathlib_path.assert_called_once_with("some/path/to/somewhere.ini")
+        logging_dict_config.assert_not_called()
+        logging_file_config.assert_called_once_with(pathlib_path.return_value)
+        logging_basic_config.assert_not_called()
+        colored_formatter.assert_not_called()
+        supports_color.assert_not_called()
 
 
 class TestRedBanner:
@@ -188,7 +256,7 @@ class TestRedBanner:
         assert traversable.mock_file.context_entered == 1
         assert traversable.mock_file.context_exited == 1
 
-    def test_when_bellow_3_9(self):
+    def test_when_below_3_9(self):
         with mock.patch.object(sys, "version_info", new=(2, 7)):
             with mock.patch.object(importlib.resources, "read_text") as read_text:
                 assert ux._read_banner("hikaru") is read_text.return_value
@@ -233,10 +301,9 @@ class TestPrintBanner:
         supports_color = stack.enter_context(mock.patch.object(ux, "supports_color", return_value=True))
         read_banner = stack.enter_context(mock.patch.object(ux, "_read_banner"))
         template = stack.enter_context(mock.patch.object(string, "Template"))
-        builtins_open = stack.enter_context(mock.patch.object(builtins, "open"))
         abspath = stack.enter_context(mock.patch.object(os.path, "abspath", return_value="some path"))
         dirname = stack.enter_context(mock.patch.object(os.path, "dirname"))
-        fileno = stack.enter_context(mock.patch.object(sys.stdout, "fileno"))
+        stdout = stack.enter_context(mock.patch.object(sys, "stdout"))
 
         with stack:
             ux.print_banner("hikaru", True, False)
@@ -261,12 +328,13 @@ class TestPrintBanner:
 
         read_banner.assert_called_once_with("hikaru")
         template.assert_called_once_with(read_banner.return_value)
-        template().safe_substitute.assert_called_once_with(args)
-        builtins_open.assert_called_once_with(fileno.return_value, "w", encoding="utf-8", closefd=False)
-        builtins_open.return_value.__enter__.return_value.write.assert_called_once_with(template().safe_substitute())
+        safe_substitute = template.return_value.safe_substitute
+        safe_substitute.assert_called_once_with(args)
         dirname.assert_called_once_with("~/hikari")
         abspath.assert_called_once_with(dirname())
         supports_color.assert_called_once_with(True, False)
+        stdout.buffer.write.assert_called_once_with(safe_substitute.return_value.encode.return_value)
+        stdout.flush.assert_called_once_with()
 
     def test_when_doesnt_supports_color(self, mock_args):
         stack = contextlib.ExitStack()
@@ -279,8 +347,7 @@ class TestPrintBanner:
         template = stack.enter_context(mock.patch.object(string, "Template"))
         abspath = stack.enter_context(mock.patch.object(os.path, "abspath", return_value="some path"))
         dirname = stack.enter_context(mock.patch.object(os.path, "dirname"))
-        builtins_open = stack.enter_context(mock.patch.object(builtins, "open"))
-        fileno = stack.enter_context(mock.patch.object(sys.stdout, "fileno"))
+        stdout = stack.enter_context(mock.patch.object(sys, "stdout"))
 
         with stack:
             ux.print_banner("hikaru", True, False)
@@ -304,12 +371,13 @@ class TestPrintBanner:
         }
 
         template.assert_called_once_with(read_banner.return_value)
-        template().safe_substitute.assert_called_once_with(args)
+        safe_substitute = template.return_value.safe_substitute
+        safe_substitute.assert_called_once_with(args)
         dirname.assert_called_once_with("~/hikari")
         abspath.assert_called_once_with(dirname())
         supports_color.assert_called_once_with(True, False)
-        builtins_open.assert_called_once_with(fileno.return_value, "w", encoding="utf-8", closefd=False)
-        builtins_open.return_value.__enter__.return_value.write.assert_called_once_with(template().safe_substitute())
+        stdout.buffer.write.assert_called_once_with(safe_substitute.return_value.encode.return_value)
+        stdout.flush.assert_called_once_with()
 
     def test_use_extra_args(self, mock_args):
         stack = contextlib.ExitStack()
@@ -317,9 +385,8 @@ class TestPrintBanner:
         stack.enter_context(mock.patch.object(time, "sleep"))
         read_banner = stack.enter_context(mock.patch.object(ux, "_read_banner"))
         template = stack.enter_context(mock.patch.object(string, "Template"))
-        builtins_open = stack.enter_context(mock.patch.object(builtins, "open"))
         stack.enter_context(mock.patch.object(os.path, "abspath", return_value="some path"))
-        fileno = stack.enter_context(mock.patch.object(sys.stdout, "fileno"))
+        stdout = stack.enter_context(mock.patch.object(sys, "stdout"))
 
         extra_args = {
             "extra_argument_1": "one",
@@ -348,9 +415,10 @@ class TestPrintBanner:
 
         read_banner.assert_called_once_with("hikaru")
         template.assert_called_once_with(read_banner.return_value)
-        template().safe_substitute.assert_called_once_with(args)
-        builtins_open.assert_called_once_with(fileno.return_value, "w", encoding="utf-8", closefd=False)
-        builtins_open.return_value.__enter__.return_value.write.assert_called_once_with(template().safe_substitute())
+        safe_substitute = template.return_value.safe_substitute
+        safe_substitute.assert_called_once_with(args)
+        stdout.buffer.write.assert_called_once_with(safe_substitute.return_value.encode.return_value)
+        stdout.flush.assert_called_once_with()
 
     def test_overwrite_args_raises_error(self, mock_args):
         stack = contextlib.ExitStack()
@@ -376,14 +444,21 @@ class TestWarnIfNotOptimized:
     @pytest.mark.skipif(not __debug__, reason="Not running in optimized mode")
     def test_when_not_optimized(self):
         with mock.patch.object(ux, "_LOGGER") as logger:
-            ux.warn_if_not_optimized()
+            ux.warn_if_not_optimized(suppress=False)
 
         logger.warning.assert_called()
 
     @pytest.mark.skipif(__debug__, reason="Running in optimized mode")
     def test_when_optimized(self):
         with mock.patch.object(ux, "_LOGGER") as logger:
-            ux.warn_if_not_optimized()
+            ux.warn_if_not_optimized(suppress=False)
+
+        logger.warning.assert_not_called()
+
+    @pytest.mark.skipif(not __debug__, reason="Not running in optimized mode")
+    def test_when_optimized_and_suppressed(self):
+        with mock.patch.object(ux, "_LOGGER") as logger:
+            ux.warn_if_not_optimized(suppress=True)
 
         logger.warning.assert_not_called()
 
@@ -594,7 +669,7 @@ class TestCheckForUpdates:
         with stack:
             await ux.check_for_updates(http_settings=http_settings, proxy_settings=proxy_settings)
 
-        logger.debug.assert_not_called()
+        logger.warning.assert_not_called()
         logger.info.assert_not_called()
         create_client_session.assert_not_called()
 
@@ -609,7 +684,7 @@ class TestCheckForUpdates:
         with stack:
             await ux.check_for_updates(http_settings=http_settings, proxy_settings=proxy_settings)
 
-        logger.debug.assert_called_once_with("Failed to fetch hikari version details", exc_info=ex)
+        logger.warning.assert_called_once_with("Failed to fetch hikari version details", exc_info=ex)
         create_tcp_connector.assert_called_once_with(dns_cache=False, limit=1, http_settings=http_settings)
         create_client_session.assert_called_once_with(
             connector=create_tcp_connector(),
@@ -629,11 +704,12 @@ class TestCheckForUpdates:
             }
         }
         _request = hikari_test_helpers.AsyncContextManagerMock()
-        _request.json = mock.AsyncMock(return_value=data)
+        _request.read = mock.AsyncMock(return_value=data)
         _client_session = hikari_test_helpers.AsyncContextManagerMock()
         _client_session.get = mock.Mock(return_value=_request)
         stack = contextlib.ExitStack()
         logger = stack.enter_context(mock.patch.object(ux, "_LOGGER"))
+        json_loads = stack.enter_context(mock.patch.object(data_binding, "default_json_loads", return_value=data))
         create_client_session = stack.enter_context(
             mock.patch.object(net, "create_client_session", return_value=_client_session)
         )
@@ -644,8 +720,10 @@ class TestCheckForUpdates:
         with stack:
             await ux.check_for_updates(http_settings=http_settings, proxy_settings=proxy_settings)
 
-        logger.debug.assert_not_called()
+        logger.warning.assert_not_called()
         logger.info.assert_not_called()
+
+        json_loads.assert_called_once_with(_request.read.return_value)
         create_tcp_connector.assert_called_once_with(dns_cache=False, limit=1, http_settings=http_settings)
         create_client_session.assert_called_once_with(
             connector=create_tcp_connector(),
@@ -674,11 +752,12 @@ class TestCheckForUpdates:
             }
         }
         _request = hikari_test_helpers.AsyncContextManagerMock()
-        _request.json = mock.AsyncMock(return_value=data)
+        _request.read = mock.AsyncMock()
         _client_session = hikari_test_helpers.AsyncContextManagerMock()
         _client_session.get = mock.Mock(return_value=_request)
         stack = contextlib.ExitStack()
         logger = stack.enter_context(mock.patch.object(ux, "_LOGGER"))
+        json_loads = stack.enter_context(mock.patch.object(data_binding, "default_json_loads", return_value=data))
         create_client_session = stack.enter_context(
             mock.patch.object(net, "create_client_session", return_value=_client_session)
         )
@@ -689,10 +768,11 @@ class TestCheckForUpdates:
         with stack:
             await ux.check_for_updates(http_settings=http_settings, proxy_settings=proxy_settings)
 
-        logger.debug.assert_not_called()
+        logger.warning.assert_not_called()
         logger.info.assert_called_once_with(
             "A newer version of hikari is available, consider upgrading to %s", ux.HikariVersion(v)
         )
+        json_loads.assert_called_once_with(_request.read.return_value)
         create_tcp_connector.assert_called_once_with(dns_cache=False, limit=1, http_settings=http_settings)
         create_client_session.assert_called_once_with(
             connector=create_tcp_connector(),
