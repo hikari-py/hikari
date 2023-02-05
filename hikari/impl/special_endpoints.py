@@ -780,6 +780,7 @@ class AuditLogIterator(iterators.LazyIterator["audit_logs.AuditLog"]):
     __slots__: typing.Sequence[str] = (
         "_entity_factory",
         "_action_type",
+        "_guild_id",
         "_request_call",
         "_route",
         "_first_id",
@@ -798,6 +799,7 @@ class AuditLogIterator(iterators.LazyIterator["audit_logs.AuditLog"]):
         self._action_type = action_type
         self._entity_factory = entity_factory
         self._first_id = before
+        self._guild_id = snowflakes.Snowflake(guild)
         self._request_call = request_call
         self._route = routes.GET_GUILD_AUDIT_LOGS.compile(guild=guild)
         self._user = user
@@ -816,7 +818,7 @@ class AuditLogIterator(iterators.LazyIterator["audit_logs.AuditLog"]):
         if not audit_log_entries:
             raise StopAsyncIteration
 
-        log = self._entity_factory.deserialize_audit_log(response)
+        log = self._entity_factory.deserialize_audit_log(response, guild_id=self._guild_id)
         # Since deserialize_audit_log may skip entries it doesn't recognise,
         # first_id has to be calculated based on the raw payload as log.entries
         # may be missing entries.

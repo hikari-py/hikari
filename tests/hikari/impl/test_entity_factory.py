@@ -1350,6 +1350,107 @@ class TestEntityFactoryImpl:
             "account": {"id": "543453", "name": "Blam"},
         }
 
+    def test_deserialize_audit_log_entry(self, entity_factory_impl, audit_log_entry_payload, mock_app):
+        entry = entity_factory_impl.deserialize_audit_log_entry(
+            audit_log_entry_payload, guild_id=snowflakes.Snowflake(123321)
+        )
+
+        assert entry.app is mock_app
+        assert entry.id == 694026906592477214
+        assert entry.target_id == 115590097100865541
+        assert entry.user_id == 560984860634644482
+        assert entry.action_type == audit_log_models.AuditLogEventType.CHANNEL_OVERWRITE_UPDATE
+        assert entry.options.id == 115590097100865541
+        assert entry.options.type == channel_models.PermissionOverwriteType.MEMBER
+        assert entry.options.role_name is None
+        assert entry.guild_id == 123321
+        assert entry.reason == "An artificial insanity."
+
+        assert len(entry.changes) == 1
+        change = entry.changes[0]
+        assert change.key == audit_log_models.AuditLogChangeKey.ADD_ROLE_TO_MEMBER
+
+        assert len(change.new_value) == 1
+        role = change.new_value[568651298858074123]
+        role.app is mock_app
+        role.id == 568651298858074123
+        role.name == "Casual"
+
+        assert len(change.old_value) == 1
+        role = change.old_value[123123123312312]
+        role.app is mock_app
+        role.id == 123123123312312
+        role.name == "aRole"
+
+    def test_deserialize_audit_log_entry_when_guild_id_in_payload(
+        self, entity_factory_impl, audit_log_entry_payload, mock_app
+    ):
+        audit_log_entry_payload["guild_id"] = 431123123
+
+        entry = entity_factory_impl.deserialize_audit_log_entry(audit_log_entry_payload)
+
+        assert entry.guild_id == 431123123
+
+    def test_deserialize_audit_log_entry_with_unset_or_unknown_fields(
+        self, entity_factory_impl, audit_log_entry_payload
+    ):
+        # Unset fields
+        audit_log_entry_payload["changes"] = None
+        audit_log_entry_payload["target_id"] = None
+        audit_log_entry_payload["user_id"] = None
+        audit_log_entry_payload["options"] = None
+        audit_log_entry_payload["action_type"] = 69
+        del audit_log_entry_payload["reason"]
+
+        entry = entity_factory_impl.deserialize_audit_log_entry(
+            audit_log_entry_payload, guild_id=snowflakes.Snowflake(1234321)
+        )
+
+        assert entry.changes == []
+        assert entry.target_id is None
+        assert entry.user_id is None
+        assert entry.action_type == 69
+        assert entry.options is None
+        assert entry.reason is None
+
+    def test_deserialize_audit_log_entry_with_unhandled_change_key(self, entity_factory_impl, audit_log_entry_payload):
+        # Unset fields
+        audit_log_entry_payload["changes"][0]["key"] = "name"
+
+        entry = entity_factory_impl.deserialize_audit_log_entry(
+            audit_log_entry_payload, guild_id=snowflakes.Snowflake(4123123)
+        )
+
+        assert len(entry.changes) == 1
+        change = entry.changes[0]
+        assert change.key == audit_log_models.AuditLogChangeKey.NAME
+        assert change.new_value == [{"id": "568651298858074123", "name": "Casual"}]
+        assert change.old_value == [{"id": "123123123312312", "name": "aRole"}]
+
+    def test_deserialize_audit_log_entry_with_change_key_unknown(self, entity_factory_impl, audit_log_entry_payload):
+        # Unset fields
+        audit_log_entry_payload["changes"][0]["key"] = "unknown"
+
+        entry = entity_factory_impl.deserialize_audit_log_entry(
+            audit_log_entry_payload, guild_id=snowflakes.Snowflake(123312)
+        )
+
+        assert len(entry.changes) == 1
+        change = entry.changes[0]
+        assert change.key == "unknown"
+        assert change.new_value == [{"id": "568651298858074123", "name": "Casual"}]
+        assert change.old_value == [{"id": "123123123312312", "name": "aRole"}]
+
+    def test_deserialize_audit_log_entry_for_unknown_action_type(self, entity_factory_impl, audit_log_entry_payload):
+        # Unset fields
+        audit_log_entry_payload["action_type"] = 1000
+        audit_log_entry_payload["options"] = {"field1": "value1", "field2": 96}
+
+        with pytest.raises(errors.UnrecognisedEntityError):
+            entity_factory_impl.deserialize_audit_log_entry(
+                audit_log_entry_payload, guild_id=snowflakes.Snowflake(341123)
+            )
+
     @pytest.fixture()
     def audit_log_payload(
         self,
@@ -1376,6 +1477,7 @@ class TestEntityFactoryImpl:
         entity_factory_impl,
         mock_app,
         audit_log_payload,
+        audit_log_entry_payload,
         user_payload,
         incoming_webhook_payload,
         application_webhook_payload,
@@ -1385,35 +1487,13 @@ class TestEntityFactoryImpl:
         guild_private_thread_payload,
         guild_news_thread_payload,
     ):
-        audit_log = entity_factory_impl.deserialize_audit_log(audit_log_payload)
+        audit_log = entity_factory_impl.deserialize_audit_log(audit_log_payload, guild_id=snowflakes.Snowflake(123321))
 
-        assert len(audit_log.entries) == 1
-        entry = audit_log.entries[694026906592477214]
-        assert entry.app is mock_app
-        assert entry.id == 694026906592477214
-        assert entry.target_id == 115590097100865541
-        assert entry.user_id == 560984860634644482
-        assert entry.action_type == audit_log_models.AuditLogEventType.CHANNEL_OVERWRITE_UPDATE
-        assert entry.options.id == 115590097100865541
-        assert entry.options.type == channel_models.PermissionOverwriteType.MEMBER
-        assert entry.options.role_name is None
-        assert entry.reason == "An artificial insanity."
-
-        assert len(entry.changes) == 1
-        change = entry.changes[0]
-        assert change.key == audit_log_models.AuditLogChangeKey.ADD_ROLE_TO_MEMBER
-
-        assert len(change.new_value) == 1
-        role = change.new_value[568651298858074123]
-        role.app is mock_app
-        role.id == 568651298858074123
-        role.name == "Casual"
-
-        assert len(change.old_value) == 1
-        role = change.old_value[123123123312312]
-        role.app is mock_app
-        role.id == 123123123312312
-        role.name == "aRole"
+        assert audit_log.entries == {
+            694026906592477214: entity_factory_impl.deserialize_audit_log_entry(
+                audit_log_entry_payload, guild_id=snowflakes.Snowflake(123321)
+            )
+        }
 
         assert audit_log.integrations == {
             4949494949: entity_factory_impl.deserialize_partial_integration(partial_integration_payload)
@@ -1430,60 +1510,12 @@ class TestEntityFactoryImpl:
             752831914402115456: entity_factory_impl.deserialize_channel_follower_webhook(follower_webhook_payload),
         }
 
-    def test_deserialize_audit_log_with_unset_or_unknown_fields(self, entity_factory_impl, audit_log_payload):
-        # Unset fields
-        audit_log_payload["audit_log_entries"][0]["changes"] = None
-        audit_log_payload["audit_log_entries"][0]["target_id"] = None
-        audit_log_payload["audit_log_entries"][0]["user_id"] = None
-        audit_log_payload["audit_log_entries"][0]["options"] = None
-        audit_log_payload["audit_log_entries"][0]["action_type"] = 69
-        del audit_log_payload["audit_log_entries"][0]["reason"]
-
-        audit_log = entity_factory_impl.deserialize_audit_log(audit_log_payload)
-
-        assert len(audit_log.entries) == 1
-        entry = audit_log.entries[694026906592477214]
-        assert entry.changes == []
-        assert entry.target_id is None
-        assert entry.user_id is None
-        assert entry.action_type == 69
-        assert entry.options is None
-        assert entry.reason is None
-
-    def test_deserialize_audit_log_with_unhandled_change_key(self, entity_factory_impl, audit_log_payload):
-        # Unset fields
-        audit_log_payload["audit_log_entries"][0]["changes"][0]["key"] = "name"
-
-        audit_log = entity_factory_impl.deserialize_audit_log(audit_log_payload)
-
-        assert len(audit_log.entries) == 1
-        entry = audit_log.entries[694026906592477214]
-        assert len(entry.changes) == 1
-        change = entry.changes[0]
-        assert change.key == audit_log_models.AuditLogChangeKey.NAME
-        assert change.new_value == [{"id": "568651298858074123", "name": "Casual"}]
-        assert change.old_value == [{"id": "123123123312312", "name": "aRole"}]
-
-    def test_deserialize_audit_log_with_change_key_unknown(self, entity_factory_impl, audit_log_payload):
-        # Unset fields
-        audit_log_payload["audit_log_entries"][0]["changes"][0]["key"] = "unknown"
-
-        audit_log = entity_factory_impl.deserialize_audit_log(audit_log_payload)
-
-        assert len(audit_log.entries) == 1
-        entry = audit_log.entries[694026906592477214]
-        assert len(entry.changes) == 1
-        change = entry.changes[0]
-        assert change.key == "unknown"
-        assert change.new_value == [{"id": "568651298858074123", "name": "Casual"}]
-        assert change.old_value == [{"id": "123123123312312", "name": "aRole"}]
-
     def test_deserialize_audit_log_with_action_type_unknown_gets_ignored(self, entity_factory_impl, audit_log_payload):
         # Unset fields
         audit_log_payload["audit_log_entries"][0]["action_type"] = 1000
         audit_log_payload["audit_log_entries"][0]["options"] = {"field1": "value1", "field2": 96}
 
-        audit_log = entity_factory_impl.deserialize_audit_log(audit_log_payload)
+        audit_log = entity_factory_impl.deserialize_audit_log(audit_log_payload, guild_id=snowflakes.Snowflake(341123))
 
         assert len(audit_log.entries) == 0
 
@@ -1500,7 +1532,8 @@ class TestEntityFactoryImpl:
                 "users": [],
                 "audit_log_entries": [],
                 "integrations": [],
-            }
+            },
+            guild_id=snowflakes.Snowflake(53123123),
         )
 
         assert audit_log.webhooks == {
@@ -1521,7 +1554,8 @@ class TestEntityFactoryImpl:
                 "users": [],
                 "audit_log_entries": [],
                 "integrations": [],
-            }
+            },
+            guild_id=snowflakes.Snowflake(5412123),
         )
 
         assert audit_log.threads == {

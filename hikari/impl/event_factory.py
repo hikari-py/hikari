@@ -486,6 +486,15 @@ class EventFactoryImpl(event_factory.EventFactory):
             )
         return guild_events.PresenceUpdateEvent(shard=shard, presence=presence, user=user, old_presence=old_presence)
 
+    def deserialize_audit_log_entry_create_event(
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+    ) -> guild_events.AuditLogEntryCreateEvent:
+        return guild_events.AuditLogEntryCreateEvent(
+            shard=shard, entry=self._app.entity_factory.deserialize_audit_log_entry(payload)
+        )
+
     ######################
     # INTERACTION EVENTS #
     ######################

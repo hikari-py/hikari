@@ -1690,3 +1690,19 @@ class TestEventManagerImpl:
         event_manager_impl.dispatch.assert_awaited_once_with(
             event_factory.deserialize_scheduled_event_user_remove_event.return_value
         )
+
+    @pytest.mark.asyncio()
+    async def test_on_guild_audit_log_entry_create(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: mock.Mock,
+        event_factory: event_factory_.EventFactory,
+    ):
+        mock_payload = mock.Mock()
+
+        await event_manager_impl.on_guild_audit_log_entry_create(shard, mock_payload)
+
+        event_factory.deserialize_audit_log_entry_create_event.assert_called_once_with(shard, mock_payload)
+        event_manager_impl.dispatch.assert_awaited_once_with(
+            event_factory.deserialize_audit_log_entry_create_event.return_value
+        )
