@@ -36,6 +36,7 @@ import importlib.resources
 import logging
 import logging.config
 import os
+import pathlib
 import platform
 import re
 import string
@@ -67,33 +68,44 @@ _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.ux")
 
 
 def init_logging(
-    flavor: typing.Union[None, str, int, typing.Dict[str, typing.Any]],
+    flavor: typing.Union[None, str, int, typing.Dict[str, typing.Any], os.PathLike[str]],
     allow_color: bool,
     force_color: bool,
 ) -> None:
-    """Attempt to initialize logging for the user.
+    """Initialize logging for the user.
 
-    If any handlers already exist, this is ignored entirely. This ensures the
-    user can use any existing logging configuration without us interfering.
-    You can manually disable this by passing `None` as the `flavor` parameter.
+    .. note::
+        If any handlers already exist, some opinionated defaults will be configured
+        (mostly do to with logging efficiency and warning logging), but existing
+        handlers will not be overwritten. You can disable this by passing
+        `None` as the `flavor` parameter.
+
+    .. warning::
+        This function is blocking!
 
     Parameters
     ----------
-    flavor : typing.Optional[None, str, typing.Dict[str, typing.Any]]
+    flavor : typing.Optional[None, str, int, typing.Dict[str, typing.Any], os.PathLike[str]]
         The hint for configuring logging.
 
         This can be `None` to not enable logging automatically.
 
         If you pass a `str` or a `int`, it is interpreted as
         the global logging level to use, and should match one of `"DEBUG"`,
-        `"INFO"`, `"WARNING"`, `"ERROR"` or `"CRITICAL"`, if `str`.
+        `"INFO"`, `"WARNING"`, `"ERROR"` or `"CRITICAL"`.
         The configuration will be set up to use a `colorlog` coloured logger,
         and to use a sane logging format strategy. The output will be written
-        to `sys.stderr` using this configuration.
+        to `sys.stdout` using this configuration.
 
         If you pass a `dict`, it is treated as the mapping to pass to
         `logging.config.dictConfig`. If the dict defines any handlers, default
-        handlers will not be setup.
+        handlers will not be setup if `incremental` is not specified.
+
+        If you pass a `str` to an existing file or a `os.PathLike`, it is
+        interpreted as the file to load config from using `logging.config.fileConfig`.
+
+        Note that `"TRACE_HIKARI"` is a library-specific logging level
+        which is expected to be more verbose than `"DEBUG"`.
     allow_color : bool
         If `False`, no colour is allowed. If `True`, the
         output device must be supported for this to return `True`.
@@ -101,6 +113,39 @@ def init_logging(
         If `True`, return `True` always, otherwise only
         return `True` if the device supports colour output and the
         `allow_color` flag is not `False`.
+
+    Examples
+    --------
+    Simple logging setup:
+
+    .. code-block:: python
+
+        init_logging("INFO")  # Registered logging level
+        # or
+        init_logging(20)  # Logging level as an int
+
+    File config:
+
+    .. code-block:: python
+
+        # See https://docs.python.org/3/library/logging.config.html#configuration-file-format for more info
+        init_logging("path/to/file.ini")
+
+    Setting up logging through a dict config:
+
+    .. code-block:: python
+
+        # See https://docs.python.org/3/library/logging.config.html#dictionary-schema-details for more info
+        init_logging(
+            {
+                "version": 1,
+                "incremental": True,  # In incremental setups, the default stream handler will be setup
+                "loggers": {
+                    "hikari.gateway": {"level": "DEBUG"},
+                    "hikari.ratelimits": {"level": "TRACE_HIKARI"},
+                },
+            }
+        )
     """
     # One observation that has been repeatedly made from seeing beginners writing
     # bots in Python is that most people seem to have no idea what logging is or
@@ -113,41 +158,79 @@ def init_logging(
     # As part of Hikari's set of opinionated defaults, we turn logging on with
     # a desirable format that is coloured in an effort to draw the user's attention
     # to it, rather than encouraging them to ignore it.
-
-    if len(logging.root.handlers) != 0 or flavor is None:
-        # Skip, the user is using something else to configure their logging.
+    if flavor is None:
         return
-
-    if isinstance(flavor, dict):
-        logging.config.dictConfig(flavor)
-
-        if flavor.get("handlers"):
-            # Handlers are defined => don't configure the default ones
-            return
-
-        flavor = None
 
     # Apparently this makes logging even more efficient!
     logging.logThreads = False
     logging.logProcesses = False
-
-    if supports_color(allow_color, force_color):
-        colorlog.basicConfig(
-            level=flavor,
-            format="%(log_color)s%(bold)s%(levelname)-1.1s%(thin)s %(asctime)23.23s %(bold)s%(name)s: "
-            "%(thin)s%(message)s%(reset)s",
-            stream=sys.stderr,
-        )
-    else:
-        logging.basicConfig(
-            level=flavor,
-            format="%(levelname)-1.1s %(asctime)23.23s %(name)s: %(message)s",
-            stream=sys.stderr,
-        )
+    logging.logMultiprocessing = False
 
     # DeprecationWarning is disabled by default, but it's useful to have enabled
     warnings.simplefilter("always", DeprecationWarning)
     logging.captureWarnings(True)
+
+    if len(logging.root.handlers) != 0:
+        # Something else is already setup, so don't overwrite it
+        return
+
+    if isinstance(flavor, str):
+        # Syntactic sugar to allow paths as strings
+        path = pathlib.Path(flavor)
+        if path.expanduser().exists():
+            flavor = path
+
+    # Config through file
+    if isinstance(flavor, os.PathLike):
+        try:
+            logging.config.fileConfig(flavor)
+        except Exception as ex:
+            raise RuntimeError("A problem occurred while trying to setup logging through file configuration") from ex
+        return
+
+    # Config through dict
+    if isinstance(flavor, dict):
+        try:
+            logging.config.dictConfig(flavor)
+        except Exception as ex:
+            raise RuntimeError("A problem occurred while trying to setup logging through dict configuration") from ex
+
+        if not flavor.get("incremental"):
+            # Non-incremental setup, return
+            return
+
+        flavor = None
+
+    # Default config (stream)
+    try:
+        if supports_color(allow_color, force_color):
+            logging.basicConfig(level=flavor, stream=sys.stdout)
+            handler = logging.root.handlers[0]
+            handler.setFormatter(
+                colorlog.formatter.ColoredFormatter(
+                    fmt=(
+                        "%(log_color)s%(bold)s%(levelname)-1.1s%(thin)s "  # Logging level
+                        "%(asctime)23.23s "  # Date and time
+                        "%(bold)s%(name)s: "  # Logger name
+                        "%(thin)s%(message)s%(reset)s"  # Message
+                    ),
+                    force_color=True,
+                )
+            )
+        else:
+            logging.basicConfig(
+                level=flavor,
+                stream=sys.stdout,
+                format=(
+                    "%(levelname)-1.1s "  # Logging level
+                    "%(asctime)23.23s "  # Date and time
+                    "%(name)s: "  # Logger name
+                    "%(message)s"  # Message
+                ),
+            )
+
+    except Exception as ex:
+        raise RuntimeError("A problem occurred while trying to setup default logging configuration") from ex
 
 
 _UNCONDITIONAL_ANSI_FLAGS: typing.Final[typing.FrozenSet[str]] = frozenset(("PYCHARM_HOSTED", "WT_SESSION"))
@@ -178,6 +261,9 @@ def print_banner(
 
     .. note::
         The `banner.txt` must be in the root folder of the package.
+
+    .. warning::
+        This function is blocking!
 
     Parameters
     ----------
@@ -237,9 +323,9 @@ def print_banner(
         for code in colorlog.escape_codes.escape_codes:
             args[code] = ""
 
-    with open(sys.stdout.fileno(), "w", encoding="utf-8", closefd=False) as stdout:
-        stdout.write(string.Template(raw_banner).safe_substitute(args))
-        stdout.flush()
+    banner_str = string.Template(raw_banner).safe_substitute(args)
+    sys.stdout.buffer.write(banner_str.encode("utf-8"))
+    sys.stdout.flush()
 
 
 def warn_if_not_optimized(suppress: bool) -> None:
