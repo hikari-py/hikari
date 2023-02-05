@@ -1736,7 +1736,7 @@ class TestRESTClientImplAsync:
             with pytest.raises(exit_exception):
                 await rest_client._perform_request(route, json={"some": "data"})
 
-        json_payload.assert_called_once_with({"some": "data"}, json_dumps=rest_client._dumps)
+        json_payload.assert_called_once_with({"some": "data"}, dumps=rest_client._dumps)
         _, kwargs = rest_client._client_session.request.call_args_list[0]
         assert kwargs["data"] is json_payload.return_value
 

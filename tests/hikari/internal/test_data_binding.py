@@ -75,8 +75,8 @@ class TestURLEncodedFormBuilder:
         )
         mock_form_class.return_value.add_field.assert_has_calls(
             [
-                mock.call("test_name", "test_data", content_type="mimetype"),
-                mock.call("test_name2", "test_data2", content_type="mimetype2"),
+                mock.call("test_name", "test_data", content_type="mimetype", content_transfer_encoding="binary"),
+                mock.call("test_name2", "test_data2", content_type="mimetype2", content_transfer_encoding="binary"),
                 mock.call("aye", stream1, filename="testing1", content_type="text"),
                 mock.call("lmao", stream2, filename="testing2", content_type="application/octet-stream"),
             ]
