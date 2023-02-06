@@ -64,6 +64,7 @@ from hikari.api import special_endpoints
 from hikari.interactions import base_interactions
 from hikari.internal import attr_extensions
 from hikari.internal import data_binding
+from hikari.internal import deprecation
 from hikari.internal import mentions
 from hikari.internal import routes
 from hikari.internal import time
@@ -98,6 +99,10 @@ if typing.TYPE_CHECKING:
     _ButtonBuilderT = typing.TypeVar("_ButtonBuilderT", bound="_ButtonBuilder[typing.Any]")
     _SelectOptionBuilderT = typing.TypeVar("_SelectOptionBuilderT", bound="_SelectOptionBuilder[typing.Any]")
     _SelectMenuBuilderT = typing.TypeVar("_SelectMenuBuilderT", bound="SelectMenuBuilder[typing.Any]")
+    _TextSelectMenuBuilderT = typing.TypeVar("_TextSelectMenuBuilderT", bound="TextSelectMenuBuilder[typing.Any]")
+    _ChannelSelectMenuBuilderT = typing.TypeVar(
+        "_ChannelSelectMenuBuilderT", bound="ChannelSelectMenuBuilder[typing.Any]"
+    )
     _TextInputBuilderT = typing.TypeVar("_TextInputBuilderT", bound="TextInputBuilder[typing.Any]")
 
     class _RequestCallSig(typing.Protocol):
@@ -1562,10 +1567,10 @@ class InteractiveButtonBuilder(
 
 @attr_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
-class _SelectOptionBuilder(special_endpoints.SelectOptionBuilder["_SelectMenuBuilderT"]):
+class _SelectOptionBuilder(special_endpoints.SelectOptionBuilder["_TextSelectMenuBuilderT"]):
     """Builder class for select menu options."""
 
-    _menu: _SelectMenuBuilderT = attr.field(alias="menu")
+    _menu: _TextSelectMenuBuilderT = attr.field(alias="menu")
     _label: str = attr.field(alias="label")
     _value: str = attr.field(alias="value")
     _description: undefined.UndefinedOr[str] = attr.field(alias="description", default=undefined.UNDEFINED)
@@ -1613,7 +1618,7 @@ class _SelectOptionBuilder(special_endpoints.SelectOptionBuilder["_SelectMenuBui
         self._is_default = state
         return self
 
-    def add_to_menu(self) -> _SelectMenuBuilderT:
+    def add_to_menu(self) -> _TextSelectMenuBuilderT:
         self._menu.add_raw_option(self)
         return self._menu
 
@@ -1640,9 +1645,8 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder[_ContainerProtoT]):
     """Builder class for select menus."""
 
     _container: _ContainerProtoT = attr.field(alias="container")
+    _type: typing.Union[component_models.ComponentType, int] = attr.field(alias="type")
     _custom_id: str = attr.field(alias="custom_id")
-    # Any has to be used here as we can't access Self type in this context
-    _options: typing.List[special_endpoints.SelectOptionBuilder[typing.Any]] = attr.field(alias="options", factory=list)
     _placeholder: undefined.UndefinedOr[str] = attr.field(alias="placeholder", default=undefined.UNDEFINED)
     _min_values: int = attr.field(alias="min_values", default=0)
     _max_values: int = attr.field(alias="max_values", default=1)
@@ -1657,12 +1661,6 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder[_ContainerProtoT]):
         return self._is_disabled
 
     @property
-    def options(
-        self: _SelectMenuBuilderT,
-    ) -> typing.Sequence[special_endpoints.SelectOptionBuilder[_SelectMenuBuilderT]]:
-        return self._options.copy()
-
-    @property
     def placeholder(self) -> undefined.UndefinedOr[str]:
         return self._placeholder
 
@@ -1673,17 +1671,6 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder[_ContainerProtoT]):
     @property
     def max_values(self) -> int:
         return self._max_values
-
-    def add_option(
-        self: _SelectMenuBuilderT, label: str, value: str, /
-    ) -> special_endpoints.SelectOptionBuilder[_SelectMenuBuilderT]:
-        return _SelectOptionBuilder(menu=self, label=label, value=value)
-
-    def add_raw_option(
-        self: _SelectMenuBuilderT, option: special_endpoints.SelectOptionBuilder[_SelectMenuBuilderT], /
-    ) -> _SelectMenuBuilderT:
-        self._options.append(option)
-        return self
 
     def set_is_disabled(self: _SelectMenuBuilderT, state: bool, /) -> _SelectMenuBuilderT:
         self._is_disabled = state
@@ -1708,13 +1695,74 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder[_ContainerProtoT]):
     def build(self) -> typing.MutableMapping[str, typing.Any]:
         data = data_binding.JSONObjectBuilder()
 
-        data["type"] = component_models.ComponentType.SELECT_MENU
+        data["type"] = self._type
         data["custom_id"] = self._custom_id
-        data["options"] = [option.build() for option in self._options]
         data.put("placeholder", self._placeholder)
         data.put("min_values", self._min_values)
         data.put("max_values", self._max_values)
         data.put("disabled", self._is_disabled)
+        return data
+
+
+@attr_extensions.with_copy
+@attr.define(kw_only=True, weakref_slot=False)
+class TextSelectMenuBuilder(
+    SelectMenuBuilder[_ContainerProtoT], special_endpoints.TextSelectMenuBuilder[_ContainerProtoT]
+):
+    """Builder class for text select menus."""
+
+    _type: typing.Union[component_models.ComponentType, int] = component_models.ComponentType.TEXT_SELECT_MENU
+    # Any has to be used here as we can't access Self type in this context
+    _options: typing.List[special_endpoints.SelectOptionBuilder[typing.Any]] = attr.field(alias="options", factory=list)
+
+    @property
+    def options(
+        self: _TextSelectMenuBuilderT,
+    ) -> typing.Sequence[special_endpoints.SelectOptionBuilder[_TextSelectMenuBuilderT]]:
+        return self._options.copy()
+
+    def add_option(
+        self: _TextSelectMenuBuilderT, label: str, value: str, /
+    ) -> special_endpoints.SelectOptionBuilder[_TextSelectMenuBuilderT]:
+        return _SelectOptionBuilder(menu=self, label=label, value=value)
+
+    def add_raw_option(
+        self: _TextSelectMenuBuilderT, option: special_endpoints.SelectOptionBuilder[_TextSelectMenuBuilderT], /
+    ) -> _TextSelectMenuBuilderT:
+        self._options.append(option)
+        return self
+
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        data = super().build()
+
+        data["options"] = [option.build() for option in self._options]
+        return data
+
+
+@attr_extensions.with_copy
+@attr.define(kw_only=True, weakref_slot=False)
+class ChannelSelectMenuBuilder(
+    SelectMenuBuilder[_ContainerProtoT], special_endpoints.ChannelSelectMenuBuilder[_ContainerProtoT]
+):
+    """Builder class for channel select menus."""
+
+    _channel_types: typing.Sequence[channels.ChannelType] = attr.field(alias="channel_types", factory=list)
+    _type: typing.Union[component_models.ComponentType, int] = component_models.ComponentType.CHANNEL_SELECT_MENU
+
+    @property
+    def channel_types(self) -> typing.Sequence[channels.ChannelType]:
+        return self._channel_types
+
+    def set_channel_types(
+        self: _ChannelSelectMenuBuilderT, value: typing.Sequence[channels.ChannelType], /
+    ) -> _ChannelSelectMenuBuilderT:
+        self._channel_types = value
+        return self
+
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        data = super().build()
+
+        data["channel_types"] = self._channel_types
         return data
 
 
@@ -1889,11 +1937,75 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
 
         return LinkButtonBuilder(container=self, style=style, url=url_or_custom_id)
 
+    @typing.overload  # Deprecated overload
     def add_select_menu(
-        self: _MessageActionRowBuilderT, custom_id: str, /
+        self: _MessageActionRowBuilderT,
+        custom_id: str,
+        /,
+    ) -> special_endpoints.TextSelectMenuBuilder[_MessageActionRowBuilderT]:
+        ...
+
+    @typing.overload
+    def add_select_menu(
+        self: _MessageActionRowBuilderT,
+        type_: typing.Literal[component_models.ComponentType.TEXT_SELECT_MENU, 3],
+        custom_id: str,
+        /,
+    ) -> special_endpoints.TextSelectMenuBuilder[_MessageActionRowBuilderT]:
+        ...
+
+    @typing.overload
+    def add_select_menu(
+        self: _MessageActionRowBuilderT,
+        type_: typing.Literal[component_models.ComponentType.CHANNEL_SELECT_MENU, 8],
+        custom_id: str,
+        /,
+    ) -> special_endpoints.ChannelSelectMenuBuilder[_MessageActionRowBuilderT]:
+        ...
+
+    @typing.overload
+    def add_select_menu(
+        self: _MessageActionRowBuilderT,
+        type_: typing.Union[component_models.ComponentType, int],
+        custom_id: str,
+        /,
     ) -> special_endpoints.SelectMenuBuilder[_MessageActionRowBuilderT]:
-        self._assert_can_add_type(component_models.ComponentType.SELECT_MENU)
-        return SelectMenuBuilder(container=self, custom_id=custom_id)
+        ...
+
+    def add_select_menu(
+        self: _MessageActionRowBuilderT,
+        type_: typing.Union[component_models.ComponentType, int, str],
+        # These have default during the deprecation period for backwards compatibility, as custom_id
+        # used to come first
+        custom_id: str = "",
+        /,
+    ) -> special_endpoints.SelectMenuBuilder[_MessageActionRowBuilderT]:
+        # custom_id used to come first, so just switch them around if only of them is passed
+        if type_ and not custom_id:
+            custom_id = str(type_)
+
+            deprecation.warn_deprecated(
+                "not passing 'type' explicitly",
+                removal_version="2.0.0.dev118",
+                additional_info="Please set the type by passing 'type' explicitly",
+                quote=False,
+            )
+            type_ = component_models.ComponentType.TEXT_SELECT_MENU
+
+        # A little guard during the deprecation period to stop mypy from complaining
+        type_ = component_models.ComponentType(type_)
+
+        if type_ not in component_models.SelectMenuTypes:
+            raise ValueError(f"{type_!r} is an invalid type option")
+
+        self._assert_can_add_type(type_)
+
+        if type_ == component_models.ComponentType.TEXT_SELECT_MENU:
+            return TextSelectMenuBuilder(container=self, custom_id=custom_id)
+        if type_ == component_models.ComponentType.CHANNEL_SELECT_MENU:
+            return ChannelSelectMenuBuilder(container=self, custom_id=custom_id)
+
+        return SelectMenuBuilder(container=self, type=type_, custom_id=custom_id)
 
     def build(self) -> typing.MutableMapping[str, typing.Any]:
         return {

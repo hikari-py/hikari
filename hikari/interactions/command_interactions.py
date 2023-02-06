@@ -31,8 +31,6 @@ __all__: typing.Sequence[str] = (
     "CommandInteraction",
     "COMMAND_RESPONSE_TYPES",
     "CommandResponseTypesT",
-    "InteractionChannel",
-    "ResolvedOptionData",
 )
 
 import typing
@@ -49,7 +47,6 @@ from hikari.internal import attr_extensions
 
 if typing.TYPE_CHECKING:
     from hikari import guilds
-    from hikari import messages as messages_
     from hikari import permissions as permissions_
     from hikari import users as users_
     from hikari.api import special_endpoints
@@ -77,38 +74,11 @@ The following types are valid for this:
 * `hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE`/`5`
 """
 
+InteractionChannel = base_interactions.InteractionChannel
+"""Deprecated alias of `hikari.base_interactions.InteractionChannel`."""
 
-@attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
-class InteractionChannel(channels.PartialChannel):
-    """Represents partial channels returned as resolved entities on interactions."""
-
-    permissions: permissions_.Permissions = attr.field(eq=False, hash=False, repr=True)
-    """Permissions the command's executor has in this channel."""
-
-
-@attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
-class ResolvedOptionData:
-    """Represents the resolved objects of entities referenced in a command's options."""
-
-    attachments: typing.Mapping[snowflakes.Snowflake, messages_.Attachment] = attr.field(repr=False)
-    """Mapping of snowflake IDs to the attachment objects."""
-
-    channels: typing.Mapping[snowflakes.Snowflake, InteractionChannel] = attr.field(repr=False)
-    """Mapping of snowflake IDs to the resolved option partial channel objects."""
-
-    members: typing.Mapping[snowflakes.Snowflake, base_interactions.InteractionMember] = attr.field(repr=False)
-    """Mapping of snowflake IDs to the resolved option member objects."""
-
-    messages: typing.Mapping[snowflakes.Snowflake, messages_.Message]
-    """Mapping of snowflake IDs to the resolved option partial message objects."""
-
-    roles: typing.Mapping[snowflakes.Snowflake, guilds.Role] = attr.field(repr=False)
-    """Mapping of snowflake IDs to the resolved option role objects."""
-
-    users: typing.Mapping[snowflakes.Snowflake, users_.User] = attr.field(repr=False)
-    """Mapping of snowflake IDs to the resolved option user objects."""
+ResolvedOptionData = base_interactions.ResolvedOptionData
+"""Deprecated alias of `hikari.base_interactions.ResolvedOptionData`."""
 
 
 @attr_extensions.with_copy
@@ -352,7 +322,7 @@ class CommandInteraction(
     options: typing.Optional[typing.Sequence[CommandInteractionOption]] = attr.field(eq=False, hash=False, repr=True)
     """Parameter values provided by the user invoking this command."""
 
-    resolved: typing.Optional[ResolvedOptionData] = attr.field(eq=False, hash=False, repr=False)
+    resolved: typing.Optional[base_interactions.ResolvedOptionData] = attr.field(eq=False, hash=False, repr=False)
     """Mappings of the objects resolved for the provided command options."""
 
     target_id: typing.Optional[snowflakes.Snowflake] = attr.field(default=None, eq=False, hash=False, repr=True)

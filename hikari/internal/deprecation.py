@@ -52,10 +52,18 @@ def check_if_past_removal(what: str, /, *, removal_version: str) -> None:
         If the deprecated item is past its removal version.
     """
     if ux.HikariVersion(hikari_about.__version__) >= ux.HikariVersion(removal_version):
-        raise DeprecationWarning(f"{what!r} is passed its removal version ({removal_version})")
+        raise DeprecationWarning(f"{what} is passed its removal version ({removal_version})")
 
 
-def warn_deprecated(what: str, /, *, removal_version: str, additional_info: str, stack_level: int = 3) -> None:
+def warn_deprecated(
+    what: str,
+    /,
+    *,
+    removal_version: str,
+    additional_info: str,
+    stack_level: int = 3,
+    quote: bool = True,
+) -> None:
     """Issue a deprecation warning.
 
     If the item is past its deprecation version, an error will be raised instead.
@@ -73,16 +81,21 @@ def warn_deprecated(what: str, /, *, removal_version: str, additional_info: str,
         Additional information on the deprecation for the user.
     stack_level : int
         The stack level to issue the warning in.
+    quote : bool
+        Whether to quote `what` when displaying the deprecation
 
     Raises
     ------
     DeprecationWarning
         If the deprecated item is past its removal version.
     """
+    if quote:
+        what = repr(what)
+
     check_if_past_removal(what, removal_version=removal_version)
 
     warnings.warn(
-        f"{what!r} is deprecated and will be removed in `{removal_version}`. {additional_info}",
+        f"{what} is deprecated and will be removed in `{removal_version}`. {additional_info}",
         category=DeprecationWarning,
         stacklevel=stack_level,
     )

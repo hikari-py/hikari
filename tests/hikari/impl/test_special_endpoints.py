@@ -23,6 +23,7 @@
 import mock
 import pytest
 
+from hikari import channels
 from hikari import commands
 from hikari import components
 from hikari import emojis
@@ -1438,20 +1439,10 @@ class Test_SelectOptionBuilder:
 class TestSelectMenuBuilder:
     @pytest.fixture()
     def menu(self):
-        return special_endpoints.SelectMenuBuilder(container=mock.Mock(), custom_id="o2o2o2")
+        return special_endpoints.SelectMenuBuilder(container=mock.Mock(), custom_id="o2o2o2", type=5)
 
     def test_custom_id_property(self, menu):
         assert menu.custom_id == "o2o2o2"
-
-    def test_add_add_option(self, menu):
-        option = menu.add_option("ok", "no u")
-        option.add_to_menu()
-        assert menu.options == [option]
-
-    def test_add_raw_option(self, menu):
-        mock_option = object()
-        menu.add_raw_option(mock_option)
-        assert menu.options == [mock_option]
 
     def test_set_is_disabled(self, menu):
         assert menu.set_is_disabled(True) is menu
@@ -1474,36 +1465,73 @@ class TestSelectMenuBuilder:
         menu._container.add_component.assert_called_once_with(menu)
 
     def test_build(self):
-        result = special_endpoints.SelectMenuBuilder(container=object(), custom_id="o2o2o2").build()
+        result = special_endpoints.SelectMenuBuilder(container=object(), custom_id="o2o2o2", type=5).build()
 
         assert result == {
-            "type": components.ComponentType.SELECT_MENU,
+            "type": 5,
             "custom_id": "o2o2o2",
-            "options": [],
             "disabled": False,
             "min_values": 0,
             "max_values": 1,
         }
 
-    def test_build_partial(self):
+
+class TestTextSelectMenuBuilder:
+    @pytest.fixture()
+    def menu(self):
+        return special_endpoints.TextSelectMenuBuilder(container=mock.Mock(), custom_id="o2o2o2")
+
+    def test_add_add_option(self, menu):
+        option = menu.add_option("ok", "no u")
+        option.add_to_menu()
+        assert menu.options == [option]
+
+    def test_add_raw_option(self, menu):
+        mock_option = object()
+        menu.add_raw_option(mock_option)
+        assert menu.options == [mock_option]
+
+    def test_build(self):
         result = (
-            special_endpoints.SelectMenuBuilder(container=object(), custom_id="o2o2o2")
+            special_endpoints.TextSelectMenuBuilder(container=object(), custom_id="o2o2o2")
             .set_placeholder("hi")
             .set_min_values(22)
             .set_max_values(53)
             .set_is_disabled(True)
-            .add_raw_option(mock.Mock(build=mock.Mock(return_value={"hi": "OK"})))
             .build()
         )
 
         assert result == {
-            "type": components.ComponentType.SELECT_MENU,
+            "type": 3,
             "custom_id": "o2o2o2",
-            "options": [{"hi": "OK"}],
             "placeholder": "hi",
             "min_values": 22,
             "max_values": 53,
             "disabled": True,
+            "options": [],
+        }
+
+
+class TestChannelSelectMenuBuilder:
+    def test_build(self):
+        result = (
+            special_endpoints.ChannelSelectMenuBuilder(container=object(), custom_id="o2o2o2")
+            .set_placeholder("hi")
+            .set_min_values(22)
+            .set_max_values(53)
+            .set_is_disabled(True)
+            .set_channel_types([channels.ChannelType.GUILD_CATEGORY])
+            .build()
+        )
+
+        assert result == {
+            "type": 8,
+            "custom_id": "o2o2o2",
+            "placeholder": "hi",
+            "min_values": 22,
+            "max_values": 53,
+            "disabled": True,
+            "channel_types": [channels.ChannelType.GUILD_CATEGORY],
         }
 
 

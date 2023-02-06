@@ -46,6 +46,7 @@ import typing
 
 import attr
 
+from hikari import channels
 from hikari import emojis
 from hikari.internal import enums
 
@@ -73,19 +74,54 @@ class ComponentType(int, enums.Enum):
         as `ComponentType.ACTION_ROW`.
     """
 
-    SELECT_MENU = 3
-    """A select menu component.
+    TEXT_SELECT_MENU = 3
+    """A text select component.
 
     .. note::
         This cannot be top-level and must be within a container component such
         as `ComponentType.ACTION_ROW`.
     """
 
+    SELECT_MENU = enums.deprecated(TEXT_SELECT_MENU, removal_version="2.0.0.dev118")
+    """Deprecated alias for `TEXT_MENU_SELECT`."""
+
     TEXT_INPUT = 4
     """A text input component.
 
     .. note::
         This component may only be used inside a modal container.
+
+    .. note::
+        This cannot be top-level and must be within a container component such
+        as `ComponentType.ACTION_ROW`.
+    """
+
+    USER_SELECT_MENU = 5
+    """A user select component.
+
+    .. note::
+        This cannot be top-level and must be within a container component such
+        as `ComponentType.ACTION_ROW`.
+    """
+
+    ROLE_SELECT_MENU = 6
+    """A role select component.
+
+    .. note::
+        This cannot be top-level and must be within a container component such
+        as `ComponentType.ACTION_ROW`.
+    """
+
+    MENTIONABLE_SELECT_MENU = 7
+    """A mentionable (users and roles) select component.
+
+    .. note::
+        This cannot be top-level and must be within a container component such
+        as `ComponentType.ACTION_ROW`.
+    """
+
+    CHANNEL_SELECT_MENU = 8
+    """A channel select component.
 
     .. note::
         This cannot be top-level and must be within a container component such
@@ -230,9 +266,6 @@ class SelectMenuComponent(PartialComponent):
     custom_id: str = attr.field(hash=True)
     """Developer defined identifier for this menu (will be <= 100 characters)."""
 
-    options: typing.Sequence[SelectMenuOption] = attr.field(eq=False)
-    """Sequence of up to 25 of the options set for this menu."""
-
     placeholder: typing.Optional[str] = attr.field(eq=False)
     """Custom placeholder text shown if nothing is selected, max 100 characters."""
 
@@ -255,6 +288,22 @@ class SelectMenuComponent(PartialComponent):
 
 
 @attr.define(kw_only=True, weakref_slot=False)
+class TextSelectMenuComponent(SelectMenuComponent):
+    """Represents a text select menu component."""
+
+    options: typing.Sequence[SelectMenuOption] = attr.field(eq=False)
+    """Sequence of up to 25 of the options set for this menu."""
+
+
+@attr.define(kw_only=True, weakref_slot=False)
+class ChannelSelectMenuComponent(SelectMenuComponent):
+    """Represents a channel select menu component."""
+
+    channel_types: typing.Sequence[typing.Union[int, channels.ChannelType]] = attr.field(eq=False)
+    """The valid channel types for this menu."""
+
+
+@attr.define(kw_only=True, weakref_slot=False)
 class TextInputComponent(PartialComponent):
     """Represents a text input component."""
 
@@ -264,6 +313,49 @@ class TextInputComponent(PartialComponent):
     value: str = attr.field(repr=True)
     """Value provided for this text input."""
 
+
+SelectMenuTypesT = typing.Union[
+    typing.Literal[ComponentType.TEXT_SELECT_MENU],
+    typing.Literal[3],
+    typing.Literal[ComponentType.USER_SELECT_MENU],
+    typing.Literal[5],
+    typing.Literal[ComponentType.ROLE_SELECT_MENU],
+    typing.Literal[6],
+    typing.Literal[ComponentType.MENTIONABLE_SELECT_MENU],
+    typing.Literal[7],
+    typing.Literal[ComponentType.CHANNEL_SELECT_MENU],
+    typing.Literal[8],
+]
+"""Type hints of the `ComponentType` values which are valid for select menus.
+
+The following values are valid for this:
+
+* `ComponentType.TEXT_SELECT_MENU`/`3`
+* `ComponentType.USER_SELECT_MENU`/`5`
+* `ComponentType.ROLE_SELECT_MENU`/`6`
+* `ComponentType.MENTIONABLE_SELECT_MENU`/`7`
+* `ComponentType.CHANNEL_SELECT_MENU`/`8`
+"""
+
+SelectMenuTypes: typing.AbstractSet[SelectMenuTypesT] = frozenset(
+    (
+        ComponentType.TEXT_SELECT_MENU,
+        ComponentType.USER_SELECT_MENU,
+        ComponentType.ROLE_SELECT_MENU,
+        ComponentType.MENTIONABLE_SELECT_MENU,
+        ComponentType.CHANNEL_SELECT_MENU,
+    )
+)
+"""Set of the `ComponentType` values which are valid for select menus.
+
+The following values are included in this:
+
+* `ComponentType.TEXT_SELECT_MENU`
+* `ComponentType.USER_SELECT_MENU`
+* `ComponentType.ROLE_SELECT_MENU`
+* `ComponentType.MENTIONABLE_SELECT_MENU`
+* `ComponentType.CHANNEL_SELECT_MENU`
+"""
 
 InteractiveButtonTypesT = typing.Union[
     typing.Literal[ButtonStyle.PRIMARY],
