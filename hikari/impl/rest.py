@@ -67,6 +67,7 @@ from hikari import undefined
 from hikari import urls
 from hikari import users
 from hikari.api import rest as rest_api
+from hikari.api import special_endpoints
 from hikari.impl import buckets as buckets_impl
 from hikari.impl import config as config_impl
 from hikari.impl import entity_factory as entity_factory_impl
@@ -94,7 +95,6 @@ if typing.TYPE_CHECKING:
     from hikari import webhooks
     from hikari.api import cache as cache_api
     from hikari.api import entity_factory as entity_factory_
-    from hikari.api import special_endpoints
 
     _T = typing.TypeVar("_T")
     _OtherT = typing.TypeVar("_OtherT")
@@ -499,11 +499,11 @@ async def _anullcontext() -> typing.AsyncGenerator[None, None]:
 def _to_list(
     singular: undefined.UndefinedNoneOr[_T],
     plural: undefined.UndefinedNoneOr[typing.Sequence[_T]],
-    other: undefined.UndefinedNoneOr[_OtherT],
+    other: _OtherT,
     type_: typing.Union[typing.Type[_T], typing.Tuple[typing.Type[_T], ...]],
     name: str,
     /,
-) -> typing.Tuple[undefined.UndefinedNoneOr[typing.Sequence[_T]], undefined.UndefinedNoneOr[_OtherT]]:
+) -> typing.Tuple[undefined.UndefinedNoneOr[typing.Sequence[_T]], undefined.UndefinedOr[_OtherT]]:
     if singular is not undefined.UNDEFINED and plural is not undefined.UNDEFINED:
         raise ValueError(f"You may only specify one of '{name}' or '{name}s', not both")
 

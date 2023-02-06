@@ -704,7 +704,7 @@ class TestInteractionDeferredBuilder:
         result, attachments = builder.build(object())
 
         assert result == {"type": base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE}
-        assert attachments == ()
+        assert attachments == {}
 
     def test_build_with_flags(self):
         builder = special_endpoints.InteractionDeferredBuilder(
@@ -717,7 +717,7 @@ class TestInteractionDeferredBuilder:
             "type": base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE,
             "data": {"flags": 64},
         }
-        assert attachments == ()
+        assert attachments == {}
 
 
 class TestInteractionMessageBuilder:
@@ -828,7 +828,7 @@ class TestInteractionMessageBuilder:
                 "allowed_mentions": {"parse": [], "users": ["123"], "roles": ["54234"]},
             },
         }
-        assert attachments == []
+        assert attachments == {}
 
     def test_build_for_partial_when_message_create(self):
         mock_entity_factory = mock.Mock()
@@ -841,7 +841,7 @@ class TestInteractionMessageBuilder:
             "type": base_interactions.ResponseType.MESSAGE_CREATE,
             "data": {"allowed_mentions": {"parse": []}},
         }
-        assert attachments == []
+        assert attachments == {}
 
     def test_build_for_partial_when_message_update(self):
         mock_entity_factory = mock.Mock()
@@ -851,7 +851,7 @@ class TestInteractionMessageBuilder:
 
         mock_entity_factory.serialize_embed.assert_not_called()
         assert result == {"type": base_interactions.ResponseType.MESSAGE_UPDATE, "data": {}}
-        assert attachments == []
+        assert attachments == {}
 
     def test_build_for_partial_when_empty_lists(self):
         mock_entity_factory = mock.Mock()
@@ -869,7 +869,7 @@ class TestInteractionMessageBuilder:
                 "embeds": [],
             },
         }
-        assert attachments == []
+        assert attachments == {}
 
     def test_build_handles_attachments(self):
         mock_entity_factory = mock.Mock()
@@ -913,7 +913,7 @@ class TestInteractionMessageBuilder:
             "data": {"attachments": None},
         }
 
-        assert attachments == []
+        assert attachments == {}
 
 
 class TestInteractionModalBuilder:
@@ -947,7 +947,7 @@ class TestInteractionModalBuilder:
                 "components": [component.build.return_value],
             },
         }
-        assert attachments == ()
+        assert attachments == {}
 
 
 class TestSlashCommandBuilder:

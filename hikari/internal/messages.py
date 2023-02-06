@@ -29,12 +29,12 @@ import typing
 
 from hikari import embeds as embeds_
 from hikari import files
+from hikari import messages as messages_
 from hikari import undefined
 from hikari.internal import data_binding
 
 if typing.TYPE_CHECKING:
     from hikari import guilds
-    from hikari import messages as messages_
     from hikari import snowflakes
     from hikari import users
     from hikari.api import entity_factory as entity_factory_

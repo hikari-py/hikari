@@ -42,12 +42,12 @@ class TestURLEncodedFormBuilder:
     def form_builder(self):
         return data_binding.URLEncodedFormBuilder()
 
-    def test_add_field(self, form_builder):
-        form_builder.add_field("test_name", "test_data", content_type="mimetype")
+    def test_add_field(self, form_builder: data_binding.URLEncodedFormBuilder):
+        form_builder.add_field("test_name", b"test_data", content_type="mimetype")
 
-        assert form_builder._fields == [("test_name", "test_data", "mimetype")]
+        assert form_builder._fields == [("test_name", b"test_data", "mimetype")]
 
-    def test_add_resource(self, form_builder):
+    def test_add_resource(self, form_builder: data_binding.URLEncodedFormBuilder):
         mock_resource = object()
 
         form_builder.add_resource("lick", mock_resource)
@@ -55,28 +55,24 @@ class TestURLEncodedFormBuilder:
         assert form_builder._resources == [("lick", mock_resource)]
 
     @pytest.mark.asyncio()
-    async def test_build(self, form_builder):
+    async def test_build(self, form_builder: data_binding.URLEncodedFormBuilder):
         resource1 = mock.Mock()
         resource2 = mock.Mock()
         stream1 = mock.Mock(filename="testing1", mimetype="text")
         stream2 = mock.Mock(filename="testing2", mimetype=None)
-        mock_stack = mock.AsyncMock(enter_async_context=mock.AsyncMock(side_effect=[stream1, stream2]))
-        executor = object()
+        executor = mock.Mock()
         form_builder._fields = [("test_name", "test_data", "mimetype"), ("test_name2", "test_data2", "mimetype2")]
         form_builder._resources = [("aye", resource1), ("lmao", resource2)]
 
         with mock.patch.object(aiohttp, "FormData") as mock_form_class:
-            assert await form_builder.build(mock_stack, executor) is mock_form_class.return_value
+            assert await form_builder.build(executor) is mock_form_class.return_value
 
         resource1.stream.assert_called_once_with(executor=executor)
         resource2.stream.assert_called_once_with(executor=executor)
-        mock_stack.enter_async_context.assert_has_awaits(
-            [mock.call(resource1.stream.return_value), mock.call(resource2.stream.return_value)]
-        )
         mock_form_class.return_value.add_field.assert_has_calls(
             [
-                mock.call("test_name", "test_data", content_type="mimetype", content_transfer_encoding="binary"),
-                mock.call("test_name2", "test_data2", content_type="mimetype2", content_transfer_encoding="binary"),
+                mock.call("test_name", "test_data", content_type="mimetype"),
+                mock.call("test_name2", "test_data2", content_type="mimetype2"),
                 mock.call("aye", stream1, filename="testing1", content_type="text"),
                 mock.call("lmao", stream2, filename="testing2", content_type="application/octet-stream"),
             ]

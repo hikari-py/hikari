@@ -752,7 +752,7 @@ class TestInteractionServer:
         mock_fetcher.return_value.verify.assert_called_once_with(b"timestampbody", b"signature")
         assert result.content_type == "text/plain"
         assert result.charset == "UTF-8"
-        assert result.files == ()
+        assert result.files == {}
         assert result.headers is None
         assert result.payload == b"Invalid request signature"
         assert result.status_code == 400
@@ -770,7 +770,7 @@ class TestInteractionServer:
 
         assert result.content_type == "text/plain"
         assert result.charset == "UTF-8"
-        assert result.files == ()
+        assert result.files == {}
         assert result.headers is None
         assert result.payload == b"Invalid request signature"
         assert result.status_code == 400
@@ -786,7 +786,7 @@ class TestInteractionServer:
 
         assert result.content_type == "text/plain"
         assert result.charset == "UTF-8"
-        assert result.files == ()
+        assert result.files == {}
         assert result.headers is None
         assert result.payload == b"Invalid JSON body"
         assert result.status_code == 400
@@ -801,7 +801,7 @@ class TestInteractionServer:
 
         assert result.content_type == "text/plain"
         assert result.charset == "UTF-8"
-        assert result.files == ()
+        assert result.files == {}
         assert result.headers is None
         assert result.payload == b"Missing required 'type' field in payload"
         assert result.status_code == 400
@@ -814,7 +814,7 @@ class TestInteractionServer:
 
         assert result.content_type == "application/json"
         assert result.charset == "UTF-8"
-        assert result.files == ()
+        assert result.files == {}
         assert result.headers is None
         assert result.payload == b'{"type":1}'
         assert result.status_code == 200
@@ -832,7 +832,7 @@ class TestInteractionServer:
 
         assert result.content_type == "text/plain"
         assert result.charset == "UTF-8"
-        assert result.files == ()
+        assert result.files == {}
         assert result.headers is None
         assert result.payload == b"Interaction type not implemented"
         assert result.status_code == 501
@@ -856,7 +856,7 @@ class TestInteractionServer:
 
         assert result.content_type == "text/plain"
         assert result.charset == "UTF-8"
-        assert result.files == ()
+        assert result.files == {}
         assert result.headers is None
         assert result.payload == b"Exception occurred during interaction deserialization"
         assert result.status_code == 500
@@ -885,7 +885,7 @@ class TestInteractionServer:
 
         assert result.content_type == "text/plain"
         assert result.charset == "UTF-8"
-        assert result.files == ()
+        assert result.files == {}
         assert result.headers is None
         assert result.payload == b"Exception occurred during interaction dispatch"
         assert result.status_code == 500
@@ -915,7 +915,7 @@ class TestInteractionServer:
 
         assert result.content_type == "text/plain"
         assert result.charset == "UTF-8"
-        assert result.files == ()
+        assert result.files == {}
         assert result.headers is None
         assert result.payload == b"Exception occurred during interaction dispatch"
         assert result.status_code == 500
@@ -946,7 +946,7 @@ class TestInteractionServer:
 
         assert result.content_type == "text/plain"
         assert result.charset == "UTF-8"
-        assert result.files == ()
+        assert result.files == {}
         assert result.headers is None
         assert result.payload == b"Exception occurred during interaction dispatch"
         assert result.status_code == 500
@@ -963,7 +963,7 @@ class TestInteractionServer:
 
         assert result.content_type == "text/plain"
         assert result.charset == "UTF-8"
-        assert result.files == ()
+        assert result.files == {}
         assert result.headers is None
         assert result.payload == b"Handler not set for this interaction type"
         assert result.status_code == 501
