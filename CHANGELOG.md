@@ -1,3 +1,44 @@
+## 2.0.0.dev116 (2023-02-06)
+
+### Breaking Changes
+
+- Remove `RateLimitedError` in favour of always waiting on ratelimits. ([#1441](https://github.com/hikari-py/hikari/issues/1441))
+-  ([#1455](https://github.com/hikari-py/hikari/issues/1455))
+- Default logging to `sys.stdout` stream to bring more in-line with banner output. ([#1485](https://github.com/hikari-py/hikari/issues/1485))
+
+### Deprecation
+
+- Deprecate selects v1 functionality:
+   - `ComponentType.SELECT_MENU` -> `ComponentType.TEXT_SELECT_MENU`
+   - Not passing `MessageActionRowBuilder.add_select_menu`'s `type` argument explicitly.
+   - `InteractionChannel` and `ResolvedOptionData` moved from `hikari.interactions.command_interactions` to `hikari.interactions.base_interactions`. ([#1455](https://github.com/hikari-py/hikari/issues/1455))
+- Renamed `Intents.GUILD_BANS` to `Intents.GUILD_MODERATION`. ([#1471](https://github.com/hikari-py/hikari/issues/1471))
+
+### Features
+
+- Add linked roles support (models + endpoints). ([#1422](https://github.com/hikari-py/hikari/issues/1422))
+- Add selects v2 components. ([#1455](https://github.com/hikari-py/hikari/issues/1455))
+- Added `fetch_self`, `edit`, `delete`, `sync`, and `create_guild` methods to `hikari.templates.Template`. ([#1457](https://github.com/hikari-py/hikari/issues/1457))
+- Add ability to suppress optimization warnings through `suppress_optimization_warning=True` to the `GatewayBot` or `RESTBot` constructors. ([#1459](https://github.com/hikari-py/hikari/issues/1459))
+- Support GIF sticker image format ([#1464](https://github.com/hikari-py/hikari/issues/1464))
+- Add support for guild audit log entry create events. ([#1471](https://github.com/hikari-py/hikari/issues/1471))
+- Update `RESTClient.edit_channnel` to support setting `applied_tags` on forum threads. ([#1474](https://github.com/hikari-py/hikari/issues/1474))
+- Implement `reply_must_exist` in create message methods ([#1475](https://github.com/hikari-py/hikari/issues/1475))
+- Support loading files through `logging.config.fileConfig` in `init_logging`. ([#1485](https://github.com/hikari-py/hikari/issues/1485))
+- Add `orjson` as an optional speedup and allow to pass custom `json.dumps` and `json.loads` functions to all components. ([#1486](https://github.com/hikari-py/hikari/issues/1486))
+
+### Bugfixes
+
+- The global ratelimit now abides by `max_rate_limit`. ([#1441](https://github.com/hikari-py/hikari/issues/1441))
+- Move `description_localizations` from `PartialCommand` to `SlashCommand` (removing it from `ContextMenuCommand`). ([#1470](https://github.com/hikari-py/hikari/issues/1470))
+- Add missing fields to `GuildChannel.edit`. ([#1474](https://github.com/hikari-py/hikari/issues/1474))
+- Fix `hikari.webhooks.ChannelFollowWebhook` not including source in all cases.
+  - `source_channel` and `source_guild` will be `None` instead. ([#1480](https://github.com/hikari-py/hikari/issues/1480))
+- Fix colour logging not occurring on specific terminals (ie, Pycharm). ([#1485](https://github.com/hikari-py/hikari/issues/1485))
+
+---
+
+
 ## 2.0.0.dev115 (2023-01-03)
 
 ### Breaking Changes
