@@ -541,6 +541,8 @@ class InteractionServer(interaction_server.InteractionServer):
         self._close_event = asyncio.Event()
         self._is_closing = False
 
+        await self._fetch_public_key()
+
         aio_app = aiohttp.web.Application()
         aio_app.add_routes([aiohttp.web.post("/", self.aiohttp_hook)])
         self._server = aiohttp.web_runner.AppRunner(aio_app, access_log=_LOGGER)
