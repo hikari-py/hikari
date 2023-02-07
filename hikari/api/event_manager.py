@@ -35,6 +35,8 @@ from hikari.events import base_events
 if typing.TYPE_CHECKING:
     import types
 
+    from typing_extensions import Self
+
     from hikari.api import shard as gateway_shard
     from hikari.internal import data_binding
 
@@ -43,8 +45,6 @@ if typing.TYPE_CHECKING:
     ConsumerT = typing.Callable[
         [gateway_shard.GatewayShard, data_binding.JSONObject], typing.Coroutine[typing.Any, typing.Any, None]
     ]
-
-    _EventStreamT = typing.TypeVar("_EventStreamT")
 
 
 class EventStream(iterators.LazyIterator[base_events.EventT], abc.ABC):
@@ -110,10 +110,10 @@ class EventStream(iterators.LazyIterator[base_events.EventT], abc.ABC):
 
     @abc.abstractmethod
     def filter(
-        self: _EventStreamT,
+        self,
         *predicates: typing.Union[typing.Tuple[str, typing.Any], typing.Callable[[base_events.EventT], bool]],
         **attrs: typing.Any,
-    ) -> _EventStreamT:
+    ) -> Self:
         """Filter the items by one or more conditions.
 
         Each condition is treated as a predicate, being called with each item
@@ -144,7 +144,7 @@ class EventStream(iterators.LazyIterator[base_events.EventT], abc.ABC):
         """
 
     @abc.abstractmethod
-    def __enter__(self: _EventStreamT) -> _EventStreamT:
+    def __enter__(self) -> Self:
         raise NotImplementedError
 
     @abc.abstractmethod

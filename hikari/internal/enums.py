@@ -31,6 +31,9 @@ import sys
 import types
 import typing
 
+if typing.TYPE_CHECKING:
+    from typing_extensions import Self
+
 _T = typing.TypeVar("_T")
 _MAX_CACHED_MEMBERS: typing.Final[int] = 1 << 12
 
@@ -161,11 +164,11 @@ class _EnumMeta(type):
         yield from cls._name_to_member_map_.values()
 
     def __new__(
-        mcs: typing.Type[_T],
+        mcs,
         name: str,
         bases: typing.Tuple[typing.Type[typing.Any], ...],
         namespace: typing.Union[typing.Dict[str, typing.Any], _EnumNamespace],
-    ) -> _T:
+    ) -> Self:
         global _Enum
 
         if _Enum is NotImplemented:
@@ -426,11 +429,11 @@ class _FlagMeta(type):
 
     @staticmethod
     def __new__(
-        mcs: typing.Type[_T],
+        mcs,
         name: str,
         bases: typing.Tuple[typing.Type[typing.Any], ...],
         namespace: typing.Union[typing.Dict[str, typing.Any], _EnumNamespace],
-    ) -> _T:
+    ) -> Self:
         global _Flag
 
         if _Flag is NotImplemented:
@@ -669,7 +672,7 @@ class Flag(metaclass=_FlagMeta):
         """Return the `int` value of the flag."""
         return self._value_
 
-    def all(self: _T, *flags: _T) -> bool:
+    def all(self, *flags: Self) -> bool:
         """Check if all of the given flags are part of this value.
 
         Returns
@@ -680,7 +683,7 @@ class Flag(metaclass=_FlagMeta):
         """
         return all((flag & self) == flag for flag in flags)
 
-    def any(self: _T, *flags: _T) -> bool:
+    def any(self, *flags: Self) -> bool:
         """Check if any of the given flags are part of this value.
 
         Returns
@@ -691,7 +694,7 @@ class Flag(metaclass=_FlagMeta):
         """
         return any((flag & self) == flag for flag in flags)
 
-    def difference(self: _T, other: typing.Union[_T, int]) -> _T:
+    def difference(self, other: typing.Union[Self, int]) -> _T:
         """Perform a set difference with the other set.
 
         This will return all flags in this set that are not in the other value.
@@ -700,18 +703,18 @@ class Flag(metaclass=_FlagMeta):
         """
         return self.__class__(self & ~int(other))
 
-    def intersection(self: _T, other: typing.Union[_T, int]) -> _T:
+    def intersection(self, other: typing.Union[Self, int]) -> _T:
         """Return a combination of flags that are set for both given values.
 
         Equivalent to using the "AND" `&` operator.
         """
         return self.__class__(self._value_ & int(other))
 
-    def invert(self: _T) -> _T:
+    def invert(self) -> Self:
         """Return a set of all flags not in the current set."""
         return self.__class__(self.__class__.__everything__._value_ & ~self._value_)
 
-    def is_disjoint(self: _T, other: typing.Union[_T, int]) -> bool:
+    def is_disjoint(self, other: typing.Union[Self, int]) -> bool:
         """Return whether two sets have a intersection or not.
 
         If the two sets have an intersection, then this returns
@@ -720,18 +723,18 @@ class Flag(metaclass=_FlagMeta):
         """
         return not (self & other)
 
-    def is_subset(self: _T, other: typing.Union[_T, int]) -> bool:
+    def is_subset(self, other: typing.Union[Self, int]) -> bool:
         """Return whether another set contains this set or not.
 
         Equivalent to using the "in" operator.
         """
         return (self & other) == other
 
-    def is_superset(self: _T, other: typing.Union[_T, int]) -> bool:
+    def is_superset(self, other: typing.Union[Self, int]) -> bool:
         """Return whether this set contains another set or not."""
         return (self & other) == self
 
-    def none(self: _T, *flags: _T) -> bool:
+    def none(self, *flags: Self) -> bool:
         """Check if none of the given flags are part of this value.
 
         .. note::
@@ -745,7 +748,7 @@ class Flag(metaclass=_FlagMeta):
         """
         return not self.any(*flags)
 
-    def split(self: _T) -> typing.Sequence[_T]:
+    def split(self) -> typing.Sequence[Self]:
         """Return a list of all defined atomic values for this flag.
 
         Any unrecognised bits will be omitted for brevity.
@@ -758,7 +761,7 @@ class Flag(metaclass=_FlagMeta):
             key=lambda m: m._name_,
         )
 
-    def symmetric_difference(self: _T, other: typing.Union[_T, int]) -> _T:
+    def symmetric_difference(self, other: typing.Union[_T, int]) -> Self:
         """Return a set with the symmetric differences of two flag sets.
 
         Equivalent to using the "XOR" `^` operator.
@@ -767,7 +770,7 @@ class Flag(metaclass=_FlagMeta):
         """
         return self.__class__(self._value_ ^ int(other))
 
-    def union(self: _T, other: typing.Union[_T, int]) -> _T:
+    def union(self, other: typing.Union[_T, int]) -> Self:
         """Return a combination of all flags in this set and the other set.
 
         Equivalent to using the "OR" `~` operator.
@@ -791,7 +794,7 @@ class Flag(metaclass=_FlagMeta):
     def __int__(self) -> int:
         return self._value_
 
-    def __iter__(self: _T) -> typing.Iterator[_T]:
+    def __iter__(self) -> typing.Iterator[Self]:
         return iter(self.split())
 
     def __len__(self) -> int:
@@ -800,7 +803,7 @@ class Flag(metaclass=_FlagMeta):
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__}.{self.name}: {self.value!r}>"
 
-    def __rsub__(self: _T, other: typing.Union[int, _T]) -> _T:
+    def __rsub__(self, other: typing.Union[int, _T]) -> Self:
         # This logic has to be reversed to be correct, since order matters for
         # a subtraction operator. This also ensures `int - _T -> _T` is a valid
         # case for us.

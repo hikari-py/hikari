@@ -36,7 +36,8 @@ __all__: typing.Sequence[str] = (
 
 import typing
 
-SelfT = typing.TypeVar("SelfT")
+if typing.TYPE_CHECKING:
+    from typing_extensions import Self
 
 
 class UndefinedType:
@@ -47,11 +48,11 @@ class UndefinedType:
     def __bool__(self) -> typing.Literal[False]:
         return False
 
-    def __copy__(self: SelfT) -> SelfT:
+    def __copy__(self) -> Self:
         # This is meant to be a singleton
         return self
 
-    def __deepcopy__(self: SelfT, memo: typing.MutableMapping[int, typing.Any]) -> SelfT:
+    def __deepcopy__(self, memo: typing.MutableMapping[int, typing.Any]) -> Self:
         memo[id(self)] = self
 
         # This is meant to be a singleton

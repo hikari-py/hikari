@@ -2368,7 +2368,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     def _deserialize_interaction_command_option(
         self, payload: data_binding.JSONObject
     ) -> command_interactions.CommandInteractionOption:
-        suboptions: typing.Optional[typing.List[command_interactions.CommandInteractionOption]] = None
+        suboptions: typing.Optional[typing.Sequence[command_interactions.CommandInteractionOption]] = None
         if raw_suboptions := payload.get("options"):
             suboptions = [self._deserialize_interaction_command_option(suboption) for suboption in raw_suboptions]
 
@@ -2381,14 +2381,14 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=payload["name"],
             type=option_type,
             value=value,
-            options=suboptions,
+            options=suboptions,  # type: ignore[arg-type]  # MyPy gets the type equality wrong here.
         )
 
     def _deserialize_autocomplete_interaction_option(
         self,
         payload: data_binding.JSONObject,
     ) -> command_interactions.AutocompleteInteractionOption:
-        suboptions: typing.Optional[typing.List[command_interactions.AutocompleteInteractionOption]] = None
+        suboptions: typing.Optional[typing.Sequence[command_interactions.AutocompleteInteractionOption]] = None
         if raw_suboptions := payload.get("options"):
             suboptions = [self._deserialize_autocomplete_interaction_option(suboption) for suboption in raw_suboptions]
 
@@ -2403,7 +2403,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=payload["name"],
             type=option_type,
             value=value,
-            options=suboptions,
+            options=suboptions,  # type: ignore[arg-type]  # MyPy gets the type equality wrong here.
             is_focused=is_focused,
         )
 
