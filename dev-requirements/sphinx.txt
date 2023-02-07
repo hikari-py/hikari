@@ -4,8 +4,7 @@ sphinx==6.1.3
 furo==2022.12.7
 
 # Autodocumentation
-#sphinx-autoapi==2.0.0
-git+https://github.com/readthedocs/sphinx-autoapi.git@1556b17ca8ae3de6a8f0d129774bb49edc76a737
+sphinx-autoapi==2.0.1
 numpydoc==1.5.0
 
 # Static files
