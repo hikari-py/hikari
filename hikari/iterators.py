@@ -34,8 +34,6 @@ __all__: typing.Sequence[str] = (
     "All",
     "AttrComparator",
     "BufferedLazyIterator",
-    "ValueT",
-    "AnotherValueT",
 )
 
 import abc
