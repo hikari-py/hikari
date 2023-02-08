@@ -32,6 +32,8 @@ __all__: typing.Sequence[str] = (
     "ButtonComponent",
     "SelectMenuOption",
     "SelectMenuComponent",
+    "TextSelectMenuComponent",
+    "ChannelSelectMenuComponent",
     "TextInputStyle",
     "TextInputComponent",
     "InteractiveButtonTypes",
