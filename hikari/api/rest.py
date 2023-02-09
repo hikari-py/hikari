@@ -2130,8 +2130,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
             .. warning::
                 As of writing this can only be set for interaction webhooks
-                and the only settable flag is `EPHEMERAL`; this field is just
-                ignored for non-interaction webhooks.
+                and the only settable flags are `EPHEMERAL` and `SUPPRESS_NOTIFICATIONS`;
+                this field is just ignored for non-interaction webhooks.
 
         Returns
         -------
@@ -7437,8 +7437,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         flags : typing.Union[int, hikari.messages.MessageFlag, hikari.undefined.UndefinedType]
             If provided, the message flags this response should have.
 
-            As of writing the only message flag which can be set here is
-            `hikari.messages.MessageFlag.EPHEMERAL`.
+            As of writing the only message flags that can be set here is
+            `hikari.messages.MessageFlag.EPHEMERAL` and `hikari.messages.MessageFlag.SUPPRESS_NOTIFICATIONS`.
         tts : hikari.undefined.UndefinedOr[bool]
             If provided, whether the message will be read out by a screen
             reader using Discord's TTS (text-to-speech) system.

@@ -308,8 +308,8 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
         flags : typing.Union[int, hikari.messages.MessageFlag, hikari.undefined.UndefinedType]
             If provided, the message flags this response should have.
 
-            As of writing the only message flag which can be set here is
-            `hikari.messages.MessageFlag.EPHEMERAL`.
+            As of writing the only message flags which can be set here is
+            `hikari.messages.MessageFlag.EPHEMERAL` and `hikari.messages.MessageFlag.SUPPRESS_NOTIFICATIONS`.
         tts : hikari.undefined.UndefinedOr[bool]
             If provided, whether the message will be read out by a screen
             reader using Discord's TTS (text-to-speech) system.
