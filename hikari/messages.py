@@ -165,6 +165,9 @@ class MessageFlag(enums.Flag):
     FAILED_TO_MENTION_SOME_ROLES_IN_THREAD = 1 << 8
     """This message failed to mention some roles and add their mentions to the thread."""
 
+    SUPPRESS_NOTIFICATIONS = 1 << 12
+    """This message will not trigger push and desktop notifications."""
+
 
 @typing.final
 class MessageActivityType(int, enums.Enum):
