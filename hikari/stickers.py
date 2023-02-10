@@ -78,12 +78,14 @@ class StickerFormatType(int, enums.Enum):
     GIF = 4
     """A GIF sticker."""
 
+
 _STICKER_EXTENSIONS: typing.Dict[typing.Union[StickerFormatType, int], str] = {
     StickerFormatType.LOTTIE: "json",
     StickerFormatType.GIF: "gif",
     StickerFormatType.PNG: "png",
     StickerFormatType.APNG: "png",
 }
+
 
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
 class StickerPack(snowflakes.Unique):
