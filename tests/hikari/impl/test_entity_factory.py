@@ -2956,6 +2956,10 @@ class TestEntityFactoryImpl:
             def filename(self) -> str:
                 return "lolbook.png"
 
+            @property
+            def mimetype(self) -> typing.Optional[str]:
+                return "image/png"
+
         footer_icon = embed_models.EmbedResource(resource=files.URL("http://http.cat"))
         thumbnail = embed_models.EmbedImage(resource=DummyWebResource())
         image = embed_models.EmbedImage(resource=files.URL("http://bazbork.com"))

@@ -451,6 +451,11 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
         _, _, ext = self.filename.rpartition(".")
         return ext if ext != self.filename else None
 
+    @property
+    @abc.abstractmethod
+    def mimetype(self) -> typing.Optional[str]:
+        """Mimetype of the resource, if known."""
+
     async def read(
         self,
         *,
@@ -789,11 +794,18 @@ class URL(WebResource):
         If not specified, it will be obtained from the url.
     """
 
-    __slots__: typing.Sequence[str] = ("_url", "_filename")
+    __slots__: typing.Sequence[str] = ("_url", "_filename", "_mimetype")
 
-    def __init__(self, url: str, filename: typing.Optional[str] = None) -> None:
+    def __init__(
+        self, url: str, filename: typing.Optional[str] = None, *, mimetype: typing.Optional[str] = None
+    ) -> None:
+        parsed_url = urllib.parse.urlparse(url)
+        if mimetype is None:
+            mimetype = guess_mimetype_from_filename(filename or parsed_url.path.rsplit("/", 1)[-1])
+
         self._url = url
         self._filename = filename
+        self._mimetype = mimetype
 
     @property
     def url(self) -> str:
@@ -806,6 +818,11 @@ class URL(WebResource):
 
         url = urllib.parse.urlparse(self._url)
         return os.path.basename(url.path)
+
+    @property
+    def mimetype(self) -> typing.Optional[str]:
+        # <<inherited docstring from Resource>>.
+        return self._mimetype
 
 
 ########################################
@@ -896,7 +913,7 @@ class File(Resource[ThreadedFileReader]):
         Whether to mark the file as a spoiler in Discord. Defaults to `False`.
     """
 
-    __slots__: typing.Sequence[str] = ("path", "_filename", "is_spoiler")
+    __slots__: typing.Sequence[str] = ("path", "_filename", "is_spoiler", "mimetype")
 
     path: pathlib.Path
     """The path to the file."""
@@ -906,10 +923,27 @@ class File(Resource[ThreadedFileReader]):
 
     _filename: typing.Optional[str]
 
-    def __init__(self, path: Pathish, /, filename: typing.Optional[str] = None, *, spoiler: bool = False) -> None:
-        self.path = ensure_path(path)
+    mimetype: typing.Optional[str]
+    """The file's mimetype, if known."""
+
+    def __init__(
+        self,
+        path: Pathish,
+        /,
+        filename: typing.Optional[str] = None,
+        *,
+        mimetype: typing.Optional[str] = None,
+        spoiler: bool = False,
+    ) -> None:
+        path = ensure_path(path)
+
+        if mimetype is None:
+            mimetype = guess_mimetype_from_filename(filename or path.name)
+
+        self.path = path
         self.is_spoiler = spoiler
         self._filename = filename
+        self.mimetype = mimetype
 
     @property
     @typing.final
@@ -1083,6 +1117,7 @@ class Bytes(Resource[IteratorReader]):
     data: typing.Union[bytes, LazyByteIteratorish]
     """The raw data/provider of raw data to upload."""
 
+    # TODO: this docstring is wrong, it's actually being defaulted to "text/plain;charset=UTF-8"
     mimetype: typing.Optional[str]
     """The provided mimetype, if provided. Otherwise `None`."""
 

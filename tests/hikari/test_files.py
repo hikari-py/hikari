@@ -172,6 +172,7 @@ class TestResource:
             stream = mock.Mock(return_value=MockReader())
             url = "https://myspace.com/rickastley/lyrics.txt"
             filename = "lyrics.txt"
+            mimetype = "text/plain"
 
         return ResourceImpl()
 

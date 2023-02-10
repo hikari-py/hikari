@@ -47,6 +47,8 @@ if typing.TYPE_CHECKING:
 
 _TWEMOJI_PNG_BASE_URL: typing.Final[str] = "https://raw.githubusercontent.com/twitter/twemoji/master/assets/72x72/"
 _CUSTOM_EMOJI_REGEX: typing.Final[typing.Pattern[str]] = re.compile(r"<(?P<flags>[^:]*):(?P<name>[^:]*):(?P<id>\d+)>")
+_GIF_MIMETYPE: typing.Final[str] = "image/gif"
+_PNG_MIMETYPE: typing.Final[str] = "image/png"
 
 
 class Emoji(files.WebResource, abc.ABC):
@@ -163,6 +165,11 @@ class UnicodeEmoji(str, Emoji):
             codepoints = [codepoints[0], *codepoints[2:]]
 
         return "-".join(hex(c)[2:] for c in codepoints) + ".png"
+
+    @property
+    def mimetype(self) -> typing.Optional[str]:
+        # <<inherited docstring from Resource>>.
+        return _PNG_MIMETYPE
 
     @property
     def url(self) -> str:
@@ -288,6 +295,14 @@ class CustomEmoji(snowflakes.Unique, Emoji):
     @typing.final
     def mention(self) -> str:
         return f"<{'a' if self.is_animated else ''}:{self.url_name}>"
+
+    @property
+    def mimetype(self) -> typing.Optional[str]:
+        # <<inherited docstring from Resource>>.
+        if self.is_animated:
+            return _GIF_MIMETYPE
+
+        return _PNG_MIMETYPE
 
     @property
     @typing.final

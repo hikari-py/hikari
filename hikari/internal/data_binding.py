@@ -167,7 +167,7 @@ class URLEncodedFormBuilder:
     def add_resource(self, name: str, resource: files.Resource[files.AsyncReader]) -> None:
         self._resources.append((name, resource))
 
-    async def build(self, executor: typing.Optional[concurrent.futures.Executor] = None) -> aiohttp.MultipartWriter:
+    def build(self, executor: typing.Optional[concurrent.futures.Executor] = None) -> aiohttp.MultipartWriter:
         form = aiohttp.MultipartWriter(subtype="form-data")
 
         for field in self._fields:
@@ -176,9 +176,7 @@ class URLEncodedFormBuilder:
             form.append_payload(body_payload)
 
         for name, resource in self._resources:
-            async with resource.stream(executor=executor, head_only=True) as stream:
-                content_type = stream.mimetype or _APPLICATION_OCTET_STREAM
-
+            content_type = resource.mimetype or _APPLICATION_OCTET_STREAM
             payload = _FilePayload(resource, content_type, executor=executor)
             payload.set_content_disposition("form-data", name=name, filename=resource.filename)
             form.append_payload(payload)

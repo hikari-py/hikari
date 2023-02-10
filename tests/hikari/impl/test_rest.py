@@ -452,6 +452,7 @@ def file_resource():
 
     class FileResource(files.Resource):
         filename = None
+        mimetype = None
         url = None
 
         def __init__(self, stream_data):

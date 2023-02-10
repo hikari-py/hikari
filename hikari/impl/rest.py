@@ -835,7 +835,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
             async with bucket_acquire:
                 if form_builder:
-                    data = await form_builder.build(executor=self._executor)
+                    data = form_builder.build(executor=self._executor)
 
                 if trace_logging_enabled:
                     uuid = time.uuid()

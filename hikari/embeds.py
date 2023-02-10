@@ -75,6 +75,11 @@ class EmbedResource(files.Resource[files.AsyncReader]):
         """File name of this embed resource."""
         return self.resource.filename
 
+    @property
+    def mimetype(self) -> typing.Optional[str]:
+        # <<inherited docstring from Resource>>.
+        return self.resource.mimetype
+
     def stream(
         self,
         *,

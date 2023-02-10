@@ -89,7 +89,6 @@ _UTF_8_CHARSET: typing.Final[str] = "UTF-8"
 # Header keys and values
 _X_SIGNATURE_ED25519_HEADER: typing.Final[str] = "X-Signature-Ed25519"
 _X_SIGNATURE_TIMESTAMP_HEADER: typing.Final[str] = "X-Signature-Timestamp"
-_CONTENT_TYPE_KEY: typing.Final[str] = "Content-Type"
 _USER_AGENT_KEY: typing.Final[str] = "User-Agent"
 _APPLICATION_OCTET_STREAM: typing.Final[str] = "application/octet-stream"
 _JSON_CONTENT_TYPE: typing.Final[str] = "application/json"
@@ -329,7 +328,7 @@ class InteractionServer(interaction_server.InteractionServer):
             if response.payload:
                 form_builder.add_field("payload_json", response.payload, content_type=response.content_type)
 
-            form = await form_builder.build(executor=self._executor)
+            form = form_builder.build(executor=self._executor)
             return aiohttp.web.Response(status=response.status_code, headers=response.headers, body=form)
 
         return aiohttp.web.Response(

@@ -232,6 +232,11 @@ class Attachment(snowflakes.Unique, files.WebResource):
     time (but will exist as long as their relevant message exists).
     """
 
+    @property
+    def mimetype(self) -> typing.Optional[str]:
+        # <<inherited docstring from Resource>>.
+        return self.media_type
+
     def __str__(self) -> str:
         return self.filename
 
