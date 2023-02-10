@@ -38,6 +38,8 @@ __all__: typing.Sequence[str] = (
     "InteractiveButtonBuilder",
     "LinkButtonBuilder",
     "SelectMenuBuilder",
+    "ChannelSelectMenuComponent",
+    "TextSelectMenuBuilder",
     "TextInputBuilder",
     "InteractionModalBuilder",
     "MessageActionRowBuilder",
