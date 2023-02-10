@@ -156,9 +156,15 @@ class PartialSticker(snowflakes.Unique):
         """URL for the image.
 
         The extension will be based on `format_type`. If `format_type` is `StickerFormatType.LOTTIE`,
-        then the extension will be `.json`. Otherwise, it will be `.png`.
+        then the extension will be `.json`, if it's `StickerFormatType.GIF` it will be `.gif`. Otherwise, it will be `.png`.
         """
-        ext = "json" if self.format_type is StickerFormatType.LOTTIE else "png"
+        ext = (
+            "json"
+            if self.format_type is StickerFormatType.LOTTIE
+            else "gif"
+            if self.format_type is StickerFormatType.GIF
+            else "png"
+        )
 
         return routes.CDN_STICKER.compile_to_file(urls.CDN_URL, sticker_id=self.id, file_format=ext)
 
