@@ -1653,6 +1653,10 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder[_ContainerProtoT]):
     _is_disabled: bool = attr.field(alias="is_disabled", default=False)
 
     @property
+    def type(self) -> typing.Union[int, component_models.SelectMenuTypesT]:
+        return self._type
+
+    @property
     def custom_id(self) -> str:
         return self._custom_id
 
@@ -1711,7 +1715,9 @@ class TextSelectMenuBuilder(
 ):
     """Builder class for text select menus."""
 
-    _type: typing.Union[component_models.ComponentType, int] = component_models.ComponentType.TEXT_SELECT_MENU
+    _type: typing.Union[component_models.ComponentType, int] = attr.field(
+        default=component_models.ComponentType.TEXT_SELECT_MENU, init=False
+    )
     # Any has to be used here as we can't access Self type in this context
     _options: typing.List[special_endpoints.SelectOptionBuilder[typing.Any]] = attr.field(alias="options", factory=list)
 
@@ -1747,7 +1753,9 @@ class ChannelSelectMenuBuilder(
     """Builder class for channel select menus."""
 
     _channel_types: typing.Sequence[channels.ChannelType] = attr.field(alias="channel_types", factory=list)
-    _type: typing.Union[component_models.ComponentType, int] = component_models.ComponentType.CHANNEL_SELECT_MENU
+    _type: typing.Union[component_models.ComponentType, int] = attr.field(
+        default=component_models.ComponentType.CHANNEL_SELECT_MENU, init=False
+    )
 
     @property
     def channel_types(self) -> typing.Sequence[channels.ChannelType]:

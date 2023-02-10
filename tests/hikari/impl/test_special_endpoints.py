@@ -20,6 +20,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import typing
+
 import mock
 import pytest
 
@@ -1441,6 +1443,11 @@ class TestSelectMenuBuilder:
     def menu(self):
         return special_endpoints.SelectMenuBuilder(container=mock.Mock(), custom_id="o2o2o2", type=5)
 
+    def test_type_property(self):
+        menu = special_endpoints.SelectMenuBuilder(container=mock.Mock(), type=123, custom_id="hihihi")
+
+        assert menu.type == 123
+
     def test_custom_id_property(self, menu):
         assert menu.custom_id == "o2o2o2"
 
@@ -1481,6 +1488,9 @@ class TestTextSelectMenuBuilder:
     def menu(self):
         return special_endpoints.TextSelectMenuBuilder(container=mock.Mock(), custom_id="o2o2o2")
 
+    def test_type_property(self, menu: special_endpoints.TextSelectMenuBuilder[typing.Any]):
+        assert menu.type is components.ComponentType.TEXT_SELECT_MENU
+
     def test_add_add_option(self, menu):
         option = menu.add_option("ok", "no u")
         option.add_to_menu()
@@ -1513,6 +1523,17 @@ class TestTextSelectMenuBuilder:
 
 
 class TestChannelSelectMenuBuilder:
+    def test_type_property(self):
+        menu = special_endpoints.ChannelSelectMenuBuilder(container=mock.Mock(), custom_id="id")
+        assert menu.type is components.ComponentType.CHANNEL_SELECT_MENU
+
+    def test_set_channel_types(self):
+        menu = special_endpoints.ChannelSelectMenuBuilder(container=mock.Mock(), custom_id="hi")
+
+        menu.set_channel_types([channels.ChannelType.DM, channels.ChannelType.GUILD_FORUM])
+
+        assert menu.channel_types == [channels.ChannelType.DM, channels.ChannelType.GUILD_FORUM]
+
     def test_build(self):
         result = (
             special_endpoints.ChannelSelectMenuBuilder(container=object(), custom_id="o2o2o2")

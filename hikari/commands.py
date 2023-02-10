@@ -254,9 +254,9 @@ class PartialCommand(snowflakes.Unique):
     """Auto-incrementing version identifier updated during substantial record changes."""
 
     name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attr.field(
-        eq=False, factory=dict, hash=False, repr=False
+        eq=False, hash=False, repr=False
     )
-    """A mapping of name localizations for this option."""
+    """A mapping of name localizations for this command."""
 
     async def fetch_self(self) -> PartialCommand:
         """Fetch an up-to-date version of this command object.
@@ -447,7 +447,7 @@ class SlashCommand(PartialCommand):
     description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attr.field(
         eq=False, hash=False, repr=False
     )
-    """A set of description localizations for this command"""
+    """A set of description localizations for this command."""
 
     options: typing.Optional[typing.Sequence[CommandOption]] = attr.field(eq=False, hash=False, repr=False)
     """Sequence of up to (and including) 25 of the options for this command."""
