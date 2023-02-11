@@ -82,8 +82,6 @@ class StickerFormatType(int, enums.Enum):
 _STICKER_EXTENSIONS: typing.Dict[typing.Union[StickerFormatType, int], str] = {
     StickerFormatType.LOTTIE: "json",
     StickerFormatType.GIF: "gif",
-    StickerFormatType.PNG: "png",
-    StickerFormatType.APNG: "png",
 }
 
 
