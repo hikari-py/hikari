@@ -1657,7 +1657,7 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder[_ContainerProtoT]):
     _is_disabled: bool = attr.field(alias="is_disabled", default=False)
 
     @property
-    def type(self) -> typing.Union[int, component_models.SelectMenuTypesT]:
+    def type(self) -> typing.Union[int, component_models.ComponentType]:
         return self._type
 
     @property

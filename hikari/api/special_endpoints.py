@@ -1488,7 +1488,7 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
 
     @property
     @abc.abstractmethod
-    def type(self) -> typing.Union[int, components_.SelectMenuTypesT]:
+    def type(self) -> typing.Union[int, components_.ComponentType]:
         """Type of the select menu this builds."""
 
     @property
