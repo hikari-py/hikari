@@ -1488,11 +1488,6 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
 
     @property
     @abc.abstractmethod
-    def type(self) -> typing.Union[int, components_.ComponentType]:
-        """Type of the select menu this builds."""
-
-    @property
-    @abc.abstractmethod
     def custom_id(self) -> str:
         """Developer set custom ID used for identifying interactions with this menu."""
 
