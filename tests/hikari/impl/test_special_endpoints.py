@@ -1214,6 +1214,9 @@ class Test_ButtonBuilder:
             is_disabled=True,
         )
 
+    def test_type_property(self, button):
+        assert button.type is components.ComponentType.BUTTON
+
     def test_style_property(self, button):
         assert button.style is components.ButtonStyle.DANGER
 
@@ -1565,6 +1568,9 @@ class TestTextInput:
             label="label",
         )
 
+    def test_type_property(self, text_input):
+        assert text_input.type is components.ComponentType.TEXT_INPUT
+
     def test_set_style(self, text_input):
         assert text_input.set_style(components.TextInputStyle.PARAGRAPH) is text_input
         assert text_input.style == components.TextInputStyle.PARAGRAPH
@@ -1644,6 +1650,11 @@ class TestTextInput:
 
 
 class TestMessageActionRowBuilder:
+    def test_type_property(self):
+        row = special_endpoints.MessageActionRowBuilder()
+
+        assert row.type is components.ComponentType.ACTION_ROW
+
     def test_components_property(self):
         mock_component = object()
         row = special_endpoints.MessageActionRowBuilder().add_component(mock_component)
@@ -1691,6 +1702,11 @@ class TestMessageActionRowBuilder:
 
 
 class TestModalActionRow:
+    def test_type_property(self):
+        row = special_endpoints.ModalActionRowBuilder()
+
+        assert row.type is components.ComponentType.ACTION_ROW
+
     def test_add_text_input(self):
         row = special_endpoints.ModalActionRowBuilder()
         menu = row.add_text_input("hihihi", "label")

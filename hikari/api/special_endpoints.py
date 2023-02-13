@@ -1243,6 +1243,11 @@ class ComponentBuilder(abc.ABC):
 
     __slots__: typing.Sequence[str] = ()
 
+    @property
+    @abc.abstractmethod
+    def type(self) -> typing.Union[int, components_.ComponentType]:
+        """Type of component this builder represents."""
+
     @abc.abstractmethod
     def build(self) -> typing.MutableMapping[str, typing.Any]:
         """Build a JSON object from this builder.
@@ -1258,6 +1263,11 @@ class ButtonBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
     """Builder class for a message button component."""
 
     __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def type(self) -> typing.Literal[components_.ComponentType.BUTTON]:
+        """Type of component this builder represents."""
 
     @property
     @abc.abstractmethod
@@ -1369,7 +1379,7 @@ class InteractiveButtonBuilder(ButtonBuilder[_ContainerT], abc.ABC):
         """Developer set custom ID used for identifying interactions with this button."""
 
 
-class SelectOptionBuilder(ComponentBuilder, abc.ABC, typing.Generic[_SelectMenuBuilderT]):
+class SelectOptionBuilder(abc.ABC, typing.Generic[_SelectMenuBuilderT]):
     """Builder class for select menu options."""
 
     __slots__: typing.Sequence[str] = ()
@@ -1458,6 +1468,16 @@ class SelectOptionBuilder(ComponentBuilder, abc.ABC, typing.Generic[_SelectMenuB
         -------
         _SelectMenuBuilderT
             The menu component that owns this button.
+        """
+
+    @abc.abstractmethod
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        """Build a JSON object from this builder.
+
+        Returns
+        -------
+        typing.MutableMapping[str, typing.Any]
+            The built json object representation of this builder.
         """
 
 
@@ -1653,6 +1673,11 @@ class TextInputBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
 
     @property
     @abc.abstractmethod
+    def type(self) -> typing.Literal[components_.ComponentType.TEXT_INPUT]:
+        """Type of component this builder represents."""
+
+    @property
+    @abc.abstractmethod
     def custom_id(self) -> str:
         """Developer set custom ID used for identifying this text input.
 
@@ -1834,6 +1859,11 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    def type(self) -> typing.Literal[components_.ComponentType.ACTION_ROW]:
+        """Type of component this builder represents."""
+
+    @property
+    @abc.abstractmethod
     def components(self) -> typing.Sequence[ComponentBuilder]:
         """Sequence of the component builders registered within this action row."""
 
@@ -1986,6 +2016,11 @@ class ModalActionRowBuilder(ComponentBuilder, abc.ABC):
     """Builder class for modal action row components."""
 
     __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def type(self) -> typing.Literal[components_.ComponentType.ACTION_ROW]:
+        """Type of component this builder represents."""
 
     @property
     @abc.abstractmethod

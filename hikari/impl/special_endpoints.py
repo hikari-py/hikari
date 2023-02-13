@@ -1485,6 +1485,10 @@ class _ButtonBuilder(special_endpoints.ButtonBuilder[_ContainerProtoT]):
     _is_disabled: bool = attr.field(alias="is_disabled", default=False)
 
     @property
+    def type(self) -> typing.Literal[component_models.ComponentType.BUTTON]:
+        return component_models.ComponentType.BUTTON
+
+    @property
     def style(self) -> typing.Union[int, component_models.ButtonStyle]:
         return self._style
 
@@ -1715,7 +1719,7 @@ class TextSelectMenuBuilder(
 ):
     """Builder class for text select menus."""
 
-    _type: typing.Union[component_models.ComponentType, int] = attr.field(
+    _type: typing.Literal[component_models.ComponentType.TEXT_SELECT_MENU] = attr.field(
         default=component_models.ComponentType.TEXT_SELECT_MENU, init=False
     )
     # Any has to be used here as we can't access Self type in this context
@@ -1753,7 +1757,7 @@ class ChannelSelectMenuBuilder(
     """Builder class for channel select menus."""
 
     _channel_types: typing.Sequence[channels.ChannelType] = attr.field(alias="channel_types", factory=list)
-    _type: typing.Union[component_models.ComponentType, int] = attr.field(
+    _type: typing.Literal[component_models.ComponentType.CHANNEL_SELECT_MENU] = attr.field(
         default=component_models.ComponentType.CHANNEL_SELECT_MENU, init=False
     )
 
@@ -1791,6 +1795,10 @@ class TextInputBuilder(special_endpoints.TextInputBuilder[_ContainerProtoT]):
     _required: undefined.UndefinedOr[bool] = attr.field(alias="required", default=undefined.UNDEFINED, kw_only=True)
     _min_length: undefined.UndefinedOr[int] = attr.field(alias="min_length", default=undefined.UNDEFINED, kw_only=True)
     _max_length: undefined.UndefinedOr[int] = attr.field(alias="max_length", default=undefined.UNDEFINED, kw_only=True)
+
+    @property
+    def type(self) -> typing.Literal[component_models.ComponentType.TEXT_INPUT]:
+        return component_models.ComponentType.TEXT_INPUT
 
     @property
     def custom_id(self) -> str:
@@ -1884,6 +1892,10 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
 
     _components: typing.List[special_endpoints.ComponentBuilder] = attr.field(alias="components", factory=list)
     _stored_type: typing.Optional[component_models.ComponentType] = attr.field(default=None, init=False)
+
+    @property
+    def type(self) -> typing.Literal[component_models.ComponentType.ACTION_ROW]:
+        return component_models.ComponentType.ACTION_ROW
 
     @property
     def components(self) -> typing.Sequence[special_endpoints.ComponentBuilder]:
@@ -2030,6 +2042,10 @@ class ModalActionRowBuilder(special_endpoints.ModalActionRowBuilder):
     _stored_type: typing.Optional[component_models.ComponentType] = attr.field(
         alias="stored_type", init=False, default=None
     )
+
+    @property
+    def type(self) -> typing.Literal[component_models.ComponentType.ACTION_ROW]:
+        return component_models.ComponentType.ACTION_ROW
 
     @property
     def components(self) -> typing.Sequence[special_endpoints.ComponentBuilder]:
