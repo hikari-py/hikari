@@ -20,6 +20,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import typing
+
 import mock
 import pytest
 
@@ -1212,6 +1214,9 @@ class Test_ButtonBuilder:
             is_disabled=True,
         )
 
+    def test_type_property(self, button):
+        assert button.type is components.ComponentType.BUTTON
+
     def test_style_property(self, button):
         assert button.style is components.ButtonStyle.DANGER
 
@@ -1441,6 +1446,11 @@ class TestSelectMenuBuilder:
     def menu(self):
         return special_endpoints.SelectMenuBuilder(container=mock.Mock(), custom_id="o2o2o2", type=5)
 
+    def test_type_property(self):
+        menu = special_endpoints.SelectMenuBuilder(container=mock.Mock(), type=123, custom_id="hihihi")
+
+        assert menu.type == 123
+
     def test_custom_id_property(self, menu):
         assert menu.custom_id == "o2o2o2"
 
@@ -1481,6 +1491,9 @@ class TestTextSelectMenuBuilder:
     def menu(self):
         return special_endpoints.TextSelectMenuBuilder(container=mock.Mock(), custom_id="o2o2o2")
 
+    def test_type_property(self, menu: special_endpoints.TextSelectMenuBuilder[typing.Any]):
+        assert menu.type is components.ComponentType.TEXT_SELECT_MENU
+
     def test_add_add_option(self, menu):
         option = menu.add_option("ok", "no u")
         option.add_to_menu()
@@ -1513,6 +1526,17 @@ class TestTextSelectMenuBuilder:
 
 
 class TestChannelSelectMenuBuilder:
+    def test_type_property(self):
+        menu = special_endpoints.ChannelSelectMenuBuilder(container=mock.Mock(), custom_id="id")
+        assert menu.type is components.ComponentType.CHANNEL_SELECT_MENU
+
+    def test_set_channel_types(self):
+        menu = special_endpoints.ChannelSelectMenuBuilder(container=mock.Mock(), custom_id="hi")
+
+        menu.set_channel_types([channels.ChannelType.DM, channels.ChannelType.GUILD_FORUM])
+
+        assert menu.channel_types == [channels.ChannelType.DM, channels.ChannelType.GUILD_FORUM]
+
     def test_build(self):
         result = (
             special_endpoints.ChannelSelectMenuBuilder(container=object(), custom_id="o2o2o2")
@@ -1543,6 +1567,9 @@ class TestTextInput:
             custom_id="o2o2o2",
             label="label",
         )
+
+    def test_type_property(self, text_input):
+        assert text_input.type is components.ComponentType.TEXT_INPUT
 
     def test_set_style(self, text_input):
         assert text_input.set_style(components.TextInputStyle.PARAGRAPH) is text_input
@@ -1623,6 +1650,11 @@ class TestTextInput:
 
 
 class TestMessageActionRowBuilder:
+    def test_type_property(self):
+        row = special_endpoints.MessageActionRowBuilder()
+
+        assert row.type is components.ComponentType.ACTION_ROW
+
     def test_components_property(self):
         mock_component = object()
         row = special_endpoints.MessageActionRowBuilder().add_component(mock_component)
@@ -1670,6 +1702,11 @@ class TestMessageActionRowBuilder:
 
 
 class TestModalActionRow:
+    def test_type_property(self):
+        row = special_endpoints.ModalActionRowBuilder()
+
+        assert row.type is components.ComponentType.ACTION_ROW
+
     def test_add_text_input(self):
         row = special_endpoints.ModalActionRowBuilder()
         menu = row.add_text_input("hihihi", "label")
