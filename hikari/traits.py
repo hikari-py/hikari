@@ -50,6 +50,8 @@ if typing.TYPE_CHECKING:
     import datetime
     from concurrent import futures
 
+    from typing_extensions import Self
+
     from hikari import channels
     from hikari import guilds
     from hikari import intents as intents_
@@ -64,8 +66,6 @@ if typing.TYPE_CHECKING:
     from hikari.api import rest as rest_
     from hikari.api import shard as gateway_shard
     from hikari.api import voice as voice_
-
-    _RESTBotAwareT = typing.TypeVar("_RESTBotAwareT", bound="RESTBotAware")
 
 
 @typing.runtime_checkable
@@ -476,15 +476,15 @@ class RESTBotAware(InteractionServerAware, Runnable, fast_protocol.FastProtocolC
 
     @property
     def on_shutdown(
-        self: _RESTBotAwareT,
-    ) -> typing.Sequence[typing.Callable[[_RESTBotAwareT], typing.Coroutine[typing.Any, typing.Any, None]]]:
+        self,
+    ) -> typing.Sequence[typing.Callable[[Self], typing.Coroutine[typing.Any, typing.Any, None]]]:
         """Sequence of the bot's asynchronous shutdown callbacks."""
         raise NotImplementedError
 
     @property
     def on_startup(
-        self: _RESTBotAwareT,
-    ) -> typing.Sequence[typing.Callable[[_RESTBotAwareT], typing.Coroutine[typing.Any, typing.Any, None]]]:
+        self,
+    ) -> typing.Sequence[typing.Callable[[Self], typing.Coroutine[typing.Any, typing.Any, None]]]:
         """Sequence of the bot's asynchronous startup callbacks."""
         raise NotImplementedError
 
