@@ -218,7 +218,7 @@ class TestEventStream:
             del streamer
             gc.collect()  # Force a GC collection
 
-        logger.warning.assert_called_once_with("active '%r' streamer fell out of scope before being closed", "Event")
+        logger.warning.assert_called_once_with("active %r streamer fell out of scope before being closed", "Event")
         close_method.assert_called_once_with()
 
     def test___del___for_inactive_stream(self):
