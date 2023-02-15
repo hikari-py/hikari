@@ -24,10 +24,8 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import gc
-import logging
 import sys
 import typing
-import unittest
 import warnings
 import weakref
 
