@@ -222,10 +222,7 @@ class BaseCommandInteraction(base_interactions.PartialInteraction):
             `None`.
         """
         if isinstance(self.app, traits.CacheAware):
-            channel = (
-                self.app.cache.get_guild_channel(self.channel_id) or
-                self.app.cache.get_thread(self.channel_id)
-            )
+            channel = self.app.cache.get_guild_channel(self.channel_id) or self.app.cache.get_thread(self.channel_id)
             assert channel is None or isinstance(channel, channels.TextableGuildChannel)
             return channel
 
