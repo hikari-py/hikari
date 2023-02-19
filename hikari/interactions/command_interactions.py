@@ -179,7 +179,7 @@ class BaseCommandInteraction(base_interactions.PartialInteraction):
     """The type of the command."""
 
     async def fetch_channel(self) -> channels.TextableChannel:
-        """Fetch the guild channel this was triggered in.
+        """Fetch the guild channel or thread this was triggered in.
 
         Returns
         -------
@@ -209,7 +209,7 @@ class BaseCommandInteraction(base_interactions.PartialInteraction):
         return channel
 
     def get_channel(self) -> typing.Optional[channels.TextableGuildChannel]:
-        """Get the guild channel this was triggered in from the cache.
+        """Get the guild channel or thread this was triggered in from the cache.
 
         .. note::
             This will always return `None` for interactions triggered
@@ -222,7 +222,10 @@ class BaseCommandInteraction(base_interactions.PartialInteraction):
             `None`.
         """
         if isinstance(self.app, traits.CacheAware):
-            channel = self.app.cache.get_guild_channel(self.channel_id)
+            channel = (
+                self.app.cache.get_guild_channel(self.channel_id) or
+                self.app.cache.get_thread(self.channel_id)
+            )
             assert channel is None or isinstance(channel, channels.TextableGuildChannel)
             return channel
 
