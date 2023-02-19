@@ -222,7 +222,7 @@ class ComponentInteraction(
         return self.app.rest.interaction_deferred_builder(type_)
 
     async def fetch_channel(self) -> channels.TextableChannel:
-        """Fetch the channel this interaction occurred in.
+        """Fetch the channel or thread this interaction occurred in.
 
         Returns
         -------
@@ -251,7 +251,7 @@ class ComponentInteraction(
         return channel
 
     def get_channel(self) -> typing.Union[channels.GuildTextChannel, channels.GuildNewsChannel, None]:
-        """Get the guild channel this interaction occurred in.
+        """Get the guild channel or thread this interaction occurred in.
 
         .. note::
             This will always return `None` for interactions triggered
@@ -264,7 +264,7 @@ class ComponentInteraction(
             `None`.
         """
         if isinstance(self.app, traits.CacheAware):
-            channel = self.app.cache.get_guild_channel(self.channel_id)
+            channel = self.app.cache.get_guild_channel(self.channel_id) or self.app.cache.get_thread(self.channel_id)
             assert channel is None or isinstance(channel, (channels.GuildTextChannel, channels.GuildNewsChannel))
             return channel
 

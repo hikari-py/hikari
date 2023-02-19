@@ -125,7 +125,7 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
     """Components in the modal."""
 
     async def fetch_channel(self) -> channels.TextableChannel:
-        """Fetch the guild channel this interaction was triggered in.
+        """Fetch the channel or thread this interaction was triggered in.
 
         Returns
         -------
@@ -155,7 +155,7 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
         return channel
 
     def get_channel(self) -> typing.Optional[channels.TextableGuildChannel]:
-        """Get the guild channel this interaction was triggered in from the cache.
+        """Get the guild channel or thread this interaction was triggered in from the cache.
 
         .. note::
             This will always return `None` for interactions triggered
@@ -168,7 +168,7 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
             `None`.
         """
         if isinstance(self.app, traits.CacheAware):
-            channel = self.app.cache.get_guild_channel(self.channel_id)
+            channel = self.app.cache.get_guild_channel(self.channel_id) or self.app.cache.get_thread(self.channel_id)
             assert channel is None or isinstance(channel, channels.TextableGuildChannel)
             return channel
 

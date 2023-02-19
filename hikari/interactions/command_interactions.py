@@ -179,7 +179,7 @@ class BaseCommandInteraction(base_interactions.PartialInteraction):
     """The type of the command."""
 
     async def fetch_channel(self) -> channels.TextableChannel:
-        """Fetch the guild channel or thread this was triggered in.
+        """Fetch the channel or thread this was triggered in.
 
         Returns
         -------
