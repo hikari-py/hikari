@@ -49,6 +49,7 @@ class TestPartialRole:
         return guilds.PartialRole(
             app=mock_app,
             id=snowflakes.Snowflake(1106913972),
+            guild_id=snowflakes.Snowflake(652341231),
             name="The Big Cool",
         )
 
@@ -57,6 +58,16 @@ class TestPartialRole:
 
     def test_mention_property(self, model):
         assert model.mention == "<@&1106913972>"
+
+    def test_mention_property_when_is_everuone_role(self):
+        role = guilds.PartialRole(
+            app=mock_app,
+            id=snowflakes.Snowflake(432123123),
+            guild_id=snowflakes.Snowflake(432123123),
+            name="The Big Cool",
+        )
+
+        assert role.mention == "@everyone"
 
 
 def test_PartialApplication_str_operator():

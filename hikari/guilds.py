@@ -941,12 +941,18 @@ class PartialRole(snowflakes.Unique):
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
     """The ID of this entity."""
 
+    guild_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
+    """The ID of the guild this role belongs to."""
+
     name: str = attr.field(eq=False, hash=False, repr=True)
     """The role's name."""
 
     @property
     def mention(self) -> str:
         """Return a raw mention string for the role."""
+        if self.guild_id == self.id:
+            return "@everyone"
+
         return f"<@&{self.id}>"
 
     def __str__(self) -> str:
@@ -962,9 +968,6 @@ class Role(PartialRole):
 
     This will be applied to a member's name in chat if it's their top coloured role.
     """
-
-    guild_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
-    """The ID of the guild this role belongs to."""
 
     is_hoisted: bool = attr.field(eq=False, hash=False, repr=True)
     """Whether this role is hoisting the members it's attached to in the member list.

@@ -420,6 +420,12 @@ class _GatewayGuildDefinition(entity_factory.GatewayGuildDefinition):
         return self._voice_states
 
 
+_ROLE_CHANGE_KEYS = {
+    audit_log_models.AuditLogChangeKey.ADD_ROLE_TO_MEMBER,
+    audit_log_models.AuditLogChangeKey.REMOVE_ROLE_FROM_MEMBER,
+}
+
+
 class EntityFactoryImpl(entity_factory.EntityFactory):
     """Standard implementation for a serializer/deserializer.
 
@@ -479,8 +485,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             audit_log_models.AuditLogChangeKey.SYSTEM_CHANNEL_ID: snowflakes.Snowflake,
             audit_log_models.AuditLogChangeKey.FORMAT_TYPE: sticker_models.StickerFormatType,
             audit_log_models.AuditLogChangeKey.GUILD_ID: snowflakes.Snowflake,
-            audit_log_models.AuditLogChangeKey.ADD_ROLE_TO_MEMBER: self._deserialize_audit_log_change_roles,
-            audit_log_models.AuditLogChangeKey.REMOVE_ROLE_FROM_MEMBER: self._deserialize_audit_log_change_roles,
             audit_log_models.AuditLogChangeKey.PERMISSION_OVERWRITES: self._deserialize_audit_log_overwrites,
         }
         self._audit_log_event_mapping: typing.Dict[
@@ -748,12 +752,12 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     #####################
 
     def _deserialize_audit_log_change_roles(
-        self, payload: data_binding.JSONArray
+        self, payload: data_binding.JSONArray, *, guild_id: snowflakes.Snowflake
     ) -> typing.Mapping[snowflakes.Snowflake, guild_models.PartialRole]:
         roles: typing.Dict[snowflakes.Snowflake, guild_models.PartialRole] = {}
         for role_payload in payload:
             role = guild_models.PartialRole(
-                app=self._app, id=snowflakes.Snowflake(role_payload["id"]), name=role_payload["name"]
+                app=self._app, id=snowflakes.Snowflake(role_payload["id"]), name=role_payload["name"], guild_id=guild_id
             )
             roles[role.id] = role
 
@@ -842,6 +846,18 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 if value_converter := self._audit_log_entry_converters.get(key):
                     new_value = value_converter(new_value) if new_value is not None else None
                     old_value = value_converter(old_value) if old_value is not None else None
+
+                elif key in _ROLE_CHANGE_KEYS:
+                    new_value = (
+                        self._deserialize_audit_log_change_roles(new_value, guild_id=guild_id)
+                        if new_value is not None
+                        else None
+                    )
+                    old_value = (
+                        self._deserialize_audit_log_change_roles(old_value, guild_id=guild_id)
+                        if old_value is not None
+                        else None
+                    )
 
                 elif not isinstance(
                     key, audit_log_models.AuditLogChangeKey
@@ -3449,6 +3465,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             role = template_models.TemplateRole(
                 app=self._app,
                 id=snowflakes.Snowflake(role_payload["id"]),
+                guild_id=guild_id,
                 name=role_payload["name"],
                 permissions=permission_models.Permissions(int(role_payload["permissions"])),
                 color=color_models.Color(role_payload["color"]),
