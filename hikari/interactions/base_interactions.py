@@ -654,6 +654,8 @@ class ResolvedOptionData:
 
 
 class GetChannelMixin:
+    """Mixin that allows an interaction to fetch the channel it occurred in."""
+
     @property
     @abc.abstractmethod
     def app(self) -> traits.RESTAware:
@@ -716,6 +718,8 @@ class GetChannelMixin:
 
 
 class GetGuildMixin(abc.ABC):
+    """Mixin that allows an interaction to fetch the guild it occurred in."""
+
     @property
     @abc.abstractmethod
     def app(self) -> traits.RESTAware:
