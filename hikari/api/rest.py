@@ -2027,9 +2027,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             At the time of writing, `username` and `avatar_url` are ignored for
             interaction webhooks.
 
-            Additionally, flags this can only be set for interaction webhooks
-            and the only settable flag is `EPHEMERAL`; this field is just
-            ignored for non-interaction webhooks.
+            Additionally, only `SUPPRESS_EMBEDS`, `SUPPRESS_NOTIFICATIONS` and `EPHEMERAL`
+            are the only flags that can be set, with `EPHEMERAL` limited to
+            interaction webhooks.
 
         Parameters
         ----------
@@ -7437,8 +7437,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         flags : typing.Union[int, hikari.messages.MessageFlag, hikari.undefined.UndefinedType]
             If provided, the message flags this response should have.
 
-            As of writing the only message flags that can be set here is
-            `hikari.messages.MessageFlag.EPHEMERAL` and `hikari.messages.MessageFlag.SUPPRESS_NOTIFICATIONS`.
+            As of writing the only message flags that can be set here are
+            `hikari.messages.MessageFlag.EPHEMERAL`, `hikari.messages.MessageFlag.SUPPRESS_NOTIFICATIONS`
+            and `hikari.messages.MessageFlag.SUPPRESS_EMBEDS`.
         tts : hikari.undefined.UndefinedOr[bool]
             If provided, whether the message will be read out by a screen
             reader using Discord's TTS (text-to-speech) system.
