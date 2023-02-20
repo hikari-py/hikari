@@ -654,17 +654,17 @@ class ResolvedOptionData:
 
 
 class GetChannelMixin:
-    """Mixin that allows an interaction to fetch the channel it occurred in."""
+    """Mixin that allows an interaction to get the channel it occurred in."""
 
     @property
     @abc.abstractmethod
     def app(self) -> traits.RESTAware:
-        ...
+        "RESTAware app used to fetch the channel."
 
     @property
     @abc.abstractmethod
     def channel_id(self) -> snowflakes.Snowflake:
-        ...
+        """ID of the channel that should be fetched from the cache or REST endpoint."""
 
     async def fetch_channel(self) -> channels.TextableChannel:
         """Fetch the channel or thread this was triggered in.
@@ -718,17 +718,17 @@ class GetChannelMixin:
 
 
 class GetGuildMixin(abc.ABC):
-    """Mixin that allows an interaction to fetch the guild it occurred in."""
+    """Mixin that allows an interaction to get the guild it occurred in."""
 
     @property
     @abc.abstractmethod
     def app(self) -> traits.RESTAware:
-        ...
+        "RESTAware app used to fetch the guild."
 
     @property
     @abc.abstractmethod
     def guild_id(self) -> snowflakes.Snowflake:
-        ...
+        """ID of the guild that should be fetched from the cache or REST endpoint."""
 
     async def fetch_guild(self) -> typing.Optional[guilds.RESTGuild]:
         """Fetch the guild this interaction happened in.
