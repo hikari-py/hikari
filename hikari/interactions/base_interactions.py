@@ -727,7 +727,7 @@ class GetGuildMixin(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def guild_id(self) -> snowflakes.Snowflake:
+    def guild_id(self) -> snowflakes.Snowflake | None:
         """ID of the guild that should be fetched from the cache or REST endpoint."""
 
     async def fetch_guild(self) -> typing.Optional[guilds.RESTGuild]:
