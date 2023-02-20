@@ -661,7 +661,7 @@ class GetChannelMixin:
     @property
     @abc.abstractmethod
     def app(self) -> traits.RESTAware:
-        "RESTAware app used to fetch the channel."
+        """RESTAware app used to fetch the channel."""
 
     @property
     @abc.abstractmethod
@@ -727,7 +727,7 @@ class GetGuildMixin(abc.ABC):
     @property
     @abc.abstractmethod
     def app(self) -> traits.RESTAware:
-        "RESTAware app used to fetch the guild."
+        """RESTAware app used to fetch the guild."""
 
     @property
     @abc.abstractmethod
