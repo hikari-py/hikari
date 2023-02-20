@@ -29,13 +29,10 @@ import typing
 
 import attr
 
-from hikari import channels
-from hikari import traits
 from hikari.interactions import base_interactions
 
 if typing.TYPE_CHECKING:
     from hikari import components as components_
-    from hikari import guilds
     from hikari import locales
     from hikari import messages
     from hikari import permissions
@@ -87,6 +84,8 @@ The following types are valid for this:
 class ComponentInteraction(
     base_interactions.MessageResponseMixin[ComponentResponseTypesT],
     base_interactions.ModalResponseMixin,
+    base_interactions.GetChannelMixin,
+    base_interactions.GetGuildMixin,
 ):
     """Represents a component interaction on Discord."""
 
@@ -220,93 +219,3 @@ class ComponentInteraction(
             raise ValueError("Invalid type passed for a deferred response")
 
         return self.app.rest.interaction_deferred_builder(type_)
-
-    async def fetch_channel(self) -> channels.TextableChannel:
-        """Fetch the channel or thread this interaction occurred in.
-
-        Returns
-        -------
-        hikari.channels.TextableChannel
-            The channel. This will be a _derivative_ of `hikari.channels.TextableChannel`.
-
-        Raises
-        ------
-        hikari.errors.UnauthorizedError
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.ForbiddenError
-            If you are missing the `READ_MESSAGES` permission in the channel.
-        hikari.errors.NotFoundError
-            If the channel is not found.
-        hikari.errors.RateLimitTooLongError
-            Raised in the event that a rate limit occurs that is
-            longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitTooLongError
-            Raised in the event that a rate limit occurs that is
-            longer than `max_rate_limit` when making a request.
-        hikari.errors.InternalServerError
-            If an internal error occurs on Discord while handling the request.
-        """
-        channel = await self.app.rest.fetch_channel(self.channel_id)
-        assert isinstance(channel, channels.TextableChannel)
-        return channel
-
-    def get_channel(self) -> typing.Union[channels.TextableGuildChannel, None]:
-        """Get the guild channel or thread this interaction occurred in.
-
-        .. note::
-            This will always return `None` for interactions triggered
-            in a DM channel.
-
-        Returns
-        -------
-        typing.Union[hikari.channels.GuildTextChannel, hikari.channels.GuildNewsChannel, None]
-            The object of the guild channel that was found in the cache or
-            `None`.
-        """
-        if isinstance(self.app, traits.CacheAware):
-            channel = self.app.cache.get_guild_channel(self.channel_id) or self.app.cache.get_thread(self.channel_id)
-            assert channel is None or isinstance(channel, channels.TextableGuildChannel)
-            return channel
-
-        return None
-
-    async def fetch_guild(self) -> typing.Optional[guilds.RESTGuild]:
-        """Fetch the guild this interaction happened in.
-
-        Returns
-        -------
-        typing.Optional[hikari.guilds.RESTGuild]
-            Object of the guild this interaction happened in or `None`
-            if this occurred within a DM channel.
-
-        Raises
-        ------
-        hikari.errors.ForbiddenError
-            If you are not part of the guild.
-        hikari.errors.NotFoundError
-            If the guild is not found.
-        hikari.errors.UnauthorizedError
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.RateLimitTooLongError
-            Raised in the event that a rate limit occurs that is
-            longer than `max_rate_limit` when making a request.
-        hikari.errors.InternalServerError
-            If an internal error occurs on Discord while handling the request.
-        """
-        if not self.guild_id:
-            return None
-
-        return await self.app.rest.fetch_guild(self.guild_id)
-
-    def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
-        """Get the object of this interaction's guild from the cache.
-
-        Returns
-        -------
-        typing.Optional[hikari.guilds.GatewayGuild]
-            The object of the guild if found, else `None`.
-        """
-        if self.guild_id and isinstance(self.app, traits.CacheAware):
-            return self.app.cache.get_guild(self.guild_id)
-
-        return None

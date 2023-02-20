@@ -38,6 +38,7 @@ __all__: typing.Sequence[str] = (
     "ResponseType",
 )
 
+import abc
 import typing
 
 import attr
@@ -650,3 +651,118 @@ class ResolvedOptionData:
 
     users: typing.Mapping[snowflakes.Snowflake, users.User] = attr.field(repr=False)
     """Mapping of snowflake IDs to the resolved option user objects."""
+
+
+class GetChannelMixin:
+    @property
+    @abc.abstractmethod
+    def app(self) -> traits.RESTAware:
+        ...
+
+    @property
+    @abc.abstractmethod
+    def channel_id(self) -> snowflakes.Snowflake:
+        ...
+
+    async def fetch_channel(self) -> channels.TextableChannel:
+        """Fetch the channel or thread this was triggered in.
+
+        Returns
+        -------
+        hikari.channels.TextableChannel
+            The requested partial channel derived object of the channel this was
+            triggered in.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you are missing the `READ_MESSAGES` permission in the channel.
+        hikari.errors.NotFoundError
+            If the channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        channel = await self.app.rest.fetch_channel(self.channel_id)
+        assert isinstance(channel, channels.TextableChannel)
+        return channel
+
+    def get_channel(self) -> typing.Optional[channels.TextableGuildChannel]:
+        """Get the guild channel or thread this was triggered in from the cache.
+
+        .. note::
+            This will always return `None` for interactions triggered
+            in a DM channel.
+
+        Returns
+        -------
+        typing.Optional[hikari.channels.TextableGuildChannel]
+            The object of the guild channel that was found in the cache or
+            `None`.
+        """
+        if isinstance(self.app, traits.CacheAware):
+            channel = self.app.cache.get_guild_channel(self.channel_id) or self.app.cache.get_thread(self.channel_id)
+            assert channel is None or isinstance(channel, channels.TextableGuildChannel)
+            return channel
+
+        return None
+
+
+class GetGuildMixin(abc.ABC):
+    @property
+    @abc.abstractmethod
+    def app(self) -> traits.RESTAware:
+        ...
+
+    @property
+    @abc.abstractmethod
+    def guild_id(self) -> snowflakes.Snowflake:
+        ...
+
+    async def fetch_guild(self) -> typing.Optional[guilds.RESTGuild]:
+        """Fetch the guild this interaction happened in.
+
+        Returns
+        -------
+        typing.Optional[hikari.guilds.RESTGuild]
+            Object of the guild this interaction happened in or `None`
+            if this occurred within a DM channel.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you are not part of the guild.
+        hikari.errors.NotFoundError
+            If the guild is not found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        if not self.guild_id:
+            return None
+
+        return await self.app.rest.fetch_guild(self.guild_id)
+
+    def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
+        """Get the object of this interaction's guild guild from the cache.
+
+        Returns
+        -------
+        typing.Optional[hikari.guilds.GatewayGuild]
+            The object of the guild if found, else `None`.
+        """
+        if self.guild_id and isinstance(self.app, traits.CacheAware):
+            return self.app.cache.get_guild(self.guild_id)
+
+        return None
