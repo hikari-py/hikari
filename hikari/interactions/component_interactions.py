@@ -250,7 +250,7 @@ class ComponentInteraction(
         assert isinstance(channel, channels.TextableChannel)
         return channel
 
-    def get_channel(self) -> typing.Union[channels.GuildTextChannel, channels.GuildNewsChannel, None]:
+    def get_channel(self) -> typing.Union[channels.TextableGuildChannel, None]:
         """Get the guild channel or thread this interaction occurred in.
 
         .. note::
@@ -265,7 +265,7 @@ class ComponentInteraction(
         """
         if isinstance(self.app, traits.CacheAware):
             channel = self.app.cache.get_guild_channel(self.channel_id) or self.app.cache.get_thread(self.channel_id)
-            assert channel is None or isinstance(channel, (channels.GuildTextChannel, channels.GuildNewsChannel))
+            assert channel is None or isinstance(channel, channels.TextableGuildChannel)
             return channel
 
         return None
