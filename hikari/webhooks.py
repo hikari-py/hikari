@@ -126,8 +126,8 @@ class ExecutableWebhook(abc.ABC):
             interaction webhooks.
 
             Additionally, flags this can only be set for interaction webhooks
-            and the only settable flag is EPHEMERAL and SUPPRESS_NOTIFICATIONS;
-            this field is just ignored for non-interaction webhooks.
+            and the only settable flag is `EPHEMERAL`; this field is just
+            ignored for non-interaction webhooks.
 
         Parameters
         ----------

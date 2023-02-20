@@ -1116,7 +1116,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             `hikari.undefined.UNDEFINED`, then nothing is changed.
 
             Note that some flags may not be able to be set. Currently the only
-            flags that can be set are `NONE` and `SUPPRESS_EMBEDS`.
+            flags that can be set are `SUPPRESS_NOTIFICATIONS` and
+            `SUPPRESS_EMBEDS`.
 
         Returns
         -------
@@ -2023,8 +2024,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """Execute a webhook.
 
         .. warning::
-            As of writing, `username` and `avatar_url` are ignored for
+            At the time of writing, `username` and `avatar_url` are ignored for
             interaction webhooks.
+
+            Additionally, flags this can only be set for interaction webhooks
+            and the only settable flag is `EPHEMERAL`; this field is just
+            ignored for non-interaction webhooks.
 
         Parameters
         ----------
@@ -2127,11 +2132,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             specific roles.
         flags : typing.Union[hikari.undefined.UndefinedType, int, hikari.messages.MessageFlag]
             The flags to set for this webhook message.
-
-            .. warning::
-                As of writing this can only be set for interaction webhooks
-                and the only settable flags are `EPHEMERAL` and `SUPPRESS_NOTIFICATIONS`;
-                this field is just ignored for non-interaction webhooks.
 
         Returns
         -------
