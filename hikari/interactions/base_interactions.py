@@ -50,6 +50,7 @@ from hikari import undefined
 from hikari import webhooks
 from hikari.internal import attr_extensions
 from hikari.internal import enums
+from hikari.internal import fast_protocol
 
 if typing.TYPE_CHECKING:
     from hikari import embeds as embeds_
@@ -653,7 +654,7 @@ class ResolvedOptionData:
     """Mapping of snowflake IDs to the resolved option user objects."""
 
 
-class GetChannelMixin:
+class GetChannelMixin(fast_protocol.FastProtocolChecking, typing.Protocol):
     """Mixin that allows an interaction to get the channel it occurred in."""
 
     __slots__ = ()
@@ -719,7 +720,7 @@ class GetChannelMixin:
         return None
 
 
-class GetGuildMixin(abc.ABC):
+class GetGuildMixin(fast_protocol.FastProtocolChecking, typing.Protocol):
     """Mixin that allows an interaction to get the guild it occurred in."""
 
     __slots__ = ()
