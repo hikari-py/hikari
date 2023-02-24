@@ -683,7 +683,7 @@ class TestInteractionServer:
         assert result.charset == "UTF-8"
         assert result.files == [mock_file_1, mock_file_2]
         assert result.headers is None
-        assert result.payload == b'{"ok": "No boomer"}'
+        assert result.payload == b'{"ok":"No boomer"}'
         assert result.status_code == 200
 
     @pytest.mark.asyncio()
@@ -724,7 +724,7 @@ class TestInteractionServer:
         assert result.charset == "UTF-8"
         assert result.files == [mock_file_1, mock_file_2]
         assert result.headers is None
-        assert result.payload == b'{"ok": "No boomer"}'
+        assert result.payload == b'{"ok":"No boomer"}'
         assert result.status_code == 200
 
         assert g_called is True
@@ -810,13 +810,13 @@ class TestInteractionServer:
     async def test_on_interaction_on_ping(self, mock_interaction_server: interaction_server_impl.InteractionServer):
         mock_interaction_server._public_key = mock.Mock()
 
-        result = await mock_interaction_server.on_interaction(b'{"type": 1}', b"signature", b"timestamp")
+        result = await mock_interaction_server.on_interaction(b'{"type":1}', b"signature", b"timestamp")
 
         assert result.content_type == "application/json"
         assert result.charset == "UTF-8"
         assert result.files == ()
         assert result.headers is None
-        assert result.payload == b'{"type": 1}'
+        assert result.payload == b'{"type":1}'
         assert result.status_code == 200
 
     @pytest.mark.asyncio()
@@ -973,6 +973,7 @@ class TestInteractionServer:
         mock_context = object()
         mock_socket = object()
         mock_interaction_server._is_closing = True
+        mock_interaction_server._fetch_public_key = mock.AsyncMock()
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(aiohttp.web, "TCPSite", return_value=mock.AsyncMock()))
         stack.enter_context(mock.patch.object(aiohttp.web, "UnixSite", return_value=mock.AsyncMock()))
@@ -993,6 +994,8 @@ class TestInteractionServer:
                 shutdown_timeout=3232.3232,
                 ssl_context=mock_context,
             )
+
+            mock_interaction_server._fetch_public_key.assert_awaited_once_with()
 
             aiohttp.web.Application.assert_called_once_with()
             aiohttp.web.Application.return_value.add_routes.assert_called_once_with(
@@ -1037,6 +1040,7 @@ class TestInteractionServer:
         self, mock_interaction_server: interaction_server_impl.InteractionServer
     ):
         mock_context = object()
+        mock_interaction_server._fetch_public_key = mock.AsyncMock()
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(aiohttp.web, "TCPSite", return_value=mock.AsyncMock()))
         stack.enter_context(mock.patch.object(aiohttp.web_runner, "AppRunner", return_value=mock.AsyncMock()))
@@ -1044,6 +1048,8 @@ class TestInteractionServer:
 
         with stack:
             await mock_interaction_server.start(ssl_context=mock_context)
+
+            mock_interaction_server._fetch_public_key.assert_awaited_once_with()
 
             aiohttp.web.Application.assert_called_once_with()
             aiohttp.web.Application.return_value.add_routes.assert_called_once_with(
@@ -1069,6 +1075,7 @@ class TestInteractionServer:
         self, mock_interaction_server: interaction_server_impl.InteractionServer
     ):
         mock_context = object()
+        mock_interaction_server._fetch_public_key = mock.AsyncMock()
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(aiohttp.web, "TCPSite", return_value=mock.AsyncMock()))
         stack.enter_context(mock.patch.object(aiohttp.web_runner, "AppRunner", return_value=mock.AsyncMock()))
@@ -1077,6 +1084,8 @@ class TestInteractionServer:
 
         with stack:
             await mock_interaction_server.start(ssl_context=mock_context)
+
+            mock_interaction_server._fetch_public_key.assert_awaited_once_with()
 
             aiohttp.web.Application.assert_called_once_with()
             aiohttp.web.Application.return_value.add_routes.assert_called_once_with(
@@ -1100,6 +1109,7 @@ class TestInteractionServer:
     @pytest.mark.asyncio()
     async def test_start_with_multiple_hosts(self, mock_interaction_server: interaction_server_impl.InteractionServer):
         mock_context = object()
+        mock_interaction_server._fetch_public_key = mock.AsyncMock()
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(aiohttp.web, "TCPSite", return_value=mock.AsyncMock()))
         stack.enter_context(mock.patch.object(aiohttp.web_runner, "AppRunner", return_value=mock.AsyncMock()))
@@ -1107,6 +1117,8 @@ class TestInteractionServer:
 
         with stack:
             await mock_interaction_server.start(ssl_context=mock_context, host=["123", "4312"], port=453123)
+
+            mock_interaction_server._fetch_public_key.assert_awaited_once_with()
 
             aiohttp.web.Application.assert_called_once_with()
             aiohttp.web.Application.return_value.add_routes.assert_called_once_with(
@@ -1146,6 +1158,7 @@ class TestInteractionServer:
     async def test_start_when_no_tcp_sites(self, mock_interaction_server: interaction_server_impl.InteractionServer):
         mock_socket = object()
         mock_context = object()
+        mock_interaction_server._fetch_public_key = mock.AsyncMock()
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(aiohttp.web, "TCPSite", return_value=mock.AsyncMock()))
         stack.enter_context(mock.patch.object(aiohttp.web_runner, "AppRunner", return_value=mock.AsyncMock()))
@@ -1155,6 +1168,8 @@ class TestInteractionServer:
 
         with stack:
             await mock_interaction_server.start(ssl_context=mock_context, socket=mock_socket)
+
+            mock_interaction_server._fetch_public_key.assert_awaited_once_with()
 
             aiohttp.web.Application.assert_called_once_with()
             aiohttp.web.Application.return_value.add_routes.assert_called_once_with(

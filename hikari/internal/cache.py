@@ -67,6 +67,8 @@ from hikari.internal import attr_extensions
 from hikari.internal import collections
 
 if typing.TYPE_CHECKING:
+    from typing_extensions import Self
+
     from hikari import applications
     from hikari import channels as channels_
     from hikari import components as components_
@@ -320,7 +322,7 @@ class BaseData(abc.ABC, typing.Generic[ValueT]):
 
     @classmethod
     @abc.abstractmethod
-    def build_from_entity(cls: typing.Type[DataT], entity: ValueT, /) -> DataT:
+    def build_from_entity(cls, entity: ValueT, /) -> Self:
         """Build a data object from an initialised entity.
 
         Parameters

@@ -23,7 +23,7 @@
 """Implementation of parts of Python's `enum` protocol to be more performant."""
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("Enum", "Flag")
+__all__: typing.Sequence[str] = ("deprecated", "Enum", "Flag")
 
 import functools
 import operator
@@ -31,8 +31,47 @@ import sys
 import types
 import typing
 
+if typing.TYPE_CHECKING:
+    from typing_extensions import Self
+
 _T = typing.TypeVar("_T")
 _MAX_CACHED_MEMBERS: typing.Final[int] = 1 << 12
+
+
+class _DeprecatedAlias(typing.Generic[_T]):
+    __slots__ = ("_name", "_alias", "_removal_version")
+
+    def __init__(self, name: str, alias: str, removal_version: str) -> None:
+        self._name = name
+        self._alias = alias
+        self._removal_version = removal_version
+
+        # Import kept in-line due to circular import issues
+        from hikari.internal import deprecation
+
+        deprecation.check_if_past_removal(self._name, removal_version=removal_version)
+
+    def __get__(self, instance: typing.Optional[_T], owner_enum: _T) -> _T:
+        # Import kept in-line due to circular import issues
+        from hikari.internal import deprecation
+
+        deprecation.warn_deprecated(
+            self._name,
+            removal_version=self._removal_version,
+            additional_info=f"Use '{self._alias}' instead.",
+        )
+
+        return owner_enum[self._alias]
+
+
+class deprecated:
+    """Used to denote that an enum member is a deprecated alias of another."""
+
+    __slots__ = ("value", "removal_version")
+
+    def __init__(self, value: typing.Any, /, *, removal_version: str) -> None:
+        self.value = value
+        self.removal_version = removal_version
 
 
 class _EnumNamespace(typing.Dict[str, typing.Any]):
@@ -42,7 +81,7 @@ class _EnumNamespace(typing.Dict[str, typing.Any]):
         super().__init__()
         self.base = base
         self.names_to_values: typing.Dict[str, typing.Any] = {}
-        self.values_to_names: typing.Dict[str, typing.Any] = {}
+        self.values_to_names: typing.Dict[typing.Any, str] = {}
         self["__doc__"] = "An enumeration."
 
     def __getitem__(self, name: str) -> typing.Any:
@@ -58,16 +97,28 @@ class _EnumNamespace(typing.Dict[str, typing.Any]):
         if name == "" or name == "mro":
             raise TypeError(f"Invalid enum member name: {name!r}")
 
-        if name.startswith("_"):
+        if isinstance(value, deprecated):
+            real_value = value.value
+
+            if (alias := self.values_to_names.get(real_value)) is None:
+                raise ValueError("`deprecated` must be used on an existing value")
+
+            member = _DeprecatedAlias(name, alias, value.removal_version)
+            super().__setitem__(name, member)
+
+            # Unpack for down below
+            value = real_value
+
+        elif name.startswith("_"):
             # Dunder/sunder, so skip.
             super().__setitem__(name, value)
             return
 
-        if hasattr(value, "__get__") or hasattr(value, "__set__") or hasattr(value, "__del__"):
+        elif hasattr(value, "__get__") or hasattr(value, "__set__") or hasattr(value, "__del__"):
             super().__setitem__(name, value)
             return
 
-        if not isinstance(value, self.base):
+        elif not isinstance(value, self.base):
             raise TypeError(f"Expected member {name} to be of type {self.base.__name__} but was {type(value).__name__}")
 
         name = sys.intern(name)
@@ -83,13 +134,9 @@ class _EnumNamespace(typing.Dict[str, typing.Any]):
 
         if name in self.names_to_values:
             raise TypeError(f"Cannot define {name!r} name multiple times")
-        if value in self.values_to_names:
-            # We must have defined some alias, so just register the name
-            self.names_to_values[name] = value
-            return
 
         self.names_to_values[name] = value
-        self.values_to_names[value] = name
+        self.values_to_names.setdefault(value, name)
 
 
 # We refer to these from the metaclasses, but obviously this won't work
@@ -102,14 +149,13 @@ _Enum = NotImplemented
 class _EnumMeta(type):
     def __call__(cls, value: typing.Any) -> typing.Any:
         """Cast a value to the enum, returning the raw value that was passed if value not found."""
-        try:
-            return cls._value_to_member_map_[value]
-        except KeyError:
-            # If we can't find the value, just return what got casted in
-            return value
+        return cls._value_to_member_map_.get(value, value)
 
     def __getitem__(cls, name: str) -> typing.Any:
-        return cls._name_to_member_map_[name]
+        if member := getattr(cls, name, None):
+            return member
+
+        raise KeyError(name)
 
     def __contains__(cls, item: typing.Any) -> bool:
         return item in cls._value_to_member_map_
@@ -118,11 +164,11 @@ class _EnumMeta(type):
         yield from cls._name_to_member_map_.values()
 
     def __new__(
-        mcs: typing.Type[_T],
+        mcs,
         name: str,
         bases: typing.Tuple[typing.Type[typing.Any], ...],
         namespace: typing.Union[typing.Dict[str, typing.Any], _EnumNamespace],
-    ) -> _T:
+    ) -> Self:
         global _Enum
 
         if _Enum is NotImplemented:
@@ -158,18 +204,21 @@ class _EnumMeta(type):
         cls = super().__new__(mcs, name, bases, new_namespace)
 
         for name, value in namespace.names_to_values.items():
-            # Patching the member init call is around 100ns faster per call than
-            # using the default type.__call__ which would make us do the lookup
-            # in cls.__new__. Reason for this is that python will also always
-            # invoke cls.__init__ if we do this, so we end up with two function
-            # calls.
-            member = cls.__new__(cls, value)
-            member._name_ = name
-            member._value_ = value
+            member = new_namespace.get(name)
+            if not isinstance(member, _DeprecatedAlias):
+                # Patching the member init call is around 100ns faster per call than
+                # using the default type.__call__ which would make us do the lookup
+                # in cls.__new__. Reason for this is that python will also always
+                # invoke cls.__init__ if we do this, so we end up with two function
+                # calls.
+                member = cls.__new__(cls, value)
+                member._name_ = name
+                member._value_ = value
+                setattr(cls, name, member)
+
             name_to_member[name] = member
-            value_to_member[value] = member
+            value_to_member.setdefault(value, member)
             member_names.append(name)
-            setattr(cls, name, member)
 
         return cls
 
@@ -356,7 +405,10 @@ class _FlagMeta(type):
                 return pseudomember
 
     def __getitem__(cls, name: str) -> typing.Any:
-        return cls._name_to_member_map_[name]
+        if member := getattr(cls, name, None):
+            return member
+
+        raise KeyError(name)
 
     def __iter__(cls) -> typing.Iterator[typing.Any]:
         yield from cls._name_to_member_map_.values()
@@ -377,11 +429,11 @@ class _FlagMeta(type):
 
     @staticmethod
     def __new__(
-        mcs: typing.Type[_T],
+        mcs,
         name: str,
         bases: typing.Tuple[typing.Type[typing.Any], ...],
         namespace: typing.Union[typing.Dict[str, typing.Any], _EnumNamespace],
-    ) -> _T:
+    ) -> Self:
         global _Flag
 
         if _Flag is NotImplemented:
@@ -420,21 +472,24 @@ class _FlagMeta(type):
         cls = super().__new__(mcs, name, (int, *bases), new_namespace)
 
         for name, value in namespace.names_to_values.items():
-            # Patching the member init call is around 100ns faster per call than
-            # using the default type.__call__ which would make us do the lookup
-            # in cls.__new__. Reason for this is that python will also always
-            # invoke cls.__init__ if we do this, so we end up with two function
-            # calls.
-            member = cls.__new__(cls, value)
-            member._name_ = name
-            member._value_ = value
-            name_to_member[name] = member
-            value_to_member[value] = member
-            member_names.append(name)
-            setattr(cls, name, member)
+            member = new_namespace.get(name)
+            if not isinstance(member, _DeprecatedAlias):
+                # Patching the member init call is around 100ns faster per call than
+                # using the default type.__call__ which would make us do the lookup
+                # in cls.__new__. Reason for this is that python will also always
+                # invoke cls.__init__ if we do this, so we end up with two function
+                # calls.
+                member = cls.__new__(cls, value)
+                member._name_ = name
+                member._value_ = value
+                setattr(cls, name, member)
 
-            if not (value & value - 1):
-                powers_of_2_map[value] = member
+                if not (value & value - 1):
+                    powers_of_2_map[value] = member
+
+            name_to_member[name] = member
+            value_to_member.setdefault(value, member)
+            member_names.append(name)
 
         all_bits = functools.reduce(operator.or_, value_to_member.keys())
         all_bits_member = cls.__new__(cls, all_bits)
@@ -617,7 +672,7 @@ class Flag(metaclass=_FlagMeta):
         """Return the `int` value of the flag."""
         return self._value_
 
-    def all(self: _T, *flags: _T) -> bool:
+    def all(self, *flags: Self) -> bool:
         """Check if all of the given flags are part of this value.
 
         Returns
@@ -628,7 +683,7 @@ class Flag(metaclass=_FlagMeta):
         """
         return all((flag & self) == flag for flag in flags)
 
-    def any(self: _T, *flags: _T) -> bool:
+    def any(self, *flags: Self) -> bool:
         """Check if any of the given flags are part of this value.
 
         Returns
@@ -639,7 +694,7 @@ class Flag(metaclass=_FlagMeta):
         """
         return any((flag & self) == flag for flag in flags)
 
-    def difference(self: _T, other: typing.Union[_T, int]) -> _T:
+    def difference(self, other: typing.Union[Self, int]) -> _T:
         """Perform a set difference with the other set.
 
         This will return all flags in this set that are not in the other value.
@@ -648,18 +703,18 @@ class Flag(metaclass=_FlagMeta):
         """
         return self.__class__(self & ~int(other))
 
-    def intersection(self: _T, other: typing.Union[_T, int]) -> _T:
+    def intersection(self, other: typing.Union[Self, int]) -> _T:
         """Return a combination of flags that are set for both given values.
 
         Equivalent to using the "AND" `&` operator.
         """
         return self.__class__(self._value_ & int(other))
 
-    def invert(self: _T) -> _T:
+    def invert(self) -> Self:
         """Return a set of all flags not in the current set."""
         return self.__class__(self.__class__.__everything__._value_ & ~self._value_)
 
-    def is_disjoint(self: _T, other: typing.Union[_T, int]) -> bool:
+    def is_disjoint(self, other: typing.Union[Self, int]) -> bool:
         """Return whether two sets have a intersection or not.
 
         If the two sets have an intersection, then this returns
@@ -668,18 +723,18 @@ class Flag(metaclass=_FlagMeta):
         """
         return not (self & other)
 
-    def is_subset(self: _T, other: typing.Union[_T, int]) -> bool:
+    def is_subset(self, other: typing.Union[Self, int]) -> bool:
         """Return whether another set contains this set or not.
 
         Equivalent to using the "in" operator.
         """
         return (self & other) == other
 
-    def is_superset(self: _T, other: typing.Union[_T, int]) -> bool:
+    def is_superset(self, other: typing.Union[Self, int]) -> bool:
         """Return whether this set contains another set or not."""
         return (self & other) == self
 
-    def none(self: _T, *flags: _T) -> bool:
+    def none(self, *flags: Self) -> bool:
         """Check if none of the given flags are part of this value.
 
         .. note::
@@ -693,7 +748,7 @@ class Flag(metaclass=_FlagMeta):
         """
         return not self.any(*flags)
 
-    def split(self: _T) -> typing.Sequence[_T]:
+    def split(self) -> typing.Sequence[Self]:
         """Return a list of all defined atomic values for this flag.
 
         Any unrecognised bits will be omitted for brevity.
@@ -706,7 +761,7 @@ class Flag(metaclass=_FlagMeta):
             key=lambda m: m._name_,
         )
 
-    def symmetric_difference(self: _T, other: typing.Union[_T, int]) -> _T:
+    def symmetric_difference(self, other: typing.Union[_T, int]) -> Self:
         """Return a set with the symmetric differences of two flag sets.
 
         Equivalent to using the "XOR" `^` operator.
@@ -715,7 +770,7 @@ class Flag(metaclass=_FlagMeta):
         """
         return self.__class__(self._value_ ^ int(other))
 
-    def union(self: _T, other: typing.Union[_T, int]) -> _T:
+    def union(self, other: typing.Union[_T, int]) -> Self:
         """Return a combination of all flags in this set and the other set.
 
         Equivalent to using the "OR" `~` operator.
@@ -739,7 +794,7 @@ class Flag(metaclass=_FlagMeta):
     def __int__(self) -> int:
         return self._value_
 
-    def __iter__(self: _T) -> typing.Iterator[_T]:
+    def __iter__(self) -> typing.Iterator[Self]:
         return iter(self.split())
 
     def __len__(self) -> int:
@@ -748,7 +803,7 @@ class Flag(metaclass=_FlagMeta):
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__}.{self.name}: {self.value!r}>"
 
-    def __rsub__(self: _T, other: typing.Union[int, _T]) -> _T:
+    def __rsub__(self, other: typing.Union[int, _T]) -> Self:
         # This logic has to be reversed to be correct, since order matters for
         # a subtraction operator. This also ensures `int - _T -> _T` is a valid
         # case for us.

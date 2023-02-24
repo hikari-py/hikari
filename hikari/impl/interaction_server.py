@@ -142,7 +142,7 @@ class _Response:
 
 # Constant response
 _PONG_RESPONSE: typing.Final[_Response] = _Response(
-    _OK_STATUS, data_binding.dump_json({"type": _PONG_RESPONSE_TYPE}).encode(), content_type=_JSON_CONTENT_TYPE
+    _OK_STATUS, data_binding.default_json_dumps({"type": _PONG_RESPONSE_TYPE}), content_type=_JSON_CONTENT_TYPE
 )
 
 
@@ -193,10 +193,10 @@ class InteractionServer(interaction_server.InteractionServer):
 
     Other Parameters
     ----------------
-    dumps : aiohttp.typedefs.JSONEncoder
-        The JSON encoder this server should use. Defaults to `json.dumps`.
-    loads : aiohttp.typedefs.JSONDecoder
-        The JSON decoder this server should use. Defaults to `json.loads`.
+    dumps : hikari.internal.data_binding.JSONEncoder
+        The JSON encoder this server should use. Defaults to `hikari.internal.data_binding.default_json_dumps`.
+    loads : hikari.internal.data_binding.JSONDecoder
+        The JSON decoder this server should use. Defaults to `hikari.internal.data_binding.default_json_loads`.
     public_key : bytes
         The public key this server should use for verifying request payloads from
         Discord. If left as `None` then the client will try to work this
@@ -224,10 +224,10 @@ class InteractionServer(interaction_server.InteractionServer):
     def __init__(
         self,
         *,
-        dumps: aiohttp.typedefs.JSONEncoder = data_binding.dump_json,
+        dumps: data_binding.JSONEncoder = data_binding.default_json_dumps,
         entity_factory: entity_factory_api.EntityFactory,
         executor: typing.Optional[concurrent.futures.Executor] = None,
-        loads: aiohttp.typedefs.JSONDecoder = data_binding.load_json,
+        loads: data_binding.JSONDecoder = data_binding.default_json_loads,
         rest_client: rest_api.RESTClient,
         public_key: typing.Optional[bytes] = None,
     ) -> None:
@@ -433,10 +433,11 @@ class InteractionServer(interaction_server.InteractionServer):
             return _Response(_BAD_REQUEST_STATUS, b"Invalid request signature")
 
         try:
-            payload = self._loads(body.decode("utf-8"))
+            payload = self._loads(body)
+            assert isinstance(payload, dict)
             interaction_type = int(payload["type"])
 
-        except (data_binding.JSONDecodeError, ValueError, TypeError) as exc:
+        except (ValueError, TypeError) as exc:
             _LOGGER.error("Received a request with an invalid JSON body", exc_info=exc)
             return _Response(_BAD_REQUEST_STATUS, b"Invalid JSON body")
 
@@ -484,7 +485,7 @@ class InteractionServer(interaction_server.InteractionServer):
                 )
                 return _Response(_INTERNAL_SERVER_ERROR_STATUS, b"Exception occurred during interaction dispatch")
 
-            return _Response(_OK_STATUS, payload.encode(), files=files, content_type=_JSON_CONTENT_TYPE)
+            return _Response(_OK_STATUS, payload, files=files, content_type=_JSON_CONTENT_TYPE)
 
         _LOGGER.debug(
             "Ignoring interaction %s of type %s without registered listener", interaction.id, interaction.type
@@ -539,6 +540,8 @@ class InteractionServer(interaction_server.InteractionServer):
 
         self._close_event = asyncio.Event()
         self._is_closing = False
+
+        await self._fetch_public_key()
 
         aio_app = aiohttp.web.Application()
         aio_app.add_routes([aiohttp.web.post("/", self.aiohttp_hook)])

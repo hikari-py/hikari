@@ -29,10 +29,10 @@ __all__: typing.Sequence[str] = (
     "JSONObject",
     "JSONArray",
     "JSONish",
-    "dump_json",
-    "load_json",
-    "JSONDecodeError",
+    "default_json_loads",
+    "default_json_dumps",
     "JSONObjectBuilder",
+    "JSONPayload",
     "StringMapBuilder",
     "URLEncodedFormBuilder",
 )
@@ -75,62 +75,88 @@ JSONish = typing.Union[str, int, float, bool, None, JSONArray, JSONObject]
 Stringish = typing.Union[str, int, bool, undefined.UndefinedType, None, snowflakes.Unique]
 """Type hint for any valid that can be put in a StringMapBuilder"""
 
+JSONEncoder = typing.Callable[[typing.Union[JSONArray, JSONObject]], bytes]
+"""Type hint for hikari-compatible JSON encoders.
+
+A hikari-compatible JSON encoder is one which will take in a JSON-ish object and output either `str`
+or `bytes`.
+"""
+
+JSONDecoder = typing.Callable[[typing.Union[str, bytes]], typing.Union[JSONArray, JSONObject]]
+"""Type hint for hikari-compatible JSON decoder.
+
+A hikari-compatible JSON decoder is one which will take either a `str` or `bytes` and outputs
+the JSON-ish object, as well as raises a `ValueError` on an incorrect JSON payload being passed in.
+"""
+
 _StringMapBuilderArg = typing.Union[
     typing.Mapping[str, str], multidict.MultiMapping[str], typing.Iterable[typing.Tuple[str, str]]
 ]
 
 _APPLICATION_OCTET_STREAM: typing.Final[str] = "application/octet-stream"
+_JSON_CONTENT_TYPE: typing.Final[str] = "application/json"
+_BINARY: typing.Final[str] = "binary"
+_UTF_8: typing.Final[str] = "utf-8"
 
-if typing.TYPE_CHECKING:
-    JSONDecodeError: typing.Type[Exception] = Exception
-    """Exception raised when loading an invalid JSON string."""
+default_json_dumps: JSONEncoder
+"""Default json encoder to use."""
 
-    def dump_json(_: typing.Union[JSONArray, JSONObject], /, *, indent: int = ...) -> str:
-        """Convert a Python type to a JSON string."""
-        raise NotImplementedError
+default_json_loads: JSONDecoder
+"""Default json decoder to use."""
 
-    def load_json(_: typing.AnyStr, /) -> typing.Union[JSONArray, JSONObject]:
-        """Convert a JSON string to a Python type."""
-        raise NotImplementedError
+try:
+    import orjson
 
-else:
+    default_json_dumps = orjson.dumps
+    default_json_loads = orjson.loads
+except ModuleNotFoundError:
     import json
 
-    dump_json = json.dumps
-    """Convert a Python type to a JSON string."""
+    _json_separators = (",", ":")
 
-    load_json = json.loads
-    """Convert a JSON string to a Python type."""
+    def default_json_dumps(obj: typing.Union[JSONArray, JSONObject]) -> bytes:
+        """Encode a JSON object to a `str`."""
+        return json.dumps(obj, separators=_json_separators).encode(_UTF_8)
 
-    JSONDecodeError = json.JSONDecodeError
-    """Exception raised when loading an invalid JSON string."""
+    default_json_loads = json.loads
+
+
+@typing.final
+class JSONPayload(aiohttp.BytesPayload):
+    """A JSON payload to use in an aiohttp request."""
+
+    def __init__(self, value: typing.Any, dumps: JSONEncoder = default_json_dumps) -> None:
+        super().__init__(dumps(value), content_type=_JSON_CONTENT_TYPE, encoding=_UTF_8)
 
 
 @typing.final
 class URLEncodedFormBuilder:
     """Helper class to generate `aiohttp.FormData`."""
 
-    __slots__: typing.Sequence[str] = ("_executor", "_fields", "_resources")
+    __slots__: typing.Sequence[str] = ("_fields", "_resources")
 
-    def __init__(self, executor: typing.Optional[concurrent.futures.Executor] = None) -> None:
-        self._executor = executor
-        self._fields: typing.List[typing.Tuple[str, str, typing.Optional[str]]] = []
+    def __init__(self) -> None:
+        self._fields: typing.List[typing.Tuple[str, typing.Union[str, bytes], typing.Optional[str]]] = []
         self._resources: typing.List[typing.Tuple[str, files.Resource[files.AsyncReader]]] = []
 
-    def add_field(self, name: str, data: str, *, content_type: typing.Optional[str] = None) -> None:
+    def add_field(
+        self, name: str, data: typing.Union[str, bytes], *, content_type: typing.Optional[str] = None
+    ) -> None:
         self._fields.append((name, data, content_type))
 
     def add_resource(self, name: str, resource: files.Resource[files.AsyncReader]) -> None:
         self._resources.append((name, resource))
 
-    async def build(self, stack: contextlib.AsyncExitStack) -> aiohttp.FormData:
+    async def build(
+        self, stack: contextlib.AsyncExitStack, executor: typing.Optional[concurrent.futures.Executor] = None
+    ) -> aiohttp.FormData:
         form = aiohttp.FormData()
 
         for field in self._fields:
-            form.add_field(field[0], field[1], content_type=field[2])
+            form.add_field(field[0], field[1], content_type=field[2], content_transfer_encoding=_BINARY)
 
         for name, resource in self._resources:
-            stream = await stack.enter_async_context(resource.stream(executor=self._executor))
+            stream = await stack.enter_async_context(resource.stream(executor=executor))
             mimetype = stream.mimetype or _APPLICATION_OCTET_STREAM
             form.add_field(name, stream, filename=stream.filename, content_type=mimetype)
 

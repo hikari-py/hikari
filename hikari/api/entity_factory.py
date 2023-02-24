@@ -157,6 +157,23 @@ class EntityFactory(abc.ABC):
         """
 
     @abc.abstractmethod
+    def deserialize_own_application_role_connection(
+        self, payload: data_binding.JSONObject
+    ) -> application_models.OwnApplicationRoleConnection:
+        """Parse a raw payload from Discord into an own application role connection object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.applications.OwnApplicationRoleConnection
+            The deserialized "own application role connection" object.
+        """
+
+    @abc.abstractmethod
     def deserialize_application(self, payload: data_binding.JSONObject) -> application_models.Application:
         """Parse a raw payload from Discord into an application object.
 
@@ -186,6 +203,40 @@ class EntityFactory(abc.ABC):
         -------
         hikari.applications.AuthorizationInformation
             The deserialized authorization information object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_application_connection_metadata_record(
+        self, payload: data_binding.JSONObject
+    ) -> application_models.ApplicationRoleConnectionMetadataRecord:
+        """Parse a raw payload from Discord into an application connection metadata record object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.applications.ApplicationRoleConnectionMetadataRecord
+            The deserialized "application connection metadata record" object.
+        """
+
+    @abc.abstractmethod
+    def serialize_application_connection_metadata_record(
+        self, record: application_models.ApplicationRoleConnectionMetadataRecord
+    ) -> data_binding.JSONObject:
+        """Serialize an application connection metadata record object to a json serializable dict.
+
+        Parameters
+        ----------
+        record : hikari.applications.ApplicationRoleConnectionMetadataRecord
+            The record object to serialize.
+
+        Returns
+        -------
+        hikari.internal.data_binding.JSONObject
+            The serialized representation of the record object.
         """
 
     @abc.abstractmethod
@@ -240,18 +291,54 @@ class EntityFactory(abc.ABC):
     #####################
 
     @abc.abstractmethod
-    def deserialize_audit_log(self, payload: data_binding.JSONObject) -> audit_log_models.AuditLog:
+    def deserialize_audit_log(
+        self, payload: data_binding.JSONObject, *, guild_id: snowflakes.Snowflake
+    ) -> audit_log_models.AuditLog:
         """Parse a raw payload from Discord into an audit log object.
 
         Parameters
         ----------
         payload : hikari.internal.data_binding.JSONObject
             The JSON payload to deserialize.
+        guild_id : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
+            The ID of the guild this audit log belongs to.
 
         Returns
         -------
         hikari.audit_logs.AuditLog
             The deserialized audit log object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_audit_log_entry(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+    ) -> audit_log_models.AuditLogEntry:
+        """Parse a raw payload from Discord into an audit log entry object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Other Parameters
+        ----------------
+        guild_id : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
+            The ID of the guild this entry belongs to. If passed then this
+            will be prioritised over `"guild_id"` in the payload.
+
+        Returns
+        -------
+        hikari.audit_logs.AuditLogEntry
+            The deserialized audit log entry object.
+
+        Raises
+        ------
+        KeyError
+            If `guild_id` is left as `hikari.undefined.UNDEFINED` when
+            `"guild_id"` is not present in the passed payload.
         """
 
     ##################

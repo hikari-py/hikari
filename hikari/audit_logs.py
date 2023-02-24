@@ -396,14 +396,6 @@ class MessagePinEntryInfo(BaseAuditLogEntryInfo):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -430,14 +422,6 @@ class MessagePinEntryInfo(BaseAuditLogEntryInfo):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -492,14 +476,6 @@ class MessageDeleteEntryInfo(MessageBulkDeleteEntryInfo):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -544,14 +520,6 @@ class MemberMoveEntryInfo(MemberDisconnectEntryInfo):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -572,6 +540,9 @@ class AuditLogEntry(snowflakes.Unique):
 
     id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
     """The ID of this entity."""
+
+    guild_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
+    """ID of the guild this audit log entry is for."""
 
     target_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=True)
     """The ID of the entity affected by this change, if applicable."""
@@ -608,14 +579,6 @@ class AuditLogEntry(snowflakes.Unique):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """

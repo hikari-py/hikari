@@ -29,7 +29,7 @@ __all__: typing.Sequence[str] = ("FastProtocolChecking",)
 import typing
 
 if typing.TYPE_CHECKING:
-    _T = typing.TypeVar("_T")
+    from typing_extensions import Self
 
 _Protocol: FastProtocolChecking = NotImplemented
 _IGNORED_ATTRS = typing.EXCLUDED_ATTRIBUTES + ["__qualname__", "__slots__"]
@@ -45,11 +45,11 @@ class _FastProtocolChecking(type(typing.Protocol)):
     _attributes_: typing.Tuple[str, ...]
 
     def __new__(
-        cls: typing.Type[_T],
+        cls,
         cls_name: str,
         bases: typing.Tuple[typing.Type[typing.Any], ...],
         namespace: typing.Dict[str, typing.Any],
-    ) -> _T:
+    ) -> Self:
         global _Protocol
 
         if _Protocol is NotImplemented:
@@ -90,7 +90,7 @@ class _FastProtocolChecking(type(typing.Protocol)):
 
         return cls
 
-    def __instancecheck__(self: _T, other: typing.Any) -> bool:
+    def __instancecheck__(self, other: typing.Any) -> bool:
         if not self._is_protocol:
             return super().__instancecheck__(other)
 

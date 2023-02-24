@@ -79,10 +79,10 @@ class Intents(enums.Flag):
         # so to keep your code readable.
         my_intents = (
             Intents.GUILDS             |
-            Intents.GUILD_BANS         |
             Intents.GUILD_EMOJIS       |
             Intents.GUILD_INTEGRATIONS |
             Intents.GUILD_MESSAGES     |
+            Intents.GUILD_MODERATION   |
             Intents.PRIVATE_MESSAGES
         )
 
@@ -219,12 +219,16 @@ class Intents(enums.Flag):
         This intent is privileged, and requires enabling/whitelisting to use.
     """
 
-    GUILD_BANS = 1 << 2
+    GUILD_MODERATION = 1 << 2
     """Subscribes to the events listed below.
 
+    * `GUILD_AUDIT_LOG_ENTRY_CREATE`
     * `GUILD_BAN_ADD`
     * `GUILD_BAN_REMOVE`
     """
+
+    GUILD_BANS = enums.deprecated(GUILD_MODERATION, removal_version="2.0.0.dev118")
+    """Deprecated alias of `GUILD_BANS`."""
 
     GUILD_EMOJIS = 1 << 3
     """Subscribes to the events listed below.
@@ -341,7 +345,6 @@ class Intents(enums.Flag):
 
     ALL_GUILDS_UNPRIVILEGED = (
         GUILDS
-        | GUILD_BANS
         | GUILD_EMOJIS
         | GUILD_INTEGRATIONS
         | GUILD_WEBHOOKS
@@ -350,6 +353,7 @@ class Intents(enums.Flag):
         | GUILD_MESSAGES
         | GUILD_MESSAGE_REACTIONS
         | GUILD_MESSAGE_TYPING
+        | GUILD_MODERATION
         | GUILD_SCHEDULED_EVENTS
     )
     """All unprivileged guild-related intents."""

@@ -31,8 +31,6 @@ __all__: typing.Sequence[str] = (
     "CommandInteraction",
     "COMMAND_RESPONSE_TYPES",
     "CommandResponseTypesT",
-    "InteractionChannel",
-    "ResolvedOptionData",
 )
 
 import typing
@@ -48,8 +46,9 @@ from hikari.interactions import base_interactions
 from hikari.internal import attr_extensions
 
 if typing.TYPE_CHECKING:
+    from typing_extensions import Self
+
     from hikari import guilds
-    from hikari import messages as messages_
     from hikari import permissions as permissions_
     from hikari import users as users_
     from hikari.api import special_endpoints
@@ -77,38 +76,11 @@ The following types are valid for this:
 * `hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE`/`5`
 """
 
+InteractionChannel = base_interactions.InteractionChannel
+"""Deprecated alias of `hikari.base_interactions.InteractionChannel`."""
 
-@attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
-class InteractionChannel(channels.PartialChannel):
-    """Represents partial channels returned as resolved entities on interactions."""
-
-    permissions: permissions_.Permissions = attr.field(eq=False, hash=False, repr=True)
-    """Permissions the command's executor has in this channel."""
-
-
-@attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
-class ResolvedOptionData:
-    """Represents the resolved objects of entities referenced in a command's options."""
-
-    attachments: typing.Mapping[snowflakes.Snowflake, messages_.Attachment] = attr.field(repr=False)
-    """Mapping of snowflake IDs to the attachment objects."""
-
-    channels: typing.Mapping[snowflakes.Snowflake, InteractionChannel] = attr.field(repr=False)
-    """Mapping of snowflake IDs to the resolved option partial channel objects."""
-
-    members: typing.Mapping[snowflakes.Snowflake, base_interactions.InteractionMember] = attr.field(repr=False)
-    """Mapping of snowflake IDs to the resolved option member objects."""
-
-    messages: typing.Mapping[snowflakes.Snowflake, messages_.Message]
-    """Mapping of snowflake IDs to the resolved option partial message objects."""
-
-    roles: typing.Mapping[snowflakes.Snowflake, guilds.Role] = attr.field(repr=False)
-    """Mapping of snowflake IDs to the resolved option role objects."""
-
-    users: typing.Mapping[snowflakes.Snowflake, users_.User] = attr.field(repr=False)
-    """Mapping of snowflake IDs to the resolved option user objects."""
+ResolvedOptionData = base_interactions.ResolvedOptionData
+"""Deprecated alias of `hikari.base_interactions.ResolvedOptionData`."""
 
 
 @attr_extensions.with_copy
@@ -131,8 +103,7 @@ class CommandInteractionOption:
     subcommand or group.
     """
 
-    # TODO: use typing.Self here
-    options: typing.Optional[typing.Sequence[CommandInteractionOption]] = attr.field(repr=True)
+    options: typing.Optional[typing.Sequence[Self]] = attr.field(repr=True)
     """Options provided for this option.
 
     Either `CommandInteractionOption.value` or `CommandInteractionOption.options`
@@ -152,18 +123,6 @@ class AutocompleteInteractionOption(CommandInteractionOption):
 
     Focused options are not guaranteed to be parsed so the value may be a string
     even if the option type says otherwise.
-    """
-
-    options: typing.Optional[typing.Sequence[AutocompleteInteractionOption]] = attr.field(repr=True)
-    """Options provided for this option.
-
-    Either `AutocompleteInteractionOption.value` or `AutocompleteInteractionOption.options`
-    will be provided with `value` being provided when an option is provided as a
-    parameter with a value and `options` being provided when an option donates a
-    subcommand or group.
-
-    `AutocompleteInteractionOption.is_focused` will be `True` for the value being
-    autocompleted.
     """
 
 
@@ -242,14 +201,6 @@ class BaseCommandInteraction(base_interactions.PartialInteraction):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -296,14 +247,6 @@ class BaseCommandInteraction(base_interactions.PartialInteraction):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -331,14 +274,6 @@ class BaseCommandInteraction(base_interactions.PartialInteraction):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -376,7 +311,7 @@ class CommandInteraction(
     options: typing.Optional[typing.Sequence[CommandInteractionOption]] = attr.field(eq=False, hash=False, repr=True)
     """Parameter values provided by the user invoking this command."""
 
-    resolved: typing.Optional[ResolvedOptionData] = attr.field(eq=False, hash=False, repr=False)
+    resolved: typing.Optional[base_interactions.ResolvedOptionData] = attr.field(eq=False, hash=False, repr=False)
     """Mappings of the objects resolved for the provided command options."""
 
     target_id: typing.Optional[snowflakes.Snowflake] = attr.field(default=None, eq=False, hash=False, repr=True)

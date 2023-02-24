@@ -263,14 +263,6 @@ class ExecutableWebhook(abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -425,14 +417,6 @@ class ExecutableWebhook(abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """  # noqa: E501 - Line too long
@@ -475,14 +459,6 @@ class ExecutableWebhook(abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -549,7 +525,7 @@ class PartialWebhook(snowflakes.Unique):
 
     @property
     def default_avatar_url(self) -> files_.URL:
-        """Default avatar URL for the user."""  # noqa: D401 - Imperative mood
+        """Default avatar URL for the user."""
         return routes.CDN_DEFAULT_USER_AVATAR.compile_to_file(
             urls.CDN_URL,
             discriminator=0,
@@ -717,14 +693,6 @@ class IncomingWebhook(PartialWebhook, ExecutableWebhook):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -767,14 +735,6 @@ class IncomingWebhook(PartialWebhook, ExecutableWebhook):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -813,14 +773,6 @@ class IncomingWebhook(PartialWebhook, ExecutableWebhook):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -855,11 +807,19 @@ class ChannelFollowerWebhook(PartialWebhook):
         This will be `None` when received within an audit log.
     """
 
-    source_channel: channels_.PartialChannel = attr.field(eq=False, hash=False, repr=True)
-    """The partial object of the channel this webhook is following."""
+    source_channel: typing.Optional[channels_.PartialChannel] = attr.field(eq=False, hash=False, repr=True)
+    """The partial object of the channel this webhook is following.
 
-    source_guild: guilds_.PartialGuild = attr.field(eq=False, hash=False, repr=True)
-    """The partial object of the guild this webhook is following."""
+    This will be `None` when the user that followed the channel is no
+    longer in the source guild or has lost access to the source channel.
+    """
+
+    source_guild: typing.Optional[guilds_.PartialGuild] = attr.field(eq=False, hash=False, repr=True)
+    """The partial object of the guild this webhook is following.
+
+    This will be `None` when the user that followed the channel is no
+    longer in the source guild or has lost access to the source channel.
+    """
 
     async def delete(self) -> None:
         """Delete this webhook.
@@ -919,14 +879,6 @@ class ChannelFollowerWebhook(PartialWebhook):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -959,14 +911,6 @@ class ChannelFollowerWebhook(PartialWebhook):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -994,14 +938,6 @@ class ChannelFollowerWebhook(PartialWebhook):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """

@@ -38,6 +38,8 @@ __all__: typing.Sequence[str] = (
     "InteractiveButtonBuilder",
     "LinkButtonBuilder",
     "SelectMenuBuilder",
+    "TextSelectMenuBuilder",
+    "ChannelSelectMenuBuilder",
     "SelectOptionBuilder",
     "TextInputBuilder",
     "InteractionModalBuilder",
@@ -52,6 +54,8 @@ from hikari import undefined
 
 if typing.TYPE_CHECKING:
     import types
+
+    from typing_extensions import Self
 
     from hikari import channels
     from hikari import colors
@@ -71,8 +75,6 @@ if typing.TYPE_CHECKING:
     from hikari.api import rest as rest_api
     from hikari.interactions import base_interactions
     from hikari.internal import time
-
-    _T = typing.TypeVar("_T")
 
 _SelectMenuBuilderT = typing.TypeVar("_SelectMenuBuilderT", bound="SelectMenuBuilder[typing.Any]")
 _ContainerT = typing.TypeVar("_ContainerT")
@@ -190,7 +192,7 @@ class GuildBuilder(abc.ABC):
         """Default message notification level that can be overwritten.
 
         If not overridden, this will use the Discord default level.
-        """  # noqa: D401 - Imperative mood
+        """
 
     @default_message_notifications.setter
     def default_message_notifications(
@@ -562,7 +564,7 @@ class InteractionDeferredBuilder(InteractionResponseBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_flags(self: _T, flags: typing.Union[undefined.UndefinedType, int, messages.MessageFlag], /) -> _T:
+    def set_flags(self, flags: typing.Union[undefined.UndefinedType, int, messages.MessageFlag], /) -> Self:
         """Set message flags for this response.
 
         .. note::
@@ -591,7 +593,7 @@ class InteractionAutocompleteBuilder(InteractionResponseBuilder, abc.ABC):
         """Autocomplete choices."""
 
     @abc.abstractmethod
-    def set_choices(self: _T, choices: typing.Sequence[commands.CommandChoice], /) -> _T:
+    def set_choices(self, choices: typing.Sequence[commands.CommandChoice], /) -> Self:
         """Set autocomplete choices.
 
         Returns
@@ -687,7 +689,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
-    def clear_attachments(self: _T, /) -> _T:
+    def clear_attachments(self, /) -> Self:
         """Clear attachments for this response.
 
         This is only useful for message update responses, where you might want to
@@ -700,7 +702,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
-    def add_attachment(self: _T, attachment: files.Resourceish, /) -> _T:
+    def add_attachment(self, attachment: files.Resourceish, /) -> Self:
         """Add an attachment to this response.
 
         Parameters
@@ -715,7 +717,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
-    def add_component(self: _T, component: ComponentBuilder, /) -> _T:
+    def add_component(self, component: ComponentBuilder, /) -> Self:
         """Add a component to this response.
 
         Parameters
@@ -730,7 +732,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
-    def add_embed(self: _T, embed: embeds_.Embed, /) -> _T:
+    def add_embed(self, embed: embeds_.Embed, /) -> Self:
         """Add an embed to this response.
 
         Parameters
@@ -745,7 +747,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_content(self: _T, content: undefined.UndefinedOr[str], /) -> _T:
+    def set_content(self, content: undefined.UndefinedOr[str], /) -> Self:
         """Set the response's message content.
 
         Parameters
@@ -760,7 +762,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_flags(self: _T, flags: typing.Union[undefined.UndefinedType, int, messages.MessageFlag], /) -> _T:
+    def set_flags(self, flags: typing.Union[undefined.UndefinedType, int, messages.MessageFlag], /) -> Self:
         """Set message flags for this response.
 
         .. note::
@@ -779,7 +781,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_tts(self: _T, tts: undefined.UndefinedOr[bool], /) -> _T:
+    def set_tts(self, tts: undefined.UndefinedOr[bool], /) -> Self:
         """Set whether this response should trigger text-to-speech processing.
 
         Parameters
@@ -794,7 +796,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_mentions_everyone(self: _T, mentions: undefined.UndefinedOr[bool] = undefined.UNDEFINED, /) -> _T:
+    def set_mentions_everyone(self, mentions: undefined.UndefinedOr[bool] = undefined.UNDEFINED, /) -> Self:
         """Set whether this response should be able to mention @everyone/@here.
 
         Parameters
@@ -810,12 +812,12 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
     @abc.abstractmethod
     def set_role_mentions(
-        self: _T,
+        self,
         mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
         /,
-    ) -> _T:
+    ) -> Self:
         """Set whether and what role mentions should be possible for this response.
 
         Parameters
@@ -833,12 +835,12 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
     @abc.abstractmethod
     def set_user_mentions(
-        self: _T,
+        self,
         mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
         ] = undefined.UNDEFINED,
         /,
-    ) -> _T:
+    ) -> Self:
         """Set whether and what user mentions should be possible for this response.
 
         Parameters
@@ -886,7 +888,7 @@ class InteractionModalBuilder(InteractionResponseBuilder, abc.ABC):
         """Sequence of component builders to send in this modal."""
 
     @abc.abstractmethod
-    def set_title(self: _T, title: str, /) -> _T:
+    def set_title(self, title: str, /) -> Self:
         """Set the title that will show up in the modal.
 
         Parameters
@@ -896,7 +898,7 @@ class InteractionModalBuilder(InteractionResponseBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_custom_id(self: _T, custom_id: str, /) -> _T:
+    def set_custom_id(self, custom_id: str, /) -> Self:
         """Set the developer set custom ID used for identifying interactions with this modal.
 
         Parameters
@@ -906,7 +908,7 @@ class InteractionModalBuilder(InteractionResponseBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
-    def add_component(self: _T, component: ComponentBuilder, /) -> _T:
+    def add_component(self, component: ComponentBuilder, /) -> Self:
         """Add a component to this modal.
 
         Parameters
@@ -969,7 +971,7 @@ class CommandBuilder(abc.ABC):
         """Name localizations set for this command."""
 
     @abc.abstractmethod
-    def set_id(self: _T, id_: undefined.UndefinedOr[snowflakes.Snowflakeish], /) -> _T:
+    def set_id(self, id_: undefined.UndefinedOr[snowflakes.Snowflakeish], /) -> Self:
         """Set the ID of this command.
 
         Parameters
@@ -985,8 +987,8 @@ class CommandBuilder(abc.ABC):
 
     @abc.abstractmethod
     def set_default_member_permissions(
-        self: _T, default_member_permissions: typing.Union[undefined.UndefinedType, int, permissions_.Permissions], /
-    ) -> _T:
+        self, default_member_permissions: typing.Union[undefined.UndefinedType, int, permissions_.Permissions], /
+    ) -> Self:
         """Set the member permissions necessary to utilize this command by default.
 
         Parameters
@@ -1004,7 +1006,7 @@ class CommandBuilder(abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_is_dm_enabled(self: _T, state: undefined.UndefinedOr[bool], /) -> _T:
+    def set_is_dm_enabled(self, state: undefined.UndefinedOr[bool], /) -> Self:
         """Set whether this command will be enabled in DMs with the bot.
 
         Parameters
@@ -1019,7 +1021,7 @@ class CommandBuilder(abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_is_nsfw(self: _T, state: undefined.UndefinedOr[bool], /) -> _T:
+    def set_is_nsfw(self, state: undefined.UndefinedOr[bool], /) -> Self:
         """Set whether this command will be age-restricted.
 
         Parameters
@@ -1035,8 +1037,8 @@ class CommandBuilder(abc.ABC):
 
     @abc.abstractmethod
     def set_name_localizations(
-        self: _T, name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str], /
-    ) -> _T:
+        self, name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str], /
+    ) -> Self:
         """Set the name localizations for this command.
 
         Parameters
@@ -1120,10 +1122,10 @@ class SlashCommandBuilder(CommandBuilder):
 
     @abc.abstractmethod
     def set_description_localizations(
-        self: _T,
+        self,
         description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str],
         /,
-    ) -> _T:
+    ) -> Self:
         """Set the localised descriptions for this command.
 
         Parameters
@@ -1143,7 +1145,7 @@ class SlashCommandBuilder(CommandBuilder):
         """Sequence of up to 25 of the options set for this command."""
 
     @abc.abstractmethod
-    def add_option(self: _T, option: commands.CommandOption) -> _T:
+    def add_option(self, option: commands.CommandOption) -> Self:
         """Add an option to this command.
 
         .. note::
@@ -1241,6 +1243,11 @@ class ComponentBuilder(abc.ABC):
 
     __slots__: typing.Sequence[str] = ()
 
+    @property
+    @abc.abstractmethod
+    def type(self) -> typing.Union[int, components_.ComponentType]:
+        """Type of component this builder represents."""
+
     @abc.abstractmethod
     def build(self) -> typing.MutableMapping[str, typing.Any]:
         """Build a JSON object from this builder.
@@ -1256,6 +1263,11 @@ class ButtonBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
     """Builder class for a message button component."""
 
     __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def type(self) -> typing.Literal[components_.ComponentType.BUTTON]:
+        """Type of component this builder represents."""
 
     @property
     @abc.abstractmethod
@@ -1284,8 +1296,8 @@ class ButtonBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
 
     @abc.abstractmethod
     def set_emoji(
-        self: _T, emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType], /
-    ) -> _T:
+        self, emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType], /
+    ) -> Self:
         """Set the emoji to display on this button.
 
         Parameters
@@ -1301,7 +1313,7 @@ class ButtonBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
         """
 
     @abc.abstractmethod
-    def set_label(self: _T, label: undefined.UndefinedOr[str], /) -> _T:
+    def set_label(self, label: undefined.UndefinedOr[str], /) -> Self:
         """Set the text label which should be displayed on this button.
 
         Parameters
@@ -1318,7 +1330,7 @@ class ButtonBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
         """
 
     @abc.abstractmethod
-    def set_is_disabled(self: _T, state: bool, /) -> _T:
+    def set_is_disabled(self, state: bool, /) -> Self:
         """Set whether this button should be disabled.
 
         Parameters
@@ -1367,7 +1379,7 @@ class InteractiveButtonBuilder(ButtonBuilder[_ContainerT], abc.ABC):
         """Developer set custom ID used for identifying interactions with this button."""
 
 
-class SelectOptionBuilder(ComponentBuilder, abc.ABC, typing.Generic[_SelectMenuBuilderT]):
+class SelectOptionBuilder(abc.ABC, typing.Generic[_SelectMenuBuilderT]):
     """Builder class for select menu options."""
 
     __slots__: typing.Sequence[str] = ()
@@ -1385,7 +1397,7 @@ class SelectOptionBuilder(ComponentBuilder, abc.ABC, typing.Generic[_SelectMenuB
     @property
     @abc.abstractmethod
     def description(self) -> undefined.UndefinedOr[str]:
-        """Description of the option, max 100 characters."""  # noqa: D401 - Imperative mood
+        """Description of the option, max 100 characters."""
 
     @property
     @abc.abstractmethod
@@ -1398,7 +1410,7 @@ class SelectOptionBuilder(ComponentBuilder, abc.ABC, typing.Generic[_SelectMenuB
         """Whether this option should be marked as selected by default."""
 
     @abc.abstractmethod
-    def set_description(self: _T, value: undefined.UndefinedOr[str], /) -> _T:
+    def set_description(self, value: undefined.UndefinedOr[str], /) -> Self:
         """Set the option's description.
 
         Parameters
@@ -1415,8 +1427,8 @@ class SelectOptionBuilder(ComponentBuilder, abc.ABC, typing.Generic[_SelectMenuB
 
     @abc.abstractmethod
     def set_emoji(
-        self: _T, emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType], /
-    ) -> _T:
+        self, emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType], /
+    ) -> Self:
         """Set the emoji to display on this option.
 
         Parameters
@@ -1432,7 +1444,7 @@ class SelectOptionBuilder(ComponentBuilder, abc.ABC, typing.Generic[_SelectMenuB
         """
 
     @abc.abstractmethod
-    def set_is_default(self: _T, state: bool, /) -> _T:
+    def set_is_default(self, state: bool, /) -> Self:
         """Set whether this option should be selected by default.
 
         Parameters
@@ -1458,9 +1470,19 @@ class SelectOptionBuilder(ComponentBuilder, abc.ABC, typing.Generic[_SelectMenuB
             The menu component that owns this button.
         """
 
+    @abc.abstractmethod
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        """Build a JSON object from this builder.
+
+        Returns
+        -------
+        typing.MutableMapping[str, typing.Any]
+            The built json object representation of this builder.
+        """
+
 
 class SelectMenuBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
-    """Builder class for select menu options."""
+    """Builder class for a select menu."""
 
     __slots__: typing.Sequence[str] = ()
 
@@ -1476,13 +1498,8 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
 
     @property
     @abc.abstractmethod
-    def options(self: _SelectMenuBuilderT) -> typing.Sequence[SelectOptionBuilder[_SelectMenuBuilderT]]:
-        """Sequence of the options set for this select menu."""
-
-    @property
-    @abc.abstractmethod
     def placeholder(self) -> undefined.UndefinedOr[str]:
-        """Placeholder text to display when no options are selected."""  # noqa: D401 - Imperative mood
+        """Placeholder text to display when no options are selected."""
 
     @property
     @abc.abstractmethod
@@ -1505,28 +1522,7 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
         """
 
     @abc.abstractmethod
-    def add_option(self: _SelectMenuBuilderT, label: str, value: str, /) -> SelectOptionBuilder[_SelectMenuBuilderT]:
-        """Add an option to this menu.
-
-        .. note::
-            Setup should be finalised by calling `add_to_menu` in the builder
-            returned.
-
-        Parameters
-        ----------
-        label : str
-            The user-facing name of this option, max 100 characters.
-        value : str
-            The developer defined value of this option, max 100 characters.
-
-        Returns
-        -------
-        SelectOptionBuilder[SelectMenuBuilder]
-            Option builder object.
-        """
-
-    @abc.abstractmethod
-    def set_is_disabled(self: _T, state: bool, /) -> _T:
+    def set_is_disabled(self, state: bool, /) -> Self:
         """Set whether this option is disabled.
 
         Defaults to `False`.
@@ -1543,7 +1539,7 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
         """
 
     @abc.abstractmethod
-    def set_placeholder(self: _T, value: undefined.UndefinedOr[str], /) -> _T:
+    def set_placeholder(self, value: undefined.UndefinedOr[str], /) -> Self:
         """Set place-holder text to be shown when no option is selected.
 
         Parameters
@@ -1559,7 +1555,7 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
         """
 
     @abc.abstractmethod
-    def set_min_values(self: _T, value: int, /) -> _T:
+    def set_min_values(self, value: int, /) -> Self:
         """Set the minimum amount of options which need to be selected for this menu.
 
         .. note::
@@ -1578,7 +1574,7 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
         """
 
     @abc.abstractmethod
-    def set_max_values(self: _T, value: int, /) -> _T:
+    def set_max_values(self, value: int, /) -> Self:
         """Set the maximum amount of options which can be selected for this menu.
 
         .. note::
@@ -1607,10 +1603,73 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
         """
 
 
+class TextSelectMenuBuilder(SelectMenuBuilder[_ContainerT], abc.ABC, typing.Generic[_ContainerT]):
+    """Builder class for a text select menu."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def options(self) -> typing.Sequence[SelectOptionBuilder[Self]]:
+        """Sequence of the options set for this select menu."""
+
+    @abc.abstractmethod
+    def add_option(self, label: str, value: str, /) -> SelectOptionBuilder[Self]:
+        """Add an option to this menu.
+
+        .. note::
+            Setup should be finalised by calling `add_to_menu` in the builder
+            returned.
+
+        Parameters
+        ----------
+        label : str
+            The user-facing name of this option, max 100 characters.
+        value : str
+            The developer defined value of this option, max 100 characters.
+
+        Returns
+        -------
+        SelectOptionBuilder[SelectMenuBuilder]
+            Option builder object.
+        """
+
+
+class ChannelSelectMenuBuilder(SelectMenuBuilder[_ContainerT], abc.ABC, typing.Generic[_ContainerT]):
+    """Builder class for a channel select menu."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def channel_types(self) -> typing.Sequence[channels.ChannelType]:
+        """The channel types that can be selected in this menu."""
+
+    @abc.abstractmethod
+    def set_channel_types(self, value: typing.Sequence[channels.ChannelType], /) -> Self:
+        """Set the valid channel types for this menu.
+
+        Parameters
+        ----------
+        value : typing.Sequence[hikari.channels.ChannelType]
+            The valid channel types for this menu.
+
+        Returns
+        -------
+        SelectMenuBuilder
+            The builder object to enable chained calls.
+        """
+
+
 class TextInputBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
     """Builder class for text inputs components."""
 
     __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def type(self) -> typing.Literal[components_.ComponentType.TEXT_INPUT]:
+        """Type of component this builder represents."""
 
     @property
     @abc.abstractmethod
@@ -1635,7 +1694,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
     @property
     @abc.abstractmethod
     def placeholder(self) -> undefined.UndefinedOr[str]:
-        """Placeholder text for when the text input is empty."""  # noqa: D401 - Imperative mood
+        """Placeholder text for when the text input is empty."""
 
     @property
     @abc.abstractmethod
@@ -1658,7 +1717,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
         """Maximum length the text should have."""
 
     @abc.abstractmethod
-    def set_style(self: _T, style: typing.Union[components_.TextInputStyle, int], /) -> _T:
+    def set_style(self, style: typing.Union[components_.TextInputStyle, int], /) -> Self:
         """Set the style to use for the text input.
 
         Parameters
@@ -1673,7 +1732,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
         """
 
     @abc.abstractmethod
-    def set_custom_id(self: _T, custom_id: str, /) -> _T:
+    def set_custom_id(self, custom_id: str, /) -> Self:
         """Set the developer set custom ID used for identifying this text input.
 
         Parameters
@@ -1688,7 +1747,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
         """
 
     @abc.abstractmethod
-    def set_label(self: _T, label: str, /) -> _T:
+    def set_label(self, label: str, /) -> Self:
         """Set the label above this text input.
 
         Parameters
@@ -1703,7 +1762,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
         """
 
     @abc.abstractmethod
-    def set_placeholder(self: _T, placeholder: str, /) -> _T:
+    def set_placeholder(self, placeholder: str, /) -> Self:
         """Set the placeholder text for when the text input is empty.
 
         Parameters
@@ -1718,7 +1777,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
         """
 
     @abc.abstractmethod
-    def set_value(self: _T, value: str, /) -> _T:
+    def set_value(self, value: str, /) -> Self:
         """Pre-filled text that will be sent if the user does not write anything.
 
         Parameters
@@ -1733,7 +1792,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
         """
 
     @abc.abstractmethod
-    def set_required(self: _T, required: bool, /) -> _T:
+    def set_required(self, required: bool, /) -> Self:
         """Set whether this text input is required to be filled-in.
 
         Parameters
@@ -1748,7 +1807,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
         """
 
     @abc.abstractmethod
-    def set_min_length(self: _T, min_length: int, /) -> _T:
+    def set_min_length(self, min_length: int, /) -> Self:
         """Set the minimum length the text should have.
 
         Parameters
@@ -1763,7 +1822,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
         """
 
     @abc.abstractmethod
-    def set_max_length(self: _T, max_length: int, /) -> _T:
+    def set_max_length(self, max_length: int, /) -> Self:
         """Set the maximum length the text should have.
 
         Parameters
@@ -1795,15 +1854,16 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    def type(self) -> typing.Literal[components_.ComponentType.ACTION_ROW]:
+        """Type of component this builder represents."""
+
+    @property
+    @abc.abstractmethod
     def components(self) -> typing.Sequence[ComponentBuilder]:
         """Sequence of the component builders registered within this action row."""
 
     @abc.abstractmethod
-    def add_component(
-        self: _T,
-        component: ComponentBuilder,
-        /,
-    ) -> _T:
+    def add_component(self, component: ComponentBuilder, /) -> Self:
         """Add a component to this action row builder.
 
         .. warning::
@@ -1825,28 +1885,28 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
     @typing.overload
     @abc.abstractmethod
     def add_button(
-        self: _T, style: components_.InteractiveButtonTypesT, custom_id: str, /
-    ) -> InteractiveButtonBuilder[_T]:
+        self, style: components_.InteractiveButtonTypesT, custom_id: str, /
+    ) -> InteractiveButtonBuilder[Self]:
         ...
 
     @typing.overload
     @abc.abstractmethod
     def add_button(
-        self: _T, style: typing.Literal[components_.ButtonStyle.LINK, 5], url: str, /
-    ) -> LinkButtonBuilder[_T]:
+        self, style: typing.Literal[components_.ButtonStyle.LINK, 5], url: str, /
+    ) -> LinkButtonBuilder[Self]:
         ...
 
     @typing.overload
     @abc.abstractmethod
     def add_button(
-        self: _T, style: typing.Union[int, components_.ButtonStyle], url_or_custom_id: str, /
-    ) -> typing.Union[LinkButtonBuilder[_T], InteractiveButtonBuilder[_T]]:
+        self, style: typing.Union[int, components_.ButtonStyle], url_or_custom_id: str, /
+    ) -> typing.Union[LinkButtonBuilder[Self], InteractiveButtonBuilder[Self]]:
         ...
 
     @abc.abstractmethod
     def add_button(
-        self: _T, style: typing.Union[int, components_.ButtonStyle], url_or_custom_id: str, /
-    ) -> typing.Union[LinkButtonBuilder[_T], InteractiveButtonBuilder[_T]]:
+        self, style: typing.Union[int, components_.ButtonStyle], url_or_custom_id: str, /
+    ) -> typing.Union[LinkButtonBuilder[Self], InteractiveButtonBuilder[Self]]:
         """Add a button component to this action row builder.
 
         Parameters
@@ -1868,12 +1928,63 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
             component.
         """
 
+    @typing.overload  # Deprecated overload
     @abc.abstractmethod
-    def add_select_menu(self: _T, custom_id: str, /) -> SelectMenuBuilder[_T]:
+    def add_select_menu(
+        self,
+        custom_id: str,
+        /,
+    ) -> TextSelectMenuBuilder[Self]:
+        ...
+
+    @typing.overload
+    @abc.abstractmethod
+    def add_select_menu(
+        self,
+        type_: typing.Literal[components_.ComponentType.TEXT_SELECT_MENU, 3],
+        custom_id: str,
+        /,
+    ) -> TextSelectMenuBuilder[Self]:
+        ...
+
+    @typing.overload
+    @abc.abstractmethod
+    def add_select_menu(
+        self,
+        type_: typing.Literal[components_.ComponentType.CHANNEL_SELECT_MENU, 8],
+        custom_id: str,
+        /,
+    ) -> ChannelSelectMenuBuilder[Self]:
+        ...
+
+    @typing.overload
+    @abc.abstractmethod
+    def add_select_menu(
+        self,
+        type_: typing.Union[components_.ComponentType, int],
+        custom_id: str,
+        /,
+    ) -> SelectMenuBuilder[Self]:
+        ...
+
+    @abc.abstractmethod
+    def add_select_menu(
+        self,
+        type_: typing.Union[components_.ComponentType, int, str],
+        # These have default during the deprecation period for backwards compatibility, as custom_id
+        # used to come first
+        custom_id: str = "",
+        /,
+    ) -> SelectMenuBuilder[Self]:
         """Add a select menu component to this action row builder.
+
+        .. deprecated:: 2.0.0.dev116
+            `type_` now comes as a positional-only argument before `custom_id`.
 
         Parameters
         ----------
+        type_ : typing.Union[hikari.components.ComponentType, int]
+            The type for the select menu.
         custom_id : str
             A developer-defined custom identifier used to identify which menu
             triggered component interactions.
@@ -1884,6 +1995,11 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
             Select menu builder object.
             `SelectMenuBuilder.add_to_container` should be called to finalise the
             component.
+
+        Raises
+        ------
+        ValueError
+            If an invalid select menu type is passed.
         """
 
 
@@ -1894,15 +2010,20 @@ class ModalActionRowBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    def type(self) -> typing.Literal[components_.ComponentType.ACTION_ROW]:
+        """Type of component this builder represents."""
+
+    @property
+    @abc.abstractmethod
     def components(self) -> typing.Sequence[ComponentBuilder]:
         """Sequence of the component builders registered within this action row."""
 
     @abc.abstractmethod
     def add_component(
-        self: _T,
+        self,
         component: ComponentBuilder,
         /,
-    ) -> _T:
+    ) -> Self:
         """Add a component to this action row builder.
 
         .. warning::
@@ -1923,10 +2044,10 @@ class ModalActionRowBuilder(ComponentBuilder, abc.ABC):
 
     @abc.abstractmethod
     def add_text_input(
-        self: _T,
+        self,
         custom_id: str,
         label: str,
-    ) -> TextInputBuilder[_T]:
+    ) -> TextInputBuilder[Self]:
         """Add a text input component to this action row builder.
 
         Parameters

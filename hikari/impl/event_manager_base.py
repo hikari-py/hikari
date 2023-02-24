@@ -50,6 +50,8 @@ from hikari.internal import reflect
 from hikari.internal import ux
 
 if typing.TYPE_CHECKING:
+    from typing_extensions import Self
+
     from hikari import intents as intents_
     from hikari.api import event_factory as event_factory_
     from hikari.api import shard as gateway_shard
@@ -72,8 +74,6 @@ if typing.TYPE_CHECKING:
         [_EventManagerBaseT, gateway_shard.GatewayShard, data_binding.JSONObject],
         typing.Coroutine[typing.Any, typing.Any, None],
     ]
-
-    _EventStreamT = typing.TypeVar("_EventStreamT", bound="EventStream[typing.Any]")
 
 
 if sys.version_info >= (3, 10):
@@ -162,7 +162,7 @@ class EventStream(event_manager_.EventStream[base_events.EventT]):
         # The registered wrapping function for the weak ref to this class's _listener method.
         self._timeout = timeout
 
-    def __enter__(self: _EventStreamT) -> _EventStreamT:
+    def __enter__(self) -> Self:
         self.open()
         return self
 
@@ -229,10 +229,10 @@ class EventStream(event_manager_.EventStream[base_events.EventT]):
         self._active = False
 
     def filter(
-        self: _EventStreamT,
+        self,
         *predicates: typing.Union[typing.Tuple[str, typing.Any], typing.Callable[[base_events.EventT], bool]],
         **attrs: typing.Any,
-    ) -> _EventStreamT:
+    ) -> Self:
         filter_ = self._map_predicates_and_attr_getters("filter", *predicates, **attrs)
         if self._active:
             self._queue = [entry for entry in self._queue if filter_(entry)]

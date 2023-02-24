@@ -49,10 +49,7 @@ async def test_generate_error_response(status_, expected_error):
         headers = {}
 
         async def read(self):
-            return "some raw body"
-
-        async def json(self):
-            return {"message": "raw message", "code": 123}
+            return '{"message": "raw message", "code": 123}'
 
     with mock.patch.object(errors, expected_error) as error:
         returned = await net.generate_error_response(StubResponse())
@@ -63,9 +60,11 @@ async def test_generate_error_response(status_, expected_error):
         http.HTTPStatus.FORBIDDEN,
         http.HTTPStatus.NOT_FOUND,
     ):
-        error.assert_called_once_with("https://some.url", {}, "some raw body", "raw message", 123)
+        error.assert_called_once_with(
+            "https://some.url", {}, '{"message": "raw message", "code": 123}', "raw message", 123
+        )
     else:
-        error.assert_called_once_with("https://some.url", status_, {}, "some raw body")
+        error.assert_called_once_with("https://some.url", status_, {}, '{"message": "raw message", "code": 123}')
 
     assert returned is error()
 
@@ -103,15 +102,12 @@ async def test_generate_error_response_with_non_conforming_status_code(status_, 
         headers = {}
 
         async def read(self):
-            return "some raw body"
-
-        async def json(self):
-            return {"message": "raw message", "code": 123}
+            return '{"message": "raw message", "code": 123}'
 
     with mock.patch.object(errors, expected_error) as error:
         returned = await net.generate_error_response(StubResponse())
 
-    error.assert_called_once_with("https://some.url", status_, {}, "some raw body")
+    error.assert_called_once_with("https://some.url", status_, {}, '{"message": "raw message", "code": 123}')
 
     assert returned is error()
 
@@ -126,13 +122,10 @@ async def test_generate_error_response_with_non_conforming_status_code(status_, 
 )
 @pytest.mark.asyncio()
 async def test_generate_error_when_error_without_json(status_, expected_error):
-    json_response = aiohttp.ContentTypeError(None, None)
-
     class StubResponse:
         real_url = "https://some.url"
         status = status_
         headers = {}
-        json = mock.AsyncMock(side_effect=json_response)
 
         async def read(self):
             return "some raw body"
@@ -163,29 +156,28 @@ async def test_generate_bad_request_error_without_json_response():
 
 
 @pytest.mark.parametrize(
-    ("json_method", "expected_errors"),
+    ("data", "expected_errors"),
     [
         (
-            mock.AsyncMock(return_value={"message": "raw message", "code": 123, "errors": {"component": []}}),
+            '{"message": "raw message", "code": 123, "errors": {"component": []}}',
             {"component": []},
         ),
-        (mock.AsyncMock(return_value={"message": "raw message", "code": 123, "errors": {}}), {}),
-        (mock.AsyncMock(return_value={"message": "raw message", "code": 123}), None),
+        ('{"message": "raw message", "code": 123, "errors": {}}', {}),
+        ('{"message": "raw message", "code": 123}', None),
     ],
 )
 @pytest.mark.asyncio()
-async def test_generate_bad_request_error_with_json_response(json_method, expected_errors):
+async def test_generate_bad_request_error_with_json_response(data, expected_errors):
     class StubResponse:
         real_url = "https://some.url"
         status = http.HTTPStatus.BAD_REQUEST
         headers = {}
-        json = json_method
 
         async def read(self):
-            return "some raw body"
+            return data
 
     with mock.patch.object(errors, "BadRequestError", errors=None) as error:
         returned = await net.generate_error_response(StubResponse())
 
-    error.assert_called_once_with("https://some.url", {}, "some raw body", "raw message", 123, errors=expected_errors)
+    error.assert_called_once_with("https://some.url", {}, data, "raw message", 123, errors=expected_errors)
     assert returned is error()

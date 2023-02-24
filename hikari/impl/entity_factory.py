@@ -507,7 +507,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             int, typing.Callable[[data_binding.JSONObject], component_models.MessageComponentTypesT]
         ] = {
             component_models.ComponentType.BUTTON: self._deserialize_button,
-            component_models.ComponentType.SELECT_MENU: self._deserialize_select_menu,
+            component_models.ComponentType.TEXT_SELECT_MENU: self._deserialize_text_select_menu,
+            component_models.ComponentType.USER_SELECT_MENU: self._deserialize_select_menu,
+            component_models.ComponentType.ROLE_SELECT_MENU: self._deserialize_select_menu,
+            component_models.ComponentType.MENTIONABLE_SELECT_MENU: self._deserialize_select_menu,
+            component_models.ComponentType.CHANNEL_SELECT_MENU: self._deserialize_channel_select_menu,
         }
         self._modal_component_type_mapping: typing.Dict[
             int, typing.Callable[[data_binding.JSONObject], component_models.ModalComponentTypesT]
@@ -588,6 +592,15 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             my_permissions=permission_models.Permissions(int(payload["permissions"])),
         )
 
+    def deserialize_own_application_role_connection(
+        self, payload: data_binding.JSONObject
+    ) -> application_models.OwnApplicationRoleConnection:
+        return application_models.OwnApplicationRoleConnection(
+            platform_name=payload.get("platform_name"),
+            platform_username=payload.get("platform_username"),
+            metadata=payload.get("metadata") or {},
+        )
+
     def deserialize_application(self, payload: data_binding.JSONObject) -> application_models.Application:
         team: typing.Optional[application_models.Team] = None
         if (team_payload := payload.get("team")) is not None:
@@ -633,6 +646,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             cover_image_hash=payload.get("cover_image"),
             privacy_policy_url=payload.get("privacy_policy_url"),
             terms_of_service_url=payload.get("terms_of_service_url"),
+            role_connections_verification_url=payload.get("role_connections_verification_url"),
             custom_install_url=payload.get("custom_install_url"),
             tags=payload.get("tags") or [],
             install_parameters=install_parameters,
@@ -660,6 +674,44 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             expires_at=time.iso8601_datetime_string_to_datetime(payload["expires"]),
             user=self.deserialize_user(payload["user"]) if "user" in payload else None,
         )
+
+    def deserialize_application_connection_metadata_record(
+        self, payload: data_binding.JSONObject
+    ) -> application_models.ApplicationRoleConnectionMetadataRecord:
+        name_localizations: typing.Mapping[str, str]
+        if raw_name_localizations := payload.get("name_localizations"):
+            name_localizations = {locales.Locale(k): raw_name_localizations[k] for k in raw_name_localizations}
+        else:
+            name_localizations = {}
+
+        description_localizations: typing.Mapping[str, str]
+        if raw_description_localizations := payload.get("description_localizations"):
+            description_localizations = {
+                locales.Locale(k): raw_description_localizations[k] for k in raw_description_localizations
+            }
+        else:
+            description_localizations = {}
+
+        return application_models.ApplicationRoleConnectionMetadataRecord(
+            type=application_models.ApplicationRoleConnectionMetadataRecordType(payload["type"]),
+            key=payload["key"],
+            name=payload["name"],
+            description=payload["description"],
+            name_localizations=name_localizations,
+            description_localizations=description_localizations,
+        )
+
+    def serialize_application_connection_metadata_record(
+        self, record: application_models.ApplicationRoleConnectionMetadataRecord
+    ) -> data_binding.JSONObject:
+        return {
+            "type": int(record.type),
+            "key": record.key,
+            "name": record.name,
+            "description": record.description,
+            "name_localizations": record.name_localizations,
+            "description_localizations": record.description_localizations,
+        }
 
     def deserialize_partial_token(self, payload: data_binding.JSONObject) -> application_models.PartialOAuth2Token:
         return application_models.PartialOAuth2Token(
@@ -767,61 +819,81 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             app=self._app, channel_id=snowflakes.Snowflake(payload["channel_id"]), count=int(payload["count"])
         )
 
-    def deserialize_audit_log(self, payload: data_binding.JSONObject) -> audit_log_models.AuditLog:
+    def deserialize_audit_log_entry(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+    ) -> audit_log_models.AuditLogEntry:
+        if guild_id is undefined.UNDEFINED:
+            guild_id = snowflakes.Snowflake(payload["guild_id"])
+
+        entry_id = snowflakes.Snowflake(payload["id"])
+
+        changes: typing.List[audit_log_models.AuditLogChange] = []
+        if (change_payloads := payload.get("changes")) is not None:
+            for change_payload in change_payloads:
+                key: typing.Union[audit_log_models.AuditLogChangeKey, str] = audit_log_models.AuditLogChangeKey(
+                    change_payload["key"]
+                )
+
+                new_value = change_payload.get("new_value")
+                old_value = change_payload.get("old_value")
+                if value_converter := self._audit_log_entry_converters.get(key):
+                    new_value = value_converter(new_value) if new_value is not None else None
+                    old_value = value_converter(old_value) if old_value is not None else None
+
+                elif not isinstance(
+                    key, audit_log_models.AuditLogChangeKey
+                ):  # pyright: ignore [reportUnnecessaryIsInstance]
+                    _LOGGER.debug("Unknown audit log change key found %r", key)
+
+                changes.append(audit_log_models.AuditLogChange(key=key, new_value=new_value, old_value=old_value))
+
+        target_id: typing.Optional[snowflakes.Snowflake] = None
+        if (raw_target_id := payload["target_id"]) is not None:
+            target_id = snowflakes.Snowflake(raw_target_id)
+
+        user_id: typing.Optional[snowflakes.Snowflake] = None
+        if (raw_user_id := payload["user_id"]) is not None:
+            user_id = snowflakes.Snowflake(raw_user_id)
+
+        action_type: typing.Union[audit_log_models.AuditLogEventType, int]
+        action_type = audit_log_models.AuditLogEventType(payload["action_type"])
+
+        options: typing.Optional[audit_log_models.BaseAuditLogEntryInfo] = None
+        if (raw_option := payload.get("options")) is not None:
+            if option_converter := self._audit_log_event_mapping.get(action_type):
+                options = option_converter(raw_option)
+
+            else:
+                raise errors.UnrecognisedEntityError(f"Unknown audit log action type found {action_type!r}")
+
+        return audit_log_models.AuditLogEntry(
+            app=self._app,
+            id=entry_id,
+            target_id=target_id,
+            changes=changes,
+            user_id=user_id,
+            action_type=action_type,
+            options=options,
+            reason=payload.get("reason"),
+            guild_id=guild_id,
+        )
+
+    def deserialize_audit_log(
+        self, payload: data_binding.JSONObject, *, guild_id: snowflakes.Snowflake
+    ) -> audit_log_models.AuditLog:
         entries = {}
         for entry_payload in payload["audit_log_entries"]:
-            entry_id = snowflakes.Snowflake(entry_payload["id"])
+            try:
+                entry = self.deserialize_audit_log_entry(entry_payload, guild_id=guild_id)
 
-            changes: typing.List[audit_log_models.AuditLogChange] = []
-            if (change_payloads := entry_payload.get("changes")) is not None:
-                for change_payload in change_payloads:
-                    key: typing.Union[audit_log_models.AuditLogChangeKey, str] = audit_log_models.AuditLogChangeKey(
-                        change_payload["key"]
-                    )
+            except errors.UnrecognisedEntityError as exc:
+                _LOGGER.debug(exc.reason)
 
-                    new_value = change_payload.get("new_value")
-                    old_value = change_payload.get("old_value")
-                    if value_converter := self._audit_log_entry_converters.get(key):
-                        new_value = value_converter(new_value) if new_value is not None else None
-                        old_value = value_converter(old_value) if old_value is not None else None
-
-                    elif not isinstance(
-                        key, audit_log_models.AuditLogChangeKey
-                    ):  # pyright: ignore [reportUnnecessaryIsInstance]
-                        _LOGGER.debug("Unknown audit log change key found %r", key)
-
-                    changes.append(audit_log_models.AuditLogChange(key=key, new_value=new_value, old_value=old_value))
-
-            target_id: typing.Optional[snowflakes.Snowflake] = None
-            if (raw_target_id := entry_payload["target_id"]) is not None:
-                target_id = snowflakes.Snowflake(raw_target_id)
-
-            user_id: typing.Optional[snowflakes.Snowflake] = None
-            if (raw_user_id := entry_payload["user_id"]) is not None:
-                user_id = snowflakes.Snowflake(raw_user_id)
-
-            action_type: typing.Union[audit_log_models.AuditLogEventType, int]
-            action_type = audit_log_models.AuditLogEventType(entry_payload["action_type"])
-
-            options: typing.Optional[audit_log_models.BaseAuditLogEntryInfo] = None
-            if (raw_option := entry_payload.get("options")) is not None:
-                if option_converter := self._audit_log_event_mapping.get(action_type):
-                    options = option_converter(raw_option)
-
-                else:
-                    _LOGGER.debug("Unknown audit log action type found %r", action_type)
-                    continue
-
-            entries[entry_id] = audit_log_models.AuditLogEntry(
-                app=self._app,
-                id=entry_id,
-                target_id=target_id,
-                changes=changes,
-                user_id=user_id,
-                action_type=action_type,
-                options=options,
-                reason=entry_payload.get("reason"),
-            )
+            else:
+                entries[entry.id] = entry
 
         integrations = {
             snowflakes.Snowflake(integration["id"]): self.deserialize_partial_integration(integration)
@@ -2296,7 +2368,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     def _deserialize_interaction_command_option(
         self, payload: data_binding.JSONObject
     ) -> command_interactions.CommandInteractionOption:
-        suboptions: typing.Optional[typing.List[command_interactions.CommandInteractionOption]] = None
+        suboptions: typing.Optional[typing.Sequence[command_interactions.CommandInteractionOption]] = None
         if raw_suboptions := payload.get("options"):
             suboptions = [self._deserialize_interaction_command_option(suboption) for suboption in raw_suboptions]
 
@@ -2309,14 +2381,14 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=payload["name"],
             type=option_type,
             value=value,
-            options=suboptions,
+            options=suboptions,  # type: ignore[arg-type]  # MyPy gets the type equality wrong here.
         )
 
     def _deserialize_autocomplete_interaction_option(
         self,
         payload: data_binding.JSONObject,
     ) -> command_interactions.AutocompleteInteractionOption:
-        suboptions: typing.Optional[typing.List[command_interactions.AutocompleteInteractionOption]] = None
+        suboptions: typing.Optional[typing.Sequence[command_interactions.AutocompleteInteractionOption]] = None
         if raw_suboptions := payload.get("options"):
             suboptions = [self._deserialize_autocomplete_interaction_option(suboption) for suboption in raw_suboptions]
 
@@ -2331,7 +2403,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=payload["name"],
             type=option_type,
             value=value,
-            options=suboptions,
+            options=suboptions,  # type: ignore[arg-type]  # MyPy gets the type equality wrong here.
             is_focused=is_focused,
         )
 
@@ -2380,12 +2452,12 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         payload: data_binding.JSONObject,
         *,
         guild_id: typing.Optional[snowflakes.Snowflake] = None,
-    ) -> command_interactions.ResolvedOptionData:
-        channels: typing.Dict[snowflakes.Snowflake, command_interactions.InteractionChannel] = {}
+    ) -> base_interactions.ResolvedOptionData:
+        channels: typing.Dict[snowflakes.Snowflake, base_interactions.InteractionChannel] = {}
         if raw_channels := payload.get("channels"):
             for channel_payload in raw_channels.values():
                 channel_id = snowflakes.Snowflake(channel_payload["id"])
-                channels[channel_id] = command_interactions.InteractionChannel(
+                channels[channel_id] = base_interactions.InteractionChannel(
                     app=self._app,
                     id=channel_id,
                     type=channel_models.ChannelType(channel_payload["type"]),
@@ -2428,7 +2500,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         else:
             attachments = {}
 
-        return command_interactions.ResolvedOptionData(
+        return base_interactions.ResolvedOptionData(
             attachments=attachments,
             channels=channels,
             members=members,
@@ -2461,7 +2533,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             member = None
             user = self.deserialize_user(payload["user"])
 
-        resolved: typing.Optional[command_interactions.ResolvedOptionData] = None
+        resolved: typing.Optional[base_interactions.ResolvedOptionData] = None
         if resolved_payload := data_payload.get("resolved"):
             resolved = self._deserialize_resolved_option_data(resolved_payload, guild_id=guild_id)
 
@@ -2638,6 +2710,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             member = None
             user = self.deserialize_user(payload["user"])
 
+        resolved: typing.Optional[base_interactions.ResolvedOptionData] = None
+        if resolved_payload := data_payload.get("resolved"):
+            resolved = self._deserialize_resolved_option_data(resolved_payload, guild_id=guild_id)
+
         app_perms = payload.get("app_permissions")
         return component_interactions.ComponentInteraction(
             app=self._app,
@@ -2650,6 +2726,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             user=user,
             token=payload["token"],
             values=data_payload.get("values") or (),
+            resolved=resolved,
             version=payload["version"],
             custom_id=data_payload["custom_id"],
             component_type=component_models.ComponentType(data_payload["component_type"]),
@@ -2775,26 +2852,57 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     def _deserialize_select_menu(self, payload: data_binding.JSONObject) -> component_models.SelectMenuComponent:
-        options: typing.List[component_models.SelectMenuOption] = []
-        for option_payload in payload["options"]:
-            emoji = None
-            if emoji_payload := option_payload.get("emoji"):
-                emoji = self.deserialize_emoji(emoji_payload)
-
-            options.append(
-                component_models.SelectMenuOption(
-                    label=option_payload["label"],
-                    value=option_payload["value"],
-                    description=option_payload.get("description"),
-                    emoji=emoji,
-                    is_default=option_payload.get("default", False),
-                )
-            )
-
         return component_models.SelectMenuComponent(
             type=component_models.ComponentType(payload["type"]),
             custom_id=payload["custom_id"],
+            placeholder=payload.get("placeholder"),
+            min_values=payload.get("min_values", 1),
+            max_values=payload.get("max_values", 1),
+            is_disabled=payload.get("disabled", False),
+        )
+
+    def _deserialize_text_select_menu(
+        self, payload: data_binding.JSONObject
+    ) -> component_models.TextSelectMenuComponent:
+        options: typing.List[component_models.SelectMenuOption] = []
+        if "options" in payload:
+            for option_payload in payload["options"]:
+                emoji = None
+                if emoji_payload := option_payload.get("emoji"):
+                    emoji = self.deserialize_emoji(emoji_payload)
+
+                options.append(
+                    component_models.SelectMenuOption(
+                        label=option_payload["label"],
+                        value=option_payload["value"],
+                        description=option_payload.get("description"),
+                        emoji=emoji,
+                        is_default=option_payload.get("default", False),
+                    )
+                )
+
+        return component_models.TextSelectMenuComponent(
+            type=component_models.ComponentType(payload["type"]),
+            custom_id=payload["custom_id"],
             options=options,
+            placeholder=payload.get("placeholder"),
+            min_values=payload.get("min_values", 1),
+            max_values=payload.get("max_values", 1),
+            is_disabled=payload.get("disabled", False),
+        )
+
+    def _deserialize_channel_select_menu(
+        self, payload: data_binding.JSONObject
+    ) -> component_models.ChannelSelectMenuComponent:
+        channel_types: typing.List[typing.Union[int, channel_models.ChannelType]] = []
+        if "channel_types" in payload:
+            for channel_type in payload["channel_types"]:
+                channel_types.append(channel_models.ChannelType(channel_type))
+
+        return component_models.ChannelSelectMenuComponent(
+            type=component_models.ComponentType(payload["type"]),
+            custom_id=payload["custom_id"],
+            channel_types=channel_types,
             placeholder=payload.get("placeholder"),
             min_values=payload.get("min_values", 1),
             max_values=payload.get("max_values", 1),
@@ -3524,21 +3632,24 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         self, payload: data_binding.JSONObject
     ) -> webhook_models.ChannelFollowerWebhook:
         application_id: typing.Optional[snowflakes.Snowflake] = None
-        if (raw_application_id := payload.get("application_id")) is not None:
+        if raw_application_id := payload.get("application_id"):
             application_id = snowflakes.Snowflake(raw_application_id)
 
-        raw_source_channel = payload["source_channel"]
-        # In this case the channel type isn't provided as we can safely
-        # assume it's a news channel.
-        raw_source_channel["type"] = channel_models.ChannelType.GUILD_NEWS
-        source_channel = self.deserialize_partial_channel(raw_source_channel)
-        source_guild_payload = payload["source_guild"]
-        source_guild = guild_models.PartialGuild(
-            app=self._app,
-            id=snowflakes.Snowflake(source_guild_payload["id"]),
-            name=source_guild_payload["name"],
-            icon_hash=source_guild_payload.get("icon"),
-        )
+        source_channel: typing.Optional[channel_models.PartialChannel] = None
+        if raw_source_channel := payload.get("source_channel"):
+            # In this case the channel type isn't provided as we can safely
+            # assume it's a news channel.
+            raw_source_channel.setdefault("type", channel_models.ChannelType.GUILD_NEWS)
+            source_channel = self.deserialize_partial_channel(raw_source_channel)
+
+        source_guild: typing.Optional[guild_models.PartialGuild] = None
+        if source_guild_payload := payload.get("source_guild"):
+            source_guild = guild_models.PartialGuild(
+                app=self._app,
+                id=snowflakes.Snowflake(source_guild_payload["id"]),
+                name=source_guild_payload["name"],
+                icon_hash=source_guild_payload.get("icon"),
+            )
 
         return webhook_models.ChannelFollowerWebhook(
             app=self._app,

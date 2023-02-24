@@ -179,3 +179,15 @@ class TestGuildStickersUpdateEvent:
         assert await event.fetch_stickers() is event.app.rest.fetch_guild_stickers.return_value
 
         event.app.rest.fetch_guild_stickers.assert_awaited_once_with(event.guild_id)
+
+
+class TestAuditLogEntryCreateEvent:
+    @pytest.fixture()
+    def event(self):
+        return guild_events.AuditLogEntryCreateEvent(shard=mock.Mock(), entry=mock.Mock())
+
+    def test_app_property(self, event):
+        assert event.app is event.entry.app
+
+    def test_guild_id_property(self, event):
+        assert event.guild_id is event.entry.guild_id

@@ -163,13 +163,17 @@ class ManualRateLimiter(BurstRateLimiter):
     Expect random occurrences.
     """
 
-    __slots__: typing.Sequence[str] = ()
+    __slots__: typing.Sequence[str] = ("reset_at",)
 
     throttle_task: typing.Optional[asyncio.Task[typing.Any]]
     # <<inherited docstring from BurstRateLimiter>>.
 
+    reset_at: typing.Optional[float]
+    """The monotonic `time.monotonic` timestamp at which the ratelimit gets lifted."""
+
     def __init__(self) -> None:
         super().__init__("global")
+        self.reset_at = None
 
     async def acquire(self) -> None:
         """Acquire time on this rate limiter.
@@ -237,11 +241,34 @@ class ManualRateLimiter(BurstRateLimiter):
             in the queue.
         """
         _LOGGER.warning("you are being globally rate limited for %ss", retry_after)
+
+        self.reset_at = time.monotonic() + retry_after
         await asyncio.sleep(retry_after)
+        self.reset_at = None
+
         while self.queue:
             next_future = self.queue.pop(0)
             next_future.set_result(None)
         self.throttle_task = None
+
+    def get_time_until_reset(self, now: float) -> float:
+        """Determine how long until the current rate limit is reset.
+
+        Parameters
+        ----------
+        now : float
+            The monotonic `time.monotonic` timestamp.
+
+        Returns
+        -------
+        float
+            The time left to sleep before the rate limit is reset. If no rate limit
+            is in effect, then this will return `0.0` instead.
+        """
+        if not self.reset_at:
+            return 0.0
+
+        return self.reset_at - now
 
 
 class WindowedBurstRateLimiter(BurstRateLimiter):
@@ -279,7 +306,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
     # <<inherited docstring from BurstRateLimiter>>.
 
     reset_at: float
-    """The `time.monotonic_timestamp` that the limit window ends at."""
+    """The `time.monotonic` that the limit window ends at."""
 
     remaining: int
     """The number of `WindowedBurstRateLimiter.acquire`'s left in this window before you will get rate limited."""
@@ -332,7 +359,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
         Parameters
         ----------
         now : float
-            The monotonic `time.monotonic_timestamp` timestamp.
+            The monotonic `time.monotonic` timestamp.
 
         Returns
         -------
@@ -357,7 +384,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
         Parameters
         ----------
         now : float
-            The monotonic `time.monotonic_timestamp` timestamp.
+            The monotonic `time.monotonic` timestamp.
 
         Returns
         -------

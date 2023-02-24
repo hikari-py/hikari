@@ -107,6 +107,9 @@ class ComponentInteraction(
     values: typing.Sequence[str] = attr.field(eq=False)
     """Sequence of the values which were selected for a select menu component."""
 
+    resolved: typing.Optional[base_interactions.ResolvedOptionData] = attr.field(eq=False, hash=False, repr=False)
+    """Mappings of the objects resolved for the provided command options."""
+
     guild_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False)
     """ID of the guild this interaction was triggered in.
 
@@ -240,14 +243,6 @@ class ComponentInteraction(
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -295,14 +290,6 @@ class ComponentInteraction(
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """

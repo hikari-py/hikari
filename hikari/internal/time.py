@@ -97,7 +97,7 @@ try:
     # See https://tools.ietf.org/html/rfc3339#section-5.6
     fast_iso8601_datetime_string_to_datetime = ciso8601.parse_rfc3339
 
-except ImportError:
+except ModuleNotFoundError:
     fast_iso8601_datetime_string_to_datetime = None
 
 iso8601_datetime_string_to_datetime: typing.Callable[[str], datetime.datetime] = (
@@ -204,17 +204,22 @@ def utc_datetime() -> datetime.datetime:
 # monotonic on ARM64 architectures, but on x86, monotonic is around 1ns faster
 # than monotonic_ns. Just thought that was kind of interesting to note down.
 # (RPi 3B versus i7 6700)
-#
-# time.perf_counter and time.perf_counter_ns don't have proper typehints, causing
-# pdoc to not be able to recognise them. This is just a little hack around that.
-def monotonic() -> float:
-    """Performance counter for benchmarking."""  # noqa: D401 - Imperative mood
-    return time.perf_counter()
+if typing.TYPE_CHECKING:
 
+    def monotonic() -> float:
+        """Performance counter for benchmarking."""  # noqa: D401 - Imperative mood
+        raise NotImplementedError
 
-def monotonic_ns() -> int:
-    """Performance counter for benchmarking as nanoseconds."""  # noqa: D401 - Imperative mood
-    return time.perf_counter_ns()
+    def monotonic_ns() -> int:
+        """Performance counter for benchmarking as nanoseconds."""  # noqa: D401 - Imperative mood
+        raise NotImplementedError
+
+else:
+    monotonic = time.perf_counter
+    """Performance counter for benchmarking."""
+
+    monotonic_ns = time.perf_counter_ns
+    """Performance counter for benchmarking as nanoseconds."""
 
 
 def uuid() -> str:

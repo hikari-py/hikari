@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("warn_deprecated",)
+__all__: typing.Sequence[str] = ("warn_deprecated", "check_if_past_removal")
 
 import typing
 import warnings
@@ -33,12 +33,44 @@ from hikari import _about as hikari_about
 from hikari.internal import ux
 
 
-def warn_deprecated(name: str, /, *, removal_version: str, additional_info: str, stack_level: int = 3) -> None:
-    """Issue a deprecation warning.
+def check_if_past_removal(what: str, /, *, removal_version: str) -> None:
+    """Check if a deprecation is passed its removal version.
 
     Parameters
     ----------
-    name : str
+    what : str
+        What is being deprecated.
+
+    Other Parameters
+    ----------------
+    removal_version : str
+        The version it will be removed in.
+
+    Raises
+    ------
+    DeprecationWarning
+        If the deprecated item is past its removal version.
+    """
+    if ux.HikariVersion(hikari_about.__version__) >= ux.HikariVersion(removal_version):
+        raise DeprecationWarning(f"{what} is passed its removal version ({removal_version})")
+
+
+def warn_deprecated(
+    what: str,
+    /,
+    *,
+    removal_version: str,
+    additional_info: str,
+    stack_level: int = 3,
+    quote: bool = True,
+) -> None:
+    """Issue a deprecation warning.
+
+    If the item is past its deprecation version, an error will be raised instead.
+
+    Parameters
+    ----------
+    what : str
         What is being deprecated.
 
     Other Parameters
@@ -49,12 +81,21 @@ def warn_deprecated(name: str, /, *, removal_version: str, additional_info: str,
         Additional information on the deprecation for the user.
     stack_level : int
         The stack level to issue the warning in.
+    quote : bool
+        Whether to quote `what` when displaying the deprecation
+
+    Raises
+    ------
+    DeprecationWarning
+        If the deprecated item is past its removal version.
     """
-    if ux.HikariVersion(hikari_about.__version__) >= ux.HikariVersion(removal_version):
-        raise DeprecationWarning(f"{name!r} is passed its removal version ({removal_version})")
+    if quote:
+        what = repr(what)
+
+    check_if_past_removal(what, removal_version=removal_version)
 
     warnings.warn(
-        f"{name!r} is deprecated and will be removed in `{removal_version}`. {additional_info}",
+        f"{what} is deprecated and will be removed in `{removal_version}`. {additional_info}",
         category=DeprecationWarning,
         stacklevel=stack_level,
     )

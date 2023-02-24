@@ -179,14 +179,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -227,6 +219,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         locked: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         invitable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        applied_tags: undefined.UndefinedOr[typing.Sequence[channels_.ForumTag]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.PartialChannel:
         """Edit a channel.
@@ -242,7 +235,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         name : hikari.undefined.UndefinedOr[str]
             If provided, the new name for the channel.
         flags : hikari.undefined.UndefinedOr[hikari.channels.ChannelFlag]
-            If provided, the new flags for the channel
+            If provided, the new channel flags to use for the channel. This can
+            only be used on a forum channel to apply `REQUIRE_TAG`, or
+            on a forum thread to apply `PINNED`.
         position : hikari.undefined.UndefinedOr[int]
             If provided, the new position for the channel.
         topic : hikari.undefined.UndefinedOr[str]
@@ -291,21 +286,25 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
             This only applies to forum channels.
         archived : hikari.undefined.UndefinedOr[bool]
-            If provided, whether to archive or unarchive this thread channel.
+            If provided, the new archived state for the thread. This only
+            applies to threads.
         locked : hikari.undefined.UndefinedOr[bool]
-            If provided, whether to lock or unlock this thread channel.
+            If provided, the new locked state for the thread. This only applies
+            to threads.
 
             If it's locked then only people with `MANAGE_THREADS` can unarchive it.
         invitable : undefined.UndefinedOr[bool]
-            If provided, whether non-moderators should be able to add other non-moderators to the thread.
-
-            This only applies to private threads.
+            If provided, the new setting for whether non-moderators can invite
+            new members to a private thread. This only applies to threads.
         auto_archive_duration : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
-            If provided, how long the thread should remain inactive until it's archived.
+            If provided, the new auto archive duration for this thread. This
+            only applies to threads.
 
-            This should be either 60, 1440, 4320 or 10080 seconds and, as of
-            writing, ignores the parent channel's set default_auto_archive_duration
-            when passed as `hikari.undefined.UNDEFINED`.
+            This should be either 60, 1440, 4320 or 10080 seconds, as of
+            writing.
+        applied_tags : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.ForumTag]]
+            If provided, the new tags to apply to the thread. This only applies
+            to threads in a forum channel.
         reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -328,14 +327,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """  # noqa: E501 - Line too long
@@ -377,14 +368,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -421,14 +404,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -483,14 +458,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -538,14 +505,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -631,14 +590,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """  # noqa: E501 - Line too long
@@ -672,14 +623,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """  # noqa: E501 - Line too long
@@ -712,14 +655,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -797,14 +732,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -857,14 +784,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -897,14 +816,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -938,14 +849,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -979,14 +882,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -1051,14 +946,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -1097,14 +984,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -1268,14 +1147,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """  # noqa: E501 - Line too long
@@ -1316,14 +1187,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -1502,14 +1365,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """  # noqa: E501 - Line too long
@@ -1543,14 +1398,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -1656,14 +1503,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -1708,14 +1547,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -1762,14 +1593,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -1822,14 +1645,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -1865,14 +1680,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -1929,14 +1736,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -1986,14 +1785,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -2036,14 +1827,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -2078,14 +1861,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -2119,14 +1894,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -2183,14 +1950,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -2228,14 +1987,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -2406,14 +2157,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """  # noqa: E501 - Line too long
@@ -2466,14 +2209,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -2637,14 +2372,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """  # noqa: E501 - Line too long
@@ -2692,14 +2419,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -2716,14 +2435,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -2744,14 +2455,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -2790,14 +2493,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -2830,14 +2525,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -2858,14 +2545,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -2921,14 +2600,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -2974,14 +2645,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -3005,14 +2668,96 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def fetch_my_user_application_role_connection(
+        self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication]
+    ) -> applications.OwnApplicationRoleConnection:
+        """Fetch the token's associated role connections.
+
+        .. note::
+            This requires the token to have the
+            `hikari.applications.OAuth2Scope.ROLE_CONNECTIONS_WRITE` scope enabled.
+
+        Parameters
+        ----------
+        application : hikari.snowflakes.SnowflakeishOr[hikari.applications.PartialApplication]
+            The application to fetch the application role connections for.
+
+        Returns
+        -------
+        hikari.applications.OwnApplicationRoleConnection
+            The requested role connection.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the application is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def set_my_user_application_role_connection(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        platform_name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        platform_username: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        metadata: undefined.UndefinedOr[
+            typing.Mapping[str, typing.Union[str, int, bool, datetime.datetime]]
+        ] = undefined.UNDEFINED,
+    ) -> applications.OwnApplicationRoleConnection:
+        """Set the token's associated role connections.
+
+        .. note::
+            This requires the token to have the
+            `hikari.applications.OAuth2Scope.ROLE_CONNECTIONS_WRITE` scope enabled.
+
+        Parameters
+        ----------
+        application : hikari.snowflakes.SnowflakeishOr[hikari.applications.PartialApplication]
+            The application to set the application role connections for.
+
+        Other Parameters
+        ----------------
+        platform_name : hikari.undefined.UndefinedOr[str]
+            If provided, the name of the platform that will be connected.
+        platform_username : hikari.undefined.UndefinedOr[str]
+            If provided, the name of the user in the platform.
+        metadata : hikari.undefined.UndefinedOr[typing.Mapping[str, typing.Union[str, int, bool, datetime.datetime]]
+            If provided, the role connection metadata.
+
+            Depending on the time of the previously created application role
+            records through `set_application_role_connection_metadata_records`,
+            this mapping should contain those keys to the valid type of the record:
+                - `INTEGER_X`: An `int`.
+                - `DATETIME_X`: A `datetime.datetime` object.
+                - `BOOLEAN_X`: A `bool`.
+
+        Returns
+        -------
+        hikari.applications.OwnApplicationRoleConnection
+            The set role connection.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If incorrect values are provided or unknown keys are provided in the metadata.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the application is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -3041,14 +2786,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -3074,14 +2811,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -3107,14 +2836,78 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def fetch_application_role_connection_metadata_records(
+        self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication]
+    ) -> typing.Sequence[applications.ApplicationRoleConnectionMetadataRecord]:
+        """Fetch the application role connection metadata records.
+
+        .. note::
+            This requires the token to have the
+            `hikari.applications.OAuth2Scope.ROLE_CONNECTIONS_WRITE` scope enabled.
+
+        Parameters
+        ----------
+        application : hikari.snowflakes.SnowflakeishOr[hikari.applications.PartialApplication]
+            The application to fetch the application role connection metadata records for.
+
+        Returns
+        -------
+        typing.Sequence[hikari.applications.ApplicationRoleConnectionMetadataRecord]
+            The requested application role connection metadata records.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the application is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def set_application_role_connection_metadata_records(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        records: typing.Sequence[applications.ApplicationRoleConnectionMetadataRecord],
+    ) -> typing.Sequence[applications.ApplicationRoleConnectionMetadataRecord]:
+        """Set the application role connection metadata records.
+
+        .. note::
+            This requires the token to have the
+            `hikari.applications.OAuth2Scope.ROLE_CONNECTIONS_WRITE` scope enabled.
+
+        Parameters
+        ----------
+        application : hikari.snowflakes.SnowflakeishOr[hikari.applications.PartialApplication]
+            The application to set the application role connection metadata records for.
+        records : typing.Sequence[hikari.applications.ApplicationRoleConnectionMetadataRecord]
+            The records to set for the application.
+
+        Returns
+        -------
+        typing.Sequence[hikari.applications.ApplicationRoleConnectionMetadataRecord]
+            The set application role connection metadata records.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If incorrect values are provided for the records.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the application is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -3152,14 +2945,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -3199,14 +2984,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -3258,14 +3035,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -3295,14 +3064,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -3382,14 +3143,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -3410,14 +3163,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -3446,14 +3191,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -3510,14 +3247,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -3553,14 +3282,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -3591,14 +3312,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -3655,14 +3368,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -3718,14 +3423,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -3766,14 +3463,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -3792,14 +3481,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -3831,14 +3512,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -3871,14 +3544,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -3916,14 +3581,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -3985,14 +3642,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -4049,14 +3698,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -4097,14 +3738,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -4144,14 +3777,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
 
@@ -4186,14 +3811,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -4225,14 +3842,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -4339,14 +3948,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """  # noqa: E501 - Line too long
@@ -4372,14 +3973,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -4410,14 +4003,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -4496,14 +4081,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -4582,14 +4159,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -4687,14 +4256,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """  # noqa: E501 - Line too long
@@ -4772,14 +4333,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -4854,14 +4407,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -4916,14 +4461,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -4990,14 +4527,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -5069,14 +4598,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -5242,14 +4763,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """  # noqa: E501 - Line too long
@@ -5276,14 +4789,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -5317,14 +4822,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -5349,14 +4846,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -5390,14 +4879,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -5436,14 +4917,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -5477,14 +4950,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -5518,14 +4983,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -5578,14 +5035,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -5638,14 +5087,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -5699,14 +5140,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -5739,14 +5172,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -5782,14 +5207,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -5833,14 +5250,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -5867,14 +5276,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -5913,14 +5314,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -6011,14 +5404,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -6070,14 +5455,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -6122,14 +5499,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -6174,14 +5543,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -6222,14 +5583,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -6250,7 +5603,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         *,
-        delete_message_days: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         delete_message_seconds: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
@@ -6267,12 +5619,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        delete_message_days : hikari.undefined.UndefinedOr[int]
-            If provided, the number of days to delete messages for.
-            This must be between 0 and 7.
-
-            .. deprecated:: 2.0.0.dev114
-                Use `delete_message_seconds` instead.
         delete_message_seconds : hikari.undefined.UndefinedNoneOr[hikari.internal.time.Intervalish]
             If provided, the number of seconds to delete messages for.
             This can be represented as either an int/float between 0 and 604800 (7 days), or
@@ -6294,14 +5640,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -6312,7 +5650,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         *,
-        delete_message_days: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         delete_message_seconds: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
@@ -6354,14 +5691,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -6410,14 +5739,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -6472,14 +5793,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -6511,14 +5824,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -6592,14 +5897,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -6631,14 +5928,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -6714,14 +6003,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -6754,14 +6035,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -6810,14 +6083,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -6875,14 +6140,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -6914,14 +6171,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -6955,14 +6204,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -6996,14 +6237,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -7034,14 +6267,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -7090,14 +6315,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -7127,14 +6344,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -7194,14 +6403,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -7232,14 +6433,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -7283,14 +6476,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -7336,14 +6521,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -7380,14 +6557,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -7434,14 +6603,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -7469,14 +6630,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -7509,14 +6662,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -7553,14 +6698,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -7648,14 +6785,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -7699,14 +6828,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -7787,14 +6908,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -7868,14 +6981,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -7926,14 +7031,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -8005,14 +7102,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -8051,14 +7140,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -8094,14 +7175,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -8140,14 +7213,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -8199,14 +7264,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -8303,14 +7360,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -8433,14 +7482,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """  # noqa: E501 - Line too long
@@ -8586,14 +7627,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """  # noqa: E501 - Line too long
@@ -8620,14 +7653,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -8663,14 +7688,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -8768,14 +7785,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -8809,14 +7818,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -8888,14 +7889,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -8967,14 +7960,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -9043,14 +8028,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -9147,14 +8124,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -9186,14 +8155,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -9252,14 +8213,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """

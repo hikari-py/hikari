@@ -51,12 +51,14 @@ from hikari.impl import rest as rest_impl
 from hikari.impl import shard as shard_impl
 from hikari.impl import voice as voice_impl
 from hikari.internal import aio
+from hikari.internal import data_binding
 from hikari.internal import signals
 from hikari.internal import time
 from hikari.internal import ux
 
 if typing.TYPE_CHECKING:
     import concurrent.futures
+    import os
 
     from hikari import channels
     from hikari import guilds
@@ -194,30 +196,30 @@ class GatewayBot(traits.GatewayBotAware):
            we should also chunk small guilds if the presences are not declared).
         4. The members cache is enabled or there are listeners for the
            `MemberChunkEvent`.
-    logs : typing.Union[None, LoggerLevel, typing.Dict[str, typing.Any]]
-        Defaults to `"INFO"`.
+    logs : typing.Union[None, str, int, typing.Dict[str, typing.Any], os.PathLike]
+        The flavour to set the logging to.
 
-        If `None`, then the Python logging system is left uninitialized
-        on startup, and you will need to configure it manually to view most
-        logs that are output by components of this library.
+        This can be `None` to not enable logging automatically.
 
-        If one of the valid values in a `LoggerLevel`, then this will match a
-        call to `colorlog.basicConfig` (a facade for `logging.basicConfig` with
-        additional conduit for enabling coloured logging levels) with the
-        `level` kwarg matching this value.
+        If you pass a `str` or a `int`, it is interpreted as
+        the global logging level to use, and should match one of `"DEBUG"`,
+        `"INFO"`, `"WARNING"`, `"ERROR"` or `"CRITICAL"`.
+        The configuration will be set up to use a `colorlog` coloured logger,
+        and to use a sane logging format strategy. The output will be written
+        to `sys.stdout` using this configuration.
 
-        If a `typing.Dict[str, typing.Any]` equivalent, then this value is
-        passed to `logging.config.dictConfig` to allow the user to provide a
-        specialized logging configuration of their choice. If any handlers are
-        defined in the dict, default handlers will not be setup.
+        If you pass a `dict`, it is treated as the mapping to pass to
+        `logging.config.dictConfig`. If the dict defines any handlers, default
+        handlers will not be setup if `incremental` is not specified.
 
-        As a side note, you can always opt to leave this on the default value
-        and then use an incremental `logging.config.dictConfig` that applies
-        any additional changes on top of the base configuration, if you prefer.
-        An example of can be found in the `Example` section.
+        If you pass a `str` to an existing file or a `os.PathLike`, it is
+        interpreted as the file to load config from using `logging.config.fileConfig`.
 
         Note that `"TRACE_HIKARI"` is a library-specific logging level
         which is expected to be more verbose than `"DEBUG"`.
+
+        Defaults to `"INFO"`.
+
     max_rate_limit : float
         The max number of seconds to backoff for when rate limited. Anything
         greater than this will instead raise an error.
@@ -237,6 +239,10 @@ class GatewayBot(traits.GatewayBotAware):
     proxy_settings : typing.Optional[hikari.impl.config.ProxySettings]
         Custom proxy settings to use with network-layer logic
         in your application to get through an HTTP-proxy.
+    dumps : hikari.internal.data_binding.JSONEncoder
+        The JSON encoder this application should use. Defaults to `hikari.internal.data_binding.default_json_dumps`.
+    loads : hikari.internal.data_binding.JSONDecoder
+        The JSON decoder this application should use. Defaults to `hikari.internal.data_binding.default_json_loads`.
     rest_url : typing.Optional[str]
         Defaults to the Discord REST API URL if `None`. Can be
         overridden if you are attempting to point to an unofficial endpoint, or
@@ -245,25 +251,36 @@ class GatewayBot(traits.GatewayBotAware):
 
     Examples
     --------
-    Setting up logging using a dictionary configuration:
+    Simple logging setup:
 
     .. code-block:: python
 
-        import os
+        hikari.GatewayBot("TOKEN", logs="INFO")  # Registered logging level
+        # or
+        hikari.GatewayBot("TOKEN", logs=20)  # Logging level as an int
 
-        import hikari
+    File config:
 
-        # We want to make gateway logs output as DEBUG, and TRACE for all ratelimit content.
-        bot = hikari.GatewayBot(
-            token=os.environ["BOT_TOKEN"],
+    .. code-block:: python
+
+        # See https://docs.python.org/3/library/logging.config.html#configuration-file-format for more info
+        hikari.GatewayBot("TOKEN", logs="path/to/file.ini")
+
+    Setting up logging through a dict config:
+
+    .. code-block:: python
+
+        # See https://docs.python.org/3/library/logging.config.html#dictionary-schema-details for more info
+        hikari.GatewayBot(
+            "TOKEN",
             logs={
                 "version": 1,
-                "incremental": True,
+                "incremental": True,  # In incremental setups, the default stream handler will be setup
                 "loggers": {
                     "hikari.gateway": {"level": "DEBUG"},
                     "hikari.ratelimits": {"level": "TRACE_HIKARI"},
                 },
-            },
+            }
         )
     """
 
@@ -291,6 +308,8 @@ class GatewayBot(traits.GatewayBotAware):
         "_shards",
         "_token",
         "_voice",
+        "_loads",
+        "_dumps",
         "shards",
     )
 
@@ -305,9 +324,11 @@ class GatewayBot(traits.GatewayBotAware):
         force_color: bool = False,
         cache_settings: typing.Optional[config_impl.CacheSettings] = None,
         http_settings: typing.Optional[config_impl.HTTPSettings] = None,
+        dumps: data_binding.JSONEncoder = data_binding.default_json_dumps,
+        loads: data_binding.JSONDecoder = data_binding.default_json_loads,
         intents: intents_.Intents = intents_.Intents.ALL_UNPRIVILEGED,
         auto_chunk_members: bool = True,
-        logs: typing.Union[None, int, str, typing.Dict[str, typing.Any]] = "INFO",
+        logs: typing.Union[None, str, int, typing.Dict[str, typing.Any], os.PathLike[str]] = "INFO",
         max_rate_limit: float = 300.0,
         max_retries: int = 3,
         proxy_settings: typing.Optional[config_impl.ProxySettings] = None,
@@ -326,6 +347,8 @@ class GatewayBot(traits.GatewayBotAware):
         self._intents = intents
         self._proxy_settings = proxy_settings if proxy_settings is not None else config_impl.ProxySettings()
         self._token = token.strip()
+        self._dumps = dumps
+        self._loads = loads
 
         # Caching
         cache_settings = cache_settings if cache_settings is not None else config_impl.CacheSettings()
@@ -357,6 +380,8 @@ class GatewayBot(traits.GatewayBotAware):
             http_settings=self._http_settings,
             max_rate_limit=max_rate_limit,
             proxy_settings=self._proxy_settings,
+            dumps=dumps,
+            loads=loads,
             rest_url=rest_url,
             max_retries=max_retries,
             token=token,
@@ -1252,6 +1277,8 @@ class GatewayBot(traits.GatewayBotAware):
             event_manager=self._event_manager,
             event_factory=self._event_factory,
             intents=self._intents,
+            dumps=self._dumps,
+            loads=self._loads,
             initial_activity=activity,
             initial_is_afk=afk,
             initial_idle_since=idle_since,

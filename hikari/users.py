@@ -156,7 +156,7 @@ class PartialUser(snowflakes.Unique, abc.ABC):
         """Custom banner color for the user if set, else `None`.
 
         The official client will decide the default color if not set.
-        """  # noqa: D401 - Imperative mood
+        """
 
     @property
     def accent_colour(self) -> undefined.UndefinedNoneOr[colors.Color]:
@@ -218,14 +218,6 @@ class PartialUser(snowflakes.Unique, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -246,14 +238,6 @@ class PartialUser(snowflakes.Unique, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -414,14 +398,6 @@ class PartialUser(snowflakes.Unique, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """  # noqa: E501 - Line too long
@@ -471,7 +447,7 @@ class User(PartialUser, abc.ABC):
         """The custom banner color for the user, if set else `None`.
 
         The official client will decide the default color if not set.
-        """  # noqa: D401 - Imperative mood
+        """
 
     @property
     def accent_colour(self) -> typing.Optional[colors.Color]:
@@ -507,7 +483,7 @@ class User(PartialUser, abc.ABC):
 
     @property
     def default_avatar_url(self) -> files.URL:
-        """Default avatar URL for this user."""  # noqa: D401 - Imperative mood
+        """Default avatar URL for this user."""
         return routes.CDN_DEFAULT_USER_AVATAR.compile_to_file(
             urls.CDN_URL,
             discriminator=int(self.discriminator) % 5,
@@ -795,14 +771,6 @@ class OwnUser(UserImpl):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """

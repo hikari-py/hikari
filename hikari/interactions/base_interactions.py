@@ -27,6 +27,8 @@ __all__: typing.Sequence[str] = (
     "DEFERRED_RESPONSE_TYPES",
     "DeferredResponseTypesT",
     "InteractionMember",
+    "InteractionChannel",
+    "ResolvedOptionData",
     "InteractionType",
     "MessageResponseMixin",
     "MESSAGE_RESPONSE_TYPES",
@@ -40,6 +42,7 @@ import typing
 
 import attr
 
+from hikari import channels
 from hikari import guilds
 from hikari import snowflakes
 from hikari import undefined
@@ -235,14 +238,6 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -358,14 +353,6 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """  # noqa: E501 - Line too long
@@ -524,14 +511,6 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """  # noqa: E501 - Line too long
@@ -562,14 +541,6 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitedError
-            Usually, Hikari will handle and retry on hitting
-            rate-limits automatically. This includes most bucket-specific
-            rate-limits and global rate-limits. In some rare edge cases,
-            however, Discord implements other undocumented rules for
-            rate-limiting, such as limits per attribute. These cannot be
-            detected or handled normally by Hikari due to their undocumented
-            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -646,3 +617,36 @@ class InteractionMember(guilds.Member):
 
     permissions: permissions_.Permissions = attr.field(eq=False, hash=False, repr=False)
     """Permissions the member has in the current channel."""
+
+
+@attr_extensions.with_copy
+@attr.define(hash=True, kw_only=True, weakref_slot=False)
+class InteractionChannel(channels.PartialChannel):
+    """Represents partial channels returned as resolved entities on interactions."""
+
+    permissions: permissions_.Permissions = attr.field(eq=False, hash=False, repr=True)
+    """Permissions the command's executor has in this channel."""
+
+
+@attr_extensions.with_copy
+@attr.define(hash=False, kw_only=True, weakref_slot=False)
+class ResolvedOptionData:
+    """Represents the resolved objects of entities referenced in a command's options."""
+
+    attachments: typing.Mapping[snowflakes.Snowflake, messages.Attachment] = attr.field(repr=False)
+    """Mapping of snowflake IDs to the attachment objects."""
+
+    channels: typing.Mapping[snowflakes.Snowflake, InteractionChannel] = attr.field(repr=False)
+    """Mapping of snowflake IDs to the resolved option partial channel objects."""
+
+    members: typing.Mapping[snowflakes.Snowflake, InteractionMember] = attr.field(repr=False)
+    """Mapping of snowflake IDs to the resolved option member objects."""
+
+    messages: typing.Mapping[snowflakes.Snowflake, messages.Message] = attr.field(repr=False)
+    """Mapping of snowflake IDs to the resolved option partial message objects."""
+
+    roles: typing.Mapping[snowflakes.Snowflake, guilds.Role] = attr.field(repr=False)
+    """Mapping of snowflake IDs to the resolved option role objects."""
+
+    users: typing.Mapping[snowflakes.Snowflake, users.User] = attr.field(repr=False)
+    """Mapping of snowflake IDs to the resolved option user objects."""
