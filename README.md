@@ -257,9 +257,9 @@ Hikari does not include a command framework by default, so you will want to pick
 
 There are also third party libraries to help you manage components:
 
-- [`yuyo`](https://github.com/FasterSpeeding/Yuyo/) - A collection of utility functions and classes designed to enhances hikari.
-- [`miru`](https://github.com/HyperGH/hikari-miru) -  A component handler for hikari, inspired by discord.py's views. 
-- [`flare`](https://github.com/brazier-dev/hikari-flare/) - A component manager designed to write simple persistent interactions.
+- [`yuyo`](https://github.com/FasterSpeeding/Yuyo/) - a collection of utility functions and classes designed to enhances hikari.
+- [`miru`](https://github.com/HyperGH/hikari-miru) -  a component handler for hikari, inspired by discord.py's views. 
+- [`flare`](https://github.com/brazier-dev/hikari-flare/) - a component manager designed to write simple persistent interactions.
 
 ---
 
