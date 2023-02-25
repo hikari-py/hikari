@@ -55,7 +55,7 @@ async def message_listener(event: hikari.MessageCreateEvent) -> None:
 ```py
 @bot.listen()
 async def message_listener(event: hikari.MessageCreateEvent) -> None:
-    if event.is_bot: # Ignore messages from bots
+    if not event.is_human: # Ignore messages from bots
         return
     
     await event.message.respond("Hi!")

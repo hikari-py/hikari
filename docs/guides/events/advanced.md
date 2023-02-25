@@ -12,7 +12,7 @@ with execution.
 With `wait_for()` you can block until you receive an event with a given predicate and timeout.
 
 In the example below, the bot prompts the user to play a number guessing game.
-Each iteration, the bot waits for the user to input a number, evaluates it and gives an
+Each iteration, the bot waits for the user to input a number, evaluates it, then gives an
 appropiate response.
 
 ```py
@@ -27,7 +27,7 @@ import hikari
 @bot.listen()
 async def guessing_game(event: hikari.MessageCreateEvent) -> None:
 
-    if event.is_bot:
+    if not event.is_human:
         return
 
     me = bot.get_me()
@@ -86,7 +86,7 @@ In the example below, we query the user for their 3 most favorite movies and gat
 @bot.listen()
 async def favorite_movie_collector(event: hikari.MessageCreateEvent) -> None:
 
-    if event.is_bot:
+    if not event.is_human:
         return
 
     me = bot.get_me()
