@@ -30,6 +30,7 @@ import logging
 import sys
 import typing
 
+from hikari import applications
 from hikari import errors
 from hikari import traits
 from hikari.api import interaction_server as interaction_server_
@@ -47,7 +48,6 @@ if typing.TYPE_CHECKING:
     import socket as socket_
     import ssl
 
-    from hikari import applications
     from hikari.api import entity_factory as entity_factory_api
     from hikari.api import rest as rest_api
     from hikari.api import special_endpoints
@@ -78,7 +78,8 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         The bot or bearer token.
     token_type : typing.Union[str, hikari.applications.TokenType, None]
         The type of token in use. This should only be passed when `str`
-        is passed for `token`, can be `"Bot"` or `"Bearer"`.
+        is passed for `token`, can be `"Bot"` or `"Bearer"` and defaults
+        to `"Bot".
 
         This should be left as `None` when `hikari.api.rest.TokenStrategy`
         is passed for `token`.
@@ -259,7 +260,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
     def __init__(
         self,
         token: str,
-        token_type: typing.Union[str, applications.TokenType],
+        token_type: typing.Union[str, applications.TokenType] = applications.TokenType.BOT,
         public_key: typing.Union[bytes, str, None] = None,
         *,
         allow_color: bool = True,
@@ -299,6 +300,9 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
 
         if isinstance(token, str):
             token = token.strip()
+
+            if not token_type:
+                token_type = applications.TokenType.BOT
 
         # Beautification and logging
         ux.init_logging(logs, allow_color, force_color)
