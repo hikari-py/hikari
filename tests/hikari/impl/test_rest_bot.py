@@ -213,7 +213,7 @@ class TestRESTBot:
         stack.enter_context(mock.patch.object(interaction_server_impl, "InteractionServer"))
 
         with stack:
-            result = cls("token", "token_type")
+            result = cls("token")
 
             rest_impl.RESTClientImpl.assert_called_once_with(
                 cache=None,
@@ -225,7 +225,7 @@ class TestRESTBot:
                 proxy_settings=config.ProxySettings.return_value,
                 rest_url=None,
                 token="token",
-                token_type="token_type",
+                token_type="Bot",
             )
 
             config.HTTPSettings.assert_called_once()
