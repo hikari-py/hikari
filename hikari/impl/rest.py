@@ -352,7 +352,7 @@ class RESTApp(traits.ExecutorAware):
             raise errors.ComponentStateConflictError("Rest app is not running")
 
         await self._client_session.close()
-        self._bucket_manager.close()
+        await self._bucket_manager.close()
 
     @typing.overload
     def acquire(self, token: typing.Optional[rest_api.TokenStrategy] = None) -> RESTClientImpl:
@@ -645,7 +645,7 @@ class RESTClientImpl(rest_api.RESTClient):
             self._client_session = None
 
         if self._bucket_manager_owner:
-            self._bucket_manager.close()
+            await self._bucket_manager.close()
 
     def start(self) -> None:
         """Start the HTTP client.

@@ -435,7 +435,7 @@ class RESTBucketManager:
         self._closed_event = asyncio.Event()
         self._gc_task = asyncio.create_task(self._gc(poll_period, expire_after))
 
-    def close(self) -> None:
+    async def close(self) -> None:
         """Close the garbage collector and kill any tasks waiting on ratelimits."""
         if not self._closed_event:
             raise errors.ComponentStateConflictError("Cannot interact with an inactive bucket manager")
@@ -451,47 +451,26 @@ class RESTBucketManager:
 
         if self._gc_task is not None:
             self._gc_task.cancel()
+
+            try:
+                await self._gc_task
+            except asyncio.CancelledError:
+                pass
+
             self._gc_task = None
 
         self._closed_event.set()
         self._closed_event = None
 
     async def _gc(self, poll_period: float, expire_after: float) -> None:
-        """Run the garbage collector loop.
-
-        This is designed to run in the background and manage removing unused
-        route references from the rate-limiter collection to save memory.
-
-        This will run forever until `RESTBucketManager.closed_event` is set.
-        This will invoke `RESTBucketManager.do_gc_pass` periodically.
-
-        .. warning::
-            You generally have no need to invoke this directly. Use
-            `RESTBucketManager.start` and `RESTBucketManager.close` to control
-            this instead.
-
-        Parameters
-        ----------
-        poll_period : float
-            The period to poll at.
-        expire_after : float
-            Time after which the last `reset_at` was hit for a bucket to
-            remove it. Higher values will retain unneeded ratelimit info for
-            longer, but may produce more effective ratelimiting logic as a
-            result. Using `0` will make the bucket get garbage collected as soon
-            as the rate limit has reset.
-        """
         # Prevent filling memory increasingly until we run out by removing dead buckets every 20s
         # Allocations are somewhat cheap if we only do them every so-many seconds, after all.
         _LOGGER.log(ux.TRACE, "rate limit garbage collector started")
 
-        assert self._closed_event is not None
-        while not self._closed_event.is_set():
-            try:
-                await asyncio.wait_for(self._closed_event.wait(), timeout=poll_period)
-            except asyncio.TimeoutError:
-                _LOGGER.log(ux.TRACE, "performing rate limit garbage collection pass")
-                self._purge_stale_buckets(expire_after)
+        while True:
+            await asyncio.sleep(poll_period)
+            _LOGGER.log(ux.TRACE, "performing rate limit garbage collection pass")
+            self._purge_stale_buckets(expire_after)
 
     def _purge_stale_buckets(self, expire_after: float) -> None:
         buckets_to_purge: typing.List[str] = []

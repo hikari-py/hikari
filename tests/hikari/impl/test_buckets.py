@@ -165,7 +165,7 @@ class TestRESTBucketManager:
         buckets_array = [mock.Mock() for _ in range(30)]
         bucket_manager._real_hashes_to_buckets = {f"blah{i}": b for i, b in enumerate(buckets_array)}
 
-        bucket_manager.close()
+        await bucket_manager.close()
 
         assert bucket_manager._real_hashes_to_buckets == {}
 
@@ -177,7 +177,7 @@ class TestRESTBucketManager:
         closed_event = mock.Mock()
         bucket_manager._closed_event = closed_event
 
-        bucket_manager.close()
+        await bucket_manager.close()
 
         assert bucket_manager._closed_event is None
         closed_event.set.assert_called_once()
@@ -205,27 +205,6 @@ class TestRESTBucketManager:
             bucket_manager.start()
 
     @pytest.mark.asyncio()
-    async def test_gc_polls_until_closed_event_set(self, event_loop, bucket_manager):
-        bucket_manager._closed_event = asyncio.Event()
-
-        # Start the gc and initial assertions
-        task = event_loop.create_task(bucket_manager._gc(0.001, float("inf")))
-        assert not task.done()
-
-        # [First poll] event not set => shouldn't complete the task
-        await asyncio.sleep(0.001)
-        assert not task.done()
-
-        # [Second poll] event not set during poll => shouldn't complete the task
-        await asyncio.sleep(0.001)
-        bucket_manager._closed_event.set()
-        assert not task.done()
-
-        # [Third poll] event set => should complete the task
-        await asyncio.sleep(0.001)
-        assert task.done()
-
-    @pytest.mark.asyncio()
     async def test_gc_makes_gc_pass(self, bucket_manager):
         class ExitError(Exception):
             ...
@@ -233,7 +212,7 @@ class TestRESTBucketManager:
         bucket_manager._closed_event.wait = mock.Mock()
 
         with mock.patch.object(buckets.RESTBucketManager, "_purge_stale_buckets") as purge_stale_buckets:
-            with mock.patch.object(asyncio, "wait_for", side_effect=[asyncio.TimeoutError, ExitError]):
+            with mock.patch.object(asyncio, "sleep", side_effect=[None, ExitError]):
                 with pytest.raises(ExitError):
                     await bucket_manager._gc(0.001, 33)
 
