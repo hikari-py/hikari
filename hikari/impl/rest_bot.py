@@ -301,7 +301,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         if isinstance(token, str):
             token = token.strip()
 
-            if not token_type:
+            if token_type is None:
                 token_type = applications.TokenType.BOT
 
         # Beautification and logging
