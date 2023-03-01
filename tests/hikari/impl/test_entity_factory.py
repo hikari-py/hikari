@@ -1326,11 +1326,10 @@ class TestEntityFactoryImpl:
         test_role_payloads = [
             {"id": "24", "name": "roleA"},
         ]
-        roles = entity_factory_impl._deserialize_audit_log_change_roles(test_role_payloads, guild_id=654234)
+        roles = entity_factory_impl._deserialize_audit_log_change_roles(test_role_payloads)
         assert len(roles) == 1
         role = roles[24]
         assert role.id == 24
-        assert role.guild_id == 654234
         assert role.name == "roleA"
         assert isinstance(role, guild_models.PartialRole)
 
@@ -6681,7 +6680,6 @@ class TestEntityFactoryImpl:
         assert len(template.source_guild.roles) == 1
         role = template.source_guild.roles[33]
         assert role.app is mock_app
-        assert role.guild_id == 574921006817476608
         assert role.id == 33
         assert role.name == "@everyone"
         assert role.permissions == permission_models.Permissions(104189505)
