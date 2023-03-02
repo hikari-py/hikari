@@ -160,7 +160,7 @@ class TestRole:
     def test_mention_property(self, model):
         assert model.mention == "<@&979899100>"
 
-    def test_mention_property_when_is_everuone_role(self, model):
+    def test_mention_property_when_is_everyone_role(self, model):
         model.id = model.guild_id
         assert model.mention == "@everyone"
 
