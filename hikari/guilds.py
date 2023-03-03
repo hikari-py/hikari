@@ -2113,7 +2113,7 @@ class PartialGuild(snowflakes.Unique):
             If provided, the auto archive duration Discord's end user client
             should default to when creating threads in this channel.
 
-            This should be either 60, 1440, 4320 or 10080 seconds and, as of
+            This should be either 60, 1440, 4320 or 10080 minutes and, as of
             writing, ignores the parent channel's set default_auto_archive_duration
             when passed as `hikari.undefined.UNDEFINED`.
         default_thread_rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]

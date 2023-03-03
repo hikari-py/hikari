@@ -1037,7 +1037,7 @@ class GuildChannel(PartialChannel):
             If provided, the auto archive duration Discord's end user client
             should default to when creating threads in this channel.
 
-            This should be either 60, 1440, 4320 or 10080 seconds, as of
+            This should be either 60, 1440, 4320 or 10080 minutes, as of
             writing.
         flags : hikari.undefined.UndefinedOr[ChannelFlag]
             If provided, the new channel flags to use for the channel. This can
@@ -1050,7 +1050,7 @@ class GuildChannel(PartialChannel):
             If provided, the new auto archive duration for this thread. This
             only applies to threads.
 
-            This should be either 60, 1440, 4320 or 10080 seconds, as of
+            This should be either 60, 1440, 4320 or 10080 minutes, as of
             writing.
         locked : hikari.undefined.UndefinedOr[bool]
             If provided, the new locked state for the thread. This only applies

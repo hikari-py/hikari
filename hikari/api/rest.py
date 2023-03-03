@@ -265,7 +265,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the auto archive duration Discord's end user client
             should default to when creating threads in this channel.
 
-            This should be either 60, 1440, 4320 or 10080 seconds and, as of
+            This should be either 60, 1440, 4320 or 10080 minutes and, as of
             writing, ignores the parent channel's set default_auto_archive_duration
             when passed as `hikari.undefined.UNDEFINED`.
         default_thread_rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
@@ -300,7 +300,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the new auto archive duration for this thread. This
             only applies to threads.
 
-            This should be either 60, 1440, 4320 or 10080 seconds, as of
+            This should be either 60, 1440, 4320 or 10080 minutes, as of
             writing.
         applied_tags : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.ForumTag]]
             If provided, the new tags to apply to the thread. This only applies
@@ -4056,7 +4056,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the auto archive duration Discord's end user client
             should default to when creating threads in this channel.
 
-            This should be either 60, 1440, 4320 or 10080 seconds and, as of
+            This should be either 60, 1440, 4320 or 10080 minutes and, as of
             writing, ignores the parent channel's set default_auto_archive_duration
             when passed as `hikari.undefined.UNDEFINED`.
         reason : hikari.undefined.UndefinedOr[str]
@@ -4134,7 +4134,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the auto archive duration Discord's end user client
             should default to when creating threads in this channel.
 
-            This should be either 60, 1440, 4320 or 10080 seconds and, as of
+            This should be either 60, 1440, 4320 or 10080 minutes and, as of
             writing, ignores the parent channel's set default_auto_archive_duration
             when passed as `hikari.undefined.UNDEFINED`.
         reason : hikari.undefined.UndefinedOr[str]
@@ -4220,7 +4220,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the auto archive duration Discord's end user client
             should default to when creating threads in this channel.
 
-            This should be either 60, 1440, 4320 or 10080 seconds and, as of
+            This should be either 60, 1440, 4320 or 10080 minutes and, as of
             writing, ignores the parent channel's set default_auto_archive_duration
             when passed as `hikari.undefined.UNDEFINED`.
         default_thread_rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
@@ -4499,7 +4499,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         auto_archive_duration : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
             If provided, how long the thread should remain inactive until it's archived.
 
-            This should be either 60, 1440, 4320 or 10080 seconds and, as of
+            This should be either 60, 1440, 4320 or 10080 minutes and, as of
             writing, ignores the parent channel's set default_auto_archive_duration
             when passed as `hikari.undefined.UNDEFINED`.
         rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
@@ -4566,7 +4566,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         auto_archive_duration : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
             If provided, how long the thread should remain inactive until it's archived.
 
-            This should be either 60, 1440, 4320 or 10080 seconds and, as of
+            This should be either 60, 1440, 4320 or 10080 minutes and, as of
             writing, ignores the parent channel's set default_auto_archive_duration
             when passed as `hikari.undefined.UNDEFINED`.
         invitable : undefined.UndefinedOr[bool]
@@ -4734,7 +4734,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         auto_archive_duration : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
             If provided, how long the post should remain inactive until it's archived.
 
-            This should be either 60, 1440, 4320 or 10080 seconds and, as of
+            This should be either 60, 1440, 4320 or 10080 minutes and, as of
             writing, ignores the parent channel's set default_auto_archive_duration
             when passed as `hikari.undefined.UNDEFINED`.
         rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
