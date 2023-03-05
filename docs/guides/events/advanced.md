@@ -47,7 +47,7 @@ async def guessing_game(event: hikari.MessageCreateEvent) -> None:
     while guess != number:
         try:
             input_event = await bot.wait_for(
-                hikari.MessageCreateEvent, 
+                hikari.MessageCreateEvent,
                 # We only want to check for input coming from the player
                 # We also want to ensure there is content to parse
                 predicate=lambda e: e.author_id == player.id and e.content is not None,
@@ -68,7 +68,7 @@ async def guessing_game(event: hikari.MessageCreateEvent) -> None:
             await input_event.message.respond(f"{player.mention}, your guess is too low!")
         elif guess > number:
             await input_event.message.respond(f"{player.mention}, your guess is too high!")
-        
+
     await event.message.respond(f"You guessed the number! It was **{number}**!")
 
 # -- Snip --
