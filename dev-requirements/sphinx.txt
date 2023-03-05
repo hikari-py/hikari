@@ -8,8 +8,7 @@ sphinx-autoapi==2.0.1
 numpydoc==1.5.0
 
 # Static files
-#myst-parser==0.18.1
-git+https://github.com/executablebooks/MyST-Parser@ebb5b9f4e54263d8d62e6dc7ded7f08f4d842e47
+myst-parser==0.19.1
 
 # Misc extensions
 sphinxext.opengraph==0.8.1
