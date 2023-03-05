@@ -79,6 +79,12 @@ class StickerFormatType(int, enums.Enum):
     """A GIF sticker."""
 
 
+_STICKER_EXTENSIONS: typing.Dict[typing.Union[StickerFormatType, int], str] = {
+    StickerFormatType.LOTTIE: "json",
+    StickerFormatType.GIF: "gif",
+}
+
+
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
 class StickerPack(snowflakes.Unique):
     """Represents a sticker pack on Discord."""
@@ -156,9 +162,9 @@ class PartialSticker(snowflakes.Unique):
         """URL for the image.
 
         The extension will be based on `format_type`. If `format_type` is `StickerFormatType.LOTTIE`,
-        then the extension will be `.json`. Otherwise, it will be `.png`.
+        then the extension will be `.json`, if it's `StickerFormatType.GIF` it will be `.gif`. Otherwise, it will be `.png`.
         """
-        ext = "json" if self.format_type is StickerFormatType.LOTTIE else "png"
+        ext = _STICKER_EXTENSIONS.get(self.format_type, "png")
 
         return routes.CDN_STICKER.compile_to_file(urls.CDN_URL, sticker_id=self.id, file_format=ext)
 
