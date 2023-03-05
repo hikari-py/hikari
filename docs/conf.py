@@ -57,15 +57,21 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx.ext.viewcode",
     "sphinx.ext.mathjax",
-    # Docs generation
-    "autoapi.extension",
-    "numpydoc",
+    # Our extensions
     "myst_parser",
-    # Misc
     "sphinxext.opengraph",
     "sphinx_copybutton",
     "sphinxcontrib.towncrier.ext",
 ]
+
+if os.getenv("SKIP_REFERENCE_DOCS") is None:
+    extensions.extend(
+        (
+            "autoapi.extension",
+            "numpydoc",
+        )
+    )
+
 
 templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
