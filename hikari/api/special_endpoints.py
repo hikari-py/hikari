@@ -1976,7 +1976,6 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
     @abc.abstractmethod
     def add_channel_menu(
         self,
-        type_: typing.Union[components_.ComponentType, int],
         custom_id: str,
         /,
         *,
@@ -1990,8 +1989,6 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
 
         Parameters
         ----------
-        type_ : typing.Union[hikari.components.ComponentType, int]
-            The type for the select menu.
         custom_id : str
             A developer-defined custom identifier used to identify which menu
             triggered component interactions.
@@ -2023,7 +2020,6 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
     @abc.abstractmethod
     def add_text_menu(
         self,
-        type_: typing.Union[components_.ComponentType, int],
         custom_id: str,
         /,
         *,
@@ -2036,8 +2032,6 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
 
         Parameters
         ----------
-        type_ : typing.Union[hikari.components.ComponentType, int]
-            The type for the select menu.
         custom_id : str
             A developer-defined custom identifier used to identify which menu
             triggered component interactions.
