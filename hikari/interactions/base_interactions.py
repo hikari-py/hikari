@@ -308,7 +308,7 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
         flags : typing.Union[int, hikari.messages.MessageFlag, hikari.undefined.UndefinedType]
             If provided, the message flags this response should have.
 
-            As of writing the only message flags that can be set here are
+            As of writing the only message flags which can be set here are
             `hikari.messages.MessageFlag.EPHEMERAL`, `hikari.messages.MessageFlag.SUPPRESS_NOTIFICATIONS`
             and `hikari.messages.MessageFlag.SUPPRESS_EMBEDS`.
         tts : hikari.undefined.UndefinedOr[bool]

@@ -2027,7 +2027,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             At the time of writing, `username` and `avatar_url` are ignored for
             interaction webhooks.
 
-            Additionally, only `SUPPRESS_EMBEDS`, `SUPPRESS_NOTIFICATIONS` and `EPHEMERAL`
+            Additionally, `SUPPRESS_EMBEDS`, `SUPPRESS_NOTIFICATIONS` and `EPHEMERAL`
             are the only flags that can be set, with `EPHEMERAL` limited to
             interaction webhooks.
 
@@ -7437,7 +7437,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         flags : typing.Union[int, hikari.messages.MessageFlag, hikari.undefined.UndefinedType]
             If provided, the message flags this response should have.
 
-            As of writing the only message flags that can be set here are
+            As of writing the only message flags which can be set here are
             `hikari.messages.MessageFlag.EPHEMERAL`, `hikari.messages.MessageFlag.SUPPRESS_NOTIFICATIONS`
             and `hikari.messages.MessageFlag.SUPPRESS_EMBEDS`.
         tts : hikari.undefined.UndefinedOr[bool]
