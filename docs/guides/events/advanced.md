@@ -9,7 +9,7 @@ This guide only applies to GatewayBot. REST-only applications cannot receive eve
 Sometimes you may want to wait for an event to be received in a procedural manner, then proceed
 with execution.
 
-With `wait_for()` you can block until you receive an event with a given predicate and timeout.
+With `wait_for()` you can block until you receive an event with a given predicate, or until a timeout is reached.
 
 In the example below, the bot prompts the user to play a number guessing game.
 Each iteration, the bot waits for the user to input a number, evaluates it, then gives an
@@ -22,11 +22,10 @@ import random
 
 import hikari
 
-# -- Snip --
+bot = hikari.GatewayBot(...)
 
 @bot.listen()
 async def guessing_game(event: hikari.MessageCreateEvent) -> None:
-
     if not event.is_human:
         return
 
@@ -112,4 +111,4 @@ async def favorite_movie_collector(event: hikari.MessageCreateEvent) -> None:
         await event.message.respond(f"Your favorite movies are:```{' '.join(movies)}```")
 ```
 
-For more methods available on hikari's `LazyIterator`, check [this page](https://docs.hikari-py.dev/en/latest/reference/hikari/iterators/#hikari.iterators.LazyIterator).
+`GatewayBot.stream` returns a `LazyIterator`. For more methods available on hikari's `LazyIterator`, check [this page](https://docs.hikari-py.dev/en/latest/reference/hikari/iterators/#hikari.iterators.LazyIterator).

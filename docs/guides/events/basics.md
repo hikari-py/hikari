@@ -11,12 +11,12 @@ happening within the guilds your bot is a member of. These pieces of information
 and inform your bot about actions other users or bots may have triggered.
 
 An example would be `MessageCreateEvent`, which the bot receives every time a message is sent in a channel
-the bot can see. It contains some information about the message, where it was sent, etc..
+the bot can see. It contains some information about the message, where it was sent, etc...
 
 ## Listeners
 
 To execute code when the bot receives an event, we can create a listener. This is an async function that
-will be called every time an event of the type we specified is encountered.
+will be called every time an event of the type we specified is received.
 
 ```py
 @bot.listen()
@@ -55,7 +55,7 @@ async def message_listener(event: hikari.MessageCreateEvent) -> None:
 ```py
 @bot.listen()
 async def message_listener(event: hikari.MessageCreateEvent) -> None:
-    if not event.is_human: # Ignore messages from bots
+    if not event.is_human: # Ignore bot and system messages
         return
     
     await event.message.respond("Hi!")
@@ -66,7 +66,7 @@ async def message_listener(event: hikari.MessageCreateEvent) -> None:
 ## Subscribing listeners
 
 It may be undesirable, or even infeasible to use the decorator-syntax above to create a listener in some cases,
-such as when trying to programatically register listeners. This is where `subscribe()` comes in.
+such as when trying to programmatically register listeners. This is where [`subscribe()`](https://docs.hikari-py.dev/en/latest/reference/hikari/impl/bot/#hikari.impl.bot.GatewayBot.subscribe) comes in.
 
 ```py
 bot = hikari.GatewayBot(...)
@@ -81,4 +81,4 @@ async def message_listener(event: hikari.MessageCreateEvent) -> None:
 bot.subscribe(hikari.MessageCreateEvent, message_listener)
 ```
 
-You may also use `unsubscribe()` to deregister a listener function from a given event type the same way.
+You may also use [`unsubscribe()`](https://docs.hikari-py.dev/en/latest/reference/hikari/impl/bot/#hikari.impl.bot.GatewayBot.unsubscribe) to deregister a listener function from a given event type the same way.
