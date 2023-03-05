@@ -2738,6 +2738,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Depending on the time of the previously created application role
             records through `set_application_role_connection_metadata_records`,
             this mapping should contain those keys to the valid type of the record:
+
                 - `INTEGER_X`: An `int`.
                 - `DATETIME_X`: A `datetime.datetime` object.
                 - `BOOLEAN_X`: A `bool`.

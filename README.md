@@ -35,8 +35,8 @@ py -3 -m pip install -U hikari
 ## Bots
 
 Hikari provides two different default bot implementations to suit your needs:
-- [GatewayBot](#GatewayBot)
-- [RESTBot](#RESTBot)
+- [GatewayBot](#gatewaybot)
+- [RESTBot](#restbot)
 
 ### GatewayBot
 

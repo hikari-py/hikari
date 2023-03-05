@@ -36,6 +36,9 @@ from pipelines import nox
 @nox.session(reuse_venv=True)
 def sphinx(session: nox.Session):
     """Generate docs using sphinx."""
+    if "--no-refs" in session.posargs:
+        session.env["SKIP_REFERENCE_DOCS"] = "1"
+
     if not os.path.exists(config.ARTIFACT_DIRECTORY):
         os.mkdir(config.ARTIFACT_DIRECTORY)
 
