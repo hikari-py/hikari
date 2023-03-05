@@ -125,9 +125,9 @@ class ExecutableWebhook(abc.ABC):
             At the time of writing, `username` and `avatar_url` are ignored for
             interaction webhooks.
 
-            Additionally, flags this can only be set for interaction webhooks
-            and the only settable flag is EPHEMERAL; this field is just
-            ignored for non-interaction webhooks.
+            Additionally, `SUPPRESS_EMBEDS`, `SUPPRESS_NOTIFICATIONS` and `EPHEMERAL`
+            are the only flags that can be set, with `EPHEMERAL` limited to
+            interaction webhooks.
 
         Parameters
         ----------

@@ -559,8 +559,9 @@ class InteractionDeferredBuilder(InteractionResponseBuilder, abc.ABC):
         """Message flags this response should have.
 
         .. note::
-            As of writing the only message flag which can be set here is
-            `hikari.messages.MessageFlag.EPHEMERAL`.
+            As of writing the only message flags which can be set here are
+            `hikari.messages.MessageFlag.EPHEMERAL`, `hikari.messages.MessageFlag.SUPPRESS_NOTIFICATIONS`
+            and `hikari.messages.MessageFlag.SUPRESS_EMBEDS`.
         """
 
     @abc.abstractmethod
@@ -568,7 +569,9 @@ class InteractionDeferredBuilder(InteractionResponseBuilder, abc.ABC):
         """Set message flags for this response.
 
         .. note::
-            As of writing, the only message flag which can be set is `hikari.messages.MessageFlag.EPHEMERAL`.
+            As of writing, the only message flags which can be set are `hikari.messages.MessageFlag.EPHEMERAL`
+            `hikari.messages.MessageFlag.SUPPRESS_NOTIFICATIONS` and
+            `hikari.messages.MessageFlag.SUPRESS_EMBEDS`.
 
         Parameters
         ----------
@@ -650,8 +653,10 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
         """Message flags this response should have.
 
         .. note::
-            As of writing the only message flag which can be set here is
-            `hikari.messages.MessageFlag.EPHEMERAL`.
+            As of writing the only message flags which can be set here are
+            `hikari.messages.MessageFlag.EPHEMERAL`,
+            `hikari.messages.MessageFlag.SUPPRESS_NOTIFICATIONS`
+            and `hikari.messages.MessageFlag.SUPRESS_EMBEDS`.
         """
 
     @property
@@ -766,8 +771,8 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
         """Set message flags for this response.
 
         .. note::
-            As of writing, the only message flag which can be set is
-            `hikari.messages.MessageFlag.EPHEMERAL`..
+            As of writing, the only message flags which can be set is
+            `hikari.messages.MessageFlag.EPHEMERAL` and `hikari.messages.MessageFlag.SUPPRESS_NOTIFICATIONS`..
 
         Parameters
         ----------
