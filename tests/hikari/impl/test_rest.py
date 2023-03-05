@@ -679,6 +679,7 @@ class TestRESTClientImpl:
     async def test_close(self, rest_client, client_session_owner, bucket_manager_owner):
         rest_client._close_event = mock_close_event = mock.Mock()
         rest_client._client_session.close = client_close = mock.AsyncMock()
+        rest_client._bucket_manager.close = bucket_close = mock.AsyncMock()
         rest_client._client_session_owner = client_session_owner
         rest_client._bucket_manager_owner = bucket_manager_owner
 
@@ -695,7 +696,7 @@ class TestRESTClientImpl:
             assert rest_client._client_session is not None
 
         if bucket_manager_owner:
-            rest_client._bucket_manager.close.assert_called_once_with()
+            bucket_close.assert_awaited_once_with()
         else:
             rest_client._bucket_manager.assert_not_called()
 
