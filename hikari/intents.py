@@ -227,9 +227,6 @@ class Intents(enums.Flag):
     * `GUILD_BAN_REMOVE`
     """
 
-    GUILD_BANS = enums.deprecated(GUILD_MODERATION, removal_version="2.0.0.dev118")
-    """Deprecated alias of `GUILD_BANS`."""
-
     GUILD_EMOJIS = 1 << 3
     """Subscribes to the events listed below.
 

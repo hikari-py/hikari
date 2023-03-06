@@ -66,7 +66,6 @@ from hikari.api import special_endpoints
 from hikari.interactions import base_interactions
 from hikari.internal import attr_extensions
 from hikari.internal import data_binding
-from hikari.internal import deprecation
 from hikari.internal import mentions
 from hikari.internal import routes
 from hikari.internal import time
@@ -1864,7 +1863,8 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
     def components(self) -> typing.Sequence[special_endpoints.ComponentBuilder]:
         return self._components.copy()
 
-    def _assert_can_add_type(self, type_: component_models.ComponentType, /) -> None:
+    def _assert_can_add_type(self, type_: typing.Union[component_models.ComponentType, int], /) -> None:
+        type_ = component_models.ComponentType(type_)
         if self._stored_type is not None and self._stored_type != type_:
             raise ValueError(
                 f"{type_} component type cannot be added to a container which already holds {self._stored_type}"
@@ -1912,14 +1912,6 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
 
         return LinkButtonBuilder(container=self, style=style, url=url_or_custom_id)
 
-    @typing.overload  # Deprecated overload
-    def add_select_menu(
-        self,
-        custom_id: str,
-        /,
-    ) -> special_endpoints.TextSelectMenuBuilder[Self]:
-        ...
-
     @typing.overload
     def add_select_menu(
         self,
@@ -1938,38 +1930,12 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
     ) -> special_endpoints.ChannelSelectMenuBuilder[Self]:
         ...
 
-    @typing.overload
     def add_select_menu(
         self,
         type_: typing.Union[component_models.ComponentType, int],
         custom_id: str,
         /,
     ) -> special_endpoints.SelectMenuBuilder[Self]:
-        ...
-
-    def add_select_menu(
-        self,
-        type_: typing.Union[component_models.ComponentType, int, str],
-        # These have default during the deprecation period for backwards compatibility, as custom_id
-        # used to come first
-        custom_id: str = "",
-        /,
-    ) -> special_endpoints.SelectMenuBuilder[Self]:
-        # custom_id used to come first, so just switch them around if only of them is passed
-        if type_ and not custom_id:
-            custom_id = str(type_)
-
-            deprecation.warn_deprecated(
-                "not passing 'type' explicitly",
-                removal_version="2.0.0.dev118",
-                additional_info="Please set the type by passing 'type' explicitly",
-                quote=False,
-            )
-            type_ = component_models.ComponentType.TEXT_SELECT_MENU
-
-        # A little guard during the deprecation period to stop mypy from complaining
-        type_ = component_models.ComponentType(type_)
-
         if type_ not in component_models.SelectMenuTypes:
             raise ValueError(f"{type_!r} is an invalid type option")
 

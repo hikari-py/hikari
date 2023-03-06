@@ -84,9 +84,6 @@ class ComponentType(int, enums.Enum):
         as `ComponentType.ACTION_ROW`.
     """
 
-    SELECT_MENU = enums.deprecated(TEXT_SELECT_MENU, removal_version="2.0.0.dev118")
-    """Deprecated alias for `TEXT_MENU_SELECT`."""
-
     TEXT_INPUT = 4
     """A text input component.
 
