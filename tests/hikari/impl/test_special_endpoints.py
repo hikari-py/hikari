@@ -1678,7 +1678,7 @@ class TestMessageActionRowBuilder:
 
     def test_add_select_menu(self):
         row = special_endpoints.MessageActionRowBuilder()
-        menu = row.add_select_menu("hihihi")
+        menu = row.add_select_menu(components.ComponentType.TEXT_SELECT_MENU, "hihihi")
 
         menu.add_to_container()
 

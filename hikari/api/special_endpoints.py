@@ -1933,15 +1933,6 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
             component.
         """
 
-    @typing.overload  # Deprecated overload
-    @abc.abstractmethod
-    def add_select_menu(
-        self,
-        custom_id: str,
-        /,
-    ) -> TextSelectMenuBuilder[Self]:
-        ...
-
     @typing.overload
     @abc.abstractmethod
     def add_select_menu(
@@ -1962,7 +1953,6 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
     ) -> ChannelSelectMenuBuilder[Self]:
         ...
 
-    @typing.overload
     @abc.abstractmethod
     def add_select_menu(
         self,
@@ -1970,21 +1960,7 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
         custom_id: str,
         /,
     ) -> SelectMenuBuilder[Self]:
-        ...
-
-    @abc.abstractmethod
-    def add_select_menu(
-        self,
-        type_: typing.Union[components_.ComponentType, int, str],
-        # These have default during the deprecation period for backwards compatibility, as custom_id
-        # used to come first
-        custom_id: str = "",
-        /,
-    ) -> SelectMenuBuilder[Self]:
         """Add a select menu component to this action row builder.
-
-        .. deprecated:: 2.0.0.dev116
-            `type_` now comes as a positional-only argument before `custom_id`.
 
         Parameters
         ----------
