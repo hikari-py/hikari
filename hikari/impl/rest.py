@@ -76,6 +76,7 @@ from hikari.impl import special_endpoints as special_endpoints_impl
 from hikari.interactions import base_interactions
 from hikari.internal import aio
 from hikari.internal import data_binding
+from hikari.internal import deprecation
 from hikari.internal import mentions
 from hikari.internal import net
 from hikari.internal import routes
@@ -4088,11 +4089,32 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.DELETE_INTERACTION_RESPONSE.compile(webhook=application, token=token)
         await self._request(route, auth=None)
 
+    @typing.overload
+    async def create_autocomplete_response(
+        self,
+        interaction: snowflakes.SnowflakeishOr[base_interactions.PartialInteraction],
+        token: str,
+        choices: typing.Sequence[special_endpoints.AutocompleteChoiceBuilder],
+    ) -> None:
+        ...
+
+    @typing.overload
+    @typing_extensions.deprecated("AutocompleteChoiceBuilder should be used instead of CommandChoice")
     async def create_autocomplete_response(
         self,
         interaction: snowflakes.SnowflakeishOr[base_interactions.PartialInteraction],
         token: str,
         choices: typing.Sequence[commands.CommandChoice],
+    ) -> None:
+        ...
+
+    async def create_autocomplete_response(
+        self,
+        interaction: snowflakes.SnowflakeishOr[base_interactions.PartialInteraction],
+        token: str,
+        choices: typing.Union[
+            typing.Sequence[commands.CommandChoice], typing.Sequence[special_endpoints.AutocompleteChoiceBuilder]
+        ],
     ) -> None:
         route = routes.POST_INTERACTION_RESPONSE.compile(interaction=interaction, token=token)
 
@@ -4100,7 +4122,22 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("type", base_interactions.ResponseType.AUTOCOMPLETE)
 
         data = data_binding.JSONObjectBuilder()
-        data.put("choices", [{"name": choice.name, "value": choice.value} for choice in choices])
+        raw_choices: typing.List[typing.Dict[str, typing.Union[str, int, float]]] = []
+        warned = False
+
+        for choice in choices:
+            if not warned and isinstance(choice, commands.CommandChoice):
+                deprecation.warn_deprecated(
+                    "Passing CommandChoice",
+                    removal_version="2.0.0.dev119",
+                    additional_info="Use AutocompleteChoiceBuilder instead",
+                    quote=False,
+                )
+                warned = True
+
+            raw_choices.append({"name": choice.name, "value": choice.value})
+
+        data.put("choices", raw_choices)
 
         body.put("data", data)
         await self._request(route, json=body, auth=None)

@@ -6091,6 +6091,22 @@ class TestRESTClientImplAsync:
         expected_route = routes.POST_INTERACTION_RESPONSE.compile(interaction=1235431, token="snek")
         rest_client._request = mock.AsyncMock()
 
+        choices = [
+            special_endpoints.AutocompleteChoiceBuilder(name="c", value="d"),
+            special_endpoints.AutocompleteChoiceBuilder(name="eee", value="fff"),
+        ]
+        await rest_client.create_autocomplete_response(StubModel(1235431), "snek", choices)
+
+        rest_client._request.assert_awaited_once_with(
+            expected_route,
+            json={"type": 8, "data": {"choices": [{"name": "c", "value": "d"}, {"name": "eee", "value": "fff"}]}},
+            auth=None,
+        )
+
+    async def test_create_autocomplete_response_for_deprecated_command_choices(self, rest_client):
+        expected_route = routes.POST_INTERACTION_RESPONSE.compile(interaction=1235431, token="snek")
+        rest_client._request = mock.AsyncMock()
+
         choices = [commands.CommandChoice(name="a", value="b"), commands.CommandChoice(name="foo", value="bar")]
         await rest_client.create_autocomplete_response(StubModel(1235431), "snek", choices)
 
