@@ -663,6 +663,10 @@ class InteractionAutocompleteBuilder(InteractionResponseBuilder, abc.ABC):
     ) -> Self:
         """Set autocomplete choices.
 
+        .. deprecated:: 2.0.0.dev118
+            Passing `hikari.commands.CommandChoice`s here instead of
+            `hikari.api.special_endpoints.AutocompleteChoiceBuilder`s.
+
         Returns
         -------
         InteractionAutocompleteBuilder
