@@ -45,6 +45,7 @@ import typing
 import urllib.parse
 
 import aiohttp
+import typing_extensions
 
 from hikari import _about as about
 from hikari import applications
@@ -3942,8 +3943,24 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> special_endpoints.InteractionDeferredBuilder:
         return special_endpoints_impl.InteractionDeferredBuilder(type=type_)
 
+    @typing.overload
     def interaction_autocomplete_builder(
         self, choices: typing.Sequence[commands.CommandChoice]
+    ) -> special_endpoints.InteractionAutocompleteBuilder:
+        ...
+
+    @typing.overload
+    @typing_extensions.deprecated("AutocompleteChoice should be used instead of CommandChoice")
+    def interaction_autocomplete_builder(
+        self, choices: typing.Sequence[special_endpoints.AutocompleteChoice]
+    ) -> special_endpoints.InteractionAutocompleteBuilder:
+        ...
+
+    def interaction_autocomplete_builder(
+        self,
+        choices: typing.Union[
+            typing.Sequence[commands.CommandChoice], typing.Sequence[special_endpoints.AutocompleteChoice]
+        ],
     ) -> special_endpoints.InteractionAutocompleteBuilder:
         return special_endpoints_impl.InteractionAutocompleteBuilder(choices)
 

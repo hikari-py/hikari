@@ -27,6 +27,7 @@ You should never need to make any of these objects manually.
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
+    "AutocompleteChoice",
     "CommandBuilder",
     "SlashCommandBuilder",
     "ContextMenuCommandBuilder",
@@ -50,6 +51,7 @@ import asyncio
 import typing
 
 import attr
+import typing_extensions
 
 from hikari import channels
 from hikari import commands
@@ -895,20 +897,110 @@ def _maybe_cast(
 
 @attr_extensions.with_copy
 @attr.define(kw_only=False, weakref_slot=False)
+class AutocompleteChoice(special_endpoints.AutocompleteChoice):
+    """Standard implementation of `special_endpoints.AutocompleteChoice`."""
+
+    _name: str = attr.field(alias="name")
+    _value: typing.Union[int, str, float] = attr.field(alias="value")
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @property
+    def value(self) -> typing.Union[int, str, float]:
+        return self._value
+
+    def set_name(self, name: str, /) -> Self:
+        self._name = name
+        return self
+
+    def set_value(self, value: typing.Union[int, float, str], /) -> Self:
+        self._value = value
+        return self
+
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        return {"name": self._name, "value": self._value}
+
+
+@attr_extensions.with_copy
+@attr.define(init=False, weakref_slot=False)
 class InteractionAutocompleteBuilder(special_endpoints.InteractionAutocompleteBuilder):
     """Standard implementation of `hikari.api.special_endpoints.InteractionAutocompleteBuilder`."""
 
-    _choices: typing.Sequence[commands.CommandChoice] = attr.field(alias="choices", factory=list)
+    _choices: typing.Sequence[special_endpoints.AutocompleteChoice] = attr.field(factory=list)
+
+    @typing.overload
+    @typing_extensions.deprecated("AutocompleteChoice should be used instead of CommandChoice")
+    def __init__(
+        self,
+        choices: typing.Sequence[commands.CommandChoice],
+    ) -> None:
+        ...
+
+    @typing.overload
+    def __init__(
+        self,
+        choices: typing.Sequence[special_endpoints.AutocompleteChoice],
+    ) -> None:
+        ...
+
+    @typing.overload
+    def __init__(self) -> None:
+        ...
+
+    def __init__(
+        self,
+        choices: typing.Union[
+            typing.Sequence[special_endpoints.AutocompleteChoice], typing.Sequence[commands.CommandChoice], None
+        ] = None,
+    ) -> None:
+        if not choices:
+            return self.__attrs_init__()
+
+        new_choices: typing.List[special_endpoints.AutocompleteChoice] = []
+        warned = False
+        for choice in choices:
+            if isinstance(choice, commands.CommandChoice):
+                if not warned:
+                    deprecation.warn_deprecated(
+                        "Passing CommandChoice",
+                        removal_version="2.0.0.dev119",
+                        additional_info="Use AutocompleteChoice instead",
+                        quote=False,
+                    )
+                    warned = True
+
+                choice = AutocompleteChoice(choice.name, choice.value)
+
+            new_choices.append(choice)
+
+        self.__attrs_init__(new_choices)
 
     @property
     def type(self) -> typing.Literal[base_interactions.ResponseType.AUTOCOMPLETE]:
         return base_interactions.ResponseType.AUTOCOMPLETE
 
     @property
-    def choices(self) -> typing.Sequence[commands.CommandChoice]:
+    def choices(self) -> typing.Sequence[special_endpoints.AutocompleteChoice]:
         return self._choices
 
+    @typing.overload
+    @typing_extensions.deprecated("AutocompleteChoice should be used instead of CommandChoice")
     def set_choices(self, choices: typing.Sequence[commands.CommandChoice], /) -> Self:
+        ...
+
+    @typing.overload
+    def set_choices(self, choices: typing.Sequence[special_endpoints.AutocompleteChoice], /) -> Self:
+        ...
+
+    def set_choices(
+        self,
+        choices: typing.Union[
+            typing.Sequence[special_endpoints.AutocompleteChoice], typing.Sequence[commands.CommandChoice]
+        ],
+        /,
+    ) -> Self:
         """Set autocomplete choices.
 
         Returns
@@ -916,14 +1008,31 @@ class InteractionAutocompleteBuilder(special_endpoints.InteractionAutocompleteBu
         InteractionAutocompleteBuilder
             Object of this builder.
         """
-        self._choices = choices
+        real_choices: typing.List[special_endpoints.AutocompleteChoice] = []
+        warned = False
+
+        for choice in choices:
+            if isinstance(choice, commands.CommandChoice):
+                if not warned:
+                    deprecation.warn_deprecated(
+                        "Passing CommandChoice",
+                        removal_version="2.0.0.dev119",
+                        additional_info="Use AutocompleteChoice instead",
+                        quote=False,
+                    )
+                    warned = True
+
+                choice = AutocompleteChoice(choice.name, choice.value)
+
+            real_choices.append(choice)
+
+        self._choices = real_choices
         return self
 
     def build(
         self, _: entity_factory_.EntityFactory, /
     ) -> typing.Tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
-        data = {"choices": [{"name": choice.name, "value": choice.value} for choice in self._choices]}
-        return {"type": self.type, "data": data}, ()
+        return {"type": self.type, "data": {"choices": [choice.build() for choice in self._choices]}}, ()
 
 
 @attr_extensions.with_copy

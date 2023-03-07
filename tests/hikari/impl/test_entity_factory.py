@@ -4070,12 +4070,21 @@ class TestEntityFactoryImpl:
                     "required": True,
                     "min_value": 0,
                     "max_value": 10,
+                    "min_length": 1,
+                    "max_length": 44,
+                    "autocomplete": True,
                     "options": [
                         {
                             "type": 6,
                             "name": "a name",
                             "description": "84",
-                            "choices": [{"name": "a choice", "value": "4 u"}],
+                            "choices": [
+                                {
+                                    "name": "a choice",
+                                    "name_localizations": {"en-GB": "scott", "el": "Salvador"},
+                                    "value": "4 u",
+                                }
+                            ],
                         }
                     ],
                 }
@@ -4113,6 +4122,8 @@ class TestEntityFactoryImpl:
         ]
         assert option.min_value == 0
         assert option.max_value == 10
+        assert option.min_length == 1
+        assert option.max_length == 44
 
         assert len(option.options) == 1
         suboption = option.options[0]
@@ -4126,9 +4137,10 @@ class TestEntityFactoryImpl:
         # CommandChoice
         assert len(suboption.choices) == 1
         choice = suboption.choices[0]
+        assert isinstance(choice, commands.CommandChoice)
         assert choice.name == "a choice"
         assert choice.value == "4 u"
-        assert isinstance(choice, commands.CommandChoice)
+        assert choice.name_localizations == {locales.Locale.EN_GB: "scott", locales.Locale.EL: "Salvador"}
 
         assert isinstance(suboption, commands.CommandOption)
         assert isinstance(option, commands.CommandOption)
@@ -4693,7 +4705,13 @@ class TestEntityFactoryImpl:
             min_length=3,
             max_length=69,
             channel_types=[channel_models.ChannelType.GUILD_STAGE, channel_models.ChannelType.GUILD_TEXT, 100],
-            choices=[commands.CommandChoice(name="a", value="choice")],
+            choices=[
+                commands.CommandChoice(
+                    name="a",
+                    name_localizations={locales.Locale.CS: "computers!", locales.Locale.EL: "sava"},
+                    value="choice",
+                )
+            ],
             name_localizations={locales.Locale.TR: "b"},
             description_localizations={locales.Locale.TR: "c"},
             options=[
@@ -4723,7 +4741,13 @@ class TestEntityFactoryImpl:
             "min_length": 3,
             "max_length": 69,
             "autocomplete": True,
-            "choices": [{"name": "a", "value": "choice"}],
+            "choices": [
+                {
+                    "name": "a",
+                    "name_localizations": {locales.Locale.CS: "computers!", locales.Locale.EL: "sava"},
+                    "value": "choice",
+                }
+            ],
             "description_localizations": {"tr": "c"},
             "name_localizations": {"tr": "b"},
             "options": [
@@ -4732,7 +4756,13 @@ class TestEntityFactoryImpl:
                     "description": "you're drunk",
                     "name": "go home",
                     "required": False,
-                    "choices": [{"name": "boo", "value": "hoo"}],
+                    "choices": [
+                        {
+                            "name": "boo",
+                            "name_localizations": {},
+                            "value": "hoo",
+                        }
+                    ],
                     "description_localizations": {"tr": "c"},
                     "name_localizations": {"tr": "b"},
                 }

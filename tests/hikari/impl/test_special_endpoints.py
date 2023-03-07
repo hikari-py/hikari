@@ -687,6 +687,124 @@ class TestGuildThreadIterator:
         )
 
 
+class TestInteractionAutocompleteBuilder:
+    def test_type_property(self):
+        assert special_endpoints.InteractionAutocompleteBuilder([])
+
+    def test_choices(self):
+        builder = special_endpoints.InteractionAutocompleteBuilder(
+            [
+                special_endpoints.AutocompleteChoice(name="echo", value="charlie"),
+                special_endpoints.AutocompleteChoice(name="echo", value="charlie"),
+            ]
+        )
+
+        assert builder.choices == [
+            special_endpoints.AutocompleteChoice(name="echo", value="charlie"),
+            special_endpoints.AutocompleteChoice(name="echo", value="charlie"),
+        ]
+
+    def test_choices_for_deprecated_cmd_choices(self):
+        choices = [
+            commands.CommandChoice(name="meow", value="meow meow"),
+            commands.CommandChoice(name="name", value="x"),
+        ]
+
+        builder = special_endpoints.InteractionAutocompleteBuilder(choices)
+
+        assert builder.choices == [
+            special_endpoints.AutocompleteChoice(name="meow", value="meow meow"),
+            special_endpoints.AutocompleteChoice("name", "x"),
+        ]
+
+    def test_set_choices(self):
+        builder = special_endpoints.InteractionAutocompleteBuilder()
+
+        builder.set_choices(
+            [special_endpoints.AutocompleteChoice("aaa", "bbb"), special_endpoints.AutocompleteChoice("e", "a")]
+        )
+
+        assert builder.choices == [
+            special_endpoints.AutocompleteChoice("aaa", "bbb"),
+            special_endpoints.AutocompleteChoice("e", "a"),
+        ]
+
+    def test_set_choices_for_deprecated_cmd_choices(self):
+        builder = special_endpoints.InteractionAutocompleteBuilder()
+
+        builder.set_choices(
+            [
+                commands.CommandChoice(name="its", value="the police!"),
+                commands.CommandChoice(name="inspect", value="me"),
+            ]
+        )
+
+        assert builder.choices == [
+            special_endpoints.AutocompleteChoice("its", "the police!"),
+            special_endpoints.AutocompleteChoice("inspect", "me"),
+        ]
+
+    def test_build(self):
+        builder = special_endpoints.InteractionAutocompleteBuilder(
+            [
+                special_endpoints.AutocompleteChoice("meow", "waaaa"),
+                special_endpoints.AutocompleteChoice("lotta", "water"),
+            ]
+        )
+
+        data, files = builder.build(mock.Mock())
+
+        assert files == ()
+        assert data == {
+            "type": base_interactions.ResponseType.AUTOCOMPLETE,
+            "data": {"choices": [{"name": "meow", "value": "waaaa"}, {"name": "lotta", "value": "water"}]},
+        }
+
+    def test_build_for_deprecated_cmd_choices(self):
+        builder = special_endpoints.InteractionAutocompleteBuilder(
+            [commands.CommandChoice(name="a", value="b"), commands.CommandChoice(name="c", value="d")]
+        )
+
+        data, files = builder.build(mock.Mock())
+
+        assert files == ()
+        assert data == {
+            "type": base_interactions.ResponseType.AUTOCOMPLETE,
+            "data": {"choices": [{"name": "a", "value": "b"}, {"name": "c", "value": "d"}]},
+        }
+
+
+class TestAutocompleteChoice:
+    def test_name_property(self):
+        choice = special_endpoints.AutocompleteChoice("heavy", "value")
+
+        assert choice.name == "heavy"
+
+    def test_value_property(self):
+        choice = special_endpoints.AutocompleteChoice("name", "weapon")
+
+        assert choice.value == "weapon"
+
+    def test_set_name(self):
+        choice = special_endpoints.AutocompleteChoice("heavy", "value")
+
+        choice.set_name("widen")
+
+        assert choice.name == "widen"
+
+    def test_set_value(self):
+        choice = special_endpoints.AutocompleteChoice("name", "weapon")
+
+        choice.set_value(123)
+
+        assert choice.value == 123
+
+    def test_build(self):
+        choice = special_endpoints.AutocompleteChoice("atlantic", "slow")
+
+        assert choice.build() == {"name": "atlantic", "value": "slow"}
+
+
 class TestInteractionDeferredBuilder:
     def test_type_property(self):
         builder = special_endpoints.InteractionDeferredBuilder(5)
