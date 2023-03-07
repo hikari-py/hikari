@@ -938,25 +938,18 @@ class InteractionAutocompleteBuilder(special_endpoints.InteractionAutocompleteBu
 
     @typing.overload
     def __init__(
-        self, choices: typing.Sequence[special_endpoints.AutocompleteChoiceBuilder], *, _stack_level: int = 0
+        self, choices: typing.Sequence[special_endpoints.AutocompleteChoiceBuilder] = ..., *, _stack_level: int = 0
     ) -> None:
-        ...
-
-    @typing.overload
-    def __init__(self, *, _stack_level: int = 0) -> None:
         ...
 
     def __init__(
         self,
         choices: typing.Union[
-            typing.Sequence[special_endpoints.AutocompleteChoiceBuilder], typing.Sequence[commands.CommandChoice], None
-        ] = None,
+            typing.Sequence[special_endpoints.AutocompleteChoiceBuilder], typing.Sequence[commands.CommandChoice]
+        ] = (),
         *,
         _stack_level: int = 0,
     ) -> None:
-        if not choices:
-            return self.__attrs_init__()
-
         new_choices: typing.List[special_endpoints.AutocompleteChoiceBuilder] = []
         warned = False
         for choice in choices:
