@@ -29,6 +29,8 @@ import abc
 import datetime
 import typing
 
+import typing_extensions
+
 from hikari import scheduled_events
 from hikari import traits
 from hikari import undefined
@@ -7287,10 +7289,32 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
+    @typing.overload
+    def interaction_autocomplete_builder(
+        self, choices: typing.Sequence[special_endpoints.AutocompleteChoiceBuilder]
+    ) -> special_endpoints.InteractionAutocompleteBuilder:
+        ...
+
+    @abc.abstractmethod
+    @typing.overload
+    @typing_extensions.deprecated("AutocompleteChoiceBuilder should be used instead of CommandChoice")
     def interaction_autocomplete_builder(
         self, choices: typing.Sequence[commands.CommandChoice]
     ) -> special_endpoints.InteractionAutocompleteBuilder:
+        ...
+
+    @abc.abstractmethod
+    def interaction_autocomplete_builder(
+        self,
+        choices: typing.Union[
+            typing.Sequence[commands.CommandChoice], typing.Sequence[special_endpoints.AutocompleteChoiceBuilder]
+        ],
+    ) -> special_endpoints.InteractionAutocompleteBuilder:
         """Create a builder for an autocomplete interaction response.
+
+        .. deprecated:: 2.0.0.dev118
+            Passing `hikari.commands.CommandChoice`s here instead of
+            `hikari.api.special_endpoints.AutocompleteChoiceBuilder`s.
 
         Returns
         -------
