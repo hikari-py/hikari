@@ -68,6 +68,7 @@ from hikari.api import special_endpoints
 from hikari.interactions import base_interactions
 from hikari.internal import attr_extensions
 from hikari.internal import data_binding
+from hikari.internal import deprecation
 from hikari.internal import mentions
 from hikari.internal import routes
 from hikari.internal import time
@@ -932,21 +933,17 @@ class InteractionAutocompleteBuilder(special_endpoints.InteractionAutocompleteBu
 
     @typing.overload
     @typing_extensions.deprecated("AutocompleteChoiceBuilder should be used instead of CommandChoice")
-    def __init__(
-        self,
-        choices: typing.Sequence[commands.CommandChoice],
-    ) -> None:
+    def __init__(self, choices: typing.Sequence[commands.CommandChoice], *, _stack_level: int = 0) -> None:
         ...
 
     @typing.overload
     def __init__(
-        self,
-        choices: typing.Sequence[special_endpoints.AutocompleteChoiceBuilder],
+        self, choices: typing.Sequence[special_endpoints.AutocompleteChoiceBuilder], *, _stack_level: int = 0
     ) -> None:
         ...
 
     @typing.overload
-    def __init__(self) -> None:
+    def __init__(self, *, _stack_level: int = 0) -> None:
         ...
 
     def __init__(
@@ -954,6 +951,8 @@ class InteractionAutocompleteBuilder(special_endpoints.InteractionAutocompleteBu
         choices: typing.Union[
             typing.Sequence[special_endpoints.AutocompleteChoiceBuilder], typing.Sequence[commands.CommandChoice], None
         ] = None,
+        *,
+        _stack_level: int = 0,
     ) -> None:
         if not choices:
             return self.__attrs_init__()
@@ -968,6 +967,7 @@ class InteractionAutocompleteBuilder(special_endpoints.InteractionAutocompleteBu
                         removal_version="2.0.0.dev119",
                         additional_info="Use AutocompleteChoiceBuilder instead",
                         quote=False,
+                        stack_level=3 + _stack_level,
                     )
                     warned = True
 
