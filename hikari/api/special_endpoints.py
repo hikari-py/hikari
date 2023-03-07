@@ -24,7 +24,7 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
-    "AutocompleteChoice",
+    "AutocompleteChoiceBuilder",
     "ButtonBuilder",
     "CommandBuilder",
     "SlashCommandBuilder",
@@ -588,7 +588,7 @@ class InteractionDeferredBuilder(InteractionResponseBuilder, abc.ABC):
         """
 
 
-class AutocompleteChoice(abc.ABC):
+class AutocompleteChoiceBuilder(abc.ABC):
     """Interface of an autocomplete choice used to respond to interactions."""
 
     __slots__: typing.Sequence[str] = ()
@@ -609,7 +609,7 @@ class AutocompleteChoice(abc.ABC):
 
         Returns
         -------
-        AutocompleteChoice
+        AutocompleteChoiceBuilder
             The autocomplete choice builder.
         """
 
@@ -619,7 +619,7 @@ class AutocompleteChoice(abc.ABC):
 
         Returns
         -------
-        AutocompleteChoice
+        AutocompleteChoiceBuilder
             The autocomplete choice builder.
         """
 
@@ -641,23 +641,25 @@ class InteractionAutocompleteBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def choices(self) -> typing.Sequence[AutocompleteChoice]:
+    def choices(self) -> typing.Sequence[AutocompleteChoiceBuilder]:
         """Autocomplete choices."""
 
     @abc.abstractmethod
     @typing_extensions.overload
-    @typing_extensions.deprecated("AutocompleteChoice should be used instead of CommandChoice")
+    @typing_extensions.deprecated("AutocompleteChoiceBuilder should be used instead of CommandChoice")
     def set_choices(self, choices: typing.Sequence[commands.CommandChoice], /) -> Self:
         ...
 
     @abc.abstractmethod
     @typing_extensions.overload
-    def set_choices(self, choices: typing.Sequence[AutocompleteChoice], /) -> Self:
+    def set_choices(self, choices: typing.Sequence[AutocompleteChoiceBuilder], /) -> Self:
         ...
 
     @abc.abstractmethod
     def set_choices(
-        self, choices: typing.Union[typing.Sequence[commands.CommandChoice], typing.Sequence[AutocompleteChoice]], /
+        self,
+        choices: typing.Union[typing.Sequence[commands.CommandChoice], typing.Sequence[AutocompleteChoiceBuilder]],
+        /,
     ) -> Self:
         """Set autocomplete choices.
 

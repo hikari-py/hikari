@@ -3950,16 +3950,16 @@ class RESTClientImpl(rest_api.RESTClient):
         ...
 
     @typing.overload
-    @typing_extensions.deprecated("AutocompleteChoice should be used instead of CommandChoice")
+    @typing_extensions.deprecated("AutocompleteChoiceBuilder should be used instead of CommandChoice")
     def interaction_autocomplete_builder(
-        self, choices: typing.Sequence[special_endpoints.AutocompleteChoice]
+        self, choices: typing.Sequence[special_endpoints.AutocompleteChoiceBuilder]
     ) -> special_endpoints.InteractionAutocompleteBuilder:
         ...
 
     def interaction_autocomplete_builder(
         self,
         choices: typing.Union[
-            typing.Sequence[commands.CommandChoice], typing.Sequence[special_endpoints.AutocompleteChoice]
+            typing.Sequence[commands.CommandChoice], typing.Sequence[special_endpoints.AutocompleteChoiceBuilder]
         ],
     ) -> special_endpoints.InteractionAutocompleteBuilder:
         return special_endpoints_impl.InteractionAutocompleteBuilder(choices)

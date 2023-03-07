@@ -694,14 +694,14 @@ class TestInteractionAutocompleteBuilder:
     def test_choices(self):
         builder = special_endpoints.InteractionAutocompleteBuilder(
             [
-                special_endpoints.AutocompleteChoice(name="echo", value="charlie"),
-                special_endpoints.AutocompleteChoice(name="echo", value="charlie"),
+                special_endpoints.AutocompleteChoiceBuilder(name="echo", value="charlie"),
+                special_endpoints.AutocompleteChoiceBuilder(name="echo", value="charlie"),
             ]
         )
 
         assert builder.choices == [
-            special_endpoints.AutocompleteChoice(name="echo", value="charlie"),
-            special_endpoints.AutocompleteChoice(name="echo", value="charlie"),
+            special_endpoints.AutocompleteChoiceBuilder(name="echo", value="charlie"),
+            special_endpoints.AutocompleteChoiceBuilder(name="echo", value="charlie"),
         ]
 
     def test_choices_for_deprecated_cmd_choices(self):
@@ -713,20 +713,23 @@ class TestInteractionAutocompleteBuilder:
         builder = special_endpoints.InteractionAutocompleteBuilder(choices)
 
         assert builder.choices == [
-            special_endpoints.AutocompleteChoice(name="meow", value="meow meow"),
-            special_endpoints.AutocompleteChoice("name", "x"),
+            special_endpoints.AutocompleteChoiceBuilder(name="meow", value="meow meow"),
+            special_endpoints.AutocompleteChoiceBuilder("name", "x"),
         ]
 
     def test_set_choices(self):
         builder = special_endpoints.InteractionAutocompleteBuilder()
 
         builder.set_choices(
-            [special_endpoints.AutocompleteChoice("aaa", "bbb"), special_endpoints.AutocompleteChoice("e", "a")]
+            [
+                special_endpoints.AutocompleteChoiceBuilder("aaa", "bbb"),
+                special_endpoints.AutocompleteChoiceBuilder("e", "a"),
+            ]
         )
 
         assert builder.choices == [
-            special_endpoints.AutocompleteChoice("aaa", "bbb"),
-            special_endpoints.AutocompleteChoice("e", "a"),
+            special_endpoints.AutocompleteChoiceBuilder("aaa", "bbb"),
+            special_endpoints.AutocompleteChoiceBuilder("e", "a"),
         ]
 
     def test_set_choices_for_deprecated_cmd_choices(self):
@@ -740,15 +743,15 @@ class TestInteractionAutocompleteBuilder:
         )
 
         assert builder.choices == [
-            special_endpoints.AutocompleteChoice("its", "the police!"),
-            special_endpoints.AutocompleteChoice("inspect", "me"),
+            special_endpoints.AutocompleteChoiceBuilder("its", "the police!"),
+            special_endpoints.AutocompleteChoiceBuilder("inspect", "me"),
         ]
 
     def test_build(self):
         builder = special_endpoints.InteractionAutocompleteBuilder(
             [
-                special_endpoints.AutocompleteChoice("meow", "waaaa"),
-                special_endpoints.AutocompleteChoice("lotta", "water"),
+                special_endpoints.AutocompleteChoiceBuilder("meow", "waaaa"),
+                special_endpoints.AutocompleteChoiceBuilder("lotta", "water"),
             ]
         )
 
@@ -774,33 +777,33 @@ class TestInteractionAutocompleteBuilder:
         }
 
 
-class TestAutocompleteChoice:
+class TestAutocompleteChoiceBuilder:
     def test_name_property(self):
-        choice = special_endpoints.AutocompleteChoice("heavy", "value")
+        choice = special_endpoints.AutocompleteChoiceBuilder("heavy", "value")
 
         assert choice.name == "heavy"
 
     def test_value_property(self):
-        choice = special_endpoints.AutocompleteChoice("name", "weapon")
+        choice = special_endpoints.AutocompleteChoiceBuilder("name", "weapon")
 
         assert choice.value == "weapon"
 
     def test_set_name(self):
-        choice = special_endpoints.AutocompleteChoice("heavy", "value")
+        choice = special_endpoints.AutocompleteChoiceBuilder("heavy", "value")
 
         choice.set_name("widen")
 
         assert choice.name == "widen"
 
     def test_set_value(self):
-        choice = special_endpoints.AutocompleteChoice("name", "weapon")
+        choice = special_endpoints.AutocompleteChoiceBuilder("name", "weapon")
 
         choice.set_value(123)
 
         assert choice.value == 123
 
     def test_build(self):
-        choice = special_endpoints.AutocompleteChoice("atlantic", "slow")
+        choice = special_endpoints.AutocompleteChoiceBuilder("atlantic", "slow")
 
         assert choice.build() == {"name": "atlantic", "value": "slow"}
 

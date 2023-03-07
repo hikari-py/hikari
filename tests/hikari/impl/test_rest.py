@@ -1582,10 +1582,10 @@ class TestRESTClientImpl:
 
     def test_interaction_autocomplete_builder(self, rest_client):
         result = rest_client.interaction_autocomplete_builder(
-            [special_endpoints.AutocompleteChoice(name="name", value="value")]
+            [special_endpoints.AutocompleteChoiceBuilder(name="name", value="value")]
         )
 
-        assert result.choices == [special_endpoints.AutocompleteChoice(name="name", value="value")]
+        assert result.choices == [special_endpoints.AutocompleteChoiceBuilder(name="name", value="value")]
 
     def test_interaction_message_builder(self, rest_client):
         result = rest_client.interaction_message_builder(4)
