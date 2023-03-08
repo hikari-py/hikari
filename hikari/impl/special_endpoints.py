@@ -51,7 +51,6 @@ import asyncio
 import typing
 
 import attr
-import typing_extensions
 
 from hikari import channels
 from hikari import commands
@@ -932,7 +931,7 @@ class InteractionAutocompleteBuilder(special_endpoints.InteractionAutocompleteBu
     _choices: typing.Sequence[special_endpoints.AutocompleteChoiceBuilder] = attr.field(factory=list)
 
     @typing.overload
-    @typing_extensions.deprecated("AutocompleteChoiceBuilder should be used instead of CommandChoice")
+    @deprecation.deprecated("AutocompleteChoiceBuilder should be used instead of CommandChoice")
     def __init__(self, choices: typing.Sequence[commands.CommandChoice], *, _stack_level: int = 0) -> None:
         ...
 
@@ -979,7 +978,7 @@ class InteractionAutocompleteBuilder(special_endpoints.InteractionAutocompleteBu
         return self._choices
 
     @typing.overload
-    @typing_extensions.deprecated("AutocompleteChoiceBuilder should be used instead of CommandChoice")
+    @deprecation.deprecated("AutocompleteChoiceBuilder should be used instead of CommandChoice")
     def set_choices(self, choices: typing.Sequence[commands.CommandChoice], /) -> Self:
         ...
 

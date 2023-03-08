@@ -29,11 +29,10 @@ import abc
 import datetime
 import typing
 
-import typing_extensions
-
 from hikari import scheduled_events
 from hikari import traits
 from hikari import undefined
+from hikari.internal import deprecation
 
 if typing.TYPE_CHECKING:
     from hikari import applications
@@ -7297,7 +7296,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     @typing.overload
-    @typing_extensions.deprecated("AutocompleteChoiceBuilder should be used instead of CommandChoice")
+    @deprecation.deprecated("AutocompleteChoiceBuilder should be used instead of CommandChoice")
     def interaction_autocomplete_builder(
         self, choices: typing.Sequence[commands.CommandChoice]
     ) -> special_endpoints.InteractionAutocompleteBuilder:
@@ -7695,7 +7694,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     @typing.overload
-    @typing_extensions.deprecated("AutocompleteChoiceBuilder should be used instead of CommandChoice")
+    @deprecation.deprecated("AutocompleteChoiceBuilder should be used instead of CommandChoice")
     async def create_autocomplete_response(
         self,
         interaction: snowflakes.SnowflakeishOr[base_interactions.PartialInteraction],

@@ -45,7 +45,6 @@ import typing
 import urllib.parse
 
 import aiohttp
-import typing_extensions
 
 from hikari import _about as about
 from hikari import applications
@@ -3951,7 +3950,7 @@ class RESTClientImpl(rest_api.RESTClient):
         ...
 
     @typing.overload
-    @typing_extensions.deprecated("AutocompleteChoiceBuilder should be used instead of CommandChoice")
+    @deprecation.deprecated("AutocompleteChoiceBuilder should be used instead of CommandChoice")
     def interaction_autocomplete_builder(
         self, choices: typing.Sequence[commands.CommandChoice]
     ) -> special_endpoints.InteractionAutocompleteBuilder:
@@ -4099,7 +4098,7 @@ class RESTClientImpl(rest_api.RESTClient):
         ...
 
     @typing.overload
-    @typing_extensions.deprecated("AutocompleteChoiceBuilder should be used instead of CommandChoice")
+    @deprecation.deprecated("AutocompleteChoiceBuilder should be used instead of CommandChoice")
     async def create_autocomplete_response(
         self,
         interaction: snowflakes.SnowflakeishOr[base_interactions.PartialInteraction],
