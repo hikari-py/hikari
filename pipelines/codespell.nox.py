@@ -25,6 +25,7 @@ from pipelines import nox
 IGNORED_WORDS = [
     "ro",
     "falsy",
+    "ws",
 ]
 
 
