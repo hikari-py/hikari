@@ -38,7 +38,7 @@ if typing.TYPE_CHECKING:
 else:
 
     def deprecated(*args):
-        """Mark a function, overload, or class as deprecated for type-checkersA.
+        """Mark a function, overload, or class as deprecated for type-checkers.
 
         This has no runtime side-effects.
         """
