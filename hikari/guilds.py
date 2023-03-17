@@ -1012,7 +1012,7 @@ class Role(PartialRole):
     is_premium_subscriber_role: bool = attr.field(eq=False, hash=False, repr=True)
     """Whether this role is the guild's nitro subscriber role."""
 
-    is_guild_linked_role = bool = attr.field(eq=False, hash=False, repr=True)
+    is_guild_linked_role: bool = attr.field(eq=False, hash=False, repr=True)
     """Whether this role is a linked role in the guild."""
 
     @property
