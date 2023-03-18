@@ -27,11 +27,10 @@ import json
 import pathlib
 import subprocess
 import sys
-import tempfile
 import time
 import urllib.request
 
-sys.path.append(".")
+sys.path.append("..")
 
 
 from hikari import emojis
@@ -39,44 +38,53 @@ from hikari import emojis
 TWEMOJI_REPO_BASE_URL = "https://github.com/twitter/twemoji.git"
 DISCORD_EMOJI_MAPPING_URL = "https://emzi0767.gl-pages.emzi0767.dev/discord-emoji/discordEmojiMap-canary.min.json"
 
+try:
+    tempdir = pathlib.Path(sys.argv[1])
+except IndexError:
+    print("Argument 1 must be the path to the temporary directory")
+    exit(2)
 
-with tempfile.TemporaryDirectory() as tempdir:
-    tempdir = pathlib.Path(tempdir)
-    invalid_emojis = []
-    start = time.perf_counter()
 
+start = time.perf_counter()
+
+has_items = next(tempdir.iterdir(), False)
+if has_items:
+    print("Updating twemoji collection")
+    subprocess.check_call("git pull", shell=True, cwd=tempdir)
+else:
     print("Cloning twemoji collection")
     subprocess.check_call(f"git clone {TWEMOJI_REPO_BASE_URL} {tempdir} --depth=1", shell=True)
 
-    print("Fetching emoji mapping")
-    with urllib.request.urlopen(DISCORD_EMOJI_MAPPING_URL) as request:
-        mapping = json.loads(request.read())["emojiDefinitions"]
+print("Fetching emoji mapping")
+with urllib.request.urlopen(DISCORD_EMOJI_MAPPING_URL) as request:
+    mapping = json.loads(request.read())["emojiDefinitions"]
 
-    assets_path = tempdir / "assets" / "72x72"
+assets_path = tempdir / "assets" / "72x72"
 
-    total = len(mapping)
-    for i, emoji in enumerate(mapping, start=1):
-        name = emoji["primaryName"]
-        emoji_surrogates = emoji["surrogates"]
-        emoji = emojis.UnicodeEmoji.parse(emoji_surrogates)
-        line_repr = f"{i}/{total} {name} {' '.join(map(hex, map(ord, emoji_surrogates)))} {emoji.url}"
+invalid_emojis = []
+total = len(mapping)
+for i, emoji in enumerate(mapping, start=1):
+    name = emoji["primaryName"]
+    emoji_surrogates = emoji["surrogates"]
+    emoji = emojis.UnicodeEmoji.parse(emoji_surrogates)
+    line_repr = f"{i}/{total} {name} {' '.join(map(hex, map(ord, emoji_surrogates)))} {emoji.url}"
 
-        if (assets_path / emoji.filename).exists():
-            print(f"[  OK  ] {line_repr}")
-        else:
-            invalid_emojis.append(line_repr)
-            print(f"[ FAIL ] {line_repr}")
+    if (assets_path / emoji.filename).exists():
+        print(f"[  OK  ] {line_repr}")
+    else:
+        invalid_emojis.append(line_repr)
+        print(f"[ FAIL ] {line_repr}")
 
-    print("")
-    print("Results")
-    print("-------")
-    print(f"Valid emojis: {total - len(invalid_emojis)}")
-    print(f"Invalid emojis: {len(invalid_emojis)}")
+print("")
+print("Results")
+print("-------")
+print(f"Valid emojis: {total - len(invalid_emojis)}")
+print(f"Invalid emojis: {len(invalid_emojis)}")
 
-    for line_repr in invalid_emojis:
-        print(f"  {line_repr}")
+for line_repr in invalid_emojis:
+    print(f"  {line_repr}")
 
-    print(f"Took {time.perf_counter() - start} seconds")
+print(f"Took {time.perf_counter() - start} seconds")
 
-    if invalid_emojis or total == 0:
-        exit(1)
+if invalid_emojis or total == 0:
+    exit(1)

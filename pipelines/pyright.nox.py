@@ -45,7 +45,7 @@ def pyright(session: nox.Session) -> None:
     session.run("pyright")
 
 
-@nox.session()
+@nox.session(default_session=True)
 def verify_types(session: nox.Session) -> None:
     """Verify the "type completeness" of types exported by the library using Pyright."""
     session.install(".", *nox.dev_requirements("pyright"))

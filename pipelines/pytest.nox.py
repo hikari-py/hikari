@@ -44,7 +44,7 @@ COVERAGE_FLAGS = [
 ]
 
 
-@nox.session(reuse_venv=True)
+@nox.session(default_session=True)
 def pytest(session: nox.Session) -> None:
     """Run unit tests and measure code coverage.
 
@@ -53,7 +53,7 @@ def pytest(session: nox.Session) -> None:
     _pytest(session)
 
 
-@nox.session(reuse_venv=True)
+@nox.session()
 def pytest_all_features(session: nox.Session) -> None:
     """Run unit tests and measure code coverage, using speedup modules.
 
