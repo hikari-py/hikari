@@ -2,7 +2,7 @@
 mock==5.0.1
 
 pytest==7.2.2
-pytest-asyncio==0.20.3
+pytest-asyncio==0.21.0
 pytest-cov==4.0.0
 pytest-randomly==3.12.0
 
