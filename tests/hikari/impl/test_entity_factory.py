@@ -1456,7 +1456,17 @@ class TestEntityFactoryImpl:
             "account": {"id": "543453", "name": "Blam"},
         }
 
-    def test_deserialize_audit_log_entry(self, entity_factory_impl, audit_log_entry_payload, mock_app):
+    def test_deserialize_audit_log_entry(
+        self,
+        entity_factory_impl,
+        auto_mod_rule_payload,
+        audit_log_entry_payload,
+        application_webhook_payload,
+        incoming_webhook_payload,
+        follower_webhook_payload,
+        partial_integration_payload,
+        mock_app,
+    ):
         entry = entity_factory_impl.deserialize_audit_log_entry(
             audit_log_entry_payload, guild_id=snowflakes.Snowflake(123321)
         )
@@ -1488,23 +1498,24 @@ class TestEntityFactoryImpl:
         role.id == 123123123312312
         role.name == "aRole"
 
-        assert audit_log.auto_mod_rules == {
+        assert audit_log_models.auto_mod_rules == {
             94594949494: entity_factory_impl.deserialize_auto_mod_rule(auto_mod_rule_payload)
         }
-        assert audit_log.integrations == {
+        assert audit_log_models.integrations == {
             4949494949: entity_factory_impl.deserialize_partial_integration(partial_integration_payload)
         }
-        assert audit_log.threads == {
+        assert audit_log_models.threads == {
             947643783913308301: entity_factory_impl.deserialize_guild_public_thread(guild_public_thread_payload),
             947690637610844210: entity_factory_impl.deserialize_guild_private_thread(guild_private_thread_payload),
             946900871160164393: entity_factory_impl.deserialize_guild_news_thread(guild_news_thread_payload),
         }
-        assert audit_log.users == {115590097100865541: entity_factory_impl.deserialize_user(user_payload)}
-        assert audit_log.webhooks == {
+        assert audit_log_models.users == {115590097100865541: entity_factory_impl.deserialize_user(user_payload)}
+        assert audit_log_models.webhooks == {
             223704706495545344: entity_factory_impl.deserialize_incoming_webhook(incoming_webhook_payload),
             658822586720976555: entity_factory_impl.deserialize_application_webhook(application_webhook_payload),
             752831914402115456: entity_factory_impl.deserialize_channel_follower_webhook(follower_webhook_payload),
         }
+
     def test_deserialize_audit_log_entry_when_guild_id_in_payload(
         self, entity_factory_impl, audit_log_entry_payload, mock_app
     ):
