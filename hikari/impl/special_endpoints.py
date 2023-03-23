@@ -1442,10 +1442,13 @@ class _ButtonBuilder(special_endpoints.ButtonBuilder):
     _emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType] = attr.field(
         default=undefined.UNDEFINED
     )
-    _emoji_id: undefined.UndefinedOr[str] = attr.field(alias="emoji_id", default=undefined.UNDEFINED)
-    _emoji_name: undefined.UndefinedOr[str] = attr.field(alias="emoji_name", default=undefined.UNDEFINED)
+    _emoji_id: undefined.UndefinedOr[str] = attr.field(init=False, default=undefined.UNDEFINED)
+    _emoji_name: undefined.UndefinedOr[str] = attr.field(init=False, default=undefined.UNDEFINED)
     _label: undefined.UndefinedOr[str] = attr.field(alias="label", default=undefined.UNDEFINED)
     _is_disabled: bool = attr.field(alias="is_disabled", default=False)
+
+    def __attrs_post_init__(self) -> None:
+        self._emoji_id, self._emoji_name = _build_emoji(self._emoji)
 
     @property
     def type(self) -> typing.Literal[component_models.ComponentType.BUTTON]:
@@ -1541,9 +1544,12 @@ class _SelectOptionBuilder(special_endpoints.SelectOptionBuilder):
     _emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType] = attr.field(
         alias="emoji", default=undefined.UNDEFINED
     )
-    _emoji_id: undefined.UndefinedOr[str] = attr.field(alias="emoji_id", default=undefined.UNDEFINED)
-    _emoji_name: undefined.UndefinedOr[str] = attr.field(alias="emoji_name", default=undefined.UNDEFINED)
+    _emoji_id: undefined.UndefinedOr[str] = attr.field(init=False, default=undefined.UNDEFINED)
+    _emoji_name: undefined.UndefinedOr[str] = attr.field(init=False, default=undefined.UNDEFINED)
     _is_default: bool = attr.field(alias="is_default", default=False)
+
+    def __attrs_post_init__(self) -> None:
+        self._emoji_id, self._emoji_name = _build_emoji(self._emoji)
 
     @property
     def label(self) -> str:
