@@ -2029,6 +2029,7 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
         custom_id: str,
         /,
         *,
+        # TODO: accept options here as well?
         placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         min_values: int = 0,
         max_values: int = 1,

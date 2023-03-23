@@ -35,6 +35,7 @@ from hikari import messages
 from hikari import permissions
 from hikari import snowflakes
 from hikari import undefined
+from hikari.api import special_endpoints as special_endpoints_api
 from hikari.impl import special_endpoints
 from hikari.interactions import base_interactions
 from hikari.internal import routes
@@ -1203,13 +1204,10 @@ class Test_ButtonBuilder:
     @pytest.fixture()
     def button(self):
         return special_endpoints._ButtonBuilder(
-            container=mock.Mock(),
             style=components.ButtonStyle.DANGER,
             custom_id="sfdasdasd",
             url="hi there",
             emoji=543123,
-            emoji_id="56554456",
-            emoji_name="hi there",
             label="a lebel",
             is_disabled=True,
         )
@@ -1259,73 +1257,55 @@ class Test_ButtonBuilder:
 
     def test_build(self):
         result = special_endpoints._ButtonBuilder(
-            container=object(),
             style=components.ButtonStyle.DANGER,
-            url=undefined.UNDEFINED,
-            emoji_id=undefined.UNDEFINED,
-            emoji_name="emoji_name",
+            url="https://example.com",
             label="no u",
             custom_id="ooga booga",
+            emoji="emoji_name",
             is_disabled=True,
         ).build()
 
         assert result == {
             "type": components.ComponentType.BUTTON,
             "style": components.ButtonStyle.DANGER,
+            "url": "https://example.com",
             "emoji": {"name": "emoji_name"},
             "label": "no u",
             "custom_id": "ooga booga",
             "disabled": True,
         }
 
+    @pytest.mark.parametrize("emoji", [123321, emojis.CustomEmoji(id=123321, name="", is_animated=True)])
+    def test_build_with_custom_emoji(self, emoji: typing.Union[int, emojis.Emoji]):
+        result = special_endpoints._ButtonBuilder(
+            style=components.ButtonStyle.DANGER,
+            emoji=emoji,
+        ).build()
+
+        assert result == {
+            "type": components.ComponentType.BUTTON,
+            "style": components.ButtonStyle.DANGER,
+            "emoji": {"id": "123321"},
+            "disabled": False,
+        }
+
     def test_build_without_optional_fields(self):
         result = special_endpoints._ButtonBuilder(
-            container=object(),
             style=components.ButtonStyle.LINK,
-            url="OK",
-            emoji_id="123321",
-            emoji_name=undefined.UNDEFINED,
-            label=undefined.UNDEFINED,
-            custom_id=undefined.UNDEFINED,
-            is_disabled=False,
         ).build()
 
         assert result == {
             "type": components.ComponentType.BUTTON,
             "style": components.ButtonStyle.LINK,
-            "emoji": {"id": "123321"},
             "disabled": False,
-            "url": "OK",
         }
-
-    def test_add_to_container(self):
-        mock_container = mock.Mock()
-        button = special_endpoints._ButtonBuilder(
-            container=mock_container,
-            style=components.ButtonStyle.DANGER,
-            url=undefined.UNDEFINED,
-            emoji_id=undefined.UNDEFINED,
-            emoji_name="emoji_name",
-            label="no u",
-            custom_id="ooga booga",
-            is_disabled=True,
-        )
-
-        assert button.add_to_container() is mock_container
-
-        mock_container.add_component.assert_called_once_with(button)
 
 
 class TestLinkButtonBuilder:
     def test_url_property(self):
         button = special_endpoints.LinkButtonBuilder(
-            container=object(),
-            style=components.ButtonStyle.DANGER,
             url="hihihihi",
-            emoji_id=undefined.UNDEFINED,
-            emoji_name="emoji_name",
             label="no u",
-            custom_id="ooga booga",
             is_disabled=True,
         )
 
@@ -1335,11 +1315,7 @@ class TestLinkButtonBuilder:
 class TestInteractiveButtonBuilder:
     def test_custom_id_property(self):
         button = special_endpoints.InteractiveButtonBuilder(
-            container=object(),
             style=components.ButtonStyle.DANGER,
-            url="hihihihi",
-            emoji_id=undefined.UNDEFINED,
-            emoji_name="emoji_name",
             label="no u",
             custom_id="ooga booga",
             is_disabled=True,
@@ -1397,10 +1373,6 @@ class TestSelectOptionBuilder:
         assert option.set_is_default(True) is option
         assert option.is_default is True
 
-    def test_add_to_menu(self, option):
-        assert option.add_to_menu() is option._menu
-        option._menu.add_raw_option.assert_called_once_with(option)
-
     def test_build_with_custom_emoji(self, option):
         result = (
             special_endpoints.SelectOptionBuilder(label="ok", value="ok2")
@@ -1444,10 +1416,10 @@ class TestSelectOptionBuilder:
 class TestSelectMenuBuilder:
     @pytest.fixture()
     def menu(self):
-        return special_endpoints.SelectMenuBuilder(container=mock.Mock(), custom_id="o2o2o2", type=5)
+        return special_endpoints.SelectMenuBuilder(custom_id="o2o2o2", type=5)
 
     def test_type_property(self):
-        menu = special_endpoints.SelectMenuBuilder(container=mock.Mock(), type=123, custom_id="hihihi")
+        menu = special_endpoints.SelectMenuBuilder(type=123, custom_id="hihihi")
 
         assert menu.type == 123
 
@@ -1470,15 +1442,30 @@ class TestSelectMenuBuilder:
         assert menu.set_max_values(25) is menu
         assert menu.max_values == 25
 
-    def test_add_to_container(self, menu):
-        assert menu.add_to_container() is menu._container
-        menu._container.add_component.assert_called_once_with(menu)
-
     def test_build(self):
-        result = special_endpoints.SelectMenuBuilder(container=object(), custom_id="o2o2o2", type=5).build()
+        menu = special_endpoints.SelectMenuBuilder(
+            custom_id="45234fsdf",
+            type=components.ComponentType.USER_SELECT_MENU,
+            placeholder="meep",
+            min_values=5,
+            max_values=23,
+            is_disabled=True,
+        )
 
-        assert result == {
-            "type": 5,
+        assert menu.build() == {
+            "type": components.ComponentType.USER_SELECT_MENU,
+            "custom_id": "45234fsdf",
+            "placeholder": "meep",
+            "disabled": True,
+            "min_values": 5,
+            "max_values": 23,
+        }
+
+    def test_build_without_optional_fields(self):
+        menu = special_endpoints.SelectMenuBuilder(custom_id="o2o2o2", type=components.ComponentType.ROLE_SELECT_MENU)
+
+        assert menu.build() == {
+            "type": components.ComponentType.ROLE_SELECT_MENU,
             "custom_id": "o2o2o2",
             "disabled": False,
             "min_values": 0,
@@ -1489,67 +1476,98 @@ class TestSelectMenuBuilder:
 class TestTextSelectMenuBuilder:
     @pytest.fixture()
     def menu(self):
-        return special_endpoints.TextSelectMenuBuilder(container=mock.Mock(), custom_id="o2o2o2")
+        return special_endpoints.TextSelectMenuBuilder(custom_id="o2o2o2")
 
-    def test_type_property(self, menu: special_endpoints.TextSelectMenuBuilder[typing.Any]):
+    def test_parent_property(self):
+        mock_parent = object()
+        menu = special_endpoints.TextSelectMenuBuilder(custom_id="o2o2o2", parent=mock_parent)
+
+        assert menu.parent is mock_parent
+
+    def test_parent_property_when_none(self):
+        menu = special_endpoints.TextSelectMenuBuilder(custom_id="o2o2o2")
+
+        with pytest.raises(RuntimeError, match="This menu has no parent"):
+            menu.parent
+
+    def test_type_property(self, menu: special_endpoints.TextSelectMenuBuilder[typing.NoReturn]):
         assert menu.type is components.ComponentType.TEXT_SELECT_MENU
 
-    def test_add_add_option(self, menu):
-        option = menu.add_option("ok", "no u")
-        option.add_to_menu()
-        assert menu.options == [option]
+    def test_add_option(self, menu: special_endpoints.TextSelectMenuBuilder[typing.NoReturn]):
+        menu.add_option("ok", "no u", description="meow", emoji="e", is_default=True)
+
+        assert len(menu.options) == 1
+        option = menu.options[0]
+        assert option.label == "ok"
+        assert option.value == "no u"
+        assert option.description == "meow"
+        assert option.emoji == "e"
+        assert option.is_default is True
 
     def test_add_raw_option(self, menu):
         mock_option = object()
+
         menu.add_raw_option(mock_option)
+
         assert menu.options == [mock_option]
 
     def test_build(self):
-        result = (
-            special_endpoints.TextSelectMenuBuilder(container=object(), custom_id="o2o2o2")
-            .set_placeholder("hi")
-            .set_min_values(22)
-            .set_max_values(53)
-            .set_is_disabled(True)
-            .build()
+        menu = special_endpoints.TextSelectMenuBuilder(
+            custom_id="o2o2o2",
+            placeholder="hi",
+            min_values=22,
+            max_values=53,
+            is_disabled=True,
+            options=[special_endpoints.SelectOptionBuilder("meow", "vault")],
         )
 
-        assert result == {
-            "type": 3,
+        assert menu.build() == {
+            "type": components.ComponentType.TEXT_SELECT_MENU,
             "custom_id": "o2o2o2",
             "placeholder": "hi",
             "min_values": 22,
             "max_values": 53,
             "disabled": True,
+            "options": [{"label": "meow", "value": "vault", "default": False}],
+        }
+
+    def test_build_without_optional_fields(self):
+        menu = special_endpoints.TextSelectMenuBuilder(custom_id="fds  qw")
+
+        assert menu.build() == {
+            "type": components.ComponentType.TEXT_SELECT_MENU,
+            "custom_id": "fds  qw",
+            "min_values": 0,
+            "max_values": 1,
+            "disabled": False,
             "options": [],
         }
 
 
 class TestChannelSelectMenuBuilder:
     def test_type_property(self):
-        menu = special_endpoints.ChannelSelectMenuBuilder(container=mock.Mock(), custom_id="id")
+        menu = special_endpoints.ChannelSelectMenuBuilder(custom_id="id")
         assert menu.type is components.ComponentType.CHANNEL_SELECT_MENU
 
     def test_set_channel_types(self):
-        menu = special_endpoints.ChannelSelectMenuBuilder(container=mock.Mock(), custom_id="hi")
+        menu = special_endpoints.ChannelSelectMenuBuilder(custom_id="hi")
 
         menu.set_channel_types([channels.ChannelType.DM, channels.ChannelType.GUILD_FORUM])
 
         assert menu.channel_types == [channels.ChannelType.DM, channels.ChannelType.GUILD_FORUM]
 
     def test_build(self):
-        result = (
-            special_endpoints.ChannelSelectMenuBuilder(container=object(), custom_id="o2o2o2")
-            .set_placeholder("hi")
-            .set_min_values(22)
-            .set_max_values(53)
-            .set_is_disabled(True)
-            .set_channel_types([channels.ChannelType.GUILD_CATEGORY])
-            .build()
+        menu = special_endpoints.ChannelSelectMenuBuilder(
+            custom_id="o2o2o2",
+            placeholder="hi",
+            min_values=22,
+            max_values=53,
+            is_disabled=True,
+            channel_types=[channels.ChannelType.GUILD_CATEGORY],
         )
 
-        assert result == {
-            "type": 8,
+        assert menu.build() == {
+            "type": components.ComponentType.CHANNEL_SELECT_MENU,
             "custom_id": "o2o2o2",
             "placeholder": "hi",
             "min_values": 22,
@@ -1558,12 +1576,23 @@ class TestChannelSelectMenuBuilder:
             "channel_types": [channels.ChannelType.GUILD_CATEGORY],
         }
 
+    def test_build_without_optional_fields(self):
+        menu = special_endpoints.ChannelSelectMenuBuilder(custom_id="42312312")
+
+        assert menu.build() == {
+            "type": components.ComponentType.CHANNEL_SELECT_MENU,
+            "custom_id": "42312312",
+            "min_values": 0,
+            "max_values": 1,
+            "disabled": False,
+            "channel_types": [],
+        }
+
 
 class TestTextInput:
     @pytest.fixture()
     def text_input(self):
         return special_endpoints.TextInputBuilder(
-            container=mock.Mock(),
             custom_id="o2o2o2",
             label="label",
         )
@@ -1603,40 +1632,31 @@ class TestTextInput:
         assert text_input.set_max_length(250) is text_input
         assert text_input.max_length == 250
 
-    def test_add_to_container(self, text_input):
-        assert text_input.add_to_container() is text_input._container
-        text_input._container.add_component.assert_called_once_with(text_input)
+    def test_build_partial(self):
+        text_input = special_endpoints.TextInputBuilder(custom_id="o2o2o2", label="label")
 
-    def test_build(self):
-        result = special_endpoints.TextInputBuilder(
-            container=object(),
-            custom_id="o2o2o2",
-            label="label",
-        ).build()
-
-        assert result == {
+        assert text_input.build() == {
             "type": components.ComponentType.TEXT_INPUT,
             "style": 1,
             "custom_id": "o2o2o2",
             "label": "label",
+            "required": True,
+            "min_length": 0,
+            "max_length": 4000,
         }
 
-    def test_build_partial(self):
-        result = (
-            special_endpoints.TextInputBuilder(
-                container=object(),
-                custom_id="o2o2o2",
-                label="label",
-            )
-            .set_placeholder("placeholder")
-            .set_value("value")
-            .set_required(False)
-            .set_min_length(10)
-            .set_max_length(250)
-            .build()
+    def test_build(self):
+        text_input = special_endpoints.TextInputBuilder(
+            custom_id="o2o2o2",
+            label="label",
+            placeholder="placeholder",
+            value="value",
+            required=False,
+            min_length=10,
+            max_length=250,
         )
 
-        assert result == {
+        assert text_input.build() == {
             "type": components.ComponentType.TEXT_INPUT,
             "style": 1,
             "custom_id": "o2o2o2",
@@ -1656,40 +1676,99 @@ class TestMessageActionRowBuilder:
         assert row.type is components.ComponentType.ACTION_ROW
 
     def test_components_property(self):
-        mock_component = object()
+        mock_component = mock.Mock()
         row = special_endpoints.MessageActionRowBuilder().add_component(mock_component)
         assert row.components == [mock_component]
 
-    def test_add_button_for_interactive(self):
+    def test_add_interactive_button(self):
         row = special_endpoints.MessageActionRowBuilder()
-        button = row.add_button(components.ButtonStyle.DANGER, "go home")
 
-        button.add_to_container()
+        row.add_interactive_button(
+            components.ButtonStyle.DANGER, "go home", emoji="emoji", label="libal", is_disabled=True
+        )
 
-        assert row.components == [button]
+        assert len(row.components) == 1
+        button = row.components[0]
+        assert isinstance(button, special_endpoints_api.InteractiveButtonBuilder)
+        assert button.type is components.ComponentType.BUTTON
+        assert button.style is components.ButtonStyle.DANGER
+        assert button.emoji == "emoji"
+        assert button.custom_id == "go home"
+        assert button.label == "libal"
+        assert button.is_disabled is True
 
-    def test_add_button_for_link(self):
+    def test_add_link_button(self):
         row = special_endpoints.MessageActionRowBuilder()
-        button = row.add_button(components.ButtonStyle.LINK, "go home")
 
-        button.add_to_container()
+        row.add_link_button("https://example.com", emoji="e", label="American made", is_disabled=True)
 
-        assert row.components == [button]
+        assert len(row.components) == 1
+        button = row.components[0]
+        assert isinstance(button, special_endpoints.LinkButtonBuilder)
+        assert button.type is components.ComponentType.BUTTON
+        assert button.style is components.ButtonStyle.LINK
+        assert button.emoji == "e"
+        assert button.url == "https://example.com"
+        assert button.label == "American made"
+        assert button.is_disabled is True
 
     def test_add_select_menu(self):
         row = special_endpoints.MessageActionRowBuilder()
-        menu = row.add_select_menu(components.ComponentType.TEXT_SELECT_MENU, "hihihi")
 
-        menu.add_to_container()
+        row.add_select_menu(
+            components.ComponentType.ROLE_SELECT_MENU,
+            "two trucks",
+            placeholder="holding hands",
+            min_values=6,
+            max_values=9,
+            is_disabled=True,
+        )
 
-        assert row.components == [menu]
+        assert len(row.components) == 1
+        component = row.components[0]
+        assert isinstance(component, special_endpoints_api.SelectMenuBuilder)
+
+    def test_add_channel_menu(self):
+        row = special_endpoints.MessageActionRowBuilder()
+
+        row.add_channel_menu(
+            "flex",
+            channel_types=[channels.ChannelType.GROUP_DM],
+            placeholder="The pasion",
+            min_values=4,
+            max_values=9,
+            is_disabled=True,
+        )
+
+        assert len(row.components) == 1
+        component = row.components[0]
+        assert isinstance(component, special_endpoints_api.SelectMenuBuilder)
+
+    def test_add_text_menu(self):
+        row = special_endpoints.MessageActionRowBuilder()
+
+        (
+            row.add_text_menu(
+                "Two pickup trucks", placeholder="American made", min_values=5, max_values=6, is_disabled=True
+            )
+        )
+
+        assert len(row.components) == 1
+        component = row.components[0]
+        assert isinstance(component, special_endpoints_api.SelectMenuBuilder)
+        assert component.custom_id == "Two pickup trucks"
+        assert component.placeholder == "American made"
+        assert component.min_values == 5
+        assert component.max_values == 6
+        assert component.is_disabled is True
 
     def test_build(self):
-        mock_component_1 = mock.Mock()
-        mock_component_2 = mock.Mock()
+        mock_component_1 = mock.Mock(type=components.ComponentType.BUTTON)
+        mock_component_2 = mock.Mock(type=components.ComponentType.BUTTON)
 
-        row = special_endpoints.MessageActionRowBuilder()
-        row._components = [mock_component_1, mock_component_2]
+        row = (
+            special_endpoints.MessageActionRowBuilder().add_component(mock_component_1).add_component(mock_component_2)
+        )
 
         result = row.build()
 
@@ -1709,8 +1788,40 @@ class TestModalActionRow:
 
     def test_add_text_input(self):
         row = special_endpoints.ModalActionRowBuilder()
-        menu = row.add_text_input("hihihi", "label")
+        menu = row.add_text_input(
+            "hihihi",
+            "lalbell",
+            style=components.TextInputStyle.PARAGRAPH,
+            placeholder="meep",
+            value="beep",
+            required=False,
+            min_length=444,
+            max_length=447,
+        )
 
-        menu.add_to_container()
+        assert len(row.components) == 1
+        menu = row.components[0]
+        assert isinstance(menu, special_endpoints_api.TextInputBuilder)
+        assert menu.custom_id == "hihihi"
+        assert menu.label == "lalbell"
+        assert menu.style is components.TextInputStyle.PARAGRAPH
+        assert menu.placeholder == "meep"
+        assert menu.value == "beep"
+        assert menu.is_required is False
+        assert menu.min_length == 444
+        assert menu.max_length == 447
 
-        assert row.components == [menu]
+    def test_build(self):
+        mock_component_1 = mock.Mock(type=components.ComponentType.TEXT_INPUT)
+        mock_component_2 = mock.Mock(type=components.ComponentType.TEXT_INPUT)
+
+        row = special_endpoints.ModalActionRowBuilder().add_component(mock_component_1).add_component(mock_component_2)
+
+        result = row.build()
+
+        assert result == {
+            "type": components.ComponentType.ACTION_ROW,
+            "components": [mock_component_1.build.return_value, mock_component_2.build.return_value],
+        }
+        mock_component_1.build.assert_called_once_with()
+        mock_component_2.build.assert_called_once_with()

@@ -66,6 +66,7 @@ from hikari.api import special_endpoints
 from hikari.interactions import base_interactions
 from hikari.internal import attr_extensions
 from hikari.internal import data_binding
+from hikari.internal import deprecation
 from hikari.internal import mentions
 from hikari.internal import routes
 from hikari.internal import time
@@ -1440,7 +1441,7 @@ class _ButtonBuilder(special_endpoints.ButtonBuilder):
     _custom_id: undefined.UndefinedOr[str] = attr.field(alias="custom_id", default=undefined.UNDEFINED)
     _url: undefined.UndefinedOr[str] = attr.field(alias="url", default=undefined.UNDEFINED)
     _emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType] = attr.field(
-        default=undefined.UNDEFINED
+        alias="emoji", default=undefined.UNDEFINED
     )
     _emoji_id: undefined.UndefinedOr[str] = attr.field(init=False, default=undefined.UNDEFINED)
     _emoji_name: undefined.UndefinedOr[str] = attr.field(init=False, default=undefined.UNDEFINED)
@@ -1757,9 +1758,7 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
         is_default: bool = False,
     ) -> Self:
         return self.add_raw_option(
-            SelectOptionBuilder(label=label, value=value, description=description, is_default=is_default).set_emoji(
-                emoji
-            )
+            SelectOptionBuilder(label=label, value=value, description=description, emoji=emoji, is_default=is_default)
         )
 
     def add_raw_option(self, option: special_endpoints.SelectOptionBuilder, /) -> Self:
@@ -1840,7 +1839,15 @@ class TextInputBuilder(special_endpoints.TextInputBuilder):
         return self._value
 
     @property
+    #  @deprecation.deprecated("Use .is_required")
     def required(self) -> bool:
+        deprecation.warn_deprecated(
+            ".required", removal_version="2.0.0.dev119", additional_info="Use .is_required", quote=False
+        )
+        return self._required
+
+    @property
+    def is_required(self) -> bool:
         return self._required
 
     @property
@@ -1938,8 +1945,8 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
         is_disabled: bool = False,
     ) -> Self:
         return self.add_component(
-            InteractiveButtonBuilder(style=style, custom_id=custom_id, label=label, is_disabled=is_disabled).set_emoji(
-                emoji
+            InteractiveButtonBuilder(
+                style=style, custom_id=custom_id, emoji=emoji, label=label, is_disabled=is_disabled
             )
         )
 
@@ -1952,7 +1959,7 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
         label: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         is_disabled: bool = False,
     ) -> Self:
-        return self.add_component(LinkButtonBuilder(url=url, label=label, is_disabled=is_disabled).set_emoji(emoji))
+        return self.add_component(LinkButtonBuilder(url=url, label=label, emoji=emoji, is_disabled=is_disabled))
 
     def add_select_menu(
         self,
