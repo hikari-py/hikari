@@ -1691,7 +1691,13 @@ class TextInputBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    #  @deprecation.deprecated("Use .is_required")
     def required(self) -> bool:
+        """Deprecated alias for `hikari.api.special_endpoints.TextInputBuilder`."""
+
+    @property
+    @abc.abstractmethod
+    def is_required(self) -> bool:
         """Whether this text input is required to be filled-in."""
 
     @property
