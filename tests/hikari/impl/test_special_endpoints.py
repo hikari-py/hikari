@@ -1348,10 +1348,10 @@ class TestInteractiveButtonBuilder:
         assert button.custom_id == "ooga booga"
 
 
-class Test_SelectOptionBuilder:
+class TestSelectOptionBuilder:
     @pytest.fixture()
     def option(self):
-        return special_endpoints._SelectOptionBuilder(menu=mock.Mock(), label="ok", value="ok2")
+        return special_endpoints.SelectOptionBuilder(label="ok", value="ok2")
 
     def test_label_property(self, option):
         assert option.label == "ok"
@@ -1403,7 +1403,7 @@ class Test_SelectOptionBuilder:
 
     def test_build_with_custom_emoji(self, option):
         result = (
-            special_endpoints._SelectOptionBuilder(label="ok", value="ok2", menu=object())
+            special_endpoints.SelectOptionBuilder(label="ok", value="ok2")
             .set_is_default(True)
             .set_emoji(123312)
             .set_description("very")
@@ -1420,7 +1420,7 @@ class Test_SelectOptionBuilder:
 
     def test_build_with_unicode_emoji(self, option):
         result = (
-            special_endpoints._SelectOptionBuilder(label="ok", value="ok2", menu=object())
+            special_endpoints.SelectOptionBuilder(label="ok", value="ok2")
             .set_is_default(True)
             .set_emoji("hi")
             .set_description("very")
@@ -1436,7 +1436,7 @@ class Test_SelectOptionBuilder:
         }
 
     def test_build_partial(self, option):
-        result = special_endpoints._SelectOptionBuilder(label="ok", value="ok2", menu=object()).build()
+        result = special_endpoints.SelectOptionBuilder(label="ok", value="ok2").build()
 
         assert result == {"label": "ok", "value": "ok2", "default": False}
 

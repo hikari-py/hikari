@@ -1534,19 +1534,21 @@ class InteractiveButtonBuilder(_ButtonBuilder, special_endpoints.InteractiveButt
 
 
 @attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
-class _SelectOptionBuilder(special_endpoints.SelectOptionBuilder):
+@attr.define(weakref_slot=False)
+class SelectOptionBuilder(special_endpoints.SelectOptionBuilder):
     """Builder class for select menu options."""
 
     _label: str = attr.field(alias="label")
     _value: str = attr.field(alias="value")
-    _description: undefined.UndefinedOr[str] = attr.field(alias="description", default=undefined.UNDEFINED)
+    _description: undefined.UndefinedOr[str] = attr.field(
+        alias="description", default=undefined.UNDEFINED, kw_only=True
+    )
     _emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType] = attr.field(
-        alias="emoji", default=undefined.UNDEFINED
+        alias="emoji", default=undefined.UNDEFINED, kw_only=True
     )
     _emoji_id: undefined.UndefinedOr[str] = attr.field(init=False, default=undefined.UNDEFINED)
     _emoji_name: undefined.UndefinedOr[str] = attr.field(init=False, default=undefined.UNDEFINED)
-    _is_default: bool = attr.field(alias="is_default", default=False)
+    _is_default: bool = attr.field(alias="is_default", default=False, kw_only=True)
 
     def __attrs_post_init__(self) -> None:
         self._emoji_id, self._emoji_name = _build_emoji(self._emoji)
@@ -1755,7 +1757,7 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
         is_default: bool = False,
     ) -> Self:
         return self.add_raw_option(
-            _SelectOptionBuilder(label=label, value=value, description=description, is_default=is_default).set_emoji(
+            SelectOptionBuilder(label=label, value=value, description=description, is_default=is_default).set_emoji(
                 emoji
             )
         )
