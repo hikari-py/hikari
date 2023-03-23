@@ -1256,16 +1256,16 @@ class Test_ButtonBuilder:
         assert button.is_disabled is False
 
     def test_build(self):
-        result = special_endpoints._ButtonBuilder(
+        button = special_endpoints._ButtonBuilder(
             style=components.ButtonStyle.DANGER,
             url="https://example.com",
             label="no u",
             custom_id="ooga booga",
             emoji="emoji_name",
             is_disabled=True,
-        ).build()
+        )
 
-        assert result == {
+        assert button.build() == {
             "type": components.ComponentType.BUTTON,
             "style": components.ButtonStyle.DANGER,
             "url": "https://example.com",
@@ -1277,12 +1277,9 @@ class Test_ButtonBuilder:
 
     @pytest.mark.parametrize("emoji", [123321, emojis.CustomEmoji(id=123321, name="", is_animated=True)])
     def test_build_with_custom_emoji(self, emoji: typing.Union[int, emojis.Emoji]):
-        result = special_endpoints._ButtonBuilder(
-            style=components.ButtonStyle.DANGER,
-            emoji=emoji,
-        ).build()
+        button = special_endpoints._ButtonBuilder(style=components.ButtonStyle.DANGER, emoji=emoji)
 
-        assert result == {
+        assert button.build() == {
             "type": components.ComponentType.BUTTON,
             "style": components.ButtonStyle.DANGER,
             "emoji": {"id": "123321"},
@@ -1290,11 +1287,9 @@ class Test_ButtonBuilder:
         }
 
     def test_build_without_optional_fields(self):
-        result = special_endpoints._ButtonBuilder(
-            style=components.ButtonStyle.LINK,
-        ).build()
+        button = special_endpoints._ButtonBuilder(style=components.ButtonStyle.LINK)
 
-        assert result == {
+        assert button.build() == {
             "type": components.ComponentType.BUTTON,
             "style": components.ButtonStyle.LINK,
             "disabled": False,
@@ -1373,16 +1368,12 @@ class TestSelectOptionBuilder:
         assert option.set_is_default(True) is option
         assert option.is_default is True
 
-    def test_build_with_custom_emoji(self, option):
-        result = (
-            special_endpoints.SelectOptionBuilder(label="ok", value="ok2")
-            .set_is_default(True)
-            .set_emoji(123312)
-            .set_description("very")
-            .build()
+    def test_build_with_custom_emoji(self):
+        option = special_endpoints.SelectOptionBuilder(
+            label="ok", value="ok2", is_default=True, emoji=123312, description="very"
         )
 
-        assert result == {
+        assert option.build() == {
             "label": "ok",
             "value": "ok2",
             "default": True,
@@ -1390,16 +1381,12 @@ class TestSelectOptionBuilder:
             "description": "very",
         }
 
-    def test_build_with_unicode_emoji(self, option):
-        result = (
-            special_endpoints.SelectOptionBuilder(label="ok", value="ok2")
-            .set_is_default(True)
-            .set_emoji("hi")
-            .set_description("very")
-            .build()
+    def test_build_with_unicode_emoji(self):
+        option = special_endpoints.SelectOptionBuilder(
+            label="ok", value="ok2", is_default=True, emoji="hi", description="very"
         )
 
-        assert result == {
+        assert option.build() == {
             "label": "ok",
             "value": "ok2",
             "default": True,
@@ -1407,10 +1394,10 @@ class TestSelectOptionBuilder:
             "description": "very",
         }
 
-    def test_build_partial(self, option):
-        result = special_endpoints.SelectOptionBuilder(label="ok", value="ok2").build()
+    def test_build_partial(self):
+        option = special_endpoints.SelectOptionBuilder(label="ok", value="ok2")
 
-        assert result == {"label": "ok", "value": "ok2", "default": False}
+        assert option.build() == {"label": "ok", "value": "ok2", "default": False}
 
 
 class TestSelectMenuBuilder:
@@ -1747,10 +1734,8 @@ class TestMessageActionRowBuilder:
     def test_add_text_menu(self):
         row = special_endpoints.MessageActionRowBuilder()
 
-        (
-            row.add_text_menu(
-                "Two pickup trucks", placeholder="American made", min_values=5, max_values=6, is_disabled=True
-            )
+        row.add_text_menu(
+            "Two pickup trucks", placeholder="American made", min_values=5, max_values=6, is_disabled=True
         )
 
         assert len(row.components) == 1
@@ -1770,9 +1755,7 @@ class TestMessageActionRowBuilder:
             special_endpoints.MessageActionRowBuilder().add_component(mock_component_1).add_component(mock_component_2)
         )
 
-        result = row.build()
-
-        assert result == {
+        assert row.build() == {
             "type": components.ComponentType.ACTION_ROW,
             "components": [mock_component_1.build.return_value, mock_component_2.build.return_value],
         }
