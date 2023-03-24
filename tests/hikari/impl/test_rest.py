@@ -292,6 +292,199 @@ class TestClientCredentialsStrategy:
         assert strategy._expire_at == 0.0
         assert strategy._token is None
 
+#############################
+# OAuthCredentialsStrategy #
+#############################
+
+
+class TestOAuthCredentialsStrategy:
+    @pytest.fixture()
+    def mock_token(self):
+        return mock.Mock(
+            applications.PartialOAuth2Token,
+            expires_in=datetime.timedelta(weeks=1),
+            token_type=applications.TokenType.BEARER,
+            access_token="mockmock.tokentoken.mocktoken",
+            refresh_token="refresh.mock.token"
+        )
+
+    def test_client_id_property(self):
+        mock_client = hikari_test_helpers.mock_class_namespace(applications.Application, id=41551, init_=False)()
+        strategy = rest.OAuthCredentialsStrategy(client=mock_client, client_secret="123123123", auth_code="auth#code", redirect_uri="https://web.site/auth/discord")
+
+        assert strategy.client_id == 41551
+
+    def test_scopes_property(self):
+        token = rest.OAuthCredentialsStrategy(client=987654321, client_secret="123123123", auth_code="auth#code", redirect_uri="https://web.site/auth/discord", scopes=("identify",))
+
+        assert token.scopes == ("identify",)
+
+    def test_token_type_property(self):
+        token = rest.OAuthCredentialsStrategy(client=987654321, client_secret="123123123", auth_code="auth#code", redirect_uri="https://web.site/auth/discord")
+        assert token.token_type is applications.TokenType.BEARER
+
+    @pytest.mark.asyncio()
+    async def test_acquire_on_new_instance(self, mock_token):
+        mock_rest = mock.AsyncMock(authorize_access_token=mock.AsyncMock(return_value=mock_token))
+
+        result = await rest.OAuthCredentialsStrategy(client=987654321, client_secret="123123123", auth_code="auth#code", redirect_uri="https://web.site/auth/discord", scopes=("identify",)).acquire(mock_rest)
+
+        assert result == "mockmock.tokentoken.mocktoken"
+
+        mock_rest.authorize_access_token.assert_awaited_once_with(
+            client=987654321,
+            client_secret="123123123",
+            code="auth#code",
+            redirect_uri="https://web.site/auth/discord",
+        )
+
+    @pytest.mark.asyncio()
+    async def test_acquire_handles_out_of_date_token(self, mock_token):
+        mock_old_token = mock.AsyncMock(
+            applications.PartialOAuth2Token,
+            expires_in=datetime.timedelta(weeks=1),
+            token_type=applications.TokenType.BEARER,
+            access_token="old.mock.token",
+            refresh_token="refresh.mock.token"
+        )
+        mock_rest = mock.AsyncMock(refresh_access_token=mock.AsyncMock(return_value=mock_token))
+        strategy = rest.OAuthCredentialsStrategy(client=123456789, client_secret="123123123", auth_code="auth#code", redirect_uri="https://web.site/auth/discord")
+        token = await strategy.acquire(
+            mock.AsyncMock(authorize_access_token=mock.AsyncMock(return_value=mock_old_token))
+        )
+
+        with mock.patch.object(time, "monotonic", return_value=99999999999):
+            new_token = await strategy.acquire(mock_rest)
+
+        mock_rest.refresh_access_token.assert_awaited_once_with(
+            client=123456789, client_secret="123123123", refresh_token="refresh.mock.token"
+        )
+        assert new_token != token
+        assert new_token == "mockmock.tokentoken.mocktoken"
+
+    @pytest.mark.asyncio()
+    async def test_acquire_handles_token_being_set_before_lock_is_acquired(self, mock_token):
+        lock = asyncio.Lock()
+        mock_rest = mock.AsyncMock(authorize_access_token=mock.AsyncMock(side_effect=[mock_token]))
+
+        with mock.patch.object(asyncio, "Lock", return_value=lock):
+            strategy = rest.OAuthCredentialsStrategy(client=123456789, client_secret="123123123", auth_code="auth#code", redirect_uri="https://web.site/auth/discord")
+
+        async with lock:
+            tokens_gather = asyncio.gather(
+                strategy.acquire(mock_rest), strategy.acquire(mock_rest), strategy.acquire(mock_rest)
+            )
+
+        results = await tokens_gather
+
+        mock_rest.authorize_access_token.assert_awaited_once_with(
+            client=123456789,
+            client_secret="123123123",
+            code="auth#code",
+            redirect_uri="https://web.site/auth/discord",
+        )
+        assert results == [
+            "mockmock.tokentoken.mocktoken",
+            "mockmock.tokentoken.mocktoken",
+            "mockmock.tokentoken.mocktoken",
+        ]
+
+    @pytest.mark.asyncio()
+    async def test_acquire_after_invalidation(self, mock_token):
+        mock_old_token = mock.AsyncMock(
+            applications.PartialOAuth2Token,
+            expires_in=datetime.timedelta(weeks=1),
+            token_type=applications.TokenType.BEARER,
+            access_token="okokok.fofdsasdasdofo.ddd",
+            refresh_token="refresh.mock.token"
+        )
+        mock_rest = mock.Mock(authorize_access_token=mock.AsyncMock(return_value=mock_token))
+        strategy = rest.OAuthCredentialsStrategy(client=123456789, client_secret="123123123", auth_code="auth#code", redirect_uri="https://web.site/auth/discord", scopes=("identify",))
+        token = await strategy.acquire(
+            mock.AsyncMock(authorize_access_token=mock.AsyncMock(return_value=mock_old_token))
+        )
+
+        strategy.invalidate(token)
+        with pytest.raises(RuntimeError):
+            await strategy.acquire(mock_rest)
+
+    @pytest.mark.asyncio()
+    async def test_acquire_uses_newly_cached_token_after_acquiring_lock(self):
+        class MockLock:
+            def __init__(self, strat):
+                self._strategy = strat
+
+            async def __aenter__(self):
+                self._strategy._token = "cab.cab.cab"
+                return self
+
+            async def __aexit__(self, exc_type, exc_val, exc_tb):
+                return
+
+        mock_rest = mock.AsyncMock()
+        strategy = rest.OAuthCredentialsStrategy(client=123456789, client_secret="123123123", auth_code="auth#code", redirect_uri="https://web.site/auth/discord")
+        strategy._lock = MockLock(strategy)
+        strategy._token = None
+        strategy._expire_at = time.monotonic() + 500
+
+        result = await strategy.acquire(mock_rest)
+
+        assert result == "cab.cab.cab"
+
+        mock_rest.authorize_access_token.assert_not_called()
+
+    @pytest.mark.asyncio()
+    async def test_acquire_caches_client_http_response_error(self):
+        mock_rest = mock.AsyncMock()
+        error = errors.ClientHTTPResponseError(
+            url="okokok", status=42, headers={}, raw_body=b"ok", message="OK", code=34123
+        )
+        mock_rest.authorize_access_token.side_effect = error
+        strategy = rest.OAuthCredentialsStrategy(client=123456789, client_secret="123123123", auth_code="auth#code", redirect_uri="https://web.site/auth/discord")
+
+        with pytest.raises(errors.ClientHTTPResponseError):
+            await strategy.acquire(mock_rest)
+
+        with pytest.raises(errors.ClientHTTPResponseError):
+            await strategy.acquire(mock_rest)
+
+        mock_rest.authorize_access_token.assert_awaited_once_with(
+                        client=123456789,
+                        client_secret="123123123",
+                        code="auth#code",
+                        redirect_uri="https://web.site/auth/discord",
+                    )
+
+    def test_invalidate_when_token_is_not_stored_token(self):
+        strategy = rest.OAuthCredentialsStrategy(client=123456789, client_secret="123123123", auth_code="auth#code", redirect_uri="https://web.site/auth/discord")
+        strategy._expire_at = 10.0
+        strategy._token = "token"
+
+        strategy.invalidate("tokena")
+
+        assert strategy._expire_at == 10.0
+        assert strategy._token == "token"
+
+    def test_invalidate_when_no_token_specified(self):
+        strategy = rest.OAuthCredentialsStrategy(client=123456789, client_secret="123123123", auth_code="auth#code", redirect_uri="https://web.site/auth/discord")
+        strategy._expire_at = 10.0
+        strategy._token = "token"
+
+        strategy.invalidate(None)
+
+        assert strategy._expire_at == 0.0
+        assert strategy._token is None
+
+    def test_invalidate_when_token_is_stored_token(self):
+        strategy = rest.OAuthCredentialsStrategy(client=123456789, client_secret="123123123", auth_code="auth#code", redirect_uri="https://web.site/auth/discord")
+        strategy._expire_at = 10.0
+        strategy._token = "token"
+
+        strategy.invalidate("token")
+
+        assert strategy._expire_at == 0.0
+        assert strategy._token is None
+
 
 ###########
 # RESTApp #
