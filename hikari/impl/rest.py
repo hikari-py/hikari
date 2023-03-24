@@ -264,8 +264,8 @@ class OAuthCredentialsStrategy(rest_api.TokenStrategy):
         self._lock = asyncio.Lock()
         self._scopes = scopes
         self._token: typing.Optional[str] = None
-        self._refresh_token = None
-        self._auth_code = auth_code
+        self._refresh_token: str = ""
+        self._auth_code: typing.Optional[str] = auth_code
         self._redirect_uri = redirect_uri
 
     @property
@@ -321,15 +321,15 @@ class OAuthCredentialsStrategy(rest_api.TokenStrategy):
 
             # Expires in is lowered a bit in-order to lower the chance of a dead token being used.
             self._expire_at = time.monotonic() + math.floor(response.expires_in.total_seconds() * 0.99)
-            self._token = str(response.access_token)
-            self._refresh_token = response.refresh_token
+            self._token = response.access_token
+            self._refresh_token = str(response.refresh_token)
             return self._token
 
     def invalidate(self, token: typing.Optional[str] = None) -> None:
         if not token or token == self._token:
             self._expire_at = 0.0
             self._token = None
-            self._refresh_token = None
+            self._refresh_token = ""
             self._auth_code = None
 
 
