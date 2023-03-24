@@ -306,7 +306,7 @@ class TestOAuthCredentialsStrategy:
             expires_in=datetime.timedelta(weeks=1),
             token_type=applications.TokenType.BEARER,
             access_token="mockmock.tokentoken.mocktoken",
-            refresh_token="refresh.mock.token",
+            refresh_token=7654,
         )
 
     def test_client_id_property(self):
@@ -368,7 +368,7 @@ class TestOAuthCredentialsStrategy:
             expires_in=datetime.timedelta(weeks=1),
             token_type=applications.TokenType.BEARER,
             access_token="old.mock.token",
-            refresh_token="refresh.mock.token",
+            refresh_token=7654,
         )
         mock_rest = mock.AsyncMock(refresh_access_token=mock.AsyncMock(return_value=mock_token))
         strategy = rest.OAuthCredentialsStrategy(
@@ -385,7 +385,7 @@ class TestOAuthCredentialsStrategy:
             new_token = await strategy.acquire(mock_rest)
 
         mock_rest.refresh_access_token.assert_awaited_once_with(
-            client=123456789, client_secret="123123123", refresh_token="refresh.mock.token"
+            client=123456789, client_secret="123123123", refresh_token=7654
         )
         assert new_token != token
         assert new_token == "mockmock.tokentoken.mocktoken"
@@ -429,7 +429,7 @@ class TestOAuthCredentialsStrategy:
             expires_in=datetime.timedelta(weeks=1),
             token_type=applications.TokenType.BEARER,
             access_token="okokok.fofdsasdasdofo.ddd",
-            refresh_token="refresh.mock.token",
+            refresh_token=7654,
         )
         mock_rest = mock.Mock(authorize_access_token=mock.AsyncMock(return_value=mock_token))
         strategy = rest.OAuthCredentialsStrategy(
