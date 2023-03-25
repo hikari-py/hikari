@@ -1691,7 +1691,6 @@ class TextInputBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    #  @deprecation.deprecated("Use .is_required")
     def required(self) -> bool:
         """Deprecated alias for `hikari.api.special_endpoints.TextInputBuilder`."""
 
@@ -2029,7 +2028,6 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
         custom_id: str,
         /,
         *,
-        # TODO: accept options here as well?
         placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         min_values: int = 0,
         max_values: int = 1,

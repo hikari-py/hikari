@@ -1682,7 +1682,7 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
     _type: typing.Literal[component_models.ComponentType.TEXT_SELECT_MENU] = attr.field()
 
     if not typing.TYPE_CHECKING:
-        # This will not work with the attrs generated copy methods.
+        # This will not work with the generated for attrs copy methods.
         __copy__ = None
         __deepcopy__ = None
 
@@ -1840,7 +1840,6 @@ class TextInputBuilder(special_endpoints.TextInputBuilder):
         return self._value
 
     @property
-    #  @deprecation.deprecated("Use .is_required")
     def required(self) -> bool:
         deprecation.warn_deprecated(
             ".required", removal_version="2.0.0.dev119", additional_info="Use .is_required", quote=False
