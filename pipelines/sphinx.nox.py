@@ -33,7 +33,7 @@ from pipelines import config
 from pipelines import nox
 
 
-@nox.session(reuse_venv=True)
+@nox.session()
 def sphinx(session: nox.Session):
     """Generate docs using sphinx."""
     if "--no-refs" in session.posargs:
@@ -85,7 +85,7 @@ class HTTPServerThread(threading.Thread):
         self.server.shutdown()
 
 
-@nox.session(reuse_venv=True, venv_backend="none")
+@nox.session(venv_backend="none")
 def view_docs(_: nox.Session) -> None:
     """Start an HTTP server for any generated pages in `/public/docs/dirhtml`."""
     with contextlib.closing(HTTPServerThread()) as thread:

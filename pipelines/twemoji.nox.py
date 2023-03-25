@@ -23,8 +23,8 @@
 from pipelines import nox
 
 
-@nox.session(reuse_venv=True)
+@nox.session()
 def twemoji_test(session: nox.Session):
     """Brute-force test all possible Twemoji mappings for Discord unicode emojis."""
     session.install("-e", ".")
-    session.run("python", "scripts/test_twemoji_mapping.py")
+    session.run("python", "scripts/ci/test_twemoji_mapping.py", session.create_tmp())
