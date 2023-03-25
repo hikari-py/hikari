@@ -390,8 +390,8 @@ class TestOAuthCredentialsStrategy:
     @pytest.mark.asyncio()
     async def test_acquire_uses_newly_cached_token_after_acquiring_lock(self, strategy):
         class MockLock:
-            def __init__(self, strat):
-                self._strategy = strat
+            def __init__(self, strategy):
+                self._strategy = strategy
 
             async def __aenter__(self):
                 self._strategy._token = "cab.cab.cab"
