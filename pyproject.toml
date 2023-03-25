@@ -25,6 +25,7 @@ build-backend = "setuptools.build_meta"
 [tool.black]
 line-length = 120
 include = ".*pyi?$"
+skip-magic-trailing-comma = true
 target-version = ["py38"]
 
 [tool.coverage.run]
