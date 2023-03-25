@@ -43,7 +43,7 @@ jobs:
           DEPLOY_WEBHOOK_URL: ${{ secrets.DEPLOY_WEBHOOK_URL }}
           TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-        run: bash scripts/release.sh
+        run: bash scripts/ci/release.sh
 
       - name: Re-enable "include administrators" branch protection
         uses: benjefferies/branch-protection-bot@1.0.7

@@ -35,4 +35,4 @@ posix_read "Twine username" TWINE_USERNAME
 posix_read "Twine password" TWINE_PASSWORD
 posix_read "Discord deployment webhook URL" DEPLOY_WEBHOOK_URL
 
-bash scripts/release.sh
+bash scripts/ci/release.sh
