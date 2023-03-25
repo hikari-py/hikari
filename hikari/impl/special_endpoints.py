@@ -1679,7 +1679,7 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
     """Builder class for text select menus."""
 
     _options: typing.List[special_endpoints.SelectOptionBuilder] = attr.field()
-    _parent: typing.Optional[_ParentT]
+    _parent: typing.Optional[_ParentT] = attr.field()
     _type: typing.Literal[component_models.ComponentType.TEXT_SELECT_MENU] = attr.field()
 
     if not typing.TYPE_CHECKING:
