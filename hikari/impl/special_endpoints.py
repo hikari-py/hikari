@@ -38,6 +38,7 @@ __all__: typing.Sequence[str] = (
     "InteractiveButtonBuilder",
     "LinkButtonBuilder",
     "SelectMenuBuilder",
+    "SelectOptionBuilder",
     "ChannelSelectMenuBuilder",
     "TextSelectMenuBuilder",
     "TextInputBuilder",
@@ -1911,7 +1912,7 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
     """Standard implementation of `hikari.api.special_endpoints.ActionRowBuilder`."""
 
     _components: typing.List[special_endpoints.ComponentBuilder] = attr.field(alias="components", factory=list)
-    _stored_type: typing.Union[component_models.ComponentType, int, None] = attr.field(default=None, init=False)
+    _stored_type: typing.Optional[int] = attr.field(default=None, init=False)
 
     @property
     def type(self) -> typing.Literal[component_models.ComponentType.ACTION_ROW]:
@@ -2038,9 +2039,7 @@ class ModalActionRowBuilder(special_endpoints.ModalActionRowBuilder):
     """Standard implementation of `hikari.api.special_endpoints.ActionRowBuilder`."""
 
     _components: typing.List[special_endpoints.ComponentBuilder] = attr.field(alias="components", factory=list)
-    _stored_type: typing.Union[component_models.ComponentType, int, None] = attr.field(
-        alias="stored_type", init=False, default=None
-    )
+    _stored_type: typing.Optional[int] = attr.field(init=False, default=None)
 
     @property
     def type(self) -> typing.Literal[component_models.ComponentType.ACTION_ROW]:
