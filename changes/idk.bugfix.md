@@ -1,1 +1,0 @@
-Pyright will now let you pass `role_mentions` and `user_mentions` to `InteractionMessageBuilder.__init__`.
