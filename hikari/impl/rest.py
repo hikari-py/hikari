@@ -264,7 +264,7 @@ class OAuthCredentialsStrategy(rest_api.TokenStrategy):
         self._lock = asyncio.Lock()
         self._scopes = scopes
         self._token: typing.Optional[str] = None
-        self._refresh_token: str = ""
+        self._refresh_token: typing.Optional[str] = None
         self._auth_code: typing.Optional[str] = auth_code
         self._redirect_uri = redirect_uri
 
@@ -272,9 +272,6 @@ class OAuthCredentialsStrategy(rest_api.TokenStrategy):
     def client_id(self) -> snowflakes.Snowflake:
         """ID of the application this token strategy authenticates with."""
         return self._client_id
-
-    def _is_expired(self) -> bool:
-        return time.monotonic() >= self._expire_at
 
     @property
     def scopes(self) -> typing.Sequence[typing.Union[applications.OAuth2Scope, str]]:
@@ -284,6 +281,9 @@ class OAuthCredentialsStrategy(rest_api.TokenStrategy):
     @property
     def token_type(self) -> applications.TokenType:
         return applications.TokenType.BEARER
+
+    def _is_expired(self) -> bool:
+        return time.monotonic() >= self._expire_at
 
     async def acquire(self, client: rest_api.RESTClient) -> str:
         if not self._auth_code:
@@ -310,7 +310,9 @@ class OAuthCredentialsStrategy(rest_api.TokenStrategy):
                     )
                 else:
                     response = await client.refresh_access_token(
-                        client=self._client_id, client_secret=self._client_secret, refresh_token=self._refresh_token
+                        client=self._client_id,
+                        client_secret=self._client_secret,
+                        refresh_token=str(self._refresh_token),
                     )
 
             except errors.ClientHTTPResponseError as exc:
@@ -329,7 +331,7 @@ class OAuthCredentialsStrategy(rest_api.TokenStrategy):
         if not token or token == self._token:
             self._expire_at = 0.0
             self._token = None
-            self._refresh_token = ""
+            self._refresh_token = None
             self._auth_code = None
 
 
