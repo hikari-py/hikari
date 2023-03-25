@@ -1277,7 +1277,9 @@ class Test_ButtonBuilder:
 
     @pytest.mark.parametrize("emoji", [123321, emojis.CustomEmoji(id=123321, name="", is_animated=True)])
     def test_build_with_custom_emoji(self, emoji: typing.Union[int, emojis.Emoji]):
-        button = special_endpoints._ButtonBuilder(style=components.ButtonStyle.DANGER, emoji=emoji)
+        button = special_endpoints._ButtonBuilder(
+            style=components.ButtonStyle.DANGER, emoji=emoji, url=undefined.UNDEFINED, custom_id=undefined.UNDEFINED
+        )
 
         assert button.build() == {
             "type": components.ComponentType.BUTTON,
@@ -1287,7 +1289,9 @@ class Test_ButtonBuilder:
         }
 
     def test_build_without_optional_fields(self):
-        button = special_endpoints._ButtonBuilder(style=components.ButtonStyle.LINK)
+        button = special_endpoints._ButtonBuilder(
+            style=components.ButtonStyle.LINK, url=undefined.UNDEFINED, custom_id=undefined.UNDEFINED
+        )
 
         assert button.build() == {
             "type": components.ComponentType.BUTTON,

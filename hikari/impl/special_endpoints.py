@@ -1439,8 +1439,8 @@ def _build_emoji(
 @attr.define(kw_only=True, weakref_slot=False)
 class _ButtonBuilder(special_endpoints.ButtonBuilder):
     _style: typing.Union[int, component_models.ButtonStyle] = attr.field(alias="style")
-    _custom_id: undefined.UndefinedOr[str] = attr.field(alias="custom_id", default=undefined.UNDEFINED)
-    _url: undefined.UndefinedOr[str] = attr.field(alias="url", default=undefined.UNDEFINED)
+    _custom_id: undefined.UndefinedOr[str] = attr.field()
+    _url: undefined.UndefinedOr[str] = attr.field()
     _emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType] = attr.field(
         alias="emoji", default=undefined.UNDEFINED
     )
@@ -1529,6 +1529,7 @@ class InteractiveButtonBuilder(_ButtonBuilder, special_endpoints.InteractiveButt
     """Builder class for interactive buttons."""
 
     _custom_id: str = attr.field(alias="custom_id")
+    _url: undefined.UndefinedType = attr.field(init=False, default=undefined.UNDEFINED)
 
     @property
     def custom_id(self) -> str:
