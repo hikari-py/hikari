@@ -3943,19 +3943,6 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> special_endpoints.InteractionDeferredBuilder:
         return special_endpoints_impl.InteractionDeferredBuilder(type=type_)
 
-    @typing.overload
-    def interaction_autocomplete_builder(
-        self, choices: typing.Sequence[special_endpoints.AutocompleteChoiceBuilder]
-    ) -> special_endpoints.InteractionAutocompleteBuilder:
-        ...
-
-    @typing.overload
-    @deprecation.deprecated("AutocompleteChoiceBuilder should be used instead of CommandChoice")
-    def interaction_autocomplete_builder(
-        self, choices: typing.Sequence[commands.CommandChoice]
-    ) -> special_endpoints.InteractionAutocompleteBuilder:
-        ...
-
     def interaction_autocomplete_builder(
         self,
         choices: typing.Union[
@@ -4087,25 +4074,6 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> None:
         route = routes.DELETE_INTERACTION_RESPONSE.compile(webhook=application, token=token)
         await self._request(route, auth=None)
-
-    @typing.overload
-    async def create_autocomplete_response(
-        self,
-        interaction: snowflakes.SnowflakeishOr[base_interactions.PartialInteraction],
-        token: str,
-        choices: typing.Sequence[special_endpoints.AutocompleteChoiceBuilder],
-    ) -> None:
-        ...
-
-    @typing.overload
-    @deprecation.deprecated("AutocompleteChoiceBuilder should be used instead of CommandChoice")
-    async def create_autocomplete_response(
-        self,
-        interaction: snowflakes.SnowflakeishOr[base_interactions.PartialInteraction],
-        token: str,
-        choices: typing.Sequence[commands.CommandChoice],
-    ) -> None:
-        ...
 
     async def create_autocomplete_response(
         self,

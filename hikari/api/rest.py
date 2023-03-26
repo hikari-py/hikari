@@ -32,7 +32,6 @@ import typing
 from hikari import scheduled_events
 from hikari import traits
 from hikari import undefined
-from hikari.internal import deprecation
 
 if typing.TYPE_CHECKING:
     from hikari import applications
@@ -7288,21 +7287,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    @typing.overload
-    def interaction_autocomplete_builder(
-        self, choices: typing.Sequence[special_endpoints.AutocompleteChoiceBuilder]
-    ) -> special_endpoints.InteractionAutocompleteBuilder:
-        ...
-
-    @abc.abstractmethod
-    @typing.overload
-    @deprecation.deprecated("AutocompleteChoiceBuilder should be used instead of CommandChoice")
-    def interaction_autocomplete_builder(
-        self, choices: typing.Sequence[commands.CommandChoice]
-    ) -> special_endpoints.InteractionAutocompleteBuilder:
-        ...
-
-    @abc.abstractmethod
     def interaction_autocomplete_builder(
         self,
         choices: typing.Union[
@@ -7681,27 +7665,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
-
-    @abc.abstractmethod
-    @typing.overload
-    async def create_autocomplete_response(
-        self,
-        interaction: snowflakes.SnowflakeishOr[base_interactions.PartialInteraction],
-        token: str,
-        choices: typing.Sequence[special_endpoints.AutocompleteChoiceBuilder],
-    ) -> None:
-        ...
-
-    @abc.abstractmethod
-    @typing.overload
-    @deprecation.deprecated("AutocompleteChoiceBuilder should be used instead of CommandChoice")
-    async def create_autocomplete_response(
-        self,
-        interaction: snowflakes.SnowflakeishOr[base_interactions.PartialInteraction],
-        token: str,
-        choices: typing.Sequence[commands.CommandChoice],
-    ) -> None:
-        ...
 
     @abc.abstractmethod
     async def create_autocomplete_response(

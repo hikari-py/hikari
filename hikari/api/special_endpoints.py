@@ -52,7 +52,6 @@ import abc
 import typing
 
 from hikari import undefined
-from hikari.internal import deprecation
 
 if typing.TYPE_CHECKING:
     import types
@@ -642,17 +641,6 @@ class InteractionAutocompleteBuilder(InteractionResponseBuilder, abc.ABC):
     @abc.abstractmethod
     def choices(self) -> typing.Sequence[AutocompleteChoiceBuilder]:
         """Autocomplete choices."""
-
-    @abc.abstractmethod
-    @typing.overload
-    @deprecation.deprecated("AutocompleteChoiceBuilder should be used instead of CommandChoice")
-    def set_choices(self, choices: typing.Sequence[commands.CommandChoice], /) -> Self:
-        ...
-
-    @abc.abstractmethod
-    @typing.overload
-    def set_choices(self, choices: typing.Sequence[AutocompleteChoiceBuilder], /) -> Self:
-        ...
 
     @abc.abstractmethod
     def set_choices(

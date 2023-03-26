@@ -930,17 +930,6 @@ class InteractionAutocompleteBuilder(special_endpoints.InteractionAutocompleteBu
 
     _choices: typing.Sequence[special_endpoints.AutocompleteChoiceBuilder] = attr.field(factory=list)
 
-    @typing.overload
-    @deprecation.deprecated("AutocompleteChoiceBuilder should be used instead of CommandChoice")
-    def __init__(self, choices: typing.Sequence[commands.CommandChoice], *, _stack_level: int = 0) -> None:
-        ...
-
-    @typing.overload
-    def __init__(
-        self, choices: typing.Sequence[special_endpoints.AutocompleteChoiceBuilder] = ..., *, _stack_level: int = 0
-    ) -> None:
-        ...
-
     def __init__(
         self,
         choices: typing.Union[
@@ -976,15 +965,6 @@ class InteractionAutocompleteBuilder(special_endpoints.InteractionAutocompleteBu
     @property
     def choices(self) -> typing.Sequence[special_endpoints.AutocompleteChoiceBuilder]:
         return self._choices
-
-    @typing.overload
-    @deprecation.deprecated("AutocompleteChoiceBuilder should be used instead of CommandChoice")
-    def set_choices(self, choices: typing.Sequence[commands.CommandChoice], /) -> Self:
-        ...
-
-    @typing.overload
-    def set_choices(self, choices: typing.Sequence[special_endpoints.AutocompleteChoiceBuilder], /) -> Self:
-        ...
 
     def set_choices(
         self,
