@@ -1006,10 +1006,10 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
     )
     _role_mentions: undefined.UndefinedOr[
         typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
-    ] = attr.field(default=undefined.UNDEFINED, kw_only=True)
+    ] = attr.field(alias="role_mentions", default=undefined.UNDEFINED, kw_only=True)
     _user_mentions: undefined.UndefinedOr[
         typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
-    ] = attr.field(default=undefined.UNDEFINED, kw_only=True)
+    ] = attr.field(alias="user_mentions", default=undefined.UNDEFINED, kw_only=True)
     _attachments: undefined.UndefinedNoneOr[typing.List[files.Resourceish]] = attr.field(
         alias="attachments", default=undefined.UNDEFINED, kw_only=True
     )
