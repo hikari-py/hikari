@@ -1001,7 +1001,7 @@ class GuildChannel(PartialChannel):
         auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         locked: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         invitable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        applied_tags: undefined.UndefinedOr[typing.Sequence[ForumTag]] = undefined.UNDEFINED,
+        applied_tags: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[ForumTag]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> PartialChannel:
         """Edit the text channel.
@@ -1060,7 +1060,7 @@ class GuildChannel(PartialChannel):
         invitable : hikari.undefined.UndefinedOr[bool]
             If provided, the new setting for whether non-moderators can invite
             new members to a private thread. This only applies to threads.
-        applied_tags : hikari.undefined.UndefinedOr[typing.Sequence[ForumTag]]
+        applied_tags : hikari.undefined.UndefinedOr[hikari.SnowflakeishSequence[hikari.channels.ForumTag]]
             If provided, the new tags to apply to the thread. This only applies
             to threads in a forum channel.
         reason : hikari.undefined.UndefinedOr[str]
