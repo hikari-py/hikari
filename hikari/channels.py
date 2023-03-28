@@ -1060,7 +1060,7 @@ class GuildChannel(PartialChannel):
         invitable : hikari.undefined.UndefinedOr[bool]
             If provided, the new setting for whether non-moderators can invite
             new members to a private thread. This only applies to threads.
-        applied_tags : hikari.undefined.UndefinedOr[hikari.SnowflakeishSequence[hikari.channels.ForumTag]]
+        applied_tags : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.channels.ForumTag]]
             If provided, the new tags to apply to the thread. This only applies
             to threads in a forum channel.
         reason : hikari.undefined.UndefinedOr[str]
