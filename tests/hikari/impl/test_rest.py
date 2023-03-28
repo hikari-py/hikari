@@ -2251,7 +2251,7 @@ class TestRESTClientImplAsync:
             invitable=True,
             auto_archive_duration=auto_archive_duration,
             flags=12,
-            applied_tags=[0],
+            applied_tags=[StubModel(0)],
         )
 
         assert result == mock_object
