@@ -1878,7 +1878,7 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
     ) -> Self:
         """Add an interactive button component to this action row builder.
 
-        Either `emoji` xor `label` must be provided to be the button's
+        Either `emoji` or `label` (exclusively) must be provided to be the button's
         displayed label.
 
         Parameters
@@ -1913,7 +1913,7 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
     ) -> Self:
         """Add a link button component to this action row builder.
 
-        Either `emoji` xor `label` must be provided to be the button's
+        Either `emoji` or `label` (exclusively) must be provided to be the button's
         displayed label.
 
         Parameters
