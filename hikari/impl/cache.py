@@ -1074,7 +1074,7 @@ class CacheImpl(cache.MutableCache):
         *,
         decrement: typing.Optional[int] = None,
         deleting: bool = False,
-    ) -> typing.Optional[cache_utility.RefCell[cache_utility.MemberData]]:
+    ) -> None:
         if deleting:
             member.object.has_been_deleted = True
 
@@ -1083,10 +1083,10 @@ class CacheImpl(cache.MutableCache):
 
         user_id = member.object.user.object.id
         if not guild_record.members or user_id not in guild_record.members:
-            return None
+            return
 
         if not self._can_remove_member(member):
-            return None
+            return
 
         del guild_record.members[user_id]
         self._garbage_collect_user(member.object.user, decrement=1)
@@ -1094,8 +1094,6 @@ class CacheImpl(cache.MutableCache):
         if not guild_record.members:
             guild_record.members = None
             self._remove_guild_record_if_empty(member.object.guild_id, guild_record)
-
-        return member
 
     def clear_members(
         self,
@@ -1118,9 +1116,10 @@ class CacheImpl(cache.MutableCache):
             return cache_utility.EmptyCacheView()
 
         cached_members = guild_record.members.freeze()
-        members_gen = (self._garbage_collect_member(guild_record, m, deleting=True) for m in cached_members.values())
-        # _garbage_collect_member will only return the member data object if they could be removed, else None.
-        cached_members = {member.object.user.object.id: member for member in members_gen if member}
+
+        for m in cached_members.values():
+            self._garbage_collect_member(guild_record, m, deleting=True)
+
         self._remove_guild_record_if_empty(guild_id, guild_record)
         return cache_utility.CacheMappingView(cached_members, builder=self._build_member)  # type: ignore[type-var]
 
@@ -1143,13 +1142,8 @@ class CacheImpl(cache.MutableCache):
         if not member_data:
             return None
 
-        if not guild_record.members:
-            guild_record.members = None
-            self._remove_guild_record_if_empty(guild_id, guild_record)
-
-        # _garbage_collect_member will only return the member data object if they could be removed, else None.
-        garbage_collected = self._garbage_collect_member(guild_record, member_data, deleting=True)
-        return self._build_member(member_data) if garbage_collected else None
+        self._garbage_collect_member(guild_record, member_data, deleting=True)
+        return self._build_member(member_data)
 
     def get_member(
         self,
@@ -1572,8 +1566,9 @@ class CacheImpl(cache.MutableCache):
 
         cached_voice_states = {}
 
-        for user_id, voice_state in guild_record.voice_states.items():
+        for user_id, voice_state in tuple(guild_record.voice_states.items()):
             if voice_state.channel_id == channel_id:
+                del guild_record.voice_states[user_id]
                 cached_voice_states[user_id] = voice_state
                 self._garbage_collect_member(guild_record, voice_state.member, decrement=1)
 
@@ -1623,11 +1618,12 @@ class CacheImpl(cache.MutableCache):
         if not voice_state_data:
             return None
 
+        self._garbage_collect_member(guild_record, voice_state_data.member, decrement=1)
+
         if not guild_record.voice_states:
             guild_record.voice_states = None
+            self._remove_guild_record_if_empty(guild_id, guild_record)
 
-        self._garbage_collect_member(guild_record, voice_state_data.member, decrement=1)
-        self._remove_guild_record_if_empty(guild_id, guild_record)
         return self._build_voice_state(voice_state_data)
 
     def get_voice_state(
@@ -1734,12 +1730,13 @@ class CacheImpl(cache.MutableCache):
         *,
         decrement: typing.Optional[int] = None,
         override_ref: bool = False,
-    ) -> typing.Optional[cache_utility.RefCell[cache_utility.MessageData]]:
+    ) -> bool:
+        # A bool is returned to inform whether the message was removed or not
         if decrement is not None:
             self._increment_ref_count(message, -decrement)
 
         if not self._can_remove_message(message) or override_ref:
-            return None
+            return False
 
         self._garbage_collect_user(message.object.author, decrement=1)
 
@@ -1760,7 +1757,7 @@ class CacheImpl(cache.MutableCache):
         if message.object.id in self._referenced_messages:
             del self._referenced_messages[message.object.id]
 
-        return message
+        return True
 
     def _on_message_expire(self, message: cache_utility.RefCell[cache_utility.MessageData], /) -> None:
         if not self._garbage_collect_message(message):
@@ -1795,7 +1792,6 @@ class CacheImpl(cache.MutableCache):
 
         if not self._garbage_collect_message(message_data):
             self._referenced_messages[message_id] = message_data
-            return None
 
         return self._build_message(message_data)
 

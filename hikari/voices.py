@@ -93,7 +93,7 @@ class VoiceState:
     session_id: str = attr.field(hash=True, repr=True)
     """The string ID of this voice state's session."""
 
-    requested_to_speak_at: typing.Optional[datetime.datetime] = attr.field(eq=False, hash=False, repr=True)
+    requested_to_speak_at: typing.Optional[datetime.datetime] = attr.field(eq=False, hash=False, repr=False)
     """When the user requested to speak in a stage channel.
 
     Will be `None` if they have not requested to speak.

@@ -2057,7 +2057,7 @@ class TestCacheImpl:
 
         assert result is None
 
-    def test_delete_member_for_known_member(self, cache_impl):
+    def test_delete_member(self, cache_impl):
         mock_member = mock.Mock(guilds.Member)
         mock_user = cache_utilities.RefCell(mock.Mock(id=snowflakes.Snowflake(67876)))
         mock_member_data = mock.Mock(
@@ -2077,21 +2077,6 @@ class TestCacheImpl:
         cache_impl._build_member.assert_called_once_with(mock_reffed_member)
         cache_impl._garbage_collect_user.assert_called_once_with(mock_user, decrement=1)
         cache_impl._remove_guild_record_if_empty.assert_called_once_with(snowflakes.Snowflake(42123), guild_record)
-
-    def test_delete_member_for_known_hard_referenced_member(self, cache_impl):
-        mock_member = cache_utilities.RefCell(mock.Mock(has_been_deleted=False), ref_count=1)
-        cache_impl._guild_entries = collections.FreezableDict(
-            {
-                snowflakes.Snowflake(42123): cache_utilities.GuildRecord(
-                    members=collections.FreezableDict({snowflakes.Snowflake(67876): mock_member})
-                )
-            }
-        )
-
-        result = cache_impl.delete_member(StubModel(42123), StubModel(67876))
-
-        assert result is None
-        assert mock_member.object.has_been_deleted is True
 
     def test_get_member_for_unknown_member_cache(self, cache_impl):
         cache_impl._guild_entries = collections.FreezableDict(
@@ -2634,10 +2619,40 @@ class TestCacheImpl:
 
         assert result is mock_voice_state
         cache_impl._garbage_collect_member.assert_called_once_with(guild_record, mock_member_data, decrement=1)
-        cache_impl._remove_guild_record_if_empty.assert_called_once_with(snowflakes.Snowflake(43123), guild_record)
+        cache_impl._remove_guild_record_if_empty.assert_not_called()
         assert cache_impl._guild_entries[snowflakes.Snowflake(43123)].voice_states == {
             snowflakes.Snowflake(6541234): mock_other_voice_state_data
         }
+
+    def test_delete_voice_state_when_no_voice_states_left(self, cache_impl):
+        mock_member_data = object()
+        mock_voice_state_data = mock.Mock(cache_utilities.VoiceStateData, member=mock_member_data)
+        mock_voice_state = mock.Mock(voices.VoiceState)
+        cache_impl._build_voice_state = mock.Mock(return_value=mock_voice_state)
+        guild_record = cache_utilities.GuildRecord(
+            voice_states=collections.FreezableDict({snowflakes.Snowflake(12354345): mock_voice_state_data}),
+            members=collections.FreezableDict(
+                {snowflakes.Snowflake(12354345): mock_member_data, snowflakes.Snowflake(9955959): object()}
+            ),
+        )
+        cache_impl._user_entries = collections.FreezableDict(
+            {snowflakes.Snowflake(12354345): object(), snowflakes.Snowflake(9393): object()}
+        )
+        cache_impl._guild_entries = collections.FreezableDict(
+            {
+                snowflakes.Snowflake(65234): mock.Mock(cache_utilities.GuildRecord),
+                snowflakes.Snowflake(43123): guild_record,
+            }
+        )
+        cache_impl._remove_guild_record_if_empty = mock.Mock()
+        cache_impl._garbage_collect_member = mock.Mock()
+
+        result = cache_impl.delete_voice_state(StubModel(43123), StubModel(12354345))
+
+        assert result is mock_voice_state
+        cache_impl._garbage_collect_member.assert_called_once_with(guild_record, mock_member_data, decrement=1)
+        cache_impl._remove_guild_record_if_empty.assert_called_once_with(snowflakes.Snowflake(43123), guild_record)
+        assert cache_impl._guild_entries[snowflakes.Snowflake(43123)].voice_states is None
 
     def test_delete_voice_state_unknown_state(self, cache_impl):
         mock_other_voice_state_data = mock.Mock(cache_utilities.VoiceStateData)
