@@ -2214,7 +2214,7 @@ class TestRESTClientImplAsync:
             "invitable": True,
             "auto_archive_duration": 12322,
             "flags": 12,
-            "applied_tags": [{"id": 0, "name": "testing", "moderated": True, "emoji_id": None, "emoji_name": None}],
+            "applied_tags": ["0"],
         }
 
         result = await rest_client.edit_channel(
@@ -2249,7 +2249,7 @@ class TestRESTClientImplAsync:
             invitable=True,
             auto_archive_duration=auto_archive_duration,
             flags=12,
-            applied_tags=[channels.ForumTag(name="testing", moderated=True)],
+            applied_tags=[StubModel(0)],
         )
 
         assert result == mock_object
