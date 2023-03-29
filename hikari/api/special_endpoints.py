@@ -1611,9 +1611,9 @@ class TextSelectMenuBuilder(SelectMenuBuilder, abc.ABC, typing.Generic[_ParentT]
             The option's description.
 
             This can be up to 100 characters long.
-        emoji
+        emoji : typing.Union[hikari.snowflakes.Snowflakeish, hikari.emojis.Emoji, str, hikari.undefined.UndefinedType]
             The option's display emoji.
-        is_default
+        is_default : bool
             Whether this option should be selected by default.
 
         Returns
