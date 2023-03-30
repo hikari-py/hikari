@@ -33,3 +33,9 @@ class TestLazyIterator:
     def test_asynchronous_only(self, lazy_iterator):
         with pytest.raises(TypeError, match="is async-only, did you mean 'async for' or `anext`?"):
             next(lazy_iterator)
+
+    @pytest.mark.asyncio()
+    async def test_flatten(self):
+        iterator = iterators.FlatLazyIterator([[123, 321, 4352, 123], [], [12343123, 4234432], [543123123]])
+
+        assert await iterator.flatten() == [123, 321, 4352, 123, 12343123, 4234432, 543123123]

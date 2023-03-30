@@ -1610,9 +1610,7 @@ class TestRESTClientImpl:
 
     def test_interaction_modal_builder(self, rest_client):
         result = rest_client.interaction_modal_builder("title", "custom")
-        result.add_component(
-            special_endpoints.ModalActionRowBuilder().add_text_input("idd", "labell").add_to_container()
-        )
+        result.add_component(special_endpoints.ModalActionRowBuilder().add_text_input("idd", "labell"))
 
         assert result.type == 9
         assert isinstance(result, special_endpoints.InteractionModalBuilder)
@@ -2216,7 +2214,7 @@ class TestRESTClientImplAsync:
             "invitable": True,
             "auto_archive_duration": 12322,
             "flags": 12,
-            "applied_tags": [{"id": 0, "name": "testing", "moderated": True, "emoji_id": None, "emoji_name": None}],
+            "applied_tags": ["0"],
         }
 
         result = await rest_client.edit_channel(
@@ -2251,7 +2249,7 @@ class TestRESTClientImplAsync:
             invitable=True,
             auto_archive_duration=auto_archive_duration,
             flags=12,
-            applied_tags=[channels.ForumTag(name="testing", moderated=True)],
+            applied_tags=[StubModel(0)],
         )
 
         assert result == mock_object
@@ -2370,43 +2368,10 @@ class TestRESTClientImplAsync:
     @pytest.mark.parametrize(
         ("target", "expected_type"),
         [
+            (mock.Mock(users.UserImpl, id=456), channels.PermissionOverwriteType.MEMBER),
+            (mock.Mock(guilds.Role, id=456), channels.PermissionOverwriteType.ROLE),
             (
-                users.UserImpl(
-                    id=456,
-                    app=object(),
-                    avatar_hash="",
-                    banner_hash="",
-                    accent_color=123456,
-                    discriminator="",
-                    flags=0,
-                    username="",
-                    is_bot=True,
-                    is_system=True,
-                ),
-                channels.PermissionOverwriteType.MEMBER,
-            ),
-            (
-                guilds.Role(
-                    id=456,
-                    app=object(),
-                    color=None,
-                    guild_id=123,
-                    is_hoisted=True,
-                    icon_hash="icon_hash",
-                    unicode_emoji=None,
-                    is_managed=False,
-                    name="",
-                    is_mentionable=True,
-                    permissions=0,
-                    position=0,
-                    bot_id=None,
-                    integration_id=None,
-                    is_premium_subscriber_role=False,
-                ),
-                channels.PermissionOverwriteType.ROLE,
-            ),
-            (
-                channels.PermissionOverwrite(type=channels.PermissionOverwriteType.MEMBER, id=456),
+                mock.Mock(channels.PermissionOverwrite, id=456, type=channels.PermissionOverwriteType.MEMBER),
                 channels.PermissionOverwriteType.MEMBER,
             ),
         ],

@@ -47,7 +47,7 @@ else
 fi
 
 echo "===== INSTALLING DEPENDENCIES ====="
-pip install -r requirements.txt -r dev-requirements/release.txt -r dev-requirements/nox.txt
+pip install -r requirements.txt -r dev-requirements/release.txt -r dev-requirements.txt
 
 export REF=$(git rev-parse HEAD)
 
@@ -74,10 +74,27 @@ echo "-- Uploading to PyPI --"
 python -m twine upload --disable-progress-bar --skip-existing dist/* --non-interactive --repository-url https://upload.pypi.org/legacy/
 
 echo "===== SENDING WEBHOOK ====="
-bash scripts/release-webhook.sh
+curl \
+  -X POST \
+  -H "Content-Type: application/json" \
+  "${DEPLOY_WEBHOOK_URL}" \
+  -d '{
+        "username": "Github Actions",
+        "embeds": [
+          {
+            "title": "'"${VERSION} has been deployed to PyPI"'",
+            "color": 6697881,
+            "description": "'"Install it now by executing: \`\`\`pip install hikari==${VERSION}\`\`\`\\nDocumentation can be found at https://docs.hikari-py.dev/en/${VERSION}"'",
+            "footer": {
+              "text": "'"SHA: ${REF}"'"
+            }
+          }
+        ]
+    }'
+
 
 echo "===== UPDATING VERSION IN REPOSITORY ====="
-NEW_VERSION=$(python scripts/increase_version_number.py "${VERSION}")
+NEW_VERSION=$(python scripts/ci/increase_version_number.py "${VERSION}")
 
 echo "-- Setting up git --"
 git fetch origin

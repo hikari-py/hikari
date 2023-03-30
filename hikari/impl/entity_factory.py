@@ -1848,6 +1848,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         subscription_listing_id: typing.Optional[snowflakes.Snowflake] = None
         is_premium_subscriber_role: bool = False
         is_available_for_purchase: bool = False
+        is_guild_linked_role: bool = False
         if "tags" in payload:
             tags_payload = payload["tags"]
             if "bot_id" in tags_payload:
@@ -1860,6 +1861,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 subscription_listing_id = snowflakes.Snowflake(tags_payload["subscription_listing_id"])
             if "available_for_purchase" in tags_payload:
                 is_available_for_purchase = True
+            if "guild_connections" in tags_payload:
+                is_guild_linked_role = True
 
         emoji: typing.Optional[emoji_models.UnicodeEmoji] = None
         if (raw_emoji := payload.get("unicode_emoji")) is not None:
@@ -1883,6 +1886,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             is_premium_subscriber_role=is_premium_subscriber_role,
             subscription_listing_id=subscription_listing_id,
             is_available_for_purchase=is_available_for_purchase,
+            is_guild_linked_role=is_guild_linked_role,
         )
 
     @staticmethod

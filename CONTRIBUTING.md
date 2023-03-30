@@ -73,7 +73,7 @@ We have nox to help out with running pipelines locally and provides some helpful
 
 You will need to install `nox` locally before running any pipelines.
 ```bash
-pip install -r dev-requirements/nox.txt
+pip install -r dev-requirements.txt
 ```
 
 Nox is similar to tox, but uses a pure Python configuration instead of an INI based configuration. Nox and tox are

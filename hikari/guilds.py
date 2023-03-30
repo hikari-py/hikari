@@ -1033,6 +1033,9 @@ class Role(PartialRole):
     is_available_for_purchase: bool = attr.field(eq=False, hash=False, repr=True)
     """Whether this role is available for purchase."""
 
+    is_guild_linked_role: bool = attr.field(eq=False, hash=False, repr=True)
+    """Whether this role is a linked role in the guild."""
+
     @property
     def colour(self) -> colours.Colour:
         """Alias for the `color` field."""
@@ -1042,6 +1045,18 @@ class Role(PartialRole):
     def icon_url(self) -> typing.Optional[files.URL]:
         """Role icon URL, if there is one."""
         return self.make_icon_url()
+
+    @property
+    def mention(self) -> str:
+        """Return a raw mention string for the role.
+
+        When this role represents @everyone mentions will only work if
+        `mentions_everyone` is `True`.
+        """
+        if self.guild_id == self.id:
+            return "@everyone"
+
+        return super().mention
 
     def make_icon_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the icon URL for this role, if set.

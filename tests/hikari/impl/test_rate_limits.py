@@ -310,23 +310,33 @@ class TestWindowedBurstRateLimiter:
     @pytest.mark.asyncio()
     async def test_throttle_when_limited_sleeps_then_bursts_repeatedly(self, event_loop):
         window = 5
-        sleep_count = 0
+        loop_count = 0
         futures = [event_loop.create_future() for _ in range(20)]
+        reset_time_iter = iter(range(int(len(futures) / window)))
 
-        async def mock_sleep(t):
-            nonlocal sleep_count
+        def mock_get_time_until_reset(_self, _):
+            nonlocal loop_count
 
             for i, future in enumerate(futures):
-                if i >= (window * sleep_count):
+                if i >= (window * loop_count):
                     assert not future.done(), f"future {i} was complete, expected it to be incomplete!"
                 else:
                     assert future.done(), f"future {i} was incomplete, expected it to be completed!"
 
-            sleep_count += 1
+            loop_count += 1
+
+            rl.remaining = window
+
+            return next(reset_time_iter)
 
         stack = contextlib.ExitStack()
         rl = stack.enter_context(rate_limits.WindowedBurstRateLimiter(__name__, 0, window))
-        stack.enter_context(mock.patch.object(asyncio, "sleep", new=mock_sleep))
+        stack.enter_context(
+            mock.patch.object(
+                rate_limits.WindowedBurstRateLimiter, "get_time_until_reset", new=mock_get_time_until_reset
+            )
+        )
+        stack.enter_context(mock.patch.object(asyncio, "sleep"))
 
         with stack:
             rl.queue = list(futures)
@@ -335,7 +345,7 @@ class TestWindowedBurstRateLimiter:
             # die if we take too long...
             await asyncio.wait(futures, timeout=3)
 
-        assert sleep_count == 4
+        assert loop_count == 4
         assert len(rl.queue) == 0
         for i, future in enumerate(futures):
             assert future.done(), f"future {i} was incomplete!"
