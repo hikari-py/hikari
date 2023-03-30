@@ -146,6 +146,7 @@ class TestRole:
             bot_id=None,
             integration_id=None,
             is_premium_subscriber_role=False,
+            is_guild_linked_role=True,
         )
 
     def test_colour_property(self, model):
