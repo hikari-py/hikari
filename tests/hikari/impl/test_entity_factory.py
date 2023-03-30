@@ -314,6 +314,8 @@ def guild_role_payload():
             "integration_id": "456",
             "premium_subscriber": None,
             "guild_connections": None,
+            "available_for_purchase": None,
+            "subscription_listing_id": "9876",
         },
     }
 
@@ -3344,6 +3346,8 @@ class TestEntityFactoryImpl:
         assert guild_role.integration_id == 456
         assert guild_role.is_premium_subscriber_role is True
         assert guild_role.is_guild_linked_role is True
+        assert guild_role.subscription_listing_id == 9876
+        assert guild_role.is_available_for_purchase is True
         assert isinstance(guild_role, guild_models.Role)
 
     def test_deserialize_role_with_missing_or_unset_fields(self, entity_factory_impl, guild_role_payload):
@@ -3354,6 +3358,8 @@ class TestEntityFactoryImpl:
         assert guild_role.integration_id is None
         assert guild_role.is_premium_subscriber_role is False
         assert guild_role.is_guild_linked_role is False
+        assert guild_role.subscription_listing_id is None
+        assert guild_role.is_available_for_purchase is False
         assert guild_role.unicode_emoji is None
 
     def test_deserialize_role_with_no_tags(self, entity_factory_impl, guild_role_payload):

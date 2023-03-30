@@ -147,6 +147,8 @@ class TestRole:
             integration_id=None,
             is_premium_subscriber_role=False,
             is_guild_linked_role=True,
+            subscription_listing_id=snowflakes.Snowflake(10),
+            is_available_for_purchase=True,
         )
 
     def test_colour_property(self, model):
