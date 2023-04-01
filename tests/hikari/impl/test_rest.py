@@ -1596,6 +1596,7 @@ class TestRESTClientImpl:
     def test_interaction_modal_builder(self, rest_client):
         result = rest_client.interaction_modal_builder("aaaaa", "custom")
 
+        assert result.type == 9
         assert result.title == "aaaaa"
         assert result.custom_id == "custom"
 
