@@ -2191,7 +2191,14 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     def _deserialize_command_option(self, payload: data_binding.JSONObject) -> commands.CommandOption:
         choices: typing.Optional[typing.List[commands.CommandChoice]] = None
         if raw_choices := payload.get("choices"):
-            choices = [commands.CommandChoice(name=choice["name"], value=choice["value"]) for choice in raw_choices]
+            choices = [
+                commands.CommandChoice(
+                    name=choice["name"],
+                    name_localizations=choice.get("name_localizations") or {},
+                    value=choice["value"],
+                )
+                for choice in raw_choices
+            ]
 
         suboptions: typing.Optional[typing.List[commands.CommandOption]] = None
         if raw_options := payload.get("options"):
@@ -2674,7 +2681,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             payload["channel_types"] = option.channel_types
 
         if option.choices is not None:
-            payload["choices"] = [{"name": choice.name, "value": choice.value} for choice in option.choices]
+            payload["choices"] = [
+                {"name": choice.name, "name_localizations": choice.name_localizations, "value": choice.value}
+                for choice in option.choices
+            ]
 
         if option.options is not None:
             payload["options"] = [self.serialize_command_option(suboption) for suboption in option.options]

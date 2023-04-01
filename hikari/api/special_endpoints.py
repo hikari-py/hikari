@@ -24,6 +24,7 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
+    "AutocompleteChoiceBuilder",
     "ButtonBuilder",
     "CommandBuilder",
     "SlashCommandBuilder",
@@ -584,6 +585,52 @@ class InteractionDeferredBuilder(InteractionResponseBuilder, abc.ABC):
         """
 
 
+class AutocompleteChoiceBuilder(abc.ABC):
+    """Interface of an autocomplete choice used to respond to interactions."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def name(self) -> str:
+        """The choice's name."""
+
+    @property
+    @abc.abstractmethod
+    def value(self) -> typing.Union[int, str, float]:
+        """The choice's value."""
+
+    @abc.abstractmethod
+    def set_name(self, name: str, /) -> Self:
+        """Set this choice's name.
+
+        Returns
+        -------
+        AutocompleteChoiceBuilder
+            The autocomplete choice builder.
+        """
+
+    @abc.abstractmethod
+    def set_value(self, value: typing.Union[int, float, str], /) -> Self:
+        """Set this choice's value.
+
+        Returns
+        -------
+        AutocompleteChoiceBuilder
+            The autocomplete choice builder.
+        """
+
+    @abc.abstractmethod
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        """Build a JSON object from this builder.
+
+        Returns
+        -------
+        typing.MutableMapping[str, typing.Any]
+            The built json object representation of this builder.
+        """
+
+
 class InteractionAutocompleteBuilder(InteractionResponseBuilder, abc.ABC):
     """Interface of an autocomplete interaction response builder."""
 
@@ -591,12 +638,20 @@ class InteractionAutocompleteBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def choices(self) -> typing.Sequence[commands.CommandChoice]:
+    def choices(self) -> typing.Sequence[AutocompleteChoiceBuilder]:
         """Autocomplete choices."""
 
     @abc.abstractmethod
-    def set_choices(self, choices: typing.Sequence[commands.CommandChoice], /) -> Self:
+    def set_choices(
+        self,
+        choices: typing.Union[typing.Sequence[commands.CommandChoice], typing.Sequence[AutocompleteChoiceBuilder]],
+        /,
+    ) -> Self:
         """Set autocomplete choices.
+
+        .. deprecated:: 2.0.0.dev118
+            Passing `hikari.commands.CommandChoice`s here instead of
+            `hikari.api.special_endpoints.AutocompleteChoiceBuilder`s.
 
         Returns
         -------

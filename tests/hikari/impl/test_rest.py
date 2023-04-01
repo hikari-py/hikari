@@ -1582,25 +1582,10 @@ class TestRESTClientImpl:
 
     def test_interaction_autocomplete_builder(self, rest_client):
         result = rest_client.interaction_autocomplete_builder(
-            [
-                commands.CommandChoice(name="name", value="value"),
-                commands.CommandChoice(name="a", value="b"),
-            ]
+            [special_endpoints.AutocompleteChoiceBuilder(name="name", value="value")]
         )
 
-        assert result.type == 8
-        assert isinstance(result, special_endpoints.InteractionAutocompleteBuilder)
-        assert len(result.choices) == 2
-
-        raw, files = result.build(mock.Mock())
-        assert files == ()
-        assert raw["data"] == {"choices": [{"name": "name", "value": "value"}, {"name": "a", "value": "b"}]}
-
-    def test_interaction_autocomplete_builder_with_set_choices(self, rest_client):
-        result = rest_client.interaction_autocomplete_builder([commands.CommandChoice(name="name", value="value")])
-
-        result.set_choices([commands.CommandChoice(name="a", value="b")])
-        assert result.choices == [commands.CommandChoice(name="a", value="b")]
+        assert result.choices == [special_endpoints.AutocompleteChoiceBuilder(name="name", value="value")]
 
     def test_interaction_message_builder(self, rest_client):
         result = rest_client.interaction_message_builder(4)
@@ -1609,17 +1594,11 @@ class TestRESTClientImpl:
         assert isinstance(result, special_endpoints.InteractionMessageBuilder)
 
     def test_interaction_modal_builder(self, rest_client):
-        result = rest_client.interaction_modal_builder("title", "custom")
-        result.add_component(special_endpoints.ModalActionRowBuilder().add_text_input("idd", "labell"))
+        result = rest_client.interaction_modal_builder("aaaaa", "custom")
 
         assert result.type == 9
-        assert isinstance(result, special_endpoints.InteractionModalBuilder)
-
-    def test_interaction_modal_builder_with_components(self, rest_client):
-        result = rest_client.interaction_modal_builder("title", "custom")
-
-        assert result.type == 9
-        assert isinstance(result, special_endpoints.InteractionModalBuilder)
+        assert result.title == "aaaaa"
+        assert result.custom_id == "custom"
 
     def test_fetch_scheduled_event_users(self, rest_client: rest.RESTClientImpl):
         with mock.patch.object(special_endpoints, "ScheduledEventUserIterator") as iterator_cls:
@@ -6077,6 +6056,22 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route, auth=None)
 
     async def test_create_autocomplete_response(self, rest_client):
+        expected_route = routes.POST_INTERACTION_RESPONSE.compile(interaction=1235431, token="snek")
+        rest_client._request = mock.AsyncMock()
+
+        choices = [
+            special_endpoints.AutocompleteChoiceBuilder(name="c", value="d"),
+            special_endpoints.AutocompleteChoiceBuilder(name="eee", value="fff"),
+        ]
+        await rest_client.create_autocomplete_response(StubModel(1235431), "snek", choices)
+
+        rest_client._request.assert_awaited_once_with(
+            expected_route,
+            json={"type": 8, "data": {"choices": [{"name": "c", "value": "d"}, {"name": "eee", "value": "fff"}]}},
+            auth=None,
+        )
+
+    async def test_create_autocomplete_response_for_deprecated_command_choices(self, rest_client):
         expected_route = routes.POST_INTERACTION_RESPONSE.compile(interaction=1235431, token="snek")
         rest_client._request = mock.AsyncMock()
 

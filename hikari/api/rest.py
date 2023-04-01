@@ -7288,9 +7288,16 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     def interaction_autocomplete_builder(
-        self, choices: typing.Sequence[commands.CommandChoice]
+        self,
+        choices: typing.Union[
+            typing.Sequence[commands.CommandChoice], typing.Sequence[special_endpoints.AutocompleteChoiceBuilder]
+        ],
     ) -> special_endpoints.InteractionAutocompleteBuilder:
         """Create a builder for an autocomplete interaction response.
+
+        .. deprecated:: 2.0.0.dev118
+            Passing `hikari.commands.CommandChoice`s here instead of
+            `hikari.api.special_endpoints.AutocompleteChoiceBuilder`s.
 
         Returns
         -------
@@ -7664,9 +7671,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         interaction: snowflakes.SnowflakeishOr[base_interactions.PartialInteraction],
         token: str,
-        choices: typing.Sequence[commands.CommandChoice],
+        choices: typing.Union[
+            typing.Sequence[commands.CommandChoice], typing.Sequence[special_endpoints.AutocompleteChoiceBuilder]
+        ],
     ) -> None:
         """Create the initial response for an autocomplete interaction.
+
+        .. deprecated:: 2.0.0.dev118
+            Passing `hikari.commands.CommandChoice`s here instead of
+            `hikari.api.special_endpoints.AutocompleteChoiceBuilder`s.
 
         Parameters
         ----------
@@ -7674,10 +7687,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Object or ID of the interaction this response is for.
         token : str
             The command interaction's token.
-
-        Other Parameters
-        ----------------
-        choices : typing.Sequence[commands.CommandChoice]
+        choices : typing.Sequence[hikari.api.special_endpoints.AutocompleteChoiceBuilder]
             The autocomplete choices themselves.
 
         Raises

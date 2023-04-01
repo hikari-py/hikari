@@ -118,6 +118,11 @@ class CommandChoice:
     name: str = attr.field(repr=True)
     """The choice's name (inclusively between 1-100 characters)."""
 
+    name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attr.field(
+        eq=False, factory=dict, hash=False, repr=False
+    )
+    """A mapping of name localizations for this command choice."""
+
     value: typing.Union[str, int, float] = attr.field(repr=True)
     """Value of the choice (up to 100 characters if a string)."""
 
