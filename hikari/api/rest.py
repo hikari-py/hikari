@@ -2960,6 +2960,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> applications.OAuth2AuthorizationToken:
         """Authorize an OAuth2 token using the authorize code grant type.
 
+        .. warning::
+            There is no way to ensure what scopes are granted in the token,
+            so you should check
+            `hikari.applications.OAuth2AuthorizationToken.scopes` to validate
+            that the expected scopes were actually authorized here.
+
         Parameters
         ----------
         client : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
@@ -2995,16 +3001,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         client: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         client_secret: str,
         refresh_token: str,
-        *,
-        scopes: undefined.UndefinedOr[
-            typing.Sequence[typing.Union[applications.OAuth2Scope, str]]
-        ] = undefined.UNDEFINED,
     ) -> applications.OAuth2AuthorizationToken:
         """Refresh an access token.
 
         .. warning::
-            As of writing this Discord currently ignores any passed scopes,
-            therefore you should use
+            There is no way to ensure what scopes are granted in the token,
+            so you should check
             `hikari.applications.OAuth2AuthorizationToken.scopes` to validate
             that the expected scopes were actually authorized here.
 
@@ -3016,11 +3018,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Secret of the application to authorize with.
         refresh_token : str
             The refresh token to use.
-
-        Other Parameters
-        ----------------
-        scopes : typing.Sequence[typing.Union[hikari.applications.OAuth2Scope, str]]
-            The scope of the access request.
 
         Returns
         -------

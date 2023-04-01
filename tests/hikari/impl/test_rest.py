@@ -63,6 +63,14 @@ from hikari.internal import routes
 from hikari.internal import time
 from tests.hikari import hikari_test_helpers
 
+
+class StubModel(snowflakes.Unique):
+    id = None
+
+    def __init__(self, id=0):
+        self.id = snowflakes.Snowflake(id)
+
+
 #################
 # _RESTProvider #
 #################
@@ -173,18 +181,12 @@ class TestClientCredentialsStrategy:
 
     @pytest.mark.asyncio()
     async def test_acquire_handles_token_being_set_before_lock_is_acquired(self, mock_token):
-        lock = asyncio.Lock()
-        mock_rest = mock.Mock(authorize_client_credentials_token=mock.AsyncMock(side_effect=[mock_token]))
+        mock_rest = mock.Mock(authorize_client_credentials_token=mock.AsyncMock(return_value=mock_token))
+        strategy = rest.ClientCredentialsStrategy(client=6512312, client_secret="453123123")
 
-        with mock.patch.object(asyncio, "Lock", return_value=lock):
-            strategy = rest.ClientCredentialsStrategy(client=6512312, client_secret="453123123")
-
-        async with lock:
-            tokens_gather = asyncio.gather(
-                strategy.acquire(mock_rest), strategy.acquire(mock_rest), strategy.acquire(mock_rest)
-            )
-
-        results = await tokens_gather
+        results = await asyncio.gather(
+            strategy.acquire(mock_rest), strategy.acquire(mock_rest), strategy.acquire(mock_rest)
+        )
 
         mock_rest.authorize_client_credentials_token.assert_awaited_once_with(
             client=6512312, client_secret="453123123", scopes=("applications.commands.update", "identify")
@@ -284,6 +286,171 @@ class TestClientCredentialsStrategy:
 
     def test_invalidate_when_token_is_stored_token(self):
         strategy = rest.ClientCredentialsStrategy(client=65123, client_secret="12354")
+        strategy._expire_at = 10.0
+        strategy._token = "token"
+
+        strategy.invalidate("token")
+
+        assert strategy._expire_at == 0.0
+        assert strategy._token is None
+
+
+#############################
+# OAuthCredentialsStrategy #
+#############################
+
+
+class TestOAuthCredentialsStrategy:
+    @pytest.fixture()
+    def mock_token(self):
+        return mock.Mock(
+            expires_in=datetime.timedelta(weeks=1),
+            token_type=applications.TokenType.BEARER,
+            access_token="mockmock.tokentoken.mocktoken",
+            refresh_token="7654",
+        )
+
+    @pytest.fixture()
+    def strategy(self):
+        return rest.OAuthCredentialsStrategy(
+            client=4321,
+            client_secret="123123123",
+            code="auth#code",
+            redirect_uri="https://web.site/auth/discord",
+        )
+
+    def test_client_id_property(self):
+        strategy = rest.OAuthCredentialsStrategy(
+            client=StubModel(41551),
+            client_secret="123123123",
+            code="auth#code",
+            redirect_uri="https://web.site/auth/discord",
+        )
+
+        assert strategy.client_id == 41551
+
+    def test_token_type_property(self, strategy):
+        assert strategy.token_type is applications.TokenType.BEARER
+
+    @pytest.mark.asyncio()
+    async def test_acquire_on_new_instance(self, mock_token, strategy):
+        mock_rest = mock.Mock(authorize_access_token=mock.AsyncMock(return_value=mock_token))
+
+        assert await strategy.acquire(mock_rest) == "mockmock.tokentoken.mocktoken"
+
+        mock_rest.authorize_access_token.assert_awaited_once_with(
+            client=4321,
+            client_secret="123123123",
+            code="auth#code",
+            redirect_uri="https://web.site/auth/discord",
+        )
+
+    @pytest.mark.asyncio()
+    async def test_acquire_handles_out_of_date_token(self, mock_token, strategy):
+        mock_rest = mock.Mock(refresh_access_token=mock.AsyncMock(return_value=mock_token))
+        strategy._expire_at = 0
+        strategy._token = "old token"
+        strategy._refresh_token = "refresh token"
+
+        new_token = await strategy.acquire(mock_rest)
+
+        mock_rest.refresh_access_token.assert_awaited_once_with(
+            client=4321, client_secret="123123123", refresh_token="refresh token"
+        )
+
+        assert new_token == strategy._token == "mockmock.tokentoken.mocktoken"
+
+    @pytest.mark.asyncio()
+    async def test_acquire_handles_token_being_set_before_lock_is_acquired(self, mock_token, strategy):
+        mock_rest = mock.Mock(authorize_access_token=mock.AsyncMock(return_value=mock_token))
+
+        results = await asyncio.gather(
+            strategy.acquire(mock_rest), strategy.acquire(mock_rest), strategy.acquire(mock_rest)
+        )
+
+        mock_rest.authorize_access_token.assert_awaited_once_with(
+            client=4321,
+            client_secret="123123123",
+            code="auth#code",
+            redirect_uri="https://web.site/auth/discord",
+        )
+        assert results == [
+            "mockmock.tokentoken.mocktoken",
+            "mockmock.tokentoken.mocktoken",
+            "mockmock.tokentoken.mocktoken",
+        ]
+
+    @pytest.mark.asyncio()
+    async def test_acquire_after_invalidation(self, mock_token, strategy):
+        strategy._code = None
+
+        with pytest.raises(RuntimeError, match=r"Token has been invalidated. Unable to get current or new token"):
+            await strategy.acquire(object())
+
+    @pytest.mark.asyncio()
+    async def test_acquire_uses_newly_cached_token_after_acquiring_lock(self, strategy):
+        class MockLock:
+            def __init__(self, strategy):
+                self._strategy = strategy
+
+            async def __aenter__(self):
+                self._strategy._token = "cab.cab.cab"
+                return self
+
+            async def __aexit__(self, exc_type, exc_val, exc_tb):
+                return
+
+        mock_rest = mock.Mock()
+        strategy._lock = MockLock(strategy)
+        strategy._token = None
+        strategy._expire_at = time.monotonic() + 500
+
+        result = await strategy.acquire(mock_rest)
+
+        assert result == "cab.cab.cab"
+
+        mock_rest.authorize_access_token.assert_not_called()
+
+    @pytest.mark.asyncio()
+    async def test_acquire_caches_client_http_response_error(self, strategy):
+        mock_rest = mock.AsyncMock()
+        error = errors.ClientHTTPResponseError(
+            url="okokok", status=42, headers={}, raw_body=b"ok", message="OK", code=34123
+        )
+        mock_rest.authorize_access_token.side_effect = error
+
+        with pytest.raises(errors.ClientHTTPResponseError):
+            await strategy.acquire(mock_rest)
+
+        with pytest.raises(errors.ClientHTTPResponseError):
+            await strategy.acquire(mock_rest)
+
+        mock_rest.authorize_access_token.assert_awaited_once_with(
+            client=4321,
+            client_secret="123123123",
+            code="auth#code",
+            redirect_uri="https://web.site/auth/discord",
+        )
+
+    def test_invalidate_when_token_is_not_stored_token(self, strategy):
+        strategy._expire_at = 10.0
+        strategy._token = "token"
+
+        strategy.invalidate("tokena")
+
+        assert strategy._expire_at == 10.0
+        assert strategy._token == "token"
+
+    def test_invalidate_when_no_token_specified(self, strategy):
+        strategy._expire_at = 10.0
+        strategy._token = "token"
+
+        strategy.invalidate(None)
+
+        assert strategy._expire_at == 0.0
+        assert strategy._token is None
+
+    def test_invalidate_when_token_is_stored_token(self, strategy):
         strategy._expire_at = 10.0
         strategy._token = "token"
 
@@ -468,13 +635,6 @@ def file_resource_patch(file_resource):
     resource = file_resource("some data")
     with mock.patch.object(files, "ensure_resource", return_value=resource):
         yield resource
-
-
-class StubModel(snowflakes.Unique):
-    id = None
-
-    def __init__(self, id=0):
-        self.id = snowflakes.Snowflake(id)
 
 
 class TestStringifyHttpMessage:
@@ -3721,29 +3881,6 @@ class TestRESTClientImplAsync:
         )
         rest_client._request.assert_awaited_once_with(
             expected_route, form_builder=mock_url_encoded_form, auth="Basic NDU0MTIzOjEyMzEyMw=="
-        )
-
-    async def test_refresh_access_token_with_scopes(self, rest_client):
-        expected_route = routes.POST_TOKEN.compile()
-        mock_url_encoded_form = mock.Mock()
-        rest_client._request = mock.AsyncMock(return_value={"access_token": 42})
-
-        with mock.patch.object(data_binding, "URLEncodedFormBuilder", return_value=mock_url_encoded_form):
-            result = await rest_client.refresh_access_token(54123, "312312", "a.codett", scopes=["1", "3", "scope43"])
-
-        mock_url_encoded_form.add_field.assert_has_calls(
-            [
-                mock.call("grant_type", "refresh_token"),
-                mock.call("refresh_token", "a.codett"),
-                mock.call("scope", "1 3 scope43"),
-            ]
-        )
-        assert result is rest_client._entity_factory.deserialize_authorization_token.return_value
-        rest_client._entity_factory.deserialize_authorization_token.assert_called_once_with(
-            rest_client._request.return_value
-        )
-        rest_client._request.assert_awaited_once_with(
-            expected_route, form_builder=mock_url_encoded_form, auth="Basic NTQxMjM6MzEyMzEy"
         )
 
     async def test_revoke_access_token(self, rest_client):
