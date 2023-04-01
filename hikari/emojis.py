@@ -45,7 +45,7 @@ if typing.TYPE_CHECKING:
     from hikari import traits
     from hikari import users
 
-_TWEMOJI_PNG_BASE_URL: typing.Final[str] = "https://raw.githubusercontent.com/twitter/twemoji/master/assets/72x72/"
+_TWEMOJI_PNG_BASE_URL: typing.Final[str] = "https://raw.githubusercontent.com/discord/twemoji/master/assets/72x72/"
 _CUSTOM_EMOJI_REGEX: typing.Final[typing.Pattern[str]] = re.compile(r"<(?P<flags>[^:]*):(?P<name>[^:]*):(?P<id>\d+)>")
 
 
@@ -182,7 +182,7 @@ class UnicodeEmoji(str, Emoji):
 
             >>> emoji = hikari.UnicodeEmoji("\N{OK HAND SIGN}")
             >>> emoji.url
-            'https://raw.githubusercontent.com/twitter/twemoji/master/assets/72x72/1f44c.png'
+            'https://raw.githubusercontent.com/discord/twemoji/master/assets/72x72/1f44c.png'
         """
         return _TWEMOJI_PNG_BASE_URL + self.filename
 
