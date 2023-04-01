@@ -39,7 +39,7 @@ jobs:
       - name: Run prepare script
         env:
           VERSION: ${{ inputs.version }}
-        run: bash scripts/prepare-release.sh
+        run: bash scripts/ci/prepare-release.sh
 
       - name: Create pull request
         uses: repo-sync/pull-request@v2

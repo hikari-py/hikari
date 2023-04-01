@@ -418,15 +418,12 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
             `throttle_task` to `None`. This means you can check if throttling
             is occurring by checking if `throttle_task` is not `None`.
         """
-        _LOGGER.debug(
-            "you are being rate limited on bucket %s, backing off for %ss",
-            self.name,
-            self.get_time_until_reset(time.monotonic()),
-        )
-
         while self.queue:
             sleep_for = self.get_time_until_reset(time.monotonic())
-            await asyncio.sleep(sleep_for)
+
+            if sleep_for > 0:
+                _LOGGER.debug("you are being rate limited on bucket %s, backing off for %ss", self.name, sleep_for)
+                await asyncio.sleep(sleep_for)
 
             while self.remaining > 0 and self.queue:
                 self.drip()

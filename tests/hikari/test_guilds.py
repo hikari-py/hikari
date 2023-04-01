@@ -146,6 +146,7 @@ class TestRole:
             bot_id=None,
             integration_id=None,
             is_premium_subscriber_role=False,
+            is_guild_linked_role=True,
         )
 
     def test_colour_property(self, model):
@@ -156,6 +157,13 @@ class TestRole:
             assert model.icon_url == make_icon_url.return_value
 
             model.make_icon_url.assert_called_once_with()
+
+    def test_mention_property(self, model):
+        assert model.mention == "<@&979899100>"
+
+    def test_mention_property_when_is_everyone_role(self, model):
+        model.id = model.guild_id
+        assert model.mention == "@everyone"
 
     def test_make_icon_url_when_hash_is_None(self, model):
         model.icon_hash = None

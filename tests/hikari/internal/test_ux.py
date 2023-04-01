@@ -233,13 +233,15 @@ class TestRedBanner:
             joint_path = None
             open_mode = None
             mock_file = None
+            open_encoding = None
 
             def joinpath(self, path):
                 self.joint_path = path
                 return self
 
-            def open(self, mode):
+            def open(self, mode, encoding):
                 self.open_mode = mode
+                self.open_encoding = encoding
                 return self.mock_file
 
         traversable = MockTraversable()
@@ -253,6 +255,7 @@ class TestRedBanner:
         read_text.assert_called_once_with("hikaru")
         assert traversable.joint_path == "banner.txt"
         assert traversable.open_mode == "r"
+        assert traversable.open_encoding == "utf-8"
         assert traversable.mock_file.context_entered == 1
         assert traversable.mock_file.context_exited == 1
 
@@ -261,7 +264,7 @@ class TestRedBanner:
             with mock.patch.object(importlib.resources, "read_text") as read_text:
                 assert ux._read_banner("hikaru") is read_text.return_value
 
-        read_text.assert_called_once_with("hikaru", "banner.txt")
+        read_text.assert_called_once_with("hikaru", "banner.txt", encoding="utf-8")
 
 
 class TestPrintBanner:

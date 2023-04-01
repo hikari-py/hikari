@@ -1,14 +1,14 @@
 sphinx==6.1.3
 
 # Theme
-furo==2022.12.7
+furo==2023.3.27
 
 # Autodocumentation
-sphinx-autoapi==2.0.1
+sphinx-autoapi==2.1.0
 numpydoc==1.5.0
 
 # Static files
-myst-parser==0.19.1
+myst-parser==1.0.0
 
 # Misc extensions
 sphinxext.opengraph==0.8.1

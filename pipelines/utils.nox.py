@@ -47,7 +47,7 @@ TO_DELETE = [
 ]
 
 
-@nox.session(reuse_venv=False, venv_backend="none")
+@nox.session(venv_backend="none")
 def purge(session: nox.Session) -> None:
     """Delete any nox-generated files."""
     for func, trash_list in TO_DELETE:

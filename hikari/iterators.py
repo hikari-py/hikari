@@ -639,6 +639,10 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
         """
         return _FlatMapLazyIterator(self, flattener)
 
+    def flatten(self: LazyIterator[typing.Iterable[AnotherValueT]]) -> LazyIterator[AnotherValueT]:
+        """Flatten an async iterator of iterables."""
+        return self.flat_map(_flatten)
+
     def awaiting(self, window_size: int = 10) -> LazyIterator[ValueT]:
         """Await each item concurrently in a fixed size window.
 
@@ -731,6 +735,10 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
             raise TypeError(
                 f"{cls.__module__}.{cls.__qualname__} is async-only, did you mean 'async for' or `anext`?"
             ) from None
+
+
+def _flatten(value: ValueT) -> ValueT:
+    return value
 
 
 class BufferedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT], abc.ABC):

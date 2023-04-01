@@ -51,6 +51,7 @@ __all__: typing.Sequence[str] = (
 import abc
 import typing
 
+from hikari import components as components_
 from hikari import undefined
 
 if typing.TYPE_CHECKING:
@@ -61,7 +62,6 @@ if typing.TYPE_CHECKING:
     from hikari import channels
     from hikari import colors
     from hikari import commands
-    from hikari import components as components_
     from hikari import embeds as embeds_
     from hikari import emojis
     from hikari import files
@@ -77,8 +77,7 @@ if typing.TYPE_CHECKING:
     from hikari.interactions import base_interactions
     from hikari.internal import time
 
-_SelectMenuBuilderT = typing.TypeVar("_SelectMenuBuilderT", bound="SelectMenuBuilder[typing.Any]")
-_ContainerT = typing.TypeVar("_ContainerT")
+_ParentT = typing.TypeVar("_ParentT")
 
 
 class TypingIndicator(abc.ABC):
@@ -1319,7 +1318,7 @@ class ComponentBuilder(abc.ABC):
         """
 
 
-class ButtonBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
+class ButtonBuilder(ComponentBuilder, abc.ABC):
     """Builder class for a message button component."""
 
     __slots__: typing.Sequence[str] = ()
@@ -1404,20 +1403,8 @@ class ButtonBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
             The builder object to enable chained calls.
         """
 
-    @abc.abstractmethod
-    def add_to_container(self) -> _ContainerT:
-        """Add this button to the container component it belongs to.
 
-        This is used as the finalising call during chained calls.
-
-        Returns
-        -------
-        _ContainerT
-            The container component that owns this button.
-        """
-
-
-class LinkButtonBuilder(ButtonBuilder[_ContainerT], abc.ABC):
+class LinkButtonBuilder(ButtonBuilder, abc.ABC):
     """Builder interface for link buttons."""
 
     __slots__: typing.Sequence[str] = ()
@@ -1428,7 +1415,7 @@ class LinkButtonBuilder(ButtonBuilder[_ContainerT], abc.ABC):
         """URL this button should link to when pressed."""
 
 
-class InteractiveButtonBuilder(ButtonBuilder[_ContainerT], abc.ABC):
+class InteractiveButtonBuilder(ButtonBuilder, abc.ABC):
     """Builder interface for interactive buttons."""
 
     __slots__: typing.Sequence[str] = ()
@@ -1439,7 +1426,7 @@ class InteractiveButtonBuilder(ButtonBuilder[_ContainerT], abc.ABC):
         """Developer set custom ID used for identifying interactions with this button."""
 
 
-class SelectOptionBuilder(abc.ABC, typing.Generic[_SelectMenuBuilderT]):
+class SelectOptionBuilder(abc.ABC):
     """Builder class for select menu options."""
 
     __slots__: typing.Sequence[str] = ()
@@ -1519,18 +1506,6 @@ class SelectOptionBuilder(abc.ABC, typing.Generic[_SelectMenuBuilderT]):
         """
 
     @abc.abstractmethod
-    def add_to_menu(self) -> _SelectMenuBuilderT:
-        """Add this option to the menu component it belongs to.
-
-        This is used as the finalising call during chained calls.
-
-        Returns
-        -------
-        _SelectMenuBuilderT
-            The menu component that owns this button.
-        """
-
-    @abc.abstractmethod
     def build(self) -> typing.MutableMapping[str, typing.Any]:
         """Build a JSON object from this builder.
 
@@ -1541,7 +1516,7 @@ class SelectOptionBuilder(abc.ABC, typing.Generic[_SelectMenuBuilderT]):
         """
 
 
-class SelectMenuBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
+class SelectMenuBuilder(ComponentBuilder, abc.ABC):
     """Builder class for a select menu."""
 
     __slots__: typing.Sequence[str] = ()
@@ -1652,34 +1627,34 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
             The builder object to enable chained calls.
         """
 
-    @abc.abstractmethod
-    def add_to_container(self) -> _ContainerT:
-        """Finalise this builder by adding it to its parent container component.
 
-        Returns
-        -------
-        _ContainerT
-            The parent container component builder.
-        """
-
-
-class TextSelectMenuBuilder(SelectMenuBuilder[_ContainerT], abc.ABC, typing.Generic[_ContainerT]):
+class TextSelectMenuBuilder(SelectMenuBuilder, abc.ABC, typing.Generic[_ParentT]):
     """Builder class for a text select menu."""
 
     __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod
-    def options(self) -> typing.Sequence[SelectOptionBuilder[Self]]:
+    def parent(self) -> _ParentT:
+        """Parent object which initialised this builder."""
+
+    @property
+    @abc.abstractmethod
+    def options(self) -> typing.Sequence[SelectOptionBuilder]:
         """Sequence of the options set for this select menu."""
 
     @abc.abstractmethod
-    def add_option(self, label: str, value: str, /) -> SelectOptionBuilder[Self]:
+    def add_option(
+        self,
+        label: str,
+        value: str,
+        /,
+        *,
+        description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType] = undefined.UNDEFINED,
+        is_default: bool = False,
+    ) -> Self:
         """Add an option to this menu.
-
-        .. note::
-            Setup should be finalised by calling `add_to_menu` in the builder
-            returned.
 
         Parameters
         ----------
@@ -1687,15 +1662,23 @@ class TextSelectMenuBuilder(SelectMenuBuilder[_ContainerT], abc.ABC, typing.Gene
             The user-facing name of this option, max 100 characters.
         value : str
             The developer defined value of this option, max 100 characters.
+        description : hikari.undefined.UndefinedOr[str]
+            The option's description.
+
+            This can be up to 100 characters long.
+        emoji : typing.Union[hikari.snowflakes.Snowflakeish, hikari.emojis.Emoji, str, hikari.undefined.UndefinedType]
+            The option's display emoji.
+        is_default : bool
+            Whether this option should be selected by default.
 
         Returns
         -------
-        SelectOptionBuilder[SelectMenuBuilder]
-            Option builder object.
+        TextSelectMenuBuilder
+            The select menu builder to enable call chaining.
         """
 
 
-class ChannelSelectMenuBuilder(SelectMenuBuilder[_ContainerT], abc.ABC, typing.Generic[_ContainerT]):
+class ChannelSelectMenuBuilder(SelectMenuBuilder, abc.ABC):
     """Builder class for a channel select menu."""
 
     __slots__: typing.Sequence[str] = ()
@@ -1721,7 +1704,7 @@ class ChannelSelectMenuBuilder(SelectMenuBuilder[_ContainerT], abc.ABC, typing.G
         """
 
 
-class TextInputBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
+class TextInputBuilder(ComponentBuilder, abc.ABC):
     """Builder class for text inputs components."""
 
     __slots__: typing.Sequence[str] = ()
@@ -1763,17 +1746,22 @@ class TextInputBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
 
     @property
     @abc.abstractmethod
-    def required(self) -> undefined.UndefinedOr[bool]:
+    def required(self) -> bool:
+        """Deprecated alias for `hikari.api.special_endpoints.TextInputBuilder`."""
+
+    @property
+    @abc.abstractmethod
+    def is_required(self) -> bool:
         """Whether this text input is required to be filled-in."""
 
     @property
     @abc.abstractmethod
-    def min_length(self) -> undefined.UndefinedOr[int]:
+    def min_length(self) -> int:
         """Minimum length the text should have."""
 
     @property
     @abc.abstractmethod
-    def max_length(self) -> undefined.UndefinedOr[int]:
+    def max_length(self) -> int:
         """Maximum length the text should have."""
 
     @abc.abstractmethod
@@ -1822,12 +1810,12 @@ class TextInputBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
         """
 
     @abc.abstractmethod
-    def set_placeholder(self, placeholder: str, /) -> Self:
+    def set_placeholder(self, placeholder: undefined.UndefinedOr[str], /) -> Self:
         """Set the placeholder text for when the text input is empty.
 
         Parameters
         ----------
-        placeholder : str:
+        placeholder : hikari.undefined.UndefinedOr[str]
             Placeholder text that will disappear when the user types anything.
 
         Returns
@@ -1837,12 +1825,12 @@ class TextInputBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
         """
 
     @abc.abstractmethod
-    def set_value(self, value: str, /) -> Self:
+    def set_value(self, value: undefined.UndefinedOr[str], /) -> Self:
         """Pre-filled text that will be sent if the user does not write anything.
 
         Parameters
         ----------
-        value : str
+        value : hikari.undefined.UndefinedOr[str]
             Pre-filled text that will be sent if the user does not write anything.
 
         Returns
@@ -1896,16 +1884,6 @@ class TextInputBuilder(ComponentBuilder, abc.ABC, typing.Generic[_ContainerT]):
             The builder object to enable chained calls.
         """
 
-    @abc.abstractmethod
-    def add_to_container(self) -> _ContainerT:
-        """Finalise this builder by adding it to its parent container component.
-
-        Returns
-        -------
-        _ContainerT
-            The parent container component builder.
-        """
-
 
 class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
     """Builder class for action row components."""
@@ -1942,71 +1920,73 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
             The builder object to enable chained calls.
         """
 
-    @typing.overload
     @abc.abstractmethod
-    def add_button(
-        self, style: components_.InteractiveButtonTypesT, custom_id: str, /
-    ) -> InteractiveButtonBuilder[Self]:
-        ...
+    def add_interactive_button(
+        self,
+        style: components_.InteractiveButtonTypesT,
+        custom_id: str,
+        /,
+        *,
+        emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType] = undefined.UNDEFINED,
+        label: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        is_disabled: bool = False,
+    ) -> Self:
+        """Add an interactive button component to this action row builder.
 
-    @typing.overload
-    @abc.abstractmethod
-    def add_button(
-        self, style: typing.Literal[components_.ButtonStyle.LINK, 5], url: str, /
-    ) -> LinkButtonBuilder[Self]:
-        ...
-
-    @typing.overload
-    @abc.abstractmethod
-    def add_button(
-        self, style: typing.Union[int, components_.ButtonStyle], url_or_custom_id: str, /
-    ) -> typing.Union[LinkButtonBuilder[Self], InteractiveButtonBuilder[Self]]:
-        ...
-
-    @abc.abstractmethod
-    def add_button(
-        self, style: typing.Union[int, components_.ButtonStyle], url_or_custom_id: str, /
-    ) -> typing.Union[LinkButtonBuilder[Self], InteractiveButtonBuilder[Self]]:
-        """Add a button component to this action row builder.
+        Either `emoji` or `label` (exclusively) must be provided to be the button's
+        displayed label.
 
         Parameters
         ----------
-        style : typing.Union[int, hikari.messages.ButtonStyle]
+        style : hikari.messages.InteractiveButtonTypesT
             The button's style.
-        url_or_custom_id : str
-            For interactive button styles this is a developer-defined custom
-            identifier used to identify which button triggered component interactions.
-
-            For Link button styles this is the URL the link button should redirect
-            to.
+        custom_id : str
+            The developer-defined custom identifier used to identify which button
+            triggered component interactions.
+        emoji : typing.Union[hikari.snowflakes.Snowflakeish, hikari.emojis.Emoji, str, hikari.undefined.UndefinedType]
+            The button's display emoji.
+        label : hikari.undefined.UndefinedOr[str]
+            The button's display label.
+        is_disabled : bool
+            Whether the button should be marked as disabled.
 
         Returns
         -------
-        typing.Union[LinkButtonBuilder[Self], InteractiveButtonBuilder[Self]]
-            Button builder object.
-            `ButtonBuilder.add_to_container` should be called to finalise the
-            component.
+        ActionRowBuilder
+            The action row builder to enable chained calls.
         """
 
-    @typing.overload
     @abc.abstractmethod
-    def add_select_menu(
+    def add_link_button(
         self,
-        type_: typing.Literal[components_.ComponentType.TEXT_SELECT_MENU, 3],
-        custom_id: str,
+        url: str,
         /,
-    ) -> TextSelectMenuBuilder[Self]:
-        ...
+        *,
+        emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType] = undefined.UNDEFINED,
+        label: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        is_disabled: bool = False,
+    ) -> Self:
+        """Add a link button component to this action row builder.
 
-    @typing.overload
-    @abc.abstractmethod
-    def add_select_menu(
-        self,
-        type_: typing.Literal[components_.ComponentType.CHANNEL_SELECT_MENU, 8],
-        custom_id: str,
-        /,
-    ) -> ChannelSelectMenuBuilder[Self]:
-        ...
+        Either `emoji` or `label` (exclusively) must be provided to be the button's
+        displayed label.
+
+        Parameters
+        ----------
+        url : str
+            The URL the link button should redirect to.
+        emoji : typing.Union[hikari.snowflakes.Snowflakeish, hikari.emojis.Emoji, str, hikari.undefined.UndefinedType]
+            The button's display emoji.
+        label : hikari.undefined.UndefinedOr[str]
+            The button's display label.
+        is_disabled : bool
+            Whether the button should be marked as disabled.
+
+        Returns
+        -------
+        ActionRowBuilder
+            The action row builder to enable chained calls.
+        """
 
     @abc.abstractmethod
     def add_select_menu(
@@ -2014,8 +1994,17 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
         type_: typing.Union[components_.ComponentType, int],
         custom_id: str,
         /,
-    ) -> SelectMenuBuilder[Self]:
+        *,
+        placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        min_values: int = 0,
+        max_values: int = 1,
+        is_disabled: bool = False,
+    ) -> Self:
         """Add a select menu component to this action row builder.
+
+        For channel select menus and text select menus see
+        `MessageActionRowBuilder.add_channel_menu` and
+        `MessageActionRowBuilder.add_text_menu`.
 
         Parameters
         ----------
@@ -2024,13 +2013,106 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
         custom_id : str
             A developer-defined custom identifier used to identify which menu
             triggered component interactions.
+        placeholder : hikari.undefined.UndefinedOr[str]
+            Placeholder text to show when no entries have been selected.
+        min_values : int
+            The minimum amount of entries which need to be selected.
+        max_values : int
+            The maximum amount of entries which can be selected.
+        is_disabled : bool
+            Whether this select menu should be marked as disabled.
 
         Returns
         -------
-        SelectMenuBuilder[Self]
-            Select menu builder object.
-            `SelectMenuBuilder.add_to_container` should be called to finalise the
-            component.
+        ActionRowBuilder
+            The action row builder to enable chained calls.
+
+        Raises
+        ------
+        ValueError
+            If an invalid select menu type is passed.
+        """
+
+    @abc.abstractmethod
+    def add_channel_menu(
+        self,
+        custom_id: str,
+        /,
+        *,
+        channel_types: typing.Sequence[channels.ChannelType] = (),
+        placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        min_values: int = 0,
+        max_values: int = 1,
+        is_disabled: bool = False,
+    ) -> Self:
+        """Add a channel select menu component to this action row builder.
+
+        Parameters
+        ----------
+        custom_id : str
+            A developer-defined custom identifier used to identify which menu
+            triggered component interactions.
+        channel_types : typing.Sequence[hikari.channels.ChannelType]
+            The channel types this select menu should allow.
+
+            If left as an empty sequence then there will be no
+            channel type restriction.
+        placeholder : hikari.undefined.UndefinedOr[str]
+            Placeholder text to show when no entries have been selected.
+        min_values : int
+            The minimum amount of entries which need to be selected.
+        max_values : int
+            The maximum amount of entries which can be selected.
+        is_disabled : bool
+            Whether this select menu should be marked as disabled.
+
+        Returns
+        -------
+        ActionRowBuilder
+            The action row builder to enable chained calls.
+
+        Raises
+        ------
+        ValueError
+            If an invalid select menu type is passed.
+        """
+
+    @abc.abstractmethod
+    def add_text_menu(
+        self,
+        custom_id: str,
+        /,
+        *,
+        placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        min_values: int = 0,
+        max_values: int = 1,
+        is_disabled: bool = False,
+    ) -> TextSelectMenuBuilder[Self]:
+        """Add a select menu component to this action row builder.
+
+        Parameters
+        ----------
+        custom_id : str
+            A developer-defined custom identifier used to identify which menu
+            triggered component interactions.
+        placeholder : hikari.undefined.UndefinedOr[str]
+            Placeholder text to show when no entries have been selected.
+        min_values : int
+            The minimum amount of entries which need to be selected.
+        max_values : int
+            The maximum amount of entries which can be selected.
+        is_disabled : bool
+            Whether this select menu should be marked as disabled.
+
+        Returns
+        -------
+        TextSelectMenuBuilder
+            The text select menu builder.
+
+            `TextSelectMenuBuilder.add_option` should be called to add
+            options to the returned builder then
+            `TextSelectMenuBuilder.parent` can be used to return to this
+            action row while chaining calls.
 
         Raises
         ------
@@ -2083,7 +2165,15 @@ class ModalActionRowBuilder(ComponentBuilder, abc.ABC):
         self,
         custom_id: str,
         label: str,
-    ) -> TextInputBuilder[Self]:
+        /,
+        *,
+        style: components_.TextInputStyle = components_.TextInputStyle.SHORT,
+        placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        value: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        required: bool = True,
+        min_length: int = 0,
+        max_length: int = 4000,
+    ) -> Self:
         """Add a text input component to this action row builder.
 
         Parameters
@@ -2092,11 +2182,25 @@ class ModalActionRowBuilder(ComponentBuilder, abc.ABC):
             Developer set custom ID used for identifying this text input.
         label : str
             Label above this text input.
+        style : hikari.components.TextInputStyle
+            The text input's style.
+        placeholder : hikari.undefined.UndefinedOr[str]
+            Placeholder text to display when the text input is empty.
+        value : hikari.undefined.UndefinedOr[str]
+            Default text to pre-fill the field with.
+        required : bool
+            Whether text must be supplied for this text input.
+        min_length : int
+            Minimum length the input text can be.
+
+            This can be greater than or equal to 0 and less than or equal to 4000.
+        max_length : int
+            Maximum length the input text can be.
+
+            This can be greater than or equal to 1 and less than or equal to 4000.
 
         Returns
         -------
-        TextInputBuilder[Self]
-            Text input builder object.
-            `TextInputBuilder.add_to_container` should be called to finalise the
-            component.
+        ModalActionRowBuilder
+            The modal action row builder to enable call chaining.
         """

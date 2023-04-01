@@ -1,1 +1,4 @@
 * text=auto eol=lf
+
+# Language aware diff headers
+*.py    diff=python

@@ -219,7 +219,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         locked: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         invitable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
-        applied_tags: undefined.UndefinedOr[typing.Sequence[channels_.ForumTag]] = undefined.UNDEFINED,
+        applied_tags: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[channels_.ForumTag]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.PartialChannel:
         """Edit a channel.
@@ -302,7 +302,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
             This should be either 60, 1440, 4320 or 10080 minutes, as of
             writing.
-        applied_tags : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.ForumTag]]
+        applied_tags : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.channels.ForumTag]]
             If provided, the new tags to apply to the thread. This only applies
             to threads in a forum channel.
         reason : hikari.undefined.UndefinedOr[str]

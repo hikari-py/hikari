@@ -1044,7 +1044,7 @@ class RESTClientImpl(rest_api.RESTClient):
         locked: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         invitable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
-        applied_tags: undefined.UndefinedOr[typing.Sequence[channels_.ForumTag]] = undefined.UNDEFINED,
+        applied_tags: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[channels_.ForumTag]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.PartialChannel:
         if isinstance(auto_archive_duration, datetime.timedelta):
@@ -1096,7 +1096,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("auto_archive_duration", auto_archive_duration, conversion=time.timespan_to_int)
         body.put("locked", locked)
         body.put("invitable", invitable)
-        body.put_array("applied_tags", applied_tags, conversion=self._entity_factory.serialize_forum_tag)
+        body.put_snowflake_array("applied_tags", applied_tags)
 
         response = await self._request(route, json=body, reason=reason)
         assert isinstance(response, dict)
