@@ -28,7 +28,7 @@ __all__: typing.Sequence[str] = ("TypingEvent", "GuildTypingEvent", "DMTypingEve
 import abc
 import typing
 
-import attr
+import attrs
 
 from hikari import channels
 from hikari import intents
@@ -36,7 +36,7 @@ from hikari import traits
 from hikari.api import special_endpoints
 from hikari.events import base_events
 from hikari.events import shard_events
-from hikari.internal import attr_extensions
+from hikari.internal import attrs_extensions
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -128,24 +128,24 @@ class TypingEvent(shard_events.ShardEvent, abc.ABC):
 
 
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGE_TYPING)
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 class GuildTypingEvent(TypingEvent):
     """Event fired when a user starts typing in a guild channel."""
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    channel_id: snowflakes.Snowflake = attr.field()
+    channel_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from TypingEvent>>.
 
-    timestamp: datetime.datetime = attr.field(repr=False)
+    timestamp: datetime.datetime = attrs.field(repr=False)
     # <<inherited docstring from TypingEvent>>.
 
-    guild_id: snowflakes.Snowflake = attr.field()
+    guild_id: snowflakes.Snowflake = attrs.field()
     """ID of the guild that this event relates to."""
 
-    member: guilds.Member = attr.field(repr=False)
+    member: guilds.Member = attrs.field(repr=False)
     """Object of the member who triggered this typing event."""
 
     @property
@@ -236,24 +236,24 @@ class GuildTypingEvent(TypingEvent):
 
 
 @base_events.requires_intents(intents.Intents.DM_MESSAGES)
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 class DMTypingEvent(TypingEvent):
     """Event fired when a user starts typing in a guild channel."""
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    channel_id: snowflakes.Snowflake = attr.field()
+    channel_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from TypingEvent>>.
 
-    user_id: snowflakes.Snowflake = attr.field(repr=True)
+    user_id: snowflakes.Snowflake = attrs.field(repr=True)
     # <<inherited docstring from TypingEvent>>.
 
-    timestamp: datetime.datetime = attr.field(repr=False)
+    timestamp: datetime.datetime = attrs.field(repr=False)
     # <<inherited docstring from TypingEvent>>.
 
     async def fetch_channel(self) -> channels.DMChannel:

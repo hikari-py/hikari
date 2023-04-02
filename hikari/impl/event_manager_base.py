@@ -36,7 +36,7 @@ import typing
 import warnings
 import weakref
 
-import attr
+import attrs
 
 from hikari import errors
 from hikari import iterators
@@ -301,21 +301,21 @@ def filtered(
     return decorator
 
 
-@attr.define(weakref_slot=False)
+@attrs.define(weakref_slot=False)
 class _Consumer:
-    callback: _ConsumerT = attr.field(hash=True)
+    callback: _ConsumerT = attrs.field(hash=True)
     """The callback function for this consumer."""
 
-    events_bitmask: int = attr.field()
+    events_bitmask: int = attrs.field()
     """The registered events bitmask."""
 
-    is_caching: bool = attr.field()
+    is_caching: bool = attrs.field()
     """Cached value of whether or not this consumer is making cache calls in the current env."""
 
-    listener_group_count: int = attr.field(init=False, default=0)
+    listener_group_count: int = attrs.field(init=False, default=0)
     """The number of listener groups registered to this consumer."""
 
-    waiter_group_count: int = attr.field(init=False, default=0)
+    waiter_group_count: int = attrs.field(init=False, default=0)
     """The number of waiters groups registered to this consumer."""
 
     @property

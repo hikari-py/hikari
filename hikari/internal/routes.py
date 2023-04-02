@@ -31,10 +31,10 @@ import re
 import typing
 import urllib.parse
 
-import attr
+import attrs
 
 from hikari import files
-from hikari.internal import attr_extensions
+from hikari.internal import attrs_extensions
 from hikari.internal import data_binding
 
 HASH_SEPARATOR: typing.Final[str] = ";"
@@ -49,8 +49,8 @@ MAJOR_PARAM_COMBOS: typing.Mapping[typing.FrozenSet[str], typing.Callable[[typin
 
 # This could be frozen, except attrs' docs advise against this for performance
 # reasons when using slotted classes.
-@attr_extensions.with_copy
-@attr.define(hash=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=True, weakref_slot=False)
 @typing.final
 class CompiledRoute:
     """A compiled representation of a route to a specific resource.
@@ -59,13 +59,13 @@ class CompiledRoute:
     `Route` is treated as a template, this is treated as an instance.
     """
 
-    major_param_hash: str = attr.field()
+    major_param_hash: str = attrs.field()
     """The major parameters in a bucket hash-compatible representation."""
 
-    route: Route = attr.field()
+    route: Route = attrs.field()
     """The route this compiled route was created from."""
 
-    compiled_path: str = attr.field()
+    compiled_path: str = attrs.field()
     """The compiled route path to use."""
 
     @property
@@ -114,8 +114,8 @@ class CompiledRoute:
         return f"{self.method} {self.compiled_path}"
 
 
-@attr_extensions.with_copy
-@attr.define(hash=True, init=False, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=True, init=False, weakref_slot=False)
 @typing.final
 class Route:
     """A template used to create compiled routes for specific parameters.
@@ -131,16 +131,16 @@ class Route:
         The template string for the path to use.
     """
 
-    method: str = attr.field()
+    method: str = attrs.field()
     """The HTTP method."""
 
-    path_template: str = attr.field()
+    path_template: str = attrs.field()
     """The template string used for the path."""
 
-    major_params: typing.Optional[typing.FrozenSet[str]] = attr.field(hash=False, eq=False, repr=False)
+    major_params: typing.Optional[typing.FrozenSet[str]] = attrs.field(hash=False, eq=False, repr=False)
     """The optional major parameter name combination for this endpoint."""
 
-    has_ratelimits: bool = attr.field(hash=False, eq=False, repr=False)
+    has_ratelimits: bool = attrs.field(hash=False, eq=False, repr=False)
     """Whether this route is affected by ratelimits.
 
     This should be left as `True` (the default) for most routes. This
@@ -193,26 +193,26 @@ def _cdn_valid_formats_converter(values: typing.AbstractSet[str]) -> typing.Froz
     return frozenset(v.lower() for v in values)
 
 
-@attr_extensions.with_copy
-@attr.define(hash=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=True, weakref_slot=False)
 @typing.final
 class CDNRoute:
     """Route implementation for a CDN resource."""
 
-    path_template: str = attr.field()
+    path_template: str = attrs.field()
     """Template string for this endpoint."""
 
-    valid_formats: typing.AbstractSet[str] = attr.field(
+    valid_formats: typing.AbstractSet[str] = attrs.field(
         converter=_cdn_valid_formats_converter, eq=False, hash=False, repr=False
     )
     """Valid file formats for this endpoint."""
 
     @valid_formats.validator
-    def _(self, _: attr.Attribute[typing.AbstractSet[str]], values: typing.AbstractSet[str]) -> None:
+    def _(self, _: attrs.Attribute[typing.AbstractSet[str]], values: typing.AbstractSet[str]) -> None:
         if not values:
             raise ValueError(f"{self.path_template} must have at least one valid format set")
 
-    is_sizable: bool = attr.field(default=True, kw_only=True, repr=False, hash=False, eq=False)
+    is_sizable: bool = attrs.field(default=True, kw_only=True, repr=False, hash=False, eq=False)
     """Whether a `size` param can be specified."""
 
     def compile(

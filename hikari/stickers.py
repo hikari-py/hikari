@@ -35,11 +35,11 @@ __all__: typing.Sequence[str] = (
 
 import typing
 
-import attr
+import attrs
 
 from hikari import snowflakes
 from hikari import urls
-from hikari.internal import attr_extensions
+from hikari.internal import attrs_extensions
 from hikari.internal import enums
 from hikari.internal import routes
 
@@ -85,29 +85,29 @@ _STICKER_EXTENSIONS: typing.Dict[typing.Union[StickerFormatType, int], str] = {
 }
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class StickerPack(snowflakes.Unique):
     """Represents a sticker pack on Discord."""
 
-    id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
+    id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
     """The ID of this entity."""
 
-    name: str = attr.field(eq=False, hash=False, repr=False)
+    name: str = attrs.field(eq=False, hash=False, repr=False)
     """The name of the pack."""
 
-    description: str = attr.field(eq=False, hash=False, repr=False)
+    description: str = attrs.field(eq=False, hash=False, repr=False)
     """The description of the pack."""
 
-    cover_sticker_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
+    cover_sticker_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The ID of a sticker in the pack which is shown as the pack's icon."""
 
-    stickers: typing.Sequence[StandardSticker] = attr.field(eq=False, hash=False, repr=False)
+    stickers: typing.Sequence[StandardSticker] = attrs.field(eq=False, hash=False, repr=False)
     """The stickers that belong to this pack."""
 
-    sku_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=False)
+    sku_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the packs SKU."""
 
-    banner_asset_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
+    banner_asset_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """ID of the sticker pack's banner image, if set."""
 
     @property
@@ -145,18 +145,18 @@ class StickerPack(snowflakes.Unique):
         return None
 
 
-@attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class PartialSticker(snowflakes.Unique):
     """Represents the partial stickers found attached to messages on Discord."""
 
-    id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
+    id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
     """The ID of this entity."""
 
-    name: str = attr.field(eq=False, hash=False, repr=False)
+    name: str = attrs.field(eq=False, hash=False, repr=False)
     """The name of the sticker."""
 
-    format_type: typing.Union[StickerFormatType, int] = attr.field(eq=False, hash=False, repr=True)
+    format_type: typing.Union[StickerFormatType, int] = attrs.field(eq=False, hash=False, repr=True)
     """The format of this sticker's asset."""
 
     @property
@@ -171,48 +171,48 @@ class PartialSticker(snowflakes.Unique):
         return routes.CDN_STICKER.compile_to_file(urls.CDN_URL, sticker_id=self.id, file_format=ext)
 
 
-@attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class StandardSticker(PartialSticker):
     """Represents a standard Discord sticker that belongs to a pack."""
 
-    type: StickerType = attr.field(eq=False, hash=False, repr=False, init=False, default=StickerType.STANDARD)
+    type: StickerType = attrs.field(eq=False, hash=False, repr=False, init=False, default=StickerType.STANDARD)
     """The sticker type."""
 
-    description: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    description: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """The description of this sticker."""
 
-    pack_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
+    pack_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
     """ID of the package this sticker belongs to."""
 
-    sort_value: int = attr.field(eq=False, hash=False, repr=False)
+    sort_value: int = attrs.field(eq=False, hash=False, repr=False)
     """The sort value for the sticker in its pack."""
 
-    tags: typing.Sequence[str] = attr.field(eq=False, hash=False, repr=True)
+    tags: typing.Sequence[str] = attrs.field(eq=False, hash=False, repr=True)
     """A sequence of this sticker's tags."""
 
 
-@attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class GuildSticker(PartialSticker):
     """Represents a Discord sticker that belongs to a guild."""
 
-    type: StickerType = attr.field(eq=False, hash=False, repr=False, init=False, default=StickerType.GUILD)
+    type: StickerType = attrs.field(eq=False, hash=False, repr=False, init=False, default=StickerType.GUILD)
     """The sticker type."""
 
-    description: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    description: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """The description of this sticker."""
 
-    guild_id: snowflakes.Snowflake = attr.field(eq=False, hash=False)
+    guild_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False)
     """The guild this sticker belongs to."""
 
-    is_available: bool = attr.field(eq=False, hash=False)
+    is_available: bool = attrs.field(eq=False, hash=False)
     """Whether the sticker can be used."""
 
-    tag: str = attr.field(eq=False, hash=False)
+    tag: str = attrs.field(eq=False, hash=False)
     """This sticker's tag."""
 
-    user: typing.Optional[users.User] = attr.field(eq=False, hash=False, repr=False)
+    user: typing.Optional[users.User] = attrs.field(eq=False, hash=False, repr=False)
     """The user that uploaded this sticker.
 
     This will only available if you have the `MANAGE_EMOJIS_AND_STICKERS` permission.
