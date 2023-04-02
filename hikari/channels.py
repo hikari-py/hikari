@@ -778,8 +778,7 @@ class TextableChannel(PartialChannel):
     async def delete_messages(
         self,
         messages: typing.Union[
-            snowflakes.SnowflakeishOr[messages.PartialMessage],
-            snowflakes.SnowflakeishIterable[messages.PartialMessage],
+            snowflakes.SnowflakeishOr[messages.PartialMessage], snowflakes.SnowflakeishIterable[messages.PartialMessage]
         ],
         /,
         *other_messages: snowflakes.SnowflakeishOr[messages.PartialMessage],
@@ -923,11 +922,7 @@ class GroupDMChannel(PrivateChannel):
             return None
 
         return routes.CDN_CHANNEL_ICON.compile_to_file(
-            urls.CDN_URL,
-            channel_id=self.id,
-            hash=self.icon_hash,
-            size=size,
-            file_format=ext,
+            urls.CDN_URL, channel_id=self.id, hash=self.icon_hash, size=size, file_format=ext
         )
 
 
@@ -1217,8 +1212,7 @@ class PermissibleGuildChannel(GuildChannel):
         )
 
     async def remove_overwrite(
-        self,
-        target: typing.Union[PermissionOverwrite, guilds.PartialRole, users.PartialUser, snowflakes.Snowflakeish],
+        self, target: typing.Union[PermissionOverwrite, guilds.PartialRole, users.PartialUser, snowflakes.Snowflakeish]
     ) -> None:
         """Delete a custom permission for an entity in a given guild channel.
 

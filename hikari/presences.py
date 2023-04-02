@@ -157,11 +157,7 @@ class ActivityAssets:
         except ValueError:
             assert self._application_id is not None
             return routes.CDN_APPLICATION_ASSET.compile_to_file(
-                urls.CDN_URL,
-                application_id=self._application_id,
-                hash=asset,
-                size=size,
-                file_format=ext,
+                urls.CDN_URL, application_id=self._application_id, hash=asset, size=size, file_format=ext
             )
 
     @property

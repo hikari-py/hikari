@@ -45,11 +45,7 @@ def sphinx(session: nox.Session):
     session.install("-e", ".", *nox.dev_requirements("sphinx"))
 
     session.run(
-        "sphinx-build",
-        "-M",
-        "dirhtml",
-        config.DOCUMENTATION_DIRECTORY,
-        os.path.join(config.ARTIFACT_DIRECTORY, "docs"),
+        "sphinx-build", "-M", "dirhtml", config.DOCUMENTATION_DIRECTORY, os.path.join(config.ARTIFACT_DIRECTORY, "docs")
     )
 
 

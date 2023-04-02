@@ -24,11 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = [
-    "ModalResponseTypesT",
-    "ModalInteraction",
-    "ModalInteraction",
-]
+__all__: typing.List[str] = ["ModalResponseTypesT", "ModalInteraction", "ModalInteraction"]
 
 import typing
 

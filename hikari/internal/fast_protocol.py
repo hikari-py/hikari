@@ -45,10 +45,7 @@ class _FastProtocolChecking(type(typing.Protocol)):
     _attributes_: typing.Tuple[str, ...]
 
     def __new__(
-        cls,
-        cls_name: str,
-        bases: typing.Tuple[typing.Type[typing.Any], ...],
-        namespace: typing.Dict[str, typing.Any],
+        cls, cls_name: str, bases: typing.Tuple[typing.Type[typing.Any], ...], namespace: typing.Dict[str, typing.Any]
     ) -> Self:
         global _Protocol
 

@@ -198,11 +198,7 @@ class TestGuildBanIterator:
             side_effect=[[mock_payload_1, mock_payload_2, mock_payload_3], [mock_payload_4, mock_payload_5], []]
         )
         iterator = special_endpoints.GuildBanIterator(
-            entity_factory=mock_entity_factory,
-            request_call=mock_request,
-            guild=10000,
-            newest_first=False,
-            first_id="0",
+            entity_factory=mock_entity_factory, request_call=mock_request, guild=10000, newest_first=False, first_id="0"
         )
 
         result = await iterator
@@ -500,12 +496,7 @@ class TestGuildThreadIterator:
         )
         mock_route = mock.Mock()
         thread_iterator = special_endpoints.GuildThreadIterator(
-            mock_deserialize,
-            mock_entity_factory,
-            mock_request,
-            mock_route,
-            "eatmyshinymetal",
-            before_is_timestamp=True,
+            mock_deserialize, mock_entity_factory, mock_request, mock_route, "eatmyshinymetal", before_is_timestamp=True
         )
 
         results = await thread_iterator
@@ -611,12 +602,7 @@ class TestGuildThreadIterator:
         )
         mock_route = mock.Mock()
         thread_iterator = special_endpoints.GuildThreadIterator(
-            mock_deserialize,
-            mock_entity_factory,
-            mock_request,
-            mock_route,
-            "3451231231231",
-            before_is_timestamp=False,
+            mock_deserialize, mock_entity_factory, mock_request, mock_route, "3451231231231", before_is_timestamp=False
         )
 
         result = await thread_iterator
@@ -835,10 +821,7 @@ class TestInteractionDeferredBuilder:
 
         result, attachments = builder.build(object())
 
-        assert result == {
-            "type": base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE,
-            "data": {"flags": 64},
-        }
+        assert result == {"type": base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE, "data": {"flags": 64}}
         assert attachments == ()
 
 
@@ -986,10 +969,7 @@ class TestInteractionMessageBuilder:
         mock_entity_factory.serialize_embed.assert_not_called()
         assert result == {
             "type": base_interactions.ResponseType.MESSAGE_UPDATE,
-            "data": {
-                "components": [],
-                "embeds": [],
-            },
+            "data": {"components": [], "embeds": []},
         }
         assert attachments == []
 
@@ -1030,10 +1010,7 @@ class TestInteractionMessageBuilder:
 
         result, attachments = builder.build(mock_entity_factory)
 
-        assert result == {
-            "type": base_interactions.ResponseType.MESSAGE_UPDATE,
-            "data": {"attachments": None},
-        }
+        assert result == {"type": base_interactions.ResponseType.MESSAGE_UPDATE, "data": {"attachments": None}}
 
         assert attachments == []
 
@@ -1063,11 +1040,7 @@ class TestInteractionModalBuilder:
         result, attachments = builder.build(mock.Mock())
         assert result == {
             "type": 9,
-            "data": {
-                "title": "title",
-                "custom_id": "custom_id",
-                "components": [component.build.return_value],
-            },
+            "data": {"title": "title", "custom_id": "custom_id", "components": [component.build.return_value]},
         }
         assert attachments == ()
 
@@ -1220,10 +1193,7 @@ class TestSlashCommandBuilder:
 class TestContextMenuBuilder:
     def test_build_with_optional_data(self):
         builder = (
-            special_endpoints.ContextMenuCommandBuilder(
-                commands.CommandType.USER,
-                "we are number",
-            )
+            special_endpoints.ContextMenuCommandBuilder(commands.CommandType.USER, "we are number")
             .set_id(3412312)
             .set_name_localizations({locales.Locale.TR: "merhaba"})
             .set_default_member_permissions(permissions.Permissions.ADMINISTRATOR)
@@ -1423,11 +1393,7 @@ class Test_ButtonBuilder:
 
 class TestLinkButtonBuilder:
     def test_url_property(self):
-        button = special_endpoints.LinkButtonBuilder(
-            url="hihihihi",
-            label="no u",
-            is_disabled=True,
-        )
+        button = special_endpoints.LinkButtonBuilder(url="hihihihi", label="no u", is_disabled=True)
 
         assert button.url == "hihihihi"
 
@@ -1435,10 +1401,7 @@ class TestLinkButtonBuilder:
 class TestInteractiveButtonBuilder:
     def test_custom_id_property(self):
         button = special_endpoints.InteractiveButtonBuilder(
-            style=components.ButtonStyle.DANGER,
-            label="no u",
-            custom_id="ooga booga",
-            is_disabled=True,
+            style=components.ButtonStyle.DANGER, label="no u", custom_id="ooga booga", is_disabled=True
         )
 
         assert button.custom_id == "ooga booga"
@@ -1704,10 +1667,7 @@ class TestChannelSelectMenuBuilder:
 class TestTextInput:
     @pytest.fixture()
     def text_input(self):
-        return special_endpoints.TextInputBuilder(
-            custom_id="o2o2o2",
-            label="label",
-        )
+        return special_endpoints.TextInputBuilder(custom_id="o2o2o2", label="label")
 
     def test_type_property(self, text_input):
         assert text_input.type is components.ComponentType.TEXT_INPUT

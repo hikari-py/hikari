@@ -34,10 +34,7 @@ def test_SessionStartLimit_used_property():
 
 def test_SessionStartLimit_reset_at_property():
     obj = sessions.SessionStartLimit(
-        total=100,
-        remaining=2,
-        reset_after=datetime.timedelta(hours=1, days=10),
-        max_concurrency=1,
+        total=100, remaining=2, reset_after=datetime.timedelta(hours=1, days=10), max_concurrency=1
     )
     obj._created_at = datetime.datetime(2020, 7, 22, 22, 22, 36, 988017, tzinfo=datetime.timezone.utc)
 

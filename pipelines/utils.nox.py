@@ -36,15 +36,9 @@ DIRECTORIES_TO_DELETE = [
     "node_modules",
 ]
 
-FILES_TO_DELETE = [
-    ".coverage",
-    "package-lock.json",
-]
+FILES_TO_DELETE = [".coverage", "package-lock.json"]
 
-TO_DELETE = [
-    (shutil.rmtree, DIRECTORIES_TO_DELETE),
-    (os.remove, FILES_TO_DELETE),
-]
+TO_DELETE = [(shutil.rmtree, DIRECTORIES_TO_DELETE), (os.remove, FILES_TO_DELETE)]
 
 
 @nox.session(venv_backend="none")

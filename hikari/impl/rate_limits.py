@@ -483,11 +483,7 @@ class ExponentialBackOff:
     """
 
     def __init__(
-        self,
-        base: float = 2.0,
-        maximum: float = 64.0,
-        jitter_multiplier: float = 1.0,
-        initial_increment: int = 0,
+        self, base: float = 2.0, maximum: float = 64.0, jitter_multiplier: float = 1.0, initial_increment: int = 0
     ) -> None:
         # https://mypy.readthedocs.io/en/stable/duck_type_compatibility.html
         # Mypy makes the assumption that ints will always be compatible with floats, this isn't the case and could lead

@@ -208,12 +208,7 @@ class VoiceAware(fast_protocol.FastProtocolChecking, typing.Protocol):
 
 @typing.runtime_checkable
 class ShardAware(
-    IntentsAware,
-    NetworkSettingsAware,
-    ExecutorAware,
-    VoiceAware,
-    fast_protocol.FastProtocolChecking,
-    typing.Protocol,
+    IntentsAware, NetworkSettingsAware, ExecutorAware, VoiceAware, fast_protocol.FastProtocolChecking, typing.Protocol
 ):
     """Structural supertype for a shard-aware object.
 
@@ -501,17 +496,13 @@ class RESTBotAware(InteractionServerAware, Runnable, fast_protocol.FastProtocolC
 
     @property
     @abc.abstractmethod
-    def on_shutdown(
-        self,
-    ) -> typing.Sequence[typing.Callable[[Self], typing.Coroutine[typing.Any, typing.Any, None]]]:
+    def on_shutdown(self) -> typing.Sequence[typing.Callable[[Self], typing.Coroutine[typing.Any, typing.Any, None]]]:
         """Sequence of the bot's asynchronous shutdown callbacks."""
         raise NotImplementedError
 
     @property
     @abc.abstractmethod
-    def on_startup(
-        self,
-    ) -> typing.Sequence[typing.Callable[[Self], typing.Coroutine[typing.Any, typing.Any, None]]]:
+    def on_startup(self) -> typing.Sequence[typing.Callable[[Self], typing.Coroutine[typing.Any, typing.Any, None]]]:
         """Sequence of the bot's asynchronous startup callbacks."""
         raise NotImplementedError
 

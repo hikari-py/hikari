@@ -713,11 +713,7 @@ class Member(users.User):
             self.guild_id, self.user.id, delete_message_seconds=delete_message_seconds, reason=reason
         )
 
-    async def unban(
-        self,
-        *,
-        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> None:
+    async def unban(self, *, reason: undefined.UndefinedOr[str] = undefined.UNDEFINED) -> None:
         """Unban this member from the guild.
 
         Other Parameters
@@ -744,11 +740,7 @@ class Member(users.User):
         """
         await self.user.app.rest.unban_user(self.guild_id, self.user.id, reason=reason)
 
-    async def kick(
-        self,
-        *,
-        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> None:
+    async def kick(self, *, reason: undefined.UndefinedOr[str] = undefined.UNDEFINED) -> None:
         """Kick this member from this guild.
 
         Other Parameters
@@ -1086,11 +1078,7 @@ class Role(PartialRole):
             return None
 
         return routes.CDN_ROLE_ICON.compile_to_file(
-            urls.CDN_URL,
-            role_id=self.id,
-            hash=self.icon_hash,
-            size=size,
-            file_format=ext,
+            urls.CDN_URL, role_id=self.id, hash=self.icon_hash, size=size, file_format=ext
         )
 
 
@@ -1190,11 +1178,7 @@ class PartialApplication(snowflakes.Unique):
             return None
 
         return routes.CDN_APPLICATION_ICON.compile_to_file(
-            urls.CDN_URL,
-            application_id=self.id,
-            hash=self.icon_hash,
-            size=size,
-            file_format=ext,
+            urls.CDN_URL, application_id=self.id, hash=self.icon_hash, size=size, file_format=ext
         )
 
 
@@ -1410,11 +1394,7 @@ class PartialGuild(snowflakes.Unique):
                 ext = "png"
 
         return routes.CDN_GUILD_ICON.compile_to_file(
-            urls.CDN_URL,
-            guild_id=self.id,
-            hash=self.icon_hash,
-            size=size,
-            file_format=ext,
+            urls.CDN_URL, guild_id=self.id, hash=self.icon_hash, size=size, file_format=ext
         )
 
     async def ban(
@@ -2525,11 +2505,7 @@ class GuildPreview(PartialGuild):
             return None
 
         return routes.CDN_GUILD_DISCOVERY_SPLASH.compile_to_file(
-            urls.CDN_URL,
-            guild_id=self.id,
-            hash=self.discovery_splash_hash,
-            size=size,
-            file_format=ext,
+            urls.CDN_URL, guild_id=self.id, hash=self.discovery_splash_hash, size=size, file_format=ext
         )
 
     def make_splash_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
@@ -2558,11 +2534,7 @@ class GuildPreview(PartialGuild):
             return None
 
         return routes.CDN_GUILD_SPLASH.compile_to_file(
-            urls.CDN_URL,
-            guild_id=self.id,
-            hash=self.splash_hash,
-            size=size,
-            file_format=ext,
+            urls.CDN_URL, guild_id=self.id, hash=self.splash_hash, size=size, file_format=ext
         )
 
 
@@ -2847,11 +2819,7 @@ class Guild(PartialGuild):
                 ext = "png"
 
         return routes.CDN_GUILD_BANNER.compile_to_file(
-            urls.CDN_URL,
-            guild_id=self.id,
-            hash=self.banner_hash,
-            size=size,
-            file_format=ext,
+            urls.CDN_URL, guild_id=self.id, hash=self.banner_hash, size=size, file_format=ext
         )
 
     def make_discovery_splash_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
@@ -2880,11 +2848,7 @@ class Guild(PartialGuild):
             return None
 
         return routes.CDN_GUILD_DISCOVERY_SPLASH.compile_to_file(
-            urls.CDN_URL,
-            guild_id=self.id,
-            hash=self.discovery_splash_hash,
-            size=size,
-            file_format=ext,
+            urls.CDN_URL, guild_id=self.id, hash=self.discovery_splash_hash, size=size, file_format=ext
         )
 
     def make_splash_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
@@ -2913,16 +2877,11 @@ class Guild(PartialGuild):
             return None
 
         return routes.CDN_GUILD_SPLASH.compile_to_file(
-            urls.CDN_URL,
-            guild_id=self.id,
-            hash=self.splash_hash,
-            size=size,
-            file_format=ext,
+            urls.CDN_URL, guild_id=self.id, hash=self.splash_hash, size=size, file_format=ext
         )
 
     def get_channel(
-        self,
-        channel: snowflakes.SnowflakeishOr[channels_.PartialChannel],
+        self, channel: snowflakes.SnowflakeishOr[channels_.PartialChannel]
     ) -> typing.Optional[channels_.PermissibleGuildChannel]:
         """Get a cached channel that belongs to the guild by it's ID or object.
 

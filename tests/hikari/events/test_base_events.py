@@ -36,12 +36,7 @@ class DummyGuildEvent(base_events.Event):
 
 @base_events.no_recursive_throw()
 @base_events.requires_intents(intents.Intents.GUILD_PRESENCES)
-@attrs.define(
-    eq=False,
-    hash=False,
-    init=False,
-    kw_only=True,
-)
+@attrs.define(eq=False, hash=False, init=False, kw_only=True)
 class DummyPresenceEvent(base_events.Event):
     pass
 
@@ -52,12 +47,7 @@ class ErrorEvent(base_events.Event):
     pass
 
 
-@attrs.define(
-    eq=False,
-    hash=False,
-    init=False,
-    kw_only=True,
-)
+@attrs.define(eq=False, hash=False, init=False, kw_only=True)
 class DummyGuildDerivedEvent(DummyGuildEvent):
     pass
 
@@ -102,9 +92,7 @@ class TestExceptionEvent:
     @pytest.fixture()
     def event(self, error):
         return base_events.ExceptionEvent(
-            exception=error,
-            failed_event=mock.Mock(base_events.Event),
-            failed_callback=mock.AsyncMock(),
+            exception=error, failed_event=mock.Mock(base_events.Event), failed_callback=mock.AsyncMock()
         )
 
     def test_app_property(self, event):

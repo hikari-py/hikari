@@ -60,11 +60,7 @@ class TestMessageApplication:
     @pytest.fixture()
     def message_application(self):
         return messages.MessageApplication(
-            id=123,
-            name="test app",
-            description="",
-            icon_hash="123abc",
-            cover_image_hash="abc123",
+            id=123, name="test app", description="", icon_hash="123abc", cover_image_hash="abc123"
         )
 
     def test_cover_image_url(self, message_application):

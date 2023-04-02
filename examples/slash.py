@@ -35,11 +35,7 @@ async def register_commands(event: hikari.StartingEvent) -> None:
         bot.rest.slash_command_builder("ephemeral", "Send a very secret message."),
     ]
 
-    await bot.rest.set_application_commands(
-        application=application.id,
-        commands=commands,
-        guild=COMMAND_GUILD_ID,
-    )
+    await bot.rest.set_application_commands(application=application.id, commands=commands, guild=COMMAND_GUILD_ID)
 
 
 @bot.listen()
@@ -51,14 +47,12 @@ async def handle_interactions(event: hikari.InteractionCreateEvent) -> None:
 
     if event.interaction.command_name == "ping":
         await event.interaction.create_initial_response(
-            hikari.ResponseType.MESSAGE_CREATE,
-            f"Pong! {bot.heartbeat_latency * 1_000:.0f}ms",
+            hikari.ResponseType.MESSAGE_CREATE, f"Pong! {bot.heartbeat_latency * 1_000:.0f}ms"
         )
 
     elif event.interaction.command_name == "info":
         await event.interaction.create_initial_response(
-            hikari.ResponseType.MESSAGE_CREATE,
-            "Hello, this is an example bot written in hikari!",
+            hikari.ResponseType.MESSAGE_CREATE, "Hello, this is an example bot written in hikari!"
         )
 
     elif event.interaction.command_name == "ephemeral":

@@ -58,13 +58,9 @@ if typing.TYPE_CHECKING:
 
     _InteractionT_co = typing.TypeVar("_InteractionT_co", bound=base_interactions.PartialInteraction, covariant=True)
     _MessageResponseBuilderT = typing.Union[
-        special_endpoints.InteractionDeferredBuilder,
-        special_endpoints.InteractionMessageBuilder,
+        special_endpoints.InteractionDeferredBuilder, special_endpoints.InteractionMessageBuilder
     ]
-    _ModalOrMessageResponseBuilderT = typing.Union[
-        _MessageResponseBuilderT,
-        special_endpoints.InteractionModalBuilder,
-    ]
+    _ModalOrMessageResponseBuilderT = typing.Union[_MessageResponseBuilderT, special_endpoints.InteractionModalBuilder]
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.rest_bot")
 
@@ -337,9 +333,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
 
         # InteractionServer
         self._server = interaction_server_impl.InteractionServer(
-            entity_factory=self._entity_factory,
-            public_key=public_key,
-            rest_client=self._rest,
+            entity_factory=self._entity_factory, public_key=public_key, rest_client=self._rest
         )
 
     @property
@@ -576,9 +570,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
 
         try:
             with signals.handle_interrupts(
-                enabled=enable_signal_handlers,
-                loop=loop,
-                propagate_interrupts=propagate_interrupts,
+                enabled=enable_signal_handlers, loop=loop, propagate_interrupts=propagate_interrupts
             ):
                 loop.run_until_complete(
                     self.start(
@@ -668,8 +660,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
 
         if check_for_updates:
             asyncio.create_task(
-                ux.check_for_updates(self._http_settings, self._proxy_settings),
-                name="check for package updates",
+                ux.check_for_updates(self._http_settings, self._proxy_settings), name="check for package updates"
             )
 
         self._rest.start()

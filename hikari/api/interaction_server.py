@@ -39,13 +39,9 @@ if typing.TYPE_CHECKING:
     _InteractionT_co = typing.TypeVar("_InteractionT_co", bound=base_interactions.PartialInteraction, covariant=True)
     _ResponseT_co = typing.TypeVar("_ResponseT_co", bound=special_endpoints.InteractionResponseBuilder, covariant=True)
     _MessageResponseBuilderT = typing.Union[
-        special_endpoints.InteractionDeferredBuilder,
-        special_endpoints.InteractionMessageBuilder,
+        special_endpoints.InteractionDeferredBuilder, special_endpoints.InteractionMessageBuilder
     ]
-    _ModalOrMessageResponseBuilder = typing.Union[
-        _MessageResponseBuilderT,
-        special_endpoints.InteractionModalBuilder,
-    ]
+    _ModalOrMessageResponseBuilder = typing.Union[_MessageResponseBuilderT, special_endpoints.InteractionModalBuilder]
 
 
 ListenerT = typing.Union[

@@ -1174,16 +1174,12 @@ class SlashCommandBuilder(CommandBuilder):
 
     @property
     @abc.abstractmethod
-    def description_localizations(
-        self,
-    ) -> typing.Mapping[typing.Union[locales.Locale, str], str]:
+    def description_localizations(self) -> typing.Mapping[typing.Union[locales.Locale, str], str]:
         """Command's localised descriptions."""
 
     @abc.abstractmethod
     def set_description_localizations(
-        self,
-        description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str],
-        /,
+        self, description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str], /
     ) -> Self:
         """Set the localised descriptions for this command.
 
@@ -2137,11 +2133,7 @@ class ModalActionRowBuilder(ComponentBuilder, abc.ABC):
         """Sequence of the component builders registered within this action row."""
 
     @abc.abstractmethod
-    def add_component(
-        self,
-        component: ComponentBuilder,
-        /,
-    ) -> Self:
+    def add_component(self, component: ComponentBuilder, /) -> Self:
         """Add a component to this action row builder.
 
         .. warning::

@@ -80,10 +80,7 @@ class TestTemplate:
     async def test_create_guild(self, obj):
         obj.app.rest.create_guild_from_template = mock.AsyncMock()
 
-        returned = await obj.create_guild(
-            name="Test guild",
-            icon="https://avatars.githubusercontent.com/u/72694042",
-        )
+        returned = await obj.create_guild(name="Test guild", icon="https://avatars.githubusercontent.com/u/72694042")
         assert returned == obj.app.rest.create_guild_from_template.return_value
 
         obj.app.rest.create_guild_from_template.assert_awaited_once_with(

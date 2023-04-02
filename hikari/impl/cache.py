@@ -95,8 +95,7 @@ class CacheImpl(cache.MutableCache):
     _role_entries: collections.ExtendedMutableMapping[snowflakes.Snowflake, guilds.Role]
     _sticker_entries: collections.ExtendedMutableMapping[snowflakes.Snowflake, cache_utility.GuildStickerData]
     _unknown_custom_emoji_entries: collections.ExtendedMutableMapping[
-        snowflakes.Snowflake,
-        cache_utility.RefCell[emojis.CustomEmoji],
+        snowflakes.Snowflake, cache_utility.RefCell[emojis.CustomEmoji]
     ]
     _user_entries: collections.ExtendedMutableMapping[snowflakes.Snowflake, cache_utility.RefCell[users.User]]
     _message_entries: collections.ExtendedMutableMapping[
@@ -188,10 +187,7 @@ class CacheImpl(cache.MutableCache):
 
         self._dm_channel_entries[snowflakes.Snowflake(user)] = snowflakes.Snowflake(channel)
 
-    def _build_emoji(
-        self,
-        emoji_data: cache_utility.KnownCustomEmojiData,
-    ) -> emojis.KnownCustomEmoji:
+    def _build_emoji(self, emoji_data: cache_utility.KnownCustomEmojiData) -> emojis.KnownCustomEmoji:
         return emoji_data.build_entity(self._app)
 
     def clear_emojis(self) -> cache.CacheView[snowflakes.Snowflake, emojis.KnownCustomEmoji]:
@@ -313,10 +309,7 @@ class CacheImpl(cache.MutableCache):
         self.set_emoji(emoji)
         return cached_emoji, self.get_emoji(emoji.id)
 
-    def _build_sticker(
-        self,
-        sticker_data: cache_utility.GuildStickerData,
-    ) -> stickers.GuildSticker:
+    def _build_sticker(self, sticker_data: cache_utility.GuildStickerData) -> stickers.GuildSticker:
         return sticker_data.build_entity(self._app)
 
     def clear_stickers(self) -> cache.CacheView[snowflakes.Snowflake, stickers.GuildSticker]:
@@ -671,9 +664,7 @@ class CacheImpl(cache.MutableCache):
         if not guild_record or not guild_record.threads:
             return cache_utility.EmptyCacheView()
 
-        return cache_utility.CacheMappingView(
-            {sf: self._guild_thread_entries[sf] for sf in guild_record.threads},
-        )
+        return cache_utility.CacheMappingView({sf: self._guild_thread_entries[sf] for sf in guild_record.threads})
 
     def get_threads_view_for_channel(
         self,
@@ -837,10 +828,7 @@ class CacheImpl(cache.MutableCache):
         self.set_guild_channel(channel)
         return cached_channel, self.get_guild_channel(channel.id)
 
-    def _build_invite(
-        self,
-        invite_data: cache_utility.InviteData,
-    ) -> invites.InviteWithMetadata:
+    def _build_invite(self, invite_data: cache_utility.InviteData) -> invites.InviteWithMetadata:
         return invite_data.build_entity(self._app)
 
     def _remove_invite_users(self, invite: cache_utility.InviteData) -> None:
@@ -1055,16 +1043,11 @@ class CacheImpl(cache.MutableCache):
         self.set_me(user)
         return cached_user, self.get_me()
 
-    def _build_member(
-        self,
-        member_data: cache_utility.RefCell[cache_utility.MemberData],
-    ) -> guilds.Member:
+    def _build_member(self, member_data: cache_utility.RefCell[cache_utility.MemberData]) -> guilds.Member:
         return member_data.object.build_entity(self._app)
 
     @staticmethod
-    def _can_remove_member(
-        member: cache_utility.RefCell[cache_utility.MemberData],
-    ) -> bool:
+    def _can_remove_member(member: cache_utility.RefCell[cache_utility.MemberData]) -> bool:
         return member.ref_count < 1 and member.object.has_been_deleted
 
     def _garbage_collect_member(
@@ -1241,10 +1224,7 @@ class CacheImpl(cache.MutableCache):
         self.set_member(member)
         return cached_member, self.get_member(member.guild_id, member.user.id)
 
-    def _build_presence(
-        self,
-        presence_data: cache_utility.MemberPresenceData,
-    ) -> presences.MemberPresence:
+    def _build_presence(self, presence_data: cache_utility.MemberPresenceData) -> presences.MemberPresence:
         return presence_data.build_entity(self._app)
 
     def _garbage_collect_unknown_custom_emoji(
@@ -1256,10 +1236,7 @@ class CacheImpl(cache.MutableCache):
         if emoji.ref_count < 1 and emoji.object.id in self._unknown_custom_emoji_entries:
             del self._unknown_custom_emoji_entries[emoji.object.id]
 
-    def _remove_presence_assets(
-        self,
-        presence_data: cache_utility.MemberPresenceData,
-    ) -> None:
+    def _remove_presence_assets(self, presence_data: cache_utility.MemberPresenceData) -> None:
         for activity_data in presence_data.activities:
             if isinstance(activity_data.emoji, cache_utility.RefCell):
                 self._garbage_collect_unknown_custom_emoji(activity_data.emoji, decrement=1)
@@ -1538,10 +1515,7 @@ class CacheImpl(cache.MutableCache):
 
         return cell
 
-    def _build_voice_state(
-        self,
-        voice_data: cache_utility.VoiceStateData,
-    ) -> voices.VoiceState:
+    def _build_voice_state(self, voice_data: cache_utility.VoiceStateData) -> voices.VoiceState:
         return voice_data.build_entity(self._app)
 
     def clear_voice_states(

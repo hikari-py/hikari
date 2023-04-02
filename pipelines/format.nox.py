@@ -73,7 +73,7 @@ def remove_trailing_whitespaces(session: nox.Session, check_only: bool = False) 
     call(
         f"{message} {count} file(s). "
         f"{remark}Took {1_000 * (end - start):.2f}ms to check {total} files in this project."
-        + ("\nTry running 'nox -s reformat-code' to fix them" if check_only and count else ""),
+        + ("\nTry running 'nox -s reformat-code' to fix them" if check_only and count else "")
     )
 
 

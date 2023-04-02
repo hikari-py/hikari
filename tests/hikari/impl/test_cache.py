@@ -390,10 +390,7 @@ class TestCacheImpl:
 
         result = cache_impl.get_emojis_view()
 
-        assert result == {
-            snowflakes.Snowflake(123123123): mock_emoji_1,
-            snowflakes.Snowflake(43156234): mock_emoji_2,
-        }
+        assert result == {snowflakes.Snowflake(123123123): mock_emoji_1, snowflakes.Snowflake(43156234): mock_emoji_2}
         cache_impl._build_emoji.assert_has_calls([mock.call(mock_emoji_data_1), mock.call(mock_emoji_data_2)])
 
     def test_get_emojis_view_for_guild(self, cache_impl):
@@ -420,10 +417,7 @@ class TestCacheImpl:
 
         result = cache_impl.get_emojis_view_for_guild(StubModel(9342123))
 
-        assert result == {
-            snowflakes.Snowflake(65123): mock_emoji_1,
-            snowflakes.Snowflake(43156234): mock_emoji_2,
-        }
+        assert result == {snowflakes.Snowflake(65123): mock_emoji_1, snowflakes.Snowflake(43156234): mock_emoji_2}
         cache_impl._build_emoji.assert_has_calls([mock.call(mock_emoji_data_1), mock.call(mock_emoji_data_2)])
 
     def test_get_emojis_view_for_guild_for_unknown_emoji_cache(self, cache_impl):
@@ -822,10 +816,7 @@ class TestCacheImpl:
 
         result = cache_impl.get_stickers_view_for_guild(StubModel(9342123))
 
-        assert result == {
-            snowflakes.Snowflake(65123): mock_sticker_1,
-            snowflakes.Snowflake(43156234): mock_sticker_2,
-        }
+        assert result == {snowflakes.Snowflake(65123): mock_sticker_1, snowflakes.Snowflake(43156234): mock_sticker_2}
         cache_impl._build_sticker.assert_has_calls([mock.call(mock_sticker_data_1), mock.call(mock_sticker_data_2)])
 
     def test_get_stickers_view_for_guild_for_unknown_sticker_cache(self, cache_impl):
@@ -943,8 +934,7 @@ class TestCacheImpl:
                 snowflakes.Snowflake(423123): cache_utilities.GuildRecord(),
                 snowflakes.Snowflake(675345): cache_utilities.GuildRecord(guild=mock_guild_1),
                 snowflakes.Snowflake(32142): cache_utilities.GuildRecord(
-                    guild=mock_guild_2,
-                    members=collections.FreezableDict({snowflakes.Snowflake(3241123): mock_member}),
+                    guild=mock_guild_2, members=collections.FreezableDict({snowflakes.Snowflake(3241123): mock_member})
                 ),
                 snowflakes.Snowflake(765345): cache_utilities.GuildRecord(guild=mock_guild_3),
                 snowflakes.Snowflake(321132): cache_utilities.GuildRecord(),
@@ -1185,10 +1175,7 @@ class TestCacheImpl:
 
         result = cache_impl.get_available_guilds_view()
 
-        assert result == {
-            snowflakes.Snowflake(4312312): mock_guild_1,
-            snowflakes.Snowflake(73453): mock_guild_2,
-        }
+        assert result == {snowflakes.Snowflake(4312312): mock_guild_1, snowflakes.Snowflake(73453): mock_guild_2}
 
     def test_get_available_guilds_view_when_no_guilds_cached(self, cache_impl):
         cache_impl._guild_entries = collections.FreezableDict(
@@ -1217,10 +1204,7 @@ class TestCacheImpl:
 
         result = cache_impl.get_unavailable_guilds_view()
 
-        assert result == {
-            snowflakes.Snowflake(4312312): mock_guild_1,
-            snowflakes.Snowflake(73453): mock_guild_2,
-        }
+        assert result == {snowflakes.Snowflake(4312312): mock_guild_1, snowflakes.Snowflake(73453): mock_guild_2}
 
     def test_get_unavailable_guilds_view_when_no_guilds_cached(self, cache_impl):
         cache_impl._guild_entries = collections.FreezableDict(
@@ -1405,10 +1389,7 @@ class TestCacheImpl:
 
         result = cache_impl.clear_invites_for_guild(StubModel(999888777))
 
-        assert result == {
-            "oeoeoeoeooe": mock_invite_1,
-            "owowowowoowowow": mock_invite_2,
-        }
+        assert result == {"oeoeoeoeooe": mock_invite_1, "owowowowoowowow": mock_invite_2}
         assert cache_impl._invite_entries == {"oeoeoeoeoeoeoe": mock_other_invite_data}
         cache_impl._garbage_collect_user.assert_has_calls(
             [mock.call(mock_target_user, decrement=1), mock.call(mock_inviter, decrement=1)], any_order=True
@@ -1483,10 +1464,7 @@ class TestCacheImpl:
 
         result = cache_impl.clear_invites_for_channel(StubModel(999888777), StubModel(34123123))
 
-        assert result == {
-            "oeoeoeoeooe": mock_invite_1,
-            "owowowowoowowow": mock_invite_2,
-        }
+        assert result == {"oeoeoeoeooe": mock_invite_1, "owowowowoowowow": mock_invite_2}
         cache_impl._garbage_collect_user.assert_has_calls(
             [mock.call(mock_target_user, decrement=1), mock.call(mock_inviter, decrement=1)], any_order=True
         )
@@ -1625,9 +1603,7 @@ class TestCacheImpl:
         assert result is mock_invite
         cache_impl._build_invite.assert_called_once_with(mock_invite_data)
         cache_impl._garbage_collect_user.assert_not_called()
-        assert cache_impl._invite_entries == {
-            "blamSpat": mock_other_invite_data,
-        }
+        assert cache_impl._invite_entries == {"blamSpat": mock_other_invite_data}
         assert cache_impl._guild_entries[snowflakes.Snowflake(999999999)].invites == ["ok", "blat"]
 
     def test_delete_invite_for_unknown_invite(self, cache_impl):
@@ -1711,10 +1687,7 @@ class TestCacheImpl:
 
         result = cache_impl.get_invites_view_for_guild(StubModel(4444444))
 
-        assert result == {
-            "okok": mock_invite_1,
-            "dsaytert": mock_invite_2,
-        }
+        assert result == {"okok": mock_invite_1, "dsaytert": mock_invite_2}
         cache_impl._build_invite.assert_has_calls([mock.call(mock_invite_data_1), mock.call(mock_invite_data_2)])
 
     def test_get_invites_view_for_guild_unknown_emoji_cache(self, cache_impl):
@@ -2236,10 +2209,7 @@ class TestCacheImpl:
 
         result = cache_impl.get_members_view_for_guild(StubModel(42334))
 
-        assert result == {
-            snowflakes.Snowflake(3214321): mock_member_1,
-            snowflakes.Snowflake(53224): mock_member_2,
-        }
+        assert result == {snowflakes.Snowflake(3214321): mock_member_1, snowflakes.Snowflake(53224): mock_member_2}
         cache_impl._build_member.assert_has_calls([mock.call(mock_member_data_1), mock.call(mock_member_data_2)])
 
     def test_set_member(self, cache_impl):
@@ -2397,10 +2367,7 @@ class TestCacheImpl:
         mock_user = cache_utilities.RefCell(mock.Mock(id=snowflakes.Snowflake(21231234)), ref_count=1)
         mock_other_user = mock.Mock(cache_utilities.RefCell, ref_count=1)
         cache_impl._user_entries = collections.FreezableDict(
-            {
-                snowflakes.Snowflake(21231234): mock_user,
-                snowflakes.Snowflake(645234): mock_other_user,
-            }
+            {snowflakes.Snowflake(21231234): mock_user, snowflakes.Snowflake(645234): mock_other_user}
         )
 
         cache_impl._garbage_collect_user(mock_user, decrement=1)
@@ -2412,10 +2379,7 @@ class TestCacheImpl:
         cache_impl._dm_channel_entries = collections.FreezableDict({21231234: 123123123})
         mock_other_user = mock.Mock(cache_utilities.RefCell, ref_count=1)
         cache_impl._user_entries = collections.FreezableDict(
-            {
-                snowflakes.Snowflake(21231234): mock_user,
-                snowflakes.Snowflake(645234): mock_other_user,
-            }
+            {snowflakes.Snowflake(21231234): mock_user, snowflakes.Snowflake(645234): mock_other_user}
         )
 
         cache_impl._garbage_collect_user(mock_user, decrement=1)
@@ -2472,10 +2436,7 @@ class TestCacheImpl:
 
         result = cache_impl.get_users_view()
 
-        assert result == {
-            snowflakes.Snowflake(54123): mock_user_1,
-            snowflakes.Snowflake(76345): mock_user_2,
-        }
+        assert result == {snowflakes.Snowflake(54123): mock_user_1, snowflakes.Snowflake(76345): mock_user_2}
 
     def test_get_users_view_for_empty_user_cache(self, cache_impl):
         assert cache_impl.get_users_view() == {}

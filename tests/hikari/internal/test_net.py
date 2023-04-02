@@ -158,10 +158,7 @@ async def test_generate_bad_request_error_without_json_response():
 @pytest.mark.parametrize(
     ("data", "expected_errors"),
     [
-        (
-            '{"message": "raw message", "code": 123, "errors": {"component": []}}',
-            {"component": []},
-        ),
+        ('{"message": "raw message", "code": 123, "errors": {"component": []}}', {"component": []}),
         ('{"message": "raw message", "code": 123, "errors": {}}', {}),
         ('{"message": "raw message", "code": 123}', None),
     ],

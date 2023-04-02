@@ -53,12 +53,7 @@ class TestStickerPack:
         ) as route:
             assert model.make_banner_url(ext="url", size=512) == "file"
 
-        route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            hash=541231,
-            size=512,
-            file_format="url",
-        )
+        route.compile_to_file.assert_called_once_with(urls.CDN_URL, hash=541231, size=512, file_format="url")
 
     def test_make_banner_url_when_no_banner_asset(self, model):
         model.banner_asset_id = None

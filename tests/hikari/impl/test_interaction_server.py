@@ -610,10 +610,7 @@ class TestInteractionServer:
         assert mock_interaction_server._is_closing is False
         assert mock_interaction_server._running_generator_listeners == []
         gather.assert_awaited_once_with(
-            generator_listener_1,
-            generator_listener_2,
-            generator_listener_3,
-            generator_listener_4,
+            generator_listener_1, generator_listener_2, generator_listener_3, generator_listener_4
         )
 
     @pytest.mark.asyncio()

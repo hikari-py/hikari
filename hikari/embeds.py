@@ -76,10 +76,7 @@ class EmbedResource(files.Resource[files.AsyncReader]):
         return self.resource.filename
 
     def stream(
-        self,
-        *,
-        executor: typing.Optional[concurrent.futures.Executor] = None,
-        head_only: bool = False,
+        self, *, executor: typing.Optional[concurrent.futures.Executor] = None, head_only: bool = False
     ) -> files.AsyncReaderContextManager[files.AsyncReader]:
         """Produce a stream of data for the resource.
 

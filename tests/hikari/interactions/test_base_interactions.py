@@ -215,12 +215,7 @@ class TestModalResponseMixin:
         await mock_modal_response_mixin.create_modal_response("title", "custom_id", None, [])
 
         mock_app.rest.create_modal_response.assert_awaited_once_with(
-            34123,
-            "399393939doodsodso",
-            title="title",
-            custom_id="custom_id",
-            component=None,
-            components=[],
+            34123, "399393939doodsodso", title="title", custom_id="custom_id", component=None, components=[]
         )
 
     def test_build_response(self, mock_modal_response_mixin, mock_app):

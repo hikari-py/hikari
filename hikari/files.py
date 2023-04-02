@@ -451,11 +451,7 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
         _, _, ext = self.filename.rpartition(".")
         return ext if ext != self.filename else None
 
-    async def read(
-        self,
-        *,
-        executor: typing.Optional[concurrent.futures.Executor] = None,
-    ) -> bytes:
+    async def read(self, *, executor: typing.Optional[concurrent.futures.Executor] = None) -> bytes:
         """Read the entire resource at once into memory.
 
         .. code-block:: python
@@ -488,11 +484,7 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
             return await reader.read()
 
     async def save(
-        self,
-        path: Pathish,
-        *,
-        executor: typing.Optional[concurrent.futures.Executor] = None,
-        force: bool = False,
+        self, path: Pathish, *, executor: typing.Optional[concurrent.futures.Executor] = None, force: bool = False
     ) -> None:
         """Save this resource to disk.
 
@@ -523,10 +515,7 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
 
     @abc.abstractmethod
     def stream(
-        self,
-        *,
-        executor: typing.Optional[concurrent.futures.Executor] = None,
-        head_only: bool = False,
+        self, *, executor: typing.Optional[concurrent.futures.Executor] = None, head_only: bool = False
     ) -> AsyncReaderContextManager[ReaderImplT]:
         """Produce a stream of data for the resource.
 
@@ -692,10 +681,7 @@ class WebResource(Resource[WebReader], abc.ABC):
     __slots__: typing.Sequence[str] = ()
 
     def stream(
-        self,
-        *,
-        executor: typing.Optional[concurrent.futures.Executor] = None,
-        head_only: bool = False,
+        self, *, executor: typing.Optional[concurrent.futures.Executor] = None, head_only: bool = False
     ) -> AsyncReaderContextManager[WebReader]:
         """Start streaming the content into memory by downloading it.
 
@@ -926,10 +912,7 @@ class File(Resource[ThreadedFileReader]):
         return filename
 
     def stream(
-        self,
-        *,
-        executor: typing.Optional[concurrent.futures.Executor] = None,
-        head_only: bool = False,
+        self, *, executor: typing.Optional[concurrent.futures.Executor] = None, head_only: bool = False
     ) -> AsyncReaderContextManager[ThreadedFileReader]:
         """Start streaming the resource using a thread pool executor.
 
@@ -965,11 +948,7 @@ class File(Resource[ThreadedFileReader]):
         raise TypeError("The executor must be a ThreadPoolExecutor or None")
 
     async def save(
-        self,
-        path: Pathish,
-        *,
-        executor: typing.Optional[concurrent.futures.Executor] = None,
-        force: bool = False,
+        self, path: Pathish, *, executor: typing.Optional[concurrent.futures.Executor] = None, force: bool = False
     ) -> None:
         # An optimization can be done here to avoid a lot of thread calls and streaming
         # by just copying the file
@@ -1122,10 +1101,7 @@ class Bytes(Resource[IteratorReader]):
         return self._filename
 
     def stream(
-        self,
-        *,
-        executor: typing.Optional[concurrent.futures.Executor] = None,
-        head_only: bool = False,
+        self, *, executor: typing.Optional[concurrent.futures.Executor] = None, head_only: bool = False
     ) -> AsyncReaderContextManager[IteratorReader]:
         """Start streaming the content in chunks.
 
@@ -1145,11 +1121,7 @@ class Bytes(Resource[IteratorReader]):
         return _NoOpAsyncReaderContextManagerImpl(IteratorReader(self.filename, self.mimetype, self.data))
 
     async def save(
-        self,
-        path: Pathish,
-        *,
-        executor: typing.Optional[concurrent.futures.Executor] = None,
-        force: bool = False,
+        self, path: Pathish, *, executor: typing.Optional[concurrent.futures.Executor] = None, force: bool = False
     ) -> None:
         if not isinstance(self.data, (bytes, bytearray, memoryview)):
             await super().save(path, executor=executor, force=force)

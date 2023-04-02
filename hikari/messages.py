@@ -341,11 +341,7 @@ class MessageApplication(guilds.PartialApplication):
             return None
 
         return routes.CDN_APPLICATION_COVER.compile_to_file(
-            urls.CDN_URL,
-            application_id=self.id,
-            hash=self.cover_image_hash,
-            size=size,
-            file_format=ext,
+            urls.CDN_URL, application_id=self.id, hash=self.cover_image_hash, size=size, file_format=ext
         )
 
 
@@ -368,8 +364,7 @@ class MessageInteraction:
 
 
 def _map_cache_maybe_discover(
-    ids: typing.Iterable[snowflakes.Snowflake],
-    cache_call: typing.Callable[[snowflakes.Snowflake], typing.Optional[_T]],
+    ids: typing.Iterable[snowflakes.Snowflake], cache_call: typing.Callable[[snowflakes.Snowflake], typing.Optional[_T]]
 ) -> typing.Dict[snowflakes.Snowflake, _T]:
     results: typing.Dict[snowflakes.Snowflake, _T] = {}
     for id_ in ids:
@@ -1099,18 +1094,11 @@ class PartialMessage(snowflakes.Unique):
         await self.app.rest.delete_message(self.channel_id, self.id)
 
     @typing.overload
-    async def add_reaction(
-        self,
-        emoji: typing.Union[str, emojis_.Emoji],
-    ) -> None:
+    async def add_reaction(self, emoji: typing.Union[str, emojis_.Emoji]) -> None:
         ...
 
     @typing.overload
-    async def add_reaction(
-        self,
-        emoji: str,
-        emoji_id: snowflakes.SnowflakeishOr[emojis_.CustomEmoji],
-    ) -> None:
+    async def add_reaction(self, emoji: str, emoji_id: snowflakes.SnowflakeishOr[emojis_.CustomEmoji]) -> None:
         ...
 
     async def add_reaction(
@@ -1268,18 +1256,11 @@ class PartialMessage(snowflakes.Unique):
         ...
 
     @typing.overload
-    async def remove_all_reactions(
-        self,
-        emoji: typing.Union[str, emojis_.Emoji],
-    ) -> None:
+    async def remove_all_reactions(self, emoji: typing.Union[str, emojis_.Emoji]) -> None:
         ...
 
     @typing.overload
-    async def remove_all_reactions(
-        self,
-        emoji: str,
-        emoji_id: snowflakes.SnowflakeishOr[emojis_.CustomEmoji],
-    ) -> None:
+    async def remove_all_reactions(self, emoji: str, emoji_id: snowflakes.SnowflakeishOr[emojis_.CustomEmoji]) -> None:
         ...
 
     async def remove_all_reactions(

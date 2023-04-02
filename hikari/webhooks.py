@@ -526,11 +526,7 @@ class PartialWebhook(snowflakes.Unique):
     @property
     def default_avatar_url(self) -> files_.URL:
         """Default avatar URL for the user."""
-        return routes.CDN_DEFAULT_USER_AVATAR.compile_to_file(
-            urls.CDN_URL,
-            discriminator=0,
-            file_format="png",
-        )
+        return routes.CDN_DEFAULT_USER_AVATAR.compile_to_file(urls.CDN_URL, discriminator=0, file_format="png")
 
     def make_avatar_url(self, ext: str = "png", size: int = 4096) -> typing.Optional[files_.URL]:
         """Generate the avatar URL for this webhook's custom avatar if set.
@@ -563,11 +559,7 @@ class PartialWebhook(snowflakes.Unique):
             return None
 
         return routes.CDN_USER_AVATAR.compile_to_file(
-            urls.CDN_URL,
-            user_id=self.id,
-            hash=self.avatar_hash,
-            size=size,
-            file_format=ext,
+            urls.CDN_URL, user_id=self.id, hash=self.avatar_hash, size=size, file_format=ext
         )
 
 
@@ -706,12 +698,7 @@ class IncomingWebhook(PartialWebhook, ExecutableWebhook):
             token = self.token
 
         webhook = await self.app.rest.edit_webhook(
-            self.id,
-            token=token,
-            name=name,
-            avatar=avatar,
-            channel=channel,
-            reason=reason,
+            self.id, token=token, name=name, avatar=avatar, channel=channel, reason=reason
         )
         assert isinstance(webhook, IncomingWebhook)
         return webhook
@@ -882,13 +869,7 @@ class ChannelFollowerWebhook(PartialWebhook):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
-        webhook = await self.app.rest.edit_webhook(
-            self.id,
-            name=name,
-            avatar=avatar,
-            channel=channel,
-            reason=reason,
-        )
+        webhook = await self.app.rest.edit_webhook(self.id, name=name, avatar=avatar, channel=channel, reason=reason)
         assert isinstance(webhook, ChannelFollowerWebhook)
         return webhook
 

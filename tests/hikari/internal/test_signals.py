@@ -64,10 +64,7 @@ class TestHandleInterrupt:
 
                 assert register_signal_handler.call_count == 2
                 register_signal_handler.assert_has_calls(
-                    [
-                        mock.call(2, interrupt_handler.return_value),
-                        mock.call(15, interrupt_handler.return_value),
-                    ]
+                    [mock.call(2, interrupt_handler.return_value), mock.call(15, interrupt_handler.return_value)]
                 )
 
                 register_signal_handler.reset_mock()

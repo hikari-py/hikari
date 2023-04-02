@@ -216,12 +216,7 @@ class CDNRoute:
     """Whether a `size` param can be specified."""
 
     def compile(
-        self,
-        base_url: str,
-        *,
-        file_format: str,
-        size: typing.Optional[int] = None,
-        **kwargs: typing.Any,
+        self, base_url: str, *, file_format: str, size: typing.Optional[int] = None, **kwargs: typing.Any
     ) -> str:
         """Generate a full CDN url from this endpoint.
 
@@ -285,12 +280,7 @@ class CDNRoute:
         return url
 
     def compile_to_file(
-        self,
-        base_url: str,
-        *,
-        file_format: str,
-        size: typing.Optional[int] = None,
-        **kwargs: typing.Any,
+        self, base_url: str, *, file_format: str, size: typing.Optional[int] = None, **kwargs: typing.Any
     ) -> files.URL:
         """Perform the same as `compile`, but return the URL as a `files.URL`."""
         return files.URL(self.compile(base_url, file_format=file_format, size=size, **kwargs))
