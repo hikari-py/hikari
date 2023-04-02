@@ -5021,7 +5021,7 @@ class TestEntityFactoryImpl:
             "cover_sticker_id": "456",
             "stickers": [standard_sticker_payload],
             "sku_id": "789",
-            "banner_asset_id": "hash123",
+            "banner_asset_id": "342123321",
         }
 
     def test_deserialize_partial_sticker(self, entity_factory_impl, partial_sticker_payload):
@@ -5069,7 +5069,7 @@ class TestEntityFactoryImpl:
         assert pack.description == "My sticker pack description"
         assert pack.cover_sticker_id == 456
         assert pack.sku_id == 789
-        assert pack.banner_hash == "hash123"
+        assert pack.banner_asset_id == 342123321
 
         assert len(pack.stickers) == 1
         sticker = pack.stickers[0]
@@ -5080,6 +5080,15 @@ class TestEntityFactoryImpl:
         assert sticker.pack_id == 123
         assert sticker.sort_value == 96
         assert sticker.tags == ["thinking", "thonkang"]
+
+    def test_deserialize_sticker_pack_with_optional_fields(self, entity_factory_impl, sticker_pack_payload):
+        del sticker_pack_payload["cover_sticker_id"]
+        del sticker_pack_payload["banner_asset_id"]
+
+        pack = entity_factory_impl.deserialize_sticker_pack(sticker_pack_payload)
+
+        assert pack.cover_sticker_id is None
+        assert pack.banner_asset_id is None
 
     def test_stickers(self, entity_factory_impl, guild_sticker_payload):
         guild_definition = entity_factory_impl.deserialize_gateway_guild(

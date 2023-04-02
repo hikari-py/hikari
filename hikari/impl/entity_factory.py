@@ -2749,14 +2749,22 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         for sticker_payload in payload["stickers"]:
             pack_stickers.append(self.deserialize_standard_sticker(sticker_payload))
 
+        cover_sticker_id: typing.Optional[snowflakes.Snowflake] = None
+        if raw_cover_sticker_id := payload.get("cover_sticker_id"):
+            cover_sticker_id = snowflakes.Snowflake(raw_cover_sticker_id)
+
+        banner_asset_id: typing.Optional[snowflakes.Snowflake] = None
+        if raw_banner_asset_id := payload.get("banner_asset_id"):
+            banner_asset_id = snowflakes.Snowflake(raw_banner_asset_id)
+
         return sticker_models.StickerPack(
             id=snowflakes.Snowflake(payload["id"]),
             name=payload["name"],
             description=payload["description"],
-            cover_sticker_id=snowflakes.Snowflake(payload["cover_sticker_id"]),
+            cover_sticker_id=cover_sticker_id,
             stickers=pack_stickers,
             sku_id=snowflakes.Snowflake(payload["sku_id"]),
-            banner_hash=payload["banner_asset_id"],
+            banner_asset_id=banner_asset_id,
         )
 
     def deserialize_partial_sticker(self, payload: data_binding.JSONObject) -> sticker_models.PartialSticker:
