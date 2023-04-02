@@ -29,12 +29,12 @@ __all__: typing.Sequence[str] = ("VoiceEvent", "VoiceStateUpdateEvent", "VoiceSe
 import abc
 import typing
 
-import attr
+import attrs
 
 from hikari import intents
 from hikari.events import base_events
 from hikari.events import shard_events
-from hikari.internal import attr_extensions
+from hikari.internal import attrs_extensions
 
 if typing.TYPE_CHECKING:
     from hikari import snowflakes
@@ -55,8 +55,8 @@ class VoiceEvent(shard_events.ShardEvent, abc.ABC):
 
 
 @base_events.requires_intents(intents.Intents.GUILD_VOICE_STATES)
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 class VoiceStateUpdateEvent(VoiceEvent):
     """Event fired when a user changes their voice state.
 
@@ -66,16 +66,16 @@ class VoiceStateUpdateEvent(VoiceEvent):
     to connect to the voice gateway to stream audio or video content.
     """
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring>>.
 
-    old_state: typing.Optional[voices.VoiceState] = attr.field(repr=True)
+    old_state: typing.Optional[voices.VoiceState] = attrs.field(repr=True)
     """The old voice state.
 
     This will be `None` if the voice state missing from the cache.
     """
 
-    state: voices.VoiceState = attr.field(repr=True)
+    state: voices.VoiceState = attrs.field(repr=True)
     """Voice state that this update contained."""
 
     @property
@@ -89,8 +89,8 @@ class VoiceStateUpdateEvent(VoiceEvent):
         return self.state.guild_id
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 class VoiceServerUpdateEvent(VoiceEvent):
     """Event fired when a voice server is changed.
 
@@ -98,19 +98,19 @@ class VoiceServerUpdateEvent(VoiceEvent):
     falls over to a new server.
     """
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    guild_id: snowflakes.Snowflake = attr.field(repr=True)
+    guild_id: snowflakes.Snowflake = attrs.field(repr=True)
     # <<inherited docstring from VoiceEvent>>
 
-    token: str = attr.field(repr=False)
+    token: str = attrs.field(repr=False)
     """Token that should be used to authenticate with the voice gateway."""
 
-    raw_endpoint: typing.Optional[str] = attr.field(repr=True)
+    raw_endpoint: typing.Optional[str] = attrs.field(repr=True)
     """Raw endpoint URI that Discord sent.
 
     If this is `None`, it means that the server has been deallocated

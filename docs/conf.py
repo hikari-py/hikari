@@ -57,15 +57,21 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx.ext.viewcode",
     "sphinx.ext.mathjax",
-    # Docs generation
-    "autoapi.extension",
-    "numpydoc",
+    # Our extensions
     "myst_parser",
-    # Misc
     "sphinxext.opengraph",
     "sphinx_copybutton",
     "sphinxcontrib.towncrier.ext",
 ]
+
+if os.getenv("SKIP_REFERENCE_DOCS") is None:
+    extensions.extend(
+        (
+            "autoapi.extension",
+            "numpydoc",
+        )
+    )
+
 
 templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
@@ -76,9 +82,6 @@ default_role = "py:obj"
 
 html_theme = "furo"
 html_favicon = "https://www.hikari-py.dev/logo.png"
-# html_theme_options = {
-#     "top_of_page_button": None,
-# }
 html_static_path = ["_static"]
 html_css_files = ["extra.css"]
 
@@ -101,7 +104,6 @@ autoapi_options = ["members", "show-inheritance"]
 autoapi_template_dir = "_templates"
 
 autoapi_add_toctree_entry = False
-autoapi_add_objects_to_toctree = False
 autoapi_keep_files = True
 autoapi_member_order = "groupwise"
 

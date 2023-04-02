@@ -43,7 +43,7 @@ import warnings
 if typing.TYPE_CHECKING:
     import logging
 
-    # typing_extensions is a dependency of mypy, and pyright vendors it.
+    # Both mypy and pyright vendor typing_extensions.
     import typing_extensions
 
 T_co = typing.TypeVar("T_co", covariant=True)
@@ -100,14 +100,11 @@ def is_async_iterator(obj: typing.Any) -> typing_extensions.TypeGuard[typing.Asy
 
 def is_async_iterable(obj: typing.Any) -> typing_extensions.TypeGuard[typing.AsyncIterable[object]]:
     """Determine if the object is an async iterable or not."""
-    attr = getattr(obj, "__aiter__", None)
-    return inspect.isfunction(attr) or inspect.ismethod(attr)
+    attrs = getattr(obj, "__aiter__", None)
+    return inspect.isfunction(attrs) or inspect.ismethod(attrs)
 
 
-async def first_completed(
-    *aws: typing.Awaitable[typing.Any],
-    timeout: typing.Optional[float] = None,
-) -> None:
+async def first_completed(*aws: typing.Awaitable[typing.Any], timeout: typing.Optional[float] = None) -> None:
     """Wait for the first awaitable to complete.
 
     The awaitables that don't complete first will be cancelled.
@@ -151,10 +148,7 @@ async def first_completed(
                     pass
 
 
-async def all_of(
-    *aws: typing.Awaitable[T_co],
-    timeout: typing.Optional[float] = None,
-) -> typing.Sequence[T_co]:
+async def all_of(*aws: typing.Awaitable[T_co], timeout: typing.Optional[float] = None) -> typing.Sequence[T_co]:
     """Await the completion of all the given awaitable items.
 
     If any fail or time out, then they are all cancelled.

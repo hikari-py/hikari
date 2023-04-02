@@ -28,12 +28,12 @@ __all__: typing.Sequence[str] = ("RoleEvent", "RoleCreateEvent", "RoleUpdateEven
 import abc
 import typing
 
-import attr
+import attrs
 
 from hikari import intents
 from hikari.events import base_events
 from hikari.events import shard_events
-from hikari.internal import attr_extensions
+from hikari.internal import attrs_extensions
 
 if typing.TYPE_CHECKING:
     from hikari import guilds
@@ -59,16 +59,16 @@ class RoleEvent(shard_events.ShardEvent, abc.ABC):
         """ID of the role that this event relates to."""
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILDS)
 class RoleCreateEvent(RoleEvent):
     """Event fired when a role is created."""
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    role: guilds.Role = attr.field()
+    role: guilds.Role = attrs.field()
     """Role that was created."""
 
     @property
@@ -87,22 +87,22 @@ class RoleCreateEvent(RoleEvent):
         return self.role.id
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILDS)
 class RoleUpdateEvent(RoleEvent):
     """Event fired when a role is updated."""
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    old_role: typing.Optional[guilds.Role] = attr.field()
+    old_role: typing.Optional[guilds.Role] = attrs.field()
     """The old role object.
 
     This will be `None` if the role missing from the cache.
     """
 
-    role: guilds.Role = attr.field()
+    role: guilds.Role = attrs.field()
     """Role that was updated."""
 
     @property
@@ -121,25 +121,25 @@ class RoleUpdateEvent(RoleEvent):
         return self.role.id
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILDS)
 class RoleDeleteEvent(RoleEvent):
     """Event fired when a role is deleted."""
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    guild_id: snowflakes.Snowflake = attr.field()
+    guild_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from RoleEvent>>.
 
-    role_id: snowflakes.Snowflake = attr.field()
+    role_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from RoleEvent>>.
 
-    old_role: typing.Optional[guilds.Role] = attr.field()
+    old_role: typing.Optional[guilds.Role] = attrs.field()
     """The old role object.
 
     This will be `None` if the role was missing from the cache.

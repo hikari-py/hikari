@@ -60,11 +60,7 @@ class TestMessageApplication:
     @pytest.fixture()
     def message_application(self):
         return messages.MessageApplication(
-            id=123,
-            name="test app",
-            description="",
-            icon_hash="123abc",
-            cover_image_hash="abc123",
+            id=123, name="test app", description="", icon_hash="123abc", cover_image_hash="abc123"
         )
 
     def test_cover_image_url(self, message_application):
@@ -205,6 +201,8 @@ class TestAsyncMessage:
             attachments=attachments,
             component=component,
             components=components,
+            sticker=123,
+            stickers=[543, 6542],
             tts=True,
             reply=reference_messsage,
             reply_must_exist=False,
@@ -223,6 +221,8 @@ class TestAsyncMessage:
             attachments=attachments,
             component=component,
             components=components,
+            sticker=123,
+            stickers=[543, 6542],
             tts=True,
             reply=reference_messsage,
             reply_must_exist=False,
@@ -247,6 +247,8 @@ class TestAsyncMessage:
             attachments=undefined.UNDEFINED,
             component=undefined.UNDEFINED,
             components=undefined.UNDEFINED,
+            sticker=undefined.UNDEFINED,
+            stickers=undefined.UNDEFINED,
             tts=undefined.UNDEFINED,
             reply=message,
             reply_must_exist=undefined.UNDEFINED,
@@ -271,6 +273,8 @@ class TestAsyncMessage:
             attachments=undefined.UNDEFINED,
             component=undefined.UNDEFINED,
             components=undefined.UNDEFINED,
+            sticker=undefined.UNDEFINED,
+            stickers=undefined.UNDEFINED,
             tts=undefined.UNDEFINED,
             reply=undefined.UNDEFINED,
             reply_must_exist=undefined.UNDEFINED,

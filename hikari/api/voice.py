@@ -31,11 +31,11 @@ import typing
 from hikari.events import voice_events
 
 if typing.TYPE_CHECKING:
+    from typing_extensions import Self
+
     from hikari import channels
     from hikari import guilds
     from hikari import snowflakes
-
-    _T = typing.TypeVar("_T")
 
     _VoiceConnectionT = typing.TypeVar("_VoiceConnectionT", bound="VoiceConnection")
 
@@ -149,18 +149,18 @@ class VoiceConnection(abc.ABC):
     @classmethod
     @abc.abstractmethod
     async def initialize(
-        cls: typing.Type[_T],
+        cls,
         channel_id: snowflakes.Snowflake,
         endpoint: str,
         guild_id: snowflakes.Snowflake,
-        on_close: typing.Callable[[_T], typing.Awaitable[None]],
+        on_close: typing.Callable[[Self], typing.Awaitable[None]],
         owner: VoiceComponent,
         session_id: str,
         shard_id: int,
         token: str,
         user_id: snowflakes.Snowflake,
         **kwargs: typing.Any,
-    ) -> _T:
+    ) -> Self:
         """Initialize and connect the voice connection.
 
         Parameters

@@ -30,12 +30,12 @@ import abc
 import re
 import typing
 
-import attr
+import attrs
 
 from hikari import files
 from hikari import snowflakes
 from hikari import urls
-from hikari.internal import attr_extensions
+from hikari.internal import attrs_extensions
 from hikari.internal import routes
 
 # import unicodedata
@@ -45,7 +45,7 @@ if typing.TYPE_CHECKING:
     from hikari import traits
     from hikari import users
 
-_TWEMOJI_PNG_BASE_URL: typing.Final[str] = "https://raw.githubusercontent.com/twitter/twemoji/master/assets/72x72/"
+_TWEMOJI_PNG_BASE_URL: typing.Final[str] = "https://raw.githubusercontent.com/discord/twemoji/master/assets/72x72/"
 _CUSTOM_EMOJI_REGEX: typing.Final[typing.Pattern[str]] = re.compile(r"<(?P<flags>[^:]*):(?P<name>[^:]*):(?P<id>\d+)>")
 
 
@@ -182,7 +182,7 @@ class UnicodeEmoji(str, Emoji):
 
             >>> emoji = hikari.UnicodeEmoji("\N{OK HAND SIGN}")
             >>> emoji.url
-            'https://raw.githubusercontent.com/twitter/twemoji/master/assets/72x72/1f44c.png'
+            'https://raw.githubusercontent.com/discord/twemoji/master/assets/72x72/1f44c.png'
         """
         return _TWEMOJI_PNG_BASE_URL + self.filename
 
@@ -237,8 +237,8 @@ class UnicodeEmoji(str, Emoji):
         return cls(string)
 
 
-@attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class CustomEmoji(snowflakes.Unique, Emoji):
     """Represents a custom emoji.
 
@@ -263,13 +263,13 @@ class CustomEmoji(snowflakes.Unique, Emoji):
         <https://github.com/discord/discord-api-docs/issues/1614#issuecomment-628548913>
     """
 
-    id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
+    id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
     """The ID of this entity."""
 
-    name: str = attr.field(eq=False, hash=False, repr=True)
+    name: str = attrs.field(eq=False, hash=False, repr=True)
     """The name of the emoji."""
 
-    is_animated: bool = attr.field(eq=False, hash=False, repr=True)
+    is_animated: bool = attrs.field(eq=False, hash=False, repr=True)
     """Whether the emoji is animated."""
 
     def __str__(self) -> str:
@@ -325,7 +325,7 @@ class CustomEmoji(snowflakes.Unique, Emoji):
         raise ValueError("Expected an emoji mention")
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class KnownCustomEmoji(CustomEmoji):
     """Represents an emoji that is known from a guild the bot is in.
 
@@ -333,21 +333,21 @@ class KnownCustomEmoji(CustomEmoji):
     _are_ part of. As a result, it contains a lot more information with it.
     """
 
-    app: traits.RESTAware = attr.field(
-        repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
+    app: traits.RESTAware = attrs.field(
+        repr=False, eq=False, hash=False, metadata={attrs_extensions.SKIP_DEEP_COPY: True}
     )
     """Client application that models may use for procedures."""
 
-    guild_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=False)
+    guild_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the guild this emoji belongs to."""
 
-    role_ids: typing.Sequence[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
+    role_ids: typing.Sequence[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The IDs of the roles that are whitelisted to use this emoji.
 
     If this is empty then any user can use this emoji regardless of their roles.
     """
 
-    user: typing.Optional[users.User] = attr.field(eq=False, hash=False, repr=False)
+    user: typing.Optional[users.User] = attrs.field(eq=False, hash=False, repr=False)
     """The user that created the emoji.
 
     .. note::
@@ -355,13 +355,13 @@ class KnownCustomEmoji(CustomEmoji):
         permission in the server the emoji is from.
     """
 
-    is_colons_required: bool = attr.field(eq=False, hash=False, repr=False)
+    is_colons_required: bool = attrs.field(eq=False, hash=False, repr=False)
     """Whether this emoji must be wrapped in colons."""
 
-    is_managed: bool = attr.field(eq=False, hash=False, repr=False)
+    is_managed: bool = attrs.field(eq=False, hash=False, repr=False)
     """Whether the emoji is managed by an integration."""
 
-    is_available: bool = attr.field(eq=False, hash=False, repr=False)
+    is_available: bool = attrs.field(eq=False, hash=False, repr=False)
     """Whether this emoji can currently be used.
 
     May be `False` due to a loss of Sever Boosts on the emoji's guild.

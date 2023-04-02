@@ -30,6 +30,7 @@ import logging
 import sys
 import typing
 
+from hikari import applications
 from hikari import errors
 from hikari import traits
 from hikari.api import interaction_server as interaction_server_
@@ -47,7 +48,6 @@ if typing.TYPE_CHECKING:
     import socket as socket_
     import ssl
 
-    from hikari import applications
     from hikari.api import entity_factory as entity_factory_api
     from hikari.api import rest as rest_api
     from hikari.api import special_endpoints
@@ -58,13 +58,9 @@ if typing.TYPE_CHECKING:
 
     _InteractionT_co = typing.TypeVar("_InteractionT_co", bound=base_interactions.PartialInteraction, covariant=True)
     _MessageResponseBuilderT = typing.Union[
-        special_endpoints.InteractionDeferredBuilder,
-        special_endpoints.InteractionMessageBuilder,
+        special_endpoints.InteractionDeferredBuilder, special_endpoints.InteractionMessageBuilder
     ]
-    _ModalOrMessageResponseBuilderT = typing.Union[
-        _MessageResponseBuilderT,
-        special_endpoints.InteractionModalBuilder,
-    ]
+    _ModalOrMessageResponseBuilderT = typing.Union[_MessageResponseBuilderT, special_endpoints.InteractionModalBuilder]
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.rest_bot")
 
@@ -78,7 +74,8 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         The bot or bearer token.
     token_type : typing.Union[str, hikari.applications.TokenType, None]
         The type of token in use. This should only be passed when `str`
-        is passed for `token`, can be `"Bot"` or `"Bearer"`.
+        is passed for `token`, can be `"Bot"` or `"Bearer"` and defaults
+        to `"Bot".
 
         This should be left as `None` when `hikari.api.rest.TokenStrategy`
         is passed for `token`.
@@ -259,7 +256,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
     def __init__(
         self,
         token: str,
-        token_type: typing.Union[str, applications.TokenType],
+        token_type: typing.Union[str, applications.TokenType] = applications.TokenType.BOT,
         public_key: typing.Union[bytes, str, None] = None,
         *,
         allow_color: bool = True,
@@ -300,6 +297,9 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         if isinstance(token, str):
             token = token.strip()
 
+            if token_type is None:
+                token_type = applications.TokenType.BOT
+
         # Beautification and logging
         ux.init_logging(logs, allow_color, force_color)
         self.print_banner(banner, allow_color, force_color)
@@ -333,9 +333,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
 
         # InteractionServer
         self._server = interaction_server_impl.InteractionServer(
-            entity_factory=self._entity_factory,
-            public_key=public_key,
-            rest_client=self._rest,
+            entity_factory=self._entity_factory, public_key=public_key, rest_client=self._rest
         )
 
     @property
@@ -572,9 +570,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
 
         try:
             with signals.handle_interrupts(
-                enabled=enable_signal_handlers,
-                loop=loop,
-                propagate_interrupts=propagate_interrupts,
+                enabled=enable_signal_handlers, loop=loop, propagate_interrupts=propagate_interrupts
             ):
                 loop.run_until_complete(
                     self.start(
@@ -664,8 +660,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
 
         if check_for_updates:
             asyncio.create_task(
-                ux.check_for_updates(self._http_settings, self._proxy_settings),
-                name="check for package updates",
+                ux.check_for_updates(self._http_settings, self._proxy_settings), name="check for package updates"
             )
 
         self._rest.start()

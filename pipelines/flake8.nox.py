@@ -25,13 +25,13 @@ from pipelines import config
 from pipelines import nox
 
 
-@nox.session(reuse_venv=True)
+@nox.session()
 def flake8(session: nox.Session) -> None:
     """Run code linting, SAST, and analysis."""
     _flake8(session)
 
 
-@nox.session(reuse_venv=True)
+@nox.session()
 def flake8_html(session: nox.Session) -> None:
     """Run code linting, SAST, and analysis and generate an HTML report."""
     _flake8(session, ("--format=html", f"--htmldir={config.FLAKE8_REPORT}"))

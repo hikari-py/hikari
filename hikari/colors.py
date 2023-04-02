@@ -508,11 +508,7 @@ class Color(int):
         raise ValueError(f"Could not transform {value!r} into a {cls.__qualname__} object")
 
     def to_bytes(
-        self,
-        length: typing.SupportsIndex,
-        byteorder: typing.Literal["little", "big"],
-        *,
-        signed: bool = True,
+        self, length: typing.SupportsIndex, byteorder: typing.Literal["little", "big"], *, signed: bool = True
     ) -> bytes:
         """Convert the color code to bytes.
 

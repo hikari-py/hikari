@@ -98,10 +98,7 @@ class TestPartialChannel:
     @pytest.fixture()
     def model(self, mock_app):
         return hikari_test_helpers.mock_class_namespace(channels.PartialChannel, rename_impl_=False)(
-            app=mock_app,
-            id=snowflakes.Snowflake(1234567),
-            name="foo",
-            type=channels.ChannelType.GUILD_NEWS,
+            app=mock_app, id=snowflakes.Snowflake(1234567), name="foo", type=channels.ChannelType.GUILD_NEWS
         )
 
     def test_str_operator(self, model):
@@ -153,10 +150,7 @@ class TestGroupDMChannel:
             last_message_id=snowflakes.Snowflake(3232),
             owner_id=snowflakes.Snowflake(1066),
             icon_hash="1a2b3c",
-            nicknames={
-                snowflakes.Snowflake(1): "person 1",
-                snowflakes.Snowflake(2): "person 2",
-            },
+            nicknames={snowflakes.Snowflake(1): "person 1", snowflakes.Snowflake(2): "person 2"},
             recipients={
                 snowflakes.Snowflake(1): mock.Mock(spec_set=users.User, __str__=mock.Mock(return_value="snoop#0420")),
                 snowflakes.Snowflake(2): mock.Mock(spec_set=users.User, __str__=mock.Mock(return_value="yeet#1012")),
@@ -198,10 +192,7 @@ class TestTextChannel:
     @pytest.fixture()
     def model(self, mock_app):
         return hikari_test_helpers.mock_class_namespace(channels.TextableChannel)(
-            app=mock_app,
-            id=snowflakes.Snowflake(12345679),
-            name="foo1",
-            type=channels.ChannelType.GUILD_TEXT,
+            app=mock_app, id=snowflakes.Snowflake(12345679), name="foo1", type=channels.ChannelType.GUILD_TEXT
         )
 
     @pytest.mark.asyncio()
@@ -281,6 +272,8 @@ class TestTextChannel:
             components=mock_components,
             embed=mock_embed,
             embeds=mock_embeds,
+            sticker=543,
+            stickers=[132, 65423],
             reply=mock_reply,
             reply_must_exist=False,
             mentions_everyone=False,
@@ -300,6 +293,8 @@ class TestTextChannel:
             components=mock_components,
             embed=mock_embed,
             embeds=mock_embeds,
+            sticker=543,
+            stickers=[132, 65423],
             reply=mock_reply,
             reply_must_exist=False,
             mentions_everyone=False,
@@ -455,10 +450,7 @@ class TestPermissibleGuildChannel:
 
         await model.remove_overwrite(333)
 
-        model.app.rest.delete_permission_overwrite.assert_called_once_with(
-            69420,
-            333,
-        )
+        model.app.rest.delete_permission_overwrite.assert_called_once_with(69420, 333)
 
     def test_get_guild(self, model):
         guild = mock.Mock(id=123456789)
@@ -492,11 +484,7 @@ class TestPermissibleGuildChannel:
 class TestForumTag:
     @pytest.mark.parametrize(
         ("emoji", "expected_unicode_emoji", "expected_emoji_id"),
-        [
-            (123, None, 123),
-            ("emoji", "emoji", None),
-            (None, None, None),
-        ],
+        [(123, None, 123), ("emoji", "emoji", None), (None, None, None)],
     )
     def test_emoji_parameters(self, emoji, expected_emoji_id, expected_unicode_emoji):
         tag = channels.ForumTag(name="testing", emoji=emoji)

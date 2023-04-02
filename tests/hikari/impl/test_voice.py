@@ -213,12 +213,7 @@ class TestVoiceComponentImpl:
             )
 
         assert voice_client._voice_listener is True
-        mock_shard.update_voice_state.assert_awaited_once_with(
-            123,
-            4532,
-            self_deaf=False,
-            self_mute=True,
-        )
+        mock_shard.update_voice_state.assert_awaited_once_with(123, 4532, self_deaf=False, self_mute=True)
         assert voice_client._connections == {
             123: mock_connection_type.initialize.return_value,
             555: mock_other_connection,
@@ -235,10 +230,7 @@ class TestVoiceComponentImpl:
         mock_app.shards = {0: mock_shard}
         mock_connection_type = mock.AsyncMock()
 
-        with pytest.raises(
-            errors.VoiceError,
-            match="Could not connect to voice channel 4532 in guild 123.",
-        ):
+        with pytest.raises(errors.VoiceError, match="Could not connect to voice channel 4532 in guild 123."):
             await voice_client.connect_to(123, 4532, mock_connection_type)
 
     @pytest.mark.asyncio()
@@ -333,7 +325,7 @@ class TestVoiceComponentImpl:
                     timeout=None,
                     predicate=voice_client._init_server_update_predicate.return_value,
                 ),
-            ],
+            ]
         )
         mock_app.cache.get_me.assert_called_once_with()
         voice_client._init_state_update_predicate.assert_called_once_with(123, mock_app.cache.get_me.return_value.id)

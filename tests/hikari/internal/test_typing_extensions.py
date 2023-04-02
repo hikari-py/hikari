@@ -87,10 +87,7 @@ class TestFastProtocolChecking:
                 ...
 
     def test_new_when_fastprotocolchecking_in_bases_but_not_protocol(self):
-        with pytest.raises(
-            TypeError,
-            match=r"FastProtocolChecking can only be used with protocols",
-        ):
+        with pytest.raises(TypeError, match=r"FastProtocolChecking can only be used with protocols"):
 
             class MyProtocol(fast_protocol.FastProtocolChecking):
                 ...

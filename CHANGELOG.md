@@ -1,3 +1,30 @@
+## 2.0.0.dev117 (2023-03-06)
+
+### Breaking Changes
+
+- Remove previously deprecated functionality:
+   - `delete_message_days` parameter for `ban` methods. ([#1496](https://github.com/hikari-py/hikari/issues/1496))
+- `type` can no-longer be specified while initialise `hikari.impl.special_endpoints.TextSelectMenuBuilder` and `hikari.impl.special_endpoints.ChannelSelectMenuBuilder`.
+  `hikari.api.special_endpoints.SelectOptionBuilder` no-longer inherits from `hikari.api.special_endpoints.ComponentBuilder` (but it still has a `build` method). ([#1509](https://github.com/hikari-py/hikari/issues/1509))
+
+### Features
+
+- Pre-maturely fetch the public key if not present when starting an interaction server. ([#1423](https://github.com/hikari-py/hikari/issues/1423))
+- Add and document the new `SUPPRESS_NOTIFICATIONS` message flag. ([#1504](https://github.com/hikari-py/hikari/issues/1504))
+- `hikari.impl.special_endpoints.ChannelSelectMenuBuilder` and `hikari.impl.special_endpoints.TextSelectMenuBuilder` are now both exported directly on `hikari.impl`. ([#1508](https://github.com/hikari-py/hikari/issues/1508))
+- `type` property to the component builders. ([#1509](https://github.com/hikari-py/hikari/issues/1509))
+- Traits now use `abc.abstractmethod`. This gives better type errors. ([#1516](https://github.com/hikari-py/hikari/issues/1516))
+- `token_type` now defaults to `"Bot"` when initialising `RESTBot` with a string token. ([#1527](https://github.com/hikari-py/hikari/issues/1527))
+
+### Bugfixes
+
+- Re-export missing exports from `hikari.api.special_endpoints` and `hikari.components`. ([#1501](https://github.com/hikari-py/hikari/issues/1501))
+- Fix `PartialSticker.image_url` not accounting for stickers with GIF format. ([#1506](https://github.com/hikari-py/hikari/issues/1506))
+- Await bucket manager gc task to completion when closing ([#1529](https://github.com/hikari-py/hikari/issues/1529))
+
+---
+
+
 ## 2.0.0.dev116 (2023-02-06)
 
 ### Breaking Changes

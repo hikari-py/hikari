@@ -151,7 +151,7 @@ class TestRESTBucketManager:
     @pytest.fixture()
     def bucket_manager(self):
         manager = buckets.RESTBucketManager(max_rate_limit=float("inf"))
-        manager._closed_event = mock.Mock(wait=mock.AsyncMock(), is_set=mock.Mock(return_value=False))
+        manager._gc_task = object()
 
         return manager
 
@@ -161,32 +161,43 @@ class TestRESTBucketManager:
         assert bucket_manager.max_rate_limit is bucket_manager._max_rate_limit
 
     @pytest.mark.asyncio()
-    async def test_close_closes_all_buckets(self, bucket_manager):
+    async def test_close(self, bucket_manager):
+        class GcTaskMock:
+            def __init__(self):
+                self._awaited_count = 0
+                self.cancel = mock.Mock()
+
+            def __await__(self):
+                if False:
+                    yield  # Turns it into a generator
+
+                self._awaited_count += 1
+
+            def __call__(self):
+                return self
+
+            def assert_awaited_once(self):
+                assert self._awaited_count == 1
+
         buckets_array = [mock.Mock() for _ in range(30)]
         bucket_manager._real_hashes_to_buckets = {f"blah{i}": b for i, b in enumerate(buckets_array)}
+        bucket_manager._gc_task = gc_task = GcTaskMock()
 
-        bucket_manager.close()
+        await bucket_manager.close()
 
         assert bucket_manager._real_hashes_to_buckets == {}
 
         for i, b in enumerate(buckets_array):
             b.close.assert_called_once(), i
 
-    @pytest.mark.asyncio()
-    async def test_close_sets_closed_event(self, bucket_manager):
-        closed_event = mock.Mock()
-        bucket_manager._closed_event = closed_event
-
-        bucket_manager.close()
-
-        assert bucket_manager._closed_event is None
-        closed_event.set.assert_called_once()
+        assert bucket_manager._gc_task is None
+        gc_task.cancel.assert_called_once_with()
+        gc_task.assert_awaited_once()
 
     @pytest.mark.asyncio()
     async def test_start(self, bucket_manager):
-        bucket_manager._closed_event = None
+        bucket_manager._gc_task = None
 
-        assert bucket_manager._gc_task is None
         bucket_manager.start()
         assert bucket_manager._gc_task is not None
 
@@ -199,41 +210,18 @@ class TestRESTBucketManager:
 
     @pytest.mark.asyncio()
     async def test_start_when_already_started(self, bucket_manager):
-        bucket_manager._closed_event = object()
+        bucket_manager._gc_task = object()
 
         with pytest.raises(errors.ComponentStateConflictError):
             bucket_manager.start()
-
-    @pytest.mark.asyncio()
-    async def test_gc_polls_until_closed_event_set(self, event_loop, bucket_manager):
-        bucket_manager._closed_event = asyncio.Event()
-
-        # Start the gc and initial assertions
-        task = event_loop.create_task(bucket_manager._gc(0.001, float("inf")))
-        assert not task.done()
-
-        # [First poll] event not set => shouldn't complete the task
-        await asyncio.sleep(0.001)
-        assert not task.done()
-
-        # [Second poll] event not set during poll => shouldn't complete the task
-        await asyncio.sleep(0.001)
-        bucket_manager._closed_event.set()
-        assert not task.done()
-
-        # [Third poll] event set => should complete the task
-        await asyncio.sleep(0.001)
-        assert task.done()
 
     @pytest.mark.asyncio()
     async def test_gc_makes_gc_pass(self, bucket_manager):
         class ExitError(Exception):
             ...
 
-        bucket_manager._closed_event.wait = mock.Mock()
-
         with mock.patch.object(buckets.RESTBucketManager, "_purge_stale_buckets") as purge_stale_buckets:
-            with mock.patch.object(asyncio, "wait_for", side_effect=[asyncio.TimeoutError, ExitError]):
+            with mock.patch.object(asyncio, "sleep", side_effect=[None, ExitError]):
                 with pytest.raises(ExitError):
                     await bucket_manager._gc(0.001, 33)
 
@@ -431,7 +419,7 @@ class TestRESTBucketManager:
                 bucket_manager.update_rate_limits(route, "auth", "123", 22, 23, 5.32)
                 bucket.update_rate_limit.assert_called_once_with(22, 23, 27 + 5.32)
 
-    @pytest.mark.parametrize(("closed_event", "is_alive"), [(None, False), ("some", True)])
-    def test_is_alive(self, bucket_manager, closed_event, is_alive):
-        bucket_manager._closed_event = closed_event
+    @pytest.mark.parametrize(("gc_task", "is_alive"), [(None, False), ("some", True)])
+    def test_is_alive(self, bucket_manager, gc_task, is_alive):
+        bucket_manager._gc_task = gc_task
         assert bucket_manager.is_alive is is_alive

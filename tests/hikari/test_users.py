@@ -209,11 +209,7 @@ class TestUser:
             assert obj.make_avatar_url(ext=None, size=4096) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            user_id=obj.id,
-            hash="a_18dnf8dfbakfdh",
-            size=4096,
-            file_format="gif",
+            urls.CDN_URL, user_id=obj.id, hash="a_18dnf8dfbakfdh", size=4096, file_format="gif"
         )
 
     def test_make_avatar_url_when_format_is_None_and_avatar_hash_is_not_for_gif(self, obj):
@@ -225,11 +221,7 @@ class TestUser:
             assert obj.make_avatar_url(ext=None, size=4096) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            user_id=obj.id,
-            hash=obj.avatar_hash,
-            size=4096,
-            file_format="png",
+            urls.CDN_URL, user_id=obj.id, hash=obj.avatar_hash, size=4096, file_format="png"
         )
 
     def test_make_avatar_url_with_all_args(self, obj):
@@ -241,11 +233,7 @@ class TestUser:
             assert obj.make_avatar_url(ext="url", size=4096) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            user_id=obj.id,
-            hash=obj.avatar_hash,
-            size=4096,
-            file_format="url",
+            urls.CDN_URL, user_id=obj.id, hash=obj.avatar_hash, size=4096, file_format="url"
         )
 
     def test_display_avatar_url_when_avatar_url(self, obj):
@@ -266,11 +254,7 @@ class TestUser:
         ) as route:
             assert obj.default_avatar_url == "file"
 
-        route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            discriminator=4,
-            file_format="png",
-        )
+        route.compile_to_file.assert_called_once_with(urls.CDN_URL, discriminator=4, file_format="png")
 
     def test_banner_url_property(self, obj):
         with mock.patch.object(users.User, "make_banner_url") as make_banner_url:
@@ -293,11 +277,7 @@ class TestUser:
             assert obj.make_banner_url(ext=None, size=4096) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            user_id=obj.id,
-            hash="a_18dnf8dfbakfdh",
-            size=4096,
-            file_format="gif",
+            urls.CDN_URL, user_id=obj.id, hash="a_18dnf8dfbakfdh", size=4096, file_format="gif"
         )
 
     def test_make_banner_url_when_format_is_None_and_banner_hash_is_not_for_gif(self, obj):
@@ -309,11 +289,7 @@ class TestUser:
             assert obj.make_banner_url(ext=None, size=4096) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            user_id=obj.id,
-            hash=obj.banner_hash,
-            size=4096,
-            file_format="png",
+            urls.CDN_URL, user_id=obj.id, hash=obj.banner_hash, size=4096, file_format="png"
         )
 
     def test_make_banner_url_with_all_args(self, obj):
@@ -325,11 +301,7 @@ class TestUser:
             assert obj.make_banner_url(ext="url", size=4096) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            user_id=obj.id,
-            hash=obj.banner_hash,
-            size=4096,
-            file_format="url",
+            urls.CDN_URL, user_id=obj.id, hash=obj.banner_hash, size=4096, file_format="url"
         )
 
 

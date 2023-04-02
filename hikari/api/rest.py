@@ -50,7 +50,7 @@ if typing.TYPE_CHECKING:
     from hikari import permissions as permissions_
     from hikari import sessions
     from hikari import snowflakes
-    from hikari import stickers
+    from hikari import stickers as stickers_
     from hikari import templates
     from hikari import users
     from hikari import voices
@@ -219,7 +219,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         locked: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         invitable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
-        applied_tags: undefined.UndefinedOr[typing.Sequence[channels_.ForumTag]] = undefined.UNDEFINED,
+        applied_tags: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[channels_.ForumTag]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.PartialChannel:
         """Edit a channel.
@@ -265,7 +265,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the auto archive duration Discord's end user client
             should default to when creating threads in this channel.
 
-            This should be either 60, 1440, 4320 or 10080 seconds and, as of
+            This should be either 60, 1440, 4320 or 10080 minutes and, as of
             writing, ignores the parent channel's set default_auto_archive_duration
             when passed as `hikari.undefined.UNDEFINED`.
         default_thread_rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
@@ -300,9 +300,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the new auto archive duration for this thread. This
             only applies to threads.
 
-            This should be either 60, 1440, 4320 or 10080 seconds, as of
+            This should be either 60, 1440, 4320 or 10080 minutes, as of
             writing.
-        applied_tags : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.ForumTag]]
+        applied_tags : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.channels.ForumTag]]
             If provided, the new tags to apply to the thread. This only applies
             to threads in a forum channel.
         reason : hikari.undefined.UndefinedOr[str]
@@ -1000,6 +1000,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        sticker: undefined.UndefinedOr[snowflakes.SnowflakeishOr[stickers_.PartialSticker]] = undefined.UNDEFINED,
+        stickers: undefined.UndefinedOr[
+            snowflakes.SnowflakeishSequence[stickers_.PartialSticker]
+        ] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reply: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = undefined.UNDEFINED,
         reply_must_exist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -1076,6 +1080,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the message embed.
         embeds : hikari.undefined.UndefinedOr[typing.Sequence[hikari.embeds.Embed]]
             If provided, the message embeds.
+        sticker : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.stickers.PartialSticker]]
+            If provided, the object or ID of a sticker to send on the message.
+
+            As of writing, bots can only send custom stickers from the current guild.
+        stickers : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.stickers.PartialSticker]]
+            If provided, a sequence of the objects and IDs of up to 3 stickers
+            to send on the message.
+
+            As of writing, bots can only send custom stickers from the current guild.
         tts : hikari.undefined.UndefinedOr[bool]
             If provided, whether the message will be read out by a screen
             reader using Discord's TTS (text-to-speech) system.
@@ -1116,7 +1129,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             `hikari.undefined.UNDEFINED`, then nothing is changed.
 
             Note that some flags may not be able to be set. Currently the only
-            flags that can be set are `NONE` and `SUPPRESS_EMBEDS`.
+            flags that can be set are `SUPPRESS_NOTIFICATIONS` and
+            `SUPPRESS_EMBEDS`.
 
         Returns
         -------
@@ -1833,8 +1847,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_channel_webhooks(
-        self,
-        channel: snowflakes.SnowflakeishOr[channels_.WebhookChannelT],
+        self, channel: snowflakes.SnowflakeishOr[channels_.WebhookChannelT]
     ) -> typing.Sequence[webhooks.PartialWebhook]:
         """Fetch all channel webhooks.
 
@@ -1867,8 +1880,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_guild_webhooks(
-        self,
-        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
     ) -> typing.Sequence[webhooks.PartialWebhook]:
         """Fetch all guild webhooks.
 
@@ -2023,7 +2035,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """Execute a webhook.
 
         .. warning::
-            As of writing, `username` and `avatar_url` are ignored for
+            At the time of writing, `username` and `avatar_url` are ignored for
+            interaction webhooks.
+
+            Additionally, `SUPPRESS_EMBEDS`, `SUPPRESS_NOTIFICATIONS` and `EPHEMERAL`
+            are the only flags that can be set, with `EPHEMERAL` limited to
             interaction webhooks.
 
         Parameters
@@ -2127,11 +2143,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             specific roles.
         flags : typing.Union[hikari.undefined.UndefinedType, int, hikari.messages.MessageFlag]
             The flags to set for this webhook message.
-
-            .. warning::
-                As of writing this can only be set for interaction webhooks
-                and the only settable flag is `EPHEMERAL`; this field is just
-                ignored for non-interaction webhooks.
 
         Returns
         -------
@@ -2738,6 +2749,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Depending on the time of the previously created application role
             records through `set_application_role_connection_metadata_records`,
             this mapping should contain those keys to the valid type of the record:
+
                 - `INTEGER_X`: An `int`.
                 - `DATETIME_X`: A `datetime.datetime` object.
                 - `BOOLEAN_X`: A `bool`.
@@ -3468,7 +3480,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def fetch_available_sticker_packs(self) -> typing.Sequence[stickers.StickerPack]:
+    async def fetch_available_sticker_packs(self) -> typing.Sequence[stickers_.StickerPack]:
         """Fetch the available sticker packs.
 
         Returns
@@ -3487,14 +3499,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_sticker(
-        self,
-        sticker: snowflakes.SnowflakeishOr[stickers.PartialSticker],
-    ) -> typing.Union[stickers.GuildSticker, stickers.StandardSticker]:
+        self, sticker: snowflakes.SnowflakeishOr[stickers_.PartialSticker]
+    ) -> typing.Union[stickers_.GuildSticker, stickers_.StandardSticker]:
         """Fetch a sticker.
 
         Parameters
         ----------
-        sticker : snowflakes.SnowflakeishOr[stickers.PartialSticker]
+        sticker : hikari.snowflakes.SnowflakeishOr[hikari.stickers.PartialSticker]
             The sticker to fetch. This can be a sticker object or the
             ID of an existing sticker.
 
@@ -3519,12 +3530,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def fetch_guild_stickers(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
-    ) -> typing.Sequence[stickers.GuildSticker]:
+    ) -> typing.Sequence[stickers_.GuildSticker]:
         """Fetch a standard sticker.
 
         Parameters
         ----------
-        guild : snowflakes.SnowflakeishOr[stickers.PartialGuild]
+        guild : hikari.snowflakes.SnowflakeishOr[hikari.stickers.PartialGuild]
             The guild to request stickers for. This can be a guild object or the
             ID of an existing guild.
 
@@ -3552,16 +3563,16 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def fetch_guild_sticker(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        sticker: snowflakes.SnowflakeishOr[stickers.PartialSticker],
-    ) -> stickers.GuildSticker:
+        sticker: snowflakes.SnowflakeishOr[stickers_.PartialSticker],
+    ) -> stickers_.GuildSticker:
         """Fetch a guild sticker.
 
         Parameters
         ----------
-        guild : snowflakes.SnowflakeishOr[stickers.PartialGuild]
+        guild : hikari.snowflakes.SnowflakeishOr[hikari.stickers.PartialGuild]
             The guild the sticker is in. This can be a guild object or the
             ID of an existing guild.
-        sticker : snowflakes.SnowflakeishOr[stickers.PartialSticker]
+        sticker : hikari.snowflakes.SnowflakeishOr[hikari.stickers.PartialSticker]
             The sticker to fetch. This can be a sticker object or the
             ID of an existing sticker.
 
@@ -3595,7 +3606,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> stickers.GuildSticker:
+    ) -> stickers_.GuildSticker:
         """Create a sticker in a guild.
 
         Parameters
@@ -3650,13 +3661,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def edit_sticker(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        sticker: snowflakes.SnowflakeishOr[stickers.PartialSticker],
+        sticker: snowflakes.SnowflakeishOr[stickers_.PartialSticker],
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         tag: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> stickers.GuildSticker:
+    ) -> stickers_.GuildSticker:
         """Edit a sticker in a guild.
 
         Parameters
@@ -3706,7 +3717,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def delete_sticker(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        sticker: snowflakes.SnowflakeishOr[stickers.PartialSticker],
+        sticker: snowflakes.SnowflakeishOr[stickers_.PartialSticker],
         *,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
@@ -4056,7 +4067,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the auto archive duration Discord's end user client
             should default to when creating threads in this channel.
 
-            This should be either 60, 1440, 4320 or 10080 seconds and, as of
+            This should be either 60, 1440, 4320 or 10080 minutes and, as of
             writing, ignores the parent channel's set default_auto_archive_duration
             when passed as `hikari.undefined.UNDEFINED`.
         reason : hikari.undefined.UndefinedOr[str]
@@ -4134,7 +4145,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the auto archive duration Discord's end user client
             should default to when creating threads in this channel.
 
-            This should be either 60, 1440, 4320 or 10080 seconds and, as of
+            This should be either 60, 1440, 4320 or 10080 minutes and, as of
             writing, ignores the parent channel's set default_auto_archive_duration
             when passed as `hikari.undefined.UNDEFINED`.
         reason : hikari.undefined.UndefinedOr[str]
@@ -4220,7 +4231,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the auto archive duration Discord's end user client
             should default to when creating threads in this channel.
 
-            This should be either 60, 1440, 4320 or 10080 seconds and, as of
+            This should be either 60, 1440, 4320 or 10080 minutes and, as of
             writing, ignores the parent channel's set default_auto_archive_duration
             when passed as `hikari.undefined.UNDEFINED`.
         default_thread_rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
@@ -4499,7 +4510,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         auto_archive_duration : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
             If provided, how long the thread should remain inactive until it's archived.
 
-            This should be either 60, 1440, 4320 or 10080 seconds and, as of
+            This should be either 60, 1440, 4320 or 10080 minutes and, as of
             writing, ignores the parent channel's set default_auto_archive_duration
             when passed as `hikari.undefined.UNDEFINED`.
         rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
@@ -4566,7 +4577,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         auto_archive_duration : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
             If provided, how long the thread should remain inactive until it's archived.
 
-            This should be either 60, 1440, 4320 or 10080 seconds and, as of
+            This should be either 60, 1440, 4320 or 10080 minutes and, as of
             writing, ignores the parent channel's set default_auto_archive_duration
             when passed as `hikari.undefined.UNDEFINED`.
         invitable : undefined.UndefinedOr[bool]
@@ -4617,6 +4628,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        sticker: undefined.UndefinedOr[snowflakes.SnowflakeishOr[stickers_.PartialSticker]] = undefined.UNDEFINED,
+        stickers: undefined.UndefinedOr[
+            snowflakes.SnowflakeishSequence[stickers_.PartialSticker]
+        ] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -4698,6 +4713,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the message embed.
         embeds : hikari.undefined.UndefinedOr[typing.Sequence[hikari.embeds.Embed]]
             If provided, the message embeds.
+        sticker : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.stickers.PartialSticker]]
+            If provided, the object or ID of a sticker to send on the message.
+
+            As of writing, bots can only send custom stickers from the current guild.
+        stickers : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.stickers.PartialSticker]]
+            If provided, a sequence of the objects and IDs of up to 3 stickers
+            to send on the message.
+
+            As of writing, bots can only send custom stickers from the current guild.
         tts : hikari.undefined.UndefinedOr[bool]
             If provided, whether the message will be read out by a screen
             reader using Discord's TTS (text-to-speech) system.
@@ -4734,7 +4758,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         auto_archive_duration : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
             If provided, how long the post should remain inactive until it's archived.
 
-            This should be either 60, 1440, 4320 or 10080 seconds and, as of
+            This should be either 60, 1440, 4320 or 10080 minutes and, as of
             writing, ignores the parent channel's set default_auto_archive_duration
             when passed as `hikari.undefined.UNDEFINED`.
         rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
@@ -5178,9 +5202,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_member(
-        self,
-        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], user: snowflakes.SnowflakeishOr[users.PartialUser]
     ) -> guilds.Member:
         """Fetch a guild member.
 
@@ -5282,9 +5304,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def search_members(
-        self,
-        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        name: str,
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], name: str
     ) -> typing.Sequence[guilds.Member]:
         """Search the members in a guild by nickname and username.
 
@@ -5707,9 +5727,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_ban(
-        self,
-        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], user: snowflakes.SnowflakeishOr[users.PartialUser]
     ) -> guilds.GuildBan:
         """Fetch the guild's ban info for a user.
 
@@ -5798,10 +5816,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def fetch_roles(
-        self,
-        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-    ) -> typing.Sequence[guilds.Role]:
+    async def fetch_roles(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> typing.Sequence[guilds.Role]:
         """Fetch the roles of a guild.
 
         Parameters
@@ -6009,9 +6024,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def delete_role(
-        self,
-        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        role: snowflakes.SnowflakeishOr[guilds.PartialRole],
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], role: snowflakes.SnowflakeishOr[guilds.PartialRole]
     ) -> None:
         """Delete a role.
 
@@ -6146,8 +6159,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_guild_voice_regions(
-        self,
-        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
     ) -> typing.Sequence[voices.VoiceRegion]:
         """Fetch the available voice regions for a guild.
 
@@ -6177,8 +6189,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_guild_invites(
-        self,
-        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
     ) -> typing.Sequence[invites.InviteWithMetadata]:
         """Fetch the guild's invites.
 
@@ -6210,8 +6221,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_integrations(
-        self,
-        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
     ) -> typing.Sequence[guilds.Integration]:
         """Fetch the guild's integrations.
 
@@ -6527,9 +6537,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def delete_template(
-        self,
-        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        template: typing.Union[str, templates.Template],
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], template: typing.Union[str, templates.Template]
     ) -> templates.Template:
         """Delete a guild template.
 
@@ -6668,9 +6676,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def sync_guild_template(
-        self,
-        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        template: typing.Union[str, templates.Template],
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], template: typing.Union[str, templates.Template]
     ) -> templates.Template:
         """Create a guild template.
 
@@ -6703,11 +6709,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    def slash_command_builder(
-        self,
-        name: str,
-        description: str,
-    ) -> special_endpoints.SlashCommandBuilder:
+    def slash_command_builder(self, name: str, description: str) -> special_endpoints.SlashCommandBuilder:
         r"""Create a command builder to use in `RESTClient.set_application_commands`.
 
         Parameters
@@ -6727,9 +6729,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     def context_menu_command_builder(
-        self,
-        type: typing.Union[commands.CommandType, int],
-        name: str,
+        self, type: typing.Union[commands.CommandType, int], name: str
     ) -> special_endpoints.ContextMenuCommandBuilder:
         r"""Create a command builder to use in `RESTClient.set_application_commands`.
 
@@ -7287,9 +7287,17 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     def interaction_autocomplete_builder(
-        self, choices: typing.Sequence[commands.CommandChoice]
+        self,
+        choices: typing.Union[
+            typing.Sequence[commands.CommandChoice], typing.Sequence[special_endpoints.AutocompleteChoiceBuilder]
+        ],
+        _stack_level: int = 0,
     ) -> special_endpoints.InteractionAutocompleteBuilder:
         """Create a builder for an autocomplete interaction response.
+
+        .. deprecated:: 2.0.0.dev118
+            Passing `hikari.commands.CommandChoice`s here instead of
+            `hikari.api.special_endpoints.AutocompleteChoiceBuilder`s.
 
         Returns
         -------
@@ -7437,8 +7445,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         flags : typing.Union[int, hikari.messages.MessageFlag, hikari.undefined.UndefinedType]
             If provided, the message flags this response should have.
 
-            As of writing the only message flag which can be set here is
-            `hikari.messages.MessageFlag.EPHEMERAL`.
+            As of writing the only message flags which can be set here are
+            `hikari.messages.MessageFlag.EPHEMERAL`, `hikari.messages.MessageFlag.SUPPRESS_NOTIFICATIONS`
+            and `hikari.messages.MessageFlag.SUPPRESS_EMBEDS`.
         tts : hikari.undefined.UndefinedOr[bool]
             If provided, whether the message will be read out by a screen
             reader using Discord's TTS (text-to-speech) system.
@@ -7662,9 +7671,16 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         interaction: snowflakes.SnowflakeishOr[base_interactions.PartialInteraction],
         token: str,
-        choices: typing.Sequence[commands.CommandChoice],
+        choices: typing.Union[
+            typing.Sequence[commands.CommandChoice], typing.Sequence[special_endpoints.AutocompleteChoiceBuilder]
+        ],
+        _stack_level: int = 0,
     ) -> None:
         """Create the initial response for an autocomplete interaction.
+
+        .. deprecated:: 2.0.0.dev118
+            Passing `hikari.commands.CommandChoice`s here instead of
+            `hikari.api.special_endpoints.AutocompleteChoiceBuilder`s.
 
         Parameters
         ----------
@@ -7672,10 +7688,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Object or ID of the interaction this response is for.
         token : str
             The command interaction's token.
-
-        Other Parameters
-        ----------------
-        choices : typing.Sequence[commands.CommandChoice]
+        choices : typing.Sequence[hikari.api.special_endpoints.AutocompleteChoiceBuilder]
             The autocomplete choices themselves.
 
         Raises

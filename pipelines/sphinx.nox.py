@@ -33,20 +33,19 @@ from pipelines import config
 from pipelines import nox
 
 
-@nox.session(reuse_venv=True)
+@nox.session()
 def sphinx(session: nox.Session):
     """Generate docs using sphinx."""
+    if "--no-refs" in session.posargs:
+        session.env["SKIP_REFERENCE_DOCS"] = "1"
+
     if not os.path.exists(config.ARTIFACT_DIRECTORY):
         os.mkdir(config.ARTIFACT_DIRECTORY)
 
     session.install("-e", ".", *nox.dev_requirements("sphinx"))
 
     session.run(
-        "sphinx-build",
-        "-M",
-        "dirhtml",
-        config.DOCUMENTATION_DIRECTORY,
-        os.path.join(config.ARTIFACT_DIRECTORY, "docs"),
+        "sphinx-build", "-M", "dirhtml", config.DOCUMENTATION_DIRECTORY, os.path.join(config.ARTIFACT_DIRECTORY, "docs")
     )
 
 
@@ -82,7 +81,7 @@ class HTTPServerThread(threading.Thread):
         self.server.shutdown()
 
 
-@nox.session(reuse_venv=True, venv_backend="none")
+@nox.session(venv_backend="none")
 def view_docs(_: nox.Session) -> None:
     """Start an HTTP server for any generated pages in `/public/docs/dirhtml`."""
     with contextlib.closing(HTTPServerThread()) as thread:

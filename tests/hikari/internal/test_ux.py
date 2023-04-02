@@ -110,9 +110,7 @@ class TestInitLogging:
         logging_file_config.assert_not_called()
         logging_dict_config.assert_called_once_with({"incremental": True, "hikari": {"level": "INFO"}})
         logging_basic_config.assert_called_once_with(
-            level=None,
-            stream=sys.stdout,
-            format="%(levelname)-1.1s %(asctime)23.23s %(name)s: %(message)s",
+            level=None, stream=sys.stdout, format="%(levelname)-1.1s %(asctime)23.23s %(name)s: %(message)s"
         )
         colored_formatter.assert_not_called()
         handler.setFormatter.assert_not_called()
@@ -162,9 +160,7 @@ class TestInitLogging:
         logging_dict_config.assert_not_called()
         logging_file_config.assert_not_called()
         logging_basic_config.assert_called_once_with(
-            level="LOGGING_LEVEL",
-            format="%(levelname)-1.1s %(asctime)23.23s %(name)s: %(message)s",
-            stream=sys.stdout,
+            level="LOGGING_LEVEL", format="%(levelname)-1.1s %(asctime)23.23s %(name)s: %(message)s", stream=sys.stdout
         )
         colored_formatter.assert_not_called()
         supports_color.assert_called_once_with(True, False)
@@ -233,13 +229,15 @@ class TestRedBanner:
             joint_path = None
             open_mode = None
             mock_file = None
+            open_encoding = None
 
             def joinpath(self, path):
                 self.joint_path = path
                 return self
 
-            def open(self, mode):
+            def open(self, mode, encoding):
                 self.open_mode = mode
+                self.open_encoding = encoding
                 return self.mock_file
 
         traversable = MockTraversable()
@@ -253,6 +251,7 @@ class TestRedBanner:
         read_text.assert_called_once_with("hikaru")
         assert traversable.joint_path == "banner.txt"
         assert traversable.open_mode == "r"
+        assert traversable.open_encoding == "utf-8"
         assert traversable.mock_file.context_entered == 1
         assert traversable.mock_file.context_exited == 1
 
@@ -261,7 +260,7 @@ class TestRedBanner:
             with mock.patch.object(importlib.resources, "read_text") as read_text:
                 assert ux._read_banner("hikaru") is read_text.return_value
 
-        read_text.assert_called_once_with("hikaru", "banner.txt")
+        read_text.assert_called_once_with("hikaru", "banner.txt", encoding="utf-8")
 
 
 class TestPrintBanner:
@@ -388,10 +387,7 @@ class TestPrintBanner:
         stack.enter_context(mock.patch.object(os.path, "abspath", return_value="some path"))
         stdout = stack.enter_context(mock.patch.object(sys, "stdout"))
 
-        extra_args = {
-            "extra_argument_1": "one",
-            "extra_argument_2": "two",
-        }
+        extra_args = {"extra_argument_1": "one", "extra_argument_2": "two"}
 
         with stack:
             ux.print_banner("hikaru", True, False, extra_args=extra_args)
@@ -429,9 +425,7 @@ class TestPrintBanner:
         stack.enter_context(mock.patch.object(sys.stdout, "write"))
         stack.enter_context(mock.patch.object(os.path, "abspath", return_value="some path"))
 
-        extra_args = {
-            "hikari_version": "overwrite",
-        }
+        extra_args = {"hikari_version": "overwrite"}
 
         with stack:
             with pytest.raises(

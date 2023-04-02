@@ -27,18 +27,18 @@ from nox import options as _options
 from nox import session as _session
 from nox.sessions import Session
 
-from pipelines import config
+from pipelines import config as _pipelines_config
 
 # Default sessions should be defined here
-_options.sessions = ["reformat-code", "pytest", "flake8", "slotscheck", "mypy", "verify-types"]
+_options.sessions = ["reformat-code", "pytest-all-features", "flake8", "slotscheck", "mypy", "verify-types"]
 
 _NoxCallbackSig = _typing.Callable[[Session], None]
 
 
-def session(*, reuse_venv: bool = False, **kwargs: _typing.Any) -> _typing.Callable[[_NoxCallbackSig], _NoxCallbackSig]:
+def session(**kwargs: _typing.Any) -> _typing.Callable[[_NoxCallbackSig], _NoxCallbackSig]:
     def decorator(func: _NoxCallbackSig) -> _NoxCallbackSig:
         name = func.__name__.replace("_", "-")
-
+        reuse_venv = kwargs.pop("reuse_venv", True)
         return _session(name=name, reuse_venv=reuse_venv, **kwargs)(func)
 
     return decorator
@@ -48,6 +48,6 @@ def dev_requirements(*dependencies: str) -> _typing.Sequence[str]:
     args = []
 
     for dep in dependencies:
-        args.extend(("-r", _os.path.join(config.DEV_REQUIREMENTS_DIRECTORY, f"{dep}.txt")))
+        args.extend(("-r", _os.path.join(_pipelines_config.DEV_REQUIREMENTS_DIRECTORY, f"{dep}.txt")))
 
     return args

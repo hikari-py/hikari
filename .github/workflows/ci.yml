@@ -2,6 +2,8 @@ name: CI
 
 on:
   push:
+    branches-ignore:
+      - "dependabot/**"
   pull_request:
 
 concurrency:
@@ -42,11 +44,11 @@ jobs:
       - name: Run tests
         shell: bash
         run: |
-          pip install -r dev-requirements/nox.txt
+          pip install -r dev-requirements.txt
           nox -s pytest
           nox -s pytest-all-features -- --cov-append
 
-          python scripts/normalize_coverage.py
+          python scripts/ci/normalize_coverage.py
           mv .coverage .coverage.${{ matrix.os }}.${{ matrix.python-version }}
 
       - name: Upload coverage
@@ -105,7 +107,7 @@ jobs:
       - name: Check stubs
         if: always()
         run: |
-          pip install -r dev-requirements/nox.txt
+          pip install -r dev-requirements.txt
           nox -s generate-stubs
           if [ "$(git status --short)" ]; then
             echo "Stubs were not updated accordingly to the changes. Please run 'nox -s generate-stubs' and commit the changes to fix this."
@@ -161,7 +163,7 @@ jobs:
 
       - name: Test twemoji mapping
         run: |
-          pip install -r dev-requirements/nox.txt
+          pip install -r dev-requirements.txt
           nox -s twemoji-test
 
   docs:
@@ -181,7 +183,7 @@ jobs:
 
       - name: Build documentation
         run: |
-          pip install -r dev-requirements/nox.txt
+          pip install -r dev-requirements.txt
           nox -s sphinx
 
       - name: Upload artifacts

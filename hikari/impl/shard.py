@@ -634,10 +634,7 @@ class GatewayShardImpl(shard.GatewayShard):
             raise errors.ComponentStateConflictError("Cannot run more than one instance of one shard concurrently")
 
         self._handshake_event = asyncio.Event()
-        keep_alive_task = asyncio.create_task(
-            self._keep_alive(),
-            name=f"keep alive (shard {self._shard_id})",
-        )
+        keep_alive_task = asyncio.create_task(self._keep_alive(), name=f"keep alive (shard {self._shard_id})")
 
         await aio.first_completed(self._handshake_event.wait(), asyncio.shield(keep_alive_task))
 
@@ -660,10 +657,7 @@ class GatewayShardImpl(shard.GatewayShard):
     ) -> None:
         self._check_if_connected()
         presence_payload = self._serialize_and_store_presence_payload(
-            idle_since=idle_since,
-            afk=afk,
-            activity=activity,
-            status=status,
+            idle_since=idle_since, afk=afk, activity=activity, status=status
         )
         await self._send_json({_OP: _PRESENCE_UPDATE, _D: presence_payload})
 
@@ -785,10 +779,7 @@ class GatewayShardImpl(shard.GatewayShard):
 
         assert self._handshake_event is not None
 
-        url_parts = urllib.parse.urlparse(
-            self._resume_gateway_url or self._gateway_url,
-            allow_fragments=True,
-        )
+        url_parts = urllib.parse.urlparse(self._resume_gateway_url or self._gateway_url, allow_fragments=True)
 
         query = dict(urllib.parse.parse_qsl(url_parts.query))
         query["v"] = str(urls.VERSION)
@@ -798,14 +789,7 @@ class GatewayShardImpl(shard.GatewayShard):
             query["compress"] = "zlib-stream"
 
         url = urllib.parse.urlunparse(
-            (
-                url_parts.scheme,
-                url_parts.netloc,
-                url_parts.path,
-                url_parts.params,
-                urllib.parse.urlencode(query),
-                "",
-            )
+            (url_parts.scheme, url_parts.netloc, url_parts.path, url_parts.params, urllib.parse.urlencode(query), "")
         )
 
         self._ws = await _GatewayTransport.connect(
@@ -862,10 +846,7 @@ class GatewayShardImpl(shard.GatewayShard):
         else:
             self._logger.debug("resuming session %s", self._session_id)
             await self._send_json(
-                {
-                    _OP: _RESUME,
-                    _D: {"token": self._token, "seq": self._seq, "session_id": self._session_id},
-                }
+                {_OP: _RESUME, _D: {"token": self._token, "seq": self._seq, "session_id": self._session_id}}
             )
 
         lifetime_tasks = (heartbeat_task, poll_events_task)
@@ -907,9 +888,7 @@ class GatewayShardImpl(shard.GatewayShard):
             except errors.GatewayServerClosedConnectionError as ex:
                 if not ex.can_reconnect:
                     self._logger.info(
-                        "server has closed the connection permanently [code:%s, reason:%s]",
-                        ex.code,
-                        ex.reason,
+                        "server has closed the connection permanently [code:%s, reason:%s]", ex.code, ex.reason
                     )
                     raise
 

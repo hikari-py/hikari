@@ -227,12 +227,7 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
     which allows dynamically changing the enforced rate limits at any time.
     """
 
-    __slots__: typing.Sequence[str] = (
-        "_compiled_route",
-        "_max_rate_limit",
-        "_global_ratelimit",
-        "_lock",
-    )
+    __slots__: typing.Sequence[str] = ("_compiled_route", "_max_rate_limit", "_global_ratelimit", "_lock")
 
     def __init__(
         self,
@@ -385,7 +380,6 @@ class RESTBucketManager:
         "_routes_to_hashes",
         "_real_hashes_to_buckets",
         "_global_ratelimit",
-        "_closed_event",
         "_gc_task",
         "_max_rate_limit",
     )
@@ -393,7 +387,6 @@ class RESTBucketManager:
     def __init__(self, max_rate_limit: float) -> None:
         self._routes_to_hashes: typing.Dict[routes.Route, str] = {}
         self._real_hashes_to_buckets: typing.Dict[str, RESTBucket] = {}
-        self._closed_event: typing.Optional[asyncio.Event] = None
         self._gc_task: typing.Optional[asyncio.Task[None]] = None
         self._max_rate_limit = max_rate_limit
         self._global_ratelimit = rate_limits.ManualRateLimiter()
@@ -405,7 +398,7 @@ class RESTBucketManager:
     @property
     def is_alive(self) -> bool:
         """Whether the component is alive."""
-        return self._closed_event is not None
+        return self._gc_task is not None
 
     def start(self, poll_period: float = 20.0, expire_after: float = 10.0) -> None:
         """Start this ratelimiter up.
@@ -426,21 +419,18 @@ class RESTBucketManager:
             result. Using `0` will make the bucket get garbage collected as soon
             as the rate limit has reset. Defaults to `10` seconds.
         """
-        if self._closed_event:
+        if self._gc_task:
             raise errors.ComponentStateConflictError("Cannot start an active bucket manager")
 
         # Assert is in running loop
         asyncio.get_running_loop()
 
-        self._closed_event = asyncio.Event()
         self._gc_task = asyncio.create_task(self._gc(poll_period, expire_after))
 
-    def close(self) -> None:
+    async def close(self) -> None:
         """Close the garbage collector and kill any tasks waiting on ratelimits."""
-        if not self._closed_event:
+        if not self._gc_task:
             raise errors.ComponentStateConflictError("Cannot interact with an inactive bucket manager")
-
-        assert self._closed_event is not None
 
         for bucket in self._real_hashes_to_buckets.values():
             bucket.close()
@@ -449,49 +439,24 @@ class RESTBucketManager:
         self._real_hashes_to_buckets.clear()
         self._routes_to_hashes.clear()
 
-        if self._gc_task is not None:
-            self._gc_task.cancel()
-            self._gc_task = None
+        self._gc_task.cancel()
 
-        self._closed_event.set()
-        self._closed_event = None
+        try:
+            await self._gc_task
+        except asyncio.CancelledError:
+            pass
+
+        self._gc_task = None
 
     async def _gc(self, poll_period: float, expire_after: float) -> None:
-        """Run the garbage collector loop.
-
-        This is designed to run in the background and manage removing unused
-        route references from the rate-limiter collection to save memory.
-
-        This will run forever until `RESTBucketManager.closed_event` is set.
-        This will invoke `RESTBucketManager.do_gc_pass` periodically.
-
-        .. warning::
-            You generally have no need to invoke this directly. Use
-            `RESTBucketManager.start` and `RESTBucketManager.close` to control
-            this instead.
-
-        Parameters
-        ----------
-        poll_period : float
-            The period to poll at.
-        expire_after : float
-            Time after which the last `reset_at` was hit for a bucket to
-            remove it. Higher values will retain unneeded ratelimit info for
-            longer, but may produce more effective ratelimiting logic as a
-            result. Using `0` will make the bucket get garbage collected as soon
-            as the rate limit has reset.
-        """
         # Prevent filling memory increasingly until we run out by removing dead buckets every 20s
         # Allocations are somewhat cheap if we only do them every so-many seconds, after all.
         _LOGGER.log(ux.TRACE, "rate limit garbage collector started")
 
-        assert self._closed_event is not None
-        while not self._closed_event.is_set():
-            try:
-                await asyncio.wait_for(self._closed_event.wait(), timeout=poll_period)
-            except asyncio.TimeoutError:
-                _LOGGER.log(ux.TRACE, "performing rate limit garbage collection pass")
-                self._purge_stale_buckets(expire_after)
+        while True:
+            await asyncio.sleep(poll_period)
+            _LOGGER.log(ux.TRACE, "performing rate limit garbage collection pass")
+            self._purge_stale_buckets(expire_after)
 
     def _purge_stale_buckets(self, expire_after: float) -> None:
         buckets_to_purge: typing.List[str] = []
@@ -550,7 +515,7 @@ class RESTBucketManager:
         typing.AsyncContextManager
             The context manager to use during the duration of the request.
         """
-        if not self._closed_event:
+        if not self._gc_task:
             raise errors.ComponentStateConflictError("Cannot interact with an inactive bucket manager")
 
         authentication_hash = _create_authentication_hash(authentication)
@@ -564,12 +529,7 @@ class RESTBucketManager:
             _LOGGER.debug("%s is being mapped to existing bucket %s", compiled_route, real_bucket_hash)
         else:
             _LOGGER.debug("%s is being mapped to new bucket %s", compiled_route, real_bucket_hash)
-            bucket = RESTBucket(
-                real_bucket_hash,
-                compiled_route,
-                self._global_ratelimit,
-                self._max_rate_limit,
-            )
+            bucket = RESTBucket(real_bucket_hash, compiled_route, self._global_ratelimit, self._max_rate_limit)
             self._real_hashes_to_buckets[real_bucket_hash] = bucket
 
         return bucket
@@ -600,7 +560,7 @@ class RESTBucketManager:
         reset_after : float
             The `X-RateLimit-Reset-After` header cast to a `float`.
         """
-        if not self._closed_event:
+        if not self._gc_task:
             raise errors.ComponentStateConflictError("Cannot interact with an inactive bucket manager")
 
         self._routes_to_hashes[compiled_route.route] = bucket_header
@@ -639,12 +599,7 @@ class RESTBucketManager:
                     remaining_header,
                 )
 
-                bucket = RESTBucket(
-                    real_bucket_hash,
-                    compiled_route,
-                    self._global_ratelimit,
-                    self._max_rate_limit,
-                )
+                bucket = RESTBucket(real_bucket_hash, compiled_route, self._global_ratelimit, self._max_rate_limit)
 
             self._real_hashes_to_buckets[real_bucket_hash] = bucket
 

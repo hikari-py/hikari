@@ -36,7 +36,7 @@ import typing
 import warnings
 import weakref
 
-import attr
+import attrs
 
 from hikari import errors
 from hikari import iterators
@@ -50,6 +50,8 @@ from hikari.internal import reflect
 from hikari.internal import ux
 
 if typing.TYPE_CHECKING:
+    from typing_extensions import Self
+
     from hikari import intents as intents_
     from hikari.api import event_factory as event_factory_
     from hikari.api import shard as gateway_shard
@@ -59,8 +61,7 @@ if typing.TYPE_CHECKING:
         [gateway_shard.GatewayShard, data_binding.JSONObject], typing.Coroutine[typing.Any, typing.Any, None]
     ]
     _ListenerMapT = typing.Dict[
-        typing.Type[base_events.EventT],
-        typing.List[event_manager_.CallbackT[base_events.EventT]],
+        typing.Type[base_events.EventT], typing.List[event_manager_.CallbackT[base_events.EventT]]
     ]
     _WaiterT = typing.Tuple[
         typing.Optional[event_manager_.PredicateT[base_events.EventT]], "asyncio.Future[base_events.EventT]"
@@ -72,8 +73,6 @@ if typing.TYPE_CHECKING:
         [_EventManagerBaseT, gateway_shard.GatewayShard, data_binding.JSONObject],
         typing.Coroutine[typing.Any, typing.Any, None],
     ]
-
-    _EventStreamT = typing.TypeVar("_EventStreamT", bound="EventStream[typing.Any]")
 
 
 if sys.version_info >= (3, 10):
@@ -162,7 +161,7 @@ class EventStream(event_manager_.EventStream[base_events.EventT]):
         # The registered wrapping function for the weak ref to this class's _listener method.
         self._timeout = timeout
 
-    def __enter__(self: _EventStreamT) -> _EventStreamT:
+    def __enter__(self) -> Self:
         self.open()
         return self
 
@@ -229,10 +228,10 @@ class EventStream(event_manager_.EventStream[base_events.EventT]):
         self._active = False
 
     def filter(
-        self: _EventStreamT,
+        self,
         *predicates: typing.Union[typing.Tuple[str, typing.Any], typing.Callable[[base_events.EventT], bool]],
         **attrs: typing.Any,
-    ) -> _EventStreamT:
+    ) -> Self:
         filter_ = self._map_predicates_and_attr_getters("filter", *predicates, **attrs)
         if self._active:
             self._queue = [entry for entry in self._queue if filter_(entry)]
@@ -301,21 +300,21 @@ def filtered(
     return decorator
 
 
-@attr.define(weakref_slot=False)
+@attrs.define(weakref_slot=False)
 class _Consumer:
-    callback: _ConsumerT = attr.field(hash=True)
+    callback: _ConsumerT = attrs.field(hash=True)
     """The callback function for this consumer."""
 
-    events_bitmask: int = attr.field()
+    events_bitmask: int = attrs.field()
     """The registered events bitmask."""
 
-    is_caching: bool = attr.field()
+    is_caching: bool = attrs.field()
     """Cached value of whether or not this consumer is making cache calls in the current env."""
 
-    listener_group_count: int = attr.field(init=False, default=0)
+    listener_group_count: int = attrs.field(init=False, default=0)
     """The number of listener groups registered to this consumer."""
 
-    waiter_group_count: int = attr.field(init=False, default=0)
+    waiter_group_count: int = attrs.field(init=False, default=0)
     """The number of waiters groups registered to this consumer."""
 
     @property
@@ -420,11 +419,7 @@ class EventManagerBase(event_manager_.EventManager):
     # For the sake of UX, I will check this at runtime instead and let the
     # user use a static type checker.
     def subscribe(
-        self,
-        event_type: typing.Type[typing.Any],
-        callback: event_manager_.CallbackT[typing.Any],
-        *,
-        _nested: int = 0,
+        self, event_type: typing.Type[typing.Any], callback: event_manager_.CallbackT[typing.Any], *, _nested: int = 0
     ) -> None:
         if not inspect.iscoroutinefunction(callback):
             raise TypeError("Cannot subscribe a non-coroutine function callback")
@@ -448,11 +443,7 @@ class EventManagerBase(event_manager_.EventManager):
             self._increment_listener_group_count(event_type, 1)
 
     def get_listeners(
-        self,
-        event_type: typing.Type[base_events.EventT],
-        /,
-        *,
-        polymorphic: bool = True,
+        self, event_type: typing.Type[base_events.EventT], /, *, polymorphic: bool = True
     ) -> typing.Collection[event_manager_.CallbackT[base_events.EventT]]:
         if polymorphic:
             listeners: typing.List[event_manager_.CallbackT[base_events.EventT]] = []
@@ -471,11 +462,7 @@ class EventManagerBase(event_manager_.EventManager):
     # using ABCs that are not concrete in generic types passed to functions.
     # For the sake of UX, I will check this at runtime instead and let the
     # user use a static type checker.
-    def unsubscribe(
-        self,
-        event_type: typing.Type[typing.Any],
-        callback: event_manager_.CallbackT[typing.Any],
-    ) -> None:
+    def unsubscribe(self, event_type: typing.Type[typing.Any], callback: event_manager_.CallbackT[typing.Any]) -> None:
         if listeners := self._listeners.get(event_type):
             _LOGGER.debug(
                 "unsubscribing callback %s%s from event-type %s.%s",
@@ -490,8 +477,7 @@ class EventManagerBase(event_manager_.EventManager):
                 self._increment_listener_group_count(event_type, -1)
 
     def listen(
-        self,
-        *event_types: typing.Type[base_events.EventT],
+        self, *event_types: typing.Type[base_events.EventT]
     ) -> typing.Callable[[event_manager_.CallbackT[base_events.EventT]], event_manager_.CallbackT[base_events.EventT]]:
         def decorator(
             callback: event_manager_.CallbackT[base_events.EventT],
@@ -603,10 +589,7 @@ class EventManagerBase(event_manager_.EventManager):
             raise
 
     async def _handle_dispatch(
-        self,
-        consumer: _Consumer,
-        shard: gateway_shard.GatewayShard,
-        payload: data_binding.JSONObject,
+        self, consumer: _Consumer, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> None:
         if not consumer.is_enabled:
             name = consumer.callback.__name__
@@ -647,11 +630,7 @@ class EventManagerBase(event_manager_.EventManager):
                     exc_info=trio,
                 )
             else:
-                exception_event = base_events.ExceptionEvent(
-                    exception=ex,
-                    failed_event=event,
-                    failed_callback=callback,
-                )
+                exception_event = base_events.ExceptionEvent(exception=ex, failed_event=event, failed_callback=callback)
 
                 log = _LOGGER.debug if self.get_listeners(type(exception_event), polymorphic=True) else _LOGGER.error
                 log("an exception occurred handling an event (%s)", type(event).__name__, exc_info=trio)

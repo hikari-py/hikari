@@ -24,15 +24,11 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = [
-    "ModalResponseTypesT",
-    "ModalInteraction",
-    "ModalInteraction",
-]
+__all__: typing.List[str] = ["ModalResponseTypesT", "ModalInteraction", "ModalInteraction"]
 
 import typing
 
-import attr
+import attrs
 
 from hikari import channels
 from hikari import guilds
@@ -41,7 +37,7 @@ from hikari import permissions
 from hikari import snowflakes
 from hikari import traits
 from hikari.interactions import base_interactions
-from hikari.internal import attr_extensions
+from hikari.internal import attrs_extensions
 
 if typing.TYPE_CHECKING:
     from hikari import components as components_
@@ -69,24 +65,24 @@ The following types are valid for this:
 """
 
 
-@attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypesT]):
     """Represents a modal interaction on Discord."""
 
-    channel_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
+    channel_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
     """ID of the channel this modal interaction event was triggered in."""
 
-    custom_id: str = attr.field(eq=False, hash=False, repr=True)
+    custom_id: str = attrs.field(eq=False, hash=False, repr=True)
     """The custom id of the modal."""
 
-    guild_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=True)
+    guild_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
     """ID of the guild this modal interaction event was triggered in.
 
     This will be `None` for modal interactions triggered in DMs.
     """
 
-    guild_locale: typing.Optional[str] = attr.field(eq=False, hash=False, repr=True)
+    guild_locale: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=True)
     """The preferred language of the guild this modal interaction was triggered in.
 
     This will be `None` for modal interactions triggered in DMs.
@@ -96,13 +92,13 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
         for the guild and will otherwise default to `en-US`.
     """
 
-    message: typing.Optional[messages.Message] = attr.field(eq=False, repr=False)
+    message: typing.Optional[messages.Message] = attrs.field(eq=False, repr=False)
     """The message whose component triggered the modal.
 
     This will be None if the modal was a response to a command.
     """
 
-    member: typing.Optional[base_interactions.InteractionMember] = attr.field(eq=False, hash=False, repr=True)
+    member: typing.Optional[base_interactions.InteractionMember] = attrs.field(eq=False, hash=False, repr=True)
     """The member who triggered this modal interaction.
 
     This will be `None` for modal interactions triggered in DMs.
@@ -112,16 +108,16 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
         contains the member's permissions in the current channel.
     """
 
-    user: _users.User = attr.field(eq=False, hash=False, repr=True)
+    user: _users.User = attrs.field(eq=False, hash=False, repr=True)
     """The user who triggered this modal interaction."""
 
-    locale: str = attr.field(eq=False, hash=False, repr=True)
+    locale: str = attrs.field(eq=False, hash=False, repr=True)
     """The selected language of the user who triggered this modal interaction."""
 
-    app_permissions: typing.Optional[permissions.Permissions] = attr.field(eq=False, hash=False, repr=False)
+    app_permissions: typing.Optional[permissions.Permissions] = attrs.field(eq=False, hash=False, repr=False)
     """Permissions the bot has in this interaction's channel if it's in a guild."""
 
-    components: typing.Sequence[components_.ModalActionRowComponent] = attr.field(eq=False, hash=False, repr=True)
+    components: typing.Sequence[components_.ModalActionRowComponent] = attrs.field(eq=False, hash=False, repr=True)
     """Components in the modal."""
 
     async def fetch_channel(self) -> channels.TextableChannel:

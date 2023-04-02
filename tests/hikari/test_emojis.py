@@ -82,7 +82,7 @@ class TestUnicodeEmoji:
         assert emoji.filename == f"{expected_filename}.png"
 
     def test_url_property(self, emoji):
-        assert emoji.url == "https://raw.githubusercontent.com/twitter/twemoji/master/assets/72x72/1f44c.png"
+        assert emoji.url == "https://raw.githubusercontent.com/discord/twemoji/master/assets/72x72/1f44c.png"
 
     def test_unicode_escape_property(self, emoji):
         assert emoji.unicode_escape == "\\U0001f44c"
