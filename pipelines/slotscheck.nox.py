@@ -25,7 +25,7 @@ from pipelines import config
 from pipelines import nox
 
 
-@nox.session(default_session=True)
+@nox.session()
 def slotscheck(session: nox.Session) -> None:
     """Check for common slotting mistakes."""
     session.install(".", *nox.dev_requirements("slotscheck"))

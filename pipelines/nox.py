@@ -30,7 +30,7 @@ from nox.sessions import Session
 from pipelines import config as _pipelines_config
 
 # Default sessions should be defined here
-_options.sessions = []
+_options.sessions = ["reformat-code", "pytest-all-features", "flake8", "slotscheck", "mypy", "verify-types"]
 
 _NoxCallbackSig = _typing.Callable[[Session], None]
 

@@ -32,7 +32,7 @@ STUBGEN_GENERATE = [
 ]
 
 
-@nox.session(default_session=True)
+@nox.session()
 def mypy(session: nox.Session) -> None:
     """Perform static type analysis on Python source code using mypy."""
     session.install(

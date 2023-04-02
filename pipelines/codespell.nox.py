@@ -29,7 +29,7 @@ IGNORED_WORDS = [
 ]
 
 
-@nox.session(default_session=True)
+@nox.session()
 def codespell(session: nox.Session) -> None:
     """Run codespell to check for spelling mistakes."""
     session.install(*nox.dev_requirements("codespell"))

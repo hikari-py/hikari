@@ -44,7 +44,7 @@ COVERAGE_FLAGS = [
 ]
 
 
-@nox.session(default_session=True)
+@nox.session()
 def pytest(session: nox.Session) -> None:
     """Run unit tests and measure code coverage.
 

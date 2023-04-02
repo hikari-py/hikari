@@ -32,7 +32,7 @@ from pipelines import nox
 GIT = shutil.which("git")
 
 
-@nox.session(default_session=True)
+@nox.session()
 def reformat_code(session: nox.Session) -> None:
     """Remove trailing whitespace in source, run isort, codespell and then run black code formatter."""
     session.install(*nox.dev_requirements("formatting"))
@@ -43,7 +43,7 @@ def reformat_code(session: nox.Session) -> None:
     session.run("black", *config.PYTHON_REFORMATTING_PATHS)
 
 
-@nox.session(default_session=True, venv_backend="none")
+@nox.session(venv_backend="none")
 def check_trailing_whitespaces(session: nox.Session) -> None:
     """Check for trailing whitespaces in the project."""
     remove_trailing_whitespaces(session, check_only=True)
