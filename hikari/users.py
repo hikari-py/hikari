@@ -254,10 +254,6 @@ class PartialUser(snowflakes.Unique, abc.ABC):
         components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
-        sticker: undefined.UndefinedOr[snowflakes.SnowflakeishOr[stickers_.PartialSticker]] = undefined.UNDEFINED,
-        stickers: undefined.UndefinedOr[
-            snowflakes.SnowflakeishSequence[stickers_.PartialSticker]
-        ] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reply: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages.PartialMessage]] = undefined.UNDEFINED,
         reply_must_exist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -422,8 +418,6 @@ class PartialUser(snowflakes.Unique, abc.ABC):
             components=components,
             embed=embed,
             embeds=embeds,
-            sticker=sticker,
-            stickers=stickers,  # TODO: can bots even send the default stickers in DMs?
             tts=tts,
             reply=reply,
             reply_must_exist=reply_must_exist,
@@ -796,10 +790,6 @@ class OwnUser(UserImpl):
         components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
-        sticker: undefined.UndefinedOr[snowflakes.SnowflakeishOr[stickers_.PartialSticker]] = undefined.UNDEFINED,
-        stickers: undefined.UndefinedOr[
-            snowflakes.SnowflakeishSequence[stickers_.PartialSticker]
-        ] = undefined.UNDEFINED,
         nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reply: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages.PartialMessage]] = undefined.UNDEFINED,
