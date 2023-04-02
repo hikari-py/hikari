@@ -1415,8 +1415,7 @@ class TestLinkButtonBuilder:
 class TestInteractiveButtonBuilder:
     def test_custom_id_property(self):
         button = special_endpoints.InteractiveButtonBuilder(
-            style=components.ButtonStyle.DANGER,
-            custom_id="oogie",
+            style=components.ButtonStyle.DANGER, custom_id="oogie"
         ).set_custom_id("eeeeee")
 
         assert button.custom_id == "eeeeee"

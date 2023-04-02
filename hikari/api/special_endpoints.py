@@ -1198,11 +1198,7 @@ class SlashCommandBuilder(CommandBuilder):
         """Sequence of up to 25 of the options set for this command."""
 
     @abc.abstractmethod
-    def set_description(
-        self,
-        description: str,
-        /,
-    ) -> Self:
+    def set_description(self, description: str, /) -> Self:
         """Set the description for this command.
 
         Parameters
