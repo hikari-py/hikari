@@ -89,7 +89,7 @@ if typing.TYPE_CHECKING:
     from hikari import audit_logs
     from hikari import invites
     from hikari import sessions
-    from hikari import stickers
+    from hikari import stickers as stickers_
     from hikari import templates
     from hikari import voices
     from hikari import webhooks
@@ -1346,6 +1346,10 @@ class RESTClientImpl(rest_api.RESTClient):
         ] = undefined.UNDEFINED,
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        sticker: undefined.UndefinedOr[snowflakes.SnowflakeishOr[stickers_.PartialSticker]] = undefined.UNDEFINED,
+        stickers: undefined.UndefinedOr[
+            snowflakes.SnowflakeishSequence[stickers_.PartialSticker]
+        ] = undefined.UNDEFINED,
         flags: typing.Union[undefined.UndefinedType, int, messages_.MessageFlag] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -1366,6 +1370,9 @@ class RESTClientImpl(rest_api.RESTClient):
 
         if not undefined.any_undefined(embed, embeds):
             raise ValueError("You may only specify one of 'embed' or 'embeds', not both")
+
+        if not undefined.any_undefined(sticker, stickers):
+            raise ValueError("You may only specify one of 'sticker' or 'stickers', not both")
 
         if undefined.all_undefined(embed, embeds) and isinstance(content, embeds_.Embed):
             # Syntactic sugar, common mistake to accidentally send an embed
@@ -1426,6 +1433,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("flags", flags)
         body.put("embeds", serialized_embeds)
         body.put("components", serialized_components)
+        body.put_snowflake_array("sticker_ids", (sticker,) if sticker else stickers)
 
         if not edit or not undefined.all_undefined(mentions_everyone, mentions_reply, user_mentions, role_mentions):
             body.put(
@@ -1469,6 +1477,10 @@ class RESTClientImpl(rest_api.RESTClient):
         components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        sticker: undefined.UndefinedOr[snowflakes.SnowflakeishOr[stickers_.PartialSticker]] = undefined.UNDEFINED,
+        stickers: undefined.UndefinedOr[
+            snowflakes.SnowflakeishSequence[stickers_.PartialSticker]
+        ] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reply: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = undefined.UNDEFINED,
         reply_must_exist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -1491,6 +1503,8 @@ class RESTClientImpl(rest_api.RESTClient):
             components=components,
             embed=embed,
             embeds=embeds,
+            sticker=sticker,
+            stickers=stickers,
             tts=tts,
             mentions_everyone=mentions_everyone,
             mentions_reply=mentions_reply,
@@ -2380,7 +2394,7 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.DELETE_GUILD_EMOJI.compile(guild=guild, emoji=emoji)
         await self._request(route, reason=reason)
 
-    async def fetch_available_sticker_packs(self) -> typing.Sequence[stickers.StickerPack]:
+    async def fetch_available_sticker_packs(self) -> typing.Sequence[stickers_.StickerPack]:
         route = routes.GET_STICKER_PACKS.compile()
         response = await self._request(route, auth=None)
         assert isinstance(response, dict)
@@ -2391,8 +2405,8 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def fetch_sticker(
         self,
-        sticker: snowflakes.SnowflakeishOr[stickers.PartialSticker],
-    ) -> typing.Union[stickers.StandardSticker, stickers.GuildSticker]:
+        sticker: snowflakes.SnowflakeishOr[stickers_.PartialSticker],
+    ) -> typing.Union[stickers_.StandardSticker, stickers_.GuildSticker]:
         route = routes.GET_STICKER.compile(sticker=sticker)
         response = await self._request(route)
         assert isinstance(response, dict)
@@ -2404,7 +2418,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def fetch_guild_stickers(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
-    ) -> typing.Sequence[stickers.GuildSticker]:
+    ) -> typing.Sequence[stickers_.GuildSticker]:
         route = routes.GET_GUILD_STICKERS.compile(guild=guild)
         response = await self._request(route)
         assert isinstance(response, list)
@@ -2415,8 +2429,8 @@ class RESTClientImpl(rest_api.RESTClient):
     async def fetch_guild_sticker(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        sticker: snowflakes.SnowflakeishOr[stickers.PartialSticker],
-    ) -> stickers.GuildSticker:
+        sticker: snowflakes.SnowflakeishOr[stickers_.PartialSticker],
+    ) -> stickers_.GuildSticker:
         route = routes.GET_GUILD_STICKER.compile(guild=guild, sticker=sticker)
         response = await self._request(route)
         assert isinstance(response, dict)
@@ -2431,7 +2445,7 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> stickers.GuildSticker:
+    ) -> stickers_.GuildSticker:
         route = routes.POST_GUILD_STICKERS.compile(guild=guild)
         form = data_binding.URLEncodedFormBuilder()
         form.add_field("name", name)
@@ -2446,13 +2460,13 @@ class RESTClientImpl(rest_api.RESTClient):
     async def edit_sticker(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        sticker: snowflakes.SnowflakeishOr[stickers.PartialSticker],
+        sticker: snowflakes.SnowflakeishOr[stickers_.PartialSticker],
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         tag: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> stickers.GuildSticker:
+    ) -> stickers_.GuildSticker:
         route = routes.PATCH_GUILD_STICKER.compile(guild=guild, sticker=sticker)
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
@@ -2466,7 +2480,7 @@ class RESTClientImpl(rest_api.RESTClient):
     async def delete_sticker(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        sticker: snowflakes.SnowflakeishOr[stickers.PartialSticker],
+        sticker: snowflakes.SnowflakeishOr[stickers_.PartialSticker],
         *,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
@@ -2917,6 +2931,10 @@ class RESTClientImpl(rest_api.RESTClient):
         components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        sticker: undefined.UndefinedOr[snowflakes.SnowflakeishOr[stickers_.PartialSticker]] = undefined.UNDEFINED,
+        stickers: undefined.UndefinedOr[
+            snowflakes.SnowflakeishSequence[stickers_.PartialSticker]
+        ] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -2956,6 +2974,8 @@ class RESTClientImpl(rest_api.RESTClient):
             components=components,
             embed=embed,
             embeds=embeds,
+            sticker=sticker,
+            stickers=stickers,
             tts=tts,
             mentions_everyone=mentions_everyone,
             mentions_reply=mentions_reply,

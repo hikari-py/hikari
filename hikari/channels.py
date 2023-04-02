@@ -80,6 +80,7 @@ if typing.TYPE_CHECKING:
     from hikari import guilds
     from hikari import iterators
     from hikari import messages
+    from hikari import stickers as stickers_
     from hikari import users
     from hikari import voices
     from hikari.api import special_endpoints
@@ -497,6 +498,10 @@ class TextableChannel(PartialChannel):
         components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        sticker: undefined.UndefinedOr[snowflakes.SnowflakeishOr[stickers_.PartialSticker]] = undefined.UNDEFINED,
+        stickers: undefined.UndefinedOr[
+            snowflakes.SnowflakeishSequence[stickers_.PartialSticker]
+        ] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reply: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages.PartialMessage]] = undefined.UNDEFINED,
         reply_must_exist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -571,6 +576,15 @@ class TextableChannel(PartialChannel):
             If provided, the message embed.
         embeds : hikari.undefined.UndefinedOr[typing.Sequence[hikari.embeds.Embed]]
             If provided, the message embeds.
+        sticker : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.stickers.PartialSticker]]
+            If provided, the object or ID of a sticker to send on the message.
+
+            As of writing, bots can only send custom stickers from the current guild.
+        stickers : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.stickers.PartialSticker]]
+            If provided, a sequence of the objects and IDs of up to 3 stickers
+            to send on the message.
+
+            As of writing, bots can only send custom stickers from the current guild.
         tts : hikari.undefined.UndefinedOr[bool]
             If provided, whether the message will be TTS (Text To Speech).
         reply : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]]
@@ -647,6 +661,8 @@ class TextableChannel(PartialChannel):
             components=components,
             embed=embed,
             embeds=embeds,
+            sticker=sticker,
+            stickers=stickers,
             tts=tts,
             reply=reply,
             reply_must_exist=reply_must_exist,

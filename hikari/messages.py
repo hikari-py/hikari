@@ -900,6 +900,10 @@ class PartialMessage(snowflakes.Unique):
         components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        sticker: undefined.UndefinedOr[snowflakes.SnowflakeishOr[stickers_.PartialSticker]] = undefined.UNDEFINED,
+        stickers: undefined.UndefinedOr[
+            snowflakes.SnowflakeishSequence[stickers_.PartialSticker]
+        ] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reply: typing.Union[
             undefined.UndefinedType, snowflakes.SnowflakeishOr[PartialMessage], bool
@@ -976,6 +980,14 @@ class PartialMessage(snowflakes.Unique):
             If provided, the message embed.
         embeds : hikari.undefined.UndefinedOr[typing.Sequence[hikari.embeds.Embed]]
             If provided, the message embeds.
+        sticker : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.stickers.PartialSticker]]
+            If provided, object or ID of a sticker to send on the message.
+
+            As of writing, bots can only send custom stickers from the current guild.
+        stickers : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.stickers.PartialSticker]]
+            If provided, object or ID of up to 3 stickers to send on the message.
+
+            As of writing, bots can only send custom stickers from the current guild.
         tts : hikari.undefined.UndefinedOr[bool]
             If provided, whether the message will be TTS (Text To Speech).
         reply : typing.Union[hikari.undefined.UndefinedType, hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage], bool]
@@ -1058,6 +1070,8 @@ class PartialMessage(snowflakes.Unique):
             components=components,
             embed=embed,
             embeds=embeds,
+            sticker=sticker,
+            stickers=stickers,
             tts=tts,
             reply=reply,
             reply_must_exist=reply_must_exist,
