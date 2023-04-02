@@ -1,3 +1,72 @@
+## 2.0.0.dev118 (2023-04-02)
+
+### Breaking Changes
+
+- Refactors to the component builder interfaces which make them flatter:
+
+  * Removed `add_to_container` from `ButtonBuilder`, `LinkButtonBuilder`, `InteractiveButtonBuilder`, `SelectMenuBuilder`, `ChannelSelectMenuBuilder`, and `TextInputBuilder`; these classes are no-longer generic and no-longer take `container` in their inits.
+  * Replaced `TextSelectMenuBuilder.add_to_container` with the `TextSelectMenuBuilder.parent` property.
+      This new property doesn't "finalise" the addition but rather just returns the parent object, or raises if the select menu is an orphan. This change also involves replacing the `container` parameter in `TextSelectMenuBuilder.__init__` with an optional `parent` parameter.
+  * Removed `SelectOptionBuilder.add_to_menu`; this class isn't generic anymore.
+  * `TextSelectMenuBuilder.add_option` now takes all the option's configuration as parameters and returns `Self`.
+  * Split `MessageActionRowBuilder.add_button` into `.add_interactive_button` and `.add_link_button`.
+      These both now take all the button's configuration as parameters and return `Self`.
+  * `MessageActionRowBuilder.add_select_menu` now takes all the menu's configuration as parameters and returns `Self`.
+      The new `.add_channel_menu` and `.add_text_menu` methods should be used for adding text and channel menus. Where `.add_channel_menu` returns `Self` and `.add_text_menu` returns a text menu builder with a `parent` property for getting back to the action row builder.
+  * `ModalActionRowBuilder.add_text_input` now takes all the text input's configuration as parameters and returns `Self`.
+  * `min_length` and `max_length` can no-longer be `hikari.undefined.UNDEFINED` for the text input builder, and default to `0` and `4000` respectively. This change effects both the types accepted by `ModalActionRowBuilder.__init__` and the return types of the relevant properties.
+  * Removed the `emoji_id` and `emoji_name` parameters from `LinkButtonBuilder.__init__`, and `InteractiveButtonBuilder.__init__`.
+  * Removed the `style` and `custom_id` parameters from `LinkButtonBuilder.__init__`.
+  * Removed the `url` parameter from `InteractiveButtonBuilder.__init__`. ([#1533](https://github.com/hikari-py/hikari/issues/1533))
+- Remove previously deprecated functionality:
+  - `Intents.GUILD_BANS` (deprecated alias for `Intents.GUILD_MODERATION`)
+  - `ComponentType.SELECT_MENU` (deprecated alias for `Intents.TEXT_SELECT_MENU`)
+  - Not passing type through `type` argument explicitly to `MessageActionRowBuilder.add_select_menu` ([#1535](https://github.com/hikari-py/hikari/issues/1535))
+- Renamed `StickerPack.banner_hash` to `StickerPack.banner_asset_id`. ([#1572](https://github.com/hikari-py/hikari/issues/1572))
+
+### Deprecation
+
+- Renamed `TextInputBuilder.required` property to `TextInputBuilder.is_required`. ([#1533](https://github.com/hikari-py/hikari/issues/1533))
+- Passing `CommandChoice`s instead of `AutocompleteChoiceBuilder`s when making autocomplete responses. ([#1539](https://github.com/hikari-py/hikari/issues/1539))
+- `hikari.impl.bot` moved to `hikari.impl.gateway_bot`. ([#1576](https://github.com/hikari-py/hikari/issues/1576))
+
+### Features
+
+- `Role.mention` now returns `"@everyone"` for the `@everyone` role. ([#1528](https://github.com/hikari-py/hikari/issues/1528))
+- Refactors to the component builder interfaces which make them flatter:
+
+  * `hikari.undefined.UNDEFINED` can now be passed to `TextInputBuilder.set_placeholder` and `TextInputBuilder.set_value`.
+  * The standard implementation of a select option builder is now exposed at `hikari.impl.special_endpoints.SelectOptionBuilder`. ([#1533](https://github.com/hikari-py/hikari/issues/1533))
+- `CommandChoice.name_localizations` field and separate `AutocompleteChoiceBuilder` for use when making autocomplete responses. ([#1539](https://github.com/hikari-py/hikari/issues/1539))
+- Implement guild role subscriptions. ([#1550](https://github.com/hikari-py/hikari/issues/1550))
+- Add `Role.is_guild_linked_role`. ([#1551](https://github.com/hikari-py/hikari/issues/1551))
+- `hikari.iterators.LazyIterator.flatten` method for flattening a lazy iterator of synchronous iterables. ([#1562](https://github.com/hikari-py/hikari/issues/1562))
+- Support sending stickers when creating a message. ([#1571](https://github.com/hikari-py/hikari/issues/1571))
+- Added several set methods for required values to the builders:
+
+  * `CommandBuilder.set_name`
+  * `SlashCommandBuilder.set_description`
+  * `InteractiveButtonBuilder.set_custom_id`
+  * `SelectOptionBuilder.set_label`
+  * `SelectOptionBuilder.set_value`
+  * `SelectMenuBuilder.set_custom_id` ([#1574](https://github.com/hikari-py/hikari/issues/1574))
+
+### Bugfixes
+
+- `emoji=` can now be passed to `LinkButtonBuilder.__init__` and `InteractiveButtonBuilder.__init__` alone without causing serialization issues (and Pyright will now let you pass it). ([#1533](https://github.com/hikari-py/hikari/issues/1533))
+- Open `banner.txt`s with `utf-8` encoding explicitly. ([#1545](https://github.com/hikari-py/hikari/issues/1545))
+- Pyright will now let you pass `role_mentions` and `user_mentions` to `InteractionMessageBuilder.__init__`. ([#1560](https://github.com/hikari-py/hikari/issues/1560))
+- Fixed forum channel applied tags not being a sequence of snowflakes. ([#1564](https://github.com/hikari-py/hikari/issues/1564))
+- Switch to using <https://github.com/discord/twemoji> for emoji images. ([#1568](https://github.com/hikari-py/hikari/issues/1568))
+- Fixed sticker pack handling and typing:
+
+  * Fixed deserialization raising when `"banner_asset_id"` or `"cover_sticker_id"` weren't included in the payload.
+  * `StickerPack.banner_asset_id` is now correctly typed as `Optional[Snowflake]`.
+  * `StickerPack.banner_url` and `StickerPack.make_banner_url` both now correctly return `None` when `StickerPack.banner_asset_id` is `None`. ([#1572](https://github.com/hikari-py/hikari/issues/1572))
+
+---
+
+
 ## 2.0.0.dev117 (2023-03-06)
 
 ### Breaking Changes
