@@ -32,12 +32,12 @@ from hikari import errors
 from hikari import presences
 from hikari import snowflakes
 from hikari import undefined
-from hikari.impl import bot as bot_impl
 from hikari.impl import cache as cache_impl
 from hikari.impl import config
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import event_factory as event_factory_impl
 from hikari.impl import event_manager as event_manager_impl
+from hikari.impl import gateway_bot as bot_impl
 from hikari.impl import rest as rest_impl
 from hikari.impl import shard as shard_impl
 from hikari.impl import voice as voice_impl

@@ -32,7 +32,7 @@ from hikari import snowflakes
 from hikari import undefined
 from hikari import urls
 from hikari import users
-from hikari.impl import bot
+from hikari.impl import gateway_bot
 from hikari.internal import routes
 from hikari.internal import time
 from tests.hikari import hikari_test_helpers
@@ -40,7 +40,7 @@ from tests.hikari import hikari_test_helpers
 
 @pytest.fixture()
 def mock_app():
-    return mock.Mock(spec_set=bot.GatewayBot)
+    return mock.Mock(spec_set=gateway_bot.GatewayBot)
 
 
 class TestPartialRole:

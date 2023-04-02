@@ -26,7 +26,7 @@ import mock
 import pytest
 
 from hikari import snowflakes
-from hikari.impl import bot
+from hikari.impl import gateway_bot
 
 
 @pytest.fixture()
@@ -141,5 +141,5 @@ def test_calculate_shard_id_with_shard_count(guild_id, expected_id):
     [(140502780547694592, 2), ("115590097100865541", 5), (snowflakes.Snowflake(105785483455418368), 7)],
 )
 def test_calculate_shard_id_with_app(guild_id, expected_id):
-    mock_app = mock.Mock(bot.GatewayBot, shard_count=8)
+    mock_app = mock.Mock(gateway_bot.GatewayBot, shard_count=8)
     assert snowflakes.calculate_shard_id(mock_app, guild_id) == expected_id
