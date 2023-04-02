@@ -134,7 +134,7 @@ class TestAutocompleteInteraction:
         builder = mock_autocomplete_interaction.build_response(mock_command_choices)
 
         assert builder is mock_app.rest.interaction_autocomplete_builder.return_value
-        mock_app.rest.interaction_autocomplete_builder.assert_called_once_with(mock_command_choices, _stack_level=1)
+        mock_app.rest.interaction_autocomplete_builder.assert_called_once_with(mock_command_choices)
 
     @pytest.mark.asyncio()
     async def test_create_response(
@@ -146,5 +146,5 @@ class TestAutocompleteInteraction:
         await mock_autocomplete_interaction.create_response(mock_command_choices)
 
         mock_app.rest.create_autocomplete_response.assert_awaited_once_with(
-            2312312, "httptptptptptptptp", mock_command_choices, _stack_level=1
+            2312312, "httptptptptptptptp", mock_command_choices
         )

@@ -642,16 +642,13 @@ class InteractionAutocompleteBuilder(InteractionResponseBuilder, abc.ABC):
         """Autocomplete choices."""
 
     @abc.abstractmethod
-    def set_choices(
-        self,
-        choices: typing.Union[typing.Sequence[commands.CommandChoice], typing.Sequence[AutocompleteChoiceBuilder]],
-        /,
-    ) -> Self:
+    def set_choices(self, choices: typing.Sequence[AutocompleteChoiceBuilder], /) -> Self:
         """Set autocomplete choices.
 
-        .. deprecated:: 2.0.0.dev118
-            Passing `hikari.commands.CommandChoice`s here instead of
-            `hikari.api.special_endpoints.AutocompleteChoiceBuilder`s.
+        Parameters
+        ----------
+        choices : typing.Sequence[AutocompleteChoiceBuilder]
+            The choices to set.
 
         Returns
         -------
@@ -1831,11 +1828,6 @@ class TextInputBuilder(ComponentBuilder, abc.ABC):
     @abc.abstractmethod
     def value(self) -> undefined.UndefinedOr[str]:
         """Pre-filled text that will be sent if the user does not write anything."""
-
-    @property
-    @abc.abstractmethod
-    def required(self) -> bool:
-        """Deprecated alias for `hikari.api.special_endpoints.TextInputBuilder`."""
 
     @property
     @abc.abstractmethod

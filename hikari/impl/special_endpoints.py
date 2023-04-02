@@ -68,7 +68,6 @@ from hikari.api import special_endpoints
 from hikari.interactions import base_interactions
 from hikari.internal import attrs_extensions
 from hikari.internal import data_binding
-from hikari.internal import deprecation
 from hikari.internal import mentions
 from hikari.internal import routes
 from hikari.internal import time
@@ -919,39 +918,11 @@ class AutocompleteChoiceBuilder(special_endpoints.AutocompleteChoiceBuilder):
 
 
 @attrs_extensions.with_copy
-@attrs.define(init=False, weakref_slot=False)
+@attrs.define(weakref_slot=False)
 class InteractionAutocompleteBuilder(special_endpoints.InteractionAutocompleteBuilder):
     """Standard implementation of `hikari.api.special_endpoints.InteractionAutocompleteBuilder`."""
 
-    _choices: typing.Sequence[special_endpoints.AutocompleteChoiceBuilder] = attrs.field(factory=list)
-
-    def __init__(
-        self,
-        choices: typing.Union[
-            typing.Sequence[special_endpoints.AutocompleteChoiceBuilder], typing.Sequence[commands.CommandChoice]
-        ] = (),
-        *,
-        _stack_level: int = 0,
-    ) -> None:
-        new_choices: typing.List[special_endpoints.AutocompleteChoiceBuilder] = []
-        warned = False
-        for choice in choices:
-            if isinstance(choice, commands.CommandChoice):
-                if not warned:
-                    deprecation.warn_deprecated(
-                        "Passing CommandChoice",
-                        removal_version="2.0.0.dev119",
-                        additional_info="Use AutocompleteChoiceBuilder instead",
-                        quote=False,
-                        stack_level=3 + _stack_level,
-                    )
-                    warned = True
-
-                choice = AutocompleteChoiceBuilder(choice.name, choice.value)
-
-            new_choices.append(choice)
-
-        self.__attrs_init__(new_choices)
+    _choices: typing.Sequence[special_endpoints.AutocompleteChoiceBuilder] = attrs.field(factory=tuple)
 
     @property
     def type(self) -> typing.Literal[base_interactions.ResponseType.AUTOCOMPLETE]:
@@ -961,39 +932,8 @@ class InteractionAutocompleteBuilder(special_endpoints.InteractionAutocompleteBu
     def choices(self) -> typing.Sequence[special_endpoints.AutocompleteChoiceBuilder]:
         return self._choices
 
-    def set_choices(
-        self,
-        choices: typing.Union[
-            typing.Sequence[special_endpoints.AutocompleteChoiceBuilder], typing.Sequence[commands.CommandChoice]
-        ],
-        /,
-    ) -> Self:
-        """Set autocomplete choices.
-
-        Returns
-        -------
-        InteractionAutocompleteBuilder
-            Object of this builder.
-        """
-        real_choices: typing.List[special_endpoints.AutocompleteChoiceBuilder] = []
-        warned = False
-
-        for choice in choices:
-            if isinstance(choice, commands.CommandChoice):
-                if not warned:
-                    deprecation.warn_deprecated(
-                        "Passing CommandChoice",
-                        removal_version="2.0.0.dev119",
-                        additional_info="Use AutocompleteChoiceBuilder instead",
-                        quote=False,
-                    )
-                    warned = True
-
-                choice = AutocompleteChoiceBuilder(choice.name, choice.value)
-
-            real_choices.append(choice)
-
-        self._choices = real_choices
+    def set_choices(self, choices: typing.Sequence[special_endpoints.AutocompleteChoiceBuilder], /) -> Self:
+        self._choices = choices
         return self
 
     def build(
@@ -1931,13 +1871,6 @@ class TextInputBuilder(special_endpoints.TextInputBuilder):
     @property
     def value(self) -> undefined.UndefinedOr[str]:
         return self._value
-
-    @property
-    def required(self) -> bool:
-        deprecation.warn_deprecated(
-            ".required", removal_version="2.0.0.dev119", additional_info="Use .is_required", quote=False
-        )
-        return self._required
 
     @property
     def is_required(self) -> bool:
