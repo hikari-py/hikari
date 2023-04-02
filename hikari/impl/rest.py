@@ -3948,8 +3948,9 @@ class RESTClientImpl(rest_api.RESTClient):
         choices: typing.Union[
             typing.Sequence[commands.CommandChoice], typing.Sequence[special_endpoints.AutocompleteChoiceBuilder]
         ],
+        _stack_level: int = 0,
     ) -> special_endpoints.InteractionAutocompleteBuilder:
-        return special_endpoints_impl.InteractionAutocompleteBuilder(choices, _stack_level=1)
+        return special_endpoints_impl.InteractionAutocompleteBuilder(choices, _stack_level=_stack_level + 1)
 
     def interaction_message_builder(
         self, type_: typing.Union[base_interactions.ResponseType, int], /
@@ -4082,6 +4083,7 @@ class RESTClientImpl(rest_api.RESTClient):
         choices: typing.Union[
             typing.Sequence[commands.CommandChoice], typing.Sequence[special_endpoints.AutocompleteChoiceBuilder]
         ],
+        _stack_level: int = 0,
     ) -> None:
         route = routes.POST_INTERACTION_RESPONSE.compile(interaction=interaction, token=token)
 
@@ -4099,6 +4101,7 @@ class RESTClientImpl(rest_api.RESTClient):
                     removal_version="2.0.0.dev119",
                     additional_info="Use AutocompleteChoiceBuilder instead",
                     quote=False,
+                    stack_level=3 + _stack_level,
                 )
                 warned = True
 
