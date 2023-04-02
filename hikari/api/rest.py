@@ -1085,7 +1085,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
             As of writing, bots can only send custom stickers from the current guild.
         stickers : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.stickers.PartialSticker]]
-            If provided, a sequence of objects and IDs of up to 3 stickers to send on the message.
+            If provided, a sequence of the objects and IDs of up to 3 stickers
+            to send on the message.
 
             As of writing, bots can only send custom stickers from the current guild.
         tts : hikari.undefined.UndefinedOr[bool]
@@ -4720,7 +4721,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
             As of writing, bots can only send custom stickers from the current guild.
         stickers : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.stickers.PartialSticker]]
-            If provided, a sequence of objects and IDs of up to 3 stickers to send on the message.
+            If provided, a sequence of the objects and IDs of up to 3 stickers
+            to send on the message.
 
             As of writing, bots can only send custom stickers from the current guild.
         tts : hikari.undefined.UndefinedOr[bool]
