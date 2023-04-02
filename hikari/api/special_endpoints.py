@@ -958,7 +958,7 @@ class InteractionModalBuilder(InteractionResponseBuilder, abc.ABC):
 
     @abc.abstractmethod
     def set_custom_id(self, custom_id: str, /) -> Self:
-        """Set the developer set custom ID used for identifying interactions with this modal.
+        """Set the custom ID used for identifying interactions with this modal.
 
         Parameters
         ----------
@@ -1453,7 +1453,7 @@ class InteractiveButtonBuilder(ButtonBuilder, abc.ABC):
 
     @abc.abstractmethod
     def set_custom_id(self, custom_id: str, /) -> Self:
-        """Set the developer set custom ID used for identifying this button.
+        """Set the custom ID used for identifying this button.
 
         Parameters
         ----------
@@ -1631,7 +1631,7 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC):
 
     @abc.abstractmethod
     def set_custom_id(self, custom_id: str, /) -> Self:
-        """Set the developer set custom ID used for identifying this menu.
+        """Set the custom ID used for identifying this menu.
 
         Parameters
         ----------
@@ -1869,7 +1869,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC):
 
     @abc.abstractmethod
     def set_custom_id(self, custom_id: str, /) -> Self:
-        """Set the developer set custom ID used for identifying this text input.
+        """Set the custom ID used for identifying this text input.
 
         Parameters
         ----------
