@@ -1045,16 +1045,47 @@ class TestInteractionModalBuilder:
         assert attachments == ()
 
 
+class TestCommandBuilder:
+    @pytest.fixture()
+    def stub_command(self) -> typing.Type[special_endpoints.CommandBuilder]:
+        return hikari_test_helpers.mock_class_namespace(special_endpoints.CommandBuilder)
+
+    def test_name_property(self, stub_command):
+        builder = stub_command("NOOOOO").set_name("aaaaa")
+
+        assert builder.name == "aaaaa"
+
+    def test_id_property(self, stub_command):
+        builder = stub_command("OKSKDKSDK").set_id(3212123)
+
+        assert builder.id == 3212123
+
+    def test_default_member_permissions(self, stub_command):
+        builder = stub_command("oksksksk").set_default_member_permissions(permissions.Permissions.ADMINISTRATOR)
+
+        assert builder.default_member_permissions == permissions.Permissions.ADMINISTRATOR
+
+    def test_is_dm_enabled(self, stub_command):
+        builder = stub_command("oksksksk").set_is_dm_enabled(True)
+
+        assert builder.is_dm_enabled is True
+
+    def test_is_nsfw_property(self, stub_command):
+        builder = stub_command("oksksksk").set_is_nsfw(True)
+
+        assert builder.is_nsfw is True
+
+    def test_name_localizations_property(self, stub_command):
+        builder = stub_command("oksksksk").set_name_localizations({"aaa": "bbb", "ccc": "DDd"})
+
+        assert builder.name_localizations == {"aaa": "bbb", "ccc": "DDd"}
+
+
 class TestSlashCommandBuilder:
     def test_description_property(self):
-        builder = special_endpoints.SlashCommandBuilder("ok", "NO")
+        builder = special_endpoints.SlashCommandBuilder("ok", "NO").set_description("meow")
 
-        assert builder.description == "NO"
-
-    def test_name_property(self):
-        builder = special_endpoints.SlashCommandBuilder("NOOOOO", "OKKKK")
-
-        assert builder.name == "NOOOOO"
+        assert builder.description == "meow"
 
     def test_options_property(self):
         builder = special_endpoints.SlashCommandBuilder("OKSKDKSDK", "inmjfdsmjiooikjsa")
@@ -1065,23 +1096,6 @@ class TestSlashCommandBuilder:
         builder.add_option(mock_option)
 
         assert builder.options == [mock_option]
-
-    def test_id_property(self):
-        builder = special_endpoints.SlashCommandBuilder("OKSKDKSDK", "inmjfdsmjiooikjsa").set_id(3212123)
-
-        assert builder.id == 3212123
-
-    def test_default_member_permissions(self):
-        builder = special_endpoints.SlashCommandBuilder("oksksksk", "kfdkodfokfd").set_default_member_permissions(
-            permissions.Permissions.ADMINISTRATOR
-        )
-
-        assert builder.default_member_permissions == permissions.Permissions.ADMINISTRATOR
-
-    def test_is_dm_enabled(self):
-        builder = special_endpoints.SlashCommandBuilder("oksksksk", "kfdkodfokfd").set_is_dm_enabled(True)
-
-        assert builder.is_dm_enabled is True
 
     def test_build_with_optional_data(self):
         mock_entity_factory = mock.Mock()
@@ -1401,10 +1415,10 @@ class TestLinkButtonBuilder:
 class TestInteractiveButtonBuilder:
     def test_custom_id_property(self):
         button = special_endpoints.InteractiveButtonBuilder(
-            style=components.ButtonStyle.DANGER, label="no u", custom_id="ooga booga", is_disabled=True
-        )
+            style=components.ButtonStyle.DANGER, custom_id="oogie"
+        ).set_custom_id("eeeeee")
 
-        assert button.custom_id == "ooga booga"
+        assert button.custom_id == "eeeeee"
 
 
 class TestSelectOptionBuilder:
@@ -1413,10 +1427,14 @@ class TestSelectOptionBuilder:
         return special_endpoints.SelectOptionBuilder(label="ok", value="ok2")
 
     def test_label_property(self, option):
-        assert option.label == "ok"
+        option.set_label("new_label")
+
+        assert option.label == "new_label"
 
     def test_value_property(self, option):
-        assert option.value == "ok2"
+        option.set_value("aaaaaaaaaaaa")
+
+        assert option.value == "aaaaaaaaaaaa"
 
     def test_emoji_property(self, option):
         option._emoji = 123321
@@ -1499,7 +1517,9 @@ class TestSelectMenuBuilder:
         assert menu.type == 123
 
     def test_custom_id_property(self, menu):
-        assert menu.custom_id == "o2o2o2"
+        menu.set_custom_id("ooooo")
+
+        assert menu.custom_id == "ooooo"
 
     def test_set_is_disabled(self, menu):
         assert menu.set_is_disabled(True) is menu

@@ -1335,6 +1335,10 @@ class CommandBuilder(special_endpoints.CommandBuilder):
     def name(self) -> str:
         return self._name
 
+    def set_name(self, name: str, /) -> Self:
+        self._name = name
+        return self
+
     def set_id(self, id_: undefined.UndefinedOr[snowflakes.Snowflakeish], /) -> Self:
         self._id = snowflakes.Snowflake(id_) if id_ is not undefined.UNDEFINED else undefined.UNDEFINED
         return self
@@ -1399,10 +1403,6 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
     def type(self) -> commands.CommandType:
         return commands.CommandType.SLASH
 
-    def add_option(self, option: commands.CommandOption) -> Self:
-        self._options.append(option)
-        return self
-
     @property
     def options(self) -> typing.Sequence[commands.CommandOption]:
         return self._options.copy()
@@ -1411,10 +1411,18 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
     def description_localizations(self) -> typing.Mapping[typing.Union[locales.Locale, str], str]:
         return self._description_localizations
 
+    def set_description(self, description: str, /) -> Self:
+        self._description = description
+        return self
+
     def set_description_localizations(
         self, description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str], /
     ) -> Self:
         self._description_localizations = description_localizations
+        return self
+
+    def add_option(self, option: commands.CommandOption) -> Self:
+        self._options.append(option)
         return self
 
     def build(self, entity_factory: entity_factory_.EntityFactory, /) -> typing.MutableMapping[str, typing.Any]:
@@ -1607,6 +1615,10 @@ class InteractiveButtonBuilder(_ButtonBuilder, special_endpoints.InteractiveButt
     def custom_id(self) -> str:
         return self._custom_id
 
+    def set_custom_id(self, custom_id: str, /) -> Self:
+        self._custom_id = custom_id
+        return self
+
 
 @attrs_extensions.with_copy
 @attrs.define(weakref_slot=False)
@@ -1647,6 +1659,14 @@ class SelectOptionBuilder(special_endpoints.SelectOptionBuilder):
     @property
     def is_default(self) -> bool:
         return self._is_default
+
+    def set_label(self, label: str, /) -> Self:
+        self._label = label
+        return self
+
+    def set_value(self, value: str, /) -> Self:
+        self._value = value
+        return self
 
     def set_description(self, value: undefined.UndefinedOr[str], /) -> Self:
         self._description = value
@@ -1715,6 +1735,10 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder):
     @property
     def max_values(self) -> int:
         return self._max_values
+
+    def set_custom_id(self, custom_id: str, /) -> Self:
+        self._custom_id = custom_id
+        return self
 
     def set_is_disabled(self, state: bool, /) -> Self:
         self._is_disabled = state
