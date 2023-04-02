@@ -107,17 +107,16 @@ class StickerPack(snowflakes.Unique):
     sku_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=False)
     """The ID of the packs SKU."""
 
-    # This is not exactly how Discord documents it, but we need to keep consistency
-    banner_hash: str = attr.field(eq=False, hash=False, repr=False)
-    """The hash for the pack's banner."""
+    banner_asset_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
+    """ID of the sticker pack's banner image, if set."""
 
     @property
-    def banner_url(self) -> files.URL:
-        """Banner URL for the pack."""
+    def banner_url(self) -> typing.Optional[files.URL]:
+        """Banner URL for the pack, if set."""
         return self.make_banner_url()
 
-    def make_banner_url(self, *, ext: str = "png", size: int = 4096) -> files.URL:
-        """Generate the pack's banner image URL.
+    def make_banner_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+        """Generate the pack's banner image URL, if set.
 
         Parameters
         ----------
@@ -130,17 +129,20 @@ class StickerPack(snowflakes.Unique):
 
         Returns
         -------
-        hikari.files.URL
-            The URL of the banner.
+        typing.Optional[hikari.files.URL]
+            The URL of the banner, if set.
 
         Raises
         ------
         ValueError
             If `size` is not a power of two or not between 16 and 4096.
         """
-        return routes.CDN_STICKER_PACK_BANNER.compile_to_file(
-            urls.CDN_URL, hash=self.banner_hash, file_format=ext, size=size
-        )
+        if self.banner_asset_id is not None:
+            return routes.CDN_STICKER_PACK_BANNER.compile_to_file(
+                urls.CDN_URL, hash=self.banner_asset_id, file_format=ext, size=size
+            )
+
+        return None
 
 
 @attr_extensions.with_copy
