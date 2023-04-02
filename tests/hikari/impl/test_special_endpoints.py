@@ -691,19 +691,6 @@ class TestInteractionAutocompleteBuilder:
             special_endpoints.AutocompleteChoiceBuilder(name="echo", value="charlie"),
         ]
 
-    def test_choices_for_deprecated_cmd_choices(self):
-        choices = [
-            commands.CommandChoice(name="meow", value="meow meow"),
-            commands.CommandChoice(name="name", value="x"),
-        ]
-
-        builder = special_endpoints.InteractionAutocompleteBuilder(choices)
-
-        assert builder.choices == [
-            special_endpoints.AutocompleteChoiceBuilder(name="meow", value="meow meow"),
-            special_endpoints.AutocompleteChoiceBuilder("name", "x"),
-        ]
-
     def test_set_choices(self):
         builder = special_endpoints.InteractionAutocompleteBuilder()
 
@@ -717,21 +704,6 @@ class TestInteractionAutocompleteBuilder:
         assert builder.choices == [
             special_endpoints.AutocompleteChoiceBuilder("aaa", "bbb"),
             special_endpoints.AutocompleteChoiceBuilder("e", "a"),
-        ]
-
-    def test_set_choices_for_deprecated_cmd_choices(self):
-        builder = special_endpoints.InteractionAutocompleteBuilder()
-
-        builder.set_choices(
-            [
-                commands.CommandChoice(name="its", value="the police!"),
-                commands.CommandChoice(name="inspect", value="me"),
-            ]
-        )
-
-        assert builder.choices == [
-            special_endpoints.AutocompleteChoiceBuilder("its", "the police!"),
-            special_endpoints.AutocompleteChoiceBuilder("inspect", "me"),
         ]
 
     def test_build(self):
@@ -748,19 +720,6 @@ class TestInteractionAutocompleteBuilder:
         assert data == {
             "type": base_interactions.ResponseType.AUTOCOMPLETE,
             "data": {"choices": [{"name": "meow", "value": "waaaa"}, {"name": "lotta", "value": "water"}]},
-        }
-
-    def test_build_for_deprecated_cmd_choices(self):
-        builder = special_endpoints.InteractionAutocompleteBuilder(
-            [commands.CommandChoice(name="a", value="b"), commands.CommandChoice(name="c", value="d")]
-        )
-
-        data, files = builder.build(mock.Mock())
-
-        assert files == ()
-        assert data == {
-            "type": base_interactions.ResponseType.AUTOCOMPLETE,
-            "data": {"choices": [{"name": "a", "value": "b"}, {"name": "c", "value": "d"}]},
         }
 
 
@@ -1710,7 +1669,7 @@ class TestTextInput:
 
     def test_set_required(self, text_input):
         assert text_input.set_required(True) is text_input
-        assert text_input.required is True
+        assert text_input.is_required is True
 
     def test_set_value(self, text_input):
         assert text_input.set_value("valueeeee") is text_input
