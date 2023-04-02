@@ -1208,7 +1208,7 @@ class SlashCommandBuilder(CommandBuilder):
 
         Returns
         -------
-        CommandBuilder
+        SlashCommandBuilder
             Object of this command builder.
         """
 
@@ -1225,7 +1225,7 @@ class SlashCommandBuilder(CommandBuilder):
 
         Returns
         -------
-        CommandBuilder
+        SlashCommandBuilder
             Object of this command builder.
         """
 
@@ -1243,7 +1243,7 @@ class SlashCommandBuilder(CommandBuilder):
 
         Returns
         -------
-        CommandBuilder
+        SlashCommandBuilder
             Object of this command builder to allow for chained calls.
         """
 
