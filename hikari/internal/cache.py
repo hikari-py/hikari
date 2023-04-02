@@ -50,7 +50,7 @@ import copy
 import datetime
 import typing
 
-import attr
+import attrs
 
 from hikari import embeds as embeds_
 from hikari import emojis
@@ -63,7 +63,7 @@ from hikari import stickers as stickers_
 from hikari import undefined
 from hikari import voices
 from hikari.api import cache
-from hikari.internal import attr_extensions
+from hikari.internal import attrs_extensions
 from hikari.internal import collections
 
 if typing.TYPE_CHECKING:
@@ -179,8 +179,8 @@ class EmptyCacheView(cache.CacheView[typing.Any, typing.Any]):
         raise IndexError(index)
 
 
-@attr_extensions.with_copy
-@attr.define(repr=False, hash=False, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(repr=False, hash=False, weakref_slot=False)
 class GuildRecord:
     """An object used for storing guild specific cached information in-memory.
 
@@ -189,48 +189,48 @@ class GuildRecord:
     guild.
     """
 
-    is_available: typing.Optional[bool] = attr.field(default=None)
+    is_available: typing.Optional[bool] = attrs.field(default=None)
     """Whether the cached guild is available or not.
 
     This will be `None` when no `GuildRecord.guild` is also
     `None` else `bool`.
     """
 
-    guild: typing.Optional[guilds.GatewayGuild] = attr.field(default=None)
+    guild: typing.Optional[guilds.GatewayGuild] = attrs.field(default=None)
     """A cached guild object.
 
     This will be `hikari.guilds.GatewayGuild` or `None` if not cached.
     """
 
-    channels: typing.Optional[typing.MutableSet[snowflakes.Snowflake]] = attr.field(default=None)
+    channels: typing.Optional[typing.MutableSet[snowflakes.Snowflake]] = attrs.field(default=None)
     """A set of the IDs of the guild channels cached for this guild.
 
     This will be `None` if no channels are cached for this guild else
     `typing.MutableSet[hikari.snowflakes.Snowflake]` of channel IDs.
     """
 
-    threads: typing.Optional[typing.MutableSet[snowflakes.Snowflake]] = attr.field(default=None)
+    threads: typing.Optional[typing.MutableSet[snowflakes.Snowflake]] = attrs.field(default=None)
     """A set of the IDs of the guild threads cached for this guild.
 
     This will be `None` if no threads are cached for this guild else
     `typing.MutableSet[hikari.snowflakes.Snowflake]` of thread IDs.
     """
 
-    emojis: typing.Optional[typing.MutableSet[snowflakes.Snowflake]] = attr.field(default=None)
+    emojis: typing.Optional[typing.MutableSet[snowflakes.Snowflake]] = attrs.field(default=None)
     """A set of the IDs of the emojis cached for this guild.
 
     This will be `None` if no emojis are cached for this guild else
     `typing.MutableSet[hikari.snowflakes.Snowflake]` of emoji IDs.
     """
 
-    stickers: typing.Optional[typing.MutableSet[snowflakes.Snowflake]] = attr.field(default=None)
+    stickers: typing.Optional[typing.MutableSet[snowflakes.Snowflake]] = attrs.field(default=None)
     """A sequence of sticker IDs cached for this guild.
 
     This will be `None` if no stickers are cached for this guild else
     `typing.Sequence[hikari.snowflakes.Snowflake]` of emoji IDs.
     """
 
-    invites: typing.Optional[typing.MutableSequence[str]] = attr.field(default=None)
+    invites: typing.Optional[typing.MutableSequence[str]] = attrs.field(default=None)
     """A set of the `str` codes of the invites cached for this guild.
 
     This will be `None` if no invites are cached for this guild else
@@ -239,7 +239,7 @@ class GuildRecord:
 
     members: typing.Optional[
         collections.ExtendedMutableMapping[snowflakes.Snowflake, RefCell[MemberData]]
-    ] = attr.field(default=None)
+    ] = attrs.field(default=None)
     """A mapping of user IDs to the objects of members cached for this guild.
 
     This will be `None` if no members are cached for this guild else
@@ -248,14 +248,14 @@ class GuildRecord:
 
     presences: typing.Optional[
         collections.ExtendedMutableMapping[snowflakes.Snowflake, MemberPresenceData]
-    ] = attr.field(default=None)
+    ] = attrs.field(default=None)
     """A mapping of user IDs to objects of the presences cached for this guild.
 
     This will be `None` if no presences are cached for this guild else
     `hikari.internal.collections.ExtendedMutableMapping[hikari.snowflakes.Snowflake, MemberPresenceData]`.
     """
 
-    roles: typing.Optional[typing.MutableSet[snowflakes.Snowflake]] = attr.field(default=None)
+    roles: typing.Optional[typing.MutableSet[snowflakes.Snowflake]] = attrs.field(default=None)
     """A set of the IDs of the roles cached for this guild.
 
     This will be `None` if no roles are cached for this guild else
@@ -264,7 +264,7 @@ class GuildRecord:
 
     voice_states: typing.Optional[
         collections.ExtendedMutableMapping[snowflakes.Snowflake, VoiceStateData]
-    ] = attr.field(default=None)
+    ] = attrs.field(default=None)
     """A mapping of user IDs to objects of the voice states cached for this guild.
 
     This will be `None` if no voice states are cached for this guild else
@@ -337,23 +337,23 @@ class BaseData(abc.ABC, typing.Generic[ValueT]):
         """
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, repr=False, hash=False, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, repr=False, hash=False, weakref_slot=False)
 class InviteData(BaseData[invites.InviteWithMetadata]):
     """A data model for storing invite data in an in-memory cache."""
 
-    code: str = attr.field()
-    guild_id: typing.Optional[snowflakes.Snowflake] = attr.field()
-    channel_id: snowflakes.Snowflake = attr.field()
-    inviter: typing.Optional[RefCell[users_.User]] = attr.field()
-    target_type: typing.Union[invites.TargetType, int, None] = attr.field()
-    target_user: typing.Optional[RefCell[users_.User]] = attr.field()
-    target_application: typing.Optional[applications.InviteApplication] = attr.ib()
-    uses: int = attr.field()
-    max_uses: typing.Optional[int] = attr.field()
-    max_age: typing.Optional[datetime.timedelta] = attr.field()
-    is_temporary: bool = attr.field()
-    created_at: datetime.datetime = attr.field()
+    code: str = attrs.field()
+    guild_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
+    channel_id: snowflakes.Snowflake = attrs.field()
+    inviter: typing.Optional[RefCell[users_.User]] = attrs.field()
+    target_type: typing.Union[invites.TargetType, int, None] = attrs.field()
+    target_user: typing.Optional[RefCell[users_.User]] = attrs.field()
+    target_application: typing.Optional[applications.InviteApplication] = attrs.field()
+    uses: int = attrs.field()
+    max_uses: typing.Optional[int] = attrs.field()
+    max_age: typing.Optional[datetime.timedelta] = attrs.field()
+    is_temporary: bool = attrs.field()
+    created_at: datetime.datetime = attrs.field()
 
     def build_entity(self, app: traits.RESTAware, /) -> invites.InviteWithMetadata:
         return invites.InviteWithMetadata(
@@ -408,24 +408,24 @@ class InviteData(BaseData[invites.InviteWithMetadata]):
         )
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, repr=False, hash=False, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, repr=False, hash=False, weakref_slot=False)
 class MemberData(BaseData[guilds.Member]):
     """A data model for storing member data in an in-memory cache."""
 
-    user: RefCell[users_.User] = attr.field()
-    guild_id: snowflakes.Snowflake = attr.field()
-    nickname: typing.Optional[str] = attr.field()
-    guild_avatar_hash: typing.Optional[str] = attr.field()
-    role_ids: typing.Tuple[snowflakes.Snowflake, ...] = attr.field()
-    joined_at: datetime.datetime = attr.field()
-    premium_since: typing.Optional[datetime.datetime] = attr.field()
-    is_deaf: undefined.UndefinedOr[bool] = attr.field()
-    is_mute: undefined.UndefinedOr[bool] = attr.field()
-    is_pending: undefined.UndefinedOr[bool] = attr.field()
-    raw_communication_disabled_until: typing.Optional[datetime.datetime] = attr.field()
+    user: RefCell[users_.User] = attrs.field()
+    guild_id: snowflakes.Snowflake = attrs.field()
+    nickname: typing.Optional[str] = attrs.field()
+    guild_avatar_hash: typing.Optional[str] = attrs.field()
+    role_ids: typing.Tuple[snowflakes.Snowflake, ...] = attrs.field()
+    joined_at: datetime.datetime = attrs.field()
+    premium_since: typing.Optional[datetime.datetime] = attrs.field()
+    is_deaf: undefined.UndefinedOr[bool] = attrs.field()
+    is_mute: undefined.UndefinedOr[bool] = attrs.field()
+    is_pending: undefined.UndefinedOr[bool] = attrs.field()
+    raw_communication_disabled_until: typing.Optional[datetime.datetime] = attrs.field()
     # meta-attribute
-    has_been_deleted: bool = attr.field(default=False, init=False)
+    has_been_deleted: bool = attrs.field(default=False, init=False)
 
     @classmethod
     def build_from_entity(
@@ -462,20 +462,20 @@ class MemberData(BaseData[guilds.Member]):
         )
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, repr=False, hash=False, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, repr=False, hash=False, weakref_slot=False)
 class KnownCustomEmojiData(BaseData[emojis.KnownCustomEmoji]):
     """A data model for storing known custom emoji data in an in-memory cache."""
 
-    id: snowflakes.Snowflake = attr.field()
-    name: str = attr.field()
-    is_animated: bool = attr.field()
-    guild_id: snowflakes.Snowflake = attr.field()
-    role_ids: typing.Tuple[snowflakes.Snowflake, ...] = attr.field()
-    user: typing.Optional[RefCell[users_.User]] = attr.field()
-    is_colons_required: bool = attr.field()
-    is_managed: bool = attr.field()
-    is_available: bool = attr.field()
+    id: snowflakes.Snowflake = attrs.field()
+    name: str = attrs.field()
+    is_animated: bool = attrs.field()
+    guild_id: snowflakes.Snowflake = attrs.field()
+    role_ids: typing.Tuple[snowflakes.Snowflake, ...] = attrs.field()
+    user: typing.Optional[RefCell[users_.User]] = attrs.field()
+    is_colons_required: bool = attrs.field()
+    is_managed: bool = attrs.field()
+    is_available: bool = attrs.field()
 
     @classmethod
     def build_from_entity(
@@ -516,19 +516,19 @@ class KnownCustomEmojiData(BaseData[emojis.KnownCustomEmoji]):
         )
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, repr=False, hash=False, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, repr=False, hash=False, weakref_slot=False)
 class GuildStickerData(BaseData[stickers_.GuildSticker]):
     """A data model for storing sticker data in an in-memory cache."""
 
-    id: snowflakes.Snowflake = attr.field()
-    name: str = attr.field()
-    description: typing.Optional[str] = attr.field()
-    tag: str = attr.field()
-    format_type: typing.Union[stickers_.StickerFormatType, int] = attr.field()
-    is_available: bool = attr.field()
-    guild_id: snowflakes.Snowflake = attr.field()
-    user: typing.Optional[RefCell[users_.User]] = attr.field()
+    id: snowflakes.Snowflake = attrs.field()
+    name: str = attrs.field()
+    description: typing.Optional[str] = attrs.field()
+    tag: str = attrs.field()
+    format_type: typing.Union[stickers_.StickerFormatType, int] = attrs.field()
+    is_available: bool = attrs.field()
+    guild_id: snowflakes.Snowflake = attrs.field()
+    user: typing.Optional[RefCell[users_.User]] = attrs.field()
 
     @classmethod
     def build_from_entity(
@@ -565,26 +565,26 @@ class GuildStickerData(BaseData[stickers_.GuildSticker]):
         )
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, repr=False, hash=False, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, repr=False, hash=False, weakref_slot=False)
 class RichActivityData(BaseData[presences.RichActivity]):
     """A data model for storing rich activity data in an in-memory cache."""
 
-    name: str = attr.field()
-    url: typing.Optional[str] = attr.field()
-    type: typing.Union[presences.ActivityType, int] = attr.field()
-    created_at: datetime.datetime = attr.field()
-    timestamps: typing.Optional[presences.ActivityTimestamps] = attr.field()
-    application_id: typing.Optional[snowflakes.Snowflake] = attr.field()
-    details: typing.Optional[str] = attr.field()
-    state: typing.Optional[str] = attr.field()
-    emoji: typing.Union[RefCell[emojis.CustomEmoji], str, None] = attr.field()
-    party: typing.Optional[presences.ActivityParty] = attr.field()
-    assets: typing.Optional[presences.ActivityAssets] = attr.field()
-    secrets: typing.Optional[presences.ActivitySecret] = attr.field()
-    is_instance: typing.Optional[bool] = attr.field()
-    flags: typing.Optional[presences.ActivityFlag] = attr.field()
-    buttons: typing.Tuple[str, ...] = attr.field()
+    name: str = attrs.field()
+    url: typing.Optional[str] = attrs.field()
+    type: typing.Union[presences.ActivityType, int] = attrs.field()
+    created_at: datetime.datetime = attrs.field()
+    timestamps: typing.Optional[presences.ActivityTimestamps] = attrs.field()
+    application_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
+    details: typing.Optional[str] = attrs.field()
+    state: typing.Optional[str] = attrs.field()
+    emoji: typing.Union[RefCell[emojis.CustomEmoji], str, None] = attrs.field()
+    party: typing.Optional[presences.ActivityParty] = attrs.field()
+    assets: typing.Optional[presences.ActivityAssets] = attrs.field()
+    secrets: typing.Optional[presences.ActivitySecret] = attrs.field()
+    is_instance: typing.Optional[bool] = attrs.field()
+    flags: typing.Optional[presences.ActivityFlag] = attrs.field()
+    buttons: typing.Tuple[str, ...] = attrs.field()
 
     @classmethod
     def build_from_entity(
@@ -652,16 +652,16 @@ class RichActivityData(BaseData[presences.RichActivity]):
         )
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, repr=False, hash=False, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, repr=False, hash=False, weakref_slot=False)
 class MemberPresenceData(BaseData[presences.MemberPresence]):
     """A data model for storing presence data in an in-memory cache."""
 
-    user_id: snowflakes.Snowflake = attr.field()
-    guild_id: snowflakes.Snowflake = attr.field()
-    visible_status: typing.Union[presences.Status, str] = attr.field()
-    activities: typing.Tuple[RichActivityData, ...] = attr.field()
-    client_status: presences.ClientStatus = attr.field()
+    user_id: snowflakes.Snowflake = attrs.field()
+    guild_id: snowflakes.Snowflake = attrs.field()
+    visible_status: typing.Union[presences.Status, str] = attrs.field()
+    activities: typing.Tuple[RichActivityData, ...] = attrs.field()
+    client_status: presences.ClientStatus = attrs.field()
 
     @classmethod
     def build_from_entity(cls, presence: presences.MemberPresence, /) -> MemberPresenceData:
@@ -686,15 +686,15 @@ class MemberPresenceData(BaseData[presences.MemberPresence]):
         )
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, repr=False, hash=False, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, repr=False, hash=False, weakref_slot=False)
 class MessageInteractionData(BaseData[messages.MessageInteraction]):
     """A model for storing message interaction data."""
 
-    id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
-    type: typing.Union[base_interactions.InteractionType, int] = attr.field(eq=False, repr=True)
-    name: str = attr.field(eq=False, repr=True)
-    user: RefCell[users_.User] = attr.field(eq=False, repr=True)
+    id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
+    type: typing.Union[base_interactions.InteractionType, int] = attrs.field(eq=False, repr=True)
+    name: str = attrs.field(eq=False, repr=True)
+    user: RefCell[users_.User] = attrs.field(eq=False, repr=True)
 
     @classmethod
     def build_from_entity(
@@ -730,42 +730,42 @@ def _copy_embed(embed: embeds_.Embed) -> embeds_.Embed:
     )
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, repr=False, hash=False, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, repr=False, hash=False, weakref_slot=False)
 class MessageData(BaseData[messages.Message]):
     """A model for storing message data in an in-memory cache."""
 
-    id: snowflakes.Snowflake = attr.field()
-    channel_id: snowflakes.Snowflake = attr.field()
-    guild_id: typing.Optional[snowflakes.Snowflake] = attr.field()
-    author: RefCell[users_.User] = attr.field()
-    member: typing.Optional[RefCell[MemberData]] = attr.field()
-    content: typing.Optional[str] = attr.field()
-    timestamp: datetime.datetime = attr.field()
-    edited_timestamp: typing.Optional[datetime.datetime] = attr.field()
-    is_tts: bool = attr.field()
-    user_mentions: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, RefCell[users_.User]]] = attr.field()
-    role_mention_ids: undefined.UndefinedOr[typing.Tuple[snowflakes.Snowflake, ...]] = attr.field()
+    id: snowflakes.Snowflake = attrs.field()
+    channel_id: snowflakes.Snowflake = attrs.field()
+    guild_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
+    author: RefCell[users_.User] = attrs.field()
+    member: typing.Optional[RefCell[MemberData]] = attrs.field()
+    content: typing.Optional[str] = attrs.field()
+    timestamp: datetime.datetime = attrs.field()
+    edited_timestamp: typing.Optional[datetime.datetime] = attrs.field()
+    is_tts: bool = attrs.field()
+    user_mentions: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, RefCell[users_.User]]] = attrs.field()
+    role_mention_ids: undefined.UndefinedOr[typing.Tuple[snowflakes.Snowflake, ...]] = attrs.field()
     channel_mentions: undefined.UndefinedOr[
         typing.Mapping[snowflakes.Snowflake, channels_.PartialChannel]
-    ] = attr.field()
-    mentions_everyone: undefined.UndefinedOr[bool] = attr.field()
-    attachments: typing.Tuple[messages.Attachment, ...] = attr.field()
-    embeds: typing.Tuple[embeds_.Embed, ...] = attr.field()
-    reactions: typing.Tuple[messages.Reaction, ...] = attr.field()
-    is_pinned: bool = attr.field()
-    webhook_id: typing.Optional[snowflakes.Snowflake] = attr.field()
-    type: typing.Union[messages.MessageType, int] = attr.field()
-    activity: typing.Optional[messages.MessageActivity] = attr.field()
-    application: typing.Optional[messages.MessageApplication] = attr.field()
-    message_reference: typing.Optional[messages.MessageReference] = attr.field()
-    flags: messages.MessageFlag = attr.field()
-    stickers: typing.Tuple[stickers_.PartialSticker, ...] = attr.field()
-    nonce: typing.Optional[str] = attr.field()
-    referenced_message: typing.Optional[RefCell[MessageData]] = attr.field()
-    interaction: typing.Optional[MessageInteractionData] = attr.field()
-    application_id: typing.Optional[snowflakes.Snowflake] = attr.field()
-    components: typing.Tuple[components_.MessageActionRowComponent, ...] = attr.field()
+    ] = attrs.field()
+    mentions_everyone: undefined.UndefinedOr[bool] = attrs.field()
+    attachments: typing.Tuple[messages.Attachment, ...] = attrs.field()
+    embeds: typing.Tuple[embeds_.Embed, ...] = attrs.field()
+    reactions: typing.Tuple[messages.Reaction, ...] = attrs.field()
+    is_pinned: bool = attrs.field()
+    webhook_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
+    type: typing.Union[messages.MessageType, int] = attrs.field()
+    activity: typing.Optional[messages.MessageActivity] = attrs.field()
+    application: typing.Optional[messages.MessageApplication] = attrs.field()
+    message_reference: typing.Optional[messages.MessageReference] = attrs.field()
+    flags: messages.MessageFlag = attrs.field()
+    stickers: typing.Tuple[stickers_.PartialSticker, ...] = attrs.field()
+    nonce: typing.Optional[str] = attrs.field()
+    referenced_message: typing.Optional[RefCell[MessageData]] = attrs.field()
+    interaction: typing.Optional[MessageInteractionData] = attrs.field()
+    application_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
+    components: typing.Tuple[components_.MessageActionRowComponent, ...] = attrs.field()
 
     @classmethod
     def build_from_entity(
@@ -925,23 +925,23 @@ class MessageData(BaseData[messages.Message]):
             self.mentions_everyone = message.mentions_everyone
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, repr=False, hash=False, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, repr=False, hash=False, weakref_slot=False)
 class VoiceStateData(BaseData[voices.VoiceState]):
     """A data model for storing voice state data in an in-memory cache."""
 
-    channel_id: typing.Optional[snowflakes.Snowflake] = attr.field()
-    guild_id: snowflakes.Snowflake = attr.field()
-    is_guild_deafened: bool = attr.field()
-    is_guild_muted: bool = attr.field()
-    is_self_deafened: bool = attr.field()
-    is_self_muted: bool = attr.field()
-    is_streaming: bool = attr.field()
-    is_suppressed: bool = attr.field()
-    is_video_enabled: bool = attr.field()
-    member: RefCell[MemberData] = attr.field()
-    session_id: str = attr.field()
-    requested_to_speak_at: typing.Optional[datetime.datetime] = attr.field()
+    channel_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
+    guild_id: snowflakes.Snowflake = attrs.field()
+    is_guild_deafened: bool = attrs.field()
+    is_guild_muted: bool = attrs.field()
+    is_self_deafened: bool = attrs.field()
+    is_self_muted: bool = attrs.field()
+    is_streaming: bool = attrs.field()
+    is_suppressed: bool = attrs.field()
+    is_video_enabled: bool = attrs.field()
+    member: RefCell[MemberData] = attrs.field()
+    session_id: str = attrs.field()
+    requested_to_speak_at: typing.Optional[datetime.datetime] = attrs.field()
 
     def build_entity(self, app: traits.RESTAware, /) -> voices.VoiceState:
         member = self.member.object.build_entity(app)
@@ -986,12 +986,12 @@ class VoiceStateData(BaseData[voices.VoiceState]):
         )
 
 
-@attr_extensions.with_copy
-@attr.define(repr=True, hash=False, weakref_slot=True)
+@attrs_extensions.with_copy
+@attrs.define(repr=True, hash=False, weakref_slot=True)
 class Cell(typing.Generic[ValueT]):
     """Object used to store mutable references to a value in multiple places."""
 
-    object: ValueT = attr.field(repr=True)
+    object: ValueT = attrs.field(repr=True)
 
     def copy(self) -> ValueT:
         """Get a copy of the contents of this cell.
@@ -1004,8 +1004,8 @@ class Cell(typing.Generic[ValueT]):
         return copy.copy(self.object)
 
 
-@attr_extensions.with_copy
-@attr.define(repr=False, hash=False, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(repr=False, hash=False, weakref_slot=False)
 class RefCell(typing.Generic[ValueT]):
     """Object used to track mutable references to a value in multiple places.
 
@@ -1015,8 +1015,8 @@ class RefCell(typing.Generic[ValueT]):
     the time spent building these entities for the objects that reference them.
     """
 
-    object: ValueT = attr.field(repr=True)
-    ref_count: int = attr.field(default=0, kw_only=True)
+    object: ValueT = attrs.field(repr=True)
+    ref_count: int = attrs.field(default=0, kw_only=True)
 
     def copy(self) -> ValueT:
         """Get a copy of the contents of this cell.

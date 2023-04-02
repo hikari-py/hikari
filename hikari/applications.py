@@ -50,14 +50,14 @@ __all__: typing.Sequence[str] = (
 import base64
 import typing
 
-import attr
+import attrs
 
 from hikari import guilds
 from hikari import locales
 from hikari import snowflakes
 from hikari import urls
 from hikari import users
-from hikari.internal import attr_extensions
+from hikari.internal import attrs_extensions
 from hikari.internal import enums
 from hikari.internal import routes
 
@@ -255,71 +255,71 @@ class ConnectionVisibility(int, enums.Enum):
     """Everyone can see the connection."""
 
 
-@attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class OwnConnection:
     """Represents a user's connection with a third party account.
 
     Returned by the `GET Current User Connections` endpoint.
     """
 
-    id: str = attr.field(hash=True, repr=True)
+    id: str = attrs.field(hash=True, repr=True)
     """The string ID of the third party connected account.
 
     .. warning::
         Seeing as this is a third party ID, it will not be a snowflakes.
     """
 
-    name: str = attr.field(eq=False, hash=False, repr=True)
+    name: str = attrs.field(eq=False, hash=False, repr=True)
     """The username of the connected account."""
 
-    type: str = attr.field(eq=False, hash=False, repr=True)
+    type: str = attrs.field(eq=False, hash=False, repr=True)
     """The type of service this connection is for."""
 
-    is_revoked: bool = attr.field(eq=False, hash=False, repr=False)
+    is_revoked: bool = attrs.field(eq=False, hash=False, repr=False)
     """`True` if the connection has been revoked."""
 
-    integrations: typing.Sequence[guilds.PartialIntegration] = attr.field(eq=False, hash=False, repr=False)
+    integrations: typing.Sequence[guilds.PartialIntegration] = attrs.field(eq=False, hash=False, repr=False)
     """A sequence of the partial guild integration objects this connection has."""
 
-    is_verified: bool = attr.field(eq=False, hash=False, repr=False)
+    is_verified: bool = attrs.field(eq=False, hash=False, repr=False)
     """`True` if the connection has been verified."""
 
-    is_friend_sync_enabled: bool = attr.field(eq=False, hash=False, repr=False)
+    is_friend_sync_enabled: bool = attrs.field(eq=False, hash=False, repr=False)
     """`True` if friends should be added based on this connection."""
 
-    is_activity_visible: bool = attr.field(eq=False, hash=False, repr=False)
+    is_activity_visible: bool = attrs.field(eq=False, hash=False, repr=False)
     """`True` if this connection's activities are shown in the user's presence."""
 
-    visibility: typing.Union[ConnectionVisibility, int] = attr.field(eq=False, hash=False, repr=True)
+    visibility: typing.Union[ConnectionVisibility, int] = attrs.field(eq=False, hash=False, repr=True)
     """The visibility of the connection."""
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class OwnGuild(guilds.PartialGuild):
     """Represents a user bound partial guild object."""
 
-    features: typing.Sequence[typing.Union[str, guilds.GuildFeature]] = attr.field(eq=False, hash=False, repr=False)
+    features: typing.Sequence[typing.Union[str, guilds.GuildFeature]] = attrs.field(eq=False, hash=False, repr=False)
     """A list of the features in this guild."""
 
-    is_owner: bool = attr.field(eq=False, hash=False, repr=True)
+    is_owner: bool = attrs.field(eq=False, hash=False, repr=True)
     """`True` when the current user owns this guild."""
 
-    my_permissions: permissions_.Permissions = attr.field(eq=False, hash=False, repr=False)
+    my_permissions: permissions_.Permissions = attrs.field(eq=False, hash=False, repr=False)
     """The guild-level permissions that apply to the current user or bot."""
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class OwnApplicationRoleConnection:
     """Represents an own application role connection."""
 
-    platform_name: typing.Optional[str] = attr.field(eq=True, hash=True, repr=True)
+    platform_name: typing.Optional[str] = attrs.field(eq=True, hash=True, repr=True)
     """The name of the platform."""
 
-    platform_username: typing.Optional[str] = attr.field(eq=True, hash=True, repr=True)
+    platform_username: typing.Optional[str] = attrs.field(eq=True, hash=True, repr=True)
     """The users name in the platform."""
 
-    metadata: typing.Mapping[str, str] = attr.field(eq=False, hash=False, repr=False)
+    metadata: typing.Mapping[str, str] = attrs.field(eq=False, hash=False, repr=False)
     """Mapping application role connection metadata keys to their value.
 
     .. note::
@@ -344,25 +344,25 @@ class TeamMembershipState(int, enums.Enum):
     """Denotes the user has accepted the invite and is now a member."""
 
 
-@attr_extensions.with_copy
-@attr.define(eq=False, hash=False, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(eq=False, hash=False, kw_only=True, weakref_slot=False)
 class TeamMember(users.User):
     """Represents a member of a Team."""
 
-    membership_state: typing.Union[TeamMembershipState, int] = attr.field(repr=False)
+    membership_state: typing.Union[TeamMembershipState, int] = attrs.field(repr=False)
     """The state of this user's membership."""
 
-    permissions: typing.Sequence[str] = attr.field(repr=False)
+    permissions: typing.Sequence[str] = attrs.field(repr=False)
     """This member's permissions within a team.
 
     At the time of writing, this will always be a sequence of one `str`,
     which will always be `"*"`. This may change in the future, however.
     """
 
-    team_id: snowflakes.Snowflake = attr.field(repr=True)
+    team_id: snowflakes.Snowflake = attrs.field(repr=True)
     """The ID of the team this member belongs to."""
 
-    user: users.User = attr.field(repr=True)
+    user: users.User = attrs.field(repr=True)
     """The user representation of this team member."""
 
     @property
@@ -432,36 +432,36 @@ class TeamMember(users.User):
         return self.user == other
 
 
-@attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class Team(snowflakes.Unique):
     """Represents a development team, along with all its members."""
 
-    app: traits.RESTAware = attr.field(
-        repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
+    app: traits.RESTAware = attrs.field(
+        repr=False, eq=False, hash=False, metadata={attrs_extensions.SKIP_DEEP_COPY: True}
     )
     """Client application that models may use for procedures."""
 
-    id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
+    id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
     """The ID of this entity."""
 
-    name: str = attr.field(hash=False, eq=False, repr=True)
+    name: str = attrs.field(hash=False, eq=False, repr=True)
     """The name of this team."""
 
-    icon_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    icon_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """The CDN hash of this team's icon.
 
     If no icon is provided, this will be `None`.
     """
 
-    members: typing.Mapping[snowflakes.Snowflake, TeamMember] = attr.field(eq=False, hash=False, repr=False)
+    members: typing.Mapping[snowflakes.Snowflake, TeamMember] = attrs.field(eq=False, hash=False, repr=False)
     """A mapping containing each member in this team.
 
     The mapping maps keys containing the member's ID to values containing the
     member object.
     """
 
-    owner_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
+    owner_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
     """The ID of this team's owner."""
 
     def __str__(self) -> str:
@@ -507,20 +507,20 @@ class Team(snowflakes.Unique):
         )
 
 
-@attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class InviteApplication(guilds.PartialApplication):
     """Represents the information of an Invite Application."""
 
-    app: traits.RESTAware = attr.field(
-        repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
+    app: traits.RESTAware = attrs.field(
+        repr=False, eq=False, hash=False, metadata={attrs_extensions.SKIP_DEEP_COPY: True}
     )
     """Client application that models may use for procedures."""
 
-    cover_image_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    cover_image_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """The CDN's hash of this application's default rich presence invite cover image."""
 
-    public_key: bytes = attr.field(eq=False, hash=False, repr=False)
+    public_key: bytes = attrs.field(eq=False, hash=False, repr=False)
     """The key used for verifying interaction and GameSDK payload signatures."""
 
     @property
@@ -563,71 +563,71 @@ class InviteApplication(guilds.PartialApplication):
         )
 
 
-@attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class ApplicationInstallParameters:
     """Represents the application install parameters."""
 
-    scopes: typing.Sequence[str] = attr.field(eq=True, repr=False, hash=True)
+    scopes: typing.Sequence[str] = attrs.field(eq=True, repr=False, hash=True)
     """The scopes to authorize the bot for."""
 
-    permissions: permissions_.Permissions = attr.field(eq=True, repr=False, hash=True)
+    permissions: permissions_.Permissions = attrs.field(eq=True, repr=False, hash=True)
     """The permissions to add the bot to guild with."""
 
 
-@attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class Application(guilds.PartialApplication):
     """Represents the information of an Oauth2 Application."""
 
-    app: traits.RESTAware = attr.field(
-        repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
+    app: traits.RESTAware = attrs.field(
+        repr=False, eq=False, hash=False, metadata={attrs_extensions.SKIP_DEEP_COPY: True}
     )
     """Client application that models may use for procedures."""
 
-    is_bot_public: bool = attr.field(eq=False, hash=False, repr=True)
+    is_bot_public: bool = attrs.field(eq=False, hash=False, repr=True)
     """`True` if the bot associated with this application is public."""
 
-    is_bot_code_grant_required: bool = attr.field(eq=False, hash=False, repr=False)
+    is_bot_code_grant_required: bool = attrs.field(eq=False, hash=False, repr=False)
     """`True` if this application's bot is requiring code grant for invites."""
 
-    owner: users.User = attr.field(eq=False, hash=False, repr=True)
+    owner: users.User = attrs.field(eq=False, hash=False, repr=True)
     """The application's owner."""
 
-    rpc_origins: typing.Optional[typing.Sequence[str]] = attr.field(eq=False, hash=False, repr=False)
+    rpc_origins: typing.Optional[typing.Sequence[str]] = attrs.field(eq=False, hash=False, repr=False)
     """A collection of this application's RPC origin URLs, if RPC is enabled."""
 
-    flags: ApplicationFlags = attr.field(eq=False, hash=False, repr=False)
+    flags: ApplicationFlags = attrs.field(eq=False, hash=False, repr=False)
     """The flags for this application."""
 
-    public_key: bytes = attr.field(eq=False, hash=False, repr=False)
+    public_key: bytes = attrs.field(eq=False, hash=False, repr=False)
     """The key used for verifying interaction and GameSDK payload signatures."""
 
-    team: typing.Optional[Team] = attr.field(eq=False, hash=False, repr=False)
+    team: typing.Optional[Team] = attrs.field(eq=False, hash=False, repr=False)
     """The team this application belongs to.
 
     If the application is not part of a team, this will be `None`.
     """
 
-    cover_image_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    cover_image_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """The CDN's hash of this application's default rich presence invite cover image."""
 
-    terms_of_service_url: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    terms_of_service_url: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """The URL of this application's terms of service."""
 
-    privacy_policy_url: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    privacy_policy_url: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """The URL of this application's privacy policy."""
 
-    role_connections_verification_url: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    role_connections_verification_url: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """The URL of this application's role connection verification entry point."""
 
-    custom_install_url: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    custom_install_url: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """The URL of this application's custom authorization link."""
 
-    tags: typing.Sequence[str] = attr.field(eq=False, hash=False, repr=False)
+    tags: typing.Sequence[str] = attrs.field(eq=False, hash=False, repr=False)
     """A sequence of tags describing the content and functionality of the application."""
 
-    install_parameters: typing.Optional[ApplicationInstallParameters] = attr.field(eq=False, hash=False, repr=False)
+    install_parameters: typing.Optional[ApplicationInstallParameters] = attrs.field(eq=False, hash=False, repr=False)
     """Settings for the application's default in-app authorization link, if enabled."""
 
     @property
@@ -670,53 +670,53 @@ class Application(guilds.PartialApplication):
         )
 
 
-@attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class AuthorizationApplication(guilds.PartialApplication):
     """The application model found attached to `AuthorizationInformation`."""
 
-    public_key: bytes = attr.field(eq=False, hash=False, repr=False)
+    public_key: bytes = attrs.field(eq=False, hash=False, repr=False)
     """The key used for verifying interaction and GameSDK payload signatures."""
 
-    is_bot_public: typing.Optional[bool] = attr.field(eq=False, hash=False, repr=True)
+    is_bot_public: typing.Optional[bool] = attrs.field(eq=False, hash=False, repr=True)
     """`True` if the bot associated with this application is public.
 
     Will be `None` if this application doesn't have an associated bot.
     """
 
-    is_bot_code_grant_required: typing.Optional[bool] = attr.field(eq=False, hash=False, repr=False)
+    is_bot_code_grant_required: typing.Optional[bool] = attrs.field(eq=False, hash=False, repr=False)
     """`True` if this application's bot is requiring code grant for invites.
 
     Will be `None` if this application doesn't have a bot.
     """
 
-    terms_of_service_url: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    terms_of_service_url: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """The URL of this application's terms of service."""
 
-    privacy_policy_url: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    privacy_policy_url: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """The URL of this application's privacy policy."""
 
 
-@attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=False, kw_only=True, weakref_slot=False)
 class AuthorizationInformation:
     """Model for the data returned by Get Current Authorization Information."""
 
-    application: AuthorizationApplication = attr.field(hash=False, repr=True)
+    application: AuthorizationApplication = attrs.field(hash=False, repr=True)
     """The current application."""
 
-    expires_at: datetime.datetime = attr.field(hash=False, repr=True)
+    expires_at: datetime.datetime = attrs.field(hash=False, repr=True)
     """When the access token this data was retrieved with expires."""
 
-    scopes: typing.Sequence[typing.Union[OAuth2Scope, str]] = attr.field(hash=False, repr=True)
+    scopes: typing.Sequence[typing.Union[OAuth2Scope, str]] = attrs.field(hash=False, repr=True)
     """A sequence of the scopes the current user has authorized the application for."""
 
-    user: typing.Optional[users.User] = attr.field(hash=False, repr=True)
+    user: typing.Optional[users.User] = attrs.field(hash=False, repr=True)
     """The user who has authorized this token if they included the `identify` scope."""
 
 
-@attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class PartialOAuth2Token:
     """Model for partial OAuth2 token data returned by the API.
 
@@ -724,38 +724,38 @@ class PartialOAuth2Token:
     flow.
     """
 
-    access_token: str = attr.field(hash=True, repr=False)
+    access_token: str = attrs.field(hash=True, repr=False)
     """Access token issued by the authorization server."""
 
-    token_type: typing.Union[TokenType, str] = attr.field(eq=False, hash=False, repr=True)
+    token_type: typing.Union[TokenType, str] = attrs.field(eq=False, hash=False, repr=True)
     """Type of token issued by the authorization server."""
 
-    expires_in: datetime.timedelta = attr.field(eq=False, hash=False, repr=True)
+    expires_in: datetime.timedelta = attrs.field(eq=False, hash=False, repr=True)
     """Lifetime of this access token."""
 
-    scopes: typing.Sequence[typing.Union[OAuth2Scope, str]] = attr.field(eq=False, hash=False, repr=True)
+    scopes: typing.Sequence[typing.Union[OAuth2Scope, str]] = attrs.field(eq=False, hash=False, repr=True)
     """Scopes the access token has access to."""
 
     def __str__(self) -> str:
         return self.access_token
 
 
-@attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class OAuth2AuthorizationToken(PartialOAuth2Token):
     """Model for the OAuth2 token data returned by the authorization grant flow."""
 
-    refresh_token: int = attr.field(eq=False, hash=False, repr=False)
+    refresh_token: int = attrs.field(eq=False, hash=False, repr=False)
     """Refresh token used to obtain new access tokens with the same grant."""
 
-    webhook: typing.Optional[webhooks.IncomingWebhook] = attr.field(eq=False, hash=False, repr=True)
+    webhook: typing.Optional[webhooks.IncomingWebhook] = attrs.field(eq=False, hash=False, repr=True)
     """Object of the webhook that was created.
 
     This will only be present if this token was authorized with the
     `webhooks.incoming` scope, otherwise this will be `None`.
     """
 
-    guild: typing.Optional[guilds.RESTGuild] = attr.field(eq=False, hash=False, repr=True)
+    guild: typing.Optional[guilds.RESTGuild] = attrs.field(eq=False, hash=False, repr=True)
     """Object of the guild the user was added to.
 
     This will only be present if this token was authorized with the
@@ -763,12 +763,12 @@ class OAuth2AuthorizationToken(PartialOAuth2Token):
     """
 
 
-@attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class OAuth2ImplicitToken(PartialOAuth2Token):
     """Model for the OAuth2 token data returned by the implicit grant flow."""
 
-    state: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    state: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """State parameter that was present in the authorization request if provided."""
 
 
@@ -815,23 +815,23 @@ class ApplicationRoleConnectionMetadataRecordType(int, enums.Enum):
     """Boolean Not Equal."""
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class ApplicationRoleConnectionMetadataRecord:
     """Represents a role connection metadata record."""
 
-    type: typing.Union[ApplicationRoleConnectionMetadataRecordType, int] = attr.field(eq=False, hash=False, repr=False)
+    type: typing.Union[ApplicationRoleConnectionMetadataRecordType, int] = attrs.field(eq=False, hash=False, repr=False)
     """The type of metadata value record."""
 
-    key: str = attr.field(eq=True, hash=True, repr=False)
+    key: str = attrs.field(eq=True, hash=True, repr=False)
     """Dictionary key for the metadata field."""
 
-    name: str = attr.field(eq=False, hash=False, repr=True)
+    name: str = attrs.field(eq=False, hash=False, repr=True)
     """The metadata's field name."""
 
-    description: str = attr.field(eq=False, hash=False, repr=True)
+    description: str = attrs.field(eq=False, hash=False, repr=True)
     """The metadata's field description."""
 
-    name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attr.field(
+    name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attrs.field(
         eq=False,
         hash=False,
         repr=False,
@@ -839,7 +839,7 @@ class ApplicationRoleConnectionMetadataRecord:
     )
     """A mapping of name localizations for this metadata field."""
 
-    description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attr.field(
+    description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attrs.field(
         eq=False,
         hash=False,
         repr=False,

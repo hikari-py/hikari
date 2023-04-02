@@ -36,13 +36,13 @@ __all__: typing.Sequence[str] = (
 import abc
 import typing
 
-import attr
+import attrs
 
 from hikari import channels as channels_
 from hikari import snowflakes
 from hikari import undefined
 from hikari import urls
-from hikari.internal import attr_extensions
+from hikari.internal import attrs_extensions
 from hikari.internal import enums
 from hikari.internal import routes
 
@@ -468,29 +468,29 @@ class ExecutableWebhook(abc.ABC):
         await self.app.rest.delete_webhook_message(self.webhook_id, token=self.token, message=message)
 
 
-@attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class PartialWebhook(snowflakes.Unique):
     """Base class for all webhook implementations."""
 
-    app: traits.RESTAware = attr.field(
-        repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
+    app: traits.RESTAware = attrs.field(
+        repr=False, eq=False, hash=False, metadata={attrs_extensions.SKIP_DEEP_COPY: True}
     )
     """Client application that models may use for procedures."""
 
-    id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
+    id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
     """The ID of this entity."""
 
-    type: typing.Union[WebhookType, int] = attr.field(eq=False, hash=False, repr=True)
+    type: typing.Union[WebhookType, int] = attrs.field(eq=False, hash=False, repr=True)
     """The type of the webhook."""
 
-    name: str = attr.field(eq=False, hash=False, repr=True)
+    name: str = attrs.field(eq=False, hash=False, repr=True)
     """The name of the webhook."""
 
-    avatar_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    avatar_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """The avatar hash of the webhook."""
 
-    application_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
+    application_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the application that created this webhook."""
 
     def __str__(self) -> str:
@@ -571,7 +571,7 @@ class PartialWebhook(snowflakes.Unique):
         )
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class IncomingWebhook(PartialWebhook, ExecutableWebhook):
     """Represents an incoming webhook object on Discord.
 
@@ -580,13 +580,13 @@ class IncomingWebhook(PartialWebhook, ExecutableWebhook):
     send informational messages to specific channels.
     """
 
-    channel_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
+    channel_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
     """The channel ID this webhook is for."""
 
-    guild_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
+    guild_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
     """The guild ID of the webhook."""
 
-    author: typing.Optional[users_.User] = attr.field(eq=False, hash=False, repr=True)
+    author: typing.Optional[users_.User] = attrs.field(eq=False, hash=False, repr=True)
     """The user that created the webhook.
 
     .. note::
@@ -594,7 +594,7 @@ class IncomingWebhook(PartialWebhook, ExecutableWebhook):
         rather than bot authorization or when received within audit logs.
     """
 
-    token: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    token: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """The token for the webhook.
 
     .. note::
@@ -790,31 +790,31 @@ class IncomingWebhook(PartialWebhook, ExecutableWebhook):
         return webhook
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class ChannelFollowerWebhook(PartialWebhook):
     """Represents a channel follower webhook object on Discord."""
 
-    channel_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
+    channel_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
     """The channel ID this webhook is for."""
 
-    guild_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
+    guild_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
     """The guild ID of the webhook."""
 
-    author: typing.Optional[users_.User] = attr.field(eq=False, hash=False, repr=True)
+    author: typing.Optional[users_.User] = attrs.field(eq=False, hash=False, repr=True)
     """The user that created the webhook.
 
     .. note::
         This will be `None` when received within an audit log.
     """
 
-    source_channel: typing.Optional[channels_.PartialChannel] = attr.field(eq=False, hash=False, repr=True)
+    source_channel: typing.Optional[channels_.PartialChannel] = attrs.field(eq=False, hash=False, repr=True)
     """The partial object of the channel this webhook is following.
 
     This will be `None` when the user that followed the channel is no
     longer in the source guild or has lost access to the source channel.
     """
 
-    source_guild: typing.Optional[guilds_.PartialGuild] = attr.field(eq=False, hash=False, repr=True)
+    source_guild: typing.Optional[guilds_.PartialGuild] = attrs.field(eq=False, hash=False, repr=True)
     """The partial object of the guild this webhook is following.
 
     This will be `None` when the user that followed the channel is no
@@ -946,12 +946,12 @@ class ChannelFollowerWebhook(PartialWebhook):
         return webhook
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class ApplicationWebhook(PartialWebhook):
     """Represents an application webhook object on Discord.
 
     This is from the interactions flow.
     """
 
-    application_id: snowflakes.Snowflake = attr.ib()
+    application_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from PartialWebhook>>.

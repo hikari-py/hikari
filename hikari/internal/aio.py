@@ -100,8 +100,8 @@ def is_async_iterator(obj: typing.Any) -> typing_extensions.TypeGuard[typing.Asy
 
 def is_async_iterable(obj: typing.Any) -> typing_extensions.TypeGuard[typing.AsyncIterable[object]]:
     """Determine if the object is an async iterable or not."""
-    attr = getattr(obj, "__aiter__", None)
-    return inspect.isfunction(attr) or inspect.ismethod(attr)
+    attrs = getattr(obj, "__aiter__", None)
+    return inspect.isfunction(attrs) or inspect.ismethod(attrs)
 
 
 async def first_completed(

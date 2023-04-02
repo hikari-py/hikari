@@ -29,13 +29,13 @@ __all__: typing.Sequence[str] = ("PartialUser", "User", "OwnUser", "UserFlag", "
 import abc
 import typing
 
-import attr
+import attrs
 
 from hikari import snowflakes
 from hikari import traits
 from hikari import undefined
 from hikari import urls
-from hikari.internal import attr_extensions
+from hikari.internal import attrs_extensions
 from hikari.internal import enums
 from hikari.internal import routes
 
@@ -628,8 +628,8 @@ class User(PartialUser, abc.ABC):
         )
 
 
-@attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class PartialUserImpl(PartialUser):
     """Implementation for partial information about a user.
 
@@ -637,39 +637,39 @@ class PartialUserImpl(PartialUser):
     present, which will be denoted by `hikari.undefined.UNDEFINED`.
     """
 
-    id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
+    id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
     """The ID of this user."""
 
-    app: traits.RESTAware = attr.field(
-        repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
+    app: traits.RESTAware = attrs.field(
+        repr=False, eq=False, hash=False, metadata={attrs_extensions.SKIP_DEEP_COPY: True}
     )
     """Client application that models may use for procedures."""
 
-    discriminator: undefined.UndefinedOr[str] = attr.field(eq=False, hash=False, repr=True)
+    discriminator: undefined.UndefinedOr[str] = attrs.field(eq=False, hash=False, repr=True)
     """Four-digit discriminator for the user."""
 
-    username: undefined.UndefinedOr[str] = attr.field(eq=False, hash=False, repr=True)
+    username: undefined.UndefinedOr[str] = attrs.field(eq=False, hash=False, repr=True)
     """Username of the user."""
 
-    avatar_hash: undefined.UndefinedNoneOr[str] = attr.field(eq=False, hash=False, repr=False)
+    avatar_hash: undefined.UndefinedNoneOr[str] = attrs.field(eq=False, hash=False, repr=False)
     """Avatar hash of the user, if a custom avatar is set."""
 
-    banner_hash: undefined.UndefinedNoneOr[str] = attr.field(eq=False, hash=False, repr=False)
+    banner_hash: undefined.UndefinedNoneOr[str] = attrs.field(eq=False, hash=False, repr=False)
     """Banner hash of the user, if a custom banner is set."""
 
-    accent_color: undefined.UndefinedNoneOr[colors.Color] = attr.field(eq=False, hash=False, repr=False)
+    accent_color: undefined.UndefinedNoneOr[colors.Color] = attrs.field(eq=False, hash=False, repr=False)
     """The custom banner color for the user, if set.
 
     The official client will decide the default color if not set.
     """
 
-    is_bot: undefined.UndefinedOr[bool] = attr.field(eq=False, hash=False, repr=True)
+    is_bot: undefined.UndefinedOr[bool] = attrs.field(eq=False, hash=False, repr=True)
     """Whether this user is a bot account."""
 
-    is_system: undefined.UndefinedOr[bool] = attr.field(eq=False, hash=False, repr=True)
+    is_system: undefined.UndefinedOr[bool] = attrs.field(eq=False, hash=False, repr=True)
     """Whether this user is a system account."""
 
-    flags: undefined.UndefinedOr[UserFlag] = attr.field(eq=False, hash=False, repr=True)
+    flags: undefined.UndefinedOr[UserFlag] = attrs.field(eq=False, hash=False, repr=True)
     """Public flags for this user."""
 
     @property
@@ -691,66 +691,66 @@ class PartialUserImpl(PartialUser):
         return f"{self.username}#{self.discriminator}"
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class UserImpl(PartialUserImpl, User):
     """Concrete implementation of user information."""
 
-    discriminator: str = attr.field(eq=False, hash=False, repr=True)
+    discriminator: str = attrs.field(eq=False, hash=False, repr=True)
     """The user's discriminator."""
 
-    username: str = attr.field(eq=False, hash=False, repr=True)
+    username: str = attrs.field(eq=False, hash=False, repr=True)
     """The user's username."""
 
-    avatar_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    avatar_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """The user's avatar hash, if they have one, otherwise `None`."""
 
-    banner_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    banner_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """Banner hash of the user, if they have one, otherwise `None`"""
 
-    accent_color: typing.Optional[colors.Color] = attr.field(eq=False, hash=False, repr=False)
+    accent_color: typing.Optional[colors.Color] = attrs.field(eq=False, hash=False, repr=False)
     """The custom banner color for the user, if set.
 
     The official client will decide the default color if not set.
     """
 
-    is_bot: bool = attr.field(eq=False, hash=False, repr=True)
+    is_bot: bool = attrs.field(eq=False, hash=False, repr=True)
     """`True` if this user is a bot account, `False` otherwise."""
 
-    is_system: bool = attr.field(eq=False, hash=False, repr=True)
+    is_system: bool = attrs.field(eq=False, hash=False, repr=True)
     """`True` if this user is a system account, `False` otherwise."""
 
-    flags: UserFlag = attr.field(eq=False, hash=False, repr=True)
+    flags: UserFlag = attrs.field(eq=False, hash=False, repr=True)
     """The public flags for this user."""
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class OwnUser(UserImpl):
     """Represents a user with extended OAuth2 information."""
 
-    is_mfa_enabled: bool = attr.field(eq=False, hash=False, repr=False)
+    is_mfa_enabled: bool = attrs.field(eq=False, hash=False, repr=False)
     """Whether the user's account has multi-factor authentication enabled."""
 
-    locale: typing.Optional[typing.Union[str, locales.Locale]] = attr.field(eq=False, hash=False, repr=False)
+    locale: typing.Optional[typing.Union[str, locales.Locale]] = attrs.field(eq=False, hash=False, repr=False)
     """The user's set locale.
 
     This is not provided in the `READY` event.
     """
 
-    is_verified: typing.Optional[bool] = attr.field(eq=False, hash=False, repr=False)
+    is_verified: typing.Optional[bool] = attrs.field(eq=False, hash=False, repr=False)
     """Whether the email for this user's account has been verified.
 
     Will be `None` if retrieved through the OAuth2 flow without the `email`
     scope.
     """
 
-    email: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    email: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """The user's set email.
 
     Will be `None` if retrieved through OAuth2 flow without the `email`
     scope. Will always be `None` for bot users.
     """
 
-    premium_type: typing.Union[PremiumType, int, None] = attr.field(eq=False, hash=False, repr=False)
+    premium_type: typing.Union[PremiumType, int, None] = attrs.field(eq=False, hash=False, repr=False)
     """The type of Nitro Subscription this user account had.
 
     This will always be `None` for bots.

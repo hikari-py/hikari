@@ -59,7 +59,7 @@ __all__: typing.Sequence[str] = (
 
 import typing
 
-import attr
+import attrs
 
 from hikari import emojis
 from hikari import permissions
@@ -68,7 +68,7 @@ from hikari import traits
 from hikari import undefined
 from hikari import urls
 from hikari import webhooks
-from hikari.internal import attr_extensions
+from hikari.internal import attrs_extensions
 from hikari.internal import enums
 from hikari.internal import routes
 
@@ -164,8 +164,8 @@ class VideoQualityMode(int, enums.Enum):
     """Video quality will be set to 720p."""
 
 
-@attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class ChannelFollow:
     """Relationship between a news channel and a subscriber channel.
 
@@ -173,15 +173,15 @@ class ChannelFollow:
     to any "broadcast" announcements that the news channel creates.
     """
 
-    app: traits.RESTAware = attr.field(
-        repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
+    app: traits.RESTAware = attrs.field(
+        repr=False, eq=False, hash=False, metadata={attrs_extensions.SKIP_DEEP_COPY: True}
     )
     """Client application that models may use for procedures."""
 
-    channel_id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
+    channel_id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
     """Return the channel ID of the channel being followed."""
 
-    webhook_id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
+    webhook_id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
     """Return the ID of the webhook for this follow."""
 
     async def fetch_channel(self) -> typing.Union[GuildNewsChannel, GuildTextChannel]:
@@ -274,8 +274,8 @@ class PermissionOverwriteType(int, enums.Enum):
     """A permission overwrite that targets a specific guild member."""
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 class PermissionOverwrite:
     """Represents permission overwrites for a channel or role in a channel.
 
@@ -303,18 +303,18 @@ class PermissionOverwrite:
         )
     """
 
-    id: snowflakes.Snowflake = attr.field(converter=snowflakes.Snowflake, repr=True)
+    id: snowflakes.Snowflake = attrs.field(converter=snowflakes.Snowflake, repr=True)
     """The ID of this entity."""
 
-    type: typing.Union[PermissionOverwriteType, int] = attr.field(converter=PermissionOverwriteType, repr=True)
+    type: typing.Union[PermissionOverwriteType, int] = attrs.field(converter=PermissionOverwriteType, repr=True)
     """The type of entity this overwrite targets."""
 
-    allow: permissions.Permissions = attr.field(
+    allow: permissions.Permissions = attrs.field(
         converter=permissions.Permissions, default=permissions.Permissions.NONE, repr=True
     )
     """The permissions this overwrite allows."""
 
-    deny: permissions.Permissions = attr.field(
+    deny: permissions.Permissions = attrs.field(
         converter=permissions.Permissions, default=permissions.Permissions.NONE, repr=True
     )
     """The permissions this overwrite denies."""
@@ -325,8 +325,8 @@ class PermissionOverwrite:
         return ~(self.allow | self.deny)
 
 
-@attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class PartialChannel(snowflakes.Unique):
     """Channel representation for cases where further detail is not provided.
 
@@ -334,18 +334,18 @@ class PartialChannel(snowflakes.Unique):
     not available from Discord.
     """
 
-    app: traits.RESTAware = attr.field(
-        repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
+    app: traits.RESTAware = attrs.field(
+        repr=False, eq=False, hash=False, metadata={attrs_extensions.SKIP_DEEP_COPY: True}
     )
     """Client application that models may use for procedures."""
 
-    id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
+    id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
     """The ID of this entity."""
 
-    name: typing.Optional[str] = attr.field(eq=False, hash=False, repr=True)
+    name: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=True)
     """The channel's name. This will be missing for DM channels."""
 
-    type: typing.Union[ChannelType, int] = attr.field(eq=False, hash=False, repr=True)
+    type: typing.Union[ChannelType, int] = attrs.field(eq=False, hash=False, repr=True)
     """The channel's type."""
 
     @property
@@ -829,11 +829,11 @@ class TextableChannel(PartialChannel):
         return await self.app.rest.delete_messages(self.id, messages, *other_messages)
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class PrivateChannel(PartialChannel):
     """The base for anything that is a private (non-guild bound) channel."""
 
-    last_message_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
+    last_message_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the last message sent in this channel.
 
     .. warning::
@@ -842,11 +842,11 @@ class PrivateChannel(PartialChannel):
     """
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class DMChannel(PrivateChannel, TextableChannel):
     """Represents a direct message text channel that is between you and another user."""
 
-    recipient: users.User = attr.field(eq=False, hash=False, repr=False)
+    recipient: users.User = attrs.field(eq=False, hash=False, repr=False)
     """The user recipient of this DM."""
 
     @property
@@ -858,7 +858,7 @@ class DMChannel(PrivateChannel, TextableChannel):
         return f"{self.__class__.__name__} with: {self.recipient}"
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class GroupDMChannel(PrivateChannel):
     """Represents a group direct message channel.
 
@@ -868,19 +868,19 @@ class GroupDMChannel(PrivateChannel):
         it.
     """
 
-    owner_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
+    owner_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
     """The ID of the owner of the group."""
 
-    icon_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    icon_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """The CDN hash of the icon of the group, if an icon is set."""
 
-    nicknames: typing.MutableMapping[snowflakes.Snowflake, str] = attr.field(eq=False, hash=False, repr=False)
+    nicknames: typing.MutableMapping[snowflakes.Snowflake, str] = attrs.field(eq=False, hash=False, repr=False)
     """A mapping of set nicknames within this group DMs to user IDs."""
 
-    recipients: typing.Mapping[snowflakes.Snowflake, users.User] = attr.field(eq=False, hash=False, repr=False)
+    recipients: typing.Mapping[snowflakes.Snowflake, users.User] = attrs.field(eq=False, hash=False, repr=False)
     """The recipients of the group DM."""
 
-    application_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
+    application_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the application that created the group DM.
 
     If the group DM was not created by a bot, this will be `None`.
@@ -931,14 +931,14 @@ class GroupDMChannel(PrivateChannel):
         )
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class GuildChannel(PartialChannel):
     """The base for anything that is a guild channel."""
 
-    guild_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
+    guild_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
     """The ID of the guild the channel belongs to."""
 
-    parent_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=True)
+    parent_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
     """The ID of the parent channel the channel belongs to.
 
     For thread channels this will refer to the parent textable guild channel.
@@ -1128,7 +1128,7 @@ class GuildChannel(PartialChannel):
         )
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class PermissibleGuildChannel(GuildChannel):
     """Base class for all guild channels which have permission overwrites.
 
@@ -1137,16 +1137,16 @@ class PermissibleGuildChannel(GuildChannel):
         permissions from their parent channel.
     """
 
-    position: int = attr.field(eq=False, hash=False, repr=False)
+    position: int = attrs.field(eq=False, hash=False, repr=False)
     """The sorting position of the channel.
 
     Higher numbers appear further down the channel list.
     """
 
-    is_nsfw: bool = attr.field(eq=False, hash=False, repr=False)
+    is_nsfw: bool = attrs.field(eq=False, hash=False, repr=False)
     """Whether the channel is marked as NSFW."""
 
-    permission_overwrites: typing.Mapping[snowflakes.Snowflake, PermissionOverwrite] = attr.field(
+    permission_overwrites: typing.Mapping[snowflakes.Snowflake, PermissionOverwrite] = attrs.field(
         eq=False, hash=False, repr=False
     )
     """The permission overwrites for the channel.
@@ -1251,7 +1251,7 @@ class TextableGuildChannel(GuildChannel, TextableChannel):
     __slots__: typing.Sequence[str] = ()
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class GuildCategory(PermissibleGuildChannel):
     """Represents a guild category channel.
 
@@ -1259,21 +1259,21 @@ class GuildCategory(PermissibleGuildChannel):
     organisation.
     """
 
-    parent_id: None = attr.field(eq=False, hash=False, repr=True)
+    parent_id: None = attrs.field(eq=False, hash=False, repr=True)
     """The ID of the parent channel the channel belongs to.
 
     This is always `None` for categories.
     """
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class GuildTextChannel(PermissibleGuildChannel, TextableGuildChannel):
     """Represents a guild text channel."""
 
-    topic: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    topic: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """The topic of the channel."""
 
-    last_message_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
+    last_message_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the last message sent in this channel.
 
     .. warning::
@@ -1281,7 +1281,7 @@ class GuildTextChannel(PermissibleGuildChannel, TextableGuildChannel):
         this will always be valid.
     """
 
-    rate_limit_per_user: datetime.timedelta = attr.field(eq=False, hash=False, repr=False)
+    rate_limit_per_user: datetime.timedelta = attrs.field(eq=False, hash=False, repr=False)
     """The delay (in seconds) between a user can send a message to this channel.
 
     If there is no rate limit, this will be 0 seconds.
@@ -1292,7 +1292,7 @@ class GuildTextChannel(PermissibleGuildChannel, TextableGuildChannel):
         will not be affected by this rate limit.
     """
 
-    last_pin_timestamp: typing.Optional[datetime.datetime] = attr.field(eq=False, hash=False, repr=False)
+    last_pin_timestamp: typing.Optional[datetime.datetime] = attrs.field(eq=False, hash=False, repr=False)
     """The timestamp of the last-pinned message.
 
     .. note::
@@ -1300,21 +1300,21 @@ class GuildTextChannel(PermissibleGuildChannel, TextableGuildChannel):
         these cases are. Trust no one!
     """
 
-    default_auto_archive_duration: datetime.timedelta = attr.field(eq=False, hash=False, repr=False)
+    default_auto_archive_duration: datetime.timedelta = attrs.field(eq=False, hash=False, repr=False)
     """The auto archive duration Discord's client defaults to for threads in this channel.
 
     This may be be either 1 hour, 1 day, 3 days or 1 week.
     """
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class GuildNewsChannel(PermissibleGuildChannel, TextableGuildChannel):
     """Represents an news channel."""
 
-    topic: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    topic: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """The topic of the channel."""
 
-    last_message_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
+    last_message_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the last message sent in this channel.
 
     .. warning::
@@ -1322,7 +1322,7 @@ class GuildNewsChannel(PermissibleGuildChannel, TextableGuildChannel):
         this will always be valid.
     """
 
-    last_pin_timestamp: typing.Optional[datetime.datetime] = attr.field(eq=False, hash=False, repr=False)
+    last_pin_timestamp: typing.Optional[datetime.datetime] = attrs.field(eq=False, hash=False, repr=False)
     """The timestamp of the last-pinned message.
 
     .. note::
@@ -1330,21 +1330,21 @@ class GuildNewsChannel(PermissibleGuildChannel, TextableGuildChannel):
         these cases are. Trust no one!
     """
 
-    default_auto_archive_duration: datetime.timedelta = attr.field(eq=False, hash=False, repr=False)
+    default_auto_archive_duration: datetime.timedelta = attrs.field(eq=False, hash=False, repr=False)
     """The auto archive duration Discord's client defaults to for threads in this channel.
 
     This may be be either 1 hour, 1 day, 3 days or 1 week.
     """
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class GuildVoiceChannel(PermissibleGuildChannel, TextableGuildChannel):
     """Represents a voice channel."""
 
-    bitrate: int = attr.field(eq=False, hash=False, repr=True)
+    bitrate: int = attrs.field(eq=False, hash=False, repr=True)
     """The bitrate for the voice channel (in bits per second)."""
 
-    region: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    region: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """ID of the voice region for this voice channel.
 
     If set to `None` then this is set to "auto" mode where the used
@@ -1352,16 +1352,16 @@ class GuildVoiceChannel(PermissibleGuildChannel, TextableGuildChannel):
     it's empty.
     """
 
-    user_limit: int = attr.field(eq=False, hash=False, repr=True)
+    user_limit: int = attrs.field(eq=False, hash=False, repr=True)
     """The user limit for the voice channel.
 
     If this is `0`, then assume no limit.
     """
 
-    video_quality_mode: typing.Union[VideoQualityMode, int] = attr.field(eq=False, hash=False, repr=False)
+    video_quality_mode: typing.Union[VideoQualityMode, int] = attrs.field(eq=False, hash=False, repr=False)
     """The video quality mode for the voice channel."""
 
-    last_message_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
+    last_message_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the last message sent in this channel.
 
     .. warning::
@@ -1370,14 +1370,14 @@ class GuildVoiceChannel(PermissibleGuildChannel, TextableGuildChannel):
     """
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class GuildStageChannel(PermissibleGuildChannel):
     """Represents a stage channel."""
 
-    bitrate: int = attr.field(eq=False, hash=False, repr=True)
+    bitrate: int = attrs.field(eq=False, hash=False, repr=True)
     """The bitrate for the stage channel (in bits per second)."""
 
-    region: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    region: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """ID of the voice region for this stage channel.
 
     If set to `None` then this is set to "auto" mode where the used
@@ -1385,7 +1385,7 @@ class GuildStageChannel(PermissibleGuildChannel):
     it's empty.
     """
 
-    user_limit: int = attr.field(eq=False, hash=False, repr=True)
+    user_limit: int = attrs.field(eq=False, hash=False, repr=True)
     """The user limit for the stage channel.
 
     If this is `0`, then assume no limit.
@@ -1417,11 +1417,11 @@ class ForumLayoutType(int, enums.Enum):
     """Gallery View."""
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class ForumTag(snowflakes.Unique):
     """Represents a forum tag."""
 
-    id: snowflakes.Snowflake = attr.field(
+    id: snowflakes.Snowflake = attrs.field(
         eq=True, hash=True, repr=True, converter=snowflakes.Snowflake, factory=snowflakes.Snowflake.min
     )
     """The ID of the tag.
@@ -1429,16 +1429,16 @@ class ForumTag(snowflakes.Unique):
     When creating tags, this will be `0`.
     """
 
-    name: str = attr.field(eq=False, hash=False, repr=True)
+    name: str = attrs.field(eq=False, hash=False, repr=True)
     """The name of the tag."""
 
-    moderated: bool = attr.field(eq=False, hash=False, repr=False, default=False)
+    moderated: bool = attrs.field(eq=False, hash=False, repr=False, default=False)
     """The whether this flag can only be applied by moderators.
 
     Moderators are those with `MANAGE_CHANNEL` or `ADMINISTRATOR` permissions.
     """
 
-    _emoji: typing.Union[str, int, emojis.Emoji, None] = attr.field(alias="emoji", default=None)
+    _emoji: typing.Union[str, int, emojis.Emoji, None] = attrs.field(alias="emoji", default=None)
     # Discord will send either emoji_id or emoji_name, never both.
     # Thus, we can take in a generic "emoji" argument when the user
     # creates the class and then demystify it later.
@@ -1460,14 +1460,14 @@ class ForumTag(snowflakes.Unique):
         return None
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class GuildForumChannel(PermissibleGuildChannel):
     """Represents a guild forum channel."""
 
-    topic: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    topic: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """The guidelines for the channel."""
 
-    last_thread_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
+    last_thread_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the last thread created in this channel.
 
     .. warning::
@@ -1475,7 +1475,7 @@ class GuildForumChannel(PermissibleGuildChannel):
         this will always be valid.
     """
 
-    rate_limit_per_user: datetime.timedelta = attr.field(eq=False, hash=False, repr=False)
+    rate_limit_per_user: datetime.timedelta = attrs.field(eq=False, hash=False, repr=False)
     """The delay (in seconds) between a user can create threads in this channel.
 
     If there is no rate limit, this will be 0 seconds.
@@ -1486,7 +1486,7 @@ class GuildForumChannel(PermissibleGuildChannel):
         will not be affected by this rate limit.
     """
 
-    default_thread_rate_limit_per_user: datetime.timedelta = attr.field(eq=False, hash=False, repr=False)
+    default_thread_rate_limit_per_user: datetime.timedelta = attrs.field(eq=False, hash=False, repr=False)
     """The default delay (in seconds) between a user can send a message in created threads.
 
     If there is no rate limit, this will be 0 seconds.
@@ -1497,32 +1497,32 @@ class GuildForumChannel(PermissibleGuildChannel):
         will not be affected by this rate limit.
     """
 
-    default_auto_archive_duration: datetime.timedelta = attr.field(eq=False, hash=False, repr=False)
+    default_auto_archive_duration: datetime.timedelta = attrs.field(eq=False, hash=False, repr=False)
     """The auto archive duration Discord's client defaults to for threads in this channel.
 
     This may be be either 1 hour, 1 day, 3 days or 1 week.
     """
 
-    flags: ChannelFlag = attr.field(eq=False, hash=False, repr=False)
+    flags: ChannelFlag = attrs.field(eq=False, hash=False, repr=False)
     """The channel flags for this channel.
 
     .. note::
         As of writing, the only flag that can be set is `ChannelFlag.REQUIRE_TAG`.
     """
 
-    available_tags: typing.Sequence[ForumTag] = attr.field(eq=False, hash=False, repr=False)
+    available_tags: typing.Sequence[ForumTag] = attrs.field(eq=False, hash=False, repr=False)
     """The available tags to select from when creating a thread."""
 
-    default_sort_order: ForumSortOrderType = attr.field(eq=False, hash=False, repr=False)
+    default_sort_order: ForumSortOrderType = attrs.field(eq=False, hash=False, repr=False)
     """The default sort order for the forum."""
 
-    default_layout: ForumLayoutType = attr.field(eq=False, hash=False, repr=False)
+    default_layout: ForumLayoutType = attrs.field(eq=False, hash=False, repr=False)
     """The default layout for the forum."""
 
-    default_reaction_emoji_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
+    default_reaction_emoji_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the default reaction emoji."""
 
-    default_reaction_emoji_name: typing.Union[str, emojis.UnicodeEmoji, None] = attr.field(
+    default_reaction_emoji_name: typing.Union[str, emojis.UnicodeEmoji, None] = attrs.field(
         eq=False, hash=False, repr=False
     )
     """Name of the default reaction emoji.
@@ -1555,14 +1555,14 @@ This includes:
 """
 
 
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class ThreadMember:
     """Represents a thread's member."""
 
-    thread_id: snowflakes.Snowflake = attr.field(eq=True, repr=True)
+    thread_id: snowflakes.Snowflake = attrs.field(eq=True, repr=True)
     """ID of the thread this member is in."""
 
-    user_id: snowflakes.Snowflake = attr.field(eq=True, repr=True)
+    user_id: snowflakes.Snowflake = attrs.field(eq=True, repr=True)
     """The member's user ID.
 
     .. note::
@@ -1570,10 +1570,10 @@ class ThreadMember:
         guild create events, where this is the current bot's user.
     """
 
-    joined_at: datetime.datetime = attr.field(eq=True, repr=True)
+    joined_at: datetime.datetime = attrs.field(eq=True, repr=True)
     """When the user joined the relevant thread."""
 
-    flags: int = attr.field(eq=True, repr=True)
+    flags: int = attrs.field(eq=True, repr=True)
     """Bitfield flag of the user's settings for the thread.
 
     .. note::
@@ -1581,11 +1581,11 @@ class ThreadMember:
     """
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class GuildThreadChannel(TextableGuildChannel):
     """Base class for all guild thread channels."""
 
-    last_message_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
+    last_message_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the last message sent in this channel.
 
     .. warning::
@@ -1593,7 +1593,7 @@ class GuildThreadChannel(TextableGuildChannel):
         this will always be valid.
     """
 
-    last_pin_timestamp: typing.Optional[datetime.datetime] = attr.field(eq=False, hash=False, repr=False)
+    last_pin_timestamp: typing.Optional[datetime.datetime] = attrs.field(eq=False, hash=False, repr=False)
     """The timestamp of the last-pinned message.
 
     .. note::
@@ -1601,7 +1601,7 @@ class GuildThreadChannel(TextableGuildChannel):
         these cases are. Trust no one!
     """
 
-    rate_limit_per_user: datetime.timedelta = attr.field(eq=False, hash=False, repr=False)
+    rate_limit_per_user: datetime.timedelta = attrs.field(eq=False, hash=False, repr=False)
     """The delay (in seconds) between a user can send a message to this channel.
 
     If there is no rate limit, this will be 0 seconds.
@@ -1612,30 +1612,30 @@ class GuildThreadChannel(TextableGuildChannel):
         will not be affected by this rate limit.
     """
 
-    approximate_message_count: int = attr.field(eq=False, hash=False, repr=True)
+    approximate_message_count: int = attrs.field(eq=False, hash=False, repr=True)
     """Approximate number of messages in the thread channel.
 
     .. warning::
         This stops counting at 50 for threads created before 2022/06/01.
     """
 
-    approximate_member_count: int = attr.field(eq=False, hash=False, repr=True)
+    approximate_member_count: int = attrs.field(eq=False, hash=False, repr=True)
     """Approximate count of members in the thread channel.
 
     .. warning::
         This stop counting at 50.
     """
 
-    is_archived: bool = attr.field(eq=False, hash=False, repr=True)
+    is_archived: bool = attrs.field(eq=False, hash=False, repr=True)
     """Whether the thread is archived."""
 
-    auto_archive_duration: datetime.timedelta = attr.field(eq=False, hash=False, repr=True)
+    auto_archive_duration: datetime.timedelta = attrs.field(eq=False, hash=False, repr=True)
     """How long the thread will be left inactive before being automatically archived.
 
     As of writing this may either 1 hour, 1 day, 3 days or 1 week.
     """
 
-    archive_timestamp: datetime.datetime = attr.field(eq=False, hash=False, repr=True)
+    archive_timestamp: datetime.datetime = attrs.field(eq=False, hash=False, repr=True)
     """When the thread's archived state was last changed.
 
     .. note::
@@ -1643,14 +1643,14 @@ class GuildThreadChannel(TextableGuildChannel):
         creation date and this will be changed when a thread is unarchived.
     """
 
-    is_locked: bool = attr.field(eq=False, hash=False, repr=True)
+    is_locked: bool = attrs.field(eq=False, hash=False, repr=True)
     """Whether the thread is locked.
 
     When a thread is locked, only users with `MANAGE_THREADS` permission
     can un-archive it.
     """
 
-    member: typing.Optional[ThreadMember] = attr.field(eq=False, hash=False, repr=True)
+    member: typing.Optional[ThreadMember] = attrs.field(eq=False, hash=False, repr=True)
     """Thread member object for the current user, if they are in the thread.
 
     .. note::
@@ -1658,13 +1658,13 @@ class GuildThreadChannel(TextableGuildChannel):
         access events.
     """
 
-    owner_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
+    owner_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
     """ID of the user who created this thread."""
 
-    parent_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
+    parent_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
     """Id of this thread's textable parent channel."""
 
-    thread_created_at: typing.Optional[datetime.datetime] = attr.field(eq=False, hash=False, repr=True)
+    thread_created_at: typing.Optional[datetime.datetime] = attrs.field(eq=False, hash=False, repr=True)
     """When the thread was created.
 
     Will be `None` for threads created before 2020-01-09.
@@ -1677,17 +1677,17 @@ class GuildNewsThread(GuildThreadChannel):
     __slots__: typing.Sequence[str] = ()
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class GuildPublicThread(GuildThreadChannel):
     """Represents a non-news guild channel public thread."""
 
-    applied_tag_ids: typing.Sequence[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
+    applied_tag_ids: typing.Sequence[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The IDs of the applied tags on this thread.
 
     This will only apply to threads created inside a forum channel.
     """
 
-    flags: ChannelFlag = attr.field(eq=False, hash=False, repr=False)
+    flags: ChannelFlag = attrs.field(eq=False, hash=False, repr=False)
     """The channel flags for this thread.
 
     This will only apply to threads created inside a forum channel.
@@ -1697,9 +1697,9 @@ class GuildPublicThread(GuildThreadChannel):
     """
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class GuildPrivateThread(GuildThreadChannel):
     """Represents a guild private thread."""
 
-    is_invitable: bool = attr.field(eq=False, hash=False, repr=True)
+    is_invitable: bool = attrs.field(eq=False, hash=False, repr=True)
     """Whether non-moderators can add other non-moderators to a private thread."""

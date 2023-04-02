@@ -35,7 +35,7 @@ import copy as std_copy
 import logging
 import typing
 
-import attr
+import attrs
 
 ModelT = typing.TypeVar("ModelT")
 SKIP_DEEP_COPY: typing.Final[str] = "skip_deep_copy"
@@ -62,7 +62,7 @@ def invalidate_deep_copy_cache() -> None:
 def get_fields_definition(
     cls: type,
 ) -> typing.Tuple[
-    typing.Sequence[typing.Tuple[attr.Attribute[typing.Any], str]], typing.Sequence[attr.Attribute[typing.Any]]
+    typing.Sequence[typing.Tuple[attrs.Attribute[typing.Any], str]], typing.Sequence[attrs.Attribute[typing.Any]]
 ]:
     """Get a sequence of init key-words to their relative attribute.
 
@@ -76,10 +76,10 @@ def get_fields_definition(
     typing.Sequence[typing.Tuple[str, str]]
         A sequence of tuples of string attribute names to string key-word names.
     """
-    init_results: typing.List[typing.Tuple[attr.Attribute[typing.Any], str]] = []
-    non_init_results: typing.List[attr.Attribute[typing.Any]] = []
+    init_results: typing.List[typing.Tuple[attrs.Attribute[typing.Any], str]] = []
+    non_init_results: typing.List[attrs.Attribute[typing.Any]] = []
 
-    for field in attr.fields(cls):
+    for field in attrs.fields(cls):
         if field.init:
             key_word = field.name[1:] if field.name.startswith("_") else field.name
             init_results.append((field, key_word))
@@ -107,8 +107,8 @@ def generate_shallow_copier(cls: typing.Type[ModelT]) -> typing.Callable[[ModelT
     from hikari.internal import ux
 
     kwargs, setters = get_fields_definition(cls)
-    kwargs = ",".join(f"{kwarg}=m.{attribute.name}" for attribute, kwarg in kwargs)
-    setters = ";".join(f"r.{attribute.name}=m.{attribute.name}" for attribute in setters) + ";" if setters else ""
+    kwargs = ",".join(f"{kwarg}=m.{attrsibute.name}" for attrsibute, kwarg in kwargs)
+    setters = ";".join(f"r.{attrsibute.name}=m.{attrsibute.name}" for attrsibute in setters) + ";" if setters else ""
     code = f"def copy(m):r=cls({kwargs});{setters}return r"
     globals_ = {"cls": cls}
     _LOGGER.log(ux.TRACE, "generating shallow copy function for %r: %r", cls, code)
@@ -154,11 +154,11 @@ def copy_attrs(model: ModelT) -> ModelT:
 
 
 def _normalize_kwargs_and_setters(
-    kwargs: typing.Sequence[typing.Tuple[attr.Attribute[typing.Any], str]],
-    setters: typing.Sequence[attr.Attribute[typing.Any]],
-) -> typing.Iterable[attr.Attribute[typing.Any]]:
-    for attribute, _ in kwargs:
-        yield attribute
+    kwargs: typing.Sequence[typing.Tuple[attrs.Attribute[typing.Any], str]],
+    setters: typing.Sequence[attrs.Attribute[typing.Any]],
+) -> typing.Iterable[attrs.Attribute[typing.Any]]:
+    for attrsibute, _ in kwargs:
+        yield attrsibute
 
     yield from setters
 
@@ -186,9 +186,9 @@ def generate_deep_copier(
         return lambda _, __: None
 
     setters = ";".join(
-        f"m.{attribute.name}=std_copy(m.{attribute.name},memo)if(id_:=id(m.{attribute.name}))not in memo else memo[id_]"
-        for attribute in _normalize_kwargs_and_setters(kwargs, setters)
-        if not attribute.metadata.get(SKIP_DEEP_COPY)
+        f"m.{attrsibute.name}=std_copy(m.{attrsibute.name},memo)if(id_:=id(m.{attrsibute.name}))not in memo else memo[id_]"
+        for attrsibute in _normalize_kwargs_and_setters(kwargs, setters)
+        if not attrsibute.metadata.get(SKIP_DEEP_COPY)
     )
     code = f"def deep_copy(m,memo):{setters}"
     globals_ = {"std_copy": std_copy.deepcopy, "cls": cls}

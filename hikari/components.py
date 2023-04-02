@@ -46,7 +46,7 @@ __all__: typing.Sequence[str] = (
 
 import typing
 
-import attr
+import attrs
 
 from hikari import channels
 from hikari import emojis
@@ -168,22 +168,22 @@ class TextInputStyle(int, enums.Enum):
     """Intended for much longer inputs."""
 
 
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class PartialComponent:
     """Base class for all component entities."""
 
-    type: typing.Union[ComponentType, int] = attr.field()
+    type: typing.Union[ComponentType, int] = attrs.field()
     """The type of component this is."""
 
 
 AllowedComponentsT = typing.TypeVar("AllowedComponentsT", bound="PartialComponent")
 
 
-@attr.define(weakref_slot=False)
+@attrs.define(weakref_slot=False)
 class ActionRowComponent(typing.Generic[AllowedComponentsT], PartialComponent):
     """Represents a row of components."""
 
-    components: typing.Sequence[AllowedComponentsT] = attr.field()
+    components: typing.Sequence[AllowedComponentsT] = attrs.field()
     """Sequence of the components contained within this row."""
 
     @typing.overload
@@ -206,20 +206,20 @@ class ActionRowComponent(typing.Generic[AllowedComponentsT], PartialComponent):
         return len(self.components)
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class ButtonComponent(PartialComponent):
     """Represents a button component."""
 
-    style: typing.Union[ButtonStyle, int] = attr.field(eq=False)
+    style: typing.Union[ButtonStyle, int] = attrs.field(eq=False)
     """The button's style."""
 
-    label: typing.Optional[str] = attr.field(eq=False)
+    label: typing.Optional[str] = attrs.field(eq=False)
     """Text label which appears on the button."""
 
-    emoji: typing.Optional[emojis.Emoji] = attr.field(eq=False)
+    emoji: typing.Optional[emojis.Emoji] = attrs.field(eq=False)
     """Custom or unicode emoji which appears on the button."""
 
-    custom_id: typing.Optional[str] = attr.field(hash=True)
+    custom_id: typing.Optional[str] = attrs.field(hash=True)
     """Developer defined identifier for this button (will be <= 100 characters).
 
     .. note::
@@ -231,85 +231,85 @@ class ButtonComponent(PartialComponent):
         * `ButtonStyle.DANGER`
     """
 
-    url: typing.Optional[str] = attr.field(eq=False)
+    url: typing.Optional[str] = attrs.field(eq=False)
     """Url for `ButtonStyle.LINK` style buttons."""
 
-    is_disabled: bool = attr.field(eq=False)
+    is_disabled: bool = attrs.field(eq=False)
     """Whether the button is disabled."""
 
 
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class SelectMenuOption:
     """Represents an option for a `SelectMenuComponent`."""
 
-    label: str = attr.field()
+    label: str = attrs.field()
     """User-facing name of the option, max 100 characters."""
 
-    value: str = attr.field()
+    value: str = attrs.field()
     """Dev-defined value of the option, max 100 characters."""
 
-    description: typing.Optional[str] = attr.field()
+    description: typing.Optional[str] = attrs.field()
     """Optional description of the option, max 100 characters."""
 
-    emoji: typing.Optional[emojis.Emoji] = attr.field(eq=False)
+    emoji: typing.Optional[emojis.Emoji] = attrs.field(eq=False)
     """Custom or unicode emoji which appears on the button."""
 
-    is_default: bool = attr.field()
+    is_default: bool = attrs.field()
     """Whether this option will be selected by default."""
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class SelectMenuComponent(PartialComponent):
     """Represents a select menu component."""
 
-    custom_id: str = attr.field(hash=True)
+    custom_id: str = attrs.field(hash=True)
     """Developer defined identifier for this menu (will be <= 100 characters)."""
 
-    placeholder: typing.Optional[str] = attr.field(eq=False)
+    placeholder: typing.Optional[str] = attrs.field(eq=False)
     """Custom placeholder text shown if nothing is selected, max 100 characters."""
 
-    min_values: int = attr.field(eq=False)
+    min_values: int = attrs.field(eq=False)
     """The minimum amount of options which must be chosen for this menu.
 
     This will be greater than or equal to 0 and will be less than or equal to
     `SelectMenuComponent.max_values`.
     """
 
-    max_values: int = attr.field(eq=False)
+    max_values: int = attrs.field(eq=False)
     """The minimum amount of options which can be chosen for this menu.
 
     This will be less than or equal to 25 and will be greater than or equal to
     `SelectMenuComponent.min_values`.
     """
 
-    is_disabled: bool = attr.field(eq=False)
+    is_disabled: bool = attrs.field(eq=False)
     """Whether the select menu is disabled."""
 
 
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class TextSelectMenuComponent(SelectMenuComponent):
     """Represents a text select menu component."""
 
-    options: typing.Sequence[SelectMenuOption] = attr.field(eq=False)
+    options: typing.Sequence[SelectMenuOption] = attrs.field(eq=False)
     """Sequence of up to 25 of the options set for this menu."""
 
 
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class ChannelSelectMenuComponent(SelectMenuComponent):
     """Represents a channel select menu component."""
 
-    channel_types: typing.Sequence[typing.Union[int, channels.ChannelType]] = attr.field(eq=False)
+    channel_types: typing.Sequence[typing.Union[int, channels.ChannelType]] = attrs.field(eq=False)
     """The valid channel types for this menu."""
 
 
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class TextInputComponent(PartialComponent):
     """Represents a text input component."""
 
-    custom_id: str = attr.field(repr=True)
+    custom_id: str = attrs.field(repr=True)
     """Developer set custom ID used for identifying interactions with this modal."""
 
-    value: str = attr.field(repr=True)
+    value: str = attrs.field(repr=True)
     """Value provided for this text input."""
 
 

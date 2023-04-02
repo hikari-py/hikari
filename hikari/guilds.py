@@ -56,7 +56,7 @@ __all__: typing.Sequence[str] = (
 
 import typing
 
-import attr
+import attrs
 
 from hikari import channels as channels_
 from hikari import snowflakes
@@ -65,7 +65,7 @@ from hikari import traits
 from hikari import undefined
 from hikari import urls
 from hikari import users
-from hikari.internal import attr_extensions
+from hikari.internal import attrs_extensions
 from hikari.internal import enums
 from hikari.internal import routes
 from hikari.internal import time
@@ -280,20 +280,20 @@ class GuildNSFWLevel(int, enums.Enum):
     """Guild may contain NSFW content."""
 
 
-@attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=False, kw_only=True, weakref_slot=False)
 class GuildWidget:
     """Represents a guild widget."""
 
-    app: traits.RESTAware = attr.field(
-        repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
+    app: traits.RESTAware = attrs.field(
+        repr=False, eq=False, hash=False, metadata={attrs_extensions.SKIP_DEEP_COPY: True}
     )
     """Client application that models may use for procedures."""
 
-    channel_id: typing.Optional[snowflakes.Snowflake] = attr.field(repr=True)
+    channel_id: typing.Optional[snowflakes.Snowflake] = attrs.field(repr=True)
     """The ID of the channel the invite for this embed targets, if enabled."""
 
-    is_enabled: bool = attr.field(repr=True)
+    is_enabled: bool = attrs.field(repr=True)
     """Whether this embed is enabled."""
 
     async def fetch_channel(self) -> typing.Optional[channels_.GuildChannel]:
@@ -332,49 +332,49 @@ class GuildWidget:
         return widget_channel
 
 
-@attr_extensions.with_copy
-@attr.define(eq=False, hash=False, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(eq=False, hash=False, kw_only=True, weakref_slot=False)
 class Member(users.User):
     """Used to represent a guild bound member."""
 
-    guild_id: snowflakes.Snowflake = attr.field(repr=True)
+    guild_id: snowflakes.Snowflake = attrs.field(repr=True)
     """The ID of the guild this member belongs to."""
 
-    is_deaf: undefined.UndefinedOr[bool] = attr.field(repr=False)
+    is_deaf: undefined.UndefinedOr[bool] = attrs.field(repr=False)
     """`True` if this member is deafened in the current voice channel.
 
     This will be `hikari.undefined.UNDEFINED` if it's state is
     unknown.
     """
 
-    is_mute: undefined.UndefinedOr[bool] = attr.field(repr=False)
+    is_mute: undefined.UndefinedOr[bool] = attrs.field(repr=False)
     """`True` if this member is muted in the current voice channel.
 
     This will be `hikari.undefined.UNDEFINED` if it's state is unknown.
     """
 
-    is_pending: undefined.UndefinedOr[bool] = attr.field(repr=False)
+    is_pending: undefined.UndefinedOr[bool] = attrs.field(repr=False)
     """Whether the user has passed the guild's membership screening requirements.
 
     This will be `hikari.undefined.UNDEFINED` if it's state is unknown.
     """
 
-    joined_at: datetime.datetime = attr.field(repr=True)
+    joined_at: datetime.datetime = attrs.field(repr=True)
     """The datetime of when this member joined the guild they belong to."""
 
-    nickname: typing.Optional[str] = attr.field(repr=True)
+    nickname: typing.Optional[str] = attrs.field(repr=True)
     """This member's nickname.
 
     This will be `None` if not set.
     """
 
-    premium_since: typing.Optional[datetime.datetime] = attr.field(repr=False)
+    premium_since: typing.Optional[datetime.datetime] = attrs.field(repr=False)
     """The datetime of when this member started "boosting" this guild.
 
     Will be `None` if the member is not a premium user.
     """
 
-    raw_communication_disabled_until: typing.Optional[datetime.datetime] = attr.field(repr=False)
+    raw_communication_disabled_until: typing.Optional[datetime.datetime] = attrs.field(repr=False)
     """The datetime when this member's timeout will expire.
 
      Will be `None` if the member is not timed out.
@@ -385,7 +385,7 @@ class Member(users.User):
         out at the time of the call.
      """
 
-    role_ids: typing.Sequence[snowflakes.Snowflake] = attr.field(repr=False)
+    role_ids: typing.Sequence[snowflakes.Snowflake] = attrs.field(repr=False)
     """A sequence of the IDs of the member's current roles."""
 
     # This is technically optional, since UPDATE MEMBER and MESSAGE CREATE
@@ -394,10 +394,10 @@ class Member(users.User):
     # entity factory to always provide the user object in these cases, so we
     # can assume this is always set, and thus we are always able to get info
     # such as the ID of the user this member represents.
-    user: users.User = attr.field(repr=True)
+    user: users.User = attrs.field(repr=True)
     """This member's corresponding user object."""
 
-    guild_avatar_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    guild_avatar_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """Hash of the member's guild avatar guild if set, else `None`.
 
     .. note::
@@ -940,20 +940,20 @@ class Member(users.User):
         return self.user == other
 
 
-@attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class PartialRole(snowflakes.Unique):
     """Represents a partial guild bound role object."""
 
-    app: traits.RESTAware = attr.field(
-        repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
+    app: traits.RESTAware = attrs.field(
+        repr=False, eq=False, hash=False, metadata={attrs_extensions.SKIP_DEEP_COPY: True}
     )
     """Client application that models may use for procedures."""
 
-    id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
+    id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
     """The ID of this entity."""
 
-    name: str = attr.field(eq=False, hash=False, repr=True)
+    name: str = attrs.field(eq=False, hash=False, repr=True)
     """The role's name."""
 
     @property
@@ -965,75 +965,75 @@ class PartialRole(snowflakes.Unique):
         return self.name
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class Role(PartialRole):
     """Represents a guild bound role object."""
 
-    color: colors.Color = attr.field(eq=False, hash=False, repr=True)
+    color: colors.Color = attrs.field(eq=False, hash=False, repr=True)
     """The colour of this role.
 
     This will be applied to a member's name in chat if it's their top coloured role.
     """
 
-    guild_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
+    guild_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
     """The ID of the guild this role belongs to."""
 
-    is_hoisted: bool = attr.field(eq=False, hash=False, repr=True)
+    is_hoisted: bool = attrs.field(eq=False, hash=False, repr=True)
     """Whether this role is hoisting the members it's attached to in the member list.
 
     Members will be hoisted under their highest role where this is set to `True`.
     """
 
-    icon_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    icon_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """Hash of the role's icon if set, else `None`."""
 
-    unicode_emoji: typing.Optional[emojis_.UnicodeEmoji] = attr.field(eq=False, hash=False, repr=False)
+    unicode_emoji: typing.Optional[emojis_.UnicodeEmoji] = attrs.field(eq=False, hash=False, repr=False)
     """Role's icon as an unicode emoji if set, else `None`."""
 
-    is_managed: bool = attr.field(eq=False, hash=False, repr=False)
+    is_managed: bool = attrs.field(eq=False, hash=False, repr=False)
     """Whether this role is managed by an integration."""
 
-    is_mentionable: bool = attr.field(eq=False, hash=False, repr=False)
+    is_mentionable: bool = attrs.field(eq=False, hash=False, repr=False)
     """Whether this role can be mentioned by all regardless of permissions."""
 
-    permissions: permissions_.Permissions = attr.field(eq=False, hash=False, repr=False)
+    permissions: permissions_.Permissions = attrs.field(eq=False, hash=False, repr=False)
     """The guild wide permissions this role gives to the members it's attached to.
 
     This may be overridden by channel overwrites.
     """
 
-    position: int = attr.field(eq=False, hash=False, repr=True)
+    position: int = attrs.field(eq=False, hash=False, repr=True)
     """The position of this role in the role hierarchy.
 
     This will start at `0` for the lowest role (@everyone)
     and increase as you go up the hierarchy.
     """
 
-    bot_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=True)
+    bot_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
     """The ID of the bot this role belongs to.
 
     If `None`, this is not a bot role.
     """
 
-    integration_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=True)
+    integration_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
     """The ID of the integration this role belongs to.
 
     If `None`, this is not a integration role.
     """
 
-    is_premium_subscriber_role: bool = attr.field(eq=False, hash=False, repr=True)
+    is_premium_subscriber_role: bool = attrs.field(eq=False, hash=False, repr=True)
     """Whether this role is the guild's nitro subscriber role."""
 
-    subscription_listing_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=True)
+    subscription_listing_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
     """The ID of this role's subscription SKU and listing.
 
     If `None`, this is not a purchasable role.
     """
 
-    is_available_for_purchase: bool = attr.field(eq=False, hash=False, repr=True)
+    is_available_for_purchase: bool = attrs.field(eq=False, hash=False, repr=True)
     """Whether this role is available for purchase."""
 
-    is_guild_linked_role: bool = attr.field(eq=False, hash=False, repr=True)
+    is_guild_linked_role: bool = attrs.field(eq=False, hash=False, repr=True)
     """Whether this role is a linked role in the guild."""
 
     @property
@@ -1122,15 +1122,15 @@ class IntegrationExpireBehaviour(int, enums.Enum):
     """Kick the subscriber."""
 
 
-@attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class IntegrationAccount:
     """An account that's linked to an integration."""
 
-    id: str = attr.field(hash=True, repr=True)
+    id: str = attrs.field(hash=True, repr=True)
     """The string ID of this (likely) third party account."""
 
-    name: str = attr.field(eq=False, hash=False, repr=True)
+    name: str = attrs.field(eq=False, hash=False, repr=True)
     """The name of this account."""
 
     def __str__(self) -> str:
@@ -1138,21 +1138,21 @@ class IntegrationAccount:
 
 
 # This is here rather than in applications.py to avoid circular imports
-@attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class PartialApplication(snowflakes.Unique):
     """A partial representation of a Discord application."""
 
-    id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
+    id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
     """The ID of this entity."""
 
-    name: str = attr.field(eq=False, hash=False, repr=True)
+    name: str = attrs.field(eq=False, hash=False, repr=True)
     """The name of this application."""
 
-    description: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    description: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """The description of this application, if any."""
 
-    icon_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    icon_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """The CDN hash of this application's icon, if set."""
 
     def __str__(self) -> str:
@@ -1198,44 +1198,44 @@ class PartialApplication(snowflakes.Unique):
         )
 
 
-@attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class IntegrationApplication(PartialApplication):
     """An application that's linked to an integration."""
 
-    bot: typing.Optional[users.User] = attr.field(eq=False, hash=False, repr=False)
+    bot: typing.Optional[users.User] = attrs.field(eq=False, hash=False, repr=False)
     """The bot associated with this application."""
 
 
-@attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class PartialIntegration(snowflakes.Unique):
     """A partial representation of an integration, found in audit logs."""
 
-    account: IntegrationAccount = attr.field(eq=False, hash=False, repr=False)
+    account: IntegrationAccount = attrs.field(eq=False, hash=False, repr=False)
     """The account connected to this integration."""
 
-    id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
+    id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
     """The ID of this entity."""
 
-    name: str = attr.field(eq=False, hash=False, repr=True)
+    name: str = attrs.field(eq=False, hash=False, repr=True)
     """The name of this integration."""
 
-    type: typing.Union[IntegrationType, str] = attr.field(eq=False, hash=False, repr=True)
+    type: typing.Union[IntegrationType, str] = attrs.field(eq=False, hash=False, repr=True)
     """The type of this integration."""
 
     def __str__(self) -> str:
         return self.name
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class Integration(PartialIntegration):
     """Represents a guild integration object."""
 
-    guild_id: snowflakes.Snowflake = attr.field()
+    guild_id: snowflakes.Snowflake = attrs.field()
     """The ID of the guild this integration belongs to."""
 
-    expire_behavior: typing.Union[IntegrationExpireBehaviour, int, None] = attr.field(eq=False, hash=False, repr=False)
+    expire_behavior: typing.Union[IntegrationExpireBehaviour, int, None] = attrs.field(eq=False, hash=False, repr=False)
     """How members should be treated after their connected subscription expires.
 
     This will not be enacted until after `GuildIntegration.expire_grace_period`
@@ -1245,38 +1245,38 @@ class Integration(PartialIntegration):
         This will always be `None` for Discord integrations.
     """
 
-    expire_grace_period: typing.Optional[datetime.timedelta] = attr.field(eq=False, hash=False, repr=False)
+    expire_grace_period: typing.Optional[datetime.timedelta] = attrs.field(eq=False, hash=False, repr=False)
     """How many days users with expired subscriptions are given until the expire behavior is enacted out on them.
 
     .. note::
         This will always be `None` for Discord integrations.
     """
 
-    is_enabled: bool = attr.field(eq=False, hash=False, repr=True)
+    is_enabled: bool = attrs.field(eq=False, hash=False, repr=True)
     """Whether this integration is enabled."""
 
-    is_syncing: typing.Optional[bool] = attr.field(eq=False, hash=False, repr=False)
+    is_syncing: typing.Optional[bool] = attrs.field(eq=False, hash=False, repr=False)
     """Whether this integration is syncing subscribers/emojis."""
 
-    is_emojis_enabled: typing.Optional[bool] = attr.field(eq=False, hash=False, repr=False)
+    is_emojis_enabled: typing.Optional[bool] = attrs.field(eq=False, hash=False, repr=False)
     """Whether users under this integration are allowed to use it's custom emojis."""
 
-    is_revoked: typing.Optional[bool] = attr.field(eq=False, hash=False, repr=False)
+    is_revoked: typing.Optional[bool] = attrs.field(eq=False, hash=False, repr=False)
     """Whether the integration has been revoked."""
 
-    last_synced_at: typing.Optional[datetime.datetime] = attr.field(eq=False, hash=False, repr=False)
+    last_synced_at: typing.Optional[datetime.datetime] = attrs.field(eq=False, hash=False, repr=False)
     """The datetime of when this integration's subscribers were last synced."""
 
-    role_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
+    role_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the managed role used for this integration's subscribers."""
 
-    user: typing.Optional[users.User] = attr.field(eq=False, hash=False, repr=False)
+    user: typing.Optional[users.User] = attrs.field(eq=False, hash=False, repr=False)
     """The user this integration belongs to."""
 
-    subscriber_count: typing.Optional[int] = attr.field(eq=False, hash=False, repr=False)
+    subscriber_count: typing.Optional[int] = attrs.field(eq=False, hash=False, repr=False)
     """The number of subscribers this integration has."""
 
-    application: typing.Optional[IntegrationApplication] = attr.field(eq=False, hash=False, repr=False)
+    application: typing.Optional[IntegrationApplication] = attrs.field(eq=False, hash=False, repr=False)
     """The bot/OAuth2 application associated with this integration.
 
     .. note::
@@ -1284,18 +1284,18 @@ class Integration(PartialIntegration):
     """
 
 
-@attr_extensions.with_copy
-@attr.define(hash=False, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=False, weakref_slot=False)
 class WelcomeChannel:
     """Used to represent channels on guild welcome screens."""
 
-    channel_id: snowflakes.Snowflake = attr.field(hash=False, repr=True)
+    channel_id: snowflakes.Snowflake = attrs.field(hash=False, repr=True)
     """ID of the channel shown in the welcome screen."""
 
-    description: str = attr.field(hash=False, repr=False)
+    description: str = attrs.field(hash=False, repr=False)
     """The description shown for this channel."""
 
-    emoji_name: typing.Union[str, emojis_.UnicodeEmoji, None] = attr.field(
+    emoji_name: typing.Union[str, emojis_.UnicodeEmoji, None] = attrs.field(
         default=None, kw_only=True, hash=False, repr=True
     )
     """The emoji shown in the welcome screen channel if set to a unicode emoji.
@@ -1305,51 +1305,51 @@ class WelcomeChannel:
         to be provided nor accurate.
     """
 
-    emoji_id: typing.Optional[snowflakes.Snowflake] = attr.field(default=None, kw_only=True, hash=False, repr=True)
+    emoji_id: typing.Optional[snowflakes.Snowflake] = attrs.field(default=None, kw_only=True, hash=False, repr=True)
     """ID of the emoji shown in the welcome screen channel if it's set to a custom emoji."""
 
 
-@attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=False, kw_only=True, weakref_slot=False)
 class WelcomeScreen:
     """Used to represent guild welcome screens on Discord."""
 
-    description: typing.Optional[str] = attr.field(hash=False, repr=True)
+    description: typing.Optional[str] = attrs.field(hash=False, repr=True)
     """The guild's description shown in the welcome screen."""
 
-    channels: typing.Sequence[WelcomeChannel] = attr.field(hash=False, repr=True)
+    channels: typing.Sequence[WelcomeChannel] = attrs.field(hash=False, repr=True)
     """An array of up to 5 of the channels shown in the welcome screen."""
 
 
-@attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=False, kw_only=True, weakref_slot=False)
 class GuildBan:
     """Used to represent guild bans."""
 
-    reason: typing.Optional[str] = attr.field(repr=True)
+    reason: typing.Optional[str] = attrs.field(repr=True)
     """The reason for this ban, will be `None` if no reason was given."""
 
-    user: users.User = attr.field(repr=True)
+    user: users.User = attrs.field(repr=True)
     """The object of the user this ban targets."""
 
 
-@attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class PartialGuild(snowflakes.Unique):
     """Base object for any partial guild objects."""
 
-    app: traits.RESTAware = attr.field(
-        repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
+    app: traits.RESTAware = attrs.field(
+        repr=False, eq=False, hash=False, metadata={attrs_extensions.SKIP_DEEP_COPY: True}
     )
     """Client application that models may use for procedures."""
 
-    id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
+    id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
     """The ID of this entity."""
 
-    icon_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    icon_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """The hash for the guild icon, if there is one."""
 
-    name: str = attr.field(eq=False, hash=False, repr=True)
+    name: str = attrs.field(eq=False, hash=False, repr=True)
     """The name of the guild."""
 
     def __str__(self) -> str:
@@ -2462,31 +2462,31 @@ class PartialGuild(snowflakes.Unique):
         return await self.app.rest.fetch_roles(self.id)
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class GuildPreview(PartialGuild):
     """A preview of a guild with the `GuildFeature.DISCOVERABLE` feature."""
 
-    features: typing.Sequence[typing.Union[str, GuildFeature]] = attr.field(eq=False, hash=False, repr=False)
+    features: typing.Sequence[typing.Union[str, GuildFeature]] = attrs.field(eq=False, hash=False, repr=False)
     """A list of the features in this guild."""
 
-    splash_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    splash_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """The hash of the splash for the guild, if there is one."""
 
-    discovery_splash_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    discovery_splash_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """The hash of the discovery splash for the guild, if there is one."""
 
-    emojis: typing.Mapping[snowflakes.Snowflake, emojis_.KnownCustomEmoji] = attr.field(
+    emojis: typing.Mapping[snowflakes.Snowflake, emojis_.KnownCustomEmoji] = attrs.field(
         eq=False, hash=False, repr=False
     )
     """The mapping of IDs to the emojis this guild provides."""
 
-    approximate_active_member_count: int = attr.field(eq=False, hash=False, repr=True)
+    approximate_active_member_count: int = attrs.field(eq=False, hash=False, repr=True)
     """The approximate amount of presences in this guild."""
 
-    approximate_member_count: int = attr.field(eq=False, hash=False, repr=True)
+    approximate_member_count: int = attrs.field(eq=False, hash=False, repr=True)
     """The approximate amount of members in this guild."""
 
-    description: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    description: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """The guild's description, if set."""
 
     @property
@@ -2566,139 +2566,139 @@ class GuildPreview(PartialGuild):
         )
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class Guild(PartialGuild):
     """A representation of a guild on Discord."""
 
-    features: typing.Sequence[typing.Union[str, GuildFeature]] = attr.field(eq=False, hash=False, repr=False)
+    features: typing.Sequence[typing.Union[str, GuildFeature]] = attrs.field(eq=False, hash=False, repr=False)
     """A list of the features in this guild."""
 
-    application_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
+    application_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the application that created this guild.
 
     This will always be `None` for guilds that weren't created by a bot.
     """
 
-    afk_channel_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
+    afk_channel_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The ID for the channel that AFK voice users get sent to.
 
     If `None`, then no AFK channel is set up for this guild.
     """
 
-    afk_timeout: datetime.timedelta = attr.field(eq=False, hash=False, repr=False)
+    afk_timeout: datetime.timedelta = attrs.field(eq=False, hash=False, repr=False)
     """Timeout for activity before a member is classed as AFK.
 
     How long a voice user has to be AFK for before they are classed as being
     AFK and are moved to the AFK channel (`Guild.afk_channel_id`).
     """
 
-    banner_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    banner_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """The hash for the guild's banner.
 
     This is only present if the guild has `GuildFeature.BANNER` in
     `Guild.features` for this guild. For all other purposes, it is `None`.
     """
 
-    default_message_notifications: typing.Union[GuildMessageNotificationsLevel, int] = attr.field(
+    default_message_notifications: typing.Union[GuildMessageNotificationsLevel, int] = attrs.field(
         eq=False, hash=False, repr=False
     )
     """The default setting for message notifications in this guild."""
 
-    description: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    description: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """The guild's description.
 
     This is only present if certain `GuildFeature`'s are set in
     `Guild.features` for this guild. Otherwise, this will always be `None`.
     """
 
-    discovery_splash_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    discovery_splash_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """The hash of the discovery splash for the guild, if there is one."""
 
-    explicit_content_filter: typing.Union[GuildExplicitContentFilterLevel, int] = attr.field(
+    explicit_content_filter: typing.Union[GuildExplicitContentFilterLevel, int] = attrs.field(
         eq=False, hash=False, repr=False
     )
     """The setting for the explicit content filter in this guild."""
 
-    is_widget_enabled: typing.Optional[bool] = attr.field(eq=False, hash=False, repr=False)
+    is_widget_enabled: typing.Optional[bool] = attrs.field(eq=False, hash=False, repr=False)
     """Describes whether the guild widget is enabled or not.
 
     If this information is not present, this will be `None`.
     """
 
-    max_video_channel_users: typing.Optional[int] = attr.field(eq=False, hash=False, repr=False)
+    max_video_channel_users: typing.Optional[int] = attrs.field(eq=False, hash=False, repr=False)
     """The maximum number of users allowed in a video channel together.
 
     This information may not be present, in which case, it will be `None`.
     """
 
-    mfa_level: typing.Union[GuildMFALevel, int] = attr.field(eq=False, hash=False, repr=False)
+    mfa_level: typing.Union[GuildMFALevel, int] = attrs.field(eq=False, hash=False, repr=False)
     """The required MFA level for users wishing to participate in this guild."""
 
-    owner_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
+    owner_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
     """The ID of the owner of this guild."""
 
-    preferred_locale: typing.Union[str, locales.Locale] = attr.field(eq=False, hash=False, repr=False)
+    preferred_locale: typing.Union[str, locales.Locale] = attrs.field(eq=False, hash=False, repr=False)
     """The preferred locale to use for this guild.
 
     This can only be change if `GuildFeature.COMMUNITY` is in `Guild.features`
     for this guild and will otherwise default to `en-US`.
     """
 
-    premium_subscription_count: typing.Optional[int] = attr.field(eq=False, hash=False, repr=False)
+    premium_subscription_count: typing.Optional[int] = attrs.field(eq=False, hash=False, repr=False)
     """The number of nitro boosts that the server currently has.
 
     This information may not be present, in which case, it will be `None`.
     """
 
-    premium_tier: typing.Union[GuildPremiumTier, int] = attr.field(eq=False, hash=False, repr=False)
+    premium_tier: typing.Union[GuildPremiumTier, int] = attrs.field(eq=False, hash=False, repr=False)
     """The premium tier for this guild."""
 
-    public_updates_channel_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
+    public_updates_channel_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The channel ID of the channel where admins and moderators receive notices from Discord.
 
     This is only present if `GuildFeature.COMMUNITY` is in `Guild.features` for
     this guild. For all other purposes, it should be considered to be `None`.
     """
 
-    rules_channel_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
+    rules_channel_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the channel where rules and guidelines will be displayed.
 
     If the `GuildFeature.COMMUNITY` feature is not defined, then this is `None`.
     """
 
-    splash_hash: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    splash_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """The hash of the splash for the guild, if there is one."""
 
-    system_channel_flags: GuildSystemChannelFlag = attr.field(eq=False, hash=False, repr=False)
+    system_channel_flags: GuildSystemChannelFlag = attrs.field(eq=False, hash=False, repr=False)
     """Return flags for the guild system channel.
 
     These are used to describe which notifications are suppressed.
     """
 
-    system_channel_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
+    system_channel_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the system channel or `None` if it is not enabled.
 
     Welcome messages and Nitro boost messages may be sent to this channel.
     """
 
-    vanity_url_code: typing.Optional[str] = attr.field(eq=False, hash=False, repr=False)
+    vanity_url_code: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """The vanity URL code for the guild's vanity URL.
 
     This is only present if `GuildFeature.VANITY_URL` is in `Guild.features` for
     this guild. If not, this will always be `None`.
     """
 
-    verification_level: typing.Union[GuildVerificationLevel, int] = attr.field(eq=False, hash=False, repr=False)
+    verification_level: typing.Union[GuildVerificationLevel, int] = attrs.field(eq=False, hash=False, repr=False)
     """The verification level needed for a user to participate in this guild."""
 
-    widget_channel_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
+    widget_channel_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The channel ID that the widget's generated invite will send the user to.
 
     If this information is unavailable or this is not enabled for the guild then
     this will be `None`.
     """
 
-    nsfw_level: GuildNSFWLevel = attr.field(eq=False, hash=False, repr=False)
+    nsfw_level: GuildNSFWLevel = attrs.field(eq=False, hash=False, repr=False)
     """The NSFW level of the guild."""
 
     @property
@@ -3252,48 +3252,50 @@ class Guild(PartialGuild):
         return updates_channel
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class RESTGuild(Guild):
     """Guild specialization that is sent via the REST API only."""
 
-    emojis: typing.Mapping[snowflakes.Snowflake, emojis_.KnownCustomEmoji] = attr.field(
+    emojis: typing.Mapping[snowflakes.Snowflake, emojis_.KnownCustomEmoji] = attrs.field(
         eq=False, hash=False, repr=False
     )
     """A mapping of emoji IDs to the objects of the emojis this guild provides."""
 
-    stickers: typing.Mapping[snowflakes.Snowflake, stickers.GuildSticker] = attr.field(eq=False, hash=False, repr=False)
+    stickers: typing.Mapping[snowflakes.Snowflake, stickers.GuildSticker] = attrs.field(
+        eq=False, hash=False, repr=False
+    )
     """A mapping of sticker IDs to the objects of the stickers this guild provides."""
 
-    roles: typing.Mapping[snowflakes.Snowflake, Role] = attr.field(eq=False, hash=False, repr=False)
+    roles: typing.Mapping[snowflakes.Snowflake, Role] = attrs.field(eq=False, hash=False, repr=False)
     """The roles in this guild, represented as a mapping of role ID to role object."""
 
-    approximate_active_member_count: typing.Optional[int] = attr.field(eq=False, hash=False, repr=False)
+    approximate_active_member_count: typing.Optional[int] = attrs.field(eq=False, hash=False, repr=False)
     """The approximate number of members in the guild that are not offline.
 
     This will be `None` when creating a guild.
     """
 
-    approximate_member_count: typing.Optional[int] = attr.field(eq=False, hash=False, repr=False)
+    approximate_member_count: typing.Optional[int] = attrs.field(eq=False, hash=False, repr=False)
     """The approximate number of members in the guild.
 
     This will be `None` when creating a guild.
     """
 
-    max_presences: typing.Optional[int] = attr.field(eq=False, hash=False, repr=False)
+    max_presences: typing.Optional[int] = attrs.field(eq=False, hash=False, repr=False)
     """The maximum number of presences for the guild.
 
     If `None`, then there is no limit.
     """
 
-    max_members: int = attr.field(eq=False, hash=False, repr=False)
+    max_members: int = attrs.field(eq=False, hash=False, repr=False)
     """The maximum number of members allowed in this guild."""
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class GatewayGuild(Guild):
     """Guild specialization that is sent via the gateway only."""
 
-    is_large: typing.Optional[bool] = attr.field(eq=False, hash=False, repr=False)
+    is_large: typing.Optional[bool] = attrs.field(eq=False, hash=False, repr=False)
     """Whether the guild is considered to be large or not.
 
     This information is only available if the guild was sent via a `GUILD_CREATE`
@@ -3304,7 +3306,7 @@ class GatewayGuild(Guild):
     sent about members who are offline or invisible.
     """
 
-    joined_at: typing.Optional[datetime.datetime] = attr.field(eq=False, hash=False, repr=False)
+    joined_at: typing.Optional[datetime.datetime] = attrs.field(eq=False, hash=False, repr=False)
     """The date and time that the bot user joined this guild.
 
     This information is only available if the guild was sent via a `GUILD_CREATE`
@@ -3312,7 +3314,7 @@ class GatewayGuild(Guild):
     `None`.
     """
 
-    member_count: typing.Optional[int] = attr.field(eq=False, hash=False, repr=False)
+    member_count: typing.Optional[int] = attrs.field(eq=False, hash=False, repr=False)
     """The number of members in this guild.
 
     This information is only available if the guild was sent via a `GUILD_CREATE`

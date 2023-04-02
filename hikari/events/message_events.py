@@ -41,7 +41,7 @@ __all__: typing.Sequence[str] = (
 import abc
 import typing
 
-import attr
+import attrs
 
 from hikari import channels
 from hikari import intents
@@ -50,7 +50,7 @@ from hikari import traits
 from hikari import undefined
 from hikari.events import base_events
 from hikari.events import shard_events
-from hikari.internal import attr_extensions
+from hikari.internal import attrs_extensions
 
 if typing.TYPE_CHECKING:
     from hikari import embeds as embeds_
@@ -145,8 +145,8 @@ class MessageCreateEvent(MessageEvent, abc.ABC):
         return self.message.id
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGES)
 class GuildMessageCreateEvent(MessageCreateEvent):
     """Event that is fired when a message is created within a guild.
@@ -154,10 +154,10 @@ class GuildMessageCreateEvent(MessageCreateEvent):
     This contains the full message in the internal `message` attribute.
     """
 
-    message: messages.Message = attr.field()
+    message: messages.Message = attrs.field()
     # <<inherited docstring from MessageCreateEvent>>
 
-    shard: shard_.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: shard_.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>
 
     @property
@@ -228,8 +228,8 @@ class GuildMessageCreateEvent(MessageCreateEvent):
         return None
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.DM_MESSAGES)
 class DMMessageCreateEvent(MessageCreateEvent):
     """Event that is fired when a message is created within a DM.
@@ -237,10 +237,10 @@ class DMMessageCreateEvent(MessageCreateEvent):
     This contains the full message in the internal `message` attribute.
     """
 
-    message: messages.Message = attr.field()
+    message: messages.Message = attrs.field()
     # <<inherited docstring from MessageCreateEvent>>
 
-    shard: shard_.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: shard_.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>
 
 
@@ -360,8 +360,8 @@ class MessageUpdateEvent(MessageEvent, abc.ABC):
         return self.message.id
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGES)
 class GuildMessageUpdateEvent(MessageUpdateEvent):
     """Event that is fired when a message is updated in a guild.
@@ -371,16 +371,16 @@ class GuildMessageUpdateEvent(MessageUpdateEvent):
         due to Discord limitations.
     """
 
-    old_message: typing.Optional[messages.PartialMessage] = attr.field()
+    old_message: typing.Optional[messages.PartialMessage] = attrs.field()
     """The old message object.
 
     This will be `None` if the message missing from the cache.
     """
 
-    message: messages.PartialMessage = attr.field()
+    message: messages.PartialMessage = attrs.field()
     # <<inherited docstring from MessageUpdateEvent>>
 
-    shard: shard_.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: shard_.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>
 
     @property
@@ -452,8 +452,8 @@ class GuildMessageUpdateEvent(MessageUpdateEvent):
         return self.app.cache.get_guild(self.guild_id)
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.DM_MESSAGES)
 class DMMessageUpdateEvent(MessageUpdateEvent):
     """Event that is fired when a message is updated in a DM.
@@ -463,16 +463,16 @@ class DMMessageUpdateEvent(MessageUpdateEvent):
         due to Discord limitations.
     """
 
-    old_message: typing.Optional[messages.PartialMessage] = attr.field()
+    old_message: typing.Optional[messages.PartialMessage] = attrs.field()
     """The old message object.
 
     This will be `None` if the message missing from the cache.
     """
 
-    message: messages.PartialMessage = attr.field()
+    message: messages.PartialMessage = attrs.field()
     # <<inherited docstring from MessageUpdateEvent>>
 
-    shard: shard_.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: shard_.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>
 
 
@@ -501,8 +501,8 @@ class MessageDeleteEvent(MessageEvent, abc.ABC):
         """
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGES)
 class GuildMessageDeleteEvent(MessageDeleteEvent):
     """Event that is triggered if a message is deleted in a guild.
@@ -512,22 +512,22 @@ class GuildMessageDeleteEvent(MessageDeleteEvent):
         during deletion events.
     """
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>
 
-    channel_id: snowflakes.Snowflake = attr.field()
+    channel_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from MessageEvent>>
 
-    guild_id: snowflakes.Snowflake = attr.field()
+    guild_id: snowflakes.Snowflake = attrs.field()
     """ID of the guild that this event occurred in."""
 
-    message_id: snowflakes.Snowflake = attr.field()
+    message_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from MessageDeleteEvent>>
 
-    old_message: typing.Optional[messages.Message] = attr.field()
+    old_message: typing.Optional[messages.Message] = attrs.field()
     # <<inherited docstring from MessageDeleteEvent>>
 
-    shard: shard_.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: shard_.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>
 
     def get_channel(self) -> typing.Optional[channels.TextableGuildChannel]:
@@ -567,8 +567,8 @@ class GuildMessageDeleteEvent(MessageDeleteEvent):
         return self.app.cache.get_guild(self.guild_id)
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.DM_MESSAGES)
 class DMMessageDeleteEvent(MessageDeleteEvent):
     """Event that is triggered if a message is deleted in a DM.
@@ -578,24 +578,24 @@ class DMMessageDeleteEvent(MessageDeleteEvent):
         during deletion events.
     """
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>
 
-    channel_id: snowflakes.Snowflake = attr.field()
+    channel_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from MessageEvent>>
 
-    message_id: snowflakes.Snowflake = attr.field()
+    message_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from MessageDeleteEvent>>
 
-    old_message: typing.Optional[messages.Message] = attr.field()
+    old_message: typing.Optional[messages.Message] = attrs.field()
     # <<inherited docstring from MessageDeleteEvent>>
 
-    shard: shard_.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: shard_.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGES)
 class GuildBulkMessageDeleteEvent(shard_events.ShardEvent):
     """Event that is triggered when a bulk deletion is triggered in a guild.
@@ -605,25 +605,25 @@ class GuildBulkMessageDeleteEvent(shard_events.ShardEvent):
         during deletion events.
     """
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>
 
-    channel_id: snowflakes.Snowflake = attr.field()
+    channel_id: snowflakes.Snowflake = attrs.field()
     """ID of the channel that this event concerns."""
 
-    guild_id: snowflakes.Snowflake = attr.field()
+    guild_id: snowflakes.Snowflake = attrs.field()
     """ID of the guild that this event occurred in."""
 
-    message_ids: typing.AbstractSet[snowflakes.Snowflake] = attr.field()
+    message_ids: typing.AbstractSet[snowflakes.Snowflake] = attrs.field()
     """Set of message IDs that were bulk deleted."""
 
-    old_messages: typing.Mapping[snowflakes.Snowflake, messages.Message] = attr.field()
+    old_messages: typing.Mapping[snowflakes.Snowflake, messages.Message] = attrs.field()
     """Mapping of a snowflake to the deleted message object.
 
     If the message was not found in the cache it will be missing from the mapping.
     """
 
-    shard: shard_.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: shard_.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>
 
     def get_channel(self) -> typing.Optional[channels.TextableGuildChannel]:
