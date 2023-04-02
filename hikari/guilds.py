@@ -1026,7 +1026,7 @@ class Role(PartialRole):
 
     subscription_listing_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=True)
     """The ID of this role's subscription SKU and listing.
-    
+
     If `None`, this is not a purchasable role.
     """
 
