@@ -24,7 +24,7 @@
 from pipelines import nox
 
 
-@nox.session(default_session=True)
+@nox.session()
 def safety(session: nox.Session) -> None:
     """Perform dependency scanning."""
     session.install("-r", "requirements.txt", *nox.dev_requirements("safety"))

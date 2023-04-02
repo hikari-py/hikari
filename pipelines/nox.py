@@ -30,7 +30,7 @@ from nox.sessions import Session
 from pipelines import config as _pipelines_config
 
 # Default sessions should be defined here
-_options.sessions = []
+_options.sessions = ["reformat-code", "pytest-all-features", "flake8", "slotscheck", "mypy", "verify-types"]
 
 _NoxCallbackSig = _typing.Callable[[Session], None]
 
@@ -39,10 +39,6 @@ def session(**kwargs: _typing.Any) -> _typing.Callable[[_NoxCallbackSig], _NoxCa
     def decorator(func: _NoxCallbackSig) -> _NoxCallbackSig:
         name = func.__name__.replace("_", "-")
         reuse_venv = kwargs.pop("reuse_venv", True)
-
-        if kwargs.pop("default_session", False):
-            _options.sessions.append(name)
-
         return _session(name=name, reuse_venv=reuse_venv, **kwargs)(func)
 
     return decorator
