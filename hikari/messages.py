@@ -133,6 +133,9 @@ class MessageType(int, enums.Enum):
     CONTEXT_MENU_COMMAND = 23
     """A message sent to indicate a context menu has been executed."""
 
+    ROLE_SUBSCRIPTION_PURCHASE = 25
+    """A message sent to indicate a role subscription has been purchased."""
+
 
 @typing.final
 class MessageFlag(enums.Flag):

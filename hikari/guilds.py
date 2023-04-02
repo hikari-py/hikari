@@ -171,6 +171,18 @@ class GuildFeature(str, enums.Enum):
     MORE_STICKERS = "MORE_STICKERS"
     """Guild has an increased custom stickers slots."""
 
+    CREATOR_MONETIZABLE = "CREATOR_MONETIZABLE_PROVISIONAL"
+    """Guild has enabled monetization."""
+
+    CREATOR_STORE_PAGE = "CREATOR_STORE_PAGE"
+    """Guild has enabled the store page."""
+
+    ROLE_SUBSCRIPTIONS_ENABLED = "ROLE_SUBSCRIPTIONS_ENABLED"
+    """Guild has enabled role subscriptions."""
+
+    ROLE_SUBSCRIPTIONS_AVAILABLE_FOR_PURCHASE = "ROLE_SUBSCRIPTIONS_AVAILABLE_FOR_PURCHASE"
+    """Guild has role subscriptions available for purchase."""
+
 
 @typing.final
 class GuildMessageNotificationsLevel(int, enums.Enum):
@@ -1012,6 +1024,15 @@ class Role(PartialRole):
     is_premium_subscriber_role: bool = attr.field(eq=False, hash=False, repr=True)
     """Whether this role is the guild's nitro subscriber role."""
 
+    subscription_listing_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=True)
+    """The ID of this role's subscription SKU and listing.
+
+    If `None`, this is not a purchasable role.
+    """
+
+    is_available_for_purchase: bool = attr.field(eq=False, hash=False, repr=True)
+    """Whether this role is available for purchase."""
+
     is_guild_linked_role: bool = attr.field(eq=False, hash=False, repr=True)
     """Whether this role is a linked role in the guild."""
 
@@ -1078,13 +1099,16 @@ class IntegrationType(str, enums.Enum):
     """The integration type."""
 
     TWITCH = "twitch"
-    "Twitch."
+    """Twitch."""
 
     YOUTUBE = "youtube"
-    "Youtube."
+    """Youtube."""
 
     DISCORD_BOT = "discord"
-    "Discord bot."
+    """Discord bot."""
+
+    GUILD_SUBSCRIPTION = "guild_subscription"
+    """Guild subscription."""
 
 
 @typing.final
