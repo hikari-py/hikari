@@ -80,6 +80,7 @@ if typing.TYPE_CHECKING:
     from hikari import guilds
     from hikari import iterators
     from hikari import messages
+    from hikari import stickers as stickers_
     from hikari import users
     from hikari import voices
     from hikari.api import special_endpoints
@@ -497,6 +498,10 @@ class TextableChannel(PartialChannel):
         components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        sticker: undefined.UndefinedOr[snowflakes.SnowflakeishOr[stickers_.PartialSticker]] = undefined.UNDEFINED,
+        stickers: undefined.UndefinedOr[
+            snowflakes.SnowflakeishSequence[stickers_.PartialSticker]
+        ] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reply: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages.PartialMessage]] = undefined.UNDEFINED,
         reply_must_exist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -647,6 +652,8 @@ class TextableChannel(PartialChannel):
             components=components,
             embed=embed,
             embeds=embeds,
+            sticker=sticker,
+            stickers=stickers,
             tts=tts,
             reply=reply,
             reply_must_exist=reply_must_exist,

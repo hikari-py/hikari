@@ -50,7 +50,7 @@ if typing.TYPE_CHECKING:
     from hikari import permissions as permissions_
     from hikari import sessions
     from hikari import snowflakes
-    from hikari import stickers
+    from hikari import stickers as stickers_
     from hikari import templates
     from hikari import users
     from hikari import voices
@@ -1000,6 +1000,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        sticker: undefined.UndefinedOr[snowflakes.SnowflakeishOr[stickers_.PartialSticker]] = undefined.UNDEFINED,
+        stickers: undefined.UndefinedOr[
+            snowflakes.SnowflakeishSequence[stickers_.PartialSticker]
+        ] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reply: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = undefined.UNDEFINED,
         reply_must_exist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -3469,7 +3473,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def fetch_available_sticker_packs(self) -> typing.Sequence[stickers.StickerPack]:
+    async def fetch_available_sticker_packs(self) -> typing.Sequence[stickers_.StickerPack]:
         """Fetch the available sticker packs.
 
         Returns
@@ -3489,13 +3493,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def fetch_sticker(
         self,
-        sticker: snowflakes.SnowflakeishOr[stickers.PartialSticker],
-    ) -> typing.Union[stickers.GuildSticker, stickers.StandardSticker]:
+        sticker: snowflakes.SnowflakeishOr[stickers_.PartialSticker],
+    ) -> typing.Union[stickers_.GuildSticker, stickers_.StandardSticker]:
         """Fetch a sticker.
 
         Parameters
         ----------
-        sticker : snowflakes.SnowflakeishOr[stickers.PartialSticker]
+        sticker : hikari.snowflakes.SnowflakeishOr[hikari.stickers.PartialSticker]
             The sticker to fetch. This can be a sticker object or the
             ID of an existing sticker.
 
@@ -3520,12 +3524,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def fetch_guild_stickers(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
-    ) -> typing.Sequence[stickers.GuildSticker]:
+    ) -> typing.Sequence[stickers_.GuildSticker]:
         """Fetch a standard sticker.
 
         Parameters
         ----------
-        guild : snowflakes.SnowflakeishOr[stickers.PartialGuild]
+        guild : hikari.snowflakes.SnowflakeishOr[hikari.stickers.PartialGuild]
             The guild to request stickers for. This can be a guild object or the
             ID of an existing guild.
 
@@ -3553,16 +3557,16 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def fetch_guild_sticker(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        sticker: snowflakes.SnowflakeishOr[stickers.PartialSticker],
-    ) -> stickers.GuildSticker:
+        sticker: snowflakes.SnowflakeishOr[stickers_.PartialSticker],
+    ) -> stickers_.GuildSticker:
         """Fetch a guild sticker.
 
         Parameters
         ----------
-        guild : snowflakes.SnowflakeishOr[stickers.PartialGuild]
+        guild : hikari.snowflakes.SnowflakeishOr[hikari.stickers.PartialGuild]
             The guild the sticker is in. This can be a guild object or the
             ID of an existing guild.
-        sticker : snowflakes.SnowflakeishOr[stickers.PartialSticker]
+        sticker : hikari.snowflakes.SnowflakeishOr[hikari.stickers.PartialSticker]
             The sticker to fetch. This can be a sticker object or the
             ID of an existing sticker.
 
@@ -3596,7 +3600,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> stickers.GuildSticker:
+    ) -> stickers_.GuildSticker:
         """Create a sticker in a guild.
 
         Parameters
@@ -3651,13 +3655,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def edit_sticker(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        sticker: snowflakes.SnowflakeishOr[stickers.PartialSticker],
+        sticker: snowflakes.SnowflakeishOr[stickers_.PartialSticker],
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         tag: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> stickers.GuildSticker:
+    ) -> stickers_.GuildSticker:
         """Edit a sticker in a guild.
 
         Parameters
@@ -3707,7 +3711,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def delete_sticker(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        sticker: snowflakes.SnowflakeishOr[stickers.PartialSticker],
+        sticker: snowflakes.SnowflakeishOr[stickers_.PartialSticker],
         *,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
@@ -4618,6 +4622,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        sticker: undefined.UndefinedOr[snowflakes.SnowflakeishOr[stickers_.PartialSticker]] = undefined.UNDEFINED,
+        stickers: undefined.UndefinedOr[
+            snowflakes.SnowflakeishSequence[stickers_.PartialSticker]
+        ] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
