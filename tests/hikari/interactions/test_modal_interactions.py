@@ -60,7 +60,7 @@ class TestModalInteraction:
                     components.TextInputComponent(
                         type=components.ComponentType.TEXT_INPUT, custom_id="le id", value="le value"
                     )
-                ],
+                ]
             ),
         )
 

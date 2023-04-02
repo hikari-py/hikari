@@ -485,9 +485,7 @@ class User(PartialUser, abc.ABC):
     def default_avatar_url(self) -> files.URL:
         """Default avatar URL for this user."""
         return routes.CDN_DEFAULT_USER_AVATAR.compile_to_file(
-            urls.CDN_URL,
-            discriminator=int(self.discriminator) % 5,
-            file_format="png",
+            urls.CDN_URL, discriminator=int(self.discriminator) % 5, file_format="png"
         )
 
     @property
@@ -575,11 +573,7 @@ class User(PartialUser, abc.ABC):
                 ext = "png"
 
         return routes.CDN_USER_AVATAR.compile_to_file(
-            urls.CDN_URL,
-            user_id=self.id,
-            hash=self.avatar_hash,
-            size=size,
-            file_format=ext,
+            urls.CDN_URL, user_id=self.id, hash=self.avatar_hash, size=size, file_format=ext
         )
 
     def make_banner_url(self, *, ext: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
@@ -620,11 +614,7 @@ class User(PartialUser, abc.ABC):
                 ext = "png"
 
         return routes.CDN_USER_BANNER.compile_to_file(
-            urls.CDN_URL,
-            user_id=self.id,
-            hash=self.banner_hash,
-            size=size,
-            file_format=ext,
+            urls.CDN_URL, user_id=self.id, hash=self.banner_hash, size=size, file_format=ext
         )
 
 

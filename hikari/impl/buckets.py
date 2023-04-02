@@ -227,12 +227,7 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
     which allows dynamically changing the enforced rate limits at any time.
     """
 
-    __slots__: typing.Sequence[str] = (
-        "_compiled_route",
-        "_max_rate_limit",
-        "_global_ratelimit",
-        "_lock",
-    )
+    __slots__: typing.Sequence[str] = ("_compiled_route", "_max_rate_limit", "_global_ratelimit", "_lock")
 
     def __init__(
         self,
@@ -534,12 +529,7 @@ class RESTBucketManager:
             _LOGGER.debug("%s is being mapped to existing bucket %s", compiled_route, real_bucket_hash)
         else:
             _LOGGER.debug("%s is being mapped to new bucket %s", compiled_route, real_bucket_hash)
-            bucket = RESTBucket(
-                real_bucket_hash,
-                compiled_route,
-                self._global_ratelimit,
-                self._max_rate_limit,
-            )
+            bucket = RESTBucket(real_bucket_hash, compiled_route, self._global_ratelimit, self._max_rate_limit)
             self._real_hashes_to_buckets[real_bucket_hash] = bucket
 
         return bucket
@@ -609,12 +599,7 @@ class RESTBucketManager:
                     remaining_header,
                 )
 
-                bucket = RESTBucket(
-                    real_bucket_hash,
-                    compiled_route,
-                    self._global_ratelimit,
-                    self._max_rate_limit,
-                )
+                bucket = RESTBucket(real_bucket_hash, compiled_route, self._global_ratelimit, self._max_rate_limit)
 
             self._real_hashes_to_buckets[real_bucket_hash] = bucket
 

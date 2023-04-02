@@ -1340,9 +1340,7 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         return self
 
     def set_default_member_permissions(
-        self,
-        default_member_permissions: typing.Union[undefined.UndefinedType, int, permissions_.Permissions],
-        /,
+        self, default_member_permissions: typing.Union[undefined.UndefinedType, int, permissions_.Permissions], /
     ) -> Self:
         self._default_member_permissions = default_member_permissions
         return self
@@ -1360,9 +1358,7 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         return self._name_localizations
 
     def set_name_localizations(
-        self,
-        name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str],
-        /,
+        self, name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str], /
     ) -> Self:
         self._name_localizations = name_localizations
         return self
@@ -1412,15 +1408,11 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
         return self._options.copy()
 
     @property
-    def description_localizations(
-        self,
-    ) -> typing.Mapping[typing.Union[locales.Locale, str], str]:
+    def description_localizations(self) -> typing.Mapping[typing.Union[locales.Locale, str], str]:
         return self._description_localizations
 
     def set_description_localizations(
-        self,
-        description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str],
-        /,
+        self, description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str], /
     ) -> Self:
         self._description_localizations = description_localizations
         return self
@@ -1555,9 +1547,7 @@ class _ButtonBuilder(special_endpoints.ButtonBuilder):
         return self._is_disabled
 
     def set_emoji(
-        self,
-        emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType],
-        /,
+        self, emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType], /
     ) -> Self:
         self._emoji_id, self._emoji_name = _build_emoji(emoji)
         self._emoji = emoji
@@ -1663,9 +1653,7 @@ class SelectOptionBuilder(special_endpoints.SelectOptionBuilder):
         return self
 
     def set_emoji(
-        self,
-        emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType],
-        /,
+        self, emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType], /
     ) -> Self:
         self._emoji_id, self._emoji_name = _build_emoji(emoji)
         self._emoji = emoji
@@ -1826,9 +1814,7 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
         return self._parent
 
     @property
-    def options(
-        self,
-    ) -> typing.Sequence[special_endpoints.SelectOptionBuilder]:
+    def options(self) -> typing.Sequence[special_endpoints.SelectOptionBuilder]:
         return self._options.copy()
 
     def add_option(

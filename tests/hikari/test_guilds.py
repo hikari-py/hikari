@@ -46,11 +46,7 @@ def mock_app():
 class TestPartialRole:
     @pytest.fixture()
     def model(self, mock_app):
-        return guilds.PartialRole(
-            app=mock_app,
-            id=snowflakes.Snowflake(1106913972),
-            name="The Big Cool",
-        )
+        return guilds.PartialRole(app=mock_app, id=snowflakes.Snowflake(1106913972), name="The Big Cool")
 
     def test_str_operator(self, model):
         assert str(model) == "The Big Cool"
@@ -69,11 +65,7 @@ class TestPartialApplication:
     @pytest.fixture()
     def model(self):
         return hikari_test_helpers.mock_class_namespace(
-            guilds.PartialApplication,
-            init_=False,
-            slots_=False,
-            id=123,
-            icon_hash="ahashicon",
+            guilds.PartialApplication, init_=False, slots_=False, id=123, icon_hash="ahashicon"
         )()
 
     def test_icon_url_property(self, model):
@@ -234,10 +226,7 @@ class TestMember:
             nickname="davb",
             guild_avatar_hash="dab",
             premium_since=None,
-            role_ids=[
-                snowflakes.Snowflake(456),
-                snowflakes.Snowflake(1234),
-            ],
+            role_ids=[snowflakes.Snowflake(456), snowflakes.Snowflake(1234)],
             user=mock_user,
             raw_communication_disabled_until=None,
         )
@@ -550,12 +539,7 @@ class TestMember:
 class TestPartialGuild:
     @pytest.fixture()
     def model(self, mock_app):
-        return guilds.PartialGuild(
-            app=mock_app,
-            id=snowflakes.Snowflake(90210),
-            icon_hash="yeet",
-            name="hikari",
-        )
+        return guilds.PartialGuild(app=mock_app, id=snowflakes.Snowflake(90210), icon_hash="yeet", name="hikari")
 
     def test_str_operator(self, model):
         assert str(model) == "hikari"
@@ -589,11 +573,7 @@ class TestPartialGuild:
             assert model.make_icon_url(ext=None, size=1024) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            guild_id=90210,
-            hash="a_yeet",
-            size=1024,
-            file_format="gif",
+            urls.CDN_URL, guild_id=90210, hash="a_yeet", size=1024, file_format="gif"
         )
 
     def test_make_icon_url_when_format_is_None_and_avatar_hash_is_not_for_gif(self, model):
@@ -603,11 +583,7 @@ class TestPartialGuild:
             assert model.make_icon_url(ext=None, size=4096) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            guild_id=90210,
-            hash="yeet",
-            size=4096,
-            file_format="png",
+            urls.CDN_URL, guild_id=90210, hash="yeet", size=4096, file_format="png"
         )
 
     def test_make_icon_url_with_all_args(self, model):
@@ -617,11 +593,7 @@ class TestPartialGuild:
             assert model.make_icon_url(ext="url", size=2048) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            guild_id=90210,
-            hash="yeet",
-            size=2048,
-            file_format="url",
+            urls.CDN_URL, guild_id=90210, hash="yeet", size=2048, file_format="url"
         )
 
     @pytest.mark.asyncio()
@@ -723,21 +695,12 @@ class TestPartialGuild:
         file = object()
 
         sticker = await model.create_sticker(
-            "NewSticker",
-            "funny",
-            file,
-            description="A sticker",
-            reason="blah blah blah",
+            "NewSticker", "funny", file, description="A sticker", reason="blah blah blah"
         )
         assert sticker is model.app.rest.create_sticker.return_value
 
         model.app.rest.create_sticker.assert_awaited_once_with(
-            90210,
-            "NewSticker",
-            "funny",
-            file,
-            description="A sticker",
-            reason="blah blah blah",
+            90210, "NewSticker", "funny", file, description="A sticker", reason="blah blah blah"
         )
 
     @pytest.mark.asyncio()
@@ -747,12 +710,7 @@ class TestPartialGuild:
         sticker = await model.edit_sticker(4567, name="Brilliant", tag="parmesan", description="amazing")
 
         model.app.rest.edit_sticker.assert_awaited_once_with(
-            90210,
-            4567,
-            name="Brilliant",
-            tag="parmesan",
-            description="amazing",
-            reason=undefined.UNDEFINED,
+            90210, 4567, name="Brilliant", tag="parmesan", description="amazing", reason=undefined.UNDEFINED
         )
 
         assert sticker is model.app.rest.edit_sticker.return_value
@@ -763,11 +721,7 @@ class TestPartialGuild:
 
         sticker = await model.delete_sticker(951)
 
-        model.app.rest.delete_sticker.assert_awaited_once_with(
-            90210,
-            951,
-            reason=undefined.UNDEFINED,
-        )
+        model.app.rest.delete_sticker.assert_awaited_once_with(90210, 951, reason=undefined.UNDEFINED)
 
         assert sticker is model.app.rest.delete_sticker.return_value
 
@@ -961,11 +915,7 @@ class TestGuildPreview:
             assert model.make_splash_url(ext="url", size=1024) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            guild_id=123,
-            hash="18dnf8dfbakfdh",
-            size=1024,
-            file_format="url",
+            urls.CDN_URL, guild_id=123, hash="18dnf8dfbakfdh", size=1024, file_format="url"
         )
 
     def test_make_splash_url_when_no_hash(self, model):
@@ -987,11 +937,7 @@ class TestGuildPreview:
             assert model.make_discovery_splash_url(ext="url", size=2048) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            guild_id=123,
-            hash="18dnf8dfbakfdh",
-            size=2048,
-            file_format="url",
+            urls.CDN_URL, guild_id=123, hash="18dnf8dfbakfdh", size=2048, file_format="url"
         )
 
     def test_make_discovery_splash_url_when_no_hash(self, model):
@@ -1129,11 +1075,7 @@ class TestGuild:
             assert model.make_splash_url(ext="url", size=2) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            guild_id=123,
-            hash="18dnf8dfbakfdh",
-            size=2,
-            file_format="url",
+            urls.CDN_URL, guild_id=123, hash="18dnf8dfbakfdh", size=2, file_format="url"
         )
 
     def test_make_splash_url_when_no_hash(self, model):
@@ -1155,11 +1097,7 @@ class TestGuild:
             assert model.make_discovery_splash_url(ext="url", size=1024) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            guild_id=123,
-            hash="18dnf8dfbakfdh",
-            size=1024,
-            file_format="url",
+            urls.CDN_URL, guild_id=123, hash="18dnf8dfbakfdh", size=1024, file_format="url"
         )
 
     def test_make_discovery_splash_url_when_no_hash(self, model):
@@ -1179,11 +1117,7 @@ class TestGuild:
             assert model.make_banner_url(ext="url", size=512) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            guild_id=123,
-            hash="banner_hash",
-            size=512,
-            file_format="url",
+            urls.CDN_URL, guild_id=123, hash="banner_hash", size=512, file_format="url"
         )
 
     def test_make_banner_url_when_format_is_None_and_banner_hash_is_for_gif(self, model):
@@ -1195,11 +1129,7 @@ class TestGuild:
             assert model.make_banner_url(ext=None, size=4096) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            guild_id=model.id,
-            hash="a_18dnf8dfbakfdh",
-            size=4096,
-            file_format="gif",
+            urls.CDN_URL, guild_id=model.id, hash="a_18dnf8dfbakfdh", size=4096, file_format="gif"
         )
 
     def test_make_banner_url_when_format_is_None_and_banner_hash_is_not_for_gif(self, model):
@@ -1211,11 +1141,7 @@ class TestGuild:
             assert model.make_banner_url(ext=None, size=4096) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            guild_id=model.id,
-            hash=model.banner_hash,
-            size=4096,
-            file_format="png",
+            urls.CDN_URL, guild_id=model.id, hash=model.banner_hash, size=4096, file_format="png"
         )
 
     def test_make_banner_url_when_no_hash(self, model):

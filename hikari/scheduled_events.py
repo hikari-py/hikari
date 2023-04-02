@@ -182,11 +182,7 @@ class ScheduledEvent(snowflakes.Unique):
             return None
 
         return routes.SCHEDULED_EVENT_COVER.compile_to_file(
-            urls.CDN_URL,
-            scheduled_event_id=self.id,
-            hash=self.image_hash,
-            size=size,
-            file_format=ext,
+            urls.CDN_URL, scheduled_event_id=self.id, hash=self.image_hash, size=size, file_format=ext
         )
 
 

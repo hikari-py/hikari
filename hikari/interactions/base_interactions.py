@@ -582,12 +582,7 @@ class ModalResponseMixin(PartialInteraction):
             If both `component` and `components` are specified or if none are specified.
         """
         await self.app.rest.create_modal_response(
-            self.id,
-            self.token,
-            title=title,
-            custom_id=custom_id,
-            component=component,
-            components=components,
+            self.id, self.token, title=title, custom_id=custom_id, component=component, components=components
         )
 
     def build_modal_response(self, title: str, custom_id: str) -> special_endpoints.InteractionModalBuilder:

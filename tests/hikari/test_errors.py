@@ -76,12 +76,7 @@ class TestHTTPResponseError:
     @pytest.fixture()
     def error(self):
         return errors.HTTPResponseError(
-            "https://some.url",
-            http.HTTPStatus.BAD_REQUEST,
-            {},
-            "raw body",
-            "message",
-            12345,
+            "https://some.url", http.HTTPStatus.BAD_REQUEST, {}, "raw body", "message", 12345
         )
 
     def test_str(self, error):
@@ -113,24 +108,16 @@ class TestBadRequestError:
             {},
             "raw body",
             errors={
-                "": [
-                    {"code": "012", "message": "test error"},
-                ],
+                "": [{"code": "012", "message": "test error"}],
                 "components": {
                     "0": {
                         "_errors": [
                             {"code": "123", "message": "something went wrong"},
                             {"code": "456", "message": "but more things too!"},
-                        ],
-                    },
+                        ]
+                    }
                 },
-                "attachments": {
-                    "1": {
-                        "_errors": [
-                            {"code": "789", "message": "at this point, all wrong!"},
-                        ],
-                    },
-                },
+                "attachments": {"1": {"_errors": [{"code": "789", "message": "at this point, all wrong!"}]}},
             },
         )
 

@@ -499,11 +499,7 @@ class Team(snowflakes.Unique):
             return None
 
         return routes.CDN_TEAM_ICON.compile_to_file(
-            urls.CDN_URL,
-            team_id=self.id,
-            hash=self.icon_hash,
-            size=size,
-            file_format=ext,
+            urls.CDN_URL, team_id=self.id, hash=self.icon_hash, size=size, file_format=ext
         )
 
 
@@ -555,11 +551,7 @@ class InviteApplication(guilds.PartialApplication):
             return None
 
         return routes.CDN_APPLICATION_COVER.compile_to_file(
-            urls.CDN_URL,
-            application_id=self.id,
-            hash=self.cover_image_hash,
-            size=size,
-            file_format=ext,
+            urls.CDN_URL, application_id=self.id, hash=self.cover_image_hash, size=size, file_format=ext
         )
 
 
@@ -662,11 +654,7 @@ class Application(guilds.PartialApplication):
             return None
 
         return routes.CDN_APPLICATION_COVER.compile_to_file(
-            urls.CDN_URL,
-            application_id=self.id,
-            hash=self.cover_image_hash,
-            size=size,
-            file_format=ext,
+            urls.CDN_URL, application_id=self.id, hash=self.cover_image_hash, size=size, file_format=ext
         )
 
 
@@ -832,18 +820,12 @@ class ApplicationRoleConnectionMetadataRecord:
     """The metadata's field description."""
 
     name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attrs.field(
-        eq=False,
-        hash=False,
-        repr=False,
-        factory=dict,
+        eq=False, hash=False, repr=False, factory=dict
     )
     """A mapping of name localizations for this metadata field."""
 
     description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attrs.field(
-        eq=False,
-        hash=False,
-        repr=False,
-        factory=dict,
+        eq=False, hash=False, repr=False, factory=dict
     )
     """A mapping of description localizations for this metadata field."""
 

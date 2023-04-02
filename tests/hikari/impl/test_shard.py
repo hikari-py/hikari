@@ -82,13 +82,7 @@ def proxy_settings():
 
 
 class StubResponse:
-    def __init__(
-        self,
-        *,
-        type=None,
-        data=None,
-        extra=None,
-    ):
+    def __init__(self, *, type=None, data=None, extra=None):
         self.type = type
         self.data = data
         self.extra = extra
@@ -225,10 +219,7 @@ class TestGatewayTransport:
         assert exception.code == int(code)
         assert exception.can_reconnect is True
 
-    @pytest.mark.parametrize(
-        "code",
-        [*range(4010, 4020), 5000],
-    )
+    @pytest.mark.parametrize("code", [*range(4010, 4020), 5000])
     def test__handle_other_message_when_message_type_is_CLOSE_and_should_not_reconnect(self, code, transport_impl):
         stub_response = StubResponse(type=aiohttp.WSMsgType.CLOSE, extra="don't reconnect", data=code)
 
@@ -551,10 +542,7 @@ class TestGatewayShardImpl:
         client._intents = mock_intents
         assert client.intents is mock_intents
 
-    @pytest.mark.parametrize(
-        ("keep_alive_task", "expected"),
-        [(None, False), ("some", True)],
-    )
+    @pytest.mark.parametrize(("keep_alive_task", "expected"), [(None, False), ("some", True)])
     def test_is_alive_property(self, client, keep_alive_task, expected):
         client._keep_alive_task = keep_alive_task
 
@@ -610,11 +598,7 @@ class TestGatewayShardImpl:
         actual_result = client._serialize_and_store_presence_payload()
 
         if activity is not None:
-            expected_activity = {
-                "name": activity.name,
-                "type": activity.type,
-                "url": activity.url,
-            }
+            expected_activity = {"name": activity.name, "type": activity.type, "url": activity.url}
         else:
             expected_activity = None
 
@@ -775,10 +759,7 @@ class TestGatewayShardImplAsync:
                 await client.request_guild_members(123, query="test", limit=1, include_presences=False)
 
         send_json.assert_awaited_once_with(
-            {
-                "op": 8,
-                "d": {"guild_id": "123", "query": "test", "presences": False, "limit": 1},
-            }
+            {"op": 8, "d": {"guild_id": "123", "query": "test", "presences": False, "limit": 1}}
         )
 
         check_if_alive.assert_called_once_with()
@@ -830,10 +811,7 @@ class TestGatewayShardImplAsync:
                 await client.request_guild_members(123, include_presences=include_presences)
 
         send_json.assert_awaited_once_with(
-            {
-                "op": 8,
-                "d": {"guild_id": "123", "query": "", "presences": include_presences, "limit": 0},
-            }
+            {"op": 8, "d": {"guild_id": "123", "query": "", "presences": include_presences, "limit": 0}}
         )
         check_if_alive.assert_called_once_with()
 
@@ -889,10 +867,7 @@ class TestGatewayShardImplAsync:
             with mock.patch.object(shard.GatewayShardImpl, "_check_if_connected") as check_if_alive:
                 with mock.patch.object(shard.GatewayShardImpl, "_send_json") as send_json:
                     await client.update_presence(
-                        idle_since=datetime.datetime.now(),
-                        afk=True,
-                        status=presences.Status.IDLE,
-                        activity=None,
+                        idle_since=datetime.datetime.now(), afk=True, status=presences.Status.IDLE, activity=None
                     )
 
         send_json.assert_awaited_once_with({"op": 3, "d": presence.return_value})
@@ -904,15 +879,7 @@ class TestGatewayShardImplAsync:
                 await client.update_voice_state(123456, 6969420, self_mute=False, self_deaf=True)
 
         send_json.assert_awaited_once_with(
-            {
-                "op": 4,
-                "d": {
-                    "guild_id": "123456",
-                    "channel_id": "6969420",
-                    "self_mute": False,
-                    "self_deaf": True,
-                },
-            }
+            {"op": 4, "d": {"guild_id": "123456", "channel_id": "6969420", "self_mute": False, "self_deaf": True}}
         )
         check_if_alive.assert_called_once_with()
 
@@ -1031,7 +998,7 @@ class TestGatewayShardImplAsync:
             [
                 mock.call(heartbeat.return_value, name="heartbeat (shard 20)"),
                 mock.call(poll_events.return_value, name="poll events (shard 20)"),
-            ],
+            ]
         )
         heartbeat.assert_called_once_with(0.01)
 
@@ -1120,20 +1087,13 @@ class TestGatewayShardImplAsync:
             [
                 mock.call(heartbeat.return_value, name="heartbeat (shard 20)"),
                 mock.call(poll_events.return_value, name="poll events (shard 20)"),
-            ],
+            ]
         )
         heartbeat.assert_called_once_with(0.01)
 
         ws.receive_json.assert_awaited_once_with()
         send_json.assert_called_once_with(
-            {
-                "op": 6,
-                "d": {
-                    "token": "sometoken",
-                    "seq": 1234,
-                    "session_id": "some session id",
-                },
-            }
+            {"op": 6, "d": {"token": "sometoken", "seq": 1234, "session_id": "some session id"}}
         )
 
         assert shield.call_count == 2
@@ -1198,11 +1158,7 @@ class TestGatewayShardImplAsync:
             "v": 10,
             "session_id": 100001,
             "resume_gateway_url": "testing_endpoint",
-            "user": {
-                "id": 123,
-                "username": "davfsa",
-                "discriminator": "7026",
-            },
+            "user": {"id": 123, "username": "davfsa", "discriminator": "7026"},
             "guilds": ["1"] * 100,
         }
 

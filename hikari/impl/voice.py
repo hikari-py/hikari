@@ -188,9 +188,7 @@ class VoiceComponentImpl(voice.VoiceComponent):
                 ),
             )
         except asyncio.TimeoutError as e:
-            raise errors.VoiceError(
-                f"Could not connect to voice channel {channel} in guild {guild}.",
-            ) from e
+            raise errors.VoiceError(f"Could not connect to voice channel {channel} in guild {guild}.") from e
 
         # We will never receive the first endpoint as `None`
         assert server_event.endpoint is not None
@@ -236,8 +234,7 @@ class VoiceComponentImpl(voice.VoiceComponent):
 
     @staticmethod
     def _init_state_update_predicate(
-        guild_id: snowflakes.Snowflake,
-        user_id: snowflakes.Snowflake,
+        guild_id: snowflakes.Snowflake, user_id: snowflakes.Snowflake
     ) -> typing.Callable[[voice_events.VoiceStateUpdateEvent], bool]:
         def predicate(event: voice_events.VoiceStateUpdateEvent) -> bool:
             return event.state.guild_id == guild_id and event.state.user_id == user_id
@@ -263,10 +260,7 @@ class VoiceComponentImpl(voice.VoiceComponent):
 
             # Leave the voice channel explicitly, otherwise we will just appear to
             # not leave properly.
-            await self._app.shards[connection.shard_id].update_voice_state(
-                guild=connection.guild_id,
-                channel=None,
-            )
+            await self._app.shards[connection.shard_id].update_voice_state(guild=connection.guild_id, channel=None)
 
             _LOGGER.debug(
                 "successfully unregistered voice connection %s to guild %s and left voice channel %s",

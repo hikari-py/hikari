@@ -186,22 +186,12 @@ class StringMapBuilder(multidict.MultiDict[str]):
         super().__init__(arg, **kwargs)
 
     @typing.overload
-    def put(
-        self,
-        key: str,
-        value: Stringish,
-        /,
-    ) -> None:
+    def put(self, key: str, value: Stringish, /) -> None:
         ...
 
     @typing.overload
     def put(
-        self,
-        key: str,
-        value: undefined.UndefinedOr[T_co],
-        /,
-        *,
-        conversion: typing.Callable[[T_co], Stringish],
+        self, key: str, value: undefined.UndefinedOr[T_co], /, *, conversion: typing.Callable[[T_co], Stringish]
     ) -> None:
         ...
 
@@ -280,12 +270,7 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
 
     @typing.overload
     def put(
-        self,
-        key: str,
-        value: undefined.UndefinedNoneOr[T_co],
-        /,
-        *,
-        conversion: typing.Callable[[T_co], JSONish],
+        self, key: str, value: undefined.UndefinedNoneOr[T_co], /, *, conversion: typing.Callable[[T_co], JSONish]
     ) -> None:
         ...
 
@@ -324,12 +309,7 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
             self[key] = conversion(value)
 
     @typing.overload
-    def put_array(
-        self,
-        key: str,
-        values: undefined.UndefinedOr[typing.Iterable[JSONish]],
-        /,
-    ) -> None:
+    def put_array(self, key: str, values: undefined.UndefinedOr[typing.Iterable[JSONish]], /) -> None:
         ...
 
     @typing.overload
@@ -399,10 +379,7 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
             self[key] = value
 
     def put_snowflake_array(
-        self,
-        key: str,
-        values: undefined.UndefinedOr[typing.Iterable[snowflakes.SnowflakeishOr[snowflakes.Unique]]],
-        /,
+        self, key: str, values: undefined.UndefinedOr[typing.Iterable[snowflakes.SnowflakeishOr[snowflakes.Unique]]], /
     ) -> None:
         """Put an array of snowflakes with the given key into this builder.
 

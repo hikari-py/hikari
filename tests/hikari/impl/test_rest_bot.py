@@ -415,9 +415,7 @@ class TestRESTBot:
 
         check_for_updates.assert_not_called()
         handle_interrupts.assert_called_once_with(
-            enabled=True,
-            loop=get_or_make_loop.return_value,
-            propagate_interrupts=True,
+            enabled=True, loop=get_or_make_loop.return_value, propagate_interrupts=True
         )
         handle_interrupts.return_value.assert_used_once()
 
@@ -437,10 +435,7 @@ class TestRESTBot:
 
         assert get_or_make_loop.return_value.run_until_complete.call_count == 2
         get_or_make_loop.return_value.run_until_complete.assert_has_calls(
-            [
-                mock.call(mock_rest_bot.start.return_value),
-                mock.call(mock_rest_bot.join.return_value),
-            ]
+            [mock.call(mock_rest_bot.start.return_value), mock.call(mock_rest_bot.join.return_value)]
         )
         get_or_make_loop.return_value.close.assert_not_called()
 

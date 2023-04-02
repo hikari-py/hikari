@@ -106,11 +106,7 @@ async def _close_resource(name: str, awaitable: typing.Awaitable[typing.Any]) ->
         await future
     except Exception as ex:
         asyncio.get_running_loop().call_exception_handler(
-            {
-                "message": f"{name} raised an exception during shut down",
-                "future": future,
-                "exception": ex,
-            }
+            {"message": f"{name} raised an exception during shut down", "future": future, "exception": ex}
         )
 
 
@@ -606,8 +602,7 @@ class GatewayBot(traits.GatewayBotAware):
         await aio.first_completed(self._closed_event.wait(), *(s.join() for s in self._shards.values()))
 
     def listen(
-        self,
-        *event_types: typing.Type[base_events.EventT],
+        self, *event_types: typing.Type[base_events.EventT]
     ) -> typing.Callable[[event_manager_.CallbackT[base_events.EventT]], event_manager_.CallbackT[base_events.EventT]]:
         """Generate a decorator to subscribe a callback to an event type.
 
@@ -812,9 +807,7 @@ class GatewayBot(traits.GatewayBotAware):
 
         try:
             with signals.handle_interrupts(
-                enabled=enable_signal_handlers,
-                loop=loop,
-                propagate_interrupts=propagate_interrupts,
+                enabled=enable_signal_handlers, loop=loop, propagate_interrupts=propagate_interrupts
             ):
                 loop.run_until_complete(
                     self.start(
@@ -924,8 +917,7 @@ class GatewayBot(traits.GatewayBotAware):
 
         if check_for_updates:
             asyncio.create_task(
-                ux.check_for_updates(self._http_settings, self._proxy_settings),
-                name="check for package updates",
+                ux.check_for_updates(self._http_settings, self._proxy_settings), name="check for package updates"
             )
 
         self._rest.start()

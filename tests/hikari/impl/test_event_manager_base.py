@@ -79,9 +79,7 @@ def mock_app():
 
 
 class TestEventStream:
-    def test___enter___and___exit__(
-        self,
-    ):
+    def test___enter___and___exit__(self):
         stub_stream = hikari_test_helpers.mock_class_namespace(
             event_manager_base.EventStream, open=mock.Mock(), close=mock.Mock()
         )(mock_app, base_events.Event, timeout=None)
@@ -314,9 +312,7 @@ class TestEventStream:
         mock_listener = object()
         mock_manager = mock.Mock()
         stream = hikari_test_helpers.mock_class_namespace(event_manager_base.EventStream)(
-            event_manager=mock_manager,
-            event_type=base_events.Event,
-            timeout=float("inf"),
+            event_manager=mock_manager, event_type=base_events.Event, timeout=float("inf")
         )
 
         stream._active = True
@@ -363,12 +359,7 @@ class TestEventStream:
 class TestConsumer:
     @pytest.mark.parametrize(
         ("is_caching", "listener_group_count", "waiter_group_count", "expected_result"),
-        [
-            (True, -10000, -10000, True),
-            (False, 0, 1, True),
-            (False, 1, 0, True),
-            (False, 0, 0, False),
-        ],
+        [(True, -10000, -10000, True), (False, 0, 1, True), (False, 1, 0, True), (False, 0, 0, False)],
     )
     def test_is_enabled(self, is_caching, listener_group_count, waiter_group_count, expected_result):
         consumer = event_manager_base._Consumer(object(), 123, is_caching)
@@ -521,8 +512,7 @@ class TestEventManagerBase:
 
         event_manager._handle_dispatch.assert_called_once_with(on_existing_event, shard, {"berp": "baz"})
         create_task.assert_called_once_with(
-            event_manager._handle_dispatch(on_existing_event, shard, {"berp": "baz"}),
-            name="dispatch EXISTING_EVENT",
+            event_manager._handle_dispatch(on_existing_event, shard, {"berp": "baz"}), name="dispatch EXISTING_EVENT"
         )
         event_manager.dispatch.assert_called_once_with(
             event_manager._event_factory.deserialize_shard_payload_event.return_value
@@ -547,8 +537,7 @@ class TestEventManagerBase:
 
         event_manager._handle_dispatch.assert_called_once_with(on_existing_event, shard, {"berp": "baz"})
         create_task.assert_called_once_with(
-            event_manager._handle_dispatch(on_existing_event, shard, {"berp": "baz"}),
-            name="dispatch EXISTING_EVENT",
+            event_manager._handle_dispatch(on_existing_event, shard, {"berp": "baz"}), name="dispatch EXISTING_EVENT"
         )
         event_manager.dispatch.assert_not_called()
         event_manager._event_factory.deserialize_shard_payload_event.vassert_not_called()
@@ -596,11 +585,7 @@ class TestEventManagerBase:
 
         error_handler.assert_called_once_with(
             event_loop,
-            {
-                "exception": exc,
-                "message": "Exception occurred in raw event dispatch conduit",
-                "task": current_task(),
-            },
+            {"exception": exc, "message": "Exception occurred in raw event dispatch conduit", "task": current_task()},
         )
 
     @pytest.mark.asyncio()

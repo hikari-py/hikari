@@ -189,11 +189,7 @@ class TestClientCredentialsStrategy:
         mock_rest.authorize_client_credentials_token.assert_awaited_once_with(
             client=6512312, client_secret="453123123", scopes=("applications.commands.update", "identify")
         )
-        assert results == [
-            "Bearer okokok.fofofo.ddd",
-            "Bearer okokok.fofofo.ddd",
-            "Bearer okokok.fofofo.ddd",
-        ]
+        assert results == ["Bearer okokok.fofofo.ddd", "Bearer okokok.fofofo.ddd", "Bearer okokok.fofofo.ddd"]
 
     @pytest.mark.asyncio()
     async def test_acquire_after_invalidation(self, mock_token):
@@ -442,12 +438,7 @@ def file_resource():
         async def __aenter__(self):
             return self
 
-        async def __aexit__(
-            self,
-            exc_type,
-            exc,
-            exc_tb,
-        ) -> None:
+        async def __aexit__(self, exc_type, exc, exc_tb) -> None:
             pass
 
     class FileResource(files.Resource):
@@ -508,11 +499,7 @@ class TestTransformEmojiToUrlFormat:
         assert rest._transform_emoji_to_url_format("rooYay", 123) == "rooYay:123"
 
     @pytest.mark.parametrize(
-        "emoji",
-        [
-            emojis.CustomEmoji(id=123, name="rooYay", is_animated=False),
-            emojis.UnicodeEmoji("\N{OK HAND SIGN}"),
-        ],
+        "emoji", [emojis.CustomEmoji(id=123, name="rooYay", is_animated=False), emojis.UnicodeEmoji("\N{OK HAND SIGN}")]
     )
     def test_when_id_passed_with_emoji_object(self, rest_client, emoji):
         with pytest.raises(ValueError, match="emoji_id shouldn't be passed when an Emoji object is passed for emoji"):
@@ -1072,9 +1059,7 @@ class TestRESTClientImpl:
             assert rest_client.fetch_members(guild) == stub_iterator
 
             iterator.assert_called_once_with(
-                entity_factory=rest_client._entity_factory,
-                request_call=rest_client._request,
-                guild=guild,
+                entity_factory=rest_client._entity_factory, request_call=rest_client._request, guild=guild
             )
 
     def test_kick_member(self, rest_client):
@@ -1109,11 +1094,7 @@ class TestRESTClientImpl:
             iterator = rest_client.fetch_bans(187, newest_first=True, start_at=StubModel(65652342134))
 
         iterator_cls.assert_called_once_with(
-            rest_client._entity_factory,
-            rest_client._request,
-            187,
-            True,
-            "65652342134",
+            rest_client._entity_factory, rest_client._request, 187, True, "65652342134"
         )
         assert iterator is iterator_cls.return_value
 
@@ -1123,11 +1104,7 @@ class TestRESTClientImpl:
             iterator = rest_client.fetch_bans(9000, newest_first=True, start_at=start_at)
 
         iterator_cls.assert_called_once_with(
-            rest_client._entity_factory,
-            rest_client._request,
-            9000,
-            True,
-            "950000286338908160",
+            rest_client._entity_factory, rest_client._request, 9000, True, "950000286338908160"
         )
         assert iterator is iterator_cls.return_value
 
@@ -1136,11 +1113,7 @@ class TestRESTClientImpl:
             iterator = rest_client.fetch_bans(8844)
 
         iterator_cls.assert_called_once_with(
-            rest_client._entity_factory,
-            rest_client._request,
-            8844,
-            False,
-            str(snowflakes.Snowflake.min()),
+            rest_client._entity_factory, rest_client._request, 8844, False, str(snowflakes.Snowflake.min())
         )
         assert iterator is iterator_cls.return_value
 
@@ -1149,11 +1122,7 @@ class TestRESTClientImpl:
             iterator = rest_client.fetch_bans(3848, newest_first=True)
 
         iterator_cls.assert_called_once_with(
-            rest_client._entity_factory,
-            rest_client._request,
-            3848,
-            True,
-            str(snowflakes.Snowflake.max()),
+            rest_client._entity_factory, rest_client._request, 3848, True, str(snowflakes.Snowflake.max())
         )
         assert iterator is iterator_cls.return_value
 
@@ -1611,12 +1580,7 @@ class TestRESTClientImpl:
             )
 
         iterator_cls.assert_called_once_with(
-            rest_client._entity_factory,
-            rest_client._request,
-            True,
-            "65652342134",
-            33432234,
-            6666655555,
+            rest_client._entity_factory, rest_client._request, True, "65652342134", 33432234, 6666655555
         )
         assert iterator is iterator_cls.return_value
 
@@ -1626,12 +1590,7 @@ class TestRESTClientImpl:
             iterator = rest_client.fetch_scheduled_event_users(54123, 656324, newest_first=True, start_at=start_at)
 
         iterator_cls.assert_called_once_with(
-            rest_client._entity_factory,
-            rest_client._request,
-            True,
-            "950000286338908160",
-            54123,
-            656324,
+            rest_client._entity_factory, rest_client._request, True, "950000286338908160", 54123, 656324
         )
         assert iterator is iterator_cls.return_value
 
@@ -1656,12 +1615,7 @@ class TestRESTClientImpl:
             iterator = rest_client.fetch_scheduled_event_users(6423, 65456234, newest_first=True)
 
         iterator_cls.assert_called_once_with(
-            rest_client._entity_factory,
-            rest_client._request,
-            True,
-            str(snowflakes.Snowflake.max()),
-            6423,
-            65456234,
+            rest_client._entity_factory, rest_client._request, True, str(snowflakes.Snowflake.max()), 6423, 65456234
         )
         assert iterator is iterator_cls.return_value
 
@@ -2061,9 +2015,7 @@ class TestRESTClientImplAsync:
         class StubResponse:
             status = http.HTTPStatus.TOO_MANY_REQUESTS
             content_type = rest._APPLICATION_JSON
-            headers = {
-                rest._X_RATELIMIT_REMAINING_HEADER: "0",
-            }
+            headers = {rest._X_RATELIMIT_REMAINING_HEADER: "0"}
             real_url = "https://some.url"
 
             async def json(self):
@@ -2146,11 +2098,7 @@ class TestRESTClientImplAsync:
     )
     @pytest.mark.parametrize(
         ("auto_archive_duration", "default_auto_archive_duration"),
-        [
-            (12322, 445123),
-            (datetime.timedelta(minutes=12322), datetime.timedelta(minutes=445123)),
-            (12322.0, 445123.1),
-        ],
+        [(12322, 445123), (datetime.timedelta(minutes=12322), datetime.timedelta(minutes=445123)), (12322.0, 445123.1)],
     )
     async def test_edit_channel(
         self,
@@ -2187,10 +2135,7 @@ class TestRESTClientImplAsync:
             "default_thread_rate_limit_per_user": 40,
             "default_forum_layout": 1,
             "default_sort_order": 0,
-            "default_reaction_emoji": {
-                "emoji_id": expected_emoji_id,
-                "emoji_name": expected_emoji_name,
-            },
+            "default_reaction_emoji": {"emoji_id": expected_emoji_id, "emoji_name": expected_emoji_name},
             "available_tags": [{"id": 0, "name": "testing", "moderated": True, "emoji_id": None, "emoji_name": None}],
             "archived": True,
             "locked": False,
@@ -2727,10 +2672,7 @@ class TestRESTClientImplAsync:
         await rest_client.delete_messages(StubModel(123), *messages)
 
         rest_client._request.assert_has_awaits(
-            [
-                mock.call(expected_route, json=expected_json1),
-                mock.call(expected_route, json=expected_json2),
-            ]
+            [mock.call(expected_route, json=expected_json1), mock.call(expected_route, json=expected_json2)]
         )
 
     async def test_delete_messages_when_one_message_left_in_chunk_and_delete_message_raises_message_not_found(
@@ -2995,11 +2937,7 @@ class TestRESTClientImplAsync:
     async def test_edit_webhook(self, rest_client):
         webhook = StubModel(456)
         expected_route = routes.PATCH_WEBHOOK_WITH_TOKEN.compile(webhook=123, token="token")
-        expected_json = {
-            "name": "some other name",
-            "channel": "789",
-            "avatar": None,
-        }
+        expected_json = {"name": "some other name", "channel": "789", "avatar": None}
         rest_client._request = mock.AsyncMock(return_value={"id": "456"})
         rest_client._entity_factory.deserialize_webhook = mock.Mock(return_value=webhook)
 
@@ -3122,10 +3060,7 @@ class TestRESTClientImplAsync:
             content_type="application/json",
         )
         rest_client._request.assert_awaited_once_with(
-            expected_route,
-            form_builder=mock_form,
-            query={"wait": "true"},
-            auth=None,
+            expected_route, form_builder=mock_form, query={"wait": "true"}, auth=None
         )
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
 
@@ -3160,10 +3095,7 @@ class TestRESTClientImplAsync:
             "payload_json", b'{"testing":"ensure_in_test"}', content_type="application/json"
         )
         rest_client._request.assert_awaited_once_with(
-            expected_route,
-            form_builder=mock_form,
-            query={"wait": "true", "thread_id": "1234543123"},
-            auth=None,
+            expected_route, form_builder=mock_form, query={"wait": "true", "thread_id": "1234543123"}, auth=None
         )
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
 
@@ -3701,10 +3633,7 @@ class TestRESTClientImplAsync:
             result = await rest_client.refresh_access_token(454123, "123123", "a.codet")
 
         mock_url_encoded_form.add_field.assert_has_calls(
-            [
-                mock.call("grant_type", "refresh_token"),
-                mock.call("refresh_token", "a.codet"),
-            ]
+            [mock.call("grant_type", "refresh_token"), mock.call("refresh_token", "a.codet")]
         )
         assert result is rest_client._entity_factory.deserialize_authorization_token.return_value
         rest_client._entity_factory.deserialize_authorization_token.assert_called_once_with(
@@ -3954,22 +3883,12 @@ class TestRESTClientImplAsync:
         file = object()
 
         sticker = await rest_client.create_sticker(
-            90210,
-            "NewSticker",
-            "funny",
-            file,
-            description="A sticker",
-            reason="blah blah blah",
+            90210, "NewSticker", "funny", file, description="A sticker", reason="blah blah blah"
         )
         assert sticker is rest_client.create_sticker.return_value
 
         rest_client.create_sticker.assert_awaited_once_with(
-            90210,
-            "NewSticker",
-            "funny",
-            file,
-            description="A sticker",
-            reason="blah blah blah",
+            90210, "NewSticker", "funny", file, description="A sticker", reason="blah blah blah"
         )
 
     async def test_edit_sticker(self, rest_client):
@@ -4375,11 +4294,7 @@ class TestRESTClientImplAsync:
         rest_client._create_guild_channel = mock.AsyncMock()
 
         returned = await rest_client.create_guild_category(
-            guild,
-            "general",
-            position=1,
-            permission_overwrites=[overwrite1, overwrite2],
-            reason="because we need one",
+            guild, "general", position=1, permission_overwrites=[overwrite1, overwrite2], reason="because we need one"
         )
         assert returned is rest_client._entity_factory.deserialize_guild_category.return_value
 
@@ -4423,10 +4338,7 @@ class TestRESTClientImplAsync:
             "default_thread_rate_limit_per_user": 40,
             "default_forum_layout": 1,
             "default_sort_order": 0,
-            "default_reaction_emoji": {
-                "emoji_id": expected_emoji_id,
-                "emoji_name": expected_emoji_name,
-            },
+            "default_reaction_emoji": {"emoji_id": expected_emoji_id, "emoji_name": expected_emoji_name},
             "available_tags": [{"id": "321"}, {"id": "123"}],
         }
         rest_client._request = mock.AsyncMock(return_value={"id": "456"})
@@ -4915,10 +4827,7 @@ class TestRESTClientImplAsync:
         rest_client._request = mock.AsyncMock(return_value={"id": "789"})
 
         result = await rest_client.edit_member(
-            StubModel(123),
-            StubModel(456),
-            communication_disabled_until=None,
-            reason="because i can",
+            StubModel(123), StubModel(456), communication_disabled_until=None, reason="because i can"
         )
         assert result is rest_client._entity_factory.deserialize_member.return_value
 
@@ -5252,10 +5161,7 @@ class TestRESTClientImplAsync:
     async def test_edit_widget(self, rest_client):
         widget = StubModel(456)
         expected_route = routes.PATCH_GUILD_WIDGET.compile(guild=123)
-        expected_json = {
-            "enabled": True,
-            "channel": "456",
-        }
+        expected_json = {"enabled": True, "channel": "456"}
         rest_client._request = mock.AsyncMock(return_value={"id": "456"})
         rest_client._entity_factory.deserialize_guild_widget = mock.Mock(return_value=widget)
 
@@ -5272,10 +5178,7 @@ class TestRESTClientImplAsync:
     async def test_edit_widget_when_channel_is_None(self, rest_client):
         widget = StubModel(456)
         expected_route = routes.PATCH_GUILD_WIDGET.compile(guild=123)
-        expected_json = {
-            "enabled": True,
-            "channel": None,
-        }
+        expected_json = {"enabled": True, "channel": None}
         rest_client._request = mock.AsyncMock(return_value={"id": "456"})
         rest_client._entity_factory.deserialize_guild_widget = mock.Mock(return_value=widget)
 
@@ -5343,11 +5246,7 @@ class TestRESTClientImplAsync:
         assert result is rest_client._entity_factory.deserialize_welcome_screen.return_value
 
         rest_client._request.assert_awaited_once_with(
-            expected_route,
-            json={
-                "description": None,
-                "welcome_channels": None,
-            },
+            expected_route, json={"description": None, "welcome_channels": None}
         )
         rest_client._entity_factory.deserialize_welcome_screen.assert_called_once_with(
             rest_client._request.return_value
@@ -5586,12 +5485,7 @@ class TestRESTClientImplAsync:
 
         assert result is rest_client._request.return_value
         rest_client._request.assert_awaited_once_with(
-            expected_route,
-            json={
-                "type": 100,
-                "name": "okokok",
-                "description": "not ok anymore",
-            },
+            expected_route, json={"type": 100, "name": "okokok", "description": "not ok anymore"}
         )
 
     async def test__create_application_command_standardizes_default_member_permissions(
@@ -5611,12 +5505,7 @@ class TestRESTClientImplAsync:
         assert result is rest_client._request.return_value
         rest_client._request.assert_awaited_once_with(
             expected_route,
-            json={
-                "type": 100,
-                "name": "okokok",
-                "description": "not ok anymore",
-                "default_member_permissions": None,
-            },
+            json={"type": 100, "name": "okokok", "description": "not ok anymore", "default_member_permissions": None},
         )
 
     async def test_create_slash_command(self, rest_client: rest.RESTClientImpl):
@@ -5729,10 +5618,7 @@ class TestRESTClientImplAsync:
 
         assert result == [mock_command]
         rest_client._entity_factory.deserialize_command.assert_has_calls(
-            [
-                mock.call({"id": "435765"}, guild_id=453123),
-                mock.call({"id": "4949493933"}, guild_id=453123),
-            ]
+            [mock.call({"id": "435765"}, guild_id=453123), mock.call({"id": "4949493933"}, guild_id=453123)]
         )
         rest_client._request.assert_awaited_once_with(expected_route, json=[mock_command_builder.build.return_value])
         mock_command_builder.build.assert_called_once_with(rest_client._entity_factory)
@@ -5775,10 +5661,7 @@ class TestRESTClientImplAsync:
         expected_route = routes.PATCH_APPLICATION_COMMAND.compile(application=1235432, command=3451231)
         rest_client._request = mock.AsyncMock(return_value={"id": "94594994"})
 
-        result = await rest_client.edit_application_command(
-            StubModel(1235432),
-            StubModel(3451231),
-        )
+        result = await rest_client.edit_application_command(StubModel(1235432), StubModel(3451231))
 
         assert result is rest_client._entity_factory.deserialize_command.return_value
         rest_client._entity_factory.deserialize_command.assert_called_once_with(
@@ -5793,19 +5676,14 @@ class TestRESTClientImplAsync:
         rest_client._request = mock.AsyncMock(return_value={"id": "94594994"})
 
         result = await rest_client.edit_application_command(
-            StubModel(1235432),
-            StubModel(3451231),
-            default_member_permissions=permissions.Permissions.NONE,
+            StubModel(1235432), StubModel(3451231), default_member_permissions=permissions.Permissions.NONE
         )
 
         assert result is rest_client._entity_factory.deserialize_command.return_value
         rest_client._entity_factory.deserialize_command.assert_called_once_with(
             rest_client._request.return_value, guild_id=None
         )
-        rest_client._request.assert_awaited_once_with(
-            expected_route,
-            json={"default_member_permissions": None},
-        )
+        rest_client._request.assert_awaited_once_with(expected_route, json={"default_member_permissions": None})
 
     async def test_delete_application_command_with_guild(self, rest_client):
         expected_route = routes.DELETE_APPLICATION_GUILD_COMMAND.compile(

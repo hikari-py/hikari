@@ -24,14 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = (
-    "TargetType",
-    "VanityURL",
-    "InviteGuild",
-    "InviteCode",
-    "Invite",
-    "InviteWithMetadata",
-)
+__all__: typing.Sequence[str] = ("TargetType", "VanityURL", "InviteGuild", "InviteCode", "Invite", "InviteWithMetadata")
 
 import abc
 import typing
@@ -168,11 +161,7 @@ class InviteGuild(guilds.PartialGuild):
             return None
 
         return routes.CDN_GUILD_SPLASH.compile_to_file(
-            urls.CDN_URL,
-            guild_id=self.id,
-            hash=self.splash_hash,
-            size=size,
-            file_format=ext,
+            urls.CDN_URL, guild_id=self.id, hash=self.splash_hash, size=size, file_format=ext
         )
 
     @property
@@ -217,11 +206,7 @@ class InviteGuild(guilds.PartialGuild):
                 ext = "png"
 
         return routes.CDN_GUILD_BANNER.compile_to_file(
-            urls.CDN_URL,
-            guild_id=self.id,
-            hash=self.banner_hash,
-            size=size,
-            file_format=ext,
+            urls.CDN_URL, guild_id=self.id, hash=self.banner_hash, size=size, file_format=ext
         )
 
 

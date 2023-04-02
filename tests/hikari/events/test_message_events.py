@@ -37,12 +37,7 @@ class TestMessageCreateEvent:
     def event(self):
         cls = hikari_test_helpers.mock_class_namespace(
             message_events.MessageCreateEvent,
-            message=mock.Mock(
-                spec_set=messages.Message,
-                author=mock.Mock(
-                    spec_set=users.User,
-                ),
-            ),
+            message=mock.Mock(spec_set=messages.Message, author=mock.Mock(spec_set=users.User)),
             shard=mock.Mock(),
         )
 
@@ -73,12 +68,7 @@ class TestMessageCreateEvent:
 
     @pytest.mark.parametrize(
         ("author_is_bot", "webhook_id", "expected_is_human"),
-        [
-            (True, 123, False),
-            (True, None, False),
-            (False, 123, False),
-            (False, None, True),
-        ],
+        [(True, 123, False), (True, None, False), (False, 123, False), (False, None, True)],
     )
     def test_is_human_property(self, event, author_is_bot, webhook_id, expected_is_human):
         event.message.author.is_bot = author_is_bot
@@ -99,12 +89,7 @@ class TestMessageUpdateEvent:
     def event(self):
         cls = hikari_test_helpers.mock_class_namespace(
             message_events.MessageUpdateEvent,
-            message=mock.Mock(
-                spec_set=messages.Message,
-                author=mock.Mock(
-                    spec_set=users.User,
-                ),
-            ),
+            message=mock.Mock(spec_set=messages.Message, author=mock.Mock(spec_set=users.User)),
             shard=mock.Mock(),
         )
 
@@ -120,10 +105,7 @@ class TestMessageUpdateEvent:
 
     @pytest.mark.parametrize(
         ("author", "expected_id"),
-        [
-            (mock.Mock(spec_set=users.User, id=91827), 91827),
-            (undefined.UNDEFINED, undefined.UNDEFINED),
-        ],
+        [(mock.Mock(spec_set=users.User, id=91827), 91827), (undefined.UNDEFINED, undefined.UNDEFINED)],
     )
     def test_author_id_property(self, event, author, expected_id):
         event.message.author = author

@@ -1847,8 +1847,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_channel_webhooks(
-        self,
-        channel: snowflakes.SnowflakeishOr[channels_.WebhookChannelT],
+        self, channel: snowflakes.SnowflakeishOr[channels_.WebhookChannelT]
     ) -> typing.Sequence[webhooks.PartialWebhook]:
         """Fetch all channel webhooks.
 
@@ -1881,8 +1880,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_guild_webhooks(
-        self,
-        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
     ) -> typing.Sequence[webhooks.PartialWebhook]:
         """Fetch all guild webhooks.
 
@@ -3501,8 +3499,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_sticker(
-        self,
-        sticker: snowflakes.SnowflakeishOr[stickers_.PartialSticker],
+        self, sticker: snowflakes.SnowflakeishOr[stickers_.PartialSticker]
     ) -> typing.Union[stickers_.GuildSticker, stickers_.StandardSticker]:
         """Fetch a sticker.
 
@@ -5205,9 +5202,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_member(
-        self,
-        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], user: snowflakes.SnowflakeishOr[users.PartialUser]
     ) -> guilds.Member:
         """Fetch a guild member.
 
@@ -5309,9 +5304,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def search_members(
-        self,
-        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        name: str,
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], name: str
     ) -> typing.Sequence[guilds.Member]:
         """Search the members in a guild by nickname and username.
 
@@ -5734,9 +5727,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_ban(
-        self,
-        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], user: snowflakes.SnowflakeishOr[users.PartialUser]
     ) -> guilds.GuildBan:
         """Fetch the guild's ban info for a user.
 
@@ -5825,10 +5816,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def fetch_roles(
-        self,
-        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-    ) -> typing.Sequence[guilds.Role]:
+    async def fetch_roles(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> typing.Sequence[guilds.Role]:
         """Fetch the roles of a guild.
 
         Parameters
@@ -6036,9 +6024,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def delete_role(
-        self,
-        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        role: snowflakes.SnowflakeishOr[guilds.PartialRole],
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], role: snowflakes.SnowflakeishOr[guilds.PartialRole]
     ) -> None:
         """Delete a role.
 
@@ -6173,8 +6159,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_guild_voice_regions(
-        self,
-        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
     ) -> typing.Sequence[voices.VoiceRegion]:
         """Fetch the available voice regions for a guild.
 
@@ -6204,8 +6189,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_guild_invites(
-        self,
-        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
     ) -> typing.Sequence[invites.InviteWithMetadata]:
         """Fetch the guild's invites.
 
@@ -6237,8 +6221,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_integrations(
-        self,
-        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
     ) -> typing.Sequence[guilds.Integration]:
         """Fetch the guild's integrations.
 
@@ -6554,9 +6537,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def delete_template(
-        self,
-        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        template: typing.Union[str, templates.Template],
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], template: typing.Union[str, templates.Template]
     ) -> templates.Template:
         """Delete a guild template.
 
@@ -6695,9 +6676,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def sync_guild_template(
-        self,
-        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        template: typing.Union[str, templates.Template],
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], template: typing.Union[str, templates.Template]
     ) -> templates.Template:
         """Create a guild template.
 
@@ -6730,11 +6709,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    def slash_command_builder(
-        self,
-        name: str,
-        description: str,
-    ) -> special_endpoints.SlashCommandBuilder:
+    def slash_command_builder(self, name: str, description: str) -> special_endpoints.SlashCommandBuilder:
         r"""Create a command builder to use in `RESTClient.set_application_commands`.
 
         Parameters
@@ -6754,9 +6729,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     def context_menu_command_builder(
-        self,
-        type: typing.Union[commands.CommandType, int],
-        name: str,
+        self, type: typing.Union[commands.CommandType, int], name: str
     ) -> special_endpoints.ContextMenuCommandBuilder:
         r"""Create a command builder to use in `RESTClient.set_application_commands`.
 

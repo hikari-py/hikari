@@ -61,11 +61,7 @@ def v8_get_gateway_bot(_):
         {
             "url": gateway_uri_v8,
             "shards": 1,
-            "session_start_limit": {
-                "total": 1000,
-                "remaining": 1000,
-                "reset_after": 1,
-            },
+            "session_start_limit": {"total": 1000, "remaining": 1000, "reset_after": 1},
         }
     )
 

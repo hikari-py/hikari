@@ -515,9 +515,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         }
         self._modal_component_type_mapping: typing.Dict[
             int, typing.Callable[[data_binding.JSONObject], component_models.ModalComponentTypesT]
-        ] = {
-            component_models.ComponentType.TEXT_INPUT: self._deserialize_text_input,
-        }
+        ] = {component_models.ComponentType.TEXT_INPUT: self._deserialize_text_input}
         self._dm_channel_type_mapping = {
             channel_models.ChannelType.DM: self.deserialize_dm,
             channel_models.ChannelType.GROUP_DM: self.deserialize_group_dm,
@@ -1004,10 +1002,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     def _set_guild_channel_attrsibutes(
-        self,
-        payload: data_binding.JSONObject,
-        *,
-        guild_id: undefined.UndefinedOr[snowflakes.Snowflake],
+        self, payload: data_binding.JSONObject, *, guild_id: undefined.UndefinedOr[snowflakes.Snowflake]
     ) -> _GuildChannelFields:
         if guild_id is undefined.UNDEFINED:
             guild_id = snowflakes.Snowflake(payload["guild_id"])
@@ -1539,11 +1534,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                     proxy_resource=files.ensure_resource(raw_proxy_url) if raw_proxy_url else None,
                 )
 
-            author = embed_models.EmbedAuthor(
-                name=author_payload.get("name"),
-                url=author_payload.get("url"),
-                icon=icon,
-            )
+            author = embed_models.EmbedAuthor(name=author_payload.get("name"), url=author_payload.get("url"), icon=icon)
 
         footer: typing.Optional[embed_models.EmbedFooter] = None
         if footer_payload := payload.get("footer"):
@@ -1561,9 +1552,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             fields = []
             for field_payload in fields_array:
                 field = embed_models.EmbedField(
-                    name=field_payload["name"],
-                    value=field_payload["value"],
-                    inline=field_payload.get("inline", False),
+                    name=field_payload["name"], value=field_payload["value"], inline=field_payload.get("inline", False)
                 )
                 fields.append(field)
 
@@ -1692,9 +1681,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
     def deserialize_custom_emoji(self, payload: data_binding.JSONObject) -> emoji_models.CustomEmoji:
         return emoji_models.CustomEmoji(
-            id=snowflakes.Snowflake(payload["id"]),
-            name=payload["name"],
-            is_animated=payload.get("animated", False),
+            id=snowflakes.Snowflake(payload["id"]), name=payload["name"], is_animated=payload.get("animated", False)
         )
 
     def deserialize_known_custom_emoji(
@@ -1742,9 +1729,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             max_concurrency=max(session_start_limit_payload.get("max_concurrency", 0), 1),
         )
         return gateway_models.GatewayBotInfo(
-            url=payload["url"],
-            shard_count=int(payload["shards"]),
-            session_start_limit=session_start_limit,
+            url=payload["url"], shard_count=int(payload["shards"]), session_start_limit=session_start_limit
         )
 
     ################
@@ -1838,10 +1823,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     def deserialize_role(
-        self,
-        payload: data_binding.JSONObject,
-        *,
-        guild_id: snowflakes.Snowflake,
+        self, payload: data_binding.JSONObject, *, guild_id: snowflakes.Snowflake
     ) -> guild_models.Role:
         bot_id: typing.Optional[snowflakes.Snowflake] = None
         integration_id: typing.Optional[snowflakes.Snowflake] = None
@@ -2404,8 +2386,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     def _deserialize_autocomplete_interaction_option(
-        self,
-        payload: data_binding.JSONObject,
+        self, payload: data_binding.JSONObject
     ) -> command_interactions.AutocompleteInteractionOption:
         suboptions: typing.Optional[typing.Sequence[command_interactions.AutocompleteInteractionOption]] = None
         if raw_suboptions := payload.get("options"):
@@ -2467,10 +2448,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     def _deserialize_resolved_option_data(
-        self,
-        payload: data_binding.JSONObject,
-        *,
-        guild_id: typing.Optional[snowflakes.Snowflake] = None,
+        self, payload: data_binding.JSONObject, *, guild_id: typing.Optional[snowflakes.Snowflake] = None
     ) -> base_interactions.ResolvedOptionData:
         channels: typing.Dict[snowflakes.Snowflake, base_interactions.InteractionChannel] = {}
         if raw_channels := payload.get("channels"):
@@ -2520,12 +2498,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             attachments = {}
 
         return base_interactions.ResolvedOptionData(
-            attachments=attachments,
-            channels=channels,
-            members=members,
-            messages=messages,
-            roles=roles,
-            users=users,
+            attachments=attachments, channels=channels, members=members, messages=messages, roles=roles, users=users
         )
 
     def deserialize_command_interaction(
@@ -2941,9 +2914,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
     def _deserialize_text_input(self, payload: data_binding.JSONObject) -> component_models.TextInputComponent:
         return component_models.TextInputComponent(
-            type=component_models.ComponentType(payload["type"]),
-            custom_id=payload["custom_id"],
-            value=payload["value"],
+            type=component_models.ComponentType(payload["type"]), custom_id=payload["custom_id"], value=payload["value"]
         )
 
     ##################
@@ -3454,9 +3425,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             member = self.deserialize_member(raw_member, user=user, guild_id=guild_id)
 
         return scheduled_events_models.ScheduledEventUser(
-            event_id=snowflakes.Snowflake(payload["guild_scheduled_event_id"]),
-            user=user,
-            member=member,
+            event_id=snowflakes.Snowflake(payload["guild_scheduled_event_id"]), user=user, member=member
         )
 
     ###################

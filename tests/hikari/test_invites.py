@@ -69,11 +69,7 @@ class TestInviteGuild:
             assert model.make_splash_url(ext="url", size=2) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            guild_id=123321,
-            hash="18dnf8dfbakfdh",
-            size=2,
-            file_format="url",
+            urls.CDN_URL, guild_id=123321, hash="18dnf8dfbakfdh", size=2, file_format="url"
         )
 
     def test_make_splash_url_when_no_hash(self, model: invites.InviteGuild):
@@ -93,11 +89,7 @@ class TestInviteGuild:
             assert model.make_banner_url(ext="url", size=512) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            guild_id=123321,
-            hash="fofoof",
-            size=512,
-            file_format="url",
+            urls.CDN_URL, guild_id=123321, hash="fofoof", size=512, file_format="url"
         )
 
     def test_make_banner_url_when_format_is_None_and_banner_hash_is_for_gif(self, model: invites.InviteGuild):
@@ -109,11 +101,7 @@ class TestInviteGuild:
             assert model.make_banner_url(ext=None, size=4096) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            guild_id=model.id,
-            hash="a_18dnf8dfbakfdh",
-            size=4096,
-            file_format="gif",
+            urls.CDN_URL, guild_id=model.id, hash="a_18dnf8dfbakfdh", size=4096, file_format="gif"
         )
 
     def test_make_banner_url_when_format_is_None_and_banner_hash_is_not_for_gif(self, model: invites.InviteGuild):
@@ -125,11 +113,7 @@ class TestInviteGuild:
             assert model.make_banner_url(ext=None, size=4096) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            guild_id=model.id,
-            hash=model.banner_hash,
-            size=4096,
-            file_format="png",
+            urls.CDN_URL, guild_id=model.id, hash=model.banner_hash, size=4096, file_format="png"
         )
 
     def test_make_banner_url_when_no_hash(self, model: invites.InviteGuild):

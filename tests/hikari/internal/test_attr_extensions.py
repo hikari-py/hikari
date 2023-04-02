@@ -208,9 +208,7 @@ def test_generate_deep_copier():
     memo = {123: object()}
 
     with mock.patch.object(
-        stdlib_copy,
-        "deepcopy",
-        side_effect=[copied_recursor, copied_field, copied_foo, copied_end, copied_blam],
+        stdlib_copy, "deepcopy", side_effect=[copied_recursor, copied_field, copied_foo, copied_end, copied_blam]
     ):
         attrs_extensions.generate_deep_copier(StubBaseClass)(model, memo)
 
@@ -245,11 +243,7 @@ def test_generate_deep_copier_with_only_init_attributes():
     copied_foo = object()
     memo = {123: object()}
 
-    with mock.patch.object(
-        stdlib_copy,
-        "deepcopy",
-        side_effect=[copied_recursor, copied_field, copied_foo],
-    ):
+    with mock.patch.object(stdlib_copy, "deepcopy", side_effect=[copied_recursor, copied_field, copied_foo]):
         attrs_extensions.generate_deep_copier(StubBaseClass)(model, memo)
 
         stdlib_copy.deepcopy.assert_has_calls(
@@ -279,18 +273,11 @@ def test_generate_deep_copier_with_only_non_init_attributes():
     copied_blam = object()
     memo = {123: object()}
 
-    with mock.patch.object(
-        stdlib_copy,
-        "deepcopy",
-        side_effect=[copied_end, copied_blam],
-    ):
+    with mock.patch.object(stdlib_copy, "deepcopy", side_effect=[copied_end, copied_blam]):
         attrs_extensions.generate_deep_copier(StubBaseClass)(model, memo)
 
         stdlib_copy.deepcopy.assert_has_calls(
-            [
-                mock.call(old_model_fields.end, memo),
-                mock.call(old_model_fields._blam, memo),
-            ]
+            [mock.call(old_model_fields.end, memo), mock.call(old_model_fields._blam, memo)]
         )
 
     assert model.end is copied_end
@@ -305,11 +292,7 @@ def test_generate_deep_copier_with_no_attributes():
     model = StubBaseClass()
     memo = {123: object()}
 
-    with mock.patch.object(
-        stdlib_copy,
-        "deepcopy",
-        side_effect=NotImplementedError,
-    ):
+    with mock.patch.object(stdlib_copy, "deepcopy", side_effect=NotImplementedError):
         attrs_extensions.generate_deep_copier(StubBaseClass)(model, memo)
 
         stdlib_copy.deepcopy.assert_not_called()

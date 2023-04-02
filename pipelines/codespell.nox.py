@@ -22,11 +22,7 @@
 from pipelines import config
 from pipelines import nox
 
-IGNORED_WORDS = [
-    "ro",
-    "falsy",
-    "ws",
-]
+IGNORED_WORDS = ["ro", "falsy", "ws"]
 
 
 @nox.session()

@@ -248,10 +248,7 @@ class TestEventManagerImpl:
 
     @pytest.mark.asyncio()
     async def test_on_thread_create_when_create_stateful(
-        self,
-        event_manager_impl: event_manager.EventManagerImpl,
-        shard: mock.Mock,
-        event_factory: mock.Mock,
+        self, event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
     ):
         mock_payload = {"id": "123321", "newly_created": True}
         await event_manager_impl.on_thread_create(shard, mock_payload)
@@ -263,10 +260,7 @@ class TestEventManagerImpl:
 
     @pytest.mark.asyncio()
     async def test_on_thread_create_stateless(
-        self,
-        stateless_event_manager_impl: event_manager.EventManagerImpl,
-        shard: mock.Mock,
-        event_factory: mock.Mock,
+        self, stateless_event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
     ):
         mock_payload = {"id": "123321", "newly_created": True}
         await stateless_event_manager_impl.on_thread_create(shard, mock_payload)
@@ -278,10 +272,7 @@ class TestEventManagerImpl:
 
     @pytest.mark.asyncio()
     async def test_on_thread_create_for_access_stateful(
-        self,
-        event_manager_impl: event_manager.EventManagerImpl,
-        shard: mock.Mock,
-        event_factory: mock.Mock,
+        self, event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
     ):
         mock_payload = {"id": "123321"}
         await event_manager_impl.on_thread_create(shard, mock_payload)
@@ -293,10 +284,7 @@ class TestEventManagerImpl:
 
     @pytest.mark.asyncio()
     async def test_on_thread_create_for_access_stateless(
-        self,
-        stateless_event_manager_impl: event_manager.EventManagerImpl,
-        shard: mock.Mock,
-        event_factory: mock.Mock,
+        self, stateless_event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
     ):
         mock_payload = {"id": "123321"}
         await stateless_event_manager_impl.on_thread_create(shard, mock_payload)
@@ -308,10 +296,7 @@ class TestEventManagerImpl:
 
     @pytest.mark.asyncio()
     async def test_on_thread_update_stateful(
-        self,
-        event_manager_impl: event_manager.EventManagerImpl,
-        shard: mock.Mock,
-        event_factory: mock.Mock,
+        self, event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
     ):
         mock_payload = mock.Mock()
         await event_manager_impl.on_thread_update(shard, mock_payload)
@@ -323,10 +308,7 @@ class TestEventManagerImpl:
 
     @pytest.mark.asyncio()
     async def test_on_thread_update_stateless(
-        self,
-        stateless_event_manager_impl: event_manager.EventManagerImpl,
-        shard: mock.Mock,
-        event_factory: mock.Mock,
+        self, stateless_event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
     ):
         mock_payload = mock.Mock()
         await stateless_event_manager_impl.on_thread_update(shard, mock_payload)
@@ -338,10 +320,7 @@ class TestEventManagerImpl:
 
     @pytest.mark.asyncio()
     async def test_on_thread_delete_stateful(
-        self,
-        event_manager_impl: event_manager.EventManagerImpl,
-        shard: mock.Mock,
-        event_factory: mock.Mock,
+        self, event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
     ):
         mock_payload = mock.Mock()
         await event_manager_impl.on_thread_delete(shard, mock_payload)
@@ -353,10 +332,7 @@ class TestEventManagerImpl:
 
     @pytest.mark.asyncio()
     async def test_on_thread_delete_stateless(
-        self,
-        stateless_event_manager_impl: event_manager.EventManagerImpl,
-        shard: mock.Mock,
-        event_factory: mock.Mock,
+        self, stateless_event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
     ):
         mock_payload = mock.Mock()
         await stateless_event_manager_impl.on_thread_delete(shard, mock_payload)
@@ -368,10 +344,7 @@ class TestEventManagerImpl:
 
     @pytest.mark.asyncio()
     async def test_on_thread_list_sync_stateful_when_channel_ids(
-        self,
-        event_manager_impl: event_manager.EventManagerImpl,
-        shard: mock.Mock,
-        event_factory: mock.Mock,
+        self, event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
     ):
         event = event_factory.deserialize_thread_list_sync_event.return_value
         event.channel_ids = ["1", "2"]
@@ -390,10 +363,7 @@ class TestEventManagerImpl:
 
     @pytest.mark.asyncio()
     async def test_on_thread_list_sync_stateful_when_not_channel_ids(
-        self,
-        event_manager_impl: event_manager.EventManagerImpl,
-        shard: mock.Mock,
-        event_factory: mock.Mock,
+        self, event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
     ):
         event = event_factory.deserialize_thread_list_sync_event.return_value
         event.channel_ids = None
@@ -409,10 +379,7 @@ class TestEventManagerImpl:
 
     @pytest.mark.asyncio()
     async def test_on_thread_list_sync_stateless(
-        self,
-        stateless_event_manager_impl: event_manager.EventManagerImpl,
-        shard: mock.Mock,
-        event_factory: mock.Mock,
+        self, stateless_event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
     ):
         mock_payload = mock.Mock()
         await stateless_event_manager_impl.on_thread_list_sync(shard, mock_payload)
@@ -424,10 +391,7 @@ class TestEventManagerImpl:
 
     @pytest.mark.asyncio()
     async def test_on_thread_members_update_stateful_when_id_in_removed(
-        self,
-        event_manager_impl: event_manager.EventManagerImpl,
-        shard: mock.Mock,
-        event_factory: mock.Mock,
+        self, event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
     ):
         event = event_factory.deserialize_thread_members_update_event.return_value
         event.removed_member_ids = [1, 2, 3]
@@ -441,10 +405,7 @@ class TestEventManagerImpl:
 
     @pytest.mark.asyncio()
     async def test_on_thread_members_update_stateful_when_id_not_in_removed(
-        self,
-        event_manager_impl: event_manager.EventManagerImpl,
-        shard: mock.Mock,
-        event_factory: mock.Mock,
+        self, event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
     ):
         event = event_factory.deserialize_thread_members_update_event.return_value
         event.removed_member_ids = [1, 2, 3]
@@ -458,10 +419,7 @@ class TestEventManagerImpl:
 
     @pytest.mark.asyncio()
     async def test_on_thread_members_update_stateless(
-        self,
-        stateless_event_manager_impl: event_manager.EventManagerImpl,
-        shard: mock.Mock,
-        event_factory: mock.Mock,
+        self, stateless_event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
     ):
         mock_payload = mock.Mock()
         await stateless_event_manager_impl.on_thread_members_update(shard, mock_payload)
@@ -676,11 +634,7 @@ class TestEventManagerImpl:
 
     @pytest.mark.asyncio()
     async def test_on_guild_create_when_members_declared_and_member_cache_enabled(
-        self,
-        stateless_event_manager_impl,
-        shard,
-        event_factory,
-        entity_factory,
+        self, stateless_event_manager_impl, shard, event_factory, entity_factory
     ):
         shard.id = 123
         stateless_event_manager_impl._intents = intents.Intents.GUILD_MEMBERS
@@ -700,11 +654,7 @@ class TestEventManagerImpl:
 
     @pytest.mark.asyncio()
     async def test_on_guild_create_when_members_declared_and_enabled_for_member_chunk_event(
-        self,
-        stateless_event_manager_impl,
-        shard,
-        event_factory,
-        entity_factory,
+        self, stateless_event_manager_impl, shard, event_factory, entity_factory
     ):
         shard.id = 123
         stateless_event_manager_impl._intents = intents.Intents.GUILD_MEMBERS
@@ -733,12 +683,7 @@ class TestEventManagerImpl:
     @pytest.mark.parametrize("enabled_for_event", [True, False])
     @pytest.mark.asyncio()
     async def test_on_guild_create_when_chunk_members_disabled(
-        self,
-        stateless_event_manager_impl,
-        shard,
-        large,
-        cache_enabled,
-        enabled_for_event,
+        self, stateless_event_manager_impl, shard, large, cache_enabled, enabled_for_event
     ):
         shard.id = 123
         stateless_event_manager_impl._intents = intents.Intents.GUILD_MEMBERS

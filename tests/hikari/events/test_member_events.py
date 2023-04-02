@@ -47,10 +47,7 @@ class TestMemberEvent:
         event.user_id == 456
 
     def test_guild_when_no_cache_trait(self):
-        event = hikari_test_helpers.mock_class_namespace(
-            member_events.MemberEvent,
-            app=None,
-        )()
+        event = hikari_test_helpers.mock_class_namespace(member_events.MemberEvent, app=None)()
 
         assert event.get_guild() is None
 

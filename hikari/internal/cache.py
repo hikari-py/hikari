@@ -101,19 +101,11 @@ class CacheMappingView(cache.CacheView[KeyT, ValueT]):
     __slots__: typing.Sequence[str] = ("_data", "_builder")
 
     @typing.overload
-    def __init__(
-        self,
-        items: typing.Mapping[KeyT, ValueT],
-    ) -> None:
+    def __init__(self, items: typing.Mapping[KeyT, ValueT]) -> None:
         ...
 
     @typing.overload
-    def __init__(
-        self,
-        items: typing.Mapping[KeyT, DataT],
-        *,
-        builder: typing.Callable[[DataT], ValueT],
-    ) -> None:
+    def __init__(self, items: typing.Mapping[KeyT, DataT], *, builder: typing.Callable[[DataT], ValueT]) -> None:
         ...
 
     def __init__(
@@ -479,11 +471,7 @@ class KnownCustomEmojiData(BaseData[emojis.KnownCustomEmoji]):
 
     @classmethod
     def build_from_entity(
-        cls,
-        emoji: emojis.KnownCustomEmoji,
-        /,
-        *,
-        user: typing.Optional[RefCell[users_.User]] = None,
+        cls, emoji: emojis.KnownCustomEmoji, /, *, user: typing.Optional[RefCell[users_.User]] = None
     ) -> KnownCustomEmojiData:
         if not user and emoji.user:
             user = RefCell(copy.copy(emoji.user))
@@ -532,11 +520,7 @@ class GuildStickerData(BaseData[stickers_.GuildSticker]):
 
     @classmethod
     def build_from_entity(
-        cls,
-        sticker: stickers_.GuildSticker,
-        /,
-        *,
-        user: typing.Optional[RefCell[users_.User]] = None,
+        cls, sticker: stickers_.GuildSticker, /, *, user: typing.Optional[RefCell[users_.User]] = None
     ) -> GuildStickerData:
         if not user and sticker.user:
             user = RefCell(copy.copy(sticker.user))
@@ -588,11 +572,7 @@ class RichActivityData(BaseData[presences.RichActivity]):
 
     @classmethod
     def build_from_entity(
-        cls,
-        activity: presences.RichActivity,
-        /,
-        *,
-        emoji: typing.Union[RefCell[emojis.CustomEmoji], str, None] = None,
+        cls, activity: presences.RichActivity, /, *, emoji: typing.Union[RefCell[emojis.CustomEmoji], str, None] = None
     ) -> RichActivityData:
         if emoji:
             pass
@@ -698,11 +678,7 @@ class MessageInteractionData(BaseData[messages.MessageInteraction]):
 
     @classmethod
     def build_from_entity(
-        cls,
-        interaction: messages.MessageInteraction,
-        /,
-        *,
-        user: typing.Optional[RefCell[users_.User]] = None,
+        cls, interaction: messages.MessageInteraction, /, *, user: typing.Optional[RefCell[users_.User]] = None
     ) -> MessageInteractionData:
         if user is None:
             user = RefCell(interaction.user)
@@ -964,11 +940,7 @@ class VoiceStateData(BaseData[voices.VoiceState]):
 
     @classmethod
     def build_from_entity(
-        cls,
-        voice_state: voices.VoiceState,
-        /,
-        *,
-        member: typing.Optional[RefCell[MemberData]] = None,
+        cls, voice_state: voices.VoiceState, /, *, member: typing.Optional[RefCell[MemberData]] = None
     ) -> VoiceStateData:
         return cls(
             channel_id=voice_state.channel_id,

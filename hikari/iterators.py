@@ -28,13 +28,7 @@ wish to extend this API further!
 """
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = (
-    "LazyIterator",
-    "FlatLazyIterator",
-    "All",
-    "AttrComparator",
-    "BufferedLazyIterator",
-)
+__all__: typing.Sequence[str] = ("LazyIterator", "FlatLazyIterator", "All", "AttrComparator", "BufferedLazyIterator")
 
 import abc
 import asyncio
@@ -234,8 +228,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
         return _ChunkedLazyIterator(self, chunk_size)
 
     def map(
-        self,
-        transformation: typing.Union[typing.Callable[[ValueT], AnotherValueT], str],
+        self, transformation: typing.Union[typing.Callable[[ValueT], AnotherValueT], str]
     ) -> LazyIterator[AnotherValueT]:
         """Map the values to a different value.
 
@@ -956,9 +949,7 @@ class _MappingLazyIterator(typing.Generic[AnotherValueT, ValueT], LazyIterator[V
     __slots__: typing.Sequence[str] = ("_iterator", "_transformation")
 
     def __init__(
-        self,
-        iterator: LazyIterator[AnotherValueT],
-        transformation: typing.Callable[[AnotherValueT], ValueT],
+        self, iterator: LazyIterator[AnotherValueT], transformation: typing.Callable[[AnotherValueT], ValueT]
     ) -> None:
         self._iterator = iterator
         self._transformation = transformation
