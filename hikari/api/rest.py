@@ -7292,6 +7292,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         choices: typing.Union[
             typing.Sequence[commands.CommandChoice], typing.Sequence[special_endpoints.AutocompleteChoiceBuilder]
         ],
+        _stack_level: int = 0,
     ) -> special_endpoints.InteractionAutocompleteBuilder:
         """Create a builder for an autocomplete interaction response.
 
@@ -7674,6 +7675,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         choices: typing.Union[
             typing.Sequence[commands.CommandChoice], typing.Sequence[special_endpoints.AutocompleteChoiceBuilder]
         ],
+        _stack_level: int = 0,
     ) -> None:
         """Create the initial response for an autocomplete interaction.
 

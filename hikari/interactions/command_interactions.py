@@ -383,7 +383,10 @@ class AutocompleteInteraction(BaseCommandInteraction):
     """Parameter values provided by the user invoking this command."""
 
     def build_response(
-        self, choices: typing.Sequence[commands.CommandChoice]
+        self,
+        choices: typing.Union[
+            typing.Sequence[commands.CommandChoice], typing.Sequence[special_endpoints.AutocompleteChoiceBuilder]
+        ],
     ) -> special_endpoints.InteractionAutocompleteBuilder:
         """Get a message response builder for use in the REST server flow.
 
@@ -391,6 +394,10 @@ class AutocompleteInteraction(BaseCommandInteraction):
             For interactions received over the gateway
             `AutocompleteInteraction.create_response` should be used to set
             the interaction response.
+
+        .. deprecated:: 2.0.0.dev118
+            Passing `hikari.commands.CommandChoice`s here instead of
+            `hikari.api.special_endpoints.AutocompleteChoiceBuilder`s.
 
         Examples
         --------
@@ -401,9 +408,9 @@ class AutocompleteInteraction(BaseCommandInteraction):
                     interaction
                     .build_response(
                         [
-                            CommandChoice(name="foo", value="a"),
-                            CommandChoice(name="bar", value="b"),
-                            CommandChoice(name="baz", value="c"),
+                            AutocompleteChoiceBuilder(name="foo", value="a"),
+                            AutocompleteChoiceBuilder(name="bar", value="b"),
+                            AutocompleteChoiceBuilder(name="baz", value="c"),
                         ]
                     )
                 )
@@ -413,12 +420,18 @@ class AutocompleteInteraction(BaseCommandInteraction):
         hikari.api.special_endpoints.InteractionAutocompleteBuilder
             Interaction autocomplete response builder object.
         """
-        return self.app.rest.interaction_autocomplete_builder(choices)
+        return self.app.rest.interaction_autocomplete_builder(choices, _stack_level=1)
 
-    async def create_response(self, choices: typing.Sequence[commands.CommandChoice]) -> None:
-        """Create a response for this autocomplete interaction."""
-        await self.app.rest.create_autocomplete_response(
-            self.id,
-            self.token,
-            choices,
-        )
+    async def create_response(
+        self,
+        choices: typing.Union[
+            typing.Sequence[commands.CommandChoice], typing.Sequence[special_endpoints.AutocompleteChoiceBuilder]
+        ],
+    ) -> None:
+        """Create a response for this autocomplete interaction.
+
+        .. deprecated:: 2.0.0.dev118
+            Passing `hikari.commands.CommandChoice`s here instead of
+            `hikari.api.special_endpoints.AutocompleteChoiceBuilder`s.
+        """
+        await self.app.rest.create_autocomplete_response(self.id, self.token, choices, _stack_level=1)
