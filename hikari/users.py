@@ -47,7 +47,6 @@ if typing.TYPE_CHECKING:
     from hikari import guilds
     from hikari import locales
     from hikari import messages
-    from hikari import stickers as stickers_
     from hikari.api import special_endpoints
 
 
