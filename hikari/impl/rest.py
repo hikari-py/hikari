@@ -1432,7 +1432,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("flags", flags)
         body.put("embeds", serialized_embeds)
         body.put("components", serialized_components)
-        body.put_snowflake_array("sticker_ids", [sticker] if sticker else stickers)
+        body.put_snowflake_array("sticker_ids", (sticker,) if sticker else stickers)
 
         if not edit or not undefined.all_undefined(mentions_everyone, mentions_reply, user_mentions, role_mentions):
             body.put(
