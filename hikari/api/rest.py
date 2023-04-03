@@ -1422,7 +1422,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         messages: typing.Union[
             snowflakes.SnowflakeishOr[messages_.PartialMessage],
-            snowflakes.SnowflakeishIterable[messages_.PartialMessage],
+            typing.Iterable[snowflakes.SnowflakeishOr[messages_.PartialMessage]],
+            typing.AsyncIterable[snowflakes.SnowflakeishOr[messages_.PartialMessage]],
         ],
         /,
         *other_messages: snowflakes.SnowflakeishOr[messages_.PartialMessage],
@@ -1455,9 +1456,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.TextableChannel]
             The channel to bulk delete the messages in. This may be
             the object or the ID of an existing channel.
-        messages : typing.Union[hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage], hikari.snowflakes.SnowflakeishIterable[hikari.messages.PartialMessage]]
+        messages
             Either the object/ID of an existing message to delete or an iterable
-            of the objects and/or IDs of existing messages to delete.
+            (sync or async) of the objects and/or IDs of existing messages to delete.
 
         Other Parameters
         ----------------
@@ -1471,7 +1472,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             messages that were not removed. The
             `BaseException.__cause__` of the exception will be the
             original error that terminated this process.
-        """  # noqa: E501 - Line too long
+        """
 
     @abc.abstractmethod
     async def add_reaction(
