@@ -200,12 +200,12 @@ class HTTPTimeoutSettings:
 class HTTPSettings(config.HTTPSettings):
     """Settings to control HTTP clients."""
 
-    enable_cleanup_closed: bool = attrs.field(default=True, validator=attrs.validators.instance_of(bool))
+    enable_cleanup_closed: bool = attrs.field(default=False, validator=attrs.validators.instance_of(bool))
     """Toggle whether to clean up closed transports.
 
-    This defaults to `True` to combat various protocol and asyncio
-    issues present when using Microsoft Windows. If you are sure you know
-    what you are doing, you may instead set this to `False` to disable this
+    This defaults to `False` to combat various protocol and asyncio
+    issues present. If you are sure you know  what you are doing,
+    you may instead set this to `True` to enable this
     behavior internally.
     """
 
