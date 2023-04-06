@@ -106,7 +106,7 @@ if typing.TYPE_CHECKING:
 
 else:
 
-    def deprecated(*args):
+    def deprecated(*args, **kwargs):
         """Mark a function, overload, or class as deprecated for type-checkers.
 
         This has no runtime side-effects.
