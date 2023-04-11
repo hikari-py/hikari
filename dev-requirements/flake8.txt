@@ -11,7 +11,7 @@ flake8-comprehensions==3.11.1           # comprehension checks
 flake8-docstrings==1.7.0                # pydocstyle support
 flake8-executable==2.1.3                # shebangs
 flake8-fixme==1.1.1                     # "fix me" counter
-flake8-functions==0.0.7                 # function linting
+flake8-functions==0.0.8                 # function linting
 flake8-html==0.4.3                      # html output
 flake8-isort==6.0.0                     # runs isort
 flake8-mutable==1.2.0                   # mutable default argument detection
