@@ -12,5 +12,5 @@ myst-parser==1.0.0
 
 # Misc extensions
 sphinxext.opengraph==0.8.2
-sphinx-copybutton==0.5.1
+sphinx-copybutton==0.5.2
 sphinxcontrib-towncrier==0.3.2a0
