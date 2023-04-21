@@ -334,8 +334,8 @@ def warn_if_not_optimized(suppress: bool) -> None:
     if __debug__ and not suppress:
         _LOGGER.warning(
             "You are running on optimization level 0 (no optimizations), which may slow down your application. "
-            "For production, consider using at least level 1 optimization by passing `-O` as an option in "
-            "your call to the python interpreter."
+            "For production, consider using at least level 1 optimization by passing `-O` to the python "
+            "interpreter call"
         )
 
 
