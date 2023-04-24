@@ -32,7 +32,7 @@ jobs:
           python-version: 3.8
 
       - name: Temporarily disable "include administrators" branch protection
-        uses: benjefferies/branch-protection-bot@1.0.7
+        uses: benjefferies/branch-protection-bot@1.0.8
         with:
           access_token: ${{ steps.generate_token.outputs.token }}
           enforce_admins: false
@@ -46,7 +46,7 @@ jobs:
         run: bash scripts/ci/release.sh
 
       - name: Re-enable "include administrators" branch protection
-        uses: benjefferies/branch-protection-bot@1.0.7
+        uses: benjefferies/branch-protection-bot@1.0.8
         if: always()
         with:
           access_token: ${{ steps.generate_token.outputs.token }}
