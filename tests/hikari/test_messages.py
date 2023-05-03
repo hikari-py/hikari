@@ -46,6 +46,8 @@ class TestAttachment:
             size=543,
             url="htttt",
             is_ephemeral=False,
+            duration=1,
+            waveform="122111",
         )
         assert str(attachment) == "super_cool_file.cool"
 

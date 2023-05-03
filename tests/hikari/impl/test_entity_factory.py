@@ -5537,6 +5537,8 @@ class TestEntityFactoryImpl:
             "width": 1844,
             "height": 2638,
             "ephemeral": True,
+            "duration_secs": 1000.123,
+            "waveform": "some encoded string",
         }
 
     @pytest.fixture()
@@ -5604,6 +5606,8 @@ class TestEntityFactoryImpl:
         assert attachment.width == 1844
         assert attachment.height == 2638
         assert attachment.is_ephemeral is True
+        assert attachment.duration == 1000.123
+        assert attachment.waveform == "some encoded string"
         assert isinstance(attachment, message_models.Attachment)
 
     def test__deserialize_message_attachment_with_null_fields(self, entity_factory_impl, attachment_payload):
@@ -5621,6 +5625,8 @@ class TestEntityFactoryImpl:
         del attachment_payload["height"]
         del attachment_payload["width"]
         del attachment_payload["ephemeral"]
+        del attachment_payload["duration_secs"]
+        del attachment_payload["waveform"]
 
         attachment = entity_factory_impl._deserialize_message_attachment(attachment_payload)
 
@@ -5628,6 +5634,8 @@ class TestEntityFactoryImpl:
         assert attachment.height is None
         assert attachment.width is None
         assert attachment.is_ephemeral is False
+        assert attachment.duration is None
+        assert attachment.waveform is None
 
     def test_deserialize_partial_message(
         self,

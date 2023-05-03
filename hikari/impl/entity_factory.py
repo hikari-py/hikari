@@ -2946,6 +2946,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             height=payload.get("height"),
             width=payload.get("width"),
             is_ephemeral=payload.get("ephemeral", False),
+            duration=payload.get("duration_secs"),
+            waveform=payload.get("waveform"),
         )
 
     def _deserialize_message_reaction(self, payload: data_binding.JSONObject) -> message_models.Reaction:
