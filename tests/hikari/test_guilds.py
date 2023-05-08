@@ -32,7 +32,7 @@ from hikari import snowflakes
 from hikari import undefined
 from hikari import urls
 from hikari import users
-from hikari.impl import bot
+from hikari.impl import gateway_bot
 from hikari.internal import routes
 from hikari.internal import time
 from tests.hikari import hikari_test_helpers
@@ -40,7 +40,7 @@ from tests.hikari import hikari_test_helpers
 
 @pytest.fixture()
 def mock_app():
-    return mock.Mock(spec_set=bot.GatewayBot)
+    return mock.Mock(spec_set=gateway_bot.GatewayBot)
 
 
 class TestPartialRole:
@@ -1021,7 +1021,15 @@ class TestGuild:
         assert model.get_emojis() == {}
 
     def test_get_sticker(self, model):
+        model.app.cache.get_sticker.return_value.guild_id = model.id
         assert model.get_sticker(456) is model.app.cache.get_sticker.return_value
+        model.app.cache.get_sticker.assert_called_once_with(456)
+
+    def test_get_sticker_when_not_from_guild(self, model):
+        model.app.cache.get_sticker.return_value.guild_id = 546123123433
+
+        assert model.get_sticker(456) is None
+
         model.app.cache.get_sticker.assert_called_once_with(456)
 
     def test_get_sticker_when_no_cache_trait(self, model):
@@ -1045,7 +1053,15 @@ class TestGuild:
         assert model.get_roles() == {}
 
     def test_get_emoji(self, model):
+        model.app.cache.get_emoji.return_value.guild_id = model.id
         assert model.get_emoji(456) is model.app.cache.get_emoji.return_value
+        model.app.cache.get_emoji.assert_called_once_with(456)
+
+    def test_get_emoji_when_not_from_guild(self, model):
+        model.app.cache.get_emoji.return_value.guild_id = 1233212
+
+        assert model.get_emoji(456) is None
+
         model.app.cache.get_emoji.assert_called_once_with(456)
 
     def test_get_emoji_when_no_cache_trait(self, model):
@@ -1053,7 +1069,15 @@ class TestGuild:
         assert model.get_emoji(456) is None
 
     def test_get_role(self, model):
+        model.app.cache.get_role.return_value.guild_id = model.id
         assert model.get_role(456) is model.app.cache.get_role.return_value
+        model.app.cache.get_role.assert_called_once_with(456)
+
+    def test_get_role_when_not_from_guild(self, model):
+        model.app.cache.get_role.return_value.guild_id = 7623123321123
+
+        assert model.get_role(456) is None
+
         model.app.cache.get_role.assert_called_once_with(456)
 
     def test_get_role_when_no_cache_trait(self, model):
@@ -1226,7 +1250,15 @@ class TestGuild:
         assert await model.fetch_afk_channel() is None
 
     def test_get_channel(self, model):
+        model.app.cache.get_guild_channel.return_value.guild_id = model.id
         assert model.get_channel(456) is model.app.cache.get_guild_channel.return_value
+        model.app.cache.get_guild_channel.assert_called_once_with(456)
+
+    def test_get_channel_when_not_from_guild(self, model):
+        model.app.cache.get_guild_channel.return_value.guild_id = 654523123
+
+        assert model.get_channel(456) is None
+
         model.app.cache.get_guild_channel.assert_called_once_with(456)
 
     def test_get_channel_when_no_cache_trait(self, model):

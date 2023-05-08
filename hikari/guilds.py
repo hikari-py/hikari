@@ -2898,7 +2898,11 @@ class Guild(PartialGuild):
         if not isinstance(self.app, traits.CacheAware):
             return None
 
-        return self.app.cache.get_guild_channel(channel)
+        channel_ = self.app.cache.get_guild_channel(channel)
+        if channel_ and channel_.guild_id == self.id:
+            return channel_
+
+        return None
 
     def get_member(self, user: snowflakes.SnowflakeishOr[users.PartialUser]) -> typing.Optional[Member]:
         """Get a cached member that belongs to the guild by it's user ID or object.
@@ -2994,7 +2998,11 @@ class Guild(PartialGuild):
         if not isinstance(self.app, traits.CacheAware):
             return None
 
-        return self.app.cache.get_emoji(emoji)
+        emoji_ = self.app.cache.get_emoji(emoji)
+        if emoji_ and emoji_.guild_id == self.id:
+            return emoji_
+
+        return None
 
     def get_sticker(
         self, sticker: snowflakes.SnowflakeishOr[stickers.GuildSticker]
@@ -3015,7 +3023,11 @@ class Guild(PartialGuild):
         if not isinstance(self.app, traits.CacheAware):
             return None
 
-        return self.app.cache.get_sticker(sticker)
+        sticker_ = self.app.cache.get_sticker(sticker)
+        if sticker_ and sticker_.guild_id == self.id:
+            return sticker_
+
+        return None
 
     def get_role(self, role: snowflakes.SnowflakeishOr[PartialRole]) -> typing.Optional[Role]:
         """Get a cached role that belongs to the guild by it's ID or object.
@@ -3033,7 +3045,11 @@ class Guild(PartialGuild):
         if not isinstance(self.app, traits.CacheAware):
             return None
 
-        return self.app.cache.get_role(role)
+        role_ = self.app.cache.get_role(role)
+        if role_ and role_.guild_id == self.id:
+            return role_
+
+        return None
 
     async def fetch_owner(self) -> Member:
         """Fetch the owner of the guild.

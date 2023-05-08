@@ -642,16 +642,13 @@ class InteractionAutocompleteBuilder(InteractionResponseBuilder, abc.ABC):
         """Autocomplete choices."""
 
     @abc.abstractmethod
-    def set_choices(
-        self,
-        choices: typing.Union[typing.Sequence[commands.CommandChoice], typing.Sequence[AutocompleteChoiceBuilder]],
-        /,
-    ) -> Self:
+    def set_choices(self, choices: typing.Sequence[AutocompleteChoiceBuilder], /) -> Self:
         """Set autocomplete choices.
 
-        .. deprecated:: 2.0.0.dev118
-            Passing `hikari.commands.CommandChoice`s here instead of
-            `hikari.api.special_endpoints.AutocompleteChoiceBuilder`s.
+        Parameters
+        ----------
+        choices : typing.Sequence[AutocompleteChoiceBuilder]
+            The choices to set.
 
         Returns
         -------
@@ -958,7 +955,7 @@ class InteractionModalBuilder(InteractionResponseBuilder, abc.ABC):
 
     @abc.abstractmethod
     def set_custom_id(self, custom_id: str, /) -> Self:
-        """Set the developer set custom ID used for identifying interactions with this modal.
+        """Set the custom ID used for identifying interactions with this modal.
 
         Parameters
         ----------
@@ -1028,6 +1025,21 @@ class CommandBuilder(abc.ABC):
     @abc.abstractmethod
     def name_localizations(self) -> typing.Mapping[typing.Union[locales.Locale, str], str]:
         """Name localizations set for this command."""
+
+    @abc.abstractmethod
+    def set_name(self, name: str, /) -> Self:
+        """Set the name of this command.
+
+        Parameters
+        ----------
+        name : str
+            The name to set for this command.
+
+        Returns
+        -------
+        CommandBuilder
+            Object of this command builder to allow for chained calls.
+        """
 
     @abc.abstractmethod
     def set_id(self, id_: undefined.UndefinedOr[snowflakes.Snowflakeish], /) -> Self:
@@ -1177,6 +1189,26 @@ class SlashCommandBuilder(CommandBuilder):
     def description_localizations(self) -> typing.Mapping[typing.Union[locales.Locale, str], str]:
         """Command's localised descriptions."""
 
+    @property
+    @abc.abstractmethod
+    def options(self) -> typing.Sequence[commands.CommandOption]:
+        """Sequence of up to 25 of the options set for this command."""
+
+    @abc.abstractmethod
+    def set_description(self, description: str, /) -> Self:
+        """Set the description for this command.
+
+        Parameters
+        ----------
+        description : str
+            The description to set for this command.
+
+        Returns
+        -------
+        SlashCommandBuilder
+            Object of this command builder.
+        """
+
     @abc.abstractmethod
     def set_description_localizations(
         self, description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str], /
@@ -1190,14 +1222,9 @@ class SlashCommandBuilder(CommandBuilder):
 
         Returns
         -------
-        CommandBuilder
+        SlashCommandBuilder
             Object of this command builder.
         """
-
-    @property
-    @abc.abstractmethod
-    def options(self) -> typing.Sequence[commands.CommandOption]:
-        """Sequence of up to 25 of the options set for this command."""
 
     @abc.abstractmethod
     def add_option(self, option: commands.CommandOption) -> Self:
@@ -1213,7 +1240,7 @@ class SlashCommandBuilder(CommandBuilder):
 
         Returns
         -------
-        CommandBuilder
+        SlashCommandBuilder
             Object of this command builder to allow for chained calls.
         """
 
@@ -1421,6 +1448,21 @@ class InteractiveButtonBuilder(ButtonBuilder, abc.ABC):
     def custom_id(self) -> str:
         """Developer set custom ID used for identifying interactions with this button."""
 
+    @abc.abstractmethod
+    def set_custom_id(self, custom_id: str, /) -> Self:
+        """Set the custom ID used for identifying this button.
+
+        Parameters
+        ----------
+        custom_id : str
+            Developer set custom ID used for identifying this button.
+
+        Returns
+        -------
+        InteractiveButtonBuilder
+            The builder object to enable chained calls.
+        """
+
 
 class SelectOptionBuilder(abc.ABC):
     """Builder class for select menu options."""
@@ -1451,6 +1493,38 @@ class SelectOptionBuilder(abc.ABC):
     @abc.abstractmethod
     def is_default(self) -> bool:
         """Whether this option should be marked as selected by default."""
+
+    @abc.abstractmethod
+    def set_label(self, label: str, /) -> Self:
+        """Set the option's label.
+
+        Parameters
+        ----------
+        label : str
+            Label to set for this option. This can be up to 100 characters
+            long.
+
+        Returns
+        -------
+        SelectOptionBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_value(self, value: str, /) -> Self:
+        """Set the option's value.
+
+        Parameters
+        ----------
+        value : str
+            Value to set for this option. This can be up to 100 characters
+            long.
+
+        Returns
+        -------
+        SelectOptionBuilder
+            The builder object to enable chained calls.
+        """
 
     @abc.abstractmethod
     def set_description(self, value: undefined.UndefinedOr[str], /) -> Self:
@@ -1550,6 +1624,21 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC):
         Defaults to 1.
         Must be greater than or equal to `SelectMenuBuilder.min_values` and
         less than or equal to 25.
+        """
+
+    @abc.abstractmethod
+    def set_custom_id(self, custom_id: str, /) -> Self:
+        """Set the custom ID used for identifying this menu.
+
+        Parameters
+        ----------
+        custom_id : str
+            Developer set custom ID used for identifying this menu.
+
+        Returns
+        -------
+        SelectMenuBuilder
+            The builder object to enable chained calls.
         """
 
     @abc.abstractmethod
@@ -1742,11 +1831,6 @@ class TextInputBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def required(self) -> bool:
-        """Deprecated alias for `hikari.api.special_endpoints.TextInputBuilder`."""
-
-    @property
-    @abc.abstractmethod
     def is_required(self) -> bool:
         """Whether this text input is required to be filled-in."""
 
@@ -1777,7 +1861,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC):
 
     @abc.abstractmethod
     def set_custom_id(self, custom_id: str, /) -> Self:
-        """Set the developer set custom ID used for identifying this text input.
+        """Set the custom ID used for identifying this text input.
 
         Parameters
         ----------
