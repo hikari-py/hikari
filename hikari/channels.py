@@ -79,7 +79,7 @@ if typing.TYPE_CHECKING:
     from hikari import files
     from hikari import guilds
     from hikari import iterators
-    from hikari import messages
+    from hikari import messages as messages_
     from hikari import stickers as stickers_
     from hikari import users
     from hikari import voices
@@ -409,7 +409,7 @@ class TextableChannel(PartialChannel):
         before: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[snowflakes.Unique]] = undefined.UNDEFINED,
         after: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[snowflakes.Unique]] = undefined.UNDEFINED,
         around: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[snowflakes.Unique]] = undefined.UNDEFINED,
-    ) -> iterators.LazyIterator[messages.Message]:
+    ) -> iterators.LazyIterator[messages_.Message]:
         """Browse the message history for a given text channel.
 
         .. note::
@@ -457,7 +457,7 @@ class TextableChannel(PartialChannel):
         """
         return self.app.rest.fetch_messages(self.id, before=before, after=after, around=around)
 
-    async def fetch_message(self, message: snowflakes.SnowflakeishOr[messages.PartialMessage]) -> messages.Message:
+    async def fetch_message(self, message: snowflakes.SnowflakeishOr[messages_.PartialMessage]) -> messages_.Message:
         """Fetch a specific message in the given text channel.
 
         Parameters
@@ -503,7 +503,7 @@ class TextableChannel(PartialChannel):
             snowflakes.SnowflakeishSequence[stickers_.PartialSticker]
         ] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        reply: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages.PartialMessage]] = undefined.UNDEFINED,
+        reply: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = undefined.UNDEFINED,
         reply_must_exist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -513,8 +513,8 @@ class TextableChannel(PartialChannel):
         role_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
-        flags: typing.Union[undefined.UndefinedType, int, messages.MessageFlag] = undefined.UNDEFINED,
-    ) -> messages.Message:
+        flags: typing.Union[undefined.UndefinedType, int, messages_.MessageFlag] = undefined.UNDEFINED,
+    ) -> messages_.Message:
         """Create a message in this channel.
 
         Parameters
@@ -699,7 +699,7 @@ class TextableChannel(PartialChannel):
         """
         return self.app.rest.trigger_typing(self.id)
 
-    async def fetch_pins(self) -> typing.Sequence[messages.Message]:
+    async def fetch_pins(self) -> typing.Sequence[messages_.Message]:
         """Fetch the pinned messages in this text channel.
 
         Returns
@@ -723,7 +723,7 @@ class TextableChannel(PartialChannel):
         """
         return await self.app.rest.fetch_pins(self.id)
 
-    async def pin_message(self, message: snowflakes.SnowflakeishOr[messages.PartialMessage]) -> None:
+    async def pin_message(self, message: snowflakes.SnowflakeishOr[messages_.PartialMessage]) -> None:
         """Pin an existing message in the text channel.
 
         Parameters
@@ -749,7 +749,7 @@ class TextableChannel(PartialChannel):
         """
         return await self.app.rest.pin_message(self.id, message)
 
-    async def unpin_message(self, message: snowflakes.SnowflakeishOr[messages.PartialMessage]) -> None:
+    async def unpin_message(self, message: snowflakes.SnowflakeishOr[messages_.PartialMessage]) -> None:
         """Unpin a given message from the text channel.
 
         Parameters
@@ -778,10 +778,12 @@ class TextableChannel(PartialChannel):
     async def delete_messages(
         self,
         messages: typing.Union[
-            snowflakes.SnowflakeishOr[messages.PartialMessage], snowflakes.SnowflakeishIterable[messages.PartialMessage]
+            snowflakes.SnowflakeishOr[messages_.PartialMessage],
+            typing.Iterable[snowflakes.SnowflakeishOr[messages_.PartialMessage]],
+            typing.AsyncIterable[snowflakes.SnowflakeishOr[messages_.PartialMessage]],
         ],
         /,
-        *other_messages: snowflakes.SnowflakeishOr[messages.PartialMessage],
+        *other_messages: snowflakes.SnowflakeishOr[messages_.PartialMessage],
     ) -> None:
         """Bulk-delete messages from the channel.
 
@@ -808,9 +810,9 @@ class TextableChannel(PartialChannel):
 
         Parameters
         ----------
-        messages : typing.Union[hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage], hikari.snowflakes.SnowflakeishIterable[hikari.messages.PartialMessage]]
+        messages
             Either the object/ID of an existing message to delete or an iterable
-            of the objects and/or IDs of existing messages to delete.
+            (sync or async) of the objects and/or IDs of existing messages to delete.
 
         Other Parameters
         ----------------
@@ -824,7 +826,7 @@ class TextableChannel(PartialChannel):
             messages that were not removed. The
             `BaseException.__cause__` of the exception will be the
             original error that terminated this process.
-        """  # noqa: E501 - Line too long
+        """
         return await self.app.rest.delete_messages(self.id, messages, *other_messages)
 
 
