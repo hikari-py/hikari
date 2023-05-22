@@ -1,7 +1,7 @@
 sphinx==6.2.1
 
 # Theme
-furo==2023.3.27
+furo==2023.5.20
 
 # Autodocumentation
 sphinx-autoapi==2.1.0
