@@ -42,7 +42,7 @@ class TestCommandInteraction:
             app=mock_app,
             id=snowflakes.Snowflake(2312312),
             type=base_interactions.InteractionType.APPLICATION_COMMAND,
-            channel_id=snowflakes.Snowflake(3123123),
+            channel=mock.Mock(id=3123123),
             guild_id=snowflakes.Snowflake(5412231),
             member=object(),
             user=object(),
@@ -74,6 +74,9 @@ class TestCommandInteraction:
         mock_app.rest.interaction_deferred_builder.assert_called_once_with(
             base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE
         )
+
+    def test_channel_id_property(self, mock_command_interaction):
+        assert mock_command_interaction.channel_id == 3123123
 
     @pytest.mark.asyncio()
     async def test_fetch_channel(self, mock_command_interaction, mock_app):
@@ -107,7 +110,7 @@ class TestAutocompleteInteraction:
             app=mock_app,
             id=snowflakes.Snowflake(2312312),
             type=base_interactions.InteractionType.APPLICATION_COMMAND,
-            channel_id=snowflakes.Snowflake(3123123),
+            channel=mock.Mock(3123123),
             guild_id=snowflakes.Snowflake(5412231),
             guild_locale="en-US",
             locale="en-US",

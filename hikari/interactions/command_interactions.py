@@ -134,8 +134,8 @@ class BaseCommandInteraction(base_interactions.PartialInteraction):
     May be a command interaction or an autocomplete interaction.
     """
 
-    channel_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
-    """ID of the channel this command interaction event was triggered in."""
+    channel: channels.PartialChannel = attrs.field(eq=False, hash=False, repr=False)
+    """The channel this command interaction event was triggered in."""
 
     guild_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
     """ID of the guild this command interaction event was triggered in.
@@ -177,6 +177,10 @@ class BaseCommandInteraction(base_interactions.PartialInteraction):
 
     command_type: typing.Union[commands.CommandType, int] = attrs.field(eq=False, hash=False, repr=True)
     """The type of the command."""
+
+    @property
+    def channel_id(self) -> snowflakes.Snowflake:
+        return self.channel.id
 
     async def fetch_channel(self) -> channels.TextableChannel:
         """Fetch the guild channel this was triggered in.

@@ -4348,7 +4348,9 @@ class TestEntityFactoryImpl:
         }
 
     @pytest.fixture()
-    def command_interaction_payload(self, interaction_member_payload, interaction_resolved_data_payload):
+    def command_interaction_payload(
+        self, interaction_member_payload, interaction_resolved_data_payload, guild_text_channel_payload
+    ):
         return {
             "id": "3490190239012093",
             "type": 2,
@@ -4369,7 +4371,7 @@ class TestEntityFactoryImpl:
                 ],
                 "resolved": interaction_resolved_data_payload,
             },
-            "channel_id": "49949494",
+            "channel": guild_text_channel_payload,
             "member": interaction_member_payload,
             "token": "moe cat girls",
             "locale": "es-ES",
@@ -4386,6 +4388,7 @@ class TestEntityFactoryImpl:
         command_interaction_payload,
         interaction_member_payload,
         interaction_resolved_data_payload,
+        guild_text_channel_payload,
     ):
         interaction = entity_factory_impl.deserialize_command_interaction(command_interaction_payload)
         assert interaction.app is mock_app
@@ -4394,7 +4397,9 @@ class TestEntityFactoryImpl:
         assert interaction.type is base_interactions.InteractionType.APPLICATION_COMMAND
         assert interaction.token == "moe cat girls"
         assert interaction.version == 69420
-        assert interaction.channel_id == 49949494
+        assert interaction.channel == entity_factory_impl.deserialize_channel(
+            guild_text_channel_payload, guild_id=43123123
+        )
         assert interaction.guild_id == 43123123
         assert interaction.locale == "es-ES"
         assert interaction.locale is locales.Locale.ES_ES
@@ -4438,7 +4443,9 @@ class TestEntityFactoryImpl:
         assert isinstance(interaction, command_interactions.CommandInteraction)
 
     @pytest.fixture()
-    def context_menu_command_interaction_payload(self, interaction_member_payload, user_payload):
+    def context_menu_command_interaction_payload(
+        self, interaction_member_payload, user_payload, guild_text_channel_payload
+    ):
         return {
             "id": "3490190239012093",
             "type": 4,
@@ -4450,7 +4457,7 @@ class TestEntityFactoryImpl:
                 "target_id": "115590097100865541",
                 "resolved": {"users": {"115590097100865541": user_payload}},
             },
-            "channel_id": "49949494",
+            "channel": guild_text_channel_payload,
             "member": interaction_member_payload,
             "token": "moe cat girls",
             "locale": "es-ES",
@@ -4489,7 +4496,9 @@ class TestEntityFactoryImpl:
         assert interaction.app_permissions is None
 
     @pytest.fixture()
-    def autocomplete_interaction_payload(self, member_payload, user_payload, interaction_resolved_data_payload):
+    def autocomplete_interaction_payload(
+        self, member_payload, user_payload, interaction_resolved_data_payload, guild_text_channel_payload
+    ):
         return {
             "id": "3490190239012093",
             "type": 4,
@@ -4510,7 +4519,7 @@ class TestEntityFactoryImpl:
                     }
                 ],
             },
-            "channel_id": "49949494",
+            "channel": guild_text_channel_payload,
             "user": user_payload,
             "token": "moe cat girls",
             "locale": "es-ES",
@@ -4526,6 +4535,7 @@ class TestEntityFactoryImpl:
         member_payload,
         autocomplete_interaction_payload,
         interaction_resolved_data_payload,
+        guild_text_channel_payload,
     ):
         entity_factory_impl._deserialize_interaction_member = mock.Mock()
         entity_factory_impl._deserialize_resolved_option_data = mock.Mock()
@@ -4537,7 +4547,9 @@ class TestEntityFactoryImpl:
         assert interaction.type is base_interactions.InteractionType.AUTOCOMPLETE
         assert interaction.token == "moe cat girls"
         assert interaction.version == 69420
-        assert interaction.channel_id == 49949494
+        assert interaction.channel == entity_factory_impl.deserialize_channel(
+            guild_text_channel_payload, guild_id=43123123
+        )
         assert interaction.guild_id == 43123123
         assert interaction.member is entity_factory_impl._deserialize_interaction_member.return_value
         entity_factory_impl._deserialize_interaction_member.assert_called_once_with(member_payload, guild_id=43123123)
