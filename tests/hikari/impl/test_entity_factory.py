@@ -4397,9 +4397,7 @@ class TestEntityFactoryImpl:
         assert interaction.type is base_interactions.InteractionType.APPLICATION_COMMAND
         assert interaction.token == "moe cat girls"
         assert interaction.version == 69420
-        assert interaction.channel == entity_factory_impl.deserialize_channel(
-            guild_text_channel_payload, guild_id=43123123
-        )
+        assert interaction.channel == entity_factory_impl.deserialize_partial_channel(guild_text_channel_payload)
         assert interaction.guild_id == 43123123
         assert interaction.locale == "es-ES"
         assert interaction.locale is locales.Locale.ES_ES
@@ -4547,9 +4545,7 @@ class TestEntityFactoryImpl:
         assert interaction.type is base_interactions.InteractionType.AUTOCOMPLETE
         assert interaction.token == "moe cat girls"
         assert interaction.version == 69420
-        assert interaction.channel == entity_factory_impl.deserialize_channel(
-            guild_text_channel_payload, guild_id=43123123
-        )
+        assert interaction.channel == entity_factory_impl.deserialize_partial_channel(guild_text_channel_payload)
         assert interaction.guild_id == 43123123
         assert interaction.member is entity_factory_impl._deserialize_interaction_member.return_value
         entity_factory_impl._deserialize_interaction_member.assert_called_once_with(member_payload, guild_id=43123123)
