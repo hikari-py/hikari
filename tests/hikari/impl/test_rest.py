@@ -430,16 +430,21 @@ def rest_client(rest_client_class, mock_cache):
 def file_resource():
     class Stream:
         def __init__(self, data):
+            self.open = False
             self.data = data
 
         async def data_uri(self):
+            if not self.open:
+                raise RuntimeError("Tried to read off a closed stream")
+
             return self.data
 
         async def __aenter__(self):
+            self.open = True
             return self
 
         async def __aexit__(self, exc_type, exc, exc_tb) -> None:
-            pass
+            self.open = False
 
     class FileResource(files.Resource):
         filename = None
