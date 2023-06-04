@@ -2454,12 +2454,20 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_channels := payload.get("channels"):
             for channel_payload in raw_channels.values():
                 channel_id = snowflakes.Snowflake(channel_payload["id"])
+
+                # Even tho (at the time of writing) it is documented that these partial channels will always contain
+                # this field, they are explicitly avoided for DM channels.
+                if "permissions" in channel_payload:
+                    permissions = permission_models.Permissions(int(channel_payload["permissions"]))
+                else:
+                    permissions = permission_models.Permissions.NONE
+
                 channels[channel_id] = base_interactions.InteractionChannel(
                     app=self._app,
                     id=channel_id,
                     type=channel_models.ChannelType(channel_payload["type"]),
-                    name=channel_payload["name"],
-                    permissions=permission_models.Permissions(int(channel_payload["permissions"])),
+                    name=channel_payload.get("name"),
+                    permissions=permissions,
                 )
 
         if raw_users := payload.get("users"):
