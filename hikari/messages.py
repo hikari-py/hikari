@@ -171,6 +171,9 @@ class MessageFlag(enums.Flag):
     SUPPRESS_NOTIFICATIONS = 1 << 12
     """This message will not trigger push and desktop notifications."""
 
+    IS_VOICE_MESSAGE = 1 << 13
+    """This message is a voice message."""
+
 
 @typing.final
 class MessageActivityType(int, enums.Enum):
@@ -234,6 +237,12 @@ class Attachment(snowflakes.Unique, files.WebResource):
     and indicates that the attachment will be removed after a set period of
     time (but will exist as long as their relevant message exists).
     """
+
+    duration: typing.Optional[float] = attrs.field(hash=False, eq=False, repr=False)
+    """The duration (in seconds) of the voice message."""
+
+    waveform: typing.Optional[str] = attrs.field(hash=False, eq=False, repr=False)
+    """A base64 encoded representation of the sampled waveform for the voice message."""
 
     def __str__(self) -> str:
         return self.filename
