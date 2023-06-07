@@ -464,11 +464,7 @@ class Member(users.User):
         Username: `Member.username`.
         Global name: `Member.global_name`.
         """
-        if isinstance(self.nickname, str):
-            return self.nickname
-        if isinstance(self.global_name, str):
-            return self.global_name
-        return self.username
+        return self.nickname or self.global_name or self.username
 
     @property
     def flags(self) -> users.UserFlag:
