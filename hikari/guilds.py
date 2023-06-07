@@ -462,7 +462,7 @@ class Member(users.User):
         --------
         Nickname: `Member.nickname`.
         Username: `Member.username`.
-        Global name: `Member.global_name`
+        Global name: `Member.global_name`.
         """
         if isinstance(self.nickname, str):
             return self.nickname
