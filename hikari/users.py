@@ -175,8 +175,8 @@ class PartialUser(snowflakes.Unique, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def global_name(self) -> undefined.UndefinedOr[str]:
-        """Global name for the user."""
+    def global_name(self) -> undefined.UndefinedNoneOr[str]:
+        """Global name for the user, if they have one, otherwise `None`."""
 
     @property
     @abc.abstractmethod
@@ -539,7 +539,7 @@ class User(PartialUser, abc.ABC):
     @property
     @abc.abstractmethod
     def global_name(self) -> typing.Optional[str]:
-        """Global name for the user."""
+        """Global name for the user, if they have one, otherwise `None`."""
 
     def make_avatar_url(self, *, ext: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the avatar URL for this user, if set.
@@ -651,7 +651,7 @@ class PartialUserImpl(PartialUser):
     username: undefined.UndefinedOr[str] = attrs.field(eq=False, hash=False, repr=True)
     """Username of the user."""
 
-    global_name: undefined.UndefinedOr[str] = attrs.field(eq=False, hash=False, repr=True)
+    global_name: undefined.UndefinedNoneOr[str] = attrs.field(eq=False, hash=False, repr=True)
     """Global name of the user."""
 
     avatar_hash: undefined.UndefinedNoneOr[str] = attrs.field(eq=False, hash=False, repr=False)
