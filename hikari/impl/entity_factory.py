@@ -3520,7 +3520,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             id=snowflakes.Snowflake(payload["id"]),
             discriminator=payload["discriminator"],
             username=payload["username"],
-            global_name=payload.get("global_name", None),
+            global_name=payload.get("global_name"),
             avatar_hash=payload["avatar"],
             banner_hash=payload.get("banner", None),
             accent_color=color_models.Color(accent_color) if accent_color is not None else None,
