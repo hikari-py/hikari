@@ -725,6 +725,7 @@ class GatewayShardImpl(shard.GatewayShard):
                     user_pl = data["user"]
                     self._user_id = snowflakes.Snowflake(user_pl["id"])
 
+                    # TODO: Remove when rollout finishes
                     user = user_pl["username"] + (
                         "#" + user_pl["discriminator"] if user_pl["discriminator"] != "0" else ""
                     )
