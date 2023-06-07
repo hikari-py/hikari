@@ -462,7 +462,7 @@ class Member(users.User):
         --------
         Nickname: `Member.nickname`.
         Username: `Member.username`.
-        Global_name: `Member.global_name`.
+        Globalname: `Member.global_name`.
         """
         return self.nickname or self.global_name or self.username
 
