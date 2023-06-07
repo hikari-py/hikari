@@ -6692,6 +6692,7 @@ class TestEntityFactoryImpl:
         return {
             "id": "379953393319542784",
             "username": "qt pi",
+            "global_name": "blahaj",
             "avatar": "820d0e50543216e812ad94e6ab7",
             "banner": "a_221313e1e2edsncsncsmcndsc",
             "accent_color": 231321,
@@ -6712,6 +6713,7 @@ class TestEntityFactoryImpl:
         assert my_user.app is mock_app
         assert my_user.id == 379953393319542784
         assert my_user.username == "qt pi"
+        assert my_user.global_name == "blahaj"
         assert my_user.avatar_hash == "820d0e50543216e812ad94e6ab7"
         assert my_user.banner_hash == "a_221313e1e2edsncsncsmcndsc"
         assert my_user.accent_color == 231321
@@ -6740,6 +6742,7 @@ class TestEntityFactoryImpl:
                 "premium_type": 1,
             }
         )
+        assert my_user.global_name is None
         assert my_user.app is mock_app
         assert my_user.banner_hash is None
         assert my_user.accent_color is None

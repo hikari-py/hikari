@@ -459,7 +459,7 @@ class TestMember:
 
     def test_display_name_property_when_no_nickname(self, model, mock_user):
         model.nickname = None
-        assert model.display_name is mock_user.username
+        assert model.display_name is mock_user.global_name
 
     def test_mention_property(self, model, mock_user):
         assert model.mention == mock_user.mention

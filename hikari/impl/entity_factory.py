@@ -230,6 +230,7 @@ class _UserFields:
     id: snowflakes.Snowflake = attrs.field()
     discriminator: str = attrs.field()
     username: str = attrs.field()
+    global_name: typing.Optional[str] = attrs.field()
     avatar_hash: str = attrs.field()
     banner_hash: typing.Optional[str] = attrs.field()
     accent_color: typing.Optional[color_models.Color] = attrs.field()
@@ -3519,6 +3520,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             id=snowflakes.Snowflake(payload["id"]),
             discriminator=payload["discriminator"],
             username=payload["username"],
+            global_name=payload.get("global_name"),
             avatar_hash=payload["avatar"],
             banner_hash=payload.get("banner", None),
             accent_color=color_models.Color(accent_color) if accent_color is not None else None,
@@ -3536,6 +3538,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             id=user_fields.id,
             discriminator=user_fields.discriminator,
             username=user_fields.username,
+            global_name=payload.get("global_name"),
             avatar_hash=user_fields.avatar_hash,
             banner_hash=user_fields.banner_hash,
             accent_color=user_fields.accent_color,
@@ -3551,6 +3554,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             id=user_fields.id,
             discriminator=user_fields.discriminator,
             username=user_fields.username,
+            global_name=payload.get("global_name"),
             avatar_hash=user_fields.avatar_hash,
             banner_hash=user_fields.banner_hash,
             accent_color=user_fields.accent_color,
