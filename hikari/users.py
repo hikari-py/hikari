@@ -497,7 +497,7 @@ class User(PartialUser, abc.ABC):
         """Default avatar URL for this user."""
         if self.discriminator == "0":  # migrated account
             return routes.CDN_DEFAULT_USER_AVATAR.compile_to_file(
-                urls.CDN_URL, discriminator=(self.id >> 22) % 6, file_format="png"
+                urls.CDN_URL, discriminator=self.id.created_at.timestamp() % 6, file_format="png"
             )
 
         return routes.CDN_DEFAULT_USER_AVATAR.compile_to_file(
@@ -513,7 +513,7 @@ class User(PartialUser, abc.ABC):
     @abc.abstractmethod
     def discriminator(self) -> str:
         """Discriminator for the user.
-        
+
         .. note::
             Discriminators are deprecated and being replaced with "0" by Discord
             during username migration. This field will be removed after migration is complete.
@@ -664,7 +664,7 @@ class PartialUserImpl(PartialUser):
 
     discriminator: undefined.UndefinedOr[str] = attrs.field(eq=False, hash=False, repr=True)
     """Four-digit discriminator for the user if unmigrated.
-    
+
     .. note::
         Discriminators are deprecated and being replaced with "0" by Discord
         during username migration. This field will be removed after migration is complete.
