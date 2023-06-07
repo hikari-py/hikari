@@ -455,7 +455,7 @@ class Member(users.User):
         """Return the member's display name.
 
         If the member has a nickname, this will return that nickname.
-        If the user has a global name, it will return that global name.
+        If the user has a global name, this will return that global name.
         If the user has neither, the username will be returned instead.
 
         See Also

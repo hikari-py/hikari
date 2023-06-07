@@ -489,11 +489,11 @@ class User(PartialUser, abc.ABC):
     @property
     def default_avatar_url(self) -> files.URL:
         """Default avatar URL for this user."""
-        if self.discriminator == "0": # migrated account
+        if self.discriminator == "0":  # migrated account
             return routes.CDN_DEFAULT_USER_AVATAR.compile_to_file(
                 urls.CDN_URL, discriminator=(self.id >> 22) % 6, file_format="png"
             )
-        
+
         return routes.CDN_DEFAULT_USER_AVATAR.compile_to_file(
             urls.CDN_URL, discriminator=int(self.discriminator) % 5, file_format="png"
         )
