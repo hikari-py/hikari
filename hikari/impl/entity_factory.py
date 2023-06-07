@@ -3538,7 +3538,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             id=user_fields.id,
             discriminator=user_fields.discriminator,
             username=user_fields.username,
-            global_name=payload.get("global_name", None),
+            global_name=payload.get("global_name"),
             avatar_hash=user_fields.avatar_hash,
             banner_hash=user_fields.banner_hash,
             accent_color=user_fields.accent_color,
