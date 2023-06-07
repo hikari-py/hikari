@@ -455,14 +455,20 @@ class Member(users.User):
         """Return the member's display name.
 
         If the member has a nickname, this will return that nickname.
-        Otherwise, it will return the username instead.
+        If the user has a global name, it will return that global name.
+        If the user has neither, the username will be returned instead.
 
         See Also
         --------
         Nickname: `Member.nickname`.
         Username: `Member.username`.
+        Global name: `Member.global_name`
         """
-        return self.nickname if isinstance(self.nickname, str) else self.username
+        if isinstance(self.nickname, str):
+            return self.nickname
+        if isinstance(self.global_name, str):
+            return self.global_name
+        return self.username
 
     @property
     def flags(self) -> users.UserFlag:
@@ -571,6 +577,10 @@ class Member(users.User):
     @property
     def username(self) -> str:
         return self.user.username
+
+    @property
+    def global_name(self) -> typing.Optional[str]:
+        return self.user.global_name
 
     def make_avatar_url(self, *, ext: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
         return self.user.make_avatar_url(ext=ext, size=size)

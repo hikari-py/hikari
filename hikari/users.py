@@ -175,6 +175,11 @@ class PartialUser(snowflakes.Unique, abc.ABC):
 
     @property
     @abc.abstractmethod
+    def global_name(self) -> undefined.UndefinedOr[str]:
+        """Global name for the user."""
+
+    @property
+    @abc.abstractmethod
     def is_bot(self) -> undefined.UndefinedOr[bool]:
         """Whether this user is a bot account."""
 
@@ -531,6 +536,11 @@ class User(PartialUser, abc.ABC):
     def username(self) -> str:
         """Username for the user."""
 
+    @property
+    @abc.abstractmethod
+    def global_name(self) -> typing.Optional[str]:
+        """Global name for the user."""
+
     def make_avatar_url(self, *, ext: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the avatar URL for this user, if set.
 
@@ -636,10 +646,13 @@ class PartialUserImpl(PartialUser):
     """Client application that models may use for procedures."""
 
     discriminator: undefined.UndefinedOr[str] = attrs.field(eq=False, hash=False, repr=True)
-    """Four-digit discriminator for the user."""
+    """Four-digit discriminator for the user if unmigrated."""
 
     username: undefined.UndefinedOr[str] = attrs.field(eq=False, hash=False, repr=True)
     """Username of the user."""
+
+    global_name: undefined.UndefinedOr[str] = attrs.field(eq=False, hash=False, repr=True)
+    """Global name of the user."""
 
     avatar_hash: undefined.UndefinedNoneOr[str] = attrs.field(eq=False, hash=False, repr=False)
     """Avatar hash of the user, if a custom avatar is set."""
@@ -678,6 +691,8 @@ class PartialUserImpl(PartialUser):
     def __str__(self) -> str:
         if self.username is undefined.UNDEFINED or self.discriminator is undefined.UNDEFINED:
             return f"Partial user ID {self.id}"
+        elif self.discriminator == "0":  # migrated account
+            return self.username
         return f"{self.username}#{self.discriminator}"
 
 
@@ -690,6 +705,9 @@ class UserImpl(PartialUserImpl, User):
 
     username: str = attrs.field(eq=False, hash=False, repr=True)
     """The user's username."""
+
+    global_name: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=True)
+    """The user's global name."""
 
     avatar_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """The user's avatar hash, if they have one, otherwise `None`."""

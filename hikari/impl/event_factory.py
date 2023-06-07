@@ -468,6 +468,7 @@ class EventFactoryImpl(event_factory.EventFactory):
                 id=snowflakes.Snowflake(user_payload["id"]),
                 discriminator=discriminator,
                 username=user_payload.get("username", undefined.UNDEFINED),
+                global_name=user_payload.get("global_name", undefined.UNDEFINED),
                 avatar_hash=user_payload.get("avatar", undefined.UNDEFINED),
                 banner_hash=user_payload.get("banner", undefined.UNDEFINED),
                 accent_color=accent_color,

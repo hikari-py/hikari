@@ -725,10 +725,13 @@ class GatewayShardImpl(shard.GatewayShard):
                     user_pl = data["user"]
                     self._user_id = snowflakes.Snowflake(user_pl["id"])
 
+                    user = user_pl["username"] + (
+                        "#" + user_pl["discriminator"] if user_pl["discriminator"] != "0" else ""
+                    )
                     self._logger.info(
                         "shard is ready: %s guilds, %s (%s), session %r on v%s gateway",
                         len(data["guilds"]),
-                        f"{user_pl['username']}#{user_pl['discriminator']}",
+                        user,
                         self._user_id,
                         self._session_id,
                         data["v"],
