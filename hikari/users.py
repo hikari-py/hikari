@@ -166,7 +166,13 @@ class PartialUser(snowflakes.Unique, abc.ABC):
     @property
     @abc.abstractmethod
     def discriminator(self) -> undefined.UndefinedOr[str]:
-        """Discriminator for the user."""
+        """Discriminator for the user.
+
+        .. note::
+            Discriminators are deprecated and being replaced with "0" by Discord
+            during username migration. This field will be removed after migration is complete.
+            Learn more here: https://dis.gd/usernames
+        """
 
     @property
     @abc.abstractmethod
@@ -506,7 +512,13 @@ class User(PartialUser, abc.ABC):
     @property
     @abc.abstractmethod
     def discriminator(self) -> str:
-        """Discriminator for the user."""
+        """Discriminator for the user.
+        
+        .. note::
+            Discriminators are deprecated and being replaced with "0" by Discord
+            during username migration. This field will be removed after migration is complete.
+            Learn more here: https://dis.gd/usernames
+        """
 
     @property
     @abc.abstractmethod
@@ -651,7 +663,13 @@ class PartialUserImpl(PartialUser):
     """Client application that models may use for procedures."""
 
     discriminator: undefined.UndefinedOr[str] = attrs.field(eq=False, hash=False, repr=True)
-    """Four-digit discriminator for the user if unmigrated."""
+    """Four-digit discriminator for the user if unmigrated.
+    
+    .. note::
+        Discriminators are deprecated and being replaced with "0" by Discord
+        during username migration. This field will be removed after migration is complete.
+        Learn more here: https://dis.gd/usernames
+    """
 
     username: undefined.UndefinedOr[str] = attrs.field(eq=False, hash=False, repr=True)
     """Username of the user."""
@@ -706,7 +724,13 @@ class UserImpl(PartialUserImpl, User):
     """Concrete implementation of user information."""
 
     discriminator: str = attrs.field(eq=False, hash=False, repr=True)
-    """The user's discriminator."""
+    """The user's discriminator.
+
+    .. note::
+        Discriminators are deprecated and being replaced with "0" by Discord
+        during username migration. This field will be removed after migration is complete.
+        Learn more here: https://dis.gd/usernames
+    """
 
     username: str = attrs.field(eq=False, hash=False, repr=True)
     """The user's username."""
