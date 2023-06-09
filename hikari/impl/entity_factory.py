@@ -3514,7 +3514,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     ###############
 
     @staticmethod
-    def _set_user_attrsibutes(payload: data_binding.JSONObject) -> _UserFields:
+    def _set_user_attributes(payload: data_binding.JSONObject) -> _UserFields:
         accent_color = payload.get("accent_color")
         return _UserFields(
             id=snowflakes.Snowflake(payload["id"]),
@@ -3529,7 +3529,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     def deserialize_user(self, payload: data_binding.JSONObject) -> user_models.User:
-        user_fields = self._set_user_attrsibutes(payload)
+        user_fields = self._set_user_attributes(payload)
         flags = (
             user_models.UserFlag(payload["public_flags"]) if "public_flags" in payload else user_models.UserFlag.NONE
         )
@@ -3548,7 +3548,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     def deserialize_my_user(self, payload: data_binding.JSONObject) -> user_models.OwnUser:
-        user_fields = self._set_user_attrsibutes(payload)
+        user_fields = self._set_user_attributes(payload)
         return user_models.OwnUser(
             app=self._app,
             id=user_fields.id,
