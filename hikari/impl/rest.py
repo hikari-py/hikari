@@ -2537,36 +2537,41 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put_snowflake("rules_channel_id", rules_channel)
         body.put_snowflake("public_updates_channel_id", public_updates_channel)
 
+        stack = contextlib.AsyncExitStack()
         tasks: typing.List[asyncio.Task[str]] = []
 
-        if icon is None:
-            body.put("icon", None)
-        elif icon is not undefined.UNDEFINED:
-            icon_resource = files.ensure_resource(icon)
-            async with icon_resource.stream(executor=self._executor) as stream:
+        async with stack:
+            if icon is None:
+                body.put("icon", None)
+            elif icon is not undefined.UNDEFINED:
+                icon_resource = files.ensure_resource(icon)
+                stream = await stack.enter_async_context(icon_resource.stream(executor=self._executor))
+
                 task = asyncio.create_task(stream.data_uri())
                 task.add_done_callback(lambda future: body.put("icon", future.result()))
                 tasks.append(task)
 
-        if splash is None:
-            body.put("splash", None)
-        elif splash is not undefined.UNDEFINED:
-            splash_resource = files.ensure_resource(splash)
-            async with splash_resource.stream(executor=self._executor) as stream:
+            if splash is None:
+                body.put("splash", None)
+            elif splash is not undefined.UNDEFINED:
+                splash_resource = files.ensure_resource(splash)
+                stream = await stack.enter_async_context(splash_resource.stream(executor=self._executor))
+
                 task = asyncio.create_task(stream.data_uri())
                 task.add_done_callback(lambda future: body.put("splash", future.result()))
                 tasks.append(task)
 
-        if banner is None:
-            body.put("banner", None)
-        elif banner is not undefined.UNDEFINED:
-            banner_resource = files.ensure_resource(banner)
-            async with banner_resource.stream(executor=self._executor) as stream:
+            if banner is None:
+                body.put("banner", None)
+            elif banner is not undefined.UNDEFINED:
+                banner_resource = files.ensure_resource(banner)
+                stream = await stack.enter_async_context(banner_resource.stream(executor=self._executor))
+
                 task = asyncio.create_task(stream.data_uri())
                 task.add_done_callback(lambda future: body.put("banner", future.result()))
                 tasks.append(task)
 
-        await asyncio.gather(*tasks)
+            await asyncio.gather(*tasks)
 
         response = await self._request(route, json=body, reason=reason)
         assert isinstance(response, dict)

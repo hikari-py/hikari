@@ -278,6 +278,15 @@ class Permissions(enums.Flag):
     MODERATE_MEMBERS = 1 << 40
     """Allows for timing out members."""
 
+    VIEW_CREATOR_MONETIZATION_ANALYTICS = 1 << 41
+    """Allows for viewing role subscription insights"""
+
+    USE_SOUNDBOARD = 1 << 42
+    """Allows the use of soundboard in a voice chat."""
+
+    SEND_VOICE_MESSAGES = 1 << 46
+    """Allows sending voice messages."""
+
     @classmethod
     def all_permissions(cls) -> Permissions:
         """Get an instance of `Permissions` with all the known permissions.

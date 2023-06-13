@@ -230,6 +230,7 @@ class _UserFields:
     id: snowflakes.Snowflake = attrs.field()
     discriminator: str = attrs.field()
     username: str = attrs.field()
+    global_name: typing.Optional[str] = attrs.field()
     avatar_hash: str = attrs.field()
     banner_hash: typing.Optional[str] = attrs.field()
     accent_color: typing.Optional[color_models.Color] = attrs.field()
@@ -2454,12 +2455,20 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_channels := payload.get("channels"):
             for channel_payload in raw_channels.values():
                 channel_id = snowflakes.Snowflake(channel_payload["id"])
+
+                # Even tho (at the time of writing) it is documented that these partial channels will always contain
+                # this field, they are explicitly avoided for DM channels.
+                if "permissions" in channel_payload:
+                    permissions = permission_models.Permissions(int(channel_payload["permissions"]))
+                else:
+                    permissions = permission_models.Permissions.NONE
+
                 channels[channel_id] = base_interactions.InteractionChannel(
                     app=self._app,
                     id=channel_id,
                     type=channel_models.ChannelType(channel_payload["type"]),
-                    name=channel_payload["name"],
-                    permissions=permission_models.Permissions(int(channel_payload["permissions"])),
+                    name=channel_payload.get("name"),
+                    permissions=permissions,
                 )
 
         if raw_users := payload.get("users"):
@@ -2946,6 +2955,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             height=payload.get("height"),
             width=payload.get("width"),
             is_ephemeral=payload.get("ephemeral", False),
+            duration=payload.get("duration_secs"),
+            waveform=payload.get("waveform"),
         )
 
     def _deserialize_message_reaction(self, payload: data_binding.JSONObject) -> message_models.Reaction:
@@ -3503,12 +3514,13 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     ###############
 
     @staticmethod
-    def _set_user_attrsibutes(payload: data_binding.JSONObject) -> _UserFields:
+    def _set_user_attributes(payload: data_binding.JSONObject) -> _UserFields:
         accent_color = payload.get("accent_color")
         return _UserFields(
             id=snowflakes.Snowflake(payload["id"]),
             discriminator=payload["discriminator"],
             username=payload["username"],
+            global_name=payload.get("global_name"),
             avatar_hash=payload["avatar"],
             banner_hash=payload.get("banner", None),
             accent_color=color_models.Color(accent_color) if accent_color is not None else None,
@@ -3517,7 +3529,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     def deserialize_user(self, payload: data_binding.JSONObject) -> user_models.User:
-        user_fields = self._set_user_attrsibutes(payload)
+        user_fields = self._set_user_attributes(payload)
         flags = (
             user_models.UserFlag(payload["public_flags"]) if "public_flags" in payload else user_models.UserFlag.NONE
         )
@@ -3526,6 +3538,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             id=user_fields.id,
             discriminator=user_fields.discriminator,
             username=user_fields.username,
+            global_name=payload.get("global_name"),
             avatar_hash=user_fields.avatar_hash,
             banner_hash=user_fields.banner_hash,
             accent_color=user_fields.accent_color,
@@ -3535,12 +3548,13 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     def deserialize_my_user(self, payload: data_binding.JSONObject) -> user_models.OwnUser:
-        user_fields = self._set_user_attrsibutes(payload)
+        user_fields = self._set_user_attributes(payload)
         return user_models.OwnUser(
             app=self._app,
             id=user_fields.id,
             discriminator=user_fields.discriminator,
             username=user_fields.username,
+            global_name=payload.get("global_name"),
             avatar_hash=user_fields.avatar_hash,
             banner_hash=user_fields.banner_hash,
             accent_color=user_fields.accent_color,

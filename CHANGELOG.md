@@ -1,3 +1,47 @@
+## 2.0.0.dev120 (2023-06-08)
+
+### Breaking Changes
+
+- Remove previously deprecated `hikari.impl.bot` module ([#1612](https://github.com/hikari-py/hikari/issues/1612))
+
+### Deprecation
+
+- Deprecate `User.discriminator` ([#1631](https://github.com/hikari-py/hikari/issues/1631))
+
+### Features
+
+- Implement voice messages ([#1609](https://github.com/hikari-py/hikari/issues/1609))
+- Implement username changes:
+  - Add `global_name`
+  - `User.__str__()` respects `global_name` now
+  - `User.default_avatar_url` returns correct URL for migrated accounts ([#1631](https://github.com/hikari-py/hikari/issues/1631))
+
+### Bugfixes
+
+- Fix a bug in `RESTClient.edit_guild` which load to closed stream errors ([#1627](https://github.com/hikari-py/hikari/issues/1627))
+- Properly handle DM channels in resolved interaction channels. ([#1628](https://github.com/hikari-py/hikari/issues/1628))
+
+---
+
+
+## 2.0.0.dev119 (2023-05-08)
+
+### Breaking Changes
+
+- Remove deprecated functionality for 2.0.0.dev119
+  - Removed `TextInputBuilder.required` in favour of `TextInputBuilder.is_required`.
+  - Removed the ability to pass `CommandChoices` instead of `AutocompleteChoiceBuilders` when making autocomplete responses. ([#1580](https://github.com/hikari-py/hikari/issues/1580))
+
+### Bugfixes
+
+- Fix `messages` argument typing for `RESTClient.delete_messages`. ([#1581](https://github.com/hikari-py/hikari/issues/1581))
+- Default `HTTPSettings.enable_cleanup_closed` to `False`.
+  - CPython3.11 changes around SSLProto have made this quite unstable and prone to errors when dealing with unclosed TLS transports, which ends up in aiohttp calling close and abort twice. ([#1585](https://github.com/hikari-py/hikari/issues/1585))
+- `Guild.get_channel`, `Guild.get_emoji`, `Guild.get_sticker` and `Guild.get_role` now only return entries from the relevant guild. ([#1608](https://github.com/hikari-py/hikari/issues/1608))
+
+---
+
+
 ## 2.0.0.dev118 (2023-04-02)
 
 ### Breaking Changes

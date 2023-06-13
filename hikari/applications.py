@@ -422,6 +422,10 @@ class TeamMember(users.User):
     def username(self) -> str:
         return self.user.username
 
+    @property
+    def global_name(self) -> typing.Optional[str]:
+        return self.user.global_name
+
     def __str__(self) -> str:
         return str(self.user)
 

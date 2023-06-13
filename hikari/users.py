@@ -166,12 +166,23 @@ class PartialUser(snowflakes.Unique, abc.ABC):
     @property
     @abc.abstractmethod
     def discriminator(self) -> undefined.UndefinedOr[str]:
-        """Discriminator for the user."""
+        """Discriminator for the user.
+
+        .. deprecation:: 2.0.0.dev120
+            Discriminators are deprecated and being replaced with "0" by Discord
+            during username migration. This field will be removed after migration is complete.
+            Learn more here: https://dis.gd/usernames
+        """
 
     @property
     @abc.abstractmethod
     def username(self) -> undefined.UndefinedOr[str]:
         """Username for the user."""
+
+    @property
+    @abc.abstractmethod
+    def global_name(self) -> undefined.UndefinedNoneOr[str]:
+        """Global name for the user, if they have one, otherwise `None`."""
 
     @property
     @abc.abstractmethod
@@ -484,6 +495,11 @@ class User(PartialUser, abc.ABC):
     @property
     def default_avatar_url(self) -> files.URL:
         """Default avatar URL for this user."""
+        if self.discriminator == "0":  # migrated account
+            return routes.CDN_DEFAULT_USER_AVATAR.compile_to_file(
+                urls.CDN_URL, discriminator=self.id.created_at.timestamp() % 6, file_format="png"
+            )
+
         return routes.CDN_DEFAULT_USER_AVATAR.compile_to_file(
             urls.CDN_URL, discriminator=int(self.discriminator) % 5, file_format="png"
         )
@@ -496,7 +512,13 @@ class User(PartialUser, abc.ABC):
     @property
     @abc.abstractmethod
     def discriminator(self) -> str:
-        """Discriminator for the user."""
+        """Discriminator for the user.
+
+        .. deprecation:: 2.0.0.dev120
+            Discriminators are deprecated and being replaced with "0" by Discord
+            during username migration. This field will be removed after migration is complete.
+            Learn more here: https://dis.gd/usernames
+        """
 
     @property
     @abc.abstractmethod
@@ -530,6 +552,11 @@ class User(PartialUser, abc.ABC):
     @abc.abstractmethod
     def username(self) -> str:
         """Username for the user."""
+
+    @property
+    @abc.abstractmethod
+    def global_name(self) -> typing.Optional[str]:
+        """Global name for the user, if they have one, otherwise `None`."""
 
     def make_avatar_url(self, *, ext: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the avatar URL for this user, if set.
@@ -636,10 +663,19 @@ class PartialUserImpl(PartialUser):
     """Client application that models may use for procedures."""
 
     discriminator: undefined.UndefinedOr[str] = attrs.field(eq=False, hash=False, repr=True)
-    """Four-digit discriminator for the user."""
+    """Four-digit discriminator for the user if unmigrated.
+
+    .. deprecation:: 2.0.0.dev120
+        Discriminators are deprecated and being replaced with "0" by Discord
+        during username migration. This field will be removed after migration is complete.
+        Learn more here: https://dis.gd/usernames
+    """
 
     username: undefined.UndefinedOr[str] = attrs.field(eq=False, hash=False, repr=True)
     """Username of the user."""
+
+    global_name: undefined.UndefinedNoneOr[str] = attrs.field(eq=False, hash=False, repr=True)
+    """Global name of the user."""
 
     avatar_hash: undefined.UndefinedNoneOr[str] = attrs.field(eq=False, hash=False, repr=False)
     """Avatar hash of the user, if a custom avatar is set."""
@@ -678,6 +714,8 @@ class PartialUserImpl(PartialUser):
     def __str__(self) -> str:
         if self.username is undefined.UNDEFINED or self.discriminator is undefined.UNDEFINED:
             return f"Partial user ID {self.id}"
+        elif self.discriminator == "0":  # migrated account
+            return self.username
         return f"{self.username}#{self.discriminator}"
 
 
@@ -686,10 +724,19 @@ class UserImpl(PartialUserImpl, User):
     """Concrete implementation of user information."""
 
     discriminator: str = attrs.field(eq=False, hash=False, repr=True)
-    """The user's discriminator."""
+    """The user's discriminator.
+
+    .. deprecation:: 2.0.0.dev120
+        Discriminators are deprecated and being replaced with "0" by Discord
+        during username migration. This field will be removed after migration is complete.
+        Learn more here: https://dis.gd/usernames
+    """
 
     username: str = attrs.field(eq=False, hash=False, repr=True)
     """The user's username."""
+
+    global_name: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=True)
+    """The user's global name."""
 
     avatar_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """The user's avatar hash, if they have one, otherwise `None`."""

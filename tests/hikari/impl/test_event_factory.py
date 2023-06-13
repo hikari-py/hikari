@@ -651,6 +651,7 @@ class TestEventFactoryImpl:
             "user": {
                 "id": "1231312",
                 "username": "OK",
+                "global_name": "blahaj",
                 "avatar": "NOK",
                 "banner": "12122hssjamanmdd",
                 "accent_color": 12342,
@@ -674,6 +675,7 @@ class TestEventFactoryImpl:
         assert isinstance(event.user, user_models.PartialUser)
         assert event.user.id == 1231312
         assert event.user.username == "OK"
+        assert event.user.global_name == "blahaj"
         assert event.user.discriminator == "1231"
         assert event.user.avatar_hash == "NOK"
         assert event.user.banner_hash == "12122hssjamanmdd"
@@ -701,6 +703,7 @@ class TestEventFactoryImpl:
         assert isinstance(event.user, user_models.PartialUser)
         assert event.user.id == 1231312
         assert event.user.username is undefined.UNDEFINED
+        assert event.user.global_name is undefined.UNDEFINED
         assert event.user.discriminator is undefined.UNDEFINED
         assert event.user.avatar_hash is undefined.UNDEFINED
         assert event.user.banner_hash is undefined.UNDEFINED
