@@ -1,1 +1,0 @@
-Remove `InviteApplication.public_key` as Discord no-longer provides this.
