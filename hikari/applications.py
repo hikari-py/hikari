@@ -520,9 +520,6 @@ class InviteApplication(guilds.PartialApplication):
     cover_image_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """The CDN's hash of this application's default rich presence invite cover image."""
 
-    public_key: bytes = attrs.field(eq=False, hash=False, repr=False)
-    """The key used for verifying interaction and GameSDK payload signatures."""
-
     @property
     def cover_image_url(self) -> typing.Optional[files.URL]:
         """Rich presence cover image URL for this application, if set."""

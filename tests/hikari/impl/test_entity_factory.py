@@ -1076,7 +1076,6 @@ class TestEntityFactoryImpl:
             "icon": "0227b2e89ea08d666c43003fbadbc72a",
             "description": "Play inside Discord with your friends!",
             "cover_image": "0227b2e89ea08d666c43003fbadbc72a (but as cover)",
-            "verify_key": "1bf78fdbfcbabe2e1256f9b133818976591203a22febabba5ff89f86f24760ff",
         }
 
     @pytest.fixture()
@@ -5136,10 +5135,6 @@ class TestEntityFactoryImpl:
         assert application.id == 773336526917861400
         assert application.name == "Betrayal.io"
         assert application.description == "Play inside Discord with your friends!"
-        assert (
-            application.public_key
-            == b"\x1b\xf7\x8f\xdb\xfc\xba\xbe.\x12V\xf9\xb13\x81\x89vY\x12\x03\xa2/\xeb\xab\xba_\xf8\x9f\x86\xf2G`\xff"
-        )
         assert application.icon_hash == "0227b2e89ea08d666c43003fbadbc72a"
         assert application.cover_image_hash == "0227b2e89ea08d666c43003fbadbc72a (but as cover)"
         assert isinstance(application, application_models.InviteApplication)
@@ -5154,12 +5149,7 @@ class TestEntityFactoryImpl:
                 "approximate_member_count": 231,
                 "approximate_presence_count": 9,
                 "expires_at": None,
-                "target_application": {
-                    "id": "773336526917861400",
-                    "name": "Betrayal.io",
-                    "description": "",
-                    "verify_key": "1bf78fdbfcbabe2e1256f9b133818976591203a22febabba5ff89f86f24760ff",
-                },
+                "target_application": {"id": "773336526917861400", "name": "Betrayal.io", "description": ""},
             }
         )
         assert invite.expires_at is None
@@ -5189,7 +5179,6 @@ class TestEntityFactoryImpl:
             "id": "773336526917861400",
             "name": "Betrayal.io",
             "description": "Play inside Discord with your friends!",
-            "verify_key": "1bf78fdbfcbabe2e1256f9b133818976591203a22febabba5ff89f86f24760ff",
         }
 
         invite = entity_factory_impl.deserialize_invite(invite_payload)
@@ -5296,10 +5285,6 @@ class TestEntityFactoryImpl:
         assert application.id == 773336526917861400
         assert application.name == "Betrayal.io"
         assert application.description == "Play inside Discord with your friends!"
-        assert (
-            application.public_key
-            == b"\x1b\xf7\x8f\xdb\xfc\xba\xbe.\x12V\xf9\xb13\x81\x89vY\x12\x03\xa2/\xeb\xab\xba_\xf8\x9f\x86\xf2G`\xff"
-        )
         assert application.icon_hash == "0227b2e89ea08d666c43003fbadbc72a"
         assert application.cover_image_hash == "0227b2e89ea08d666c43003fbadbc72a (but as cover)"
         assert isinstance(application, application_models.InviteApplication)
