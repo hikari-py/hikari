@@ -714,8 +714,11 @@ class PartialUserImpl(PartialUser):
     def __str__(self) -> str:
         if self.username is undefined.UNDEFINED or self.discriminator is undefined.UNDEFINED:
             return f"Partial user ID {self.id}"
-        elif self.discriminator == "0":  # migrated account
-            return self.username
+
+        # migrated account
+        if self.discriminator == "0":
+            return self.global_name or self.username
+
         return f"{self.username}#{self.discriminator}"
 
 

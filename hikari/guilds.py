@@ -929,7 +929,7 @@ class Member(users.User):
         )
 
     def __str__(self) -> str:
-        return str(self.user)
+        return self.nickname or str(self.user)
 
     def __hash__(self) -> int:
         return hash(self.user)

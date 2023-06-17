@@ -325,8 +325,23 @@ class TestPartialUserImpl:
     def test_str_operator(self, obj):
         assert str(obj) == "thomm.o#8637"
 
+    def test_str_operator_when_migrated(self, obj: users.PartialUserImpl):
+        obj.discriminator = "0"
+        assert str(obj) == "thomm.o"
+
+    def test_str_operator_when_migrated_and_global_name_set(self, obj: users.PartialUserImpl):
+        obj.discriminator = "0"
+        obj.global_name = "hello"
+        assert str(obj) == "hello"
+
     def test_str_operator_when_partial(self, obj):
         obj.username = undefined.UNDEFINED
+        assert str(obj) == "Partial user ID 123"
+
+    def test_str_operator_when_migrated_and_partial(self, obj):
+        obj.username = undefined.UNDEFINED
+        obj.discriminator = "0"
+        obj.global_name = "0"
         assert str(obj) == "Partial user ID 123"
 
     def test_mention_property(self, obj):
