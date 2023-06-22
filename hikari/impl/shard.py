@@ -886,6 +886,9 @@ class GatewayShardImpl(shard.GatewayShard):
                 # Since nothing went wrong, we can reset the backoff and try again
                 backoff.reset()
 
+            except ConnectionResetError:
+                self._logger.warning("connection got reset by server. Will retry shortly")
+
             except errors.GatewayConnectionError as ex:
                 self._logger.warning("failed to communicate with server, reason was: %r. Will retry shortly", ex.reason)
 
