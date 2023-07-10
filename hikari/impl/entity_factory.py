@@ -1173,6 +1173,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             snowflakes.Snowflake(overwrite["id"]): self.deserialize_permission_overwrite(overwrite)
             for overwrite in payload["permission_overwrites"]
         }
+        last_message_id = (
+            snowflakes.Snowflake(msg_id) if (msg_id := payload.get("last_message_id")) is not None else None
+        )
         return channel_models.GuildStageChannel(
             app=self._app,
             id=channel_fields.id,
@@ -1186,6 +1189,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             bitrate=int(payload["bitrate"]),
             user_limit=int(payload["user_limit"]),
             position=int(payload["position"]),
+            last_message_id=last_message_id,
         )
 
     def deserialize_guild_forum_channel(

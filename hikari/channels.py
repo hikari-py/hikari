@@ -1367,7 +1367,7 @@ class GuildVoiceChannel(PermissibleGuildChannel, TextableGuildChannel):
 
 
 @attrs.define(hash=True, kw_only=True, weakref_slot=False)
-class GuildStageChannel(PermissibleGuildChannel):
+class GuildStageChannel(PermissibleGuildChannel, TextableGuildChannel):
     """Represents a stage channel."""
 
     bitrate: int = attrs.field(eq=False, hash=False, repr=True)
@@ -1385,6 +1385,14 @@ class GuildStageChannel(PermissibleGuildChannel):
     """The user limit for the stage channel.
 
     If this is `0`, then assume no limit.
+    """
+
+    last_message_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
+    """The ID of the last message sent in this channel.
+
+    .. warning::
+        This might point to an invalid or deleted message. Do not assume that
+        this will always be valid.
     """
 
 
