@@ -2041,6 +2041,7 @@ class TestEntityFactoryImpl:
         )
         assert voice_channel.parent_id is None
         assert voice_channel.region is None
+        assert voice_channel.last_message_id is None
 
     def test_deserialize_guild_stage_channel_with_unset_fields(self, entity_factory_impl):
         voice_channel = entity_factory_impl.deserialize_guild_stage_channel(
@@ -2058,6 +2059,7 @@ class TestEntityFactoryImpl:
         )
         assert voice_channel.parent_id is None
         assert voice_channel.is_nsfw is False
+        assert voice_channel.last_message_id is None
 
     @pytest.fixture()
     def guild_forum_channel_payload(self, permission_overwrite_payload):
