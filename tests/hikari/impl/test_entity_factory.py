@@ -1999,6 +1999,7 @@ class TestEntityFactoryImpl:
             "user_limit": 3,
             "rtc_region": "euoo",
             "parent_id": "543",
+            "last_message_id": "1000101",
         }
 
     def test_deserialize_guild_stage_channel(
@@ -2018,6 +2019,7 @@ class TestEntityFactoryImpl:
         assert voice_channel.region == "euoo"
         assert voice_channel.bitrate == 64000
         assert voice_channel.user_limit == 3
+        assert voice_channel.last_message_id == 1000101
         assert isinstance(voice_channel, channel_models.GuildStageChannel)
 
     def test_deserialize_guild_stage_channel_with_null_fields(self, entity_factory_impl):
@@ -2034,10 +2036,12 @@ class TestEntityFactoryImpl:
                 "user_limit": 3,
                 "rtc_region": None,
                 "type": 6,
+                "last_message_id": None,
             }
         )
         assert voice_channel.parent_id is None
         assert voice_channel.region is None
+        assert voice_channel.last_message_id is None
 
     def test_deserialize_guild_stage_channel_with_unset_fields(self, entity_factory_impl):
         voice_channel = entity_factory_impl.deserialize_guild_stage_channel(
@@ -2055,6 +2059,7 @@ class TestEntityFactoryImpl:
         )
         assert voice_channel.parent_id is None
         assert voice_channel.is_nsfw is False
+        assert voice_channel.last_message_id is None
 
     @pytest.fixture()
     def guild_forum_channel_payload(self, permission_overwrite_payload):
