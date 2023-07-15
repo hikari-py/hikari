@@ -589,6 +589,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             features=[guild_models.GuildFeature(feature) for feature in payload["features"]],
             is_owner=bool(payload["owner"]),
             my_permissions=permission_models.Permissions(int(payload["permissions"])),
+            approximate_member_count=int(payload["approximate_member_count"]),
+            approximate_active_member_count=int(payload["approximate_presence_count"]),
         )
 
     def deserialize_own_application_role_connection(
