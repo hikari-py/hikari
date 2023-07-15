@@ -42,3 +42,27 @@ jobs:
           if [ "$changelog_fragments" != "$valid_changelog_fragments" ]; then
             exit 1
           fi
+
+      # We can also detect and rename idk.{}.md to valid changelog files
+      - name: Try to rename idk changelog fragments
+        if: always()
+        run: |
+          diff=$(git diff origin/${{ github.base_ref }} HEAD --name-only)
+
+          idk_changelog_fragments=$(echo "$diff" | grep "^changes/idk\.")
+
+          if [ -z "idk_changelog_fragments" ]; then
+            # Nothing to change
+            exit 0
+          fi
+
+          while IFS= read -r filename; do
+            mv "$filename" ${filename/idk/${{ github.event.number }}}
+          done <<< "$idk_changelog_fragments"
+
+          git config --global user.name "hikari-bot"
+          git config --global user.email "90276125+hikari-bot[bot]@users.noreply.github.com"
+
+          git add -A
+          git commit -m "Rename changelog fragments"
+          git push
