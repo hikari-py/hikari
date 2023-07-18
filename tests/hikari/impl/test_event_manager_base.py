@@ -601,6 +601,18 @@ class TestEventManagerBase:
         consumer.callback.assert_not_called()
         error_handler.assert_not_called()
 
+    def test_subscribe_when_class_call(self, event_manager):
+        class Foo:
+            async def __call__(self) -> None:
+                ...
+
+        foo = Foo()
+        event_manager._check_event = mock.Mock()
+
+        event_manager.subscribe(member_events.MemberCreateEvent, foo)
+
+        assert event_manager._listeners[member_events.MemberCreateEvent] == [foo]
+
     def test_subscribe_when_callback_is_not_coroutine(self, event_manager):
         def test():
             ...
