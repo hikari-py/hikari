@@ -987,7 +987,7 @@ class GatewayBot(traits.GatewayBotAware):
                         large_threshold=large_threshold,
                         shard_id=shard_id,
                         shard_count=shard_count,
-                        url=requirements.url,
+                        gateway_url=requirements.url,
                     )
                     for shard_id in window
                 )
@@ -1261,7 +1261,7 @@ class GatewayBot(traits.GatewayBotAware):
         large_threshold: int,
         shard_id: int,
         shard_count: int,
-        url: str,
+        gateway_url: str,
     ) -> None:
         new_shard = shard_impl.GatewayShardImpl(
             http_settings=self._http_settings,
@@ -1279,7 +1279,7 @@ class GatewayBot(traits.GatewayBotAware):
             shard_id=shard_id,
             shard_count=shard_count,
             token=self._token,
-            url=url,
+            gateway_url=gateway_url,
         )
         try:
             start = time.monotonic()

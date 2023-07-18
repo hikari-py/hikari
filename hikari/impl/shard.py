@@ -373,7 +373,7 @@ class GatewayShardImpl(shard.GatewayShard):
     ----------
     token : str
         The bot token to use.
-    url : str
+    gateway_url : str
         The gateway URL to use. This should not contain a query-string or
         fragments.
     event_manager : hikari.api.event_manager.EventManager
@@ -417,6 +417,18 @@ class GatewayShardImpl(shard.GatewayShard):
         The proxy settings to use while negotiating a websocket.
     data_format : str
         Data format to use for inbound data. Only supported format is `"json"`.
+    initial_seq : typing.Optional[int]
+        The initial session sequence to start at.
+    initial_session_id : typing.Optional[str]
+        The initial session id to start with.
+    initial_resume_gateway_url : typing.Optional[str]
+        The initial resume gateway url to use.
+
+    Raises
+    ------
+    ValueError
+        If not all of `initial_seq`, `initial_session_id`, and `initial_resume_gateway_url`
+        are passed, with any one of them being given a value.
     """
 
     __slots__: typing.Sequence[str] = (
@@ -467,13 +479,16 @@ class GatewayShardImpl(shard.GatewayShard):
         large_threshold: int = 250,
         shard_id: int = 0,
         shard_count: int = 1,
+        initial_seq: typing.Optional[int] = None,
+        initial_session_id: typing.Optional[str] = None,
+        initial_resume_gateway_url: typing.Optional[str] = None,
         http_settings: config.HTTPSettings,
         proxy_settings: config.ProxySettings,
         data_format: str = shard.GatewayDataFormat.JSON,
         event_manager: event_manager_.EventManager,
         event_factory: event_factory_.EventFactory,
         token: str,
-        url: str,
+        gateway_url: str,
     ) -> None:
         if data_format != shard.GatewayDataFormat.JSON:
             raise NotImplementedError(f"Unsupported gateway data format: {data_format}")
@@ -481,10 +496,17 @@ class GatewayShardImpl(shard.GatewayShard):
         if compression and compression != shard.GatewayCompression.TRANSPORT_ZLIB_STREAM:
             raise NotImplementedError(f"Unsupported compression format {compression}")
 
+        if bool(initial_seq) ^ bool(initial_session_id) ^ bool(initial_resume_gateway_url):
+            # It makes no sense to allow passing RESUME data if not all the data is passed
+            raise ValueError(
+                "You must specify exactly all or neither of "
+                "`initial_seq`, `initial_session_id` or `initial_resume_gateway_url`"
+            )
+
         self._activity = initial_activity
         self._event_manager = event_manager
         self._event_factory = event_factory
-        self._gateway_url = url
+        self._gateway_url = gateway_url
         self._handshake_event: typing.Optional[asyncio.Event] = None
         self._heartbeat_latency = float("nan")
         self._http_settings = http_settings
@@ -501,9 +523,9 @@ class GatewayShardImpl(shard.GatewayShard):
             f"shard {shard_id} non-priority rate limit", *_NON_PRIORITY_RATELIMIT
         )
         self._proxy_settings = proxy_settings
-        self._resume_gateway_url: typing.Optional[str] = None
-        self._seq: typing.Optional[int] = None
-        self._session_id: typing.Optional[str] = None
+        self._resume_gateway_url = initial_resume_gateway_url
+        self._seq = initial_seq
+        self._session_id = initial_session_id
         self._shard_count = shard_count
         self._shard_id = shard_id
         self._status = initial_status
@@ -540,6 +562,18 @@ class GatewayShardImpl(shard.GatewayShard):
     @property
     def shard_count(self) -> int:
         return self._shard_count
+
+    @property
+    def session_id(self) -> typing.Optional[str]:
+        return self._session_id
+
+    @property
+    def seq(self) -> typing.Optional[int]:
+        return self._seq
+
+    @property
+    def resume_gateway_url(self) -> typing.Optional[str]:
+        return self._resume_gateway_url
 
     async def close(self) -> None:
         if not self._keep_alive_task:

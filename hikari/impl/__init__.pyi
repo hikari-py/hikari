@@ -6,7 +6,8 @@ from hikari.impl.cache import *
 from hikari.impl.config import *
 from hikari.impl.entity_factory import *
 from hikari.impl.event_manager import *
-from hikari.impl.event_manager_base import *
+from hikari.impl.event_manager_base import EventManagerBase as EventManagerBase
+from hikari.impl.event_manager_base import EventStream as EventStream
 from hikari.impl.gateway_bot import *
 from hikari.impl.interaction_server import *
 from hikari.impl.rate_limits import *
