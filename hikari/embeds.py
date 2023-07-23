@@ -425,7 +425,7 @@ class Embed:
             result in a potentially incorrect timezone being set.
 
             To generate a timezone aware timestamp, use one of the following
-            snippets
+            snippets:
 
             .. code-block:: python
 
