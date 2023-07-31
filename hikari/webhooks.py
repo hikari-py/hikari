@@ -526,7 +526,7 @@ class PartialWebhook(snowflakes.Unique):
     @property
     def default_avatar_url(self) -> files_.URL:
         """Default avatar URL for the user."""
-        return routes.CDN_DEFAULT_USER_AVATAR.compile_to_file(urls.CDN_URL, discriminator=0, file_format="png")
+        return routes.CDN_DEFAULT_USER_AVATAR.compile_to_file(urls.CDN_URL, style=0, file_format="png")
 
     def make_avatar_url(self, ext: str = "png", size: int = 4096) -> typing.Optional[files_.URL]:
         """Generate the avatar URL for this webhook's custom avatar if set.

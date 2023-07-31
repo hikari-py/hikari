@@ -254,7 +254,19 @@ class TestUser:
         ) as route:
             assert obj.default_avatar_url == "file"
 
-        route.compile_to_file.assert_called_once_with(urls.CDN_URL, discriminator=4, file_format="png")
+        route.compile_to_file.assert_called_once_with(urls.CDN_URL, style=4, file_format="png")
+
+    def test_default_avatar_for_migrated_users(self, obj):
+        obj.id = 377812572784820226
+        obj.avatar_hash = "18dnf8dfbakfdh"
+        obj.discriminator = "0"
+
+        with mock.patch.object(
+            routes, "CDN_DEFAULT_USER_AVATAR", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert obj.default_avatar_url == "file"
+
+        route.compile_to_file.assert_called_once_with(urls.CDN_URL, style=0, file_format="png")
 
     def test_banner_url_property(self, obj):
         with mock.patch.object(users.User, "make_banner_url") as make_banner_url:
