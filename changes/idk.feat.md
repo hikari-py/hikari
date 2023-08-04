@@ -1,1 +1,1 @@
-Add `CacheComponents.MY_MEMBER` to only cache the bot member.
+Add `CacheSettings.only_cache_my_member` to only cache the bot member.

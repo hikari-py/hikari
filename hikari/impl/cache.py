@@ -1083,7 +1083,7 @@ class CacheImpl(cache.MutableCache):
     def clear_members(
         self,
     ) -> cache.CacheView[snowflakes.Snowflake, cache.CacheView[snowflakes.Snowflake, guilds.Member]]:
-        if not self._is_cache_enabled_for(config_api.CacheComponents.MEMBERS | config_api.CacheComponents.MY_MEMBER):
+        if not self._is_cache_enabled_for(config_api.CacheComponents.MEMBERS):
             return cache_utility.EmptyCacheView()
 
         views = ((guild_id, self.clear_members_for_guild(guild_id)) for guild_id in self._guild_entries.freeze().keys())
@@ -1092,7 +1092,7 @@ class CacheImpl(cache.MutableCache):
     def clear_members_for_guild(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
     ) -> cache.CacheView[snowflakes.Snowflake, guilds.Member]:
-        if not self._is_cache_enabled_for(config_api.CacheComponents.MEMBERS | config_api.CacheComponents.MY_MEMBER):
+        if not self._is_cache_enabled_for(config_api.CacheComponents.MEMBERS):
             return cache_utility.EmptyCacheView()
 
         guild_id = snowflakes.Snowflake(guild)
@@ -1113,7 +1113,7 @@ class CacheImpl(cache.MutableCache):
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         /,
     ) -> typing.Optional[guilds.Member]:
-        if not self._is_cache_enabled_for(config_api.CacheComponents.MEMBERS | config_api.CacheComponents.MY_MEMBER):
+        if not self._is_cache_enabled_for(config_api.CacheComponents.MEMBERS):
             return None
 
         guild_id = snowflakes.Snowflake(guild)
@@ -1140,7 +1140,7 @@ class CacheImpl(cache.MutableCache):
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         /,
     ) -> typing.Optional[guilds.Member]:
-        if not self._is_cache_enabled_for(config_api.CacheComponents.MEMBERS | config_api.CacheComponents.MY_MEMBER):
+        if not self._is_cache_enabled_for(config_api.CacheComponents.MEMBERS):
             return None
 
         guild_id = snowflakes.Snowflake(guild)
@@ -1155,7 +1155,7 @@ class CacheImpl(cache.MutableCache):
     def get_members_view(
         self,
     ) -> cache.CacheView[snowflakes.Snowflake, cache.CacheView[snowflakes.Snowflake, guilds.Member]]:
-        if not self._is_cache_enabled_for(config_api.CacheComponents.MEMBERS | config_api.CacheComponents.MY_MEMBER):
+        if not self._is_cache_enabled_for(config_api.CacheComponents.MEMBERS):
             return cache_utility.EmptyCacheView()
 
         views: typing.Mapping[snowflakes.Snowflake, cache.CacheView[snowflakes.Snowflake, guilds.Member]] = {
@@ -1168,7 +1168,7 @@ class CacheImpl(cache.MutableCache):
     def get_members_view_for_guild(
         self, guild_id: snowflakes.Snowflakeish, /
     ) -> cache.CacheView[snowflakes.Snowflake, guilds.Member]:
-        if not self._is_cache_enabled_for(config_api.CacheComponents.MEMBERS | config_api.CacheComponents.MY_MEMBER):
+        if not self._is_cache_enabled_for(config_api.CacheComponents.MEMBERS):
             return cache_utility.EmptyCacheView()
 
         guild_id = snowflakes.Snowflake(guild_id)
@@ -1183,7 +1183,7 @@ class CacheImpl(cache.MutableCache):
         return cache_utility.CacheMappingView(cached_members, builder=self._build_member)  # type: ignore[type-var]
 
     def set_member(self, member: guilds.Member, /) -> None:
-        if not self._is_cache_enabled_for(config_api.CacheComponents.MEMBERS | config_api.CacheComponents.MY_MEMBER):
+        if not self._is_cache_enabled_for(config_api.CacheComponents.MEMBERS):
             return None
 
         self._set_member(member, is_reference=False)
@@ -1217,7 +1217,7 @@ class CacheImpl(cache.MutableCache):
     def update_member(
         self, member: guilds.Member, /
     ) -> typing.Tuple[typing.Optional[guilds.Member], typing.Optional[guilds.Member]]:
-        if not self._is_cache_enabled_for(config_api.CacheComponents.MEMBERS | config_api.CacheComponents.MY_MEMBER):
+        if not self._is_cache_enabled_for(config_api.CacheComponents.MEMBERS):
             return None, None
 
         cached_member = self.get_member(member.guild_id, member.user.id)

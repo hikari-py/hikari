@@ -279,7 +279,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
             stickers = event.stickers if self._cache_enabled_for(config.CacheComponents.GUILD_STICKERS) else None
             guild = event.guild if self._cache_enabled_for(config.CacheComponents.GUILDS) else None
             guild_id = event.guild.id
-            members = event.members if self._cache_enabled_for(config.CacheComponents.MEMBERS | config.CacheComponents.MY_MEMBER) else None
+            members = event.members if self._cache_enabled_for(config.CacheComponents.MEMBERS) else None
             presences = event.presences if self._cache_enabled_for(config.CacheComponents.PRESENCES) else None
             roles = event.roles if self._cache_enabled_for(config.CacheComponents.ROLES) else None
             voice_states = event.voice_states if self._cache_enabled_for(config.CacheComponents.VOICE_STATES) else None
@@ -294,7 +294,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
             stickers = gd.stickers() if self._cache_enabled_for(config.CacheComponents.GUILD_STICKERS) else None
             guild = gd.guild() if self._cache_enabled_for(config.CacheComponents.GUILDS) else None
             guild_id = gd.id
-            members = gd.members() if self._cache_enabled_for(config.CacheComponents.MEMBERS | config.CacheComponents.MY_MEMBER) else None
+            members = gd.members() if self._cache_enabled_for(config.CacheComponents.MEMBERS) else None
             presences = gd.presences() if self._cache_enabled_for(config.CacheComponents.PRESENCES) else None
             roles = gd.roles() if self._cache_enabled_for(config.CacheComponents.ROLES) else None
             voice_states = gd.voice_states() if self._cache_enabled_for(config.CacheComponents.VOICE_STATES) else None
@@ -343,7 +343,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
             if members:
                 # TODO: do we really want to invalidate these all after an outage.
                 self._cache.clear_members_for_guild(guild_id)
-                if self._cache_enabled_for(config.CacheComponents.MEMBERS):
+                if not self._cache.settings.only_cache_my_member:
                     for member in members.values():
                         self._cache.set_member(member)
                 else:
@@ -456,7 +456,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         | config.CacheComponents.PRESENCES
         | config.CacheComponents.VOICE_STATES
         | config.CacheComponents.MEMBERS
-        | config.CacheComponents.MY_MEMBER
+       
         | config.CacheComponents.GUILD_THREADS,
     )
     async def on_guild_delete(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
@@ -572,7 +572,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         event = self._event_factory.deserialize_guild_member_remove_event(shard, payload, old_member=old)
         await self.dispatch(event)
 
-    @event_manager_base.filtered(member_events.MemberUpdateEvent, config.CacheComponents.MEMBERS | config.CacheComponents.MY_MEMBER)
+    @event_manager_base.filtered(member_events.MemberUpdateEvent, config.CacheComponents.MEMBERS)
     async def on_guild_member_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway-events#guild-member-update for more info."""
         old: typing.Optional[guilds.Member] = None
