@@ -114,7 +114,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
     def _cache_enabled_for(self, components: config.CacheComponents, /) -> bool:
         return self._cache is not None and (self._cache.settings.components & components) == components
 
-    @event_manager_base.filtered(shard_events.ShardReadyEvent, config.CacheComponents.ME | config.CacheComponents.MY_MEMBER)
+    @event_manager_base.filtered(shard_events.ShardReadyEvent, config.CacheComponents.ME)
     async def on_ready(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway-events#ready for more info."""
         # TODO: cache unavailable guilds on startup, I didn't bother for the time being.
@@ -772,7 +772,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         """See https://discord.com/developers/docs/topics/gateway-events#typing-start for more info."""
         await self.dispatch(self._event_factory.deserialize_typing_start_event(shard, payload))
 
-    @event_manager_base.filtered(user_events.OwnUserUpdateEvent, config.CacheComponents.ME | config.CacheComponents.MY_MEMBER)
+    @event_manager_base.filtered(user_events.OwnUserUpdateEvent, config.CacheComponents.ME)
     async def on_user_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway-events#user-update for more info."""
         old = self._cache.get_me() if self._cache else None
