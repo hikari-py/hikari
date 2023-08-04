@@ -134,7 +134,7 @@ class CacheImpl(cache.MutableCache):
         self._referenced_messages = collections.FreezableDict()
 
     def _is_cache_enabled_for(self, required_flag: config_api.CacheComponents) -> bool:
-        return (self._settings.components & required_flag) == required_flag
+        return (self._settings.components & required_flag) > 0
 
     @staticmethod
     def _increment_ref_count(obj: cache_utility.RefCell[typing.Any], increment: int = 1) -> None:
@@ -1029,14 +1029,14 @@ class CacheImpl(cache.MutableCache):
         return copy.copy(self._me)
 
     def set_me(self, user: users.OwnUser, /) -> None:
-        if self._is_cache_enabled_for(config_api.CacheComponents.ME):
+        if self._is_cache_enabled_for(config_api.CacheComponents.ME | config_api.CacheComponents.MY_MEMBER):
             _LOGGER.debug("setting my user to %s", user)
             self._me = copy.copy(user)
 
     def update_me(
         self, user: users.OwnUser, /
     ) -> typing.Tuple[typing.Optional[users.OwnUser], typing.Optional[users.OwnUser]]:
-        if not self._is_cache_enabled_for(config_api.CacheComponents.ME):
+        if not self._is_cache_enabled_for(config_api.CacheComponents.ME | config_api.CacheComponents.MY_MEMBER):
             return None, None
 
         cached_user = self.get_me()
@@ -1083,7 +1083,7 @@ class CacheImpl(cache.MutableCache):
     def clear_members(
         self,
     ) -> cache.CacheView[snowflakes.Snowflake, cache.CacheView[snowflakes.Snowflake, guilds.Member]]:
-        if not self._is_cache_enabled_for(config_api.CacheComponents.MEMBERS):
+        if not self._is_cache_enabled_for(config_api.CacheComponents.MEMBERS | config_api.CacheComponents.MY_MEMBER):
             return cache_utility.EmptyCacheView()
 
         views = ((guild_id, self.clear_members_for_guild(guild_id)) for guild_id in self._guild_entries.freeze().keys())
@@ -1092,7 +1092,7 @@ class CacheImpl(cache.MutableCache):
     def clear_members_for_guild(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
     ) -> cache.CacheView[snowflakes.Snowflake, guilds.Member]:
-        if not self._is_cache_enabled_for(config_api.CacheComponents.MEMBERS):
+        if not self._is_cache_enabled_for(config_api.CacheComponents.MEMBERS | config_api.CacheComponents.MY_MEMBER):
             return cache_utility.EmptyCacheView()
 
         guild_id = snowflakes.Snowflake(guild)
@@ -1113,7 +1113,7 @@ class CacheImpl(cache.MutableCache):
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         /,
     ) -> typing.Optional[guilds.Member]:
-        if not self._is_cache_enabled_for(config_api.CacheComponents.MEMBERS):
+        if not self._is_cache_enabled_for(config_api.CacheComponents.MEMBERS | config_api.CacheComponents.MY_MEMBER):
             return None
 
         guild_id = snowflakes.Snowflake(guild)
@@ -1140,7 +1140,7 @@ class CacheImpl(cache.MutableCache):
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         /,
     ) -> typing.Optional[guilds.Member]:
-        if not self._is_cache_enabled_for(config_api.CacheComponents.MEMBERS):
+        if not self._is_cache_enabled_for(config_api.CacheComponents.MEMBERS | config_api.CacheComponents.MY_MEMBER):
             return None
 
         guild_id = snowflakes.Snowflake(guild)
@@ -1155,7 +1155,7 @@ class CacheImpl(cache.MutableCache):
     def get_members_view(
         self,
     ) -> cache.CacheView[snowflakes.Snowflake, cache.CacheView[snowflakes.Snowflake, guilds.Member]]:
-        if not self._is_cache_enabled_for(config_api.CacheComponents.MEMBERS):
+        if not self._is_cache_enabled_for(config_api.CacheComponents.MEMBERS | config_api.CacheComponents.MY_MEMBER):
             return cache_utility.EmptyCacheView()
 
         views: typing.Mapping[snowflakes.Snowflake, cache.CacheView[snowflakes.Snowflake, guilds.Member]] = {
@@ -1168,7 +1168,7 @@ class CacheImpl(cache.MutableCache):
     def get_members_view_for_guild(
         self, guild_id: snowflakes.Snowflakeish, /
     ) -> cache.CacheView[snowflakes.Snowflake, guilds.Member]:
-        if not self._is_cache_enabled_for(config_api.CacheComponents.MEMBERS):
+        if not self._is_cache_enabled_for(config_api.CacheComponents.MEMBERS | config_api.CacheComponents.MY_MEMBER):
             return cache_utility.EmptyCacheView()
 
         guild_id = snowflakes.Snowflake(guild_id)
@@ -1183,7 +1183,7 @@ class CacheImpl(cache.MutableCache):
         return cache_utility.CacheMappingView(cached_members, builder=self._build_member)  # type: ignore[type-var]
 
     def set_member(self, member: guilds.Member, /) -> None:
-        if not self._is_cache_enabled_for(config_api.CacheComponents.MEMBERS):
+        if not self._is_cache_enabled_for(config_api.CacheComponents.MEMBERS | config_api.CacheComponents.MY_MEMBER):
             return None
 
         self._set_member(member, is_reference=False)
@@ -1217,7 +1217,7 @@ class CacheImpl(cache.MutableCache):
     def update_member(
         self, member: guilds.Member, /
     ) -> typing.Tuple[typing.Optional[guilds.Member], typing.Optional[guilds.Member]]:
-        if not self._is_cache_enabled_for(config_api.CacheComponents.MEMBERS):
+        if not self._is_cache_enabled_for(config_api.CacheComponents.MEMBERS | config_api.CacheComponents.MY_MEMBER):
             return None, None
 
         cached_member = self.get_member(member.guild_id, member.user.id)

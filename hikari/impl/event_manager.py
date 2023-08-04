@@ -114,7 +114,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
     def _cache_enabled_for(self, components: config.CacheComponents, /) -> bool:
         return self._cache is not None and (self._cache.settings.components & components) == components
 
-    @event_manager_base.filtered(shard_events.ShardReadyEvent, config.CacheComponents.ME)
+    @event_manager_base.filtered(shard_events.ShardReadyEvent, config.CacheComponents.ME | config.CacheComponents.MY_MEMBER)
     async def on_ready(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway-events#ready for more info."""
         # TODO: cache unavailable guilds on startup, I didn't bother for the time being.
@@ -279,7 +279,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
             stickers = event.stickers if self._cache_enabled_for(config.CacheComponents.GUILD_STICKERS) else None
             guild = event.guild if self._cache_enabled_for(config.CacheComponents.GUILDS) else None
             guild_id = event.guild.id
-            members = event.members if self._cache_enabled_for(config.CacheComponents.MEMBERS) else None
+            members = event.members if self._cache_enabled_for(config.CacheComponents.MEMBERS | config.CacheComponents.MY_MEMBER) else None
             presences = event.presences if self._cache_enabled_for(config.CacheComponents.PRESENCES) else None
             roles = event.roles if self._cache_enabled_for(config.CacheComponents.ROLES) else None
             voice_states = event.voice_states if self._cache_enabled_for(config.CacheComponents.VOICE_STATES) else None
@@ -294,7 +294,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
             stickers = gd.stickers() if self._cache_enabled_for(config.CacheComponents.GUILD_STICKERS) else None
             guild = gd.guild() if self._cache_enabled_for(config.CacheComponents.GUILDS) else None
             guild_id = gd.id
-            members = gd.members() if self._cache_enabled_for(config.CacheComponents.MEMBERS) else None
+            members = gd.members() if self._cache_enabled_for(config.CacheComponents.MEMBERS | config.CacheComponents.MY_MEMBER) else None
             presences = gd.presences() if self._cache_enabled_for(config.CacheComponents.PRESENCES) else None
             roles = gd.roles() if self._cache_enabled_for(config.CacheComponents.ROLES) else None
             voice_states = gd.voice_states() if self._cache_enabled_for(config.CacheComponents.VOICE_STATES) else None
@@ -343,8 +343,16 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
             if members:
                 # TODO: do we really want to invalidate these all after an outage.
                 self._cache.clear_members_for_guild(guild_id)
-                for member in members.values():
-                    self._cache.set_member(member)
+                if self._cache_enabled_for(config.CacheComponents.MEMBERS):
+                    for member in members.values():
+                        self._cache.set_member(member)
+                else:
+                    # TODO: walrus operator?
+                    me = self._cache.get_me()
+                    if me is not None:
+                        member = members.get(me.id)
+                        if member is not None:
+                            self._cache.set_member(member)
 
             if presences:
                 self._cache.clear_presences_for_guild(guild_id)
@@ -451,6 +459,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         | config.CacheComponents.PRESENCES
         | config.CacheComponents.VOICE_STATES
         | config.CacheComponents.MEMBERS
+        | config.CacheComponents.MY_MEMBER
         | config.CacheComponents.GUILD_THREADS,
     )
     async def on_guild_delete(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
@@ -566,7 +575,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         event = self._event_factory.deserialize_guild_member_remove_event(shard, payload, old_member=old)
         await self.dispatch(event)
 
-    @event_manager_base.filtered(member_events.MemberUpdateEvent, config.CacheComponents.MEMBERS)
+    @event_manager_base.filtered(member_events.MemberUpdateEvent, config.CacheComponents.MEMBERS | config.CacheComponents.MY_MEMBER)
     async def on_guild_member_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway-events#guild-member-update for more info."""
         old: typing.Optional[guilds.Member] = None
@@ -766,7 +775,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         """See https://discord.com/developers/docs/topics/gateway-events#typing-start for more info."""
         await self.dispatch(self._event_factory.deserialize_typing_start_event(shard, payload))
 
-    @event_manager_base.filtered(user_events.OwnUserUpdateEvent, config.CacheComponents.ME)
+    @event_manager_base.filtered(user_events.OwnUserUpdateEvent, config.CacheComponents.ME | config.CacheComponents.MY_MEMBER)
     async def on_user_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway-events#user-update for more info."""
         old = self._cache.get_me() if self._cache else None
