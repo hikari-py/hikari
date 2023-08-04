@@ -347,12 +347,9 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
                     for member in members.values():
                         self._cache.set_member(member)
                 else:
-                    # TODO: walrus operator?
-                    me = self._cache.get_me()
-                    if me is not None:
-                        member = members.get(me.id)
-                        if member is not None:
-                            self._cache.set_member(member)
+                    member = members.get(shard.get_user_id())
+                    if member is not None:
+                        self._cache.set_member(member)
 
             if presences:
                 self._cache.clear_presences_for_guild(guild_id)
