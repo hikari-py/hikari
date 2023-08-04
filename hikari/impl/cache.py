@@ -134,7 +134,7 @@ class CacheImpl(cache.MutableCache):
         self._referenced_messages = collections.FreezableDict()
 
     def _is_cache_enabled_for(self, required_flag: config_api.CacheComponents) -> bool:
-        return (self._settings.components & required_flag) > 0
+        return (self._settings.components & required_flag) == required_flag
 
     @staticmethod
     def _increment_ref_count(obj: cache_utility.RefCell[typing.Any], increment: int = 1) -> None:

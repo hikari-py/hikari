@@ -456,7 +456,6 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         | config.CacheComponents.PRESENCES
         | config.CacheComponents.VOICE_STATES
         | config.CacheComponents.MEMBERS
-       
         | config.CacheComponents.GUILD_THREADS,
     )
     async def on_guild_delete(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
