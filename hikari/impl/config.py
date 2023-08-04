@@ -323,8 +323,8 @@ class CacheSettings(config.CacheSettings):
 
     only_cache_my_member: bool = attrs.field(default=False)
     """This reduces the members cache to only the bot itself.
-    
+
     This will have no effect if the members cache is not enabled.
-    
+
     Defaults to `False`.
     """
