@@ -347,9 +347,9 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
                     for member in members.values():
                         self._cache.set_member(member)
                 else:
-                    member = members.get(shard.get_user_id())
-                    if member is not None:
-                        self._cache.set_member(member)
+                    my_member = members.get(shard.get_user_id())
+                    if my_member is not None:
+                        self._cache.set_member(my_member)
 
             if presences:
                 self._cache.clear_presences_for_guild(guild_id)
