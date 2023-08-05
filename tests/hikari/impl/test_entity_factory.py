@@ -2023,7 +2023,7 @@ class TestEntityFactoryImpl:
         assert isinstance(voice_channel, channel_models.GuildStageChannel)
 
     def test_deserialize_guild_stage_channel_with_null_fields(self, entity_factory_impl):
-        voice_channel = entity_factory_impl.deserialize_guild_voice_channel(
+        voice_channel = entity_factory_impl.deserialize_guild_stage_channel(
             {
                 "id": "123",
                 "permission_overwrites": [],
