@@ -375,6 +375,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
             self._auto_chunk_members
             and self._intents & intents_.Intents.GUILD_MEMBERS
             and (payload.get("large") or not presences_declared)
+            and (self._cache is None or not self._cache.settings.only_cache_my_member)
             and (
                 self._cache_enabled_for(config.CacheComponents.MEMBERS)
                 or self._enabled_for_event(shard_events.MemberChunkEvent)
