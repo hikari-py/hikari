@@ -1169,18 +1169,21 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> channel_models.GuildStageChannel:
         channel_fields = self._set_guild_channel_attrsibutes(payload, guild_id=guild_id)
-        permission_overwrites = {
-            snowflakes.Snowflake(overwrite["id"]): self.deserialize_permission_overwrite(overwrite)
-            for overwrite in payload["permission_overwrites"]
-        }
-        last_message_id = snowflakes.Snowflake(payload["last_message_id"]) if "last_message_id" in payload else None
+
+        last_message_id: typing.Optional[snowflakes.Snowflake] = None
+        if (raw_last_message_id := payload.get("last_message_id")) is not None:
+            last_message_id = snowflakes.Snowflake(raw_last_message_id)
+
         return channel_models.GuildStageChannel(
             app=self._app,
             id=channel_fields.id,
             name=channel_fields.name,
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
-            permission_overwrites=permission_overwrites,
+            permission_overwrites={
+                snowflakes.Snowflake(overwrite["id"]): self.deserialize_permission_overwrite(overwrite)
+                for overwrite in payload["permission_overwrites"]
+            },
             is_nsfw=payload.get("nsfw", False),
             parent_id=channel_fields.parent_id,
             region=payload["rtc_region"],
