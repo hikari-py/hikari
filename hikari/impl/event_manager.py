@@ -343,7 +343,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
             if members:
                 # TODO: do we really want to invalidate these all after an outage.
                 self._cache.clear_members_for_guild(guild_id)
-                if not self._cache.settings.only_cache_my_member:
+                if not self._cache.settings.only_my_member:
                     for member in members.values():
                         self._cache.set_member(member)
                 else:
@@ -375,7 +375,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
             self._auto_chunk_members
             and self._intents & intents_.Intents.GUILD_MEMBERS
             and (payload.get("large") or not presences_declared)
-            and (self._cache is None or not self._cache.settings.only_cache_my_member)
+            and (self._cache is None or not self._cache.settings.only_my_member)
             and (
                 self._cache_enabled_for(config.CacheComponents.MEMBERS)
                 or self._enabled_for_event(shard_events.MemberChunkEvent)

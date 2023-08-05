@@ -202,7 +202,7 @@ class CacheSettings(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def only_cache_my_member(self) -> bool:
+    def only_my_member(self) -> bool:
         """Reduce the members cache to only the bot itself.
 
         This will have no effect if the members cache is not enabled.
