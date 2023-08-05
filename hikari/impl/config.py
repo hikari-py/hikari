@@ -324,6 +324,7 @@ class CacheSettings(config.CacheSettings):
     only_my_member: bool = attrs.field(default=False)
     """Reduce the members cache to only the bot itself.
 
+    Useful when only the bot member is required (eg. permission checks).
     This will have no effect if the members cache is not enabled.
 
     Defaults to `False`.

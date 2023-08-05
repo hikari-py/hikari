@@ -205,6 +205,7 @@ class CacheSettings(abc.ABC):
     def only_my_member(self) -> bool:
         """Reduce the members cache to only the bot itself.
 
+        Useful when only the bot member is required (eg. permission checks).
         This will have no effect if the members cache is not enabled.
 
         Defaults to `False`.
