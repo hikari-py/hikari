@@ -308,6 +308,12 @@ class OwnGuild(guilds.PartialGuild):
     my_permissions: permissions_.Permissions = attrs.field(eq=False, hash=False, repr=False)
     """The guild-level permissions that apply to the current user or bot."""
 
+    approximate_member_count: int = attrs.field(eq=False, hash=False, repr=True)
+    """The approximate amount of members in this guild."""
+
+    approximate_active_member_count: int = attrs.field(eq=False, hash=False, repr=True)
+    """The approximate amount of presences in this guild."""
+
 
 @attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class OwnApplicationRoleConnection:
