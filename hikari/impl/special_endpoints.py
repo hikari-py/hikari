@@ -598,6 +598,7 @@ class OwnGuildIterator(iterators.BufferedLazyIterator["applications.OwnGuild"]):
 
     async def _next_chunk(self) -> typing.Optional[typing.Generator[applications.OwnGuild, typing.Any, None]]:
         query = data_binding.StringMapBuilder()
+        query.put("with_counts", True)
         query.put("before" if self._newest_first else "after", self._first_id)
         # We rely on Discord's default for the limit here since for this endpoint this has always scaled
         # along side the maximum page size limit to match the maximum amount of guilds a user can be in.
