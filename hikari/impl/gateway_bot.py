@@ -563,11 +563,11 @@ class GatewayBot(traits.GatewayBotAware):
 
         See Also
         --------
-        Listen : `hikari.impl.bot.GatewayBot.listen`.
-        Stream : `hikari.impl.bot.GatewayBot.stream`.
-        Subscribe : `hikari.impl.bot.GatewayBot.subscribe`.
-        Unsubscribe : `hikari.impl.bot.GatewayBot.unsubscribe`.
-        Wait_for : `hikari.impl.bot.GatewayBot.wait_for`.
+        Listen : `hikari.impl.gateway_bot.GatewayBot.listen`.
+        Stream : `hikari.impl.gateway_bot.GatewayBot.stream`.
+        Subscribe : `hikari.impl.gateway_bot.GatewayBot.subscribe`.
+        Unsubscribe : `hikari.impl.gateway_bot.GatewayBot.unsubscribe`.
+        Wait_for : `hikari.impl.gateway_bot.GatewayBot.wait_for`.
         """
         return self._event_manager.dispatch(event)
 
@@ -626,11 +626,11 @@ class GatewayBot(traits.GatewayBotAware):
 
         See Also
         --------
-        Dispatch : `hikari.impl.bot.GatewayBot.dispatch`.
-        Stream : `hikari.impl.bot.GatewayBot.stream`.
-        Subscribe : `hikari.impl.bot.GatewayBot.subscribe`.
-        Unsubscribe : `hikari.impl.bot.GatewayBot.unsubscribe`.
-        Wait_for : `hikari.impl.bot.GatewayBot.wait_for`.
+        Dispatch : `hikari.impl.gateway_bot.GatewayBot.dispatch`.
+        Stream : `hikari.impl.gateway_bot.GatewayBot.stream`.
+        Subscribe : `hikari.impl.gateway_bot.GatewayBot.subscribe`.
+        Unsubscribe : `hikari.impl.gateway_bot.GatewayBot.unsubscribe`.
+        Wait_for : `hikari.impl.gateway_bot.GatewayBot.wait_for`.
         """
         return self._event_manager.listen(*event_types)
 
@@ -1056,11 +1056,11 @@ class GatewayBot(traits.GatewayBotAware):
 
         See Also
         --------
-        Dispatch : `hikari.impl.bot.GatewayBot.dispatch`.
-        Listen : `hikari.impl.bot.GatewayBot.listen`.
-        Subscribe : `hikari.impl.bot.GatewayBot.subscribe`.
-        Unsubscribe : `hikari.impl.bot.GatewayBot.unsubscribe`.
-        Wait_for : `hikari.impl.bot.GatewayBot.wait_for`.
+        Dispatch : `hikari.impl.gateway_bot.GatewayBot.dispatch`.
+        Listen : `hikari.impl.gateway_bot.GatewayBot.listen`.
+        Subscribe : `hikari.impl.gateway_bot.GatewayBot.subscribe`.
+        Unsubscribe : `hikari.impl.gateway_bot.GatewayBot.unsubscribe`.
+        Wait_for : `hikari.impl.gateway_bot.GatewayBot.wait_for`.
         """
         self._check_if_alive()
         return self._event_manager.stream(event_type, timeout=timeout, limit=limit)
@@ -1099,11 +1099,11 @@ class GatewayBot(traits.GatewayBotAware):
 
         See Also
         --------
-        Dispatch : `hikari.impl.bot.GatewayBot.dispatch`.
-        Listen : `hikari.impl.bot.GatewayBot.listen`.
-        Stream : `hikari.impl.bot.GatewayBot.stream`.
-        Unsubscribe : `hikari.impl.bot.GatewayBot.unsubscribe`.
-        Wait_for : `hikari.impl.bot.GatewayBot.wait_for`.
+        Dispatch : `hikari.impl.gateway_bot.GatewayBot.dispatch`.
+        Listen : `hikari.impl.gateway_bot.GatewayBot.listen`.
+        Stream : `hikari.impl.gateway_bot.GatewayBot.stream`.
+        Unsubscribe : `hikari.impl.gateway_bot.GatewayBot.unsubscribe`.
+        Wait_for : `hikari.impl.gateway_bot.GatewayBot.wait_for`.
         """
         self._event_manager.subscribe(event_type, callback)
 
@@ -1139,11 +1139,11 @@ class GatewayBot(traits.GatewayBotAware):
 
         See Also
         --------
-        Dispatch : `hikari.impl.bot.GatewayBot.dispatch`.
-        Listen : `hikari.impl.bot.GatewayBot.listen`.
-        Stream : `hikari.impl.bot.GatewayBot.stream`.
-        Subscribe : `hikari.impl.bot.GatewayBot.subscribe`.
-        Wait_for : `hikari.impl.bot.GatewayBot.wait_for`.
+        Dispatch : `hikari.impl.gateway_bot.GatewayBot.dispatch`.
+        Listen : `hikari.impl.gateway_bot.GatewayBot.listen`.
+        Stream : `hikari.impl.gateway_bot.GatewayBot.stream`.
+        Subscribe : `hikari.impl.gateway_bot.GatewayBot.subscribe`.
+        Wait_for : `hikari.impl.gateway_bot.GatewayBot.wait_for`.
         """
         self._event_manager.unsubscribe(event_type, callback)
 
@@ -1190,11 +1190,11 @@ class GatewayBot(traits.GatewayBotAware):
 
         See Also
         --------
-        Dispatch : `hikari.impl.bot.GatewayBot.dispatch`.
-        Listen : `hikari.impl.bot.GatewayBot.listen`.
-        Stream : `hikari.impl.bot.GatewayBot.stream`.
-        Subscribe : `hikari.impl.bot.GatewayBot.subscribe`.
-        Unsubscribe : `hikari.impl.bot.GatewayBot.unsubscribe`.
+        Dispatch : `hikari.impl.gateway_bot.GatewayBot.dispatch`.
+        Listen : `hikari.impl.gateway_bot.GatewayBot.listen`.
+        Stream : `hikari.impl.gateway_bot.GatewayBot.stream`.
+        Subscribe : `hikari.impl.gateway_bot.GatewayBot.subscribe`.
+        Unsubscribe : `hikari.impl.gateway_bot.GatewayBot.unsubscribe`.
         """
         self._check_if_alive()
         return await self._event_manager.wait_for(event_type, timeout=timeout, predicate=predicate)
