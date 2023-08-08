@@ -641,19 +641,26 @@ class TestEventManagerImpl:
         stateless_event_manager_impl.dispatch.assert_not_called()
 
     @pytest.mark.asyncio()
-    async def test_on_guild_create_when_members_declared_and_member_cache_enabled(
-        self, stateless_event_manager_impl, shard, event_factory, entity_factory
+    async def test_on_guild_create_when_members_declared_and_member_cache_enabled_but_only_my_member_not_enabled(
+        self, event_manager_impl, shard, event_factory, entity_factory
     ):
+        def cache_enabled_for_members_only(component):
+            return component == config.CacheComponents.MEMBERS
+
         shard.id = 123
-        stateless_event_manager_impl._intents = intents.Intents.GUILD_MEMBERS
-        stateless_event_manager_impl._cache_enabled_for = mock.Mock(return_value=True)
-        stateless_event_manager_impl._enabled_for_event = mock.Mock(return_value=False)
+        event_manager_impl._cache.settings.only_my_member = False
+        event_manager_impl._intents = intents.Intents.GUILD_MEMBERS
+        event_manager_impl._cache_enabled_for = cache_enabled_for_members_only
+        event_manager_impl._enabled_for_event = mock.Mock(return_value=False)
+        gateway_guild = entity_factory.deserialize_gateway_guild.return_value
+        gateway_guild.id = 456
+        gateway_guild.members.return_value = {1: "member1", 2: "member2"}
         mock_request_guild_members = mock.Mock()
 
         with mock.patch.object(asyncio, "create_task") as create_task:
             with mock.patch.object(event_manager, "_fixed_size_nonce", return_value="abc"):
                 with mock.patch.object(event_manager, "_request_guild_members", new=mock_request_guild_members):
-                    await stateless_event_manager_impl.on_guild_create(shard, {"id": 456, "large": False})
+                    await event_manager_impl.on_guild_create(shard, {"id": 456, "large": False})
 
         mock_request_guild_members.assert_called_once_with(shard, 456, include_presences=False, nonce="123.abc")
         create_task.assert_called_once_with(
@@ -664,21 +671,17 @@ class TestEventManagerImpl:
     async def test_on_guild_create_when_members_declared_and_member_cache_but_only_my_member_enabled(
         self, event_manager_impl, shard, event_factory, entity_factory
     ):
+        def cache_enabled_for_members_only(component):
+            return component == config.CacheComponents.MEMBERS
+
         shard.id = 123
-        event_manager_impl._intents = intents.Intents.GUILD_MEMBERS
-        event_manager_impl._cache_enabled_for = mock.Mock(return_value=True)
-        event_manager_impl._enabled_for_event = mock.Mock(return_value=False)
-        event_manager_impl._cache.settings.only_my_member = True
         shard.get_user_id.return_value = 1
+        event_manager_impl._cache.settings.only_my_member = True
+        event_manager_impl._intents = intents.Intents.GUILD_MEMBERS
+        event_manager_impl._cache_enabled_for = cache_enabled_for_members_only
+        event_manager_impl._enabled_for_event = mock.Mock(return_value=False)
         gateway_guild = entity_factory.deserialize_gateway_guild.return_value
-        gateway_guild.channels.return_value = {1: "channel1", 2: "channel2"}
-        gateway_guild.emojis.return_value = {1: "emoji1", 2: "emoji2"}
-        gateway_guild.roles.return_value = {1: "role1", 2: "role2"}
-        gateway_guild.voice_states.return_value = {1: "voice1", 2: "voice2"}
-        gateway_guild.presences.return_value = {1: "presence1", 2: "presence2"}
         gateway_guild.members.return_value = {1: "member1", 2: "member2"}
-        gateway_guild.stickers.return_value = {1: "sticker1", 2: "sticker2"}
-        gateway_guild.threads.return_value = {1: "thread1", 2: "thread2"}
 
         mock_request_guild_members = mock.Mock()
 

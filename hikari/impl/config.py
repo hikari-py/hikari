@@ -29,6 +29,7 @@ __all__: typing.Sequence[str] = (
     "ProxySettings",
     "HTTPTimeoutSettings",
     "HTTPSettings",
+    "CacheComponents",
     "CacheSettings",
 )
 
@@ -41,6 +42,9 @@ import attrs
 from hikari.api import config
 from hikari.internal import attrs_extensions
 from hikari.internal import data_binding
+
+# Re-export
+CacheComponents = config.CacheComponents
 
 _BASICAUTH_TOKEN_PREFIX: typing.Final[str] = "Basic"  # nosec
 _PROXY_AUTHENTICATION_HEADER: typing.Final[str] = "Proxy-Authentication"
