@@ -43,9 +43,6 @@ from hikari.api import config
 from hikari.internal import attrs_extensions
 from hikari.internal import data_binding
 
-# Re-export
-CacheComponents = config.CacheComponents
-
 _BASICAUTH_TOKEN_PREFIX: typing.Final[str] = "Basic"  # nosec
 _PROXY_AUTHENTICATION_HEADER: typing.Final[str] = "Proxy-Authentication"
 
@@ -294,6 +291,10 @@ class HTTPSettings(config.HTTPSettings):
     The behaviour if this is not explicitly defined is to use sane
     defaults that are most efficient for optimal use of this library.
     """
+
+
+# Re-export
+CacheComponents = config.CacheComponents
 
 
 @attrs_extensions.with_copy
