@@ -352,7 +352,7 @@ def _serialize_activity(activity: typing.Optional[presences.Activity]) -> data_b
     if activity is None:
         return None
 
-    return {"name": activity.name, "type": int(activity.type), "url": activity.url}
+    return {"name": activity.name, "state": activity.state, "type": int(activity.type), "url": activity.url}
 
 
 class GatewayShardImpl(shard.GatewayShard):

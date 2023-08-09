@@ -85,9 +85,6 @@ class ActivityType(int, enums.Enum):
 
     To set an emoji with the status, place a unicode emoji or Discord emoji
     (`:smiley:`) as the first part of the status activity name.
-
-    .. warning::
-        Bots **DO NOT** support setting custom statuses.
     """
 
     COMPETING = 5
@@ -306,8 +303,18 @@ class Activity:
     name: str = attrs.field()
     """The activity name."""
 
+    state: typing.Optional[str] = attrs.field(default=None)
+    """The activities state.
+    
+    This field can be use to set a custom status or provide more information
+    on the activity.
+    """
+
     url: typing.Optional[str] = attrs.field(default=None, repr=False)
-    """The activity URL. Only valid for `STREAMING` activities."""
+    """The activity URL.
+    
+    Only valid for `STREAMING` activities.
+    """
 
     type: typing.Union[ActivityType, int] = attrs.field(converter=ActivityType, default=ActivityType.PLAYING)
     """The activity type."""

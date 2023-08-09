@@ -55,20 +55,6 @@ def test_validate_activity_when_no_activity(activity):
     warn.assert_not_called()
 
 
-def test_validate_activity_when_type_is_custom():
-    activity = presences.Activity(name="test", type=presences.ActivityType.CUSTOM)
-
-    with mock.patch.object(warnings, "warn") as warn:
-        bot_impl._validate_activity(activity)
-
-    warn.assert_called_once_with(
-        "The CUSTOM activity type is not supported by bots at the time of writing, and may therefore not have "
-        "any effect if used.",
-        category=errors.HikariWarning,
-        stacklevel=3,
-    )
-
-
 def test_validate_activity_when_type_is_streaming_but_no_url():
     activity = presences.Activity(name="test", url=None, type=presences.ActivityType.STREAMING)
 
@@ -84,7 +70,7 @@ def test_validate_activity_when_type_is_streaming_but_no_url():
 
 
 def test_validate_activity_when_no_warning():
-    activity = presences.Activity(name="test", type=presences.ActivityType.PLAYING)
+    activity = presences.Activity(name="test", state="Hello!", type=presences.ActivityType.CUSTOM)
 
     with mock.patch.object(warnings, "warn") as warn:
         bot_impl._validate_activity(activity)
