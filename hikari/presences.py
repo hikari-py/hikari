@@ -81,7 +81,11 @@ class ActivityType(int, enums.Enum):
     """Shows up as `Watching <name>`."""
 
     CUSTOM = 4
-    """A custom status."""
+    """Shows up as `<emoji> <state>`.
+    
+    .. warning::
+        As of the time of writing, emoji cannot be used by bot accounts.
+    """
 
     COMPETING = 5
     """Shows up as `Competing in <name>`."""
