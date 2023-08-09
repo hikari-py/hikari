@@ -304,15 +304,15 @@ class Activity:
     """The activity name."""
 
     state: typing.Optional[str] = attrs.field(default=None)
-    """The activities state.
-    
+    """The activities state, if set.
+
     This field can be use to set a custom status or provide more information
     on the activity.
     """
 
     url: typing.Optional[str] = attrs.field(default=None, repr=False)
-    """The activity URL.
-    
+    """The activity URL, if set.
+
     Only valid for `STREAMING` activities.
     """
 
@@ -338,9 +338,6 @@ class RichActivity(Activity):
 
     details: typing.Optional[str] = attrs.field(repr=False)
     """The text that describes what the activity's target is doing, if set."""
-
-    state: typing.Optional[str] = attrs.field(repr=False)
-    """The current status of this activity's target, if set."""
 
     emoji: typing.Optional[emojis_.Emoji] = attrs.field(repr=False)
     """The emoji of this activity, if it is a custom status and set."""
