@@ -81,11 +81,7 @@ class ActivityType(int, enums.Enum):
     """Shows up as `Watching <name>`."""
 
     CUSTOM = 4
-    """A custom status.
-
-    To set an emoji with the status, place a unicode emoji or Discord emoji
-    (`:smiley:`) as the first part of the status activity name.
-    """
+    """A custom status."""
 
     COMPETING = 5
     """Shows up as `Competing in <name>`."""
