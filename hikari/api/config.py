@@ -77,7 +77,7 @@ class CacheComponents(enums.Flag):
     """Enables the guild stickers cache."""
 
     GUILD_THREADS = 1 << 12
-    """Enabled the guild threads cache."""
+    """Enables the guild threads cache."""
 
     ALL = (
         GUILDS
@@ -199,3 +199,14 @@ class CacheSettings(abc.ABC):
     @abc.abstractmethod
     def components(self) -> CacheComponents:
         """Cache components to use."""
+
+    @property
+    @abc.abstractmethod
+    def only_my_member(self) -> bool:
+        """Reduce the members cache to only the bot itself.
+
+        Useful when only the bot member is required (eg. permission checks).
+        This will have no effect if the members cache is not enabled.
+
+        Defaults to `False`.
+        """

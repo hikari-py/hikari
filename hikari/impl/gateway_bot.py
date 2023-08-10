@@ -183,15 +183,22 @@ class GatewayBot(traits.GatewayBotAware):
         Defaults to `True`. If `False`, then no member chunks
         will be requested automatically, even if there are reasons to do so.
 
-        All following statements must be true to automatically request chunks:
+        We only want to chunk if we are allowed and need to:
 
-        1. `auto_chunk_members` is `True`.
-        2. The members intent is enabled.
-        3. The server is marked as "large" or the presences intent is not enabled
-           (since Discord only sends other members when presences are declared,
-           we should also chunk small guilds if the presences are not declared).
-        4. The members cache is enabled or there are listeners for the
-           `MemberChunkEvent`.
+        - Allowed?
+            All the following must be true:
+                1. `auto_chunk_members` is true (the user wants us to).
+                2. We have the necessary intents (`GUILD_MEMBERS`).
+                3. The guild is marked as "large" or we do not have `GUILD_PRESENCES` intent
+                   Discord will only send every other member objects on the `GUILD_CREATE`
+                   payload if presence intents are also declared, so if this isn't the case then we also
+                   want to chunk small guilds.
+
+        - Needed?
+            One of the following must be true:
+                1. We have a cache, and it requires it (it is enabled for `MEMBERS`), but we are
+                   not limited to only our own member (which is included in the `GUILD_CREATE` payload).
+                2. The user is waiting for the member chunks (there is an event listener for it).
     logs : typing.Union[None, str, int, typing.Dict[str, typing.Any], os.PathLike]
         The flavour to set the logging to.
 
