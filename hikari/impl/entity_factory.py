@@ -1310,7 +1310,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if deserialize := self._thread_channel_type_mapping.get(channel_type):
             return deserialize(payload, guild_id=guild_id, member=member, user_id=user_id)
 
-        _LOGGER.debug(f"Unrecognised thread channel type {channel_type}")
+        _LOGGER.debug("Unrecognised thread channel type %s", channel_type)
         raise errors.UnrecognisedEntityError(f"Unrecognised thread channel type {channel_type}")
 
     def deserialize_guild_news_thread(
@@ -1555,7 +1555,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if dm_channel_model := self._dm_channel_type_mapping.get(channel_type):
             return dm_channel_model(payload)
 
-        _LOGGER.debug(f"Unrecognised channel type {channel_type}")
+        _LOGGER.debug("Unrecognised channel type %s", channel_type)
         raise errors.UnrecognisedEntityError(f"Unrecognised channel type {channel_type}")
 
     ################
@@ -3501,7 +3501,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if converter := self._scheduled_event_type_mapping.get(event_type):
             return converter(payload)
 
-        _LOGGER.debug(f"Unrecognised scheduled event type {event_type}")
+        _LOGGER.debug("Unrecognised scheduled event type %s", event_type)
         raise errors.UnrecognisedEntityError(f"Unrecognised scheduled event type {event_type}")
 
     def deserialize_scheduled_event_user(
@@ -3775,5 +3775,5 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if converter := self._webhook_type_mapping.get(webhook_type):
             return converter(payload)
 
-        _LOGGER.debug(f"Unrecognised webhook type {webhook_type}")
+        _LOGGER.debug("Unrecognised webhook type %s", webhook_type)
         raise errors.UnrecognisedEntityError(f"Unrecognised webhook type {webhook_type}")
