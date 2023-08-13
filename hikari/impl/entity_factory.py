@@ -599,7 +599,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             channel_models.ChannelType.GUILD_VOICE: self.deserialize_guild_voice_channel,
             channel_models.ChannelType.GUILD_STAGE: self.deserialize_guild_stage_channel,
             channel_models.ChannelType.GUILD_FORUM: self.deserialize_guild_forum_channel,
-            channel_models.ChannelType.GUILD_MEDIA: self.deserialize_guild_media_channel
+            channel_models.ChannelType.GUILD_MEDIA: self.deserialize_guild_media_channel,
         }
         self._thread_channel_type_mapping = {
             channel_models.ChannelType.GUILD_NEWS_THREAD: self.deserialize_guild_news_thread,
@@ -1598,7 +1598,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             owner_id=snowflakes.Snowflake(payload["owner_id"]),
             metadata=self._deserialize_thread_metadata(payload["thread_metadata"]),
         )
-    
+
     def deserialize_guild_media_channel(
         self,
         payload: data_binding.JSONObject,
