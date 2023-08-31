@@ -1,4 +1,4 @@
-sphinx==7.2.4
+sphinx==7.2.5
 
 # Theme
 furo==2023.8.19
