@@ -1484,7 +1484,7 @@ class RESTClientImpl(rest_api.RESTClient):
             body.put("attachments", attachments_payload)
 
         elif attachment is None or attachments is None:
-            body.put("attachments", None)
+            body.put("attachments", [])
 
         return body, form_builder
 
