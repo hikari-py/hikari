@@ -81,8 +81,8 @@ class ActivityType(int, enums.Enum):
     """Shows up as `Watching <name>`."""
 
     CUSTOM = 4
-    """Shows up as `<emoji> <state>`.
-    
+    """Shows up as `<emoji> <name>`.
+
     .. warning::
         As of the time of writing, emoji cannot be used by bot accounts.
     """
