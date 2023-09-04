@@ -355,6 +355,7 @@ def _serialize_activity(activity: typing.Optional[presences.Activity]) -> data_b
         return None
 
     # Syntactic sugar, treat `name` as state if using `CUSTOM` and `state` is not passed.
+    state: typing.Optional[str]
     if activity.type is presences.ActivityType.CUSTOM and activity.name and not activity.state:
         name = _CUSTOM_STATUS_NAME
         state = activity.name
