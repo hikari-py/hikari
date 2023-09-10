@@ -651,6 +651,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             custom_install_url=payload.get("custom_install_url"),
             tags=payload.get("tags") or [],
             install_parameters=install_parameters,
+            approximate_guild_count=payload["approximate_guild_count"],
         )
 
     def deserialize_authorization_information(

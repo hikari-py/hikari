@@ -632,6 +632,9 @@ class Application(guilds.PartialApplication):
     install_parameters: typing.Optional[ApplicationInstallParameters] = attrs.field(eq=False, hash=False, repr=False)
     """Settings for the application's default in-app authorization link, if enabled."""
 
+    approximate_guild_count: int = attrs.field(eq=False, hash=False, repr=False)
+    """The approximate number of guilds this application is part of."""
+
     @property
     def cover_image_url(self) -> typing.Optional[files.URL]:
         """Rich presence cover image URL for this application, if set."""

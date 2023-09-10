@@ -975,6 +975,7 @@ class TestEntityFactoryImpl:
             "custom_install_url": "https://dontinstallme.com",
             "tags": ["i", "like", "hikari"],
             "install_params": {"scopes": ["bot", "applications.commands"], "permissions": 8},
+            "approximate_guild_count": 10000,
         }
 
     def test_deserialize_application(
@@ -1001,6 +1002,7 @@ class TestEntityFactoryImpl:
         assert application.custom_install_url == "https://dontinstallme.com"
         assert application.tags == ["i", "like", "hikari"]
         assert application.icon_hash == "iwiwiwiwiw"
+        assert application.approximate_guild_count == 10000
         # Install Parameters
         assert application.install_parameters.scopes == [
             application_models.OAuth2Scope.BOT,
@@ -1037,6 +1039,7 @@ class TestEntityFactoryImpl:
                 "verify_key": "1232313223",
                 "flags": 0,
                 "owner": owner_payload,
+                "approximate_guild_count": 10000,
             }
         )
 
@@ -1061,6 +1064,7 @@ class TestEntityFactoryImpl:
                 "bot_require_code_grant": False,
                 "verify_key": "1232313223",
                 "flags": 0,
+                "approximate_guild_count": 10000,
             }
         )
 
