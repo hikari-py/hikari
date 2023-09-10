@@ -78,19 +78,12 @@ _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.bot")
 def _validate_activity(activity: undefined.UndefinedNoneOr[presences.Activity]) -> None:
     # This seems to cause confusion for a lot of people, so lets add some warnings into the mix.
 
-    if activity is undefined.UNDEFINED or activity is None:
+    if not activity:
         return
 
     # If you ever change where this is called from, make sure to check the stacklevels are correct
     # or the code preview in the warning will be wrong...
-    if activity.type is presences.ActivityType.CUSTOM:
-        warnings.warn(
-            "The CUSTOM activity type is not supported by bots at the time of writing, and may therefore not have "
-            "any effect if used.",
-            category=errors.HikariWarning,
-            stacklevel=3,
-        )
-    elif activity.type is presences.ActivityType.STREAMING and activity.url is None:
+    if activity.type is presences.ActivityType.STREAMING and activity.url is None:
         warnings.warn(
             "The STREAMING activity type requires a 'url' parameter pointing to a valid Twitch or YouTube video "
             "URL to be specified on the activity for the presence update to have any effect.",
