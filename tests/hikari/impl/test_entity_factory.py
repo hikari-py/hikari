@@ -872,28 +872,15 @@ class TestEntityFactoryImpl:
         assert own_connection.visibility == application_models.ConnectionVisibility.NONE
         assert isinstance(own_connection, application_models.OwnConnection)
 
-    def test_deserialize_own_connection_when_integrations_is_None(self, entity_factory_impl, own_connection_payload):
+    def test_deserialize_own_connection_with_nullable_and_optional_fields(self, entity_factory_impl, own_connection_payload):
         del own_connection_payload["integrations"]
-        own_connection = entity_factory_impl.deserialize_own_connection(own_connection_payload)
-        assert own_connection.id == "2513849648abc"
-        assert own_connection.name == "FS"
-        assert own_connection.type == "twitter"
-        assert own_connection.is_revoked is False
-        assert own_connection.integrations == []
-        assert own_connection.is_verified is True
-        assert own_connection.is_friend_sync_enabled is False
-        assert own_connection.is_activity_visible is True
-        assert own_connection.visibility == application_models.ConnectionVisibility.NONE
-        assert isinstance(own_connection, application_models.OwnConnection)
-
-    def test_deserialize_own_connection_when_revoked_is_None(self, entity_factory_impl, own_connection_payload):
         del own_connection_payload["revoked"]
         own_connection = entity_factory_impl.deserialize_own_connection(own_connection_payload)
         assert own_connection.id == "2513849648abc"
         assert own_connection.name == "FS"
         assert own_connection.type == "twitter"
         assert own_connection.is_revoked is False
-        assert own_connection.integrations == [entity_factory_impl.deserialize_partial_integration(partial_integration)]
+        assert own_connection.integrations == []
         assert own_connection.is_verified is True
         assert own_connection.is_friend_sync_enabled is False
         assert own_connection.is_activity_visible is True
