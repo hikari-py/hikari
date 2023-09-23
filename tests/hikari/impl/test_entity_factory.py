@@ -872,7 +872,9 @@ class TestEntityFactoryImpl:
         assert own_connection.visibility == application_models.ConnectionVisibility.NONE
         assert isinstance(own_connection, application_models.OwnConnection)
 
-    def test_deserialize_own_connection_with_nullable_and_optional_fields(self, entity_factory_impl, own_connection_payload):
+    def test_deserialize_own_connection_with_nullable_and_optional_fields(
+        self, entity_factory_impl, own_connection_payload
+    ):
         del own_connection_payload["integrations"]
         del own_connection_payload["revoked"]
         own_connection = entity_factory_impl.deserialize_own_connection(own_connection_payload)
