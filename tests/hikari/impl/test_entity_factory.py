@@ -886,7 +886,6 @@ class TestEntityFactoryImpl:
         assert own_connection.is_activity_visible is True
         assert own_connection.visibility == application_models.ConnectionVisibility.NONE
         assert isinstance(own_connection, application_models.OwnConnection)
-    
     @pytest.fixture()
     def own_guild_payload(self):
         return {
