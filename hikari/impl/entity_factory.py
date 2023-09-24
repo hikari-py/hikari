@@ -572,7 +572,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             id=payload["id"],
             name=payload["name"],
             type=payload["type"],
-            is_revoked=payload["revoked"],
+            is_revoked=payload.get("revoked", False),
             integrations=integrations,
             is_verified=payload["verified"],
             is_friend_sync_enabled=payload["friend_sync"],
