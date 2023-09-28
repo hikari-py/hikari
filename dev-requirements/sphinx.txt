@@ -5,7 +5,7 @@ furo==2023.9.10
 
 # Autodocumentation
 sphinx-autoapi==3.0.0
-numpydoc==1.5.0
+numpydoc==1.6.0
 
 # Static files
 myst-parser==2.0.0
