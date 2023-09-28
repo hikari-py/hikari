@@ -1694,7 +1694,12 @@ class TestEventManagerImpl:
         )
 
     @pytest.mark.asyncio()
-    async def test_on_stage_instance_create(self, event_manager, shard, event_factory):
+    async def test_on_stage_instance_create(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: mock.Mock,
+        event_factory: event_factory_.EventFactory,
+    ):
         payload = {
             "id": "840647391636226060",
             "guild_id": "197038439483310086",
@@ -1704,15 +1709,20 @@ class TestEventManagerImpl:
             "discoverable_disabled": False,
         }
 
-        await event_manager.on_stage_instance_create(shard, payload)
+        await event_manager_impl.on_stage_instance_create(shard, payload)
 
         event_factory.deserialize_stage_instance_create_event.assert_called_once_with(shard, payload)
-        event_manager.dispatch.assert_awaited_once_with(
+        event_manager_impl.dispatch.assert_awaited_once_with(
             event_factory.deserialize_stage_instance_create_event.return_value
         )
 
     @pytest.mark.asyncio()
-    async def test_on_stage_instance_update(self, event_manager, shard, event_factory):
+    async def test_on_stage_instance_update(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: mock.Mock,
+        event_factory: event_factory_.EventFactory,
+    ):
         payload = {
             "id": "840647391636226060",
             "guild_id": "197038439483310086",
@@ -1722,15 +1732,20 @@ class TestEventManagerImpl:
             "discoverable_disabled": False,
         }
 
-        await event_manager.on_stage_instance_update(shard, payload)
+        await event_manager_impl.on_stage_instance_update(shard, payload)
 
         event_factory.deserialize_stage_instance_edit_event.assert_called_once_with(shard, payload)
-        event_manager.dispatch.assert_awaited_once_with(
+        event_manager_impl.dispatch.assert_awaited_once_with(
             event_factory.deserialize_stage_instance_edit_event.return_value
         )
 
     @pytest.mark.asyncio()
-    async def test_on_stage_instance_delete(self, event_manager, shard, event_factory):
+    async def test_on_stage_instance_delete(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: mock.Mock,
+        event_factory: event_factory_.EventFactory,
+    ):
         payload = {
             "id": "840647391636226060",
             "guild_id": "197038439483310086",
@@ -1740,9 +1755,9 @@ class TestEventManagerImpl:
             "discoverable_disabled": False,
         }
 
-        await event_manager.on_stage_instance_delete(shard, payload)
+        await event_manager_impl.on_stage_instance_delete(shard, payload)
 
         event_factory.deserialize_stage_instance_delete_event.assert_called_once_with(shard, payload)
-        event_manager.dispatch.assert_awaited_once_with(
+        event_manager_impl.dispatch.assert_awaited_once_with(
             event_factory.deserialize_stage_instance_delete_event.return_value
         )

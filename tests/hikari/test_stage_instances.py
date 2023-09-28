@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -26,7 +26,7 @@ import pytest
 from hikari import channels
 from hikari import snowflakes
 from hikari import stage_instances
-from hikari.impl import bot
+from hikari.impl import gateway_bot as bot
 
 
 @pytest.fixture()
@@ -36,10 +36,10 @@ def mock_app():
 
 class TestStageInstance:
     @pytest.fixture()
-    async def stage_instance(self, mock_app):
+    def stage_instance(self, mock_app):
         return stage_instances.StageInstance(
-            id=snowflakes.Snowflake(123),
             app=mock_app,
+            id=snowflakes.Snowflake(123),
             channel_id=snowflakes.Snowflake(6969),
             guild_id=snowflakes.Snowflake(420),
             topic="beanos",
@@ -73,13 +73,12 @@ class TestStageInstance:
         mock_channel = mock.Mock(channels.GuildStageChannel)
         stage_instance.app.rest.fetch_channel = mock.AsyncMock(return_value=mock_channel)
 
-        await stage_instance.fetch_channel() == stage_instance.app.rest.fetch_channel.result_value
+        assert await stage_instance.fetch_channel() == stage_instance.app.rest.fetch_channel.result_value
         stage_instance.app.rest.fetch_channel.assert_awaited_once_with(6969)
 
     @pytest.mark.asyncio()
     async def test_fetch_guild(self, stage_instance):
         stage_instance.app.rest.fetch_guild = mock.AsyncMock()
 
-        await stage_instance.fetch_guild() == stage_instance.app.rest.fetch_guild.return_value
-
+        assert await stage_instance.fetch_guild() == stage_instance.app.rest.fetch_guild.return_value
         stage_instance.app.rest.fetch_guild.assert_awaited_once_with(420)

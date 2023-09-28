@@ -62,6 +62,7 @@ from hikari import messages as messages_
 from hikari import permissions as permissions_
 from hikari import scheduled_events
 from hikari import snowflakes
+from hikari import stage_instances
 from hikari import traits
 from hikari import undefined
 from hikari import urls
@@ -4379,8 +4380,7 @@ class RESTClientImpl(rest_api.RESTClient):
         )
 
     async def fetch_stage_instance(
-        self,
-        channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel],
+        self, channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel]
     ) -> stage_instances.StageInstance:
         route = routes.GET_STAGE_INSTANCE.compile(channel=channel)
         response = await self._request(route)
@@ -4421,8 +4421,7 @@ class RESTClientImpl(rest_api.RESTClient):
         return self._entity_factory.deserialize_stage_instance(response)
 
     async def delete_stage_instance(
-        self,
-        channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel],
+        self, channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel]
     ) -> stage_instances.StageInstance:
         route = routes.DELETE_STAGE_INSTANCE.compile(channel=channel)
         response = await self._request(route)

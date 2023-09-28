@@ -23,10 +23,7 @@
 """Application and entities that are used to describe Stage instances on Discord."""
 from __future__ import annotations
 
-__all__: typing.List[str] = [
-    "StagePrivacyLevel",
-    "StageInstance",
-]
+__all__: typing.List[str] = ["StagePrivacyLevel", "StageInstance"]
 
 import typing
 
@@ -34,7 +31,7 @@ import attr
 
 from hikari import channels
 from hikari import snowflakes
-from hikari.internal import attr_extensions
+from hikari.internal import attrs_extensions
 from hikari.internal import enums
 
 if typing.TYPE_CHECKING:
@@ -61,7 +58,7 @@ class StageInstance(snowflakes.Unique):
     """ID of the Stage instance."""
 
     app: traits.RESTAware = attr.field(
-        repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
+        repr=False, eq=False, hash=False, metadata={attrs_extensions.SKIP_DEEP_COPY: True}
     )
     """The client application that models may use for procedures."""
 

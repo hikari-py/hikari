@@ -8220,9 +8220,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If an internal error occurs on Discord while handling the request.
         """
 
+    @abc.abstractmethod
     async def fetch_stage_instance(
-        self,
-        channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel],
+        self, channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel]
     ) -> stage_instances.StageInstance:
         """Fetch the Stage instance associated with a guild stage channel.
 
@@ -8365,8 +8365,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def delete_stage_instance(
-        self,
-        channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel],
+        self, channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel]
     ) -> stage_instances.StageInstance:
         """Delete the Stage instance.
 

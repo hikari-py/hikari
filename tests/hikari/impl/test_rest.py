@@ -6426,7 +6426,7 @@ class TestRESTClientImplAsync:
 
     async def test_create_stage_instance(self, rest_client):
         expected_route = routes.POST_STAGE_INSTANCE.compile()
-        expected_json = {"channel_id":"7334", "privacy_level": 1, "topic":"ur mom"}
+        expected_json = {"channel_id": "7334", "privacy_level": 1, "topic": "ur mom"}
         mock_payload = {
             "id": "8406",
             "guild_id": "19703",
@@ -6445,7 +6445,7 @@ class TestRESTClientImplAsync:
 
     async def test_edit_stage_instance(self, rest_client):
         expected_route = routes.PATCH_STAGE_INSTANCE.compile(channel=7334)
-        expected_json = {"privacy_level": 1, "topic":"ur mom"}
+        expected_json = {"privacy_level": 1, "topic": "ur mom"}
         mock_payload = {
             "id": "8406",
             "guild_id": "19703",
