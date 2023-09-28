@@ -70,10 +70,10 @@ class TestStageInstance:
 
     @pytest.mark.asyncio()
     async def test_fetch_channel(self, stage_instance):
-        mock_channel = mock.Mock(channels.GuildStageChannel)
-        stage_instance.app.rest.fetch_channel = mock.AsyncMock(return_value=mock_channel)
+        mock_stage_channel = mock.Mock(channels.GuildStageChannel)
+        stage_instance.app.rest.fetch_channel = mock.AsyncMock(return_value=mock_stage_channel)
 
-        assert await stage_instance.fetch_channel() == stage_instance.app.rest.fetch_channel.result_value
+        assert await stage_instance.fetch_channel() == mock_stage_channel
         stage_instance.app.rest.fetch_channel.assert_awaited_once_with(6969)
 
     @pytest.mark.asyncio()
