@@ -421,7 +421,9 @@ class EventManagerBase(event_manager_.EventManager):
     def subscribe(
         self, event_type: typing.Type[typing.Any], callback: event_manager_.CallbackT[typing.Any], *, _nested: int = 0
     ) -> None:
-        if not (inspect.iscoroutinefunction(callback) or inspect.iscoroutinefunction(callback.__call__)):
+        if not (
+            inspect.iscoroutinefunction(callback) or inspect.iscoroutinefunction(getattr(callback, "__call__", None))
+        ):
             raise TypeError("Cannot subscribe a non-coroutine function callback")
 
         # `_nested` is used to show the correct source code snippet if an intent
@@ -621,6 +623,9 @@ class EventManagerBase(event_manager_.EventManager):
             await callback(event)
         except Exception as ex:
             # Skip the first frame in logs if it exists, as it means it wasn't our fault
+            trio: typing.Union[
+                typing.Tuple[typing.Type[Exception], Exception, typing.Optional[types.TracebackType]], Exception
+            ]
             trio = (type(ex), ex, ex.__traceback__.tb_next) if ex.__traceback__ else ex
 
             if base_events.is_no_recursive_throw_event(event):
