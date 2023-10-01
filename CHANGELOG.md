@@ -1,3 +1,27 @@
+## 2.0.0.dev121 (2023-09-10)
+
+### Features
+
+- Add `approximate_member_count` and `approximate_presence_count` to `OwnGuild`. ([#1659](https://github.com/hikari-py/hikari/issues/1659))
+- Add `CacheSettings.only_my_member` to only cache the bot member. ([#1679](https://github.com/hikari-py/hikari/issues/1679))
+- Bots can now utilize `Activity.state`
+  - When used with `type` set to `ActivityType.CUSTOM`, it will show as the text for the custom status.
+    Syntactic sugar also exists to support simply using `name` instead of `state`.
+  - Can be used with other activity types to provide additional information on the activity. ([#1683](https://github.com/hikari-py/hikari/issues/1683))
+- Add missing Audit Log event types to `AuditLogEventType` ([#1705](https://github.com/hikari-py/hikari/issues/1705))
+- Add `approximate_guild_count` field to own `Application` ([#1712](https://github.com/hikari-py/hikari/issues/1712))
+
+### Bugfixes
+
+- Handle connection reset error on shards. ([#1645](https://github.com/hikari-py/hikari/issues/1645))
+- Retry REST requests on connection errors ([#1648](https://github.com/hikari-py/hikari/issues/1648))
+- Add support for text in stage channels ([#1653](https://github.com/hikari-py/hikari/issues/1653))
+- Fix incorrect calculation for the default avatar of migrated users ([#1673](https://github.com/hikari-py/hikari/issues/1673))
+- Fix attachments not being removed in message edits when `attachment` or `attachments` is `None` ([#1702](https://github.com/hikari-py/hikari/issues/1702))
+
+---
+
+
 ## 2.0.0.dev120 (2023-06-08)
 
 ### Breaking Changes

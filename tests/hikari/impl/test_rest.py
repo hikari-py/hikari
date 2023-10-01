@@ -1166,7 +1166,7 @@ class TestRESTClientImpl:
             undefined.UNDEFINED, undefined.UNDEFINED, undefined.UNDEFINED, undefined.UNDEFINED
         )
 
-    @pytest.mark.parametrize("args", [("embeds", "components"), ("embed", "component")])
+    @pytest.mark.parametrize("args", [("embeds", "components", "attachments"), ("embed", "component", "attachment")])
     def test__build_message_payload_with_None_args(self, rest_client, args):
         kwargs = {}
         for arg in args:
@@ -1177,7 +1177,7 @@ class TestRESTClientImpl:
         ) as generate_allowed_mentions:
             body, form = rest_client._build_message_payload(**kwargs)
 
-        assert body == {"embeds": [], "components": [], "allowed_mentions": {"allowed_mentions": 1}}
+        assert body == {"embeds": [], "components": [], "attachments": [], "allowed_mentions": {"allowed_mentions": 1}}
         assert form is None
 
         generate_allowed_mentions.assert_called_once_with(

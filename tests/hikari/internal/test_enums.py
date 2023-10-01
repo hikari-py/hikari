@@ -202,7 +202,7 @@ class TestEnum:
 
         returned = Enum(9)
         assert returned == Enum.foo
-        assert type(returned) == Enum
+        assert type(returned) is Enum
 
     def test_call_when_not_member(self):
         class Enum(int, enums.Enum):
@@ -212,7 +212,7 @@ class TestEnum:
 
         returned = Enum(69)
         assert returned == 69
-        assert type(returned) != Enum
+        assert type(returned) is not Enum
 
     def test_getitem(self):
         class Enum(int, enums.Enum):
@@ -222,7 +222,7 @@ class TestEnum:
 
         returned = Enum["foo"]
         assert returned == Enum.foo
-        assert type(returned) == Enum
+        assert type(returned) is Enum
 
     def test_contains(self):
         class Enum(int, enums.Enum):
@@ -1252,7 +1252,7 @@ class TestIntFlag:
 
         returned = TestFlag["FOO"]
         assert returned == TestFlag.FOO
-        assert type(returned) == TestFlag
+        assert type(returned) is TestFlag
 
     def test_repr(self):
         class TestFlag(enums.Flag):

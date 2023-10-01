@@ -81,13 +81,10 @@ class ActivityType(int, enums.Enum):
     """Shows up as `Watching <name>`."""
 
     CUSTOM = 4
-    """A custom status.
-
-    To set an emoji with the status, place a unicode emoji or Discord emoji
-    (`:smiley:`) as the first part of the status activity name.
+    """Shows up as `<emoji> <name>`.
 
     .. warning::
-        Bots **DO NOT** support setting custom statuses.
+        As of the time of writing, emoji cannot be used by bot accounts.
     """
 
     COMPETING = 5
@@ -306,8 +303,18 @@ class Activity:
     name: str = attrs.field()
     """The activity name."""
 
+    state: typing.Optional[str] = attrs.field(default=None)
+    """The activities state, if set.
+
+    This field can be use to set a custom status or provide more information
+    on the activity.
+    """
+
     url: typing.Optional[str] = attrs.field(default=None, repr=False)
-    """The activity URL. Only valid for `STREAMING` activities."""
+    """The activity URL, if set.
+
+    Only valid for `STREAMING` activities.
+    """
 
     type: typing.Union[ActivityType, int] = attrs.field(converter=ActivityType, default=ActivityType.PLAYING)
     """The activity type."""
@@ -331,9 +338,6 @@ class RichActivity(Activity):
 
     details: typing.Optional[str] = attrs.field(repr=False)
     """The text that describes what the activity's target is doing, if set."""
-
-    state: typing.Optional[str] = attrs.field(repr=False)
-    """The current status of this activity's target, if set."""
 
     emoji: typing.Optional[emojis_.Emoji] = attrs.field(repr=False)
     """The emoji of this activity, if it is a custom status and set."""

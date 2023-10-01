@@ -872,8 +872,11 @@ class TestEntityFactoryImpl:
         assert own_connection.visibility == application_models.ConnectionVisibility.NONE
         assert isinstance(own_connection, application_models.OwnConnection)
 
-    def test_deserialize_own_connection_when_integrations_is_None(self, entity_factory_impl, own_connection_payload):
+    def test_deserialize_own_connection_with_nullable_and_optional_fields(
+        self, entity_factory_impl, own_connection_payload
+    ):
         del own_connection_payload["integrations"]
+        del own_connection_payload["revoked"]
         own_connection = entity_factory_impl.deserialize_own_connection(own_connection_payload)
         assert own_connection.id == "2513849648abc"
         assert own_connection.name == "FS"
@@ -895,16 +898,21 @@ class TestEntityFactoryImpl:
             "owner": False,
             "permissions": "2147483647",
             "features": ["DISCOVERABLE", "FORCE_RELAY"],
+            "approximate_member_count": 3268,
+            "approximate_presence_count": 784,
         }
 
     def test_deserialize_own_guild(self, entity_factory_impl, mock_app, own_guild_payload):
         own_guild = entity_factory_impl.deserialize_own_guild(own_guild_payload)
+
         assert own_guild.id == 152559372126519269
         assert own_guild.name == "Isopropyl"
         assert own_guild.icon_hash == "d4a983885dsaa7691ce8bcaaf945a"
         assert own_guild.features == [guild_models.GuildFeature.DISCOVERABLE, "FORCE_RELAY"]
         assert own_guild.is_owner is False
         assert own_guild.my_permissions == permission_models.Permissions(2147483647)
+        assert own_guild.approximate_member_count == 3268
+        assert own_guild.approximate_active_member_count == 784
 
     def test_deserialize_own_guild_with_null_and_unset_fields(self, entity_factory_impl):
         own_guild = entity_factory_impl.deserialize_own_guild(
@@ -915,6 +923,8 @@ class TestEntityFactoryImpl:
                 "owner": False,
                 "permissions": "2147483647",
                 "features": ["DISCOVERABLE", "FORCE_RELAY"],
+                "approximate_member_count": 3268,
+                "approximate_presence_count": 784,
             }
         )
         assert own_guild.icon_hash is None
@@ -968,6 +978,7 @@ class TestEntityFactoryImpl:
             "custom_install_url": "https://dontinstallme.com",
             "tags": ["i", "like", "hikari"],
             "install_params": {"scopes": ["bot", "applications.commands"], "permissions": 8},
+            "approximate_guild_count": 10000,
         }
 
     def test_deserialize_application(
@@ -994,6 +1005,7 @@ class TestEntityFactoryImpl:
         assert application.custom_install_url == "https://dontinstallme.com"
         assert application.tags == ["i", "like", "hikari"]
         assert application.icon_hash == "iwiwiwiwiw"
+        assert application.approximate_guild_count == 10000
         # Install Parameters
         assert application.install_parameters.scopes == [
             application_models.OAuth2Scope.BOT,
@@ -1030,6 +1042,7 @@ class TestEntityFactoryImpl:
                 "verify_key": "1232313223",
                 "flags": 0,
                 "owner": owner_payload,
+                "approximate_guild_count": 10000,
             }
         )
 
@@ -1054,6 +1067,7 @@ class TestEntityFactoryImpl:
                 "bot_require_code_grant": False,
                 "verify_key": "1232313223",
                 "flags": 0,
+                "approximate_guild_count": 10000,
             }
         )
 
@@ -2023,7 +2037,7 @@ class TestEntityFactoryImpl:
         assert isinstance(voice_channel, channel_models.GuildStageChannel)
 
     def test_deserialize_guild_stage_channel_with_null_fields(self, entity_factory_impl):
-        voice_channel = entity_factory_impl.deserialize_guild_voice_channel(
+        voice_channel = entity_factory_impl.deserialize_guild_stage_channel(
             {
                 "id": "123",
                 "permission_overwrites": [],

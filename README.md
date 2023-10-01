@@ -40,7 +40,7 @@ Hikari provides two different default bot implementations to suit your needs:
 
 ### GatewayBot
 
-A [`GatewayBot`](https://docs.hikari-py.dev/en/stable/reference/hikari/impl/bot/#hikari.impl.bot.GatewayBot)
+A [`GatewayBot`](https://docs.hikari-py.dev/en/stable/reference/hikari/impl/gateway_bot/#hikari.impl.gateway_bot.GatewayBot)
 is one which will connect to Discord through the gateway and receive
 events through there. A simple startup example could be the following:
 
@@ -194,7 +194,7 @@ bot.run(
 
 Many other helpful options exist for you to take advantage of if you wish. Links to the respective docs can be seen
 below:
-- [GatewayBot.run](https://docs.hikari-py.dev/en/stable/reference/hikari/impl/bot/#hikari.impl.bot.GatewayBot.run)
+- [GatewayBot.run](https://docs.hikari-py.dev/en/stable/reference/hikari/impl/gateway_bot/#hikari.impl.gateway_bot.GatewayBot.run)
 - [RESTBot.run](https://docs.hikari-py.dev/en/stable/reference/hikari/impl/rest_bot/#hikari.impl.rest_bot.RESTBot.run)
 
 ---

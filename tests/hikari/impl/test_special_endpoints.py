@@ -100,9 +100,9 @@ class TestOwnGuildIterator:
         )
         mock_request.assert_has_awaits(
             [
-                mock.call(compiled_route=expected_route, query={"after": "123321"}),
-                mock.call(compiled_route=expected_route, query={"after": "123321124123"}),
-                mock.call(compiled_route=expected_route, query={"after": "12332112432234"}),
+                mock.call(compiled_route=expected_route, query={"after": "123321", "with_counts": "true"}),
+                mock.call(compiled_route=expected_route, query={"after": "123321124123", "with_counts": "true"}),
+                mock.call(compiled_route=expected_route, query={"after": "12332112432234", "with_counts": "true"}),
             ]
         )
 
@@ -148,9 +148,9 @@ class TestOwnGuildIterator:
         )
         mock_request.assert_has_awaits(
             [
-                mock.call(compiled_route=expected_route, query={"before": "55555555555555555"}),
-                mock.call(compiled_route=expected_route, query={"before": "1213321124123"}),
-                mock.call(compiled_route=expected_route, query={"before": "1213321123123"}),
+                mock.call(compiled_route=expected_route, query={"before": "55555555555555555", "with_counts": "true"}),
+                mock.call(compiled_route=expected_route, query={"before": "1213321124123", "with_counts": "true"}),
+                mock.call(compiled_route=expected_route, query={"before": "1213321123123", "with_counts": "true"}),
             ]
         )
 
@@ -168,7 +168,8 @@ class TestOwnGuildIterator:
 
         assert result == []
         mock_entity_factory.deserialize_own_guild.assert_not_called()
-        query = {"before" if newest_first else "after": "123321"}
+        order_key = "before" if newest_first else "after"
+        query = {order_key: "123321", "with_counts": "true"}
         mock_request.assert_awaited_once_with(compiled_route=expected_route, query=query)
 
 

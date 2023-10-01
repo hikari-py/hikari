@@ -168,7 +168,7 @@ class PartialUser(snowflakes.Unique, abc.ABC):
     def discriminator(self) -> undefined.UndefinedOr[str]:
         """Discriminator for the user.
 
-        .. deprecation:: 2.0.0.dev120
+        .. deprecated:: 2.0.0.dev120
             Discriminators are deprecated and being replaced with "0" by Discord
             during username migration. This field will be removed after migration is complete.
             Learn more here: https://dis.gd/usernames
@@ -497,11 +497,11 @@ class User(PartialUser, abc.ABC):
         """Default avatar URL for this user."""
         if self.discriminator == "0":  # migrated account
             return routes.CDN_DEFAULT_USER_AVATAR.compile_to_file(
-                urls.CDN_URL, discriminator=self.id.created_at.timestamp() % 6, file_format="png"
+                urls.CDN_URL, style=(self.id >> 22) % 6, file_format="png"
             )
 
         return routes.CDN_DEFAULT_USER_AVATAR.compile_to_file(
-            urls.CDN_URL, discriminator=int(self.discriminator) % 5, file_format="png"
+            urls.CDN_URL, style=int(self.discriminator) % 5, file_format="png"
         )
 
     @property
@@ -514,7 +514,7 @@ class User(PartialUser, abc.ABC):
     def discriminator(self) -> str:
         """Discriminator for the user.
 
-        .. deprecation:: 2.0.0.dev120
+        .. deprecated:: 2.0.0.dev120
             Discriminators are deprecated and being replaced with "0" by Discord
             during username migration. This field will be removed after migration is complete.
             Learn more here: https://dis.gd/usernames
@@ -665,7 +665,7 @@ class PartialUserImpl(PartialUser):
     discriminator: undefined.UndefinedOr[str] = attrs.field(eq=False, hash=False, repr=True)
     """Four-digit discriminator for the user if unmigrated.
 
-    .. deprecation:: 2.0.0.dev120
+    .. deprecated:: 2.0.0.dev120
         Discriminators are deprecated and being replaced with "0" by Discord
         during username migration. This field will be removed after migration is complete.
         Learn more here: https://dis.gd/usernames
@@ -726,7 +726,7 @@ class UserImpl(PartialUserImpl, User):
     discriminator: str = attrs.field(eq=False, hash=False, repr=True)
     """The user's discriminator.
 
-    .. deprecation:: 2.0.0.dev120
+    .. deprecated:: 2.0.0.dev120
         Discriminators are deprecated and being replaced with "0" by Discord
         during username migration. This field will be removed after migration is complete.
         Learn more here: https://dis.gd/usernames
