@@ -8266,6 +8266,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         topic: str,
         privacy_level: undefined.UndefinedOr[stage_instances.StagePrivacyLevel] = undefined.UNDEFINED,
+        send_start_notification: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        guild_scheduled_event_id: undefined.UndefinedOr[
+            snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent]
+        ] = undefined.UNDEFINED,
     ) -> stage_instances.StageInstance:
         """Create a Stage instance in guild stage channel.
 
@@ -8283,6 +8287,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The privacy level of the Stage Instance.
 
             This will be set to `hikari.stage_instances.StagePrivacyLevel.GUILD_ONLY` if not provided.
+
+        send_start_notification: hikari.undefined.UndefinedOr[builtins.bool]
+            Whether to notify @everyone that the Stage instance has started.
+
+        guild_scheduled_event_id: hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.scheduled_events.ScheduledEvent]]
+            The ID of the scheduled event to associate with the Stage instance.
+
 
         Returns
         -------
@@ -8308,7 +8319,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """
+        """  # noqa: E501 - Line too long
 
     @abc.abstractmethod
     async def edit_stage_instance(

@@ -30,7 +30,9 @@ import typing
 import attr
 
 from hikari import channels
+from hikari import scheduled_events
 from hikari import snowflakes
+from hikari import undefined
 from hikari.internal import attrs_extensions
 from hikari.internal import enums
 
@@ -44,7 +46,7 @@ class StagePrivacyLevel(int, enums.Enum):
     """The privacy level of a Stage instance."""
 
     PUBLIC = 1
-    """The Stage instance is visible publicly."""
+    """The Stage instance is visible publicly. (Deprecated)"""
 
     GUILD = 2
     """The Stage instance is only visible to the guild members"""
@@ -76,6 +78,11 @@ class StageInstance(snowflakes.Unique):
 
     discoverable_disabled: bool = attr.field(eq=False, hash=False, repr=False)
     """Whether or not Stage discovery is disabled."""
+
+    guild_scheduled_event_id: undefined.UndefinedOr[
+        snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent]
+    ] = attr.field(eq=False, hash=False, repr=False)
+    "The ID of the scheduled event for this Stage instance, if it exists."
 
     def get_channel(self) -> typing.Optional[channels.GuildStageChannel]:
         """Return the guild stage channel where this stage instance was created.
@@ -178,3 +185,38 @@ class StageInstance(snowflakes.Unique):
             If an internal error occurs on Discord while handling the request.
         """
         return await self.app.rest.fetch_guild(self.guild_id)
+
+    async def fetch_scheduled_event(self) -> typing.Optional[scheduled_events.ScheduledEvent]:
+        """Fetch the scheduled event for this Stage Instance.
+
+        Returns
+        -------
+        typing.Optional[hikari.scheduled_events.ScheduledEvent]
+            The scheduled event for this Stage Instance, if it exists.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you are not part of the guild.
+        hikari.errors.NotFoundError
+            If the guild is not found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        if self.guild_scheduled_event_id is undefined.UNDEFINED:
+            return None
+
+        return await self.app.rest.fetch_scheduled_event(self.guild_id, self.guild_scheduled_event_id)

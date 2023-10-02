@@ -4393,12 +4393,18 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         topic: str,
         privacy_level: undefined.UndefinedOr[stage_instances.StagePrivacyLevel] = undefined.UNDEFINED,
+        send_start_notification: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        guild_scheduled_event_id: undefined.UndefinedOr[
+            snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent]
+        ] = undefined.UNDEFINED,
     ) -> stage_instances.StageInstance:
         route = routes.POST_STAGE_INSTANCE.compile()
         body = data_binding.JSONObjectBuilder()
         body.put_snowflake("channel_id", channel)
         body.put("topic", topic)
         body.put("privacy_level", privacy_level)
+        body.put("send_start_notification", send_start_notification)
+        body.put_snowflake("guild_scheduled_event_id", guild_scheduled_event_id)
 
         response = await self._request(route, json=body)
         assert isinstance(response, dict)

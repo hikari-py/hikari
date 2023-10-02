@@ -45,6 +45,7 @@ class TestStageInstance:
             topic="beanos",
             privacy_level=stage_instances.StagePrivacyLevel.PUBLIC,
             discoverable_disabled=True,
+            guild_scheduled_event_id=snowflakes.Snowflake(1337),
         )
 
     def test_id_property(self, stage_instance):
@@ -67,6 +68,9 @@ class TestStageInstance:
 
     def test_discoverable_disabled_property(self, stage_instance):
         assert stage_instance.discoverable_disabled is True
+
+    def test_guild_scheduled_event_id_property(self, stage_instance):
+        assert stage_instance.guild_scheduled_event_id == 1337
 
     @pytest.mark.asyncio()
     async def test_fetch_channel(self, stage_instance):

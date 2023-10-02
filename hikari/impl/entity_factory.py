@@ -1476,6 +1476,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             topic=payload["topic"],
             privacy_level=stage_instances.StagePrivacyLevel(payload["privacy_level"]),
             discoverable_disabled=payload["discoverable_disabled"],
+            guild_scheduled_event_id=payload.get("guild_scheduled_event_id", undefined.UNDEFINED),
         )
 
     def deserialize_channel(
