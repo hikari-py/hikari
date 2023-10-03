@@ -51,7 +51,7 @@ if typing.TYPE_CHECKING:
 
 @base_events.requires_intents(intents.Intents.GUILD_SCHEDULED_EVENTS)
 class ScheduledEventEvent(shard_events.ShardEvent, abc.ABC):
-    """Event bassed for any scheduled event related events."""
+    """Event base for any scheduled event related events."""
 
     __slots__: typing.Sequence[str] = ()
 

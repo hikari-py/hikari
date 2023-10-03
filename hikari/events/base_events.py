@@ -228,7 +228,7 @@ class ExceptionEvent(Event, typing.Generic[EventT]):
     def exc_info(self) -> typing.Tuple[typing.Type[Exception], Exception, typing.Optional[types.TracebackType]]:
         """Exception triplet that follows the same format as `sys.exc_info`.
 
-        The `sys.exc_info` tiplet consists of the exception type, the exception
+        The `sys.exc_info` triplet consists of the exception type, the exception
         instance, and the traceback of the exception.
         """
         return type(self.exception), self.exception, self.exception.__traceback__
