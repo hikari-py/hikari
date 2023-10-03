@@ -565,18 +565,18 @@ class Flag(metaclass=_FlagMeta):
     -----------------------------
     * `e1 & e2` :
         Bitwise `AND` operation. Will return a member that contains all flags
-        that are common between both oprands on the values. This also works with
-        one of the oprands being an `int`eger. You may instead use
+        that are common between both operands on the values. This also works with
+        one of the operands being an `int`eger. You may instead use
         the `intersection` method.
     * `e1 | e2` :
         Bitwise `OR` operation. Will return a member that contains all flags
-        that appear on at least one of the oprands. This also works with
-        one of the oprands being an `int`eger. You may instead use
+        that appear on at least one of the operands. This also works with
+        one of the operands being an `int`eger. You may instead use
         the `union` method.
     * `e1 ^ e2` :
         Bitwise `XOR` operation. Will return a member that contains all flags
-        that only appear on at least one and at most one of the oprands.
-        This also works with one of the oprands being an `int`eger.
+        that only appear on at least one and at most one of the operands.
+        This also works with one of the operands being an `int`eger.
         You may instead use the `symmetric_difference` method.
     * `~e` :
         Return the inverse of this value. This is equivalent to disabling all
