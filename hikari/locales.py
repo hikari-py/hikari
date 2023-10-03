@@ -77,10 +77,10 @@ class Locale(str, enums.Enum):
     """Polish."""
 
     PT_BR = "pt-BR"
-    """Portuguese, Bralizian."""
+    """Portuguese, Brazilian."""
 
     RO = "ro"
-    """Romian."""
+    """Romanian."""
 
     FI = "fi"
     """Finnish."""
