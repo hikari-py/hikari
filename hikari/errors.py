@@ -66,7 +66,7 @@ if typing.TYPE_CHECKING:
     from hikari.internal import routes
 
 
-# The standard exceptions are all unsloted so slotting here would be a waste of time.
+# The standard exceptions are all unslotted so slotting here would be a waste of time.
 @attrs_extensions.with_copy
 @attrs.define(auto_exc=True, repr=False, init=False, slots=False)
 class HikariError(RuntimeError):
@@ -79,7 +79,7 @@ class HikariError(RuntimeError):
     """
 
 
-# The standard warnings are all unsloted so slotting here would be a waste of time.
+# The standard warnings are all unslotted so slotting here would be a waste of time.
 @attrs_extensions.with_copy
 @attrs.define(auto_exc=True, repr=False, init=False, slots=False)
 class HikariWarning(RuntimeWarning):

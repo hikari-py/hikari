@@ -427,6 +427,8 @@ class Embed:
             To generate a timezone aware timestamp, use one of the following
             snippets:
 
+            .. code-block:: python
+
                 # Use UTC.
                 >>> datetime.datetime.now(tz=datetime.timezone.utc)
                 datetime.datetime(2020, 6, 5, 18, 29, 56, 424744, tzinfo=datetime.timezone.utc)
@@ -440,7 +442,9 @@ class Embed:
 
             You can generate a timezone-aware timestamp instead of a timezone-naive
             one by specifying a timezone. Hikari will detect any difference in
-            timezone if the timestamp is non timezone-naive and fix it for you.
+            timezone if the timestamp is non timezone-naive and fix it for you:
+
+            .. code-block:: python
 
                 # I am British, and it is June, so we are in daylight saving
                 # (UTC+1 or GMT+1, specifically).
@@ -463,7 +467,9 @@ class Embed:
                 >>> ...
 
             A library on PyPI called [tzlocal](...) also exists that may be useful
-            to you if you need to get your local timezone for any reason.
+            to you if you need to get your local timezone for any reason:
+
+            .. code-block:: python
 
                 >>> import datetime
                 >>> import tzlocal

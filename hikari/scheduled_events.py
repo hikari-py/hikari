@@ -67,7 +67,7 @@ class ScheduledEventType(int, enums.Enum):
     """A scheduled stage instance."""
 
     VOICE = 2
-    """A scheculed voice chat event."""
+    """A scheduled voice chat event."""
 
     EXTERNAL = 3
     """A scheduled event which takes part outside of Discord."""
@@ -80,7 +80,7 @@ class ScheduledEventStatus(int, enums.Enum):
     """Indicates that the scheduled event hasn't occurred yet."""
 
     ACTIVE = 2
-    """Indicates an eventis on-going."""
+    """Indicates an event is on-going."""
 
     COMPLETED = 3
     """Indicates an event has finished."""

@@ -113,6 +113,8 @@ _RECONNECTABLE_CLOSE_CODES: typing.FrozenSet[errors.ShardCloseCode] = frozenset(
         errors.ShardCloseCode.RATE_LIMITED,
     )
 )
+# Default value used by the client
+_CUSTOM_STATUS_NAME = "Custom Status"
 
 
 def _log_filterer(token: str) -> typing.Callable[[str], str]:
@@ -352,7 +354,17 @@ def _serialize_activity(activity: typing.Optional[presences.Activity]) -> data_b
     if activity is None:
         return None
 
-    return {"name": activity.name, "type": int(activity.type), "url": activity.url}
+    # Syntactic sugar, treat `name` as state if using `CUSTOM` and `state` is not passed.
+    state: typing.Optional[str]
+    if activity.type is presences.ActivityType.CUSTOM and activity.name and not activity.state:
+        name = _CUSTOM_STATUS_NAME
+        state = activity.name
+    else:
+        name = activity.name
+        state = activity.state
+
+    payload = {"name": name, "state": state, "type": int(activity.type), "url": activity.url}
+    return payload
 
 
 class GatewayShardImpl(shard.GatewayShard):
@@ -885,6 +897,9 @@ class GatewayShardImpl(shard.GatewayShard):
 
                 # Since nothing went wrong, we can reset the backoff and try again
                 backoff.reset()
+
+            except ConnectionResetError:
+                self._logger.warning("connection got reset by server. Will retry shortly")
 
             except errors.GatewayConnectionError as ex:
                 self._logger.warning("failed to communicate with server, reason was: %r. Will retry shortly", ex.reason)

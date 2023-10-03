@@ -29,6 +29,7 @@ __all__: typing.Sequence[str] = (
     "ProxySettings",
     "HTTPTimeoutSettings",
     "HTTPSettings",
+    "CacheComponents",
     "CacheSettings",
 )
 
@@ -292,6 +293,10 @@ class HTTPSettings(config.HTTPSettings):
     """
 
 
+# Re-export
+CacheComponents = config.CacheComponents
+
+
 @attrs_extensions.with_copy
 @attrs.define(kw_only=True, weakref_slot=False)
 class CacheSettings(config.CacheSettings):
@@ -319,4 +324,13 @@ class CacheSettings(config.CacheSettings):
     This will have no effect if the channel IDs cache is not enabled.
 
     Defaults to `50`.
+    """
+
+    only_my_member: bool = attrs.field(default=False)
+    """Reduce the members cache to only the bot itself.
+
+    Useful when only the bot member is required (eg. permission checks).
+    This will have no effect if the members cache is not enabled.
+
+    Defaults to `False`.
     """

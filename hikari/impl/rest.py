@@ -736,8 +736,10 @@ class RESTClientImpl(rest_api.RESTClient):
 
         raise errors.ComponentStateConflictError("The REST client was closed mid-request")
 
+    # Ignore too long and too complex, respectively
+    # We rather keep everything we can here inline.
     @typing.final
-    async def _perform_request(
+    async def _perform_request(  # noqa: CFQ001, C901
         self,
         compiled_route: routes.CompiledRoute,
         *,
@@ -779,13 +781,14 @@ class RESTClientImpl(rest_api.RESTClient):
         url = compiled_route.create_url(self._rest_url)
 
         stack = contextlib.AsyncExitStack()
-        # This is initiated the first time we hit a 5xx error to save a little memory when nothing goes wrong
+        # This is initiated the first time we time out or hit a 5xx error to
+        # save a little memory when nothing goes wrong
         backoff: typing.Optional[rate_limits.ExponentialBackOff] = None
         retry_count = 0
         trace_logging_enabled = _LOGGER.isEnabledFor(ux.TRACE)
 
         while True:
-            async with stack:
+            try:
                 if form_builder:
                     data = await form_builder.build(stack, executor=self._executor)
 
@@ -831,6 +834,28 @@ class RESTClientImpl(rest_api.RESTClient):
 
                 # Ensure we are not rate limited, and update rate limiting headers where appropriate.
                 time_before_retry = await self._parse_ratelimits(compiled_route, auth, response)
+
+            except (asyncio.TimeoutError, aiohttp.ClientConnectionError) as ex:
+                if retry_count >= self._max_retries:
+                    raise errors.HTTPError(message=str(ex)) from ex
+
+                if backoff is None:
+                    backoff = rate_limits.ExponentialBackOff(maximum=_MAX_BACKOFF_DURATION)
+
+                sleep_time = next(backoff)
+                _LOGGER.warning(
+                    "Connection error (%s), backing off for %.2fs and retrying. Retries remaining: %s",
+                    type(ex).__name__,
+                    sleep_time,
+                    self._max_retries - retry_count,
+                )
+                retry_count += 1
+
+                await asyncio.sleep(sleep_time)
+                continue
+
+            finally:
+                await stack.aclose()
 
             if time_before_retry is not None:
                 await asyncio.sleep(time_before_retry)
@@ -1459,7 +1484,7 @@ class RESTClientImpl(rest_api.RESTClient):
             body.put("attachments", attachments_payload)
 
         elif attachment is None or attachments is None:
-            body.put("attachments", None)
+            body.put("attachments", [])
 
         return body, form_builder
 

@@ -57,9 +57,30 @@ def test__serialize_activity_when_activity_is_None():
 
 
 def test__serialize_activity_when_activity_is_not_None():
-    activity = mock.Mock(type="0", url="https://some.url")
-    activity.name = "some name"  # This has to be set separate because if not, its set as the mock's name
-    assert shard._serialize_activity(activity) == {"name": "some name", "type": 0, "url": "https://some.url"}
+    activity = presences.Activity(name="some name", type=0, state="blah", url="https://some.url")
+    assert shard._serialize_activity(activity) == {
+        "name": "some name",
+        "type": 0,
+        "state": "blah",
+        "url": "https://some.url",
+    }
+
+
+@pytest.mark.parametrize(
+    ("activity_name", "activity_state", "expected_name", "expected_state"),
+    [("Testing!", None, "Custom Status", "Testing!"), ("Blah name!", "Testing!", "Blah name!", "Testing!")],
+)
+def test__serialize_activity_custom_activity_syntactic_sugar(
+    activity_name, activity_state, expected_name, expected_state
+):
+    activity = presences.Activity(name=activity_name, state=activity_state, type=presences.ActivityType.CUSTOM)
+
+    assert shard._serialize_activity(activity) == {
+        "type": 4,
+        "name": expected_name,
+        "state": expected_state,
+        "url": None,
+    }
 
 
 def test__serialize_datetime_when_datetime_is_None():
@@ -598,7 +619,12 @@ class TestGatewayShardImpl:
         actual_result = client._serialize_and_store_presence_payload()
 
         if activity is not None:
-            expected_activity = {"name": activity.name, "type": activity.type, "url": activity.url}
+            expected_activity = {
+                "name": activity.name,
+                "state": activity.state,
+                "type": activity.type,
+                "url": activity.url,
+            }
         else:
             expected_activity = None
 

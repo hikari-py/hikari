@@ -26,6 +26,7 @@ import http
 import re
 import typing
 
+import aiohttp
 import mock
 import pytest
 
@@ -1165,7 +1166,7 @@ class TestRESTClientImpl:
             undefined.UNDEFINED, undefined.UNDEFINED, undefined.UNDEFINED, undefined.UNDEFINED
         )
 
-    @pytest.mark.parametrize("args", [("embeds", "components"), ("embed", "component")])
+    @pytest.mark.parametrize("args", [("embeds", "components", "attachments"), ("embed", "component", "attachment")])
     def test__build_message_payload_with_None_args(self, rest_client, args):
         kwargs = {}
         for arg in args:
@@ -1176,7 +1177,7 @@ class TestRESTClientImpl:
         ) as generate_allowed_mentions:
             body, form = rest_client._build_message_payload(**kwargs)
 
-        assert body == {"embeds": [], "components": [], "allowed_mentions": {"allowed_mentions": 1}}
+        assert body == {"embeds": [], "components": [], "attachments": [], "allowed_mentions": {"allowed_mentions": 1}}
         assert form is None
 
         generate_allowed_mentions.assert_called_once_with(
@@ -1912,6 +1913,33 @@ class TestRESTClientImplAsync:
         exponential_backoff.assert_called_once_with(maximum=16)
         asyncio_sleep.assert_has_awaits([mock.call(1), mock.call(2), mock.call(3)])
         generate_error_response.assert_called_once_with(rest_client._client_session.request.return_value)
+
+    @hikari_test_helpers.timeout()
+    @pytest.mark.parametrize("exception", [asyncio.TimeoutError, aiohttp.ClientConnectionError])
+    async def test_perform_request_when_connection_error_will_retry_until_exhausted(self, rest_client, exception):
+        route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
+        mock_session = mock.AsyncMock(request=mock.AsyncMock(side_effect=exception))
+        rest_client._max_retries = 3
+        rest_client._parse_ratelimits = mock.AsyncMock()
+        rest_client._client_session = mock_session
+
+        stack = contextlib.ExitStack()
+        stack.enter_context(pytest.raises(errors.HTTPError))
+        exponential_backoff = stack.enter_context(
+            mock.patch.object(
+                rate_limits,
+                "ExponentialBackOff",
+                return_value=mock.Mock(__next__=mock.Mock(side_effect=[1, 2, 3, 4, 5])),
+            )
+        )
+        asyncio_sleep = stack.enter_context(mock.patch.object(asyncio, "sleep"))
+
+        with stack:
+            await rest_client._perform_request(route)
+
+        assert exponential_backoff.return_value.__next__.call_count == 3
+        exponential_backoff.assert_called_once_with(maximum=16)
+        asyncio_sleep.assert_has_awaits([mock.call(1), mock.call(2), mock.call(3)])
 
     @pytest.mark.parametrize("enabled", [True, False])
     @hikari_test_helpers.timeout()

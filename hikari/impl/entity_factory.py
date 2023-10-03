@@ -572,7 +572,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             id=payload["id"],
             name=payload["name"],
             type=payload["type"],
-            is_revoked=payload["revoked"],
+            is_revoked=payload.get("revoked", False),
             integrations=integrations,
             is_verified=payload["verified"],
             is_friend_sync_enabled=payload["friend_sync"],
@@ -589,6 +589,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             features=[guild_models.GuildFeature(feature) for feature in payload["features"]],
             is_owner=bool(payload["owner"]),
             my_permissions=permission_models.Permissions(int(payload["permissions"])),
+            approximate_member_count=int(payload["approximate_member_count"]),
+            approximate_active_member_count=int(payload["approximate_presence_count"]),
         )
 
     def deserialize_own_application_role_connection(
@@ -649,6 +651,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             custom_install_url=payload.get("custom_install_url"),
             tags=payload.get("tags") or [],
             install_parameters=install_parameters,
+            approximate_guild_count=payload["approximate_guild_count"],
         )
 
     def deserialize_authorization_information(
@@ -1169,23 +1172,28 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> channel_models.GuildStageChannel:
         channel_fields = self._set_guild_channel_attrsibutes(payload, guild_id=guild_id)
-        permission_overwrites = {
-            snowflakes.Snowflake(overwrite["id"]): self.deserialize_permission_overwrite(overwrite)
-            for overwrite in payload["permission_overwrites"]
-        }
+
+        last_message_id: typing.Optional[snowflakes.Snowflake] = None
+        if (raw_last_message_id := payload.get("last_message_id")) is not None:
+            last_message_id = snowflakes.Snowflake(raw_last_message_id)
+
         return channel_models.GuildStageChannel(
             app=self._app,
             id=channel_fields.id,
             name=channel_fields.name,
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
-            permission_overwrites=permission_overwrites,
+            permission_overwrites={
+                snowflakes.Snowflake(overwrite["id"]): self.deserialize_permission_overwrite(overwrite)
+                for overwrite in payload["permission_overwrites"]
+            },
             is_nsfw=payload.get("nsfw", False),
             parent_id=channel_fields.parent_id,
             region=payload["rtc_region"],
             bitrate=int(payload["bitrate"]),
             user_limit=int(payload["user_limit"]),
             position=int(payload["position"]),
+            last_message_id=last_message_id,
         )
 
     def deserialize_guild_forum_channel(
