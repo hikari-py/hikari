@@ -31,7 +31,7 @@ class TestStageInstanceCreateEvent:
     @pytest.fixture()
     def event(self):
         return stage_events.StageInstanceCreateEvent(
-            shard=object(), stage_instance=mock.Mock(stage_instances.StageInstance)
+            shard=object(), stage_instance=mock.Mock()
         )
 
     def test_app_property(self, event):
