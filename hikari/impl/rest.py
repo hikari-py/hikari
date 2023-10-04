@@ -4392,7 +4392,6 @@ class RESTClientImpl(rest_api.RESTClient):
         channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel],
         *,
         topic: str,
-        privacy_level: undefined.UndefinedOr[stage_instances.StagePrivacyLevel] = undefined.UNDEFINED,
         send_start_notification: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         guild_scheduled_event_id: undefined.UndefinedOr[
             snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent]
@@ -4402,7 +4401,6 @@ class RESTClientImpl(rest_api.RESTClient):
         body = data_binding.JSONObjectBuilder()
         body.put_snowflake("channel_id", channel)
         body.put("topic", topic)
-        body.put("privacy_level", privacy_level)
         body.put("send_start_notification", send_start_notification)
         body.put_snowflake("guild_scheduled_event_id", guild_scheduled_event_id)
 
@@ -4415,12 +4413,10 @@ class RESTClientImpl(rest_api.RESTClient):
         channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel],
         *,
         topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        privacy_level: undefined.UndefinedOr[stage_instances.StagePrivacyLevel] = undefined.UNDEFINED,
     ) -> stage_instances.StageInstance:
         route = routes.PATCH_STAGE_INSTANCE.compile(channel=channel)
         body = data_binding.JSONObjectBuilder()
         body.put("topic", topic)
-        body.put("privacy_level", privacy_level)
 
         response = await self._request(route, json=body)
         assert isinstance(response, dict)

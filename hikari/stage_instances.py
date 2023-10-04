@@ -23,7 +23,7 @@
 """Application and entities that are used to describe Stage instances on Discord."""
 from __future__ import annotations
 
-__all__: typing.List[str] = ["StagePrivacyLevel", "StageInstance"]
+__all__: typing.Sequence[str] = ("StageInstance",)
 
 import typing
 
@@ -39,17 +39,6 @@ from hikari.internal import enums
 if typing.TYPE_CHECKING:
     from hikari import guilds
     from hikari import traits
-
-
-@typing.final
-class StagePrivacyLevel(int, enums.Enum):
-    """The privacy level of a Stage instance."""
-
-    PUBLIC = 1
-    """The Stage instance is visible publicly. (Deprecated)"""
-
-    GUILD = 2
-    """The Stage instance is only visible to the guild members"""
 
 
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
@@ -72,9 +61,6 @@ class StageInstance(snowflakes.Unique):
 
     topic: str = attr.field(eq=False, hash=False, repr=False)
     """The topic of the Stage instance."""
-
-    privacy_level: typing.Union[StagePrivacyLevel, int] = attr.field(eq=False, hash=False, repr=False)
-    """The privacy level of the Stage instance."""
 
     discoverable_disabled: bool = attr.field(eq=False, hash=False, repr=False)
     """Whether or not Stage discovery is disabled."""

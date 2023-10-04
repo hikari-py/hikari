@@ -8265,7 +8265,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel],
         *,
         topic: str,
-        privacy_level: undefined.UndefinedOr[stage_instances.StagePrivacyLevel] = undefined.UNDEFINED,
         send_start_notification: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         guild_scheduled_event_id: undefined.UndefinedOr[
             snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent]
@@ -8282,11 +8281,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------------
         topic: builtins.str
             The topic for the Stage instance.
-
-        privacy_level: hikari.undefined.UndefinedOr[hikari.stage_instances.StagePrivacyLevel]
-            The privacy level of the Stage Instance.
-
-            This will be set to `hikari.stage_instances.StagePrivacyLevel.GUILD_ONLY` if not provided.
 
         send_start_notification: hikari.undefined.UndefinedOr[builtins.bool]
             Whether to notify @everyone that the Stage instance has started.
@@ -8327,7 +8321,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel],
         *,
         topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        privacy_level: undefined.UndefinedOr[stage_instances.StagePrivacyLevel] = undefined.UNDEFINED,
     ) -> stage_instances.StageInstance:
         """Edit the Stage instance in a guild stage channel.
 
@@ -8344,9 +8337,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------------
         topic: hikari.undefined.UndefinedOr[builtins.str]
             The topic for the Stage instance.
-
-        privacy_level: hikari.undefined.UndefinedOr[hikari.stage_instances.StagePrivacyLevel]
-            The privacy level of the Stage Instance.
 
         Returns
         -------
