@@ -64,9 +64,9 @@ class StageInstance(snowflakes.Unique):
     discoverable_disabled: bool = attr.field(eq=False, hash=False, repr=False)
     """Whether or not stage discovery is disabled."""
 
-    guild_scheduled_event_id: undefined.UndefinedOr[
-        snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent]
-    ] = attr.field(eq=False, hash=False, repr=False)
+    guild_scheduled_event_id: typing.Optional[snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent]] = attr.field(
+        eq=False, hash=False, repr=False
+    )
     """The ID of the scheduled event for this stage instance, if it exists."""
 
     def get_channel(self) -> typing.Optional[channels.GuildStageChannel]:
@@ -201,7 +201,7 @@ class StageInstance(snowflakes.Unique):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
-        if self.guild_scheduled_event_id is undefined.UNDEFINED:
+        if not self.guild_scheduled_event_id:
             return None
 
         return await self.app.rest.fetch_scheduled_event(self.guild_id, self.guild_scheduled_event_id)
