@@ -8224,17 +8224,17 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def fetch_stage_instance(
         self, channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel]
     ) -> stage_instances.StageInstance:
-        """Fetch the Stage instance associated with a guild stage channel.
+        """Fetch the stage instance associated with a guild stage channel.
 
         Parameters
         ----------
         channel: hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildStageChannel]
-            The guild stage channel to fetch the Stage instance from.
+            The guild stage channel to fetch the stage instance from.
 
         Returns
         -------
         typing.Optional[hikari.stage_instances.StageInstance]
-            The Stage instance associated with the guild stage channel.
+            The stage instance associated with the guild stage channel.
 
             `builtins.None` if no Stage instance exists in the stage channel.
 
@@ -8270,29 +8270,29 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent]
         ] = undefined.UNDEFINED,
     ) -> stage_instances.StageInstance:
-        """Create a Stage instance in guild stage channel.
+        """Create a stage instance in guild stage channel.
 
         Parameters
         ----------
         channel: hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildStageChannel]
-            The channel to use for the Stage instance creation.
+            The channel to use for the stage instance creation.
 
         Other Parameters
         ----------------
         topic: builtins.str
-            The topic for the Stage instance.
+            The topic for the stage instance.
 
         send_start_notification: hikari.undefined.UndefinedOr[builtins.bool]
-            Whether to notify @everyone that the Stage instance has started.
+            Whether to send a notification to *all* server members that the stage instance has started.
 
         guild_scheduled_event_id: hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.scheduled_events.ScheduledEvent]]
-            The ID of the scheduled event to associate with the Stage instance.
+            The ID of the scheduled event to associate with the stage instance.
 
 
         Returns
         -------
         hikari.stage_instances.StageInstance
-            The created Stage instance.
+            The created stage instance.
 
         Raises
         ------
@@ -8322,26 +8322,26 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> stage_instances.StageInstance:
-        """Edit the Stage instance in a guild stage channel.
+        """Edit the stage instance in a guild stage channel.
 
         !!! note
             This will raise `hikari.errors.UnauthorizedError` if the bot is not a moderator
-            of the Stage instance.
+            of the stage instance.
 
         Parameters
         ----------
         channel: hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildStageChannel]
-            The channel that the Stage instance is associated with.
+            The channel that the stage instance is associated with.
 
         Other Parameters
         ----------------
         topic: hikari.undefined.UndefinedOr[builtins.str]
-            The topic for the Stage instance.
+            The topic for the stage instance.
 
         Returns
         -------
         hikari.stage_instances.StageInstance
-            The edited Stage instance.
+            The edited stage instance.
 
         Raises
         ------
@@ -8368,17 +8368,17 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def delete_stage_instance(
         self, channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel]
     ) -> stage_instances.StageInstance:
-        """Delete the Stage instance.
+        """Delete the stage instance.
 
         Parameters
         ----------
         channel: hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildStageChannel]
-            The guild stage channel to fetch the Stage instance from.
+            The guild stage channel to fetch the stage instance from.
 
         Returns
         -------
         hikari.stage_instances.StageInstance
-            The Stage instance that was deleted.
+            The stage instance that was deleted.
 
         Raises
         ------

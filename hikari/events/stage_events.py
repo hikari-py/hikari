@@ -20,7 +20,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Events that fire when Stage instances are created/updated/deleted."""
+"""Events that fire when stage instances are created/updated/deleted."""
 
 from __future__ import annotations
 
@@ -43,7 +43,7 @@ if typing.TYPE_CHECKING:
 
 @base_events.requires_intents(intents.Intents.GUILDS)
 class StageInstanceEvent(shard_events.ShardEvent, abc.ABC):
-    """Event base for any event that involves Stage instances."""
+    """Event base for any event that involves stage instances."""
 
     __slots__: typing.Sequence[str] = ()
 
@@ -61,12 +61,12 @@ class StageInstanceEvent(shard_events.ShardEvent, abc.ABC):
     @property
     @abc.abstractmethod
     def stage_instance(self) -> StageInstance:
-        """Stage Instance that this event relates to.
+        """Stage instance that this event relates to.
 
         Returns
         -------
         hikari.stage_instance.StageInstance
-            The Stage Instance that this event relates to.
+            The stage instance that this event relates to.
         """
 
 
@@ -74,13 +74,13 @@ class StageInstanceEvent(shard_events.ShardEvent, abc.ABC):
 @attr.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILDS)
 class StageInstanceCreateEvent(StageInstanceEvent):
-    """Event fired when a Stage instance is created."""
+    """Event fired when a stage instance is created."""
 
     shard: gateway_shard.GatewayShard = attr.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     stage_instance: StageInstance = attr.field()
-    """The Stage instance that was created."""
+    """The stage instance that was created."""
 
     @property
     def app(self) -> traits.RESTAware:
@@ -97,13 +97,13 @@ class StageInstanceCreateEvent(StageInstanceEvent):
 @attr.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILDS)
 class StageInstanceEditEvent(StageInstanceEvent):
-    """Event fired when a Stage instance is edited."""
+    """Event fired when a stage instance is edited."""
 
     shard: gateway_shard.GatewayShard = attr.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     stage_instance: StageInstance = attr.field()
-    """The Stage instance that was edited."""
+    """The stage instance that was edited."""
 
     @property
     def app(self) -> traits.RESTAware:
@@ -119,13 +119,13 @@ class StageInstanceEditEvent(StageInstanceEvent):
 @attr.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILDS)
 class StageInstanceDeleteEvent(StageInstanceEvent):
-    """Event fired when a Stage instance is deleted."""
+    """Event fired when a stage instance is deleted."""
 
     shard: gateway_shard.GatewayShard = attr.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     stage_instance: StageInstance = attr.field()
-    """The Stage instance that was deleted."""
+    """The stage instance that was deleted."""
 
     @property
     def app(self) -> traits.RESTAware:

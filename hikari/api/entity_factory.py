@@ -1997,7 +1997,7 @@ class EntityFactory(abc.ABC):
         """
 
     #########################
-    # Stage instance models #
+    # STAGE INSTANCE MODELS #
     #########################
 
     @abc.abstractmethod

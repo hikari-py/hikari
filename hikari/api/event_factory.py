@@ -1404,7 +1404,7 @@ class EventFactory(abc.ABC):
     def deserialize_stage_instance_create_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> stage_events.StageInstanceCreateEvent:
-        """Parse a raw payload from Discord into a Stage instance create event object.
+        """Parse a raw payload from Discord into a stage instance create event object.
 
         Parameters
         ----------
@@ -1416,14 +1416,14 @@ class EventFactory(abc.ABC):
         Returns
         -------
         hikari.events.voice_events.StageInstanceCreateEvent
-            The parsed Stage instance create event object.
+            The parsed stage instance create event object.
         """
 
     @abc.abstractmethod
     def deserialize_stage_instance_edit_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> stage_events.StageInstanceEditEvent:
-        """Parse a raw payload from Discord into a Stage instance update event object.
+        """Parse a raw payload from Discord into a stage instance update event object.
 
         Parameters
         ----------
@@ -1435,14 +1435,14 @@ class EventFactory(abc.ABC):
         Returns
         -------
         hikari.events.voice_events.StageInstanceEditEvent
-            The parsed Stage instance update event object.
+            The parsed stage instance update event object.
         """
 
     @abc.abstractmethod
     def deserialize_stage_instance_delete_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> stage_events.StageInstanceDeleteEvent:
-        """Parse a raw payload from Discord into a Stage instance delete event object.
+        """Parse a raw payload from Discord into a stage instance delete event object.
 
         Parameters
         ----------
@@ -1454,5 +1454,5 @@ class EventFactory(abc.ABC):
         Returns
         -------
         hikari.events.voice_events.StageInstanceDeleteEvent
-            The parsed Stage instance delete event object.
+            The parsed stage instance delete event object.
         """

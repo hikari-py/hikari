@@ -20,7 +20,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Application and entities that are used to describe Stage instances on Discord."""
+"""Application and entities that are used to describe stage instances on Discord."""
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = ("StageInstance",)
@@ -43,10 +43,10 @@ if typing.TYPE_CHECKING:
 
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
 class StageInstance(snowflakes.Unique):
-    """Represents a Stage instance."""
+    """Represents a stage instance."""
 
     id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
-    """ID of the Stage instance."""
+    """ID of the stage instance."""
 
     app: traits.RESTAware = attr.field(
         repr=False, eq=False, hash=False, metadata={attrs_extensions.SKIP_DEEP_COPY: True}
@@ -54,21 +54,21 @@ class StageInstance(snowflakes.Unique):
     """The client application that models may use for procedures."""
 
     channel_id: snowflakes.Snowflake = attr.field(hash=True, repr=False)
-    """The channel ID of the Stage instance."""
+    """The channel ID of the stage instance."""
 
     guild_id: snowflakes.Snowflake = attr.field(hash=True, repr=False)
-    """The guild ID of the Stage instance."""
+    """The guild ID of the stage instance."""
 
     topic: str = attr.field(eq=False, hash=False, repr=False)
-    """The topic of the Stage instance."""
+    """The topic of the stage instance."""
 
     discoverable_disabled: bool = attr.field(eq=False, hash=False, repr=False)
-    """Whether or not Stage discovery is disabled."""
+    """Whether or not stage discovery is disabled."""
 
     guild_scheduled_event_id: undefined.UndefinedOr[
         snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent]
     ] = attr.field(eq=False, hash=False, repr=False)
-    "The ID of the scheduled event for this Stage instance, if it exists."
+    "The ID of the scheduled event for this stage instance, if it exists."
 
     def get_channel(self) -> typing.Optional[channels.GuildStageChannel]:
         """Return the guild stage channel where this stage instance was created.
@@ -127,7 +127,7 @@ class StageInstance(snowflakes.Unique):
         return channel
 
     def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
-        """Get the cached guild that this Stage Instance relates to, if known.
+        """Get the cached guild that this stage instance relates to, if known.
 
         If not known, this will return `builtins.None` instead.
 
@@ -141,12 +141,12 @@ class StageInstance(snowflakes.Unique):
         return self.app.cache.get_guild(self.guild_id)
 
     async def fetch_guild(self) -> guilds.RESTGuild:
-        """Fetch the guild linked to this Stage Instance.
+        """Fetch the guild linked to this stage Instance.
 
         Returns
         -------
         hikari.guilds.RESTGuild
-            The guild linked to this Stage Instance
+            The guild linked to this stage instance
 
         Raises
         ------
@@ -173,12 +173,12 @@ class StageInstance(snowflakes.Unique):
         return await self.app.rest.fetch_guild(self.guild_id)
 
     async def fetch_scheduled_event(self) -> typing.Optional[scheduled_events.ScheduledEvent]:
-        """Fetch the scheduled event for this Stage Instance.
+        """Fetch the scheduled event for this stage instance.
 
         Returns
         -------
         typing.Optional[hikari.scheduled_events.ScheduledEvent]
-            The scheduled event for this Stage Instance, if it exists.
+            The scheduled event for this stage instance, if it exists.
 
         Raises
         ------
