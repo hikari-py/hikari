@@ -1475,7 +1475,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             guild_id=snowflakes.Snowflake(payload["guild_id"]),
             topic=payload["topic"],
             discoverable_disabled=payload["discoverable_disabled"],
-            guild_scheduled_event_id=payload.get("guild_scheduled_event_id", undefined.UNDEFINED),
+            guild_scheduled_event_id=snowflakes.Snowflake(payload["guild_scheduled_event_id"])
+            if "guild_scheduled_event_id" in payload
+            else undefined.UNDEFINED,
         )
 
     def deserialize_channel(
