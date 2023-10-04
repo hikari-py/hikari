@@ -1476,7 +1476,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             topic=payload["topic"],
             discoverable_disabled=payload["discoverable_disabled"],
             guild_scheduled_event_id=snowflakes.Snowflake(payload["guild_scheduled_event_id"])
-            if "guild_scheduled_event_id" in payload
+            if payload["guild_scheduled_event_id"]
             else undefined.UNDEFINED,
         )
 
