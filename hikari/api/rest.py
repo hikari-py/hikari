@@ -8233,17 +8233,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        typing.Optional[hikari.stage_instances.StageInstance]
+        hikari.stage_instances.StageInstance
             The stage instance associated with the guild stage channel.
-
-            `builtins.None` if no Stage instance exists in the stage channel.
 
         Raises
         ------
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
-            If the interaction or response is not found.
+            If the stage instance or channel is not found.
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
