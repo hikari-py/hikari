@@ -30,9 +30,7 @@ from hikari.events import stage_events
 class TestStageInstanceCreateEvent:
     @pytest.fixture()
     def event(self):
-        return stage_events.StageInstanceCreateEvent(
-            shard=object(), stage_instance=mock.Mock()
-        )
+        return stage_events.StageInstanceCreateEvent(shard=object(), stage_instance=mock.Mock())
 
     def test_app_property(self, event):
         assert event.app is event.stage_instance.app

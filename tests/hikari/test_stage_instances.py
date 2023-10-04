@@ -26,7 +26,6 @@ import pytest
 from hikari import channels
 from hikari import snowflakes
 from hikari import stage_instances
-from hikari.impl import gateway_bot as bot
 
 
 @pytest.fixture()

@@ -34,7 +34,6 @@ from hikari import scheduled_events
 from hikari import snowflakes
 from hikari import undefined
 from hikari.internal import attrs_extensions
-from hikari.internal import enums
 
 if typing.TYPE_CHECKING:
     from hikari import guilds
