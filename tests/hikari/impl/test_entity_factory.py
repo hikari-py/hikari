@@ -7055,7 +7055,7 @@ class TestEntityFactoryImpl:
             "guild_id": "197038439483310086",
             "channel_id": "733488538393510049",
             "topic": "Testing Testing, 123",
-            "privacy_level": 1,
+            "guild_scheduled_event_id": "363820363920323120",
             "discoverable_disabled": False,
         }
 
@@ -7067,5 +7067,4 @@ class TestEntityFactoryImpl:
         assert stage_instance.channel_id == 733488538393510049
         assert stage_instance.guild_id == 197038439483310086
         assert stage_instance.topic == "Testing Testing, 123"
-        assert stage_instance.privacy_level == 1
         assert stage_instance.discoverable_disabled is False

@@ -6426,18 +6426,20 @@ class TestRESTClientImplAsync:
 
     async def test_create_stage_instance(self, rest_client):
         expected_route = routes.POST_STAGE_INSTANCE.compile()
-        expected_json = {"channel_id": "7334", "privacy_level": 1, "topic": "ur mom"}
+        expected_json = {"channel_id": "7334", "topic": "ur mom", "guild_scheduled_event_id": "3361203239"}
         mock_payload = {
             "id": "8406",
             "guild_id": "19703",
             "channel_id": "7334",
             "topic": "ur mom",
-            "privacy_level": 1,
+            "guild_scheduled_event_id": "3361203239",
             "discoverable_disabled": False,
         }
         rest_client._request = mock.AsyncMock(return_value=mock_payload)
 
-        result = await rest_client.create_stage_instance(channel=7334, privacy_level=1, topic="ur mom")
+        result = await rest_client.create_stage_instance(
+            channel=7334, topic="ur mom", guild_scheduled_event_id=3361203239
+        )
 
         assert result is rest_client._entity_factory.deserialize_stage_instance.return_value
         rest_client._request.assert_called_once_with(expected_route, json=expected_json)
@@ -6445,18 +6447,17 @@ class TestRESTClientImplAsync:
 
     async def test_edit_stage_instance(self, rest_client):
         expected_route = routes.PATCH_STAGE_INSTANCE.compile(channel=7334)
-        expected_json = {"privacy_level": 1, "topic": "ur mom"}
+        expected_json = {"topic": "ur mom"}
         mock_payload = {
             "id": "8406",
             "guild_id": "19703",
             "channel_id": "7334",
             "topic": "ur mom",
-            "privacy_level": 1,
             "discoverable_disabled": False,
         }
         rest_client._request = mock.AsyncMock(return_value=mock_payload)
 
-        result = await rest_client.edit_stage_instance(channel=7334, privacy_level=1, topic="ur mom")
+        result = await rest_client.edit_stage_instance(channel=7334, topic="ur mom")
 
         assert result is rest_client._entity_factory.deserialize_stage_instance.return_value
         rest_client._request.assert_called_once_with(expected_route, json=expected_json)
@@ -6469,7 +6470,6 @@ class TestRESTClientImplAsync:
             "guild_id": "19703",
             "channel_id": "7334",
             "topic": "ur mom",
-            "privacy_level": 1,
             "discoverable_disabled": False,
         }
         rest_client._request = mock.AsyncMock(return_value=mock_payload)
