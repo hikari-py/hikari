@@ -8324,10 +8324,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> stage_instances.StageInstance:
         """Edit the stage instance in a guild stage channel.
 
-        !!! note
-            This will raise `hikari.errors.UnauthorizedError` if the bot is not a moderator
-            of the stage instance.
-
         Parameters
         ----------
         channel: hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildStageChannel]
@@ -8346,7 +8342,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Raises
         ------
         hikari.errors.UnauthorizedError
-            If you are unauthorized to make the request (invalid/missing token).
+            If you are unauthorized to make the request (invalid/missing token
+            or you are not a moderator of the stage instance).
         hikari.errors.NotFoundError
             If the interaction or response is not found.
         hikari.errors.RateLimitTooLongError
