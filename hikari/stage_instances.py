@@ -68,7 +68,7 @@ class StageInstance(snowflakes.Unique):
     guild_scheduled_event_id: undefined.UndefinedOr[
         snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent]
     ] = attr.field(eq=False, hash=False, repr=False)
-    "The ID of the scheduled event for this stage instance, if it exists."
+    """The ID of the scheduled event for this stage instance, if it exists."""
 
     def get_channel(self) -> typing.Optional[channels.GuildStageChannel]:
         """Return the guild stage channel where this stage instance was created.
