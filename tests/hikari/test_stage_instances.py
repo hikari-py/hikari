@@ -31,7 +31,7 @@ from hikari.impl import gateway_bot as bot
 
 @pytest.fixture()
 def mock_app():
-    return mock.Mock(spec_set=bot.GatewayBot)
+    return mock.Mock()
 
 
 class TestStageInstance:
