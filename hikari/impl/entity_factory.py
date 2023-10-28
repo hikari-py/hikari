@@ -1468,6 +1468,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     def deserialize_stage_instance(self, payload: data_binding.JSONObject) -> stage_instances.StageInstance:
+        guild_scheduled_event_id = (
+            snowflakes.Snowflake(payload["guild_scheduled_event_id"]) if payload["guild_scheduled_event_id"] else None
+        )
+
         return stage_instances.StageInstance(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
@@ -1475,9 +1479,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             guild_id=snowflakes.Snowflake(payload["guild_id"]),
             topic=payload["topic"],
             discoverable_disabled=payload["discoverable_disabled"],
-            guild_scheduled_event_id=snowflakes.Snowflake(payload["guild_scheduled_event_id"])
-            if payload["guild_scheduled_event_id"]
-            else None,
+            guild_scheduled_event_id=guild_scheduled_event_id,
         )
 
     def deserialize_channel(
