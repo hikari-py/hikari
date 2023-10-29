@@ -1,7 +1,7 @@
 # mock in the stdlib changes between versions of Python, so are not consistent in behaviour like the backport is
 mock==5.1.0
 
-pytest==7.4.2
+pytest==7.4.3
 pytest-asyncio==0.21.1
 pytest-cov==4.1.0
 pytest-randomly==3.15.0

@@ -179,7 +179,7 @@ jobs:
           python-version: 3.9
 
       - name: Setup node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
 
       - name: Build documentation
         run: |

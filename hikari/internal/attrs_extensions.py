@@ -37,7 +37,7 @@ import typing
 
 import attrs
 
-ModelT = typing.TypeVar("ModelT")
+ModelT = typing.TypeVar("ModelT", bound=attrs.AttrsInstance)
 SKIP_DEEP_COPY: typing.Final[str] = "skip_deep_copy"
 
 _DEEP_COPIERS: typing.MutableMapping[
@@ -60,7 +60,7 @@ def invalidate_deep_copy_cache() -> None:
 
 
 def get_fields_definition(
-    cls: type,
+    cls: typing.Type[attrs.AttrsInstance],
 ) -> typing.Tuple[
     typing.Sequence[typing.Tuple[attrs.Attribute[typing.Any], str]], typing.Sequence[attrs.Attribute[typing.Any]]
 ]:
@@ -68,7 +68,7 @@ def get_fields_definition(
 
     Parameters
     ----------
-    cls : typing.Type[ModelT]
+    cls : typing.Type[attrs.AttrsInstance]
         The attrs class to get the fields definition for.
 
     Returns
@@ -79,7 +79,10 @@ def get_fields_definition(
     init_results: typing.List[typing.Tuple[attrs.Attribute[typing.Any], str]] = []
     non_init_results: typing.List[attrs.Attribute[typing.Any]] = []
 
-    for field in attrs.fields(cls):
+    # Mypy has a bug where it will always report
+    # "Argument 1 to "fields" has incompatible type "Type[AttrsInstance]"; expected an attrs class"
+    # even if the type is correct.
+    for field in attrs.fields(cls):  # type: ignore[misc]
         if field.init:
             key_word = field.name[1:] if field.name.startswith("_") else field.name
             init_results.append((field, key_word))
@@ -107,8 +110,8 @@ def generate_shallow_copier(cls: typing.Type[ModelT]) -> typing.Callable[[ModelT
     from hikari.internal import ux
 
     kwargs, setters = get_fields_definition(cls)
-    kwargs = ",".join(f"{kwarg}=m.{attrsibute.name}" for attrsibute, kwarg in kwargs)
-    setters = ";".join(f"r.{attrsibute.name}=m.{attrsibute.name}" for attrsibute in setters) + ";" if setters else ""
+    kwargs = ",".join(f"{kwarg}=m.{attribute.name}" for attribute, kwarg in kwargs)
+    setters = ";".join(f"r.{attribute.name}=m.{attribute.name}" for attribute in setters) + ";" if setters else ""
     code = f"def copy(m):r=cls({kwargs});{setters}return r"
     globals_ = {"cls": cls}
     _LOGGER.log(ux.TRACE, "generating shallow copy function for %r: %r", cls, code)
