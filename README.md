@@ -18,7 +18,7 @@ Gateway APIs.
 Built on good intentions and the hope that it will be extendable and reusable, rather than an obstacle for future
 development.
 
-Python 3.8, 3.9, 3.10, 3.11 and 3.12-dev are currently supported.
+Python 3.8, 3.9, 3.10, 3.11 and 3.12 are currently supported.
 
 ## Installation
 
