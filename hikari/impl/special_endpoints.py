@@ -1011,7 +1011,7 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
     )
 
     # Not-required arguments.
-    _content: undefined.UndefinedOr[str] = attrs.field(alias="content", default=undefined.UNDEFINED)
+    _content: undefined.UndefinedNoneOr[str] = attrs.field(alias="content", default=undefined.UNDEFINED)
 
     # Key-word only not-required arguments.
     _flags: typing.Union[int, messages.MessageFlag, undefined.UndefinedType] = attrs.field(
@@ -1030,10 +1030,10 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
     _attachments: undefined.UndefinedNoneOr[typing.List[files.Resourceish]] = attrs.field(
         alias="attachments", default=undefined.UNDEFINED, kw_only=True
     )
-    _components: undefined.UndefinedOr[typing.List[special_endpoints.ComponentBuilder]] = attrs.field(
+    _components: undefined.UndefinedNoneOr[typing.List[special_endpoints.ComponentBuilder]] = attrs.field(
         alias="components", default=undefined.UNDEFINED, kw_only=True
     )
-    _embeds: undefined.UndefinedOr[typing.List[embeds_.Embed]] = attrs.field(
+    _embeds: undefined.UndefinedNoneOr[typing.List[embeds_.Embed]] = attrs.field(
         alias="embeds", default=undefined.UNDEFINED, kw_only=True
     )
 
@@ -1042,16 +1042,16 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
         return self._attachments.copy() if self._attachments else self._attachments
 
     @property
-    def content(self) -> undefined.UndefinedOr[str]:
+    def content(self) -> undefined.UndefinedNoneOr[str]:
         return self._content
 
     @property
-    def components(self) -> undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]]:
-        return self._components.copy() if self._components is not undefined.UNDEFINED else undefined.UNDEFINED
+    def components(self) -> undefined.UndefinedNoneOr[typing.Sequence[special_endpoints.ComponentBuilder]]:
+        return self._components.copy() if self._components else self._components
 
     @property
-    def embeds(self) -> undefined.UndefinedOr[typing.Sequence[embeds_.Embed]]:
-        return self._embeds.copy() if self._embeds is not undefined.UNDEFINED else undefined.UNDEFINED
+    def embeds(self) -> undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]]:
+        return self._embeds.copy() if self._embeds else self._embeds
 
     @property
     def flags(self) -> typing.Union[undefined.UndefinedType, int, messages.MessageFlag]:
@@ -1081,10 +1081,6 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
     ) -> undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]]:
         return self._user_mentions
 
-    def clear_attachments(self, /) -> Self:
-        self._attachments = None
-        return self
-
     def add_attachment(self, attachment: files.Resourceish, /) -> Self:
         if not self._attachments:
             self._attachments = []
@@ -1092,22 +1088,38 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
         self._attachments.append(attachment)
         return self
 
+    def clear_attachments(self, /) -> Self:
+        self._attachments = None
+        return self
+
     def add_component(self, component: special_endpoints.ComponentBuilder, /) -> Self:
-        if self._components is undefined.UNDEFINED:
+        if not self._components:
             self._components = []
 
         self._components.append(component)
         return self
 
+    def clear_components(self, /) -> Self:
+        self._components = None
+        return self
+
     def add_embed(self, embed: embeds_.Embed, /) -> Self:
-        if self._embeds is undefined.UNDEFINED:
+        if not self._embeds:
             self._embeds = []
 
         self._embeds.append(embed)
         return self
 
+    def clear_embeds(self, /) -> Self:
+        self._embeds = None
+        return self
+
     def set_content(self, content: undefined.UndefinedOr[str], /) -> Self:
         self._content = str(content) if content is not undefined.UNDEFINED else undefined.UNDEFINED
+        return self
+
+    def clear_content(self, /) -> Self:
+        self._content = None
         return self
 
     def set_flags(self, flags: typing.Union[undefined.UndefinedType, int, messages.MessageFlag], /) -> Self:
@@ -1165,15 +1177,21 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
         elif self._attachments is None:
             data.put("attachments", None)
 
-        if self._embeds is not undefined.UNDEFINED:
+        if self._embeds:
             embeds: typing.List[data_binding.JSONObject] = []
             for embed, attachments in map(entity_factory.serialize_embed, self._embeds):
                 final_attachments.extend(attachments)
                 embeds.append(embed)
 
             data["embeds"] = embeds
+        elif self._embeds is None:
+            data.put("attachments", None)
 
-        data.put_array("components", self._components, conversion=lambda component: component.build())
+        if self._components:
+            data.put_array("components", self._components, conversion=lambda component: component.build())
+        elif self._components is None:
+            data.put("components", None)
+
         data.put("flags", self.flags)
         data.put("tts", self.is_tts)
 

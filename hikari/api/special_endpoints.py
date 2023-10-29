@@ -683,19 +683,19 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def components(self) -> undefined.UndefinedOr[typing.Sequence[ComponentBuilder]]:
+    def components(self) -> undefined.UndefinedNoneOr[typing.Sequence[ComponentBuilder]]:
         """Sequence of up to 5 component builders to send in this response."""
 
     @property
     @abc.abstractmethod
-    def embeds(self) -> undefined.UndefinedOr[typing.Sequence[embeds_.Embed]]:
+    def embeds(self) -> undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]]:
         """Sequence of up to 10 of the embeds included in this response."""
 
     # Settable fields
 
     @property
     @abc.abstractmethod
-    def content(self) -> undefined.UndefinedOr[str]:
+    def content(self) -> undefined.UndefinedNoneOr[str]:
         """Response's message content."""
 
     @property
