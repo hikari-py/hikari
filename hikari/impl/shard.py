@@ -818,7 +818,6 @@ class GatewayShardImpl(shard.GatewayShard):
             dumps=self._dumps,
             url=url,
         )
-        self._event_manager.dispatch(self._event_factory.deserialize_connected_event(self))
 
         # Expect initial HELLO
         hello_payload = await self._ws.receive_json()
@@ -893,6 +892,7 @@ class GatewayShardImpl(shard.GatewayShard):
                 if not self._handshake_event.is_set():
                     continue
 
+                await self._event_manager.dispatch(self._event_factory.deserialize_connected_event(self))
                 await aio.first_completed(*lifetime_tasks)
 
                 # Since nothing went wrong, we can reset the backoff and try again
@@ -957,7 +957,9 @@ class GatewayShardImpl(shard.GatewayShard):
                     else:
                         await ws.send_close(code=_RESUME_CLOSE_CODE, message=b"shard disconnecting temporarily")
 
-                    self._event_manager.dispatch(self._event_factory.deserialize_disconnected_event(self))
+                    if self._handshake_event.is_set():
+                        # We dispatched the connected event, so we can dispatch the disconnected one too
+                        await self._event_manager.dispatch(self._event_factory.deserialize_disconnected_event(self))
 
     def _serialize_and_store_presence_payload(
         self,

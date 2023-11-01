@@ -1014,10 +1014,6 @@ class TestGatewayShardImplAsync:
             dumps=client._dumps,
             url="wss://somewhere.com?somewhere=true&v=400&encoding=json",
         )
-        client._event_factory.deserialize_connected_event.assert_called_once_with(client)
-        client._event_manager.dispatch.assert_called_once_with(
-            client._event_factory.deserialize_connected_event.return_value
-        )
 
         assert create_task.call_count == 2
         create_task.assert_has_calls(
@@ -1102,10 +1098,6 @@ class TestGatewayShardImplAsync:
             dumps=client._dumps,
             transport_compression=True,
             url="wss://notsomewhere.com?somewhere=true&v=400&encoding=json&compress=zlib-stream",
-        )
-        client._event_factory.deserialize_connected_event.assert_called_once_with(client)
-        client._event_manager.dispatch.assert_called_once_with(
-            client._event_factory.deserialize_connected_event.return_value
         )
 
         assert create_task.call_count == 2
