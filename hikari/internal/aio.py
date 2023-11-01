@@ -259,7 +259,7 @@ def destroy_loop(loop: asyncio.AbstractEventLoop, logger: logging.Logger) -> Non
     remaining_tasks = tuple(t for t in asyncio.all_tasks(loop) if not t.done())
 
     if remaining_tasks:
-        logger.debug("terminating %s remaining tasks forcefully", len(remaining_tasks))
+        logger.warning("terminating %s remaining tasks forcefully", len(remaining_tasks))
         loop.run_until_complete(_gather((murder(task) for task in remaining_tasks)))
     else:
         logger.debug("No remaining tasks exist, good job!")

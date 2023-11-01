@@ -805,10 +805,10 @@ class GatewayBot(traits.GatewayBotAware):
             except AttributeError:
                 _LOGGER.log(ux.TRACE, "cannot set coroutine tracking depth for sys, no functionality exists for this")
 
-        try:
-            with signals.handle_interrupts(
-                enabled=enable_signal_handlers, loop=loop, propagate_interrupts=propagate_interrupts
-            ):
+        with signals.handle_interrupts(
+            enabled=enable_signal_handlers, loop=loop, propagate_interrupts=propagate_interrupts
+        ):
+            try:
                 loop.run_until_complete(
                     self.start(
                         activity=activity,
@@ -825,22 +825,22 @@ class GatewayBot(traits.GatewayBotAware):
 
                 loop.run_until_complete(self.join())
 
-        finally:
-            if self._closing_event:
-                if self._closing_event.is_set():
-                    loop.run_until_complete(self._closing_event.wait())
-                else:
-                    loop.run_until_complete(self.close())
+            finally:
+                if self._closing_event:
+                    if self._closing_event.is_set():
+                        loop.run_until_complete(self._closing_event.wait())
+                    else:
+                        loop.run_until_complete(self.close())
 
-            if close_passed_executor and self._executor is not None:
-                _LOGGER.debug("shutting down executor %s", self._executor)
-                self._executor.shutdown(wait=True)
-                self._executor = None
+                if close_passed_executor and self._executor is not None:
+                    _LOGGER.debug("shutting down executor %s", self._executor)
+                    self._executor.shutdown(wait=True)
+                    self._executor = None
 
-            if close_loop:
-                aio.destroy_loop(loop, _LOGGER)
+                if close_loop:
+                    aio.destroy_loop(loop, _LOGGER)
 
-            _LOGGER.info("successfully terminated")
+                _LOGGER.info("successfully terminated")
 
     async def start(
         self,

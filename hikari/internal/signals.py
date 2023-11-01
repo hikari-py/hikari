@@ -113,9 +113,12 @@ def handle_interrupts(
     try:
         yield
 
-    except errors.HikariInterrupt:
+    except errors.HikariInterrupt as ex:
         if propagate_interrupts:
-            raise
+            # Always raise a new clean errors.HikariInterrupt, which is similar
+            # to what pure Python would do with KeyboardInterrupt
+            from_ex = ex if not isinstance(ex, errors.HikariInterrupt) else None
+            raise ex from from_ex
 
     finally:
         for sig in _INTERRUPT_SIGNALS:
