@@ -1185,7 +1185,7 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
 
             data["embeds"] = embeds
         elif self._embeds is None:
-            data.put("attachments", None)
+            data.put("embeds", None)
 
         if self._components:
             data.put_array("components", self._components, conversion=lambda component: component.build())
