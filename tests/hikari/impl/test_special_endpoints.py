@@ -927,10 +927,7 @@ class TestInteractionMessageBuilder:
         result, attachments = builder.build(mock_entity_factory)
 
         mock_entity_factory.serialize_embed.assert_not_called()
-        assert result == {
-            "type": base_interactions.ResponseType.MESSAGE_UPDATE,
-            "data": {"components": [], "embeds": []},
-        }
+        assert result == {"type": base_interactions.ResponseType.MESSAGE_UPDATE, "data": {}}
         assert attachments == []
 
     def test_build_handles_attachments(self):
