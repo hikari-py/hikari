@@ -731,7 +731,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         await aio.first_completed(request_task, self._close_event.wait())
 
-        if not self._close_event.is_set():
+        if not request_task.cancelled():
             return request_task.result()
 
         raise errors.ComponentStateConflictError("The REST client was closed mid-request")
