@@ -589,21 +589,26 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
                 loop.run_until_complete(self.join())
 
             finally:
-                if self._close_event:
-                    if self._is_closing:
-                        loop.run_until_complete(self._close_event.wait())
-                    else:
-                        loop.run_until_complete(self.close())
+                try:
+                    if self._close_event:
+                        if self._is_closing:
+                            loop.run_until_complete(self._close_event.wait())
+                        else:
+                            loop.run_until_complete(self.close())
 
-                if close_passed_executor and self._executor:
-                    _LOGGER.debug("shutting down executor %s", self._executor)
-                    self._executor.shutdown(wait=True)
-                    self._executor = None
+                    if close_passed_executor and self._executor:
+                        _LOGGER.debug("shutting down executor %s", self._executor)
+                        self._executor.shutdown(wait=True)
+                        self._executor = None
 
-                if close_loop:
-                    aio.destroy_loop(loop, _LOGGER)
+                    if close_loop:
+                        aio.destroy_loop(loop, _LOGGER)
 
-                _LOGGER.info("successfully terminated")
+                    _LOGGER.info("successfully terminated")
+
+                except errors.HikariInterrupt:
+                    _LOGGER.warning("forcefully terminated")
+                    raise
 
     async def start(
         self,
