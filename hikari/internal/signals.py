@@ -117,8 +117,10 @@ def handle_interrupts(
         if propagate_interrupts:
             # Always raise a new clean errors.HikariInterrupt, which is similar
             # to what pure Python would do with KeyboardInterrupt
-            from_ex = ex if not isinstance(ex, errors.HikariInterrupt) else None
-            raise ex from from_ex
+            if type(ex.__cause__) is errors.HikariInterrupt:
+                raise ex from None
+
+            raise
 
     finally:
         for sig in _INTERRUPT_SIGNALS:
