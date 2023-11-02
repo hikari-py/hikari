@@ -32,11 +32,11 @@ import attr
 from hikari import channels
 from hikari import scheduled_events
 from hikari import snowflakes
+from hikari import traits
 from hikari.internal import attrs_extensions
 
 if typing.TYPE_CHECKING:
     from hikari import guilds
-    from hikari import traits
 
 
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
