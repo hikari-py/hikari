@@ -100,7 +100,7 @@ class ShardStateEvent(ShardEvent, abc.ABC):
 @attrs_extensions.with_copy
 @attrs.define(kw_only=True, weakref_slot=False)
 class ShardConnectedEvent(ShardStateEvent):
-    """Event fired when a shard connects."""
+    """Event fired when a shard successfully connects."""
 
     app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
