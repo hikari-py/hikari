@@ -586,7 +586,10 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
                         ssl_context=ssl_context,
                     )
                 )
-                loop.run_until_complete(self.join())
+
+                if self._close_event is not None:
+                    # The user might have closed the bot during startup, respect it
+                    loop.run_until_complete(self.join())
 
             finally:
                 try:
@@ -676,6 +679,10 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         except Exception:
             await self._rest.close()
             raise
+
+        if self._close_event is None:
+            # If the user requested to close the bot before startup, respect it
+            return
 
         await self._server.start(
             backlog=backlog,
