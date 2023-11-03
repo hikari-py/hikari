@@ -102,6 +102,9 @@ class HikariInterrupt(KeyboardInterrupt, HikariError):
     signame: str = attrs.field()
     """The signal name that was raised."""
 
+    def __str__(self) -> str:
+        return f"Signal {self.signum} ({self.signame}) received"
+
 
 @attrs.define(auto_exc=True, repr=False, slots=False)
 class ComponentStateConflictError(HikariError):
