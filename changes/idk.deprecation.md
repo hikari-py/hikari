@@ -1,0 +1,1 @@
+Deprecate `Permissions.MANAGE_EMOJIS_AND_STICKERS` in favour of `Permissions.MANAGE_GUILD_EXPRESIONS`
