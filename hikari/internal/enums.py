@@ -203,19 +203,21 @@ class _EnumMeta(type):
 
         for name, value in namespace.names_to_values.items():
             member = new_namespace.get(name)
-            if not isinstance(member, _DeprecatedAlias):
-                # Patching the member init call is around 100ns faster per call than
-                # using the default type.__call__ which would make us do the lookup
-                # in cls.__new__. Reason for this is that python will also always
-                # invoke cls.__init__ if we do this, so we end up with two function
-                # calls.
-                member = cls.__new__(cls, value)
-                member._name_ = name
-                member._value_ = value
-                setattr(cls, name, member)
+            if isinstance(member, _DeprecatedAlias):
+                continue
+
+            # Patching the member init call is around 100ns faster per call than
+            # using the default type.__call__ which would make us do the lookup
+            # in cls.__new__. Reason for this is that python will also always
+            # invoke cls.__init__ if we do this, so we end up with two function
+            # calls.
+            member = cls.__new__(cls, value)
+            member._name_ = name
+            member._value_ = value
+            setattr(cls, name, member)
 
             name_to_member[name] = member
-            value_to_member.setdefault(value, member)
+            value_to_member[value] = member
             member_names.append(name)
 
         return cls
@@ -471,23 +473,25 @@ class _FlagMeta(type):
 
         for name, value in namespace.names_to_values.items():
             member = new_namespace.get(name)
-            if not isinstance(member, _DeprecatedAlias):
-                # Patching the member init call is around 100ns faster per call than
-                # using the default type.__call__ which would make us do the lookup
-                # in cls.__new__. Reason for this is that python will also always
-                # invoke cls.__init__ if we do this, so we end up with two function
-                # calls.
-                member = cls.__new__(cls, value)
-                member._name_ = name
-                member._value_ = value
-                setattr(cls, name, member)
+            if isinstance(member, _DeprecatedAlias):
+                continue
 
-                if not (value & value - 1):
-                    powers_of_2_map[value] = member
+            # Patching the member init call is around 100ns faster per call than
+            # using the default type.__call__ which would make us do the lookup
+            # in cls.__new__. Reason for this is that python will also always
+            # invoke cls.__init__ if we do this, so we end up with two function
+            # calls.
+            member = cls.__new__(cls, value)
+            member._name_ = name
+            member._value_ = value
+            setattr(cls, name, member)
 
             name_to_member[name] = member
-            value_to_member.setdefault(value, member)
+            value_to_member[value] = member
             member_names.append(name)
+
+            if not (value & value - 1):
+                powers_of_2_map[value] = member
 
         all_bits = functools.reduce(operator.or_, value_to_member.keys())
         all_bits_member = cls.__new__(cls, all_bits)
