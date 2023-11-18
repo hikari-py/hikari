@@ -236,9 +236,6 @@ class Permissions(enums.Flag):
         (or their owner's account in the case of bot users) and the guild owner.
     """
 
-    MANAGE_EMOJIS_AND_STICKERS = enums.deprecated(MANAGE_GUILD_EXPRESSIONS, removal_version="2.0.0.dev123")
-    """Deprecated alias for MANAGE_GUILD_EXPRESSIONS."""
-
     USE_APPLICATION_COMMANDS = 1 << 31
     """Allows for using the application commands of guild integrations within a text channel."""
 
