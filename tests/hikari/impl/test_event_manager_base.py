@@ -544,10 +544,11 @@ class TestEventManagerBase:
         event_manager._enabled_for_event.assert_called_once_with(shard_events.ShardPayloadEvent)
 
     @pytest.mark.asyncio()
-    async def test_handle_dispatch_invokes_callback(self, event_manager, event_loop):
+    async def test_handle_dispatch_invokes_callback(self, event_manager):
         event_manager._enabled_for_consumer = mock.Mock(return_value=True)
         consumer = mock.AsyncMock()
         error_handler = mock.MagicMock()
+        event_loop = asyncio.get_running_loop()
         event_loop.set_exception_handler(error_handler)
         shard = object()
         pl = {"foo": "bar"}
@@ -558,10 +559,11 @@ class TestEventManagerBase:
         error_handler.assert_not_called()
 
     @pytest.mark.asyncio()
-    async def test_handle_dispatch_ignores_cancelled_errors(self, event_manager, event_loop):
+    async def test_handle_dispatch_ignores_cancelled_errors(self, event_manager):
         event_manager._enabled_for_consumer = mock.Mock(return_value=True)
         consumer = mock.AsyncMock(side_effect=asyncio.CancelledError)
         error_handler = mock.MagicMock()
+        event_loop = asyncio.get_running_loop()
         event_loop.set_exception_handler(error_handler)
         shard = object()
         pl = {"lorem": "ipsum"}
@@ -571,7 +573,7 @@ class TestEventManagerBase:
         error_handler.assert_not_called()
 
     @pytest.mark.asyncio()
-    async def test_handle_dispatch_handles_exceptions(self, event_manager, event_loop):
+    async def test_handle_dispatch_handles_exceptions(self, event_manager):
         mock_task = mock.Mock()
         # On Python 3.12+ Asyncio uses this to get the task's context if set to call the
         # error handler in. We want to avoid for this test for simplicity.
@@ -580,6 +582,7 @@ class TestEventManagerBase:
         exc = Exception("aaaa!")
         consumer = mock.Mock(callback=mock.AsyncMock(side_effect=exc))
         error_handler = mock.MagicMock()
+        event_loop = asyncio.get_running_loop()
         event_loop.set_exception_handler(error_handler)
         shard = object()
         pl = {"i like": "cats"}
@@ -593,9 +596,10 @@ class TestEventManagerBase:
         )
 
     @pytest.mark.asyncio()
-    async def test_handle_dispatch_invokes_when_consumer_not_enabled(self, event_manager, event_loop):
+    async def test_handle_dispatch_invokes_when_consumer_not_enabled(self, event_manager):
         consumer = mock.Mock(callback=mock.AsyncMock(__name__="ok"), is_enabled=False)
         error_handler = mock.MagicMock()
+        event_loop = asyncio.get_running_loop()
         event_loop.set_exception_handler(error_handler)
         shard = object()
         pl = {"foo": "bar"}

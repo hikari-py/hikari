@@ -201,7 +201,9 @@ class TestIsAsyncIterable:
 @pytest.mark.asyncio()
 class TestFirstCompleted:
     @hikari_test_helpers.timeout()
-    async def test_first_future_completes(self, event_loop):
+    async def test_first_future_completes(self):
+        event_loop = asyncio.get_running_loop()
+
         f1 = event_loop.create_future()
         f2 = event_loop.create_future()
         f3 = event_loop.create_future()
@@ -213,7 +215,9 @@ class TestFirstCompleted:
         assert f3.cancelled()
 
     @hikari_test_helpers.timeout()
-    async def test_second_future_completes(self, event_loop):
+    async def test_second_future_completes(self):
+        event_loop = asyncio.get_running_loop()
+
         f1 = event_loop.create_future()
         f2 = event_loop.create_future()
         f3 = event_loop.create_future()
@@ -225,7 +229,9 @@ class TestFirstCompleted:
         assert f3.cancelled()
 
     @hikari_test_helpers.timeout()
-    async def test_timeout_propagates(self, event_loop):
+    async def test_timeout_propagates(self):
+        event_loop = asyncio.get_running_loop()
+
         f1 = event_loop.create_future()
         f2 = event_loop.create_future()
         f3 = event_loop.create_future()
@@ -238,7 +244,9 @@ class TestFirstCompleted:
         assert f3.cancelled()
 
     @hikari_test_helpers.timeout()
-    async def test_cancelled_propagates(self, event_loop):
+    async def test_cancelled_propagates(self):
+        event_loop = asyncio.get_running_loop()
+
         f1 = event_loop.create_future()
         f2 = event_loop.create_future()
         f3 = event_loop.create_future()
@@ -254,7 +262,9 @@ class TestFirstCompleted:
         assert f3.cancelled()
 
     @hikari_test_helpers.timeout()
-    async def test_single_cancelled_propagates(self, event_loop):
+    async def test_single_cancelled_propagates(self):
+        event_loop = asyncio.get_running_loop()
+
         f1 = event_loop.create_future()
         f2 = event_loop.create_future()
         f3 = event_loop.create_future()
@@ -270,7 +280,9 @@ class TestFirstCompleted:
     # If the CI runners are slow, this may be flaky.
     @hikari_test_helpers.retry(3)
     @hikari_test_helpers.timeout()
-    async def test_result_propagates(self, event_loop):
+    async def test_result_propagates(self):
+        event_loop = asyncio.get_running_loop()
+
         f1 = event_loop.create_future()
         f2 = event_loop.create_future()
         f3 = event_loop.create_future()
@@ -286,7 +298,9 @@ class TestFirstCompleted:
     # If the CI runners are slow, this may be flaky.
     @hikari_test_helpers.retry(3)
     @hikari_test_helpers.timeout()
-    async def test_exception_propagates(self, event_loop):
+    async def test_exception_propagates(self):
+        event_loop = asyncio.get_running_loop()
+
         f1 = event_loop.create_future()
         f2 = event_loop.create_future()
         f3 = event_loop.create_future()
@@ -307,7 +321,9 @@ class TestAllOf:
     # If the CI runners are slow, this may be flaky.
     @hikari_test_helpers.retry(3)
     @hikari_test_helpers.timeout()
-    async def test_waits_for_all(self, event_loop):
+    async def test_waits_for_all(self):
+        event_loop = asyncio.get_running_loop()
+
         f1 = event_loop.create_future()
         f2 = event_loop.create_future()
         f3 = event_loop.create_future()
@@ -341,7 +357,9 @@ class TestAllOf:
     # If the CI runners are slow, this may be flaky.
     @hikari_test_helpers.retry(3)
     @hikari_test_helpers.timeout()
-    async def test_cancels_all_if_one_errors(self, event_loop):
+    async def test_cancels_all_if_one_errors(self):
+        event_loop = asyncio.get_running_loop()
+
         f1 = event_loop.create_future()
         f2 = event_loop.create_future()
         f3 = event_loop.create_future()
@@ -360,7 +378,9 @@ class TestAllOf:
     # If the CI runners are slow, this may be flaky.
     @hikari_test_helpers.retry(3)
     @hikari_test_helpers.timeout()
-    async def test_cancels_all_if_timeout(self, event_loop):
+    async def test_cancels_all_if_timeout(self):
+        event_loop = asyncio.get_running_loop()
+
         f1 = event_loop.create_future()
         f2 = event_loop.create_future()
         f3 = event_loop.create_future()
@@ -374,7 +394,9 @@ class TestAllOf:
     # If the CI runners are slow, this may be flaky.
     @hikari_test_helpers.retry(3)
     @hikari_test_helpers.timeout()
-    async def test_cancels_all_if_cancelled(self, event_loop):
+    async def test_cancels_all_if_cancelled(self):
+        event_loop = asyncio.get_running_loop()
+
         f1 = event_loop.create_future()
         f2 = event_loop.create_future()
         f3 = event_loop.create_future()
