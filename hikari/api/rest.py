@@ -8277,10 +8277,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        topic: builtins.str
+        topic: str
             The topic for the stage instance.
 
-        send_start_notification: hikari.undefined.UndefinedOr[builtins.bool]
+        send_start_notification: hikari.undefined.UndefinedOr[bool]
             Whether to send a notification to *all* server members that the stage instance has started.
 
         guild_scheduled_event_id: hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.scheduled_events.ScheduledEvent]]
