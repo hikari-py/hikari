@@ -340,6 +340,7 @@ POST_CHANNEL_TYPING: typing.Final[Route] = Route(POST, "/channels/{channel}/typi
 POST_CHANNEL_WEBHOOKS: typing.Final[Route] = Route(POST, "/channels/{channel}/webhooks")
 GET_CHANNEL_WEBHOOKS: typing.Final[Route] = Route(GET, "/channels/{channel}/webhooks")
 
+# Stage instances
 POST_STAGE_INSTANCE: typing.Final[Route] = Route(POST, "/stage-instances")
 GET_STAGE_INSTANCE: typing.Final[Route] = Route(GET, "/stage-instances/{channel}")
 PATCH_STAGE_INSTANCE: typing.Final[Route] = Route(PATCH, "/stage-instances/{channel}")
