@@ -8329,7 +8329,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Other Parameters
         ----------------
-        topic: hikari.undefined.UndefinedOr[builtins.str]
+        topic: hikari.undefined.UndefinedOr[str]
             The topic for the stage instance.
 
         Returns
