@@ -286,11 +286,12 @@ This replaces the default `asyncio` event loop with one that uses `libuv` intern
 and then amend your script to be something similar to the following example to utilise it in your application:
 
 ```py
+import asyncio
 import os
 
 if os.name != "nt":
     import uvloop
-    uvloop.install()
+    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 
 # Your code goes here
