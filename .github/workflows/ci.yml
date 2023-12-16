@@ -53,7 +53,7 @@ jobs:
       - name: Upload coverage
         uses: actions/upload-artifact@v4
         with:
-          name: coverage.${{ matrix.os }}.${{ matrix.python-version }}
+          name: .coverage.${{ matrix.os }}.${{ matrix.python-version }}
           path: .coverage
           retention-days: 1
           if-no-files-found: error
@@ -85,13 +85,12 @@ jobs:
       - name: Extract individual coverage files
         run: |
           cd coverages
-          
-          for coverage_dir in ./coverage.*;
-          do
+
+          for coverage_dir in ./coverage.*; do
               mv "$coverage_dir/.coverage" "../$coverage_dir"
               rmdir "$coverage_dir"
           done
-          
+
           cd ..
 
       - name: Combine coverage
