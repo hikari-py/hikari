@@ -86,7 +86,7 @@ jobs:
         run: |
           cd coverages
 
-          for coverage_dir in ./coverage.*; do
+          for coverage_dir in ./.coverage.*; do
               mv "$coverage_dir/.coverage" "../$coverage_dir"
               rmdir "$coverage_dir"
           done
