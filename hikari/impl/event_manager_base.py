@@ -543,7 +543,10 @@ class EventManagerBase(event_manager_.EventManager):
                 del self._waiters[cls]
                 self._increment_waiter_group_count(cls, -1)
 
-        return asyncio.gather(*tasks) if tasks else aio.completed_future()
+        if tasks:
+            return asyncio.gather(*tasks)
+
+        return aio.completed_future()
 
     def stream(
         self,

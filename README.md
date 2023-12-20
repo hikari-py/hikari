@@ -18,7 +18,7 @@ Gateway APIs.
 Built on good intentions and the hope that it will be extendable and reusable, rather than an obstacle for future
 development.
 
-Python 3.8, 3.9, 3.10 and 3.11 are currently supported.
+Python 3.8, 3.9, 3.10, 3.11 and 3.12 are currently supported.
 
 ## Installation
 
@@ -286,11 +286,12 @@ This replaces the default `asyncio` event loop with one that uses `libuv` intern
 and then amend your script to be something similar to the following example to utilise it in your application:
 
 ```py
+import asyncio
 import os
 
 if os.name != "nt":
     import uvloop
-    uvloop.install()
+    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 
 # Your code goes here

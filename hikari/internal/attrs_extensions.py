@@ -79,10 +79,7 @@ def get_fields_definition(
     init_results: typing.List[typing.Tuple[attrs.Attribute[typing.Any], str]] = []
     non_init_results: typing.List[attrs.Attribute[typing.Any]] = []
 
-    # Mypy has a bug where it will always report
-    # "Argument 1 to "fields" has incompatible type "Type[AttrsInstance]"; expected an attrs class"
-    # even if the type is correct.
-    for field in attrs.fields(cls):  # type: ignore[misc]
+    for field in attrs.fields(cls):
         if field.init:
             key_word = field.name[1:] if field.name.startswith("_") else field.name
             init_results.append((field, key_word))

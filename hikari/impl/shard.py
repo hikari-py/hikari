@@ -219,7 +219,8 @@ class _GatewayTransport:
             close_code = int(message.data)
 
             can_reconnect = close_code < 4000 or close_code in _RECONNECTABLE_CLOSE_CODES
-            raise errors.GatewayServerClosedConnectionError(message.extra, close_code, can_reconnect)
+            # str(message.extra) is used to cast the possible None to a string
+            raise errors.GatewayServerClosedConnectionError(str(message.extra), close_code, can_reconnect)
 
         if message.type == aiohttp.WSMsgType.CLOSING or message.type == aiohttp.WSMsgType.CLOSED:
             # May be caused by the server shutting us down.

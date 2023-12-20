@@ -1,3 +1,26 @@
+## 2.0.0.dev122 (2023-11-18)
+
+### Deprecation
+
+- Deprecate `Permissions.MANAGE_EMOJIS_AND_STICKERS` in favour of `Permissions.MANAGE_GUILD_EXPREASSIONS` ([#1758](https://github.com/hikari-py/hikari/issues/1758))
+
+### Features
+
+- Add Python 3.12 support. ([#1357](https://github.com/hikari-py/hikari/issues/1357))
+- Allow class listeners ([#1661](https://github.com/hikari-py/hikari/issues/1661))
+- Add missing `clear_x` methods to `InteractionMessageBuilder`
+  - This brings the functionality more in-line with other message edit APIs ([#1740](https://github.com/hikari-py/hikari/issues/1740))
+- Add missing permissions ([#1758](https://github.com/hikari-py/hikari/issues/1758))
+
+### Bugfixes
+
+- Fix optional connection "revoked" field KeyError when fetching connections. ([#1720](https://github.com/hikari-py/hikari/issues/1720))
+- Ensure shard connect and disconnect always get sent in pairs and properly waited for ([#1744](https://github.com/hikari-py/hikari/issues/1744))
+- Improve handing of force exiting a bot (double interrupt)
+  - Improve exception message
+  - Reset signal handlers to original ones after no longer capturing signals ([#1745](https://github.com/hikari-py/hikari/issues/1745))
+
+---
 ## 2.0.0.dev121 (2023-09-10)
 
 ### Features

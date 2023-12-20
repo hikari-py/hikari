@@ -166,7 +166,7 @@ async def all_of(*aws: typing.Awaitable[T_co], timeout: typing.Optional[float] =
     typing.Sequence[T_co]
         The results of each awaitable in the order they were invoked in.
     """
-    fs = tuple(map(asyncio.ensure_future, aws))
+    fs: typing.Tuple[asyncio.Future[T_co], ...] = tuple(map(asyncio.ensure_future, aws))
     gatherer = asyncio.gather(*fs)
 
     try:
