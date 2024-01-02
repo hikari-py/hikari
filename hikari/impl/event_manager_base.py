@@ -379,6 +379,10 @@ class EventManagerBase(event_manager_.EventManager):
         return False
 
     def _check_event(self, event_type: typing.Type[typing.Any], nested: int) -> None:
+        # Extract the underlying type from generics
+        if hasattr(event_type, "__origin__"):
+            event_type = event_type.__origin__
+
         try:
             is_event = issubclass(event_type, base_events.Event)
         except TypeError:
