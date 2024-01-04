@@ -4397,6 +4397,7 @@ class TestEntityFactoryImpl:
             "version": 69420,
             "application_id": "76234234",
             "app_permissions": "54123",
+            "entitlements": [],
         }
 
     def test_deserialize_command_interaction(
@@ -4478,6 +4479,7 @@ class TestEntityFactoryImpl:
             "version": 69420,
             "application_id": "76234234",
             "app_permissions": "54123123",
+            "entitlements": [],
         }
 
     def test_deserialize_command_interaction_with_context_menu_field(
@@ -4537,6 +4539,7 @@ class TestEntityFactoryImpl:
             "guild_locale": "en-US",
             "version": 69420,
             "application_id": "76234234",
+            "entitlements": [],
         }
 
     def test_deserialize_autocomplete_interaction(
@@ -4790,6 +4793,7 @@ class TestEntityFactoryImpl:
             "locale": "es-ES",
             "guild_locale": "en-US",
             "app_permissions": "5431234",
+            "entitlements": [],
         }
 
     def test_deserialize_component_interaction(
@@ -4845,6 +4849,7 @@ class TestEntityFactoryImpl:
                 "channel_id": "345626669114982999",
                 "application_id": "290926444748734465",
                 "locale": "es-ES",
+                "entitlements": [],
             }
         )
 
@@ -4877,6 +4882,7 @@ class TestEntityFactoryImpl:
             "application_id": "290926444748734465",
             "locale": "en-US",
             "guild_locale": "es-ES",
+            "entitlements": [],
         }
 
     def test_deserialize_modal_interaction(

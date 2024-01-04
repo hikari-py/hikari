@@ -48,6 +48,7 @@ if typing.TYPE_CHECKING:
     from hikari.events import lifetime_events
     from hikari.events import member_events
     from hikari.events import message_events
+    from hikari.events import monetization_events
     from hikari.events import reaction_events
     from hikari.events import role_events
     from hikari.events import scheduled_events
@@ -1393,4 +1394,62 @@ class EventFactory(abc.ABC):
         -------
         hikari.events.voice_events.VoiceServerUpdateEvent
             The parsed voice server update event object.
+        """
+
+    ##################
+    #  MONETIZATION  #
+    ##################
+
+    @abc.abstractmethod
+    def deserialize_entitlement_create_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> monetization_events.EntitlementCreateEvent:
+        """Parse a raw payload from Discord into a entitlement create event object.
+
+        Parameters
+        ----------
+        shard : hikari.api.shard.GatewayShard
+            The shard that emitted this event.
+        payload : hikari.internal.data_binding.JSONObject
+
+        Returns
+        -------
+        hikari.events.entitlement_events.EntitlementCreateEvent
+            The parsed entitlement create event object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_entitlement_delete_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> monetization_events.EntitlementDeleteEvent:
+        """Parse a raw payload from Discord into a entitlement delete event object.
+
+        Parameters
+        ----------
+        shard : hikari.api.shard.GatewayShard
+            The shard that emitted this event.
+        payload: hikari.internal.data_binding.JSONObject
+
+        Returns
+        -------
+        hikari.events.entitlement_events.EntitlementDeleteEvent
+            The parsed entitlement delete event object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_entitlement_update_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> monetization_events.EntitlementUpdateEvent:
+        """Parse a raw payload from Discord into a entitlement update event object.
+
+        Parameters
+        ----------
+        shard : hikari.api.shard.GatewayShard
+            The shard that emitted this event.
+        payload: hikari.internal.data_binding.JSONObject
+
+        Returns
+        -------
+        hikari.events.entitlement_events.EntitlementUpdateEvent
+            The parsed entitlement update event object.
         """

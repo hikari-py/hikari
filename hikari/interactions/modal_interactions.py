@@ -33,6 +33,7 @@ import attrs
 from hikari import channels
 from hikari import guilds
 from hikari import messages
+from hikari import monetization
 from hikari import permissions
 from hikari import snowflakes
 from hikari import traits
@@ -67,7 +68,9 @@ The following types are valid for this:
 
 @attrs_extensions.with_copy
 @attrs.define(hash=True, kw_only=True, weakref_slot=False)
-class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypesT]):
+class ModalInteraction(
+    base_interactions.MessageResponseMixin[ModalResponseTypesT], base_interactions.PremiumResponseMixin
+):
     """Represents a modal interaction on Discord."""
 
     channel_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
@@ -119,6 +122,9 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
 
     components: typing.Sequence[components_.ModalActionRowComponent] = attrs.field(eq=False, hash=False, repr=True)
     """Components in the modal."""
+
+    entitlements: typing.Sequence[monetization.Entitlement] = attrs.field(eq=False, hash=False, repr=True)
+    """For monetized apps, any entitlements for the invoking user, represents access to SKUs."""
 
     async def fetch_channel(self) -> channels.TextableChannel:
         """Fetch the guild channel this interaction was triggered in.

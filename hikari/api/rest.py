@@ -47,6 +47,7 @@ if typing.TYPE_CHECKING:
     from hikari import iterators
     from hikari import locales
     from hikari import messages as messages_
+    from hikari import monetization
     from hikari import permissions as permissions_
     from hikari import sessions
     from hikari import snowflakes
@@ -7407,7 +7408,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         interaction : hikari.snowflakes.SnowflakeishOr[hikari.interactions.base_interactions.PartialInteraction]
             Object or ID of the interaction this response is for.
         token : str
-            The command interaction's token.
+            The interaction's token.
         response_type : typing.Union[int, hikari.interactions.base_interactions.ResponseType]
             The type of interaction response this is.
 
@@ -7676,7 +7677,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         interaction : hikari.snowflakes.SnowflakeishOr[hikari.interactions.base_interactions.PartialInteraction]
             Object or ID of the interaction this response is for.
         token : str
-            The command interaction's token.
+            The interaction's token.
         choices : typing.Sequence[hikari.api.special_endpoints.AutocompleteChoiceBuilder]
             The autocomplete choices themselves.
 
@@ -7694,6 +7695,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If an internal error occurs on Discord while handling the request.
         """
 
+    @abc.abstractmethod
     async def create_modal_response(
         self,
         interaction: snowflakes.SnowflakeishOr[base_interactions.PartialInteraction],
@@ -7711,7 +7713,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         interaction : hikari.snowflakes.SnowflakeishOr[hikari.interactions.base_interactions.PartialInteraction]
             Object or ID of the interaction this response is for.
         token : str
-            The command interaction's token.
+            The interaction's token.
         title : str
             The title that will show up in the modal.
         custom_id : str
@@ -7728,6 +7730,22 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ------
         ValueError
             If both `component` and `components` are specified or if none are specified.
+        """
+
+    @abc.abstractmethod
+    async def create_premium_required_response(
+        self, interaction: snowflakes.SnowflakeishOr[base_interactions.PartialInteraction], token: str
+    ) -> None:
+        """Create an ephemeral response indicating that the user needs premium features.
+
+        This is only available to monetized applications.
+
+        Parameters
+        ----------
+        interaction : snowflakes.SnowflakeishOr[base_interactions.PartialInteraction]
+            Object or ID of the interaction this response is for.
+        token : str
+            The interaction's token.
         """
 
     @abc.abstractmethod
@@ -8212,6 +8230,172 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the guild or event was not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def fetch_skus(
+        self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication]
+    ) -> typing.Sequence[monetization.SKU]:
+        """Fetch all SKUs for a given application.
+
+        Because of how Discord's SKU and subscription systems work,
+        you will see two SKUs for your premium offering.
+
+        For integration and testing entitlements, you should use the SKU with type:
+        `hikari.monetization.SKUType.SUBSCRIPTION`.
+
+        Parameters
+        ----------
+        application : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+            The application to fetch SKUs for.
+
+        Returns
+        -------
+        typing.Sequence[hikari.monetization.SKU]
+            The SKUs for the application.
+
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def fetch_entitlements(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        /,
+        *,
+        user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
+        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+        before: undefined.UndefinedOr[snowflakes.SearchableSnowflakeish] = undefined.UNDEFINED,
+        after: undefined.UndefinedOr[snowflakes.SearchableSnowflakeish] = undefined.UNDEFINED,
+        limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        exclude_ended: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+    ) -> typing.Sequence[monetization.Entitlement]:
+        """Fetch all entitlements for a given application, active and expired.
+
+        Parameters
+        ----------
+        application : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+            The application to fetch entitlements for.
+
+        Other Parameters
+        ----------------
+        user : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]]
+            The user to look up entitlements for.
+        guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
+            The guild to look up entitlements for.
+        before : hikari.undefined.UndefinedOr[hikari.snowflakes.SearchableSnowflakeish]
+            Retrieve entitlements before this time or ID.
+        after : hikari.undefined.UndefinedOr[hikari.snowflakes.SearchableSnowflakeish]
+            Retrieve entitlements after this time or ID.
+        limit : hikari.undefined.UndefinedOr[int]
+            Number of entitlements to return, 1-100, default 100
+        exclude_ended : hikari.undefined.UndefinedOr[bool]
+            Whether or not ended entitlements should be omitted
+
+        Returns
+        -------
+        typing.Sequence[hikari.entitlements.Entitlement]
+            The entitlements for the application that match the criteria.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild or user was not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def create_test_entitlement(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        /,
+        *,
+        sku: snowflakes.SnowflakeishOr[monetization.SKU],
+        owner_id: snowflakes.Snowflakeish,
+        owner_type: monetization.EntitlementOwnerType,
+    ) -> monetization.Entitlement:
+        """Create a test entitlement for a given SKU.
+
+        .. note::
+            The created entitlement is only partial and the `subscription_id`,
+            `starts_at` and `ends_at` fields will be `None`.
+
+        Parameters
+        ----------
+        application : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+            The application to create the entitlement for.
+        sku_id : hikari.snowflakes.Snowflakeish
+            The SKU to create a test entitlement for.
+        owner_id : hikari.snowflakes.Snowflakeish
+            The ID of the owner of the entitlement.
+        owner_type : hikari.entitlements.EntitlementOwnerType
+            The type of the owner of the entitlement.
+
+        Returns
+        -------
+        hikari.entitlements.Entitlement
+            The created partial entitlement.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the SKU or owner was not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def delete_test_entitlement(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        entitlement: snowflakes.SnowflakeishOr[monetization.Entitlement],
+        /,
+    ) -> None:
+        """Delete a test entitlement.
+
+        Parameters
+        ----------
+        application : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+            The application to delete the entitlement from.
+        entitlement : hikari.snowflakes.SnowflakeishOr[hikari.entitlements.Entitlement]
+            The entitlement to delete.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the entitlement was not found.
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.

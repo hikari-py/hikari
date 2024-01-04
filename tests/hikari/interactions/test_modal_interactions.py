@@ -62,6 +62,7 @@ class TestModalInteraction:
                     )
                 ]
             ),
+            entitlements=[],
         )
 
     def test_build_response(self, mock_modal_interaction, mock_app):

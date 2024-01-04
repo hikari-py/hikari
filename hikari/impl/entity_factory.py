@@ -46,6 +46,7 @@ from hikari import guilds as guild_models
 from hikari import invites as invite_models
 from hikari import locales
 from hikari import messages as message_models
+from hikari import monetization as monetization_models
 from hikari import permissions as permission_models
 from hikari import presences as presence_models
 from hikari import scheduled_events as scheduled_events_models
@@ -2572,6 +2573,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             resolved=resolved,
             target_id=target_id,
             app_permissions=permission_models.Permissions(app_perms) if app_perms else None,
+            entitlements=[self.deserialize_entitlement(entitlement) for entitlement in payload.get("entitlements", [])],
         )
 
     def deserialize_autocomplete_interaction(
@@ -2613,6 +2615,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             options=options,
             locale=locales.Locale(payload["locale"]),
             guild_locale=locales.Locale(payload["guild_locale"]) if "guild_locale" in payload else None,
+            entitlements=[self.deserialize_entitlement(entitlement) for entitlement in payload.get("entitlements", [])],
         )
 
     def deserialize_modal_interaction(self, payload: data_binding.JSONObject) -> modal_interactions.ModalInteraction:
@@ -2655,6 +2658,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             custom_id=data_payload["custom_id"],
             components=self._deserialize_components(data_payload["components"], self._modal_component_type_mapping),
             message=message,
+            entitlements=[self.deserialize_entitlement(entitlement) for entitlement in payload.get("entitlements", [])],
         )
 
     def deserialize_interaction(self, payload: data_binding.JSONObject) -> base_interactions.PartialInteraction:
@@ -2747,6 +2751,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             locale=locales.Locale(payload["locale"]),
             guild_locale=locales.Locale(payload["guild_locale"]) if "guild_locale" in payload else None,
             app_permissions=permission_models.Permissions(app_perms) if app_perms else None,
+            entitlements=[self.deserialize_entitlement(entitlement) for entitlement in payload.get("entitlements", [])],
         )
 
     ##################
@@ -3705,3 +3710,33 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         _LOGGER.debug(f"Unrecognised webhook type {webhook_type}")
         raise errors.UnrecognisedEntityError(f"Unrecognised webhook type {webhook_type}")
+
+    ##################
+    #  MONETIZATION  #
+    ##################
+
+    def deserialize_entitlement(self, payload: data_binding.JSONObject) -> monetization_models.Entitlement:
+        return monetization_models.Entitlement(
+            id=snowflakes.Snowflake(payload["id"]),
+            type=monetization_models.EntitlementType(payload["type"]),
+            sku_id=snowflakes.Snowflake(payload["sku_id"]),
+            application_id=snowflakes.Snowflake(payload["application_id"]),
+            guild_id=snowflakes.Snowflake(payload["guild_id"]),
+            user_id=snowflakes.Snowflake(payload["user_id"]),
+            is_deleted=payload["deleted"],
+            starts_at=time.iso8601_datetime_string_to_datetime(payload["starts_at"])
+            if "starts_at" in payload
+            else None,
+            ends_at=time.iso8601_datetime_string_to_datetime(payload["ends_at"]) if "ends_at" in payload else None,
+            subscription_id=snowflakes.Snowflake(payload["subscription_id"]) if "subscription_id" in payload else None,
+        )
+
+    def deserialize_sku(self, payload: data_binding.JSONObject) -> monetization_models.SKU:
+        return monetization_models.SKU(
+            id=snowflakes.Snowflake(payload["id"]),
+            type=monetization_models.SKUType(payload["type"]),
+            application_id=snowflakes.Snowflake(payload["application_id"]),
+            name=payload["name"],
+            slug=payload["slug"],
+            flags=monetization_models.SKUFlags(payload["flags"]),
+        )

@@ -59,6 +59,7 @@ from hikari import guilds
 from hikari import iterators
 from hikari import locales
 from hikari import messages as messages_
+from hikari import monetization
 from hikari import permissions as permissions_
 from hikari import scheduled_events
 from hikari import snowflakes
@@ -4141,6 +4142,17 @@ class RESTClientImpl(rest_api.RESTClient):
     def build_modal_action_row(self) -> special_endpoints.ModalActionRowBuilder:
         return special_endpoints_impl.ModalActionRowBuilder()
 
+    async def create_premium_required_response(
+        self, interaction: snowflakes.SnowflakeishOr[base_interactions.PartialInteraction], token: str
+    ) -> None:
+        route = routes.POST_INTERACTION_RESPONSE.compile(interaction=interaction, token=token)
+
+        body = data_binding.JSONObjectBuilder()
+        body.put("type", base_interactions.ResponseType.PREMIUM_REQUIRED)
+        body.put("data", {})
+
+        await self._request(route, json=body, auth=None)
+
     async def fetch_scheduled_event(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -4376,4 +4388,89 @@ class RESTClientImpl(rest_api.RESTClient):
 
         return special_endpoints_impl.ScheduledEventUserIterator(
             self._entity_factory, self._request, newest_first, str(start_at), guild, event
+        )
+
+    async def fetch_skus(
+        self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication]
+    ) -> typing.Sequence[monetization.SKU]:
+        response = await self._request(routes.GET_APPLICATION_SKUS.compile(application=str(int(application))))
+        assert isinstance(response, list)
+
+        return [self._entity_factory.deserialize_sku(payload) for payload in response]
+
+    async def fetch_entitlements(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        /,
+        *,
+        user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
+        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+        before: undefined.UndefinedOr[snowflakes.SearchableSnowflakeish] = undefined.UNDEFINED,
+        after: undefined.UndefinedOr[snowflakes.SearchableSnowflakeish] = undefined.UNDEFINED,
+        limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        exclude_ended: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+    ) -> typing.Sequence[monetization.Entitlement]:
+        query = data_binding.StringMapBuilder()
+        if user is not undefined.UNDEFINED:
+            query.put("user_id", str(int(user)))
+
+        if guild is not undefined.UNDEFINED:
+            query.put("guild_id", str(int(guild)))
+
+        if before is not undefined.UNDEFINED:
+            if isinstance(before, datetime.datetime):
+                query.put("before", str(snowflakes.Snowflake.from_datetime(before)))
+            else:
+                query.put("before", str(int(before)))
+
+        if after is not undefined.UNDEFINED:
+            if isinstance(after, datetime.datetime):
+                query.put("after", str(snowflakes.Snowflake.from_datetime(after)))
+            else:
+                query.put("after", str(int(after)))
+
+        if limit is not undefined.UNDEFINED:
+            query.put("limit", limit)
+
+        if exclude_ended is not undefined.UNDEFINED:
+            query.put("exclude_ended", exclude_ended)
+
+        response = await self._request(
+            routes.GET_APPLICATION_ENTITLEMENTS.compile(application=str(int(application))), query=query
+        )
+        assert isinstance(response, list)
+
+        return [self._entity_factory.deserialize_entitlement(payload) for payload in response]
+
+    async def create_test_entitlement(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        /,
+        *,
+        sku: snowflakes.SnowflakeishOr[monetization.SKU],
+        owner_id: snowflakes.Snowflakeish,
+        owner_type: monetization.EntitlementOwnerType,
+    ) -> monetization.Entitlement:
+        body = data_binding.JSONObjectBuilder()
+        body.put("sku_id", str(int(sku)))
+        body.put("owner_id", str(int(owner_id)))
+        body.put("owner_type", int(owner_type))
+
+        response = await self._request(
+            routes.POST_APPLICATION_TEST_ENTITLEMENT.compile(application=str(int(application))), json=body
+        )
+
+        assert isinstance(response, dict)
+
+        return self._entity_factory.deserialize_entitlement(response)
+
+    async def delete_test_entitlement(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        entitlement: snowflakes.SnowflakeishOr[monetization.Entitlement],
+    ) -> None:
+        await self._request(
+            routes.DELETE_APPLICATION_TEST_ENTITLEMENT.compile(
+                application=str(int(application)), entitlement=str(int(entitlement))
+            )
         )

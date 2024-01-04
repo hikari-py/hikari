@@ -43,6 +43,7 @@ from hikari.events import guild_events
 from hikari.events import interaction_events
 from hikari.events import member_events
 from hikari.events import message_events
+from hikari.events import monetization_events
 from hikari.events import reaction_events
 from hikari.events import role_events
 from hikari.events import scheduled_events
@@ -872,3 +873,18 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
     ) -> None:
         """See https://discord.com/developers/docs/topics/gateway-events#guild-audit-log-entry-create for more info."""
         await self.dispatch(self._event_factory.deserialize_audit_log_entry_create_event(shard, payload))
+
+    @event_manager_base.filtered(monetization_events.EntitlementCreateEvent)
+    async def on_entitlement_create(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
+        """See https://discord.com/developers/docs/topics/gateway-events#entitlement-create for more info."""
+        await self.dispatch(self._event_factory.deserialize_entitlement_create_event(shard, payload))
+
+    @event_manager_base.filtered(monetization_events.EntitlementDeleteEvent)
+    async def on_entitlement_delete(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
+        """See https://discord.com/developers/docs/topics/gateway-events#entitlement-delete for more info."""
+        await self.dispatch(self._event_factory.deserialize_entitlement_delete_event(shard, payload))
+
+    @event_manager_base.filtered(monetization_events.EntitlementUpdateEvent)
+    async def on_entitlement_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
+        """See https://discord.com/developers/docs/topics/gateway-events#entitlement-update for more info."""
+        await self.dispatch(self._event_factory.deserialize_entitlement_update_event(shard, payload))
