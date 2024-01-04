@@ -22,7 +22,7 @@
 import mock
 import pytest
 
-from hikari import channels
+from hikari import channels, monetization
 from hikari import components
 from hikari import snowflakes
 from hikari import traits
@@ -62,7 +62,18 @@ class TestModalInteraction:
                     )
                 ]
             ),
-            entitlements=[],
+            entitlements=[monetization.Entitlement(
+                id=snowflakes.Snowflake(123123), 
+                sku_id=snowflakes.Snowflake(123123),
+                application_id=snowflakes.Snowflake(123123),
+                guild_id=snowflakes.Snowflake(123123),
+                user_id=snowflakes.Snowflake(123123),
+                type=monetization.EntitlementType.APPLICATION_SUBSCRIPTION,
+                starts_at=None,
+                ends_at=None,
+                is_deleted=False,
+                subscription_id=None,
+            )],
         )
 
     def test_build_response(self, mock_modal_interaction, mock_app):
