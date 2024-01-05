@@ -46,6 +46,11 @@ __all__: typing.Sequence[str] = (
     "InteractionModalBuilder",
     "MessageActionRowBuilder",
     "ModalActionRowBuilder",
+    "SelectDefaultBuilder",
+    "AutoPopulatedSelectMenuBuilder",
+    "UserSelectMenuBuilder",
+    "RoleSelectMenuBuilder",
+    "MentionableSelectMenuBuilder",
 )
 
 import abc
@@ -1586,6 +1591,62 @@ class SelectOptionBuilder(abc.ABC):
         """
 
 
+class SelectDefaultBuilder(abc.ABC, typing.Generic[components_.DefaultT]):
+    """Represents a default value for an auto-populated select."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def id(self) -> snowflakes.Snowflake:
+        """The Snowflake ID of the default."""
+
+    @property
+    @abc.abstractmethod
+    def type(self) -> components_.DefaultT:
+        """The type of the default."""
+
+    @abc.abstractmethod
+    def set_id(self, id_: snowflakes.Snowflakeish, /) -> Self:
+        """Set the ID of the default.
+
+        Parameters
+        ----------
+        id_ : hikari.snowflakes.Snowflakeish
+            The ID to set.
+
+        Returns
+        -------
+        SelectDefaultBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_type(self, type_: components_.DefaultT, /) -> Self:
+        """Set the type of the default.
+
+        Parameters
+        ----------
+        type_ : hikari.interactions.commands.SelectDefaultType
+            The type to set.
+
+        Returns
+        -------
+        SelectDefaultBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        """Build a JSON object from this builder.
+
+        Returns
+        -------
+        typing.MutableMapping[str, typing.Any]
+            The built json object representation of this builder.
+        """
+
+
 class SelectMenuBuilder(ComponentBuilder, abc.ABC):
     """Builder class for a select menu."""
 
@@ -1763,7 +1824,37 @@ class TextSelectMenuBuilder(SelectMenuBuilder, abc.ABC, typing.Generic[_ParentT]
         """
 
 
-class ChannelSelectMenuBuilder(SelectMenuBuilder, abc.ABC):
+class AutoPopulatedSelectMenuBuilder(SelectMenuBuilder, abc.ABC, typing.Generic[components_.DefaultT]):
+    """Builder class for an auto-populated select menu."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def default_values(self) -> undefined.UndefinedOr[typing.Sequence[SelectDefaultBuilder[components_.DefaultT]]]:
+        """Sequence of the default values set for this select menu."""
+
+    @abc.abstractmethod
+    def add_default_value(self, id: snowflakes.Snowflakeish, *, type: components_.DefaultT) -> Self:
+        """Add a default value to this menu.
+
+        Parameters
+        ----------
+        value : _OptionT
+            The ID of the option to add as a default value.
+        type : components_.DefaultT
+            The type of default value to add.
+
+        Returns
+        -------
+        AutoPopulatedSelectMenuBuilder
+            The select menu builder to enable call chaining.
+        """
+
+
+class ChannelSelectMenuBuilder(
+    AutoPopulatedSelectMenuBuilder[typing.Literal[components_.SelectDefaultType.CHANNEL]], abc.ABC
+):
     """Builder class for a channel select menu."""
 
     __slots__: typing.Sequence[str] = ()
@@ -1787,6 +1878,35 @@ class ChannelSelectMenuBuilder(SelectMenuBuilder, abc.ABC):
         SelectMenuBuilder
             The builder object to enable chained calls.
         """
+
+
+class RoleSelectMenuBuilder(
+    AutoPopulatedSelectMenuBuilder[typing.Literal[components_.SelectDefaultType.ROLE]], abc.ABC
+):
+    """Builder class for a role select menu."""
+
+    __slots__: typing.Sequence[str] = ()
+
+
+class UserSelectMenuBuilder(
+    AutoPopulatedSelectMenuBuilder[typing.Literal[components_.SelectDefaultType.USER]], abc.ABC
+):
+    """Builder class for a user select menu."""
+
+    __slots__: typing.Sequence[str] = ()
+
+
+class MentionableSelectMenuBuilder(
+    AutoPopulatedSelectMenuBuilder[
+        typing.Union[
+            typing.Literal[components_.SelectDefaultType.ROLE], typing.Literal[components_.SelectDefaultType.USER]
+        ]
+    ],
+    abc.ABC,
+):
+    """Builder class for a mentionable select menu."""
+
+    __slots__: typing.Sequence[str] = ()
 
 
 class TextInputBuilder(ComponentBuilder, abc.ABC):
@@ -2068,6 +2188,7 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
             The action row builder to enable chained calls.
         """
 
+    # TODO: Remove in 2.0.0.dev126
     @abc.abstractmethod
     def add_select_menu(
         self,
@@ -2085,6 +2206,10 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
         For channel select menus and text select menus see
         `MessageActionRowBuilder.add_channel_menu` and
         `MessageActionRowBuilder.add_text_menu`.
+
+        .. deprecated:: 2.0.0.dev123
+            Use the `add_*_menu()` method specific to the given select type instead.
+            This method will be removed in 2.0.0.dev126.
 
         Parameters
         ----------
@@ -2114,6 +2239,131 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
+    def add_role_menu(
+        self,
+        custom_id: str,
+        /,
+        *,
+        placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        min_values: int = 0,
+        max_values: int = 1,
+        is_disabled: bool = False,
+        default_values: undefined.UndefinedOr[
+            typing.Sequence[SelectDefaultBuilder[typing.Literal[components_.SelectDefaultType.ROLE]]]
+        ] = undefined.UNDEFINED,
+    ) -> Self:
+        """Add a role select menu component to this action row builder.
+
+        Parameters
+        ----------
+        custom_id : str
+            A developer-defined custom identifier used to identify which menu
+            triggered component interactions.
+        placeholder : hikari.undefined.UndefinedOr[str]
+            Placeholder text to show when no entries have been selected.
+        min_values : int
+            The minimum amount of entries which need to be selected.
+        max_values : int
+            The maximum amount of entries which can be selected.
+        is_disabled : bool
+            Whether this select menu should be marked as disabled.
+        default_values :
+        hikari.undefined.UndefinedOr[hikari.api.SelectDefaultBuilder[typing.Literal[hikari.components.SelectDefaultType.ROLE]]]
+            The default values for this menu.
+
+        Returns
+        -------
+        Self
+            The action row builder to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def add_user_menu(
+        self,
+        custom_id: str,
+        /,
+        *,
+        placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        min_values: int = 0,
+        max_values: int = 1,
+        is_disabled: bool = False,
+        default_values: undefined.UndefinedOr[
+            typing.Sequence[SelectDefaultBuilder[typing.Literal[components_.SelectDefaultType.USER]]]
+        ] = undefined.UNDEFINED,
+    ) -> Self:
+        """Add a user select menu component to this action row builder.
+
+        Parameters
+        ----------
+        custom_id : str
+            A developer-defined custom identifier used to identify which menu
+            triggered component interactions.
+        placeholder : hikari.undefined.UndefinedOr[str]
+            Placeholder text to show when no entries have been selected.
+        min_values : int
+            The minimum amount of entries which need to be selected.
+        max_values : int
+            The maximum amount of entries which can be selected.
+        is_disabled : bool
+            Whether this select menu should be marked as disabled.
+        default_values :
+        hikari.undefined.UndefinedOr[hikari.api.SelectDefaultBuilder[typing.Literal[hikari.components.SelectDefaultType.USER]]]
+            The default values for this menu.
+
+        Returns
+        -------
+        Self
+            The action row builder to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def add_mentionable_menu(
+        self,
+        custom_id: str,
+        /,
+        *,
+        placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        min_values: int = 0,
+        max_values: int = 1,
+        is_disabled: bool = False,
+        default_values: undefined.UndefinedOr[
+            typing.Sequence[
+                SelectDefaultBuilder[
+                    typing.Literal[components_.SelectDefaultType.USER, components_.SelectDefaultType.ROLE],
+                ]
+            ]
+        ] = undefined.UNDEFINED,
+    ) -> Self:
+        """Add a mentionable select menu component to this action row builder.
+
+        Parameters
+        ----------
+        custom_id : str
+            A developer-defined custom identifier used to identify which menu
+            triggered component interactions.
+        placeholder : hikari.undefined.UndefinedOr[str]
+            Placeholder text to show when no entries have been selected.
+        min_values : int
+            The minimum amount of entries which need to be selected.
+        max_values : int
+            The maximum amount of entries which can be selected.
+        is_disabled : bool
+            Whether this select menu should be marked as disabled.
+        default_values :
+        hikari.undefined.UndefinedOr[
+            hikari.api.SelectDefaultBuilder[
+                typing.Literal[hikari.components.SelectDefaultType.USER, hikari.components.SelectDefaultType.ROLE]
+            ]
+        ]
+            The default values for this menu.
+
+        Returns
+        -------
+        Self
+            The action row builder to enable chained calls.
+        """
+
+    @abc.abstractmethod
     def add_channel_menu(
         self,
         custom_id: str,
@@ -2124,6 +2374,9 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
         min_values: int = 0,
         max_values: int = 1,
         is_disabled: bool = False,
+        default_values: undefined.UndefinedOr[
+            typing.Sequence[SelectDefaultBuilder[typing.Literal[components_.SelectDefaultType.CHANNEL],]]
+        ] = undefined.UNDEFINED,
     ) -> Self:
         """Add a channel select menu component to this action row builder.
 
@@ -2145,6 +2398,9 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
             The maximum amount of entries which can be selected.
         is_disabled : bool
             Whether this select menu should be marked as disabled.
+        default_values :
+        hikari.undefined.UndefinedOr[hikari.api.SelectDefaultBuilder[typing.Literal[hikari.components.SelectDefaultType.CHANNEL]]]
+            The default values for this menu.
 
         Returns
         -------

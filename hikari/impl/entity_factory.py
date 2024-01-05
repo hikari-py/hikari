@@ -509,9 +509,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         ] = {
             component_models.ComponentType.BUTTON: self._deserialize_button,
             component_models.ComponentType.TEXT_SELECT_MENU: self._deserialize_text_select_menu,
-            component_models.ComponentType.USER_SELECT_MENU: self._deserialize_select_menu,
-            component_models.ComponentType.ROLE_SELECT_MENU: self._deserialize_select_menu,
-            component_models.ComponentType.MENTIONABLE_SELECT_MENU: self._deserialize_select_menu,
+            component_models.ComponentType.USER_SELECT_MENU: self._deserialize_user_select_menu,
+            component_models.ComponentType.ROLE_SELECT_MENU: self._deserialize_role_select_menu,
+            component_models.ComponentType.MENTIONABLE_SELECT_MENU: self._deserialize_mentionable_select_menu,
             component_models.ComponentType.CHANNEL_SELECT_MENU: self._deserialize_channel_select_menu,
         }
         self._modal_component_type_mapping: typing.Dict[
@@ -2871,14 +2871,81 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             is_disabled=payload.get("disabled", False),
         )
 
-    def _deserialize_select_menu(self, payload: data_binding.JSONObject) -> component_models.SelectMenuComponent:
-        return component_models.SelectMenuComponent(
+    def _deserialize_select_default_value(
+        self, payload: data_binding.JSONObject
+    ) -> component_models.SelectDefaultValue[typing.Any]:
+        return component_models.SelectDefaultValue(
+            id=snowflakes.Snowflake(payload["id"]), type=component_models.ComponentType(payload["type"])
+        )
+
+    def _deserialize_user_select_menu(
+        self, payload: data_binding.JSONObject
+    ) -> component_models.UserSelectMenuComponent:
+        return component_models.UserSelectMenuComponent(
             type=component_models.ComponentType(payload["type"]),
             custom_id=payload["custom_id"],
-            placeholder=payload.get("placeholder"),
+            placeholder=payload.get("placeholder"),  # type: ignore[arg-type]
             min_values=payload.get("min_values", 1),
             max_values=payload.get("max_values", 1),
             is_disabled=payload.get("disabled", False),
+            default_values=[
+                self._deserialize_select_default_value(default_value)
+                for default_value in payload.get("default_values", [])
+            ],
+        )
+
+    def _deserialize_role_select_menu(
+        self, payload: data_binding.JSONObject
+    ) -> component_models.RoleSelectMenuComponent:
+        return component_models.RoleSelectMenuComponent(
+            type=component_models.ComponentType(payload["type"]),
+            custom_id=payload["custom_id"],
+            placeholder=payload.get("placeholder"),  # type: ignore[arg-type]
+            min_values=payload.get("min_values", 1),
+            max_values=payload.get("max_values", 1),
+            is_disabled=payload.get("disabled", False),
+            default_values=[
+                self._deserialize_select_default_value(default_value)
+                for default_value in payload.get("default_values", [])
+            ],
+        )
+
+    def _deserialize_mentionable_select_menu(
+        self, payload: data_binding.JSONObject
+    ) -> component_models.MentionableSelectMenuComponent:
+        return component_models.MentionableSelectMenuComponent(
+            type=component_models.ComponentType(payload["type"]),
+            custom_id=payload["custom_id"],
+            placeholder=payload.get("placeholder"),  # type: ignore[arg-type]
+            min_values=payload.get("min_values", 1),
+            max_values=payload.get("max_values", 1),
+            is_disabled=payload.get("disabled", False),
+            default_values=[
+                self._deserialize_select_default_value(default_value)
+                for default_value in payload.get("default_values", [])
+            ],
+        )
+
+    def _deserialize_channel_select_menu(
+        self, payload: data_binding.JSONObject
+    ) -> component_models.ChannelSelectMenuComponent:
+        channel_types: typing.List[typing.Union[int, channel_models.ChannelType]] = []
+        if "channel_types" in payload:
+            for channel_type in payload["channel_types"]:
+                channel_types.append(channel_models.ChannelType(channel_type))
+
+        return component_models.ChannelSelectMenuComponent(
+            type=component_models.ComponentType(payload["type"]),
+            custom_id=payload["custom_id"],
+            channel_types=channel_types,
+            placeholder=payload.get("placeholder"),  # type: ignore[arg-type]
+            min_values=payload.get("min_values", 1),
+            max_values=payload.get("max_values", 1),
+            is_disabled=payload.get("disabled", False),
+            default_values=[
+                self._deserialize_select_default_value(default_value)
+                for default_value in payload.get("default_values", [])
+            ],
         )
 
     def _deserialize_text_select_menu(
@@ -2905,24 +2972,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             type=component_models.ComponentType(payload["type"]),
             custom_id=payload["custom_id"],
             options=options,
-            placeholder=payload.get("placeholder"),
-            min_values=payload.get("min_values", 1),
-            max_values=payload.get("max_values", 1),
-            is_disabled=payload.get("disabled", False),
-        )
-
-    def _deserialize_channel_select_menu(
-        self, payload: data_binding.JSONObject
-    ) -> component_models.ChannelSelectMenuComponent:
-        channel_types: typing.List[typing.Union[int, channel_models.ChannelType]] = []
-        if "channel_types" in payload:
-            for channel_type in payload["channel_types"]:
-                channel_types.append(channel_models.ChannelType(channel_type))
-
-        return component_models.ChannelSelectMenuComponent(
-            type=component_models.ComponentType(payload["type"]),
-            custom_id=payload["custom_id"],
-            channel_types=channel_types,
             placeholder=payload.get("placeholder"),
             min_values=payload.get("min_values", 1),
             max_values=payload.get("max_values", 1),

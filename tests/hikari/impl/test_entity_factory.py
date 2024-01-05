@@ -5467,9 +5467,9 @@ class TestEntityFactoryImpl:
         [
             (2, "_deserialize_button", "_message_component_type_mapping"),
             (3, "_deserialize_text_select_menu", "_message_component_type_mapping"),
-            (5, "_deserialize_select_menu", "_message_component_type_mapping"),
-            (6, "_deserialize_select_menu", "_message_component_type_mapping"),
-            (7, "_deserialize_select_menu", "_message_component_type_mapping"),
+            (5, "_deserialize_user_select_menu", "_message_component_type_mapping"),
+            (6, "_deserialize_role_select_menu", "_message_component_type_mapping"),
+            (7, "_deserialize_mentionable_select_menu", "_message_component_type_mapping"),
             (8, "_deserialize_channel_select_menu", "_message_component_type_mapping"),
             (4, "_deserialize_text_input", "_modal_component_type_mapping"),
         ],

@@ -41,11 +41,16 @@ __all__: typing.Sequence[str] = (
     "SelectMenuBuilder",
     "SelectOptionBuilder",
     "ChannelSelectMenuBuilder",
+    "UserSelectMenuBuilder",
+    "RoleSelectMenuBuilder",
+    "MentionableSelectMenuBuilder",
     "TextSelectMenuBuilder",
     "TextInputBuilder",
     "InteractionModalBuilder",
     "MessageActionRowBuilder",
     "ModalActionRowBuilder",
+    "SelectDefaultBuilder",
+    "AutoPopulatedSelectMenuBuilder",
 )
 
 import asyncio
@@ -68,6 +73,7 @@ from hikari.api import special_endpoints
 from hikari.interactions import base_interactions
 from hikari.internal import attrs_extensions
 from hikari.internal import data_binding
+from hikari.internal import deprecation
 from hikari.internal import mentions
 from hikari.internal import routes
 from hikari.internal import time
@@ -1661,6 +1667,41 @@ class SelectOptionBuilder(special_endpoints.SelectOptionBuilder):
 
 @attrs_extensions.with_copy
 @attrs.define(kw_only=True, weakref_slot=False)
+class SelectDefaultBuilder(special_endpoints.SelectDefaultBuilder[component_models.DefaultT]):
+    """Builder class for select defaults."""
+
+    _id: snowflakes.Snowflake = attrs.field(alias="id")
+    _type: component_models.DefaultT = attrs.field(alias="type")
+
+    def __init__(self, id: snowflakes.Snowflakeish, *, type: component_models.DefaultT) -> None:
+        self._id = snowflakes.Snowflake(id)
+        self._type = type
+
+    @property
+    def id(self) -> snowflakes.Snowflake:
+        return self._id
+
+    @property
+    def type(self) -> component_models.DefaultT:
+        return self._type
+
+    def set_id(self, id: snowflakes.Snowflakeish, /) -> Self:
+        self._id = snowflakes.Snowflake(id)
+        return self
+
+    def set_type(self, type: component_models.DefaultT, /) -> Self:
+        self._type = type
+        return self
+
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        data = data_binding.JSONObjectBuilder()
+        data["id"] = self._id
+        data["type"] = self._type.value
+        return data
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 class SelectMenuBuilder(special_endpoints.SelectMenuBuilder):
     """Builder class for select menus."""
 
@@ -1827,7 +1868,52 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
 
 @attrs_extensions.with_copy
 @attrs.define(kw_only=True, weakref_slot=False)
-class ChannelSelectMenuBuilder(SelectMenuBuilder, special_endpoints.ChannelSelectMenuBuilder):
+class AutoPopulatedSelectMenuBuilder(
+    SelectMenuBuilder, special_endpoints.AutoPopulatedSelectMenuBuilder[component_models.DefaultT]
+):
+    """Builder class for auto-populated select menus."""
+
+    _default_values: undefined.UndefinedOr[
+        typing.List[special_endpoints.SelectDefaultBuilder[component_models.DefaultT]]
+    ] = attrs.field(default=undefined.UNDEFINED, alias="default_values")
+
+    @property
+    def default_values(
+        self,
+    ) -> undefined.UndefinedOr[typing.Sequence[special_endpoints.SelectDefaultBuilder[component_models.DefaultT]]]:
+        return self._default_values
+
+    def add_raw_default_value(
+        self, value: special_endpoints.SelectDefaultBuilder[component_models.DefaultT], /
+    ) -> Self:
+        if self._default_values is undefined.UNDEFINED:
+            self._default_values = []
+
+        self._default_values.append(value)
+        return self
+
+    def add_default_value(self, id: snowflakes.Snowflakeish, *, type: component_models.DefaultT) -> Self:
+        if self._default_values is undefined.UNDEFINED:
+            self._default_values = []
+
+        self._default_values.append(SelectDefaultBuilder(id=snowflakes.Snowflake(id), type=type))
+        return self
+
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        data = super().build()
+
+        if self._default_values is not undefined.UNDEFINED:
+            data["default_values"] = [value.build() for value in self._default_values]
+
+        return data
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class ChannelSelectMenuBuilder(
+    AutoPopulatedSelectMenuBuilder[typing.Literal[component_models.SelectDefaultType.CHANNEL]],
+    special_endpoints.ChannelSelectMenuBuilder,
+):
     """Builder class for channel select menus."""
 
     _channel_types: typing.Sequence[channels.ChannelType] = attrs.field(alias="channel_types", factory=list)
@@ -1848,6 +1934,71 @@ class ChannelSelectMenuBuilder(SelectMenuBuilder, special_endpoints.ChannelSelec
 
         data["channel_types"] = self._channel_types
         return data
+
+    def add_default_value(
+        self,
+        id: snowflakes.Snowflakeish,
+        *,
+        type: typing.Literal[component_models.SelectDefaultType.CHANNEL] = component_models.SelectDefaultType.CHANNEL,
+    ) -> Self:
+        return super().add_default_value(id=id, type=type)
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class UserSelectMenuBuilder(
+    AutoPopulatedSelectMenuBuilder[typing.Literal[component_models.SelectDefaultType.USER]],
+    special_endpoints.UserSelectMenuBuilder,
+):
+    """Builder class for user select menus."""
+
+    _type: typing.Literal[component_models.ComponentType.USER_SELECT_MENU] = attrs.field(
+        default=component_models.ComponentType.USER_SELECT_MENU, init=False
+    )
+
+    def add_default_value(
+        self,
+        id: snowflakes.Snowflakeish,
+        *,
+        type: typing.Literal[component_models.SelectDefaultType.USER] = component_models.SelectDefaultType.USER,
+    ) -> Self:
+        return super().add_default_value(id=id, type=type)
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class RoleSelectMenuBuilder(
+    AutoPopulatedSelectMenuBuilder[typing.Literal[component_models.SelectDefaultType.ROLE]],
+    special_endpoints.RoleSelectMenuBuilder,
+):
+    """Builder class for role select menus."""
+
+    _type: typing.Literal[component_models.ComponentType.ROLE_SELECT_MENU] = attrs.field(
+        default=component_models.ComponentType.ROLE_SELECT_MENU, init=False
+    )
+
+    def add_default_value(
+        self,
+        id: snowflakes.Snowflakeish,
+        *,
+        type: typing.Literal[component_models.SelectDefaultType.ROLE] = component_models.SelectDefaultType.ROLE,
+    ) -> Self:
+        return super().add_default_value(id=id, type=type)
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class MentionableSelectMenuBuilder(
+    AutoPopulatedSelectMenuBuilder[
+        typing.Literal[component_models.SelectDefaultType.ROLE, component_models.SelectDefaultType.USER]
+    ],
+    special_endpoints.MentionableSelectMenuBuilder,
+):
+    """Builder class for mentionable select menus."""
+
+    _type: typing.Literal[component_models.ComponentType.MENTIONABLE_SELECT_MENU] = attrs.field(
+        default=component_models.ComponentType.MENTIONABLE_SELECT_MENU, init=False
+    )
 
 
 @attrs_extensions.with_copy
@@ -2017,6 +2168,11 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
         max_values: int = 1,
         is_disabled: bool = False,
     ) -> Self:
+        deprecation.warn_deprecated(
+            f"{type(self).__name__}.add_select_menu()",
+            removal_version="2.0.0.dev126",
+            additional_info="Use the non-generic add_*_menu methods instead.",
+        )
         return self.add_component(
             SelectMenuBuilder(
                 type=type_,
@@ -2025,6 +2181,102 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
                 min_values=min_values,
                 max_values=max_values,
                 is_disabled=is_disabled,
+            )
+        )
+
+    def add_user_menu(
+        self,
+        custom_id: str,
+        /,
+        *,
+        placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        min_values: int = 0,
+        max_values: int = 1,
+        is_disabled: bool = False,
+        default_values: undefined.UndefinedOr[
+            typing.Sequence[
+                special_endpoints.SelectDefaultBuilder[typing.Literal[component_models.SelectDefaultType.USER]]
+            ]
+        ] = undefined.UNDEFINED,
+    ) -> Self:
+        _default_values: undefined.UndefinedOr[
+            typing.List[special_endpoints.SelectDefaultBuilder[typing.Literal[component_models.SelectDefaultType.USER]]]
+        ] = (list(default_values) if default_values is not undefined.UNDEFINED else undefined.UNDEFINED)
+
+        return self.add_component(
+            UserSelectMenuBuilder(
+                custom_id=custom_id,
+                placeholder=placeholder,
+                min_values=min_values,
+                max_values=max_values,
+                is_disabled=is_disabled,
+                default_values=_default_values,
+            )
+        )
+
+    def add_mentionable_menu(
+        self,
+        custom_id: str,
+        /,
+        *,
+        placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        min_values: int = 0,
+        max_values: int = 1,
+        is_disabled: bool = False,
+        default_values: undefined.UndefinedOr[
+            typing.Sequence[
+                special_endpoints.SelectDefaultBuilder[
+                    typing.Literal[component_models.SelectDefaultType.USER, component_models.SelectDefaultType.ROLE]
+                ]
+            ]
+        ] = undefined.UNDEFINED,
+    ) -> Self:
+        _default_values: undefined.UndefinedOr[
+            typing.List[
+                special_endpoints.SelectDefaultBuilder[
+                    typing.Literal[component_models.SelectDefaultType.USER, component_models.SelectDefaultType.ROLE]
+                ]
+            ]
+        ] = (list(default_values) if default_values is not undefined.UNDEFINED else undefined.UNDEFINED)
+
+        return self.add_component(
+            MentionableSelectMenuBuilder(
+                custom_id=custom_id,
+                placeholder=placeholder,
+                min_values=min_values,
+                max_values=max_values,
+                is_disabled=is_disabled,
+                default_values=_default_values,
+            )
+        )
+
+    def add_role_menu(
+        self,
+        custom_id: str,
+        /,
+        *,
+        placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        min_values: int = 0,
+        max_values: int = 1,
+        is_disabled: bool = False,
+        default_values: undefined.UndefinedOr[
+            typing.Sequence[
+                special_endpoints.SelectDefaultBuilder[typing.Literal[component_models.SelectDefaultType.ROLE]]
+            ]
+        ] = undefined.UNDEFINED,
+    ) -> Self:
+        _default_values: undefined.UndefinedOr[
+            typing.List[special_endpoints.SelectDefaultBuilder[typing.Literal[component_models.SelectDefaultType.ROLE]]]
+        ] = (list(default_values) if default_values is not undefined.UNDEFINED else undefined.UNDEFINED)
+
+        return self.add_component(
+            RoleSelectMenuBuilder(
+                custom_id=custom_id,
+                placeholder=placeholder,
+                min_values=min_values,
+                max_values=max_values,
+                is_disabled=is_disabled,
+                default_values=_default_values,
             )
         )
 
@@ -2038,7 +2290,17 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
         min_values: int = 0,
         max_values: int = 1,
         is_disabled: bool = False,
+        default_values: undefined.UndefinedOr[
+            typing.Sequence[
+                special_endpoints.SelectDefaultBuilder[typing.Literal[component_models.SelectDefaultType.CHANNEL]]
+            ]
+        ] = undefined.UNDEFINED,
     ) -> Self:
+        _default_values: undefined.UndefinedOr[
+            typing.List[
+                special_endpoints.SelectDefaultBuilder[typing.Literal[component_models.SelectDefaultType.CHANNEL]]
+            ]
+        ] = (list(default_values) if default_values is not undefined.UNDEFINED else undefined.UNDEFINED)
         return self.add_component(
             ChannelSelectMenuBuilder(
                 custom_id=custom_id,
@@ -2047,6 +2309,7 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
                 min_values=min_values,
                 max_values=max_values,
                 is_disabled=is_disabled,
+                default_values=_default_values,
             )
         )
 
