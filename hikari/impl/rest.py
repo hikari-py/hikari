@@ -3972,6 +3972,9 @@ class RESTClientImpl(rest_api.RESTClient):
     def interaction_modal_builder(self, title: str, custom_id: str) -> special_endpoints.InteractionModalBuilder:
         return special_endpoints_impl.InteractionModalBuilder(title=title, custom_id=custom_id)
 
+    def interaction_premium_required_builder(self) -> special_endpoints.InteractionPremiumRequiredBuilder:
+        return special_endpoints_impl.InteractionPremiumRequiredBuilder()
+
     async def fetch_interaction_response(
         self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], token: str
     ) -> messages_.Message:

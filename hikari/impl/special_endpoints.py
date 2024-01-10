@@ -1254,6 +1254,20 @@ class InteractionModalBuilder(special_endpoints.InteractionModalBuilder):
 
 
 @attrs.define(kw_only=False, weakref_slot=False)
+class InteractionPremiumRequiredBuilder(special_endpoints.InteractionPremiumRequiredBuilder):
+    """Standard implementation of `hikari.api.special_endpoints.InteractionPremiumRequiredBuilder`."""
+
+    @property
+    def type(self) -> typing.Literal[base_interactions.ResponseType.PREMIUM_REQUIRED]:
+        return base_interactions.ResponseType.PREMIUM_REQUIRED
+
+    def build(
+        self, entity_factory: entity_factory_.EntityFactory, /
+    ) -> typing.Tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
+        return {"type": self.type, "data": {}}, ()
+
+
+@attrs.define(kw_only=False, weakref_slot=False)
 class CommandBuilder(special_endpoints.CommandBuilder):
     """Standard implementation of `hikari.api.special_endpoints.CommandBuilder`."""
 

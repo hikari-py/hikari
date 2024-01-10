@@ -7337,6 +7337,16 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
+    def interaction_premium_required_builder(self) -> special_endpoints.InteractionPremiumRequiredBuilder:
+        """Create a builder for a premium required interaction response.
+
+        Returns
+        -------
+        hikari.api.special_endpoints.InteractionPremiumRequiredBuilder
+            The interaction premium required response builder object.
+        """
+
+    @abc.abstractmethod
     async def fetch_interaction_response(
         self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], token: str
     ) -> messages_.Message:
