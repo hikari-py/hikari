@@ -22,7 +22,7 @@ with mkdocs_gen_files.open("reference/index.md", "w") as fd:
     with open("docs/reference_index.md", "r") as index:
         fd.write(index.read())
 
-mkdocs_gen_files.set_edit_path("reference/index.md", "docs/reference_index.md") 
+mkdocs_gen_files.set_edit_path("reference/index.md", "docs/reference_index.md")
 
 
 for path in sorted(src.rglob("*.py")):

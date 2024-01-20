@@ -22,6 +22,7 @@
 """Website pages generation."""
 from pipelines import nox
 
+
 @nox.session()
 def mkdocs(session: nox.Session):
     """Generate docs using mkdocs."""
@@ -32,6 +33,7 @@ def mkdocs(session: nox.Session):
 
     session.run("mkdocs", "build")
 
+
 @nox.session()
 def view_docs(session: nox.Session):
     """Start an HTTP server that serves the generated docs in real time."""
@@ -41,4 +43,3 @@ def view_docs(session: nox.Session):
     session.install("-e", ".", *nox.dev_requirements("mkdocs"))
 
     session.run("mkdocs", "serve")
-
