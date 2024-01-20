@@ -35,6 +35,7 @@ py -3 -m pip install -U hikari
 ## Bots
 
 Hikari provides two different default bot implementations to suit your needs:
+
 - [GatewayBot](#gatewaybot)
 - [RESTBot](#restbot)
 
@@ -194,6 +195,7 @@ bot.run(
 
 Many other helpful options exist for you to take advantage of if you wish. Links to the respective docs can be seen
 below:
+
 - [GatewayBot.run](https://docs.hikari-py.dev/en/stable/reference/hikari/impl/gateway_bot/#hikari.impl.gateway_bot.GatewayBot.run)
 - [RESTBot.run](https://docs.hikari-py.dev/en/stable/reference/hikari/impl/rest_bot/#hikari.impl.rest_bot.RESTBot.run)
 
@@ -251,9 +253,10 @@ implementing your own command handler.
 
 Hikari does not include a command framework by default, so you will want to pick a third party library to do it:
 
+- [`arc`](https://github.com/hypergonial/hikari-arc) - a bot framework with with a focus on type-safety and correctness.
+- [`crescent`](https://github.com/magpie-dev/hikari-crescent) - a command handler for Hikari that keeps your project neat and tidy.
 - [`lightbulb`](https://github.com/tandemdude/hikari-lightbulb) - a simple and easy to use command framework for Hikari.
 - [`tanjun`](https://github.com/FasterSpeeding/Tanjun) - a flexible command framework designed to extend Hikari.
-- [`crescent`](https://github.com/magpie-dev/hikari-crescent) - a command handler for Hikari that keeps your project neat and tidy.
 
 ---
 
