@@ -95,7 +95,7 @@ markdown_extensions:
 plugins:
   - autorefs
   - search
-  - social
+#  - social
   - glightbox:
       touchNavigation: true
       loop: false
