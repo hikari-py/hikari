@@ -9,6 +9,7 @@ theme:
   font:
     code: JetBrains Mono
   logo: assets/hikari_logo.png
+  favicon: assets/hikari_logo.png
   icon:
     repo: fontawesome/brands/github
     edit: material/pencil
