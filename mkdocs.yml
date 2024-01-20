@@ -51,8 +51,6 @@ theme:
     - navigation.tabs
     - navigation.indexes
     - navigation.top
-    - content.action.view
-    - content.action.edit
     - content.tooltips
     - toc.follow
 
