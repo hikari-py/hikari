@@ -21,9 +21,6 @@ for path in sorted(pathlib.Path("hikari").rglob("*.py")):
         continue
     elif parts[-1] == "__init__":
         parts = parts[:-1]
-        if len(parts) == 1:
-            continue
-
         # Make the __init__.py the index page of the module
         doc_path = doc_path.with_name("index.md")
         full_doc_path = full_doc_path.with_name("index.md")
@@ -50,13 +47,10 @@ for path in sorted(pathlib.Path("hikari").rglob("*.py")):
 
 with mkdocs_gen_files.open("reference/summary.md", "w") as nav_file:
     for item in nav.items():
-        if not item.filename:
-            continue
-
         path = pathlib.Path(item.filename).with_suffix("")
 
         if path.name == "index":
             path = path.parent
 
         full_name = ".".join(path.parts)
-        nav_file.write("    " * (item.level - 1) + f"* [{full_name}]({item.filename})\n")
+        nav_file.write("    " * item.level + f"* [{full_name}]({item.filename})\n")
