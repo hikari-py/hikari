@@ -749,14 +749,14 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Examples
         --------
-        .. code-block:: python
-
+        ```py
             # Trigger typing just once.
             await rest.trigger_typing(channel)
 
             # Trigger typing repeatedly for 1 minute.
             async with rest.trigger_typing(channel):
                 await asyncio.sleep(60)
+        ```
 
         .. warning::
             Sending a message to the channel will cause the typing indicator

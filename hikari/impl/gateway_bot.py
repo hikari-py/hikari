@@ -501,8 +501,7 @@ class GatewayBot(traits.GatewayBotAware):
         We can dispatch custom events by first defining a class that
         derives from `hikari.events.base_events.Event`.
 
-        .. code-block:: python
-
+        ```py
             import attrs
 
             from hikari.traits import RESTAware
@@ -525,11 +524,11 @@ class GatewayBot(traits.GatewayBotAware):
 
                 channel_id: Snowflake = attrs.field()
                 '''The channel ID.'''
+        ```
 
         We can then dispatch our event as we see fit.
 
-        .. code-block:: python
-
+        ```py
             from hikari.events.messages import MessageCreateEvent
 
             @bot.listen(MessageCreateEvent)
@@ -543,15 +542,16 @@ class GatewayBot(traits.GatewayBotAware):
                     )
 
                     bot.dispatch(event)
+        ```
 
         This event can be listened to elsewhere by subscribing to it with
         `hikari.impl.event_manager_base.EventManager.subscribe`.
 
-        .. code-block:: python
-
+        ```py
             @bot.listen(EveryoneMentionedEvent)
             async def on_everyone_mentioned(event):
                 print(event.user, "just pinged everyone in", event.channel_id)
+        ```
 
         Returns
         -------
@@ -1041,16 +1041,15 @@ class GatewayBot(traits.GatewayBotAware):
 
         Examples
         --------
-        .. code-block:: python
-
+        ```py
             with bot.stream(events.ReactionAddEvent, timeout=30).filter(("message_id", message.id)) as stream:
                 async for user_id in stream.map("user_id").limit(50):
                     ...
+        ```
 
         or using `open()` and `close()`
 
-        .. code-block:: python
-
+        ```py
             stream = bot.stream(events.ReactionAddEvent, timeout=30).filter(("message_id", message.id))
             stream.open()
 
@@ -1058,6 +1057,7 @@ class GatewayBot(traits.GatewayBotAware):
                 ...
 
             stream.close()
+        ```
 
         See Also
         --------
@@ -1093,14 +1093,14 @@ class GatewayBot(traits.GatewayBotAware):
         The following demonstrates subscribing a callback to message creation
         events.
 
-        .. code-block:: python
-
+        ```py
             from hikari.events.messages import MessageCreateEvent
 
             async def on_message(event):
                 ...
 
             bot.subscribe(MessageCreateEvent, on_message)
+        ```
 
         See Also
         --------
@@ -1133,14 +1133,14 @@ class GatewayBot(traits.GatewayBotAware):
         The following demonstrates unsubscribing a callback from a message
         creation event.
 
-        .. code-block:: python
-
+        ```py
             from hikari.events.messages import MessageCreateEvent
 
             async def on_message(event):
                 ...
 
             bot.unsubscribe(MessageCreateEvent, on_message)
+        ```
 
         See Also
         --------

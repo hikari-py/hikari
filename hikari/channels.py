@@ -680,12 +680,12 @@ class TextableChannel(PartialChannel):
         once, or used as an async context manager to keep typing until the
         block completes.
 
-        .. code-block:: python
-
+        ```py
             await channel.trigger_typing()   # type for 10s
 
             async with channel.trigger_typing():
                 await asyncio.sleep(35)            # keep typing until this finishes
+        ```
 
         .. note::
             Sending a message to this channel will stop the typing indicator. If

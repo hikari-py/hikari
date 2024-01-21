@@ -327,8 +327,7 @@ class CommandInteraction(
 
         Examples
         --------
-        .. code-block:: python
-
+        ```py
             async def handle_command_interaction(interaction: CommandInteraction) -> InteractionMessageBuilder:
                 return (
                     interaction
@@ -336,6 +335,7 @@ class CommandInteraction(
                     .add_embed(Embed(description="Hi there"))
                     .set_content("Konnichiwa")
                 )
+        ```
 
         Returns
         -------
@@ -359,12 +359,12 @@ class CommandInteraction(
 
         Examples
         --------
-        .. code-block:: python
-
+        ```py
             async def handle_command_interaction(interaction: CommandInteraction) -> InteractionMessageBuilder:
                 yield interaction.build_deferred_response()
 
                 await interaction.edit_initial_response("Pong!")
+        ```
 
         Returns
         -------
@@ -399,8 +399,7 @@ class AutocompleteInteraction(BaseCommandInteraction):
 
         Examples
         --------
-        .. code-block:: python
-
+        ```py
             async def handle_autocomplete_interaction(interaction: AutocompleteInteraction) -> InteractionAutocompleteBuilder:
                 return (
                     interaction
@@ -412,6 +411,7 @@ class AutocompleteInteraction(BaseCommandInteraction):
                         ]
                     )
                 )
+        ```
 
         Returns
         -------

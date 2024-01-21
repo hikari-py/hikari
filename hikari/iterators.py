@@ -433,8 +433,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
 
         Examples
         --------
-        .. code-block:: python
-
+        ```py
             >>> async for i, item in paginated_results.enumerate():
             ...    print(i, item)
             (0, foo)
@@ -456,6 +455,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
             (9, foo)
             (10, bar)
             (11, baz)
+        ```
 
         Returns
         -------
@@ -475,10 +475,10 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
 
         Examples
         --------
-        .. code-block:: python
-
+        ```py
             >>> async for item in paginated_results.limit(3):
             ...     print(item)
+        ```
 
         Returns
         -------
@@ -610,8 +610,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
         The following example generates a distinct collection of all mentioned
         users in the given channel from the past 500 messages.
 
-        .. code-block:: python
-
+        ```py
             def iter_mentioned_users(message: hikari.Message) -> typing.Iterable[Snowflake]:
                 for match in re.findall(r"<@!?(\d+)>", message.content):
                     yield Snowflake(match)
@@ -624,6 +623,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
                 .flat_map(iter_mentioned_users)
                 .distinct()
             )
+        ```
 
         Returns
         -------

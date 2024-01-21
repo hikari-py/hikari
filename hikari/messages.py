@@ -1137,8 +1137,7 @@ class PartialMessage(snowflakes.Unique):
 
         Examples
         --------
-        .. code-block:: python
-
+        ```py
             # Using a unicode emoji.
             await message.add_reaction("👌")
 
@@ -1150,6 +1149,7 @@ class PartialMessage(snowflakes.Unique):
 
             # Using an Emoji-derived object.
             await message.add_reaction(some_emoji_object)
+        ```
 
         Raises
         ------
@@ -1214,8 +1214,7 @@ class PartialMessage(snowflakes.Unique):
 
         Examples
         --------
-        .. code-block:: python
-
+        ```py
             # Using a unicode emoji and removing the bot's reaction from this
             # reaction.
             await message.remove_reaction("\N{OK HAND SIGN}")
@@ -1234,6 +1233,7 @@ class PartialMessage(snowflakes.Unique):
             # Using an Emoji object and removing a specific user from this
             # reaction.
             await message.remove_reaction(some_emoji_object, user=some_user)
+        ```
 
         Raises
         ------
@@ -1291,8 +1291,7 @@ class PartialMessage(snowflakes.Unique):
 
         Examples
         --------
-        .. code-block:: python
-
+        ```py
             # Using a unicode emoji and removing all 👌 reacts from the message.
             # reaction.
             await message.remove_all_reactions("\N{OK HAND SIGN}")
@@ -1302,6 +1301,7 @@ class PartialMessage(snowflakes.Unique):
 
             # Removing all reactions entirely.
             await message.remove_all_reactions()
+        ```
 
         Raises
         ------

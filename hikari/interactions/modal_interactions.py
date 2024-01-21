@@ -221,8 +221,7 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
 
         Examples
         --------
-        .. code-block:: python
-
+        ```py
             async def handle_modal_interaction(interaction: ModalInteraction) -> InteractionMessageBuilder:
                 return (
                     interaction
@@ -230,6 +229,7 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
                     .add_embed(Embed(description="Hi there"))
                     .set_content("Konnichiwa")
                 )
+        ```
 
         Returns
         -------

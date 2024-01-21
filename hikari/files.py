@@ -454,12 +454,12 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
     async def read(self, *, executor: typing.Optional[concurrent.futures.Executor] = None) -> bytes:
         """Read the entire resource at once into memory.
 
-        .. code-block:: python
-
+        ```py
             data = await resource.read(...)
             # ^-- This is a shortcut for the following --v
             async with resource.stream(...) as reader:
                 data = await reader.read()
+        ```
 
         .. warning::
             If you simply wish to re-upload this resource to Discord via
@@ -701,15 +701,14 @@ class WebResource(Resource[WebReader], abc.ABC):
         --------
         Downloading an entire resource at once into memory:
 
-        .. code-block:: python
-
+        ```py
             async with obj.stream() as stream:
                 data = await stream.read()
+        ```
 
         Checking the metadata:
 
-        .. code-block:: python
-
+        ```py
             async with obj.stream() as stream:
                 mimetype = stream.mimetype
 
@@ -719,13 +718,14 @@ class WebResource(Resource[WebReader], abc.ABC):
                 ...
             else:
                 ...
+        ```
 
         Fetching the data-uri of a resource:
 
-        .. code-block:: python
-
+        ```py
             async with obj.stream() as stream:
                 data_uri = await stream.data_uri()
+        ```
 
         Returns
         -------

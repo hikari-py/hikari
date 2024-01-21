@@ -378,8 +378,7 @@ class RESTApp(traits.ExecutorAware):
 
         Examples
         --------
-        .. code-block:: python
-
+        ```py
             rest_app = RESTApp()
             await rest_app.start()
 
@@ -389,6 +388,7 @@ class RESTApp(traits.ExecutorAware):
                 user = await client.fetch_my_user()
 
             await rest_app.close()
+        ```
 
         Parameters
         ----------

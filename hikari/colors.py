@@ -369,8 +369,7 @@ class Color(int):
 
         Examples
         --------
-        .. code-block:: python
-
+        ```py
             # Floats
             "1.0 1.0 1.0"
             "(1.0 1.0 1.0)"
@@ -390,6 +389,7 @@ class Color(int):
             "(252, 252, 252)"
             "[252, 252, 252]"
             "{252, 252, 252}"
+        ```
 
         Parameters
         ----------
@@ -437,8 +437,7 @@ class Color(int):
 
         Examples
         --------
-        .. code-block:: python
-
+        ```py
             >>> Color.of(0xFF051A)
             Color(r=0xff, g=0x5, b=0x1a)
 
@@ -474,6 +473,7 @@ class Color(int):
             Color(r=0x5, g=0x16, b=0x21)
             >>> c = Color.of("{5, 22, 33}")
             Color(r=0x5, g=0x16, b=0x21)
+        ```
 
         Returns
         -------

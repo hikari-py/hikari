@@ -167,8 +167,7 @@ class ComponentInteraction(
 
         Examples
         --------
-        .. code-block:: python
-
+        ```py
             async def handle_component_interaction(interaction: ComponentInteraction) -> InteractionMessageBuilder:
                 return (
                     interaction
@@ -176,6 +175,7 @@ class ComponentInteraction(
                     .add_embed(Embed(description="Hi there"))
                     .set_content("Konnichiwa")
                 )
+        ```
 
         Returns
         -------
