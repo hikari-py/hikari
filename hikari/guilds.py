@@ -383,7 +383,7 @@ class Member(users.User):
 
      Will be `None` if the member is not timed out.
 
-     .. note::
+     !!! note
         The datetime might be in the past, so it is recommended to use
         `communication_disabled_until` method to check if the member is timed
         out at the time of the call.
@@ -404,7 +404,7 @@ class Member(users.User):
     guild_avatar_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """Hash of the member's guild avatar guild if set, else `None`.
 
-    .. note::
+    !!! note
         This takes precedence over `Member.avatar_hash`.
     """
 
@@ -496,7 +496,7 @@ class Member(users.User):
         Unlike `raw_communication_disabled_until`, this will always be
         `None` if the member is not currently timed out.
 
-        .. note::
+        !!! note
             The output of this function can depend based on when
             the function is called.
         """
@@ -886,7 +886,7 @@ class Member(users.User):
             permission in the original voice channel and the target
             voice channel.
 
-            .. note::
+            !!! note
                 If the member is not in a voice channel, this will
                 take no effect.
         communication_disabled_until : hikari.undefined.UndefinedNoneOr[datetime.datetime]
@@ -1235,14 +1235,14 @@ class Integration(PartialIntegration):
     This will not be enacted until after `GuildIntegration.expire_grace_period`
     passes.
 
-    .. note::
+    !!! note
         This will always be `None` for Discord integrations.
     """
 
     expire_grace_period: typing.Optional[datetime.timedelta] = attrs.field(eq=False, hash=False, repr=False)
     """How many days users with expired subscriptions are given until the expire behavior is enacted out on them.
 
-    .. note::
+    !!! note
         This will always be `None` for Discord integrations.
     """
 
@@ -1273,7 +1273,7 @@ class Integration(PartialIntegration):
     application: typing.Optional[IntegrationApplication] = attrs.field(eq=False, hash=False, repr=False)
     """The bot/OAuth2 application associated with this integration.
 
-    .. note::
+    !!! note
         This is only available for Discord integrations.
     """
 
@@ -1294,7 +1294,7 @@ class WelcomeChannel:
     )
     """The emoji shown in the welcome screen channel if set to a unicode emoji.
 
-    .. warning::
+    !!! warning
         While it may also be present for custom emojis, this is neither guaranteed
         to be provided nor accurate.
     """
@@ -1573,7 +1573,7 @@ class PartialGuild(snowflakes.Unique):
         owner : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]]]
             If provided, the new guild owner.
 
-            .. warning::
+            !!! warning
                 You need to be the owner of the server to use this.
         splash : hikari.undefined.UndefinedNoneOr[hikari.files.Resourceish]
             If provided, the new guild splash. Must be a 16:9 image and the
@@ -1750,7 +1750,7 @@ class PartialGuild(snowflakes.Unique):
     ) -> stickers.GuildSticker:
         """Create a sticker in a guild.
 
-        .. note::
+        !!! note
             Lottie support is only available for verified and partnered
             servers.
 
@@ -2368,10 +2368,10 @@ class PartialGuild(snowflakes.Unique):
     ) -> channels_.GuildChannel:
         """Delete a channel in the guild.
 
-        .. note::
+        !!! note
             This method can also be used for deleting guild categories as well.
 
-        .. note::
+        !!! note
             For Public servers, the set 'Rules' or 'Guidelines' channels and the
             'Public Server Updates' channel cannot be deleted.
 

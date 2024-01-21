@@ -130,7 +130,7 @@ class TypingIndicator(special_endpoints.TypingIndicator):
     the typing indicator once, or an async context manager to keep triggering
     the typing indicator repeatedly until the context finishes.
 
-    .. note::
+    !!! note
         This is a helper class that is used by `hikari.api.rest.RESTClient`.
         You should only ever need to use instances of this class that are
         produced by that API.
@@ -212,12 +212,12 @@ class GuildBuilder(special_endpoints.GuildBuilder):
     the logic behind creating a guild on an API level is somewhat confusing
     and detailed.
 
-    .. note::
+    !!! note
         If you call `add_role`, the default roles provided by Discord will
         be created. This also applies to the `add_` functions for
         text channels/voice channels/categories.
 
-    .. note::
+    !!! note
         Functions that return a `hikari.snowflakes.Snowflake` do
         **not** provide the final ID that the object will have once the
         API call is made. The returned IDs are only able to be used to
@@ -256,7 +256,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         await guild_builder.create()
     ```
 
-    .. warning::
+    !!! warning
         The first role must always be the `@everyone` role.
 
     Adding a text channel to your guild:

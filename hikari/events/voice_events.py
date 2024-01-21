@@ -117,7 +117,7 @@ class VoiceServerUpdateEvent(VoiceEvent):
     and you have to disconnect. You will later receive a new event specifying
     what endpoint to connect to.
 
-    .. warning::
+    !!! warning
         This will not contain the scheme to use. Use the `endpoint` property
         to get a representation that has this prepended.
     """

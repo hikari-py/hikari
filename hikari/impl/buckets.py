@@ -265,7 +265,7 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
     async def acquire(self) -> None:
         """Acquire time and the lock on this bucket.
 
-        .. note::
+        !!! note
             You should afterwards invoke `RESTBucket.update_rate_limit` to
             update any rate limit information you are made aware of and
             `RESTBucket.release` to release the lock.
@@ -317,7 +317,7 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
     def update_rate_limit(self, remaining: int, limit: int, reset_at: float) -> None:
         """Update the rate limit information.
 
-        .. note::
+        !!! note
             The `reset_at` epoch is expected to be a `time.monotonic`
             monotonic epoch, rather than a `time.time` date-based epoch.
 
@@ -499,7 +499,7 @@ class RESTBucketManager:
     ) -> typing.AsyncContextManager[None]:
         """Acquire a bucket for the given route.
 
-        .. note::
+        !!! note
             You MUST keep the context manager acquired during the full duration
             of the request: from making the request until calling `update_rate_limits`.
 

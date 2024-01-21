@@ -108,7 +108,7 @@ class VoiceRegion:
     id: str = attrs.field(hash=True, repr=True)
     """The string ID of this region.
 
-    .. note::
+    !!! note
         Unlike most parts of this API, this ID will always be a string type.
         This is intentional.
     """

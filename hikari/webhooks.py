@@ -92,7 +92,7 @@ class ExecutableWebhook(abc.ABC):
     def token(self) -> typing.Optional[str]:
         """Webhook's token.
 
-        .. note::
+        !!! note
             If this is `None` then the methods provided by `ExecutableWebhook`
             will always raise a `ValueError`.
         """
@@ -121,7 +121,7 @@ class ExecutableWebhook(abc.ABC):
     ) -> messages_.Message:
         """Execute the webhook to create a message.
 
-        .. warning::
+        !!! warning
             At the time of writing, `username` and `avatar_url` are ignored for
             interaction webhooks.
 
@@ -298,13 +298,13 @@ class ExecutableWebhook(abc.ABC):
     ) -> messages_.Message:
         """Edit a message sent by a webhook.
 
-        .. note::
+        !!! note
             Mentioning everyone, roles, or users in message edits currently
             will not send a push notification showing a new mention to people
             on Discord. It will still highlight in their chat as if they
             were mentioned, however.
 
-        .. warning::
+        !!! warning
             If you specify a text `content`, `mentions_everyone`,
             `mentions_reply`, `user_mentions`, and `role_mentions` will default
             to `False` as the message will be re-parsed for mentions. This will
@@ -500,7 +500,7 @@ class PartialWebhook(snowflakes.Unique):
     def mention(self) -> str:
         """Return a raw mention string for the given webhook's user.
 
-        .. note::
+        !!! note
             This exists purely for consistency. Webhooks do not receive events
             from the gateway, and without some bot backend to support it, will
             not be able to detect mentions of their webhook.
@@ -581,7 +581,7 @@ class IncomingWebhook(PartialWebhook, ExecutableWebhook):
     author: typing.Optional[users_.User] = attrs.field(eq=False, hash=False, repr=True)
     """The user that created the webhook.
 
-    .. note::
+    !!! note
         This will be `None` when fetched with the webhook's token
         rather than bot authorization or when received within audit logs.
     """
@@ -589,7 +589,7 @@ class IncomingWebhook(PartialWebhook, ExecutableWebhook):
     token: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """The token for the webhook.
 
-    .. note::
+    !!! note
         This is only available for incoming webhooks that are created in the
         channel settings.
     """
@@ -790,7 +790,7 @@ class ChannelFollowerWebhook(PartialWebhook):
     author: typing.Optional[users_.User] = attrs.field(eq=False, hash=False, repr=True)
     """The user that created the webhook.
 
-    .. note::
+    !!! note
         This will be `None` when received within an audit log.
     """
 

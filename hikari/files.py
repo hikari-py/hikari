@@ -221,7 +221,7 @@ def guess_mimetype_from_filename(name: str, /) -> typing.Optional[str]:
 def guess_mimetype_from_data(data: bytes, /) -> typing.Optional[str]:
     """Guess the mimetype of some data from the header.
 
-    .. warning::
+    !!! warning
         This function only detects valid image headers that Discord allows
         the use of. Anything else will go undetected.
 
@@ -461,7 +461,7 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
                 data = await reader.read()
         ```
 
-        .. warning::
+        !!! warning
             If you simply wish to re-upload this resource to Discord via
             any endpoint in Hikari, you should opt to just pass this
             resource object directly. This way, Hikari can perform byte
@@ -757,7 +757,7 @@ class WebResource(Resource[WebReader], abc.ABC):
 class URL(WebResource):
     """A URL that represents a web resource.
 
-    .. note::
+    !!! note
         Some components may choose to not upload this resource directly and
         instead simply refer to the URL as needed. The main place this will
         occur is within embeds.

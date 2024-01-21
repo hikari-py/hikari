@@ -168,7 +168,7 @@ class PartialUser(snowflakes.Unique, abc.ABC):
     def discriminator(self) -> undefined.UndefinedOr[str]:
         """Discriminator for the user.
 
-        .. deprecated:: 2.0.0.dev120
+        !!! deprecated 2.0.0.dev120
             Discriminators are deprecated and being replaced with "0" by Discord
             during username migration. This field will be removed after migration is complete.
             Learn more here: https://dis.gd/usernames
@@ -514,7 +514,7 @@ class User(PartialUser, abc.ABC):
     def discriminator(self) -> str:
         """Discriminator for the user.
 
-        .. deprecated:: 2.0.0.dev120
+        !!! deprecated 2.0.0.dev120
             Discriminators are deprecated and being replaced with "0" by Discord
             during username migration. This field will be removed after migration is complete.
             Learn more here: https://dis.gd/usernames
@@ -665,7 +665,7 @@ class PartialUserImpl(PartialUser):
     discriminator: undefined.UndefinedOr[str] = attrs.field(eq=False, hash=False, repr=True)
     """Four-digit discriminator for the user if unmigrated.
 
-    .. deprecated:: 2.0.0.dev120
+    !!! deprecated 2.0.0.dev120
         Discriminators are deprecated and being replaced with "0" by Discord
         during username migration. This field will be removed after migration is complete.
         Learn more here: https://dis.gd/usernames
@@ -726,7 +726,7 @@ class UserImpl(PartialUserImpl, User):
     discriminator: str = attrs.field(eq=False, hash=False, repr=True)
     """The user's discriminator.
 
-    .. deprecated:: 2.0.0.dev120
+    !!! deprecated 2.0.0.dev120
         Discriminators are deprecated and being replaced with "0" by Discord
         during username migration. This field will be removed after migration is complete.
         Learn more here: https://dis.gd/usernames

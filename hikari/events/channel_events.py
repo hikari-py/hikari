@@ -89,7 +89,7 @@ class ChannelEvent(shard_events.ShardEvent, abc.ABC):
     async def fetch_channel(self) -> channels.PartialChannel:
         """Perform an API call to fetch the details about this channel.
 
-        .. note::
+        !!! note
             For `GuildChannelDeleteEvent` events, this will always raise
             an exception, since the channel will have already been removed.
 
@@ -185,7 +185,7 @@ class GuildChannelEvent(ChannelEvent, abc.ABC):
     async def fetch_channel(self) -> channels.GuildChannel:
         """Perform an API call to fetch the details about this channel.
 
-        .. note::
+        !!! note
             For `GuildChannelDeleteEvent` events, this will always raise
             an exception, since the channel will have already been removed.
 
@@ -223,7 +223,7 @@ class DMChannelEvent(ChannelEvent, abc.ABC):
     async def fetch_channel(self) -> channels.PrivateChannel:
         """Perform an API call to fetch the details about this channel.
 
-        .. note::
+        !!! note
             For `GuildChannelDeleteEvent` events, this will always raise
             an exception, since the channel will have already been removed.
 
@@ -688,7 +688,7 @@ class GuildThreadEvent(shard_events.ShardEvent, abc.ABC):
     async def fetch_channel(self) -> channels.GuildThreadChannel:
         """Perform an API call to fetch the details about this thread.
 
-        .. note::
+        !!! note
             For `GuildThreadDeleteEvent` events, this will always raise
             an exception, since the channel will have already been removed.
 
@@ -852,7 +852,7 @@ class ThreadMembersUpdateEvent(GuildThreadEvent):
     approximate_member_count: int = attrs.field(eq=False, hash=False, repr=True)
     """Approximate count of members in the thread channel.
 
-    .. warning::
+    !!! warning
         This stops counting at 50 for threads created before 2022/06/01.
     """
 

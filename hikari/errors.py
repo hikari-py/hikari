@@ -74,7 +74,7 @@ class HikariError(RuntimeError):
 
     Any exceptions should derive from this.
 
-    .. note::
+    !!! note
         You should never initialize this exception directly.
     """
 
@@ -87,7 +87,7 @@ class HikariWarning(RuntimeWarning):
 
     Any warnings should derive from this.
 
-    .. note::
+    !!! note
         You should never initialize this warning directly.
     """
 

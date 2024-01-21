@@ -73,7 +73,7 @@ class ExtendedMutableMapping(typing.MutableMapping[KeyT, ValueT], abc.ABC):
         This may look like calling `dict.copy` and wrapping the result in a
         mapped collection.
 
-        .. note::
+        !!! note
             Any removal policy on this mapped collection will be copied over.
 
         Returns
@@ -90,7 +90,7 @@ class ExtendedMutableMapping(typing.MutableMapping[KeyT, ValueT], abc.ABC):
         around how the data is being stored to allow for a more efficient copy.
         This may look like calling `dict.copy`.
 
-        .. note::
+        !!! note
             Unlike `ExtendedMutableMapping.copy`, this should return a pure
             mapping with no removal policy at all.
 
@@ -229,7 +229,7 @@ class SnowflakeSet(typing.MutableSet[snowflakes.Snowflake]):
     $$ \mathcal{O} \left( \log n \right) $$ and best case will be
     $$ \Omega \left\( k \right) $$
 
-    .. warning::
+    !!! warning
         This is not thread-safe and must not be iterated across whilst being
         concurrently modified.
 

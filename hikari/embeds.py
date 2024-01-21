@@ -101,7 +101,7 @@ class EmbedResourceWithProxy(EmbedResource):
     proxy_resource: typing.Optional[files.Resource[files.AsyncReader]] = attrs.field(default=None, repr=False)
     """The proxied version of the resource, or `None` if not present.
 
-    .. note::
+    !!! note
         This field cannot be set by bots or webhooks while sending an embed
         and will be ignored during serialization. Expect this to be
         populated on any received embed attached to a message event.
@@ -141,7 +141,7 @@ class EmbedImage(EmbedResourceWithProxy):
     height: typing.Optional[int] = attrs.field(default=None, repr=False)
     """The height of the image, if present and known, otherwise `None`.
 
-    .. note::
+    !!! note
         This field cannot be set by bots or webhooks while sending an embed and
         will be ignored during serialization. Expect this to be populated on
         any received embed attached to a message event.
@@ -150,7 +150,7 @@ class EmbedImage(EmbedResourceWithProxy):
     width: typing.Optional[int] = attrs.field(default=None, repr=False)
     """The width of the image, if present and known, otherwise `None`.
 
-    .. note::
+    !!! note
         This field cannot be set by bots or webhooks while sending an embed and
         will be ignored during serialization. Expect this to be populated on
         any received embed attached to a message event.
@@ -161,7 +161,7 @@ class EmbedImage(EmbedResourceWithProxy):
 class EmbedVideo(EmbedResourceWithProxy):
     """Represents an embed video.
 
-    .. note::
+    !!! note
         This object cannot be set by bots or webhooks while sending an embed and
         will be ignored during serialization. Expect this to be populated on
         any received embed attached to a message event with a video attached.
@@ -182,7 +182,7 @@ class EmbedVideo(EmbedResourceWithProxy):
 class EmbedProvider:
     """Represents an embed provider.
 
-    .. note::
+    !!! note
         This object cannot be set by bots or webhooks while sending an embed and
         will be ignored during serialization. Expect this to be populated on
         any received embed attached to a message event provided by an external
@@ -289,7 +289,7 @@ class Embed:
     ) -> Embed:
         """Generate an embed from the given attributes.
 
-        .. warning::
+        !!! warning
             **This function is for internal use only!**
         """
         # Create an empty instance without the overhead of invoking the regular
@@ -416,7 +416,7 @@ class Embed:
 
         This will be `None` if not set.
 
-        .. warning::
+        !!! warning
             Setting a non-timezone-aware datetime will result in a warning
             being raised. This is done due to potential confusion caused by
             Discord requiring a UTC timestamp for this field. Any non-timezone
@@ -545,7 +545,7 @@ class Embed:
 
         Will be `None` if not set.
 
-        .. note::
+        !!! note
             Use `set_image` to update this value.
         """
         return self._image
@@ -556,7 +556,7 @@ class Embed:
 
         Will be `None` if not set.
 
-        .. note::
+        !!! note
             Use `set_thumbnail` to update this value.
         """
         return self._thumbnail
@@ -567,7 +567,7 @@ class Embed:
 
         Will be `None` if not set.
 
-        .. note::
+        !!! note
             This object cannot be set by bots or webhooks while sending an embed
             and will be ignored during serialization. Expect this to be
             populated on any received embed attached to a message event with a
@@ -581,7 +581,7 @@ class Embed:
 
         Will be `None` if not set.
 
-        .. note::
+        !!! note
             This object cannot be set by bots or webhooks while sending an embed
             and will be ignored during serialization. Expect this to be
             populated on any received embed attached to a message event with a
@@ -595,7 +595,7 @@ class Embed:
 
         Will be `None` if not set.
 
-        .. note::
+        !!! note
             Use `set_author` to update this value.
         """
         return self._author
@@ -604,7 +604,7 @@ class Embed:
     def fields(self) -> typing.Sequence[EmbedField]:
         """Return the sequence of fields in the embed.
 
-        .. note::
+        !!! note
             Use `add_field` to add a new field, `edit_field` to edit an existing
             field, or `remove_field` to remove a field.
         """

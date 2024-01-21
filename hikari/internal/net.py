@@ -120,10 +120,10 @@ def create_client_session(
 ) -> aiohttp.ClientSession:
     """Generate a client session using the given settings.
 
-    .. warning::
+    !!! warning
         You must invoke this from within a running event loop.
 
-    .. note::
+    !!! note
         If you pass an explicit connector, then the connection
         that is created will not own the connector. You will be
         expected to manually close it __after__ the returned

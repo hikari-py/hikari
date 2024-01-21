@@ -68,7 +68,7 @@ class ActivityType(int, enums.Enum):
     STREAMING = 1
     """Shows up as `Streaming` and links to a Twitch or YouTube stream/video.
 
-    .. warning::
+    !!! warning
         You **MUST** provide a valid Twitch or YouTube stream URL to the
         activity you create in order for this to be valid. If you fail to
         do this, then the activity **WILL NOT** update.
@@ -83,7 +83,7 @@ class ActivityType(int, enums.Enum):
     CUSTOM = 4
     """Shows up as `<emoji> <name>`.
 
-    .. warning::
+    !!! warning
         As of the time of writing, emoji cannot be used by bot accounts.
     """
 
@@ -161,7 +161,7 @@ class ActivityAssets:
     def large_image_url(self) -> typing.Optional[files.URL]:
         """Large image asset URL.
 
-        .. note::
+        !!! note
             This will be `None` if no large image asset exists or if the
             asset's dynamic URL (indicated by a `{name}:` prefix) is not known.
         """
@@ -174,7 +174,7 @@ class ActivityAssets:
     def make_large_image_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the large image asset URL for this application.
 
-        .. note::
+        !!! note
             `ext` and `size` are ignored for images hosted outside of Discord
             or on Discord's media proxy.
 
@@ -206,7 +206,7 @@ class ActivityAssets:
     def small_image_url(self) -> typing.Optional[files.URL]:
         """Small image asset URL.
 
-        .. note::
+        !!! note
             This will be `None` if no large image asset exists or if the
             asset's dynamic URL (indicated by a `{name}:` prefix) is not known.
         """

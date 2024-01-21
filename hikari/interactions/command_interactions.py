@@ -148,7 +148,7 @@ class BaseCommandInteraction(base_interactions.PartialInteraction):
 
     This will be `None` for command interactions triggered in DMs.
 
-    .. note::
+    !!! note
         This value can usually only be changed if `COMMUNITY` is in `hikari.guilds.Guild.features`
         for the guild and will otherwise default to `en-US`.
     """
@@ -158,7 +158,7 @@ class BaseCommandInteraction(base_interactions.PartialInteraction):
 
     This will be `None` for command interactions triggered in DMs.
 
-    .. note::
+    !!! note
         This member object comes with the extra field `permissions` which
         contains the member's permissions in the current channel.
     """
@@ -211,7 +211,7 @@ class BaseCommandInteraction(base_interactions.PartialInteraction):
     def get_channel(self) -> typing.Optional[channels.TextableGuildChannel]:
         """Get the guild channel this was triggered in from the cache.
 
-        .. note::
+        !!! note
             This will always return `None` for interactions triggered
             in a DM channel.
 
@@ -320,7 +320,7 @@ class CommandInteraction(
     def build_response(self) -> special_endpoints.InteractionMessageBuilder:
         """Get a message response builder for use in the REST server flow.
 
-        .. note::
+        !!! note
             For interactions received over the gateway
             `CommandInteraction.create_initial_response` should be used to set
             the interaction response message.
@@ -347,12 +347,12 @@ class CommandInteraction(
     def build_deferred_response(self) -> special_endpoints.InteractionDeferredBuilder:
         """Get a deferred message response builder for use in the REST server flow.
 
-        .. note::
+        !!! note
             For interactions received over the gateway
             `CommandInteraction.create_initial_response` should be used to set
             the interaction response message.
 
-        .. note::
+        !!! note
             Unlike `hikari.api.special_endpoints.InteractionMessageBuilder`,
             the result of this call can be returned as is without any modifications
             being made to it.
@@ -387,7 +387,7 @@ class AutocompleteInteraction(BaseCommandInteraction):
     ) -> special_endpoints.InteractionAutocompleteBuilder:
         """Get a message response builder for use in the REST server flow.
 
-        .. note::
+        !!! note
             For interactions received over the gateway
             `AutocompleteInteraction.create_response` should be used to set
             the interaction response.

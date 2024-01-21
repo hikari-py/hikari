@@ -140,7 +140,7 @@ class ChannelFlag(enums.Flag):
     PINNED = 1 << 1
     """The thread is pinned in a forum channel.
 
-    .. note::
+    !!! note
         As of writing, this can only be set for threads
         belonging to a forum channel.
     """
@@ -148,7 +148,7 @@ class ChannelFlag(enums.Flag):
     REQUIRE_TAG = 1 << 4
     """Whether a tag is required to be specified when creating a thread in a forum channel
 
-    .. note::
+    !!! note
         As of writing, this can only be set for forum channels.
     """
 
@@ -243,7 +243,7 @@ class ChannelFollow:
     def get_channel(self) -> typing.Union[GuildNewsChannel, GuildTextChannel, None]:
         """Get the channel being followed from the cache.
 
-        .. warning::
+        !!! warning
             This will always be `None` if you are not
             in the guild that this channel exists in.
 
@@ -352,7 +352,7 @@ class PartialChannel(snowflakes.Unique):
     def mention(self) -> str:
         """Return a raw mention string for the channel.
 
-        .. note::
+        !!! note
             There are platform specific inconsistencies with mentions of
             GuildCategories, GroupDMChannels and DMChannels showing
             the correct name but not being interactable.
@@ -370,7 +370,7 @@ class PartialChannel(snowflakes.Unique):
     async def delete(self) -> PartialChannel:
         """Delete a channel in a guild, or close a DM.
 
-        .. note::
+        !!! note
             For Public servers, the set 'Rules' or 'Guidelines' channels and the
             'Public Server Updates' channel cannot be deleted.
 
@@ -412,7 +412,7 @@ class TextableChannel(PartialChannel):
     ) -> iterators.LazyIterator[messages_.Message]:
         """Browse the message history for a given text channel.
 
-        .. note::
+        !!! note
             This call is not a coroutine function, it returns a special type of
             lazy iterator that will perform API calls as you iterate across it,
             thus any errors documented below will happen then.
@@ -687,7 +687,7 @@ class TextableChannel(PartialChannel):
                 await asyncio.sleep(35)            # keep typing until this finishes
         ```
 
-        .. note::
+        !!! note
             Sending a message to this channel will stop the typing indicator. If
             using an `async with`, it will start up again after a few seconds.
             This is a limitation of Discord's API.
@@ -787,7 +787,7 @@ class TextableChannel(PartialChannel):
     ) -> None:
         """Bulk-delete messages from the channel.
 
-        .. note::
+        !!! note
             This API endpoint will only be able to delete 100 messages
             at a time. For anything more than this, multiple requests will
             be executed one-after-the-other, since the rate limits for this
@@ -799,12 +799,12 @@ class TextableChannel(PartialChannel):
             of this is that the `delete_message` endpoint is ratelimited
             by a different bucket with different usage rates.
 
-        .. warning::
+        !!! warning
             This endpoint is not atomic. If an error occurs midway through
             a bulk delete, you will **not** be able to revert any changes made
             up to this point.
 
-        .. warning::
+        !!! warning
             Specifying any messages more than 14 days old will cause the call
             to fail, potentially with partial completion.
 
@@ -837,7 +837,7 @@ class PrivateChannel(PartialChannel):
     last_message_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the last message sent in this channel.
 
-    .. warning::
+    !!! warning
         This might point to an invalid or deleted message. Do not assume that
         this will always be valid.
     """
@@ -863,7 +863,7 @@ class DMChannel(PrivateChannel, TextableChannel):
 class GroupDMChannel(PrivateChannel):
     """Represents a group direct message channel.
 
-    .. note::
+    !!! note
         This doesn't have the methods found on `TextableChannel` as bots cannot
         interact with a group DM that they own by sending or seeing messages in
         it.
@@ -1129,7 +1129,7 @@ class GuildChannel(PartialChannel):
 class PermissibleGuildChannel(GuildChannel):
     """Base class for all guild channels which have permission overwrites.
 
-    .. note::
+    !!! note
         This doesn't apply to thread channels as they implicitly inherit
         permissions from their parent channel.
     """
@@ -1272,7 +1272,7 @@ class GuildTextChannel(PermissibleGuildChannel, TextableGuildChannel):
     last_message_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the last message sent in this channel.
 
-    .. warning::
+    !!! warning
         This might point to an invalid or deleted message. Do not assume that
         this will always be valid.
     """
@@ -1282,7 +1282,7 @@ class GuildTextChannel(PermissibleGuildChannel, TextableGuildChannel):
 
     If there is no rate limit, this will be 0 seconds.
 
-    .. note::
+    !!! note
         Any user that has permissions allowing `MANAGE_MESSAGES`,
         `MANAGE_CHANNEL`, `ADMINISTRATOR` will not be limited. Likewise, bots
         will not be affected by this rate limit.
@@ -1291,7 +1291,7 @@ class GuildTextChannel(PermissibleGuildChannel, TextableGuildChannel):
     last_pin_timestamp: typing.Optional[datetime.datetime] = attrs.field(eq=False, hash=False, repr=False)
     """The timestamp of the last-pinned message.
 
-    .. note::
+    !!! note
         This may be `None` in several cases; Discord does not document what
         these cases are. Trust no one!
     """
@@ -1313,7 +1313,7 @@ class GuildNewsChannel(PermissibleGuildChannel, TextableGuildChannel):
     last_message_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the last message sent in this channel.
 
-    .. warning::
+    !!! warning
         This might point to an invalid or deleted message. Do not assume that
         this will always be valid.
     """
@@ -1321,7 +1321,7 @@ class GuildNewsChannel(PermissibleGuildChannel, TextableGuildChannel):
     last_pin_timestamp: typing.Optional[datetime.datetime] = attrs.field(eq=False, hash=False, repr=False)
     """The timestamp of the last-pinned message.
 
-    .. note::
+    !!! note
         This may be `None` in several cases; Discord does not document what
         these cases are. Trust no one!
     """
@@ -1360,7 +1360,7 @@ class GuildVoiceChannel(PermissibleGuildChannel, TextableGuildChannel):
     last_message_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the last message sent in this channel.
 
-    .. warning::
+    !!! warning
         This might point to an invalid or deleted message. Do not assume that
         this will always be valid.
     """
@@ -1390,7 +1390,7 @@ class GuildStageChannel(PermissibleGuildChannel, TextableGuildChannel):
     last_message_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the last message sent in this channel.
 
-    .. warning::
+    !!! warning
         This might point to an invalid or deleted message. Do not assume that
         this will always be valid.
     """
@@ -1474,7 +1474,7 @@ class GuildForumChannel(PermissibleGuildChannel):
     last_thread_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the last thread created in this channel.
 
-    .. warning::
+    !!! warning
         This might point to an invalid or deleted message. Do not assume that
         this will always be valid.
     """
@@ -1484,7 +1484,7 @@ class GuildForumChannel(PermissibleGuildChannel):
 
     If there is no rate limit, this will be 0 seconds.
 
-    .. note::
+    !!! note
         Any user that has permissions allowing `MANAGE_MESSAGES`,
         `MANAGE_CHANNEL`, `ADMINISTRATOR` will not be limited. Likewise, bots
         will not be affected by this rate limit.
@@ -1495,7 +1495,7 @@ class GuildForumChannel(PermissibleGuildChannel):
 
     If there is no rate limit, this will be 0 seconds.
 
-    .. note::
+    !!! note
         Any user that has permissions allowing `MANAGE_MESSAGES`,
         `MANAGE_CHANNEL`, `ADMINISTRATOR` will not be limited. Likewise, bots
         will not be affected by this rate limit.
@@ -1510,7 +1510,7 @@ class GuildForumChannel(PermissibleGuildChannel):
     flags: ChannelFlag = attrs.field(eq=False, hash=False, repr=False)
     """The channel flags for this channel.
 
-    .. note::
+    !!! note
         As of writing, the only flag that can be set is `ChannelFlag.REQUIRE_TAG`.
     """
 
@@ -1569,7 +1569,7 @@ class ThreadMember:
     user_id: snowflakes.Snowflake = attrs.field(eq=True, repr=True)
     """The member's user ID.
 
-    .. note::
+    !!! note
         This will only ever be `None` on thread members attached to
         guild create events, where this is the current bot's user.
     """
@@ -1580,7 +1580,7 @@ class ThreadMember:
     flags: int = attrs.field(eq=True, repr=True)
     """Bitfield flag of the user's settings for the thread.
 
-    .. note::
+    !!! note
         As of writing, the values of this field's are undocumented.
     """
 
@@ -1592,7 +1592,7 @@ class GuildThreadChannel(TextableGuildChannel):
     last_message_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the last message sent in this channel.
 
-    .. warning::
+    !!! warning
         This might point to an invalid or deleted message. Do not assume that
         this will always be valid.
     """
@@ -1600,7 +1600,7 @@ class GuildThreadChannel(TextableGuildChannel):
     last_pin_timestamp: typing.Optional[datetime.datetime] = attrs.field(eq=False, hash=False, repr=False)
     """The timestamp of the last-pinned message.
 
-    .. note::
+    !!! note
         This may be `None` in several cases; Discord does not document what
         these cases are. Trust no one!
     """
@@ -1610,7 +1610,7 @@ class GuildThreadChannel(TextableGuildChannel):
 
     If there is no rate limit, this will be 0 seconds.
 
-    .. note::
+    !!! note
         Any user that has permissions allowing `MANAGE_MESSAGES`,
         `MANAGE_CHANNEL`, `ADMINISTRATOR` will not be limited. Likewise, bots
         will not be affected by this rate limit.
@@ -1619,14 +1619,14 @@ class GuildThreadChannel(TextableGuildChannel):
     approximate_message_count: int = attrs.field(eq=False, hash=False, repr=True)
     """Approximate number of messages in the thread channel.
 
-    .. warning::
+    !!! warning
         This stops counting at 50 for threads created before 2022/06/01.
     """
 
     approximate_member_count: int = attrs.field(eq=False, hash=False, repr=True)
     """Approximate count of members in the thread channel.
 
-    .. warning::
+    !!! warning
         This stop counting at 50.
     """
 
@@ -1642,7 +1642,7 @@ class GuildThreadChannel(TextableGuildChannel):
     archive_timestamp: datetime.datetime = attrs.field(eq=False, hash=False, repr=True)
     """When the thread's archived state was last changed.
 
-    .. note::
+    !!! note
         If the thread has never been archived then this will be the thread's
         creation date and this will be changed when a thread is unarchived.
     """
@@ -1657,7 +1657,7 @@ class GuildThreadChannel(TextableGuildChannel):
     member: typing.Optional[ThreadMember] = attrs.field(eq=False, hash=False, repr=True)
     """Thread member object for the current user, if they are in the thread.
 
-    .. note::
+    !!! note
         This is only returned by some endpoints and on private thread
         access events.
     """
@@ -1696,7 +1696,7 @@ class GuildPublicThread(GuildThreadChannel):
 
     This will only apply to threads created inside a forum channel.
 
-    .. note::
+    !!! note
         As of writing, the only flag that can be set is `ChannelFlag.PINNED`.
     """
 

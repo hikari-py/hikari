@@ -116,7 +116,7 @@ async def first_completed(*aws: typing.Awaitable[typing.Any], timeout: typing.Op
     If the first awaitable raises an exception, then that exception will be
     propagated.
 
-    .. note::
+    !!! note
         If more than one awaitable is completed before entering this call, then
         the first future is always returned.
 

@@ -108,7 +108,7 @@ class Emoji(files.WebResource, abc.ABC):
 class UnicodeEmoji(str, Emoji):
     """Represents a unicode emoji.
 
-    .. warning::
+    !!! warning
         A word of warning if you try to upload this emoji as a file attachment.
 
         While this emoji type can be used to upload the Twemoji representations
@@ -252,7 +252,7 @@ class CustomEmoji(snowflakes.Unique, Emoji):
         >>> picks = random.choices(emojis, 5)
         >>> await event.respond(files=picks)
 
-    .. warning::
+    !!! warning
         Discord will not provide information on whether these emojis are
         animated or not when a reaction is removed and an event is fired. This
         is problematic if you need to try and determine the emoji that was
@@ -350,7 +350,7 @@ class KnownCustomEmoji(CustomEmoji):
     user: typing.Optional[users.User] = attrs.field(eq=False, hash=False, repr=False)
     """The user that created the emoji.
 
-    .. note::
+    !!! note
         This will be `None` if you are missing the `MANAGE_EMOJIS_AND_STICKERS`
         permission in the server the emoji is from.
     """

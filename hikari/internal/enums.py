@@ -259,7 +259,7 @@ class Enum(metaclass=_EnumMeta):
     that can be used in place of this type. This acts as a type-safe way
     of representing a set number of "things".
 
-    .. warning::
+    !!! warning
         Some semantics such as subtype checking and instance checking may
         differ. It is recommended to compare these values using the
         `==` operator rather than the `is` operator for safety reasons.
@@ -523,7 +523,7 @@ class Flag(metaclass=_FlagMeta):
     This implementation has extra features, in that it will actively behave
     like a `set` as well.
 
-    .. warning::
+    !!! warning
         It is important to keep in mind that some semantics such as subtype
         checking and instance checking may differ. It is recommended to compare
         these values using the `==` operator rather than the `is` operator for
@@ -645,7 +645,7 @@ class Flag(metaclass=_FlagMeta):
     All other methods and operators on `Flag` members are inherited from the
     member's __value__.
 
-    .. note::
+    !!! note
         Due to limitations around how this is re-implemented, this class is not
         considered a subclass of `Enum` at runtime, even if MyPy believes this
         is possible
@@ -739,7 +739,7 @@ class Flag(metaclass=_FlagMeta):
     def none(self, *flags: Self) -> bool:
         """Check if none of the given flags are part of this value.
 
-        .. note::
+        !!! note
             This is essentially the opposite of `Flag.any`.
 
         Returns

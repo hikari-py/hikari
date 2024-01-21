@@ -371,7 +371,7 @@ class RESTApp(traits.ExecutorAware):
     ) -> RESTClientImpl:
         """Acquire an instance of this REST client.
 
-        .. note::
+        !!! note
             The returned REST client should be started before it can be used,
             either by calling `RESTClientImpl.start` or by using it as an
             asynchronous context manager.
@@ -648,7 +648,7 @@ class RESTClientImpl(rest_api.RESTClient):
     def start(self) -> None:
         """Start the HTTP client.
 
-        .. note::
+        !!! note
             This must be called within an active event loop.
 
         Raises

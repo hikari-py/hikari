@@ -67,13 +67,13 @@ class All(typing.Generic[ValueT]):
 
     This behaves like a lazy wrapper implementation of the `all` builtin.
 
-    .. note::
+    !!! note
         Like the rest of the standard library, this is a short-circuiting
         operation. This means that if a predicate returns `False`, no
         predicates after this are invoked, as the result is already known. In
         this sense, they are invoked in-order.
 
-    .. warning::
+    !!! warning
         You should not generally need to use this outside of extending the
         iterators API in this library!
 
@@ -525,7 +525,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
     async def last(self) -> ValueT:
         """Return the last element of this iterator only.
 
-        .. note::
+        !!! note
             This method will consume the whole iterator if run.
 
         Returns
@@ -639,14 +639,14 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
     def awaiting(self, window_size: int = 10) -> LazyIterator[ValueT]:
         """Await each item concurrently in a fixed size window.
 
-        .. warning::
+        !!! warning
             Setting a large window size, or setting it to 0 to await everything
             is a dangerous thing to do if you are making API calls. Some
             endpoints will get ratelimited and cause a backup of waiting
             tasks, others may begin to spam global rate limits instead
             (the `fetch_user` endpoint seems to be notorious for doing this).
 
-        .. note::
+        !!! note
             This call assumes that the iterator contains awaitable values as
             input. MyPy cannot detect this nicely, so any cast is forced
             internally.

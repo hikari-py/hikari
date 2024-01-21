@@ -289,7 +289,7 @@ class GuildRecord:
 class BaseData(abc.ABC, typing.Generic[ValueT]):
     """A data class used for in-memory storage of entities in a more primitive form.
 
-    .. note::
+    !!! note
         This base implementation assumes that all the fields it'll handle will
         be immutable and to handle mutable fields you'll have to override
         build_entity and build_from_entity to explicitly copy them.

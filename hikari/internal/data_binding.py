@@ -172,7 +172,7 @@ class StringMapBuilder(multidict.MultiDict[str]):
     the amount of boilerplate needed for generating the headers and query strings for
     low-level HTTP API interaction, amongst other things.
 
-    .. warning::
+    !!! warning
         Because this subclasses `dict`, you should not use the
         index operator to set items on this object. Doing so will skip any
         form of validation on the type. Use the `put*` methods instead.
@@ -205,7 +205,7 @@ class StringMapBuilder(multidict.MultiDict[str]):
     ) -> None:
         """Add a key and value to the string map.
 
-        .. note::
+        !!! note
             The value will always be cast to a `str` before inserting it.
             `True` will be translated to `"true"`, `False` will be
             translated to `"false"`, and `None` will be translated to
@@ -252,7 +252,7 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
     This speeds up generation of JSON payloads for low level HTTP and websocket
     API interaction.
 
-    .. warning::
+    !!! warning
         Because this subclasses `dict`, you should not use the
         index operator to set items on this object. Doing so will skip any
         form of validation on the type. Use the `put*` methods instead.

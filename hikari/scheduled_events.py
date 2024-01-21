@@ -194,7 +194,7 @@ class ScheduledExternalEvent(ScheduledEvent):
     location: str = attrs.field(hash=False, repr=False)
     """The location of the scheduled event.
 
-    .. note::
+    !!! note
         There is no strict format for this field, and it will likely be a user
         friendly string.
     """

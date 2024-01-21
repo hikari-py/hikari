@@ -109,7 +109,7 @@ class GatewayBot(traits.GatewayBotAware):
     This is the class you will want to use to start, control, and build a bot
     with.
 
-    .. note::
+    !!! note
         Settings that control the gateway session are provided to the
         `GatewayBot.run` and `GatewayBot.start` functions in this class. This is done
         to allow you to contextually customise details such as sharding
@@ -1013,7 +1013,7 @@ class GatewayBot(traits.GatewayBotAware):
     ) -> event_manager_.EventStream[base_events.EventT]:
         """Return a stream iterator for the given event and sub-events.
 
-        .. warning::
+        !!! warning
             If you use `stream.open()` to start the stream then you must
             also close it with `stream.close()` otherwise it may queue
             events in memory indefinitely.
@@ -1161,7 +1161,7 @@ class GatewayBot(traits.GatewayBotAware):
     ) -> base_events.EventT:
         """Wait for a given event to occur once, then return the event.
 
-        .. warning::
+        !!! warning
             Async predicates are not supported.
 
         Parameters

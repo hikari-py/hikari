@@ -392,7 +392,7 @@ class PartialMessage(snowflakes.Unique):
     `MessageUpdateEvent`, but for all other purposes should be treated as
     being optionally specified.
 
-    .. warning::
+    !!! warning
         All fields on this model except `channel` and `id` may be set to
         `hikari.undefined.UNDEFINED` (a singleton) if we have not
         received information about their state from Discord alongside field
@@ -413,7 +413,7 @@ class PartialMessage(snowflakes.Unique):
     guild_id: typing.Optional[snowflakes.Snowflake] = attrs.field(hash=False, eq=False, repr=True)
     """The ID of the guild that the message was sent in or `None` for messages out of guilds.
 
-    .. warning::
+    !!! warning
         This will also be `None` for messages received from the REST API.
         This is a Discord limitation as stated here <https://github.com/discord/discord-api-docs/issues/912>
     """
@@ -433,7 +433,7 @@ class PartialMessage(snowflakes.Unique):
     This will also be `hikari.undefined.UNDEFINED` in some cases such as when Discord
     updates a message with an embed URL preview.
 
-    .. warning::
+    !!! warning
         This will also be `None` for messages received from the REST API.
         This is a Discord limitation as stated here <https://github.com/discord/discord-api-docs/issues/912>
     """
@@ -459,7 +459,7 @@ class PartialMessage(snowflakes.Unique):
     )
     """Users who were notified by their mention in the message.
 
-    .. warning::
+    !!! warning
         If the contents have not mutated and this is a message update event,
         some fields that are not affected may be empty instead.
 
@@ -471,7 +471,7 @@ class PartialMessage(snowflakes.Unique):
     )
     """IDs of roles that were notified by their mention in the message.
 
-    .. warning::
+    !!! warning
         If the contents have not mutated and this is a message update event,
         some fields that are not affected may be empty instead.
 
@@ -485,7 +485,7 @@ class PartialMessage(snowflakes.Unique):
 
     If the message is not crossposted, this will always be empty.
 
-    .. warning::
+    !!! warning
         If the contents have not mutated and this is a message update event,
         some fields that are not affected may be empty instead.
 
@@ -495,7 +495,7 @@ class PartialMessage(snowflakes.Unique):
     mentions_everyone: undefined.UndefinedOr[bool] = attrs.field(hash=False, eq=False, repr=False)
     """Whether the message notifies using `@everyone` or `@here`.
 
-    .. warning::
+    !!! warning
         If the contents have not mutated and this is a message update event,
         some fields that are not affected may be empty instead.
 
@@ -523,7 +523,7 @@ class PartialMessage(snowflakes.Unique):
     activity: undefined.UndefinedNoneOr[MessageActivity] = attrs.field(hash=False, eq=False, repr=False)
     """The message activity.
 
-    .. note::
+    !!! note
         This will only be provided for messages with rich-presence related chat
         embeds.
     """
@@ -531,7 +531,7 @@ class PartialMessage(snowflakes.Unique):
     application: undefined.UndefinedNoneOr[MessageApplication] = attrs.field(hash=False, eq=False, repr=False)
     """The message application.
 
-    .. note::
+    !!! note
         This will only be provided for messages with rich-presence related chat
         embeds.
     """
@@ -567,7 +567,7 @@ class PartialMessage(snowflakes.Unique):
     application_id: undefined.UndefinedNoneOr[snowflakes.Snowflake] = attrs.field(hash=False, eq=False, repr=False)
     """ID of the application this message was sent by.
 
-    .. note::
+    !!! note
         This will only be provided for interaction messages.
     """
 
@@ -582,7 +582,7 @@ class PartialMessage(snowflakes.Unique):
 
         If the message is not crossposted, this will always be empty.
 
-        .. warning::
+        !!! warning
             If the contents have not mutated and this is a message update event,
             some fields that are not affected may be empty instead.
 
@@ -597,7 +597,7 @@ class PartialMessage(snowflakes.Unique):
     def user_mentions_ids(self) -> undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]]:
         """Ids of the users who were notified by their mention in the message.
 
-        .. warning::
+        !!! warning
             If the contents have not mutated and this is a message update event,
             some fields that are not affected may be empty instead.
 
@@ -613,13 +613,13 @@ class PartialMessage(snowflakes.Unique):
 
         If this message was sent in a DM, this will always be empty.
 
-        .. warning::
+        !!! warning
             This will only return valid results on gateway events. For REST
             endpoints, this will potentially be empty. This is a limitation of
             Discord's API, as they do not consistently notify of the ID of the
             guild a message was sent in.
 
-        .. note::
+        !!! note
             If you are using a stateless application such as a stateless bot
             or a REST-only client, this will always be empty. Furthermore,
             if you are running a stateful bot and have the GUILD_MEMBERS
@@ -646,13 +646,13 @@ class PartialMessage(snowflakes.Unique):
 
         If this message was sent in a DM, this will always be empty.
 
-        .. warning::
+        !!! warning
             This will only return valid results on gateway events. For REST
             endpoints, this will potentially be empty. This is a limitation of
             Discord's API, as they do not consistently notify of the ID of the
             guild a message was sent in.
 
-        .. note::
+        !!! note
             If you are using a stateless application such as a stateless bot
             or a REST-only client, this will always be empty. Furthermore,
             if you are running a stateful bot and have the GUILD intent
@@ -745,13 +745,13 @@ class PartialMessage(snowflakes.Unique):
     ) -> Message:
         """Edit an existing message in a given channel.
 
-        .. note::
+        !!! note
             Mentioning everyone, roles, or users in message edits currently
             will not send a push notification showing a new mention to people
             on Discord. It will still highlight in their chat as if they
             were mentioned, however.
 
-        .. warning::
+        !!! warning
             If you specify a text `content`, `mentions_everyone`,
             `mentions_reply`, `user_mentions`, and `role_mentions` will default
             to `False` as the message will be re-parsed for mentions. This will
@@ -760,7 +760,7 @@ class PartialMessage(snowflakes.Unique):
             This is a limitation of Discord's design. If in doubt, specify all
             four of them each time.
 
-        .. warning::
+        !!! warning
             If the message was not sent by your user, the only parameter
             you may provide to this call is the `flags` parameter. Anything
             else will result in a `hikari.errors.ForbiddenError` being raised.
@@ -1370,7 +1370,7 @@ class Message(PartialMessage):
     activity: typing.Optional[MessageActivity] = attrs.field(hash=False, eq=False, repr=False)
     """The message activity.
 
-    .. note::
+    !!! note
         This will only be provided for messages with rich-presence related chat
         embeds.
     """
@@ -1378,7 +1378,7 @@ class Message(PartialMessage):
     application: typing.Optional[MessageApplication] = attrs.field(hash=False, eq=False, repr=False)
     """The message application.
 
-    .. note::
+    !!! note
         This will only be provided for messages with rich-presence related chat
         embeds.
     """
@@ -1407,7 +1407,7 @@ class Message(PartialMessage):
     application_id: typing.Optional[snowflakes.Snowflake] = attrs.field(hash=False, eq=False, repr=False)
     """ID of the application this message was sent by.
 
-    .. note::
+    !!! note
         This will only be provided for interaction messages.
     """
 

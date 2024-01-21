@@ -201,7 +201,7 @@ class GatewayShard(abc.ABC):
     ) -> None:
         """Request for a guild chunk.
 
-        .. note::
+        !!! note
             To request the full list of members, set `query` to `""` (empty
             string) and `limit` to `0`.
 

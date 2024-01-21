@@ -197,7 +197,7 @@ class ManualRateLimiter(BurstRateLimiter):
         Iterates repeatedly while the queue is not empty, adhering to any
         rate limits that occur in the mean time.
 
-        .. note::
+        !!! note
             This will invoke `ManualRateLimiter.unlock_later` as a scheduled
             task in the future (it will not await it to finish).
 
@@ -225,7 +225,7 @@ class ManualRateLimiter(BurstRateLimiter):
     async def unlock_later(self, retry_after: float) -> None:
         """Sleep for a while, then remove the lock.
 
-        .. warning::
+        !!! warning
             You should not need to invoke this directly. Call
             `ManualRateLimiter.throttle` instead.
 
@@ -349,7 +349,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
     def get_time_until_reset(self, now: float) -> float:
         """Determine how long until the current rate limit is reset.
 
-        .. warning::
+        !!! warning
             Invoking this method will update the internal state if we were
             previously rate limited, but at the given time are no longer under
             that limit. This makes it imperative that you only pass the current
@@ -374,7 +374,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
     def is_rate_limited(self, now: float) -> bool:
         """Determine if we are under a rate limit at the given time.
 
-        .. warning::
+        !!! warning
             Invoking this method will update the internal state if we were
             previously rate limited, but at the given time are no longer under
             that limit. This makes it imperative that you only pass the current
@@ -409,7 +409,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
         Iterates repeatedly while the queue is not empty, adhering to any
         rate limits that occur in the mean time.
 
-        .. note::
+        !!! note
             You should usually not need to invoke this directly, but if you do,
             ensure to call it using `asyncio.create_task`, and store the
             task immediately in `throttle_task`.

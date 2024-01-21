@@ -75,13 +75,13 @@ def init_logging(
 ) -> None:
     """Initialize logging for the user.
 
-    .. note::
+    !!! note
         If any handlers already exist, some opinionated defaults will be configured
         (mostly do to with logging efficiency and warning logging), but existing
         handlers will not be overwritten. You can disable this by passing
         `None` as the `flavor` parameter.
 
-    .. warning::
+    !!! warning
         This function is blocking!
 
     Parameters
@@ -260,10 +260,10 @@ def print_banner(
     documentation. Users can override this by placing a `banner.txt` in some
     package and referencing it in this call.
 
-    .. note::
+    !!! note
         The `banner.txt` must be in the root folder of the package.
 
-    .. warning::
+    !!! warning
         This function is blocking!
 
     Parameters

@@ -138,7 +138,7 @@ class CommandOption:
     name: str = attrs.field(repr=True)
     r"""The command option's name.
 
-    .. note::
+    !!! note
         This will match the regex `^[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$` in Unicode mode and will be
         lowercase.
     """
@@ -146,7 +146,7 @@ class CommandOption:
     description: str = attrs.field(repr=False)
     """The command option's description.
 
-    .. note::
+    !!! note
         This will be inclusively between 1-100 characters in length.
     """
 
@@ -232,7 +232,7 @@ class PartialCommand(snowflakes.Unique):
     name: str = attrs.field(eq=False, hash=False, repr=True)
     r"""The command's name.
 
-    .. note::
+    !!! note
         This will match the regex `^[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$` in Unicode mode and will be
         lowercase.
     """
@@ -401,7 +401,7 @@ class PartialCommand(snowflakes.Unique):
     ) -> GuildCommandPermissions:
         """Set permissions for this command in a specific guild.
 
-        .. note::
+        !!! note
             This overwrites any previously set permissions.
 
         Parameters
@@ -445,7 +445,7 @@ class SlashCommand(PartialCommand):
 
     None if this command is not a slash command.
 
-    .. note::
+    !!! note
         This will be inclusively between 1-100 characters in length.
     """
 

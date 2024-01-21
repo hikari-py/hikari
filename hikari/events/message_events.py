@@ -199,7 +199,7 @@ class GuildMessageCreateEvent(MessageCreateEvent):
     def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
         """Get the cached guild that this event occurred in, if known.
 
-        .. note::
+        !!! note
             This will require the `GUILDS` intent to be specified on start-up
             in order to be known.
 
@@ -248,7 +248,7 @@ class DMMessageCreateEvent(MessageCreateEvent):
 class MessageUpdateEvent(MessageEvent, abc.ABC):
     """Event that is fired when a message is updated.
 
-    .. note::
+    !!! note
         Less information will be available here than in the creation event
         due to Discord limitations.
     """
@@ -366,7 +366,7 @@ class MessageUpdateEvent(MessageEvent, abc.ABC):
 class GuildMessageUpdateEvent(MessageUpdateEvent):
     """Event that is fired when a message is updated in a guild.
 
-    .. note::
+    !!! note
         Less information will be available here than in the creation event
         due to Discord limitations.
     """
@@ -436,7 +436,7 @@ class GuildMessageUpdateEvent(MessageUpdateEvent):
     def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
         """Get the cached guild that this event occurred in, if known.
 
-        .. note::
+        !!! note
             This will require the `GUILDS` intent to be specified on start-up
             in order to be known.
 
@@ -458,7 +458,7 @@ class GuildMessageUpdateEvent(MessageUpdateEvent):
 class DMMessageUpdateEvent(MessageUpdateEvent):
     """Event that is fired when a message is updated in a DM.
 
-    .. note::
+    !!! note
         Less information will be available here than in the creation event
         due to Discord limitations.
     """
@@ -480,7 +480,7 @@ class DMMessageUpdateEvent(MessageUpdateEvent):
 class MessageDeleteEvent(MessageEvent, abc.ABC):
     """Special event that is triggered when a message gets deleted.
 
-    .. note::
+    !!! note
         Due to Discord limitations, most message information is unavailable
         during deletion events.
     """
@@ -507,7 +507,7 @@ class MessageDeleteEvent(MessageEvent, abc.ABC):
 class GuildMessageDeleteEvent(MessageDeleteEvent):
     """Event that is triggered if a message is deleted in a guild.
 
-    .. note::
+    !!! note
         Due to Discord limitations, most message information is unavailable
         during deletion events.
     """
@@ -551,7 +551,7 @@ class GuildMessageDeleteEvent(MessageDeleteEvent):
     def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
         """Get the cached guild this event corresponds to, if known.
 
-        .. note::
+        !!! note
             You will need `hikari.intents.Intents.GUILDS` enabled to receive this
             information.
 
@@ -573,7 +573,7 @@ class GuildMessageDeleteEvent(MessageDeleteEvent):
 class DMMessageDeleteEvent(MessageDeleteEvent):
     """Event that is triggered if a message is deleted in a DM.
 
-    .. note::
+    !!! note
         Due to Discord limitations, most message information is unavailable
         during deletion events.
     """
@@ -600,7 +600,7 @@ class DMMessageDeleteEvent(MessageDeleteEvent):
 class GuildBulkMessageDeleteEvent(shard_events.ShardEvent):
     """Event that is triggered when a bulk deletion is triggered in a guild.
 
-    .. note::
+    !!! note
         Due to Discord limitations, most message information is unavailable
         during deletion events.
     """
@@ -647,7 +647,7 @@ class GuildBulkMessageDeleteEvent(shard_events.ShardEvent):
     def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
         """Get the cached guild this event corresponds to, if known.
 
-        .. note::
+        !!! note
             You will need `hikari.intents.Intents.GUILDS` enabled to receive this
             information.
 

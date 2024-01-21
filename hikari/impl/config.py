@@ -67,7 +67,7 @@ class BasicAuthHeader:
     username: str = attrs.field(validator=attrs.validators.instance_of(str))
     """Username for the header.
 
-    .. warning::
+    !!! warning
         This must not contain `":"`.
     """
 
@@ -131,7 +131,7 @@ class ProxySettings(config.ProxySettings):
 
     Defaults to `False` to prevent potentially unwanted behavior.
 
-    .. note::
+    !!! note
         For more details of using `netrc`, visit:
         <https://www.gnu.org/software/inetutils/manual/html_node/The-_002enetrc-file.html>
     """
@@ -234,7 +234,7 @@ class HTTPSettings(config.HTTPSettings):
     future where you need to enable this if Discord change their URL without
     warning.
 
-    .. note::
+    !!! note
         This will only apply to the REST API. WebSockets remain unaffected
         by any value set here.
     """
@@ -265,12 +265,12 @@ class HTTPSettings(config.HTTPSettings):
 
     If an instance of `ssl.SSLContext`, then this context will be used.
 
-    .. warning::
+    !!! warning
         Setting a custom value here may have security implications, or
         may result in the application being unable to connect to Discord
         at all.
 
-    .. warning::
+    !!! warning
         Disabling SSL verification is almost always unadvised. This
         is because your application will no longer check whether you are
         connecting to Discord, or to some third party spoof designed

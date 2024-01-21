@@ -110,7 +110,7 @@ class TemplateGuild(guilds.PartialGuild):
     roles: typing.Mapping[snowflakes.Snowflake, TemplateRole] = attrs.field(eq=False, hash=False, repr=False)
     """The roles in the guild.
 
-    .. note::
+    !!! note
         `hikari.guilds.Role.id` will be a unique placeholder on all the role
         objects found attached this template guild.
     """
@@ -120,7 +120,7 @@ class TemplateGuild(guilds.PartialGuild):
     )
     """The channels for the guild.
 
-    .. note::
+    !!! note
         `hikari.channels.GuildChannel.id` will be a unique placeholder on all
         the channel objects found attached this template guild.
     """
@@ -282,7 +282,7 @@ class Template:
     async def create_guild(self, name: str, *, icon: undefined.UndefinedOr[str]) -> guilds.RESTGuild:
         """Make a guild from a template.
 
-        .. note::
+        !!! note
             This endpoint can only be used by bots in less than 10 guilds.
 
         Parameters

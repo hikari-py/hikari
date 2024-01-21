@@ -268,7 +268,7 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
     ) -> None:
         """Create the initial response for this interaction.
 
-        .. warning::
+        !!! warning
             Calling this on an interaction which already has an initial
             response will result in this raising a `hikari.errors.NotFoundError`.
             This includes if the REST interaction server has already responded
@@ -401,13 +401,13 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
     ) -> messages.Message:
         """Edit the initial response of this command interaction.
 
-        .. note::
+        !!! note
             Mentioning everyone, roles, or users in message edits currently
             will not send a push notification showing a new mention to people
             on Discord. It will still highlight in their chat as if they
             were mentioned, however.
 
-        .. warning::
+        !!! warning
             If you specify a text `content`, `mentions_everyone`,
             `mentions_reply`, `user_mentions`, and `role_mentions` will default
             to `False` as the message will be re-parsed for mentions. This will

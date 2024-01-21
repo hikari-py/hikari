@@ -87,7 +87,7 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
 
     This will be `None` for modal interactions triggered in DMs.
 
-    .. note::
+    !!! note
         This value can usually only be changed if `COMMUNITY` is in `hikari.guilds.Guild.features`
         for the guild and will otherwise default to `en-US`.
     """
@@ -103,7 +103,7 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
 
     This will be `None` for modal interactions triggered in DMs.
 
-    .. note::
+    !!! note
         This member object comes with the extra field `permissions` which
         contains the member's permissions in the current channel.
     """
@@ -153,7 +153,7 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
     def get_channel(self) -> typing.Optional[channels.TextableGuildChannel]:
         """Get the guild channel this interaction was triggered in from the cache.
 
-        .. note::
+        !!! note
             This will always return `None` for interactions triggered
             in a DM channel.
 
@@ -214,7 +214,7 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
     def build_response(self) -> special_endpoints.InteractionMessageBuilder:
         """Get a message response builder for use in the REST server flow.
 
-        .. note::
+        !!! note
             For interactions received over the gateway
             `ModalInteraction.create_initial_response` should be used to set
             the interaction response message.
@@ -241,12 +241,12 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
     def build_deferred_response(self) -> special_endpoints.InteractionDeferredBuilder:
         """Get a deferred message response builder for use in the REST server flow.
 
-        .. note::
+        !!! note
             For interactions received over the gateway
             `ModalInteraction.create_initial_response` should be used to set
             the interaction response message.
 
-        .. note::
+        !!! note
             Unlike `hikari.api.special_endpoints.InteractionMessageBuilder`,
             the result of this call can be returned as is without any modifications
             being made to it.

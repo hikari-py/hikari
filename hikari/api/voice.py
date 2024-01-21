@@ -114,7 +114,7 @@ class VoiceComponent(abc.ABC):
             connecting to the voice channel. If timeout is `None` there will be
             no timeout.
 
-            .. warning::
+            !!! warning
                 If timeout is `None`, this function will be awaited forever if an
                 invalid `guild_id` or `channel_id` is provided.
 

@@ -87,7 +87,7 @@ class TypingIndicator(abc.ABC):
     the typing indicator once, or an async context manager to keep triggering
     the typing indicator repeatedly until the context finishes.
 
-    .. note::
+    !!! note
         This is a helper class that is used by `hikari.api.rest.RESTClient`.
         You should only ever need to use instances of this class that are
         produced by that API.
@@ -120,12 +120,12 @@ class GuildBuilder(abc.ABC):
     the logic behind creating a guild on an API level is somewhat confusing
     and detailed.
 
-    .. note::
+    !!! note
         If you call `add_role`, the default roles provided by Discord will
         be created. This also applies to the `add_` functions for
         text channels/voice channels/categories.
 
-    .. note::
+    !!! note
         Functions that return a `hikari.snowflakes.Snowflake` do
         **not** provide the final ID that the object will have once the
         API call is made. The returned IDs are only able to be used to
@@ -164,7 +164,7 @@ class GuildBuilder(abc.ABC):
         await guild_builder.create()
     ```
 
-    .. warning::
+    !!! warning
         The first role must always be the `@everyone` role.
 
     Adding a text channel to your guild:
@@ -277,7 +277,7 @@ class GuildBuilder(abc.ABC):
     ) -> snowflakes.Snowflake:
         """Create a role.
 
-        .. warning::
+        !!! warning
             The first role you create must always be the `@everyone` role.
 
         Parameters
@@ -558,7 +558,7 @@ class InteractionDeferredBuilder(InteractionResponseBuilder, abc.ABC):
     def flags(self) -> typing.Union[undefined.UndefinedType, int, messages.MessageFlag]:
         """Message flags this response should have.
 
-        .. note::
+        !!! note
             As of writing the only message flags which can be set here are
             `hikari.messages.MessageFlag.EPHEMERAL`, `hikari.messages.MessageFlag.SUPPRESS_NOTIFICATIONS`
             and `hikari.messages.MessageFlag.SUPRESS_EMBEDS`.
@@ -568,7 +568,7 @@ class InteractionDeferredBuilder(InteractionResponseBuilder, abc.ABC):
     def set_flags(self, flags: typing.Union[undefined.UndefinedType, int, messages.MessageFlag], /) -> Self:
         """Set message flags for this response.
 
-        .. note::
+        !!! note
             As of writing, the only message flags which can be set are `hikari.messages.MessageFlag.EPHEMERAL`
             `hikari.messages.MessageFlag.SUPPRESS_NOTIFICATIONS` and
             `hikari.messages.MessageFlag.SUPRESS_EMBEDS`.
@@ -703,7 +703,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
     def flags(self) -> typing.Union[undefined.UndefinedType, int, messages.MessageFlag]:
         """Message flags this response should have.
 
-        .. note::
+        !!! note
             As of writing the only message flags which can be set here are
             `hikari.messages.MessageFlag.EPHEMERAL`,
             `hikari.messages.MessageFlag.SUPPRESS_NOTIFICATIONS`
@@ -821,7 +821,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
     def set_flags(self, flags: typing.Union[undefined.UndefinedType, int, messages.MessageFlag], /) -> Self:
         """Set message flags for this response.
 
-        .. note::
+        !!! note
             As of writing, the only message flags which can be set is
             `hikari.messages.MessageFlag.EPHEMERAL` and `hikari.messages.MessageFlag.SUPPRESS_NOTIFICATIONS`..
 
@@ -984,7 +984,7 @@ class CommandBuilder(abc.ABC):
     def name(self) -> str:
         r"""Name to set for this command.
 
-        .. warning::
+        !!! warning
             This should match the regex `^[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$` in Unicode mode
             and must be lowercase.
         """
@@ -1180,7 +1180,7 @@ class SlashCommandBuilder(CommandBuilder):
     def description(self) -> str:
         """Command's description.
 
-        .. warning::
+        !!! warning
             This should be inclusively between 1-100 characters in length.
         """
 
@@ -1230,7 +1230,7 @@ class SlashCommandBuilder(CommandBuilder):
     def add_option(self, option: commands.CommandOption) -> Self:
         """Add an option to this command.
 
-        .. note::
+        !!! note
             A command can have up to 25 options.
 
         Parameters
@@ -1366,7 +1366,7 @@ class ButtonBuilder(ComponentBuilder, abc.ABC):
     def label(self) -> undefined.UndefinedOr[str]:
         """Text label which should appear on this button.
 
-        .. note::
+        !!! note
             The text label to that should appear on this button. This may be
             up to 80 characters long.
         """
@@ -1678,7 +1678,7 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC):
     def set_min_values(self, value: int, /) -> Self:
         """Set the minimum amount of options which need to be selected for this menu.
 
-        .. note::
+        !!! note
             This defaults to 1 if not set and must be greater than or equal to 0
             and less than or equal to `SelectMenuBuilder.max_values`.
 
@@ -1697,7 +1697,7 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC):
     def set_max_values(self, value: int, /) -> Self:
         """Set the maximum amount of options which can be selected for this menu.
 
-        .. note::
+        !!! note
             This defaults to 1 if not set and must be less than or equal to 25
             and greater than or equal to `SelectMenuBuilder.min_values`.
 
@@ -1804,7 +1804,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC):
     def custom_id(self) -> str:
         """Developer set custom ID used for identifying this text input.
 
-        .. note::
+        !!! note
             This custom_id is never used in component interaction events.
             It is meant to be used purely for resolving components modal interactions.
         """
@@ -1984,7 +1984,7 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
     def add_component(self, component: ComponentBuilder, /) -> Self:
         """Add a component to this action row builder.
 
-        .. warning::
+        !!! warning
             It is generally better to use `ActionRowBuilder.add_button`
             and `ActionRowBuilder.add_select_menu` to add your
             component to the builder. Those methods utilize this one.
@@ -2220,7 +2220,7 @@ class ModalActionRowBuilder(ComponentBuilder, abc.ABC):
     def add_component(self, component: ComponentBuilder, /) -> Self:
         """Add a component to this action row builder.
 
-        .. warning::
+        !!! warning
             It is generally better to use `ActionRowBuilder.add_button`
             and `ActionRowBuilder.add_select_menu` to add your
             component to the builder. Those methods utilize this one.

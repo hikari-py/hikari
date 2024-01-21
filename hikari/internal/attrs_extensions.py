@@ -223,7 +223,7 @@ def get_or_generate_deep_copier(
 def deep_copy_attrs(model: ModelT, memo: typing.Optional[typing.MutableMapping[int, typing.Any]] = None) -> ModelT:
     """Deep copy an attrs model with `init` enabled.
 
-    .. note::
+    !!! note
         This won't deep copy attributes where "skip_deep_copy" is set to
         `True` in their metadata.
 
@@ -252,7 +252,7 @@ def deep_copy_attrs(model: ModelT, memo: typing.Optional[typing.MutableMapping[i
 def with_copy(cls: typing.Type[ModelT]) -> typing.Type[ModelT]:
     """Add a custom implementation for copying attrs models to a class.
 
-    .. note::
+    !!! note
         This will only work if the class has an attrs generated init.
     """
     cls.__copy__ = copy_attrs  # type: ignore[attr-defined]

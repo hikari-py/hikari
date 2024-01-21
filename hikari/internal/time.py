@@ -140,7 +140,7 @@ def datetime_to_discord_epoch(timestamp: datetime.datetime) -> int:
 def unix_epoch_to_datetime(epoch: typing.Union[int, float], /, *, is_millis: bool = True) -> datetime.datetime:
     """Parse a UNIX epoch to a `datetime.datetime` object.
 
-    .. note::
+    !!! note
         If an epoch that's outside the range of what this system can handle,
         this will return `datetime.datetime.max` if the timestamp is positive,
         or `datetime.datetime.min` otherwise.

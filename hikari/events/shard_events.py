@@ -70,7 +70,7 @@ class ShardEvent(base_events.Event, abc.ABC):
 class ShardPayloadEvent(ShardEvent):
     """Event fired for most shard events with their raw payload.
 
-    .. note::
+    !!! note
         This will only be dispatched for real dispatch events received from
         Discord and not artificial events like the `ShardStateEvent` events.
     """

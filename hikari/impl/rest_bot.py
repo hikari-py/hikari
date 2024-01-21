@@ -625,7 +625,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
     ) -> None:
         """Start the bot and wait for the internal server to startup then return.
 
-        .. note::
+        !!! note
             For more information on the other parameters such as defaults see
             AIOHTTP's documentation.
 

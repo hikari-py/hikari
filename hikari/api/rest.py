@@ -91,7 +91,7 @@ class TokenStrategy(abc.ABC):
     def invalidate(self, token: typing.Optional[str]) -> None:
         """Invalidate the cached token in this handler.
 
-        .. note::
+        !!! note
             `token` may be provided in-order to avoid newly generated tokens
             from being invalidated due to multiple calls being made by separate
             subroutines which are handling the same token.
@@ -378,7 +378,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> channels_.PartialChannel:
         """Delete a channel in a guild, or close a DM.
 
-        .. note::
+        !!! note
             For Public servers, the set 'Rules' or 'Guidelines' channels and the
             'Public Server Updates' channel cannot be deleted.
 
@@ -419,7 +419,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> None:
         """Edit the current user's voice state in a stage channel.
 
-        .. note::
+        !!! note
             The current user has to have already joined the target stage channel
             before any calls can be made to this endpoint.
 
@@ -473,7 +473,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> None:
         """Edit an existing voice state in a stage channel.
 
-        .. note::
+        !!! note
             The target user must already be present in the stage channel before
             any calls are made to this endpoint.
 
@@ -699,14 +699,14 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the target user id for this invite. This may be the
             object or the ID of an existing user.
 
-            .. note::
+            !!! note
                 This is required if `target_type` is `STREAM` and the targeted
                 user must be streaming into the channel.
         target_application : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]]
             If provided, the target application id for this invite. This may be
             the object or the ID of an existing application.
 
-            .. note::
+            !!! note
                 This is required if `target_type` is `EMBEDDED_APPLICATION` and
                 the targeted application must have the `EMBEDDED` flag.
         reason : hikari.undefined.UndefinedOr[str]
@@ -742,7 +742,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> special_endpoints.TypingIndicator:
         """Trigger typing in a text channel.
 
-        .. note::
+        !!! note
             The result of this call can be awaited to trigger typing once, or
             can be used as an async context manager to continually type until the
             context manager is left. Any errors documented below will happen then.
@@ -758,7 +758,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
                 await asyncio.sleep(60)
         ```
 
-        .. warning::
+        !!! warning
             Sending a message to the channel will cause the typing indicator
             to disappear until it is re-triggered.
 
@@ -897,7 +897,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> iterators.LazyIterator[messages_.Message]:
         """Browse the message history for a given text channel.
 
-        .. note::
+        !!! note
             This call is not a coroutine function, it returns a special type of
             lazy iterator that will perform API calls as you iterate across it,
             thus any errors documented below will happen then.
@@ -1236,12 +1236,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> messages_.Message:
         """Edit an existing message in a given channel.
 
-        .. warning::
+        !!! warning
             If the message was not sent by your user, the only parameter
             you may provide to this call is the `flags` parameter. Anything
             else will result in a `hikari.errors.ForbiddenError` being raised.
 
-        .. note::
+        !!! note
             Mentioning everyone, roles, or users in message edits currently
             will not send a push notification showing a new mention to people
             on Discord. It will still highlight in their chat as if they
@@ -1430,7 +1430,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> None:
         """Bulk-delete messages from the channel.
 
-        .. note::
+        !!! note
             This API endpoint will only be able to delete 100 messages
             at a time. For anything more than this, multiple requests will
             be executed one-after-the-other, since the rate limits for this
@@ -1442,12 +1442,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             of this is that the `delete_message` endpoint is rate limited
             by a different bucket with different usage rates.
 
-        .. warning::
+        !!! warning
             This endpoint is not atomic. If an error occurs midway through
             a bulk delete, you will **not** be able to revert any changes made
             up to this point.
 
-        .. warning::
+        !!! warning
             Specifying any messages more than 14 days old will cause the call
             to fail, potentially with partial completion.
 
@@ -1709,7 +1709,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> iterators.LazyIterator[users.User]:
         """Fetch reactions for an emoji from a message.
 
-        .. note::
+        !!! note
             This call is not a coroutine function, it returns a special type of
             lazy iterator that will perform API calls as you iterate across it,
             thus any errors documented below will happen then.
@@ -2035,7 +2035,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> messages_.Message:
         """Execute a webhook.
 
-        .. warning::
+        !!! warning
             At the time of writing, `username` and `avatar_url` are ignored for
             interaction webhooks.
 
@@ -2259,7 +2259,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> messages_.Message:
         """Edit a message sent by a webhook.
 
-         .. note::
+         !!! note
             Mentioning everyone, roles, or users in message edits currently
             will not send a push notification showing a new mention to people
             on Discord. It will still highlight in their chat as if they
@@ -2439,7 +2439,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def fetch_gateway_url(self) -> str:
         """Fetch the gateway url.
 
-        .. note::
+        !!! note
             This endpoint does not require any valid authorization.
 
         Raises
@@ -2625,7 +2625,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> iterators.LazyIterator[applications.OwnGuild]:
         """Fetch the token's associated guilds.
 
-        .. note::
+        !!! note
             This call is not a coroutine function, it returns a special type of
             lazy iterator that will perform API calls as you iterate across it,
             thus any errors documented below will happen then.
@@ -2690,7 +2690,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> applications.OwnApplicationRoleConnection:
         """Fetch the token's associated role connections.
 
-        .. note::
+        !!! note
             This requires the token to have the
             `hikari.applications.OAuth2Scope.ROLE_CONNECTIONS_WRITE` scope enabled.
 
@@ -2729,7 +2729,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> applications.OwnApplicationRoleConnection:
         """Set the token's associated role connections.
 
-        .. note::
+        !!! note
             This requires the token to have the
             `hikari.applications.OAuth2Scope.ROLE_CONNECTIONS_WRITE` scope enabled.
 
@@ -2808,7 +2808,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def fetch_application(self) -> applications.Application:
         """Fetch the token's associated application.
 
-        .. warning::
+        !!! warning
             This endpoint can only be used with a Bot token. Using this with a
             Bearer token will result in a `hikari.errors.UnauthorizedError`.
 
@@ -2833,7 +2833,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def fetch_authorization(self) -> applications.AuthorizationInformation:
         """Fetch the token's authorization information.
 
-        .. warning::
+        !!! warning
             This endpoint can only be used with a Bearer token. Using this
             with a Bot token will result in a `hikari.errors.UnauthorizedError`.
 
@@ -2859,7 +2859,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> typing.Sequence[applications.ApplicationRoleConnectionMetadataRecord]:
         """Fetch the application role connection metadata records.
 
-        .. note::
+        !!! note
             This requires the token to have the
             `hikari.applications.OAuth2Scope.ROLE_CONNECTIONS_WRITE` scope enabled.
 
@@ -2894,7 +2894,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> typing.Sequence[applications.ApplicationRoleConnectionMetadataRecord]:
         """Set the application role connection metadata records.
 
-        .. note::
+        !!! note
             This requires the token to have the
             `hikari.applications.OAuth2Scope.ROLE_CONNECTIONS_WRITE` scope enabled.
 
@@ -3014,7 +3014,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> applications.OAuth2AuthorizationToken:
         """Refresh an access token.
 
-        .. warning::
+        !!! warning
             As of writing this Discord currently ignores any passed scopes,
             therefore you should use
             `hikari.applications.OAuth2AuthorizationToken.scopes` to validate
@@ -3096,7 +3096,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> typing.Optional[guilds.Member]:
         """Add a user to a guild.
 
-        .. note::
+        !!! note
             This requires the `access_token` to have the
             `hikari.applications.OAuth2Scope.GUILDS_JOIN` scope enabled along
             with the authorization of a Bot which has `MANAGE_INVITES`
@@ -3219,7 +3219,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> iterators.LazyIterator[audit_logs.AuditLog]:
         """Fetch pages of the guild's audit log.
 
-        .. note::
+        !!! note
             This call is not a coroutine function, it returns a special type of
             lazy iterator that will perform API calls as you iterate across it,
             thus any errors documented below will happen then.
@@ -3623,7 +3623,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The 320x320 image for the sticker. Maximum upload size is 500kb.
             This can be a still PNG, an animated PNG, a Lottie, or a GIF.
 
-            .. note::
+            !!! note
                 Lottie support is only available for verified and partnered
                 servers.
 
@@ -3758,10 +3758,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     def guild_builder(self, name: str, /) -> special_endpoints.GuildBuilder:
         """Make a guild builder to create a guild with.
 
-        .. note::
+        !!! note
             This endpoint can only be used by bots in less than 10 guilds.
 
-        .. note::
+        !!! note
             This call is not a coroutine function, it returns a special type of
             lazy iterator that will perform API calls as you iterate across it,
             thus any errors documented below will happen then.
@@ -3831,7 +3831,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def fetch_guild_preview(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> guilds.GuildPreview:
         """Fetch a guild preview.
 
-        .. note::
+        !!! note
             This will only work for guilds you are a part of or are public.
 
         Parameters
@@ -3920,7 +3920,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         owner : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]]]
             If provided, the new guild owner.
 
-            .. warning::
+            !!! warning
                 You need to be the owner of the server to use this.
         splash : hikari.undefined.UndefinedNoneOr[hikari.files.Resourceish]
             If provided, the new guild splash. Must be a 16:9 image and the
@@ -4493,7 +4493,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> typing.Union[channels_.GuildPublicThread, channels_.GuildNewsThread]:
         """Create a public or news thread on a message in a guild channel.
 
-        .. note::
+        !!! note
             This call may create a public or news thread dependent on the
             target channel's type and cannot create private threads.
 
@@ -4560,7 +4560,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> channels_.GuildThreadChannel:
         """Create a thread in a guild channel.
 
-        .. warning::
+        !!! warning
             Private and public threads can only be made in guild text channels,
             and news threads can only be made in guild news channels.
 
@@ -5022,7 +5022,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> iterators.LazyIterator[typing.Union[channels_.GuildNewsThread, channels_.GuildPublicThread]]:
         """Fetch a channel's public archived threads.
 
-        .. note::
+        !!! note
             The exceptions on this endpoint will only be raised once the
             result is awaited or iterated over. Invoking this function
             itself will not raise anything.
@@ -5044,7 +5044,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.iterators.LazyIterator[typing.Union[hikari.channels.GuildNewsChannel, hikari.channels.GuildPublicThread]]
             An iterator to fetch the threads.
 
-            .. note::
+            !!! note
                 This call is not a coroutine function, it returns a special type of
                 lazy iterator that will perform API calls as you iterate across it.
                 See `hikari.iterators` for the full API for this iterator type.
@@ -5074,7 +5074,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> iterators.LazyIterator[channels_.GuildPrivateThread]:
         """Fetch a channel's private archived threads.
 
-        .. note::
+        !!! note
             The exceptions on this endpoint will only be raised once the
             result is awaited or iterated over. Invoking this function
             itself will not raise anything.
@@ -5096,7 +5096,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.iterators.LazyIterator[hikari.channels.GuildPrivateThread]
             An iterator to fetch the threads.
 
-            .. note::
+            !!! note
                 This call is not a coroutine function, it returns a special type of
                 lazy iterator that will perform API calls as you iterate across it.
                 See `hikari.iterators` for the full API for this iterator type.
@@ -5128,7 +5128,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> iterators.LazyIterator[channels_.GuildPrivateThread]:
         """Fetch the private archived threads you have joined in a channel.
 
-        .. note::
+        !!! note
             The exceptions on this endpoint will only be raised once the
             result is awaited or iterated over. Invoking this function
             itself will not raise anything.
@@ -5149,7 +5149,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.iterators.LazyIterator[hikari.channels.GuildPrivateThread]
             An iterator to fetch the threads.
 
-            .. note::
+            !!! note
                 This call is not a coroutine function, it returns a special type of
                 lazy iterator that will perform API calls as you iterate across it.
                 See `hikari.iterators` for the full API for this iterator type.
@@ -5240,13 +5240,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> iterators.LazyIterator[guilds.Member]:
         """Fetch the members from a guild.
 
-        .. warning::
+        !!! warning
             This endpoint requires the `GUILD_MEMBERS` intent to be enabled in
             the dashboard, not necessarily authenticated with it if using the
             gateway. If you don't have the intents you can use `search_members`
             which doesn't require any intents.
 
-        .. note::
+        !!! note
             This call is not a coroutine function, it returns a special type of
             lazy iterator that will perform API calls as you iterate across it,
             thus any errors documented below will happen then.
@@ -5281,7 +5281,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def fetch_my_member(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> guilds.Member:
         """Fetch the Oauth token's associated member in a guild.
 
-        .. warning::
+        !!! warning
             This endpoint can only be used with a Bearer token. Using this
             with a Bot token will result in a `hikari.errors.UnauthorizedError`.
 
@@ -5309,7 +5309,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> typing.Sequence[guilds.Member]:
         """Search the members in a guild by nickname and username.
 
-        .. note::
+        !!! note
             Unlike `RESTClient.fetch_members` this endpoint isn't paginated and
             therefore will return all the members in one go rather than needing
             to be asynchronously iterated over.
@@ -5394,7 +5394,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             permission in the original voice channel and the target
             voice channel.
 
-            .. note::
+            !!! note
                 If the member is not in a voice channel, this will
                 take no effect.
         communication_disabled_until : hikari.undefined.UndefinedNoneOr[datetime.datetime]
@@ -5773,7 +5773,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> iterators.LazyIterator[guilds.GuildBan]:
         """Fetch the bans of a guild.
 
-        .. note::
+        !!! note
             This call is not a coroutine function, it returns a special type of
             lazy iterator that will perform API calls as you iterate across it.
             See `hikari.iterators` for the full API for this iterator type.
@@ -6387,7 +6387,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             guild's welcome screen. This may be passed as `None` to
             remove all welcome channels
 
-            .. note::
+            !!! note
                 Custom emojis may only be included in a guild's welcome channels
                 if it's boost status is tier 2 or above.
 
@@ -6501,7 +6501,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> guilds.RESTGuild:
         """Make a guild from a template.
 
-        .. note::
+        !!! note
             This endpoint can only be used by bots in less than 10 guilds.
 
         Parameters
@@ -6995,7 +6995,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> typing.Sequence[commands.PartialCommand]:
         """Set the commands for an application.
 
-        .. warning::
+        !!! warning
             Any existing commands not included in the provided commands array
             will be deleted.
 
@@ -7229,13 +7229,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> commands.GuildCommandPermissions:
         """Set permissions for a specific command.
 
-        .. note::
+        !!! note
             This requires the `access_token` to have the
             `hikari.applications.OAuth2Scope.APPLICATIONS_COMMANDS_PERMISSION_UPDATE`
             scope enabled along with the authorization of a Bot which has `MANAGE_INVITES`
             permission within the target guild.
 
-        .. note::
+        !!! note
             This overwrites any previously set permissions.
 
         Parameters
@@ -7398,7 +7398,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> None:
         """Create the initial response for a interaction.
 
-        .. warning::
+        !!! warning
             Calling this with an interaction which already has an initial
             response will result in this raising a `hikari.errors.NotFoundError`.
             This includes if the REST interaction server has already responded
@@ -7522,7 +7522,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> messages_.Message:
         """Edit the initial response to a command interaction.
 
-        .. note::
+        !!! note
             Mentioning everyone, roles, or users in message edits currently
             will not send a push notification showing a new mention to people
             on Discord. It will still highlight in their chat as if they
@@ -7799,7 +7799,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> typing.Sequence[scheduled_events.ScheduledEvent]:
         """Fetch the scheduled events for a guild.
 
-        .. note::
+        !!! note
             `VOICE` and `STAGE_CHANNEL` events are only included if the bot has
             `VOICE` or `STAGE_CHANNEL` permissions in the associated channel.
 
@@ -8175,7 +8175,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> iterators.LazyIterator[scheduled_events.ScheduledEventUser]:
         """Asynchronously iterate over the users who're subscribed to a scheduled event.
 
-        .. note::
+        !!! note
             This call is not a coroutine function, it returns a special type of
             lazy iterator that will perform API calls as you iterate across it,
             thus any errors documented below will happen then.

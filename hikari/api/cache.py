@@ -214,7 +214,7 @@ class Cache(abc.ABC):
     ) -> typing.Optional[guilds.GatewayGuild]:
         """Get a guild from the cache.
 
-        .. warning::
+        !!! warning
             This will return a guild regardless of whether it is available or
             not. To only query available guilds, use `get_available_guild`
             instead. Likewise, to only query unavailable guilds, use
@@ -254,7 +254,7 @@ class Cache(abc.ABC):
     ) -> typing.Optional[guilds.GatewayGuild]:
         """Get the object of a unavailable guild from the cache.
 
-        .. note::
+        !!! note
             Unlike `Cache.get_available_guild`, the objects returned by this
             method will likely be out of date and inaccurate as they are
             considered unavailable, meaning that we are not receiving gateway
@@ -295,7 +295,7 @@ class Cache(abc.ABC):
     def get_unavailable_guilds_view(self) -> CacheView[snowflakes.Snowflake, guilds.GatewayGuild]:
         """Get a view of the unavailable guild objects in the cache.
 
-        .. note::
+        !!! note
             Unlike `Cache.get_available_guilds_view`, the objects returned by
             this method will likely be out of date and inaccurate as they are
             considered unavailable, meaning that we are not receiving gateway
@@ -842,7 +842,7 @@ class MutableCache(Cache, abc.ABC):
     def clear_emojis(self) -> CacheView[snowflakes.Snowflake, emojis.KnownCustomEmoji]:
         """Remove all the known custom emoji objects from the cache.
 
-        .. note::
+        !!! note
             This will skip emojis that are being kept alive by a reference
             on a presence entry.
 
@@ -859,7 +859,7 @@ class MutableCache(Cache, abc.ABC):
     ) -> CacheView[snowflakes.Snowflake, emojis.KnownCustomEmoji]:
         """Remove the known custom emoji objects cached for a specific guild.
 
-        .. note::
+        !!! note
             This will skip emojis that are being kept alive by a reference
             on a presence entry.
 
@@ -881,7 +881,7 @@ class MutableCache(Cache, abc.ABC):
     ) -> typing.Optional[emojis.KnownCustomEmoji]:
         """Remove a known custom emoji from the cache.
 
-        .. note::
+        !!! note
             This will not delete emojis that are being kept alive by a reference
             on a presence entry.
 
@@ -930,7 +930,7 @@ class MutableCache(Cache, abc.ABC):
     def clear_stickers(self) -> CacheView[snowflakes.Snowflake, stickers.GuildSticker]:
         """Remove all the sticker objects from the cache.
 
-        .. note::
+        !!! note
             This will skip stickers that are being kept alive by a reference.
 
         Returns
@@ -951,7 +951,7 @@ class MutableCache(Cache, abc.ABC):
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             Object or ID of the guild to remove the cached sticker objects for.
 
-        .. note::
+        !!! note
             This will skip stickers that are being kept alive by a reference.
 
         Returns
@@ -967,7 +967,7 @@ class MutableCache(Cache, abc.ABC):
     ) -> typing.Optional[stickers.GuildSticker]:
         """Remove a sticker from the cache.
 
-        .. note::
+        !!! note
             This will not delete stickers that are being kept alive by a reference.
 
         Parameters
@@ -1397,7 +1397,7 @@ class MutableCache(Cache, abc.ABC):
     ) -> CacheView[snowflakes.Snowflake, guilds.Member]:
         """Remove the members for a specific guild from the cache.
 
-        .. note::
+        !!! note
             This will skip members that are being referenced by other entries in
             the cache; a matching voice state will keep a member entry alive.
 
@@ -1422,7 +1422,7 @@ class MutableCache(Cache, abc.ABC):
     ) -> typing.Optional[guilds.Member]:
         """Remove a member object from the cache.
 
-        .. note::
+        !!! note
             You cannot delete a member entry that's being referenced by other
             entries in the cache; a matching voice state will keep a member
             entry alive.

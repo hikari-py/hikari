@@ -142,7 +142,7 @@ class GuildAvailableEvent(GuildVisibilityEvent):
 
     This will occur on startup or after outages.
 
-    .. note::
+    !!! note
         Some fields like `members` and `presences` are included here but not on
         the other `GuildUpdateEvent` and `GuildUnavailableEvent` guild visibility
         event models.
@@ -183,7 +183,7 @@ class GuildAvailableEvent(GuildVisibilityEvent):
 
     This will be `None` if no chunks were requested.
 
-    .. note::
+    !!! note
         This is a synthetic field.
     """
 
@@ -204,7 +204,7 @@ class GuildAvailableEvent(GuildVisibilityEvent):
 class GuildJoinEvent(GuildVisibilityEvent):
     """Event fired when the bot joins a new guild.
 
-    .. note::
+    !!! note
         Some fields like `members` and `presences` are included here but not on
         the other `GuildUpdateEvent` and `GuildUnavailableEvent` guild visibility
         event models.
@@ -245,7 +245,7 @@ class GuildJoinEvent(GuildVisibilityEvent):
 
     This will be `None` if no chunks were requested.
 
-    .. note::
+    !!! note
         This is a synthetic field.
     """
 
@@ -510,7 +510,7 @@ class IntegrationEvent(GuildEvent, abc.ABC):
     async def fetch_integrations(self) -> typing.Sequence[guilds.Integration]:
         """Perform an API call to fetch some number of guild integrations.
 
-        .. warning::
+        !!! warning
             The results of this are not clearly defined by Discord. The current
             behaviour appears to be that only the first 50 integrations actually
             get returned. Discord have made it clear that they are not willing

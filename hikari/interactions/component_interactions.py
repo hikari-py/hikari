@@ -95,7 +95,7 @@ class ComponentInteraction(
     component_type: typing.Union[components_.ComponentType, int] = attrs.field(eq=False)
     """The type of component which triggers this interaction.
 
-    .. note::
+    !!! note
         This will never be `ButtonStyle.LINK` as link buttons don't trigger
         interactions.
     """
@@ -120,7 +120,7 @@ class ComponentInteraction(
 
     This will be `None` for component interactions triggered in DMs.
 
-    .. note::
+    !!! note
         This value can usually only be changed if `COMMUNITY` is in `hikari.guilds.Guild.features`
         for the guild and will otherwise default to `en-US`.
     """
@@ -133,7 +133,7 @@ class ComponentInteraction(
 
     This will be `None` for interactions triggered in DMs.
 
-    .. note::
+    !!! note
         This member object comes with the extra field `permissions` which
         contains the member's permissions in the current channel.
     """
@@ -150,7 +150,7 @@ class ComponentInteraction(
     def build_response(self, type_: _ImmediateTypesT, /) -> special_endpoints.InteractionMessageBuilder:
         """Get a message response builder for use in the REST server flow.
 
-        .. note::
+        !!! note
             For interactions received over the gateway
             `ComponentInteraction.create_initial_response` should be used to set
             the interaction response message.
@@ -190,12 +190,12 @@ class ComponentInteraction(
     def build_deferred_response(self, type_: _DeferredTypesT, /) -> special_endpoints.InteractionDeferredBuilder:
         """Get a deferred message response builder for use in the REST server flow.
 
-        .. note::
+        !!! note
             For interactions received over the gateway
             `ComponentInteraction.create_initial_response` should be used to set
             the interaction response message.
 
-        .. note::
+        !!! note
             Unlike `hikari.api.special_endpoints.InteractionMessageBuilder`,
             the result of this call can be returned as is without any modifications
             being made to it.
@@ -252,7 +252,7 @@ class ComponentInteraction(
     def get_channel(self) -> typing.Union[channels.GuildTextChannel, channels.GuildNewsChannel, None]:
         """Get the guild channel this interaction occurred in.
 
-        .. note::
+        !!! note
             This will always return `None` for interactions triggered
             in a DM channel.
 

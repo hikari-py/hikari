@@ -160,7 +160,7 @@ def no_recursive_throw() -> typing.Callable[[_T], _T]:
         doc = inspect.getdoc(cls) or ""
         doc += (
             "\n"
-            ".. warning::\n"
+            "!!! warning\n"
             "    Any exceptions raised by handlers for this event will be dumped to the\n"
             "    application logger and silently discarded, preventing recursive loops\n"
             "    produced by faulty exception event handling. Thus, it is imperative\n"
@@ -190,7 +190,7 @@ FailedCallbackT = typing.Callable[[EventT], typing.Coroutine[typing.Any, typing.
 class ExceptionEvent(Event, typing.Generic[EventT]):
     """Event that is raised when another event handler raises an `Exception`.
 
-    .. note::
+    !!! note
         Only exceptions that derive from `Exception` will be caught.
         Other exceptions outside this range will propagate past this callback.
         This prevents event handlers interfering with critical exceptions

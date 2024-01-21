@@ -56,7 +56,7 @@ instance of the relevant `hikari.api.special_endpoints.InteractionResponseBuilde
 subclass for the provided interaction type which will instruct the server on how
 to respond.
 
-.. note::
+!!! note
     For the standard implementations of
     `hikari.api.special_endpoints.InteractionResponseBuilder` see
     `hikari.impl.special_endpoints`.

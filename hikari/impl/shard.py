@@ -371,7 +371,7 @@ def _serialize_activity(activity: typing.Optional[presences.Activity]) -> data_b
 class GatewayShardImpl(shard.GatewayShard):
     """Implementation of a V10 compatible gateway.
 
-    .. note::
+    !!! note
         If all four of `initial_activity`, `initial_idle_since`,
         `initial_is_afk`, and `initial_status` are not defined and left to their
         default values, then the presence will not be _updated_ on startup

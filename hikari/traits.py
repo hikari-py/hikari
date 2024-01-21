@@ -290,12 +290,12 @@ class ShardAware(
         retained. This means you do not have to track the global presence
         in your code.
 
-        .. note::
+        !!! note
             This will only send the update payloads to shards that are alive.
             Any shards that are not alive will cache the new presence for
             when they do start.
 
-        .. note::
+        !!! note
             If you want to set presences per shard, access the shard you wish
             to update (e.g. by using `GatewayBot.shards`), and call
             `hikari.api.shard.GatewayShard.update_presence` on that shard.
@@ -365,7 +365,7 @@ class ShardAware(
     ) -> None:
         """Request for a guild chunk.
 
-        .. note::
+        !!! note
             To request the full list of members, set `query` to `""` (empty
             string) and `limit` to `0`.
 

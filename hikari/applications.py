@@ -115,31 +115,31 @@ class OAuth2Scope(str, enums.Enum):
     ACTIVITIES_READ = "activities.read"
     """Enables fetching the "Now Playing/Recently Played" list.
 
-    .. note::
+    !!! note
         You must be whitelisted to use this scope.
     """
 
     ACTIVITIES_WRITE = "activities.write"
     """Enables updating a user's activity.
 
-    .. note::
+    !!! note
         You must be whitelisted to use this scope.
 
-    .. note::
+    !!! note
         This is not required to use the GameSDK activity manager.
     """
 
     APPLICATIONS_BUILDS_READ = "applications.builds.read"
     """Enables reading build data for a user's applications.
 
-    .. note::
+    !!! note
         You must be whitelisted to use this scope.
     """
 
     APPLICATIONS_BUILDS_UPLOAD = "applications.builds.upload"
     """Enables uploading/updating builds for a user's applications.
 
-    .. note::
+    !!! note
         You must be whitelisted to use this scope.
     """
 
@@ -165,14 +165,14 @@ class OAuth2Scope(str, enums.Enum):
 
     This includes store listings, achievements, SKU's, etc.
 
-    .. note::
+    !!! note
         The store API is deprecated and may be removed in the future.
     """
 
     BOT = "bot"
     """Enables adding a bot application to a guild.
 
-    .. note::
+    !!! note
         This requires you to have set up a bot account for your application.
     """
 
@@ -185,7 +185,7 @@ class OAuth2Scope(str, enums.Enum):
     GROUP_DM_JOIN = "gdm.join"
     """Enables joining users into a group DM.
 
-    .. warning::
+    !!! warning
         This cannot add the bot to a group DM.
     """
 
@@ -195,14 +195,14 @@ class OAuth2Scope(str, enums.Enum):
     GUILDS_JOIN = "guilds.join"
     """Enables adding the user to a specific guild.
 
-    .. note::
+    !!! note
         This requires you to have set up a bot account for your application.
     """
 
     IDENTIFY = "identify"
     """Enables viewing info about itself.
 
-    .. note::
+    !!! note
         This does not include email address info. Use the `EMAIL` scope instead
         to retrieve this information.
     """
@@ -210,14 +210,14 @@ class OAuth2Scope(str, enums.Enum):
     RELATIONSHIPS_READ = "relationships.read"
     """Enables viewing a user's friend list.
 
-    .. note::
+    !!! note
         You must be whitelisted to use this scope.
     """
 
     RPC = "rpc"
     """Enables the RPC application to control the local user's Discord client.
 
-    .. note::
+    !!! note
         You must be whitelisted to use this scope.
     """
 
@@ -227,7 +227,7 @@ class OAuth2Scope(str, enums.Enum):
     RPC_NOTIFICATIONS_READ = "rpc.notifications.read"
     """Enables the RPC application to read  from all channels the user is in.
 
-    .. note::
+    !!! note
         You must be whitelisted to use this scope.
     """
 
@@ -266,7 +266,7 @@ class OwnConnection:
     id: str = attrs.field(hash=True, repr=True)
     """The string ID of the third party connected account.
 
-    .. warning::
+    !!! warning
         Seeing as this is a third party ID, it will not be a snowflakes.
     """
 
@@ -328,7 +328,7 @@ class OwnApplicationRoleConnection:
     metadata: typing.Mapping[str, str] = attrs.field(eq=False, hash=False, repr=False)
     """Mapping application role connection metadata keys to their value.
 
-    .. note::
+    !!! note
         Unfortunately, these can't be deserialized to their proper types as Discord don't
         provide a way to difference between them.
 
