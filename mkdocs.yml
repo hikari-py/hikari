@@ -113,6 +113,8 @@ markdown_extensions:
       smart_enable: all
   - pymdownx.tabbed:
       alternate_style: true
+      combine_header_slug: true
+      slugify: !!python/object/apply:pymdownx.slugs.slugify
   - pymdownx.tasklist:
       custom_checkbox: true
 
