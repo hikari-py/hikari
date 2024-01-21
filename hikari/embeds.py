@@ -466,8 +466,9 @@ class Embed:
                 >>> ...
             ```
 
-            A library on PyPI called [tzlocal](...) also exists that may be useful
-            to you if you need to get your local timezone for any reason:
+            A library on PyPI called [tzlocal](https://pypi.org/project/tzlocal/)
+            also exists that may be useful to you if you need to get your local
+            timezone for any reason:
 
             ```py
                 >>> import datetime

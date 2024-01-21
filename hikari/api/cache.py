@@ -946,13 +946,13 @@ class MutableCache(Cache, abc.ABC):
     ) -> CacheView[snowflakes.Snowflake, stickers.GuildSticker]:
         """Remove the known custom emoji objects cached for a specific guild.
 
+        !!! note
+            This will skip stickers that are being kept alive by a reference.
+
         Parameters
         ----------
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             Object or ID of the guild to remove the cached sticker objects for.
-
-        !!! note
-            This will skip stickers that are being kept alive by a reference.
 
         Returns
         -------
