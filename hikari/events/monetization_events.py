@@ -52,7 +52,7 @@ class EntitlementEvent(shard_events.ShardEvent):
     # <<inherited docstring from Event>>.
 
     shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
-    """Shard that received this event."""
+    # <<inherited docstring from ShardEvent>>.
 
     entitlement: monetization.Entitlement = attrs.field()
     """The entitlement that changed."""

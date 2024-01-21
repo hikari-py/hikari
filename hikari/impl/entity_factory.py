@@ -2553,6 +2553,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             target_id = snowflakes.Snowflake(raw_target_id)
 
         app_perms = payload.get("app_permissions")
+
+        entitlements = [self.deserialize_entitlement(entitlement) for entitlement in payload.get("entitlements", [])]
+
         return command_interactions.CommandInteraction(
             app=self._app,
             application_id=snowflakes.Snowflake(payload["application_id"]),
@@ -2573,7 +2576,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             resolved=resolved,
             target_id=target_id,
             app_permissions=permission_models.Permissions(app_perms) if app_perms else None,
-            entitlements=[self.deserialize_entitlement(entitlement) for entitlement in payload.get("entitlements", [])],
+            entitlements=entitlements,
         )
 
     def deserialize_autocomplete_interaction(
@@ -3716,6 +3719,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     ##################
 
     def deserialize_entitlement(self, payload: data_binding.JSONObject) -> monetization_models.Entitlement:
+        starts_at = time.iso8601_datetime_string_to_datetime(payload["starts_at"]) if "starts_at" in payload else None
+
         return monetization_models.Entitlement(
             id=snowflakes.Snowflake(payload["id"]),
             type=monetization_models.EntitlementType(payload["type"]),
@@ -3724,9 +3729,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             guild_id=snowflakes.Snowflake(payload["guild_id"]),
             user_id=snowflakes.Snowflake(payload["user_id"]),
             is_deleted=payload["deleted"],
-            starts_at=time.iso8601_datetime_string_to_datetime(payload["starts_at"])
-            if "starts_at" in payload
-            else None,
+            starts_at=starts_at,
             ends_at=time.iso8601_datetime_string_to_datetime(payload["ends_at"]) if "ends_at" in payload else None,
             subscription_id=snowflakes.Snowflake(payload["subscription_id"]) if "subscription_id" in payload else None,
         )

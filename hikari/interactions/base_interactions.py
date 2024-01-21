@@ -150,7 +150,6 @@ class ResponseType(int, enums.Enum):
     * `InteractionType.APPLICATION_COMMAND`
     * `InteractionType.MESSAGE_COMPONENT`
     * `InteractionType.MODAL_SUBMIT`
-
     """
 
 

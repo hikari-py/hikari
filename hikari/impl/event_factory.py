@@ -24,8 +24,6 @@
 
 from __future__ import annotations
 
-from hikari.api.shard import GatewayShard
-
 __all__: typing.Sequence[str] = ("EventFactoryImpl",)
 
 import datetime
@@ -937,21 +935,21 @@ class EventFactoryImpl(event_factory.EventFactory):
     ################
 
     def deserialize_entitlement_create_event(
-        self, shard: GatewayShard, payload: data_binding.JSONObject
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> monetization_events.EntitlementCreateEvent:
         return monetization_events.EntitlementCreateEvent(
             app=self._app, shard=shard, entitlement=self._app.entity_factory.deserialize_entitlement(payload)
         )
 
     def deserialize_entitlement_update_event(
-        self, shard: GatewayShard, payload: data_binding.JSONObject
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> monetization_events.EntitlementUpdateEvent:
         return monetization_events.EntitlementUpdateEvent(
             app=self._app, shard=shard, entitlement=self._app.entity_factory.deserialize_entitlement(payload)
         )
 
     def deserialize_entitlement_delete_event(
-        self, shard: GatewayShard, payload: data_binding.JSONObject
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> monetization_events.EntitlementDeleteEvent:
         return monetization_events.EntitlementDeleteEvent(
             app=self._app, shard=shard, entitlement=self._app.entity_factory.deserialize_entitlement(payload)
