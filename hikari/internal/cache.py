@@ -410,7 +410,7 @@ class MemberData(BaseData[guilds.Member]):
     nickname: typing.Optional[str] = attrs.field()
     guild_avatar_hash: typing.Optional[str] = attrs.field()
     role_ids: typing.Tuple[snowflakes.Snowflake, ...] = attrs.field()
-    joined_at: datetime.datetime = attrs.field()
+    joined_at: typing.Optional[datetime.datetime] = attrs.field()
     premium_since: typing.Optional[datetime.datetime] = attrs.field()
     is_deaf: undefined.UndefinedOr[bool] = attrs.field()
     is_mute: undefined.UndefinedOr[bool] = attrs.field()

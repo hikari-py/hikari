@@ -361,7 +361,7 @@ class Member(users.User):
 
     joined_at: typing.Optional[datetime.datetime] = attrs.field(repr=True)
     """The datetime of when this member joined the guild they belong to.
-    
+
     This will be `None` for guest members that have been temporarily
     invited.
     """
