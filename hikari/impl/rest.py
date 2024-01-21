@@ -4455,13 +4455,12 @@ class RESTClientImpl(rest_api.RESTClient):
         owner_type: monetization.EntitlementOwnerType,
     ) -> monetization.Entitlement:
         body = data_binding.JSONObjectBuilder()
-        body.put("sku_id", str(int(sku)))
-        body.put("owner_id", str(int(owner_id)))
-        body.put("owner_type", int(owner_type))
+        body.put("sku_id", sku)
+        body.put("owner_id", owner)
+        body.put("owner_type", owner_type)
 
-        response = await self._request(
-            routes.POST_APPLICATION_TEST_ENTITLEMENT.compile(application=str(int(application))), json=body
-        )
+        route = routes.POST_APPLICATION_TEST_ENTITLEMENT.compile(application=application)
+        response = await self.request(route, json=body)
 
         assert isinstance(response, dict)
 
