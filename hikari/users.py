@@ -206,10 +206,10 @@ class PartialUser(snowflakes.Unique, abc.ABC):
 
         Examples
         --------
-        .. code-block:: python
-
+        ```py
             >>> some_user.mention
             '<@123456789123456789>'
+        ```
         """
 
     async def fetch_dm_channel(self) -> channels.DMChannel:
@@ -542,10 +542,10 @@ class User(PartialUser, abc.ABC):
 
         Examples
         --------
-        .. code-block:: python
-
+        ```py
             >>> some_user.mention
             '<@123456789123456789>'
+        ```
         """
 
     @property
@@ -704,10 +704,10 @@ class PartialUserImpl(PartialUser):
 
         Examples
         --------
-        .. code-block:: python
-
+        ```py
             >>> some_user.mention
             '<@123456789123456789>'
+        ```
         """
         return f"<@{self.id}>"
 

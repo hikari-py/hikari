@@ -427,8 +427,7 @@ class Embed:
             To generate a timezone aware timestamp, use one of the following
             snippets:
 
-            .. code-block:: python
-
+            ```py
                 # Use UTC.
                 >>> datetime.datetime.now(tz=datetime.timezone.utc)
                 datetime.datetime(2020, 6, 5, 18, 29, 56, 424744, tzinfo=datetime.timezone.utc)
@@ -436,6 +435,7 @@ class Embed:
                 # Use your current timezone.
                 >>> datetime.datetime.now().astimezone()
                 datetime.datetime(2020, 7, 7, 8, 57, 9, 775328, tzinfo=..., 'BST'))
+            ```
 
             By specifying a timezone, Hikari can automatically adjust the given
             time to UTC without you needing to think about it.
@@ -444,8 +444,7 @@ class Embed:
             one by specifying a timezone. Hikari will detect any difference in
             timezone if the timestamp is non timezone-naive and fix it for you:
 
-            .. code-block:: python
-
+            ```py
                 # I am British, and it is June, so we are in daylight saving
                 # (UTC+1 or GMT+1, specifically).
                 >>> import datetime
@@ -465,12 +464,12 @@ class Embed:
                 # explicitly specified, Hikari will convert it to UTC for you when
                 # you send the embed.
                 >>> ...
+            ```
 
             A library on PyPI called [tzlocal](...) also exists that may be useful
             to you if you need to get your local timezone for any reason:
 
-            .. code-block:: python
-
+            ```py
                 >>> import datetime
                 >>> import tzlocal
 
@@ -488,6 +487,7 @@ class Embed:
                 datetime.datetime(2020, 6, 5, 18, 38, 27, 863990, tzinfo=datetime.timezone.utc)
                 >>> dt.astimezone(tzlocal.get_localzone())
                 datetime.datetime(2020, 6, 5, 19, 38, 27, 863990, tzinfo=<DstTzInfo 'Europe/London' BST+1:00:00 DST>)
+            ```
 
             ...this is not required, but you may find it more useful if using the
             timestamps in debug logs, for example.

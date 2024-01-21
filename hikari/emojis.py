@@ -178,11 +178,11 @@ class UnicodeEmoji(str, Emoji):
 
         Examples
         --------
-        .. code-block:: python
-
+        ```py
             >>> emoji = hikari.UnicodeEmoji("\N{OK HAND SIGN}")
             >>> emoji.url
             'https://raw.githubusercontent.com/discord/twemoji/master/assets/72x72/1f44c.png'
+        ```
         """
         return _TWEMOJI_PNG_BASE_URL + self.filename
 

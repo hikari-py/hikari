@@ -43,8 +43,7 @@ class Permissions(enums.Flag):
     --------
     You can create an enum which combines multiple permissions using the bitwise OR operator (`|`):
 
-    .. code-block:: python
-
+    ```py
        my_perms = Permissions.MANAGE_CHANNELS | Permissions.MANAGE_GUILD
 
        required_perms = (
@@ -53,28 +52,29 @@ class Permissions(enums.Flag):
            | Permissions.BAN_MEMBERS
            | Permissions.MANAGE_GUILD
        )
+    ```
 
     To find the intersection of two sets of permissions, use the bitwise AND
     operator (`&`) between them. By then applying the `==` operator, you can check if all
     permissions from one set are present in another set. This is useful, for instance,
     for checking if a user has all the required permissions
 
-    .. code-block:: python
-
+    ```py
        if (my_perms & required_perms) == required_perms:
            print("I have all of the required permissions!")
        else:
            print("I am missing at least one required permission!")
+    ```
 
     To determine which permissions from one set are missing from another, you can use the
     bitwise equivalent of the set difference operation, as shown below. This can be used,
     for instance, to find which of a user's permissions are missing from the required permissions.
 
-    .. code-block:: python
-
-       missing_perms = ~my_perms & required_perms
-       if (missing_perms):
-           print(f"I'm missing these permissions: {missing_perms}")
+    ```py
+        missing_perms = ~my_perms & required_perms
+        if (missing_perms):
+            print(f"I'm missing these permissions: {missing_perms}")
+    ```
 
     Lastly, if you need all the permissions from a set except for a few,
     you can use the bitwise NOT operator (`~`).
@@ -82,7 +82,6 @@ class Permissions(enums.Flag):
     ```py
         # All permissions except ADMINISTRATOR.
         my_perms = ~Permissions.ADMINISTRATOR
-
     ```
     """
 
