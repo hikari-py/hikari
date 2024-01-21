@@ -1806,7 +1806,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if guild_id not in role_ids:
             role_ids.append(guild_id)
 
-        joined_at = time.iso8601_datetime_string_to_datetime(payload["joined_at"])
+        raw_joined_at = payload["joined_at"]
+        joined_at = time.iso8601_datetime_string_to_datetime(raw_joined_at) if raw_joined_at is not None else None
 
         raw_premium_since = payload.get("premium_since")
         premium_since = (
