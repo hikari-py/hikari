@@ -60,6 +60,7 @@ theme:
     - content.code.copy
     - content.code.select
     - content.code.annotate
+    - content.action.edit
     - navigation.tabs
     - navigation.indexes
     - navigation.top
