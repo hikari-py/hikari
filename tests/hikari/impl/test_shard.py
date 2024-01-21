@@ -1041,7 +1041,8 @@ class TestGatewayShardImplAsync:
                     "intents": 9,
                     "presence": serialize_and_store_presence_payload.return_value,
                 },
-            }
+            },
+            priority=True,
         )
 
         assert shield.call_count == 2
@@ -1111,7 +1112,7 @@ class TestGatewayShardImplAsync:
 
         ws.receive_json.assert_awaited_once_with()
         send_json.assert_called_once_with(
-            {"op": 6, "d": {"token": "sometoken", "seq": 1234, "session_id": "some session id"}}
+            {"op": 6, "d": {"token": "sometoken", "seq": 1234, "session_id": "some session id"}}, priority=True
         )
 
         assert shield.call_count == 2
