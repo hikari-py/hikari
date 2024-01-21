@@ -46,11 +46,4 @@ for path in sorted(pathlib.Path("hikari").rglob("*.py")):
     mkdocs_gen_files.set_edit_path(full_doc_path, pathlib.Path("..", path))
 
 with mkdocs_gen_files.open("reference/summary.md", "w") as nav_file:
-    for item in nav.items():
-        path = pathlib.Path(item.filename).with_suffix("")
-
-        if path.name == "index":
-            path = path.parent
-
-        full_name = ".".join(path.parts)
-        nav_file.write("    " * item.level + f"* [{full_name}]({item.filename})\n")
+    nav_file.writelines(nav.build_literate_nav())
