@@ -673,7 +673,24 @@ class TestEventManagerBase:
         get_intents.assert_called_once_with(member_events.MemberCreateEvent)
         warn.assert_not_called()
 
-    def test__check_intents_when_intents_correct(self, event_manager):
+    def test__check_event_when_generic_event(self, event_manager):
+        T = typing.TypeVar("T")
+
+        class GenericEvent(typing.Generic[T], base_events.Event):
+            ...
+
+        event_manager._intents = intents.Intents.GUILD_MEMBERS
+
+        with mock.patch.object(
+            base_events, "get_required_intents_for", return_value=intents.Intents.GUILD_MEMBERS
+        ) as get_intents:
+            with mock.patch.object(warnings, "warn") as warn:
+                event_manager._check_event(GenericEvent[int], 0)
+
+        get_intents.assert_called_once_with(GenericEvent)
+        warn.assert_not_called()
+
+    def test__check_event_when_intents_correct(self, event_manager):
         event_manager._intents = intents.Intents.GUILD_EMOJIS | intents.Intents.GUILD_MEMBERS
 
         with mock.patch.object(
@@ -685,7 +702,7 @@ class TestEventManagerBase:
         get_intents.assert_called_once_with(member_events.MemberCreateEvent)
         warn.assert_not_called()
 
-    def test__check_intents_when_intents_incorrect(self, event_manager):
+    def test__check_event_when_intents_incorrect(self, event_manager):
         event_manager._intents = intents.Intents.GUILD_EMOJIS
 
         with mock.patch.object(

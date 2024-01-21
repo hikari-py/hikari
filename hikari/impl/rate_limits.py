@@ -86,7 +86,7 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
     complete logic for safely aborting any pending tasks when being shut down.
     """
 
-    __slots__: typing.Sequence[str] = ("name", "throttle_task", "queue", "_closed")
+    __slots__: typing.Sequence[str] = ("name", "throttle_task", "queue")
 
     name: str
     """The name of the rate limiter."""
@@ -101,7 +101,6 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
         self.name = name
         self.throttle_task = None
         self.queue = []
-        self._closed = False
 
     @abc.abstractmethod
     async def acquire(self) -> None:
@@ -112,13 +111,7 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
         """
 
     def close(self) -> None:
-        """Close the rate limiter, and shut down any pending tasks.
-
-        Once this is invoked, you should not reuse this object.
-        """
-        if self._closed:
-            return
-
+        """Close the rate limiter, and shut down any pending tasks."""
         if self.throttle_task is not None:
             self.throttle_task.cancel()
             self.throttle_task = None
@@ -134,7 +127,6 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
             _LOGGER.debug("%s rate limiter closed with %s pending tasks!", self.name, failed_tasks)
         else:
             _LOGGER.debug("%s rate limiter closed", self.name)
-        self._closed = True
 
     @property
     def is_empty(self) -> bool:
