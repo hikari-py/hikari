@@ -2554,7 +2554,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         app_perms = payload.get("app_permissions")
 
-        entitlements = [self.deserialize_entitlement(entitlement) for entitlement in payload.get("entitlements", [])]
+        entitlements = [self.deserialize_entitlement(entitlement) for entitlement in payload.get("entitlements", ())]
 
         return command_interactions.CommandInteraction(
             app=self._app,
