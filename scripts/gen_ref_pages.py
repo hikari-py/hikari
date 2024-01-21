@@ -32,7 +32,9 @@ for path in sorted(src.rglob("*.py")):
 
     parts = tuple(module_path.parts)
 
-    if parts[-1] == "__init__":
+    if "internal" in parts:
+        continue
+    elif parts[-1] == "__init__":
         parts = parts[:-1]
         # Ignore the root __init__.py
         if parts == ():
@@ -51,7 +53,16 @@ for path in sorted(src.rglob("*.py")):
     # We could probably use some sort of template file for this if needed
     with mkdocs_gen_files.open(full_doc_path, "w") as fd:
         ident = ".".join(parts)
-        fd.write(f"---\ntitle: {ident}\ndescription: {ident} - API reference\n---\n\n::: hikari.{ident}")
+        fd.write(
+            "---\n"
+            f"title: hikari.{ident}\n"
+            f"description: hikari.{ident} - API reference\n"
+            "---\n"
+            "\n"
+            f"# `hikari.{ident}`\n"
+            "\n"
+            f"::: hikari.{ident}\n"
+        )
 
     mkdocs_gen_files.set_edit_path(full_doc_path, path)
 
