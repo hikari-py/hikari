@@ -3230,7 +3230,7 @@ class TestEntityFactoryImpl:
             {
                 "nick": None,
                 "roles": ["11111", "22222", "33333", "44444"],
-                "joined_at": "2015-04-26T06:26:56.936000+00:00",
+                "joined_at": None,
                 "premium_since": None,
                 "deaf": False,
                 "avatar": None,
@@ -3244,6 +3244,7 @@ class TestEntityFactoryImpl:
         assert member.nickname is None
         assert member.premium_since is None
         assert member.guild_avatar_hash is None
+        assert member.joined_at is None
         assert isinstance(member, guild_models.Member)
 
     def test_deserialize_member_with_undefined_fields(self, entity_factory_impl, user_payload):

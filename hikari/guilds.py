@@ -359,8 +359,12 @@ class Member(users.User):
     This will be `hikari.undefined.UNDEFINED` if it's state is unknown.
     """
 
-    joined_at: datetime.datetime = attrs.field(repr=True)
-    """The datetime of when this member joined the guild they belong to."""
+    joined_at: typing.Optional[datetime.datetime] = attrs.field(repr=True)
+    """The datetime of when this member joined the guild they belong to.
+    
+    This will be `None` for guest members that have been temporarily
+    invited.
+    """
 
     nickname: typing.Optional[str] = attrs.field(repr=True)
     """This member's nickname.
