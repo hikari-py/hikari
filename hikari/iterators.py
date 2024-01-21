@@ -51,19 +51,19 @@ class All(typing.Generic[ValueT]):
 
     For example...
 
-    .. code-block:: python
-
+    ```py
         if w(foo) and x(foo) and y(foo) and z(foo):
             ...
+    ```
 
     is equivalent to
 
-    .. code-block:: python
-
+    ```py
         condition = All([w, x, y, z])
 
         if condition(foo):
             ...
+    ```
 
     This behaves like a lazy wrapper implementation of the `all` builtin.
 
@@ -164,29 +164,29 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
 
     As an async iterable:
 
-    .. code-block:: python
-
+    ```py
         >>> async for item in paginated_results:
         ...    process(item)
+    ```
 
     As an eagerly retrieved set of results (performs all API calls at once,
     which may be slow for large sets of data):
 
-    .. code-block:: python
-
+    ```py
         >>> results = await paginated_results
         >>> # ... which is equivalent to this...
         >>> results = [item async for item in paginated_results]
+    ```
 
     As an async iterator (not recommended):
 
-    .. code-block:: python
-
+    ```py
         >>> try:
         ...    while True:
         ...        process(await paginated_results.__anext__())
         ... except StopAsyncIteration:
         ...    pass
+    ```
 
     Additionally, you can make use of some of the provided helper methods
     on this class to perform basic operations easily.
@@ -194,13 +194,13 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
     Iterating across the items with indexes (like `enumerate` for normal
     iterables):
 
-    .. code-block:: python
-
+    ```py
         >>> async for i, item in paginated_results.enumerate():
         ...    print(i, item)
         (0, foo)
         (1, bar)
         (2, baz)
+    ```
 
     Limiting the number of results you iterate across:
 

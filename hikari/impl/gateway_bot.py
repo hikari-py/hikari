@@ -249,18 +249,18 @@ class GatewayBot(traits.GatewayBotAware):
     --------
     Simple logging setup:
 
-    .. code-block:: python
-
+    ```py
         hikari.GatewayBot("TOKEN", logs="INFO")  # Registered logging level
         # or
         hikari.GatewayBot("TOKEN", logs=20)  # Logging level as an int
+    ```
 
     File config:
 
-    .. code-block:: python
-
+    ```py
         # See https://docs.python.org/3/library/logging.config.html#configuration-file-format for more info
         hikari.GatewayBot("TOKEN", logs="path/to/file.ini")
+    ```
 
     Setting up logging through a dict config:
 

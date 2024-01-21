@@ -257,10 +257,10 @@ def guess_file_extension(mimetype: str) -> typing.Optional[str]:
 
     Examples
     --------
-    .. code-block:: python
-
+    ```py
         >>> guess_file_extension("image/png")
         ".png"
+    ```
 
     Returns
     -------

@@ -229,24 +229,23 @@ class GuildBuilder(special_endpoints.GuildBuilder):
     --------
     Creating an empty guild:
 
-    .. code-block:: python
-
+    ```py
         guild = await rest.guild_builder("My Server!").create()
+    ```
 
     Creating a guild with an icon:
 
-    .. code-block:: python
-
+    ```py
         from hikari.files import WebResourceStream
 
         guild_builder = rest.guild_builder("My Server!")
         guild_builder.icon = WebResourceStream("cat.png", "http://...")
         guild = await guild_builder.create()
+    ```
 
     Adding roles to your guild:
 
-    .. code-block:: python
-
+    ```py
         from hikari.permissions import Permissions
 
         guild_builder = rest.guild_builder("My Server!")
@@ -255,6 +254,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         admin_role_id = guild_builder.add_role("Admins", permissions=Permissions.ADMINISTRATOR)
 
         await guild_builder.create()
+    ```
 
     .. warning::
         The first role must always be the `@everyone` role.

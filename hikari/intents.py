@@ -62,16 +62,15 @@ class Intents(enums.Flag):
     For example, if we wish to only refer to the `GUILDS` intent, then it is
     simply a case of accessing it normally.
 
-    .. code-block:: python
-
+    ```py
         my_intents = Intents.GUILDS
+    ```
 
     If we wanted to have several intents grouped together, we would use the
     bitwise-or operator to combine them (`|`). This can be done in-place
     with the `|=` operator if needed.
 
-    .. code-block:: python
-
+    ```py
         # One or two values that fit on one line.
         my_intents = Intents.GUILD_MESSAGES | Intents.PRIVATE_MESSAGES
 
@@ -85,6 +84,7 @@ class Intents(enums.Flag):
             Intents.GUILD_MODERATION   |
             Intents.PRIVATE_MESSAGES
         )
+    ```
 
     To check if an intent **is present** in a given intents bitfield, you can
     use the bitwise-and operator (`&`) to check. This returns the "intersection"
@@ -92,8 +92,7 @@ class Intents(enums.Flag):
     use the `==` operator to check that specific values are present. You can
     check in-place with the `&=` operator if needed.
 
-    .. code-block:: python
-
+    ```py
         # Check if an intent is set:
         if (my_intents & Intents.GUILD_MESSAGES) == Intents.GUILD_MESSAGES:
             print("Guild messages are enabled")
@@ -107,12 +106,12 @@ class Intents(enums.Flag):
         expected_intents = (Intents.GUILD_MESSAGES | Intents.PRIVATE_MESSAGES)
         if my_intents & expected_intents:
             print("Messages are enabled in guilds or private messages.")
+    ```
 
     Removing one or more intents from a combination can be done with the
     bitwise-xor (`^`) operator. The `^=` operator can do this in-place.
 
-    .. code-block:: python
-
+    ```py
         # Remove GUILD_MESSAGES
         my_intents = my_intents ^ Intents.GUILD_MESSAGES
         # or, simplifying:
@@ -122,6 +121,7 @@ class Intents(enums.Flag):
         my_intents = my_intents ^ (Intents.GUILD_MESSAGES | Intents.PRIVATE_MESSAGES)
         # or, simplifying
         my_intents ^= (Intents.GUILD_MESSAGES | Intents.PRIVATE_MESSAGES)
+    ```
 
     What is and is not covered by intents?
     --------------------------------------

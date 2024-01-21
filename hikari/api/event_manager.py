@@ -59,25 +59,25 @@ class EventStream(iterators.LazyIterator[base_events.EventT], abc.ABC):
     where `EventStream.open` and `EventStream.close` are implicitly called based on
     context.
 
-    .. code-block:: python
-
+    ```py
         with EventStream(app, EventType, timeout=50) as stream:
             async for entry in stream:
                 ...
+    ```
 
     A streamer may also be directly started and closed using the `EventStream.close`
     and `EventStream.open`. Note that if you don't call `EventStream.close` after
     opening a streamer when you're finished with it then it may queue events
     events in memory indefinitely.
 
-    .. code-block:: python
-
+    ```py
         stream = EventStream(app, EventType, timeout=50)
         await stream.open()
         async for event in stream:
             ...
 
         await stream.close()
+    ```
 
     See Also
     --------

@@ -82,8 +82,7 @@ class Color(int):
     --------
     Examples of conversions to given formats include:
 
-    .. code-block:: python
-
+    ```py
         >>> c = Color(0xFF051A)
         Color(r=0xff, g=0x5, b=0x1a)
 
@@ -104,13 +103,13 @@ class Color(int):
 
         >>> c.rgb_float
         (1.0, 0.0196078431372549, 0.10196078431372549)
+    ```
 
     Alternatively, if you have an arbitrary input in one of the above formats
     that you wish to become a color, you can use `Color.of` on the class itself
     to automatically attempt to resolve the color:
 
-    .. code-block:: python
-
+    ```py
         >>> Color.of(0xFF051A)
         Color(r=0xff, g=0x5, b=0x1a)
 
@@ -137,6 +136,7 @@ class Color(int):
 
         >>> c = Color.of([1.0, 0.0196078431372549, 0.10196078431372549])
         Color(r=0xff, g=0x5, b=0x1a)
+    ```
 
     Examples of initialization of Color objects from given formats include:
 
