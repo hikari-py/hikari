@@ -35,7 +35,7 @@ __all__: typing.Sequence[str] = (
 
 import typing
 
-import attr
+import attrs
 
 from hikari import channels
 from hikari import commands
@@ -43,7 +43,7 @@ from hikari import snowflakes
 from hikari import traits
 from hikari import undefined
 from hikari.interactions import base_interactions
-from hikari.internal import attr_extensions
+from hikari.internal import attrs_extensions
 
 if typing.TYPE_CHECKING:
     from typing_extensions import Self
@@ -83,18 +83,18 @@ ResolvedOptionData = base_interactions.ResolvedOptionData
 """Deprecated alias of `hikari.base_interactions.ResolvedOptionData`."""
 
 
-@attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=False, kw_only=True, weakref_slot=False)
 class CommandInteractionOption:
     """Represents the options passed for a command interaction."""
 
-    name: str = attr.field(repr=True)
+    name: str = attrs.field(repr=True)
     """Name of this option."""
 
-    type: typing.Union[commands.OptionType, int] = attr.field(repr=True)
+    type: typing.Union[commands.OptionType, int] = attrs.field(repr=True)
     """Type of this option."""
 
-    value: typing.Union[snowflakes.Snowflake, str, int, bool, None] = attr.field(repr=True)
+    value: typing.Union[snowflakes.Snowflake, str, int, bool, None] = attrs.field(repr=True)
     """Value provided for this option.
 
     Either `CommandInteractionOption.value` or `CommandInteractionOption.options`
@@ -103,7 +103,7 @@ class CommandInteractionOption:
     subcommand or group.
     """
 
-    options: typing.Optional[typing.Sequence[Self]] = attr.field(repr=True)
+    options: typing.Optional[typing.Sequence[Self]] = attrs.field(repr=True)
     """Options provided for this option.
 
     Either `CommandInteractionOption.value` or `CommandInteractionOption.options`
@@ -113,12 +113,12 @@ class CommandInteractionOption:
     """
 
 
-@attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=False, kw_only=True, weakref_slot=False)
 class AutocompleteInteractionOption(CommandInteractionOption):
     """Represents the options passed for a command autocomplete interaction."""
 
-    is_focused: bool = attr.field(default=False, repr=True)
+    is_focused: bool = attrs.field(default=False, repr=True)
     """Whether this option is the currently focused option for autocomplete.
 
     Focused options are not guaranteed to be parsed so the value may be a string
@@ -126,24 +126,24 @@ class AutocompleteInteractionOption(CommandInteractionOption):
     """
 
 
-@attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class BaseCommandInteraction(base_interactions.PartialInteraction):
     """Represents a base command interaction on Discord.
 
     May be a command interaction or an autocomplete interaction.
     """
 
-    channel_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
+    channel_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
     """ID of the channel this command interaction event was triggered in."""
 
-    guild_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=True)
+    guild_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
     """ID of the guild this command interaction event was triggered in.
 
     This will be `None` for command interactions triggered in DMs.
     """
 
-    guild_locale: typing.Optional[str] = attr.field(eq=False, hash=False, repr=True)
+    guild_locale: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=True)
     """The preferred language of the guild this command interaction was triggered in.
 
     This will be `None` for command interactions triggered in DMs.
@@ -153,7 +153,7 @@ class BaseCommandInteraction(base_interactions.PartialInteraction):
         for the guild and will otherwise default to `en-US`.
     """
 
-    member: typing.Optional[base_interactions.InteractionMember] = attr.field(eq=False, hash=False, repr=True)
+    member: typing.Optional[base_interactions.InteractionMember] = attrs.field(eq=False, hash=False, repr=True)
     """The member who triggered this command interaction.
 
     This will be `None` for command interactions triggered in DMs.
@@ -163,19 +163,19 @@ class BaseCommandInteraction(base_interactions.PartialInteraction):
         contains the member's permissions in the current channel.
     """
 
-    user: users_.User = attr.field(eq=False, hash=False, repr=True)
+    user: users_.User = attrs.field(eq=False, hash=False, repr=True)
     """The user who triggered this command interaction."""
 
-    locale: str = attr.field(eq=False, hash=False, repr=True)
+    locale: str = attrs.field(eq=False, hash=False, repr=True)
     """The selected language of the user who triggered this command interaction."""
 
-    command_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
+    command_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
     """ID of the command being invoked."""
 
-    command_name: str = attr.field(eq=False, hash=False, repr=True)
+    command_name: str = attrs.field(eq=False, hash=False, repr=True)
     """Name of the command being invoked."""
 
-    command_type: typing.Union[commands.CommandType, int] = attr.field(eq=False, hash=False, repr=True)
+    command_type: typing.Union[commands.CommandType, int] = attrs.field(eq=False, hash=False, repr=True)
     """The type of the command."""
 
     async def fetch_channel(self) -> channels.TextableChannel:
@@ -296,8 +296,8 @@ class BaseCommandInteraction(base_interactions.PartialInteraction):
         return None
 
 
-@attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class CommandInteraction(
     BaseCommandInteraction,
     base_interactions.MessageResponseMixin[CommandResponseTypesT],
@@ -305,16 +305,16 @@ class CommandInteraction(
 ):
     """Represents a command interaction on Discord."""
 
-    app_permissions: typing.Optional[permissions_.Permissions] = attr.field(eq=False, hash=False, repr=False)
+    app_permissions: typing.Optional[permissions_.Permissions] = attrs.field(eq=False, hash=False, repr=False)
     """Permissions the bot has in this interaction's channel if it's in a guild."""
 
-    options: typing.Optional[typing.Sequence[CommandInteractionOption]] = attr.field(eq=False, hash=False, repr=True)
+    options: typing.Optional[typing.Sequence[CommandInteractionOption]] = attrs.field(eq=False, hash=False, repr=True)
     """Parameter values provided by the user invoking this command."""
 
-    resolved: typing.Optional[base_interactions.ResolvedOptionData] = attr.field(eq=False, hash=False, repr=False)
+    resolved: typing.Optional[base_interactions.ResolvedOptionData] = attrs.field(eq=False, hash=False, repr=False)
     """Mappings of the objects resolved for the provided command options."""
 
-    target_id: typing.Optional[snowflakes.Snowflake] = attr.field(default=None, eq=False, hash=False, repr=True)
+    target_id: typing.Optional[snowflakes.Snowflake] = attrs.field(default=None, eq=False, hash=False, repr=True)
     """The target of the command. Only available if the command is a context menu command."""
 
     def build_response(self) -> special_endpoints.InteractionMessageBuilder:
@@ -374,16 +374,16 @@ class CommandInteraction(
         return self.app.rest.interaction_deferred_builder(base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE)
 
 
-@attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class AutocompleteInteraction(BaseCommandInteraction):
     """Represents an autocomplete interaction on Discord."""
 
-    options: typing.Sequence[AutocompleteInteractionOption] = attr.field(eq=False, hash=False, repr=True)
+    options: typing.Sequence[AutocompleteInteractionOption] = attrs.field(eq=False, hash=False, repr=True)
     """Parameter values provided by the user invoking this command."""
 
     def build_response(
-        self, choices: typing.Sequence[commands.CommandChoice]
+        self, choices: typing.Sequence[special_endpoints.AutocompleteChoiceBuilder]
     ) -> special_endpoints.InteractionAutocompleteBuilder:
         """Get a message response builder for use in the REST server flow.
 
@@ -391,6 +391,11 @@ class AutocompleteInteraction(BaseCommandInteraction):
             For interactions received over the gateway
             `AutocompleteInteraction.create_response` should be used to set
             the interaction response.
+
+        Parameters
+        ----------
+        choices : typing.Sequence[hikari.api.special_endpoints.AutocompleteChoiceBuilder]
+            The choices for the autocomplete.
 
         Examples
         --------
@@ -401,9 +406,9 @@ class AutocompleteInteraction(BaseCommandInteraction):
                     interaction
                     .build_response(
                         [
-                            CommandChoice(name="foo", value="a"),
-                            CommandChoice(name="bar", value="b"),
-                            CommandChoice(name="baz", value="c"),
+                            AutocompleteChoiceBuilder(name="foo", value="a"),
+                            AutocompleteChoiceBuilder(name="bar", value="b"),
+                            AutocompleteChoiceBuilder(name="baz", value="c"),
                         ]
                     )
                 )
@@ -415,10 +420,12 @@ class AutocompleteInteraction(BaseCommandInteraction):
         """
         return self.app.rest.interaction_autocomplete_builder(choices)
 
-    async def create_response(self, choices: typing.Sequence[commands.CommandChoice]) -> None:
-        """Create a response for this autocomplete interaction."""
-        await self.app.rest.create_autocomplete_response(
-            self.id,
-            self.token,
-            choices,
-        )
+    async def create_response(self, choices: typing.Sequence[special_endpoints.AutocompleteChoiceBuilder]) -> None:
+        """Create a response for this autocomplete interaction.
+
+        Parameters
+        ----------
+        choices : typing.Sequence[hikari.api.special_endpoints.AutocompleteChoiceBuilder]
+            The choices for the autocomplete.
+        """
+        await self.app.rest.create_autocomplete_response(self.id, self.token, choices)

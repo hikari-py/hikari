@@ -32,7 +32,7 @@ if typing.TYPE_CHECKING:
     from typing_extensions import Self
 
 _Protocol: FastProtocolChecking = NotImplemented
-_IGNORED_ATTRS = typing.EXCLUDED_ATTRIBUTES + ["__qualname__", "__slots__"]
+_IGNORED_ATTRS = frozenset(typing.EXCLUDED_ATTRIBUTES) | {"__qualname__", "__slots__"}
 
 
 def _check_if_ignored(name: str) -> bool:
@@ -45,10 +45,7 @@ class _FastProtocolChecking(type(typing.Protocol)):
     _attributes_: typing.Tuple[str, ...]
 
     def __new__(
-        cls,
-        cls_name: str,
-        bases: typing.Tuple[typing.Type[typing.Any], ...],
-        namespace: typing.Dict[str, typing.Any],
+        cls, cls_name: str, bases: typing.Tuple[typing.Type[typing.Any], ...], namespace: typing.Dict[str, typing.Any]
     ) -> Self:
         global _Protocol
 

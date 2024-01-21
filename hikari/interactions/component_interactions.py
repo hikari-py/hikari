@@ -27,7 +27,7 @@ __all__: typing.Sequence[str] = ("ComponentInteraction", "COMPONENT_RESPONSE_TYP
 
 import typing
 
-import attr
+import attrs
 
 from hikari import channels
 from hikari import traits
@@ -83,17 +83,16 @@ The following types are valid for this:
 """
 
 
-@attr.define(hash=True, weakref_slot=False)
+@attrs.define(hash=True, weakref_slot=False)
 class ComponentInteraction(
-    base_interactions.MessageResponseMixin[ComponentResponseTypesT],
-    base_interactions.ModalResponseMixin,
+    base_interactions.MessageResponseMixin[ComponentResponseTypesT], base_interactions.ModalResponseMixin
 ):
     """Represents a component interaction on Discord."""
 
-    channel_id: snowflakes.Snowflake = attr.field(eq=False)
+    channel_id: snowflakes.Snowflake = attrs.field(eq=False)
     """ID of the channel this interaction was triggered in."""
 
-    component_type: typing.Union[components_.ComponentType, int] = attr.field(eq=False)
+    component_type: typing.Union[components_.ComponentType, int] = attrs.field(eq=False)
     """The type of component which triggers this interaction.
 
     .. note::
@@ -101,22 +100,22 @@ class ComponentInteraction(
         interactions.
     """
 
-    custom_id: str = attr.field(eq=False)
+    custom_id: str = attrs.field(eq=False)
     """Developer defined ID of the component which triggered this interaction."""
 
-    values: typing.Sequence[str] = attr.field(eq=False)
+    values: typing.Sequence[str] = attrs.field(eq=False)
     """Sequence of the values which were selected for a select menu component."""
 
-    resolved: typing.Optional[base_interactions.ResolvedOptionData] = attr.field(eq=False, hash=False, repr=False)
+    resolved: typing.Optional[base_interactions.ResolvedOptionData] = attrs.field(eq=False, hash=False, repr=False)
     """Mappings of the objects resolved for the provided command options."""
 
-    guild_id: typing.Optional[snowflakes.Snowflake] = attr.field(eq=False)
+    guild_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False)
     """ID of the guild this interaction was triggered in.
 
     This will be `None` for component interactions triggered in DMs.
     """
 
-    guild_locale: typing.Optional[typing.Union[str, locales.Locale]] = attr.field(eq=False, hash=False, repr=True)
+    guild_locale: typing.Optional[typing.Union[str, locales.Locale]] = attrs.field(eq=False, hash=False, repr=True)
     """The preferred language of the guild this component interaction was triggered in.
 
     This will be `None` for component interactions triggered in DMs.
@@ -126,10 +125,10 @@ class ComponentInteraction(
         for the guild and will otherwise default to `en-US`.
     """
 
-    message: messages.Message = attr.field(eq=False, repr=False)
+    message: messages.Message = attrs.field(eq=False, repr=False)
     """Object of the message the components for this interaction are attached to."""
 
-    member: typing.Optional[base_interactions.InteractionMember] = attr.field(eq=False, hash=False, repr=True)
+    member: typing.Optional[base_interactions.InteractionMember] = attrs.field(eq=False, hash=False, repr=True)
     """The member who triggered this interaction.
 
     This will be `None` for interactions triggered in DMs.
@@ -139,13 +138,13 @@ class ComponentInteraction(
         contains the member's permissions in the current channel.
     """
 
-    user: users.User = attr.field(eq=False, hash=False, repr=True)
+    user: users.User = attrs.field(eq=False, hash=False, repr=True)
     """The user who triggered this interaction."""
 
-    locale: typing.Union[str, locales.Locale] = attr.field(eq=False, hash=False, repr=True)
+    locale: typing.Union[str, locales.Locale] = attrs.field(eq=False, hash=False, repr=True)
     """The selected language of the user who triggered this component interaction."""
 
-    app_permissions: typing.Optional[permissions.Permissions] = attr.field(eq=False, hash=False, repr=False)
+    app_permissions: typing.Optional[permissions.Permissions] = attrs.field(eq=False, hash=False, repr=False)
     """Permissions the bot has in this interaction's channel if it's in a guild."""
 
     def build_response(self, type_: _ImmediateTypesT, /) -> special_endpoints.InteractionMessageBuilder:

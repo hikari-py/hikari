@@ -113,6 +113,8 @@ _RECONNECTABLE_CLOSE_CODES: typing.FrozenSet[errors.ShardCloseCode] = frozenset(
         errors.ShardCloseCode.RATE_LIMITED,
     )
 )
+# Default value used by the client
+_CUSTOM_STATUS_NAME = "Custom Status"
 
 
 def _log_filterer(token: str) -> typing.Callable[[str], str]:
@@ -217,7 +219,8 @@ class _GatewayTransport:
             close_code = int(message.data)
 
             can_reconnect = close_code < 4000 or close_code in _RECONNECTABLE_CLOSE_CODES
-            raise errors.GatewayServerClosedConnectionError(message.extra, close_code, can_reconnect)
+            # str(message.extra) is used to cast the possible None to a string
+            raise errors.GatewayServerClosedConnectionError(str(message.extra), close_code, can_reconnect)
 
         if message.type == aiohttp.WSMsgType.CLOSING or message.type == aiohttp.WSMsgType.CLOSED:
             # May be caused by the server shutting us down.
@@ -352,7 +355,17 @@ def _serialize_activity(activity: typing.Optional[presences.Activity]) -> data_b
     if activity is None:
         return None
 
-    return {"name": activity.name, "type": int(activity.type), "url": activity.url}
+    # Syntactic sugar, treat `name` as state if using `CUSTOM` and `state` is not passed.
+    state: typing.Optional[str]
+    if activity.type is presences.ActivityType.CUSTOM and activity.name and not activity.state:
+        name = _CUSTOM_STATUS_NAME
+        state = activity.name
+    else:
+        name = activity.name
+        state = activity.state
+
+    payload = {"name": name, "state": state, "type": int(activity.type), "url": activity.url}
+    return payload
 
 
 class GatewayShardImpl(shard.GatewayShard):
@@ -634,10 +647,7 @@ class GatewayShardImpl(shard.GatewayShard):
             raise errors.ComponentStateConflictError("Cannot run more than one instance of one shard concurrently")
 
         self._handshake_event = asyncio.Event()
-        keep_alive_task = asyncio.create_task(
-            self._keep_alive(),
-            name=f"keep alive (shard {self._shard_id})",
-        )
+        keep_alive_task = asyncio.create_task(self._keep_alive(), name=f"keep alive (shard {self._shard_id})")
 
         await aio.first_completed(self._handshake_event.wait(), asyncio.shield(keep_alive_task))
 
@@ -660,10 +670,7 @@ class GatewayShardImpl(shard.GatewayShard):
     ) -> None:
         self._check_if_connected()
         presence_payload = self._serialize_and_store_presence_payload(
-            idle_since=idle_since,
-            afk=afk,
-            activity=activity,
-            status=status,
+            idle_since=idle_since, afk=afk, activity=activity, status=status
         )
         await self._send_json({_OP: _PRESENCE_UPDATE, _D: presence_payload})
 
@@ -731,10 +738,14 @@ class GatewayShardImpl(shard.GatewayShard):
                     user_pl = data["user"]
                     self._user_id = snowflakes.Snowflake(user_pl["id"])
 
+                    # TODO: Remove when rollout finishes
+                    user = user_pl["username"] + (
+                        "#" + user_pl["discriminator"] if user_pl["discriminator"] != "0" else ""
+                    )
                     self._logger.info(
                         "shard is ready: %s guilds, %s (%s), session %r on v%s gateway",
                         len(data["guilds"]),
-                        f"{user_pl['username']}#{user_pl['discriminator']}",
+                        user,
                         self._user_id,
                         self._session_id,
                         data["v"],
@@ -785,10 +796,7 @@ class GatewayShardImpl(shard.GatewayShard):
 
         assert self._handshake_event is not None
 
-        url_parts = urllib.parse.urlparse(
-            self._resume_gateway_url or self._gateway_url,
-            allow_fragments=True,
-        )
+        url_parts = urllib.parse.urlparse(self._resume_gateway_url or self._gateway_url, allow_fragments=True)
 
         query = dict(urllib.parse.parse_qsl(url_parts.query))
         query["v"] = str(urls.VERSION)
@@ -798,14 +806,7 @@ class GatewayShardImpl(shard.GatewayShard):
             query["compress"] = "zlib-stream"
 
         url = urllib.parse.urlunparse(
-            (
-                url_parts.scheme,
-                url_parts.netloc,
-                url_parts.path,
-                url_parts.params,
-                urllib.parse.urlencode(query),
-                "",
-            )
+            (url_parts.scheme, url_parts.netloc, url_parts.path, url_parts.params, urllib.parse.urlencode(query), "")
         )
 
         self._ws = await _GatewayTransport.connect(
@@ -818,7 +819,6 @@ class GatewayShardImpl(shard.GatewayShard):
             dumps=self._dumps,
             url=url,
         )
-        self._event_manager.dispatch(self._event_factory.deserialize_connected_event(self))
 
         # Expect initial HELLO
         hello_payload = await self._ws.receive_json()
@@ -862,10 +862,7 @@ class GatewayShardImpl(shard.GatewayShard):
         else:
             self._logger.debug("resuming session %s", self._session_id)
             await self._send_json(
-                {
-                    _OP: _RESUME,
-                    _D: {"token": self._token, "seq": self._seq, "session_id": self._session_id},
-                }
+                {_OP: _RESUME, _D: {"token": self._token, "seq": self._seq, "session_id": self._session_id}}
             )
 
         lifetime_tasks = (heartbeat_task, poll_events_task)
@@ -896,10 +893,14 @@ class GatewayShardImpl(shard.GatewayShard):
                 if not self._handshake_event.is_set():
                     continue
 
+                await self._event_manager.dispatch(self._event_factory.deserialize_connected_event(self))
                 await aio.first_completed(*lifetime_tasks)
 
                 # Since nothing went wrong, we can reset the backoff and try again
                 backoff.reset()
+
+            except ConnectionResetError:
+                self._logger.warning("connection got reset by server. Will retry shortly")
 
             except errors.GatewayConnectionError as ex:
                 self._logger.warning("failed to communicate with server, reason was: %r. Will retry shortly", ex.reason)
@@ -907,9 +908,7 @@ class GatewayShardImpl(shard.GatewayShard):
             except errors.GatewayServerClosedConnectionError as ex:
                 if not ex.can_reconnect:
                     self._logger.info(
-                        "server has closed the connection permanently [code:%s, reason:%s]",
-                        ex.code,
-                        ex.reason,
+                        "server has closed the connection permanently [code:%s, reason:%s]", ex.code, ex.reason
                     )
                     raise
 
@@ -959,7 +958,9 @@ class GatewayShardImpl(shard.GatewayShard):
                     else:
                         await ws.send_close(code=_RESUME_CLOSE_CODE, message=b"shard disconnecting temporarily")
 
-                    self._event_manager.dispatch(self._event_factory.deserialize_disconnected_event(self))
+                    if self._handshake_event.is_set():
+                        # We dispatched the connected event, so we can dispatch the disconnected one too
+                        await self._event_manager.dispatch(self._event_factory.deserialize_disconnected_event(self))
 
     def _serialize_and_store_presence_payload(
         self,

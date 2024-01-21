@@ -17,16 +17,16 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: [3.8, 3.9, "3.10", 3.11]
+        python-version: [3.8, 3.9, "3.10", 3.11, 3.12]
 
     runs-on: ${{ matrix.os }}
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -49,16 +49,14 @@ jobs:
           nox -s pytest-all-features -- --cov-append
 
           python scripts/ci/normalize_coverage.py
-          mv .coverage .coverage.${{ matrix.os }}.${{ matrix.python-version }}
 
       - name: Upload coverage
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: coverage
-          path: .coverage.${{ matrix.os }}.${{ matrix.python-version }}
+          name: .coverage.${{ matrix.os }}.${{ matrix.python-version }}
+          path: .coverage
           retention-days: 1
           if-no-files-found: error
-
 
   upload-coverage:
     needs: [test]
@@ -66,17 +64,34 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.10"
 
       - name: Download coverage
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: coverage
+          path: coverages/
+          # Not specifying any name will lead to the download of all available artifacts
+
+      # Since artifacts v2, we can no longer upload multiple artifacts
+      # with the same name and have them re-download as if it were a directory.
+      # For this reason, we need to download all available artifacts, filter
+      # out for only coverage files and then place them in the root directory
+      # with the name of the artifact
+      - name: Extract individual coverage files
+        run: |
+          cd coverages
+
+          for coverage_dir in ./.coverage.*; do
+              mv "$coverage_dir/.coverage" "../$coverage_dir"
+              rmdir "$coverage_dir"
+          done
+
+          cd ..
 
       - name: Combine coverage
         run: |
@@ -86,7 +101,7 @@ jobs:
           coverage report
 
       - name: Upload coverage to codeclimate
-        uses: paambaati/codeclimate-action@v3.2.0
+        uses: paambaati/codeclimate-action@v5.0.0
         env:
           CC_TEST_REPORTER_ID: d40e64ea0ff74713f79365fea4378ab51a2141ad4fcf0fb118496bbf560d4192
         with:
@@ -97,10 +112,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: 3.8
 
@@ -154,10 +169,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: 3.8
 
@@ -171,15 +186,15 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: 3.8
+          python-version: 3.9
 
       - name: Setup node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
 
       - name: Build documentation
         run: |
@@ -188,7 +203,7 @@ jobs:
 
       - name: Upload artifacts
         if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: docs
           path: public/docs

@@ -78,19 +78,12 @@ _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.bot")
 def _validate_activity(activity: undefined.UndefinedNoneOr[presences.Activity]) -> None:
     # This seems to cause confusion for a lot of people, so lets add some warnings into the mix.
 
-    if activity is undefined.UNDEFINED or activity is None:
+    if not activity:
         return
 
     # If you ever change where this is called from, make sure to check the stacklevels are correct
     # or the code preview in the warning will be wrong...
-    if activity.type is presences.ActivityType.CUSTOM:
-        warnings.warn(
-            "The CUSTOM activity type is not supported by bots at the time of writing, and may therefore not have "
-            "any effect if used.",
-            category=errors.HikariWarning,
-            stacklevel=3,
-        )
-    elif activity.type is presences.ActivityType.STREAMING and activity.url is None:
+    if activity.type is presences.ActivityType.STREAMING and activity.url is None:
         warnings.warn(
             "The STREAMING activity type requires a 'url' parameter pointing to a valid Twitch or YouTube video "
             "URL to be specified on the activity for the presence update to have any effect.",
@@ -106,11 +99,7 @@ async def _close_resource(name: str, awaitable: typing.Awaitable[typing.Any]) ->
         await future
     except Exception as ex:
         asyncio.get_running_loop().call_exception_handler(
-            {
-                "message": f"{name} raised an exception during shut down",
-                "future": future,
-                "exception": ex,
-            }
+            {"message": f"{name} raised an exception during shut down", "future": future, "exception": ex}
         )
 
 
@@ -187,15 +176,22 @@ class GatewayBot(traits.GatewayBotAware):
         Defaults to `True`. If `False`, then no member chunks
         will be requested automatically, even if there are reasons to do so.
 
-        All following statements must be true to automatically request chunks:
+        We only want to chunk if we are allowed and need to:
 
-        1. `auto_chunk_members` is `True`.
-        2. The members intent is enabled.
-        3. The server is marked as "large" or the presences intent is not enabled
-           (since Discord only sends other members when presences are declared,
-           we should also chunk small guilds if the presences are not declared).
-        4. The members cache is enabled or there are listeners for the
-           `MemberChunkEvent`.
+        - Allowed?
+            All the following must be true:
+                1. `auto_chunk_members` is true (the user wants us to).
+                2. We have the necessary intents (`GUILD_MEMBERS`).
+                3. The guild is marked as "large" or we do not have `GUILD_PRESENCES` intent
+                   Discord will only send every other member objects on the `GUILD_CREATE`
+                   payload if presence intents are also declared, so if this isn't the case then we also
+                   want to chunk small guilds.
+
+        - Needed?
+            One of the following must be true:
+                1. We have a cache, and it requires it (it is enabled for `MEMBERS`), but we are
+                   not limited to only our own member (which is included in the `GUILD_CREATE` payload).
+                2. The user is waiting for the member chunks (there is an event listener for it).
     logs : typing.Union[None, str, int, typing.Dict[str, typing.Any], os.PathLike]
         The flavour to set the logging to.
 
@@ -507,27 +503,27 @@ class GatewayBot(traits.GatewayBotAware):
 
         .. code-block:: python
 
-            import attr
+            import attrs
 
             from hikari.traits import RESTAware
             from hikari.events.base_events import Event
             from hikari.users import User
             from hikari.snowflakes import Snowflake
 
-            @attr.define()
+            @attrs.define()
             class EveryoneMentionedEvent(Event):
-                app: RESTAware = attr.field()
+                app: RESTAware = attrs.field()
 
-                author: User = attr.field()
+                author: User = attrs.field()
                 '''The user who mentioned everyone.'''
 
-                content: str = attr.field()
+                content: str = attrs.field()
                 '''The message that was sent.'''
 
-                message_id: Snowflake = attr.field()
+                message_id: Snowflake = attrs.field()
                 '''The message ID.'''
 
-                channel_id: Snowflake = attr.field()
+                channel_id: Snowflake = attrs.field()
                 '''The channel ID.'''
 
         We can then dispatch our event as we see fit.
@@ -567,11 +563,11 @@ class GatewayBot(traits.GatewayBotAware):
 
         See Also
         --------
-        Listen : `hikari.impl.bot.GatewayBot.listen`.
-        Stream : `hikari.impl.bot.GatewayBot.stream`.
-        Subscribe : `hikari.impl.bot.GatewayBot.subscribe`.
-        Unsubscribe : `hikari.impl.bot.GatewayBot.unsubscribe`.
-        Wait_for : `hikari.impl.bot.GatewayBot.wait_for`.
+        Listen : `hikari.impl.gateway_bot.GatewayBot.listen`.
+        Stream : `hikari.impl.gateway_bot.GatewayBot.stream`.
+        Subscribe : `hikari.impl.gateway_bot.GatewayBot.subscribe`.
+        Unsubscribe : `hikari.impl.gateway_bot.GatewayBot.unsubscribe`.
+        Wait_for : `hikari.impl.gateway_bot.GatewayBot.wait_for`.
         """
         return self._event_manager.dispatch(event)
 
@@ -606,8 +602,7 @@ class GatewayBot(traits.GatewayBotAware):
         await aio.first_completed(self._closed_event.wait(), *(s.join() for s in self._shards.values()))
 
     def listen(
-        self,
-        *event_types: typing.Type[base_events.EventT],
+        self, *event_types: typing.Type[base_events.EventT]
     ) -> typing.Callable[[event_manager_.CallbackT[base_events.EventT]], event_manager_.CallbackT[base_events.EventT]]:
         """Generate a decorator to subscribe a callback to an event type.
 
@@ -631,11 +626,11 @@ class GatewayBot(traits.GatewayBotAware):
 
         See Also
         --------
-        Dispatch : `hikari.impl.bot.GatewayBot.dispatch`.
-        Stream : `hikari.impl.bot.GatewayBot.stream`.
-        Subscribe : `hikari.impl.bot.GatewayBot.subscribe`.
-        Unsubscribe : `hikari.impl.bot.GatewayBot.unsubscribe`.
-        Wait_for : `hikari.impl.bot.GatewayBot.wait_for`.
+        Dispatch : `hikari.impl.gateway_bot.GatewayBot.dispatch`.
+        Stream : `hikari.impl.gateway_bot.GatewayBot.stream`.
+        Subscribe : `hikari.impl.gateway_bot.GatewayBot.subscribe`.
+        Unsubscribe : `hikari.impl.gateway_bot.GatewayBot.unsubscribe`.
+        Wait_for : `hikari.impl.gateway_bot.GatewayBot.wait_for`.
         """
         return self._event_manager.listen(*event_types)
 
@@ -810,12 +805,10 @@ class GatewayBot(traits.GatewayBotAware):
             except AttributeError:
                 _LOGGER.log(ux.TRACE, "cannot set coroutine tracking depth for sys, no functionality exists for this")
 
-        try:
-            with signals.handle_interrupts(
-                enabled=enable_signal_handlers,
-                loop=loop,
-                propagate_interrupts=propagate_interrupts,
-            ):
+        with signals.handle_interrupts(
+            enabled=enable_signal_handlers, loop=loop, propagate_interrupts=propagate_interrupts
+        ):
+            try:
                 loop.run_until_complete(
                     self.start(
                         activity=activity,
@@ -832,22 +825,27 @@ class GatewayBot(traits.GatewayBotAware):
 
                 loop.run_until_complete(self.join())
 
-        finally:
-            if self._closing_event:
-                if self._closing_event.is_set():
-                    loop.run_until_complete(self._closing_event.wait())
-                else:
-                    loop.run_until_complete(self.close())
+            finally:
+                try:
+                    if self._closing_event:
+                        if self._closing_event.is_set():
+                            loop.run_until_complete(self._closing_event.wait())
+                        else:
+                            loop.run_until_complete(self.close())
 
-            if close_passed_executor and self._executor is not None:
-                _LOGGER.debug("shutting down executor %s", self._executor)
-                self._executor.shutdown(wait=True)
-                self._executor = None
+                    if close_passed_executor and self._executor is not None:
+                        _LOGGER.debug("shutting down executor %s", self._executor)
+                        self._executor.shutdown(wait=True)
+                        self._executor = None
 
-            if close_loop:
-                aio.destroy_loop(loop, _LOGGER)
+                    if close_loop:
+                        aio.destroy_loop(loop, _LOGGER)
 
-            _LOGGER.info("successfully terminated")
+                    _LOGGER.info("successfully terminated")
+
+                except errors.HikariInterrupt:
+                    _LOGGER.warning("forcefully terminated")
+                    raise
 
     async def start(
         self,
@@ -924,8 +922,7 @@ class GatewayBot(traits.GatewayBotAware):
 
         if check_for_updates:
             asyncio.create_task(
-                ux.check_for_updates(self._http_settings, self._proxy_settings),
-                name="check for package updates",
+                ux.check_for_updates(self._http_settings, self._proxy_settings), name="check for package updates"
             )
 
         self._rest.start()
@@ -1064,11 +1061,11 @@ class GatewayBot(traits.GatewayBotAware):
 
         See Also
         --------
-        Dispatch : `hikari.impl.bot.GatewayBot.dispatch`.
-        Listen : `hikari.impl.bot.GatewayBot.listen`.
-        Subscribe : `hikari.impl.bot.GatewayBot.subscribe`.
-        Unsubscribe : `hikari.impl.bot.GatewayBot.unsubscribe`.
-        Wait_for : `hikari.impl.bot.GatewayBot.wait_for`.
+        Dispatch : `hikari.impl.gateway_bot.GatewayBot.dispatch`.
+        Listen : `hikari.impl.gateway_bot.GatewayBot.listen`.
+        Subscribe : `hikari.impl.gateway_bot.GatewayBot.subscribe`.
+        Unsubscribe : `hikari.impl.gateway_bot.GatewayBot.unsubscribe`.
+        Wait_for : `hikari.impl.gateway_bot.GatewayBot.wait_for`.
         """
         self._check_if_alive()
         return self._event_manager.stream(event_type, timeout=timeout, limit=limit)
@@ -1107,11 +1104,11 @@ class GatewayBot(traits.GatewayBotAware):
 
         See Also
         --------
-        Dispatch : `hikari.impl.bot.GatewayBot.dispatch`.
-        Listen : `hikari.impl.bot.GatewayBot.listen`.
-        Stream : `hikari.impl.bot.GatewayBot.stream`.
-        Unsubscribe : `hikari.impl.bot.GatewayBot.unsubscribe`.
-        Wait_for : `hikari.impl.bot.GatewayBot.wait_for`.
+        Dispatch : `hikari.impl.gateway_bot.GatewayBot.dispatch`.
+        Listen : `hikari.impl.gateway_bot.GatewayBot.listen`.
+        Stream : `hikari.impl.gateway_bot.GatewayBot.stream`.
+        Unsubscribe : `hikari.impl.gateway_bot.GatewayBot.unsubscribe`.
+        Wait_for : `hikari.impl.gateway_bot.GatewayBot.wait_for`.
         """
         self._event_manager.subscribe(event_type, callback)
 
@@ -1147,11 +1144,11 @@ class GatewayBot(traits.GatewayBotAware):
 
         See Also
         --------
-        Dispatch : `hikari.impl.bot.GatewayBot.dispatch`.
-        Listen : `hikari.impl.bot.GatewayBot.listen`.
-        Stream : `hikari.impl.bot.GatewayBot.stream`.
-        Subscribe : `hikari.impl.bot.GatewayBot.subscribe`.
-        Wait_for : `hikari.impl.bot.GatewayBot.wait_for`.
+        Dispatch : `hikari.impl.gateway_bot.GatewayBot.dispatch`.
+        Listen : `hikari.impl.gateway_bot.GatewayBot.listen`.
+        Stream : `hikari.impl.gateway_bot.GatewayBot.stream`.
+        Subscribe : `hikari.impl.gateway_bot.GatewayBot.subscribe`.
+        Wait_for : `hikari.impl.gateway_bot.GatewayBot.wait_for`.
         """
         self._event_manager.unsubscribe(event_type, callback)
 
@@ -1198,11 +1195,11 @@ class GatewayBot(traits.GatewayBotAware):
 
         See Also
         --------
-        Dispatch : `hikari.impl.bot.GatewayBot.dispatch`.
-        Listen : `hikari.impl.bot.GatewayBot.listen`.
-        Stream : `hikari.impl.bot.GatewayBot.stream`.
-        Subscribe : `hikari.impl.bot.GatewayBot.subscribe`.
-        Unsubscribe : `hikari.impl.bot.GatewayBot.unsubscribe`.
+        Dispatch : `hikari.impl.gateway_bot.GatewayBot.dispatch`.
+        Listen : `hikari.impl.gateway_bot.GatewayBot.listen`.
+        Stream : `hikari.impl.gateway_bot.GatewayBot.stream`.
+        Subscribe : `hikari.impl.gateway_bot.GatewayBot.subscribe`.
+        Unsubscribe : `hikari.impl.gateway_bot.GatewayBot.unsubscribe`.
         """
         self._check_if_alive()
         return await self._event_manager.wait_for(event_type, timeout=timeout, predicate=predicate)

@@ -248,10 +248,7 @@ class TestEventManagerImpl:
 
     @pytest.mark.asyncio()
     async def test_on_thread_create_when_create_stateful(
-        self,
-        event_manager_impl: event_manager.EventManagerImpl,
-        shard: mock.Mock,
-        event_factory: mock.Mock,
+        self, event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
     ):
         mock_payload = {"id": "123321", "newly_created": True}
         await event_manager_impl.on_thread_create(shard, mock_payload)
@@ -263,10 +260,7 @@ class TestEventManagerImpl:
 
     @pytest.mark.asyncio()
     async def test_on_thread_create_stateless(
-        self,
-        stateless_event_manager_impl: event_manager.EventManagerImpl,
-        shard: mock.Mock,
-        event_factory: mock.Mock,
+        self, stateless_event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
     ):
         mock_payload = {"id": "123321", "newly_created": True}
         await stateless_event_manager_impl.on_thread_create(shard, mock_payload)
@@ -278,10 +272,7 @@ class TestEventManagerImpl:
 
     @pytest.mark.asyncio()
     async def test_on_thread_create_for_access_stateful(
-        self,
-        event_manager_impl: event_manager.EventManagerImpl,
-        shard: mock.Mock,
-        event_factory: mock.Mock,
+        self, event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
     ):
         mock_payload = {"id": "123321"}
         await event_manager_impl.on_thread_create(shard, mock_payload)
@@ -293,10 +284,7 @@ class TestEventManagerImpl:
 
     @pytest.mark.asyncio()
     async def test_on_thread_create_for_access_stateless(
-        self,
-        stateless_event_manager_impl: event_manager.EventManagerImpl,
-        shard: mock.Mock,
-        event_factory: mock.Mock,
+        self, stateless_event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
     ):
         mock_payload = {"id": "123321"}
         await stateless_event_manager_impl.on_thread_create(shard, mock_payload)
@@ -308,10 +296,7 @@ class TestEventManagerImpl:
 
     @pytest.mark.asyncio()
     async def test_on_thread_update_stateful(
-        self,
-        event_manager_impl: event_manager.EventManagerImpl,
-        shard: mock.Mock,
-        event_factory: mock.Mock,
+        self, event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
     ):
         mock_payload = mock.Mock()
         await event_manager_impl.on_thread_update(shard, mock_payload)
@@ -323,10 +308,7 @@ class TestEventManagerImpl:
 
     @pytest.mark.asyncio()
     async def test_on_thread_update_stateless(
-        self,
-        stateless_event_manager_impl: event_manager.EventManagerImpl,
-        shard: mock.Mock,
-        event_factory: mock.Mock,
+        self, stateless_event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
     ):
         mock_payload = mock.Mock()
         await stateless_event_manager_impl.on_thread_update(shard, mock_payload)
@@ -338,10 +320,7 @@ class TestEventManagerImpl:
 
     @pytest.mark.asyncio()
     async def test_on_thread_delete_stateful(
-        self,
-        event_manager_impl: event_manager.EventManagerImpl,
-        shard: mock.Mock,
-        event_factory: mock.Mock,
+        self, event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
     ):
         mock_payload = mock.Mock()
         await event_manager_impl.on_thread_delete(shard, mock_payload)
@@ -353,10 +332,7 @@ class TestEventManagerImpl:
 
     @pytest.mark.asyncio()
     async def test_on_thread_delete_stateless(
-        self,
-        stateless_event_manager_impl: event_manager.EventManagerImpl,
-        shard: mock.Mock,
-        event_factory: mock.Mock,
+        self, stateless_event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
     ):
         mock_payload = mock.Mock()
         await stateless_event_manager_impl.on_thread_delete(shard, mock_payload)
@@ -368,10 +344,7 @@ class TestEventManagerImpl:
 
     @pytest.mark.asyncio()
     async def test_on_thread_list_sync_stateful_when_channel_ids(
-        self,
-        event_manager_impl: event_manager.EventManagerImpl,
-        shard: mock.Mock,
-        event_factory: mock.Mock,
+        self, event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
     ):
         event = event_factory.deserialize_thread_list_sync_event.return_value
         event.channel_ids = ["1", "2"]
@@ -390,10 +363,7 @@ class TestEventManagerImpl:
 
     @pytest.mark.asyncio()
     async def test_on_thread_list_sync_stateful_when_not_channel_ids(
-        self,
-        event_manager_impl: event_manager.EventManagerImpl,
-        shard: mock.Mock,
-        event_factory: mock.Mock,
+        self, event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
     ):
         event = event_factory.deserialize_thread_list_sync_event.return_value
         event.channel_ids = None
@@ -409,10 +379,7 @@ class TestEventManagerImpl:
 
     @pytest.mark.asyncio()
     async def test_on_thread_list_sync_stateless(
-        self,
-        stateless_event_manager_impl: event_manager.EventManagerImpl,
-        shard: mock.Mock,
-        event_factory: mock.Mock,
+        self, stateless_event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
     ):
         mock_payload = mock.Mock()
         await stateless_event_manager_impl.on_thread_list_sync(shard, mock_payload)
@@ -424,10 +391,7 @@ class TestEventManagerImpl:
 
     @pytest.mark.asyncio()
     async def test_on_thread_members_update_stateful_when_id_in_removed(
-        self,
-        event_manager_impl: event_manager.EventManagerImpl,
-        shard: mock.Mock,
-        event_factory: mock.Mock,
+        self, event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
     ):
         event = event_factory.deserialize_thread_members_update_event.return_value
         event.removed_member_ids = [1, 2, 3]
@@ -441,10 +405,7 @@ class TestEventManagerImpl:
 
     @pytest.mark.asyncio()
     async def test_on_thread_members_update_stateful_when_id_not_in_removed(
-        self,
-        event_manager_impl: event_manager.EventManagerImpl,
-        shard: mock.Mock,
-        event_factory: mock.Mock,
+        self, event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
     ):
         event = event_factory.deserialize_thread_members_update_event.return_value
         event.removed_member_ids = [1, 2, 3]
@@ -458,10 +419,7 @@ class TestEventManagerImpl:
 
     @pytest.mark.asyncio()
     async def test_on_thread_members_update_stateless(
-        self,
-        stateless_event_manager_impl: event_manager.EventManagerImpl,
-        shard: mock.Mock,
-        event_factory: mock.Mock,
+        self, stateless_event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
     ):
         mock_payload = mock.Mock()
         await stateless_event_manager_impl.on_thread_members_update(shard, mock_payload)
@@ -593,15 +551,19 @@ class TestEventManagerImpl:
 
         event_manager_impl.dispatch.assert_not_called()
 
-    @pytest.mark.parametrize("include_unavailable", [True, False])
+    @pytest.mark.parametrize(
+        ("include_unavailable", "only_my_member"), [(True, True), (True, False), (False, True), (False, False)]
+    )
     @pytest.mark.asyncio()
     async def test_on_guild_create_when_not_dispatching_and_caching(
-        self, event_manager_impl, shard, event_factory, entity_factory, include_unavailable
+        self, event_manager_impl, shard, event_factory, entity_factory, include_unavailable, only_my_member
     ):
         payload = {"unavailable": False} if include_unavailable else {}
         event_manager_impl._intents = intents.Intents.NONE
         event_manager_impl._cache_enabled_for = mock.Mock(return_value=True)
         event_manager_impl._enabled_for_event = mock.Mock(return_value=False)
+        event_manager_impl._cache.settings.only_my_member = only_my_member
+        shard.get_user_id.return_value = 1
         gateway_guild = entity_factory.deserialize_gateway_guild.return_value
         gateway_guild.channels.return_value = {1: "channel1", 2: "channel2"}
         gateway_guild.emojis.return_value = {1: "emoji1", 2: "emoji2"}
@@ -637,13 +599,17 @@ class TestEventManagerImpl:
         event_manager_impl._cache.clear_roles_for_guild.assert_called_once_with(gateway_guild.id)
         event_manager_impl._cache.set_role.assert_has_calls([mock.call("role1"), mock.call("role2")])
         event_manager_impl._cache.clear_members_for_guild.assert_called_once_with(gateway_guild.id)
-        event_manager_impl._cache.set_member.assert_has_calls([mock.call("member1"), mock.call("member2")])
+        if only_my_member:
+            event_manager_impl._cache.set_member.assert_called_once_with("member1")
+            shard.get_user_id.assert_has_calls([mock.call(), mock.call()])
+        else:
+            event_manager_impl._cache.set_member.assert_has_calls([mock.call("member1"), mock.call("member2")])
+            shard.get_user_id.assert_called_once_with()
         event_manager_impl._cache.clear_presences_for_guild.assert_called_once_with(gateway_guild.id)
         event_manager_impl._cache.set_presence.assert_has_calls([mock.call("presence1"), mock.call("presence2")])
         event_manager_impl._cache.clear_voice_states_for_guild.assert_called_once_with(gateway_guild.id)
         event_manager_impl._cache.set_voice_state.assert_has_calls([mock.call("voice1"), mock.call("voice2")])
         request_guild_members.assert_not_called()
-        shard.get_user_id.assert_called_once_with()
 
         event_manager_impl.dispatch.assert_not_called()
 
@@ -675,23 +641,26 @@ class TestEventManagerImpl:
         stateless_event_manager_impl.dispatch.assert_not_called()
 
     @pytest.mark.asyncio()
-    async def test_on_guild_create_when_members_declared_and_member_cache_enabled(
-        self,
-        stateless_event_manager_impl,
-        shard,
-        event_factory,
-        entity_factory,
+    async def test_on_guild_create_when_members_declared_and_member_cache_enabled_but_only_my_member_not_enabled(
+        self, event_manager_impl, shard, event_factory, entity_factory
     ):
+        def cache_enabled_for_members_only(component):
+            return component == config.CacheComponents.MEMBERS
+
         shard.id = 123
-        stateless_event_manager_impl._intents = intents.Intents.GUILD_MEMBERS
-        stateless_event_manager_impl._cache_enabled_for = mock.Mock(return_value=True)
-        stateless_event_manager_impl._enabled_for_event = mock.Mock(return_value=False)
+        event_manager_impl._cache.settings.only_my_member = False
+        event_manager_impl._intents = intents.Intents.GUILD_MEMBERS
+        event_manager_impl._cache_enabled_for = cache_enabled_for_members_only
+        event_manager_impl._enabled_for_event = mock.Mock(return_value=False)
+        gateway_guild = entity_factory.deserialize_gateway_guild.return_value
+        gateway_guild.id = 456
+        gateway_guild.members.return_value = {1: "member1", 2: "member2"}
         mock_request_guild_members = mock.Mock()
 
         with mock.patch.object(asyncio, "create_task") as create_task:
             with mock.patch.object(event_manager, "_fixed_size_nonce", return_value="abc"):
                 with mock.patch.object(event_manager, "_request_guild_members", new=mock_request_guild_members):
-                    await stateless_event_manager_impl.on_guild_create(shard, {"id": 456, "large": False})
+                    await event_manager_impl.on_guild_create(shard, {"id": 456, "large": False})
 
         mock_request_guild_members.assert_called_once_with(shard, 456, include_presences=False, nonce="123.abc")
         create_task.assert_called_once_with(
@@ -699,12 +668,34 @@ class TestEventManagerImpl:
         )
 
     @pytest.mark.asyncio()
+    async def test_on_guild_create_when_members_declared_and_member_cache_but_only_my_member_enabled(
+        self, event_manager_impl, shard, event_factory, entity_factory
+    ):
+        def cache_enabled_for_members_only(component):
+            return component == config.CacheComponents.MEMBERS
+
+        shard.id = 123
+        shard.get_user_id.return_value = 1
+        event_manager_impl._cache.settings.only_my_member = True
+        event_manager_impl._intents = intents.Intents.GUILD_MEMBERS
+        event_manager_impl._cache_enabled_for = cache_enabled_for_members_only
+        event_manager_impl._enabled_for_event = mock.Mock(return_value=False)
+        gateway_guild = entity_factory.deserialize_gateway_guild.return_value
+        gateway_guild.members.return_value = {1: "member1", 2: "member2"}
+
+        mock_request_guild_members = mock.Mock()
+
+        with mock.patch.object(asyncio, "create_task") as create_task:
+            with mock.patch.object(event_manager, "_fixed_size_nonce", return_value="abc"):
+                with mock.patch.object(event_manager, "_request_guild_members", new=mock_request_guild_members):
+                    await event_manager_impl.on_guild_create(shard, {"id": 456, "large": False})
+
+        mock_request_guild_members.assert_not_called()
+        create_task.assert_not_called()
+
+    @pytest.mark.asyncio()
     async def test_on_guild_create_when_members_declared_and_enabled_for_member_chunk_event(
-        self,
-        stateless_event_manager_impl,
-        shard,
-        event_factory,
-        entity_factory,
+        self, stateless_event_manager_impl, shard, event_factory, entity_factory
     ):
         shard.id = 123
         stateless_event_manager_impl._intents = intents.Intents.GUILD_MEMBERS
@@ -733,12 +724,7 @@ class TestEventManagerImpl:
     @pytest.mark.parametrize("enabled_for_event", [True, False])
     @pytest.mark.asyncio()
     async def test_on_guild_create_when_chunk_members_disabled(
-        self,
-        stateless_event_manager_impl,
-        shard,
-        large,
-        cache_enabled,
-        enabled_for_event,
+        self, stateless_event_manager_impl, shard, large, cache_enabled, enabled_for_event
     ):
         shard.id = 123
         stateless_event_manager_impl._intents = intents.Intents.GUILD_MEMBERS

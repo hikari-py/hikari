@@ -209,11 +209,7 @@ class TestUser:
             assert obj.make_avatar_url(ext=None, size=4096) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            user_id=obj.id,
-            hash="a_18dnf8dfbakfdh",
-            size=4096,
-            file_format="gif",
+            urls.CDN_URL, user_id=obj.id, hash="a_18dnf8dfbakfdh", size=4096, file_format="gif"
         )
 
     def test_make_avatar_url_when_format_is_None_and_avatar_hash_is_not_for_gif(self, obj):
@@ -225,11 +221,7 @@ class TestUser:
             assert obj.make_avatar_url(ext=None, size=4096) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            user_id=obj.id,
-            hash=obj.avatar_hash,
-            size=4096,
-            file_format="png",
+            urls.CDN_URL, user_id=obj.id, hash=obj.avatar_hash, size=4096, file_format="png"
         )
 
     def test_make_avatar_url_with_all_args(self, obj):
@@ -241,11 +233,7 @@ class TestUser:
             assert obj.make_avatar_url(ext="url", size=4096) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            user_id=obj.id,
-            hash=obj.avatar_hash,
-            size=4096,
-            file_format="url",
+            urls.CDN_URL, user_id=obj.id, hash=obj.avatar_hash, size=4096, file_format="url"
         )
 
     def test_display_avatar_url_when_avatar_url(self, obj):
@@ -266,11 +254,19 @@ class TestUser:
         ) as route:
             assert obj.default_avatar_url == "file"
 
-        route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            discriminator=4,
-            file_format="png",
-        )
+        route.compile_to_file.assert_called_once_with(urls.CDN_URL, style=4, file_format="png")
+
+    def test_default_avatar_for_migrated_users(self, obj):
+        obj.id = 377812572784820226
+        obj.avatar_hash = "18dnf8dfbakfdh"
+        obj.discriminator = "0"
+
+        with mock.patch.object(
+            routes, "CDN_DEFAULT_USER_AVATAR", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert obj.default_avatar_url == "file"
+
+        route.compile_to_file.assert_called_once_with(urls.CDN_URL, style=0, file_format="png")
 
     def test_banner_url_property(self, obj):
         with mock.patch.object(users.User, "make_banner_url") as make_banner_url:
@@ -293,11 +289,7 @@ class TestUser:
             assert obj.make_banner_url(ext=None, size=4096) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            user_id=obj.id,
-            hash="a_18dnf8dfbakfdh",
-            size=4096,
-            file_format="gif",
+            urls.CDN_URL, user_id=obj.id, hash="a_18dnf8dfbakfdh", size=4096, file_format="gif"
         )
 
     def test_make_banner_url_when_format_is_None_and_banner_hash_is_not_for_gif(self, obj):
@@ -309,11 +301,7 @@ class TestUser:
             assert obj.make_banner_url(ext=None, size=4096) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            user_id=obj.id,
-            hash=obj.banner_hash,
-            size=4096,
-            file_format="png",
+            urls.CDN_URL, user_id=obj.id, hash=obj.banner_hash, size=4096, file_format="png"
         )
 
     def test_make_banner_url_with_all_args(self, obj):
@@ -325,11 +313,7 @@ class TestUser:
             assert obj.make_banner_url(ext="url", size=4096) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            user_id=obj.id,
-            hash=obj.banner_hash,
-            size=4096,
-            file_format="url",
+            urls.CDN_URL, user_id=obj.id, hash=obj.banner_hash, size=4096, file_format="url"
         )
 
 
@@ -341,6 +325,7 @@ class TestPartialUserImpl:
             app=mock.Mock(),
             discriminator="8637",
             username="thomm.o",
+            global_name=None,
             avatar_hash=None,
             banner_hash=None,
             accent_color=None,
@@ -376,6 +361,7 @@ class TestOwnUser:
             app=mock.Mock(),
             discriminator="1234",
             username="foobar",
+            global_name=None,
             avatar_hash="69420",
             banner_hash="42069",
             accent_color=123456,

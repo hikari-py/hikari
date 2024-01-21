@@ -36,11 +36,11 @@ __all__: typing.Sequence[str] = (
 
 import typing
 
-import attr
+import attrs
 
 from hikari import snowflakes
 from hikari import urls
-from hikari.internal import attr_extensions
+from hikari.internal import attrs_extensions
 from hikari.internal import enums
 from hikari.internal import routes
 
@@ -67,7 +67,7 @@ class ScheduledEventType(int, enums.Enum):
     """A scheduled stage instance."""
 
     VOICE = 2
-    """A scheculed voice chat event."""
+    """A scheduled voice chat event."""
 
     EXTERNAL = 3
     """A scheduled event which takes part outside of Discord."""
@@ -80,7 +80,7 @@ class ScheduledEventStatus(int, enums.Enum):
     """Indicates that the scheduled event hasn't occurred yet."""
 
     ACTIVE = 2
-    """Indicates an eventis on-going."""
+    """Indicates an event is on-going."""
 
     COMPLETED = 3
     """Indicates an event has finished."""
@@ -92,63 +92,63 @@ class ScheduledEventStatus(int, enums.Enum):
     """Alias of `ScheduledEventStatus.CANCELED`."""
 
 
-@attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class ScheduledEvent(snowflakes.Unique):
     """Base class for scheduled events."""
 
     # entity_id is ignored right now due to always being null
     # creator_id is ignored as it just dupes creator.id
 
-    app: traits.RESTAware = attr.field(
-        repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
+    app: traits.RESTAware = attrs.field(
+        repr=False, eq=False, hash=False, metadata={attrs_extensions.SKIP_DEEP_COPY: True}
     )
     """Client application that models may use for procedures."""
 
-    id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
+    id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
     """ID of the scheduled event."""
 
-    guild_id: snowflakes.Snowflake = attr.field(hash=False, repr=True)
+    guild_id: snowflakes.Snowflake = attrs.field(hash=False, repr=True)
     """ID of the guild this scheduled event belongs to."""
 
-    name: str = attr.field(hash=False, repr=True)
+    name: str = attrs.field(hash=False, repr=True)
     """Name of the scheduled event."""
 
-    description: typing.Optional[str] = attr.field(hash=False, repr=False)
+    description: typing.Optional[str] = attrs.field(hash=False, repr=False)
     """Description of the scheduled event."""
 
-    start_time: datetime.datetime = attr.field(hash=False, repr=False)
+    start_time: datetime.datetime = attrs.field(hash=False, repr=False)
     """When the event is scheduled to start."""
 
-    end_time: typing.Optional[datetime.datetime] = attr.field(hash=False, repr=False)
+    end_time: typing.Optional[datetime.datetime] = attrs.field(hash=False, repr=False)
     """When the event is scheduled to end, if set."""
 
-    privacy_level: EventPrivacyLevel = attr.field(hash=False, repr=False)
+    privacy_level: EventPrivacyLevel = attrs.field(hash=False, repr=False)
     """Privacy level of the scheduled event.
 
     This restricts who can view and join the scheduled event.
     """
 
-    status: ScheduledEventStatus = attr.field(hash=False, repr=True)
+    status: ScheduledEventStatus = attrs.field(hash=False, repr=True)
     """Status of the scheduled event."""
 
-    entity_type: ScheduledEventType = attr.field(hash=False, repr=True)
+    entity_type: ScheduledEventType = attrs.field(hash=False, repr=True)
     """The type of entity this scheduled event is associated with."""
 
-    creator: typing.Optional[users.User] = attr.field(hash=False, repr=False)
+    creator: typing.Optional[users.User] = attrs.field(hash=False, repr=False)
     """The user who created the scheduled event.
 
     This will only be set for event created after 2021-10-25.
     """
 
-    user_count: typing.Optional[int] = attr.field(hash=False, repr=False)
+    user_count: typing.Optional[int] = attrs.field(hash=False, repr=False)
     """The number of users that have subscribed to the event.
 
     This will be `None` on gateway events when creating and
     editing a scheduled event.
     """
 
-    image_hash: typing.Optional[str] = attr.field(hash=False, repr=False)
+    image_hash: typing.Optional[str] = attrs.field(hash=False, repr=False)
     """Hash of the image used for the scheduled event, if set."""
 
     @property
@@ -182,20 +182,16 @@ class ScheduledEvent(snowflakes.Unique):
             return None
 
         return routes.SCHEDULED_EVENT_COVER.compile_to_file(
-            urls.CDN_URL,
-            scheduled_event_id=self.id,
-            hash=self.image_hash,
-            size=size,
-            file_format=ext,
+            urls.CDN_URL, scheduled_event_id=self.id, hash=self.image_hash, size=size, file_format=ext
         )
 
 
-@attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class ScheduledExternalEvent(ScheduledEvent):
     """A scheduled event that takes place outside of Discord."""
 
-    location: str = attr.field(hash=False, repr=False)
+    location: str = attrs.field(hash=False, repr=False)
     """The location of the scheduled event.
 
     .. note::
@@ -203,38 +199,38 @@ class ScheduledExternalEvent(ScheduledEvent):
         friendly string.
     """
 
-    end_time: datetime.datetime = attr.field(hash=False, repr=False)
+    end_time: datetime.datetime = attrs.field(hash=False, repr=False)
     """When the event is scheduled to end."""
 
 
-@attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class ScheduledStageEvent(ScheduledEvent):
     """A scheduled event that takes place in a stage channel."""
 
-    channel_id: snowflakes.Snowflake = attr.field(hash=False, repr=False)
+    channel_id: snowflakes.Snowflake = attrs.field(hash=False, repr=False)
     """ID of the stage channel this event is scheduled in."""
 
 
-@attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class ScheduledVoiceEvent(ScheduledEvent):
     """A scheduled event that takes place in a voice channel."""
 
-    channel_id: snowflakes.Snowflake = attr.field(hash=False, repr=False)
+    channel_id: snowflakes.Snowflake = attrs.field(hash=False, repr=False)
     """ID of the voice channel this scheduled event is in."""
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 class ScheduledEventUser:
     """A user who is subscribed to a scheduled event."""
 
-    event_id: snowflakes.Snowflake = attr.field(hash=False, repr=True)
+    event_id: snowflakes.Snowflake = attrs.field(hash=False, repr=True)
     """ID of the scheduled event they're subscribed to."""
 
-    user: users.User = attr.field(hash=True, repr=True)
+    user: users.User = attrs.field(hash=True, repr=True)
     """Object representing the user."""
 
-    member: typing.Optional[guilds.Member] = attr.field(hash=False, repr=False)
+    member: typing.Optional[guilds.Member] = attrs.field(hash=False, repr=False)
     """Their guild member object if they're in the event's guild."""

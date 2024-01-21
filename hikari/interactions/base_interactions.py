@@ -40,14 +40,14 @@ __all__: typing.Sequence[str] = (
 
 import typing
 
-import attr
+import attrs
 
 from hikari import channels
 from hikari import guilds
 from hikari import snowflakes
 from hikari import undefined
 from hikari import webhooks
-from hikari.internal import attr_extensions
+from hikari.internal import attrs_extensions
 from hikari.internal import enums
 
 if typing.TYPE_CHECKING:
@@ -185,27 +185,27 @@ The following are valid for this:
 """
 
 
-@attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class PartialInteraction(snowflakes.Unique, webhooks.ExecutableWebhook):
     """The base model for all interaction models."""
 
-    app: traits.RESTAware = attr.field(repr=False, eq=False, metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attrs.field(repr=False, eq=False, metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     """Client application that models may use for procedures."""
 
-    id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
+    id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
     # <<inherited docstring from Unique>>.
 
-    application_id: snowflakes.Snowflake = attr.field(eq=False, repr=False)
+    application_id: snowflakes.Snowflake = attrs.field(eq=False, repr=False)
     """ID of the application this interaction belongs to."""
 
-    type: typing.Union[InteractionType, int] = attr.field(eq=False, repr=True)
+    type: typing.Union[InteractionType, int] = attrs.field(eq=False, repr=True)
     """The type of interaction this is."""
 
-    token: str = attr.field(eq=False, repr=False)
+    token: str = attrs.field(eq=False, repr=False)
     """The interaction's token."""
 
-    version: int = attr.field(eq=False, repr=True)
+    version: int = attrs.field(eq=False, repr=True)
     """Version of the interaction system this interaction is under."""
 
     @property
@@ -582,12 +582,7 @@ class ModalResponseMixin(PartialInteraction):
             If both `component` and `components` are specified or if none are specified.
         """
         await self.app.rest.create_modal_response(
-            self.id,
-            self.token,
-            title=title,
-            custom_id=custom_id,
-            component=component,
-            components=components,
+            self.id, self.token, title=title, custom_id=custom_id, component=component, components=components
         )
 
     def build_modal_response(self, title: str, custom_id: str) -> special_endpoints.InteractionModalBuilder:
@@ -608,7 +603,7 @@ class ModalResponseMixin(PartialInteraction):
         return self.app.rest.interaction_modal_builder(title=title, custom_id=custom_id)
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class InteractionMember(guilds.Member):
     """Model of the member who triggered an interaction.
 
@@ -616,38 +611,38 @@ class InteractionMember(guilds.Member):
     `InteractionMember.permissions` field.
     """
 
-    permissions: permissions_.Permissions = attr.field(eq=False, hash=False, repr=False)
+    permissions: permissions_.Permissions = attrs.field(eq=False, hash=False, repr=False)
     """Permissions the member has in the current channel."""
 
 
-@attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class InteractionChannel(channels.PartialChannel):
     """Represents partial channels returned as resolved entities on interactions."""
 
-    permissions: permissions_.Permissions = attr.field(eq=False, hash=False, repr=True)
+    permissions: permissions_.Permissions = attrs.field(eq=False, hash=False, repr=True)
     """Permissions the command's executor has in this channel."""
 
 
-@attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=False, kw_only=True, weakref_slot=False)
 class ResolvedOptionData:
     """Represents the resolved objects of entities referenced in a command's options."""
 
-    attachments: typing.Mapping[snowflakes.Snowflake, messages.Attachment] = attr.field(repr=False)
+    attachments: typing.Mapping[snowflakes.Snowflake, messages.Attachment] = attrs.field(repr=False)
     """Mapping of snowflake IDs to the attachment objects."""
 
-    channels: typing.Mapping[snowflakes.Snowflake, InteractionChannel] = attr.field(repr=False)
+    channels: typing.Mapping[snowflakes.Snowflake, InteractionChannel] = attrs.field(repr=False)
     """Mapping of snowflake IDs to the resolved option partial channel objects."""
 
-    members: typing.Mapping[snowflakes.Snowflake, InteractionMember] = attr.field(repr=False)
+    members: typing.Mapping[snowflakes.Snowflake, InteractionMember] = attrs.field(repr=False)
     """Mapping of snowflake IDs to the resolved option member objects."""
 
-    messages: typing.Mapping[snowflakes.Snowflake, messages.Message] = attr.field(repr=False)
+    messages: typing.Mapping[snowflakes.Snowflake, messages.Message] = attrs.field(repr=False)
     """Mapping of snowflake IDs to the resolved option partial message objects."""
 
-    roles: typing.Mapping[snowflakes.Snowflake, guilds.Role] = attr.field(repr=False)
+    roles: typing.Mapping[snowflakes.Snowflake, guilds.Role] = attrs.field(repr=False)
     """Mapping of snowflake IDs to the resolved option role objects."""
 
-    users: typing.Mapping[snowflakes.Snowflake, users.User] = attr.field(repr=False)
+    users: typing.Mapping[snowflakes.Snowflake, users.User] = attrs.field(repr=False)
     """Mapping of snowflake IDs to the resolved option user objects."""

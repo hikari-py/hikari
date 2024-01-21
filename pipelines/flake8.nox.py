@@ -25,7 +25,7 @@ from pipelines import config
 from pipelines import nox
 
 
-@nox.session(default_session=True)
+@nox.session()
 def flake8(session: nox.Session) -> None:
     """Run code linting, SAST, and analysis."""
     _flake8(session)

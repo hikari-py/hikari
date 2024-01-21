@@ -38,6 +38,9 @@ import typing
 from hikari import errors
 from hikari.internal import ux
 
+if typing.TYPE_CHECKING:
+    _SignalHandlerT = typing.Callable[[int, typing.Optional[types.FrameType]], None]
+
 _INTERRUPT_SIGNALS: typing.Tuple[str, ...] = ("SIGINT", "SIGTERM")
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.signals")
 
@@ -49,9 +52,7 @@ def _raise_interrupt(signum: int) -> typing.NoReturn:
     raise errors.HikariInterrupt(signum, signame)
 
 
-def _interrupt_handler(
-    loop: asyncio.AbstractEventLoop,
-) -> typing.Callable[[int, typing.Optional[types.FrameType]], None]:
+def _interrupt_handler(loop: asyncio.AbstractEventLoop) -> _SignalHandlerT:
     loop_thread_id = threading.get_native_id()
 
     def handler(signum: int, frame: typing.Optional[types.FrameType]) -> None:
@@ -77,9 +78,7 @@ def _interrupt_handler(
 
 @contextlib.contextmanager
 def handle_interrupts(
-    enabled: typing.Optional[bool],
-    loop: asyncio.AbstractEventLoop,
-    propagate_interrupts: bool,
+    enabled: typing.Optional[bool], loop: asyncio.AbstractEventLoop, propagate_interrupts: bool
 ) -> typing.Generator[None, None, None]:
     """Context manager which cleanly exits on signal interrupts.
 
@@ -104,13 +103,16 @@ def handle_interrupts(
         return
 
     interrupt_handler = _interrupt_handler(loop)
+    original_handlers: typing.Dict[int, typing.Union[int, _SignalHandlerT, None]] = {}
 
     for sig in _INTERRUPT_SIGNALS:
         try:
             signum = getattr(signal, sig)
-            signal.signal(signum, interrupt_handler)
         except AttributeError:
             _LOGGER.log(ux.TRACE, "signal %s is not implemented on your platform; skipping", sig)
+        else:
+            original_handlers[signum] = signal.getsignal(signum)
+            signal.signal(signum, interrupt_handler)
 
     try:
         yield
@@ -120,10 +122,5 @@ def handle_interrupts(
             raise
 
     finally:
-        for sig in _INTERRUPT_SIGNALS:
-            try:
-                signum = getattr(signal, sig)
-                signal.signal(signum, signal.SIG_DFL)
-            except AttributeError:
-                # Signal not implemented. We already logged this earlier.
-                pass
+        for signum, handler in original_handlers.items():
+            signal.signal(signum, handler)

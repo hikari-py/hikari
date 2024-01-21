@@ -65,14 +65,16 @@ class TestBurstRateLimiter:
         mock_burst_limiter.queue = queue
         assert mock_burst_limiter.is_empty is is_empty
 
-    def test_close_removes_all_futures_from_queue(self, event_loop, mock_burst_limiter):
+    def test_close_removes_all_futures_from_queue(self, mock_burst_limiter):
+        event_loop = asyncio.get_event_loop()
         mock_burst_limiter.throttle_task = None
         futures = [event_loop.create_future() for _ in range(10)]
         mock_burst_limiter.queue = list(futures)
         mock_burst_limiter.close()
         assert len(mock_burst_limiter.queue) == 0
 
-    def test_close_cancels_all_futures_pending_when_futures_pending(self, event_loop, mock_burst_limiter):
+    def test_close_cancels_all_futures_pending_when_futures_pending(self, mock_burst_limiter):
+        event_loop = asyncio.get_event_loop()
         mock_burst_limiter.throttle_task = None
         futures = [event_loop.create_future() for _ in range(10)]
         mock_burst_limiter.queue = list(futures)
@@ -86,7 +88,8 @@ class TestBurstRateLimiter:
         mock_burst_limiter.close()
         assert True, "passed successfully"
 
-    def test_close_cancels_throttle_task_if_running(self, event_loop, mock_burst_limiter):
+    def test_close_cancels_throttle_task_if_running(self, mock_burst_limiter):
+        event_loop = asyncio.get_event_loop()
         task = event_loop.create_future()
         mock_burst_limiter.throttle_task = task
         mock_burst_limiter.close()
@@ -101,7 +104,9 @@ class TestBurstRateLimiter:
 
 class TestManualRateLimiter:
     @pytest.mark.asyncio()
-    async def test_acquire_returns_completed_future_if_throttle_task_is_None(self, event_loop):
+    async def test_acquire_returns_completed_future_if_throttle_task_is_None(self):
+        event_loop = asyncio.get_event_loop()
+
         with rate_limits.ManualRateLimiter() as limiter:
             limiter.throttle_task = None
             future = MockFuture()
@@ -111,7 +116,9 @@ class TestManualRateLimiter:
             future.set_result.assert_called_once_with(None)
 
     @pytest.mark.asyncio()
-    async def test_acquire_returns_incomplete_future_if_throttle_task_is_not_None(self, event_loop):
+    async def test_acquire_returns_incomplete_future_if_throttle_task_is_not_None(self):
+        event_loop = asyncio.get_event_loop()
+
         with rate_limits.ManualRateLimiter() as limiter:
             limiter.throttle_task = event_loop.create_future()
             future = MockFuture()
@@ -121,7 +128,9 @@ class TestManualRateLimiter:
             future.set_result.assert_not_called()
 
     @pytest.mark.asyncio()
-    async def test_acquire_places_future_on_queue_if_throttle_task_is_not_None(self, event_loop):
+    async def test_acquire_places_future_on_queue_if_throttle_task_is_not_None(self):
+        event_loop = asyncio.get_event_loop()
+
         with rate_limits.ManualRateLimiter() as limiter:
             limiter.throttle_task = event_loop.create_future()
             future = MockFuture()
@@ -153,7 +162,9 @@ class TestManualRateLimiter:
             limiter.unlock_later.assert_called_once_with(0)
 
     @pytest.mark.asyncio()
-    async def test_throttle_chews_queue_completing_futures(self, event_loop):
+    async def test_throttle_chews_queue_completing_futures(self):
+        event_loop = asyncio.get_event_loop()
+
         with rate_limits.ManualRateLimiter() as limiter:
             futures = [event_loop.create_future() for _ in range(10)]
             limiter.queue = list(futures)
@@ -162,7 +173,8 @@ class TestManualRateLimiter:
                 assert future.done(), f"future {i} was not done"
 
     @pytest.mark.asyncio()
-    async def test_throttle_sleeps_before_popping_queue(self, event_loop):
+    async def test_throttle_sleeps_before_popping_queue(self):
+        event_loop = asyncio.get_event_loop()
         # GIVEN
         slept_at = float("nan")
         popped_at = []
@@ -188,7 +200,9 @@ class TestManualRateLimiter:
             assert slept_at < pop_time, f"future {i} popped before initial sleep"
 
     @pytest.mark.asyncio()
-    async def test_throttle_clears_throttle_task(self, event_loop):
+    async def test_throttle_clears_throttle_task(self):
+        event_loop = asyncio.get_running_loop()
+
         with rate_limits.ManualRateLimiter() as limiter:
             limiter.throttle_task = event_loop.create_future()
             await limiter.unlock_later(0)
@@ -206,7 +220,9 @@ class TestWindowedBurstRateLimiter:
             inst.close()
 
     @pytest.mark.asyncio()
-    async def test_drip_if_not_throttled_and_not_ratelimited(self, ratelimiter, event_loop):
+    async def test_drip_if_not_throttled_and_not_ratelimited(self, ratelimiter):
+        event_loop = asyncio.get_running_loop()
+
         ratelimiter.drip = mock.Mock()
         ratelimiter.throttle_task = None
         ratelimiter.is_rate_limited = mock.Mock(return_value=False)
@@ -218,7 +234,9 @@ class TestWindowedBurstRateLimiter:
         event_loop.create_future.assert_not_called()
 
     @pytest.mark.asyncio()
-    async def test_no_drip_if_throttle_task_is_not_None(self, ratelimiter, event_loop):
+    async def test_no_drip_if_throttle_task_is_not_None(self, ratelimiter):
+        event_loop = asyncio.get_running_loop()
+
         ratelimiter.drip = mock.Mock()
         ratelimiter.throttle_task = asyncio.get_running_loop().create_future()
         ratelimiter.is_rate_limited = mock.Mock(return_value=False)
@@ -230,7 +248,9 @@ class TestWindowedBurstRateLimiter:
         ratelimiter.drip.assert_not_called()
 
     @pytest.mark.asyncio()
-    async def test_no_drip_if_rate_limited(self, ratelimiter, event_loop):
+    async def test_no_drip_if_rate_limited(self, ratelimiter):
+        event_loop = asyncio.get_running_loop()
+
         ratelimiter.drip = mock.Mock()
         ratelimiter.throttle_task = False
         ratelimiter.is_rate_limited = mock.Mock(return_value=True)
@@ -242,7 +262,9 @@ class TestWindowedBurstRateLimiter:
         ratelimiter.drip.assert_not_called()
 
     @pytest.mark.asyncio()
-    async def test_task_scheduled_if_rate_limited_and_throttle_task_is_None(self, ratelimiter, event_loop):
+    async def test_task_scheduled_if_rate_limited_and_throttle_task_is_None(self, ratelimiter):
+        event_loop = asyncio.get_running_loop()
+
         ratelimiter.drip = mock.Mock()
         ratelimiter.throttle_task = None
         ratelimiter.throttle = mock.AsyncMock()
@@ -256,7 +278,9 @@ class TestWindowedBurstRateLimiter:
         ratelimiter.throttle.assert_called()
 
     @pytest.mark.asyncio()
-    async def test_task_not_scheduled_if_rate_limited_and_throttle_task_not_None(self, ratelimiter, event_loop):
+    async def test_task_not_scheduled_if_rate_limited_and_throttle_task_not_None(self, ratelimiter):
+        event_loop = asyncio.get_running_loop()
+
         ratelimiter.drip = mock.Mock()
         ratelimiter.throttle_task = event_loop.create_future()
         old_task = ratelimiter.throttle_task
@@ -268,7 +292,9 @@ class TestWindowedBurstRateLimiter:
         assert old_task is ratelimiter.throttle_task, "task was rescheduled, that shouldn't happen :("
 
     @pytest.mark.asyncio()
-    async def test_future_is_added_to_queue_if_throttle_task_is_not_None(self, ratelimiter, event_loop):
+    async def test_future_is_added_to_queue_if_throttle_task_is_not_None(self, ratelimiter):
+        event_loop = asyncio.get_running_loop()
+
         ratelimiter.drip = mock.Mock()
         ratelimiter.throttle_task = asyncio.get_running_loop().create_future()
         ratelimiter.is_rate_limited = mock.Mock(return_value=False)
@@ -281,7 +307,9 @@ class TestWindowedBurstRateLimiter:
         assert ratelimiter.queue[-1:] == [future]
 
     @pytest.mark.asyncio()
-    async def test_future_is_added_to_queue_if_rate_limited(self, ratelimiter, event_loop):
+    async def test_future_is_added_to_queue_if_rate_limited(self, ratelimiter):
+        event_loop = asyncio.get_running_loop()
+
         ratelimiter.drip = mock.Mock()
         ratelimiter.throttle_task = None
         ratelimiter.is_rate_limited = mock.Mock(return_value=True)
@@ -296,7 +324,9 @@ class TestWindowedBurstRateLimiter:
             ratelimiter.throttle_task.cancel()
 
     @pytest.mark.asyncio()
-    async def test_throttle_consumes_queue(self, event_loop):
+    async def test_throttle_consumes_queue(self):
+        event_loop = asyncio.get_running_loop()
+
         with mock.patch.object(asyncio, "sleep"):
             with rate_limits.WindowedBurstRateLimiter(__name__, 0.001, 1) as rl:
                 rl.queue = [event_loop.create_future() for _ in range(15)]
@@ -308,7 +338,9 @@ class TestWindowedBurstRateLimiter:
             assert future.done(), f"future {i} was incomplete!"
 
     @pytest.mark.asyncio()
-    async def test_throttle_when_limited_sleeps_then_bursts_repeatedly(self, event_loop):
+    async def test_throttle_when_limited_sleeps_then_bursts_repeatedly(self):
+        event_loop = asyncio.get_running_loop()
+
         window = 5
         loop_count = 0
         futures = [event_loop.create_future() for _ in range(20)]
@@ -351,7 +383,9 @@ class TestWindowedBurstRateLimiter:
             assert future.done(), f"future {i} was incomplete!"
 
     @pytest.mark.asyncio()
-    async def test_throttle_resets_throttle_task(self, event_loop):
+    async def test_throttle_resets_throttle_task(self):
+        event_loop = asyncio.get_running_loop()
+
         with rate_limits.WindowedBurstRateLimiter(__name__, 0.001, 1) as rl:
             rl.queue = [event_loop.create_future() for _ in range(15)]
             rl.throttle_task = None

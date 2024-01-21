@@ -40,28 +40,28 @@ import textwrap
 import typing
 import warnings
 
-import attr
+import attrs
 
 from hikari import colors
 from hikari import errors
 from hikari import files
 from hikari import undefined
-from hikari.internal import attr_extensions
+from hikari.internal import attrs_extensions
 
 if typing.TYPE_CHECKING:
     import concurrent.futures
     import datetime
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 class EmbedResource(files.Resource[files.AsyncReader]):
     """A base type for any resource provided in an embed.
 
     Resources can be downloaded and uploaded.
     """
 
-    resource: files.Resource[files.AsyncReader] = attr.field(repr=True)
+    resource: files.Resource[files.AsyncReader] = attrs.field(repr=True)
     """The resource this object wraps around."""
 
     @property
@@ -76,10 +76,7 @@ class EmbedResource(files.Resource[files.AsyncReader]):
         return self.resource.filename
 
     def stream(
-        self,
-        *,
-        executor: typing.Optional[concurrent.futures.Executor] = None,
-        head_only: bool = False,
+        self, *, executor: typing.Optional[concurrent.futures.Executor] = None, head_only: bool = False
     ) -> files.AsyncReaderContextManager[files.AsyncReader]:
         """Produce a stream of data for the resource.
 
@@ -97,11 +94,11 @@ class EmbedResource(files.Resource[files.AsyncReader]):
         return self.resource.stream(executor=executor, head_only=head_only)
 
 
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class EmbedResourceWithProxy(EmbedResource):
     """Resource with a corresponding proxied element."""
 
-    proxy_resource: typing.Optional[files.Resource[files.AsyncReader]] = attr.field(default=None, repr=False)
+    proxy_resource: typing.Optional[files.Resource[files.AsyncReader]] = attrs.field(default=None, repr=False)
     """The proxied version of the resource, or `None` if not present.
 
     .. note::
@@ -123,25 +120,25 @@ class EmbedResourceWithProxy(EmbedResource):
         return self.proxy_resource.filename if self.proxy_resource else None
 
 
-@attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=False, kw_only=True, weakref_slot=False)
 class EmbedFooter:
     """Represents an embed footer."""
 
     # Discord says this is never None. We know that is invalid because Discord.py
     # sets it to None. Seems like undocumented behaviour again.
-    text: typing.Optional[str] = attr.field(default=None, repr=True)
+    text: typing.Optional[str] = attrs.field(default=None, repr=True)
     """The footer text, or `None` if not present."""
 
-    icon: typing.Optional[EmbedResourceWithProxy] = attr.field(default=None, repr=True)
+    icon: typing.Optional[EmbedResourceWithProxy] = attrs.field(default=None, repr=True)
     """The URL of the footer icon, or `None` if not present."""
 
 
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(hash=False, kw_only=True, weakref_slot=False)
 class EmbedImage(EmbedResourceWithProxy):
     """Represents an embed image."""
 
-    height: typing.Optional[int] = attr.field(default=None, repr=False)
+    height: typing.Optional[int] = attrs.field(default=None, repr=False)
     """The height of the image, if present and known, otherwise `None`.
 
     .. note::
@@ -150,7 +147,7 @@ class EmbedImage(EmbedResourceWithProxy):
         any received embed attached to a message event.
     """
 
-    width: typing.Optional[int] = attr.field(default=None, repr=False)
+    width: typing.Optional[int] = attrs.field(default=None, repr=False)
     """The width of the image, if present and known, otherwise `None`.
 
     .. note::
@@ -160,7 +157,7 @@ class EmbedImage(EmbedResourceWithProxy):
     """
 
 
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(hash=False, kw_only=True, weakref_slot=False)
 class EmbedVideo(EmbedResourceWithProxy):
     """Represents an embed video.
 
@@ -173,15 +170,15 @@ class EmbedVideo(EmbedResourceWithProxy):
         class yourself.**
     """
 
-    height: typing.Optional[int] = attr.field(default=None, repr=False)
+    height: typing.Optional[int] = attrs.field(default=None, repr=False)
     """The height of the video."""
 
-    width: typing.Optional[int] = attr.field(default=None, repr=False)
+    width: typing.Optional[int] = attrs.field(default=None, repr=False)
     """The width of the video."""
 
 
-@attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=False, kw_only=True, weakref_slot=False)
 class EmbedProvider:
     """Represents an embed provider.
 
@@ -195,43 +192,43 @@ class EmbedProvider:
         class yourself.**
     """
 
-    name: typing.Optional[str] = attr.field(default=None, repr=True)
+    name: typing.Optional[str] = attrs.field(default=None, repr=True)
     """The name of the provider."""
 
-    url: typing.Optional[str] = attr.field(default=None, repr=True)
+    url: typing.Optional[str] = attrs.field(default=None, repr=True)
     """The URL of the provider."""
 
 
-@attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=False, kw_only=True, weakref_slot=False)
 class EmbedAuthor:
     """Represents an author of an embed."""
 
-    name: typing.Optional[str] = attr.field(default=None, repr=True)
+    name: typing.Optional[str] = attrs.field(default=None, repr=True)
     """The name of the author, or `None` if not specified."""
 
-    url: typing.Optional[str] = attr.field(default=None, repr=True)
+    url: typing.Optional[str] = attrs.field(default=None, repr=True)
     """The URL that the author's name should act as a hyperlink to.
 
     This may be `None` if no hyperlink on the author's name is specified.
     """
 
-    icon: typing.Optional[EmbedResourceWithProxy] = attr.field(default=None, repr=False)
+    icon: typing.Optional[EmbedResourceWithProxy] = attrs.field(default=None, repr=False)
     """The author's icon, or `None` if not present."""
 
 
-@attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=False, kw_only=True, weakref_slot=False)
 class EmbedField:
     """Represents a field in a embed."""
 
-    name: str = attr.field(repr=True)
+    name: str = attrs.field(repr=True)
     """The name of the field."""
 
-    value: str = attr.field(repr=True)
+    value: str = attrs.field(repr=True)
     """The value of the field."""
 
-    _inline: bool = attr.field(alias="inline", default=False, repr=True)
+    _inline: bool = attrs.field(alias="inline", default=False, repr=True)
 
     # Use a property since we then keep the consistency of not using `is_`
     # in the constructor for `_inline`.
@@ -430,6 +427,8 @@ class Embed:
             To generate a timezone aware timestamp, use one of the following
             snippets:
 
+            .. code-block:: python
+
                 # Use UTC.
                 >>> datetime.datetime.now(tz=datetime.timezone.utc)
                 datetime.datetime(2020, 6, 5, 18, 29, 56, 424744, tzinfo=datetime.timezone.utc)
@@ -443,7 +442,9 @@ class Embed:
 
             You can generate a timezone-aware timestamp instead of a timezone-naive
             one by specifying a timezone. Hikari will detect any difference in
-            timezone if the timestamp is non timezone-naive and fix it for you.
+            timezone if the timestamp is non timezone-naive and fix it for you:
+
+            .. code-block:: python
 
                 # I am British, and it is June, so we are in daylight saving
                 # (UTC+1 or GMT+1, specifically).
@@ -466,7 +467,9 @@ class Embed:
                 >>> ...
 
             A library on PyPI called [tzlocal](...) also exists that may be useful
-            to you if you need to get your local timezone for any reason.
+            to you if you need to get your local timezone for any reason:
+
+            .. code-block:: python
 
                 >>> import datetime
                 >>> import tzlocal
@@ -896,8 +899,8 @@ class Embed:
 
     def __eq__(self, other: typing.Any) -> bool:
         if isinstance(other, type(self)):
-            for attrib in self.__slots__:
-                if getattr(self, attrib) != getattr(other, attrib):
+            for attrsib in self.__slots__:
+                if getattr(self, attrsib) != getattr(other, attrsib):
                     break
             else:
                 return True

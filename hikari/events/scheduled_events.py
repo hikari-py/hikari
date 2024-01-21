@@ -35,12 +35,12 @@ __all__: typing.Sequence[str] = (
 import abc
 import typing
 
-import attr
+import attrs
 
 from hikari import intents
 from hikari.events import base_events
 from hikari.events import shard_events
-from hikari.internal import attr_extensions
+from hikari.internal import attrs_extensions
 
 if typing.TYPE_CHECKING:
     from hikari import scheduled_events
@@ -51,7 +51,7 @@ if typing.TYPE_CHECKING:
 
 @base_events.requires_intents(intents.Intents.GUILD_SCHEDULED_EVENTS)
 class ScheduledEventEvent(shard_events.ShardEvent, abc.ABC):
-    """Event bassed for any scheduled event related events."""
+    """Event base for any scheduled event related events."""
 
     __slots__: typing.Sequence[str] = ()
 
@@ -61,16 +61,16 @@ class ScheduledEventEvent(shard_events.ShardEvent, abc.ABC):
         """ID of the scheduled event."""
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_SCHEDULED_EVENTS)
 class ScheduledEventCreateEvent(ScheduledEventEvent):
     """Event fired when a guild scheduled event is created."""
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    event: scheduled_events.ScheduledEvent = attr.field()
+    event: scheduled_events.ScheduledEvent = attrs.field()
     """The scheduled event that was created."""
 
     @property
@@ -84,16 +84,16 @@ class ScheduledEventCreateEvent(ScheduledEventEvent):
         return self.event.id
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_SCHEDULED_EVENTS)
 class ScheduledEventDeleteEvent(ScheduledEventEvent):
     """Event fired when a guild scheduled event is deleted."""
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    event: scheduled_events.ScheduledEvent = attr.field()
+    event: scheduled_events.ScheduledEvent = attrs.field()
     """The scheduled event that was deleted."""
 
     @property
@@ -107,16 +107,16 @@ class ScheduledEventDeleteEvent(ScheduledEventEvent):
         return self.event.id
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_SCHEDULED_EVENTS)
 class ScheduledEventUpdateEvent(ScheduledEventEvent):
     """Event fired when a guild scheduled event is updated."""
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    event: scheduled_events.ScheduledEvent = attr.field()
+    event: scheduled_events.ScheduledEvent = attrs.field()
     """The scheduled event that was updated."""
 
     @property
@@ -130,45 +130,45 @@ class ScheduledEventUpdateEvent(ScheduledEventEvent):
         return self.event.id
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_SCHEDULED_EVENTS)
 class ScheduledEventUserAddEvent(ScheduledEventEvent):
     """Event fired when a user subscribes to a guild scheduled event."""
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    event_id: snowflakes.Snowflake = attr.field()
+    event_id: snowflakes.Snowflake = attrs.field()
     """ID of the scheduled event that the user was added to."""
 
-    user_id: snowflakes.Snowflake = attr.field()
+    user_id: snowflakes.Snowflake = attrs.field()
     """ID of the user that was added to the scheduled event."""
 
-    guild_id: snowflakes.Snowflake = attr.field()
+    guild_id: snowflakes.Snowflake = attrs.field()
     """ID of the guild that the scheduled event belongs to."""
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_SCHEDULED_EVENTS)
 class ScheduledEventUserRemoveEvent(ScheduledEventEvent):
     """Event fired when a user unsubscribes from a guild scheduled event."""
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    event_id: snowflakes.Snowflake = attr.field()
+    event_id: snowflakes.Snowflake = attrs.field()
     """ID of the scheduled event that the user was removed from."""
 
-    user_id: snowflakes.Snowflake = attr.field()
+    user_id: snowflakes.Snowflake = attrs.field()
     """ID of the user that was removed from the scheduled event."""
 
-    guild_id: snowflakes.Snowflake = attr.field()
+    guild_id: snowflakes.Snowflake = attrs.field()
     """ID of the guild that the scheduled event belongs to."""

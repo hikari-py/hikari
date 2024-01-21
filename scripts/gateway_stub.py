@@ -36,6 +36,7 @@ heartbeat_interval = 5_000
 
 me_user_id = "1234567890"
 me_username = "nekokatt"
+me_global_name = None
 me_discriminator = "6945"
 me_avatar = None
 me_bot = True
@@ -61,11 +62,7 @@ def v8_get_gateway_bot(_):
         {
             "url": gateway_uri_v8,
             "shards": 1,
-            "session_start_limit": {
-                "total": 1000,
-                "remaining": 1000,
-                "reset_after": 1,
-            },
+            "session_start_limit": {"total": 1000, "remaining": 1000, "reset_after": 1},
         }
     )
 
@@ -75,6 +72,7 @@ def v8_get_my_user(_):
     body = {
         "id": me_user_id,
         "username": me_username,
+        "global_name": me_global_name,
         "discriminator": me_discriminator,
         "avatar": me_avatar,
         "bot": me_bot,

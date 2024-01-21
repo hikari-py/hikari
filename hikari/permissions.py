@@ -227,8 +227,8 @@ class Permissions(enums.Flag):
         (or their owner's account in the case of bot users) and the guild owner.
     """
 
-    MANAGE_EMOJIS_AND_STICKERS = 1 << 30
-    """Allows management and editing of emojis and stickers.
+    MANAGE_GUILD_EXPRESSIONS = 1 << 30
+    """Allows management and editing emojis, stickers and soundboard sounds.
 
     .. note::
         In guilds with server-wide 2FA enabled this permission can only be used
@@ -249,7 +249,7 @@ class Permissions(enums.Flag):
     """
 
     MANAGE_EVENTS = 1 << 33
-    """Allows for creating, editing, and deleting scheduled events	"""
+    """Allows for management and editing scheduled events"""
 
     MANAGE_THREADS = 1 << 34
     """Allows for deleting and archiving threads, and viewing all private threads.
@@ -277,6 +277,30 @@ class Permissions(enums.Flag):
 
     MODERATE_MEMBERS = 1 << 40
     """Allows for timing out members."""
+
+    VIEW_CREATOR_MONETIZATION_ANALYTICS = 1 << 41
+    """Allows for viewing role subscription insights"""
+
+    USE_SOUNDBOARD = 1 << 42
+    """Allows the use of soundboard in a voice chat."""
+
+    CREATE_GUILD_EXPRESSIONS = 1 << 43
+    """Allows to create guild emojis, stickers and soundboard sounds.
+
+    Additionally, it allows to edit and manage those created by the user.
+    """
+
+    CREATE_EVENTS = 1 << 44
+    """Allows to create scheduled events.
+
+    Additionally, it allows to edit and manage those created by the user.
+    """
+
+    USE_EXTERNAL_SOUNDS = 1 << 45
+    """Allows the use of soundboard sounds from external servers."""
+
+    SEND_VOICE_MESSAGES = 1 << 46
+    """Allows sending voice messages."""
 
     @classmethod
     def all_permissions(cls) -> Permissions:

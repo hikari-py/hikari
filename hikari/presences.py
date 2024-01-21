@@ -40,12 +40,12 @@ __all__: typing.Sequence[str] = (
 
 import typing
 
-import attr
+import attrs
 
 from hikari import files
 from hikari import snowflakes
 from hikari import urls
-from hikari.internal import attr_extensions
+from hikari.internal import attrs_extensions
 from hikari.internal import enums
 from hikari.internal import routes
 
@@ -81,66 +81,63 @@ class ActivityType(int, enums.Enum):
     """Shows up as `Watching <name>`."""
 
     CUSTOM = 4
-    """A custom status.
-
-    To set an emoji with the status, place a unicode emoji or Discord emoji
-    (`:smiley:`) as the first part of the status activity name.
+    """Shows up as `<emoji> <name>`.
 
     .. warning::
-        Bots **DO NOT** support setting custom statuses.
+        As of the time of writing, emoji cannot be used by bot accounts.
     """
 
     COMPETING = 5
     """Shows up as `Competing in <name>`."""
 
 
-@attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=False, kw_only=True, weakref_slot=False)
 class ActivityTimestamps:
     """The datetimes for the start and/or end of an activity session."""
 
-    start: typing.Optional[datetime.datetime] = attr.field(repr=True)
+    start: typing.Optional[datetime.datetime] = attrs.field(repr=True)
     """When this activity's session was started, if applicable."""
 
-    end: typing.Optional[datetime.datetime] = attr.field(repr=True)
+    end: typing.Optional[datetime.datetime] = attrs.field(repr=True)
     """When this activity's session will end, if applicable."""
 
 
-@attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class ActivityParty:
     """Used to represent activity groups of users."""
 
-    id: typing.Optional[str] = attr.field(hash=True, repr=True)
+    id: typing.Optional[str] = attrs.field(hash=True, repr=True)
     """The string id of this party instance, if set."""
 
-    current_size: typing.Optional[int] = attr.field(eq=False, hash=False, repr=False)
+    current_size: typing.Optional[int] = attrs.field(eq=False, hash=False, repr=False)
     """Current size of this party, if applicable."""
 
-    max_size: typing.Optional[int] = attr.field(eq=False, hash=False, repr=False)
+    max_size: typing.Optional[int] = attrs.field(eq=False, hash=False, repr=False)
     """Maximum size of this party, if applicable."""
 
 
 _DYNAMIC_URLS = {"mp": urls.MEDIA_PROXY_URL + "/{}"}
 
 
-@attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=False, kw_only=True, weakref_slot=False)
 class ActivityAssets:
     """Used to represent possible assets for an activity."""
 
-    _application_id: typing.Optional[snowflakes.Snowflake] = attr.field(alias="application_id", repr=False)
+    _application_id: typing.Optional[snowflakes.Snowflake] = attrs.field(alias="application_id", repr=False)
 
-    large_image: typing.Optional[str] = attr.field(repr=False)
+    large_image: typing.Optional[str] = attrs.field(repr=False)
     """The ID of the asset's large image, if set."""
 
-    large_text: typing.Optional[str] = attr.field(repr=True)
+    large_text: typing.Optional[str] = attrs.field(repr=True)
     """The text that'll appear when hovering over the large image, if set."""
 
-    small_image: typing.Optional[str] = attr.field(repr=False)
+    small_image: typing.Optional[str] = attrs.field(repr=False)
     """The ID of the asset's small image, if set."""
 
-    small_text: typing.Optional[str] = attr.field(repr=True)
+    small_text: typing.Optional[str] = attrs.field(repr=True)
     """The text that'll appear when hovering over the small image, if set."""
 
     def _make_asset_url(self, asset: typing.Optional[str], ext: str, size: int) -> typing.Optional[files.URL]:
@@ -157,11 +154,7 @@ class ActivityAssets:
         except ValueError:
             assert self._application_id is not None
             return routes.CDN_APPLICATION_ASSET.compile_to_file(
-                urls.CDN_URL,
-                application_id=self._application_id,
-                hash=asset,
-                size=size,
-                file_format=ext,
+                urls.CDN_URL, application_id=self._application_id, hash=asset, size=size, file_format=ext
             )
 
     @property
@@ -251,18 +244,18 @@ class ActivityAssets:
         return self._make_asset_url(self.small_image, ext, size)
 
 
-@attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=False, kw_only=True, weakref_slot=False)
 class ActivitySecret:
     """The secrets used for interacting with an activity party."""
 
-    join: typing.Optional[str] = attr.field(repr=False)
+    join: typing.Optional[str] = attrs.field(repr=False)
     """The secret used for joining a party, if applicable."""
 
-    spectate: typing.Optional[str] = attr.field(repr=False)
+    spectate: typing.Optional[str] = attrs.field(repr=False)
     """The secret used for spectating a party, if applicable."""
 
-    match: typing.Optional[str] = attr.field(repr=False)
+    match: typing.Optional[str] = attrs.field(repr=False)
     """The secret used for matching a party, if applicable."""
 
 
@@ -302,62 +295,69 @@ class ActivityFlag(enums.Flag):
 
 
 # TODO: add strict type checking to gateway for this type in an invariant way.
-@attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=False, kw_only=True, weakref_slot=False)
 class Activity:
     """Represents a regular activity that can be associated with a presence."""
 
-    name: str = attr.field()
+    name: str = attrs.field()
     """The activity name."""
 
-    url: typing.Optional[str] = attr.field(default=None, repr=False)
-    """The activity URL. Only valid for `STREAMING` activities."""
+    state: typing.Optional[str] = attrs.field(default=None)
+    """The activities state, if set.
 
-    type: typing.Union[ActivityType, int] = attr.field(converter=ActivityType, default=ActivityType.PLAYING)
+    This field can be use to set a custom status or provide more information
+    on the activity.
+    """
+
+    url: typing.Optional[str] = attrs.field(default=None, repr=False)
+    """The activity URL, if set.
+
+    Only valid for `STREAMING` activities.
+    """
+
+    type: typing.Union[ActivityType, int] = attrs.field(converter=ActivityType, default=ActivityType.PLAYING)
     """The activity type."""
 
     def __str__(self) -> str:
         return self.name
 
 
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(hash=False, kw_only=True, weakref_slot=False)
 class RichActivity(Activity):
     """Represents a rich activity that can be associated with a presence."""
 
-    created_at: datetime.datetime = attr.field(repr=False)
+    created_at: datetime.datetime = attrs.field(repr=False)
     """When this activity was added to the user's session."""
 
-    timestamps: typing.Optional[ActivityTimestamps] = attr.field(repr=False)
+    timestamps: typing.Optional[ActivityTimestamps] = attrs.field(repr=False)
     """The timestamps for when this activity's current state will start and end, if applicable."""
 
-    application_id: typing.Optional[snowflakes.Snowflake] = attr.field(repr=False)
+    application_id: typing.Optional[snowflakes.Snowflake] = attrs.field(repr=False)
     """The ID of the application this activity is for, if applicable."""
 
-    details: typing.Optional[str] = attr.field(repr=False)
+    details: typing.Optional[str] = attrs.field(repr=False)
     """The text that describes what the activity's target is doing, if set."""
 
-    state: typing.Optional[str] = attr.field(repr=False)
-    """The current status of this activity's target, if set."""
-
-    emoji: typing.Optional[emojis_.Emoji] = attr.field(repr=False)
+    emoji: typing.Optional[emojis_.Emoji] = attrs.field(repr=False)
     """The emoji of this activity, if it is a custom status and set."""
 
-    party: typing.Optional[ActivityParty] = attr.field(repr=False)
+    party: typing.Optional[ActivityParty] = attrs.field(repr=False)
     """Information about the party associated with this activity, if set."""
 
-    assets: typing.Optional[ActivityAssets] = attr.field(repr=False)
+    assets: typing.Optional[ActivityAssets] = attrs.field(repr=False)
     """Images and their hover over text for the activity."""
 
-    secrets: typing.Optional[ActivitySecret] = attr.field(repr=False)
+    secrets: typing.Optional[ActivitySecret] = attrs.field(repr=False)
     """Secrets for Rich Presence joining and spectating."""
 
-    is_instance: typing.Optional[bool] = attr.field(repr=False)
+    is_instance: typing.Optional[bool] = attrs.field(repr=False)
     """Whether this activity is an instanced game session."""
 
-    flags: typing.Optional[ActivityFlag] = attr.field(repr=False)
+    flags: typing.Optional[ActivityFlag] = attrs.field(repr=False)
     """Flags that describe what the activity includes, if present."""
 
-    buttons: typing.Sequence[str] = attr.field(repr=False)
+    buttons: typing.Sequence[str] = attrs.field(repr=False)
     """A sequence of up to 2 of the button labels shown in this rich presence."""
 
 
@@ -378,48 +378,48 @@ class Status(str, enums.Enum):
     """Offline or invisible/grey."""
 
 
-@attr_extensions.with_copy
-@attr.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=False, kw_only=True, weakref_slot=False)
 class ClientStatus:
     """The client statuses for this member."""
 
-    desktop: typing.Union[Status, str] = attr.field(repr=True)
+    desktop: typing.Union[Status, str] = attrs.field(repr=True)
     """The status of the target user's desktop session."""
 
-    mobile: typing.Union[Status, str] = attr.field(repr=True)
+    mobile: typing.Union[Status, str] = attrs.field(repr=True)
     """The status of the target user's mobile session."""
 
-    web: typing.Union[Status, str] = attr.field(repr=True)
+    web: typing.Union[Status, str] = attrs.field(repr=True)
     """The status of the target user's web session."""
 
 
-@attr_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class MemberPresence:
     """Used to represent a guild member's presence."""
 
-    app: traits.RESTAware = attr.field(
-        repr=False, eq=False, hash=False, metadata={attr_extensions.SKIP_DEEP_COPY: True}
+    app: traits.RESTAware = attrs.field(
+        repr=False, eq=False, hash=False, metadata={attrs_extensions.SKIP_DEEP_COPY: True}
     )
     """Client application that models may use for procedures."""
 
-    user_id: snowflakes.Snowflake = attr.field(repr=True, hash=True)
+    user_id: snowflakes.Snowflake = attrs.field(repr=True, hash=True)
     """The ID of the user this presence belongs to."""
 
-    guild_id: snowflakes.Snowflake = attr.field(hash=True, repr=True)
+    guild_id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
     """The ID of the guild this presence belongs to."""
 
-    visible_status: typing.Union[Status, str] = attr.field(eq=False, hash=False, repr=True)
+    visible_status: typing.Union[Status, str] = attrs.field(eq=False, hash=False, repr=True)
     """This user's current status being displayed by the client."""
 
-    activities: typing.Sequence[RichActivity] = attr.field(eq=False, hash=False, repr=False)
+    activities: typing.Sequence[RichActivity] = attrs.field(eq=False, hash=False, repr=False)
     """All active user activities.
 
     You can assume the first activity is the one that the GUI Discord client
     will show.
     """
 
-    client_status: ClientStatus = attr.field(eq=False, hash=False, repr=False)
+    client_status: ClientStatus = attrs.field(eq=False, hash=False, repr=False)
     """Platform-specific user-statuses."""
 
     async def fetch_user(self) -> users.User:

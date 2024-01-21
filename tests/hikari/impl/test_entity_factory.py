@@ -314,6 +314,8 @@ def guild_role_payload():
             "integration_id": "456",
             "premium_subscriber": None,
             "guild_connections": None,
+            "available_for_purchase": None,
+            "subscription_listing_id": "9876",
         },
     }
 
@@ -782,10 +784,7 @@ class TestGatewayGuildDefinition:
 
         entity_factory_impl.deserialize_guild_thread.assert_not_called()
 
-    def test_threads_ignores_unrecognised_and_threads(
-        self,
-        entity_factory_impl: entity_factory.EntityFactoryImpl,
-    ):
+    def test_threads_ignores_unrecognised_and_threads(self, entity_factory_impl: entity_factory.EntityFactoryImpl):
         thread_types = {*channel_models.ChannelType, -99999}.difference(
             {
                 channel_models.ChannelType.GUILD_PRIVATE_THREAD,
@@ -811,8 +810,7 @@ class TestGatewayGuildDefinition:
                 voice_state_payload,
                 guild_id=snowflakes.Snowflake(265828729970753537),
                 member=entity_factory_impl.deserialize_member(
-                    member_payload,
-                    guild_id=snowflakes.Snowflake(265828729970753537),
+                    member_payload, guild_id=snowflakes.Snowflake(265828729970753537)
                 ),
             )
         }
@@ -874,8 +872,11 @@ class TestEntityFactoryImpl:
         assert own_connection.visibility == application_models.ConnectionVisibility.NONE
         assert isinstance(own_connection, application_models.OwnConnection)
 
-    def test_deserialize_own_connection_when_integrations_is_None(self, entity_factory_impl, own_connection_payload):
+    def test_deserialize_own_connection_with_nullable_and_optional_fields(
+        self, entity_factory_impl, own_connection_payload
+    ):
         del own_connection_payload["integrations"]
+        del own_connection_payload["revoked"]
         own_connection = entity_factory_impl.deserialize_own_connection(own_connection_payload)
         assert own_connection.id == "2513849648abc"
         assert own_connection.name == "FS"
@@ -897,16 +898,21 @@ class TestEntityFactoryImpl:
             "owner": False,
             "permissions": "2147483647",
             "features": ["DISCOVERABLE", "FORCE_RELAY"],
+            "approximate_member_count": 3268,
+            "approximate_presence_count": 784,
         }
 
     def test_deserialize_own_guild(self, entity_factory_impl, mock_app, own_guild_payload):
         own_guild = entity_factory_impl.deserialize_own_guild(own_guild_payload)
+
         assert own_guild.id == 152559372126519269
         assert own_guild.name == "Isopropyl"
         assert own_guild.icon_hash == "d4a983885dsaa7691ce8bcaaf945a"
         assert own_guild.features == [guild_models.GuildFeature.DISCOVERABLE, "FORCE_RELAY"]
         assert own_guild.is_owner is False
         assert own_guild.my_permissions == permission_models.Permissions(2147483647)
+        assert own_guild.approximate_member_count == 3268
+        assert own_guild.approximate_active_member_count == 784
 
     def test_deserialize_own_guild_with_null_and_unset_fields(self, entity_factory_impl):
         own_guild = entity_factory_impl.deserialize_own_guild(
@@ -917,6 +923,8 @@ class TestEntityFactoryImpl:
                 "owner": False,
                 "permissions": "2147483647",
                 "features": ["DISCOVERABLE", "FORCE_RELAY"],
+                "approximate_member_count": 3268,
+                "approximate_presence_count": 784,
             }
         )
         assert own_guild.icon_hash is None
@@ -926,10 +934,7 @@ class TestEntityFactoryImpl:
         return {
             "platform_name": "Muck",
             "platform_username": "Muck Muck Muck",
-            "metadata": {
-                "key": "value",
-                "key2": "value2",
-            },
+            "metadata": {"key": "value", "key2": "value2"},
         }
 
     def test_deserialize_own_application_role_connection(self, entity_factory_impl, role_connection_payload):
@@ -937,10 +942,7 @@ class TestEntityFactoryImpl:
 
         assert role_connection.platform_name == "Muck"
         assert role_connection.platform_username == "Muck Muck Muck"
-        assert role_connection.metadata == {
-            "key": "value",
-            "key2": "value2",
-        }
+        assert role_connection.metadata == {"key": "value", "key2": "value2"}
         assert isinstance(role_connection, application_models.OwnApplicationRoleConnection)
 
     @pytest.fixture()
@@ -975,10 +977,8 @@ class TestEntityFactoryImpl:
             "role_connections_verification_url": "https://verifymethis.com",
             "custom_install_url": "https://dontinstallme.com",
             "tags": ["i", "like", "hikari"],
-            "install_params": {
-                "scopes": ["bot", "applications.commands"],
-                "permissions": 8,
-            },
+            "install_params": {"scopes": ["bot", "applications.commands"], "permissions": 8},
+            "approximate_guild_count": 10000,
         }
 
     def test_deserialize_application(
@@ -1005,6 +1005,7 @@ class TestEntityFactoryImpl:
         assert application.custom_install_url == "https://dontinstallme.com"
         assert application.tags == ["i", "like", "hikari"]
         assert application.icon_hash == "iwiwiwiwiw"
+        assert application.approximate_guild_count == 10000
         # Install Parameters
         assert application.install_parameters.scopes == [
             application_models.OAuth2Scope.BOT,
@@ -1041,6 +1042,7 @@ class TestEntityFactoryImpl:
                 "verify_key": "1232313223",
                 "flags": 0,
                 "owner": owner_payload,
+                "approximate_guild_count": 10000,
             }
         )
 
@@ -1065,6 +1067,7 @@ class TestEntityFactoryImpl:
                 "bot_require_code_grant": False,
                 "verify_key": "1232313223",
                 "flags": 0,
+                "approximate_guild_count": 10000,
             }
         )
 
@@ -1162,10 +1165,7 @@ class TestEntityFactoryImpl:
             "key": "developer_value",
             "name": "A thing",
             "description": "Description of the thing",
-            "name_localizations": {
-                "en-UK": "A thing (but in Bri'ish)",
-                "es": "Una cosa",
-            },
+            "name_localizations": {"en-UK": "A thing (but in Bri'ish)", "es": "Una cosa"},
             "description_localizations": {
                 "en-UK": "Description of the thing (but in Bri'ish)",
                 "es": "Descripción de la cosa",
@@ -1183,10 +1183,7 @@ class TestEntityFactoryImpl:
         assert record.key == "developer_value"
         assert record.name == "A thing"
         assert record.description == "Description of the thing"
-        assert record.name_localizations == {
-            "en-UK": "A thing (but in Bri'ish)",
-            "es": "Una cosa",
-        }
+        assert record.name_localizations == {"en-UK": "A thing (but in Bri'ish)", "es": "Una cosa"}
         assert record.description_localizations == {
             "en-UK": "Description of the thing (but in Bri'ish)",
             "es": "Descripción de la cosa",
@@ -1211,12 +1208,8 @@ class TestEntityFactoryImpl:
             key="some_key",
             name="Testing this out",
             description="Describing this out",
-            name_localizations={
-                "some_language": "Its name localization",
-            },
-            description_localizations={
-                "some_other_language": "Its description localization",
-            },
+            name_localizations={"some_language": "Its name localization"},
+            description_localizations={"some_other_language": "Its description localization"},
         )
 
         expected_result = {
@@ -1224,12 +1217,8 @@ class TestEntityFactoryImpl:
             "key": "some_key",
             "name": "Testing this out",
             "description": "Describing this out",
-            "name_localizations": {
-                "some_language": "Its name localization",
-            },
-            "description_localizations": {
-                "some_other_language": "Its description localization",
-            },
+            "name_localizations": {"some_language": "Its name localization"},
+            "description_localizations": {"some_other_language": "Its description localization"},
         }
 
         assert entity_factory_impl.serialize_application_connection_metadata_record(record) == expected_result
@@ -1324,9 +1313,7 @@ class TestEntityFactoryImpl:
     #####################
 
     def test__deserialize_audit_log_change_roles(self, entity_factory_impl):
-        test_role_payloads = [
-            {"id": "24", "name": "roleA"},
-        ]
+        test_role_payloads = [{"id": "24", "name": "roleA"}]
         roles = entity_factory_impl._deserialize_audit_log_change_roles(test_role_payloads)
         assert len(roles) == 1
         role = roles[24]
@@ -1362,10 +1349,7 @@ class TestEntityFactoryImpl:
 
     @pytest.fixture()
     def message_pin_info_payload(self):
-        return {
-            "channel_id": "123123123",
-            "message_id": "69696969",
-        }
+        return {"channel_id": "123123123", "message_id": "69696969"}
 
     def test__deserialize_message_pin_entry_info(self, entity_factory_impl, message_pin_info_payload):
         message_pin_info = entity_factory_impl._deserialize_message_pin_entry_info(message_pin_info_payload)
@@ -1375,10 +1359,7 @@ class TestEntityFactoryImpl:
 
     @pytest.fixture()
     def member_prune_info_payload(self):
-        return {
-            "delete_member_days": "7",
-            "members_removed": "1",
-        }
+        return {"delete_member_days": "7", "members_removed": "1"}
 
     def test__deserialize_member_prune_entry_info(self, entity_factory_impl, member_prune_info_payload):
         member_prune_info = entity_factory_impl._deserialize_member_prune_entry_info(member_prune_info_payload)
@@ -1449,12 +1430,7 @@ class TestEntityFactoryImpl:
 
     @pytest.fixture()
     def partial_integration_payload(self):
-        return {
-            "id": "4949494949",
-            "name": "Blah blah",
-            "type": "twitch",
-            "account": {"id": "543453", "name": "Blam"},
-        }
+        return {"id": "4949494949", "name": "Blah blah", "type": "twitch", "account": {"id": "543453", "name": "Blam"}}
 
     def test_deserialize_audit_log_entry(self, entity_factory_impl, audit_log_entry_payload, mock_app):
         entry = entity_factory_impl.deserialize_audit_log_entry(
@@ -1626,10 +1602,7 @@ class TestEntityFactoryImpl:
         assert len(audit_log.entries) == 0
 
     def test_deserialize_audit_log_skips_unknown_webhook_type(
-        self,
-        entity_factory_impl,
-        incoming_webhook_payload,
-        application_webhook_payload,
+        self, entity_factory_impl, incoming_webhook_payload, application_webhook_payload
     ):
         audit_log = entity_factory_impl.deserialize_audit_log(
             {
@@ -1648,10 +1621,7 @@ class TestEntityFactoryImpl:
         }
 
     def test_deserialize_audit_log_skips_unknown_thread_type(
-        self,
-        entity_factory_impl,
-        guild_public_thread_payload,
-        guild_private_thread_payload,
+        self, entity_factory_impl, guild_public_thread_payload, guild_private_thread_payload
     ):
         audit_log = entity_factory_impl.deserialize_audit_log(
             {
@@ -1696,8 +1666,7 @@ class TestEntityFactoryImpl:
         assert isinstance(overwrite, channel_models.PermissionOverwrite)
 
     @pytest.mark.parametrize(
-        "type",
-        [channel_models.PermissionOverwriteType.MEMBER, channel_models.PermissionOverwriteType.ROLE],
+        "type", [channel_models.PermissionOverwriteType.MEMBER, channel_models.PermissionOverwriteType.ROLE]
     )
     def test_serialize_permission_overwrite(self, entity_factory_impl, type):
         overwrite = channel_models.PermissionOverwrite(id=123123, type=type, allow=42, deny=62)
@@ -1721,12 +1690,7 @@ class TestEntityFactoryImpl:
 
     @pytest.fixture()
     def dm_channel_payload(self, user_payload):
-        return {
-            "id": "123",
-            "last_message_id": "456",
-            "type": 1,
-            "recipients": [user_payload],
-        }
+        return {"id": "123", "last_message_id": "456", "type": 1, "recipients": [user_payload]}
 
     def test_deserialize_dm_channel(self, entity_factory_impl, mock_app, dm_channel_payload, user_payload):
         dm_channel = entity_factory_impl.deserialize_dm(dm_channel_payload)
@@ -2049,6 +2013,7 @@ class TestEntityFactoryImpl:
             "user_limit": 3,
             "rtc_region": "euoo",
             "parent_id": "543",
+            "last_message_id": "1000101",
         }
 
     def test_deserialize_guild_stage_channel(
@@ -2068,10 +2033,11 @@ class TestEntityFactoryImpl:
         assert voice_channel.region == "euoo"
         assert voice_channel.bitrate == 64000
         assert voice_channel.user_limit == 3
+        assert voice_channel.last_message_id == 1000101
         assert isinstance(voice_channel, channel_models.GuildStageChannel)
 
     def test_deserialize_guild_stage_channel_with_null_fields(self, entity_factory_impl):
-        voice_channel = entity_factory_impl.deserialize_guild_voice_channel(
+        voice_channel = entity_factory_impl.deserialize_guild_stage_channel(
             {
                 "id": "123",
                 "permission_overwrites": [],
@@ -2084,10 +2050,12 @@ class TestEntityFactoryImpl:
                 "user_limit": 3,
                 "rtc_region": None,
                 "type": 6,
+                "last_message_id": None,
             }
         )
         assert voice_channel.parent_id is None
         assert voice_channel.region is None
+        assert voice_channel.last_message_id is None
 
     def test_deserialize_guild_stage_channel_with_unset_fields(self, entity_factory_impl):
         voice_channel = entity_factory_impl.deserialize_guild_stage_channel(
@@ -2105,6 +2073,7 @@ class TestEntityFactoryImpl:
         )
         assert voice_channel.parent_id is None
         assert voice_channel.is_nsfw is False
+        assert voice_channel.last_message_id is None
 
     @pytest.fixture()
     def guild_forum_channel_payload(self, permission_overwrite_payload):
@@ -2125,10 +2094,7 @@ class TestEntityFactoryImpl:
             "default_thread_rate_limit_per_user": 1400,
             "default_sort_order": 1,
             "default_forum_layout": 1,
-            "default_reaction_emoji": {
-                "emoji_id": "654395854798716938",
-                "emoji_name": "some_emoji_name",
-            },
+            "default_reaction_emoji": {"emoji_id": "654395854798716938", "emoji_name": "some_emoji_name"},
             "available_tags": [
                 {
                     "id": "924798733516800000",
@@ -2137,13 +2103,7 @@ class TestEntityFactoryImpl:
                     "emoji_id": "51685451281621",
                     "emoji_name": None,
                 },
-                {
-                    "id": "970821992448000000",
-                    "name": "Big!",
-                    "moderated": False,
-                    "emoji_id": None,
-                    "emoji_name": "B",
-                },
+                {"id": "970821992448000000", "name": "Big!", "moderated": False, "emoji_id": None, "emoji_name": "B"},
             ],
         }
 
@@ -2682,13 +2642,7 @@ class TestEntityFactoryImpl:
 
         expected_fn.assert_called_once_with(payload, guild_id=123)
 
-    @pytest.mark.parametrize(
-        ("type_", "fn"),
-        [
-            (1, "deserialize_dm"),
-            (3, "deserialize_group_dm"),
-        ],
-    )
+    @pytest.mark.parametrize(("type_", "fn"), [(1, "deserialize_dm"), (3, "deserialize_group_dm")])
     def test_deserialize_channel_when_dm(self, mock_app, type_, fn):
         payload = {"type": type_}
 
@@ -3344,6 +3298,8 @@ class TestEntityFactoryImpl:
         assert guild_role.integration_id == 456
         assert guild_role.is_premium_subscriber_role is True
         assert guild_role.is_guild_linked_role is True
+        assert guild_role.subscription_listing_id == 9876
+        assert guild_role.is_available_for_purchase is True
         assert isinstance(guild_role, guild_models.Role)
 
     def test_deserialize_role_with_missing_or_unset_fields(self, entity_factory_impl, guild_role_payload):
@@ -3354,6 +3310,8 @@ class TestEntityFactoryImpl:
         assert guild_role.integration_id is None
         assert guild_role.is_premium_subscriber_role is False
         assert guild_role.is_guild_linked_role is False
+        assert guild_role.subscription_listing_id is None
+        assert guild_role.is_available_for_purchase is False
         assert guild_role.unicode_emoji is None
 
     def test_deserialize_role_with_no_tags(self, entity_factory_impl, guild_role_payload):
@@ -3436,13 +3394,7 @@ class TestEntityFactoryImpl:
         assert integration.application.icon_hash == "123abc"
         assert integration.application.description == "same as desc2"
         assert integration.application.bot == entity_factory_impl.deserialize_user(
-            {
-                "id": "456",
-                "username": "some rando bot",
-                "avatar": "123456avc",
-                "discriminator": "6127",
-                "bot": True,
-            }
+            {"id": "456", "username": "some rando bot", "avatar": "123456avc", "discriminator": "6127", "bot": True}
         )
         assert isinstance(integration, guild_models.Integration)
 
@@ -3563,12 +3515,7 @@ class TestEntityFactoryImpl:
         assert guild_preview.description is None
 
     @pytest.fixture()
-    def rest_guild_payload(
-        self,
-        known_custom_emoji_payload,
-        guild_sticker_payload,
-        guild_role_payload,
-    ):
+    def rest_guild_payload(self, known_custom_emoji_payload, guild_sticker_payload, guild_role_payload):
         return {
             "afk_channel_id": "99998888777766",
             "afk_timeout": 1200,
@@ -3928,8 +3875,7 @@ class TestEntityFactoryImpl:
                 voice_state_payload,
                 guild_id=snowflakes.Snowflake(265828729970753537),
                 member=entity_factory_impl.deserialize_member(
-                    member_payload,
-                    guild_id=snowflakes.Snowflake(265828729970753537),
+                    member_payload, guild_id=snowflakes.Snowflake(265828729970753537)
                 ),
             )
         }
@@ -4073,12 +4019,21 @@ class TestEntityFactoryImpl:
                     "required": True,
                     "min_value": 0,
                     "max_value": 10,
+                    "min_length": 1,
+                    "max_length": 44,
+                    "autocomplete": True,
                     "options": [
                         {
                             "type": 6,
                             "name": "a name",
                             "description": "84",
-                            "choices": [{"name": "a choice", "value": "4 u"}],
+                            "choices": [
+                                {
+                                    "name": "a choice",
+                                    "name_localizations": {"en-GB": "scott", "el": "Salvador"},
+                                    "value": "4 u",
+                                }
+                            ],
                         }
                     ],
                 }
@@ -4116,6 +4071,8 @@ class TestEntityFactoryImpl:
         ]
         assert option.min_value == 0
         assert option.max_value == 10
+        assert option.min_length == 1
+        assert option.max_length == 44
 
         assert len(option.options) == 1
         suboption = option.options[0]
@@ -4129,9 +4086,10 @@ class TestEntityFactoryImpl:
         # CommandChoice
         assert len(suboption.choices) == 1
         choice = suboption.choices[0]
+        assert isinstance(choice, commands.CommandChoice)
         assert choice.name == "a choice"
         assert choice.value == "4 u"
-        assert isinstance(choice, commands.CommandChoice)
+        assert choice.name_localizations == {locales.Locale.EN_GB: "scott", locales.Locale.EL: "Salvador"}
 
         assert isinstance(suboption, commands.CommandOption)
         assert isinstance(option, commands.CommandOption)
@@ -4273,12 +4231,7 @@ class TestEntityFactoryImpl:
             "permissions": "17179869183",
             "premium_since": "2020-10-01T23:06:10.431000+00:00",
             "communication_disabled_until": "2021-10-18T23:06:10.431000+00:00",
-            "roles": [
-                "582345963851743243",
-                "582689893965365248",
-                "734164204679856290",
-                "757331666388910181",
-            ],
+            "roles": ["582345963851743243", "582689893965365248", "734164204679856290", "757331666388910181"],
         }
 
     def test__deserialize_interaction_member(self, entity_factory_impl, interaction_member_payload, user_payload):
@@ -4431,7 +4384,7 @@ class TestEntityFactoryImpl:
                             {"name": "go ice", "type": 4, "value": "42"},
                             {"name": "go fire", "type": 6, "value": 123123123},
                         ],
-                    },
+                    }
                 ],
                 "resolved": interaction_resolved_data_payload,
             },
@@ -4514,11 +4467,7 @@ class TestEntityFactoryImpl:
                 "name": "okokokok",
                 "type": 2,
                 "target_id": "115590097100865541",
-                "resolved": {
-                    "users": {
-                        "115590097100865541": user_payload,
-                    }
-                },
+                "resolved": {"users": {"115590097100865541": user_payload}},
             },
             "channel_id": "49949494",
             "member": interaction_member_payload,
@@ -4577,7 +4526,7 @@ class TestEntityFactoryImpl:
                             {"name": "meat", "type": 6, "value": 123312, "focused": True},
                             {"name": "yeet", "type": 3, "value": "ea"},
                         ],
-                    },
+                    }
                 ],
             },
             "channel_id": "49949494",
@@ -4696,7 +4645,13 @@ class TestEntityFactoryImpl:
             min_length=3,
             max_length=69,
             channel_types=[channel_models.ChannelType.GUILD_STAGE, channel_models.ChannelType.GUILD_TEXT, 100],
-            choices=[commands.CommandChoice(name="a", value="choice")],
+            choices=[
+                commands.CommandChoice(
+                    name="a",
+                    name_localizations={locales.Locale.CS: "computers!", locales.Locale.EL: "sava"},
+                    value="choice",
+                )
+            ],
             name_localizations={locales.Locale.TR: "b"},
             description_localizations={locales.Locale.TR: "c"},
             options=[
@@ -4726,7 +4681,13 @@ class TestEntityFactoryImpl:
             "min_length": 3,
             "max_length": 69,
             "autocomplete": True,
-            "choices": [{"name": "a", "value": "choice"}],
+            "choices": [
+                {
+                    "name": "a",
+                    "name_localizations": {locales.Locale.CS: "computers!", locales.Locale.EL: "sava"},
+                    "value": "choice",
+                }
+            ],
             "description_localizations": {"tr": "c"},
             "name_localizations": {"tr": "b"},
             "options": [
@@ -4735,7 +4696,7 @@ class TestEntityFactoryImpl:
                     "description": "you're drunk",
                     "name": "go home",
                     "required": False,
-                    "choices": [{"name": "boo", "value": "hoo"}],
+                    "choices": [{"name": "boo", "name_localizations": {}, "value": "hoo"}],
                     "description_localizations": {"tr": "c"},
                     "name_localizations": {"tr": "b"},
                 }
@@ -4770,11 +4731,7 @@ class TestEntityFactoryImpl:
         assert command.is_nsfw is True
         assert command.version == 123321123
 
-    def test_deserialize_context_menu_command_with_guild_id(
-        self,
-        entity_factory_impl,
-        context_menu_command_payload,
-    ):
+    def test_deserialize_context_menu_command_with_guild_id(self, entity_factory_impl, context_menu_command_payload):
         command = entity_factory_impl.deserialize_command(context_menu_command_payload, guild_id=123)
         assert isinstance(command, commands.ContextMenuCommand)
 
@@ -4922,12 +4879,7 @@ class TestEntityFactoryImpl:
         }
 
     def test_deserialize_modal_interaction(
-        self,
-        entity_factory_impl,
-        mock_app,
-        modal_interaction_payload,
-        interaction_member_payload,
-        message_payload,
+        self, entity_factory_impl, mock_app, modal_interaction_payload, interaction_member_payload, message_payload
     ):
         interaction = entity_factory_impl.deserialize_modal_interaction(modal_interaction_payload)
         assert interaction.app is mock_app
@@ -4954,10 +4906,7 @@ class TestEntityFactoryImpl:
         assert short_text_input.custom_id == "name"
 
     def test_deserialize_modal_interaction_with_user(
-        self,
-        entity_factory_impl,
-        modal_interaction_payload,
-        user_payload,
+        self, entity_factory_impl, modal_interaction_payload, user_payload
     ):
         modal_interaction_payload["member"] = None
         modal_interaction_payload["user"] = user_payload
@@ -4966,9 +4915,7 @@ class TestEntityFactoryImpl:
         assert interaction.user.id == 115590097100865541
 
     def test_deserialize_modal_interaction_with_unrecognized_component(
-        self,
-        entity_factory_impl,
-        modal_interaction_payload,
+        self, entity_factory_impl, modal_interaction_payload
     ):
         modal_interaction_payload["data"]["components"] = [{"type": 0}]
 
@@ -4981,11 +4928,7 @@ class TestEntityFactoryImpl:
 
     @pytest.fixture()
     def partial_sticker_payload(self):
-        return {
-            "id": "749046696482439188",
-            "name": "Thinking",
-            "format_type": 3,
-        }
+        return {"id": "749046696482439188", "name": "Thinking", "format_type": 3}
 
     @pytest.fixture()
     def standard_sticker_payload(self):
@@ -5021,7 +4964,7 @@ class TestEntityFactoryImpl:
             "cover_sticker_id": "456",
             "stickers": [standard_sticker_payload],
             "sku_id": "789",
-            "banner_asset_id": "hash123",
+            "banner_asset_id": "342123321",
         }
 
     def test_deserialize_partial_sticker(self, entity_factory_impl, partial_sticker_payload):
@@ -5069,7 +5012,7 @@ class TestEntityFactoryImpl:
         assert pack.description == "My sticker pack description"
         assert pack.cover_sticker_id == 456
         assert pack.sku_id == 789
-        assert pack.banner_hash == "hash123"
+        assert pack.banner_asset_id == 342123321
 
         assert len(pack.stickers) == 1
         sticker = pack.stickers[0]
@@ -5081,15 +5024,22 @@ class TestEntityFactoryImpl:
         assert sticker.sort_value == 96
         assert sticker.tags == ["thinking", "thonkang"]
 
+    def test_deserialize_sticker_pack_with_optional_fields(self, entity_factory_impl, sticker_pack_payload):
+        del sticker_pack_payload["cover_sticker_id"]
+        del sticker_pack_payload["banner_asset_id"]
+
+        pack = entity_factory_impl.deserialize_sticker_pack(sticker_pack_payload)
+
+        assert pack.cover_sticker_id is None
+        assert pack.banner_asset_id is None
+
     def test_stickers(self, entity_factory_impl, guild_sticker_payload):
         guild_definition = entity_factory_impl.deserialize_gateway_guild(
             {"id": "265828729970753537", "stickers": [guild_sticker_payload]}, user_id=123321
         )
 
         assert guild_definition.stickers() == {
-            749046696482439188: entity_factory_impl.deserialize_guild_sticker(
-                guild_sticker_payload,
-            )
+            749046696482439188: entity_factory_impl.deserialize_guild_sticker(guild_sticker_payload)
         }
 
     def test_stickers_returns_cached_values(self, entity_factory_impl):
@@ -5497,11 +5447,7 @@ class TestEntityFactoryImpl:
 
     def test__deserialize_text_select_menu_partial(self, entity_factory_impl):
         menu = entity_factory_impl._deserialize_text_select_menu(
-            {
-                "type": 3,
-                "custom_id": "Not an ID",
-                "options": [{"label": "Trans", "value": "very trans"}],
-            }
+            {"type": 3, "custom_id": "Not an ID", "options": [{"label": "Trans", "value": "very trans"}]}
         )
 
         # SelectMenuOption
@@ -5610,6 +5556,8 @@ class TestEntityFactoryImpl:
             "width": 1844,
             "height": 2638,
             "ephemeral": True,
+            "duration_secs": 1000.123,
+            "waveform": "some encoded string",
         }
 
     @pytest.fixture()
@@ -5677,13 +5625,11 @@ class TestEntityFactoryImpl:
         assert attachment.width == 1844
         assert attachment.height == 2638
         assert attachment.is_ephemeral is True
+        assert attachment.duration == 1000.123
+        assert attachment.waveform == "some encoded string"
         assert isinstance(attachment, message_models.Attachment)
 
-    def test__deserialize_message_attachment_with_null_fields(
-        self,
-        entity_factory_impl,
-        attachment_payload,
-    ):
+    def test__deserialize_message_attachment_with_null_fields(self, entity_factory_impl, attachment_payload):
         attachment_payload["height"] = None
         attachment_payload["width"] = None
 
@@ -5693,15 +5639,13 @@ class TestEntityFactoryImpl:
         assert attachment.width is None
         assert isinstance(attachment, message_models.Attachment)
 
-    def test__deserialize_message_attachment_with_unset_fields(
-        self,
-        entity_factory_impl,
-        attachment_payload,
-    ):
+    def test__deserialize_message_attachment_with_unset_fields(self, entity_factory_impl, attachment_payload):
         del attachment_payload["content_type"]
         del attachment_payload["height"]
         del attachment_payload["width"]
         del attachment_payload["ephemeral"]
+        del attachment_payload["duration_secs"]
+        del attachment_payload["waveform"]
 
         attachment = entity_factory_impl._deserialize_message_attachment(attachment_payload)
 
@@ -5709,6 +5653,8 @@ class TestEntityFactoryImpl:
         assert attachment.height is None
         assert attachment.width is None
         assert attachment.is_ephemeral is False
+        assert attachment.duration is None
+        assert attachment.waveform is None
 
     def test_deserialize_partial_message(
         self,
@@ -6020,12 +5966,7 @@ class TestEntityFactoryImpl:
         assert message.application.icon_hash is None
         assert isinstance(message.application, message_models.MessageApplication)
 
-    def test_deserialize_message_with_null_and_unset_fields(
-        self,
-        entity_factory_impl,
-        mock_app,
-        user_payload,
-    ):
+    def test_deserialize_message_with_null_and_unset_fields(self, entity_factory_impl, mock_app, user_payload):
         message_payload = {
             "id": "123",
             "channel_id": "456",
@@ -6183,13 +6124,7 @@ class TestEntityFactoryImpl:
                 "game": None,
                 "guild_id": "44004040",
                 "status": "dnd",
-                "activities": [
-                    {
-                        "name": "an activity",
-                        "type": 1,
-                        "created_at": 1584996792798,
-                    }
-                ],
+                "activities": [{"name": "an activity", "type": 1, "created_at": 1584996792798}],
                 "client_status": {},
             }
         )
@@ -6221,10 +6156,7 @@ class TestEntityFactoryImpl:
                         "type": 1,
                         "url": None,
                         "created_at": 1584996792798,
-                        "timestamps": {
-                            "start": 1584996792798,
-                            "end": 1999999792798,
-                        },
+                        "timestamps": {"start": 1584996792798, "end": 1999999792798},
                         "application_id": "40404040404040",
                         "details": None,
                         "state": None,
@@ -6569,9 +6501,7 @@ class TestEntityFactoryImpl:
 
     @pytest.fixture()
     def scheduled_event_user_payload(
-        self,
-        user_payload: typing.Dict[str, typing.Any],
-        member_payload: typing.Dict[str, typing.Any],
+        self, user_payload: typing.Dict[str, typing.Any], member_payload: typing.Dict[str, typing.Any]
     ) -> typing.Dict[str, typing.Any]:
         member_payload = member_payload.copy()
         del member_payload["user"]
@@ -6781,6 +6711,7 @@ class TestEntityFactoryImpl:
         return {
             "id": "379953393319542784",
             "username": "qt pi",
+            "global_name": "blahaj",
             "avatar": "820d0e50543216e812ad94e6ab7",
             "banner": "a_221313e1e2edsncsncsmcndsc",
             "accent_color": 231321,
@@ -6801,6 +6732,7 @@ class TestEntityFactoryImpl:
         assert my_user.app is mock_app
         assert my_user.id == 379953393319542784
         assert my_user.username == "qt pi"
+        assert my_user.global_name == "blahaj"
         assert my_user.avatar_hash == "820d0e50543216e812ad94e6ab7"
         assert my_user.banner_hash == "a_221313e1e2edsncsncsmcndsc"
         assert my_user.accent_color == 231321
@@ -6829,6 +6761,7 @@ class TestEntityFactoryImpl:
                 "premium_type": 1,
             }
         )
+        assert my_user.global_name is None
         assert my_user.app is mock_app
         assert my_user.banner_hash is None
         assert my_user.accent_color is None

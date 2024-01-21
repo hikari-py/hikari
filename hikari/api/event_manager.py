@@ -204,27 +204,27 @@ class EventManager(abc.ABC):
 
         .. code-block:: python
 
-            import attr
+            import attrs
 
             from hikari.traits import RESTAware
             from hikari.events.base_events import Event
             from hikari.users import User
             from hikari.snowflakes import Snowflake
 
-            @attr.define()
+            @attrs.define()
             class EveryoneMentionedEvent(Event):
-                app: RESTAware = attr.field()
+                app: RESTAware = attrs.field()
 
-                author: User = attr.field()
+                author: User = attrs.field()
                 '''The user who mentioned everyone.'''
 
-                content: str = attr.field()
+                content: str = attrs.field()
                 '''The message that was sent.'''
 
-                message_id: Snowflake = attr.field()
+                message_id: Snowflake = attrs.field()
                 '''The message ID.'''
 
-                channel_id: Snowflake = attr.field()
+                channel_id: Snowflake = attrs.field()
                 '''The channel ID.'''
 
         We can then dispatch our event as we see fit.
@@ -355,11 +355,7 @@ class EventManager(abc.ABC):
 
     @abc.abstractmethod
     def get_listeners(
-        self,
-        event_type: typing.Type[base_events.EventT],
-        /,
-        *,
-        polymorphic: bool = True,
+        self, event_type: typing.Type[base_events.EventT], /, *, polymorphic: bool = True
     ) -> typing.Collection[CallbackT[base_events.EventT]]:
         """Get the listeners for a given event type, if there are any.
 
@@ -383,8 +379,7 @@ class EventManager(abc.ABC):
 
     @abc.abstractmethod
     def listen(
-        self,
-        *event_types: typing.Type[base_events.EventT],
+        self, *event_types: typing.Type[base_events.EventT]
     ) -> typing.Callable[[CallbackT[base_events.EventT]], CallbackT[base_events.EventT]]:
         """Generate a decorator to subscribe a callback to an event type.
 

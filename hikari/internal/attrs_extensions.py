@@ -35,9 +35,9 @@ import copy as std_copy
 import logging
 import typing
 
-import attr
+import attrs
 
-ModelT = typing.TypeVar("ModelT")
+ModelT = typing.TypeVar("ModelT", bound=attrs.AttrsInstance)
 SKIP_DEEP_COPY: typing.Final[str] = "skip_deep_copy"
 
 _DEEP_COPIERS: typing.MutableMapping[
@@ -60,15 +60,15 @@ def invalidate_deep_copy_cache() -> None:
 
 
 def get_fields_definition(
-    cls: type,
+    cls: typing.Type[attrs.AttrsInstance],
 ) -> typing.Tuple[
-    typing.Sequence[typing.Tuple[attr.Attribute[typing.Any], str]], typing.Sequence[attr.Attribute[typing.Any]]
+    typing.Sequence[typing.Tuple[attrs.Attribute[typing.Any], str]], typing.Sequence[attrs.Attribute[typing.Any]]
 ]:
     """Get a sequence of init key-words to their relative attribute.
 
     Parameters
     ----------
-    cls : typing.Type[ModelT]
+    cls : typing.Type[attrs.AttrsInstance]
         The attrs class to get the fields definition for.
 
     Returns
@@ -76,10 +76,10 @@ def get_fields_definition(
     typing.Sequence[typing.Tuple[str, str]]
         A sequence of tuples of string attribute names to string key-word names.
     """
-    init_results: typing.List[typing.Tuple[attr.Attribute[typing.Any], str]] = []
-    non_init_results: typing.List[attr.Attribute[typing.Any]] = []
+    init_results: typing.List[typing.Tuple[attrs.Attribute[typing.Any], str]] = []
+    non_init_results: typing.List[attrs.Attribute[typing.Any]] = []
 
-    for field in attr.fields(cls):
+    for field in attrs.fields(cls):
         if field.init:
             key_word = field.name[1:] if field.name.startswith("_") else field.name
             init_results.append((field, key_word))
@@ -154,11 +154,11 @@ def copy_attrs(model: ModelT) -> ModelT:
 
 
 def _normalize_kwargs_and_setters(
-    kwargs: typing.Sequence[typing.Tuple[attr.Attribute[typing.Any], str]],
-    setters: typing.Sequence[attr.Attribute[typing.Any]],
-) -> typing.Iterable[attr.Attribute[typing.Any]]:
-    for attribute, _ in kwargs:
-        yield attribute
+    kwargs: typing.Sequence[typing.Tuple[attrs.Attribute[typing.Any], str]],
+    setters: typing.Sequence[attrs.Attribute[typing.Any]],
+) -> typing.Iterable[attrs.Attribute[typing.Any]]:
+    for attrsibute, _ in kwargs:
+        yield attrsibute
 
     yield from setters
 
@@ -186,9 +186,9 @@ def generate_deep_copier(
         return lambda _, __: None
 
     setters = ";".join(
-        f"m.{attribute.name}=std_copy(m.{attribute.name},memo)if(id_:=id(m.{attribute.name}))not in memo else memo[id_]"
-        for attribute in _normalize_kwargs_and_setters(kwargs, setters)
-        if not attribute.metadata.get(SKIP_DEEP_COPY)
+        f"m.{attrsibute.name}=std_copy(m.{attrsibute.name},memo)if(id_:=id(m.{attrsibute.name}))not in memo else memo[id_]"
+        for attrsibute in _normalize_kwargs_and_setters(kwargs, setters)
+        if not attrsibute.metadata.get(SKIP_DEEP_COPY)
     )
     code = f"def deep_copy(m,memo):{setters}"
     globals_ = {"std_copy": std_copy.deepcopy, "cls": cls}

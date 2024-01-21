@@ -29,6 +29,7 @@ __all__: typing.Sequence[str] = (
     "ProxySettings",
     "HTTPTimeoutSettings",
     "HTTPSettings",
+    "CacheComponents",
     "CacheSettings",
 )
 
@@ -36,10 +37,10 @@ import base64
 import ssl as ssl_
 import typing
 
-import attr
+import attrs
 
 from hikari.api import config
-from hikari.internal import attr_extensions
+from hikari.internal import attrs_extensions
 from hikari.internal import data_binding
 
 _BASICAUTH_TOKEN_PREFIX: typing.Final[str] = "Basic"  # nosec
@@ -58,22 +59,22 @@ def _ssl_factory(value: typing.Union[bool, ssl_.SSLContext]) -> ssl_.SSLContext:
     return ssl
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, repr=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, repr=True, weakref_slot=False)
 class BasicAuthHeader:
     """An object that can be set as a producer for a basic auth header."""
 
-    username: str = attr.field(validator=attr.validators.instance_of(str))
+    username: str = attrs.field(validator=attrs.validators.instance_of(str))
     """Username for the header.
 
     .. warning::
         This must not contain `":"`.
     """
 
-    password: str = attr.field(repr=False, validator=attr.validators.instance_of(str))
+    password: str = attrs.field(repr=False, validator=attrs.validators.instance_of(str))
     """Password to use."""
 
-    charset: str = attr.field(default="utf-8", validator=attr.validators.instance_of(str))
+    charset: str = attrs.field(default="utf-8", validator=attrs.validators.instance_of(str))
     """Encoding to use for the username and password.
 
     Default is `"utf-8"`, but you may choose to use something else,
@@ -91,12 +92,12 @@ class BasicAuthHeader:
         return self.header
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 class ProxySettings(config.ProxySettings):
     """Settings for configuring an HTTP-based proxy."""
 
-    auth: typing.Any = attr.field(default=None)
+    auth: typing.Any = attrs.field(default=None)
     """Authentication header value to use.
 
     When cast to a `str`, this should provide the full value
@@ -110,16 +111,16 @@ class ProxySettings(config.ProxySettings):
     result in no authentication being provided.
     """
 
-    headers: typing.Optional[data_binding.Headers] = attr.field(default=None)
+    headers: typing.Optional[data_binding.Headers] = attrs.field(default=None)
     """Additional headers to use for requests via a proxy, if required."""
 
-    url: typing.Union[None, str] = attr.field(default=None)
+    url: typing.Union[None, str] = attrs.field(default=None)
     """Proxy URL to use.
 
     Defaults to `None` which disables the use of an explicit proxy.
     """
 
-    trust_env: bool = attr.field(default=False, validator=attr.validators.instance_of(bool))
+    trust_env: bool = attrs.field(default=False, validator=attrs.validators.instance_of(bool))
     """Toggle whether to look for a `netrc` file or environment variables.
 
     If `True`, and no `url` is given on this object, then
@@ -151,33 +152,33 @@ class ProxySettings(config.ProxySettings):
         return {**self.headers, _PROXY_AUTHENTICATION_HEADER: self.auth}
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 class HTTPTimeoutSettings:
     """Settings to control HTTP request timeouts."""
 
-    acquire_and_connect: typing.Optional[float] = attr.field(default=None)
+    acquire_and_connect: typing.Optional[float] = attrs.field(default=None)
     """Timeout for `request_socket_connect` PLUS connection acquisition.
 
     By default, this has no timeout allocated. Setting it to `None`
     will disable it.
     """
 
-    request_socket_connect: typing.Optional[float] = attr.field(default=None)
+    request_socket_connect: typing.Optional[float] = attrs.field(default=None)
     """Timeout for connecting a socket.
 
     By default, this has no timeout allocated. Setting it to `None`
     will disable it.
     """
 
-    request_socket_read: typing.Optional[float] = attr.field(default=None)
+    request_socket_read: typing.Optional[float] = attrs.field(default=None)
     """Timeout for reading a socket.
 
     By default, this has no timeout allocated. Setting it to `None`
     will disable it.
     """
 
-    total: typing.Optional[float] = attr.field(default=30.0)
+    total: typing.Optional[float] = attrs.field(default=30.0)
     """Total timeout for entire request.
 
     By default, this has a 30 second timeout allocated. Setting it to `None`
@@ -188,28 +189,28 @@ class HTTPTimeoutSettings:
     @request_socket_connect.validator
     @request_socket_read.validator
     @total.validator
-    def _(self, attrib: attr.Attribute[typing.Optional[float]], value: typing.Any) -> None:
+    def _(self, attrsib: attrs.Attribute[typing.Optional[float]], value: typing.Any) -> None:
         # This error won't occur until some time in the future where it will be annoying to
         # try and determine the root cause, so validate it NOW.
         if value is not None and (not isinstance(value, (float, int)) or value <= 0):
-            raise ValueError(f"HTTPTimeoutSettings.{attrib.name} must be None, or a POSITIVE float/int")
+            raise ValueError(f"HTTPTimeoutSettings.{attrsib.name} must be None, or a POSITIVE float/int")
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 class HTTPSettings(config.HTTPSettings):
     """Settings to control HTTP clients."""
 
-    enable_cleanup_closed: bool = attr.field(default=True, validator=attr.validators.instance_of(bool))
+    enable_cleanup_closed: bool = attrs.field(default=False, validator=attrs.validators.instance_of(bool))
     """Toggle whether to clean up closed transports.
 
-    This defaults to `True` to combat various protocol and asyncio
-    issues present when using Microsoft Windows. If you are sure you know
-    what you are doing, you may instead set this to `False` to disable this
+    This defaults to `False` to combat various protocol and asyncio
+    issues present. If you are sure you know  what you are doing,
+    you may instead set this to `True` to enable this
     behavior internally.
     """
 
-    force_close_transports: bool = attr.field(default=True, validator=attr.validators.instance_of(bool))
+    force_close_transports: bool = attrs.field(default=True, validator=attrs.validators.instance_of(bool))
     """Toggle whether to force close transports on shut down.
 
     This defaults to `True` to combat various protocol and asyncio
@@ -218,7 +219,7 @@ class HTTPSettings(config.HTTPSettings):
     behavior internally.
     """
 
-    max_redirects: typing.Optional[int] = attr.field(default=10)
+    max_redirects: typing.Optional[int] = attrs.field(default=10)
     """Behavior for handling redirect HTTP responses.
 
     If a `int`, allow following redirects from `3xx` HTTP responses
@@ -239,16 +240,16 @@ class HTTPSettings(config.HTTPSettings):
     """
 
     @max_redirects.validator
-    def _(self, _: attr.Attribute[typing.Optional[int]], value: typing.Any) -> None:
+    def _(self, _: attrs.Attribute[typing.Optional[int]], value: typing.Any) -> None:
         # This error won't occur until some time in the future where it will be annoying to
         # try and determine the root cause, so validate it NOW.
         if value is not None and (not isinstance(value, int) or value <= 0):
             raise ValueError("http_settings.max_redirects must be None or a POSITIVE integer")
 
-    ssl: ssl_.SSLContext = attr.field(
+    ssl: ssl_.SSLContext = attrs.field(
         factory=lambda: _ssl_factory(True),
         converter=_ssl_factory,
-        validator=attr.validators.instance_of(ssl_.SSLContext),
+        validator=attrs.validators.instance_of(ssl_.SSLContext),
     )
     """SSL context to use.
 
@@ -282,8 +283,8 @@ class HTTPSettings(config.HTTPSettings):
         if any form of personal security is in your interest.
     """
 
-    timeouts: HTTPTimeoutSettings = attr.field(
-        factory=HTTPTimeoutSettings, validator=attr.validators.instance_of(HTTPTimeoutSettings)
+    timeouts: HTTPTimeoutSettings = attrs.field(
+        factory=HTTPTimeoutSettings, validator=attrs.validators.instance_of(HTTPTimeoutSettings)
     )
     """Settings to control HTTP request timeouts.
 
@@ -292,12 +293,16 @@ class HTTPSettings(config.HTTPSettings):
     """
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+# Re-export
+CacheComponents = config.CacheComponents
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 class CacheSettings(config.CacheSettings):
     """Settings to control the cache."""
 
-    components: config.CacheComponents = attr.field(
+    components: config.CacheComponents = attrs.field(
         converter=config.CacheComponents, default=config.CacheComponents.ALL
     )
     """The cache components to use.
@@ -305,7 +310,7 @@ class CacheSettings(config.CacheSettings):
     Defaults to `hikari.api.cache.CacheComponents.ALL`.
     """
 
-    max_messages: int = attr.field(default=300)
+    max_messages: int = attrs.field(default=300)
     """The maximum number of messages to store in the cache at once.
 
     This will have no effect if the messages cache is not enabled.
@@ -313,10 +318,19 @@ class CacheSettings(config.CacheSettings):
     Defaults to `300`.
     """
 
-    max_dm_channel_ids: int = attr.field(default=50)
+    max_dm_channel_ids: int = attrs.field(default=50)
     """The maximum number of channel IDs to store in the cache at once.
 
     This will have no effect if the channel IDs cache is not enabled.
 
     Defaults to `50`.
+    """
+
+    only_my_member: bool = attrs.field(default=False)
+    """Reduce the members cache to only the bot itself.
+
+    Useful when only the bot member is required (eg. permission checks).
+    This will have no effect if the members cache is not enabled.
+
+    Defaults to `False`.
     """

@@ -49,6 +49,7 @@ def make_user(user_id, username):
         id=snowflakes.Snowflake(user_id),
         discriminator="0001",
         username=username,
+        global_name=None,
         avatar_hash=None,
         banner_hash=None,
         accent_color=None,

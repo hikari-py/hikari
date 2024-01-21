@@ -56,13 +56,7 @@ def check_if_past_removal(what: str, /, *, removal_version: str) -> None:
 
 
 def warn_deprecated(
-    what: str,
-    /,
-    *,
-    removal_version: str,
-    additional_info: str,
-    stack_level: int = 3,
-    quote: bool = True,
+    what: str, /, *, removal_version: str, additional_info: str, stack_level: int = 3, quote: bool = True
 ) -> None:
     """Issue a deprecation warning.
 

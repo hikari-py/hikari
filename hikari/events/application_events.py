@@ -27,10 +27,10 @@ __all__: typing.Sequence[str] = ("ApplicationCommandPermissionsUpdateEvent",)
 
 import typing
 
-import attr
+import attrs
 
 from hikari.events import shard_events
-from hikari.internal import attr_extensions
+from hikari.internal import attrs_extensions
 
 if typing.TYPE_CHECKING:
     from hikari import commands
@@ -38,16 +38,16 @@ if typing.TYPE_CHECKING:
     from hikari.api import shard as gateway_shard
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 class ApplicationCommandPermissionsUpdateEvent(shard_events.ShardEvent):
     """Event fired when permissions for an application command are updated."""
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    permissions: commands.GuildCommandPermissions = attr.field(repr=False)
+    permissions: commands.GuildCommandPermissions = attrs.field(repr=False)
     """The updated application command permissions."""

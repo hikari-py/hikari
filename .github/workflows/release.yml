@@ -11,13 +11,13 @@ jobs:
     steps:
       - name: Generate token
         id: generate_token
-        uses: tibdex/github-app-token@v1
+        uses: tibdex/github-app-token@v2
         with:
           app_id: ${{ secrets.APP_ID }}
           private_key: ${{ secrets.PRIVATE_KEY }}
 
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           token: ${{ steps.generate_token.outputs.token }}
 
@@ -27,12 +27,12 @@ jobs:
           git config --global user.email "90276125+hikari-bot[bot]@users.noreply.github.com"
 
       - name: Setup python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: 3.8
 
       - name: Temporarily disable "include administrators" branch protection
-        uses: benjefferies/branch-protection-bot@1.0.7
+        uses: benjefferies/branch-protection-bot@v1.1.2
         with:
           access_token: ${{ steps.generate_token.outputs.token }}
           enforce_admins: false
@@ -46,7 +46,7 @@ jobs:
         run: bash scripts/ci/release.sh
 
       - name: Re-enable "include administrators" branch protection
-        uses: benjefferies/branch-protection-bot@1.0.7
+        uses: benjefferies/branch-protection-bot@v1.1.2
         if: always()
         with:
           access_token: ${{ steps.generate_token.outputs.token }}

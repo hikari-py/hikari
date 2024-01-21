@@ -45,13 +45,13 @@ __all__: typing.Sequence[str] = (
 import abc
 import typing
 
-import attr
+import attrs
 
 from hikari import emojis
 from hikari import intents
 from hikari.events import base_events
 from hikari.events import shard_events
-from hikari.internal import attr_extensions
+from hikari.internal import attrs_extensions
 
 if typing.TYPE_CHECKING:
     from hikari import guilds
@@ -238,31 +238,31 @@ class ReactionDeleteEmojiEvent(ReactionEvent, abc.ABC):
         return emoji.id == self.emoji_id if isinstance(emoji, emojis.CustomEmoji) else emoji == self.emoji_name
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGE_REACTIONS)
 class GuildReactionAddEvent(GuildReactionEvent, ReactionAddEvent):
     """Event fired when a reaction is added to a guild message."""
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    member: guilds.Member = attr.field()
+    member: guilds.Member = attrs.field()
     """Member that added the reaction."""
 
-    channel_id: snowflakes.Snowflake = attr.field()
+    channel_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from ReactionEvent>>.
 
-    message_id: snowflakes.Snowflake = attr.field()
+    message_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from ReactionEvent>>.
 
-    emoji_name: typing.Union[str, emojis.UnicodeEmoji, None] = attr.field()
+    emoji_name: typing.Union[str, emojis.UnicodeEmoji, None] = attrs.field()
     # <<inherited docstring from ReactionAddEvent>>.
 
-    emoji_id: typing.Optional[snowflakes.Snowflake] = attr.field()
+    emoji_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
     # <<inherited docstring from ReactionAddEvent>>.
 
-    is_animated: bool = attr.field()
+    is_animated: bool = attrs.field()
     # <<inherited docstring from ReactionAddEvent>>.
 
     @property
@@ -281,185 +281,185 @@ class GuildReactionAddEvent(GuildReactionEvent, ReactionAddEvent):
         return self.member.user.id
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGE_REACTIONS)
 class GuildReactionDeleteEvent(GuildReactionEvent, ReactionDeleteEvent):
     """Event fired when a reaction is removed from a guild message."""
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    user_id: snowflakes.Snowflake = attr.field()
+    user_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from ReactionDeleteEvent>>.
 
-    guild_id: snowflakes.Snowflake = attr.field()
+    guild_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from GuildReactionEvent>>.
 
-    channel_id: snowflakes.Snowflake = attr.field()
+    channel_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from ReactionEvent>>.
 
-    message_id: snowflakes.Snowflake = attr.field()
+    message_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from ReactionEvent>>.
 
-    emoji_name: typing.Union[str, emojis.UnicodeEmoji, None] = attr.field()
+    emoji_name: typing.Union[str, emojis.UnicodeEmoji, None] = attrs.field()
     # <<inherited docstring from ReactionDeleteEvent>>.
 
-    emoji_id: typing.Optional[snowflakes.Snowflake] = attr.field()
+    emoji_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
     # <<inherited docstring from ReactionDeleteEvent>>.
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGE_REACTIONS)
 class GuildReactionDeleteEmojiEvent(GuildReactionEvent, ReactionDeleteEmojiEvent):
     """Event fired when an emoji is removed from a guild message's reactions."""
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    guild_id: snowflakes.Snowflake = attr.field()
+    guild_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from GuildReactionEvent>>.
 
-    channel_id: snowflakes.Snowflake = attr.field()
+    channel_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from ReactionEvent>>.
 
-    message_id: snowflakes.Snowflake = attr.field()
+    message_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from ReactionEvent>>.
 
-    emoji_name: typing.Union[str, emojis.UnicodeEmoji, None] = attr.field()
+    emoji_name: typing.Union[str, emojis.UnicodeEmoji, None] = attrs.field()
     # <<inherited docstring from ReactionDeleteEmojiEvent>>.
 
-    emoji_id: typing.Optional[snowflakes.Snowflake] = attr.field()
+    emoji_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
     # <<inherited docstring from ReactionDeleteEmojiEvent>>.
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGE_REACTIONS)
 class GuildReactionDeleteAllEvent(GuildReactionEvent, ReactionDeleteAllEvent):
     """Event fired when all of a guild message's reactions are removed."""
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    guild_id: snowflakes.Snowflake = attr.field()
+    guild_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from GuildReactionEvent>>.
 
-    channel_id: snowflakes.Snowflake = attr.field()
+    channel_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from ReactionEvent>>.
 
-    message_id: snowflakes.Snowflake = attr.field()
+    message_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from ReactionEvent>>.
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.DM_MESSAGE_REACTIONS)
 class DMReactionAddEvent(DMReactionEvent, ReactionAddEvent):
     """Event fired when a reaction is added to a private message."""
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    user_id: snowflakes.Snowflake = attr.field()
+    user_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from ReactionAddEvent>>.
 
-    channel_id: snowflakes.Snowflake = attr.field()
+    channel_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from ReactionEvent>>.
 
-    message_id: snowflakes.Snowflake = attr.field()
+    message_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from ReactionEvent>>.
 
-    emoji_name: typing.Union[str, emojis.UnicodeEmoji, None] = attr.field()
+    emoji_name: typing.Union[str, emojis.UnicodeEmoji, None] = attrs.field()
     # <<inherited docstring from ReactionAddEvent>>.
 
-    emoji_id: typing.Optional[snowflakes.Snowflake] = attr.field()
+    emoji_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
     # <<inherited docstring from ReactionAddEvent>>.
 
-    is_animated: bool = attr.field()
+    is_animated: bool = attrs.field()
     # <<inherited docstring from ReactionAddEvent>>.
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.DM_MESSAGE_REACTIONS)
 class DMReactionDeleteEvent(DMReactionEvent, ReactionDeleteEvent):
     """Event fired when a reaction is removed from a private message."""
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    user_id: snowflakes.Snowflake = attr.field()
+    user_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from ReactionDeleteEvent>>.
 
-    channel_id: snowflakes.Snowflake = attr.field()
+    channel_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from ReactionEvent>>.
 
-    message_id: snowflakes.Snowflake = attr.field()
+    message_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from ReactionEvent>>.
 
-    emoji_name: typing.Union[str, emojis.UnicodeEmoji, None] = attr.field()
+    emoji_name: typing.Union[str, emojis.UnicodeEmoji, None] = attrs.field()
     # <<inherited docstring from ReactionDeleteEvent>>.
 
-    emoji_id: typing.Optional[snowflakes.Snowflake] = attr.field()
+    emoji_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
     # <<inherited docstring from ReactionDeleteEvent>>.
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.DM_MESSAGE_REACTIONS)
 class DMReactionDeleteEmojiEvent(DMReactionEvent, ReactionDeleteEmojiEvent):
     """Event fired when an emoji is removed from a private message's reactions."""
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    channel_id: snowflakes.Snowflake = attr.field()
+    channel_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from ReactionEvent>>.
 
-    message_id: snowflakes.Snowflake = attr.field()
+    message_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from ReactionEvent>>.
 
-    emoji_name: typing.Union[str, emojis.UnicodeEmoji, None] = attr.field()
+    emoji_name: typing.Union[str, emojis.UnicodeEmoji, None] = attrs.field()
     # <<inherited docstring from ReactionDeleteEmojiEvent>>.
 
-    emoji_id: typing.Optional[snowflakes.Snowflake] = attr.field()
+    emoji_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
     # <<inherited docstring from ReactionDeleteEmojiEvent>>.
 
 
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.DM_MESSAGE_REACTIONS)
 class DMReactionDeleteAllEvent(DMReactionEvent, ReactionDeleteAllEvent):
     """Event fired when all of a private message's reactions are removed."""
 
-    app: traits.RESTAware = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attr_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    channel_id: snowflakes.Snowflake = attr.field()
+    channel_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from ReactionEvent>>.
 
-    message_id: snowflakes.Snowflake = attr.field()
+    message_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from ReactionEvent>>.

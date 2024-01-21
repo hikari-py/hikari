@@ -77,10 +77,7 @@ async def generate_error_response(response: aiohttp.ClientResponse) -> errors.HT
 
 
 def create_tcp_connector(
-    http_settings: config.HTTPSettings,
-    *,
-    dns_cache: typing.Union[bool, int] = True,
-    limit: int = 100,
+    http_settings: config.HTTPSettings, *, dns_cache: typing.Union[bool, int] = True, limit: int = 100
 ) -> aiohttp.TCPConnector:
     """Create a TCP connector and return it.
 

@@ -135,13 +135,7 @@ class TestCDNRoute:
         assert hash(route3) != hash(route4)
 
     @pytest.mark.parametrize(
-        ("input_file_format", "expected_file_format"),
-        [
-            ("jpg", "jpg"),
-            ("JPG", "jpg"),
-            ("png", "png"),
-            ("PNG", "png"),
-        ],
+        ("input_file_format", "expected_file_format"), [("jpg", "jpg"), ("JPG", "jpg"), ("png", "png"), ("PNG", "png")]
     )
     def test_compile_uses_lowercase_file_format_always(self, input_file_format, expected_file_format):
         route = routes.CDNRoute("/foo/bar", {"png", "jpg"}, is_sizable=False)
@@ -283,15 +277,7 @@ class TestCDNRoute:
                 "bork qux",
                 "http://example.com/baz/bork%20qux.webp",
             ),
-            (
-                "http://example.com",
-                "/{foo}/bar",
-                "GIF",
-                {},
-                "baz",
-                "bork qux",
-                "http://example.com/baz/bar.gif",
-            ),
+            ("http://example.com", "/{foo}/bar", "GIF", {}, "baz", "bork qux", "http://example.com/baz/bar.gif"),
         ],
     )
     def test_compile_generates_expected_url(self, base_url, template, format, size_kwds, foo, bar, expected_url):

@@ -1,3 +1,163 @@
+## 2.0.0.dev122 (2023-11-18)
+
+### Deprecation
+
+- Deprecate `Permissions.MANAGE_EMOJIS_AND_STICKERS` in favour of `Permissions.MANAGE_GUILD_EXPREASSIONS` ([#1758](https://github.com/hikari-py/hikari/issues/1758))
+
+### Features
+
+- Add Python 3.12 support. ([#1357](https://github.com/hikari-py/hikari/issues/1357))
+- Allow class listeners ([#1661](https://github.com/hikari-py/hikari/issues/1661))
+- Add missing `clear_x` methods to `InteractionMessageBuilder`
+  - This brings the functionality more in-line with other message edit APIs ([#1740](https://github.com/hikari-py/hikari/issues/1740))
+- Add missing permissions ([#1758](https://github.com/hikari-py/hikari/issues/1758))
+
+### Bugfixes
+
+- Fix optional connection "revoked" field KeyError when fetching connections. ([#1720](https://github.com/hikari-py/hikari/issues/1720))
+- Ensure shard connect and disconnect always get sent in pairs and properly waited for ([#1744](https://github.com/hikari-py/hikari/issues/1744))
+- Improve handing of force exiting a bot (double interrupt)
+  - Improve exception message
+  - Reset signal handlers to original ones after no longer capturing signals ([#1745](https://github.com/hikari-py/hikari/issues/1745))
+
+---
+## 2.0.0.dev121 (2023-09-10)
+
+### Features
+
+- Add `approximate_member_count` and `approximate_presence_count` to `OwnGuild`. ([#1659](https://github.com/hikari-py/hikari/issues/1659))
+- Add `CacheSettings.only_my_member` to only cache the bot member. ([#1679](https://github.com/hikari-py/hikari/issues/1679))
+- Bots can now utilize `Activity.state`
+  - When used with `type` set to `ActivityType.CUSTOM`, it will show as the text for the custom status.
+    Syntactic sugar also exists to support simply using `name` instead of `state`.
+  - Can be used with other activity types to provide additional information on the activity. ([#1683](https://github.com/hikari-py/hikari/issues/1683))
+- Add missing Audit Log event types to `AuditLogEventType` ([#1705](https://github.com/hikari-py/hikari/issues/1705))
+- Add `approximate_guild_count` field to own `Application` ([#1712](https://github.com/hikari-py/hikari/issues/1712))
+
+### Bugfixes
+
+- Handle connection reset error on shards. ([#1645](https://github.com/hikari-py/hikari/issues/1645))
+- Retry REST requests on connection errors ([#1648](https://github.com/hikari-py/hikari/issues/1648))
+- Add support for text in stage channels ([#1653](https://github.com/hikari-py/hikari/issues/1653))
+- Fix incorrect calculation for the default avatar of migrated users ([#1673](https://github.com/hikari-py/hikari/issues/1673))
+- Fix attachments not being removed in message edits when `attachment` or `attachments` is `None` ([#1702](https://github.com/hikari-py/hikari/issues/1702))
+
+---
+
+
+## 2.0.0.dev120 (2023-06-08)
+
+### Breaking Changes
+
+- Remove previously deprecated `hikari.impl.bot` module ([#1612](https://github.com/hikari-py/hikari/issues/1612))
+
+### Deprecation
+
+- Deprecate `User.discriminator` ([#1631](https://github.com/hikari-py/hikari/issues/1631))
+
+### Features
+
+- Implement voice messages ([#1609](https://github.com/hikari-py/hikari/issues/1609))
+- Implement username changes:
+  - Add `global_name`
+  - `User.__str__()` respects `global_name` now
+  - `User.default_avatar_url` returns correct URL for migrated accounts ([#1631](https://github.com/hikari-py/hikari/issues/1631))
+
+### Bugfixes
+
+- Fix a bug in `RESTClient.edit_guild` which load to closed stream errors ([#1627](https://github.com/hikari-py/hikari/issues/1627))
+- Properly handle DM channels in resolved interaction channels. ([#1628](https://github.com/hikari-py/hikari/issues/1628))
+
+---
+
+
+## 2.0.0.dev119 (2023-05-08)
+
+### Breaking Changes
+
+- Remove deprecated functionality for 2.0.0.dev119
+  - Removed `TextInputBuilder.required` in favour of `TextInputBuilder.is_required`.
+  - Removed the ability to pass `CommandChoices` instead of `AutocompleteChoiceBuilders` when making autocomplete responses. ([#1580](https://github.com/hikari-py/hikari/issues/1580))
+
+### Bugfixes
+
+- Fix `messages` argument typing for `RESTClient.delete_messages`. ([#1581](https://github.com/hikari-py/hikari/issues/1581))
+- Default `HTTPSettings.enable_cleanup_closed` to `False`.
+  - CPython3.11 changes around SSLProto have made this quite unstable and prone to errors when dealing with unclosed TLS transports, which ends up in aiohttp calling close and abort twice. ([#1585](https://github.com/hikari-py/hikari/issues/1585))
+- `Guild.get_channel`, `Guild.get_emoji`, `Guild.get_sticker` and `Guild.get_role` now only return entries from the relevant guild. ([#1608](https://github.com/hikari-py/hikari/issues/1608))
+
+---
+
+
+## 2.0.0.dev118 (2023-04-02)
+
+### Breaking Changes
+
+- Refactors to the component builder interfaces which make them flatter:
+
+  * Removed `add_to_container` from `ButtonBuilder`, `LinkButtonBuilder`, `InteractiveButtonBuilder`, `SelectMenuBuilder`, `ChannelSelectMenuBuilder`, and `TextInputBuilder`; these classes are no-longer generic and no-longer take `container` in their inits.
+  * Replaced `TextSelectMenuBuilder.add_to_container` with the `TextSelectMenuBuilder.parent` property.
+      This new property doesn't "finalise" the addition but rather just returns the parent object, or raises if the select menu is an orphan. This change also involves replacing the `container` parameter in `TextSelectMenuBuilder.__init__` with an optional `parent` parameter.
+  * Removed `SelectOptionBuilder.add_to_menu`; this class isn't generic anymore.
+  * `TextSelectMenuBuilder.add_option` now takes all the option's configuration as parameters and returns `Self`.
+  * Split `MessageActionRowBuilder.add_button` into `.add_interactive_button` and `.add_link_button`.
+      These both now take all the button's configuration as parameters and return `Self`.
+  * `MessageActionRowBuilder.add_select_menu` now takes all the menu's configuration as parameters and returns `Self`.
+      The new `.add_channel_menu` and `.add_text_menu` methods should be used for adding text and channel menus. Where `.add_channel_menu` returns `Self` and `.add_text_menu` returns a text menu builder with a `parent` property for getting back to the action row builder.
+  * `ModalActionRowBuilder.add_text_input` now takes all the text input's configuration as parameters and returns `Self`.
+  * `min_length` and `max_length` can no-longer be `hikari.undefined.UNDEFINED` for the text input builder, and default to `0` and `4000` respectively. This change effects both the types accepted by `ModalActionRowBuilder.__init__` and the return types of the relevant properties.
+  * Removed the `emoji_id` and `emoji_name` parameters from `LinkButtonBuilder.__init__`, and `InteractiveButtonBuilder.__init__`.
+  * Removed the `style` and `custom_id` parameters from `LinkButtonBuilder.__init__`.
+  * Removed the `url` parameter from `InteractiveButtonBuilder.__init__`. ([#1533](https://github.com/hikari-py/hikari/issues/1533))
+- Remove previously deprecated functionality:
+  - `Intents.GUILD_BANS` (deprecated alias for `Intents.GUILD_MODERATION`)
+  - `ComponentType.SELECT_MENU` (deprecated alias for `Intents.TEXT_SELECT_MENU`)
+  - Not passing type through `type` argument explicitly to `MessageActionRowBuilder.add_select_menu` ([#1535](https://github.com/hikari-py/hikari/issues/1535))
+- Renamed `StickerPack.banner_hash` to `StickerPack.banner_asset_id`. ([#1572](https://github.com/hikari-py/hikari/issues/1572))
+
+### Deprecation
+
+- Renamed `TextInputBuilder.required` property to `TextInputBuilder.is_required`. ([#1533](https://github.com/hikari-py/hikari/issues/1533))
+- Passing `CommandChoice`s instead of `AutocompleteChoiceBuilder`s when making autocomplete responses. ([#1539](https://github.com/hikari-py/hikari/issues/1539))
+- `hikari.impl.bot` moved to `hikari.impl.gateway_bot`. ([#1576](https://github.com/hikari-py/hikari/issues/1576))
+
+### Features
+
+- `Role.mention` now returns `"@everyone"` for the `@everyone` role. ([#1528](https://github.com/hikari-py/hikari/issues/1528))
+- Refactors to the component builder interfaces which make them flatter:
+
+  * `hikari.undefined.UNDEFINED` can now be passed to `TextInputBuilder.set_placeholder` and `TextInputBuilder.set_value`.
+  * The standard implementation of a select option builder is now exposed at `hikari.impl.special_endpoints.SelectOptionBuilder`. ([#1533](https://github.com/hikari-py/hikari/issues/1533))
+- `CommandChoice.name_localizations` field and separate `AutocompleteChoiceBuilder` for use when making autocomplete responses. ([#1539](https://github.com/hikari-py/hikari/issues/1539))
+- Implement guild role subscriptions. ([#1550](https://github.com/hikari-py/hikari/issues/1550))
+- Add `Role.is_guild_linked_role`. ([#1551](https://github.com/hikari-py/hikari/issues/1551))
+- `hikari.iterators.LazyIterator.flatten` method for flattening a lazy iterator of synchronous iterables. ([#1562](https://github.com/hikari-py/hikari/issues/1562))
+- Support sending stickers when creating a message. ([#1571](https://github.com/hikari-py/hikari/issues/1571))
+- Added several set methods for required values to the builders:
+
+  * `CommandBuilder.set_name`
+  * `SlashCommandBuilder.set_description`
+  * `InteractiveButtonBuilder.set_custom_id`
+  * `SelectOptionBuilder.set_label`
+  * `SelectOptionBuilder.set_value`
+  * `SelectMenuBuilder.set_custom_id` ([#1574](https://github.com/hikari-py/hikari/issues/1574))
+
+### Bugfixes
+
+- `emoji=` can now be passed to `LinkButtonBuilder.__init__` and `InteractiveButtonBuilder.__init__` alone without causing serialization issues (and Pyright will now let you pass it). ([#1533](https://github.com/hikari-py/hikari/issues/1533))
+- Open `banner.txt`s with `utf-8` encoding explicitly. ([#1545](https://github.com/hikari-py/hikari/issues/1545))
+- Pyright will now let you pass `role_mentions` and `user_mentions` to `InteractionMessageBuilder.__init__`. ([#1560](https://github.com/hikari-py/hikari/issues/1560))
+- Fixed forum channel applied tags not being a sequence of snowflakes. ([#1564](https://github.com/hikari-py/hikari/issues/1564))
+- Switch to using <https://github.com/discord/twemoji> for emoji images. ([#1568](https://github.com/hikari-py/hikari/issues/1568))
+- Fixed sticker pack handling and typing:
+
+  * Fixed deserialization raising when `"banner_asset_id"` or `"cover_sticker_id"` weren't included in the payload.
+  * `StickerPack.banner_asset_id` is now correctly typed as `Optional[Snowflake]`.
+  * `StickerPack.banner_url` and `StickerPack.make_banner_url` both now correctly return `None` when `StickerPack.banner_asset_id` is `None`. ([#1572](https://github.com/hikari-py/hikari/issues/1572))
+
+---
+
+
 ## 2.0.0.dev117 (2023-03-06)
 
 ### Breaking Changes

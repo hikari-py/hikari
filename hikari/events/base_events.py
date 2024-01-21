@@ -37,20 +37,20 @@ import abc
 import inspect
 import typing
 
-import attr
+import attrs
 
 from hikari import intents
 from hikari import traits
 from hikari.api import shard as gateway_shard
-from hikari.internal import attr_extensions
+from hikari.internal import attrs_extensions
 
 if typing.TYPE_CHECKING:
     import types
 
     _T = typing.TypeVar("_T")
 
-REQUIRED_INTENTS_ATTR: typing.Final[str] = "___requiresintents___"
-NO_RECURSIVE_THROW_ATTR: typing.Final[str] = "___norecursivethrow___"
+REQUIRED_INTENTS_attrs: typing.Final[str] = "___requiresintents___"
+NO_RECURSIVE_THROW_attrs: typing.Final[str] = "___norecursivethrow___"
 
 _id_counter = 1  # We start at 1 since Event is 0
 
@@ -113,7 +113,7 @@ def get_required_intents_for(event_type: typing.Type[Event]) -> typing.Collectio
         Collection of acceptable subset combinations of intent needed to
         be able to receive the given event type.
     """
-    result = getattr(event_type, REQUIRED_INTENTS_ATTR, ())
+    result = getattr(event_type, REQUIRED_INTENTS_attrs, ())
     assert isinstance(result, typing.Collection)
     return result
 
@@ -133,7 +133,7 @@ def requires_intents(first: intents.Intents, *rest: intents.Intents) -> typing.C
 
     def decorator(cls: _T) -> _T:
         required_intents = [first, *rest]
-        setattr(cls, REQUIRED_INTENTS_ATTR, required_intents)
+        setattr(cls, REQUIRED_INTENTS_attrs, required_intents)
         doc = inspect.getdoc(cls) or ""
         doc += "\n\nThis requires one of the following combinations of intents in order to be dispatched:\n\n"
         for intent_group in required_intents:
@@ -156,7 +156,7 @@ def no_recursive_throw() -> typing.Callable[[_T], _T]:
     """
 
     def decorator(cls: _T) -> _T:
-        setattr(cls, NO_RECURSIVE_THROW_ATTR, True)
+        setattr(cls, NO_RECURSIVE_THROW_attrs, True)
         doc = inspect.getdoc(cls) or ""
         doc += (
             "\n"
@@ -175,7 +175,7 @@ def no_recursive_throw() -> typing.Callable[[_T], _T]:
 
 def is_no_recursive_throw_event(obj: typing.Union[_T, typing.Type[_T]]) -> bool:
     """Return True if this event is marked as `___norecursivethrow___`."""
-    result = getattr(obj, NO_RECURSIVE_THROW_ATTR, False)
+    result = getattr(obj, NO_RECURSIVE_THROW_attrs, False)
     assert isinstance(result, bool)
     return result
 
@@ -185,8 +185,8 @@ FailedCallbackT = typing.Callable[[EventT], typing.Coroutine[typing.Any, typing.
 
 
 @no_recursive_throw()
-@attr_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 class ExceptionEvent(Event, typing.Generic[EventT]):
     """Event that is raised when another event handler raises an `Exception`.
 
@@ -198,13 +198,13 @@ class ExceptionEvent(Event, typing.Generic[EventT]):
         side-effects on the application runtime.
     """
 
-    exception: Exception = attr.field()
+    exception: Exception = attrs.field()
     """Exception that was raised."""
 
-    failed_event: EventT = attr.field()
+    failed_event: EventT = attrs.field()
     """Event instance that caused the exception."""
 
-    failed_callback: FailedCallbackT[EventT] = attr.field()
+    failed_callback: FailedCallbackT[EventT] = attrs.field()
     """Event callback that threw an exception."""
 
     @property
@@ -228,7 +228,7 @@ class ExceptionEvent(Event, typing.Generic[EventT]):
     def exc_info(self) -> typing.Tuple[typing.Type[Exception], Exception, typing.Optional[types.TracebackType]]:
         """Exception triplet that follows the same format as `sys.exc_info`.
 
-        The `sys.exc_info` tiplet consists of the exception type, the exception
+        The `sys.exc_info` triplet consists of the exception type, the exception
         instance, and the traceback of the exception.
         """
         return type(self.exception), self.exception, self.exception.__traceback__

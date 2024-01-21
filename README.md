@@ -18,7 +18,7 @@ Gateway APIs.
 Built on good intentions and the hope that it will be extendable and reusable, rather than an obstacle for future
 development.
 
-Python 3.8, 3.9, 3.10 and 3.11 are currently supported.
+Python 3.8, 3.9, 3.10, 3.11 and 3.12 are currently supported.
 
 ## Installation
 
@@ -40,7 +40,7 @@ Hikari provides two different default bot implementations to suit your needs:
 
 ### GatewayBot
 
-A [`GatewayBot`](https://docs.hikari-py.dev/en/stable/reference/hikari/impl/bot/#hikari.impl.bot.GatewayBot)
+A [`GatewayBot`](https://docs.hikari-py.dev/en/stable/reference/hikari/impl/gateway_bot/#hikari.impl.gateway_bot.GatewayBot)
 is one which will connect to Discord through the gateway and receive
 events through there. A simple startup example could be the following:
 
@@ -194,7 +194,7 @@ bot.run(
 
 Many other helpful options exist for you to take advantage of if you wish. Links to the respective docs can be seen
 below:
-- [GatewayBot.run](https://docs.hikari-py.dev/en/stable/reference/hikari/impl/bot/#hikari.impl.bot.GatewayBot.run)
+- [GatewayBot.run](https://docs.hikari-py.dev/en/stable/reference/hikari/impl/gateway_bot/#hikari.impl.gateway_bot.GatewayBot.run)
 - [RESTBot.run](https://docs.hikari-py.dev/en/stable/reference/hikari/impl/rest_bot/#hikari.impl.rest_bot.RESTBot.run)
 
 ---
@@ -286,11 +286,12 @@ This replaces the default `asyncio` event loop with one that uses `libuv` intern
 and then amend your script to be something similar to the following example to utilise it in your application:
 
 ```py
+import asyncio
 import os
 
 if os.name != "nt":
     import uvloop
-    uvloop.install()
+    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 
 # Your code goes here

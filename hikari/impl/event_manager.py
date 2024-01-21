@@ -343,8 +343,12 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
             if members:
                 # TODO: do we really want to invalidate these all after an outage.
                 self._cache.clear_members_for_guild(guild_id)
-                for member in members.values():
-                    self._cache.set_member(member)
+                if not self._cache.settings.only_my_member:
+                    for member in members.values():
+                        self._cache.set_member(member)
+                else:
+                    my_member = members[shard.get_user_id()]
+                    self._cache.set_member(my_member)
 
             if presences:
                 self._cache.clear_presences_for_guild(guild_id)
@@ -361,17 +365,34 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
                 for thread in threads.values():
                     self._cache.set_thread(thread)
 
+        # We only want to chunk if we are allowed and need to:
+        #   Allowed?
+        #       All the following must be true:
+        #           1. `auto_chunk_members` is true (the user wants us to).
+        #           2. We have the necessary intents (`GUILD_MEMBERS`).
+        #           3. The guild is marked as "large" or we do not have `GUILD_PRESENCES` intent
+        #              Discord will only send every other member objects on the `GUILD_CREATE`
+        #              payload if presence intents are also declared, so if this isn't the case then we also
+        #              want to chunk small guilds.
+        #
+        #   Need to?
+        #       One of the following must be true:
+        #           1. We have a cache, and it requires it (it is enabled for `MEMBERS`), but we are
+        #              not limited to only our own member (which is included in the `GUILD_CREATE` payload).
+        #           2. The user is waiting for the member chunks (there is an event listener for it).
         presences_declared = self._intents & intents_.Intents.GUILD_PRESENCES
 
-        # When intents are enabled Discord will only send other member objects on the guild create
-        # payload if presence intents are also declared, so if this isn't the case then we also want
-        # to chunk small guilds.
         if (
             self._auto_chunk_members
             and self._intents & intents_.Intents.GUILD_MEMBERS
             and (payload.get("large") or not presences_declared)
             and (
-                self._cache_enabled_for(config.CacheComponents.MEMBERS)
+                (
+                    self._cache
+                    and self._cache_enabled_for(config.CacheComponents.MEMBERS)
+                    and not self._cache.settings.only_my_member
+                )
+                # This call is a bit expensive, so best to do it last
                 or self._enabled_for_event(shard_events.MemberChunkEvent)
             )
         ):

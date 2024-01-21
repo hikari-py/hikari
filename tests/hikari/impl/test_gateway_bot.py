@@ -32,12 +32,12 @@ from hikari import errors
 from hikari import presences
 from hikari import snowflakes
 from hikari import undefined
-from hikari.impl import bot as bot_impl
 from hikari.impl import cache as cache_impl
 from hikari.impl import config
 from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import event_factory as event_factory_impl
 from hikari.impl import event_manager as event_manager_impl
+from hikari.impl import gateway_bot as bot_impl
 from hikari.impl import rest as rest_impl
 from hikari.impl import shard as shard_impl
 from hikari.impl import voice as voice_impl
@@ -55,20 +55,6 @@ def test_validate_activity_when_no_activity(activity):
     warn.assert_not_called()
 
 
-def test_validate_activity_when_type_is_custom():
-    activity = presences.Activity(name="test", type=presences.ActivityType.CUSTOM)
-
-    with mock.patch.object(warnings, "warn") as warn:
-        bot_impl._validate_activity(activity)
-
-    warn.assert_called_once_with(
-        "The CUSTOM activity type is not supported by bots at the time of writing, and may therefore not have "
-        "any effect if used.",
-        category=errors.HikariWarning,
-        stacklevel=3,
-    )
-
-
 def test_validate_activity_when_type_is_streaming_but_no_url():
     activity = presences.Activity(name="test", url=None, type=presences.ActivityType.STREAMING)
 
@@ -84,7 +70,7 @@ def test_validate_activity_when_type_is_streaming_but_no_url():
 
 
 def test_validate_activity_when_no_warning():
-    activity = presences.Activity(name="test", type=presences.ActivityType.PLAYING)
+    activity = presences.Activity(name="test", state="Hello!", type=presences.ActivityType.CUSTOM)
 
     with mock.patch.object(warnings, "warn") as warn:
         bot_impl._validate_activity(activity)
@@ -437,7 +423,7 @@ class TestGatewayBot:
                 mock.call(shard1.close()),
                 mock.call(shard2.close()),
                 mock.call(rest.close()),
-            ],
+            ]
         )
 
         rest.close.assert_awaited_once()
@@ -449,11 +435,7 @@ class TestGatewayBot:
         # Error handling
         get_running_loop.assert_called_once_with()
         get_running_loop.return_value.call_exception_handler.assert_called_once_with(
-            {
-                "message": "shard 1 raised an exception during shut down",
-                "future": shard1.close(),
-                "exception": error,
-            }
+            {"message": "shard 1 raised an exception during shut down", "future": shard1.close(), "exception": error}
         )
 
         # Clear out maps
@@ -464,7 +446,7 @@ class TestGatewayBot:
             [
                 mock.call(event_factory.deserialize_stopping_event.return_value),
                 mock.call(event_factory.deserialize_stopped_event.return_value),
-            ],
+            ]
         )
 
     def test_dispatch(self, bot, event_manager):
@@ -622,10 +604,7 @@ class TestGatewayBot:
             )
 
         loop.run_until_complete.assert_has_calls(
-            [
-                mock.call(start_function.return_value),
-                mock.call(join_function.return_value),
-            ]
+            [mock.call(start_function.return_value), mock.call(join_function.return_value)]
         )
         start_function.assert_called_once_with(
             activity=activity,
@@ -930,23 +909,13 @@ class TestGatewayBot:
         with mock.patch.object(bot_impl.GatewayBot, "_get_shard", return_value=shard) as get_shard:
             with mock.patch.object(bot_impl.GatewayBot, "_check_if_alive") as check_if_alive:
                 await bot.request_guild_members(
-                    115590097100865541,
-                    include_presences=True,
-                    query="indeed",
-                    limit=42,
-                    users=[123],
-                    nonce="NONCE",
+                    115590097100865541, include_presences=True, query="indeed", limit=42, users=[123], nonce="NONCE"
                 )
 
         check_if_alive.assert_called_once_with()
         get_shard.assert_called_once_with(115590097100865541)
         shard.request_guild_members.assert_awaited_once_with(
-            guild=115590097100865541,
-            include_presences=True,
-            query="indeed",
-            limit=42,
-            users=[123],
-            nonce="NONCE",
+            guild=115590097100865541, include_presences=True, query="indeed", limit=42, users=[123], nonce="NONCE"
         )
 
     @pytest.mark.asyncio()
@@ -1019,9 +988,7 @@ class TestGatewayBot:
         status = object()
         bot._shards = {}
         shard_obj = mock.Mock(
-            is_alive=is_alive,
-            start=mock.AsyncMock(side_effect=RuntimeError("exit in tests")),
-            close=mock.AsyncMock(),
+            is_alive=is_alive, start=mock.AsyncMock(side_effect=RuntimeError("exit in tests")), close=mock.AsyncMock()
         )
 
         with mock.patch.object(shard_impl, "GatewayShardImpl", return_value=shard_obj):

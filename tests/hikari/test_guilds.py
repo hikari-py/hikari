@@ -32,7 +32,7 @@ from hikari import snowflakes
 from hikari import undefined
 from hikari import urls
 from hikari import users
-from hikari.impl import bot
+from hikari.impl import gateway_bot
 from hikari.internal import routes
 from hikari.internal import time
 from tests.hikari import hikari_test_helpers
@@ -40,17 +40,13 @@ from tests.hikari import hikari_test_helpers
 
 @pytest.fixture()
 def mock_app():
-    return mock.Mock(spec_set=bot.GatewayBot)
+    return mock.Mock(spec_set=gateway_bot.GatewayBot)
 
 
 class TestPartialRole:
     @pytest.fixture()
     def model(self, mock_app):
-        return guilds.PartialRole(
-            app=mock_app,
-            id=snowflakes.Snowflake(1106913972),
-            name="The Big Cool",
-        )
+        return guilds.PartialRole(app=mock_app, id=snowflakes.Snowflake(1106913972), name="The Big Cool")
 
     def test_str_operator(self, model):
         assert str(model) == "The Big Cool"
@@ -69,11 +65,7 @@ class TestPartialApplication:
     @pytest.fixture()
     def model(self):
         return hikari_test_helpers.mock_class_namespace(
-            guilds.PartialApplication,
-            init_=False,
-            slots_=False,
-            id=123,
-            icon_hash="ahashicon",
+            guilds.PartialApplication, init_=False, slots_=False, id=123, icon_hash="ahashicon"
         )()
 
     def test_icon_url_property(self, model):
@@ -147,6 +139,8 @@ class TestRole:
             integration_id=None,
             is_premium_subscriber_role=False,
             is_guild_linked_role=True,
+            subscription_listing_id=snowflakes.Snowflake(10),
+            is_available_for_purchase=True,
         )
 
     def test_colour_property(self, model):
@@ -232,10 +226,7 @@ class TestMember:
             nickname="davb",
             guild_avatar_hash="dab",
             premium_since=None,
-            role_ids=[
-                snowflakes.Snowflake(456),
-                snowflakes.Snowflake(1234),
-            ],
+            role_ids=[snowflakes.Snowflake(456), snowflakes.Snowflake(1234)],
             user=mock_user,
             raw_communication_disabled_until=None,
         )
@@ -468,7 +459,7 @@ class TestMember:
 
     def test_display_name_property_when_no_nickname(self, model, mock_user):
         model.nickname = None
-        assert model.display_name is mock_user.username
+        assert model.display_name is mock_user.global_name
 
     def test_mention_property(self, model, mock_user):
         assert model.mention == mock_user.mention
@@ -548,12 +539,7 @@ class TestMember:
 class TestPartialGuild:
     @pytest.fixture()
     def model(self, mock_app):
-        return guilds.PartialGuild(
-            app=mock_app,
-            id=snowflakes.Snowflake(90210),
-            icon_hash="yeet",
-            name="hikari",
-        )
+        return guilds.PartialGuild(app=mock_app, id=snowflakes.Snowflake(90210), icon_hash="yeet", name="hikari")
 
     def test_str_operator(self, model):
         assert str(model) == "hikari"
@@ -587,11 +573,7 @@ class TestPartialGuild:
             assert model.make_icon_url(ext=None, size=1024) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            guild_id=90210,
-            hash="a_yeet",
-            size=1024,
-            file_format="gif",
+            urls.CDN_URL, guild_id=90210, hash="a_yeet", size=1024, file_format="gif"
         )
 
     def test_make_icon_url_when_format_is_None_and_avatar_hash_is_not_for_gif(self, model):
@@ -601,11 +583,7 @@ class TestPartialGuild:
             assert model.make_icon_url(ext=None, size=4096) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            guild_id=90210,
-            hash="yeet",
-            size=4096,
-            file_format="png",
+            urls.CDN_URL, guild_id=90210, hash="yeet", size=4096, file_format="png"
         )
 
     def test_make_icon_url_with_all_args(self, model):
@@ -615,11 +593,7 @@ class TestPartialGuild:
             assert model.make_icon_url(ext="url", size=2048) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            guild_id=90210,
-            hash="yeet",
-            size=2048,
-            file_format="url",
+            urls.CDN_URL, guild_id=90210, hash="yeet", size=2048, file_format="url"
         )
 
     @pytest.mark.asyncio()
@@ -721,21 +695,12 @@ class TestPartialGuild:
         file = object()
 
         sticker = await model.create_sticker(
-            "NewSticker",
-            "funny",
-            file,
-            description="A sticker",
-            reason="blah blah blah",
+            "NewSticker", "funny", file, description="A sticker", reason="blah blah blah"
         )
         assert sticker is model.app.rest.create_sticker.return_value
 
         model.app.rest.create_sticker.assert_awaited_once_with(
-            90210,
-            "NewSticker",
-            "funny",
-            file,
-            description="A sticker",
-            reason="blah blah blah",
+            90210, "NewSticker", "funny", file, description="A sticker", reason="blah blah blah"
         )
 
     @pytest.mark.asyncio()
@@ -745,12 +710,7 @@ class TestPartialGuild:
         sticker = await model.edit_sticker(4567, name="Brilliant", tag="parmesan", description="amazing")
 
         model.app.rest.edit_sticker.assert_awaited_once_with(
-            90210,
-            4567,
-            name="Brilliant",
-            tag="parmesan",
-            description="amazing",
-            reason=undefined.UNDEFINED,
+            90210, 4567, name="Brilliant", tag="parmesan", description="amazing", reason=undefined.UNDEFINED
         )
 
         assert sticker is model.app.rest.edit_sticker.return_value
@@ -761,11 +721,7 @@ class TestPartialGuild:
 
         sticker = await model.delete_sticker(951)
 
-        model.app.rest.delete_sticker.assert_awaited_once_with(
-            90210,
-            951,
-            reason=undefined.UNDEFINED,
-        )
+        model.app.rest.delete_sticker.assert_awaited_once_with(90210, 951, reason=undefined.UNDEFINED)
 
         assert sticker is model.app.rest.delete_sticker.return_value
 
@@ -959,11 +915,7 @@ class TestGuildPreview:
             assert model.make_splash_url(ext="url", size=1024) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            guild_id=123,
-            hash="18dnf8dfbakfdh",
-            size=1024,
-            file_format="url",
+            urls.CDN_URL, guild_id=123, hash="18dnf8dfbakfdh", size=1024, file_format="url"
         )
 
     def test_make_splash_url_when_no_hash(self, model):
@@ -985,11 +937,7 @@ class TestGuildPreview:
             assert model.make_discovery_splash_url(ext="url", size=2048) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            guild_id=123,
-            hash="18dnf8dfbakfdh",
-            size=2048,
-            file_format="url",
+            urls.CDN_URL, guild_id=123, hash="18dnf8dfbakfdh", size=2048, file_format="url"
         )
 
     def test_make_discovery_splash_url_when_no_hash(self, model):
@@ -1073,7 +1021,15 @@ class TestGuild:
         assert model.get_emojis() == {}
 
     def test_get_sticker(self, model):
+        model.app.cache.get_sticker.return_value.guild_id = model.id
         assert model.get_sticker(456) is model.app.cache.get_sticker.return_value
+        model.app.cache.get_sticker.assert_called_once_with(456)
+
+    def test_get_sticker_when_not_from_guild(self, model):
+        model.app.cache.get_sticker.return_value.guild_id = 546123123433
+
+        assert model.get_sticker(456) is None
+
         model.app.cache.get_sticker.assert_called_once_with(456)
 
     def test_get_sticker_when_no_cache_trait(self, model):
@@ -1097,7 +1053,15 @@ class TestGuild:
         assert model.get_roles() == {}
 
     def test_get_emoji(self, model):
+        model.app.cache.get_emoji.return_value.guild_id = model.id
         assert model.get_emoji(456) is model.app.cache.get_emoji.return_value
+        model.app.cache.get_emoji.assert_called_once_with(456)
+
+    def test_get_emoji_when_not_from_guild(self, model):
+        model.app.cache.get_emoji.return_value.guild_id = 1233212
+
+        assert model.get_emoji(456) is None
+
         model.app.cache.get_emoji.assert_called_once_with(456)
 
     def test_get_emoji_when_no_cache_trait(self, model):
@@ -1105,7 +1069,15 @@ class TestGuild:
         assert model.get_emoji(456) is None
 
     def test_get_role(self, model):
+        model.app.cache.get_role.return_value.guild_id = model.id
         assert model.get_role(456) is model.app.cache.get_role.return_value
+        model.app.cache.get_role.assert_called_once_with(456)
+
+    def test_get_role_when_not_from_guild(self, model):
+        model.app.cache.get_role.return_value.guild_id = 7623123321123
+
+        assert model.get_role(456) is None
+
         model.app.cache.get_role.assert_called_once_with(456)
 
     def test_get_role_when_no_cache_trait(self, model):
@@ -1127,11 +1099,7 @@ class TestGuild:
             assert model.make_splash_url(ext="url", size=2) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            guild_id=123,
-            hash="18dnf8dfbakfdh",
-            size=2,
-            file_format="url",
+            urls.CDN_URL, guild_id=123, hash="18dnf8dfbakfdh", size=2, file_format="url"
         )
 
     def test_make_splash_url_when_no_hash(self, model):
@@ -1153,11 +1121,7 @@ class TestGuild:
             assert model.make_discovery_splash_url(ext="url", size=1024) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            guild_id=123,
-            hash="18dnf8dfbakfdh",
-            size=1024,
-            file_format="url",
+            urls.CDN_URL, guild_id=123, hash="18dnf8dfbakfdh", size=1024, file_format="url"
         )
 
     def test_make_discovery_splash_url_when_no_hash(self, model):
@@ -1177,11 +1141,7 @@ class TestGuild:
             assert model.make_banner_url(ext="url", size=512) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            guild_id=123,
-            hash="banner_hash",
-            size=512,
-            file_format="url",
+            urls.CDN_URL, guild_id=123, hash="banner_hash", size=512, file_format="url"
         )
 
     def test_make_banner_url_when_format_is_None_and_banner_hash_is_for_gif(self, model):
@@ -1193,11 +1153,7 @@ class TestGuild:
             assert model.make_banner_url(ext=None, size=4096) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            guild_id=model.id,
-            hash="a_18dnf8dfbakfdh",
-            size=4096,
-            file_format="gif",
+            urls.CDN_URL, guild_id=model.id, hash="a_18dnf8dfbakfdh", size=4096, file_format="gif"
         )
 
     def test_make_banner_url_when_format_is_None_and_banner_hash_is_not_for_gif(self, model):
@@ -1209,11 +1165,7 @@ class TestGuild:
             assert model.make_banner_url(ext=None, size=4096) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            guild_id=model.id,
-            hash=model.banner_hash,
-            size=4096,
-            file_format="png",
+            urls.CDN_URL, guild_id=model.id, hash=model.banner_hash, size=4096, file_format="png"
         )
 
     def test_make_banner_url_when_no_hash(self, model):
@@ -1298,7 +1250,15 @@ class TestGuild:
         assert await model.fetch_afk_channel() is None
 
     def test_get_channel(self, model):
+        model.app.cache.get_guild_channel.return_value.guild_id = model.id
         assert model.get_channel(456) is model.app.cache.get_guild_channel.return_value
+        model.app.cache.get_guild_channel.assert_called_once_with(456)
+
+    def test_get_channel_when_not_from_guild(self, model):
+        model.app.cache.get_guild_channel.return_value.guild_id = 654523123
+
+        assert model.get_channel(456) is None
+
         model.app.cache.get_guild_channel.assert_called_once_with(456)
 
     def test_get_channel_when_no_cache_trait(self, model):

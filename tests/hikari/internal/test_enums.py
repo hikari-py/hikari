@@ -68,11 +68,7 @@ class TestEnum:
                 pass
 
     @pytest.mark.parametrize(
-        ("args", "kwargs"),
-        [
-            ([enums.Enum, str], {"metaclass": enums._EnumMeta}),
-            ([enums.Enum, str], {}),
-        ],
+        ("args", "kwargs"), [([enums.Enum, str], {"metaclass": enums._EnumMeta}), ([enums.Enum, str], {})]
     )
     def test_init_enum_type_with_bases_in_wrong_order_is_TypeError(self, args, kwargs):
         with pytest.raises(TypeError):
@@ -206,7 +202,7 @@ class TestEnum:
 
         returned = Enum(9)
         assert returned == Enum.foo
-        assert type(returned) == Enum
+        assert type(returned) is Enum
 
     def test_call_when_not_member(self):
         class Enum(int, enums.Enum):
@@ -216,7 +212,7 @@ class TestEnum:
 
         returned = Enum(69)
         assert returned == 69
-        assert type(returned) != Enum
+        assert type(returned) is not Enum
 
     def test_getitem(self):
         class Enum(int, enums.Enum):
@@ -226,7 +222,7 @@ class TestEnum:
 
         returned = Enum["foo"]
         assert returned == Enum.foo
-        assert type(returned) == Enum
+        assert type(returned) is Enum
 
     def test_contains(self):
         class Enum(int, enums.Enum):
@@ -751,10 +747,7 @@ class TestIntFlag:
         # All present
         assert val.any(TestFlag.FOO, TestFlag.BAR, TestFlag.BAZ, TestFlag.BORK)
         # One present, one not
-        assert val.any(
-            TestFlag.FOO,
-            TestFlag.QUX,
-        )
+        assert val.any(TestFlag.FOO, TestFlag.QUX)
 
     def test_any_negative_case(self):
         class TestFlag(enums.Flag):
@@ -1090,10 +1083,7 @@ class TestIntFlag:
         # All present
         assert not val.none(TestFlag.FOO, TestFlag.BAR, TestFlag.BAZ, TestFlag.BORK)
         # One present, one not
-        assert not val.none(
-            TestFlag.FOO,
-            TestFlag.QUX,
-        )
+        assert not val.none(TestFlag.FOO, TestFlag.QUX)
 
     def test_split(self):
         class TestFlag(enums.Flag):
@@ -1262,7 +1252,7 @@ class TestIntFlag:
 
         returned = TestFlag["FOO"]
         assert returned == TestFlag.FOO
-        assert type(returned) == TestFlag
+        assert type(returned) is TestFlag
 
     def test_repr(self):
         class TestFlag(enums.Flag):

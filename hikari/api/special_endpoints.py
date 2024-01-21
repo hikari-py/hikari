@@ -24,6 +24,7 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
+    "AutocompleteChoiceBuilder",
     "ButtonBuilder",
     "CommandBuilder",
     "SlashCommandBuilder",
@@ -584,6 +585,52 @@ class InteractionDeferredBuilder(InteractionResponseBuilder, abc.ABC):
         """
 
 
+class AutocompleteChoiceBuilder(abc.ABC):
+    """Interface of an autocomplete choice used to respond to interactions."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def name(self) -> str:
+        """The choice's name."""
+
+    @property
+    @abc.abstractmethod
+    def value(self) -> typing.Union[int, str, float]:
+        """The choice's value."""
+
+    @abc.abstractmethod
+    def set_name(self, name: str, /) -> Self:
+        """Set this choice's name.
+
+        Returns
+        -------
+        AutocompleteChoiceBuilder
+            The autocomplete choice builder.
+        """
+
+    @abc.abstractmethod
+    def set_value(self, value: typing.Union[int, float, str], /) -> Self:
+        """Set this choice's value.
+
+        Returns
+        -------
+        AutocompleteChoiceBuilder
+            The autocomplete choice builder.
+        """
+
+    @abc.abstractmethod
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        """Build a JSON object from this builder.
+
+        Returns
+        -------
+        typing.MutableMapping[str, typing.Any]
+            The built json object representation of this builder.
+        """
+
+
 class InteractionAutocompleteBuilder(InteractionResponseBuilder, abc.ABC):
     """Interface of an autocomplete interaction response builder."""
 
@@ -591,12 +638,17 @@ class InteractionAutocompleteBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def choices(self) -> typing.Sequence[commands.CommandChoice]:
+    def choices(self) -> typing.Sequence[AutocompleteChoiceBuilder]:
         """Autocomplete choices."""
 
     @abc.abstractmethod
-    def set_choices(self, choices: typing.Sequence[commands.CommandChoice], /) -> Self:
+    def set_choices(self, choices: typing.Sequence[AutocompleteChoiceBuilder], /) -> Self:
         """Set autocomplete choices.
+
+        Parameters
+        ----------
+        choices : typing.Sequence[AutocompleteChoiceBuilder]
+            The choices to set.
 
         Returns
         -------
@@ -631,19 +683,19 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def components(self) -> undefined.UndefinedOr[typing.Sequence[ComponentBuilder]]:
+    def components(self) -> undefined.UndefinedNoneOr[typing.Sequence[ComponentBuilder]]:
         """Sequence of up to 5 component builders to send in this response."""
 
     @property
     @abc.abstractmethod
-    def embeds(self) -> undefined.UndefinedOr[typing.Sequence[embeds_.Embed]]:
+    def embeds(self) -> undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]]:
         """Sequence of up to 10 of the embeds included in this response."""
 
     # Settable fields
 
     @property
     @abc.abstractmethod
-    def content(self) -> undefined.UndefinedOr[str]:
+    def content(self) -> undefined.UndefinedNoneOr[str]:
         """Response's message content."""
 
     @property
@@ -903,7 +955,7 @@ class InteractionModalBuilder(InteractionResponseBuilder, abc.ABC):
 
     @abc.abstractmethod
     def set_custom_id(self, custom_id: str, /) -> Self:
-        """Set the developer set custom ID used for identifying interactions with this modal.
+        """Set the custom ID used for identifying interactions with this modal.
 
         Parameters
         ----------
@@ -973,6 +1025,21 @@ class CommandBuilder(abc.ABC):
     @abc.abstractmethod
     def name_localizations(self) -> typing.Mapping[typing.Union[locales.Locale, str], str]:
         """Name localizations set for this command."""
+
+    @abc.abstractmethod
+    def set_name(self, name: str, /) -> Self:
+        """Set the name of this command.
+
+        Parameters
+        ----------
+        name : str
+            The name to set for this command.
+
+        Returns
+        -------
+        CommandBuilder
+            Object of this command builder to allow for chained calls.
+        """
 
     @abc.abstractmethod
     def set_id(self, id_: undefined.UndefinedOr[snowflakes.Snowflakeish], /) -> Self:
@@ -1119,16 +1186,32 @@ class SlashCommandBuilder(CommandBuilder):
 
     @property
     @abc.abstractmethod
-    def description_localizations(
-        self,
-    ) -> typing.Mapping[typing.Union[locales.Locale, str], str]:
+    def description_localizations(self) -> typing.Mapping[typing.Union[locales.Locale, str], str]:
         """Command's localised descriptions."""
+
+    @property
+    @abc.abstractmethod
+    def options(self) -> typing.Sequence[commands.CommandOption]:
+        """Sequence of up to 25 of the options set for this command."""
+
+    @abc.abstractmethod
+    def set_description(self, description: str, /) -> Self:
+        """Set the description for this command.
+
+        Parameters
+        ----------
+        description : str
+            The description to set for this command.
+
+        Returns
+        -------
+        SlashCommandBuilder
+            Object of this command builder.
+        """
 
     @abc.abstractmethod
     def set_description_localizations(
-        self,
-        description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str],
-        /,
+        self, description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str], /
     ) -> Self:
         """Set the localised descriptions for this command.
 
@@ -1139,14 +1222,9 @@ class SlashCommandBuilder(CommandBuilder):
 
         Returns
         -------
-        CommandBuilder
+        SlashCommandBuilder
             Object of this command builder.
         """
-
-    @property
-    @abc.abstractmethod
-    def options(self) -> typing.Sequence[commands.CommandOption]:
-        """Sequence of up to 25 of the options set for this command."""
 
     @abc.abstractmethod
     def add_option(self, option: commands.CommandOption) -> Self:
@@ -1162,7 +1240,7 @@ class SlashCommandBuilder(CommandBuilder):
 
         Returns
         -------
-        CommandBuilder
+        SlashCommandBuilder
             Object of this command builder to allow for chained calls.
         """
 
@@ -1370,6 +1448,21 @@ class InteractiveButtonBuilder(ButtonBuilder, abc.ABC):
     def custom_id(self) -> str:
         """Developer set custom ID used for identifying interactions with this button."""
 
+    @abc.abstractmethod
+    def set_custom_id(self, custom_id: str, /) -> Self:
+        """Set the custom ID used for identifying this button.
+
+        Parameters
+        ----------
+        custom_id : str
+            Developer set custom ID used for identifying this button.
+
+        Returns
+        -------
+        InteractiveButtonBuilder
+            The builder object to enable chained calls.
+        """
+
 
 class SelectOptionBuilder(abc.ABC):
     """Builder class for select menu options."""
@@ -1400,6 +1493,38 @@ class SelectOptionBuilder(abc.ABC):
     @abc.abstractmethod
     def is_default(self) -> bool:
         """Whether this option should be marked as selected by default."""
+
+    @abc.abstractmethod
+    def set_label(self, label: str, /) -> Self:
+        """Set the option's label.
+
+        Parameters
+        ----------
+        label : str
+            Label to set for this option. This can be up to 100 characters
+            long.
+
+        Returns
+        -------
+        SelectOptionBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_value(self, value: str, /) -> Self:
+        """Set the option's value.
+
+        Parameters
+        ----------
+        value : str
+            Value to set for this option. This can be up to 100 characters
+            long.
+
+        Returns
+        -------
+        SelectOptionBuilder
+            The builder object to enable chained calls.
+        """
 
     @abc.abstractmethod
     def set_description(self, value: undefined.UndefinedOr[str], /) -> Self:
@@ -1499,6 +1624,21 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC):
         Defaults to 1.
         Must be greater than or equal to `SelectMenuBuilder.min_values` and
         less than or equal to 25.
+        """
+
+    @abc.abstractmethod
+    def set_custom_id(self, custom_id: str, /) -> Self:
+        """Set the custom ID used for identifying this menu.
+
+        Parameters
+        ----------
+        custom_id : str
+            Developer set custom ID used for identifying this menu.
+
+        Returns
+        -------
+        SelectMenuBuilder
+            The builder object to enable chained calls.
         """
 
     @abc.abstractmethod
@@ -1691,11 +1831,6 @@ class TextInputBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def required(self) -> bool:
-        """Deprecated alias for `hikari.api.special_endpoints.TextInputBuilder`."""
-
-    @property
-    @abc.abstractmethod
     def is_required(self) -> bool:
         """Whether this text input is required to be filled-in."""
 
@@ -1726,7 +1861,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC):
 
     @abc.abstractmethod
     def set_custom_id(self, custom_id: str, /) -> Self:
-        """Set the developer set custom ID used for identifying this text input.
+        """Set the custom ID used for identifying this text input.
 
         Parameters
         ----------
@@ -2082,11 +2217,7 @@ class ModalActionRowBuilder(ComponentBuilder, abc.ABC):
         """Sequence of the component builders registered within this action row."""
 
     @abc.abstractmethod
-    def add_component(
-        self,
-        component: ComponentBuilder,
-        /,
-    ) -> Self:
+    def add_component(self, component: ComponentBuilder, /) -> Self:
         """Add a component to this action row builder.
 
         .. warning::

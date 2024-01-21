@@ -22,6 +22,7 @@
 import mock
 import pytest
 
+from hikari import snowflakes
 from hikari import stickers
 from hikari import urls
 from hikari.internal import routes
@@ -34,10 +35,10 @@ class TestStickerPack:
             id=123,
             name="testing",
             description="testing description",
-            cover_sticker_id=None,
+            cover_sticker_id=snowflakes.Snowflake(6541234),
             stickers=[],
             sku_id=123,
-            banner_hash="abc123",
+            banner_asset_id=snowflakes.Snowflake(541231),
         )
 
     def test_banner_url(self, model):
@@ -52,12 +53,12 @@ class TestStickerPack:
         ) as route:
             assert model.make_banner_url(ext="url", size=512) == "file"
 
-        route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            hash="abc123",
-            size=512,
-            file_format="url",
-        )
+        route.compile_to_file.assert_called_once_with(urls.CDN_URL, hash=541231, size=512, file_format="url")
+
+    def test_make_banner_url_when_no_banner_asset(self, model):
+        model.banner_asset_id = None
+
+        assert model.make_banner_url(ext="url", size=512) is None
 
 
 class TestPartialSticker:

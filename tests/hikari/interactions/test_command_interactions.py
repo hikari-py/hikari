@@ -23,9 +23,9 @@ import mock
 import pytest
 
 from hikari import channels
-from hikari import commands
 from hikari import snowflakes
 from hikari import traits
+from hikari.impl import special_endpoints
 from hikari.interactions import base_interactions
 from hikari.interactions import command_interactions
 
@@ -124,7 +124,10 @@ class TestAutocompleteInteraction:
 
     @pytest.fixture()
     def mock_command_choices(self):
-        return [commands.CommandChoice(name="a", value="b"), commands.CommandChoice(name="foo", value="bar")]
+        return [
+            special_endpoints.AutocompleteChoiceBuilder(name="a", value="b"),
+            special_endpoints.AutocompleteChoiceBuilder(name="foo", value="bar"),
+        ]
 
     def test_build_response(self, mock_autocomplete_interaction, mock_app, mock_command_choices):
         mock_app.rest.interaction_autocomplete_builder = mock.Mock()
@@ -143,7 +146,5 @@ class TestAutocompleteInteraction:
         await mock_autocomplete_interaction.create_response(mock_command_choices)
 
         mock_app.rest.create_autocomplete_response.assert_awaited_once_with(
-            2312312,
-            "httptptptptptptptp",
-            mock_command_choices,
+            2312312, "httptptptptptptptp", mock_command_choices
         )

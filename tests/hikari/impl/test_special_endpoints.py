@@ -100,9 +100,9 @@ class TestOwnGuildIterator:
         )
         mock_request.assert_has_awaits(
             [
-                mock.call(compiled_route=expected_route, query={"after": "123321"}),
-                mock.call(compiled_route=expected_route, query={"after": "123321124123"}),
-                mock.call(compiled_route=expected_route, query={"after": "12332112432234"}),
+                mock.call(compiled_route=expected_route, query={"after": "123321", "with_counts": "true"}),
+                mock.call(compiled_route=expected_route, query={"after": "123321124123", "with_counts": "true"}),
+                mock.call(compiled_route=expected_route, query={"after": "12332112432234", "with_counts": "true"}),
             ]
         )
 
@@ -148,9 +148,9 @@ class TestOwnGuildIterator:
         )
         mock_request.assert_has_awaits(
             [
-                mock.call(compiled_route=expected_route, query={"before": "55555555555555555"}),
-                mock.call(compiled_route=expected_route, query={"before": "1213321124123"}),
-                mock.call(compiled_route=expected_route, query={"before": "1213321123123"}),
+                mock.call(compiled_route=expected_route, query={"before": "55555555555555555", "with_counts": "true"}),
+                mock.call(compiled_route=expected_route, query={"before": "1213321124123", "with_counts": "true"}),
+                mock.call(compiled_route=expected_route, query={"before": "1213321123123", "with_counts": "true"}),
             ]
         )
 
@@ -168,7 +168,8 @@ class TestOwnGuildIterator:
 
         assert result == []
         mock_entity_factory.deserialize_own_guild.assert_not_called()
-        query = {"before" if newest_first else "after": "123321"}
+        order_key = "before" if newest_first else "after"
+        query = {order_key: "123321", "with_counts": "true"}
         mock_request.assert_awaited_once_with(compiled_route=expected_route, query=query)
 
 
@@ -198,11 +199,7 @@ class TestGuildBanIterator:
             side_effect=[[mock_payload_1, mock_payload_2, mock_payload_3], [mock_payload_4, mock_payload_5], []]
         )
         iterator = special_endpoints.GuildBanIterator(
-            entity_factory=mock_entity_factory,
-            request_call=mock_request,
-            guild=10000,
-            newest_first=False,
-            first_id="0",
+            entity_factory=mock_entity_factory, request_call=mock_request, guild=10000, newest_first=False, first_id="0"
         )
 
         result = await iterator
@@ -500,12 +497,7 @@ class TestGuildThreadIterator:
         )
         mock_route = mock.Mock()
         thread_iterator = special_endpoints.GuildThreadIterator(
-            mock_deserialize,
-            mock_entity_factory,
-            mock_request,
-            mock_route,
-            "eatmyshinymetal",
-            before_is_timestamp=True,
+            mock_deserialize, mock_entity_factory, mock_request, mock_route, "eatmyshinymetal", before_is_timestamp=True
         )
 
         results = await thread_iterator
@@ -611,12 +603,7 @@ class TestGuildThreadIterator:
         )
         mock_route = mock.Mock()
         thread_iterator = special_endpoints.GuildThreadIterator(
-            mock_deserialize,
-            mock_entity_factory,
-            mock_request,
-            mock_route,
-            "3451231231231",
-            before_is_timestamp=False,
+            mock_deserialize, mock_entity_factory, mock_request, mock_route, "3451231231231", before_is_timestamp=False
         )
 
         result = await thread_iterator
@@ -688,6 +675,86 @@ class TestGuildThreadIterator:
         )
 
 
+class TestInteractionAutocompleteBuilder:
+    def test_type_property(self):
+        assert special_endpoints.InteractionAutocompleteBuilder([])
+
+    def test_choices(self):
+        builder = special_endpoints.InteractionAutocompleteBuilder(
+            [
+                special_endpoints.AutocompleteChoiceBuilder(name="echo", value="charlie"),
+                special_endpoints.AutocompleteChoiceBuilder(name="echo", value="charlie"),
+            ]
+        )
+
+        assert builder.choices == [
+            special_endpoints.AutocompleteChoiceBuilder(name="echo", value="charlie"),
+            special_endpoints.AutocompleteChoiceBuilder(name="echo", value="charlie"),
+        ]
+
+    def test_set_choices(self):
+        builder = special_endpoints.InteractionAutocompleteBuilder()
+
+        builder.set_choices(
+            [
+                special_endpoints.AutocompleteChoiceBuilder("aaa", "bbb"),
+                special_endpoints.AutocompleteChoiceBuilder("e", "a"),
+            ]
+        )
+
+        assert builder.choices == [
+            special_endpoints.AutocompleteChoiceBuilder("aaa", "bbb"),
+            special_endpoints.AutocompleteChoiceBuilder("e", "a"),
+        ]
+
+    def test_build(self):
+        builder = special_endpoints.InteractionAutocompleteBuilder(
+            [
+                special_endpoints.AutocompleteChoiceBuilder("meow", "waaaa"),
+                special_endpoints.AutocompleteChoiceBuilder("lotta", "water"),
+            ]
+        )
+
+        data, files = builder.build(mock.Mock())
+
+        assert files == ()
+        assert data == {
+            "type": base_interactions.ResponseType.AUTOCOMPLETE,
+            "data": {"choices": [{"name": "meow", "value": "waaaa"}, {"name": "lotta", "value": "water"}]},
+        }
+
+
+class TestAutocompleteChoiceBuilder:
+    def test_name_property(self):
+        choice = special_endpoints.AutocompleteChoiceBuilder("heavy", "value")
+
+        assert choice.name == "heavy"
+
+    def test_value_property(self):
+        choice = special_endpoints.AutocompleteChoiceBuilder("name", "weapon")
+
+        assert choice.value == "weapon"
+
+    def test_set_name(self):
+        choice = special_endpoints.AutocompleteChoiceBuilder("heavy", "value")
+
+        choice.set_name("widen")
+
+        assert choice.name == "widen"
+
+    def test_set_value(self):
+        choice = special_endpoints.AutocompleteChoiceBuilder("name", "weapon")
+
+        choice.set_value(123)
+
+        assert choice.value == 123
+
+    def test_build(self):
+        choice = special_endpoints.AutocompleteChoiceBuilder("atlantic", "slow")
+
+        assert choice.build() == {"name": "atlantic", "value": "slow"}
+
+
 class TestInteractionDeferredBuilder:
     def test_type_property(self):
         builder = special_endpoints.InteractionDeferredBuilder(5)
@@ -714,10 +781,7 @@ class TestInteractionDeferredBuilder:
 
         result, attachments = builder.build(object())
 
-        assert result == {
-            "type": base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE,
-            "data": {"flags": 64},
-        }
+        assert result == {"type": base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE, "data": {"flags": 64}}
         assert attachments == ()
 
 
@@ -863,13 +927,7 @@ class TestInteractionMessageBuilder:
         result, attachments = builder.build(mock_entity_factory)
 
         mock_entity_factory.serialize_embed.assert_not_called()
-        assert result == {
-            "type": base_interactions.ResponseType.MESSAGE_UPDATE,
-            "data": {
-                "components": [],
-                "embeds": [],
-            },
-        }
+        assert result == {"type": base_interactions.ResponseType.MESSAGE_UPDATE, "data": {}}
         assert attachments == []
 
     def test_build_handles_attachments(self):
@@ -909,10 +967,7 @@ class TestInteractionMessageBuilder:
 
         result, attachments = builder.build(mock_entity_factory)
 
-        assert result == {
-            "type": base_interactions.ResponseType.MESSAGE_UPDATE,
-            "data": {"attachments": None},
-        }
+        assert result == {"type": base_interactions.ResponseType.MESSAGE_UPDATE, "data": {"attachments": None}}
 
         assert attachments == []
 
@@ -942,25 +997,52 @@ class TestInteractionModalBuilder:
         result, attachments = builder.build(mock.Mock())
         assert result == {
             "type": 9,
-            "data": {
-                "title": "title",
-                "custom_id": "custom_id",
-                "components": [component.build.return_value],
-            },
+            "data": {"title": "title", "custom_id": "custom_id", "components": [component.build.return_value]},
         }
         assert attachments == ()
 
 
+class TestCommandBuilder:
+    @pytest.fixture()
+    def stub_command(self) -> typing.Type[special_endpoints.CommandBuilder]:
+        return hikari_test_helpers.mock_class_namespace(special_endpoints.CommandBuilder)
+
+    def test_name_property(self, stub_command):
+        builder = stub_command("NOOOOO").set_name("aaaaa")
+
+        assert builder.name == "aaaaa"
+
+    def test_id_property(self, stub_command):
+        builder = stub_command("OKSKDKSDK").set_id(3212123)
+
+        assert builder.id == 3212123
+
+    def test_default_member_permissions(self, stub_command):
+        builder = stub_command("oksksksk").set_default_member_permissions(permissions.Permissions.ADMINISTRATOR)
+
+        assert builder.default_member_permissions == permissions.Permissions.ADMINISTRATOR
+
+    def test_is_dm_enabled(self, stub_command):
+        builder = stub_command("oksksksk").set_is_dm_enabled(True)
+
+        assert builder.is_dm_enabled is True
+
+    def test_is_nsfw_property(self, stub_command):
+        builder = stub_command("oksksksk").set_is_nsfw(True)
+
+        assert builder.is_nsfw is True
+
+    def test_name_localizations_property(self, stub_command):
+        builder = stub_command("oksksksk").set_name_localizations({"aaa": "bbb", "ccc": "DDd"})
+
+        assert builder.name_localizations == {"aaa": "bbb", "ccc": "DDd"}
+
+
 class TestSlashCommandBuilder:
     def test_description_property(self):
-        builder = special_endpoints.SlashCommandBuilder("ok", "NO")
+        builder = special_endpoints.SlashCommandBuilder("ok", "NO").set_description("meow")
 
-        assert builder.description == "NO"
-
-    def test_name_property(self):
-        builder = special_endpoints.SlashCommandBuilder("NOOOOO", "OKKKK")
-
-        assert builder.name == "NOOOOO"
+        assert builder.description == "meow"
 
     def test_options_property(self):
         builder = special_endpoints.SlashCommandBuilder("OKSKDKSDK", "inmjfdsmjiooikjsa")
@@ -971,23 +1053,6 @@ class TestSlashCommandBuilder:
         builder.add_option(mock_option)
 
         assert builder.options == [mock_option]
-
-    def test_id_property(self):
-        builder = special_endpoints.SlashCommandBuilder("OKSKDKSDK", "inmjfdsmjiooikjsa").set_id(3212123)
-
-        assert builder.id == 3212123
-
-    def test_default_member_permissions(self):
-        builder = special_endpoints.SlashCommandBuilder("oksksksk", "kfdkodfokfd").set_default_member_permissions(
-            permissions.Permissions.ADMINISTRATOR
-        )
-
-        assert builder.default_member_permissions == permissions.Permissions.ADMINISTRATOR
-
-    def test_is_dm_enabled(self):
-        builder = special_endpoints.SlashCommandBuilder("oksksksk", "kfdkodfokfd").set_is_dm_enabled(True)
-
-        assert builder.is_dm_enabled is True
 
     def test_build_with_optional_data(self):
         mock_entity_factory = mock.Mock()
@@ -1099,10 +1164,7 @@ class TestSlashCommandBuilder:
 class TestContextMenuBuilder:
     def test_build_with_optional_data(self):
         builder = (
-            special_endpoints.ContextMenuCommandBuilder(
-                commands.CommandType.USER,
-                "we are number",
-            )
+            special_endpoints.ContextMenuCommandBuilder(commands.CommandType.USER, "we are number")
             .set_id(3412312)
             .set_name_localizations({locales.Locale.TR: "merhaba"})
             .set_default_member_permissions(permissions.Permissions.ADMINISTRATOR)
@@ -1302,11 +1364,7 @@ class Test_ButtonBuilder:
 
 class TestLinkButtonBuilder:
     def test_url_property(self):
-        button = special_endpoints.LinkButtonBuilder(
-            url="hihihihi",
-            label="no u",
-            is_disabled=True,
-        )
+        button = special_endpoints.LinkButtonBuilder(url="hihihihi", label="no u", is_disabled=True)
 
         assert button.url == "hihihihi"
 
@@ -1314,13 +1372,10 @@ class TestLinkButtonBuilder:
 class TestInteractiveButtonBuilder:
     def test_custom_id_property(self):
         button = special_endpoints.InteractiveButtonBuilder(
-            style=components.ButtonStyle.DANGER,
-            label="no u",
-            custom_id="ooga booga",
-            is_disabled=True,
-        )
+            style=components.ButtonStyle.DANGER, custom_id="oogie"
+        ).set_custom_id("eeeeee")
 
-        assert button.custom_id == "ooga booga"
+        assert button.custom_id == "eeeeee"
 
 
 class TestSelectOptionBuilder:
@@ -1329,10 +1384,14 @@ class TestSelectOptionBuilder:
         return special_endpoints.SelectOptionBuilder(label="ok", value="ok2")
 
     def test_label_property(self, option):
-        assert option.label == "ok"
+        option.set_label("new_label")
+
+        assert option.label == "new_label"
 
     def test_value_property(self, option):
-        assert option.value == "ok2"
+        option.set_value("aaaaaaaaaaaa")
+
+        assert option.value == "aaaaaaaaaaaa"
 
     def test_emoji_property(self, option):
         option._emoji = 123321
@@ -1415,7 +1474,9 @@ class TestSelectMenuBuilder:
         assert menu.type == 123
 
     def test_custom_id_property(self, menu):
-        assert menu.custom_id == "o2o2o2"
+        menu.set_custom_id("ooooo")
+
+        assert menu.custom_id == "ooooo"
 
     def test_set_is_disabled(self, menu):
         assert menu.set_is_disabled(True) is menu
@@ -1583,10 +1644,7 @@ class TestChannelSelectMenuBuilder:
 class TestTextInput:
     @pytest.fixture()
     def text_input(self):
-        return special_endpoints.TextInputBuilder(
-            custom_id="o2o2o2",
-            label="label",
-        )
+        return special_endpoints.TextInputBuilder(custom_id="o2o2o2", label="label")
 
     def test_type_property(self, text_input):
         assert text_input.type is components.ComponentType.TEXT_INPUT
@@ -1609,7 +1667,7 @@ class TestTextInput:
 
     def test_set_required(self, text_input):
         assert text_input.set_required(True) is text_input
-        assert text_input.required is True
+        assert text_input.is_required is True
 
     def test_set_value(self, text_input):
         assert text_input.set_value("valueeeee") is text_input

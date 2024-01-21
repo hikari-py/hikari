@@ -19,7 +19,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-import attr
+import attrs
 import mock
 import pytest
 
@@ -29,40 +29,30 @@ from hikari.events import base_events
 
 
 @base_events.requires_intents(intents.Intents.GUILDS)
-@attr.define(eq=False, hash=False, init=False, kw_only=True)
+@attrs.define(eq=False, hash=False, init=False, kw_only=True)
 class DummyGuildEvent(base_events.Event):
     pass
 
 
 @base_events.no_recursive_throw()
 @base_events.requires_intents(intents.Intents.GUILD_PRESENCES)
-@attr.define(
-    eq=False,
-    hash=False,
-    init=False,
-    kw_only=True,
-)
+@attrs.define(eq=False, hash=False, init=False, kw_only=True)
 class DummyPresenceEvent(base_events.Event):
     pass
 
 
 @base_events.no_recursive_throw()
-@attr.define(eq=False, hash=False, init=False, kw_only=True)
+@attrs.define(eq=False, hash=False, init=False, kw_only=True)
 class ErrorEvent(base_events.Event):
     pass
 
 
-@attr.define(
-    eq=False,
-    hash=False,
-    init=False,
-    kw_only=True,
-)
+@attrs.define(eq=False, hash=False, init=False, kw_only=True)
 class DummyGuildDerivedEvent(DummyGuildEvent):
     pass
 
 
-@attr.define(eq=False, hash=False, init=False, kw_only=True)
+@attrs.define(eq=False, hash=False, init=False, kw_only=True)
 class DummyPresenceDerivedEvent(DummyPresenceEvent):
     pass
 
@@ -102,9 +92,7 @@ class TestExceptionEvent:
     @pytest.fixture()
     def event(self, error):
         return base_events.ExceptionEvent(
-            exception=error,
-            failed_event=mock.Mock(base_events.Event),
-            failed_callback=mock.AsyncMock(),
+            exception=error, failed_event=mock.Mock(base_events.Event), failed_callback=mock.AsyncMock()
         )
 
     def test_app_property(self, event):
