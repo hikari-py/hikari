@@ -861,14 +861,12 @@ class GatewayShardImpl(shard.GatewayShard):
                         "intents": self._intents,
                         "presence": self._serialize_and_store_presence_payload(),
                     },
-                },
-                priority=True,
+                }
             )
         else:
             self._logger.info("resuming session %s", self._session_id)
             await self._send_json(
-                {_OP: _RESUME, _D: {"token": self._token, "seq": self._seq, "session_id": self._session_id}},
-                priority=True,
+                {_OP: _RESUME, _D: {"token": self._token, "seq": self._seq, "session_id": self._session_id}}
             )
 
         lifetime_tasks = (heartbeat_task, poll_events_task)
