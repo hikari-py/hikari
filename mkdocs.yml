@@ -72,12 +72,6 @@ theme:
 extra_css:
   - css/extra.css
 
-extra_javascript:
-  # MathJax
-  - javascript/mathjax.js
-  - https://polyfill.io/v3/polyfill.min.js?features=es6
-  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
-
 markdown_extensions:
   - abbr
   - admonition
@@ -115,13 +109,14 @@ markdown_extensions:
       alternate_style: true
       combine_header_slug: true
       slugify: !!python/object/apply:pymdownx.slugs.slugify
+        kwds:
+          case: lower
   - pymdownx.tasklist:
       custom_checkbox: true
 
 plugins:
   - autorefs
   - search
-#  - social
   - glightbox:
       touchNavigation: true
       loop: false
