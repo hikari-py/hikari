@@ -22,7 +22,7 @@ Python 3.8, 3.9, 3.10, 3.11 and 3.12 are currently supported.
 
 ## Installation
 
-Install Hikari from PyPI with the following command:
+Install hikari from PyPI with the following command:
 
 ```bash
 python -m pip install -U hikari
@@ -248,15 +248,20 @@ python -m pip install -U hikari[speedups, server]
 
 ## Additional resources
 
-You may wish to use a command framework on top of Hikari so that you can start writing a bot quickly without
+You may wish to use a command framework on top of hikari so that you can start writing a bot quickly without
 implementing your own command handler.
 
 Hikari does not include a command framework by default, so you will want to pick a third party library to do it:
 
-- [`arc`](https://github.com/hypergonial/hikari-arc) - a bot framework with with a focus on type-safety and correctness.
-- [`crescent`](https://github.com/magpie-dev/hikari-crescent) - a command handler for Hikari that keeps your project neat and tidy.
-- [`lightbulb`](https://github.com/tandemdude/hikari-lightbulb) - a simple and easy to use command framework for Hikari.
-- [`tanjun`](https://github.com/FasterSpeeding/Tanjun) - a flexible command framework designed to extend Hikari.
+- [`arc`](https://github.com/hypergonial/hikari-arc) - a bot framework with a focus on type-safety and correctness.
+- [`crescent`](https://github.com/magpie-dev/hikari-crescent) - a command handler for hikari that keeps your project neat and tidy.
+- [`lightbulb`](https://github.com/tandemdude/hikari-lightbulb) - a simple and easy to use command framework for hikari.
+- [`tanjun`](https://github.com/FasterSpeeding/Tanjun) - a flexible command framework designed to extend hikari.
+
+There are also third party libraries to help you manage components:
+
+- [`miru`](https://github.com/hypergonial/hikari-miru) - A component handler for hikari, inspired by discord.py's views.
+- [`flare`](https://github.com/brazier-dev/hikari-flare/) - a component manager designed to write simple interactions with persistent data.
 
 ---
 
@@ -310,7 +315,7 @@ Currently, this functionality does not yet exist.
 
 ---
 
-## Developing Hikari
+## Developing hikari
 
 To familiarize yourself a bit with the project, we recommend reading our
 [contributing manual](https://github.com/hikari-py/hikari/blob/master/CONTRIBUTING.md).

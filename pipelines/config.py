@@ -35,6 +35,7 @@ DEV_REQUIREMENTS_DIRECTORY = "dev-requirements"
 FLAKE8_REPORT = _os.path.join(ARTIFACT_DIRECTORY, "flake8")
 PYPROJECT_TOML = "pyproject.toml"
 COVERAGE_HTML_PATH = _os.path.join(ARTIFACT_DIRECTORY, "coverage", "html")
+DOCUMENTATION_OUTPUT_PATH = _os.path.join(ARTIFACT_DIRECTORY, "docs")
 
 # Reformatting paths
 REFORMATTING_FILE_EXTS = (

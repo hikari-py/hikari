@@ -1,15 +1,22 @@
-# mkdocs.yml
-site_name: "hikari documentation"
-site_url: https://hikari.hypergonial.com
-repo_url: https://github.com/hikari-py/hikari
-copyright: Copyright &copy; 2019 hikari maintainers
-edit_uri: edit/main/docs/
+site_name: hikari
+site_url: https://docs.hikari-py.dev/
+site_dir: public/docs
+
+repo_url: https://github.com/hikari-py/hikari/
+repo_name: hikari-py/hikari
+edit_uri: blob/master/docs/
+
+watch: [ hikari, README.md, CHANGELOG.md ]
+copyright: © 2021-present davfsa
+
 theme:
   name: material
   font:
     code: JetBrains Mono
-  logo: assets/hikari_logo.png
-  favicon: assets/hikari_logo.png
+
+  logo: https://hikari-py.dev/logo.png
+  favicon: https://hikari-py.dev/logo.png
+
   icon:
     repo: fontawesome/brands/github
     edit: material/pencil
@@ -27,19 +34,24 @@ theme:
       bug: octicons/bug-16
       example: octicons/beaker-16
       quote: octicons/quote-16
+
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: white
+      primary: deep purple
+      accent: deep purple
       toggle:
-        icon: octicons/sun-16
+        icon: material/toggle-switch
         name: Switch to dark mode
+
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: black
+      primary: deep purple
+      accent: deep purple
       toggle:
-        icon: octicons/moon-24
+        icon: material/toggle-switch-off-outline
         name: Switch to light mode
+
   features:
     - content.tabs.link
     - search.highlight
@@ -47,49 +59,62 @@ theme:
     - search.share
     - content.code.copy
     - content.code.select
+    - content.code.annotate
     - navigation.instant
     - navigation.instant.progress
     - navigation.tabs
     - navigation.indexes
     - navigation.top
+    - navigation.tracking
     - content.tooltips
     - toc.follow
 
-exclude_docs: |
-  reference_index.md
+extra_css:
+  - css/extra.css
 
-nav:
-    - Home: index.md
-    - API Reference: reference/
-    - Changelog: changelog.md
+extra_javascript:
+  # MathJax
+  - javascript/mathjax.js
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
 
 markdown_extensions:
+  - abbr
   - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - meta
+  - md_in_html
   - pymdownx.details
   - pymdownx.superfences
   - toc:
       permalink: "#"
+
+  # Python Markdown Extensions
+  - pymdownx.snippets
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.superfences
+  - pymdownx.tilde
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - pymdownx.highlight:
       anchor_linenums: true
       line_spans: __span
       pygments_lang_class: true
-  - pymdownx.inlinehilite
-  - pymdownx.snippets
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
   - pymdownx.tabbed:
       alternate_style: true
-      combine_header_slug: true
-      slugify: !!python/object/apply:pymdownx.slugs.slugify
-        kwds:
-          case: lower
-  - def_list
   - pymdownx.tasklist:
       custom_checkbox: true
-  - attr_list
-  - md_in_html
-  - tables
-  - pymdownx.emoji:
-      emoji_index: !!python/name:material.extensions.emoji.twemoji
-      emoji_generator: !!python/name:material.extensions.emoji.to_svg
 
 plugins:
   - autorefs
@@ -110,17 +135,23 @@ plugins:
          - no-lightbox
   - gen-files:
       scripts:
-      - scripts/gen_ref_pages.py
+      - docs/gen_ref_pages.py
   - literate-nav:
-      nav_file: SUMMARY.md
+      nav_file: summary.md
   - mkdocstrings:
+      enabled: !ENV [ENABLE_MKDOCSTRINGS, true]
       default_handler: python
+      enable_inventory: true
       handlers:
         python:
           import:
-            - https://docs.python.org/3.10/objects.inv
+            - https://docs.python.org/3/objects.inv
+            - https://docs.aiohttp.org/en/stable/objects.inv
             - https://www.attrs.org/en/stable/objects.inv
+            - https://multidict.readthedocs.io/en/stable/objects.inv
+            - https://yarl.readthedocs.io/en/stable/objects.inv
           options:
+            filters: ["!^_"]
             heading_level: 3
             annotations_path: brief
             docstring_section_style: spacy
@@ -134,9 +165,7 @@ plugins:
             signature_crossrefs: true
             show_symbol_type_heading: true
             show_symbol_type_toc: true
+            show_root_toc_entry: false
+            line_length: 70
             extensions:
                 - griffe_inherited_docstrings
-watch:
-  - docs
-  - README.md
-  - hikari

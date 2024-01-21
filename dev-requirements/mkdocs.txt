@@ -1,3 +1,5 @@
+mkdocs==1.5.3
+
 # Mkdocs Material
 mkdocs-material[imaging]==9.5.4
 

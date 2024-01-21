@@ -19,27 +19,27 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Website pages generation."""
+"""Documentation pages generation."""
 from pipelines import nox
 from pipelines import config
-import os
+
 
 @nox.session()
 def mkdocs(session: nox.Session):
     """Generate docs using mkdocs."""
     if "--no-refs" in session.posargs:
-        session.env["SKIP_REFERENCE_DOCS"] = "1"
+        session.env["ENABLE_MKDOCSTRINGS"] = "false"
 
     session.install("-e", ".", *nox.dev_requirements("mkdocs"))
 
-    session.run("mkdocs", "build", "--site-dir", os.path.join(config.ARTIFACT_DIRECTORY, config.DOCUMENTATION_DIRECTORY))
+    session.run("mkdocs", "build", "-d", config.DOCUMENTATION_OUTPUT_PATH)
 
 
 @nox.session()
-def view_docs(session: nox.Session):
+def mkdocs_serve(session: nox.Session):
     """Start an HTTP server that serves the generated docs in real time."""
     if "--no-refs" in session.posargs:
-        session.env["SKIP_REFERENCE_DOCS"] = "1"
+        session.env["ENABLE_MKDOCSTRINGS"] = "false"
 
     session.install("-e", ".", *nox.dev_requirements("mkdocs"))
 
