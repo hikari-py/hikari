@@ -64,9 +64,4 @@ prof/
 # Logs
 *.log
 
-# Generated docs
-reference/
-site/
-.cache/
-
 Pipfile*
