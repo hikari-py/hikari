@@ -7292,6 +7292,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> special_endpoints.InteractionAutocompleteBuilder:
         """Create a builder for an autocomplete interaction response.
 
+        Parameters
+        ----------
         choices : typing.Sequence[hikari.api.special_endpoints.AutocompleteChoiceBuilder]
             The autocomplete choices.
 
