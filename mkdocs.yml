@@ -14,8 +14,8 @@ theme:
   font:
     code: JetBrains Mono
 
-  logo: https://hikari-py.dev/logo.png
-  favicon: https://hikari-py.dev/logo.png
+  logo: logo.png
+  favicon: logo.png
 
   icon:
     repo: fontawesome/brands/github
@@ -98,8 +98,6 @@ markdown_extensions:
       anchor_linenums: true
       line_spans: __span
       pygments_lang_class: true
-  - pymdownx.arithmatex:
-      generic: true
   - pymdownx.betterem:
       smart_enable: all
   - pymdownx.tabbed:
