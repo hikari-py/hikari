@@ -140,8 +140,7 @@ class Color(int):
 
     Examples of initialization of Color objects from given formats include:
 
-    .. code-block:: python
-
+    ```py
         >>> c = Color(16712986)
         Color(r=0xff, g=0x5, b=0x1a)
 
@@ -156,6 +155,7 @@ class Color(int):
 
         >>> c = Color.from_rgb_float(1.0, 0.0196078431372549, 0.10196078431372549)
         Color(r=0xff, g=0x5, b=0x1a)
+    ```
     """
 
     __slots__: typing.Sequence[str] = ()

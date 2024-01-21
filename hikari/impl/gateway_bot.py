@@ -264,8 +264,7 @@ class GatewayBot(traits.GatewayBotAware):
 
     Setting up logging through a dict config:
 
-    .. code-block:: python
-
+    ```py
         # See https://docs.python.org/3/library/logging.config.html#dictionary-schema-details for more info
         hikari.GatewayBot(
             "TOKEN",
@@ -278,6 +277,7 @@ class GatewayBot(traits.GatewayBotAware):
                 },
             }
         )
+    ```
     """
 
     shards: typing.Mapping[int, gateway_shard.GatewayShard]

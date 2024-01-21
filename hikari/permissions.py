@@ -79,11 +79,11 @@ class Permissions(enums.Flag):
     Lastly, if you need all the permissions from a set except for a few,
     you can use the bitwise NOT operator (`~`).
 
-    .. code-block:: python
-
+    ```py
         # All permissions except ADMINISTRATOR.
         my_perms = ~Permissions.ADMINISTRATOR
 
+    ```
     """
 
     NONE = 0

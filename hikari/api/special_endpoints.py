@@ -169,14 +169,14 @@ class GuildBuilder(abc.ABC):
 
     Adding a text channel to your guild:
 
-    .. code-block:: python
-
+    ```py
         guild_builder = rest.guild_builder("My Server!")
 
         category_id = guild_builder.add_category("My safe place")
         channel_id = guild_builder.add_text_channel("general", parent_id=category_id)
 
         await guild_builder.create()
+    ```
     """
 
     __slots__: typing.Sequence[str] = ()

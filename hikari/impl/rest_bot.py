@@ -203,8 +203,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
 
     Setting up logging through a dict config:
 
-    .. code-block:: python
-
+    ```py
         # See https://docs.python.org/3/library/logging.config.html#dictionary-schema-details for more info
         hikari.RESTBot(
             "TOKEN",
@@ -217,6 +216,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
                 },
             }
         )
+    ```
     """
 
     __slots__: typing.Sequence[str] = (

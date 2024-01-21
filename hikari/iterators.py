@@ -204,10 +204,10 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
 
     Limiting the number of results you iterate across:
 
-    .. code-block:: python
-
+    ```py
         >>> async for item in paginated_results.limit(3):
         ...    process(item)
+    ```
     """
 
     __slots__: typing.Sequence[str] = ()
@@ -755,8 +755,7 @@ class BufferedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT], abc.ABC
 
     An example would look like the following:
 
-    .. code-block:: python
-
+    ```py
         async def some_http_call(i):
             ...
 
@@ -776,6 +775,7 @@ class BufferedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT], abc.ABC
 
                 generator = (SomeObject(raw_item) for raw_item in raw_items)
                 return generator
+    ```
     """
 
     __slots__: typing.Sequence[str] = ("_buffer",)

@@ -286,8 +286,7 @@ class PermissionOverwrite:
     --------
     Creating a permission overwrite.
 
-    .. code-block:: python
-
+    ```py
         overwrite = PermissionOverwrite(
             id=163979124820541440,
             type=PermissionOverwriteType.MEMBER,
@@ -301,6 +300,7 @@ class PermissionOverwrite:
                 | Permissions.SPEAK
             ),
         )
+    ```
     """
 
     id: snowflakes.Snowflake = attrs.field(converter=snowflakes.Snowflake, repr=True)

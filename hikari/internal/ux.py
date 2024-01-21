@@ -134,8 +134,7 @@ def init_logging(
 
     Setting up logging through a dict config:
 
-    .. code-block:: python
-
+    ```py
         # See https://docs.python.org/3/library/logging.config.html#dictionary-schema-details for more info
         init_logging(
             {
@@ -147,6 +146,7 @@ def init_logging(
                 },
             }
         )
+    ```
     """
     # One observation that has been repeatedly made from seeing beginners writing
     # bots in Python is that most people seem to have no idea what logging is or
