@@ -21,7 +21,8 @@
 # SOFTWARE.
 """Website pages generation."""
 from pipelines import nox
-
+from pipelines import config
+import os
 
 @nox.session()
 def mkdocs(session: nox.Session):
@@ -31,7 +32,7 @@ def mkdocs(session: nox.Session):
 
     session.install("-e", ".", *nox.dev_requirements("mkdocs"))
 
-    session.run("mkdocs", "build")
+    session.run("mkdocs", "build", "--site-dir", os.path.join(config.ARTIFACT_DIRECTORY, config.DOCUMENTATION_DIRECTORY))
 
 
 @nox.session()
@@ -42,4 +43,7 @@ def view_docs(session: nox.Session):
 
     session.install("-e", ".", *nox.dev_requirements("mkdocs"))
 
-    session.run("mkdocs", "serve")
+    if "--no-reload" in session.posargs:
+        session.run("mkdocs", "serve", "--no-livereload")
+    else:
+        session.run("mkdocs", "serve")
