@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("warn_deprecated", "check_if_past_removal")
+__all__: typing.Sequence[str] = ("deprecated", "warn_deprecated", "check_if_past_removal")
 
 import typing
 import warnings
@@ -93,3 +93,16 @@ def warn_deprecated(
         category=DeprecationWarning,
         stacklevel=stack_level,
     )
+
+
+if typing.TYPE_CHECKING:
+    from typing_extensions import deprecated
+
+else:
+
+    def deprecated(*args, **kwargs):
+        """Mark a function, overload, or class as deprecated for type-checkers.
+
+        This has no runtime side-effects.
+        """
+        return lambda value: value
