@@ -69,9 +69,6 @@ theme:
     - content.tooltips
     - toc.follow
 
-extra_css:
-  - css/extra.css
-
 markdown_extensions:
   - abbr
   - admonition
