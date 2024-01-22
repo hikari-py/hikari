@@ -253,7 +253,7 @@ class Permissions(enums.Flag):
     MANAGE_THREADS = 1 << 34
     """Allows for deleting and archiving threads, and viewing all private threads.
 
-     !!! note
+    !!! note
         In guilds with server-wide 2FA enabled this permission can only be used
         by users who have two-factor authentication enabled on their account
         (or their owner's account in the case of bot users) and the guild owner.
