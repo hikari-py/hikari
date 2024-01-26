@@ -101,12 +101,10 @@ class CacheMappingView(cache.CacheView[KeyT, ValueT]):
     __slots__: typing.Sequence[str] = ("_data", "_builder")
 
     @typing.overload
-    def __init__(self, items: typing.Mapping[KeyT, ValueT]) -> None:
-        ...
+    def __init__(self, items: typing.Mapping[KeyT, ValueT]) -> None: ...
 
     @typing.overload
-    def __init__(self, items: typing.Mapping[KeyT, DataT], *, builder: typing.Callable[[DataT], ValueT]) -> None:
-        ...
+    def __init__(self, items: typing.Mapping[KeyT, DataT], *, builder: typing.Callable[[DataT], ValueT]) -> None: ...
 
     def __init__(
         self,
@@ -139,12 +137,10 @@ class CacheMappingView(cache.CacheView[KeyT, ValueT]):
         return len(self._data)
 
     @typing.overload
-    def get_item_at(self, index: int, /) -> ValueT:
-        ...
+    def get_item_at(self, index: int, /) -> ValueT: ...
 
     @typing.overload
-    def get_item_at(self, index: slice, /) -> typing.Sequence[ValueT]:
-        ...
+    def get_item_at(self, index: slice, /) -> typing.Sequence[ValueT]: ...
 
     def get_item_at(self, index: typing.Union[slice, int], /) -> typing.Union[ValueT, typing.Sequence[ValueT]]:
         return collections.get_index_or_slice(self, index)
@@ -229,18 +225,18 @@ class GuildRecord:
     `typing.MutableSequence[str]` of invite codes.
     """
 
-    members: typing.Optional[
-        collections.ExtendedMutableMapping[snowflakes.Snowflake, RefCell[MemberData]]
-    ] = attrs.field(default=None)
+    members: typing.Optional[collections.ExtendedMutableMapping[snowflakes.Snowflake, RefCell[MemberData]]] = (
+        attrs.field(default=None)
+    )
     """A mapping of user IDs to the objects of members cached for this guild.
 
     This will be `None` if no members are cached for this guild else
     `hikari.internal.collections.ExtendedMutableMapping[hikari.snowflakes.Snowflake, MemberData]`.
     """
 
-    presences: typing.Optional[
-        collections.ExtendedMutableMapping[snowflakes.Snowflake, MemberPresenceData]
-    ] = attrs.field(default=None)
+    presences: typing.Optional[collections.ExtendedMutableMapping[snowflakes.Snowflake, MemberPresenceData]] = (
+        attrs.field(default=None)
+    )
     """A mapping of user IDs to objects of the presences cached for this guild.
 
     This will be `None` if no presences are cached for this guild else
@@ -254,9 +250,9 @@ class GuildRecord:
     `typing.MutableSet[hikari.snowflakes.Snowflake]` of role IDs.
     """
 
-    voice_states: typing.Optional[
-        collections.ExtendedMutableMapping[snowflakes.Snowflake, VoiceStateData]
-    ] = attrs.field(default=None)
+    voice_states: typing.Optional[collections.ExtendedMutableMapping[snowflakes.Snowflake, VoiceStateData]] = (
+        attrs.field(default=None)
+    )
     """A mapping of user IDs to objects of the voice states cached for this guild.
 
     This will be `None` if no voice states are cached for this guild else
@@ -722,9 +718,9 @@ class MessageData(BaseData[messages.Message]):
     is_tts: bool = attrs.field()
     user_mentions: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, RefCell[users_.User]]] = attrs.field()
     role_mention_ids: undefined.UndefinedOr[typing.Tuple[snowflakes.Snowflake, ...]] = attrs.field()
-    channel_mentions: undefined.UndefinedOr[
-        typing.Mapping[snowflakes.Snowflake, channels_.PartialChannel]
-    ] = attrs.field()
+    channel_mentions: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, channels_.PartialChannel]] = (
+        attrs.field()
+    )
     mentions_everyone: undefined.UndefinedOr[bool] = attrs.field()
     attachments: typing.Tuple[messages.Attachment, ...] = attrs.field()
     embeds: typing.Tuple[embeds_.Embed, ...] = attrs.field()

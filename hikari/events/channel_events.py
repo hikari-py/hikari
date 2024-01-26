@@ -344,8 +344,7 @@ class GuildChannelDeleteEvent(GuildChannelEvent):
 
     if typing.TYPE_CHECKING:
         # Channel will never be found.
-        async def fetch_channel(self) -> typing.NoReturn:
-            ...
+        async def fetch_channel(self) -> typing.NoReturn: ...
 
 
 @base_events.requires_intents(intents.Intents.DM_MESSAGES, intents.Intents.GUILDS)
@@ -592,8 +591,7 @@ class InviteDeleteEvent(InviteEvent):
 
     if typing.TYPE_CHECKING:
         # Invite will never be found.
-        async def fetch_invite(self) -> typing.NoReturn:
-            ...
+        async def fetch_invite(self) -> typing.NoReturn: ...
 
 
 @base_events.requires_intents(intents.Intents.GUILD_WEBHOOKS)
