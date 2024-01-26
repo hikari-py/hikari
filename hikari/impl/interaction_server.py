@@ -180,7 +180,7 @@ async def _consume_generator_listener(generator: typing.AsyncGenerator[typing.An
 
 
 class InteractionServer(interaction_server.InteractionServer):
-    """Standard implementation of `hikari.api.interaction_server.InteractionServer`.
+    """Standard implementation of [hikari.api.interaction_server.InteractionServer][].
 
     Parameters
     ----------
@@ -190,12 +190,12 @@ class InteractionServer(interaction_server.InteractionServer):
     Other Parameters
     ----------------
     dumps : hikari.internal.data_binding.JSONEncoder
-        The JSON encoder this server should use. Defaults to `hikari.internal.data_binding.default_json_dumps`.
+        The JSON encoder this server should use.
     loads : hikari.internal.data_binding.JSONDecoder
-        The JSON decoder this server should use. Defaults to `hikari.internal.data_binding.default_json_loads`.
-    public_key : bytes
+        The JSON decoder this server should use.
+    public_key : typing.Optional[bytes]
         The public key this server should use for verifying request payloads from
-        Discord. If left as `None` then the client will try to work this
+        Discord. If left as [None][] then the client will try to work this
         out using `rest_client`.
     rest_client : hikari.api.rest.RESTClient
         The client this should use for making REST requests.
@@ -234,7 +234,7 @@ class InteractionServer(interaction_server.InteractionServer):
 
         except ModuleNotFoundError as exc:
             raise RuntimeError(
-                "You must install the optional `hikari[server]` dependencies to use the default interaction server."
+                "You must install the optional [hikari[server]][] dependencies to use the default interaction server."
             ) from exc
 
         # Building asyncio.Lock when there isn't a running loop may lead to runtime errors.
@@ -280,7 +280,7 @@ class InteractionServer(interaction_server.InteractionServer):
         """Handle an AIOHTTP interaction request.
 
         This method handles aiohttp specific detail before calling
-        `InteractionServer.on_interaction` with the data extracted from the
+        [InteractionServer.on_interaction][] with the data extracted from the
         request if it can and handles building an aiohttp response.
 
         Parameters
@@ -526,8 +526,8 @@ class InteractionServer(interaction_server.InteractionServer):
         socket : typing.Optional[socket.socket]
             A pre-existing socket object to accept connections on.
         shutdown_timeout : float
-            A delay to wait for graceful server shutdown before forcefully
-            disconnecting all open client sockets. This defaults to 60 seconds.
+            A delay to wait, in seconds, for graceful server shutdown
+            before forcefully disconnecting all open client sockets.
         ssl_context : typing.Optional[ssl.SSLContext]
             SSL context for HTTPS servers.
         """

@@ -299,7 +299,7 @@ class GuildWidget:
     async def fetch_channel(self) -> typing.Optional[channels_.GuildChannel]:
         """Fetch the widget channel.
 
-        This will be `None` if not set.
+        This will be [None][] if not set.
 
         Returns
         -------
@@ -307,14 +307,14 @@ class GuildWidget:
             The requested channel.
 
             You can check the type of the channel by
-            using `isinstance`.
+            using [isinstance][].
 
         Raises
         ------
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the `READ_MESSAGES` permission in the channel.
+            If you are missing the [READ_MESSAGES][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -341,51 +341,51 @@ class Member(users.User):
     """The ID of the guild this member belongs to."""
 
     is_deaf: undefined.UndefinedOr[bool] = attrs.field(repr=False)
-    """`True` if this member is deafened in the current voice channel.
+    """[True][] if this member is deafened in the current voice channel.
 
-    This will be `hikari.undefined.UNDEFINED` if it's state is
+    This will be [hikari.undefined.UNDEFINED][] if it's state is
     unknown.
     """
 
     is_mute: undefined.UndefinedOr[bool] = attrs.field(repr=False)
-    """`True` if this member is muted in the current voice channel.
+    """[True][] if this member is muted in the current voice channel.
 
-    This will be `hikari.undefined.UNDEFINED` if it's state is unknown.
+    This will be [hikari.undefined.UNDEFINED][] if it's state is unknown.
     """
 
     is_pending: undefined.UndefinedOr[bool] = attrs.field(repr=False)
     """Whether the user has passed the guild's membership screening requirements.
 
-    This will be `hikari.undefined.UNDEFINED` if it's state is unknown.
+    This will be [hikari.undefined.UNDEFINED][] if it's state is unknown.
     """
 
     joined_at: typing.Optional[datetime.datetime] = attrs.field(repr=True)
     """The datetime of when this member joined the guild they belong to.
 
-    This will be `None` for guest members that have been temporarily
+    This will be [None][] for guest members that have been temporarily
     invited.
     """
 
     nickname: typing.Optional[str] = attrs.field(repr=True)
     """This member's nickname.
 
-    This will be `None` if not set.
+    This will be [None][] if not set.
     """
 
     premium_since: typing.Optional[datetime.datetime] = attrs.field(repr=False)
     """The datetime of when this member started "boosting" this guild.
 
-    Will be `None` if the member is not a premium user.
+    Will be [None][] if the member is not a premium user.
     """
 
     raw_communication_disabled_until: typing.Optional[datetime.datetime] = attrs.field(repr=False)
     """The datetime when this member's timeout will expire.
 
-     Will be `None` if the member is not timed out.
+     Will be [None][] if the member is not timed out.
 
      !!! note
         The datetime might be in the past, so it is recommended to use
-        `communication_disabled_until` method to check if the member is timed
+        [communication_disabled_until][] method to check if the member is timed
         out at the time of the call.
      """
 
@@ -402,10 +402,10 @@ class Member(users.User):
     """This member's corresponding user object."""
 
     guild_avatar_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
-    """Hash of the member's guild avatar guild if set, else `None`.
+    """Hash of the member's guild avatar guild if set, else [None][].
 
     !!! note
-        This takes precedence over `Member.avatar_hash`.
+        This takes precedence over [Member.avatar_hash][].
     """
 
     @property
@@ -425,8 +425,8 @@ class Member(users.User):
     def guild_avatar_url(self) -> typing.Optional[files.URL]:
         """Guild Avatar URL for the user, if they have one set.
 
-        May be `None` if no guild avatar is set. In this case, you
-        should use `avatar_hash` or `default_avatar_url` instead.
+        May be [None][] if no guild avatar is set. In this case, you
+        should use [avatar_hash][] or [default_avatar_url][] instead.
         """
         return self.make_guild_avatar_url()
 
@@ -464,9 +464,9 @@ class Member(users.User):
 
         See Also
         --------
-        Nickname: `Member.nickname`.
-        Username: `Member.username`.
-        Globalname: `Member.global_name`.
+        Nickname: [Member.nickname][].
+        Username: [Member.username][].
+        Globalname: [Member.global_name][].
         """
         return self.nickname or self.global_name or self.username
 
@@ -494,7 +494,7 @@ class Member(users.User):
         """Return when the timeout for this member ends.
 
         Unlike `raw_communication_disabled_until`, this will always be
-        `None` if the member is not currently timed out.
+        [None][] if the member is not currently timed out.
 
         !!! note
             The output of this function can depend based on when
@@ -513,7 +513,7 @@ class Member(users.User):
         Returns
         -------
         typing.Optional[hikari.guilds.Guild]
-            The linked guild object or `None` if it's not cached.
+            The linked guild object or [None][] if it's not cached.
         """
         if not isinstance(self.user.app, traits.CacheAware):
             return None
@@ -525,12 +525,12 @@ class Member(users.User):
 
         Presence info includes user status and activities.
 
-        This requires the `GUILD_PRESENCES` intent to be enabled.
+        This requires the [GUILD_PRESENCES][] intent to be enabled.
 
         Returns
         -------
         typing.Optional[hikari.presences.MemberPresence]
-            The member presence, or `None` if not known.
+            The member presence, or [None][] if not known.
         """
         if not isinstance(self.user.app, traits.CacheAware):
             return None
@@ -564,7 +564,7 @@ class Member(users.User):
         Returns
         -------
         typing.Optional[hikari.guilds.Role]
-            `None` if the cache is missing the roles information or
+            [None][] if the cache is missing the roles information or
             the highest role the user has.
         """
         roles = sorted(self.get_roles(), key=lambda r: r.position, reverse=True)
@@ -590,29 +590,28 @@ class Member(users.User):
     ) -> typing.Optional[files.URL]:
         """Generate the guild specific avatar url for this member, if set.
 
-        If no guild avatar is set, this returns `None`. You can then
-        use the `make_avatar_url` to get their global custom avatar or
-        `default_avatar_url` if they have no custom avatar set.
+        If no guild avatar is set, this returns [None][].
 
         Parameters
         ----------
         ext : typing.Optional[str]
-            The ext to use for this URL, defaults to `png` or `gif`.
+            The ext to use for this URL.
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
-            animated). Will be ignored for default avatars which can only be
-            `png`.
+            animated).
 
-            If `None`, then the correct default extension is
+            Will be ignored for default avatars which can only be `png`.
+
+            If [None][], then the correct default extension is
             determined based on whether the icon is animated or not.
         size : int
-            The size to set for the URL, defaults to `4096`.
-            Can be any power of two between 16 and 4096.
+            The size to set for the URL.
+            Can be any power of two between `16` and `4096`.
             Will be ignored for default avatars.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL to the avatar, or `None` if not present.
+            The URL to the avatar, or [None][] if not present.
 
         Raises
         ------
@@ -698,7 +697,7 @@ class Member(users.User):
         delete_message_seconds : hikari.undefined.UndefinedNoneOr[hikari.internal.time.Intervalish]
             If provided, the number of seconds to delete messages for.
             This can be represented as either an int/float between 0 and 604800 (7 days), or
-            a `datetime.timedelta` object.
+            a [datetime.timedelta][] object.
         reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -708,7 +707,7 @@ class Member(users.User):
         hikari.errors.BadRequestError
             If any of the fields that are passed have an invalid value.
         hikari.errors.ForbiddenError
-            If you are missing the `BAN_MEMBERS` permission.
+            If you are missing the [BAN_MEMBERS][] permission.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
@@ -737,7 +736,7 @@ class Member(users.User):
         hikari.errors.BadRequestError
             If any of the fields that are passed have an invalid value.
         hikari.errors.ForbiddenError
-            If you are missing the `BAN_MEMBERS` permission.
+            If you are missing the [BAN_MEMBERS][] permission.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
@@ -764,7 +763,7 @@ class Member(users.User):
         hikari.errors.BadRequestError
             If any of the fields that are passed have an invalid value.
         hikari.errors.ForbiddenError
-            If you are missing the `KICK_MEMBERS` permission.
+            If you are missing the [KICK_MEMBERS][] permission.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
@@ -797,7 +796,7 @@ class Member(users.User):
         Raises
         ------
         hikari.errors.ForbiddenError
-            If you are missing the `MANAGE_ROLES` permission.
+            If you are missing the [MANAGE_ROLES][] permission.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
@@ -830,7 +829,7 @@ class Member(users.User):
         Raises
         ------
         hikari.errors.ForbiddenError
-            If you are missing the `MANAGE_ROLES` permission.
+            If you are missing the [MANAGE_ROLES][] permission.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
@@ -1068,11 +1067,11 @@ class Role(PartialRole):
         Parameters
         ----------
         ext : str
-            The extension to use for this URL, defaults to `png`.
+            The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
         size : int
-            The size to set for the URL, defaults to `4096`.
-            Can be any power of two between 16 and 4096.
+            The size to set for the URL.
+            Can be any power of two between `16` and `4096`.
 
         Returns
         -------
@@ -1167,11 +1166,11 @@ class PartialApplication(snowflakes.Unique):
         Parameters
         ----------
         ext : str
-            The extension to use for this URL, defaults to `png`.
+            The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
         size : int
-            The size to set for the URL, defaults to `4096`.
-            Can be any power of two between 16 and 4096.
+            The size to set for the URL.
+            Can be any power of two between `16` and `4096`.
 
         Returns
         -------
@@ -1374,15 +1373,15 @@ class PartialGuild(snowflakes.Unique):
         Parameters
         ----------
         ext : typing.Optional[str]
-            The extension to use for this URL, defaults to `png` or `gif`.
+            The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
             animated).
 
             If `None`, then the correct default extension is
             determined based on whether the icon is animated or not.
         size : int
-            The size to set for the URL, defaults to `4096`.
-            Can be any power of two between 16 and 4096.
+            The size to set for the URL.
+            Can be any power of two between `16` and `4096`.
 
         Returns
         -------
@@ -2495,11 +2494,11 @@ class GuildPreview(PartialGuild):
         Parameters
         ----------
         ext : str
-            The extension to use for this URL, defaults to `png`.
+            The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
         size : int
-            The size to set for the URL, defaults to `4096`.
-            Can be any power of two between 16 and 4096.
+            The size to set for the URL.
+            Can be any power of two between `16` and `4096`.
 
         Returns
         -------
@@ -2524,11 +2523,11 @@ class GuildPreview(PartialGuild):
         Parameters
         ----------
         ext : str
-            The extension to use for this URL, defaults to `png`.
+            The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
         size : int
-            The size to set for the URL, defaults to `4096`.
-            Can be any power of two between 16 and 4096.
+            The size to set for the URL.
+            Can be any power of two between `16` and `4096`.
 
         Returns
         -------
@@ -2798,15 +2797,15 @@ class Guild(PartialGuild):
         Parameters
         ----------
         ext : typing.Optional[str]
-            The ext to use for this URL, defaults to `png` or `gif`.
+            The ext to use for this URL.
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
             animated).
 
-            If `None`, then the correct default extension is
+            If [None][], then the correct default extension is
             determined based on whether the banner is animated or not.
         size : int
-            The size to set for the URL, defaults to `4096`.
-            Can be any power of two between 16 and 4096.
+            The size to set for the URL.
+            Can be any power of two between `16` and `4096`.
 
         Returns
         -------
@@ -2842,7 +2841,7 @@ class Guild(PartialGuild):
             Supports `png`, `jpeg`, `jpg` and `webp`.
         size : int
             The size to set for the URL, defaults to `4096`.
-            Can be any power of two between 16 and 4096.
+            Can be any power of two between `16` and `4096`.
 
         Returns
         -------
@@ -2871,7 +2870,7 @@ class Guild(PartialGuild):
             Supports `png`, `jpeg`, `jpg` and `webp`.
         size : int
             The size to set for the URL, defaults to `4096`.
-            Can be any power of two between 16 and 4096.
+            Can be any power of two between `16` and `4096`.
 
         Returns
         -------

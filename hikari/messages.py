@@ -200,7 +200,7 @@ class MessageActivityType(int, enums.Enum):
 class Attachment(snowflakes.Unique, files.WebResource):
     """Represents a file attached to a message.
 
-    You can use this object in the same way as a `hikari.files.WebResource`,
+    You can use this object in the same way as a [hikari.files.WebResource][],
     by passing it as an attached file when creating a message, etc.
 
     It can also be used when editing a message to keep a previous attachment.
@@ -295,7 +295,7 @@ class MessageReference:
     id: typing.Optional[snowflakes.Snowflake] = attrs.field(repr=True)
     """The ID of the original message.
 
-    This will be `None` for channel follow add messages. This may
+    This will be [None][] for channel follow add messages. This may
     point to a deleted message.
     """
 
@@ -305,7 +305,7 @@ class MessageReference:
     guild_id: typing.Optional[snowflakes.Snowflake] = attrs.field(repr=True)
     """The ID of the guild that the message originated from.
 
-    This will be `None` when the original message is not from
+    This will be [None][] when the original message is not from
     a guild.
     """
 
@@ -329,16 +329,16 @@ class MessageApplication(guilds.PartialApplication):
         Parameters
         ----------
         ext : str
-            The extension to use for this URL, defaults to `png`.
-            Supports `png`, `jpeg`, `jpg` and `webp`.
+            The extension to use for this URL.
+            supports `png`, `jpeg`, `jpg` and `webp`.
         size : int
-            The size to set for the URL, defaults to `4096`.
-            Can be any power of two between 16 and 4096.
+            The size to set for the URL.
+            Can be any power of two between `16` and `4096`.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL, or `None` if no cover image exists.
+            The URL, or [None][] if no cover image exists.
 
         Raises
         ------
@@ -389,14 +389,13 @@ class PartialMessage(snowflakes.Unique):
     """A message representation containing partially populated information.
 
     This contains arbitrary fields that may be updated in a
-    `MessageUpdateEvent`, but for all other purposes should be treated as
+    [MessageUpdateEvent][], but for all other purposes should be treated as
     being optionally specified.
 
     !!! warning
-        All fields on this model except `channel` and `id` may be set to
-        `hikari.undefined.UNDEFINED` (a singleton) if we have not
-        received information about their state from Discord alongside field
-        nullability.
+        All fields on this model except `id` and `channel_id` may be set to
+        [hikari.undefined.UNDEFINED][] if we have not received information
+        about their state from Discord alongside field nullability.
     """
 
     app: traits.RESTAware = attrs.field(
@@ -411,30 +410,30 @@ class PartialMessage(snowflakes.Unique):
     """The ID of the channel that the message was sent in."""
 
     guild_id: typing.Optional[snowflakes.Snowflake] = attrs.field(hash=False, eq=False, repr=True)
-    """The ID of the guild that the message was sent in or `None` for messages out of guilds.
+    """The ID of the guild that the message was sent in or [None][] for messages out of guilds.
 
     !!! warning
-        This will also be `None` for messages received from the REST API.
+        This will also be [None][] for messages received from the REST API.
         This is a Discord limitation as stated here <https://github.com/discord/discord-api-docs/issues/912>
     """
 
     author: undefined.UndefinedOr[users_.User] = attrs.field(hash=False, eq=False, repr=True)
     """The author of this message.
 
-    This will also be `hikari.undefined.UNDEFINED` in some cases such as when Discord
+    This will also be [hikari.undefined.UNDEFINED][] in some cases such as when Discord
     updates a message with an embed URL preview or in messages fetched from the REST API.
     """
 
     member: undefined.UndefinedNoneOr[guilds.Member] = attrs.field(hash=False, eq=False, repr=False)
     """The member for the author who created the message.
 
-    If the message is not in a guild, this will be `None`.
+    If the message is not in a guild, this will be [None][].
 
-    This will also be `hikari.undefined.UNDEFINED` in some cases such as when Discord
+    This will also be [hikari.undefined.UNDEFINED][] in some cases such as when Discord
     updates a message with an embed URL preview.
 
     !!! warning
-        This will also be `None` for messages received from the REST API.
+        This will also be [None][] for messages received from the REST API.
         This is a Discord limitation as stated here <https://github.com/discord/discord-api-docs/issues/912>
     """
 
@@ -447,7 +446,7 @@ class PartialMessage(snowflakes.Unique):
     edited_timestamp: undefined.UndefinedNoneOr[datetime.datetime] = attrs.field(hash=False, eq=False, repr=False)
     """The timestamp that the message was last edited at.
 
-    Will be `None` if the message wasn't ever edited, or `undefined`
+    Will be [None] if the message wasn't ever edited, or [hikari.undefined.UNDEFINED][]
     if the info is not available.
     """
 
@@ -478,9 +477,9 @@ class PartialMessage(snowflakes.Unique):
         This is a Discord limitation.
     """
 
-    channel_mentions: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, channels_.PartialChannel]] = (
-        attrs.field(hash=False, eq=False, repr=False)
-    )
+    channel_mentions: undefined.UndefinedOr[
+        typing.Mapping[snowflakes.Snowflake, channels_.PartialChannel]
+    ] = attrs.field(hash=False, eq=False, repr=False)
     """Channel mentions that reference channels in the target crosspost's guild.
 
     If the message is not crossposted, this will always be empty.
@@ -556,9 +555,9 @@ class PartialMessage(snowflakes.Unique):
     referenced_message: undefined.UndefinedNoneOr[PartialMessage] = attrs.field(hash=False, eq=False, repr=False)
     """The message that was replied to.
 
-    If `type` is `MessageType.REPLY` and `hikari.undefined.UNDEFINED`, Discord's
+    If `type` is [MessageType.REPLY][] and [hikari.undefined.UNDEFINED][], Discord's
     backend didn't attempt to fetch the message, so the status is unknown. If
-    `type` is `MessageType.REPLY` and `None`, the message was deleted.
+    `type` is [MessageType.REPLY][] and [None][], the message was deleted.
     """
 
     interaction: undefined.UndefinedNoneOr[MessageInteraction] = attrs.field(hash=False, eq=False, repr=False)
@@ -627,7 +626,7 @@ class PartialMessage(snowflakes.Unique):
 
             Members that are not cached will not appear in this mapping. This
             means that there is a very small chance that some users provided
-            in `notified_users` may not be present here.
+            in [notified_users][] may not be present here.
         """
         if self.user_mentions is undefined.UNDEFINED:
             return undefined.UNDEFINED
@@ -660,7 +659,7 @@ class PartialMessage(snowflakes.Unique):
 
             Roles that are not cached will not appear in this mapping. This
             means that there is a very small chance that some role IDs provided
-            in `notifies_role_ids` may not be present here. This is a limitation
+            in [notifies_role_ids][] may not be present here. This is a limitation
             of Discord, again.
         """
         if self.role_mention_ids is undefined.UNDEFINED:
@@ -677,10 +676,10 @@ class PartialMessage(snowflakes.Unique):
         Other Parameters
         ----------------
         guild : typing.Optional[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
-            Object or ID of the guild this message is in or `None`
+            Object or ID of the guild this message is in or [None][]
             to generate a DM message link.
 
-            This parameter is necessary since `PartialMessage.guild_id`
+            This parameter is necessary since [PartialMessage.guild_id][]
             isn't returned by the REST API regardless of whether the message
             is in a DM or not.
 
@@ -754,7 +753,7 @@ class PartialMessage(snowflakes.Unique):
         !!! warning
             If you specify a text `content`, `mentions_everyone`,
             `mentions_reply`, `user_mentions`, and `role_mentions` will default
-            to `False` as the message will be re-parsed for mentions. This will
+            to [False][] as the message will be re-parsed for mentions. This will
             also occur if only one of the four are specified
 
             This is a limitation of Discord's design. If in doubt, specify all
@@ -763,7 +762,7 @@ class PartialMessage(snowflakes.Unique):
         !!! warning
             If the message was not sent by your user, the only parameter
             you may provide to this call is the `flags` parameter. Anything
-            else will result in a `hikari.errors.ForbiddenError` being raised.
+            else will result in a [hikari.errors.ForbiddenError][] being raised.
 
         Parameters
         ----------
@@ -1003,7 +1002,6 @@ class PartialMessage(snowflakes.Unique):
         reply_must_exist : hikari.undefined.UndefinedOr[bool]
             If provided, whether to error if the message being replied to does
             not exist instead of sending as a normal (non-reply) message.
-            Defaults to `True`.
 
             This will not do anything if not being used with `reply`.
         mentions_everyone : hikari.undefined.UndefinedOr[bool]
@@ -1103,10 +1101,12 @@ class PartialMessage(snowflakes.Unique):
         await self.app.rest.delete_message(self.channel_id, self.id)
 
     @typing.overload
-    async def add_reaction(self, emoji: typing.Union[str, emojis_.Emoji]) -> None: ...
+    async def add_reaction(self, emoji: typing.Union[str, emojis_.Emoji]) -> None:
+        ...
 
     @typing.overload
-    async def add_reaction(self, emoji: str, emoji_id: snowflakes.SnowflakeishOr[emojis_.CustomEmoji]) -> None: ...
+    async def add_reaction(self, emoji: str, emoji_id: snowflakes.SnowflakeishOr[emojis_.CustomEmoji]) -> None:
+        ...
 
     async def add_reaction(
         self,
@@ -1173,7 +1173,8 @@ class PartialMessage(snowflakes.Unique):
         emoji: typing.Union[str, emojis_.Emoji],
         *,
         user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users_.PartialUser]] = undefined.UNDEFINED,
-    ) -> None: ...
+    ) -> None:
+        ...
 
     @typing.overload
     async def remove_reaction(
@@ -1182,7 +1183,8 @@ class PartialMessage(snowflakes.Unique):
         emoji_id: snowflakes.SnowflakeishOr[emojis_.CustomEmoji],
         *,
         user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users_.PartialUser]] = undefined.UNDEFINED,
-    ) -> None: ...
+    ) -> None:
+        ...
 
     async def remove_reaction(
         self,
@@ -1257,15 +1259,16 @@ class PartialMessage(snowflakes.Unique):
             )
 
     @typing.overload
-    async def remove_all_reactions(self) -> None: ...
+    async def remove_all_reactions(self) -> None:
+        ...
 
     @typing.overload
-    async def remove_all_reactions(self, emoji: typing.Union[str, emojis_.Emoji]) -> None: ...
+    async def remove_all_reactions(self, emoji: typing.Union[str, emojis_.Emoji]) -> None:
+        ...
 
     @typing.overload
-    async def remove_all_reactions(
-        self, emoji: str, emoji_id: snowflakes.SnowflakeishOr[emojis_.CustomEmoji]
-    ) -> None: ...
+    async def remove_all_reactions(self, emoji: str, emoji_id: snowflakes.SnowflakeishOr[emojis_.CustomEmoji]) -> None:
+        ...
 
     async def remove_all_reactions(
         self,

@@ -81,14 +81,14 @@ _ParentT = typing.TypeVar("_ParentT")
 
 
 class TypingIndicator(abc.ABC):
-    """Result type of `hikari.api.rest.RESTClient.trigger_typing`.
+    """Result type of [hikari.api.rest.RESTClient.trigger_typing][].
 
     This is an object that can either be awaited like a coroutine to trigger
     the typing indicator once, or an async context manager to keep triggering
     the typing indicator repeatedly until the context finishes.
 
     !!! note
-        This is a helper class that is used by `hikari.api.rest.RESTClient`.
+        This is a helper class that is used by [hikari.api.rest.RESTClient][].
         You should only ever need to use instances of this class that are
         produced by that API.
     """
@@ -96,10 +96,12 @@ class TypingIndicator(abc.ABC):
     __slots__: typing.Sequence[str] = ()
 
     @abc.abstractmethod
-    def __await__(self) -> typing.Generator[None, typing.Any, None]: ...
+    def __await__(self) -> typing.Generator[None, typing.Any, None]:
+        ...
 
     @abc.abstractmethod
-    async def __aenter__(self) -> None: ...
+    async def __aenter__(self) -> None:
+        ...
 
     @abc.abstractmethod
     async def __aexit__(
@@ -107,23 +109,24 @@ class TypingIndicator(abc.ABC):
         exception_type: typing.Type[BaseException],
         exception: BaseException,
         exception_traceback: types.TracebackType,
-    ) -> None: ...
+    ) -> None:
+        ...
 
 
 class GuildBuilder(abc.ABC):
-    """Result type of `hikari.api.rest.RESTClient.guild_builder`.
+    """Result type of [hikari.api.rest.RESTClient.guild_builder][].
 
     This is used to create a guild in a tidy way using the HTTP API, since
     the logic behind creating a guild on an API level is somewhat confusing
     and detailed.
 
     !!! note
-        If you call `add_role`, the default roles provided by Discord will
+        If you call [add_role][], the default roles provided by Discord will
         be created. This also applies to the `add_` functions for
         text channels/voice channels/categories.
 
     !!! note
-        Functions that return a `hikari.snowflakes.Snowflake` do
+        Functions that return a [hikari.snowflakes.Snowflake][] do
         **not** provide the final ID that the object will have once the
         API call is made. The returned IDs are only able to be used to
         re-reference particular objects while building the guild format
@@ -289,7 +292,7 @@ class GuildBuilder(abc.ABC):
         color : hikari.undefined.UndefinedOr[hikari.colors.Colorish]
             If provided, the role's color.
         colour : hikari.undefined.UndefinedOr[hikari.colors.Colorish]
-            An alias for `color`.
+            An alias for [color][].
         hoist : hikari.undefined.UndefinedOr[bool]
             If provided, whether to hoist the role.
         mentionable : hikari.undefined.UndefinedOr[bool]
@@ -440,7 +443,7 @@ class GuildBuilder(abc.ABC):
             If provided, the permission overwrites for the channel.
         region : hikari.undefined.UndefinedOr[typing.Union[hikari.voices.VoiceRegion, str]]
              If provided, the voice region to for this channel. Passing
-             `None` here will set it to "auto" mode where the used
+             [None][] here will set it to "auto" mode where the used
              region will be decided based on the first person who connects to it
              when it's empty.
         parent_id : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
@@ -494,7 +497,7 @@ class GuildBuilder(abc.ABC):
             If provided, the permission overwrites for the channel.
         region : hikari.undefined.UndefinedOr[typing.Union[hikari.voices.VoiceRegion, str]]
              If provided, the voice region to for this channel. Passing
-             `None` here will set it to "auto" mode where the used
+             [None][] here will set it to "auto" mode where the used
              region will be decided based on the first person who connects to it
              when it's empty.
         parent_id : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
@@ -557,8 +560,8 @@ class InteractionDeferredBuilder(InteractionResponseBuilder, abc.ABC):
 
         !!! note
             As of writing the only message flags which can be set here are
-            `hikari.messages.MessageFlag.EPHEMERAL`, `hikari.messages.MessageFlag.SUPPRESS_NOTIFICATIONS`
-            and `hikari.messages.MessageFlag.SUPRESS_EMBEDS`.
+            [hikari.messages.MessageFlag.EPHEMERAL][], [hikari.messages.MessageFlag.SUPPRESS_NOTIFICATIONS][]
+            and [hikari.messages.MessageFlag.SUPRESS_EMBEDS][].
         """
 
     @abc.abstractmethod
@@ -566,9 +569,9 @@ class InteractionDeferredBuilder(InteractionResponseBuilder, abc.ABC):
         """Set message flags for this response.
 
         !!! note
-            As of writing, the only message flags which can be set are `hikari.messages.MessageFlag.EPHEMERAL`
-            `hikari.messages.MessageFlag.SUPPRESS_NOTIFICATIONS` and
-            `hikari.messages.MessageFlag.SUPRESS_EMBEDS`.
+            As of writing, the only message flags which can be set are [hikari.messages.MessageFlag.EPHEMERAL][]
+            [hikari.messages.MessageFlag.SUPPRESS_NOTIFICATIONS][] and
+            [hikari.messages.MessageFlag.SUPRESS_EMBEDS][].
 
         Parameters
         ----------
@@ -658,7 +661,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
     """Interface of an interaction message response builder used within REST servers.
 
     This can be returned by the listener registered to
-    `hikari.api.interaction_server.InteractionServer` as a response to the interaction
+    [hikari.api.interaction_server.InteractionServer][] as a response to the interaction
     create.
     """
 
@@ -702,9 +705,9 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
         !!! note
             As of writing the only message flags which can be set here are
-            `hikari.messages.MessageFlag.EPHEMERAL`,
-            `hikari.messages.MessageFlag.SUPPRESS_NOTIFICATIONS`
-            and `hikari.messages.MessageFlag.SUPRESS_EMBEDS`.
+            [hikari.messages.MessageFlag.EPHEMERAL][],
+            [hikari.messages.MessageFlag.SUPPRESS_NOTIFICATIONS][]
+            and [hikari.messages.MessageFlag.SUPRESS_EMBEDS][].
         """
 
     @property
@@ -725,8 +728,8 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
         """Whether and what role mentions should be enabled for this response.
 
         Either a sequence of object/IDs of the roles mentions should be enabled
-        for, `False` or `hikari.undefined.UNDEFINED` to disallow any
-        role mentions or `True` to allow all role mentions.
+        for, [False][] or [hikari.undefined.UNDEFINED][] to disallow any
+        role mentions or [True][] to allow all role mentions.
         """
 
     @property
@@ -737,8 +740,8 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
         """Whether and what user mentions should be enabled for this response.
 
         Either a sequence of object/IDs of the users mentions should be enabled
-        for, `False` or `hikari.undefined.UNDEFINED` to disallow any
-        user mentions or `True` to allow all user mentions.
+        for, [False][] or [hikari.undefined.UNDEFINED][] to disallow any
+        user mentions or [True][] to allow all user mentions.
         """
 
     @abc.abstractmethod
@@ -820,7 +823,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
         !!! note
             As of writing, the only message flags which can be set is
-            `hikari.messages.MessageFlag.EPHEMERAL` and `hikari.messages.MessageFlag.SUPPRESS_NOTIFICATIONS`..
+            [hikari.messages.MessageFlag.EPHEMERAL][] and [hikari.messages.MessageFlag.SUPPRESS_NOTIFICATIONS][].
 
         Parameters
         ----------
@@ -877,8 +880,8 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
         ----------
         mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
             Either a sequence of object/IDs of the roles mentions should be enabled for,
-            `False` or `hikari.undefined.UNDEFINED` to disallow any role
-            mentions or `True` to allow all role mentions.
+            [False][] or [hikari.undefined.UNDEFINED][] to disallow any role
+            mentions or [True][] to allow all role mentions.
 
         Returns
         -------
@@ -900,8 +903,8 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
         ----------
         mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
             Either a sequence of object/IDs of the users mentions should be enabled for,
-            `False` or `hikari.undefined.UNDEFINED` to disallow any user
-            mentions or `True` to allow all user mentions.
+            [False][] or [hikari.undefined.UNDEFINED][] to disallow any user
+            mentions or [True][] to allow all user mentions.
 
         Returns
         -------
@@ -914,7 +917,7 @@ class InteractionModalBuilder(InteractionResponseBuilder, abc.ABC):
     """Interface of an interaction modal response builder used within REST servers.
 
     This can be returned by the listener registered to
-    `hikari.api.interaction_server.InteractionServer` as a response to the interaction
+    [hikari.api.interaction_server.InteractionServer][] as a response to the interaction
     create.
     """
 
@@ -1252,7 +1255,7 @@ class SlashCommandBuilder(CommandBuilder):
     ) -> commands.SlashCommand:
         """Create this command through a REST call.
 
-        This is a shorthand for calling `hikari.api.rest.RESTClient.create_slash_command`
+        This is a shorthand for calling [hikari.api.rest.RESTClient.create_slash_command][]
         with the builder's information.
 
         Parameters
@@ -1293,7 +1296,7 @@ class ContextMenuCommandBuilder(CommandBuilder):
         """Create this command through a REST call.
 
         This is a shorthand for calling
-        `hikari.api.rest.RESTClient.create_context_menu_command`
+        [hikari.api.rest.RESTClient.create_context_menu_command][]
         with the builder's information.
 
         Parameters
@@ -1609,7 +1612,7 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC):
         """Minimum number of options which must be chosen.
 
         Defaults to 1.
-        Must be less than or equal to `SelectMenuBuilder.max_values` and greater
+        Must be less than or equal to [SelectMenuBuilder.max_values][] and greater
         than or equal to 0.
         """
 
@@ -1619,7 +1622,7 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC):
         """Maximum number of options which can be chosen.
 
         Defaults to 1.
-        Must be greater than or equal to `SelectMenuBuilder.min_values` and
+        Must be greater than or equal to [SelectMenuBuilder.min_values][] and
         less than or equal to 25.
         """
 
@@ -1641,8 +1644,6 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC):
     @abc.abstractmethod
     def set_is_disabled(self, state: bool, /) -> Self:
         """Set whether this option is disabled.
-
-        Defaults to `False`.
 
         Parameters
         ----------
@@ -1677,7 +1678,7 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC):
 
         !!! note
             This defaults to 1 if not set and must be greater than or equal to 0
-            and less than or equal to `SelectMenuBuilder.max_values`.
+            and less than or equal to [SelectMenuBuilder.max_values][].
 
         Parameters
         ----------
@@ -1696,7 +1697,7 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC):
 
         !!! note
             This defaults to 1 if not set and must be less than or equal to 25
-            and greater than or equal to `SelectMenuBuilder.min_values`.
+            and greater than or equal to [SelectMenuBuilder.min_values][].
 
         Parameters
         ----------
@@ -1982,8 +1983,8 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
         """Add a component to this action row builder.
 
         !!! warning
-            It is generally better to use `ActionRowBuilder.add_button`
-            and `ActionRowBuilder.add_select_menu` to add your
+            It is generally better to use [ActionRowBuilder.add_button][]
+            and [ActionRowBuilder.add_select_menu][] to add your
             component to the builder. Those methods utilize this one.
 
         Parameters
@@ -2080,8 +2081,8 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
         """Add a select menu component to this action row builder.
 
         For channel select menus and text select menus see
-        `MessageActionRowBuilder.add_channel_menu` and
-        `MessageActionRowBuilder.add_text_menu`.
+        [MessageActionRowBuilder.add_channel_menu][] and
+        [MessageActionRowBuilder.add_text_menu][].
 
         Parameters
         ----------
@@ -2186,9 +2187,9 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
         TextSelectMenuBuilder
             The text select menu builder.
 
-            `TextSelectMenuBuilder.add_option` should be called to add
+            [TextSelectMenuBuilder.add_option][] should be called to add
             options to the returned builder then
-            `TextSelectMenuBuilder.parent` can be used to return to this
+            [TextSelectMenuBuilder.parent][] can be used to return to this
             action row while chaining calls.
 
         Raises
@@ -2218,8 +2219,8 @@ class ModalActionRowBuilder(ComponentBuilder, abc.ABC):
         """Add a component to this action row builder.
 
         !!! warning
-            It is generally better to use `ActionRowBuilder.add_button`
-            and `ActionRowBuilder.add_select_menu` to add your
+            It is generally better to use [ActionRowBuilder.add_button][]
+            and [ActionRowBuilder.add_select_menu][] to add your
             component to the builder. Those methods utilize this one.
 
         Parameters

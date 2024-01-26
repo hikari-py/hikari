@@ -35,7 +35,7 @@ from hikari.internal import enums
 class Permissions(enums.Flag):
     """Represents the permissions available in a given channel or guild.
 
-    This enum is an `enum.IntFlag`, which means that it is stored as a bit field
+    This enum is an [enum.IntFlag][], which means that it is stored as a bit field
     where each bit represents a permission. You can use bitwise operators
     to efficiently manipulate and compare permissions.
 
@@ -155,7 +155,7 @@ class Permissions(enums.Flag):
     """Allows for sending messages in a channel."""
 
     SEND_TTS_MESSAGES = 1 << 12
-    """Allows for sending of `/tts` messages."""
+    """Allows for sending of [/tts][] messages."""
 
     MANAGE_MESSAGES = 1 << 13
     """Allows for deletion of other users messages.
@@ -272,7 +272,7 @@ class Permissions(enums.Flag):
     """Allows for sending messages in threads."""
 
     START_EMBEDDED_ACTIVITIES = 1 << 39
-    """Allows for launching activities (applications with the `EMBEDDED` flag) in a voice channel."""
+    """Allows for launching activities (applications with the [EMBEDDED][] flag) in a voice channel."""
 
     MODERATE_MEMBERS = 1 << 40
     """Allows for timing out members."""
@@ -303,7 +303,7 @@ class Permissions(enums.Flag):
 
     @classmethod
     def all_permissions(cls) -> Permissions:
-        """Get an instance of `Permissions` with all the known permissions.
+        """Get an instance of [hikari.permissions.Permissions][] with all the known permissions.
 
         Returns
         -------

@@ -93,8 +93,8 @@ class ResponseType(int, enums.Enum):
     MESSAGE_CREATE = 4
     """An immediate message response to an interaction.
 
-    * `InteractionType.APPLICATION_COMMAND`
-    * `InteractionType.MESSAGE_COMPONENT`
+    * [InteractionType.APPLICATION_COMMAND][]
+    * [InteractionType.MESSAGE_COMPONENT][]
     """
 
     DEFERRED_MESSAGE_CREATE = 5
@@ -105,8 +105,8 @@ class ResponseType(int, enums.Enum):
 
     This is valid for the following interaction types:
 
-    * `InteractionType.APPLICATION_COMMAND`
-    * `InteractionType.MESSAGE_COMPONENT`
+    * [InteractionType.APPLICATION_COMMAND][]
+    * [InteractionType.MESSAGE_COMPONENT][]
     """
 
     DEFERRED_MESSAGE_UPDATE = 6
@@ -114,7 +114,7 @@ class ResponseType(int, enums.Enum):
 
     This is valid for the following interaction types:
 
-    * `InteractionType.MESSAGE_COMPONENT`
+    * [InteractionType.MESSAGE_COMPONENT][]
     """
 
     MESSAGE_UPDATE = 7
@@ -122,7 +122,7 @@ class ResponseType(int, enums.Enum):
 
     This is valid for the following interaction types:
 
-    * `InteractionType.MESSAGE_COMPONENT`
+    * [InteractionType.MESSAGE_COMPONENT][]
     """
 
     AUTOCOMPLETE = 8
@@ -130,7 +130,7 @@ class ResponseType(int, enums.Enum):
 
     This is valid for the following interaction types:
 
-    * `InteractionType.AUTOCOMPLETE`
+    * [InteractionType.AUTOCOMPLETE][]
     """
 
     MODAL = 9
@@ -138,7 +138,7 @@ class ResponseType(int, enums.Enum):
 
     This is valid for the following interaction types:
 
-    * `InteractionType.MODAL_SUBMIT`
+    * [InteractionType.MODAL_SUBMIT][]
     """
 
 
@@ -149,8 +149,8 @@ MESSAGE_RESPONSE_TYPES: typing.Final[typing.AbstractSet[MessageResponseTypesT]] 
 
 This includes the following:
 
-* `ResponseType.MESSAGE_CREATE`
-* `ResponseType.MESSAGE_UPDATE`
+* [ResponseType.MESSAGE_CREATE][]
+* [ResponseType.MESSAGE_UPDATE][]
 """
 
 MessageResponseTypesT = typing.Literal[ResponseType.MESSAGE_CREATE, 4, ResponseType.MESSAGE_UPDATE, 7]
@@ -158,8 +158,8 @@ MessageResponseTypesT = typing.Literal[ResponseType.MESSAGE_CREATE, 4, ResponseT
 
 The following are valid for this:
 
-* `ResponseType.MESSAGE_CREATE`/`4`
-* `ResponseType.MESSAGE_UPDATE`/`7`
+* [ResponseType.MESSAGE_CREATE][]/`4`
+* [ResponseType.MESSAGE_UPDATE][]/`7`
 """
 
 DEFERRED_RESPONSE_TYPES: typing.Final[typing.AbstractSet[DeferredResponseTypesT]] = frozenset(
@@ -169,8 +169,8 @@ DEFERRED_RESPONSE_TYPES: typing.Final[typing.AbstractSet[DeferredResponseTypesT]
 
 This includes the following:
 
-* `ResponseType.DEFERRED_MESSAGE_CREATE`
-* `ResponseType.DEFERRED_MESSAGE_UPDATE`
+* [ResponseType.DEFERRED_MESSAGE_CREATE][]
+* [ResponseType.DEFERRED_MESSAGE_UPDATE][]
 """
 
 DeferredResponseTypesT = typing.Literal[
@@ -180,8 +180,8 @@ DeferredResponseTypesT = typing.Literal[
 
 The following are valid for this:
 
-* `ResponseType.DEFERRED_MESSAGE_CREATE`/`5`
-* `ResponseType.DEFERRED_MESSAGE_UPDATE`/`6`
+* [ResponseType.DEFERRED_MESSAGE_CREATE][]/`5`
+* [ResponseType.DEFERRED_MESSAGE_UPDATE][]/`6`
 """
 
 
@@ -270,7 +270,7 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
 
         !!! warning
             Calling this on an interaction which already has an initial
-            response will result in this raising a `hikari.errors.NotFoundError`.
+            response will result in this raising a [hikari.errors.NotFoundError][].
             This includes if the REST interaction server has already responded
             to the request.
 
@@ -283,11 +283,11 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
         ----------------
         content : hikari.undefined.UndefinedOr[typing.Any]
             If provided, the message contents. If
-            `hikari.undefined.UNDEFINED`, then nothing will be sent
+            [hikari.undefined.UNDEFINED][], then nothing will be sent
             in the content. Any other value here will be cast to a
-            `str`.
+            [str][].
 
-            If this is a `hikari.embeds.Embed` and no `embed` nor `embeds` kwarg
+            If this is a [hikari.embeds.Embed][] and no `embed` nor `embeds` kwarg
             is provided, then this will instead update the embed. This allows
             for simpler syntax when sending an embed alone.
         attachment : hikari.undefined.UndefinedNoneOr[typing.Union[hikari.files.Resourceish, hikari.messages.Attachment]]
@@ -309,8 +309,8 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
             If provided, the message flags this response should have.
 
             As of writing the only message flags which can be set here are
-            `hikari.messages.MessageFlag.EPHEMERAL`, `hikari.messages.MessageFlag.SUPPRESS_NOTIFICATIONS`
-            and `hikari.messages.MessageFlag.SUPPRESS_EMBEDS`.
+            [hikari.messages.MessageFlag.EPHEMERAL][], [hikari.messages.MessageFlag.SUPPRESS_NOTIFICATIONS][]
+            and [hikari.messages.MessageFlag.SUPPRESS_EMBEDS][].
         tts : hikari.undefined.UndefinedOr[bool]
             If provided, whether the message will be read out by a screen
             reader using Discord's TTS (text-to-speech) system.
@@ -318,20 +318,20 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
             If provided, whether the message should parse @everyone/@here
             mentions.
         user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
-            If provided, and `True`, all user mentions will be detected.
-            If provided, and `False`, all user mentions will be ignored
+            If provided, and [True][], all user mentions will be detected.
+            If provided, and [False][], all user mentions will be ignored
             if appearing in the message body.
             Alternatively this may be a collection of
-            `hikari.snowflakes.Snowflake`, or
-            `hikari.users.PartialUser` derivatives to enforce mentioning
+            [hikari.snowflakes.Snowflake][], or
+            [hikari.users.PartialUser][] derivatives to enforce mentioning
             specific users.
         role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], bool]]
-            If provided, and `True`, all role mentions will be detected.
-            If provided, and `False`, all role mentions will be ignored
+            If provided, and [True][], all role mentions will be detected.
+            If provided, and [False][], all role mentions will be ignored
             if appearing in the message body.
             Alternatively this may be a collection of
-            `hikari.snowflakes.Snowflake`, or
-            `hikari.guilds.PartialRole` derivatives to enforce mentioning
+            [hikari.snowflakes.Snowflake][], or
+            [hikari.guilds.PartialRole][] derivatives to enforce mentioning
             specific roles.
 
         Raises

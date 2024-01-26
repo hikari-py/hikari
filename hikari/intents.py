@@ -43,7 +43,7 @@ class Intents(enums.Flag):
 
     !!! note
         Discord now places limits on certain events you can receive without
-        whitelisting your bot first. On the `Bot` tab in the developer's portal
+        whitelisting your bot first. On the [Bot][] tab in the developer's portal
         for your bot, you should now have the option to enable functionality
         for receiving these events.
 
@@ -56,10 +56,10 @@ class Intents(enums.Flag):
         form of intent value when you connect. Failure to do so may result in
         immediate termination of the session server-side.
 
-    This enum is an `enum.IntFlag`, which means that you can use bitwise
+    This enum is an [enum.IntFlag][], which means that you can use bitwise
     operators to join and splice multiple intents into one value.
 
-    For example, if we wish to only refer to the `GUILDS` intent, then it is
+    For example, if we wish to only refer to the [GUILDS][] intent, then it is
     simply a case of accessing it normally.
 
     ```py
@@ -199,7 +199,7 @@ class Intents(enums.Flag):
     * `THREAD_MEMBERS_UPDATE`
 
     !!! note
-        Both `GUILDS` and `GUILD_MEMBERS` are required to receive
+        Both [GUILDS][] and [GUILD_MEMBERS][] are required to receive
         `THREAD_MEMBERS_UPDATE`.
     """
 
@@ -212,7 +212,7 @@ class Intents(enums.Flag):
     * `THREAD_MEMBERS_UPDATE`
 
     !!! note
-        Both `GUILDS` and `GUILD_MEMBERS` are required to receive
+        Both [GUILDS][] and [GUILD_MEMBERS][] are required to receive
         `THREAD_MEMBERS_UPDATE`.
 
     !!! warning
@@ -290,7 +290,7 @@ class Intents(enums.Flag):
     GUILD_MESSAGE_TYPING = 1 << 11
     """Subscribes to the events listed below.
 
-    * `TYPING_START` (in guilds only)
+    * [TYPING_START][] (in guilds only)
     """
 
     DM_MESSAGES = 1 << 12
@@ -366,8 +366,8 @@ class Intents(enums.Flag):
     ALL_GUILDS = ALL_GUILDS_UNPRIVILEGED | ALL_GUILDS_PRIVILEGED
     """All unprivileged guild intents and all privileged guild intents.
 
-    This combines `Intents.ALL_GUILDS_UNPRIVILEGED` and
-    `Intents.ALL_GUILDS_PRIVILEGED`.
+    This combines [Intents.ALL_GUILDS_UNPRIVILEGED][] and
+    [Intents.ALL_GUILDS_PRIVILEGED][].
 
     !!! warning
         This set of intent is privileged, and requires enabling/whitelisting to
