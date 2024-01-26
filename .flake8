@@ -9,7 +9,7 @@ count = true
 # D105: Magic methods not having a docstring.
 # D412: No blank lines allowed between a section header and its content
 # E402: Module level import not at top of file (isn't compatible with our import style).
-# E704: Multiple statements on one line (conflicts with black, but it will be enforced by it anyways).
+# E701, E704: Multiple statements on one line (conflicts with black, but it will be enforced by it anyways).
 # T101: TO-DO comment detection (T102 is FIX-ME and T103 is XXX).
 # S101: Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
 # W503: line break before binary operator (too many false positives and doesnt match our style)
@@ -23,6 +23,7 @@ ignore =
     D105,
     D412,
     E402,
+    E701,
     E704,
     T101,
     S101,
