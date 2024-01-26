@@ -478,9 +478,9 @@ class PartialMessage(snowflakes.Unique):
         This is a Discord limitation.
     """
 
-    channel_mentions: undefined.UndefinedOr[
-        typing.Mapping[snowflakes.Snowflake, channels_.PartialChannel]
-    ] = attrs.field(hash=False, eq=False, repr=False)
+    channel_mentions: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, channels_.PartialChannel]] = (
+        attrs.field(hash=False, eq=False, repr=False)
+    )
     """Channel mentions that reference channels in the target crosspost's guild.
 
     If the message is not crossposted, this will always be empty.
@@ -1103,12 +1103,10 @@ class PartialMessage(snowflakes.Unique):
         await self.app.rest.delete_message(self.channel_id, self.id)
 
     @typing.overload
-    async def add_reaction(self, emoji: typing.Union[str, emojis_.Emoji]) -> None:
-        ...
+    async def add_reaction(self, emoji: typing.Union[str, emojis_.Emoji]) -> None: ...
 
     @typing.overload
-    async def add_reaction(self, emoji: str, emoji_id: snowflakes.SnowflakeishOr[emojis_.CustomEmoji]) -> None:
-        ...
+    async def add_reaction(self, emoji: str, emoji_id: snowflakes.SnowflakeishOr[emojis_.CustomEmoji]) -> None: ...
 
     async def add_reaction(
         self,
@@ -1175,8 +1173,7 @@ class PartialMessage(snowflakes.Unique):
         emoji: typing.Union[str, emojis_.Emoji],
         *,
         user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users_.PartialUser]] = undefined.UNDEFINED,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     @typing.overload
     async def remove_reaction(
@@ -1185,8 +1182,7 @@ class PartialMessage(snowflakes.Unique):
         emoji_id: snowflakes.SnowflakeishOr[emojis_.CustomEmoji],
         *,
         user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users_.PartialUser]] = undefined.UNDEFINED,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     async def remove_reaction(
         self,
@@ -1261,16 +1257,15 @@ class PartialMessage(snowflakes.Unique):
             )
 
     @typing.overload
-    async def remove_all_reactions(self) -> None:
-        ...
+    async def remove_all_reactions(self) -> None: ...
 
     @typing.overload
-    async def remove_all_reactions(self, emoji: typing.Union[str, emojis_.Emoji]) -> None:
-        ...
+    async def remove_all_reactions(self, emoji: typing.Union[str, emojis_.Emoji]) -> None: ...
 
     @typing.overload
-    async def remove_all_reactions(self, emoji: str, emoji_id: snowflakes.SnowflakeishOr[emojis_.CustomEmoji]) -> None:
-        ...
+    async def remove_all_reactions(
+        self, emoji: str, emoji_id: snowflakes.SnowflakeishOr[emojis_.CustomEmoji]
+    ) -> None: ...
 
     async def remove_all_reactions(
         self,

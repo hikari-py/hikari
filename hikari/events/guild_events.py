@@ -286,8 +286,7 @@ class GuildLeaveEvent(GuildVisibilityEvent):
 
     if typing.TYPE_CHECKING:
         # This should always fail.
-        async def fetch_guild(self) -> typing.NoReturn:
-            ...
+        async def fetch_guild(self) -> typing.NoReturn: ...
 
 
 @attrs_extensions.with_copy

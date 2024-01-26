@@ -716,8 +716,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
         return self._fetch_all().__await__()
 
     @abc.abstractmethod
-    async def __anext__(self) -> ValueT:
-        ...
+    async def __anext__(self) -> ValueT: ...
 
     # These are only included at runtime in-order to avoid the model being typed as a synchronous iterator.
     if not typing.TYPE_CHECKING:
@@ -784,8 +783,7 @@ class BufferedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT], abc.ABC
         self._buffer: typing.Optional[typing.Generator[ValueT, None, None]] = (_ for _ in ())
 
     @abc.abstractmethod
-    async def _next_chunk(self) -> typing.Optional[typing.Generator[ValueT, None, None]]:
-        ...
+    async def _next_chunk(self) -> typing.Optional[typing.Generator[ValueT, None, None]]: ...
 
     async def __anext__(self) -> ValueT:
         # This sneaky snippet of code lets us use generators rather than lists.

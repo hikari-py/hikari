@@ -922,8 +922,7 @@ class TestGatewayShardImplAsync:
         client._last_heartbeat_sent = 5
         client._logger = mock.Mock()
 
-        class ExitException(Exception):
-            ...
+        class ExitException(Exception): ...
 
         stack = contextlib.ExitStack()
         sleep = stack.enter_context(mock.patch.object(asyncio, "sleep", side_effect=[None, ExitException]))
@@ -1141,8 +1140,7 @@ class TestGatewayShardImplAsync:
         )
 
     @pytest.mark.skip("TODO")
-    async def test__keep_alive(self, client):
-        ...
+    async def test__keep_alive(self, client): ...
 
     async def test__send_heartbeat(self, client):
         client._last_heartbeat_sent = 0
