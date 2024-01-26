@@ -1630,8 +1630,7 @@ class TestRESTClientImpl:
 class TestRESTClientImplAsync:
     @pytest.fixture()
     def exit_exception(self):
-        class ExitException(Exception):
-            ...
+        class ExitException(Exception): ...
 
         return ExitException
 
@@ -4754,8 +4753,7 @@ class TestRESTClientImplAsync:
             [mock.call(mock_payload_1), mock.call(mock_payload_2), mock.call(mock_payload_3)]
         )
 
-    async def test_fetch_active_threads(self, rest_client: rest.RESTClientImpl):
-        ...
+    async def test_fetch_active_threads(self, rest_client: rest.RESTClientImpl): ...
 
     async def test_reposition_channels(self, rest_client):
         expected_route = routes.PATCH_GUILD_CHANNELS.compile(guild=123)

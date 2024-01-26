@@ -187,12 +187,10 @@ class ActionRowComponent(typing.Generic[AllowedComponentsT], PartialComponent):
     """Sequence of the components contained within this row."""
 
     @typing.overload
-    def __getitem__(self, index: int, /) -> PartialComponent:
-        ...
+    def __getitem__(self, index: int, /) -> PartialComponent: ...
 
     @typing.overload
-    def __getitem__(self, slice_: slice, /) -> typing.Sequence[AllowedComponentsT]:
-        ...
+    def __getitem__(self, slice_: slice, /) -> typing.Sequence[AllowedComponentsT]: ...
 
     def __getitem__(
         self, index_or_slice: typing.Union[int, slice], /

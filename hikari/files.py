@@ -368,8 +368,7 @@ class AsyncReaderContextManager(abc.ABC, typing.Generic[ReaderImplT]):
     __slots__: typing.Sequence[str] = ()
 
     @abc.abstractmethod
-    async def __aenter__(self) -> ReaderImplT:
-        ...
+    async def __aenter__(self) -> ReaderImplT: ...
 
     @abc.abstractmethod
     async def __aexit__(
@@ -377,8 +376,7 @@ class AsyncReaderContextManager(abc.ABC, typing.Generic[ReaderImplT]):
         exc_type: typing.Optional[typing.Type[BaseException]],
         exc: typing.Optional[BaseException],
         exc_tb: typing.Optional[types.TracebackType],
-    ) -> None:
-        ...
+    ) -> None: ...
 
     # These are only included at runtime in-order to avoid the model being typed as a synchronous context manager.
     if not typing.TYPE_CHECKING:

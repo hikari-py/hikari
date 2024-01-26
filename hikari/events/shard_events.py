@@ -217,12 +217,10 @@ class MemberChunkEvent(ShardEvent, typing.Sequence["guilds.Member"]):
     """
 
     @typing.overload
-    def __getitem__(self, index_or_slice: int, /) -> guilds.Member:
-        ...
+    def __getitem__(self, index_or_slice: int, /) -> guilds.Member: ...
 
     @typing.overload
-    def __getitem__(self, index_or_slice: slice, /) -> typing.Sequence[guilds.Member]:
-        ...
+    def __getitem__(self, index_or_slice: slice, /) -> typing.Sequence[guilds.Member]: ...
 
     def __getitem__(
         self, index_or_slice: typing.Union[int, slice], /

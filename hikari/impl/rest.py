@@ -355,14 +355,12 @@ class RESTApp(traits.ExecutorAware):
         await self._bucket_manager.close()
 
     @typing.overload
-    def acquire(self, token: typing.Optional[rest_api.TokenStrategy] = None) -> RESTClientImpl:
-        ...
+    def acquire(self, token: typing.Optional[rest_api.TokenStrategy] = None) -> RESTClientImpl: ...
 
     @typing.overload
     def acquire(
         self, token: str, token_type: typing.Union[str, applications.TokenType] = applications.TokenType.BEARER
-    ) -> RESTClientImpl:
-        ...
+    ) -> RESTClientImpl: ...
 
     def acquire(
         self,
