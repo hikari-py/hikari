@@ -1263,7 +1263,7 @@ class InteractionPremiumRequiredBuilder(special_endpoints.InteractionPremiumRequ
     def build(
         self, entity_factory: entity_factory_.EntityFactory, /
     ) -> typing.Tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
-        return {"type": self.type, "data": {}}, ()
+        return {"type": self.type}, ()
 
 
 @attrs.define(kw_only=False, weakref_slot=False)
