@@ -2544,7 +2544,9 @@ class RESTClientImpl(rest_api.RESTClient):
             snowflakes.SnowflakeishOr[channels_.GuildTextChannel]
         ] = undefined.UNDEFINED,
         preferred_locale: undefined.UndefinedOr[typing.Union[str, locales.Locale]] = undefined.UNDEFINED,
-        features: undefined.UndefinedOr[typing.Sequence[guilds.MutableGuildFeature]] = undefined.UNDEFINED,
+        features: undefined.UndefinedOr[
+            typing.Sequence[typing.Union[str, guilds.MutableGuildFeature]]
+        ] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.RESTGuild:
         route = routes.PATCH_GUILD.compile(guild=guild)
