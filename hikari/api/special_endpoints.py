@@ -96,12 +96,10 @@ class TypingIndicator(abc.ABC):
     __slots__: typing.Sequence[str] = ()
 
     @abc.abstractmethod
-    def __await__(self) -> typing.Generator[None, typing.Any, None]:
-        ...
+    def __await__(self) -> typing.Generator[None, typing.Any, None]: ...
 
     @abc.abstractmethod
-    async def __aenter__(self) -> None:
-        ...
+    async def __aenter__(self) -> None: ...
 
     @abc.abstractmethod
     async def __aexit__(
@@ -109,8 +107,7 @@ class TypingIndicator(abc.ABC):
         exception_type: typing.Type[BaseException],
         exception: BaseException,
         exception_traceback: types.TracebackType,
-    ) -> None:
-        ...
+    ) -> None: ...
 
 
 class GuildBuilder(abc.ABC):

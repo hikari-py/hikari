@@ -156,8 +156,7 @@ class TestIsAsyncIterable:
 
     def test_on_delegate(self):
         class AsyncIterator:
-            async def __anext__(self):
-                ...
+            async def __anext__(self): ...
 
         class AsyncIterable:
             def __aiter__(self):
@@ -167,8 +166,7 @@ class TestIsAsyncIterable:
 
     def test_on_delegate_class(self):
         class AsyncIterator:
-            async def __anext__(self):
-                ...
+            async def __anext__(self): ...
 
         class AsyncIterable:
             def __aiter__(self):

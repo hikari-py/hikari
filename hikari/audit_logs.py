@@ -613,12 +613,10 @@ class AuditLog(typing.Sequence[AuditLogEntry]):
     """A mapping of the objects of webhooks found in this audit log."""
 
     @typing.overload
-    def __getitem__(self, index: int, /) -> AuditLogEntry:
-        ...
+    def __getitem__(self, index: int, /) -> AuditLogEntry: ...
 
     @typing.overload
-    def __getitem__(self, slice_: slice, /) -> typing.Sequence[AuditLogEntry]:
-        ...
+    def __getitem__(self, slice_: slice, /) -> typing.Sequence[AuditLogEntry]: ...
 
     def __getitem__(
         self, index_or_slice: typing.Union[int, slice], /

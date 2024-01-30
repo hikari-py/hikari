@@ -251,8 +251,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         max_retries: int = 3,
         proxy_settings: typing.Optional[config_impl.ProxySettings] = None,
         rest_url: typing.Optional[str] = None,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     @typing.overload
     def __init__(
@@ -272,8 +271,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         max_retries: int = 3,
         proxy_settings: typing.Optional[config_impl.ProxySettings] = None,
         rest_url: typing.Optional[str] = None,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     def __init__(
         self,
@@ -696,16 +694,14 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         self, interaction_type: typing.Type[command_interactions.CommandInteraction], /
     ) -> typing.Optional[
         interaction_server_.ListenerT[command_interactions.CommandInteraction, _ModalOrMessageResponseBuilderT]
-    ]:
-        ...
+    ]: ...
 
     @typing.overload
     def get_listener(
         self, interaction_type: typing.Type[component_interactions.ComponentInteraction], /
     ) -> typing.Optional[
         interaction_server_.ListenerT[component_interactions.ComponentInteraction, _ModalOrMessageResponseBuilderT]
-    ]:
-        ...
+    ]: ...
 
     @typing.overload
     def get_listener(
@@ -714,20 +710,21 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         interaction_server_.ListenerT[
             command_interactions.AutocompleteInteraction, special_endpoints.InteractionAutocompleteBuilder
         ]
-    ]:
-        ...
+    ]: ...
 
     @typing.overload
     def get_listener(
         self, interaction_type: typing.Type[modal_interactions.ModalInteraction], /
-    ) -> typing.Optional[interaction_server_.ListenerT[modal_interactions.ModalInteraction, _MessageResponseBuilderT]]:
-        ...
+    ) -> typing.Optional[
+        interaction_server_.ListenerT[modal_interactions.ModalInteraction, _MessageResponseBuilderT]
+    ]: ...
 
     @typing.overload
     def get_listener(
         self, interaction_type: typing.Type[_InteractionT_co], /
-    ) -> typing.Optional[interaction_server_.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]]:
-        ...
+    ) -> typing.Optional[
+        interaction_server_.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]
+    ]: ...
 
     def get_listener(
         self, interaction_type: typing.Type[_InteractionT_co], /
@@ -744,8 +741,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         /,
         *,
         replace: bool = False,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     @typing.overload
     def set_listener(
@@ -757,8 +753,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         /,
         *,
         replace: bool = False,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     @typing.overload
     def set_listener(
@@ -772,8 +767,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         /,
         *,
         replace: bool = False,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     @typing.overload
     def set_listener(
@@ -785,8 +779,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         /,
         *,
         replace: bool = False,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     def set_listener(
         self,

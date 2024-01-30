@@ -838,9 +838,13 @@ class GatewayShardImpl(shard.GatewayShard):
         )
         poll_events_task = asyncio.create_task(self._poll_events(), name=f"poll events (shard {self._shard_id})")
 
+        # Rate-limits are imposed per websocket connection
+        self._total_rate_limit.close()
+        self._non_priority_rate_limit.close()
+
         # Perform handshake
         if self._seq is None:
-            self._logger.debug("identifying with new session")
+            self._logger.info("identifying with new session")
             await self._send_json(
                 {
                     _OP: _IDENTIFY,
@@ -860,7 +864,7 @@ class GatewayShardImpl(shard.GatewayShard):
                 }
             )
         else:
-            self._logger.debug("resuming session %s", self._session_id)
+            self._logger.info("resuming session %s", self._session_id)
             await self._send_json(
                 {_OP: _RESUME, _D: {"token": self._token, "seq": self._seq, "session_id": self._session_id}}
             )
@@ -924,7 +928,7 @@ class GatewayShardImpl(shard.GatewayShard):
                 backoff.reset()
 
             except errors.GatewayError as ex:
-                self._logger.error("encountered generic gateway error", exc_info=ex)
+                self._logger.error("encountered gateway error", exc_info=ex)
                 raise
 
             except asyncio.CancelledError:

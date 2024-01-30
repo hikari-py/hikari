@@ -611,8 +611,7 @@ class TestEventManagerBase:
 
     def test_subscribe_when_class_call(self, event_manager):
         class Foo:
-            async def __call__(self) -> None:
-                ...
+            async def __call__(self) -> None: ...
 
         foo = Foo()
         event_manager._check_event = mock.Mock()
@@ -622,15 +621,13 @@ class TestEventManagerBase:
         assert event_manager._listeners[member_events.MemberCreateEvent] == [foo]
 
     def test_subscribe_when_callback_is_not_coroutine(self, event_manager):
-        def test():
-            ...
+        def test(): ...
 
         with pytest.raises(TypeError, match=r"Cannot subscribe a non-coroutine function callback"):
             event_manager.subscribe(member_events.MemberCreateEvent, test)
 
     def test_subscribe_when_event_type_not_in_listeners(self, event_manager):
-        async def test():
-            ...
+        async def test(): ...
 
         event_manager._increment_listener_group_count = mock.Mock()
         event_manager._check_event = mock.Mock()
@@ -642,11 +639,9 @@ class TestEventManagerBase:
         event_manager._increment_listener_group_count.assert_called_once_with(member_events.MemberCreateEvent, 1)
 
     def test_subscribe_when_event_type_in_listeners(self, event_manager):
-        async def test():
-            ...
+        async def test(): ...
 
-        async def test2():
-            ...
+        async def test2(): ...
 
         event_manager._increment_listener_group_count = mock.Mock()
         event_manager._listeners[member_events.MemberCreateEvent] = [test2]
@@ -673,7 +668,23 @@ class TestEventManagerBase:
         get_intents.assert_called_once_with(member_events.MemberCreateEvent)
         warn.assert_not_called()
 
-    def test__check_intents_when_intents_correct(self, event_manager):
+    def test__check_event_when_generic_event(self, event_manager):
+        T = typing.TypeVar("T")
+
+        class GenericEvent(typing.Generic[T], base_events.Event): ...
+
+        event_manager._intents = intents.Intents.GUILD_MEMBERS
+
+        with mock.patch.object(
+            base_events, "get_required_intents_for", return_value=intents.Intents.GUILD_MEMBERS
+        ) as get_intents:
+            with mock.patch.object(warnings, "warn") as warn:
+                event_manager._check_event(GenericEvent[int], 0)
+
+        get_intents.assert_called_once_with(GenericEvent)
+        warn.assert_not_called()
+
+    def test__check_event_when_intents_correct(self, event_manager):
         event_manager._intents = intents.Intents.GUILD_EMOJIS | intents.Intents.GUILD_MEMBERS
 
         with mock.patch.object(
@@ -685,7 +696,7 @@ class TestEventManagerBase:
         get_intents.assert_called_once_with(member_events.MemberCreateEvent)
         warn.assert_not_called()
 
-    def test__check_intents_when_intents_incorrect(self, event_manager):
+    def test__check_event_when_intents_incorrect(self, event_manager):
         event_manager._intents = intents.Intents.GUILD_EMOJIS
 
         with mock.patch.object(
@@ -738,8 +749,7 @@ class TestEventManagerBase:
         assert event_manager.get_listeners(member_events.MemberEvent, polymorphic=False) == ["coroutine0"]
 
     def test_unsubscribe_when_event_type_not_in_listeners(self, event_manager):
-        async def test():
-            ...
+        async def test(): ...
 
         event_manager._increment_listener_group_count = mock.Mock()
         event_manager._listeners = {}
@@ -750,11 +760,9 @@ class TestEventManagerBase:
         event_manager._increment_listener_group_count.assert_not_called()
 
     def test_unsubscribe_when_event_type_when_list_not_empty_after_delete(self, event_manager):
-        async def test():
-            ...
+        async def test(): ...
 
-        async def test2():
-            ...
+        async def test2(): ...
 
         event_manager._increment_listener_group_count = mock.Mock()
         event_manager._listeners = {
@@ -771,8 +779,7 @@ class TestEventManagerBase:
         event_manager._increment_listener_group_count.assert_not_called()
 
     def test_unsubscribe_when_event_type_when_list_empty_after_delete(self, event_manager):
-        async def test():
-            ...
+        async def test(): ...
 
         event_manager._increment_listener_group_count = mock.Mock()
         event_manager._listeners = {member_events.MemberCreateEvent: [test], member_events.MemberDeleteEvent: [test]}
@@ -786,29 +793,25 @@ class TestEventManagerBase:
         with pytest.raises(TypeError):
 
             @event_manager.listen()
-            async def test():
-                ...
+            async def test(): ...
 
     def test_listen_when_more_then_one_param_when_provided_in_typehint(self, event_manager):
         with pytest.raises(TypeError):
 
             @event_manager.listen()
-            async def test(a, b, c):
-                ...
+            async def test(a, b, c): ...
 
     def test_listen_when_more_then_one_param_when_provided_in_decorator(self, event_manager):
         with pytest.raises(TypeError):
 
             @event_manager.listen(object)
-            async def test(a, b, c):
-                ...
+            async def test(a, b, c): ...
 
     def test_listen_when_param_not_provided_in_decorator_nor_typehint(self, event_manager):
         with pytest.raises(TypeError):
 
             @event_manager.listen()
-            async def test(event):
-                ...
+            async def test(event): ...
 
     def test_listen_when_param_provided_in_decorator(self, event_manager):
         stack = contextlib.ExitStack()
@@ -819,8 +822,7 @@ class TestEventManagerBase:
         with stack:
 
             @event_manager.listen(member_events.MemberCreateEvent)
-            async def test(event):
-                ...
+            async def test(event): ...
 
         resolve_signature.assert_not_called()
         subscribe.assert_called_once_with(member_events.MemberCreateEvent, test, _nested=1)
@@ -834,8 +836,7 @@ class TestEventManagerBase:
         with stack:
 
             @event_manager.listen(member_events.MemberCreateEvent, member_events.MemberDeleteEvent)
-            async def test(event):
-                ...
+            async def test(event): ...
 
         assert subscribe.call_count == 2
         resolve_signature.assert_not_called()
@@ -850,8 +851,7 @@ class TestEventManagerBase:
         with mock.patch.object(event_manager_base.EventManagerBase, "subscribe") as subscribe:
 
             @event_manager.listen()
-            async def test(event: member_events.MemberCreateEvent):
-                ...
+            async def test(event: member_events.MemberCreateEvent): ...
 
         subscribe.assert_called_once_with(member_events.MemberCreateEvent, test, _nested=1)
 
@@ -859,8 +859,7 @@ class TestEventManagerBase:
         with mock.patch.object(event_manager_base.EventManagerBase, "subscribe") as subscribe:
 
             @event_manager.listen()
-            async def test(event: typing.Union[member_events.MemberCreateEvent, member_events.MemberDeleteEvent]):
-                ...
+            async def test(event: typing.Union[member_events.MemberCreateEvent, member_events.MemberDeleteEvent]): ...
 
         assert subscribe.call_count == 2
         subscribe.assert_has_calls(
@@ -875,8 +874,7 @@ class TestEventManagerBase:
         with mock.patch.object(event_manager_base.EventManagerBase, "subscribe") as subscribe:
 
             @event_manager.listen()
-            async def test(event: member_events.MemberCreateEvent | member_events.MemberDeleteEvent):
-                ...
+            async def test(event: member_events.MemberCreateEvent | member_events.MemberDeleteEvent): ...
 
         assert subscribe.call_count == 2
         subscribe.assert_has_calls(
@@ -890,5 +888,4 @@ class TestEventManagerBase:
         with pytest.raises(TypeError):
 
             @event_manager.listen()
-            async def test(event: list[member_events.MemberUpdateEvent]):
-                ...
+            async def test(event: list[member_events.MemberUpdateEvent]): ...

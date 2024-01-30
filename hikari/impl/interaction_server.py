@@ -602,16 +602,14 @@ class InteractionServer(interaction_server.InteractionServer):
         self, interaction_type: typing.Type[command_interactions.CommandInteraction], /
     ) -> typing.Optional[
         interaction_server.ListenerT[command_interactions.CommandInteraction, _ModalOrMessageResponseBuilderT]
-    ]:
-        ...
+    ]: ...
 
     @typing.overload
     def get_listener(
         self, interaction_type: typing.Type[component_interactions.ComponentInteraction], /
     ) -> typing.Optional[
         interaction_server.ListenerT[component_interactions.ComponentInteraction, _ModalOrMessageResponseBuilderT]
-    ]:
-        ...
+    ]: ...
 
     @typing.overload
     def get_listener(
@@ -620,20 +618,21 @@ class InteractionServer(interaction_server.InteractionServer):
         interaction_server.ListenerT[
             command_interactions.AutocompleteInteraction, special_endpoints.InteractionAutocompleteBuilder
         ]
-    ]:
-        ...
+    ]: ...
 
     @typing.overload
     def get_listener(
         self, interaction_type: typing.Type[modal_interactions.ModalInteraction], /
-    ) -> typing.Optional[interaction_server.ListenerT[modal_interactions.ModalInteraction, _MessageResponseBuilderT]]:
-        ...
+    ) -> typing.Optional[
+        interaction_server.ListenerT[modal_interactions.ModalInteraction, _MessageResponseBuilderT]
+    ]: ...
 
     @typing.overload
     def get_listener(
         self, interaction_type: typing.Type[_InteractionT_co], /
-    ) -> typing.Optional[interaction_server.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]]:
-        ...
+    ) -> typing.Optional[
+        interaction_server.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]
+    ]: ...
 
     def get_listener(
         self, interaction_type: typing.Type[_InteractionT_co], /
@@ -650,8 +649,7 @@ class InteractionServer(interaction_server.InteractionServer):
         /,
         *,
         replace: bool = False,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     @typing.overload
     def set_listener(
@@ -663,8 +661,7 @@ class InteractionServer(interaction_server.InteractionServer):
         /,
         *,
         replace: bool = False,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     @typing.overload
     def set_listener(
@@ -678,8 +675,7 @@ class InteractionServer(interaction_server.InteractionServer):
         /,
         *,
         replace: bool = False,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     @typing.overload
     def set_listener(
@@ -691,8 +687,7 @@ class InteractionServer(interaction_server.InteractionServer):
         /,
         *,
         replace: bool = False,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     def set_listener(
         self,

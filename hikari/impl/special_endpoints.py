@@ -102,8 +102,7 @@ if typing.TYPE_CHECKING:
             json: typing.Union[data_binding.JSONObjectBuilder, data_binding.JSONArray, None] = None,
             reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
             auth: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
-        ) -> typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]:
-            ...
+        ) -> typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]: ...
 
     class _ThreadDeserializeSig(typing.Protocol["_GuildThreadChannelCovT"]):
         def __call__(
@@ -1021,12 +1020,12 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
     _mentions_everyone: undefined.UndefinedOr[bool] = attrs.field(
         alias="mentions_everyone", default=undefined.UNDEFINED, kw_only=True
     )
-    _role_mentions: undefined.UndefinedOr[
-        typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
-    ] = attrs.field(alias="role_mentions", default=undefined.UNDEFINED, kw_only=True)
-    _user_mentions: undefined.UndefinedOr[
-        typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
-    ] = attrs.field(alias="user_mentions", default=undefined.UNDEFINED, kw_only=True)
+    _role_mentions: undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]] = (
+        attrs.field(alias="role_mentions", default=undefined.UNDEFINED, kw_only=True)
+    )
+    _user_mentions: undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]] = (
+        attrs.field(alias="user_mentions", default=undefined.UNDEFINED, kw_only=True)
+    )
     _attachments: undefined.UndefinedNoneOr[typing.List[files.Resourceish]] = attrs.field(
         alias="attachments", default=undefined.UNDEFINED, kw_only=True
     )
@@ -1765,8 +1764,7 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
         min_values: int = 0,
         max_values: int = 1,
         is_disabled: bool = False,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     @typing.overload
     def __init__(
@@ -1778,8 +1776,7 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
         min_values: int = 0,
         max_values: int = 1,
         is_disabled: bool = False,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     def __init__(
         self,
