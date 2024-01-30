@@ -4453,8 +4453,8 @@ class RESTClientImpl(rest_api.RESTClient):
         owner_type: typing.Union[int, monetization.EntitlementOwnerType],
     ) -> monetization.Entitlement:
         body = data_binding.JSONObjectBuilder()
-        body.put("sku_id", sku)
-        body.put("owner_id", owner_id)
+        body.put_snowflake("sku_id", sku)
+        body.put_snowflake("owner_id", owner_id)
         body.put("owner_type", owner_type)
 
         route = routes.POST_APPLICATION_TEST_ENTITLEMENT.compile(application=application)
