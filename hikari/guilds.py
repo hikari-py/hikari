@@ -183,6 +183,12 @@ class GuildFeature(str, enums.Enum):
     ROLE_SUBSCRIPTIONS_AVAILABLE_FOR_PURCHASE = "ROLE_SUBSCRIPTIONS_AVAILABLE_FOR_PURCHASE"
     """Guild has role subscriptions available for purchase."""
 
+    INVITES_DISABLED = "INVITES_DISABLED"
+    """Guild has paused invites, preventing new users from joining."""
+
+    RAID_ALERTS_DISABLED = "RAID_ALERTS_DISABLED"
+    """Guild has disabled alerts for join raids in the configured safety alerts channel."""
+
 
 @typing.final
 class GuildMessageNotificationsLevel(int, enums.Enum):
