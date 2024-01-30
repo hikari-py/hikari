@@ -114,6 +114,7 @@ from hikari.invites import *
 from hikari.iterators import *
 from hikari.locales import *
 from hikari.messages import *
+from hikari.monetization import *
 from hikari.permissions import *
 from hikari.presences import *
 from hikari.scheduled_events import *

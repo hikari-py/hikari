@@ -4394,7 +4394,8 @@ class RESTClientImpl(rest_api.RESTClient):
     async def fetch_skus(
         self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication]
     ) -> typing.Sequence[monetization.SKU]:
-        response = await self._request(routes.GET_APPLICATION_SKUS.compile(application=str(int(application))))
+        route = routes.GET_APPLICATION_SKUS.compile(application=application)
+        response = await self._request(route)
         assert isinstance(response, list)
 
         return [self._entity_factory.deserialize_sku(payload) for payload in response]
@@ -4436,9 +4437,8 @@ class RESTClientImpl(rest_api.RESTClient):
         if exclude_ended is not undefined.UNDEFINED:
             query.put("exclude_ended", exclude_ended)
 
-        response = await self._request(
-            routes.GET_APPLICATION_ENTITLEMENTS.compile(application=str(int(application))), query=query
-        )
+        route = routes.GET_APPLICATION_ENTITLEMENTS.compile(application=application)
+        response = await self._request(route, query=query)
         assert isinstance(response, list)
 
         return [self._entity_factory.deserialize_entitlement(payload) for payload in response]
@@ -4449,16 +4449,16 @@ class RESTClientImpl(rest_api.RESTClient):
         /,
         *,
         sku: snowflakes.SnowflakeishOr[monetization.SKU],
-        owner_id: snowflakes.Snowflakeish,
-        owner_type: monetization.EntitlementOwnerType,
+        owner_id: typing.Union[guilds.PartialGuild, users.PartialUser, snowflakes.Snowflakeish],
+        owner_type: typing.Union[int, monetization.EntitlementOwnerType],
     ) -> monetization.Entitlement:
         body = data_binding.JSONObjectBuilder()
         body.put("sku_id", sku)
-        body.put("owner_id", owner)
+        body.put("owner_id", owner_id)
         body.put("owner_type", owner_type)
 
         route = routes.POST_APPLICATION_TEST_ENTITLEMENT.compile(application=application)
-        response = await self.request(route, json=body)
+        response = await self._request(route, json=body)
 
         assert isinstance(response, dict)
 
@@ -4469,8 +4469,5 @@ class RESTClientImpl(rest_api.RESTClient):
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         entitlement: snowflakes.SnowflakeishOr[monetization.Entitlement],
     ) -> None:
-        await self._request(
-            routes.DELETE_APPLICATION_TEST_ENTITLEMENT.compile(
-                application=str(int(application)), entitlement=str(int(entitlement))
-            )
-        )
+        route = routes.DELETE_APPLICATION_TEST_ENTITLEMENT.compile(application=application, entitlement=entitlement)
+        await self._request(route)
