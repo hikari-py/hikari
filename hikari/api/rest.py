@@ -3889,6 +3889,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             snowflakes.SnowflakeishOr[channels_.GuildTextChannel]
         ] = undefined.UNDEFINED,
         preferred_locale: undefined.UndefinedOr[typing.Union[str, locales.Locale]] = undefined.UNDEFINED,
+        features: undefined.UndefinedOr[typing.Sequence[guilds.MutableGuildFeature]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.RESTGuild:
         """Edit a guild.
@@ -3936,6 +3937,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the new public updates channel.
         preferred_locale : hikari.undefined.UndefinedNoneOr[str]
             If provided, the new preferred locale.
+        features : hikari.undefined.UndefinedOr[typing.Sequence[hikari.guilds.MutableGuildFeature]]
+            If provided, the guild features to be enabled. Features not provided will be disabled.
         reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.

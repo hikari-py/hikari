@@ -629,6 +629,7 @@ class TestPartialGuild:
             owner=6996,
             afk_timeout=400,
             preferred_locale="us-en",
+            features=[guilds.MutableGuildFeature.COMMUNITY, guilds.MutableGuildFeature.RAID_ALERTS_DISABLED],
             reason="beep boop",
         )
 
@@ -648,6 +649,7 @@ class TestPartialGuild:
             rules_channel=undefined.UNDEFINED,
             public_updates_channel=undefined.UNDEFINED,
             preferred_locale="us-en",
+            features=[guilds.MutableGuildFeature.COMMUNITY, guilds.MutableGuildFeature.RAID_ALERTS_DISABLED],
             reason="beep boop",
         )
 
