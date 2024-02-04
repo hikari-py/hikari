@@ -4029,7 +4029,7 @@ class TestRESTClientImplAsync:
                 rules_channel=StubModel(987),
                 public_updates_channel=(654),
                 preferred_locale="en-UK",
-                features=[guilds.MutableGuildFeature.COMMUNITY, guilds.MutableGuildFeature.RAID_ALERTS_DISABLED],
+                features=[guilds.GuildFeature.COMMUNITY, guilds.GuildFeature.RAID_ALERTS_DISABLED],
                 reason="hikari best",
             )
             assert result is rest_client._entity_factory.deserialize_rest_guild.return_value
@@ -4074,7 +4074,7 @@ class TestRESTClientImplAsync:
             rules_channel=StubModel(987),
             public_updates_channel=(654),
             preferred_locale="en-UK",
-            features=[guilds.MutableGuildFeature.COMMUNITY, guilds.MutableGuildFeature.RAID_ALERTS_DISABLED],
+            features=[guilds.GuildFeature.COMMUNITY, guilds.GuildFeature.RAID_ALERTS_DISABLED],
             reason="hikari best",
         )
         assert result is rest_client._entity_factory.deserialize_rest_guild.return_value

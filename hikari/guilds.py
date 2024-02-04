@@ -191,28 +191,6 @@ class GuildFeature(str, enums.Enum):
 
 
 @typing.final
-class MutableGuildFeature(str, enums.Enum):
-    """Features of a guild that can be modified."""
-
-    COMMUNITY = "COMMUNITY"
-    """Enable guild's community features.
-
-    Guild must have, in conjunction, verification level set to at
-    least Low, explicit content filter set to All Members, a rule
-    channel and an update channel.
-    """
-
-    DISCOVERABLE = "DISCOVERABLE"
-    """Enable guild's discoverability in the directory."""
-
-    INVITES_DISABLED = "INVITES_DISABLED"
-    """Disable invites for the guild."""
-
-    RAID_ALERTS_DISABLED = "RAID_ALERTS_DISABLED"
-    """Disable alerts for join raids in the configured safety alerts channel."""
-
-
-@typing.final
 class GuildMessageNotificationsLevel(int, enums.Enum):
     """Represents the default notification level for new messages in a guild."""
 
@@ -1576,7 +1554,7 @@ class PartialGuild(snowflakes.Unique):
             snowflakes.SnowflakeishOr[channels_.GuildTextChannel]
         ] = undefined.UNDEFINED,
         preferred_locale: undefined.UndefinedOr[typing.Union[str, locales.Locale]] = undefined.UNDEFINED,
-        features: undefined.UndefinedOr[typing.Sequence[MutableGuildFeature]] = undefined.UNDEFINED,
+        features: undefined.UndefinedOr[typing.Sequence[GuildFeature]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> RESTGuild:
         """Edit the guild.
@@ -1618,7 +1596,7 @@ class PartialGuild(snowflakes.Unique):
             If provided, the new public updates channel.
         preferred_locale : hikari.undefined.UndefinedNoneOr[str]
             If provided, the new preferred locale.
-        features : hikari.undefined.UndefinedOr[typing.Sequence[hikari.guilds.MutableGuildFeatures]]
+        features : hikari.undefined.UndefinedOr[typing.Sequence[hikari.guilds.GuildFeatures]]
             If provided, the guild features to be enabled. Features not provided will be disabled.
         reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
