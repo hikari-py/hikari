@@ -183,6 +183,12 @@ class GuildFeature(str, enums.Enum):
     ROLE_SUBSCRIPTIONS_AVAILABLE_FOR_PURCHASE = "ROLE_SUBSCRIPTIONS_AVAILABLE_FOR_PURCHASE"
     """Guild has role subscriptions available for purchase."""
 
+    INVITES_DISABLED = "INVITES_DISABLED"
+    """Guild has paused invites, preventing new users from joining."""
+
+    RAID_ALERTS_DISABLED = "RAID_ALERTS_DISABLED"
+    """Guild has disabled alerts for join raids in the configured safety alerts channel."""
+
 
 @typing.final
 class GuildMessageNotificationsLevel(int, enums.Enum):
@@ -1548,6 +1554,7 @@ class PartialGuild(snowflakes.Unique):
             snowflakes.SnowflakeishOr[channels_.GuildTextChannel]
         ] = undefined.UNDEFINED,
         preferred_locale: undefined.UndefinedOr[typing.Union[str, locales.Locale]] = undefined.UNDEFINED,
+        features: undefined.UndefinedOr[typing.Sequence[GuildFeature]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> RESTGuild:
         """Edit the guild.
@@ -1589,6 +1596,8 @@ class PartialGuild(snowflakes.Unique):
             If provided, the new public updates channel.
         preferred_locale : hikari.undefined.UndefinedNoneOr[str]
             If provided, the new preferred locale.
+        features : hikari.undefined.UndefinedOr[typing.Sequence[hikari.guilds.GuildFeatures]]
+            If provided, the guild features to be enabled. Features not provided will be disabled.
         reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -1632,6 +1641,7 @@ class PartialGuild(snowflakes.Unique):
             rules_channel=rules_channel,
             public_updates_channel=public_updates_channel,
             preferred_locale=preferred_locale,
+            features=features,
             reason=reason,
         )
 
