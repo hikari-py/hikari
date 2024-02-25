@@ -3883,6 +3883,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             snowflakes.SnowflakeishOr[channels_.GuildTextChannel]
         ] = undefined.UNDEFINED,
         preferred_locale: undefined.UndefinedOr[typing.Union[str, locales.Locale]] = undefined.UNDEFINED,
+        features: undefined.UndefinedOr[typing.Sequence[guilds.GuildFeature]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.RESTGuild:
         """Edit a guild.
@@ -3930,6 +3931,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the new public updates channel.
         preferred_locale : hikari.undefined.UndefinedNoneOr[str]
             If provided, the new preferred locale.
+        features : hikari.undefined.UndefinedOr[typing.Sequence[hikari.guilds.GuildFeature]]
+            If provided, the guild features to be enabled. Features not provided will be disabled.
+
+            .. warning::
+                At the time of writing, Discord ignores non-`mutable features
+                <https://discord.com/developers/docs/resources/guild#guild-object-mutable-guild-features>`_.
+                This behaviour can change in the future. You should refer to the
+                aforementioned link for the most up-to-date information, and
+                only supply mutable features.
         reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.

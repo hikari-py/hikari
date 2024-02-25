@@ -4008,6 +4008,7 @@ class TestRESTClientImplAsync:
             "icon": "icon data",
             "splash": "splash data",
             "banner": "banner data",
+            "features": ["COMMUNITY", "RAID_ALERTS_DISABLED"],
         }
         rest_client._request = mock.AsyncMock(return_value={"id": "123"})
 
@@ -4028,6 +4029,7 @@ class TestRESTClientImplAsync:
                 rules_channel=StubModel(987),
                 public_updates_channel=(654),
                 preferred_locale="en-UK",
+                features=[guilds.GuildFeature.COMMUNITY, guilds.GuildFeature.RAID_ALERTS_DISABLED],
                 reason="hikari best",
             )
             assert result is rest_client._entity_factory.deserialize_rest_guild.return_value
@@ -4052,6 +4054,7 @@ class TestRESTClientImplAsync:
             "icon": None,
             "splash": None,
             "banner": None,
+            "features": ["COMMUNITY", "RAID_ALERTS_DISABLED"],
         }
         rest_client._request = mock.AsyncMock(return_value={"ok": "NO"})
 
@@ -4071,6 +4074,7 @@ class TestRESTClientImplAsync:
             rules_channel=StubModel(987),
             public_updates_channel=(654),
             preferred_locale="en-UK",
+            features=[guilds.GuildFeature.COMMUNITY, guilds.GuildFeature.RAID_ALERTS_DISABLED],
             reason="hikari best",
         )
         assert result is rest_client._entity_factory.deserialize_rest_guild.return_value
