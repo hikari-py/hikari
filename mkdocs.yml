@@ -9,7 +9,7 @@ edit_uri: blob/master/docs/
 watch: [ hikari, README.md, CHANGELOG.md ]
 copyright: © 2021-present davfsa
 
-strict: true
+#strict: true
 
 theme:
   name: material
