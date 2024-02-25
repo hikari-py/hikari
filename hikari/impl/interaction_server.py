@@ -280,7 +280,7 @@ class InteractionServer(interaction_server.InteractionServer):
         """Handle an AIOHTTP interaction request.
 
         This method handles aiohttp specific detail before calling
-        [InteractionServer.on_interaction][] with the data extracted from the
+        [hikari.impl.interaction_server.InteractionServer.on_interaction][] with the data extracted from the
         request if it can and handles building an aiohttp response.
 
         Parameters

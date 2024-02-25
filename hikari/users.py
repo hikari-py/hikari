@@ -129,7 +129,7 @@ class PartialUser(snowflakes.Unique, abc.ABC):
     This is used for endpoints and events that only expose partial user
     information.
 
-    For full user info, consider calling the [fetch_self][] method to perform an
+    For full user info, consider calling the [hikari.users.PartialUser.fetch_self][] method to perform an
     API call.
     """
 
@@ -311,7 +311,7 @@ class PartialUser(snowflakes.Unique, abc.ABC):
                 [hikari.files.URL][],
                 [hikari.messages.Attachment][],
                 [hikari.emojis.Emoji][],
-                [EmbedResource][], etc will also be uploaded this way.
+                [hikari.embeds.EmbedResource][], etc will also be uploaded this way.
                 This will use bit-inception, so only a small percentage of the
                 resource will remain in memory at any one time, thus aiding in
                 scalability.
@@ -377,7 +377,7 @@ class PartialUser(snowflakes.Unique, abc.ABC):
             [hikari.undefined.UNDEFINED][], then nothing is changed.
 
             Note that some flags may not be able to be set. Currently the only
-            flags that can be set are [NONE][] and [SUPPRESS_EMBEDS][].
+            flags that can be set are [hikari.messages.MessageFlag.NONE][] and [hikari.messages.MessageFlag.SUPPRESS_EMBEDS][].
 
         Returns
         -------
@@ -401,7 +401,7 @@ class PartialUser(snowflakes.Unique, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [SEND_MESSAGES][] in the channel or the
+            If you are missing the [hikari.permissions.Permissions.SEND_MESSAGES][] in the channel or the
             person you are trying to message has the DM's disabled.
         hikari.errors.NotFoundError
             If the user is not found.

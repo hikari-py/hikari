@@ -92,8 +92,8 @@ class Emoji(files.WebResource, abc.ABC):
         Returns
         -------
         Emoji
-            The parsed emoji object. This will be a [CustomEmoji][] if a custom
-            emoji mention, or a [UnicodeEmoji][] otherwise.
+            The parsed emoji object. This will be a [hikari.emojis.CustomEmoji][] if a custom
+            emoji mention, or a [hikari.emojis.UnicodeEmoji][] otherwise.
 
         Raises
         ------
@@ -329,7 +329,7 @@ class CustomEmoji(snowflakes.Unique, Emoji):
 class KnownCustomEmoji(CustomEmoji):
     """Represents an emoji that is known from a guild the bot is in.
 
-    This is a specialization of [CustomEmoji][] that is from a guild that you
+    This is a specialization of [hikari.emojis.CustomEmoji][] that is from a guild that you
     _are_ part of. As a result, it contains a lot more information with it.
     """
 
@@ -351,7 +351,7 @@ class KnownCustomEmoji(CustomEmoji):
     """The user that created the emoji.
 
     !!! note
-        This will be [None][] if you are missing the [MANAGE_EMOJIS_AND_STICKERS][]
+        This will be [None][] if you are missing the [hikari.permissions.Permissions.MANAGE_EMOJIS_AND_STICKERS][]
         permission in the server the emoji is from.
     """
 

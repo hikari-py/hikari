@@ -154,30 +154,30 @@ def calculate_shard_id(
 
 
 Snowflakeish = typing.Union[Snowflake, int]
-"""Type hint for a value that resembles a [Snowflake][] object functionally.
+"""Type hint for a value that resembles a [hikari.snowflakes.Snowflake][] object functionally.
 
-This is a value that is [Snowflake][]-ish.
+This is a value that is [hikari.snowflakes.Snowflake][]-ish.
 
-A value is [Snowflake][]-ish if casting it to an [int][] allows it to be cast to
-a [Snowflake][].
+A value is [hikari.snowflakes.Snowflake][]-ish if casting it to an [int][] allows it to be cast to
+a [hikari.snowflakes.Snowflake][].
 
 The valid types for this type hint are:
 
 - [int][]
-- [Snowflake][]
+- [hikari.snowflakes.Snowflake][]
 """
 
 SearchableSnowflakeish = typing.Union[Snowflakeish, "datetime.datetime"]
 """Type hint for a snowflakeish that can be searched for in history.
 
-This is just a [Snowflakeish][] that can alternatively be some form of
+This is just a [hikari.snowflakes.Snowflakeish][] that can alternatively be some form of
 [datetime.datetime][] instance.
 
 The valid types for this type hint are:
 
 - [str][] containing digits.
 - [int][]
-- [Snowflake][]
+- [hikari.snowflakes.Snowflake][]
 - [datetime.datetime][]
 """
 
@@ -186,7 +186,7 @@ T = typing.TypeVar("T", covariant=True, bound=Unique)
 SnowflakeishOr = typing.Union[T, Snowflakeish]
 """Type hint representing a unique object entity.
 
-This is a value that is [Snowflake][]-ish or a specific type covariant.
+This is a value that is [hikari.snowflakes.Snowflake][]-ish or a specific type covariant.
 
 If you see `SnowflakeishOr[Foo]` anywhere as a type hint, it means the value
 may be a `Foo` instance, a `Snowflake`, a `int` or a `str`
@@ -200,13 +200,13 @@ use of intents).
 The valid types for this type hint are:
 
 - [int][]
-- [Snowflake][]
+- [hikari.snowflakes.Snowflake][]
 """
 
 SearchableSnowflakeishOr = typing.Union[T, SearchableSnowflakeish]
 """Type hint for a unique object entity that can be searched for.
 
-This is a variant of [SnowflakeishOr][] that also allows an alternative value
+This is a variant of [hikari.snowflakes.SnowflakeishOr][] that also allows an alternative value
 of a [datetime.datetime][] to be specified.
 
 Essentially this represents any concrete object, or ID of that object. It is
@@ -217,7 +217,7 @@ use of intents).
 The valid types for this type hint are:
 
 - [int][]
-- [Snowflake][]
+- [hikari.snowflakes.Snowflake][]
 - [datetime.datetime][]
 """
 

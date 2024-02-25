@@ -23,7 +23,7 @@
 """Lazy iterators for data that requires repeated API calls to retrieve.
 
 For consumers of this API, the only class you need to worry about is
-[LazyIterator][]. Everything else is internal detail only exposed for people who
+[hikari.iterators.LazyIterator][]. Everything else is internal detail only exposed for people who
 wish to extend this API further!
 """
 from __future__ import annotations

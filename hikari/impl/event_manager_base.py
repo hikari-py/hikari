@@ -116,10 +116,10 @@ def _generate_weak_listener(
 
 
 class EventStream(event_manager_.EventStream[base_events.EventT]):
-    """An implementation of an event [EventStream][] class.
+    """An implementation of an event [hikari.api.event_manager.EventStream][] class.
 
     !!! note
-        While calling [EventStream.filter][] on an active "opened" event stream
+        While calling [hikari.impl.event_manager_base.EventStream.filter][] on an active "opened" event stream
         will return a wrapping lazy iterator, calling it on an inactive "closed"
         event stream will return the event stream and add the given predicates
         to the streamer.

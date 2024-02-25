@@ -93,7 +93,7 @@ class ExecutableWebhook(abc.ABC):
         """Webhook's token.
 
         !!! note
-            If this is [None][] then the methods provided by [ExecutableWebhook][]
+            If this is [None][] then the methods provided by [hikari.webhooks.ExecutableWebhook][]
             will always raise a [ValueError][].
         """
 

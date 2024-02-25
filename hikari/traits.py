@@ -297,7 +297,7 @@ class ShardAware(
 
         !!! note
             If you want to set presences per shard, access the shard you wish
-            to update (e.g. by using [GatewayBot.shards][]), and call
+            to update (e.g. by using [hikari.GatewayBot.shards][]), and call
             [hikari.api.shard.GatewayShard.update_presence][] on that shard.
             This method is simply a facade to make performing this in bulk
             simpler.
@@ -392,8 +392,8 @@ class ShardAware(
             If trying to specify `users` with `query`/`limit`, if `limit` is not between
             0 and 100, both inclusive or if `users` length is over 100.
         hikari.errors.MissingIntentError
-            When trying to request presences without the [GUILD_MEMBERS][] or when trying to
-            request the full list of members without [GUILD_PRESENCES][].
+            When trying to request presences without the [hikari.intents.Intents.GUILD_MEMBERS][] or when trying to
+            request the full list of members without [hikari.intents.Intents.GUILD_PRESENCES][].
         RuntimeError
             If the guild passed isn't covered by any of the shards in this sharded
             client.

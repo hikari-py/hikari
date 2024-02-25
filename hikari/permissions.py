@@ -272,7 +272,10 @@ class Permissions(enums.Flag):
     """Allows for sending messages in threads."""
 
     START_EMBEDDED_ACTIVITIES = 1 << 39
-    """Allows for launching activities (applications with the [EMBEDDED][] flag) in a voice channel."""
+    """Allows for launching activities in a voice channel.
+    
+    Activities are applications that have the [hikari.applications.ApplicationFlags.EMBEDDED][] flag.
+    """
 
     MODERATE_MEMBERS = 1 << 40
     """Allows for timing out members."""

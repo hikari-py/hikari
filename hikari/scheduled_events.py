@@ -89,7 +89,7 @@ class ScheduledEventStatus(int, enums.Enum):
     """Indicates an event has been canceled."""
 
     CANCELLED = CANCELED
-    """Alias of [ScheduledEventStatus.CANCELED][]."""
+    """Alias of [hikari.scheduled_events.ScheduledEventStatus.CANCELED][]."""
 
 
 @attrs_extensions.with_copy

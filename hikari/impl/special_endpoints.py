@@ -212,7 +212,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
     and detailed.
 
     !!! note
-        If you call [add_role][], the default roles provided by Discord will
+        If you call [hikari.api.special_endpoints.GuildBuilder.add_role][], the default roles provided by Discord will
         be created. This also applies to the `add_` functions for
         text channels/voice channels/categories.
 

@@ -200,7 +200,7 @@ class GuildMessageCreateEvent(MessageCreateEvent):
         """Get the cached guild that this event occurred in, if known.
 
         !!! note
-            This will require the [GUILDS][] intent to be specified on start-up
+            This will require the [hikari.intents.Intents.GUILDS][] intent to be specified on start-up
             in order to be known.
 
         Returns
@@ -437,7 +437,7 @@ class GuildMessageUpdateEvent(MessageUpdateEvent):
         """Get the cached guild that this event occurred in, if known.
 
         !!! note
-            This will require the [GUILDS][] intent to be specified on start-up
+            This will require the [hikari.intents.Intents.GUILDS][] intent to be specified on start-up
             in order to be known.
 
         Returns

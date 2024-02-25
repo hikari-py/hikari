@@ -173,7 +173,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [READ_MESSAGES][] permission in the channel.
+            If you are missing the [hikari.permissions.Permissions.VIEW_CHANNEL][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -236,8 +236,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the new name for the channel.
         flags : hikari.undefined.UndefinedOr[hikari.channels.ChannelFlag]
             If provided, the new channel flags to use for the channel. This can
-            only be used on a forum channel to apply [REQUIRE_TAG][], or
-            on a forum thread to apply [PINNED][].
+            only be used on a forum channel to apply [hikari.channels.ChannelFlag.REQUIRE_TAG][], or
+            on a forum thread to apply [hikari.channels.ChannelFlag.PINNED][].
         position : hikari.undefined.UndefinedOr[int]
             If provided, the new position for the channel.
         topic : hikari.undefined.UndefinedOr[str]
@@ -292,7 +292,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the new locked state for the thread. This only applies
             to threads.
 
-            If it's locked then only people with [MANAGE_THREADS][] can unarchive it.
+            If it's locked then only people with [hikari.permissions.Permissions.MANAGE_THREADS][] can unarchive it.
         invitable : undefined.UndefinedOr[bool]
             If provided, the new setting for whether non-moderators can invite
             new members to a private thread. This only applies to threads.
@@ -360,8 +360,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [MANAGE_WEBHOOKS][] permission in the target
-            channel or are missing the [VIEW_CHANNEL][] permission in the origin
+            If you are missing the [hikari.permissions.Permissions.MANAGE_WEBHOOKS][] permission in the target
+            channel or are missing the [hikari.permissions.Permissions.VIEW_CHANNEL][] permission in the origin
             channel.
         hikari.errors.NotFoundError
             If the origin or target channel is not found.
@@ -398,7 +398,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [MANAGE_CHANNEL][] permission in the channel.
+            If you are missing the [hikari.permissions.Permissions.MANAGE_CHANNELS][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -452,7 +452,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [MUTE_MEMBERS][] permission in the channel.
+            If you are missing the [hikari.permissions.Permissions.MUTE_MEMBERS][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel, message or voice state is not found.
         hikari.errors.RateLimitTooLongError
@@ -499,7 +499,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [MUTE_MEMBERS][] permission in the channel.
+            If you are missing the [hikari.permissions.Permissions.MUTE_MEMBERS][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel, message or voice state is not found.
         hikari.errors.RateLimitTooLongError
@@ -583,7 +583,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [MANAGE_PERMISSIONS][] permission in the channel.
+            If you are missing the [hikari.permissions.Permissions.MANAGE_PERMISSIONS][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found or the target is not found if it is
             a role.
@@ -617,7 +617,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [MANAGE_PERMISSIONS][] permission in the channel.
+            If you are missing the [hikari.permissions.Permissions.MANAGE_PERMISSIONS][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found or the target is not found.
         hikari.errors.RateLimitTooLongError
@@ -649,7 +649,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [MANAGE_CHANNEL][] permission in the channel.
+            If you are missing the [hikari.permissions.Permissions.MANAGE_CHANNELS][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found in any guilds you are a member of.
         hikari.errors.RateLimitTooLongError
@@ -700,15 +700,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             object or the ID of an existing user.
 
             !!! note
-                This is required if `target_type` is [STREAM][] and the targeted
+                This is required if `target_type` is [hikari.invites.TargetType.STREAM][] and the targeted
                 user must be streaming into the channel.
         target_application : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]]
             If provided, the target application id for this invite. This may be
             the object or the ID of an existing application.
 
             !!! note
-                This is required if `target_type` is [EMBEDDED_APPLICATION][] and
-                the targeted application must have the [EMBEDDED][] flag.
+                This is required if `target_type` is [hikari.invites.TargetType.EMBEDDED_APPLICATION][] and
+                the targeted application must have the [hikari.applications.ApplicationFlags.EMBEDDED][] flag.
         reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -725,7 +725,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [MANAGE_CHANNELS][] permission.
+            If you are missing the [hikari.permissions.Permissions.MANAGE_CHANNELS][] permission.
         hikari.errors.NotFoundError
             If the channel is not found, or if the target user does not exist,
             if provided.
@@ -778,7 +778,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [SEND_MESSAGES][] in the channel.
+            If you are missing the [hikari.permissions.Permissions.SEND_MESSAGES][] in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -810,7 +810,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [READ_MESSAGES][] in the channel.
+            If you are missing the [hikari.permissions.Permissions.VIEW_CHANNEL][] in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -842,7 +842,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [MANAGE_MESSAGES][] in the channel.
+            If you are missing the [hikari.permissions.Permissions.MANAGE_MESSAGES][] in the channel.
         hikari.errors.NotFoundError
             If the channel is not found, or if the message does not exist in
             the given channel.
@@ -875,7 +875,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [MANAGE_MESSAGES][] permission.
+            If you are missing the [hikari.permissions.Permissions.MANAGE_MESSAGES][] permission.
         hikari.errors.NotFoundError
             If the channel is not found or the message is not a pinned message
             in the given channel.
@@ -940,7 +940,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [READ_MESSAGE_HISTORY][] in the channel.
+            If you are missing the [hikari.permissions.Permissions.READ_MESSAGE_HISTORY][] in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -977,7 +977,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [READ_MESSAGE_HISTORY][] in the channel.
+            If you are missing the [hikari.permissions.Permissions.READ_MESSAGE_HISTORY][] in the channel.
         hikari.errors.NotFoundError
             If the channel is not found or the message is not found in the
             given text channel.
@@ -1053,7 +1053,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
                 [hikari.files.URL][],
                 [hikari.messages.Attachment][],
                 [hikari.emojis.Emoji][],
-                [EmbedResource][], etc will also be uploaded this way.
+                [hikari.embeds.EmbedResource][], etc will also be uploaded this way.
                 This will use bit-inception, so only a small percentage of the
                 resource will remain in memory at any one time, thus aiding in
                 scalability.

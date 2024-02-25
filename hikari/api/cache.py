@@ -214,9 +214,9 @@ class Cache(abc.ABC):
 
         !!! warning
             This will return a guild regardless of whether it is available or
-            not. To only query available guilds, use [get_available_guild][]
+            not. To only query available guilds, use [hikari.api.cache.Cache.get_available_guild][]
             instead. Likewise, to only query unavailable guilds, use
-            [get_unavailable_guild][].
+            [hikari.api.cache.Cache.get_unavailable_guild][].
 
         Parameters
         ----------
@@ -250,10 +250,10 @@ class Cache(abc.ABC):
     def get_unavailable_guild(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
     ) -> typing.Optional[guilds.GatewayGuild]:
-        """Get the object of a unavailable guild from the cache.
+        """Get the object of an unavailable guild from the cache.
 
         !!! note
-            Unlike [Cache.get_available_guild][], the objects returned by this
+            Unlike [hikari.api.cache.Cache.get_available_guild][], the objects returned by this
             method will likely be out of date and inaccurate as they are
             considered unavailable, meaning that we are not receiving gateway
             events for this guild.
@@ -294,7 +294,7 @@ class Cache(abc.ABC):
         """Get a view of the unavailable guild objects in the cache.
 
         !!! note
-            Unlike [Cache.get_available_guilds_view][], the objects returned by
+            Unlike [hikari.api.cache.Cache.get_available_guilds_view][], the objects returned by
             this method will likely be out of date and inaccurate as they are
             considered unavailable, meaning that we are not receiving gateway
             events for this guild.

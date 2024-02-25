@@ -93,8 +93,8 @@ class ResponseType(int, enums.Enum):
     MESSAGE_CREATE = 4
     """An immediate message response to an interaction.
 
-    * [InteractionType.APPLICATION_COMMAND][]
-    * [InteractionType.MESSAGE_COMPONENT][]
+    * [hikari.interactions.base_interactions.InteractionType.APPLICATION_COMMAND][]
+    * [hikari.interactions.base_interactions.InteractionType.MESSAGE_COMPONENT][]
     """
 
     DEFERRED_MESSAGE_CREATE = 5
@@ -105,8 +105,8 @@ class ResponseType(int, enums.Enum):
 
     This is valid for the following interaction types:
 
-    * [InteractionType.APPLICATION_COMMAND][]
-    * [InteractionType.MESSAGE_COMPONENT][]
+    * [hikari.interactions.base_interactions.InteractionType.APPLICATION_COMMAND][]
+    * [hikari.interactions.base_interactions.InteractionType.MESSAGE_COMPONENT][]
     """
 
     DEFERRED_MESSAGE_UPDATE = 6
@@ -114,7 +114,7 @@ class ResponseType(int, enums.Enum):
 
     This is valid for the following interaction types:
 
-    * [InteractionType.MESSAGE_COMPONENT][]
+    * [hikari.interactions.base_interactions.InteractionType.MESSAGE_COMPONENT][]
     """
 
     MESSAGE_UPDATE = 7
@@ -122,7 +122,7 @@ class ResponseType(int, enums.Enum):
 
     This is valid for the following interaction types:
 
-    * [InteractionType.MESSAGE_COMPONENT][]
+    * [hikari.interactions.base_interactions.InteractionType.MESSAGE_COMPONENT][]
     """
 
     AUTOCOMPLETE = 8
@@ -130,7 +130,7 @@ class ResponseType(int, enums.Enum):
 
     This is valid for the following interaction types:
 
-    * [InteractionType.AUTOCOMPLETE][]
+    * [hikari.interactions.base_interactions.InteractionType.AUTOCOMPLETE][]
     """
 
     MODAL = 9
@@ -138,7 +138,7 @@ class ResponseType(int, enums.Enum):
 
     This is valid for the following interaction types:
 
-    * [InteractionType.MODAL_SUBMIT][]
+    * [hikari.interactions.base_interactions.InteractionType.MODAL_SUBMIT][]
     """
 
 
@@ -149,8 +149,8 @@ MESSAGE_RESPONSE_TYPES: typing.Final[typing.AbstractSet[MessageResponseTypesT]] 
 
 This includes the following:
 
-* [ResponseType.MESSAGE_CREATE][]
-* [ResponseType.MESSAGE_UPDATE][]
+* [hikari.interactions.base_interactions.ResponseType.MESSAGE_CREATE][]
+* [hikari.interactions.base_interactions.ResponseType.MESSAGE_UPDATE][]
 """
 
 MessageResponseTypesT = typing.Literal[ResponseType.MESSAGE_CREATE, 4, ResponseType.MESSAGE_UPDATE, 7]
@@ -158,8 +158,8 @@ MessageResponseTypesT = typing.Literal[ResponseType.MESSAGE_CREATE, 4, ResponseT
 
 The following are valid for this:
 
-* [ResponseType.MESSAGE_CREATE][]/`4`
-* [ResponseType.MESSAGE_UPDATE][]/`7`
+* [hikari.interactions.base_interactions.ResponseType.MESSAGE_CREATE][]/`4`
+* [hikari.interactions.base_interactions.ResponseType.MESSAGE_UPDATE][]/`7`
 """
 
 DEFERRED_RESPONSE_TYPES: typing.Final[typing.AbstractSet[DeferredResponseTypesT]] = frozenset(
@@ -169,8 +169,8 @@ DEFERRED_RESPONSE_TYPES: typing.Final[typing.AbstractSet[DeferredResponseTypesT]
 
 This includes the following:
 
-* [ResponseType.DEFERRED_MESSAGE_CREATE][]
-* [ResponseType.DEFERRED_MESSAGE_UPDATE][]
+* [hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE][]
+* [hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_UPDATE][]
 """
 
 DeferredResponseTypesT = typing.Literal[
@@ -180,8 +180,8 @@ DeferredResponseTypesT = typing.Literal[
 
 The following are valid for this:
 
-* [ResponseType.DEFERRED_MESSAGE_CREATE][]/`5`
-* [ResponseType.DEFERRED_MESSAGE_UPDATE][]/`6`
+* [hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE][]/`5`
+* [hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_UPDATE][]/`6`
 """
 
 

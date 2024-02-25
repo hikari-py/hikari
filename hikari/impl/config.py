@@ -307,7 +307,7 @@ class CacheSettings(config.CacheSettings):
     )
     """The cache components to use.
 
-    Defaults to [hikari.api.cache.CacheComponents.ALL][].
+    Defaults to [hikari.api.config.CacheComponents.ALL][].
     """
 
     max_messages: int = attrs.field(default=300)

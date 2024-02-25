@@ -230,7 +230,7 @@ class Color(int):
 
     @classmethod
     def from_rgb(cls, red: int, green: int, blue: int, /) -> Color:
-        """Convert the given RGB to a [Color][] object.
+        """Convert the given RGB to a [hikari.colors.Color][] object.
 
         Each channel must be within the range [0, 255] (0x0, 0xFF).
 
@@ -263,7 +263,7 @@ class Color(int):
 
     @classmethod
     def from_rgb_float(cls, red: float, green: float, blue: float, /) -> Color:
-        """Convert the given RGB to a [Color][] object.
+        """Convert the given RGB to a [hikari.colors.Color][] object.
 
         The color-space represented values have to be within the
         range [0, 1].
@@ -297,7 +297,7 @@ class Color(int):
 
     @classmethod
     def from_hex_code(cls, hex_code: str, /) -> Color:
-        """Convert the given hexadecimal color code to a [Color][].
+        """Convert the given hexadecimal color code to a [hikari.colors.Color][].
 
         The inputs may be of the following format (case insensitive):
         `1a2`, `#1a2`, `0x1a2` (for web-safe colors), or
@@ -339,7 +339,7 @@ class Color(int):
 
     @classmethod
     def from_int(cls, integer: typing.SupportsInt, /) -> Color:
-        """Convert the given [typing.SupportsInt][] to a [Color][].
+        """Convert the given [typing.SupportsInt][] to a [hikari.colors.Color][].
 
         Parameters
         ----------
@@ -355,7 +355,7 @@ class Color(int):
 
     @classmethod
     def from_tuple_string(cls, tuple_str: str, /) -> Color:
-        """Convert a string in a tuple-like format to a [hikari.color.Color][].
+        """Convert a string in a tuple-like format to a [hikari.colors.Color][].
 
         This allows formats that are optionally enclosed by `()`,
         `{}`, `[]` or `<>`, and contain three floats or ints,
@@ -425,7 +425,7 @@ class Color(int):
 
     @classmethod
     def of(cls, value: Colorish, /) -> Color:
-        """Convert the value to a [Color][].
+        """Convert the value to a [hikari.colors.Color][].
 
         This attempts to determine the correct data format based on the
         information provided.

@@ -59,7 +59,7 @@ class Intents(enums.Flag):
     This enum is an [enum.IntFlag][], which means that you can use bitwise
     operators to join and splice multiple intents into one value.
 
-    For example, if we wish to only refer to the [GUILDS][] intent, then it is
+    For example, if we wish to only refer to the [hikari.intents.Intents.GUILDS][] intent, then it is
     simply a case of accessing it normally.
 
     ```py
@@ -199,7 +199,7 @@ class Intents(enums.Flag):
     * `THREAD_MEMBERS_UPDATE`
 
     !!! note
-        Both [GUILDS][] and [GUILD_MEMBERS][] are required to receive
+        Both [hikari.intents.Intents.GUILDS][] and [hikari.intents.Intents.GUILD_MEMBERS][] are required to receive
         `THREAD_MEMBERS_UPDATE`.
     """
 
@@ -212,7 +212,7 @@ class Intents(enums.Flag):
     * `THREAD_MEMBERS_UPDATE`
 
     !!! note
-        Both [GUILDS][] and [GUILD_MEMBERS][] are required to receive
+        Both [hikari.intents.Intents.GUILDS][] and [hikari.intents.Intents.GUILD_MEMBERS][] are required to receive
         `THREAD_MEMBERS_UPDATE`.
 
     !!! warning
@@ -366,8 +366,8 @@ class Intents(enums.Flag):
     ALL_GUILDS = ALL_GUILDS_UNPRIVILEGED | ALL_GUILDS_PRIVILEGED
     """All unprivileged guild intents and all privileged guild intents.
 
-    This combines [Intents.ALL_GUILDS_UNPRIVILEGED][] and
-    [Intents.ALL_GUILDS_PRIVILEGED][].
+    This combines [hikari.intents.Intents.ALL_GUILDS_UNPRIVILEGED][] and
+    [hikari.intents.Intents.ALL_GUILDS_PRIVILEGED][].
 
     !!! warning
         This set of intent is privileged, and requires enabling/whitelisting to

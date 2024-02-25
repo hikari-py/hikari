@@ -1463,7 +1463,7 @@ class EntityFactory(abc.ABC):
         !!! note
             This isn't required to implement logic for deserializing
             PING interactions and if you want to unmarshal those
-            [EntityFactory.deserialize_partial_interaction][] should be compatible.
+            [hikari.api.entity_factory.EntityFactory.deserialize_partial_interaction][] should be compatible.
 
         Parameters
         ----------

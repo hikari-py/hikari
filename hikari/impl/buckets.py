@@ -108,7 +108,7 @@ easily begin to re-ratelimit itself if needed. Once the task is complete, it
 tidies itself up and disposes of itself. This task will complete once the queue
 becomes empty.
 
-The result of [hikari.impl.buckets.RESTBucketManager.acquire][] is an async
+The result of [hikari.impl.buckets.RESTBucketManager.acquire_bucket][] is an async
 context manager that must be acquired during the entirety of the request and
 released once it is done (in reality, it is just a
 [hikari.impl.buckets.RESTBucket][], but we want the ratelimit update to be
@@ -220,7 +220,7 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
     Component to represent an active rate limit bucket on a specific HTTP route
     with a specific major parameter combo.
 
-    This is somewhat similar to the [WindowedBurstRateLimiter][] in how it
+    This is somewhat similar to the [hikari.impl.rate_limits.WindowedBurstRateLimiter][] in how it
     works.
 
     This algorithm will use fixed-period time windows that have a given limit
@@ -232,7 +232,7 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
     capacity to zero, and tasks that are queued will start being able to drip
     again.
 
-    Additional logic is provided by the [RESTBucket.update_rate_limit][] call
+    Additional logic is provided by the [hikari.impl.buckets.RESTBucket.update_rate_limit][] call
     which allows dynamically changing the enforced rate limits at any time.
     """
 
@@ -275,9 +275,9 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
         """Acquire time and the lock on this bucket.
 
         !!! note
-            You should afterwards invoke [RESTBucket.update_rate_limit][] to
+            You should afterwards invoke [hikari.impl.buckets.RESTBucket.update_rate_limit][] to
             update any rate limit information you are made aware of and
-            [RESTBucket.release][] to release the lock.
+            [hikari.impl.buckets.RESTBucket.release][] to release the lock.
 
         Raises
         ------
@@ -421,7 +421,7 @@ class RESTBucketManager:
         poll_period : float
             Period to poll the garbage collector at in seconds.
         expire_after : float
-            Time after which the last [reset_at][] was hit for a bucket to
+            Time after which the last [hikari.impl.buckets.RESTBucket.reset_at][] was hit for a bucket to
             remove it. Higher values will retain unneeded ratelimit info for
             longer, but may produce more effective rate-limiting logic as a
             result. Using `0` will make the bucket get garbage collected as soon
@@ -509,7 +509,7 @@ class RESTBucketManager:
 
         !!! note
             You MUST keep the context manager acquired during the full duration
-            of the request: from making the request until calling [update_rate_limits][].
+            of the request: from making the request until calling [hikari.impl.buckets.RESTBucket.update_rate_limit][].
 
         Parameters
         ----------

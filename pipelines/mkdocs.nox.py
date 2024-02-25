@@ -20,8 +20,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Documentation pages generation."""
-from pipelines import nox
 from pipelines import config
+from pipelines import nox
 
 
 @nox.session()

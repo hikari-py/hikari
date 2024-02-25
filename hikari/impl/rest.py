@@ -252,7 +252,7 @@ class RESTApp(traits.ExecutorAware):
     """The base for a HTTP-only Discord application.
 
     This comprises of a shared TCP connector connection pool, and can have
-    [RESTClientImpl][] instances for specific credentials acquired
+    [hikari.impl.rest.RESTClientImpl][] instances for specific credentials acquired
     from it.
 
     Parameters
@@ -373,7 +373,7 @@ class RESTApp(traits.ExecutorAware):
 
         !!! note
             The returned REST client should be started before it can be used,
-            either by calling [RESTClientImpl.start][] or by using it as an
+            either by calling [hikari.impl.rest.RESTClientImpl.start][] or by using it as an
             asynchronous context manager.
 
         Examples

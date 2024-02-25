@@ -110,17 +110,17 @@ class ChannelType(int, enums.Enum):
     """A channel that can be followed and can crosspost."""
 
     GUILD_NEWS_THREAD = 10
-    """A temporary sub-channel within a [ChannelType.GUILD_NEWS][] channel."""
+    """A temporary sub-channel within a [hikari.channels.ChannelType.GUILD_NEWS][] channel."""
 
     GUILD_PUBLIC_THREAD = 11
-    """A temporary sub-channel within a [ChannelType.GUILD_TEXT][] channel."""
+    """A temporary sub-channel within a [hikari.channels.ChannelType.GUILD_TEXT][] channel."""
 
     GUILD_PRIVATE_THREAD = 12
     """A temporary sub-channel with restricted access.
 
-    Like [ChannelType.GUILD_PUBLIC_THREAD][], these exist within
-    [ChannelType.GUILD_TEXT][] channels but can only be accessed by members who
-    are invited to them or have [MANAGE_THREADS][] permission.
+    Like [hikari.channels.ChannelType.GUILD_PUBLIC_THREAD][], these exist within
+    [hikari.channels.ChannelType.GUILD_TEXT][] channels but can only be accessed by members who
+    are invited to them or have [hikari.permissions.Permissions.MANAGE_THREADS][] permission.
     """
 
     GUILD_STAGE = 13
@@ -192,15 +192,15 @@ class ChannelFollow:
         typing.Union[hikari.channels.GuildNewsChannel, hikari.channels.GuildTextChannel]
             The channel being followed.
 
-            While this will usually be [GuildNewsChannel][], if the channel's
-            news status has been removed then this will be a [GuildTextChannel][].
+            While this will usually be [hikari.channels.GuildNewsChannel][], if the channel's
+            news status has been removed then this will be a [hikari.channels.GuildNewsChannel][].
 
         Raises
         ------
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [READ_MESSAGES][] permission in the channel.
+            If you are missing the [hikari.permissions.Permissions.VIEW_CHANNEL][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -224,7 +224,7 @@ class ChannelFollow:
         Raises
         ------
         hikari.errors.ForbiddenError
-            If you are missing the [MANAGE_WEBHOOKS][] permission in the guild or
+            If you are missing the [hikari.permissions.Permissions.MANAGE_WEBHOOKS][] permission in the guild or
             channel this follow is targeting.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
@@ -251,9 +251,9 @@ class ChannelFollow:
         -------
         typing.Union[hikari.channels.GuildNewsChannel, hikari.channels.GuildTextChannel, None]
             The object of the guild channel that was found in the cache or
-            [None][]. While this will usually be [GuildNewsChannel][] or
+            [None][]. While this will usually be [hikari.channels.GuildNewsChannel][] or
             [None][], if the channel referenced has since lost it's news
-            status then this will return a [GuildTextChannel][].
+            status then this will return a [hikari.channels.GuildNewsChannel][].
         """
         if not isinstance(self.app, traits.CacheAware):
             return None
@@ -384,7 +384,7 @@ class PartialChannel(snowflakes.Unique):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [MANAGE_CHANNEL][] permission in the channel.
+            If you are missing the [hikari.permissions.Permissions.MANAGE_CHANNELS][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -476,7 +476,7 @@ class TextableChannel(PartialChannel):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [READ_MESSAGE_HISTORY][] in the channel.
+            If you are missing the [hikari.permissions.Permissions.READ_MESSAGE_HISTORY][] in the channel.
         hikari.errors.NotFoundError
             If the channel is not found or the message is not found in the
             given text channel.
@@ -549,7 +549,7 @@ class TextableChannel(PartialChannel):
                 [hikari.files.URL][],
                 [hikari.messages.Attachment][],
                 [hikari.emojis.Emoji][],
-                [EmbedResource][], etc will also be uploaded this way.
+                [hikari.embeds.EmbedResource][], etc will also be uploaded this way.
                 This will use bit-inception, so only a small percentage of the
                 resource will remain in memory at any one time, thus aiding in
                 scalability.

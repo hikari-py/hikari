@@ -108,7 +108,7 @@ class OAuth2Scope(str, enums.Enum):
     """OAuth2 Scopes that Discord allows.
 
     These are categories of permissions for applications using the OAuth2 API
-    directly. Most users will only ever need the [BOT][] scope when developing
+    directly. Most users will only ever need the [hikari.applications.OAuth2Scope.BOT][] scope when developing
     bots.
     """
 
@@ -147,7 +147,7 @@ class OAuth2Scope(str, enums.Enum):
     """Allows your application's commands to be used in a guild.
 
     This is used in Discord's special Bot Authorization Flow like
-    [OAuth2Scope.BOT][] in-order to join an application into a guild as an
+    [hikari.applications.OAuth2Scope.BOT][] in-order to join an application into a guild as an
     application command providing integration.
     """
 
@@ -203,7 +203,7 @@ class OAuth2Scope(str, enums.Enum):
     """Enables viewing info about itself.
 
     !!! note
-        This does not include email address info. Use the [EMAIL][] scope instead
+        This does not include email address info. Use the [hikari.applications.OAuth2Scope.EMAIL][] scope instead
         to retrieve this information.
     """
 
@@ -674,7 +674,7 @@ class Application(guilds.PartialApplication):
 @attrs_extensions.with_copy
 @attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class AuthorizationApplication(guilds.PartialApplication):
-    """The application model found attached to [AuthorizationInformation][]."""
+    """The application model found attached to [hikari.applications.AuthorizationInformation][]."""
 
     public_key: bytes = attrs.field(eq=False, hash=False, repr=False)
     """The key used for verifying interaction and GameSDK payload signatures."""
@@ -714,7 +714,7 @@ class AuthorizationInformation:
 
     user: typing.Optional[users.User] = attrs.field(hash=False, repr=True)
     """The user who has authorized this token.
-    
+
     This will only be included if the token is authorized for the
     [hikari.applications.OAuth2Scope.IDENTIFY][] scope.
     """
@@ -757,14 +757,14 @@ class OAuth2AuthorizationToken(PartialOAuth2Token):
     """Object of the webhook that was created.
 
     This will only be present if this token was authorized with the
-    [webhooks.incoming][] scope, otherwise this will be [None][].
+    [hikari.applications.OAuth2Scope.WEBHOOK_INCOMING][] scope, otherwise this will be [None][].
     """
 
     guild: typing.Optional[guilds.RESTGuild] = attrs.field(eq=False, hash=False, repr=True)
     """Object of the guild the user was added to.
 
     This will only be present if this token was authorized with the
-    [bot][] scope, otherwise this will be [None][].
+    [hikari.applications.OAuth2Scope.BOT][] scope, otherwise this will be [None][].
     """
 
 

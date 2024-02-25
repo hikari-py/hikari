@@ -144,8 +144,8 @@ class GuildAvailableEvent(GuildVisibilityEvent):
 
     !!! note
         Some fields like `members` and `presences` are included here but not on
-        the other [GuildUpdateEvent][] and [GuildUnavailableEvent][] guild visibility
-        event models.
+        the other [hikari.events.guild_events.GuildUpdateEvent][] and
+        [hikari.events.guild_events.GuildUnavailableEvent][] guild visibility event models.
     """
 
     shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
@@ -206,8 +206,8 @@ class GuildJoinEvent(GuildVisibilityEvent):
 
     !!! note
         Some fields like `members` and `presences` are included here but not on
-        the other [GuildUpdateEvent][] and [GuildUnavailableEvent][] guild visibility
-        event models.
+        the other [hikari.events.guild_events.GuildUpdateEvent][]
+        and [hikari.events.guild_events.GuildUnavailableEvent][] guild visibility event models.
     """
 
     shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})

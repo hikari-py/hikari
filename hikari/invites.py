@@ -223,7 +223,7 @@ class Invite(InviteCode):
     """The partial object of the guild this invite belongs to.
 
     Will be [None][] for group DM invites and when attached to a gateway event;
-    for invites received over the gateway you should refer to [Invite.guild_id][].
+    for invites received over the gateway you should refer to [hikari.invites.Invite.guild_id][].
     """
 
     guild_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
@@ -236,7 +236,7 @@ class Invite(InviteCode):
     """The partial object of the channel this invite targets.
 
     Will be [None][] for invite objects that are attached to gateway events,
-    in which case you should refer to [Invite.channel_id][].
+    in which case you should refer to [hikari.invites.Invite.channel_id][].
     """
 
     channel_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
@@ -277,7 +277,7 @@ class Invite(InviteCode):
 
 @attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class InviteWithMetadata(Invite):
-    """Extends the base [Invite][] object with metadata.
+    """Extends the base [hikari.invites.Invite][] object with metadata.
 
     The metadata is only returned when getting an invite with
     guild permissions, rather than it's code.

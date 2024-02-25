@@ -135,7 +135,7 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [READ_MESSAGES][] permission in the channel.
+            If you are missing the [hikari.permissions.Permissions.VIEW_CHANNEL][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError

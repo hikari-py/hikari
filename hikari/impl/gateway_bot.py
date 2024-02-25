@@ -111,10 +111,10 @@ class GatewayBot(traits.GatewayBotAware):
 
     !!! note
         Settings that control the gateway session are provided to the
-        [GatewayBot.run][] and [GatewayBot.start][] functions in this class. This is done
-        to allow you to contextually customise details such as sharding
-        configuration without having to re-initialize the entire application
-        each time.
+        [hikari.impl.gateway_bot.GatewayBot.run][] and [hikari.impl.gateway_bot.GatewayBot.start][]
+        functions in this class. This is done to allow you to contextually
+        customise details such as sharding configuration without having to
+        re-initialize the entire application each time.
 
     Parameters
     ----------
@@ -180,8 +180,8 @@ class GatewayBot(traits.GatewayBotAware):
         - Allowed?
             All the following must be true:
                 1. `auto_chunk_members` is [True][] (the user wants us to).
-                2. We have the necessary intents ([GUILD_MEMBERS][]).
-                3. The guild is marked as "large" or we do not have [GUILD_PRESENCES][] intent
+                2. We have the necessary intents ([hikari.intents.Intents.GUILD_MEMBERS][]).
+                3. The guild is marked as "large" or we do not have [hikari.intents.Intents.GUILD_PRESENCES][] intent
                    Discord will only send every other member objects on the `GUILD_CREATE`
                    payload if presence intents are also declared, so if this isn't the case then we also
                    want to chunk small guilds.

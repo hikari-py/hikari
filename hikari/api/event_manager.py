@@ -56,8 +56,8 @@ class EventStream(iterators.LazyIterator[base_events.EventT], abc.ABC):
     Examples
     --------
     A streamer may either be started and closed using `with` syntax
-    where [EventStream.open][] and [EventStream.close][] are implicitly called based on
-    context.
+    where [hikari.api.event_manager.EventStream.open][] and
+    [hikari.api.event_manager.EventStream.close][] are implicitly called based on context.
 
     ```py
         with EventStream(app, EventType, timeout=50) as stream:
@@ -65,10 +65,10 @@ class EventStream(iterators.LazyIterator[base_events.EventT], abc.ABC):
                 ...
     ```
 
-    A streamer may also be directly started and closed using the [EventStream.close][]
-    and [EventStream.open][]. Note that if you don't call [EventStream.close][] after
-    opening a streamer when you're finished with it then it may queue events
-    events in memory indefinitely.
+    A streamer may also be directly started and closed using the [hikari.api.event_manager.EventStream.close][]
+    and [hikari.api.event_manager.EventStream.open][]. Note that if you don't call
+    [hikari.api.event_manager.EventStream.close][] after opening a streamer when
+    you're finished with it then it may queue events in memory indefinitely.
 
     ```py
         stream = EventStream(app, EventType, timeout=50)
@@ -246,7 +246,7 @@ class EventManager(abc.ABC):
         ```
 
         This event can be listened to elsewhere by subscribing to it with
-        [EventManager.subscribe][].
+        [hikari.api.event_manager.EventManager.subscribe][].
 
         ```py
             @bot.listen(EveryoneMentionedEvent)
@@ -397,7 +397,7 @@ class EventManager(abc.ABC):
         -------
         typing.Callable[[T], T]
             A decorator for a coroutine function that passes it to
-            [EventManager.subscribe][] before returning the function
+            [hikari.api.event_manager.EventManager.subscribe][] before returning the function
             reference.
 
         See Also

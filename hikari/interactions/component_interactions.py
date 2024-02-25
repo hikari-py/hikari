@@ -96,7 +96,7 @@ class ComponentInteraction(
     """The type of component which triggers this interaction.
 
     !!! note
-        This will never be [ButtonStyle.LINK][] as link buttons don't trigger
+        This will never be [hikari.components.ButtonStyle.LINK][] as link buttons don't trigger
         interactions.
     """
 
@@ -152,7 +152,7 @@ class ComponentInteraction(
 
         !!! note
             For interactions received over the gateway
-            [ComponentInteraction.create_initial_response][] should be used to set
+            [hikari.interactions.component_interactions.ComponentInteraction.create_initial_response][] should be used to set
             the interaction response message.
 
         Parameters
@@ -192,7 +192,7 @@ class ComponentInteraction(
 
         !!! note
             For interactions received over the gateway
-            [ComponentInteraction.create_initial_response][] should be used to set
+            [hikari.interactions.component_interactions.ComponentInteraction.create_initial_response][] should be used to set
             the interaction response message.
 
         !!! note
@@ -233,7 +233,7 @@ class ComponentInteraction(
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [READ_MESSAGES][] permission in the channel.
+            If you are missing the [hikari.permissions.Permissions.VIEW_CHANNEL][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError

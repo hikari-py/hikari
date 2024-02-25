@@ -90,7 +90,7 @@ class ChannelEvent(shard_events.ShardEvent, abc.ABC):
         """Perform an API call to fetch the details about this channel.
 
         !!! note
-            For [GuildChannelDeleteEvent][] events, this will always raise
+            For [hikari.events.channel_events.GuildChannelDeleteEvent][] events, this will always raise
             an exception, since the channel will have already been removed.
 
         Returns
@@ -104,7 +104,7 @@ class ChannelEvent(shard_events.ShardEvent, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [READ_MESSAGES][] permission in the channel.
+            If you are missing the [hikari.permissions.Permissions.VIEW_CHANNEL][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -186,7 +186,7 @@ class GuildChannelEvent(ChannelEvent, abc.ABC):
         """Perform an API call to fetch the details about this channel.
 
         !!! note
-            For [GuildChannelDeleteEvent][] events, this will always raise
+            For [hikari.events.channel_events.GuildChannelDeleteEvent][] events, this will always raise
             an exception, since the channel will have already been removed.
 
         Returns
@@ -201,7 +201,7 @@ class GuildChannelEvent(ChannelEvent, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [READ_MESSAGES][] permission in the channel.
+            If you are missing the [hikari.permissions.Permissions.VIEW_CHANNEL][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -224,7 +224,7 @@ class DMChannelEvent(ChannelEvent, abc.ABC):
         """Perform an API call to fetch the details about this channel.
 
         !!! note
-            For [GuildChannelDeleteEvent][] events, this will always raise
+            For [hikari.events.channel_events.GuildChannelDeleteEvent][] events, this will always raise
             an exception, since the channel will have already been removed.
 
         Returns
@@ -239,7 +239,7 @@ class DMChannelEvent(ChannelEvent, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [VIEW_CHANNEL][] permission in the channel.
+            If you are missing the [hikari.permissions.Permissions.VIEW_CHANNEL][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -436,7 +436,7 @@ class GuildPinsUpdateEvent(PinsUpdateEvent, GuildChannelEvent):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [VIEW_CHANNEL][] permission in the channel.
+            If you are missing the [hikari.permissions.Permissions.VIEW_CHANNEL][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -631,7 +631,7 @@ class WebhookUpdateEvent(GuildChannelEvent):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [MANAGE_WEBHOOKS][] permission.
+            If you are missing the [hikari.permissions.Permissions.MANAGE_WEBHOOKS][] permission.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -655,7 +655,7 @@ class WebhookUpdateEvent(GuildChannelEvent):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [MANAGE_WEBHOOKS][] permission.
+            If you are missing the [hikari.permissions.Permissions.MANAGE_WEBHOOKS][] permission.
         hikari.errors.NotFoundError
             If the guild is not found.
         hikari.errors.RateLimitTooLongError
@@ -687,7 +687,7 @@ class GuildThreadEvent(shard_events.ShardEvent, abc.ABC):
         """Perform an API call to fetch the details about this thread.
 
         !!! note
-            For [GuildThreadDeleteEvent][] events, this will always raise
+            For [hikari.events.channel_events.GuildThreadDeleteEvent][] events, this will always raise
             an exception, since the channel will have already been removed.
 
         Returns
@@ -702,7 +702,7 @@ class GuildThreadEvent(shard_events.ShardEvent, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [READ_MESSAGES][] permission in the channel.
+            If you are missing the [hikari.permissions.Permissions.VIEW_CHANNEL][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -863,13 +863,13 @@ class ThreadMembersUpdateEvent(GuildThreadEvent):
     guild_members: typing.Mapping[snowflakes.Snowflake, guilds.Member] = attrs.field()
     """Mapping of IDs to guild member objects of the added thread members.
 
-    Will only be filled if the [GUILD_MEMBERS][] intent is declared.
+    Will only be filled if the [hikari.intents.Intents.GUILD_MEMBERS][] intent is declared.
     """
 
     guild_presences: typing.Mapping[snowflakes.Snowflake, presences.MemberPresence] = attrs.field()
     """Mapping of IDs to guild presence objects of the added members.
 
-    Will only be filled if the [GUILD_PRESENCES][] intent is declared.
+    Will only be filled if the [hikari.intents.Intents.GUILD_PRESENCES][] intent is declared.
     """
 
 

@@ -72,7 +72,7 @@ class ShardPayloadEvent(ShardEvent):
 
     !!! note
         This will only be dispatched for real dispatch events received from
-        Discord and not artificial events like the [ShardStateEvent][] events.
+        Discord and not artificial events like the [hikari.events.shard_events.ShardStateEvent][] events.
     """
 
     app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})

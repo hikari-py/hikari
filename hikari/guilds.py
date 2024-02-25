@@ -314,7 +314,7 @@ class GuildWidget:
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [READ_MESSAGES][] permission in the channel.
+            If you are missing the [hikari.permissions.Permissions.VIEW_CHANNEL][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -385,7 +385,7 @@ class Member(users.User):
 
      !!! note
         The datetime might be in the past, so it is recommended to use
-        [communication_disabled_until][] method to check if the member is timed
+        [hikari.guilds.Member.communication_disabled_until][] method to check if the member is timed
         out at the time of the call.
      """
 
@@ -405,7 +405,7 @@ class Member(users.User):
     """Hash of the member's guild avatar guild if set, else [None][].
 
     !!! note
-        This takes precedence over [Member.avatar_hash][].
+        This takes precedence over [hikari.guilds.Member.avatar_hash][].
     """
 
     @property
@@ -426,7 +426,7 @@ class Member(users.User):
         """Guild Avatar URL for the user, if they have one set.
 
         May be [None][] if no guild avatar is set. In this case, you
-        should use [avatar_hash][] or [default_avatar_url][] instead.
+        should use [hikari.guilds.Member.avatar_hash][] or [hikari.guilds.Member.default_avatar_url][] instead.
         """
         return self.make_guild_avatar_url()
 
@@ -525,7 +525,7 @@ class Member(users.User):
 
         Presence info includes user status and activities.
 
-        This requires the [GUILD_PRESENCES][] intent to be enabled.
+        This requires the [hikari.intents.Intents.GUILD_PRESENCES][] intent to be enabled.
 
         Returns
         -------
@@ -707,7 +707,7 @@ class Member(users.User):
         hikari.errors.BadRequestError
             If any of the fields that are passed have an invalid value.
         hikari.errors.ForbiddenError
-            If you are missing the [BAN_MEMBERS][] permission.
+            If you are missing the [hikari.permissions.Permissions.BAN_MEMBERS][] permission.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
@@ -736,7 +736,7 @@ class Member(users.User):
         hikari.errors.BadRequestError
             If any of the fields that are passed have an invalid value.
         hikari.errors.ForbiddenError
-            If you are missing the [BAN_MEMBERS][] permission.
+            If you are missing the [hikari.permissions.Permissions.BAN_MEMBERS][] permission.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
@@ -763,7 +763,7 @@ class Member(users.User):
         hikari.errors.BadRequestError
             If any of the fields that are passed have an invalid value.
         hikari.errors.ForbiddenError
-            If you are missing the [KICK_MEMBERS][] permission.
+            If you are missing the [hikari.permissions.Permissions.KICK_MEMBERS][] permission.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
@@ -796,7 +796,7 @@ class Member(users.User):
         Raises
         ------
         hikari.errors.ForbiddenError
-            If you are missing the [MANAGE_ROLES][] permission.
+            If you are missing the [hikari.permissions.Permissions.MANAGE_ROLES][] permission.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
@@ -829,7 +829,7 @@ class Member(users.User):
         Raises
         ------
         hikari.errors.ForbiddenError
-            If you are missing the [MANAGE_ROLES][] permission.
+            If you are missing the [hikari.permissions.Permissions.MANAGE_ROLES][] permission.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
@@ -3097,7 +3097,7 @@ class Guild(PartialGuild):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the `READ_MESSAGES` permission in the channel.
+            If you are missing the [hikari.permissions.Permissions.VIEW_CHANNEL][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -3126,7 +3126,7 @@ class Guild(PartialGuild):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the `READ_MESSAGES` permission in the channel.
+            If you are missing the [hikari.permissions.Permissions.VIEW_CHANNEL][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -3156,7 +3156,7 @@ class Guild(PartialGuild):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the `READ_MESSAGES` permission in the channel.
+            If you are missing the [hikari.permissions.Permissions.VIEW_CHANNEL][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -3187,7 +3187,7 @@ class Guild(PartialGuild):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the `READ_MESSAGES` permission in the channel.
+            If you are missing the [hikari.permissions.Permissions.VIEW_CHANNEL][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -3219,7 +3219,7 @@ class Guild(PartialGuild):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the `READ_MESSAGES` permission in the channel.
+            If you are missing the [hikari.permissions.Permissions.VIEW_CHANNEL][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError

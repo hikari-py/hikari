@@ -400,7 +400,7 @@ class Embed:
     # Alias.
     @property
     def colour(self) -> typing.Optional[colors.Color]:
-        """Alias of [color][]."""
+        """Alias of [hikari.colors.Color][]."""
         return self._color
 
     # Alias.
@@ -547,7 +547,7 @@ class Embed:
         Will be [None][] if not set.
 
         !!! note
-            Use [set_image][] to update this value.
+            Use [hikari.embeds.Embed.set_image][] to update this value.
         """
         return self._image
 
@@ -558,7 +558,7 @@ class Embed:
         Will be [None][] if not set.
 
         !!! note
-            Use [set_thumbnail][] to update this value.
+            Use [hikari.embeds.Embed.set_thumbnail][] to update this value.
         """
         return self._thumbnail
 
@@ -597,7 +597,7 @@ class Embed:
         Will be [None][] if not set.
 
         !!! note
-            Use [set_author][] to update this value.
+            Use [hikari.embeds.Embed.set_author][] to update this value.
         """
         return self._author
 
@@ -606,8 +606,8 @@ class Embed:
         """Return the sequence of fields in the embed.
 
         !!! note
-            Use [add_field][] to add a new field, [edit_field][] to edit an existing
-            field, or [remove_field][] to remove a field.
+            Use [hikari.embeds.Embed.add_field][] to add a new field, [hikari.embeds.Embed.edit_field][] to edit an existing
+            field, or [hikari.embeds.Embed.remove_field][] to remove a field.
         """
         return self._fields if self._fields else []
 
@@ -638,7 +638,7 @@ class Embed:
                 [hikari.files.URL][],
                 [hikari.messages.Attachment][],
                 [hikari.emojis.Emoji][],
-                [EmbedResource][], etc will have their URL linked to directly.
+                [hikari.embeds.EmbedResource][], etc will have their URL linked to directly.
                 this field.
             - If a [hikari.files.Bytes][] is passed, or a [str][]
                 that contains a valid data URI is passed, then this is uploaded
@@ -681,7 +681,7 @@ class Embed:
                 [hikari.files.URL][],
                 [hikari.messages.Attachment][],
                 [hikari.emojis.Emoji][],
-                [EmbedResource][], etc will have their URL linked to directly.
+                [hikari.embeds.EmbedResource][], etc. will have their URL linked to directly.
                 this field.
             - If a [hikari.files.Bytes][] is passed, or a [str][]
                 that contains a valid data URI is passed, then this is uploaded
