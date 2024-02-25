@@ -301,8 +301,7 @@ class TestVoiceComponentImpl:
         mock_app.shard_count = 42
         mock_app.shards = {0: mock_shard}
 
-        class StubError(Exception):
-            ...
+        class StubError(Exception): ...
 
         mock_connection_type = mock.AsyncMock()
         mock_connection_type.initialize.side_effect = StubError

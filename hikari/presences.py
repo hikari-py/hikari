@@ -162,7 +162,7 @@ class ActivityAssets:
         """Large image asset URL.
 
         !!! note
-            This will be `None` if no large image asset exists or if the
+            This will be [None][] if no large image asset exists or if the
             asset's dynamic URL (indicated by a `{name}:` prefix) is not known.
         """
         try:
@@ -181,11 +181,11 @@ class ActivityAssets:
         Parameters
         ----------
         ext : str
-            The extension to use for this URL, defaults to `png`.
+            The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
         size : int
-            The size to set for the URL, defaults to `4096`.
-            Can be any power of two between 16 and 4096.
+            The size to set for the URL.
+            Can be any power of two between `16` and `4096`.
 
         Returns
         -------
@@ -222,11 +222,11 @@ class ActivityAssets:
         Parameters
         ----------
         ext : str
-            The extension to use for this URL, defaults to `png`.
+            The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
         size : int
-            The size to set for the URL, defaults to `4096`.
-            Can be any power of two between 16 and 4096.
+            The size to set for the URL.
+            Can be any power of two between `16` and `4096`.
 
         Returns
         -------

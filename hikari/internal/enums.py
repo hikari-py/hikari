@@ -20,7 +20,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Implementation of parts of Python's `enum` protocol to be more performant."""
+"""Implementation of parts of Python's [enum][] protocol to be more performant."""
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = ("deprecated", "Enum", "Flag")
@@ -99,7 +99,7 @@ class _EnumNamespace(typing.Dict[str, typing.Any]):
             real_value = value.value
 
             if (alias := self.values_to_names.get(real_value)) is None:
-                raise ValueError("`deprecated` must be used on an existing value")
+                raise ValueError("[deprecated][] must be used on an existing value")
 
             member = _DeprecatedAlias(name, alias, value.removal_version)
             super().__setitem__(name, member)
@@ -232,7 +232,7 @@ class _EnumMeta(type):
             return _EnumNamespace(object)
 
         try:
-            # Fails if Enum is not defined. We check this in `__new__` properly.
+            # Fails if Enum is not defined. We check this in [__new__][] properly.
             base, enum_type = bases
 
             if isinstance(base, _EnumMeta):
@@ -249,11 +249,11 @@ class _EnumMeta(type):
 
 
 class Enum(metaclass=_EnumMeta):
-    """Clone of Python's `enum.Enum` implementation.
+    """Clone of Python's [enum.Enum][] implementation.
 
     This is designed to be faster and more efficient than Python's
     implementation, while retaining the majority of the external interface
-    that Python's `enum.Enum` provides.
+    that Python's [enum.Enum][] provides.
 
     An `Enum` is a simple class containing a discrete set of constant values
     that can be used in place of this type. This acts as a type-safe way
@@ -269,9 +269,9 @@ class Enum(metaclass=_EnumMeta):
     * `__enumtype__` :
         Always `Enum`.
     * `__members__` :
-        An immutable `typing.Mapping` that maps each member name to the member
+        An immutable [typing.Mapping][] that maps each member name to the member
         value.
-    * ` __objtype__` :
+    * `__objtype__` :
         Always the first type that the enum is derived from. For example:
 
     ```py
@@ -286,38 +286,38 @@ class Enum(metaclass=_EnumMeta):
     Operators on the class
     ----------------------
     * `EnumType["FOO"]` :
-        Return the member that has the name `FOO`, raising a `KeyError`
+        Return the member that has the name `FOO`, raising a [KeyError][]
         if it is not present.
     * `EnumType.FOO` :
         Return the member that has the name `FOO`, raising a
-        `AttributeError` if it is not present.
+        [AttributeError][] if it is not present.
     * `EnumType(x)` :
         Attempt to cast `x` to the enum type by finding an existing member that
         has the same __value__. If this fails, you should expect a
-        `ValueError` to be raised.
+        [ValueError][] to be raised.
 
     Operators on each enum member
     -----------------------------
-    * `e1 == e2` : `bool`
+    * `e1 == e2` : [bool][]
         Compare equality.
-    * `e1 != e2` : `bool`
+    * `e1 != e2` : [bool][]
         Compare inequality.
-    * `repr(e)` : `str`
+    * `repr(e)` : [str][]
         Get the machine readable representation of the enum member `e`.
-    * `str(e)` : `str`
-        Get the `str` name of the enum member `e`.
+    * `str(e)` : [str][]
+        Get the [str][] name of the enum member `e`.
 
     Special properties on each enum member
     --------------------------------------
-    * `name` : `str`
+    * `name` : [str][]
         The name of the member.
     * `value` :
         The value of the member. The type depends on the implementation type
         of the enum you are using.
 
     All other methods and operators on enum members are inherited from the
-    member's __value__. For example, an enum extending `int` would
-    be able to be used as an `int` type outside these overridden definitions.
+    member's __value__. For example, an enum extending [int][] would
+    be able to be used as an [int][] type outside these overridden definitions.
     """
 
     _name_to_member_map_: typing.ClassVar[typing.Mapping[str, Enum]]
@@ -331,7 +331,7 @@ class Enum(metaclass=_EnumMeta):
 
     @property
     def name(self) -> str:
-        """Return the name of the enum member as a `str`."""
+        """Return the name of the enum member as a [str][]."""
         return self._name_
 
     @property
@@ -508,20 +508,20 @@ class _FlagMeta(type):
 
 
 class Flag(metaclass=_FlagMeta):
-    """Clone of Python's `enum.Flag` implementation.
+    """Clone of Python's [enum.Flag][] implementation.
 
     This is designed to be faster and more efficient than Python's
     implementation, while retaining the majority of the external interface
-    that Python's `enum.Flag` provides.
+    that Python's [enum.Flag][] provides.
 
-    In simple terms, an `Flag` is a set of wrapped constant `int`
+    In simple terms, an flag is a set of wrapped constant [int][]
     values that can be combined in any combination to make a special value.
     This is a more efficient way of combining things like permissions together
     into a single integral value, and works by setting the individual `1` and `0`
     on the binary representation of the integer.
 
     This implementation has extra features, in that it will actively behave
-    like a `set` as well.
+    like a [set][] as well.
 
     !!! warning
         It is important to keep in mind that some semantics such as subtype
@@ -536,29 +536,29 @@ class Flag(metaclass=_FlagMeta):
         Failing to observe this __will__ result in unexpected behaviour
         occurring in your application!
 
-        Also important to note is that despite wrapping `int` values,
-        conceptually this does not behave as if it were a subclass of `int`.
+        Also important to note is that despite wrapping [int][] values,
+        conceptually this does not behave as if it were a subclass of [int][].
 
     Special Members on the class
     ----------------------------
     * `__enumtype__` :
-        Always `Flag`.
+        Always [Flag][].
     * `__everything__` :
         A special member with all documented bits set.
     * `__members__` :
-        An immutable `typing.Mapping` that maps each member name to the member
+        An immutable [typing.Mapping][] that maps each member name to the member
         value.
-    * ` __objtype__` :
-        Always `int`.
+    * `__objtype__` :
+        Always [int][].
 
     Operators on the class
     ----------------------
     * `FlagType["FOO"]` :
-        Return the member that has the name `FOO`, raising a `KeyError`
+        Return the member that has the name `FOO`, raising a [KeyError][]
         if it is not present.
     * `FlagType.FOO` :
         Return the member that has the name `FOO`, raising a
-        `AttributeError` if it is not present.
+        [AttributeError][] if it is not present.
     * `FlagType(x)` :
         Attempt to cast `x` to the enum type by finding an existing member that
         has the same __value__. If this fails, then a special __composite__

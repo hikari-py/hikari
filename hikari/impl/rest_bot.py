@@ -73,18 +73,17 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
     token : typing.Union[str, hikari.api.rest.TokenStrategy]
         The bot or bearer token.
     token_type : typing.Union[str, hikari.applications.TokenType, None]
-        The type of token in use. This should only be passed when `str`
+        The type of token in use. This should only be passed when [str][]
         is passed for `token`, can be `"Bot"` or `"Bearer"` and defaults
         to `"Bot".
 
-        This should be left as `None` when `hikari.api.rest.TokenStrategy`
-        is passed for `token`.
+        This should be left as [None][] when [hikari.api.rest.TokenStrategy][]
+        is passed for [token][].
 
     Other Parameters
     ----------------
     allow_color : bool
-        Defaulting to `True`, this will enable coloured console logs
-        on any platform that is a TTY.
+        Whether to enable coloured console logs on any platform that is a TTY.
         Setting a `"CLICOLOR"` environment variable to any **non `0`** value
         will override this setting.
 
@@ -94,60 +93,58 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         explicitly disable this is provided. See `force_color` for an
         alternative.
     banner : typing.Optional[str]
-        The package to search for a `banner.txt` in. Defaults to `"hikari"` for
-        the `"hikari/banner.txt"` banner.
-        Setting this to `None` will disable the banner being shown.
+        The package to search for a `banner.txt` in.
+
+        Setting this to [None][] will disable the banner being shown.
     suppress_optimization_warning : bool
-        Defaults to `False`. By default, Hikari warns you if you are not running
-        your bot using optimizations (`-O` or `-OO`). If this is `True`, you won't
-        receive these warnings, even if you are not running using optimizations.
+        By default, Hikari warns you if you are not running your bot using
+        optimizations (`-O` or `-OO`). If this is [True][], you won't receive
+        these warnings, even if you are not running using optimizations.
     executor : typing.Optional[concurrent.futures.Executor]
-        Defaults to `None`. If non-`None`, then this executor
-        is used instead of the `concurrent.futures.ThreadPoolExecutor` attached
-        to the `asyncio.AbstractEventLoop` that the bot will run on. This
+        If non-[None][], then this executor is used instead of the
+        [concurrent.futures.ThreadPoolExecutor][] attached to the
+        [asyncio.AbstractEventLoop][] that the bot will run on. This
         executor is used primarily for file-IO.
 
-        While mainly supporting the `concurrent.futures.ThreadPoolExecutor`
-        implementation in the standard lib, Hikari's file handling systems
-        should also work with `concurrent.futures.ProcessPoolExecutor`, which
+        While mainly supporting the [concurrent.futures.ThreadPoolExecutor][]
+        implementation in the standard lib, hikari's file handling systems
+        should also work with [concurrent.futures.ProcessPoolExecutor][], which
         relies on all objects used in IPC to be pickleable. Many third-party
         libraries will not support this fully though, so your mileage may vary
         on using ProcessPoolExecutor implementations with this parameter.
     force_color : bool
-        Defaults to `False`. If `True`, then this application
-        will __force__ colour to be used in console-based output. Specifying a
-        `"CLICOLOR_FORCE"` environment variable with a non-`"0"` value will
+        If [True][], then this application will __force__ colour to be
+        used in console-based output. Specifying a `"CLICOLOR_FORCE"`
+        environment variable with a non-`"0"` value will
         override this setting.
 
         This will take precedence over `allow_color` if both are specified.
     http_settings : typing.Optional[hikari.config.HTTPSettings]
         Optional custom HTTP configuration settings to use. Allows you to
         customise functionality such as whether SSL-verification is enabled,
-        what timeouts `aiohttp` should expect to use for requests, and behavior
+        what timeouts [aiohttp][] should expect to use for requests, and behavior
         regarding HTTP-redirects.
     logs : typing.Union[None, int, str, typing.Dict[str, typing.Any], os.PathLike[str]]
         The flavour to set the logging to.
 
-        This can be `None` to not enable logging automatically.
+        This can be [None][] to not enable logging automatically.
 
-        If you pass a `str` or a `int`, it is interpreted as
+        If you pass a [str][] or a [int][], it is interpreted as
         the global logging level to use, and should match one of `"DEBUG"`,
         `"INFO"`, `"WARNING"`, `"ERROR"` or `"CRITICAL"`.
         The configuration will be set up to use a `colorlog` coloured logger,
         and to use a sane logging format strategy. The output will be written
-        to `sys.stdout` using this configuration.
+        to [sys.stdout][] using this configuration.
 
-        If you pass a `dict`, it is treated as the mapping to pass to
-        `logging.config.dictConfig`. If the dict defines any handlers, default
+        If you pass a [dict][], it is treated as the mapping to pass to
+        [logging.config.dictConfig][]. If the dict defines any handlers, default
         handlers will not be setup if `incremental` is not specified.
 
-        If you pass a `str` to an existing file or a `os.PathLike`, it is
-        interpreted as the file to load config from using `logging.config.fileConfig`.
+        If you pass a [str][] to an existing file or a [os.PathLike][], it is
+        interpreted as the file to load config from using [logging.config.fileConfig][].
 
         Note that `"TRACE_HIKARI"` is a library-specific logging level
         which is expected to be more verbose than `"DEBUG"`.
-
-        Defaults to `"INFO"`.
     max_rate_limit : float
         The max number of seconds to backoff for when rate limited. Anything
         greater than this will instead raise an error.
@@ -163,17 +160,19 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         that may be in use.
     max_retries : typing.Optional[int]
         Maximum number of times a request will be retried if
-        it fails with a `5xx` status. Defaults to 3 if set to `None`.
+        it fails with a `5xx` status.
+
+        Defaults to 3 if set to [None][].
     proxy_settings : typing.Optional[hikari.impl.config.ProxySettings]
         Custom proxy settings to use with network-layer logic
         in your application to get through an HTTP-proxy.
     public_key : typing.Union[str, bytes, None]
         The public key to use to verify received interaction requests.
-        This may be a hex encoded `str` or the raw `bytes`.
-        If left as `None` then the client will try to work this value
-        out based on `token`.
+        This may be a hex encoded [str][] or the raw [bytes][].
+        If left as [None][] then the client will try to work this value
+        out based on [token][].
     rest_url : typing.Optional[str]
-        Defaults to the Discord REST API URL if `None`. Can be
+        Defaults to the Discord REST API URL if [None][]. Can be
         overridden if you are attempting to point to an unofficial endpoint, or
         if you are attempting to mock/stub the Discord API for any reason.
         Generally you do not want to change this.
@@ -249,8 +248,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         max_retries: int = 3,
         proxy_settings: typing.Optional[config_impl.ProxySettings] = None,
         rest_url: typing.Optional[str] = None,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     @typing.overload
     def __init__(
@@ -270,8 +268,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         max_retries: int = 3,
         proxy_settings: typing.Optional[config_impl.ProxySettings] = None,
         rest_url: typing.Optional[str] = None,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     def __init__(
         self,
@@ -396,11 +393,11 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
             The package to find a `banner.txt` in.
         allow_color : bool
             A flag that allows advising whether to allow color if supported or
-            not. Can be overridden by setting a `"CLICOLOR"` environment
+            not. Can be overridden by setting a `CLICOLOR` environment
             variable to a non-`"0"` string.
         force_color : bool
             A flag that allows forcing color to always be output, even if the
-            terminal device may not support it. Setting the `"CLICOLOR_FORCE"`
+            terminal device may not support it. Setting the `CLICOLOR_FORCE`
             environment variable to a non-`"0"` string will override this.
 
             This will take precedence over `allow_color` if both are specified.
@@ -493,42 +490,40 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         Other Parameters
         ----------------
         asyncio_debug : bool
-            Defaults to `False`. If `True`, then debugging is
-            enabled for the asyncio event loop in use.
+            If [True][], then debugging is enabled for the asyncio event loop in use.
         backlog : int
             The number of unaccepted connections that the system will allow before
             refusing new connections.
         check_for_updates : bool
-            Defaults to `True`. If `True`, will check for
-            newer versions of `hikari` on PyPI and notify if available.
+            If [True][], will check for newer versions of hikari on
+            PyPI and notify if available.
         close_loop : bool
-            Defaults to `True`. If `True`, then once the bot
-            enters a state where all components have shut down permanently
-            during application shut down, then all asyncgens and background tasks
-            will be destroyed, and the event loop will be shut down.
+            If [True][], then once the bot enters a state where all components
+            have shut down permanently during application shut down, then all
+            asyncgens and background tasks will be destroyed, and the event
+            loop will be shut down.
 
-            This will wait until all `hikari`-owned `aiohttp` connectors have
+            This will wait until all hikari-owned [aiohttp][] connectors have
             had time to attempt to shut down correctly (around 250ms), and on
             Python 3.9 and newer, will also shut down the default event loop
             executor too.
         close_passed_executor : bool
-            Defaults to `False`. If `True`, any custom
-            `concurrent.futures.Executor` passed to the constructor will be
-            shut down when the application terminates. This does not affect the
-            default executor associated with the event loop, and will not
-            do anything if you do not provide a custom executor to the
-            constructor.
+            If [True][], any custom [concurrent.futures.Executor][] passed
+            to the constructor will be shut down when the application
+            terminates. This does not affect the default executor associated
+            with the event loop, and will not do anything if you do not
+            provide a custom executor to the constructor.
         coroutine_tracking_depth : typing.Optional[int]
-            Defaults to `None`. If an integer value and supported by
-            the interpreter, then this many nested coroutine calls will be
-            tracked with their call origin state. This allows you to determine
-            where non-awaited coroutines may originate from, but generally you
+            If an integer value and supported by the interpreter, then this
+            many nested coroutine calls will be tracked with their call
+            origin state. This allows you to determine where non-awaited
+            coroutines may originate from, but generally you
             do not want to leave this enabled for performance reasons.
         enable_signal_handlers : typing.Optional[bool]
-            Defaults to `True` if this is started in the main thread.
+            Defaults to [True][] if this is called in the main thread.
 
             If on a non-Windows OS with builtin support for kernel-level
-            POSIX signals, then setting this to `True` will allow
+            POSIX signals, then setting this to [True][] will allow
             treating keyboard interrupts and other OS signals to safely shut
             down the application as calls to shut down the application properly
             rather than just killing the process in a dirty state immediately.
@@ -549,8 +544,8 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         socket : typing.Optional[socket.socket]
             A pre-existing socket object to accept connections on.
         shutdown_timeout : float
-            A delay to wait for graceful server shut down before forcefully
-            disconnecting all open client sockets. This defaults to 60 seconds.
+            A delay, in seconds, to wait for graceful server shut down before forcefully
+            disconnecting all open client sockets.
         ssl_context : typing.Optional[ssl.SSLContext]
             SSL context for HTTPS servers.
         """
@@ -635,8 +630,8 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
             The number of unaccepted connections that the system will allow before
             refusing new connections.
         check_for_updates : bool
-            Defaults to `True`. If `True`, will check for
-            newer versions of `hikari` on PyPI and notify if available.
+            If [True][], will check for newer versions of hikari on PyPI
+            and notify if available.
         host : typing.Optional[typing.Union[str, aiohttp.web.HostSequence]]
             TCP/IP host or a sequence of hosts for the HTTP server.
         port : typing.Optional[int]
@@ -652,8 +647,8 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         socket : typing.Optional[socket.socket]
             A pre-existing socket object to accept connections on.
         shutdown_timeout : float
-            A delay to wait for graceful server shut down before forcefully
-            disconnecting all open client sockets. This defaults to 60 seconds.
+            A delay, in seconds, to wait for graceful server shut down before forcefully
+            disconnecting all open client sockets.
         ssl_context : typing.Optional[ssl.SSLContext]
             SSL context for HTTPS servers.
         """
@@ -694,16 +689,14 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         self, interaction_type: typing.Type[command_interactions.CommandInteraction], /
     ) -> typing.Optional[
         interaction_server_.ListenerT[command_interactions.CommandInteraction, _ModalOrMessageResponseBuilderT]
-    ]:
-        ...
+    ]: ...
 
     @typing.overload
     def get_listener(
         self, interaction_type: typing.Type[component_interactions.ComponentInteraction], /
     ) -> typing.Optional[
         interaction_server_.ListenerT[component_interactions.ComponentInteraction, _ModalOrMessageResponseBuilderT]
-    ]:
-        ...
+    ]: ...
 
     @typing.overload
     def get_listener(
@@ -712,20 +705,21 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         interaction_server_.ListenerT[
             command_interactions.AutocompleteInteraction, special_endpoints.InteractionAutocompleteBuilder
         ]
-    ]:
-        ...
+    ]: ...
 
     @typing.overload
     def get_listener(
         self, interaction_type: typing.Type[modal_interactions.ModalInteraction], /
-    ) -> typing.Optional[interaction_server_.ListenerT[modal_interactions.ModalInteraction, _MessageResponseBuilderT]]:
-        ...
+    ) -> typing.Optional[
+        interaction_server_.ListenerT[modal_interactions.ModalInteraction, _MessageResponseBuilderT]
+    ]: ...
 
     @typing.overload
     def get_listener(
         self, interaction_type: typing.Type[_InteractionT_co], /
-    ) -> typing.Optional[interaction_server_.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]]:
-        ...
+    ) -> typing.Optional[
+        interaction_server_.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]
+    ]: ...
 
     def get_listener(
         self, interaction_type: typing.Type[_InteractionT_co], /
@@ -742,8 +736,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         /,
         *,
         replace: bool = False,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     @typing.overload
     def set_listener(
@@ -755,8 +748,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         /,
         *,
         replace: bool = False,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     @typing.overload
     def set_listener(
@@ -770,8 +762,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         /,
         *,
         replace: bool = False,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     @typing.overload
     def set_listener(
@@ -783,8 +774,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         /,
         *,
         replace: bool = False,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     def set_listener(
         self,

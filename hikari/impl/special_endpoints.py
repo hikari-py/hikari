@@ -102,8 +102,7 @@ if typing.TYPE_CHECKING:
             json: typing.Union[data_binding.JSONObjectBuilder, data_binding.JSONArray, None] = None,
             reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
             auth: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
-        ) -> typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]:
-            ...
+        ) -> typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]: ...
 
     class _ThreadDeserializeSig(typing.Protocol["_GuildThreadChannelCovT"]):
         def __call__(
@@ -124,14 +123,14 @@ _GuildThreadChannelCovT = typing.TypeVar("_GuildThreadChannelCovT", bound=channe
 
 @typing.final
 class TypingIndicator(special_endpoints.TypingIndicator):
-    """Result type of `hikari.api.rest.RESTClient.trigger_typing`.
+    """Result type of [hikari.api.rest.RESTClient.trigger_typing][].
 
     This is an object that can either be awaited like a coroutine to trigger
     the typing indicator once, or an async context manager to keep triggering
     the typing indicator repeatedly until the context finishes.
 
     !!! note
-        This is a helper class that is used by `hikari.api.rest.RESTClient`.
+        This is a helper class that is used by [hikari.api.rest.RESTClient][].
         You should only ever need to use instances of this class that are
         produced by that API.
     """
@@ -206,19 +205,19 @@ class TypingIndicator(special_endpoints.TypingIndicator):
 @attrs_extensions.with_copy
 @attrs.define(kw_only=True, weakref_slot=False)
 class GuildBuilder(special_endpoints.GuildBuilder):
-    """Result type of `hikari.api.rest.RESTClient.guild_builder`.
+    """Result type of [hikari.api.rest.RESTClient.guild_builder][].
 
     This is used to create a guild in a tidy way using the HTTP API, since
     the logic behind creating a guild on an API level is somewhat confusing
     and detailed.
 
     !!! note
-        If you call `add_role`, the default roles provided by Discord will
+        If you call [hikari.api.special_endpoints.GuildBuilder.add_role][], the default roles provided by Discord will
         be created. This also applies to the `add_` functions for
         text channels/voice channels/categories.
 
     !!! note
-        Functions that return a `hikari.snowflakes.Snowflake` do
+        Functions that return a [hikari.snowflakes.Snowflake][] do
         **not** provide the final ID that the object will have once the
         API call is made. The returned IDs are only able to be used to
         re-reference particular objects while building the guild format
@@ -659,7 +658,7 @@ class GuildBanIterator(iterators.BufferedLazyIterator["guilds.GuildBan"]):
             return None
 
         if self._newest_first:
-            # These are always returned in ascending order by `.user.id`.
+            # These are always returned in ascending order by [.user.id][].
             chunk.reverse()
 
         self._first_id = chunk[-1]["user"]["id"]
@@ -752,7 +751,7 @@ class ScheduledEventUserIterator(iterators.BufferedLazyIterator["scheduled_event
             return None
 
         if self._newest_first:
-            # These are always returned in ascending order by `.user.id`.
+            # These are always returned in ascending order by [.user.id][].
             chunk.reverse()
 
         self._first_id = chunk[-1]["user"]["id"]
@@ -893,7 +892,7 @@ def _maybe_cast(
 @attrs_extensions.with_copy
 @attrs.define(kw_only=False, weakref_slot=False)
 class AutocompleteChoiceBuilder(special_endpoints.AutocompleteChoiceBuilder):
-    """Standard implementation of `special_endpoints.AutocompleteChoiceBuilder`."""
+    """Standard implementation of [special_endpoints.AutocompleteChoiceBuilder][]."""
 
     _name: str = attrs.field(alias="name")
     _value: typing.Union[int, str, float] = attrs.field(alias="value")
@@ -921,7 +920,7 @@ class AutocompleteChoiceBuilder(special_endpoints.AutocompleteChoiceBuilder):
 @attrs_extensions.with_copy
 @attrs.define(weakref_slot=False)
 class InteractionAutocompleteBuilder(special_endpoints.InteractionAutocompleteBuilder):
-    """Standard implementation of `hikari.api.special_endpoints.InteractionAutocompleteBuilder`."""
+    """Standard implementation of [hikari.api.special_endpoints.InteractionAutocompleteBuilder][]."""
 
     _choices: typing.Sequence[special_endpoints.AutocompleteChoiceBuilder] = attrs.field(factory=tuple)
 
@@ -946,7 +945,7 @@ class InteractionAutocompleteBuilder(special_endpoints.InteractionAutocompleteBu
 @attrs_extensions.with_copy
 @attrs.define(kw_only=False, weakref_slot=False)
 class InteractionDeferredBuilder(special_endpoints.InteractionDeferredBuilder):
-    """Standard implementation of `hikari.api.special_endpoints.InteractionDeferredBuilder`.
+    """Standard implementation of [hikari.api.special_endpoints.InteractionDeferredBuilder][].
 
     Parameters
     ----------
@@ -989,7 +988,7 @@ class InteractionDeferredBuilder(special_endpoints.InteractionDeferredBuilder):
 @attrs_extensions.with_copy
 @attrs.define(kw_only=False, weakref_slot=False)
 class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
-    """Standard implementation of `hikari.api.special_endpoints.InteractionMessageBuilder`.
+    """Standard implementation of [hikari.api.special_endpoints.InteractionMessageBuilder][].
 
     Parameters
     ----------
@@ -1021,12 +1020,12 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
     _mentions_everyone: undefined.UndefinedOr[bool] = attrs.field(
         alias="mentions_everyone", default=undefined.UNDEFINED, kw_only=True
     )
-    _role_mentions: undefined.UndefinedOr[
-        typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
-    ] = attrs.field(alias="role_mentions", default=undefined.UNDEFINED, kw_only=True)
-    _user_mentions: undefined.UndefinedOr[
-        typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
-    ] = attrs.field(alias="user_mentions", default=undefined.UNDEFINED, kw_only=True)
+    _role_mentions: undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]] = (
+        attrs.field(alias="role_mentions", default=undefined.UNDEFINED, kw_only=True)
+    )
+    _user_mentions: undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]] = (
+        attrs.field(alias="user_mentions", default=undefined.UNDEFINED, kw_only=True)
+    )
     _attachments: undefined.UndefinedNoneOr[typing.List[files.Resourceish]] = attrs.field(
         alias="attachments", default=undefined.UNDEFINED, kw_only=True
     )
@@ -1208,7 +1207,7 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
 
 @attrs.define(kw_only=False, weakref_slot=False)
 class InteractionModalBuilder(special_endpoints.InteractionModalBuilder):
-    """Standard implementation of `hikari.api.special_endpoints.InteractionModalBuilder`."""
+    """Standard implementation of [hikari.api.special_endpoints.InteractionModalBuilder][]."""
 
     _title: str = attrs.field(alias="title")
     _custom_id: str = attrs.field(alias="custom_id")
@@ -1255,7 +1254,7 @@ class InteractionModalBuilder(special_endpoints.InteractionModalBuilder):
 
 @attrs.define(kw_only=False, weakref_slot=False)
 class CommandBuilder(special_endpoints.CommandBuilder):
-    """Standard implementation of `hikari.api.special_endpoints.CommandBuilder`."""
+    """Standard implementation of [hikari.api.special_endpoints.CommandBuilder][]."""
 
     _name: str = attrs.field(alias="name")
 
@@ -1751,8 +1750,7 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
         min_values: int = 0,
         max_values: int = 1,
         is_disabled: bool = False,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     @typing.overload
     def __init__(
@@ -1764,8 +1762,7 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
         min_values: int = 0,
         max_values: int = 1,
         is_disabled: bool = False,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     def __init__(
         self,
@@ -1853,7 +1850,7 @@ class ChannelSelectMenuBuilder(SelectMenuBuilder, special_endpoints.ChannelSelec
 @attrs_extensions.with_copy
 @attrs.define(kw_only=True, weakref_slot=False)
 class TextInputBuilder(special_endpoints.TextInputBuilder):
-    """Standard implementation of `hikari.api.special_endpoints.TextInputBuilder`."""
+    """Standard implementation of [hikari.api.special_endpoints.TextInputBuilder][]."""
 
     _custom_id: str = attrs.field(alias="custom_id")
     _label: str = attrs.field(alias="label")
@@ -1953,7 +1950,7 @@ class TextInputBuilder(special_endpoints.TextInputBuilder):
 
 @attrs.define(kw_only=True, weakref_slot=False)
 class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
-    """Standard implementation of `hikari.api.special_endpoints.ActionRowBuilder`."""
+    """Standard implementation of [hikari.api.special_endpoints.ActionRowBuilder][]."""
 
     _components: typing.List[special_endpoints.ComponentBuilder] = attrs.field(alias="components", factory=list)
     _stored_type: typing.Optional[int] = attrs.field(default=None, init=False)
@@ -2080,7 +2077,7 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
 
 @attrs.define(kw_only=True, weakref_slot=False)
 class ModalActionRowBuilder(special_endpoints.ModalActionRowBuilder):
-    """Standard implementation of `hikari.api.special_endpoints.ActionRowBuilder`."""
+    """Standard implementation of [hikari.api.special_endpoints.ActionRowBuilder][]."""
 
     _components: typing.List[special_endpoints.ComponentBuilder] = attrs.field(alias="components", factory=list)
     _stored_type: typing.Optional[int] = attrs.field(init=False, default=None)

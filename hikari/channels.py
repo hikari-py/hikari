@@ -110,17 +110,17 @@ class ChannelType(int, enums.Enum):
     """A channel that can be followed and can crosspost."""
 
     GUILD_NEWS_THREAD = 10
-    """A temporary sub-channel within a `ChannelType.GUILD_NEWS` channel."""
+    """A temporary sub-channel within a [hikari.channels.ChannelType.GUILD_NEWS][] channel."""
 
     GUILD_PUBLIC_THREAD = 11
-    """A temporary sub-channel within a `ChannelType.GUILD_TEXT` channel."""
+    """A temporary sub-channel within a [hikari.channels.ChannelType.GUILD_TEXT][] channel."""
 
     GUILD_PRIVATE_THREAD = 12
     """A temporary sub-channel with restricted access.
 
-    Like `ChannelType.GUILD_PUBLIC_THREAD`, these exist within
-    `ChannelType.GUILD_TEXT` channels but can only be accessed by members who
-    are invited to them or have `MANAGE_THREADS` permission.
+    Like [hikari.channels.ChannelType.GUILD_PUBLIC_THREAD][], these exist within
+    [hikari.channels.ChannelType.GUILD_TEXT][] channels but can only be accessed by members who
+    are invited to them or have [hikari.permissions.Permissions.MANAGE_THREADS][] permission.
     """
 
     GUILD_STAGE = 13
@@ -192,15 +192,15 @@ class ChannelFollow:
         typing.Union[hikari.channels.GuildNewsChannel, hikari.channels.GuildTextChannel]
             The channel being followed.
 
-            While this will usually be `GuildNewsChannel`, if the channel's
-            news status has been removed then this will be a `GuildTextChannel`.
+            While this will usually be [hikari.channels.GuildNewsChannel][], if the channel's
+            news status has been removed then this will be a [hikari.channels.GuildNewsChannel][].
 
         Raises
         ------
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the `READ_MESSAGES` permission in the channel.
+            If you are missing the [hikari.permissions.Permissions.VIEW_CHANNEL][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -224,7 +224,7 @@ class ChannelFollow:
         Raises
         ------
         hikari.errors.ForbiddenError
-            If you are missing the `MANAGE_WEBHOOKS` permission in the guild or
+            If you are missing the [hikari.permissions.Permissions.MANAGE_WEBHOOKS][] permission in the guild or
             channel this follow is targeting.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
@@ -244,16 +244,16 @@ class ChannelFollow:
         """Get the channel being followed from the cache.
 
         !!! warning
-            This will always be `None` if you are not
+            This will always be [None][] if you are not
             in the guild that this channel exists in.
 
         Returns
         -------
         typing.Union[hikari.channels.GuildNewsChannel, hikari.channels.GuildTextChannel, None]
             The object of the guild channel that was found in the cache or
-            `None`. While this will usually be `GuildNewsChannel` or
-            `None`, if the channel referenced has since lost it's news
-            status then this will return a `GuildTextChannel`.
+            [None][]. While this will usually be [hikari.channels.GuildNewsChannel][] or
+            [None][], if the channel referenced has since lost it's news
+            status then this will return a [hikari.channels.GuildNewsChannel][].
         """
         if not isinstance(self.app, traits.CacheAware):
             return None
@@ -384,7 +384,7 @@ class PartialChannel(snowflakes.Unique):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the `MANAGE_CHANNEL` permission in the channel.
+            If you are missing the [hikari.permissions.Permissions.MANAGE_CHANNELS][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -416,7 +416,7 @@ class TextableChannel(PartialChannel):
             This call is not a coroutine function, it returns a special type of
             lazy iterator that will perform API calls as you iterate across it,
             thus any errors documented below will happen then.
-            See `hikari.iterators` for the full API for this iterator type.
+            See [hikari.iterators][] for the full API for this iterator type.
 
         Other Parameters
         ----------------
@@ -476,7 +476,7 @@ class TextableChannel(PartialChannel):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the `READ_MESSAGE_HISTORY` in the channel.
+            If you are missing the [hikari.permissions.Permissions.READ_MESSAGE_HISTORY][] in the channel.
         hikari.errors.NotFoundError
             If the channel is not found or the message is not found in the
             given text channel.
@@ -521,15 +521,15 @@ class TextableChannel(PartialChannel):
         ----------
         content : hikari.undefined.UndefinedOr[typing.Any]
             If provided, the message contents. If
-            `hikari.undefined.UNDEFINED`, then nothing will be sent
+            [hikari.undefined.UNDEFINED][], then nothing will be sent
             in the content. Any other value here will be cast to a
-            `str`.
+            [str][].
 
-            If this is a `hikari.embeds.Embed` and no `embed` nor `embeds` kwarg
+            If this is a [hikari.embeds.Embed][] and no `embed` nor `embeds` kwarg
             is provided, then this will instead update the embed. This allows
             for simpler syntax when sending an embed alone.
 
-            Likewise, if this is a `hikari.files.Resource`, then the
+            Likewise, if this is a [hikari.files.Resource][], then the
             content is instead treated as an attachment if no `attachment` and
             no `attachments` kwargs are provided.
 
@@ -542,26 +542,26 @@ class TextableChannel(PartialChannel):
             Attachments can be passed as many different things, to aid in
             convenience.
 
-            - If a `pathlib.PurePath` or `str` to a valid URL, the
+            - If a [pathlib.PurePath][] or [str][] to a valid URL, the
                 resource at the given URL will be streamed to Discord when
                 sending the message. Subclasses of
-                `hikari.files.WebResource` such as
-                `hikari.files.URL`,
-                `hikari.messages.Attachment`,
-                `hikari.emojis.Emoji`,
-                `EmbedResource`, etc will also be uploaded this way.
+                [hikari.files.WebResource][] such as
+                [hikari.files.URL][],
+                [hikari.messages.Attachment][],
+                [hikari.emojis.Emoji][],
+                [hikari.embeds.EmbedResource][], etc will also be uploaded this way.
                 This will use bit-inception, so only a small percentage of the
                 resource will remain in memory at any one time, thus aiding in
                 scalability.
-            - If a `hikari.files.Bytes` is passed, or a `str`
+            - If a [hikari.files.Bytes][] is passed, or a [str][]
                 that contains a valid data URI is passed, then this is uploaded
                 with a randomized file name if not provided.
-            - If a `hikari.files.File`, `pathlib.PurePath` or
-                `str` that is an absolute or relative path to a file
+            - If a [hikari.files.File][], [pathlib.PurePath][] or
+                [str][] that is an absolute or relative path to a file
                 on your file system is passed, then this resource is uploaded
                 as an attachment using non-blocking code internally and streamed
                 using bit-inception where possible. This depends on the
-                type of `concurrent.futures.Executor` that is being used for
+                type of [concurrent.futures.Executor][] that is being used for
                 the application (default is a thread pool which supports this
                 behaviour).
         attachments : hikari.undefined.UndefinedOr[typing.Sequence[hikari.files.Resourceish]]
@@ -592,7 +592,6 @@ class TextableChannel(PartialChannel):
         reply_must_exist : hikari.undefined.UndefinedOr[bool]
             If provided, whether to error if the message being replied to does
             not exist instead of sending as a normal (non-reply) message.
-            Defaults to `True`.
 
             This will not do anything if not being used with `reply`.
         mentions_everyone : hikari.undefined.UndefinedOr[bool]
@@ -604,8 +603,8 @@ class TextableChannel(PartialChannel):
 
             This will not do anything if not being used with `reply`.
         user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
-            If provided, and `True`, all mentions will be parsed.
-            If provided, and `False`, no mentions will be parsed.
+            If provided, and [True][], all mentions will be parsed.
+            If provided, and [False][], no mentions will be parsed.
             Alternatively this may be a collection of
             `hikari.snowflakes.Snowflake`, or
             `hikari.users.PartialUser` derivatives to enforce mentioning
@@ -904,11 +903,11 @@ class GroupDMChannel(PrivateChannel):
         Parameters
         ----------
         ext : str
-            The extension to use for this URL, defaults to `png`.
+            The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
         size : int
-            The size to set for the URL, defaults to `4096`.
-            Can be any power of two between 16 and 4096.
+            The size to set for the URL.
+            Can be any power of two between `16` and `4096`.
 
         Returns
         -------

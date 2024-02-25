@@ -92,7 +92,7 @@ class TokenStrategy(abc.ABC):
         """Invalidate the cached token in this handler.
 
         !!! note
-            `token` may be provided in-order to avoid newly generated tokens
+            [token][] may be provided in-order to avoid newly generated tokens
             from being invalidated due to multiple calls being made by separate
             subroutines which are handling the same token.
 
@@ -125,7 +125,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     def token_type(self) -> typing.Union[str, applications.TokenType, None]:
         """Type of token this client is using for most requests.
 
-        If this is `None` then this client will likely only work
+        If this is [None][] then this client will likely only work
         for some endpoints such as public and webhook ones.
         """
 
@@ -149,23 +149,23 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         -------
         hikari.channels.PartialChannel
             The channel. This will be a _derivative_ of
-            `hikari.channels.PartialChannel`, depending on the type of
+            [hikari.channels.PartialChannel][], depending on the type of
             channel you request for.
 
             This means that you may get one of
-            `hikari.channels.DMChannel`,
-            `hikari.channels.GroupDMChannel`,
-            `hikari.channels.GuildTextChannel`,
-            `hikari.channels.GuildVoiceChannel`,
-            `hikari.channels.GuildStoreChannel`,
-            `hikari.channels.GuildNewsChannel`.
+            [hikari.channels.DMChannel][],
+            [hikari.channels.GroupDMChannel][],
+            [hikari.channels.GuildTextChannel][],
+            [hikari.channels.GuildVoiceChannel][],
+            [hikari.channels.GuildStoreChannel][],
+            [hikari.channels.GuildNewsChannel][].
 
-            Likewise, the `hikari.channels.GuildChannel` can be used to
+            Likewise, the [hikari.channels.GuildChannel][] can be used to
             determine if a channel is guild-bound, and
-            `hikari.channels.TextableChannel` can be used to determine
+            [hikari.channels.TextableChannel][] can be used to determine
             if the channel provides textual functionality to the application.
 
-            You can check for these using the `isinstance`
+            You can check for these using the [isinstance][]
             builtin function.
 
         Raises
@@ -173,7 +173,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the `READ_MESSAGES` permission in the channel.
+            If you are missing the [hikari.permissions.Permissions.VIEW_CHANNEL][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -236,8 +236,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the new name for the channel.
         flags : hikari.undefined.UndefinedOr[hikari.channels.ChannelFlag]
             If provided, the new channel flags to use for the channel. This can
-            only be used on a forum channel to apply `REQUIRE_TAG`, or
-            on a forum thread to apply `PINNED`.
+            only be used on a forum channel to apply [hikari.channels.ChannelFlag.REQUIRE_TAG][], or
+            on a forum thread to apply [hikari.channels.ChannelFlag.PINNED][].
         position : hikari.undefined.UndefinedOr[int]
             If provided, the new position for the channel.
         topic : hikari.undefined.UndefinedOr[str]
@@ -254,7 +254,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the new rate limit per user in the channel.
         region : hikari.undefined.UndefinedNoneOr[typing.Union[str, hikari.voices.VoiceRegion]]
             If provided, the voice region to set for this channel. Passing
-            `None` here will set it to "auto" mode where the used
+            [None][] here will set it to "auto" mode where the used
             region will be decided based on the first person who connects to it
             when it's empty.
         permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
@@ -267,7 +267,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
             This should be either 60, 1440, 4320 or 10080 minutes and, as of
             writing, ignores the parent channel's set default_auto_archive_duration
-            when passed as `hikari.undefined.UNDEFINED`.
+            when passed as [hikari.undefined.UNDEFINED][].
         default_thread_rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
             If provided, the ratelimit that should be set in threads derived
             from this channel.
@@ -292,7 +292,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the new locked state for the thread. This only applies
             to threads.
 
-            If it's locked then only people with `MANAGE_THREADS` can unarchive it.
+            If it's locked then only people with [hikari.permissions.Permissions.MANAGE_THREADS][] can unarchive it.
         invitable : undefined.UndefinedOr[bool]
             If provided, the new setting for whether non-moderators can invite
             new members to a private thread. This only applies to threads.
@@ -360,8 +360,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the `MANAGE_WEBHOOKS` permission in the target
-            channel or are missing the `VIEW_CHANNEL` permission in the origin
+            If you are missing the [hikari.permissions.Permissions.MANAGE_WEBHOOKS][] permission in the target
+            channel or are missing the [hikari.permissions.Permissions.VIEW_CHANNEL][] permission in the origin
             channel.
         hikari.errors.NotFoundError
             If the origin or target channel is not found.
@@ -398,7 +398,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the `MANAGE_CHANNEL` permission in the channel.
+            If you are missing the [hikari.permissions.Permissions.MANAGE_CHANNELS][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -434,14 +434,14 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------------
         suppress : hikari.undefined.UndefinedOr[bool]
             If specified, whether the user should be allowed to become a speaker
-            in the target stage channel with `builtin.True` suppressing them from
+            in the target stage channel with [True][] suppressing them from
             becoming one.
         request_to_speak : typing.Union[hikari.undefined.UndefinedType, bool, datetime.datetime]
             Whether to request to speak. This may be one of the following:
 
-            * `True` to indicate that the bot wants to speak.
-            * `False` to remove any previously set request to speak.
-            * `datetime.datetime` to specify when they want their request to
+            * [True][] to indicate that the bot wants to speak.
+            * [False][] to remove any previously set request to speak.
+            * [datetime.datetime][] to specify when they want their request to
                 speak timestamp to be set to. If a datetime from the past is
                 passed then Discord will use the current time instead.
 
@@ -452,7 +452,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the `MUTE_MEMBERS` permission in the channel.
+            If you are missing the [hikari.permissions.Permissions.MUTE_MEMBERS][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel, message or voice state is not found.
         hikari.errors.RateLimitTooLongError
@@ -499,7 +499,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the `MUTE_MEMBERS` permission in the channel.
+            If you are missing the [hikari.permissions.Permissions.MUTE_MEMBERS][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel, message or voice state is not found.
         hikari.errors.RateLimitTooLongError
@@ -583,7 +583,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the `MANAGE_PERMISSIONS` permission in the channel.
+            If you are missing the [hikari.permissions.Permissions.MANAGE_PERMISSIONS][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found or the target is not found if it is
             a role.
@@ -617,7 +617,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the `MANAGE_PERMISSIONS` permission in the channel.
+            If you are missing the [hikari.permissions.Permissions.MANAGE_PERMISSIONS][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found or the target is not found.
         hikari.errors.RateLimitTooLongError
@@ -649,7 +649,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the `MANAGE_CHANNEL` permission in the channel.
+            If you are missing the [hikari.permissions.Permissions.MANAGE_CHANNELS][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found in any guilds you are a member of.
         hikari.errors.RateLimitTooLongError
@@ -700,15 +700,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             object or the ID of an existing user.
 
             !!! note
-                This is required if `target_type` is `STREAM` and the targeted
+                This is required if `target_type` is [hikari.invites.TargetType.STREAM][] and the targeted
                 user must be streaming into the channel.
         target_application : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]]
             If provided, the target application id for this invite. This may be
             the object or the ID of an existing application.
 
             !!! note
-                This is required if `target_type` is `EMBEDDED_APPLICATION` and
-                the targeted application must have the `EMBEDDED` flag.
+                This is required if `target_type` is [hikari.invites.TargetType.EMBEDDED_APPLICATION][] and
+                the targeted application must have the [hikari.applications.ApplicationFlags.EMBEDDED][] flag.
         reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -725,7 +725,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the `MANAGE_CHANNELS` permission.
+            If you are missing the [hikari.permissions.Permissions.MANAGE_CHANNELS][] permission.
         hikari.errors.NotFoundError
             If the channel is not found, or if the target user does not exist,
             if provided.
@@ -778,7 +778,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the `SEND_MESSAGES` in the channel.
+            If you are missing the [hikari.permissions.Permissions.SEND_MESSAGES][] in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -810,7 +810,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the `READ_MESSAGES` in the channel.
+            If you are missing the [hikari.permissions.Permissions.VIEW_CHANNEL][] in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -842,7 +842,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the `MANAGE_MESSAGES` in the channel.
+            If you are missing the [hikari.permissions.Permissions.MANAGE_MESSAGES][] in the channel.
         hikari.errors.NotFoundError
             If the channel is not found, or if the message does not exist in
             the given channel.
@@ -875,7 +875,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the `MANAGE_MESSAGES` permission.
+            If you are missing the [hikari.permissions.Permissions.MANAGE_MESSAGES][] permission.
         hikari.errors.NotFoundError
             If the channel is not found or the message is not a pinned message
             in the given channel.
@@ -902,7 +902,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             lazy iterator that will perform API calls as you iterate across it,
             thus any errors documented below will happen then.
 
-            See `hikari.iterators` for the full API for this iterator type.
+            See [hikari.iterators][] for the full API for this iterator type.
 
         Parameters
         ----------
@@ -940,7 +940,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the `READ_MESSAGE_HISTORY` in the channel.
+            If you are missing the [hikari.permissions.Permissions.READ_MESSAGE_HISTORY][] in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -977,7 +977,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the `READ_MESSAGE_HISTORY` in the channel.
+            If you are missing the [hikari.permissions.Permissions.READ_MESSAGE_HISTORY][] in the channel.
         hikari.errors.NotFoundError
             If the channel is not found or the message is not found in the
             given text channel.
@@ -1025,15 +1025,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The channel to create the message in.
         content : hikari.undefined.UndefinedOr[typing.Any]
             If provided, the message contents. If
-            `hikari.undefined.UNDEFINED`, then nothing will be sent
+            [hikari.undefined.UNDEFINED][], then nothing will be sent
             in the content. Any other value here will be cast to a
-            `str`.
+            [str][].
 
-            If this is a `hikari.embeds.Embed` and no `embed` nor `embeds` kwarg
+            If this is a [hikari.embeds.Embed][] and no `embed` nor `embeds` kwarg
             is provided, then this will instead update the embed. This allows
             for simpler syntax when sending an embed alone.
 
-            Likewise, if this is a `hikari.files.Resource`, then the
+            Likewise, if this is a [hikari.files.Resource][], then the
             content is instead treated as an attachment if no `attachment` and
             no `attachments` kwargs are provided.
 
@@ -1046,26 +1046,26 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Attachments can be passed as many different things, to aid in
             convenience.
 
-            - If a `pathlib.PurePath` or `str` to a valid URL, the
+            - If a [pathlib.PurePath][] or [str][] to a valid URL, the
                 resource at the given URL will be streamed to Discord when
                 sending the message. Subclasses of
-                `hikari.files.WebResource` such as
-                `hikari.files.URL`,
-                `hikari.messages.Attachment`,
-                `hikari.emojis.Emoji`,
-                `EmbedResource`, etc will also be uploaded this way.
+                [hikari.files.WebResource][] such as
+                [hikari.files.URL][],
+                [hikari.messages.Attachment][],
+                [hikari.emojis.Emoji][],
+                [hikari.embeds.EmbedResource][], etc will also be uploaded this way.
                 This will use bit-inception, so only a small percentage of the
                 resource will remain in memory at any one time, thus aiding in
                 scalability.
-            - If a `hikari.files.Bytes` is passed, or a `str`
+            - If a [hikari.files.Bytes][] is passed, or a [str][]
                 that contains a valid data URI is passed, then this is uploaded
                 with a randomized file name if not provided.
-            - If a `hikari.files.File`, `pathlib.PurePath` or
-                `str` that is an absolute or relative path to a file
+            - If a [hikari.files.File][], [pathlib.PurePath][] or
+                [str][] that is an absolute or relative path to a file
                 on your file system is passed, then this resource is uploaded
                 as an attachment using non-blocking code internally and streamed
                 using bit-inception where possible. This depends on the
-                type of `concurrent.futures.Executor` that is being used for
+                type of [concurrent.futures.Executor][] that is being used for
                 the application (default is a thread pool which supports this
                 behaviour).
         attachments : hikari.undefined.UndefinedOr[typing.Sequence[hikari.files.Resourceish]]
@@ -1097,7 +1097,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         reply_must_exist : hikari.undefined.UndefinedOr[bool]
             If provided, whether to error if the message being replied to does
             not exist instead of sending as a normal (non-reply) message.
-            Defaults to `True`.
 
             This will not do anything if not being used with `reply`.
         mentions_everyone : hikari.undefined.UndefinedOr[bool]
@@ -1109,8 +1108,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
             This will not do anything if not being used with `reply`.
         user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
-            If provided, and `True`, all user mentions will be detected.
-            If provided, and `False`, all user mentions will be ignored
+            If provided, and [True][], all user mentions will be detected.
+            If provided, and [False][], all user mentions will be ignored
             if appearing in the message body.
             Alternatively this may be a collection of
             `hikari.snowflakes.Snowflake`, or
@@ -2484,12 +2483,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             the code of an existing invite.
         with_counts : bool
             Whether the invite should contain the approximate member counts.
-
-            Defaults to `True`.
         with_expiration: bool
             Whether the invite should contain the expiration date.
-
-            Defaults to `True`.
 
         Returns
         -------
@@ -2636,7 +2631,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------------
         newest_first : bool
             Whether to fetch the newest first or the oldest first.
-            Defaults to `False`.
         start_at : hikari.undefined.UndefinedOr[hikari.snowflakes.SearchableSnowflakeishOr[hikari.guilds.PartialGuild]]
             If provided, will start at this snowflake. If you provide
             a datetime object, it will be transformed into a snowflake. This
@@ -5788,8 +5782,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------------
         newest_first : bool
             Whether to fetch the newest first or the oldest first.
-
-            Defaults to `False`.
         start_at : undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[users.PartialUser]]
             If provided, will start at this snowflake. If you provide
             a datetime object, it will be transformed into a snowflake. This
@@ -8193,8 +8185,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------------
         newest_first : bool
             Whether to fetch the newest first or the oldest first.
-
-            Defaults to `False`.
         start_at : hikari.undefined.UndefinedOr[hikari.snowflakes.SearchableSnowflakeishOr[hikari.guilds.PartialGuild]]
             If provided, will start at this snowflake. If you provide
             a datetime object, it will be transformed into a snowflake. This

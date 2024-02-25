@@ -23,7 +23,7 @@
 """Lazy iterators for data that requires repeated API calls to retrieve.
 
 For consumers of this API, the only class you need to worry about is
-`LazyIterator`. Everything else is internal detail only exposed for people who
+[hikari.iterators.LazyIterator][]. Everything else is internal detail only exposed for people who
 wish to extend this API further!
 """
 from __future__ import annotations
@@ -46,7 +46,7 @@ class All(typing.Generic[ValueT]):
     """Helper that wraps predicates and invokes them together.
 
     Calling this object will pass the input item to each item, returning
-    `True` only when all wrapped predicates return True when called
+    [True][] only when all wrapped predicates return True when called
     with the given item.
 
     For example...
@@ -65,11 +65,11 @@ class All(typing.Generic[ValueT]):
             ...
     ```
 
-    This behaves like a lazy wrapper implementation of the `all` builtin.
+    This behaves like a lazy wrapper implementation of the [all][] builtin.
 
     !!! note
         Like the rest of the standard library, this is a short-circuiting
-        operation. This means that if a predicate returns `False`, no
+        operation. This means that if a predicate returns [False][], no
         predicates after this are invoked, as the result is already known. In
         this sense, they are invoked in-order.
 
@@ -80,11 +80,11 @@ class All(typing.Generic[ValueT]):
     Operators
     ---------
     * `this(value : ValueT) -> bool`:
-        Return `True` if all conditions return `True` when
+        Return [True][] if all conditions return [True][] when
         invoked with the given value.
     * `~this`:
         Return a condition that, when invoked with the value, returns
-        `False` if all conditions were `True` in this object.
+        [False][] if all conditions were [True][] in this object.
 
     Parameters
     ----------
@@ -124,10 +124,10 @@ class AttrComparator(typing.Generic[ValueT]):
     Parameters
     ----------
     attr_name : str
-        The attribute name. Can be prepended with a ``.`` optionally.
+        The attribute name. Can be prepended with a `.` optionally.
         If the attribute name ends with a `()`, then the call is invoked
         rather than treated as a property (useful for methods like
-        `str.isupper`, for example).
+        [str.isupper][], for example).
     expected_value : typing.Any
         The expected value.
     cast : typing.Optional[typing.Callable[[ValueT], typing.Any]]
@@ -155,7 +155,7 @@ class AttrComparator(typing.Generic[ValueT]):
 class LazyIterator(typing.Generic[ValueT], abc.ABC):
     """A set of results that are fetched asynchronously from the API as needed.
 
-    This is a `typing.AsyncIterable` and `typing.AsyncIterator` with several
+    This is a [typing.AsyncIterable][] and [typing.AsyncIterator][] with several
     additional helpful methods provided for convenience.
 
     Examples
@@ -191,7 +191,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
     Additionally, you can make use of some of the provided helper methods
     on this class to perform basic operations easily.
 
-    Iterating across the items with indexes (like `enumerate` for normal
+    Iterating across the items with indexes (like [enumerate][] for normal
     iterables):
 
     ```py
@@ -716,8 +716,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
         return self._fetch_all().__await__()
 
     @abc.abstractmethod
-    async def __anext__(self) -> ValueT:
-        ...
+    async def __anext__(self) -> ValueT: ...
 
     # These are only included at runtime in-order to avoid the model being typed as a synchronous iterator.
     if not typing.TYPE_CHECKING:
@@ -784,8 +783,7 @@ class BufferedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT], abc.ABC
         self._buffer: typing.Optional[typing.Generator[ValueT, None, None]] = (_ for _ in ())
 
     @abc.abstractmethod
-    async def _next_chunk(self) -> typing.Optional[typing.Generator[ValueT, None, None]]:
-        ...
+    async def _next_chunk(self) -> typing.Optional[typing.Generator[ValueT, None, None]]: ...
 
     async def __anext__(self) -> ValueT:
         # This sneaky snippet of code lets us use generators rather than lists.

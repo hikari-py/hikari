@@ -93,8 +93,8 @@ class ExecutableWebhook(abc.ABC):
         """Webhook's token.
 
         !!! note
-            If this is `None` then the methods provided by `ExecutableWebhook`
-            will always raise a `ValueError`.
+            If this is [None][] then the methods provided by [hikari.webhooks.ExecutableWebhook][]
+            will always raise a [ValueError][].
         """
 
     async def execute(
@@ -126,22 +126,22 @@ class ExecutableWebhook(abc.ABC):
             interaction webhooks.
 
             Additionally, `SUPPRESS_EMBEDS`, `SUPPRESS_NOTIFICATIONS` and `EPHEMERAL`
-            are the only flags that can be set, with `EPHEMERAL` limited to
+            are the only flags that can be set, with `EPHEMERAL` being limited to
             interaction webhooks.
 
         Parameters
         ----------
         content : hikari.undefined.UndefinedOr[typing.Any]
             If provided, the message contents. If
-            `hikari.undefined.UNDEFINED`, then nothing will be sent
+            [hikari.undefined.UNDEFINED][], then nothing will be sent
             in the content. Any other value here will be cast to a
-            `str`.
+            [str][].
 
-            If this is a `hikari.embeds.Embed` and no `embed` kwarg is
-            provided, then this will instead update the embed. This allows for
-            simpler syntax when sending an embed alone.
+            If this is a [hikari.embeds.Embed][] and no `embed` and no `embeds`
+            kwargs are provided, then this will instead update the embed. This
+            allows for simpler syntax when sending an embed alone.
 
-            Likewise, if this is a `hikari.files.Resource`, then the
+            Likewise, if this is a [hikari.files.Resource][], then the
             content is instead treated as an attachment if no `attachment` and
             no `attachments` kwargs are provided.
 
@@ -174,18 +174,18 @@ class ExecutableWebhook(abc.ABC):
             If provided, whether the message should parse @everyone/@here
             mentions.
         user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
-            If provided, and `True`, all mentions will be parsed.
-            If provided, and `False`, no mentions will be parsed.
+            If provided, and [True][], all mentions will be parsed.
+            If provided, and [False][], no mentions will be parsed.
             Alternatively this may be a collection of
-            `hikari.snowflakes.Snowflake`, or
-            `hikari.users.PartialUser` derivatives to enforce mentioning
+            [hikari.snowflakes.Snowflake][], or
+            [hikari.users.PartialUser][] derivatives to enforce mentioning
             specific users.
         role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], bool]]
-            If provided, and `True`, all mentions will be parsed.
-            If provided, and `False`, no mentions will be parsed.
+            If provided, and [True][], all mentions will be parsed.
+            If provided, and [False][], no mentions will be parsed.
             Alternatively this may be a collection of
-            `hikari.snowflakes.Snowflake`, or
-            `hikari.guilds.PartialRole` derivatives to enforce mentioning
+            [hikari.snowflakes.Snowflake][], or
+            [hikari.guilds.PartialRole][] derivatives to enforce mentioning
             specific roles.
         flags : typing.Union[hikari.undefined.UndefinedType, int, hikari.messages.MessageFlag]
             The flags to set for this webhook message.
@@ -209,9 +209,7 @@ class ExecutableWebhook(abc.ABC):
         hikari.errors.UnauthorizedError
             If you pass a token that's invalid for the target webhook.
         ValueError
-            If either `ExecutableWebhook.token` is `None` or more than 100 unique
-            objects/entities are passed for `role_mentions` or `user_mentions` or
-            if `token` is not available.
+            If `token` is not available.
         TypeError
             If both `attachment` and `attachments`, `component` and `components`
             or `embed` and `embeds` are specified.
@@ -255,7 +253,7 @@ class ExecutableWebhook(abc.ABC):
         Raises
         ------
         ValueError
-            If `token` is not available.
+            If [token][] is not available.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
@@ -307,7 +305,7 @@ class ExecutableWebhook(abc.ABC):
         !!! warning
             If you specify a text `content`, `mentions_everyone`,
             `mentions_reply`, `user_mentions`, and `role_mentions` will default
-            to `False` as the message will be re-parsed for mentions. This will
+            to [False][] as the message will be re-parsed for mentions. This will
             also occur if only one of the four are specified
 
             This is a limitation of Discord's design. If in doubt, specify all
@@ -320,24 +318,24 @@ class ExecutableWebhook(abc.ABC):
             an existing message.
         content : hikari.undefined.UndefinedNoneOr[typing.Any]
             If provided, the message contents. If
-            `hikari.undefined.UNDEFINED`, then nothing will be sent
+            [hikari.undefined.UNDEFINED][], then nothing will be sent
             in the content. Any other value here will be cast to a
-            `str`.
+            [str][].
 
-            If this is a `hikari.embeds.Embed` and no `embed` nor
-            no `embeds` kwarg is provided, then this will instead
+            If this is a [hikari.embeds.Embed][] and no `embed` nor
+            `embeds` kwarg is provided, then this will instead
             update the embed. This allows for simpler syntax when
             sending an embed alone.
 
-            Likewise, if this is a `hikari.files.Resource`, then the
-            content is instead treated as an attachment if no `attachment` and
-            no `attachments` kwargs are provided.
+            Likewise, if this is a [hikari.files.Resource][], then the
+            content is instead treated as an attachment if no `attachment` nor
+            `attachments` kwargs are provided.
 
         Other Parameters
         ----------------
         attachment : hikari.undefined.UndefinedNoneOr[typing.Union[hikari.files.Resourceish, hikari.messages.Attachment]]
             If provided, the attachment to set on the message. If
-            `hikari.undefined.UNDEFINED`, the previous attachment, if
+            [hikari.undefined.UNDEFINED][], the previous attachment, if
             present, is not changed. If this is `None`, then the
             attachment is removed, if present. Otherwise, the new attachment
             that was provided will be attached.
@@ -537,11 +535,11 @@ class PartialWebhook(snowflakes.Unique):
         Parameters
         ----------
         ext : str
-            The extension to use for this URL, defaults to `png`.
+            The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
         size : int
-            The size to set for the URL, defaults to `4096`.
-            Can be any power of two between 16 and 4096.
+            The size to set for the URL.
+            Can be any power of two between `16` and `4096`.
             Will be ignored for default avatars.
 
         Returns
