@@ -597,7 +597,7 @@ class RESTClientImpl(rest_api.RESTClient):
         self._token_type: typing.Optional[str] = None
         if isinstance(token, str):
             if token_type is None:
-                raise ValueError("Token type required when a str is passed for [token][]")
+                raise ValueError("Token type required when a str is passed for `token`")
 
             self._token = f"{token_type.title()} {token}"
             self._token_type = applications.TokenType(token_type.title())
