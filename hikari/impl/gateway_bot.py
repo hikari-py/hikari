@@ -1059,11 +1059,11 @@ class GatewayBot(traits.GatewayBotAware):
 
         See Also
         --------
-        Dispatch : `hikari.impl.gateway_bot.GatewayBot.dispatch`.
-        Listen : `hikari.impl.gateway_bot.GatewayBot.listen`.
-        Subscribe : `hikari.impl.gateway_bot.GatewayBot.subscribe`.
-        Unsubscribe : `hikari.impl.gateway_bot.GatewayBot.unsubscribe`.
-        Wait_for : `hikari.impl.gateway_bot.GatewayBot.wait_for`.
+        Dispatch : [hikari.impl.gateway_bot.GatewayBot.dispatch][].
+        Listen : [hikari.impl.gateway_bot.GatewayBot.listen][].
+        Subscribe : [hikari.impl.gateway_bot.GatewayBot.subscribe][].
+        Unsubscribe : [hikari.impl.gateway_bot.GatewayBot.unsubscribe][].
+        Wait_for : [hikari.impl.gateway_bot.GatewayBot.wait_for][].
         """
         self._check_if_alive()
         return self._event_manager.stream(event_type, timeout=timeout, limit=limit)
@@ -1080,7 +1080,7 @@ class GatewayBot(traits.GatewayBotAware):
         event_type : typing.Type[T]
             The event type to listen for. This will also listen for any
             subclasses of the given type.
-            `T` must be a subclass of `hikari.events.base_events.Event`.
+            `T` must be a subclass of [hikari.events.base_events.Event][].
         callback
             Must be a coroutine function to invoke. This should
             consume an instance of the given event, or an instance of a valid
@@ -1102,11 +1102,11 @@ class GatewayBot(traits.GatewayBotAware):
 
         See Also
         --------
-        Dispatch : `hikari.impl.gateway_bot.GatewayBot.dispatch`.
-        Listen : `hikari.impl.gateway_bot.GatewayBot.listen`.
-        Stream : `hikari.impl.gateway_bot.GatewayBot.stream`.
-        Unsubscribe : `hikari.impl.gateway_bot.GatewayBot.unsubscribe`.
-        Wait_for : `hikari.impl.gateway_bot.GatewayBot.wait_for`.
+        Dispatch : [hikari.impl.gateway_bot.GatewayBot.dispatch][].
+        Listen : [hikari.impl.gateway_bot.GatewayBot.listen][].
+        Stream : [hikari.impl.gateway_bot.GatewayBot.stream][].
+        Unsubscribe : [hikari.impl.gateway_bot.GatewayBot.unsubscribe][].
+        Wait_for : [hikari.impl.gateway_bot.GatewayBot.wait_for][].
         """
         self._event_manager.subscribe(event_type, callback)
 
@@ -1122,7 +1122,7 @@ class GatewayBot(traits.GatewayBotAware):
         event_type : typing.Type[T]
             The event type to unsubscribe from. This must be the same exact
             type as was originally subscribed with to be removed correctly.
-            `T` must derive from `hikari.events.base_events.Event`.
+            `T` must derive from [hikari.events.base_events.Event][].
         callback
             The callback to unsubscribe.
 
@@ -1142,11 +1142,11 @@ class GatewayBot(traits.GatewayBotAware):
 
         See Also
         --------
-        Dispatch : `hikari.impl.gateway_bot.GatewayBot.dispatch`.
-        Listen : `hikari.impl.gateway_bot.GatewayBot.listen`.
-        Stream : `hikari.impl.gateway_bot.GatewayBot.stream`.
-        Subscribe : `hikari.impl.gateway_bot.GatewayBot.subscribe`.
-        Wait_for : `hikari.impl.gateway_bot.GatewayBot.wait_for`.
+        Dispatch : [hikari.impl.gateway_bot.GatewayBot.dispatch][].
+        Listen : [hikari.impl.gateway_bot.GatewayBot.listen][].
+        Stream : [hikari.impl.gateway_bot.GatewayBot.stream][].
+        Subscribe : [hikari.impl.gateway_bot.GatewayBot.subscribe][].
+        Wait_for : [hikari.impl.gateway_bot.GatewayBot.wait_for][].
         """
         self._event_manager.unsubscribe(event_type, callback)
 
@@ -1193,11 +1193,11 @@ class GatewayBot(traits.GatewayBotAware):
 
         See Also
         --------
-        Dispatch : `hikari.impl.gateway_bot.GatewayBot.dispatch`.
-        Listen : `hikari.impl.gateway_bot.GatewayBot.listen`.
-        Stream : `hikari.impl.gateway_bot.GatewayBot.stream`.
-        Subscribe : `hikari.impl.gateway_bot.GatewayBot.subscribe`.
-        Unsubscribe : `hikari.impl.gateway_bot.GatewayBot.unsubscribe`.
+        Dispatch : [hikari.impl.gateway_bot.GatewayBot.dispatch][].
+        Listen : [hikari.impl.gateway_bot.GatewayBot.listen][].
+        Stream : [hikari.impl.gateway_bot.GatewayBot.stream][].
+        Subscribe : [hikari.impl.gateway_bot.GatewayBot.subscribe][].
+        Unsubscribe : [hikari.impl.gateway_bot.GatewayBot.unsubscribe][].
         """
         self._check_if_alive()
         return await self._event_manager.wait_for(event_type, timeout=timeout, predicate=predicate)

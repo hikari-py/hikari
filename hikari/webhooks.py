@@ -125,8 +125,8 @@ class ExecutableWebhook(abc.ABC):
             At the time of writing, `username` and `avatar_url` are ignored for
             interaction webhooks.
 
-            Additionally, `SUPPRESS_EMBEDS`, `SUPPRESS_NOTIFICATIONS` and `EPHEMERAL`
-            are the only flags that can be set, with `EPHEMERAL` being limited to
+            Additionally, [hikari.messages.MessageFlag.SUPPRESS_EMBEDS][], [hikari.messages.MessageFlag.SUPPRESS_NOTIFICATIONS][] and [hikari.messages.MessageFlag.EPHEMERAL][]
+            are the only flags that can be set, with [hikari.messages.MessageFlag.EPHEMERAL][] being limited to
             interaction webhooks.
 
         Parameters
@@ -341,7 +341,7 @@ class ExecutableWebhook(abc.ABC):
             that was provided will be attached.
         attachments : hikari.undefined.UndefinedNoneOr[typing.Sequence[typing.Union[hikari.files.Resourceish, hikari.messages.Attachment]]]
             If provided, the attachments to set on the message. If
-            `hikari.undefined.UNDEFINED`, the previous attachments, if
+            [hikari.undefined.UNDEFINED][], the previous attachments, if
             present, are not changed. If this is `None`, then the
             attachments is removed, if present. Otherwise, the new attachments
             that were provided will be attached.
@@ -356,19 +356,19 @@ class ExecutableWebhook(abc.ABC):
             remove all components.
         embed : hikari.undefined.UndefinedNoneOr[hikari.embeds.Embed]
             If provided, the embed to set on the message. If
-            `hikari.undefined.UNDEFINED`, the previous embed(s) are not changed.
+            [hikari.undefined.UNDEFINED][], the previous embed(s) are not changed.
             If this is `None` then any present embeds are removed.
             Otherwise, the new embed that was provided will be used as the
             replacement.
         embeds : hikari.undefined.UndefinedNoneOr[typing.Sequence[hikari.embeds.Embed]]
             If provided, the embeds to set on the message. If
-            `hikari.undefined.UNDEFINED`, the previous embed(s) are not changed.
+            [hikari.undefined.UNDEFINED][], the previous embed(s) are not changed.
             If this is `None` then any present embeds are removed.
             Otherwise, the new embeds that were provided will be used as the
             replacement.
         mentions_everyone : hikari.undefined.UndefinedOr[bool]
             If provided, sanitation for `@everyone` mentions. If
-            `hikari.undefined.UNDEFINED`, then the previous setting is
+            [hikari.undefined.UNDEFINED][], then the previous setting is
             not changed. If `True`, then `@everyone`/`@here` mentions
             in the message content will show up as mentioning everyone that can
             view the chat.
@@ -377,16 +377,16 @@ class ExecutableWebhook(abc.ABC):
             If provided, and `False`, all user mentions will be ignored
             if appearing in the message body.
             Alternatively this may be a collection of
-            `hikari.snowflakes.Snowflake`, or
-            `hikari.users.PartialUser` derivatives to enforce mentioning
+            [hikari.snowflakes.Snowflake][], or
+            [hikari.users.PartialUser][] derivatives to enforce mentioning
             specific users.
         role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], bool]]
             If provided, and `True`, all role mentions will be detected.
             If provided, and `False`, all role mentions will be ignored
             if appearing in the message body.
             Alternatively this may be a collection of
-            `hikari.snowflakes.Snowflake`, or
-            `hikari.guilds.PartialRole` derivatives to enforce mentioning
+            [hikari.snowflakes.Snowflake][], or
+            [hikari.guilds.PartialRole][] derivatives to enforce mentioning
             specific roles.
 
         Returns
@@ -613,10 +613,10 @@ class IncomingWebhook(PartialWebhook, ExecutableWebhook):
         hikari.errors.NotFoundError
             If this webhook is not found.
         hikari.errors.ForbiddenError
-            If you either lack the `MANAGE_WEBHOOKS` permission or
+            If you either lack the [hikari.permissions.Permissions.MANAGE_WEBHOOKS][] permission or
             are not a member of the guild this webhook belongs to.
         ValueError
-            If `use_token` is passed as `True` when `IncomingWebhook.token` is
+            If `use_token` is passed as `True` when [hikari.webhooks.IncomingWebhook.token][] is
             `None`.
         """
         token: undefined.UndefinedOr[str] = undefined.UNDEFINED
@@ -669,14 +669,14 @@ class IncomingWebhook(PartialWebhook, ExecutableWebhook):
         Raises
         ------
         ValueError
-            If `use_token` is passed as `True` when `IncomingWebhook.token` is `None`.
+            If `use_token` is passed as `True` when [hikari.webhooks.IncomingWebhook.token][] is `None`.
         hikari.errors.BadRequestError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of a 64 bit integer.
+            due to it being outside the range of a 64-bit integer.
         hikari.errors.NotFoundError
             If either the webhook or the channel are not found.
         hikari.errors.ForbiddenError
-            If you either lack the `MANAGE_WEBHOOKS` permission or
+            If you either lack the [hikari.permissions.Permissions.MANAGE_WEBHOOKS][] permission or
             are not a member of the guild this webhook belongs to.
         hikari.errors.UnauthorizedError
             If you pass a token that's invalid for the target webhook.
@@ -750,7 +750,7 @@ class IncomingWebhook(PartialWebhook, ExecutableWebhook):
             is `None`.
         hikari.errors.ForbiddenError
             If you're not in the guild that owns this webhook or
-            lack the `MANAGE_WEBHOOKS` permission.
+            lack the [hikari.permissions.Permissions.MANAGE_WEBHOOKS][] permission.
         hikari.errors.NotFoundError
             If the webhook is not found.
         hikari.errors.UnauthorizedError
@@ -814,7 +814,7 @@ class ChannelFollowerWebhook(PartialWebhook):
         hikari.errors.NotFoundError
             If this webhook is not found.
         hikari.errors.ForbiddenError
-            If you either lack the `MANAGE_WEBHOOKS` permission or
+            If you either lack the [hikari.permissions.Permissions.MANAGE_WEBHOOKS][] permission or
             are not a member of the guild this webhook belongs to.
         """
         await self.app.rest.delete_webhook(self.id)
@@ -857,7 +857,7 @@ class ChannelFollowerWebhook(PartialWebhook):
         hikari.errors.NotFoundError
             If either the webhook or the channel are not found.
         hikari.errors.ForbiddenError
-            If you either lack the `MANAGE_WEBHOOKS` permission or
+            If you either lack the [hikari.permissions.Permissions.MANAGE_WEBHOOKS][] permission or
             are not a member of the guild this webhook belongs to.
         hikari.errors.UnauthorizedError
             If you pass a token that's invalid for the target webhook.
@@ -909,7 +909,7 @@ class ChannelFollowerWebhook(PartialWebhook):
         ------
         hikari.errors.ForbiddenError
             If you're not in the guild that owns this webhook or
-            lack the `MANAGE_WEBHOOKS` permission.
+            lack the [hikari.permissions.Permissions.MANAGE_WEBHOOKS][] permission.
         hikari.errors.NotFoundError
             If the webhook is not found.
         hikari.errors.UnauthorizedError

@@ -223,7 +223,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
         Returns
         -------
         LazyIterator[typing.Sequence[ValueT]]
-            `LazyIterator` that emits each chunked sequence.
+            [hikari.iterators.LazyIterator][] that emits each chunked sequence.
         """
         return _ChunkedLazyIterator(self, chunk_size)
 
@@ -242,7 +242,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
         Returns
         -------
         LazyIterator[AnotherValueT]
-            `LazyIterator` that maps each value to another value.
+            [hikari.iterators.LazyIterator][] that maps each value to another value.
         """
         if isinstance(transformation, str):
             transformation = typing.cast("spel.AttrGetter[ValueT, AnotherValueT]", spel.AttrGetter(transformation))
@@ -289,7 +289,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
         Returns
         -------
         LazyIterator[ValueT]
-            `LazyIterator` that only emits values where all conditions are
+            [hikari.iterators.LazyIterator][] that only emits values where all conditions are
             matched.
         """
         conditions: All[ValueT] = self._map_predicates_and_attr_getters("filter", *predicates, **attrs)
@@ -587,7 +587,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
         This will pass each item in the iterator to the given `function`
         parameter, expecting a new `typing.Iterable` or `typing.AsyncIterator`
         to be returned as the result. This means you can map to a new
-        `LazyIterator`, `typing.AsyncIterator`, `typing.Iterable`,
+        [hikari.iterators.LazyIterator][], `typing.AsyncIterator`, `typing.Iterable`,
         async generator, or generator.
 
         Remember that `typing.Iterator` implicitly provides `typing.Iterable`

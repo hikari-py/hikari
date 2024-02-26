@@ -686,7 +686,7 @@ class Embed:
             - If a [hikari.files.Bytes][] is passed, or a [str][]
                 that contains a valid data URI is passed, then this is uploaded
                 as an attachment and linked into the embed.
-            - If a `hikari.files.File`, `pathlib.PurePath` or
+            - If a [hikari.files.File][], `pathlib.PurePath` or
                 `str` that is an absolute or relative path to a file
                 on your file system is passed, then this resource is uploaded
                 as an attachment using non-blocking code internally and linked
@@ -723,16 +723,16 @@ class Embed:
             - If `None`, nothing is set.
             - If a `pathlib.PurePath` or `str` to a valid URL, the URL
                 is linked to directly.
-            - Subclasses of `hikari.files.WebResource` such as
-                `hikari.files.URL`,
-                `hikari.messages.Attachment`,
-                `hikari.emojis.Emoji`,
-                `EmbedResource`, etc will have their URL linked to directly.
+            - Subclasses of [hikari.files.WebResource][] such as
+                [hikari.files.URL][],
+                [hikari.messages.Attachment][],
+                [hikari.emojis.Emoji][],
+                [hikari.embeds.EmbedResource][], etc will have their URL linked to directly.
                 this field.
-            - If a `hikari.files.Bytes` is passed, or a `str`
+            - If a [hikari.files.Bytes][] is passed, or a `str`
                 that contains a valid data URI is passed, then this is uploaded
                 as an attachment and linked into the embed.
-            - If a `hikari.files.File`, `pathlib.PurePath` or
+            - If a [hikari.files.File][], `pathlib.PurePath` or
                 `str` that is an absolute or relative path to a file
                 on your file system is passed, then this resource is uploaded
                 as an attachment using non-blocking code internally and linked
@@ -763,15 +763,15 @@ class Embed:
             - If `None`, nothing is set.
             - If a `pathlib.PurePath` or `str` to a valid URL, the URL
                 is linked to directly.
-            - Subclasses of `hikari.files.WebResource` such as
-                `hikari.files.URL`,
-                `hikari.messages.Attachment`,
-                `hikari.emojis.Emoji`,
-                `EmbedResource`, etc will have their URL linked to directly.
-            - If a `hikari.files.Bytes` is passed, or a `str`
+            - Subclasses of [hikari.files.WebResource][] such as
+                [hikari.files.URL][],
+                [hikari.messages.Attachment][],
+                [hikari.emojis.Emoji][],
+                [hikari.embeds.EmbedResource][], etc will have their URL linked to directly.
+            - If a [hikari.files.Bytes][] is passed, or a `str`
                 that contains a valid data URI is passed, then this is uploaded
                 as an attachment and linked into the embed.
-            - If a `hikari.files.File`, `pathlib.PurePath` or
+            - If a [hikari.files.File][], `pathlib.PurePath` or
                 `str` that is an absolute or relative path to a file
                 on your file system is passed, then this resource is uploaded
                 as an attachment using non-blocking code internally and linked

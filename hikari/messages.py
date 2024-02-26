@@ -768,14 +768,14 @@ class PartialMessage(snowflakes.Unique):
         ----------
         content : hikari.undefined.UndefinedOr[typing.Any]
             If provided, the message content to update with. If
-            `hikari.undefined.UNDEFINED`, then the content will not
+            [hikari.undefined.UNDEFINED][], then the content will not
             be changed. If `None`, then the content will be removed.
 
             Any other value will be cast to a `str` before sending.
 
-            If this is a `hikari.embeds.Embed` and neither the `embed` or
+            If this is a [hikari.embeds.Embed][] and neither the `embed` or
             `embeds` kwargs are provided or if this is a
-            `hikari.files.Resourceish` and neither the
+            [hikari.files.Resourceish][] and neither the
             `attachment` or `attachments` kwargs are provided, the values will
             be overwritten. This allows for simpler syntax when sending an
             embed or an attachment alone.
@@ -784,13 +784,13 @@ class PartialMessage(snowflakes.Unique):
         ----------------
         attachment : hikari.undefined.UndefinedNoneOr[typing.Union[hikari.files.Resourceish, hikari.messages.Attachment]]
             If provided, the attachment to set on the message. If
-            `hikari.undefined.UNDEFINED`, the previous attachment, if
+            [hikari.undefined.UNDEFINED][], the previous attachment, if
             present, is not changed. If this is `None`, then the
             attachment is removed, if present. Otherwise, the new attachment
             that was provided will be attached.
         attachments : hikari.undefined.UndefinedNoneOr[typing.Sequence[typing.Union[hikari.files.Resourceish, hikari.messages.Attachment]]]
             If provided, the attachments to set on the message. If
-            `hikari.undefined.UNDEFINED`, the previous attachments, if
+            [hikari.undefined.UNDEFINED][], the previous attachments, if
             present, are not changed. If this is `None`, then the
             attachments is removed, if present. Otherwise, the new attachments
             that were provided will be attached.
@@ -805,19 +805,19 @@ class PartialMessage(snowflakes.Unique):
             remove all components.
         embed : hikari.undefined.UndefinedNoneOr[hikari.embeds.Embed]
             If provided, the embed to set on the message. If
-            `hikari.undefined.UNDEFINED`, the previous embed(s) are not changed.
+            [hikari.undefined.UNDEFINED][], the previous embed(s) are not changed.
             If this is `None` then any present embeds are removed.
             Otherwise, the new embed that was provided will be used as the
             replacement.
         embeds : hikari.undefined.UndefinedNoneOr[typing.Sequence[hikari.embeds.Embed]]
             If provided, the embeds to set on the message. If
-            `hikari.undefined.UNDEFINED`, the previous embed(s) are not changed.
+            [hikari.undefined.UNDEFINED][], the previous embed(s) are not changed.
             If this is `None` then any present embeds are removed.
             Otherwise, the new embeds that were provided will be used as the
             replacement.
         mentions_everyone : hikari.undefined.UndefinedOr[bool]
             Sanitation for `@everyone` mentions. If
-            `hikari.undefined.UNDEFINED`, then the previous setting is
+            [hikari.undefined.UNDEFINED][], then the previous setting is
             not changed. If `True`, then `@everyone`/`@here` mentions
             in the message content will show up as mentioning everyone that can
             view the chat.
@@ -828,31 +828,31 @@ class PartialMessage(snowflakes.Unique):
             This will not do anything if this is not a reply message.
         user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
             Sanitation for user mentions. If
-            `hikari.undefined.UNDEFINED`, then the previous setting is
+            [hikari.undefined.UNDEFINED][], then the previous setting is
             not changed. If `True`, all valid user mentions will behave
             as mentions. If `False`, all valid user mentions will not
             behave as mentions.
 
             You may alternatively pass a collection of
-            `hikari.snowflakes.Snowflake` user IDs, or
-            `hikari.users.PartialUser`-derived objects.
+            [hikari.snowflakes.Snowflake][] user IDs, or
+            [hikari.users.PartialUser][]-derived objects.
         role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], bool]]
             Sanitation for role mentions. If
-            `hikari.undefined.UNDEFINED`, then the previous setting is
+            [hikari.undefined.UNDEFINED][], then the previous setting is
             not changed. If `True`, all valid role mentions will behave
             as mentions. If `False`, all valid role mentions will not
             behave as mentions.
 
             You may alternatively pass a collection of
-            `hikari.snowflakes.Snowflake` role IDs, or
-            `hikari.guilds.PartialRole`-derived objects.
+            [hikari.snowflakes.Snowflake][] role IDs, or
+            [hikari.guilds.PartialRole][]-derived objects.
         flags : hikari.undefined.UndefinedOr[hikari.messages.MessageFlag]
             Optional flags to set on the message. If
-            `hikari.undefined.UNDEFINED`, then nothing is changed.
+            [hikari.undefined.UNDEFINED][], then nothing is changed.
 
             Note that some flags may not be able to be set. Currently the only
-            flags that can be set are `NONE` and `SUPPRESS_EMBEDS`. If you
-            have `MANAGE_MESSAGES` permissions, you can use this call to
+            flags that can be set are [hikari.messages.MessageFlag.NONE][] and [hikari.messages.MessageFlag.SUPPRESS_EMBEDS][]. If you
+            have [hikari.permissions.Permissions.MANAGE_MESSAGES][] permissions, you can use this call to
             suppress embeds on another user's message.
 
         Returns
@@ -931,15 +931,15 @@ class PartialMessage(snowflakes.Unique):
         ----------
         content : hikari.undefined.UndefinedOr[typing.Any]
             If provided, the message contents. If
-            `hikari.undefined.UNDEFINED`, then nothing will be sent
+            [hikari.undefined.UNDEFINED][], then nothing will be sent
             in the content. Any other value here will be cast to a
             `str`.
 
-            If this is a `hikari.embeds.Embed` and no `embed` nor `embeds` kwarg
+            If this is a [hikari.embeds.Embed][] and no `embed` nor `embeds` kwarg
             is provided, then this will instead update the embed. This allows
             for simpler syntax when sending an embed alone.
 
-            Likewise, if this is a `hikari.files.Resource`, then the
+            Likewise, if this is a [hikari.files.Resource][], then the
             content is instead treated as an attachment if no `attachment` and
             no `attachments` kwargs are provided.
 
@@ -955,18 +955,18 @@ class PartialMessage(snowflakes.Unique):
             - If a `pathlib.PurePath` or `str` to a valid URL, the
                 resource at the given URL will be streamed to Discord when
                 sending the message. Subclasses of
-                `hikari.files.WebResource` such as
-                `hikari.files.URL`,
-                `hikari.messages.Attachment`,
-                `hikari.emojis.Emoji`,
-                `EmbedResource`, etc will also be uploaded this way.
+                [hikari.files.WebResource][] such as
+                [hikari.files.URL][],
+                [hikari.messages.Attachment][],
+                [hikari.emojis.Emoji][],
+                [hikari.embeds.EmbedResource][], etc will also be uploaded this way.
                 This will use bit-inception, so only a small percentage of the
                 resource will remain in memory at any one time, thus aiding in
                 scalability.
-            - If a `hikari.files.Bytes` is passed, or a `str`
+            - If a [hikari.files.Bytes][] is passed, or a `str`
                 that contains a valid data URI is passed, then this is uploaded
                 with a randomized file name if not provided.
-            - If a `hikari.files.File`, `pathlib.PurePath` or
+            - If a [hikari.files.File][], `pathlib.PurePath` or
                 `str` that is an absolute or relative path to a file
                 on your file system is passed, then this resource is uploaded
                 as an attachment using non-blocking code internally and streamed
@@ -1016,21 +1016,21 @@ class PartialMessage(snowflakes.Unique):
             If provided, and `True`, all mentions will be parsed.
             If provided, and `False`, no mentions will be parsed.
             Alternatively this may be a collection of
-            `hikari.snowflakes.Snowflake`, or `hikari.users.PartialUser`
+            [hikari.snowflakes.Snowflake][], or [hikari.users.PartialUser][]
             derivatives to enforce mentioning specific users.
         role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], bool]]
             If provided, and `True`, all mentions will be parsed.
             If provided, and `False`, no mentions will be parsed.
             Alternatively this may be a collection of
-            `hikari.snowflakes.Snowflake`, or
-            `hikari.guilds.PartialRole` derivatives to enforce mentioning
+            [hikari.snowflakes.Snowflake][], or
+            [hikari.guilds.PartialRole][] derivatives to enforce mentioning
             specific roles.
         flags : hikari.undefined.UndefinedOr[hikari.messages.MessageFlag]
             If provided, optional flags to set on the message. If
-            `hikari.undefined.UNDEFINED`, then nothing is changed.
+            [hikari.undefined.UNDEFINED][], then nothing is changed.
 
             Note that some flags may not be able to be set. Currently the only
-            flags that can be set are `NONE` and `SUPPRESS_EMBEDS`.
+            flags that can be set are [hikari.messages.MessageFlag.NONE][] and [hikari.messages.MessageFlag.SUPPRESS_EMBEDS][].
 
         Returns
         -------
@@ -1118,7 +1118,7 @@ class PartialMessage(snowflakes.Unique):
         emoji : typing.Union[str, hikari.emojis.Emoji]
             Object or name of the emoji to react with.
 
-            Note that if the emoji is an `hikari.emojis.CustomEmoji`
+            Note that if the emoji is an [hikari.emojis.CustomEmoji][]
             and is not from a guild the bot user is in, then this will fail.
 
         Other Parameters
@@ -1153,8 +1153,8 @@ class PartialMessage(snowflakes.Unique):
             If the emoji is invalid, unknown, or formatted incorrectly.
         hikari.errors.ForbiddenError
             If this is the first reaction using this specific emoji on this
-            message and you lack the `ADD_REACTIONS` permission. If you lack
-            `READ_MESSAGE_HISTORY`, this may also raise this error.
+            message and you lack the [hikari.permissions.Permissions.ADD_REACTIONS][] permission. If you lack
+            [hikari.permissions.Permissions.READ_MESSAGE_HISTORY][], this may also raise this error.
         hikari.errors.NotFoundError
             If the channel or message is not found, or if the emoji is not
             found.
@@ -1237,9 +1237,9 @@ class PartialMessage(snowflakes.Unique):
             due to it being outside of the range of a 64 bit integer.
         hikari.errors.ForbiddenError
             If this is the first reaction using this specific emoji on this
-            message and you lack the `ADD_REACTIONS` permission. If you lack
-            `READ_MESSAGE_HISTORY`, this may also raise this error. If you
-            remove the reaction of another user without `MANAGE_MESSAGES`, this
+            message and you lack the [hikari.permissions.Permissions.ADD_REACTIONS][] permission. If you lack
+            [hikari.permissions.Permissions.READ_MESSAGE_HISTORY][], this may also raise this error. If you
+            remove the reaction of another user without [hikari.permissions.Permissions.MANAGE_MESSAGES][], this
             will be raised.
         hikari.errors.NotFoundError
             If the channel or message is not found, or if the emoji is not
@@ -1299,7 +1299,7 @@ class PartialMessage(snowflakes.Unique):
         Raises
         ------
         hikari.errors.ForbiddenError
-            If you are missing the `MANAGE_MESSAGES` permission, or the
+            If you are missing the [hikari.permissions.Permissions.MANAGE_MESSAGES][] permission, or the
             permission to view the channel
         hikari.errors.NotFoundError
             If the channel or message is not found, or if the emoji is not
@@ -1391,7 +1391,7 @@ class Message(PartialMessage):
     referenced_message: typing.Optional[PartialMessage] = attrs.field(hash=False, eq=False, repr=False)
     """The message that was replied to.
 
-    If `type` is `MessageType.REPLY` and `None`, the message was deleted.
+    If `type` is [hikari.messages.MessageType.REPLY][] and `None`, the message was deleted.
     """
 
     interaction: typing.Optional[MessageInteraction] = attrs.field(hash=False, eq=False, repr=False)

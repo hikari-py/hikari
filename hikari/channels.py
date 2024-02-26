@@ -606,22 +606,22 @@ class TextableChannel(PartialChannel):
             If provided, and [True][], all mentions will be parsed.
             If provided, and [False][], no mentions will be parsed.
             Alternatively this may be a collection of
-            `hikari.snowflakes.Snowflake`, or
-            `hikari.users.PartialUser` derivatives to enforce mentioning
+            [hikari.snowflakes.Snowflake][], or
+            [hikari.users.PartialUser][] derivatives to enforce mentioning
             specific users.
         role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], bool]]
             If provided, and `True`, all mentions will be parsed.
             If provided, and `False`, no mentions will be parsed.
             Alternatively this may be a collection of
-            `hikari.snowflakes.Snowflake`, or
-            `hikari.guilds.PartialRole` derivatives to enforce mentioning
+            [hikari.snowflakes.Snowflake][], or
+            [hikari.guilds.PartialRole][] derivatives to enforce mentioning
             specific roles.
         flags : hikari.undefined.UndefinedOr[hikari.messages.MessageFlag]
             If provided, optional flags to set on the message. If
-            `hikari.undefined.UNDEFINED`, then nothing is changed.
+            [hikari.undefined.UNDEFINED][], then nothing is changed.
 
             Note that some flags may not be able to be set. Currently the only
-            flags that can be set are `NONE` and `SUPPRESS_EMBEDS`.
+            flags that can be set are [hikari.messages.MessageFlag.NONE][] and [hikari.messages.MessageFlag.SUPPRESS_EMBEDS][].
 
         Returns
         -------
@@ -736,7 +736,7 @@ class TextableChannel(PartialChannel):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the `MANAGE_MESSAGES` in the channel.
+            If you are missing the [hikari.permissions.Permissions.MANAGE_MESSAGES][] in the channel.
         hikari.errors.NotFoundError
             If the channel is not found, or if the message does not exist in
             the given channel.
@@ -762,7 +762,7 @@ class TextableChannel(PartialChannel):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the `MANAGE_MESSAGES` permission.
+            If you are missing the [hikari.permissions.Permissions.MANAGE_MESSAGES][] permission.
         hikari.errors.NotFoundError
             If the channel is not found or the message is not a pinned message
             in the given channel.
@@ -1068,7 +1068,7 @@ class GuildChannel(PartialChannel):
             If provided, the new locked state for the thread. This only applies
             to threads.
 
-            If it's locked then only people with `MANAGE_THREADS` can unarchive it.
+            If it's locked then only people with [hikari.permissions.Permissions.MANAGE_THREADS][] can unarchive it.
         invitable : hikari.undefined.UndefinedOr[bool]
             If provided, the new setting for whether non-moderators can invite
             new members to a private thread. This only applies to threads.
@@ -1282,9 +1282,10 @@ class GuildTextChannel(PermissibleGuildChannel, TextableGuildChannel):
     If there is no rate limit, this will be 0 seconds.
 
     !!! note
-        Any user that has permissions allowing `MANAGE_MESSAGES`,
-        `MANAGE_CHANNEL`, `ADMINISTRATOR` will not be limited. Likewise, bots
-        will not be affected by this rate limit.
+        Any user that has permissions allowing [hikari.permissions.Permissions.MANAGE_MESSAGES][],
+        [hikari.permissions.Permissions.MANAGE_CHANNELS][],
+        [hikari.permissions.Permissions.ADMINISTRATOR][] will not be limited.
+        Likewise, bots will not be affected by this rate limit.
     """
 
     last_pin_timestamp: typing.Optional[datetime.datetime] = attrs.field(eq=False, hash=False, repr=False)
@@ -1438,7 +1439,8 @@ class ForumTag(snowflakes.Unique):
     moderated: bool = attrs.field(eq=False, hash=False, repr=False, default=False)
     """The whether this flag can only be applied by moderators.
 
-    Moderators are those with `MANAGE_CHANNEL` or `ADMINISTRATOR` permissions.
+    Moderators are those with [hikari.permissions.Permissions.MANAGE_CHANNELS][]
+    or [hikari.permissions.Permissions.ADMINISTRATOR][] permissions.
     """
 
     _emoji: typing.Union[str, int, emojis.Emoji, None] = attrs.field(alias="emoji", default=None)
@@ -1484,9 +1486,10 @@ class GuildForumChannel(PermissibleGuildChannel):
     If there is no rate limit, this will be 0 seconds.
 
     !!! note
-        Any user that has permissions allowing `MANAGE_MESSAGES`,
-        `MANAGE_CHANNEL`, `ADMINISTRATOR` will not be limited. Likewise, bots
-        will not be affected by this rate limit.
+        Any user that has permissions allowing [hikari.permissions.Permissions.MANAGE_MESSAGES][],
+        [hikari.permissions.Permissions.MANAGE_CHANNELS][],
+        [hikari.permissions.Permissions.ADMINISTRATOR][] will not be limited.
+        Likewise, bots will not be affected by this rate limit.
     """
 
     default_thread_rate_limit_per_user: datetime.timedelta = attrs.field(eq=False, hash=False, repr=False)
@@ -1495,9 +1498,10 @@ class GuildForumChannel(PermissibleGuildChannel):
     If there is no rate limit, this will be 0 seconds.
 
     !!! note
-        Any user that has permissions allowing `MANAGE_MESSAGES`,
-        `MANAGE_CHANNEL`, `ADMINISTRATOR` will not be limited. Likewise, bots
-        will not be affected by this rate limit.
+        Any user that has permissions allowing [hikari.permissions.Permissions.MANAGE_MESSAGES][],
+        [hikari.permissions.Permissions.MANAGE_CHANNELS][],
+        [hikari.permissions.Permissions.ADMINISTRATOR][] will not be limited.
+        Likewise, bots will not be affected by this rate limit.
     """
 
     default_auto_archive_duration: datetime.timedelta = attrs.field(eq=False, hash=False, repr=False)
@@ -1510,7 +1514,7 @@ class GuildForumChannel(PermissibleGuildChannel):
     """The channel flags for this channel.
 
     !!! note
-        As of writing, the only flag that can be set is `ChannelFlag.REQUIRE_TAG`.
+        As of writing, the only flag that can be set is [hikari.channels.ChannelFlag.REQUIRE_TAG][].
     """
 
     available_tags: typing.Sequence[ForumTag] = attrs.field(eq=False, hash=False, repr=False)
@@ -1531,7 +1535,7 @@ class GuildForumChannel(PermissibleGuildChannel):
     """Name of the default reaction emoji.
 
     Either the string name of the custom emoji, the object
-    of the `hikari.emojis.UnicodeEmoji` or `None` when the relevant
+    of the [hikari.emojis.UnicodeEmoji][] or `None` when the relevant
     custom emoji's data is not available (e.g. the emoji has been deleted).
     """
 
@@ -1541,8 +1545,8 @@ WebhookChannelT = typing.Union[GuildTextChannel, GuildNewsChannel]
 
 The following types are in this:
 
-* `GuildTextChannel`
-* `GuildNewsChannel`
+* [hikari.channels.GuildTextChannel][]
+* [hikari.channels.GuildNewsChannel][]
 """
 
 WebhookChannelTypes: typing.Tuple[typing.Type[GuildTextChannel], typing.Type[GuildNewsChannel]] = (
@@ -1553,8 +1557,8 @@ WebhookChannelTypes: typing.Tuple[typing.Type[GuildTextChannel], typing.Type[Gui
 
 This includes:
 
-* `GuildTextChannel`
-* `GuildNewsChannel`
+* [hikari.channels.GuildTextChannel][]
+* [hikari.channels.GuildNewsChannel][]
 """
 
 
@@ -1610,9 +1614,10 @@ class GuildThreadChannel(TextableGuildChannel):
     If there is no rate limit, this will be 0 seconds.
 
     !!! note
-        Any user that has permissions allowing `MANAGE_MESSAGES`,
-        `MANAGE_CHANNEL`, `ADMINISTRATOR` will not be limited. Likewise, bots
-        will not be affected by this rate limit.
+        Any user that has permissions allowing [hikari.permissions.Permissions.MANAGE_MESSAGES][],
+        [hikari.permissions.Permissions.MANAGE_CHANNELS][],
+        [hikari.permissions.Permissions.ADMINISTRATOR][] will not be limited.
+        Likewise, bots will not be affected by this rate limit.
     """
 
     approximate_message_count: int = attrs.field(eq=False, hash=False, repr=True)
@@ -1649,7 +1654,7 @@ class GuildThreadChannel(TextableGuildChannel):
     is_locked: bool = attrs.field(eq=False, hash=False, repr=True)
     """Whether the thread is locked.
 
-    When a thread is locked, only users with `MANAGE_THREADS` permission
+    When a thread is locked, only users with [hikari.permissions.Permissions.MANAGE_THREADS][] permission
     can un-archive it.
     """
 
@@ -1696,7 +1701,7 @@ class GuildPublicThread(GuildThreadChannel):
     This will only apply to threads created inside a forum channel.
 
     !!! note
-        As of writing, the only flag that can be set is `ChannelFlag.PINNED`.
+        As of writing, the only flag that can be set is [hikari.channels.ChannelFlag.PINNED][].
     """
 
 

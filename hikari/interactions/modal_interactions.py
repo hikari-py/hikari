@@ -89,7 +89,7 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
     This will be [None][] for modal interactions triggered in DMs.
 
     !!! note
-        This value can usually only be changed if `COMMUNITY` is in [hikari.guilds.Guild.features][]
+        This value can usually only be changed if [hikari.guilds.GuildFeature.COMMUNITY][] is in [hikari.guilds.Guild.features][]
         for the guild and will otherwise default to [hikari.locales.Locale.EN_US][].
     """
 

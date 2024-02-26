@@ -198,7 +198,7 @@ class ActivityAssets:
             If the size is not an integer power of 2 between 16 and 4096
             (inclusive).
         RuntimeError
-            If `ActivityAssets.large_image` points towards an unknown asset type.
+            If [hikari.presences.ActivityAssets.large_image][] points towards an unknown asset type.
         """
         return self._make_asset_url(self.large_image, ext, size)
 
@@ -239,7 +239,7 @@ class ActivityAssets:
             If the size is not an integer power of 2 between 16 and 4096
             (inclusive).
         RuntimeError
-            If `ActivityAssets.small_image` points towards an unknown asset type.
+            If [hikari.presences.ActivityAssets.small_image][] points towards an unknown asset type.
         """
         return self._make_asset_url(self.small_image, ext, size)
 
@@ -313,7 +313,7 @@ class Activity:
     url: typing.Optional[str] = attrs.field(default=None, repr=False)
     """The activity URL, if set.
 
-    Only valid for `STREAMING` activities.
+    Only valid for [hikari.presences.ActivityType.STREAMING][] activities.
     """
 
     type: typing.Union[ActivityType, int] = attrs.field(converter=ActivityType, default=ActivityType.PLAYING)

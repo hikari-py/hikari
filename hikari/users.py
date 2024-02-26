@@ -650,7 +650,7 @@ class PartialUserImpl(PartialUser):
     """Implementation for partial information about a user.
 
     This is pretty much the same as a normal user, but information may not be
-    present, which will be denoted by `hikari.undefined.UNDEFINED`.
+    present, which will be denoted by [hikari.undefined.UNDEFINED][].
     """
 
     id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)

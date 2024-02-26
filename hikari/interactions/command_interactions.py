@@ -97,7 +97,8 @@ class CommandInteractionOption:
     value: typing.Union[snowflakes.Snowflake, str, int, float, bool, None] = attrs.field(repr=True)
     """Value provided for this option.
 
-    Either `CommandInteractionOption.value` or `CommandInteractionOption.options`
+    Either [hikari.interactions.command_interactions.CommandInteractionOption.value][]
+    or [hikari.interactions.command_interactions.CommandInteractionOption.options][]
     will be provided with `value` being provided when an option is provided as a
     parameter with a value and `options` being provided when an option donates a
     subcommand or group.
@@ -106,7 +107,8 @@ class CommandInteractionOption:
     options: typing.Optional[typing.Sequence[Self]] = attrs.field(repr=True)
     """Options provided for this option.
 
-    Either `CommandInteractionOption.value` or `CommandInteractionOption.options`
+    Either [hikari.interactions.command_interactions.CommandInteractionOption.value][]
+    or [hikari.interactions.command_interactions.CommandInteractionOption.options][]
     will be provided with `value` being provided when an option is provided as a
     parameter with a value and `options` being provided when an option donates a
     subcommand or group.

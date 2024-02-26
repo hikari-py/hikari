@@ -62,7 +62,7 @@ class VoiceComponent(abc.ABC):
         Once this is done, unsubscribe from any events.
 
         If you simply wish to disconnect every connection, use
-        `hikari.api.VoiceComponent.disconnect` instead.
+        [hikari.api.VoiceComponent.disconnect][] instead.
         """
 
     @abc.abstractmethod

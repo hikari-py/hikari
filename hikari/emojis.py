@@ -351,7 +351,7 @@ class KnownCustomEmoji(CustomEmoji):
     """The user that created the emoji.
 
     !!! note
-        This will be [None][] if you are missing the [hikari.permissions.Permissions.MANAGE_EMOJIS_AND_STICKERS][]
+        This will be [None][] if you are missing the `MANAGE_EMOJIS_AND_STICKERS`[]
         permission in the server the emoji is from.
     """
 

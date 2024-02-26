@@ -273,7 +273,7 @@ class Permissions(enums.Flag):
 
     START_EMBEDDED_ACTIVITIES = 1 << 39
     """Allows for launching activities in a voice channel.
-    
+
     Activities are applications that have the [hikari.applications.ApplicationFlags.EMBEDDED][] flag.
     """
 

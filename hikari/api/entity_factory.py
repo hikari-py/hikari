@@ -1899,7 +1899,7 @@ class EntityFactory(abc.ABC):
         Raises
         ------
         KeyError
-            If `guild_id` is left as `hikari.undefined.UNDEFINED` when
+            If `guild_id` is left as [hikari.undefined.UNDEFINED][] when
             `"guild_id"` is not present in the passed payload for the payload of
             the voice state.
 
