@@ -312,8 +312,8 @@ class Embed:
     def __init__(
         self,
         *,
-        title: typing.Any = None,
-        description: typing.Any = None,
+        title: typing.Optional[str] = None,
+        description: typing.Optional[str] = None,
         url: typing.Optional[str] = None,
         color: typing.Optional[colors.Colorish] = None,
         colour: typing.Optional[colors.Colorish] = None,
@@ -333,9 +333,9 @@ class Embed:
 
         self._timestamp = timestamp
 
-        self.title = title
-        self.description = description
-        self.url = url
+        self._title = title
+        self._description = description
+        self._url = url
         self._author: typing.Optional[EmbedAuthor] = None
         self._image: typing.Optional[EmbedImage] = None
         self._video: typing.Optional[EmbedVideo] = None
@@ -356,8 +356,8 @@ class Embed:
         return self._title
 
     @title.setter
-    def title(self, value: typing.Any) -> None:
-        self._title = str(value) if value is not None else None
+    def title(self, value: typing.Optional[str]) -> None:
+        self._title = value
 
     @property
     def description(self) -> typing.Optional[str]:
@@ -368,8 +368,8 @@ class Embed:
         return self._description
 
     @description.setter
-    def description(self, value: typing.Any) -> None:
-        self._description = str(value) if value is not None else None
+    def description(self, value: typing.Optional[str]) -> None:
+        self._description = value
 
     @property
     def url(self) -> typing.Optional[str]:
