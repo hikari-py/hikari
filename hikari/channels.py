@@ -610,8 +610,8 @@ class TextableChannel(PartialChannel):
             [hikari.users.PartialUser][] derivatives to enforce mentioning
             specific users.
         role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], bool]]
-            If provided, and `True`, all mentions will be parsed.
-            If provided, and `False`, no mentions will be parsed.
+            If provided, and [True][], all mentions will be parsed.
+            If provided, and [False][], no mentions will be parsed.
             Alternatively this may be a collection of
             [hikari.snowflakes.Snowflake][], or
             [hikari.guilds.PartialRole][] derivatives to enforce mentioning
@@ -823,7 +823,7 @@ class TextableChannel(PartialChannel):
         hikari.errors.BulkDeleteError
             An error containing the messages successfully deleted, and the
             messages that were not removed. The
-            `BaseException.__cause__` of the exception will be the
+            [`BaseException.__cause__`][] of the exception will be the
             original error that terminated this process.
         """
         return await self.app.rest.delete_messages(self.id, messages, *other_messages)
@@ -863,9 +863,9 @@ class GroupDMChannel(PrivateChannel):
     """Represents a group direct message channel.
 
     !!! note
-        This doesn't have the methods found on `TextableChannel` as bots cannot
-        interact with a group DM that they own by sending or seeing messages in
-        it.
+        This doesn't have the methods found on [hikari.channels.TextableChannel][]
+        as bots cannot interact with a group DM that they own by sending or
+        seeing messages in it.
     """
 
     owner_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
@@ -883,7 +883,7 @@ class GroupDMChannel(PrivateChannel):
     application_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the application that created the group DM.
 
-    If the group DM was not created by a bot, this will be `None`.
+    If the group DM was not created by a bot, this will be [None][].
     """
 
     def __str__(self) -> str:
@@ -912,7 +912,7 @@ class GroupDMChannel(PrivateChannel):
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL, or `None` if no icon is present.
+            The URL, or [None][] if no icon is present.
 
         Raises
         ------
@@ -939,15 +939,15 @@ class GuildChannel(PartialChannel):
 
     For thread channels this will refer to the parent textable guild channel.
     For other guild channel types this will refer to the parent category and
-    if no parent category is set for the channel, this will be `None`.
-    For guild categories this will always be `None`.
+    if no parent category is set for the channel, this will be [None][].
+    For guild categories this will always be [None][].
     """
 
     @property
     def shard_id(self) -> typing.Optional[int]:
         """Return the shard ID for the shard.
 
-        This may be `None` if the shard count is not known.
+        This may be [None][] if the shard count is not known.
         """
         if isinstance(self.app, traits.ShardAware):
             return snowflakes.calculate_shard_id(self.app, self.guild_id)
@@ -960,7 +960,7 @@ class GuildChannel(PartialChannel):
         Returns
         -------
         typing.Optional[hikari.guilds.Guild]
-            The linked guild object or `None` if it's not cached.
+            The linked guild object or [None][] if it's not cached.
         """
         if not isinstance(self.app, traits.CacheAware):
             return None
@@ -1038,7 +1038,7 @@ class GuildChannel(PartialChannel):
             If provided, the new rate limit per user in the channel.
         region : hikari.undefined.UndefinedOr[typing.Union[hikari.voices.VoiceRegion, str]]
             If provided, the voice region to set for this channel. Passing
-            `None` here will set it to "auto" mode where the used
+            [None][] here will set it to "auto" mode where the used
             region will be decided based on the first person who connects to it
             when it's empty.
         permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
@@ -1257,7 +1257,7 @@ class GuildCategory(PermissibleGuildChannel):
     parent_id: None = attrs.field(eq=False, hash=False, repr=True)
     """The ID of the parent channel the channel belongs to.
 
-    This is always `None` for categories.
+    This is always [None][] for categories.
     """
 
 
@@ -1292,7 +1292,7 @@ class GuildTextChannel(PermissibleGuildChannel, TextableGuildChannel):
     """The timestamp of the last-pinned message.
 
     !!! note
-        This may be `None` in several cases; Discord does not document what
+        This may be [None][] in several cases; Discord does not document what
         these cases are. Trust no one!
     """
 
@@ -1322,7 +1322,7 @@ class GuildNewsChannel(PermissibleGuildChannel, TextableGuildChannel):
     """The timestamp of the last-pinned message.
 
     !!! note
-        This may be `None` in several cases; Discord does not document what
+        This may be [None][] in several cases; Discord does not document what
         these cases are. Trust no one!
     """
 
@@ -1343,7 +1343,7 @@ class GuildVoiceChannel(PermissibleGuildChannel, TextableGuildChannel):
     region: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """ID of the voice region for this voice channel.
 
-    If set to `None` then this is set to "auto" mode where the used
+    If set to [None][] then this is set to "auto" mode where the used
     region will be decided based on the first person who connects to it when
     it's empty.
     """
@@ -1376,7 +1376,7 @@ class GuildStageChannel(PermissibleGuildChannel, TextableGuildChannel):
     region: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """ID of the voice region for this stage channel.
 
-    If set to `None` then this is set to "auto" mode where the used
+    If set to [None][] then this is set to "auto" mode where the used
     region will be decided based on the first person who connects to it when
     it's empty.
     """
@@ -1535,7 +1535,7 @@ class GuildForumChannel(PermissibleGuildChannel):
     """Name of the default reaction emoji.
 
     Either the string name of the custom emoji, the object
-    of the [hikari.emojis.UnicodeEmoji][] or `None` when the relevant
+    of the [hikari.emojis.UnicodeEmoji][] or [None][] when the relevant
     custom emoji's data is not available (e.g. the emoji has been deleted).
     """
 
@@ -1573,7 +1573,7 @@ class ThreadMember:
     """The member's user ID.
 
     !!! note
-        This will only ever be `None` on thread members attached to
+        This will only ever be [None][] on thread members attached to
         guild create events, where this is the current bot's user.
     """
 
@@ -1604,7 +1604,7 @@ class GuildThreadChannel(TextableGuildChannel):
     """The timestamp of the last-pinned message.
 
     !!! note
-        This may be `None` in several cases; Discord does not document what
+        This may be [None][] in several cases; Discord does not document what
         these cases are. Trust no one!
     """
 
@@ -1675,7 +1675,7 @@ class GuildThreadChannel(TextableGuildChannel):
     thread_created_at: typing.Optional[datetime.datetime] = attrs.field(eq=False, hash=False, repr=True)
     """When the thread was created.
 
-    Will be `None` for threads created before 2020-01-09.
+    Will be [None][] for threads created before 2020-01-09.
     """
 
 

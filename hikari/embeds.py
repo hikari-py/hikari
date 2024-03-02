@@ -87,7 +87,7 @@ class EmbedResource(files.Resource[files.AsyncReader]):
             If [None][], then the default executor is used for the
             current event loop.
         head_only : bool
-            If `True`, then the implementation may only retrieve
+            If [True][], then the implementation may only retrieve
             HEAD information if supported. This currently only has
             any effect for web requests.
         """
@@ -686,8 +686,8 @@ class Embed:
             - If a [hikari.files.Bytes][] is passed, or a [str][]
                 that contains a valid data URI is passed, then this is uploaded
                 as an attachment and linked into the embed.
-            - If a [hikari.files.File][], `pathlib.PurePath` or
-                `str` that is an absolute or relative path to a file
+            - If a [hikari.files.File][], [pathlib.PurePath][] or
+                [str][] that is an absolute or relative path to a file
                 on your file system is passed, then this resource is uploaded
                 as an attachment using non-blocking code internally and linked
                 into the embed.
@@ -720,8 +720,8 @@ class Embed:
 
             This can be many different things, to aid in convenience.
 
-            - If `None`, nothing is set.
-            - If a `pathlib.PurePath` or `str` to a valid URL, the URL
+            - If [None][], nothing is set.
+            - If a [pathlib.PurePath][] or [str][] to a valid URL, the URL
                 is linked to directly.
             - Subclasses of [hikari.files.WebResource][] such as
                 [hikari.files.URL][],
@@ -729,11 +729,11 @@ class Embed:
                 [hikari.emojis.Emoji][],
                 [hikari.embeds.EmbedResource][], etc will have their URL linked to directly.
                 this field.
-            - If a [hikari.files.Bytes][] is passed, or a `str`
+            - If a [hikari.files.Bytes][] is passed, or a [str][]
                 that contains a valid data URI is passed, then this is uploaded
                 as an attachment and linked into the embed.
-            - If a [hikari.files.File][], `pathlib.PurePath` or
-                `str` that is an absolute or relative path to a file
+            - If a [hikari.files.File][], [pathlib.PurePath][] or
+                [str][] that is an absolute or relative path to a file
                 on your file system is passed, then this resource is uploaded
                 as an attachment using non-blocking code internally and linked
                 into the embed.
@@ -760,19 +760,19 @@ class Embed:
 
             This can be many different things, to aid in convenience.
 
-            - If `None`, nothing is set.
-            - If a `pathlib.PurePath` or `str` to a valid URL, the URL
+            - If [None][], nothing is set.
+            - If a [pathlib.PurePath][] or [str][] to a valid URL, the URL
                 is linked to directly.
             - Subclasses of [hikari.files.WebResource][] such as
                 [hikari.files.URL][],
                 [hikari.messages.Attachment][],
                 [hikari.emojis.Emoji][],
                 [hikari.embeds.EmbedResource][], etc will have their URL linked to directly.
-            - If a [hikari.files.Bytes][] is passed, or a `str`
+            - If a [hikari.files.Bytes][] is passed, or a [str][]
                 that contains a valid data URI is passed, then this is uploaded
                 as an attachment and linked into the embed.
-            - If a [hikari.files.File][], `pathlib.PurePath` or
-                `str` that is an absolute or relative path to a file
+            - If a [hikari.files.File][], [pathlib.PurePath][] or
+                [str][] that is an absolute or relative path to a file
                 on your file system is passed, then this resource is uploaded
                 as an attachment using non-blocking code internally and linked
                 into the embed.
@@ -804,9 +804,9 @@ class Embed:
         Other Parameters
         ----------------
         inline : bool
-            If `True`, the embed field may be shown "inline" on some
-            Discord clients with other fields. If `False`, it is always placed
-            on a separate line. This will default to `False`.
+            If [True][], the embed field may be shown "inline" on some
+            Discord clients with other fields. If [False][], it is always placed
+            on a separate line. This will default to [False][].
 
         Returns
         -------
@@ -843,7 +843,7 @@ class Embed:
             The new field value to use. If left to the default (`undefined`),
             then it will not be changed.
         inline : hikari.undefined.UndefinedOr[bool]
-            `True` to inline the field, or `False` to force
+            [True][] to inline the field, or [False][] to force
             it to be on a separate line. If left to the default (`undefined`),
             then it will not be changed.
 

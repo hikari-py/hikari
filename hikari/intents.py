@@ -409,7 +409,7 @@ class Intents(enums.Flag):
     def is_privileged(self) -> bool:
         """Determine whether the intent requires elevated privileges.
 
-        If this is `True`, you will be required to opt-in to using
+        If this is [True][], you will be required to opt-in to using
         this intent on the Discord Developer Portal before you can utilise it
         in your application.
         """

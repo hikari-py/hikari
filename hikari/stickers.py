@@ -216,5 +216,5 @@ class GuildSticker(PartialSticker):
     user: typing.Optional[users.User] = attrs.field(eq=False, hash=False, repr=False)
     """The user that uploaded this sticker.
 
-    This will only available if you have the `MANAGE_EMOJIS_AND_STICKERS`[] permission.
+    This will only available if you have the `MANAGE_EMOJIS_AND_STICKERS` permission.
     """

@@ -1116,8 +1116,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             [hikari.users.PartialUser][] derivatives to enforce mentioning
             specific users.
         role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], bool]]
-            If provided, and `True`, all role mentions will be detected.
-            If provided, and `False`, all role mentions will be ignored
+            If provided, and [True][], all role mentions will be detected.
+            If provided, and [False][], all role mentions will be ignored
             if appearing in the message body.
             Alternatively this may be a collection of
             [hikari.snowflakes.Snowflake][], or
@@ -1251,7 +1251,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
             Also important to note that if you specify a text `content`, `mentions_everyone`,
             `mentions_reply`, `user_mentions`, and `role_mentions` will default
-            to `False` as the message will be re-parsed for mentions. This will
+            to [False][] as the message will be re-parsed for mentions. This will
             also occur if only one of the four are specified
 
             This is a limitation of Discord's design. If in doubt, specify all
@@ -1268,9 +1268,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         content : hikari.undefined.UndefinedOr[typing.Any]
             If provided, the message content to update with. If
             [hikari.undefined.UNDEFINED][], then the content will not
-            be changed. If `None`, then the content will be removed.
+            be changed. If [None][], then the content will be removed.
 
-            Any other value will be cast to a `str` before sending.
+            Any other value will be cast to a [str][] before sending.
 
             If this is a [hikari.embeds.Embed][] and neither the `embed` or
             `embeds` kwargs are provided or if this is a
@@ -1284,40 +1284,40 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         attachment : hikari.undefined.UndefinedNoneOr[typing.Union[hikari.files.Resourceish, hikari.messages.Attachment]]
             If provided, the attachment to set on the message. If
             [hikari.undefined.UNDEFINED][], the previous attachment, if
-            present, is not changed. If this is `None`, then the
+            present, is not changed. If this is [None][], then the
             attachment is removed, if present. Otherwise, the new attachment
             that was provided will be attached.
         attachments : hikari.undefined.UndefinedNoneOr[typing.Sequence[typing.Union[hikari.files.Resourceish, hikari.messages.Attachment]]]
             If provided, the attachments to set on the message. If
             [hikari.undefined.UNDEFINED][], the previous attachments, if
-            present, are not changed. If this is `None`, then the
+            present, are not changed. If this is [None][], then the
             attachments is removed, if present. Otherwise, the new attachments
             that were provided will be attached.
         component : hikari.undefined.UndefinedNoneOr[hikari.api.special_endpoints.ComponentBuilder]
             If provided, builder object of the component to set for this message.
             This component will replace any previously set components and passing
-            `None` will remove all components.
+            [None][] will remove all components.
         components : hikari.undefined.UndefinedNoneOr[typing.Sequence[hikari.api.special_endpoints.ComponentBuilder]]
             If provided, a sequence of the component builder objects set for
             this message. These components will replace any previously set
-            components and passing `None` or an empty sequence will
+            components and passing [None][] or an empty sequence will
             remove all components.
         embed : hikari.undefined.UndefinedNoneOr[hikari.embeds.Embed]
             If provided, the embed to set on the message. If
             [hikari.undefined.UNDEFINED][], the previous embed(s) are not changed.
-            If this is `None` then any present embeds are removed.
+            If this is [None][] then any present embeds are removed.
             Otherwise, the new embed that was provided will be used as the
             replacement.
         embeds : hikari.undefined.UndefinedNoneOr[typing.Sequence[hikari.embeds.Embed]]
             If provided, the embeds to set on the message. If
             [hikari.undefined.UNDEFINED][], the previous embed(s) are not changed.
-            If this is `None` then any present embeds are removed.
+            If this is [None][] then any present embeds are removed.
             Otherwise, the new embeds that were provided will be used as the
             replacement.
         mentions_everyone : hikari.undefined.UndefinedOr[bool]
             If provided, sanitation for `@everyone` mentions. If
             [hikari.undefined.UNDEFINED][], then the previous setting is
-            not changed. If `True`, then `@everyone`/`@here` mentions
+            not changed. If [True][], then `@everyone`/`@here` mentions
             in the message content will show up as mentioning everyone that can
             view the chat.
         mentions_reply : hikari.undefined.UndefinedOr[bool]
@@ -1328,8 +1328,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
             If provided, sanitation for user mentions. If
             [hikari.undefined.UNDEFINED][], then the previous setting is
-            not changed. If `True`, all valid user mentions will behave
-            as mentions. If `False`, all valid user mentions will not
+            not changed. If [True][], all valid user mentions will behave
+            as mentions. If [False][], all valid user mentions will not
             behave as mentions.
 
             You may alternatively pass a collection of
@@ -1338,8 +1338,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], bool]]
             If provided, sanitation for role mentions. If
             [hikari.undefined.UNDEFINED][], then the previous setting is
-            not changed. If `True`, all valid role mentions will behave
-            as mentions. If `False`, all valid role mentions will not
+            not changed. If [True][], all valid role mentions will behave
+            as mentions. If [False][], all valid role mentions will not
             behave as mentions.
 
             You may alternatively pass a collection of
@@ -1473,7 +1473,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.BulkDeleteError
             An error containing the messages successfully deleted, and the
             messages that were not removed. The
-            `BaseException.__cause__` of the exception will be the
+            [`BaseException.__cause__`][] of the exception will be the
             original error that terminated this process.
         """
 
@@ -1941,7 +1941,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         name : hikari.undefined.UndefinedOr[str]
             If provided, the new webhook name.
         avatar : hikari.undefined.UndefinedNoneOr[hikari.files.Resourceish]
-            If provided, the new webhook avatar. If `None`, will
+            If provided, the new webhook avatar. If [None][], will
             remove the webhook avatar.
         channel : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.WebhookChannelT]]
             If provided, the text channel to move the webhook to.
@@ -2057,7 +2057,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the message contents. If
             [hikari.undefined.UNDEFINED][], then nothing will be sent
             in the content. Any other value here will be cast to a
-            `str`.
+            [str][].
 
             If this is a [hikari.embeds.Embed][] and no `embed` nor
             no `embeds` kwarg is provided, then this will instead
@@ -2089,7 +2089,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Attachments can be passed as many different things, to aid in
             convenience.
 
-            - If a `pathlib.PurePath` or `str` to a valid URL, the
+            - If a [pathlib.PurePath][] or [str][] to a valid URL, the
                 resource at the given URL will be streamed to Discord when
                 sending the message. Subclasses of
                 [hikari.files.WebResource][] such as
@@ -2100,15 +2100,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
                 This will use bit-inception, so only a small percentage of the
                 resource will remain in memory at any one time, thus aiding in
                 scalability.
-            - If a [hikari.files.Bytes] is passed, or a `str`
+            - If a [hikari.files.Bytes] is passed, or a [str][]
                 that contains a valid data URI is passed, then this is uploaded
                 with a randomized file name if not provided.
-            - If a [hikari.files.File], `pathlib.PurePath` or
-                `str` that is an absolute or relative path to a file
+            - If a [hikari.files.File], [pathlib.PurePath][] or
+                [str][] that is an absolute or relative path to a file
                 on your file system is passed, then this resource is uploaded
                 as an attachment using non-blocking code internally and streamed
                 using bit-inception where possible. This depends on the
-                type of `concurrent.futures.Executor` that is being used for
+                type of [concurrent.futures.Executor][] that is being used for
                 the application (default is a thread pool which supports this
                 behaviour).
         attachments : hikari.undefined.UndefinedOr[typing.Sequence[hikari.files.Resourceish]]
@@ -2130,16 +2130,16 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, whether the message should parse @everyone/@here
             mentions.
         user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
-            If provided, and `True`, all user mentions will be detected.
-            If provided, and `False`, all user mentions will be ignored
+            If provided, and [True][], all user mentions will be detected.
+            If provided, and [False][], all user mentions will be ignored
             if appearing in the message body.
             Alternatively this may be a collection of
             [hikari.snowflakes.Snowflake][], or
             [hikari.users.PartialUser][] derivatives to enforce mentioning
             specific users.
         role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], bool]]
-            If provided, and `True`, all role mentions will be detected.
-            If provided, and `False`, all role mentions will be ignored
+            If provided, and [True][], all role mentions will be detected.
+            If provided, and [False][], all role mentions will be ignored
             if appearing in the message body.
             Alternatively this may be a collection of
             [hikari.snowflakes.Snowflake][], or
@@ -2270,7 +2270,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
             Also important to note that if you specify a text `content`, `mentions_everyone`,
             `mentions_reply`, `user_mentions`, and `role_mentions` will default
-            to `False` as the message will be re-parsed for mentions. This will
+            to [False][] as the message will be re-parsed for mentions. This will
             also occur if only one of the four are specified
 
             This is a limitation of Discord's design. If in doubt, specify all
@@ -2289,9 +2289,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         content : hikari.undefined.UndefinedOr[typing.Any]
             If provided, the message content to update with. If
             [hikari.undefined.UNDEFINED][], then the content will not
-            be changed. If `None`, then the content will be removed.
+            be changed. If [None][], then the content will be removed.
 
-            Any other value will be cast to a `str` before sending.
+            Any other value will be cast to a [str][] before sending.
 
             If this is a [hikari.embeds.Embed][] and neither the
             `embed` or `embeds` kwargs are provided or if this is a
@@ -2311,53 +2311,53 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         attachment : hikari.undefined.UndefinedNoneOr[typing.Union[hikari.files.Resourceish, hikari.messages.Attachment]]
             If provided, the attachment to set on the message. If
             [hikari.undefined.UNDEFINED][], the previous attachment, if
-            present, is not changed. If this is `None`, then the
+            present, is not changed. If this is [None][], then the
             attachment is removed, if present. Otherwise, the new attachment
             that was provided will be attached.
         attachments : hikari.undefined.UndefinedNoneOr[typing.Sequence[typing.Union[hikari.files.Resourceish, hikari.messages.Attachment]]]
             If provided, the attachments to set on the message. If
             [hikari.undefined.UNDEFINED][], the previous attachments, if
-            present, are not changed. If this is `None`, then the
+            present, are not changed. If this is [None][], then the
             attachments is removed, if present. Otherwise, the new attachments
             that were provided will be attached.
         component : hikari.undefined.UndefinedNoneOr[hikari.api.special_endpoints.ComponentBuilder]
             If provided, builder object of the component to set for this message.
             This component will replace any previously set components and passing
-            `None` will remove all components.
+            [None][] will remove all components.
         components : hikari.undefined.UndefinedNoneOr[typing.Sequence[hikari.api.special_endpoints.ComponentBuilder]]
             If provided, a sequence of the component builder objects set for
             this message. These components will replace any previously set
-            components and passing `None` or an empty sequence will
+            components and passing [None][] or an empty sequence will
             remove all components.
         embed : hikari.undefined.UndefinedNoneOr[hikari.embeds.Embed]
             If provided, the embed to set on the message. If
             [hikari.undefined.UNDEFINED][], the previous embed(s) are not changed.
-            If this is `None` then any present embeds are removed.
+            If this is [None][] then any present embeds are removed.
             Otherwise, the new embed that was provided will be used as the
             replacement.
         embeds : hikari.undefined.UndefinedNoneOr[typing.Sequence[hikari.embeds.Embed]]
             If provided, the embeds to set on the message. If
             [hikari.undefined.UNDEFINED][], the previous embed(s) are not changed.
-            If this is `None` then any present embeds are removed.
+            If this is [None][] then any present embeds are removed.
             Otherwise, the new embeds that were provided will be used as the
             replacement.
         mentions_everyone : hikari.undefined.UndefinedOr[bool]
             If provided, sanitation for `@everyone` mentions. If
             [hikari.undefined.UNDEFINED][], then the previous setting is
-            not changed. If `True`, then `@everyone`/`@here` mentions
+            not changed. If [True][], then `@everyone`/`@here` mentions
             in the message content will show up as mentioning everyone that can
             view the chat.
         user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
-            If provided, and `True`, all user mentions will be detected.
-            If provided, and `False`, all user mentions will be ignored
+            If provided, and [True][], all user mentions will be detected.
+            If provided, and [False][], all user mentions will be ignored
             if appearing in the message body.
             Alternatively this may be a collection of
             [hikari.snowflakes.Snowflake][], or
             [hikari.users.PartialUser][] derivatives to enforce mentioning
             specific users.
         role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], bool]]
-            If provided, and `True`, all role mentions will be detected.
-            If provided, and `False`, all role mentions will be ignored
+            If provided, and [True][], all role mentions will be detected.
+            If provided, and [False][], all role mentions will be ignored
             if appearing in the message body.
             Alternatively this may be a collection of
             [hikari.snowflakes.Snowflake][], or
@@ -2574,7 +2574,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         username : undefined.UndefinedOr[str]
             If provided, the new username.
         avatar : undefined.UndefinedNoneOr[hikari.files.Resourceish]
-            If provided, the new avatar. If `None`,
+            If provided, the new avatar. If [None][],
             the avatar will be removed.
 
         Returns
@@ -3097,7 +3097,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         !!! note
             This requires the `access_token` to have the
             [hikari.applications.OAuth2Scope.GUILDS_JOIN][] scope enabled along
-            with the authorization of a Bot which has `MANAGE_INVITES`[]
+            with the authorization of a Bot which has `MANAGE_INVITES`
             permission within the target guild.
 
         Parameters
@@ -3134,7 +3134,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Returns
         -------
         typing.Optional[hikari.guilds.Member]
-            `None` if the user was already part of the guild, else
+            [None][] if the user was already part of the guild, else
             [hikari.guilds.Member][].
 
         Raises
@@ -3371,7 +3371,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If any of the fields that are passed have an invalid value or
             if there are no more spaces for the type of emoji in the guild.
         hikari.errors.ForbiddenError
-            If you are missing `MANAGE_EMOJIS_AND_STICKERS`[] in the server.
+            If you are missing `MANAGE_EMOJIS_AND_STICKERS` in the server.
         hikari.errors.NotFoundError
             If the guild is not found.
         hikari.errors.UnauthorizedError
@@ -3426,7 +3426,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.BadRequestError
             If any of the fields that are passed have an invalid value.
         hikari.errors.ForbiddenError
-            If you are missing `MANAGE_EMOJIS_AND_STICKERS`[] in the server.
+            If you are missing `MANAGE_EMOJIS_AND_STICKERS` in the server.
         hikari.errors.NotFoundError
             If the guild or the emoji are not found.
         hikari.errors.UnauthorizedError
@@ -3466,7 +3466,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Raises
         ------
         hikari.errors.ForbiddenError
-            If you are missing `MANAGE_EMOJIS_AND_STICKERS`[] in the server.
+            If you are missing `MANAGE_EMOJIS_AND_STICKERS` in the server.
         hikari.errors.NotFoundError
             If the guild or the emoji are not found.
         hikari.errors.UnauthorizedError
@@ -3644,7 +3644,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If any of the fields that are passed have an invalid value or
             if there are no more spaces for the sticker in the guild.
         hikari.errors.ForbiddenError
-            If you are missing `MANAGE_EMOJIS_AND_STICKERS`[] in the server.
+            If you are missing `MANAGE_EMOJIS_AND_STICKERS` in the server.
         hikari.errors.NotFoundError
             If the guild is not found.
         hikari.errors.UnauthorizedError
@@ -3700,7 +3700,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.BadRequestError
             If any of the fields that are passed have an invalid value.
         hikari.errors.ForbiddenError
-            If you are missing `MANAGE_EMOJIS_AND_STICKERS`[] in the server.
+            If you are missing `MANAGE_EMOJIS_AND_STICKERS` in the server.
         hikari.errors.NotFoundError
             If the guild or the sticker are not found.
         hikari.errors.UnauthorizedError
@@ -3740,7 +3740,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Raises
         ------
         hikari.errors.ForbiddenError
-            If you are missing `MANAGE_EMOJIS_AND_STICKERS`[] in the server.
+            If you are missing `MANAGE_EMOJIS_AND_STICKERS` in the server.
         hikari.errors.NotFoundError
             If the guild or the sticker are not found.
         hikari.errors.UnauthorizedError
@@ -4325,7 +4325,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the permission overwrites for the channel.
         region : hikari.undefined.UndefinedOr[typing.Union[hikari.voices.VoiceRegion, str]]
             If provided, the voice region to for this channel. Passing
-            `None` here will set it to "auto" mode where the used
+            [None][] here will set it to "auto" mode where the used
             region will be decided based on the first person who connects to it
             when it's empty.
         category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
@@ -4399,7 +4399,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the permission overwrites for the channel.
         region : hikari.undefined.UndefinedOr[typing.Union[hikari.voices.VoiceRegion, str]]
             If provided, the voice region to for this channel. Passing
-            `None` here will set it to "auto" mode where the used
+            [None][] here will set it to "auto" mode where the used
             region will be decided based on the first person who connects to it
             when it's empty.
         category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
@@ -4669,7 +4669,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the message contents. If
             [hikari.undefined.UNDEFINED][], then nothing will be sent
             in the content. Any other value here will be cast to a
-            `str`.
+            [str][].
 
             If this is a [hikari.embeds.Embed][] and no `embed` nor `embeds` kwarg
             is provided, then this will instead update the embed. This allows
@@ -4688,7 +4688,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Attachments can be passed as many different things, to aid in
             convenience.
 
-            - If a `pathlib.PurePath` or `str` to a valid URL, the
+            - If a [pathlib.PurePath][] or [str][] to a valid URL, the
                 resource at the given URL will be streamed to Discord when
                 sending the message. Subclasses of
                 [hikari.files.WebResource][] such as
@@ -4699,15 +4699,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
                 This will use bit-inception, so only a small percentage of the
                 resource will remain in memory at any one time, thus aiding in
                 scalability.
-            - If a [hikari.files.Bytes][] is passed, or a `str`
+            - If a [hikari.files.Bytes][] is passed, or a [str][]
                 that contains a valid data URI is passed, then this is uploaded
                 with a randomized file name if not provided.
-            - If a [hikari.files.File][], `pathlib.PurePath` or
-                `str` that is an absolute or relative path to a file
+            - If a [hikari.files.File][], [pathlib.PurePath][] or
+                [str][] that is an absolute or relative path to a file
                 on your file system is passed, then this resource is uploaded
                 as an attachment using non-blocking code internally and streamed
                 using bit-inception where possible. This depends on the
-                type of `concurrent.futures.Executor` that is being used for
+                type of [concurrent.futures.Executor][] that is being used for
                 the application (default is a thread pool which supports this
                 behaviour).
         attachments : hikari.undefined.UndefinedOr[typing.Sequence[hikari.files.Resourceish]]
@@ -4743,16 +4743,16 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
             This will not do anything if not being used with `reply`.
         user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
-            If provided, and `True`, all user mentions will be detected.
-            If provided, and `False`, all user mentions will be ignored
+            If provided, and [True][], all user mentions will be detected.
+            If provided, and [False][], all user mentions will be ignored
             if appearing in the message body.
             Alternatively this may be a collection of
             [hikari.snowflakes.Snowflake][], or
             [hikari.users.PartialUser][] derivatives to enforce mentioning
             specific users.
         role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], bool]]
-            If provided, and `True`, all role mentions will be detected.
-            If provided, and `False`, all role mentions will be ignored
+            If provided, and [True][], all role mentions will be detected.
+            If provided, and [False][], all role mentions will be ignored
             if appearing in the message body.
             Alternatively this may be a collection of
             [hikari.snowflakes.Snowflake][], or
@@ -5377,7 +5377,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Other Parameters
         ----------------
         nickname : hikari.undefined.UndefinedNoneOr[str]
-            If provided, the new nick for the member. If `None`,
+            If provided, the new nick for the member. If [None][],
             will remove the members nick.
 
             Requires the [hikari.permissions.Permissions.MANAGE_NICKNAMES][] permission.
@@ -5394,9 +5394,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
             Requires the [hikari.permissions.Permissions.DEAFEN_MEMBERS][] permission.
         voice_channel : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildVoiceChannel]]]
-            If provided, `None` or the object or the ID of
+            If provided, [None][] or the object or the ID of
             an existing voice channel to move the member to.
-            If `None`, will disconnect the member from voice.
+            If [None][], will disconnect the member from voice.
 
             Requires the [hikari.permissions.Permissions.MOVE_MEMBERS][] permission
             and the [hikari.permissions.Permissions.CONNECT][] permission in the
@@ -5407,7 +5407,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
                 take no effect.
         communication_disabled_until : hikari.undefined.UndefinedNoneOr[datetime.datetime]
             If provided, the datetime when the timeout (disable communication)
-            of the member expires, up to 28 days in the future, or `None`
+            of the member expires, up to 28 days in the future, or [None][]
             to remove the timeout from the member.
 
             Requires the [hikari.permissions.Permissions.MODERATE_MEMBERS][] permission.
@@ -5457,7 +5457,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------------
         nickname : hikari.undefined.UndefinedNoneOr[str]
             If provided, the new nickname for the member. If
-            `None`, will remove the members nickname.
+            [None][], will remove the members nickname.
 
             Requires the [hikari.permissions.Permissions.CHANGE_NICKNAME][] permission.
             If provided, the reason that will be recorded in the audit logs.
@@ -5651,7 +5651,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         delete_message_seconds : hikari.undefined.UndefinedNoneOr[hikari.internal.time.Intervalish]
             If provided, the number of seconds to delete messages for.
             This can be represented as either an int/float between 0 and 604800 (7 days), or
-            a `datetime.timedelta` object.
+            a [datetime.timedelta][] object.
         reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -6144,8 +6144,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Returns
         -------
         typing.Optional[int]
-            If `compute_prune_count` is not provided or `True`, the
-            number of members pruned. Else `None`.
+            If `compute_prune_count` is not provided or [True][], the
+            number of members pruned. Else [None][].
 
         Raises
         ------
@@ -6308,7 +6308,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Other Parameters
         ----------------
         channel : hikari.undefined.UndefinedNoneOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildChannel]]
-            If provided, the channel to set the widget to. If `None`,
+            If provided, the channel to set the widget to. If [None][],
             will not set to any.
         enabled : hikari.undefined.UndefinedOr[bool]
             If provided, whether to enable the widget.
@@ -6385,12 +6385,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------------
         description : undefined.UndefinedNoneOr[str]
             If provided, the description to set for the guild's welcome screen.
-            This may be `None` to unset the description.
+            This may be [None][] to unset the description.
         enabled : undefined.UndefinedOr[bool]
             If provided, Whether the guild's welcome screen should be enabled.
         channels : hikari.undefined.UndefinedNoneOr[typing.Sequence[hikari.guilds.WelcomeChannel]]
             If provided, a sequence of up to 5 public channels to set in this
-            guild's welcome screen. This may be passed as `None` to
+            guild's welcome screen. This may be passed as [None][] to
             remove all welcome channels
 
             !!! note
@@ -7238,7 +7238,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         !!! note
             This requires the `access_token` to have the
             [hikari.applications.OAuth2Scope.APPLICATIONS_COMMANDS_PERMISSION_UPDATE][]
-            scope enabled along with the authorization of a Bot which has `MANAGE_INVITES`[]
+            scope enabled along with the authorization of a Bot which has `MANAGE_INVITES`
             permission within the target guild.
 
         !!! note
@@ -7425,7 +7425,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the message contents. If
             [hikari.undefined.UNDEFINED][], then nothing will be sent
             in the content. Any other value here will be cast to a
-            `str`.
+            [str][].
 
             If this is a [hikari.embeds.Embed][] and no `embed` nor
             no `embeds` kwarg is provided, then this will instead
@@ -7459,16 +7459,16 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, whether the message should parse @everyone/@here
             mentions.
         user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
-            If provided, and `True`, all user mentions will be detected.
-            If provided, and `False`, all user mentions will be ignored
+            If provided, and [True][], all user mentions will be detected.
+            If provided, and [False][], all user mentions will be ignored
             if appearing in the message body.
             Alternatively this may be a collection of
             [hikari.snowflakes.Snowflake][], or
             [hikari.users.PartialUser][] derivatives to enforce mentioning
             specific users.
         role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], bool]]
-            If provided, and `True`, all role mentions will be detected.
-            If provided, and `False`, all role mentions will be ignored
+            If provided, and [True][], all role mentions will be detected.
+            If provided, and [False][], all role mentions will be ignored
             if appearing in the message body.
             Alternatively this may be a collection of
             [hikari.snowflakes.Snowflake][], or
@@ -7536,7 +7536,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
             Also important to note that if you specify a text `content`, `mentions_everyone`,
             `mentions_reply`, `user_mentions`, and `role_mentions` will default
-            to `False` as the message will be re-parsed for mentions. This will
+            to [False][] as the message will be re-parsed for mentions. This will
             also occur if only one of the four are specified
 
             This is a limitation of Discord's design. If in doubt, specify all
@@ -7554,9 +7554,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         content : hikari.undefined.UndefinedOr[typing.Any]
             If provided, the message content to update with. If
             [hikari.undefined.UNDEFINED][], then the content will not
-            be changed. If `None`, then the content will be removed.
+            be changed. If [None][], then the content will be removed.
 
-            Any other value will be cast to a `str` before sending.
+            Any other value will be cast to a [str][] before sending.
 
             If this is a [hikari.embeds.Embed][] and neither the
             `embed` or `embeds` kwargs are provided or if this is a
@@ -7567,50 +7567,50 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         attachment : hikari.undefined.UndefinedNoneOr[typing.Union[hikari.files.Resourceish, hikari.messages.Attachment]]
             If provided, the attachment to set on the message. If
             [hikari.undefined.UNDEFINED][], the previous attachment, if
-            present, is not changed. If this is `None`, then the
+            present, is not changed. If this is [None][], then the
             attachment is removed, if present. Otherwise, the new attachment
             that was provided will be attached.
         attachments : hikari.undefined.UndefinedNoneOr[typing.Sequence[typing.Union[hikari.files.Resourceish, hikari.messages.Attachment]]]
             If provided, the attachments to set on the message. If
             [hikari.undefined.UNDEFINED][], the previous attachments, if
-            present, are not changed. If this is `None`, then the
+            present, are not changed. If this is [None][], then the
             attachments is removed, if present. Otherwise, the new attachments
             that were provided will be attached.
         component : hikari.undefined.UndefinedNoneOr[hikari.api.special_endpoints.ComponentBuilder]
             If provided, builder object of the component to set for this message.
             This component will replace any previously set components and passing
-            `None` will remove all components.
+            [None][] will remove all components.
         components : hikari.undefined.UndefinedNoneOr[typing.Sequence[hikari.api.special_endpoints.ComponentBuilder]]
             If provided, a sequence of the component builder objects set for
             this message. These components will replace any previously set
-            components and passing `None` or an empty sequence will
+            components and passing [None][] or an empty sequence will
             remove all components.
         embed : hikari.undefined.UndefinedNoneOr[hikari.embeds.Embed]
             If provided, the embed to set on the message. If
             [hikari.undefined.UNDEFINED][], the previous embed(s) are not changed.
-            If this is `None` then any present embeds are removed.
+            If this is [None][] then any present embeds are removed.
             Otherwise, the new embed that was provided will be used as the
             replacement.
         embeds : hikari.undefined.UndefinedNoneOr[typing.Sequence[hikari.embeds.Embed]]
             If provided, the embeds to set on the message. If
             [hikari.undefined.UNDEFINED][], the previous embed(s) are not changed.
-            If this is `None` then any present embeds are removed.
+            If this is [None][] then any present embeds are removed.
             Otherwise, the new embeds that were provided will be used as the
             replacement.
         mentions_everyone : hikari.undefined.UndefinedOr[bool]
             If provided, whether the message should parse @everyone/@here
             mentions.
         user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
-            If provided, and `True`, all user mentions will be detected.
-            If provided, and `False`, all user mentions will be ignored
+            If provided, and [True][], all user mentions will be detected.
+            If provided, and [False][], all user mentions will be ignored
             if appearing in the message body.
             Alternatively this may be a collection of
             [hikari.snowflakes.Snowflake][], or
             [hikari.users.PartialUser][] derivatives to enforce mentioning
             specific users.
         role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], bool]]
-            If provided, and `True`, all role mentions will be detected.
-            If provided, and `False`, all role mentions will be ignored
+            If provided, and [True][], all role mentions will be detected.
+            If provided, and [False][], all role mentions will be ignored
             if appearing in the message body.
             Alternatively this may be a collection of
             [hikari.snowflakes.Snowflake][], or
@@ -8103,7 +8103,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         end_time : hikari.undefined.UndefinedNoneOr[datetime.datetime]
             When the event should be scheduled to end.
 
-            This can only be set to `None` for `STAGE` and `VOICE` events.
+            This can only be set to [None][] for `STAGE` and `VOICE` events.
             Must be provided when changing an event to `EXTERNAL`.
         status : hikari.undefined.UndefinedOr[hikari.scheduled_events.ScheduledEventStatus]
             The event's new status.

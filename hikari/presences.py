@@ -190,7 +190,7 @@ class ActivityAssets:
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL, or `None` if no icon exists.
+            The URL, or [None][] if no icon exists.
 
         Raises
         ------
@@ -207,7 +207,7 @@ class ActivityAssets:
         """Small image asset URL.
 
         !!! note
-            This will be `None` if no large image asset exists or if the
+            This will be [None][] if no large image asset exists or if the
             asset's dynamic URL (indicated by a `{name}:` prefix) is not known.
         """
         try:
@@ -231,7 +231,7 @@ class ActivityAssets:
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL, or `None` if no icon exists.
+            The URL, or [None][] if no icon exists.
 
         Raises
         ------

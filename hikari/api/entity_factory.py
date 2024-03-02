@@ -681,7 +681,7 @@ class EntityFactory(abc.ABC):
             prioritised over `"id"` in the payload when passed.
 
             !!! note
-                `thread_id` currently only covers the gateway GUILD_CREATE event
+                `thread_id` currently only covers the gateway `GUILD_CREATE` event
                 where the field are is included in the thread member's payload.
 
         Returns
@@ -713,7 +713,7 @@ class EntityFactory(abc.ABC):
             will be prioritised over `"guild_id"` in the payload.
 
             !!! note
-                `guild_id` currently only covers the gateway GUILD_CREATE event
+                `guild_id` currently only covers the gateway `GUILD_CREATE` event
                 where `"guild_id"` is not included in the channel's payload.
         member : hikari.undefined.UndefinedNoneOr[hikari.channels.ThreadMember]
             The member object for the thread. If passed then this will be
@@ -753,7 +753,7 @@ class EntityFactory(abc.ABC):
             prioritised over `"guild_id"` in the payload when passed.
 
             !!! note
-                `guild_id` currently only covers the gateway GUILD_CREATE event
+                `guild_id` currently only covers the gateway `GUILD_CREATE` event
                 where `"guild_id"` is not included in the channel's payload.
         member : hikari.undefined.UndefinedNoneOr[hikari.channels.ThreadMember]
             The member object for the thread. If passed then this will be
@@ -793,7 +793,7 @@ class EntityFactory(abc.ABC):
             prioritised over `"guild_id"` in the payload when passed.
 
             !!! note
-                `guild_id` currently only covers the gateway GUILD_CREATE event
+                `guild_id` currently only covers the gateway `GUILD_CREATE` event
                 where `"guild_id"` is not included in the channel's payload.
         member : hikari.undefined.UndefinedNoneOr[hikari.channels.ThreadMember]
             The member object for the thread. If passed then this will be
@@ -833,7 +833,7 @@ class EntityFactory(abc.ABC):
             prioritised over `"guild_id"` in the payload when passed.
 
             !!! note
-                `guild_id` currently only covers the gateway GUILD_CREATE event
+                `guild_id` currently only covers the gateway `GUILD_CREATE` event
                 where `"guild_id"` is not included in the channel's payload.
         member : hikari.undefined.UndefinedNoneOr[hikari.channels.ThreadMember]
             The member object for the thread. If passed then this will be
@@ -875,7 +875,7 @@ class EntityFactory(abc.ABC):
             for DM and group DM channels and will be prioritised over
             `"guild_id"` in the payload when passed.
 
-            This is necessary in GUILD_CREATE events, where `"guild_id"` is not
+            This is necessary in `GUILD_CREATE` events, where `"guild_id"` is not
             included in the channel's payload
 
         Returns

@@ -74,7 +74,7 @@ until we receive a response from this endpoint, we have no idea what our rate
 limits could be, nor the bucket that they sit in. This is usually not
 problematic, as the first request to an endpoint should never be rate limited
 unless you are hitting it from elsewhere in the same time window outside your
-hikari.applications. To manage this situation, unknown endpoints are allocated to
+`hikari.applications`. To manage this situation, unknown endpoints are allocated to
 a special unlimited bucket until they have an initial bucket hash code allocated
 from a response. Once this happens, the route is reallocated a dedicated bucket.
 Unknown buckets have a hardcoded initial hash code internally.

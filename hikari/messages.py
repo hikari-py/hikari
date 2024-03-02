@@ -769,9 +769,9 @@ class PartialMessage(snowflakes.Unique):
         content : hikari.undefined.UndefinedOr[typing.Any]
             If provided, the message content to update with. If
             [hikari.undefined.UNDEFINED][], then the content will not
-            be changed. If `None`, then the content will be removed.
+            be changed. If [None][], then the content will be removed.
 
-            Any other value will be cast to a `str` before sending.
+            Any other value will be cast to a [str][] before sending.
 
             If this is a [hikari.embeds.Embed][] and neither the `embed` or
             `embeds` kwargs are provided or if this is a
@@ -785,40 +785,40 @@ class PartialMessage(snowflakes.Unique):
         attachment : hikari.undefined.UndefinedNoneOr[typing.Union[hikari.files.Resourceish, hikari.messages.Attachment]]
             If provided, the attachment to set on the message. If
             [hikari.undefined.UNDEFINED][], the previous attachment, if
-            present, is not changed. If this is `None`, then the
+            present, is not changed. If this is [None][], then the
             attachment is removed, if present. Otherwise, the new attachment
             that was provided will be attached.
         attachments : hikari.undefined.UndefinedNoneOr[typing.Sequence[typing.Union[hikari.files.Resourceish, hikari.messages.Attachment]]]
             If provided, the attachments to set on the message. If
             [hikari.undefined.UNDEFINED][], the previous attachments, if
-            present, are not changed. If this is `None`, then the
+            present, are not changed. If this is [None][], then the
             attachments is removed, if present. Otherwise, the new attachments
             that were provided will be attached.
         component : hikari.undefined.UndefinedNoneOr[hikari.api.special_endpoints.ComponentBuilder]
             If provided, builder object of the component to set for this message.
             This component will replace any previously set components and passing
-            `None` will remove all components.
+            [None][] will remove all components.
         components : hikari.undefined.UndefinedNoneOr[typing.Sequence[hikari.api.special_endpoints.ComponentBuilder]]
             If provided, a sequence of the component builder objects set for
             this message. These components will replace any previously set
-            components and passing `None` or an empty sequence will
+            components and passing [None][] or an empty sequence will
             remove all components.
         embed : hikari.undefined.UndefinedNoneOr[hikari.embeds.Embed]
             If provided, the embed to set on the message. If
             [hikari.undefined.UNDEFINED][], the previous embed(s) are not changed.
-            If this is `None` then any present embeds are removed.
+            If this is [None][] then any present embeds are removed.
             Otherwise, the new embed that was provided will be used as the
             replacement.
         embeds : hikari.undefined.UndefinedNoneOr[typing.Sequence[hikari.embeds.Embed]]
             If provided, the embeds to set on the message. If
             [hikari.undefined.UNDEFINED][], the previous embed(s) are not changed.
-            If this is `None` then any present embeds are removed.
+            If this is [None][] then any present embeds are removed.
             Otherwise, the new embeds that were provided will be used as the
             replacement.
         mentions_everyone : hikari.undefined.UndefinedOr[bool]
             Sanitation for `@everyone` mentions. If
             [hikari.undefined.UNDEFINED][], then the previous setting is
-            not changed. If `True`, then `@everyone`/`@here` mentions
+            not changed. If [True][], then `@everyone`/`@here` mentions
             in the message content will show up as mentioning everyone that can
             view the chat.
         mentions_reply : hikari.undefined.UndefinedOr[bool]
@@ -829,8 +829,8 @@ class PartialMessage(snowflakes.Unique):
         user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
             Sanitation for user mentions. If
             [hikari.undefined.UNDEFINED][], then the previous setting is
-            not changed. If `True`, all valid user mentions will behave
-            as mentions. If `False`, all valid user mentions will not
+            not changed. If [True][], all valid user mentions will behave
+            as mentions. If [False][], all valid user mentions will not
             behave as mentions.
 
             You may alternatively pass a collection of
@@ -839,8 +839,8 @@ class PartialMessage(snowflakes.Unique):
         role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], bool]]
             Sanitation for role mentions. If
             [hikari.undefined.UNDEFINED][], then the previous setting is
-            not changed. If `True`, all valid role mentions will behave
-            as mentions. If `False`, all valid role mentions will not
+            not changed. If [True][], all valid role mentions will behave
+            as mentions. If [False][], all valid role mentions will not
             behave as mentions.
 
             You may alternatively pass a collection of
@@ -933,7 +933,7 @@ class PartialMessage(snowflakes.Unique):
             If provided, the message contents. If
             [hikari.undefined.UNDEFINED][], then nothing will be sent
             in the content. Any other value here will be cast to a
-            `str`.
+            [str][].
 
             If this is a [hikari.embeds.Embed][] and no `embed` nor `embeds` kwarg
             is provided, then this will instead update the embed. This allows
@@ -952,7 +952,7 @@ class PartialMessage(snowflakes.Unique):
             Attachments can be passed as many different things, to aid in
             convenience.
 
-            - If a `pathlib.PurePath` or `str` to a valid URL, the
+            - If a [pathlib.PurePath][] or [str][] to a valid URL, the
                 resource at the given URL will be streamed to Discord when
                 sending the message. Subclasses of
                 [hikari.files.WebResource][] such as
@@ -963,11 +963,11 @@ class PartialMessage(snowflakes.Unique):
                 This will use bit-inception, so only a small percentage of the
                 resource will remain in memory at any one time, thus aiding in
                 scalability.
-            - If a [hikari.files.Bytes][] is passed, or a `str`
+            - If a [hikari.files.Bytes][] is passed, or a [str][]
                 that contains a valid data URI is passed, then this is uploaded
                 with a randomized file name if not provided.
-            - If a [hikari.files.File][], `pathlib.PurePath` or
-                `str` that is an absolute or relative path to a file
+            - If a [hikari.files.File][], [pathlib.PurePath][] or
+                [str][] that is an absolute or relative path to a file
                 on your file system is passed, then this resource is uploaded
                 as an attachment using non-blocking code internally and streamed
                 using bit-inception where possible. This depends on the
@@ -997,7 +997,7 @@ class PartialMessage(snowflakes.Unique):
         tts : hikari.undefined.UndefinedOr[bool]
             If provided, whether the message will be TTS (Text To Speech).
         reply : typing.Union[hikari.undefined.UndefinedType, hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage], bool]
-            If provided and `True`, reply to this message.
+            If provided and [True][], reply to this message.
             If provided and not `bool`, the message to reply to.
         reply_must_exist : hikari.undefined.UndefinedOr[bool]
             If provided, whether to error if the message being replied to does
@@ -1013,14 +1013,14 @@ class PartialMessage(snowflakes.Unique):
 
             This will not do anything if not being used with `reply`.
         user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
-            If provided, and `True`, all mentions will be parsed.
-            If provided, and `False`, no mentions will be parsed.
+            If provided, and [True][], all mentions will be parsed.
+            If provided, and [False][], no mentions will be parsed.
             Alternatively this may be a collection of
             [hikari.snowflakes.Snowflake][], or [hikari.users.PartialUser][]
             derivatives to enforce mentioning specific users.
         role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], bool]]
-            If provided, and `True`, all mentions will be parsed.
-            If provided, and `False`, no mentions will be parsed.
+            If provided, and [True][], all mentions will be parsed.
+            If provided, and [False][], no mentions will be parsed.
             Alternatively this may be a collection of
             [hikari.snowflakes.Snowflake][], or
             [hikari.guilds.PartialRole][] derivatives to enforce mentioning
@@ -1336,7 +1336,7 @@ class Message(PartialMessage):
     edited_timestamp: typing.Optional[datetime.datetime] = attrs.field(hash=False, eq=False, repr=False)
     """The timestamp that the message was last edited at.
 
-    Will be `None` if it wasn't ever edited.
+    Will be [None][] if it wasn't ever edited.
     """
 
     is_tts: bool = attrs.field(hash=False, eq=False, repr=False)
@@ -1391,7 +1391,7 @@ class Message(PartialMessage):
     referenced_message: typing.Optional[PartialMessage] = attrs.field(hash=False, eq=False, repr=False)
     """The message that was replied to.
 
-    If `type` is [hikari.messages.MessageType.REPLY][] and `None`, the message was deleted.
+    If `type` is [hikari.messages.MessageType.REPLY][] and [None][], the message was deleted.
     """
 
     interaction: typing.Optional[MessageInteraction] = attrs.field(hash=False, eq=False, repr=False)

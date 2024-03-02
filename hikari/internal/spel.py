@@ -66,7 +66,7 @@ class AttrGetter(typing.Generic[InputValueT, ReturnValueT]):
     """An attribute getter that can resolve nested attributes and methods.
 
     This follows the SPEL definition for how to define expressions. Expressions
-    may be preceded with an optional [`.`][] to aid in readability.
+    may be preceded with an optional `.` to aid in readability.
     """
 
     __slots__: typing.Sequence[str] = ("pipeline", "invert_all")

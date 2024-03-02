@@ -333,9 +333,9 @@ class OwnApplicationRoleConnection:
         provide a way to difference between them.
 
         You can deserialize them yourself based on what value you expect from the key:
-            - `INTEGER_X`: Cast to an `int`.
+            - `INTEGER_X`: Cast to an [int][].
             - `DATETIME_X`: Cast to [`datetime.datetime.fromisoformat`][] or `ciso8601.parse_rfc3339` (for speed).
-            - `BOOLEAN_X`: Cast to a `bool`.
+            - `BOOLEAN_X`: Cast to a [bool][].
     """
 
 

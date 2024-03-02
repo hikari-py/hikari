@@ -592,10 +592,10 @@ class Flag(metaclass=_FlagMeta):
         not set on `e2` as well. You may instead use the `difference`
         method.
     * `bool(e)` : `bool`
-        Return `True` if `e` has a non-zero value, otherwise
-        `False`.
+        Return [True][] if `e` has a non-zero value, otherwise
+        [False][].
     * `E.A in e`: `bool`
-        `True` if `E.A` is in `e`. This is functionally equivalent
+        [True][] if `E.A` is in `e`. This is functionally equivalent
         to `E.A & e == E.A`.
     * `iter(e)` :
         Explode the value into a iterator of each __documented__ flag that can
@@ -628,13 +628,13 @@ class Flag(metaclass=_FlagMeta):
     Special members on each flag member
     -----------------------------------
     * `e.all(E.A, E.B, E.C, ...)` : `bool`
-        Returns `True` if __all__ of `E.A`, `E.B`, `E.C`, et cetera
+        Returns [True][] if __all__ of `E.A`, `E.B`, `E.C`, et cetera
         make up the value of `e`.
     * `e.any(E.A, E.B, E.C, ...)` : `bool`
-        Returns `True` if __any__ of `E.A`, `E.B`, `E.C`, et cetera
+        Returns [True][] if __any__ of `E.A`, `E.B`, `E.C`, et cetera
         make up the value of `e`.
     * `e.none(E.A, E.B, E.C, ...)` : `bool`
-        Returns `True` if __none__ of `E.A`, `E.B`, `E.C`, et cetera
+        Returns [True][] if __none__ of `E.A`, `E.B`, `E.C`, et cetera
         make up the value of `e`.
     * `e.split()` : `typing.Sequence`
         Explode the value into a sequence of each __documented__ flag that can
@@ -664,14 +664,14 @@ class Flag(metaclass=_FlagMeta):
 
     @property
     def name(self) -> str:
-        """Return the name of the flag combination as a `str`."""
+        """Return the name of the flag combination as a [str][]."""
         if self._name_ is None:
             self._name_ = "|".join(_name_resolver(self._value_to_member_map_, self._value_))
         return self._name_
 
     @property
     def value(self) -> int:
-        """Return the `int` value of the flag."""
+        """Return the [int][] value of the flag."""
         return self._value_
 
     def all(self, *flags: Self) -> bool:
@@ -680,8 +680,8 @@ class Flag(metaclass=_FlagMeta):
         Returns
         -------
         bool
-            `True` if any of the given flags are part of this value.
-            Otherwise, return `False`.
+            [True][] if any of the given flags are part of this value.
+            Otherwise, return [False][].
         """
         return all((flag & self) == flag for flag in flags)
 
@@ -691,8 +691,8 @@ class Flag(metaclass=_FlagMeta):
         Returns
         -------
         bool
-            `True` if any of the given flags are part of this value.
-            Otherwise, return `False`.
+            [True][] if any of the given flags are part of this value.
+            Otherwise, return [False][].
         """
         return any((flag & self) == flag for flag in flags)
 
@@ -720,8 +720,8 @@ class Flag(metaclass=_FlagMeta):
         """Return whether two sets have a intersection or not.
 
         If the two sets have an intersection, then this returns
-        `False`. If no common flag values exist between them, then
-        this returns `True`.
+        [False][]. If no common flag values exist between them, then
+        this returns [True][].
         """
         return not (self & other)
 
@@ -745,8 +745,8 @@ class Flag(metaclass=_FlagMeta):
         Returns
         -------
         bool
-            `True` if none of the given flags are part of this value.
-            Otherwise, return `False`.
+            [True][] if none of the given flags are part of this value.
+            Otherwise, return [False][].
         """
         return not self.any(*flags)
 
@@ -755,7 +755,7 @@ class Flag(metaclass=_FlagMeta):
 
         Any unrecognised bits will be omitted for brevity.
 
-        The result will be a name-sorted `typing.Sequence` of each member
+        The result will be a name-sorted [typing.Sequence][] of each member
         """
         return sorted(
             (member for member in self.__class__._powers_of_2_to_member_map_.values() if member.value & self),

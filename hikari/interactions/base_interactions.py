@@ -410,7 +410,7 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
         !!! warning
             If you specify a text `content`, `mentions_everyone`,
             `mentions_reply`, `user_mentions`, and `role_mentions` will default
-            to `False` as the message will be re-parsed for mentions. This will
+            to [False][] as the message will be re-parsed for mentions. This will
             also occur if only one of the four are specified
 
             This is a limitation of Discord's design. If in doubt, specify all
@@ -422,7 +422,7 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
             If provided, the message contents. If
             [hikari.undefined.UNDEFINED][], then nothing will be sent
             in the content. Any other value here will be cast to a
-            `str`.
+            [str][].
 
             If this is a [hikari.embeds.Embed][] and neither the
             `embed` or `embeds` kwargs are provided or if this is a
@@ -437,50 +437,50 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
         attachment : hikari.undefined.UndefinedNoneOr[typing.Union[hikari.files.Resourceish, hikari.messages.Attachment]]
             If provided, the attachment to set on the message. If
             [hikari.undefined.UNDEFINED][], the previous attachment, if
-            present, is not changed. If this is `None`, then the
+            present, is not changed. If this is [None][], then the
             attachment is removed, if present. Otherwise, the new attachment
             that was provided will be attached.
         attachments : hikari.undefined.UndefinedNoneOr[typing.Sequence[typing.Union[hikari.files.Resourceish, hikari.messages.Attachment]]]
             If provided, the attachments to set on the message. If
             [hikari.undefined.UNDEFINED][], the previous attachments, if
-            present, are not changed. If this is `None`, then the
+            present, are not changed. If this is [None][], then the
             attachments is removed, if present. Otherwise, the new attachments
             that were provided will be attached.
         component : hikari.undefined.UndefinedNoneOr[hikari.api.special_endpoints.ComponentBuilder]
             If provided, builder object of the component to set for this message.
             This component will replace any previously set components and passing
-            `None` will remove all components.
+            [None][] will remove all components.
         components : hikari.undefined.UndefinedNoneOr[typing.Sequence[hikari.api.special_endpoints.ComponentBuilder]]
             If provided, a sequence of the component builder objects set for
             this message. These components will replace any previously set
-            components and passing `None` or an empty sequence will
+            components and passing [None][] or an empty sequence will
             remove all components.
         embed : hikari.undefined.UndefinedNoneOr[hikari.embeds.Embed]
             If provided, the embed to set on the message. If
             [hikari.undefined.UNDEFINED][], the previous embed(s) are not changed.
-            If this is `None` then any present embeds are removed.
+            If this is [None][] then any present embeds are removed.
             Otherwise, the new embed that was provided will be used as the
             replacement.
         embeds : hikari.undefined.UndefinedNoneOr[typing.Sequence[hikari.embeds.Embed]]
             If provided, the embeds to set on the message. If
             [hikari.undefined.UNDEFINED][], the previous embed(s) are not changed.
-            If this is `None` then any present embeds are removed.
+            If this is [None][] then any present embeds are removed.
             Otherwise, the new embeds that were provided will be used as the
             replacement.
         mentions_everyone : hikari.undefined.UndefinedOr[bool]
             If provided, whether the message should parse @everyone/@here
             mentions.
         user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
-            If provided, and `True`, all user mentions will be detected.
-            If provided, and `False`, all user mentions will be ignored
+            If provided, and [True][], all user mentions will be detected.
+            If provided, and [False][], all user mentions will be ignored
             if appearing in the message body.
             Alternatively this may be a collection of
             [hikari.snowflakes.Snowflake][], or
             [hikari.users.PartialUser][] derivatives to enforce mentioning
             specific users.
         role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], bool]]
-            If provided, and `True`, all role mentions will be detected.
-            If provided, and `False`, all role mentions will be ignored
+            If provided, and [True][], all role mentions will be detected.
+            If provided, and [False][], all role mentions will be ignored
             if appearing in the message body.
             Alternatively this may be a collection of
             [hikari.snowflakes.Snowflake][], or

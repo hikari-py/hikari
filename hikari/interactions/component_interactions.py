@@ -303,7 +303,7 @@ class ComponentInteraction(
         Returns
         -------
         typing.Optional[hikari.guilds.GatewayGuild]
-            The object of the guild if found, else `None`.
+            The object of the guild if found, else [None][].
         """
         if self.guild_id and isinstance(self.app, traits.CacheAware):
             return self.app.cache.get_guild(self.guild_id)

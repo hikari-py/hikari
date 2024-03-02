@@ -139,7 +139,7 @@ class GatewayBot(traits.GatewayBotAware):
         Setting this to [None][] will disable the banner being shown.
     suppress_optimization_warning : bool
         By default, hikari warns you if you are not running
-        your bot using optimizations (`-O` or `-OO`). If this is `True`, you won't
+        your bot using optimizations (`-O` or `-OO`). If this is [True][], you won't
         receive these warnings, even if you are not running using optimizations.
     executor : typing.Optional[concurrent.futures.Executor]
         If non-[None][], then this executor
@@ -709,7 +709,7 @@ class GatewayBot(traits.GatewayBotAware):
             If [True][], will check for newer versions of hikari on PyPI
             and notify if available.
         close_passed_executor : bool
-            If `True`, any custom [concurrent.futures.Executor][] passed
+            If [True][], any custom [concurrent.futures.Executor][] passed
             to the constructor will be shut down when the application
             terminates. This does not affect the default executor associated
             with the event loop, and will not do anything if you do not
@@ -766,7 +766,7 @@ class GatewayBot(traits.GatewayBotAware):
             The shard IDs to create shards for. If not [None][], then
             a non-[None][] `shard_count` must ALSO be provided.
 
-            Defaults to `None`, which means the Discord-recommended count
+            Defaults to [None][], which means the Discord-recommended count
             is used for your application instead.
 
             Note that the sequence will be de-duplicated.
@@ -1023,11 +1023,11 @@ class GatewayBot(traits.GatewayBotAware):
             this type additionally.
         timeout : typing.Optional[int, float]
             How long this streamer should wait for the next event before
-            ending the iteration. If `None` then this will continue
+            ending the iteration. If [None][] then this will continue
             until explicitly broken from.
         limit : typing.Optional[int]
             The limit for how many events this should queue at one time before
-            dropping extra incoming events, leave this as `None` for
+            dropping extra incoming events, leave this as [None][] for
             the cache size to be unlimited.
 
         Returns
@@ -1169,14 +1169,14 @@ class GatewayBot(traits.GatewayBotAware):
             this type additionally.
         predicate
             A function taking the event as the single parameter.
-            This should return `True` if the event is one you want to
-            return, or `False` if the event should not be returned.
-            If left as `None` (the default), then the first matching event type
+            This should return [True][] if the event is one you want to
+            return, or [False][] if the event should not be returned.
+            If left as [None][] (the default), then the first matching event type
             that the bot receives (or any subtype) will be the one returned.
         timeout : typing.Union[float, int, None]
-            The amount of time to wait before raising an `asyncio.TimeoutError`
+            The amount of time to wait before raising an [asyncio.TimeoutError][]
             and giving up instead. This is measured in seconds. If
-            `None`, then no timeout will be waited for (no timeout can
+            [None][], then no timeout will be waited for (no timeout can
             result in "leaking" of coroutines that never complete if called in
             an uncontrolled way, so is not recommended).
 
@@ -1188,8 +1188,8 @@ class GatewayBot(traits.GatewayBotAware):
         Raises
         ------
         asyncio.TimeoutError
-            If the timeout is not `None` and is reached before an
-            event is received that the predicate returns `True` for.
+            If the timeout is not [None][] and is reached before an
+            event is received that the predicate returns [True][] for.
 
         See Also
         --------

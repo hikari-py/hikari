@@ -189,7 +189,7 @@ SnowflakeishOr = typing.Union[T, Snowflakeish]
 This is a value that is [hikari.snowflakes.Snowflake][]-ish or a specific type covariant.
 
 If you see `SnowflakeishOr[Foo]` anywhere as a type hint, it means the value
-may be a `Foo` instance, a [hikari.snowflakes.Snowflake][], an `int` or a `str`
+may be a `Foo` instance, a [hikari.snowflakes.Snowflake][], an [int][] or a [str][]
 with numeric digits only.
 
 Essentially this represents any concrete object, or ID of that object. It is

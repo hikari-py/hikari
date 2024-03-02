@@ -282,7 +282,7 @@ class CDNRoute:
     def compile_to_file(
         self, base_url: str, *, file_format: str, size: typing.Optional[int] = None, **kwargs: typing.Any
     ) -> files.URL:
-        """Perform the same as `compile`, but return the URL as a [hikari.files.URL]."""
+        """Perform the same as `compile`, but return the URL as a [hikari.files.URL][]."""
         return files.URL(self.compile(base_url, file_format=file_format, size=size, **kwargs))
 
 

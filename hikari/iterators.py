@@ -268,7 +268,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
         Each condition is treated as a predicate, being called with each item
         that this iterator would return when it is requested.
 
-        All conditions must evaluate to `True` for the item to be
+        All conditions must evaluate to [True][] for the item to be
         returned. If this is not met, then the item is discarded and ignored,
         the next matching item will be returned instead, if there is one.
 
@@ -276,9 +276,9 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
         ----------
         *predicates : typing.Union[typing.Callable[[ValueT], bool], typing.Tuple[str, typing.Any]]
             Predicates to invoke. These are functions that take a value and
-            return `True` if it is of interest, or `False`
-            otherwise. These may instead include 2-`tuple` objects
-            consisting of a `str` attribute name (nested attributes
+            return [True][] if it is of interest, or [False][]
+            otherwise. These may instead include 2-[tuple][] objects
+            consisting of a [str][] attribute name (nested attributes
             are referred to using the ``.`` operator), and values to compare for
             equality. This allows you to specify conditions such as
             `members.filter(("user.bot", True))`.
@@ -306,9 +306,9 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
         ----------
         *predicates : typing.Union[typing.Callable[[ValueT], bool], typing.Tuple[str, typing.Any]]
             Predicates to invoke. These are functions that take a value and
-            return `True` if it is of interest, or `False`
-            otherwise. These may instead include 2-`tuple` objects
-            consisting of a `str` attribute name (nested attributes
+            return [True][] if it is of interest, or [False][]
+            otherwise. These may instead include 2-[tuple][] objects
+            consisting of a [str][] attribute name (nested attributes
             are referred to using the ``.`` operator), and values to compare for
             equality. This allows you to specify conditions such as
             `members.take_while(("user.bot", True))`.
@@ -336,9 +336,9 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
         ----------
         *predicates : typing.Union[typing.Callable[[ValueT], bool], typing.Tuple[str, typing.Any]]
             Predicates to invoke. These are functions that take a value and
-            return `True` if it is of interest, or `False`
-            otherwise. These may instead include 2-`tuple` objects
-            consisting of a `str` attribute name (nested attributes are
+            return [True][] if it is of interest, or [False][]
+            otherwise. These may instead include 2-[tuple][] objects
+            consisting of a [str][] attribute name (nested attributes are
             referred to using the ``.`` operator), and values to compare for
             equality. This allows you to specify conditions such as
             `members.take_until(("user.bot", True))`.
@@ -368,9 +368,9 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
         ----------
         *predicates : typing.Union[typing.Callable[[ValueT], bool], typing.Tuple[str, typing.Any]]
             Predicates to invoke. These are functions that take a value and
-            return `True` if it is of interest, or `False`
-            otherwise. These may instead include 2-`tuple` objects
-            consisting of a `str` attribute name (nested attributes
+            return [True][] if it is of interest, or [False][]
+            otherwise. These may instead include 2-[tuple][] objects
+            consisting of a [str][] attribute name (nested attributes
             are referred to using the ``.`` operator), and values to compare for
             equality. This allows you to specify conditions such as
             `members.skip_while(("user.bot", True))`.
@@ -400,9 +400,9 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
         ----------
         *predicates : typing.Union[typing.Callable[[ValueT], bool], typing.Tuple[str, typing.Any]]
             Predicates to invoke. These are functions that take a value and
-            return `True` if it is of interest, or `False`
-            otherwise. These may instead include 2-`tuple` objects
-            consisting of a `str` attribute name (nested attributes are
+            return [True][] if it is of interest, or [False][]
+            otherwise. These may instead include 2-[tuple][] objects
+            consisting of a [str][] attribute name (nested attributes are
             referred to using the ``.`` operator), and values to compare for
             equality. This allows you to specify conditions such as
             `members.skip_until(("user.bot", True))`.
@@ -585,12 +585,12 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
         r"""Perform a flat mapping operation.
 
         This will pass each item in the iterator to the given `function`
-        parameter, expecting a new `typing.Iterable` or `typing.AsyncIterator`
+        parameter, expecting a new [typing.Iterable][] or [typing.AsyncIterator][]
         to be returned as the result. This means you can map to a new
-        [hikari.iterators.LazyIterator][], `typing.AsyncIterator`, `typing.Iterable`,
+        [hikari.iterators.LazyIterator][], [typing.AsyncIterator][], [typing.Iterable][],
         async generator, or generator.
 
-        Remember that `typing.Iterator` implicitly provides `typing.Iterable`
+        Remember that [typing.Iterator][] implicitly provides [typing.Iterable][]
         compatibility.
 
         This is used to provide lazy conversions, and can be used to implement
@@ -651,7 +651,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
             input. MyPy cannot detect this nicely, so any cast is forced
             internally.
             If the item is not awaitable, you will receive a
-            `TypeError` instead.
+            [TypeError][] instead.
             You have been warned. You cannot escape the ways of the duck type
             young grasshopper.
 
@@ -749,7 +749,7 @@ class BufferedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT], abc.ABC
     thus reducing the amount of work needed if only a few objects out of, say,
     100, need to be deserialized.
 
-    This `_next_chunk` should return `None` once the end of all items
+    This `_next_chunk` should return [None][] once the end of all items
     has been reached.
 
     An example would look like the following:

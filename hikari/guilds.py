@@ -866,7 +866,7 @@ class Member(users.User):
         Other Parameters
         ----------------
         nickname : hikari.undefined.UndefinedNoneOr[str]
-            If provided, the new nick for the member. If `None`,
+            If provided, the new nick for the member. If [None][],
             will remove the members nick.
 
             Requires the [hikari.permissions.Permissions.MANAGE_NICKNAMES][] permission.
@@ -883,9 +883,9 @@ class Member(users.User):
 
             Requires the [hikari.permissions.Permissions.DEAFEN_MEMBERS][] permission.
         voice_channel : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildVoiceChannel]]]
-            If provided, `None` or the object or the ID of
+            If provided, [None][] or the object or the ID of
             an existing voice channel to move the member to.
-            If `None`, will disconnect the member from voice.
+            If [None][], will disconnect the member from voice.
 
             Requires the [hikari.permissions.Permissions.MOVE_MEMBERS][] permission
             and the [hikari.permissions.Permissions.CONNECT][] permission in the
@@ -896,7 +896,7 @@ class Member(users.User):
                 take no effect.
         communication_disabled_until : hikari.undefined.UndefinedNoneOr[datetime.datetime]
             If provided, the datetime when the timeout (disable communication)
-            of the member expires, up to 28 days in the future, or `None`
+            of the member expires, up to 28 days in the future, or [None][]
             to remove the timeout from the member.
 
             Requires the [hikari.permissions.Permissions.MODERATE_MEMBERS][] permission.
@@ -988,14 +988,14 @@ class Role(PartialRole):
     is_hoisted: bool = attrs.field(eq=False, hash=False, repr=True)
     """Whether this role is hoisting the members it's attached to in the member list.
 
-    Members will be hoisted under their highest role where this is set to `True`.
+    Members will be hoisted under their highest role where this is set to [True][].
     """
 
     icon_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
-    """Hash of the role's icon if set, else `None`."""
+    """Hash of the role's icon if set, else [None][]."""
 
     unicode_emoji: typing.Optional[emojis_.UnicodeEmoji] = attrs.field(eq=False, hash=False, repr=False)
-    """Role's icon as an unicode emoji if set, else `None`."""
+    """Role's icon as an unicode emoji if set, else [None][]."""
 
     is_managed: bool = attrs.field(eq=False, hash=False, repr=False)
     """Whether this role is managed by an integration."""
@@ -1019,13 +1019,13 @@ class Role(PartialRole):
     bot_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
     """The ID of the bot this role belongs to.
 
-    If `None`, this is not a bot role.
+    If [None][], this is not a bot role.
     """
 
     integration_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
     """The ID of the integration this role belongs to.
 
-    If `None`, this is not a integration role.
+    If [None][], this is not a integration role.
     """
 
     is_premium_subscriber_role: bool = attrs.field(eq=False, hash=False, repr=True)
@@ -1034,7 +1034,7 @@ class Role(PartialRole):
     subscription_listing_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
     """The ID of this role's subscription SKU and listing.
 
-    If `None`, this is not a purchasable role.
+    If [None][], this is not a purchasable role.
     """
 
     is_available_for_purchase: bool = attrs.field(eq=False, hash=False, repr=True)
@@ -1058,7 +1058,7 @@ class Role(PartialRole):
         """Return a raw mention string for the role.
 
         When this role represents @everyone mentions will only work if
-        `mentions_everyone` is `True`.
+        `mentions_everyone` is [True][].
         """
         if self.guild_id == self.id:
             return "@everyone"
@@ -1068,7 +1068,7 @@ class Role(PartialRole):
     def make_icon_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the icon URL for this role, if set.
 
-        If no role icon is set, this returns `None`.
+        If no role icon is set, this returns [None][].
 
         Parameters
         ----------
@@ -1082,7 +1082,7 @@ class Role(PartialRole):
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL to the icon, or `None` if not present.
+            The URL to the icon, or [None][] if not present.
 
         Raises
         ------
@@ -1181,7 +1181,7 @@ class PartialApplication(snowflakes.Unique):
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL, or `None` if no icon exists.
+            The URL, or [None][] if no icon exists.
 
         Raises
         ------
@@ -1241,14 +1241,14 @@ class Integration(PartialIntegration):
     passes.
 
     !!! note
-        This will always be `None` for Discord integrations.
+        This will always be [None][] for Discord integrations.
     """
 
     expire_grace_period: typing.Optional[datetime.timedelta] = attrs.field(eq=False, hash=False, repr=False)
     """How many days users with expired subscriptions are given until the expire behavior is enacted out on them.
 
     !!! note
-        This will always be `None` for Discord integrations.
+        This will always be [None][] for Discord integrations.
     """
 
     is_enabled: bool = attrs.field(eq=False, hash=False, repr=True)
@@ -1326,7 +1326,7 @@ class GuildBan:
     """Used to represent guild bans."""
 
     reason: typing.Optional[str] = attrs.field(repr=True)
-    """The reason for this ban, will be `None` if no reason was given."""
+    """The reason for this ban, will be [None][] if no reason was given."""
 
     user: users.User = attrs.field(repr=True)
     """The object of the user this ban targets."""
@@ -1356,14 +1356,14 @@ class PartialGuild(snowflakes.Unique):
 
     @property
     def icon_url(self) -> typing.Optional[files.URL]:
-        """Icon URL for the guild, if set; otherwise `None`."""
+        """Icon URL for the guild, if set; otherwise [None][]."""
         return self.make_icon_url()
 
     @property
     def shard_id(self) -> typing.Optional[int]:
         """Return the ID of the shard this guild is served by.
 
-        This may return `None` if the application does not have a gateway
+        This may return [None][] if the application does not have a gateway
         connection.
         """
         if not isinstance(self.app, traits.ShardAware):
@@ -1383,7 +1383,7 @@ class PartialGuild(snowflakes.Unique):
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
             animated).
 
-            If `None`, then the correct default extension is
+            If [None][], then the correct default extension is
             determined based on whether the icon is animated or not.
         size : int
             The size to set for the URL.
@@ -1392,7 +1392,7 @@ class PartialGuild(snowflakes.Unique):
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL to the resource, or `None` if no icon is set.
+            The URL to the resource, or [None][] if no icon is set.
 
         Raises
         ------
@@ -1431,7 +1431,7 @@ class PartialGuild(snowflakes.Unique):
         delete_message_seconds : hikari.undefined.UndefinedNoneOr[hikari.internal.time.Intervalish]
             If provided, the number of seconds to delete messages for.
             This can be represented as either an int/float between 0 and 604800 (7 days), or
-            a `datetime.timedelta` object.
+            a [datetime.timedelta][] object.
         reason : hikari.undefined.UndefinedOr[str]
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -2248,7 +2248,7 @@ class PartialGuild(snowflakes.Unique):
             If provided, the permission overwrites for the channel.
         region : hikari.undefined.UndefinedOr[typing.Union[hikari.voices.VoiceRegion, str]]
             If provided, the voice region to for this channel. Passing
-            `None` here will set it to "auto" mode where the used
+            [None][] here will set it to "auto" mode where the used
             region will be decided based on the first person who connects to it
             when it's empty.
         category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
@@ -2329,7 +2329,7 @@ class PartialGuild(snowflakes.Unique):
             If provided, the permission overwrites for the channel.
         region : hikari.undefined.UndefinedOr[typing.Union[hikari.voices.VoiceRegion, str]]
             If provided, the voice region to for this channel. Passing
-            `None` here will set it to "auto" mode where the used
+            [None][] here will set it to "auto" mode where the used
             region will be decided based on the first person who connects to it
             when it's empty.
         category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
@@ -2542,7 +2542,7 @@ class GuildPreview(PartialGuild):
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL to the splash, or `None` if not set.
+            The URL to the splash, or [None][] if not set.
 
         Raises
         ------
@@ -2567,13 +2567,13 @@ class Guild(PartialGuild):
     application_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the application that created this guild.
 
-    This will always be `None` for guilds that weren't created by a bot.
+    This will always be [None][] for guilds that weren't created by a bot.
     """
 
     afk_channel_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The ID for the channel that AFK voice users get sent to.
 
-    If `None`, then no AFK channel is set up for this guild.
+    If [None][], then no AFK channel is set up for this guild.
     """
 
     afk_timeout: datetime.timedelta = attrs.field(eq=False, hash=False, repr=False)
@@ -2587,7 +2587,7 @@ class Guild(PartialGuild):
     """The hash for the guild's banner.
 
     This is only present if the guild has [hikari.guilds.GuildFeature.BANNER][] in
-    [hikari.guilds.Guild.features][] for this guild. For all other purposes, it is `None`.
+    [hikari.guilds.Guild.features][] for this guild. For all other purposes, it is [None][].
     """
 
     default_message_notifications: typing.Union[GuildMessageNotificationsLevel, int] = attrs.field(
@@ -2599,7 +2599,7 @@ class Guild(PartialGuild):
     """The guild's description.
 
     This is only present if certain [hikari.guilds.GuildFeature][]'s are set in
-    [hikari.guilds.Guild.features][] for this guild. Otherwise, this will always be `None`.
+    [hikari.guilds.Guild.features][] for this guild. Otherwise, this will always be [None][].
     """
 
     discovery_splash_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
@@ -2613,13 +2613,13 @@ class Guild(PartialGuild):
     is_widget_enabled: typing.Optional[bool] = attrs.field(eq=False, hash=False, repr=False)
     """Describes whether the guild widget is enabled or not.
 
-    If this information is not present, this will be `None`.
+    If this information is not present, this will be [None][].
     """
 
     max_video_channel_users: typing.Optional[int] = attrs.field(eq=False, hash=False, repr=False)
     """The maximum number of users allowed in a video channel together.
 
-    This information may not be present, in which case, it will be `None`.
+    This information may not be present, in which case, it will be [None][].
     """
 
     mfa_level: typing.Union[GuildMFALevel, int] = attrs.field(eq=False, hash=False, repr=False)
@@ -2638,7 +2638,7 @@ class Guild(PartialGuild):
     premium_subscription_count: typing.Optional[int] = attrs.field(eq=False, hash=False, repr=False)
     """The number of nitro boosts that the server currently has.
 
-    This information may not be present, in which case, it will be `None`.
+    This information may not be present, in which case, it will be [None][].
     """
 
     premium_tier: typing.Union[GuildPremiumTier, int] = attrs.field(eq=False, hash=False, repr=False)
@@ -2648,13 +2648,13 @@ class Guild(PartialGuild):
     """The channel ID of the channel where admins and moderators receive notices from Discord.
 
     This is only present if [hikari.guilds.GuildFeature.COMMUNITY][] is in [hikari.guilds.Guild.features][] for
-    this guild. For all other purposes, it should be considered to be `None`.
+    this guild. For all other purposes, it should be considered to be [None][].
     """
 
     rules_channel_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the channel where rules and guidelines will be displayed.
 
-    If the [hikari.guilds.GuildFeature.COMMUNITY][] feature is not defined, then this is `None`.
+    If the [hikari.guilds.GuildFeature.COMMUNITY][] feature is not defined, then this is [None][].
     """
 
     splash_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
@@ -2667,7 +2667,7 @@ class Guild(PartialGuild):
     """
 
     system_channel_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
-    """The ID of the system channel or `None` if it is not enabled.
+    """The ID of the system channel or [None][] if it is not enabled.
 
     Welcome messages and Nitro boost messages may be sent to this channel.
     """
@@ -2676,7 +2676,7 @@ class Guild(PartialGuild):
     """The vanity URL code for the guild's vanity URL.
 
     This is only present if [hikari.guilds.GuildFeature.VANITY_URL][] is in [hikari.guilds.Guild.features][] for
-    this guild. If not, this will always be `None`.
+    this guild. If not, this will always be [None][].
     """
 
     verification_level: typing.Union[GuildVerificationLevel, int] = attrs.field(eq=False, hash=False, repr=False)
@@ -2686,7 +2686,7 @@ class Guild(PartialGuild):
     """The channel ID that the widget's generated invite will send the user to.
 
     If this information is unavailable or this is not enabled for the guild then
-    this will be `None`.
+    this will be [None][].
     """
 
     nsfw_level: GuildNSFWLevel = attrs.field(eq=False, hash=False, repr=False)
@@ -2820,7 +2820,7 @@ class Guild(PartialGuild):
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL of the banner, or `None` if no banner is set.
+            The URL of the banner, or [None][] if no banner is set.
 
         Raises
         ------
@@ -2885,7 +2885,7 @@ class Guild(PartialGuild):
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL to the splash, or `None` if not set.
+            The URL to the splash, or [None][] if not set.
 
         Raises
         ------
@@ -2912,7 +2912,7 @@ class Guild(PartialGuild):
         Returns
         -------
         typing.Optional[hikari.channels.GuildChannel]
-            The object of the guild channel found in cache or `None`.
+            The object of the guild channel found in cache or [None][].
         """
         if not isinstance(self.app, traits.CacheAware):
             return None
@@ -2934,7 +2934,7 @@ class Guild(PartialGuild):
         Returns
         -------
         typing.Optional[Member]
-            The cached member object if found, else `None`.
+            The cached member object if found, else [None][].
         """
         if not isinstance(self.app, traits.CacheAware):
             return None
@@ -2947,7 +2947,7 @@ class Guild(PartialGuild):
         Returns
         -------
         typing.Optional[Member]
-            The cached member for this guild, or `None` if not known.
+            The cached member for this guild, or [None][] if not known.
         """
         if not isinstance(self.app, traits.ShardAware):
             return None
@@ -2971,7 +2971,7 @@ class Guild(PartialGuild):
         Returns
         -------
         typing.Optional[hikari.presences.MemberPresence]
-            The cached presence object if found, else `None`.
+            The cached presence object if found, else [None][].
         """
         if not isinstance(self.app, traits.CacheAware):
             return None
@@ -2991,7 +2991,7 @@ class Guild(PartialGuild):
         Returns
         -------
         typing.Optional[hikari.voices.VoiceState]
-            The cached voice state object if found, else `None`.
+            The cached voice state object if found, else [None][].
         """
         if not isinstance(self.app, traits.CacheAware):
             return None
@@ -3012,7 +3012,7 @@ class Guild(PartialGuild):
         -------
         typing.Optional[hikari.emojis.KnownCustomEmoji]
             The object of the custom emoji if found in cache, else
-            `None`.
+            [None][].
         """
         if not isinstance(self.app, traits.CacheAware):
             return None
@@ -3037,7 +3037,7 @@ class Guild(PartialGuild):
         -------
         typing.Optional[hikari.stickers.GuildSticker]
             The object of the sticker if found in cache, else
-            `None`.
+            [None][].
         """
         if not isinstance(self.app, traits.CacheAware):
             return None
@@ -3059,7 +3059,7 @@ class Guild(PartialGuild):
         Returns
         -------
         typing.Optional[Role]
-            The object of the role found in cache, else `None`.
+            The object of the role found in cache, else [None][].
         """
         if not isinstance(self.app, traits.CacheAware):
             return None
@@ -3095,12 +3095,12 @@ class Guild(PartialGuild):
     async def fetch_widget_channel(self) -> typing.Optional[channels_.GuildChannel]:
         """Fetch the widget channel.
 
-        This will be `None` if not set.
+        This will be [None][] if not set.
 
         Returns
         -------
         typing.Optional[hikari.channels.GuildChannel]
-            The channel the widget is linked to or else `None`.
+            The channel the widget is linked to or else [None][].
 
         Raises
         ------
@@ -3129,7 +3129,7 @@ class Guild(PartialGuild):
         Returns
         -------
         typing.Optional[hikari.channels.GuildVoiceChannel]
-            The AFK channel or `None` if not enabled.
+            The AFK channel or [None][] if not enabled.
 
         Raises
         ------
@@ -3158,7 +3158,7 @@ class Guild(PartialGuild):
         Returns
         -------
         typing.Optional[hikari.channels.GuildTextChannel]
-            The system channel for this guild or `None` if not
+            The system channel for this guild or [None][] if not
             enabled.
 
         Raises
@@ -3185,12 +3185,12 @@ class Guild(PartialGuild):
     async def fetch_rules_channel(self) -> typing.Optional[channels_.GuildTextChannel]:
         """Fetch the channel where guilds display rules and guidelines.
 
-        If the [hikari.guilds.GuildFeature.COMMUNITY][] feature is not defined, then this is `None`.
+        If the [hikari.guilds.GuildFeature.COMMUNITY][] feature is not defined, then this is [None][].
 
         Returns
         -------
         typing.Optional[hikari.channels.GuildTextChannel]
-            The channel where the rules of the guild are specified or else `None`.
+            The channel where the rules of the guild are specified or else [None][].
 
         Raises
         ------
@@ -3217,7 +3217,7 @@ class Guild(PartialGuild):
         """Fetch channel ID of the channel where admins and moderators receive notices from Discord.
 
         This is only present if [hikari.guilds.GuildFeature.COMMUNITY][] is in [hikari.guilds.Guild.features][] for
-        this guild. For all other purposes, it should be considered to be `None`.
+        this guild. For all other purposes, it should be considered to be [None][].
 
         Returns
         -------
@@ -3266,19 +3266,19 @@ class RESTGuild(Guild):
     approximate_active_member_count: typing.Optional[int] = attrs.field(eq=False, hash=False, repr=False)
     """The approximate number of members in the guild that are not offline.
 
-    This will be `None` when creating a guild.
+    This will be [None][] when creating a guild.
     """
 
     approximate_member_count: typing.Optional[int] = attrs.field(eq=False, hash=False, repr=False)
     """The approximate number of members in the guild.
 
-    This will be `None` when creating a guild.
+    This will be [None][] when creating a guild.
     """
 
     max_presences: typing.Optional[int] = attrs.field(eq=False, hash=False, repr=False)
     """The maximum number of presences for the guild.
 
-    If `None`, then there is no limit.
+    If [None][], then there is no limit.
     """
 
     max_members: int = attrs.field(eq=False, hash=False, repr=False)
@@ -3294,7 +3294,7 @@ class GatewayGuild(Guild):
 
     This information is only available if the guild was sent via a `GUILD_CREATE`
     event. If the guild is received from any other place, this will always be
-    `None`.
+    [None][].
 
     The implications of a large guild are that presence information will not be
     sent about members who are offline or invisible.
@@ -3305,7 +3305,7 @@ class GatewayGuild(Guild):
 
     This information is only available if the guild was sent via a `GUILD_CREATE`
     event. If the guild is received from any other place, this will always be
-    `None`.
+    [None][].
     """
 
     member_count: typing.Optional[int] = attrs.field(eq=False, hash=False, repr=False)
@@ -3313,5 +3313,5 @@ class GatewayGuild(Guild):
 
     This information is only available if the guild was sent via a `GUILD_CREATE`
     event. If the guild is received from any other place, this will always be
-    `None`.
+    [None][].
     """

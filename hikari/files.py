@@ -265,7 +265,7 @@ def guess_file_extension(mimetype: str) -> typing.Optional[str]:
     Returns
     -------
     typing.Optional[str]
-        The file extension, prepended with a [`.`][]. If no match was found,
+        The file extension, prepended with a `.`. If no match was found,
         return [None][].
     """
     return mimetypes.guess_extension(mimetype)
@@ -524,7 +524,7 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
             If [None][], then the default executor is used for the
             current event loop.
         head_only : bool
-            If `True`, then only the headers for the HTTP resource this
+            If [True][], then only the headers for the HTTP resource this
             object points to will be fetched without downloading the entire
             content, which can be significantly faster if you are scanning
             file types in messages, for example.
@@ -689,7 +689,7 @@ class WebResource(Resource[WebReader], abc.ABC):
         executor : typing.Optional[concurrent.futures.Executor]
             Not used. Provided only to match the underlying interface.
         head_only : bool
-            If `True`, then the implementation may only retrieve HEAD
+            If [True][], then the implementation may only retrieve HEAD
             information if supported. This currently only has any
             effect for web requests.
 
@@ -919,7 +919,7 @@ class File(Resource[ThreadedFileReader]):
             [None][], the default executor for the running event loop
             will be used instead.
 
-            Only [concurrent.futures.TheadPoolExecutor][] is supported.
+            Only [concurrent.futures.ThreadPoolExecutor][] is supported.
         head_only : bool
             Not used. Provided only to match the underlying interface.
 

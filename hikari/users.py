@@ -614,7 +614,7 @@ class User(PartialUser, abc.ABC):
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
             animated).
 
-            If `None`, then the correct default extension is
+            If [None][], then the correct default extension is
             determined based on whether the banner is animated or not.
         size : int
             The size to set for the URL.
@@ -623,7 +623,7 @@ class User(PartialUser, abc.ABC):
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL to the banner, or `None` if not present.
+            The URL to the banner, or [None][] if not present.
 
         Raises
         ------
@@ -738,10 +738,10 @@ class UserImpl(PartialUserImpl, User):
     """The user's global name."""
 
     avatar_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
-    """The user's avatar hash, if they have one, otherwise `None`."""
+    """The user's avatar hash, if they have one, otherwise [None][]."""
 
     banner_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
-    """Banner hash of the user, if they have one, otherwise `None`"""
+    """Banner hash of the user, if they have one, otherwise [None][]"""
 
     accent_color: typing.Optional[colors.Color] = attrs.field(eq=False, hash=False, repr=False)
     """The custom banner color for the user, if set.
@@ -750,10 +750,10 @@ class UserImpl(PartialUserImpl, User):
     """
 
     is_bot: bool = attrs.field(eq=False, hash=False, repr=True)
-    """`True` if this user is a bot account, `False` otherwise."""
+    """[True][] if this user is a bot account, [False][] otherwise."""
 
     is_system: bool = attrs.field(eq=False, hash=False, repr=True)
-    """`True` if this user is a system account, `False` otherwise."""
+    """[True][] if this user is a system account, [False][] otherwise."""
 
     flags: UserFlag = attrs.field(eq=False, hash=False, repr=True)
     """The public flags for this user."""
@@ -775,21 +775,21 @@ class OwnUser(UserImpl):
     is_verified: typing.Optional[bool] = attrs.field(eq=False, hash=False, repr=False)
     """Whether the email for this user's account has been verified.
 
-    Will be `None` if retrieved through the OAuth2 flow without the `email`
+    Will be [None][] if retrieved through the OAuth2 flow without the `email`
     scope.
     """
 
     email: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """The user's set email.
 
-    Will be `None` if retrieved through OAuth2 flow without the `email`
-    scope. Will always be `None` for bot users.
+    Will be [None][] if retrieved through OAuth2 flow without the `email`
+    scope. Will always be [None][] for bot users.
     """
 
     premium_type: typing.Union[PremiumType, int, None] = attrs.field(eq=False, hash=False, repr=False)
     """The type of Nitro Subscription this user account had.
 
-    This will always be `None` for bots.
+    This will always be [None][] for bots.
     """
 
     async def fetch_self(self) -> OwnUser:
