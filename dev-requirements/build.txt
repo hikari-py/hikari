@@ -1,2 +1,2 @@
 setuptools>=65.2.0
-wheel==0.42.0
+wheel==0.43.0
