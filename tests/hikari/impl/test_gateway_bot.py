@@ -934,7 +934,7 @@ class TestGatewayBot:
                 large_threshold=1000,
                 shard_id=1,
                 shard_count=3,
-                url="https://some.website",
+                gateway_url="https://some.website",
             )
 
         shard.assert_called_once_with(
@@ -975,7 +975,7 @@ class TestGatewayBot:
                     large_threshold=1000,
                     shard_id=1,
                     shard_count=3,
-                    url="https://some.website",
+                    gateway_url="https://some.website",
                 )
 
         assert bot._shards == {}
@@ -1001,7 +1001,7 @@ class TestGatewayBot:
                     large_threshold=1000,
                     shard_id=1,
                     shard_count=3,
-                    url="https://some.website",
+                    gateway_url="https://some.website",
                 )
 
         assert bot._shards == {}

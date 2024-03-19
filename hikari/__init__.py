@@ -100,10 +100,7 @@ from hikari.files import Pathish
 from hikari.files import Rawish
 from hikari.files import Resourceish
 from hikari.guilds import *
-from hikari.impl import ClientCredentialsStrategy
-from hikari.impl import GatewayBot
-from hikari.impl import RESTApp
-from hikari.impl import RESTBot
+from hikari.impl import *
 from hikari.intents import *
 from hikari.interactions.base_interactions import *
 from hikari.interactions.command_interactions import *

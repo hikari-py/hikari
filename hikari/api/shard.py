@@ -104,6 +104,21 @@ class GatewayShard(abc.ABC):
     def shard_count(self) -> int:
         """Return the total number of shards expected in the entire application."""
 
+    @property
+    @abc.abstractmethod
+    def session_id(self) -> typing.Optional[str]:
+        """The session id for the shard."""
+
+    @property
+    @abc.abstractmethod
+    def seq(self) -> typing.Optional[int]:
+        """The sequence number for the shard."""
+
+    @property
+    @abc.abstractmethod
+    def resume_gateway_url(self) -> typing.Optional[str]:
+        """The resume gateway url for the shard."""
+
     @abc.abstractmethod
     def get_user_id(self) -> snowflakes.Snowflake:
         """Return the user ID.
