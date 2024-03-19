@@ -108,12 +108,12 @@ class GuildEvent(shard_events.ShardEvent, abc.ABC):
     def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
         """Get the cached guild that this event relates to, if known.
 
-        If not known, this will return [None][] instead.
+        If not known, this will return [`None`][] instead.
 
         Returns
         -------
         typing.Optional[hikari.guilds.GatewayGuild]
-            The guild this event relates to, or [None][] if not known.
+            The guild this event relates to, or [`None`][] if not known.
         """
         if not isinstance(self.app, traits.CacheAware):
             return None
@@ -144,8 +144,8 @@ class GuildAvailableEvent(GuildVisibilityEvent):
 
     !!! note
         Some fields like `members` and `presences` are included here but not on
-        the other [hikari.events.guild_events.GuildUpdateEvent][] and
-        [hikari.events.guild_events.GuildUnavailableEvent][] guild visibility event models.
+        the other [`hikari.events.guild_events.GuildUpdateEvent`][] and
+        [`hikari.events.guild_events.GuildUnavailableEvent`][] guild visibility event models.
     """
 
     shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
@@ -181,7 +181,7 @@ class GuildAvailableEvent(GuildVisibilityEvent):
     chunk_nonce: typing.Optional[str] = attrs.field(repr=False, default=None)
     """Nonce used to request the member chunks for this guild.
 
-    This will be [None][] if no chunks were requested.
+    This will be [`None`][] if no chunks were requested.
 
     !!! note
         This is a synthetic field.
@@ -206,8 +206,8 @@ class GuildJoinEvent(GuildVisibilityEvent):
 
     !!! note
         Some fields like `members` and `presences` are included here but not on
-        the other [hikari.events.guild_events.GuildUpdateEvent][]
-        and [hikari.events.guild_events.GuildUnavailableEvent][] guild visibility event models.
+        the other [`hikari.events.guild_events.GuildUpdateEvent`][]
+        and [`hikari.events.guild_events.GuildUnavailableEvent`][] guild visibility event models.
     """
 
     shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
@@ -243,7 +243,7 @@ class GuildJoinEvent(GuildVisibilityEvent):
     chunk_nonce: typing.Optional[str] = attrs.field(repr=False, default=None)
     """Nonce used to request the member chunks for this guild.
 
-    This will be [None][] if no chunks were requested.
+    This will be [`None`][] if no chunks were requested.
 
     !!! note
         This is a synthetic field.
@@ -281,7 +281,7 @@ class GuildLeaveEvent(GuildVisibilityEvent):
     old_guild: typing.Optional[guilds.GatewayGuild] = attrs.field()
     """The old guild object.
 
-    This will be [None][] if the guild missing from the cache.
+    This will be [`None`][] if the guild missing from the cache.
     """
 
     if typing.TYPE_CHECKING:
@@ -317,7 +317,7 @@ class GuildUpdateEvent(GuildEvent):
     old_guild: typing.Optional[guilds.GatewayGuild] = attrs.field()
     """The old guild object.
 
-    This will be [None][] if the guild missing from the cache.
+    This will be [`None`][] if the guild missing from the cache.
     """
 
     guild: guilds.GatewayGuild = attrs.field()
@@ -438,7 +438,7 @@ class EmojisUpdateEvent(GuildEvent):
     old_emojis: typing.Optional[typing.Sequence[emojis_.KnownCustomEmoji]] = attrs.field()
     """Sequence of all old emojis in this guild.
 
-    This will be [None][] if it's missing from the cache.
+    This will be [`None`][] if it's missing from the cache.
     """
 
     emojis: typing.Sequence[emojis_.KnownCustomEmoji] = attrs.field()
@@ -473,7 +473,7 @@ class StickersUpdateEvent(GuildEvent):
     old_stickers: typing.Optional[typing.Sequence[stickers_.GuildSticker]] = attrs.field()
     """Sequence of all old stickers in this guild.
 
-    This will be [None][] if it's missing from the cache.
+    This will be [`None`][] if it's missing from the cache.
     """
 
     stickers: typing.Sequence[stickers_.GuildSticker] = attrs.field()
@@ -632,7 +632,7 @@ class PresenceUpdateEvent(shard_events.ShardEvent):
     old_presence: typing.Optional[presences_.MemberPresence] = attrs.field()
     """The old member presence object.
 
-    This will be [None][] if the member presence missing from the cache.
+    This will be [`None`][] if the member presence missing from the cache.
     """
 
     presence: presences_.MemberPresence = attrs.field()
@@ -644,7 +644,7 @@ class PresenceUpdateEvent(shard_events.ShardEvent):
     This is a partial user object that only contains the fields that were
     updated on the user profile.
 
-    Will be [None][] if the user itself did not change.
+    Will be [`None`][] if the user itself did not change.
     This is always the case if the user only updated their member
     representation and did not change their user profile directly.
     """
@@ -670,7 +670,7 @@ class PresenceUpdateEvent(shard_events.ShardEvent):
         Returns
         -------
         typing.Optional[hikari.users.User]
-            The full cached user, or [None][] if not cached.
+            The full cached user, or [`None`][] if not cached.
         """
         if not isinstance(self.app, traits.CacheAware):
             return None

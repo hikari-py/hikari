@@ -74,7 +74,7 @@ until we receive a response from this endpoint, we have no idea what our rate
 limits could be, nor the bucket that they sit in. This is usually not
 problematic, as the first request to an endpoint should never be rate limited
 unless you are hitting it from elsewhere in the same time window outside your
-`hikari.applications`. To manage this situation, unknown endpoints are allocated to
+[`hikari.applications`][]. To manage this situation, unknown endpoints are allocated to
 a special unlimited bucket until they have an initial bucket hash code allocated
 from a response. Once this happens, the route is reallocated a dedicated bucket.
 Unknown buckets have a hardcoded initial hash code internally.
@@ -82,7 +82,7 @@ Unknown buckets have a hardcoded initial hash code internally.
 Initially acquiring time on a bucket
 ------------------------------------
 
-Each time you call [hikari.impl.buckets.RESTBucket.acquire][] a request
+Each time you call [`hikari.impl.buckets.RESTBucket.acquire`][] a request
 timeslice for a given `Route`, several things happen. The first is that we
 attempt to find the existing bucket for that route, if there is one, or get an
 unknown bucket otherwise. This is done by creating a real bucket hash from the
@@ -92,9 +92,9 @@ codes, or to the unknown bucket hash code if not yet known. This initial hash is
 processed by the `CompiledRoute` to provide the real bucket
 hash we need to get the route's bucket object internally.
 
-The [hikari.impl.buckets.RESTBucket.acquire][] method will take the
+The [`hikari.impl.buckets.RESTBucket.acquire`][] method will take the
 bucket and acquire a new timeslice on it. This takes the form of a
-[asyncio.Future][] that is awaited and will complete once the caller is allowed
+[`asyncio.Future`][] that is awaited and will complete once the caller is allowed
 to make a request. Most of the time, this is done instantly, but if the bucket
 has an active rate limit preventing requests being sent, then the future will
 be paused until the rate limit is over. This may be longer than the rate limit
@@ -108,11 +108,11 @@ easily begin to re-ratelimit itself if needed. Once the task is complete, it
 tidies itself up and disposes of itself. This task will complete once the queue
 becomes empty.
 
-The result of [hikari.impl.buckets.RESTBucketManager.acquire_bucket][] is an async
+The result of [`hikari.impl.buckets.RESTBucketManager.acquire_bucket`][] is an async
 context manager that must be acquired during the entirety of the request and
 released once it is done (in reality, it is just a
-[hikari.impl.buckets.RESTBucket][], but we want the ratelimit update to be
-forced through [hikari.impl.buckets.RESTBucketManager.update_rate_limits][]
+[`hikari.impl.buckets.RESTBucket`][], but we want the ratelimit update to be
+forced through [`hikari.impl.buckets.RESTBucketManager.update_rate_limits`][]
 to keep proper state)
 
 Handling the rate limit headers of a response
@@ -123,19 +123,19 @@ the vital rate limit headers manually and parse them to the correct data types.
 These headers are:
 
 * `X-RateLimit-Limit`:
-    an [int][] describing the max requests in the bucket from empty to
+    an [`int`][] describing the max requests in the bucket from empty to
     being rate limited.
 * `X-RateLimit-Remaining`:
-    an [int][] describing the remaining number of requests before rate
+    an [`int`][] describing the remaining number of requests before rate
     limiting occurs in the current window.
 * `X-RateLimit-Bucket`:
-    a [str][] containing the initial bucket hash.
+    a [`str`][] containing the initial bucket hash.
 * `X-RateLimit-Reset-After`:
-    a [float][] containing the number of seconds when the current rate
+    a [`float`][] containing the number of seconds when the current rate
     limit bucket will reset with decimal millisecond precision.
 
 Each of the above values should be passed to the
-[hikari.impl.buckets.RESTBucketManager.update_rate_limits][] method to
+[`hikari.impl.buckets.RESTBucketManager.update_rate_limits`][] method to
 ensure that the bucket you acquired time from is correctly updated should
 Discord decide to alter their ratelimits on the fly without warning (including
 timings and the bucket).
@@ -146,16 +146,16 @@ information in each bucket you use.
 Tidying up
 ----------
 
-To prevent unused buckets cluttering up memory, each [hikari.impl.buckets.RESTBucketManager][]
-instance spins up a [asyncio.Task][] that periodically locks the bucket list
+To prevent unused buckets cluttering up memory, each [`hikari.impl.buckets.RESTBucketManager`][]
+instance spins up a [`asyncio.Task`][] that periodically locks the bucket list
 (not threadsafe, only using the concept of asyncio not yielding in regular
 functions) and disposes of any clearly stale buckets that are no longer needed.
 These will be recreated again in the future if they are needed.
 
 When shutting down an application, one must remember to call
-[hikari.impl.buckets.RESTBucketManager.close][]. This will ensure the
+[`hikari.impl.buckets.RESTBucketManager.close`][]. This will ensure the
 garbage collection task is stopped, and will also ensure any remaining futures
-in any bucket queues have an [asyncio.CancelledError][] set on them to prevent
+in any bucket queues have an [`asyncio.CancelledError`][] set on them to prevent
 deadlocking ratelimited calls that may be waiting to be unlocked.
 
 Body-field-specific rate limiting
@@ -168,11 +168,11 @@ on what attributes you send in a JSON or form data payload.
 
 No information is sent in headers about these specific limits. You will only
 be made aware that they exist once you get ratelimited. In the 429 ratelimited
-response, you will have the `"global"` attribute set to [False][], and a
+response, you will have the `"global"` attribute set to [`False`][], and a
 `"reset_after"` attribute that differs entirely to the `X-RateLimit-Reset-After`
 header. Thus, it is important to not assume the value in the 429 response
 for the reset time is the same as the one in the bucket headers. hikari's
-[hikari.api.rest.RESTClient][] implementation specifically uses the value
+[`hikari.api.rest.RESTClient`][] implementation specifically uses the value
 furthest in the future when working out which bucket to adhere to.
 
 It is worth remembering that there is an API limit to the number of 401s,
@@ -220,7 +220,7 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
     Component to represent an active rate limit bucket on a specific HTTP route
     with a specific major parameter combo.
 
-    This is somewhat similar to the [hikari.impl.rate_limits.WindowedBurstRateLimiter][] in how it
+    This is somewhat similar to the [`hikari.impl.rate_limits.WindowedBurstRateLimiter`][] in how it
     works.
 
     This algorithm will use fixed-period time windows that have a given limit
@@ -232,7 +232,7 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
     capacity to zero, and tasks that are queued will start being able to drip
     again.
 
-    Additional logic is provided by the [hikari.impl.buckets.RESTBucket.update_rate_limit][] call
+    Additional logic is provided by the [`hikari.impl.buckets.RESTBucket.update_rate_limit`][] call
     which allows dynamically changing the enforced rate limits at any time.
     """
 
@@ -275,9 +275,9 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
         """Acquire time and the lock on this bucket.
 
         !!! note
-            You should afterwards invoke [hikari.impl.buckets.RESTBucket.update_rate_limit][] to
+            You should afterwards invoke [`hikari.impl.buckets.RESTBucket.update_rate_limit`][] to
             update any rate limit information you are made aware of and
-            [hikari.impl.buckets.RESTBucket.release][] to release the lock.
+            [`hikari.impl.buckets.RESTBucket.release`][] to release the lock.
 
         Raises
         ------
@@ -327,8 +327,8 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
         """Update the rate limit information.
 
         !!! note
-            The `reset_at` epoch is expected to be a [time.monotonic][]
-            monotonic epoch, rather than a [time.time][] date-based epoch.
+            The `reset_at` epoch is expected to be a [`time.monotonic`][]
+            monotonic epoch, rather than a [`time.time`][] date-based epoch.
 
         Parameters
         ----------
@@ -421,7 +421,7 @@ class RESTBucketManager:
         poll_period : float
             Period to poll the garbage collector at in seconds.
         expire_after : float
-            Time after which the last [hikari.impl.buckets.RESTBucket.reset_at][] was hit for a bucket to
+            Time after which the last [`hikari.impl.buckets.RESTBucket.reset_at`][] was hit for a bucket to
             remove it. Higher values will retain unneeded ratelimit info for
             longer, but may produce more effective rate-limiting logic as a
             result. Using `0` will make the bucket get garbage collected as soon
@@ -509,7 +509,7 @@ class RESTBucketManager:
 
         !!! note
             You MUST keep the context manager acquired during the full duration
-            of the request: from making the request until calling [hikari.impl.buckets.RESTBucket.update_rate_limit][].
+            of the request: from making the request until calling [`hikari.impl.buckets.RESTBucket.update_rate_limit`][].
 
         Parameters
         ----------
@@ -562,11 +562,11 @@ class RESTBucketManager:
         bucket_header : str
             The `X-RateLimit-Bucket` header that was provided in the response.
         remaining_header : int
-            The `X-RateLimit-Remaining` header cast to an [int][].
+            The `X-RateLimit-Remaining` header cast to an [`int`][].
         limit_header : int
-            The `X-RateLimit-Limit` header cast to an [int][].
+            The `X-RateLimit-Limit` header cast to an [`int`][].
         reset_after : float
-            The `X-RateLimit-Reset-After` header cast to a [float][].
+            The `X-RateLimit-Reset-After` header cast to a [`float`][].
         """
         if not self._gc_task:
             raise errors.ComponentStateConflictError("Cannot interact with an inactive bucket manager")

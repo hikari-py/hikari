@@ -22,7 +22,7 @@
 # SOFTWARE.
 """Basic lazy ratelimit systems for asyncio.
 
-See [hikari.impl.buckets][] for HTTP-specific rate-limiting logic.
+See [`hikari.impl.buckets`][] for HTTP-specific rate-limiting logic.
 """
 
 from __future__ import annotations
@@ -92,7 +92,7 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
     """The name of the rate limiter."""
 
     throttle_task: typing.Optional[asyncio.Task[typing.Any]]
-    """The throttling task, or [None][] if it is not running."""
+    """The throttling task, or [`None`][] if it is not running."""
 
     queue: typing.List[asyncio.Future[typing.Any]]
     """The queue of any futures under a rate limit."""
@@ -130,7 +130,7 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
 
     @property
     def is_empty(self) -> bool:
-        """Return [True][] if no futures are on the queue being rate limited."""
+        """Return [`True`][] if no futures are on the queue being rate limited."""
         return len(self.queue) == 0
 
 
@@ -139,11 +139,11 @@ class ManualRateLimiter(BurstRateLimiter):
     """Rate limit handler for the global HTTP rate limit.
 
     This is a non-preemptive rate limiting algorithm that will always return
-    completed futures until [hikari.impl.rate_limits.ManualRateLimiter.throttle][] is invoked. Once this
-    is invoked, any subsequent calls to [hikari.impl.rate_limits.ManualRateLimiter.acquire][] will return
+    completed futures until [`hikari.impl.rate_limits.ManualRateLimiter.throttle`][] is invoked. Once this
+    is invoked, any subsequent calls to [`hikari.impl.rate_limits.ManualRateLimiter.acquire`][] will return
     incomplete futures that will be enqueued to an internal queue. A task will
     be spun up to wait for a period of time given to the
-    [hikari.impl.rate_limits.ManualRateLimiter.throttle][]. Once that has passed, the lock will begin to
+    [`hikari.impl.rate_limits.ManualRateLimiter.throttle`][]. Once that has passed, the lock will begin to
     re-consume incomplete futures on the queue, completing them.
 
     Triggering a throttle when it is already set will cancel the current
@@ -161,7 +161,7 @@ class ManualRateLimiter(BurstRateLimiter):
     # <<inherited docstring from BurstRateLimiter>>.
 
     reset_at: typing.Optional[float]
-    """The monotonic [time.monotonic][] timestamp at which the ratelimit gets lifted."""
+    """The monotonic [`time.monotonic`][] timestamp at which the ratelimit gets lifted."""
 
     def __init__(self) -> None:
         super().__init__("global")
@@ -190,13 +190,13 @@ class ManualRateLimiter(BurstRateLimiter):
         rate limits that occur in the meantime.
 
         !!! note
-            This will invoke [hikari.impl.rate_limits.ManualRateLimiter.unlock_later][] as a scheduled
+            This will invoke [`hikari.impl.rate_limits.ManualRateLimiter.unlock_later`][] as a scheduled
             task in the future (it will not await it to finish).
 
-            When the [hikari.impl.rate_limits.ManualRateLimiter.unlock_later][] coroutine function
+            When the [`hikari.impl.rate_limits.ManualRateLimiter.unlock_later`][] coroutine function
             completes, it should be expected to set the `throttle_task` to
-            [None][]. This means you can check if throttling is occurring
-            by checking if `throttle_task` is not [None][].
+            [`None`][]. This means you can check if throttling is occurring
+            by checking if `throttle_task` is not [`None`][].
 
             If this is invoked while another throttle is in progress, that one
             is cancelled and a new one is started. This enables new rate limits
@@ -219,12 +219,12 @@ class ManualRateLimiter(BurstRateLimiter):
 
         !!! warning
             You should not need to invoke this directly. Call
-            [hikari.impl.rate_limits.ManualRateLimiter.throttle][] instead.
+            [`hikari.impl.rate_limits.ManualRateLimiter.throttle`][] instead.
 
-            When the [hikari.impl.rate_limits.ManualRateLimiter.unlock_later][] coroutine function
+            When the [`hikari.impl.rate_limits.ManualRateLimiter.unlock_later`][] coroutine function
             completes, it should be expected to set the `throttle_task` to
-            [None][]. This means you can check if throttling is occurring
-            by checking if `throttle_task` is not [None][].
+            [`None`][]. This means you can check if throttling is occurring
+            by checking if `throttle_task` is not [`None`][].
 
         Parameters
         ----------
@@ -249,7 +249,7 @@ class ManualRateLimiter(BurstRateLimiter):
         Parameters
         ----------
         now : float
-            The monotonic [time.monotonic][] timestamp.
+            The monotonic [`time.monotonic`][] timestamp.
 
         Returns
         -------
@@ -269,7 +269,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
     Rate limiter for rate limits that last fixed periods of time with a
     fixed number of times it can be used in that time frame.
 
-    To use this, you should call [hikari.impl.rate_limits.WindowedBurstRateLimiter.acquire][] and await the
+    To use this, you should call [`hikari.impl.rate_limits.WindowedBurstRateLimiter.acquire`][] and await the
     result immediately before performing your rate-limited task.
 
     If the rate limit has been hit, acquiring time will return an incomplete
@@ -298,17 +298,17 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
     # <<inherited docstring from BurstRateLimiter>>.
 
     reset_at: float
-    """The [time.monotonic][] that the limit window ends at."""
+    """The [`time.monotonic`][] that the limit window ends at."""
 
     remaining: int
-    """The number of [hikari.impl.rate_limits.WindowedBurstRateLimiter.acquire][]'s
+    """The number of [`hikari.impl.rate_limits.WindowedBurstRateLimiter.acquire`][]'s
     left in this window before you will get rate limited."""
 
     period: float
     """How long the window lasts for from the start in seconds."""
 
     limit: int
-    """The maximum number of [hikari.impl.rate_limits.WindowedBurstRateLimiter.acquire][]'s
+    """The maximum number of [`hikari.impl.rate_limits.WindowedBurstRateLimiter.acquire`][]'s
     allowed in this time window."""
 
     def __init__(self, name: str, period: float, limit: int) -> None:
@@ -353,7 +353,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
         Parameters
         ----------
         now : float
-            The monotonic [time.monotonic][] timestamp.
+            The monotonic [`time.monotonic`][] timestamp.
 
         Returns
         -------
@@ -378,7 +378,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
         Parameters
         ----------
         now : float
-            The monotonic [time.monotonic][] timestamp.
+            The monotonic [`time.monotonic`][] timestamp.
 
         Returns
         -------
@@ -404,14 +404,14 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
 
         !!! note
             You should usually not need to invoke this directly, but if you do,
-            ensure to call it using [asyncio.create_task][], and store the
+            ensure to call it using [`asyncio.create_task`][], and store the
             task immediately in
-            [hikari.impl.rate_limits.WindowedBurstRateLimiter.throttle_task][].
+            [`hikari.impl.rate_limits.WindowedBurstRateLimiter.throttle_task`][].
 
             When this coroutine function completes, it will set the
-            [hikari.impl.rate_limits.WindowedBurstRateLimiter.throttle_task][]
-            to [None][]. This means you can check if throttling
-            is occurring by checking if it is not [None][].
+            [`hikari.impl.rate_limits.WindowedBurstRateLimiter.throttle_task`][]
+            to [`None`][]. This means you can check if throttling
+            is occurring by checking if it is not [`None`][].
         """
         while self.queue:
             sleep_for = self.get_time_until_reset(time.monotonic())
@@ -454,9 +454,9 @@ class ExponentialBackOff:
     Raises
     ------
     ValueError
-        If an [int][] that's too big to be represented as a
-        [float][] or a non-finite value is passed in place of a field
-        that's annotated as [float][].
+        If an [`int`][] that's too big to be represented as a
+        [`float`][] or a non-finite value is passed in place of a field
+        that's annotated as [`float`][].
     """
 
     __slots__: typing.Sequence[str] = ("base", "increment", "maximum", "jitter_multiplier")
@@ -468,7 +468,7 @@ class ExponentialBackOff:
     """The current increment."""
 
     maximum: float
-    """This is the max value the backoff can be in a single iteration before an [asyncio.TimeoutError][] is raised."""
+    """This is the max value the backoff can be in a single iteration before an [`asyncio.TimeoutError`][] is raised."""
 
     jitter_multiplier: typing.Final[float]
     """The multiplier for the random jitter."""

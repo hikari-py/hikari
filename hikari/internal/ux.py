@@ -79,7 +79,7 @@ def init_logging(
         If any handlers already exist, some opinionated defaults will be configured
         (mostly do to with logging efficiency and warning logging), but existing
         handlers will not be overwritten. You can disable this by passing
-        [None][] as the `flavor` parameter.
+        [`None`][] as the `flavor` parameter.
 
     !!! warning
         This function is blocking!
@@ -89,29 +89,29 @@ def init_logging(
     flavor : typing.Optional[None, str, int, typing.Dict[str, typing.Any], os.PathLike[str]]
         The hint for configuring logging.
 
-        This can be [None][] to not enable logging automatically.
+        This can be [`None`][] to not enable logging automatically.
 
-        If you pass a [str][] or a `int`, it is interpreted as
+        If you pass a [`str`][] or a [`int`][], it is interpreted as
         the global logging level to use, and should match one of `"DEBUG"`,
         `"INFO"`, `"WARNING"`, `"ERROR"` or `"CRITICAL"`.
         The configuration will be set up to use a `colorlog` coloured logger,
         and to use a sane logging format strategy. The output will be written
-        to [sys.stdout][] using this configuration.
+        to [`sys.stdout`][] using this configuration.
 
-        If you pass a [dict][], it is treated as the mapping to pass to
-        [logging.config.dictConfig][]. If the dict defines any handlers, default
+        If you pass a [`dict`][], it is treated as the mapping to pass to
+        [`logging.config.dictConfig`][]. If the dict defines any handlers, default
         handlers will not be setup if `incremental` is not specified.
 
-        If you pass a [str][] to an existing file or a [os.PathLike][], it is
-        interpreted as the file to load config from using [logging.config.fileConfig][].
+        If you pass a [`str`][] to an existing file or a [`os.PathLike`][], it is
+        interpreted as the file to load config from using [`logging.config.fileConfig`][].
 
         Note that `"TRACE_HIKARI"` is a library-specific logging level
         which is expected to be more verbose than `"DEBUG"`.
     allow_color : bool
-        If [False][], no colour is allowed. If [True][], the
+        If [`False`][], no colour is allowed. If [`True`][], the
         output device must be supported for colour to be enabled.
     force_color : bool
-        If [True][], always force colour.
+        If [`True`][], always force colour.
 
     Examples
     --------
@@ -250,7 +250,7 @@ def print_banner(
     force_color: bool,
     extra_args: typing.Optional[typing.Dict[str, str]] = None,
 ) -> None:
-    """Print a banner of choice to [sys.stdout][].
+    """Print a banner of choice to [`sys.stdout`][].
 
     Inspired by Spring Boot, we display an ASCII logo on startup. This is styled
     to grab the user's attention, and contains info such as the library version,
@@ -267,13 +267,13 @@ def print_banner(
     Parameters
     ----------
     package : typing.Optional[str]
-        The package to find the `banner.txt` in, or [None][] if no
+        The package to find the `banner.txt` in, or [`None`][] if no
         banner should be shown.
     allow_color : bool
-        If [False][], no colour is allowed. If [True][], the
+        If [`False`][], no colour is allowed. If [`True`][], the
         output device must be supported for colour to be enabled.
     force_color : bool
-        If [True][], always force colour.
+        If [`True`][], always force colour.
     extra_args : typing.Optional[typing.Dict[str, str]]
         If provided, extra $-substitutions to use when printing the banner.
         Default substitutions can not be overwritten.
@@ -336,23 +336,23 @@ def warn_if_not_optimized(suppress: bool) -> None:
 
 
 def supports_color(allow_color: bool, force_color: bool) -> bool:
-    """Return [True][] if the terminal device supports color output.
+    """Return [`True`][] if the terminal device supports color output.
 
     Parameters
     ----------
     allow_color : bool
-        If [False][], no color is allowed. If [True][], the
-        output device must be supported for this to return [True][].
+        If [`False`][], no color is allowed. If [`True`][], the
+        output device must be supported for this to return [`True`][].
     force_color : bool
-        If [True][], return [True][] always, otherwise only
-        return [True][] if the device supports color output and the
-        `allow_color` flag is not [False][].
+        If [`True`][], return [`True`][] always, otherwise only
+        return [`True`][] if the device supports color output and the
+        `allow_color` flag is not [`False`][].
 
     Returns
     -------
     bool
-        [True][] if color is allowed on the output terminal, or
-        [False][] otherwise.
+        [`True`][] if color is allowed on the output terminal, or
+        [`False`][] otherwise.
     """
     if not allow_color:
         return False

@@ -22,7 +22,7 @@
 # SOFTWARE.
 """Basic implementations of application components.
 
-These components implement the interfaces in [hikari.api][] to provide the
+These components implement the interfaces in [`hikari.api`][] to provide the
 baseline functionality. For most applications that do not have bespoke
 performance or structural requirements, you will want to use these
 implementations.

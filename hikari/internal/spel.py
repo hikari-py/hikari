@@ -34,9 +34,9 @@ Python lambdas are clunky, and using a nested function is nasty boilerplate.
 
 For applying `"bar.baz"` to `foo`, we assume `bar` is an attribute or property
 of `foo`, and `baz` is an attribute or property of `foo.bar`. We may instead
-want to invoke a method that takes no parameters (looking at `str.islower`, as
+want to invoke a method that takes no parameters (looking at [`str.islower`][], as
 an example. To do this, we append `()` onto the attribute name. For example,
-applying `author.username.islower()` to a [hikari.messages.Message][]
+applying `author.username.islower()` to a [`hikari.messages.Message`][]
 object.
 
 All expressions may start with a ``.``. You can negate the whole expression
@@ -44,7 +44,7 @@ by instead starting them with `!.`.
 
 You may also want to negate a condition. To do this, prepend `!` to the
 attribute name. For example, to check if a message was not made by a bot,
-you could run `author.!is_bot` on a [hikari.messages.Message][] object.
+you could run `author.!is_bot` on a [`hikari.messages.Message`][] object.
 Likewise, to check if the input was not a number, you could run
 `content.!isdigit()`.
 

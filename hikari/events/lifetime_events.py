@@ -57,7 +57,7 @@ class StartingEvent(base_events.Event):
         to try to access a database that has not yet connected fully).
 
     If you want to do something _after_ the application has initialized, you
-    should consider using [hikari.events.lifetime_events.StartingEvent][] instead.
+    should consider using [`hikari.events.lifetime_events.StartingEvent`][] instead.
     """
 
     app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
@@ -74,7 +74,7 @@ class StartedEvent(base_events.Event):
     initialized within a coroutine function.
 
     If you want to do something _before_ the application connects, you should
-    consider using [hikari.events.lifetime_events.StartingEvent][] instead.
+    consider using [`hikari.events.lifetime_events.StartingEvent`][] instead.
     """
 
     app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
@@ -99,7 +99,7 @@ class StoppingEvent(base_events.Event):
         on a connection still being available to complete.
 
     If you want to do something _after_ the disconnection has occurred, you
-    should consider using [hikari.events.lifetime_events.StoppingEvent][] instead.
+    should consider using [`hikari.events.lifetime_events.StoppingEvent`][] instead.
     """
 
     app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
@@ -123,7 +123,7 @@ class StoppedEvent(base_events.Event):
 
     If you want to do something when the application is preparing to shut down,
     but _before_ any connection to Discord is closed, you should consider using
-    [hikari.events.lifetime_events.StoppingEvent][] instead.
+    [`hikari.events.lifetime_events.StoppingEvent`][] instead.
     """
 
     app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})

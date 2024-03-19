@@ -110,17 +110,17 @@ class ChannelType(int, enums.Enum):
     """A channel that can be followed and can crosspost."""
 
     GUILD_NEWS_THREAD = 10
-    """A temporary sub-channel within a [hikari.channels.ChannelType.GUILD_NEWS][] channel."""
+    """A temporary sub-channel within a [`hikari.channels.ChannelType.GUILD_NEWS`][] channel."""
 
     GUILD_PUBLIC_THREAD = 11
-    """A temporary sub-channel within a [hikari.channels.ChannelType.GUILD_TEXT][] channel."""
+    """A temporary sub-channel within a [`hikari.channels.ChannelType.GUILD_TEXT`][] channel."""
 
     GUILD_PRIVATE_THREAD = 12
     """A temporary sub-channel with restricted access.
 
-    Like [hikari.channels.ChannelType.GUILD_PUBLIC_THREAD][], these exist within
-    [hikari.channels.ChannelType.GUILD_TEXT][] channels but can only be accessed by members who
-    are invited to them or have [hikari.permissions.Permissions.MANAGE_THREADS][] permission.
+    Like [`hikari.channels.ChannelType.GUILD_PUBLIC_THREAD`][], these exist within
+    [`hikari.channels.ChannelType.GUILD_TEXT`][] channels but can only be accessed by members who
+    are invited to them or have [`hikari.permissions.Permissions.MANAGE_THREADS`][] permission.
     """
 
     GUILD_STAGE = 13
@@ -192,15 +192,15 @@ class ChannelFollow:
         typing.Union[hikari.channels.GuildNewsChannel, hikari.channels.GuildTextChannel]
             The channel being followed.
 
-            While this will usually be [hikari.channels.GuildNewsChannel][], if the channel's
-            news status has been removed then this will be a [hikari.channels.GuildNewsChannel][].
+            While this will usually be [`hikari.channels.GuildNewsChannel`][], if the channel's
+            news status has been removed then this will be a [`hikari.channels.GuildNewsChannel`][].
 
         Raises
         ------
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [hikari.permissions.Permissions.VIEW_CHANNEL][] permission in the channel.
+            If you are missing the [`hikari.permissions.Permissions.VIEW_CHANNEL`][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -224,7 +224,7 @@ class ChannelFollow:
         Raises
         ------
         hikari.errors.ForbiddenError
-            If you are missing the [hikari.permissions.Permissions.MANAGE_WEBHOOKS][] permission in the guild or
+            If you are missing the [`hikari.permissions.Permissions.MANAGE_WEBHOOKS`][] permission in the guild or
             channel this follow is targeting.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
@@ -244,16 +244,16 @@ class ChannelFollow:
         """Get the channel being followed from the cache.
 
         !!! warning
-            This will always be [None][] if you are not
+            This will always be [`None`][] if you are not
             in the guild that this channel exists in.
 
         Returns
         -------
         typing.Union[hikari.channels.GuildNewsChannel, hikari.channels.GuildTextChannel, None]
             The object of the guild channel that was found in the cache or
-            [None][]. While this will usually be [hikari.channels.GuildNewsChannel][] or
-            [None][], if the channel referenced has since lost it's news
-            status then this will return a [hikari.channels.GuildNewsChannel][].
+            [`None`][]. While this will usually be [`hikari.channels.GuildNewsChannel`][] or
+            [`None`][], if the channel referenced has since lost it's news
+            status then this will return a [`hikari.channels.GuildNewsChannel`][].
         """
         if not isinstance(self.app, traits.CacheAware):
             return None
@@ -384,7 +384,7 @@ class PartialChannel(snowflakes.Unique):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [hikari.permissions.Permissions.MANAGE_CHANNELS][] permission in the channel.
+            If you are missing the [`hikari.permissions.Permissions.MANAGE_CHANNELS`][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -416,7 +416,7 @@ class TextableChannel(PartialChannel):
             This call is not a coroutine function, it returns a special type of
             lazy iterator that will perform API calls as you iterate across it,
             thus any errors documented below will happen then.
-            See [hikari.iterators][] for the full API for this iterator type.
+            See [`hikari.iterators`][] for the full API for this iterator type.
 
         Other Parameters
         ----------------
@@ -476,7 +476,7 @@ class TextableChannel(PartialChannel):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [hikari.permissions.Permissions.READ_MESSAGE_HISTORY][] in the channel.
+            If you are missing the [`hikari.permissions.Permissions.READ_MESSAGE_HISTORY`][] in the channel.
         hikari.errors.NotFoundError
             If the channel is not found or the message is not found in the
             given text channel.
@@ -521,15 +521,15 @@ class TextableChannel(PartialChannel):
         ----------
         content : hikari.undefined.UndefinedOr[typing.Any]
             If provided, the message contents. If
-            [hikari.undefined.UNDEFINED][], then nothing will be sent
+            [`hikari.undefined.UNDEFINED`][], then nothing will be sent
             in the content. Any other value here will be cast to a
-            [str][].
+            [`str`][].
 
-            If this is a [hikari.embeds.Embed][] and no `embed` nor `embeds` kwarg
+            If this is a [`hikari.embeds.Embed`][] and no `embed` nor `embeds` kwarg
             is provided, then this will instead update the embed. This allows
             for simpler syntax when sending an embed alone.
 
-            Likewise, if this is a [hikari.files.Resource][], then the
+            Likewise, if this is a [`hikari.files.Resource`][], then the
             content is instead treated as an attachment if no `attachment` and
             no `attachments` kwargs are provided.
 
@@ -542,26 +542,26 @@ class TextableChannel(PartialChannel):
             Attachments can be passed as many different things, to aid in
             convenience.
 
-            - If a [pathlib.PurePath][] or [str][] to a valid URL, the
+            - If a [`pathlib.PurePath`][] or [`str`][] to a valid URL, the
                 resource at the given URL will be streamed to Discord when
                 sending the message. Subclasses of
-                [hikari.files.WebResource][] such as
-                [hikari.files.URL][],
-                [hikari.messages.Attachment][],
-                [hikari.emojis.Emoji][],
-                [hikari.embeds.EmbedResource][], etc will also be uploaded this way.
+                [`hikari.files.WebResource`][] such as
+                [`hikari.files.URL`][],
+                [`hikari.messages.Attachment`][],
+                [`hikari.emojis.Emoji`][],
+                [`hikari.embeds.EmbedResource`][], etc will also be uploaded this way.
                 This will use bit-inception, so only a small percentage of the
                 resource will remain in memory at any one time, thus aiding in
                 scalability.
-            - If a [hikari.files.Bytes][] is passed, or a [str][]
+            - If a [`hikari.files.Bytes`][] is passed, or a [`str`][]
                 that contains a valid data URI is passed, then this is uploaded
                 with a randomized file name if not provided.
-            - If a [hikari.files.File][], [pathlib.PurePath][] or
-                [str][] that is an absolute or relative path to a file
+            - If a [`hikari.files.File`][], [`pathlib.PurePath`][] or
+                [`str`][] that is an absolute or relative path to a file
                 on your file system is passed, then this resource is uploaded
                 as an attachment using non-blocking code internally and streamed
                 using bit-inception where possible. This depends on the
-                type of [concurrent.futures.Executor][] that is being used for
+                type of [`concurrent.futures.Executor`][] that is being used for
                 the application (default is a thread pool which supports this
                 behaviour).
         attachments : hikari.undefined.UndefinedOr[typing.Sequence[hikari.files.Resourceish]]
@@ -603,25 +603,25 @@ class TextableChannel(PartialChannel):
 
             This will not do anything if not being used with `reply`.
         user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
-            If provided, and [True][], all mentions will be parsed.
-            If provided, and [False][], no mentions will be parsed.
+            If provided, and [`True`][], all mentions will be parsed.
+            If provided, and [`False`][], no mentions will be parsed.
             Alternatively this may be a collection of
-            [hikari.snowflakes.Snowflake][], or
-            [hikari.users.PartialUser][] derivatives to enforce mentioning
+            [`hikari.snowflakes.Snowflake`][], or
+            [`hikari.users.PartialUser`][] derivatives to enforce mentioning
             specific users.
         role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], bool]]
-            If provided, and [True][], all mentions will be parsed.
-            If provided, and [False][], no mentions will be parsed.
+            If provided, and [`True`][], all mentions will be parsed.
+            If provided, and [`False`][], no mentions will be parsed.
             Alternatively this may be a collection of
-            [hikari.snowflakes.Snowflake][], or
-            [hikari.guilds.PartialRole][] derivatives to enforce mentioning
+            [`hikari.snowflakes.Snowflake`][], or
+            [`hikari.guilds.PartialRole`][] derivatives to enforce mentioning
             specific roles.
         flags : hikari.undefined.UndefinedOr[hikari.messages.MessageFlag]
             If provided, optional flags to set on the message. If
-            [hikari.undefined.UNDEFINED][], then nothing is changed.
+            [`hikari.undefined.UNDEFINED`][], then nothing is changed.
 
             Note that some flags may not be able to be set. Currently the only
-            flags that can be set are [hikari.messages.MessageFlag.NONE][] and [hikari.messages.MessageFlag.SUPPRESS_EMBEDS][].
+            flags that can be set are [`hikari.messages.MessageFlag.NONE`][] and [`hikari.messages.MessageFlag.SUPPRESS_EMBEDS`][].
 
         Returns
         -------
@@ -711,7 +711,8 @@ class TextableChannel(PartialChannel):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the `READ_MESSAGES` in the channel.
+            If you are missing the [hikari.permissions.Permissions.VIEW_CHANNEL]
+            permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -736,7 +737,7 @@ class TextableChannel(PartialChannel):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [hikari.permissions.Permissions.MANAGE_MESSAGES][] in the channel.
+            If you are missing the [`hikari.permissions.Permissions.MANAGE_MESSAGES`][] in the channel.
         hikari.errors.NotFoundError
             If the channel is not found, or if the message does not exist in
             the given channel.
@@ -762,7 +763,7 @@ class TextableChannel(PartialChannel):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [hikari.permissions.Permissions.MANAGE_MESSAGES][] permission.
+            If you are missing the [`hikari.permissions.Permissions.MANAGE_MESSAGES`][] permission.
         hikari.errors.NotFoundError
             If the channel is not found or the message is not a pinned message
             in the given channel.
@@ -863,7 +864,7 @@ class GroupDMChannel(PrivateChannel):
     """Represents a group direct message channel.
 
     !!! note
-        This doesn't have the methods found on [hikari.channels.TextableChannel][]
+        This doesn't have the methods found on [`hikari.channels.TextableChannel`][]
         as bots cannot interact with a group DM that they own by sending or
         seeing messages in it.
     """
@@ -883,7 +884,7 @@ class GroupDMChannel(PrivateChannel):
     application_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the application that created the group DM.
 
-    If the group DM was not created by a bot, this will be [None][].
+    If the group DM was not created by a bot, this will be [`None`][].
     """
 
     def __str__(self) -> str:
@@ -912,7 +913,7 @@ class GroupDMChannel(PrivateChannel):
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL, or [None][] if no icon is present.
+            The URL, or [`None`][] if no icon is present.
 
         Raises
         ------
@@ -939,15 +940,15 @@ class GuildChannel(PartialChannel):
 
     For thread channels this will refer to the parent textable guild channel.
     For other guild channel types this will refer to the parent category and
-    if no parent category is set for the channel, this will be [None][].
-    For guild categories this will always be [None][].
+    if no parent category is set for the channel, this will be [`None`][].
+    For guild categories this will always be [`None`][].
     """
 
     @property
     def shard_id(self) -> typing.Optional[int]:
         """Return the shard ID for the shard.
 
-        This may be [None][] if the shard count is not known.
+        This may be [`None`][] if the shard count is not known.
         """
         if isinstance(self.app, traits.ShardAware):
             return snowflakes.calculate_shard_id(self.app, self.guild_id)
@@ -960,7 +961,7 @@ class GuildChannel(PartialChannel):
         Returns
         -------
         typing.Optional[hikari.guilds.Guild]
-            The linked guild object or [None][] if it's not cached.
+            The linked guild object or [`None`][] if it's not cached.
         """
         if not isinstance(self.app, traits.CacheAware):
             return None
@@ -1038,7 +1039,7 @@ class GuildChannel(PartialChannel):
             If provided, the new rate limit per user in the channel.
         region : hikari.undefined.UndefinedOr[typing.Union[hikari.voices.VoiceRegion, str]]
             If provided, the voice region to set for this channel. Passing
-            [None][] here will set it to "auto" mode where the used
+            [`None`][] here will set it to "auto" mode where the used
             region will be decided based on the first person who connects to it
             when it's empty.
         permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
@@ -1068,7 +1069,7 @@ class GuildChannel(PartialChannel):
             If provided, the new locked state for the thread. This only applies
             to threads.
 
-            If it's locked then only people with [hikari.permissions.Permissions.MANAGE_THREADS][] can unarchive it.
+            If it's locked then only people with [`hikari.permissions.Permissions.MANAGE_THREADS`][] can unarchive it.
         invitable : hikari.undefined.UndefinedOr[bool]
             If provided, the new setting for whether non-moderators can invite
             new members to a private thread. This only applies to threads.
@@ -1192,7 +1193,8 @@ class PermissibleGuildChannel(GuildChannel):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the `MANAGE_PERMISSIONS` permission in the channel.
+            If you are missing the [`MANAGE_PERMISSIONS`][hikari.permissions.Permissions.MANAGE_ROLES]
+            permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found or the target is not found if it is
             a role.
@@ -1227,7 +1229,8 @@ class PermissibleGuildChannel(GuildChannel):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the `MANAGE_PERMISSIONS` permission in the channel.
+            If you are missing the [`MANAGE_PERMISSIONS`][hikari.permissions.Permissions.MANAGE_ROLES]
+            permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found or the target is not found.
         hikari.errors.RateLimitTooLongError
@@ -1257,7 +1260,7 @@ class GuildCategory(PermissibleGuildChannel):
     parent_id: None = attrs.field(eq=False, hash=False, repr=True)
     """The ID of the parent channel the channel belongs to.
 
-    This is always [None][] for categories.
+    This is always [`None`][] for categories.
     """
 
 
@@ -1282,9 +1285,9 @@ class GuildTextChannel(PermissibleGuildChannel, TextableGuildChannel):
     If there is no rate limit, this will be 0 seconds.
 
     !!! note
-        Any user that has permissions allowing [hikari.permissions.Permissions.MANAGE_MESSAGES][],
-        [hikari.permissions.Permissions.MANAGE_CHANNELS][],
-        [hikari.permissions.Permissions.ADMINISTRATOR][] will not be limited.
+        Any user that has permissions allowing [`hikari.permissions.Permissions.MANAGE_MESSAGES`][],
+        [`hikari.permissions.Permissions.MANAGE_CHANNELS`][],
+        [`hikari.permissions.Permissions.ADMINISTRATOR`][] will not be limited.
         Likewise, bots will not be affected by this rate limit.
     """
 
@@ -1292,7 +1295,7 @@ class GuildTextChannel(PermissibleGuildChannel, TextableGuildChannel):
     """The timestamp of the last-pinned message.
 
     !!! note
-        This may be [None][] in several cases; Discord does not document what
+        This may be [`None`][] in several cases; Discord does not document what
         these cases are. Trust no one!
     """
 
@@ -1322,7 +1325,7 @@ class GuildNewsChannel(PermissibleGuildChannel, TextableGuildChannel):
     """The timestamp of the last-pinned message.
 
     !!! note
-        This may be [None][] in several cases; Discord does not document what
+        This may be [`None`][] in several cases; Discord does not document what
         these cases are. Trust no one!
     """
 
@@ -1343,7 +1346,7 @@ class GuildVoiceChannel(PermissibleGuildChannel, TextableGuildChannel):
     region: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """ID of the voice region for this voice channel.
 
-    If set to [None][] then this is set to "auto" mode where the used
+    If set to [`None`][] then this is set to "auto" mode where the used
     region will be decided based on the first person who connects to it when
     it's empty.
     """
@@ -1376,7 +1379,7 @@ class GuildStageChannel(PermissibleGuildChannel, TextableGuildChannel):
     region: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """ID of the voice region for this stage channel.
 
-    If set to [None][] then this is set to "auto" mode where the used
+    If set to [`None`][] then this is set to "auto" mode where the used
     region will be decided based on the first person who connects to it when
     it's empty.
     """
@@ -1439,8 +1442,8 @@ class ForumTag(snowflakes.Unique):
     moderated: bool = attrs.field(eq=False, hash=False, repr=False, default=False)
     """The whether this flag can only be applied by moderators.
 
-    Moderators are those with [hikari.permissions.Permissions.MANAGE_CHANNELS][]
-    or [hikari.permissions.Permissions.ADMINISTRATOR][] permissions.
+    Moderators are those with [`hikari.permissions.Permissions.MANAGE_CHANNELS`][]
+    or [`hikari.permissions.Permissions.ADMINISTRATOR`][] permissions.
     """
 
     _emoji: typing.Union[str, int, emojis.Emoji, None] = attrs.field(alias="emoji", default=None)
@@ -1486,9 +1489,9 @@ class GuildForumChannel(PermissibleGuildChannel):
     If there is no rate limit, this will be 0 seconds.
 
     !!! note
-        Any user that has permissions allowing [hikari.permissions.Permissions.MANAGE_MESSAGES][],
-        [hikari.permissions.Permissions.MANAGE_CHANNELS][],
-        [hikari.permissions.Permissions.ADMINISTRATOR][] will not be limited.
+        Any user that has permissions allowing [`hikari.permissions.Permissions.MANAGE_MESSAGES`][],
+        [`hikari.permissions.Permissions.MANAGE_CHANNELS`][],
+        [`hikari.permissions.Permissions.ADMINISTRATOR`][] will not be limited.
         Likewise, bots will not be affected by this rate limit.
     """
 
@@ -1498,9 +1501,9 @@ class GuildForumChannel(PermissibleGuildChannel):
     If there is no rate limit, this will be 0 seconds.
 
     !!! note
-        Any user that has permissions allowing [hikari.permissions.Permissions.MANAGE_MESSAGES][],
-        [hikari.permissions.Permissions.MANAGE_CHANNELS][],
-        [hikari.permissions.Permissions.ADMINISTRATOR][] will not be limited.
+        Any user that has permissions allowing [`hikari.permissions.Permissions.MANAGE_MESSAGES`][],
+        [`hikari.permissions.Permissions.MANAGE_CHANNELS`][],
+        [`hikari.permissions.Permissions.ADMINISTRATOR`][] will not be limited.
         Likewise, bots will not be affected by this rate limit.
     """
 
@@ -1514,7 +1517,7 @@ class GuildForumChannel(PermissibleGuildChannel):
     """The channel flags for this channel.
 
     !!! note
-        As of writing, the only flag that can be set is [hikari.channels.ChannelFlag.REQUIRE_TAG][].
+        As of writing, the only flag that can be set is [`hikari.channels.ChannelFlag.REQUIRE_TAG`][].
     """
 
     available_tags: typing.Sequence[ForumTag] = attrs.field(eq=False, hash=False, repr=False)
@@ -1535,7 +1538,7 @@ class GuildForumChannel(PermissibleGuildChannel):
     """Name of the default reaction emoji.
 
     Either the string name of the custom emoji, the object
-    of the [hikari.emojis.UnicodeEmoji][] or [None][] when the relevant
+    of the [`hikari.emojis.UnicodeEmoji`][] or [`None`][] when the relevant
     custom emoji's data is not available (e.g. the emoji has been deleted).
     """
 
@@ -1545,20 +1548,20 @@ WebhookChannelT = typing.Union[GuildTextChannel, GuildNewsChannel]
 
 The following types are in this:
 
-* [hikari.channels.GuildTextChannel][]
-* [hikari.channels.GuildNewsChannel][]
+* [`hikari.channels.GuildTextChannel`][]
+* [`hikari.channels.GuildNewsChannel`][]
 """
 
 WebhookChannelTypes: typing.Tuple[typing.Type[GuildTextChannel], typing.Type[GuildNewsChannel]] = (
     GuildTextChannel,
     GuildNewsChannel,
 )
-"""Tuple of the channel types which are valid for `WebhookChannelT`.
+"""Tuple of the channel types which are valid for [`hikari.channels.WebhookChannelT`][].
 
 This includes:
 
-* [hikari.channels.GuildTextChannel][]
-* [hikari.channels.GuildNewsChannel][]
+* [`hikari.channels.GuildTextChannel`][]
+* [`hikari.channels.GuildNewsChannel`][]
 """
 
 
@@ -1573,7 +1576,7 @@ class ThreadMember:
     """The member's user ID.
 
     !!! note
-        This will only ever be [None][] on thread members attached to
+        This will only ever be [`None`][] on thread members attached to
         guild create events, where this is the current bot's user.
     """
 
@@ -1604,7 +1607,7 @@ class GuildThreadChannel(TextableGuildChannel):
     """The timestamp of the last-pinned message.
 
     !!! note
-        This may be [None][] in several cases; Discord does not document what
+        This may be [`None`][] in several cases; Discord does not document what
         these cases are. Trust no one!
     """
 
@@ -1614,9 +1617,9 @@ class GuildThreadChannel(TextableGuildChannel):
     If there is no rate limit, this will be 0 seconds.
 
     !!! note
-        Any user that has permissions allowing [hikari.permissions.Permissions.MANAGE_MESSAGES][],
-        [hikari.permissions.Permissions.MANAGE_CHANNELS][],
-        [hikari.permissions.Permissions.ADMINISTRATOR][] will not be limited.
+        Any user that has permissions allowing [`hikari.permissions.Permissions.MANAGE_MESSAGES`][],
+        [`hikari.permissions.Permissions.MANAGE_CHANNELS`][],
+        [`hikari.permissions.Permissions.ADMINISTRATOR`][] will not be limited.
         Likewise, bots will not be affected by this rate limit.
     """
 
@@ -1654,7 +1657,7 @@ class GuildThreadChannel(TextableGuildChannel):
     is_locked: bool = attrs.field(eq=False, hash=False, repr=True)
     """Whether the thread is locked.
 
-    When a thread is locked, only users with [hikari.permissions.Permissions.MANAGE_THREADS][] permission
+    When a thread is locked, only users with [`hikari.permissions.Permissions.MANAGE_THREADS`][] permission
     can un-archive it.
     """
 
@@ -1675,7 +1678,7 @@ class GuildThreadChannel(TextableGuildChannel):
     thread_created_at: typing.Optional[datetime.datetime] = attrs.field(eq=False, hash=False, repr=True)
     """When the thread was created.
 
-    Will be [None][] for threads created before 2020-01-09.
+    Will be [`None`][] for threads created before 2020-01-09.
     """
 
 
@@ -1701,7 +1704,7 @@ class GuildPublicThread(GuildThreadChannel):
     This will only apply to threads created inside a forum channel.
 
     !!! note
-        As of writing, the only flag that can be set is [hikari.channels.ChannelFlag.PINNED][].
+        As of writing, the only flag that can be set is [`hikari.channels.ChannelFlag.PINNED`][].
     """
 
 

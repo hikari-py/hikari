@@ -52,7 +52,7 @@ if typing.TYPE_CHECKING:
 class Snowflake(int):
     """A concrete representation of a unique ID for an entity on Discord.
 
-    This object can be treated as a regular [int][] for most purposes.
+    This object can be treated as a regular [`int`][] for most purposes.
     """
 
     __slots__: typing.Sequence[str] = ()
@@ -154,31 +154,31 @@ def calculate_shard_id(
 
 
 Snowflakeish = typing.Union[Snowflake, int]
-"""Type hint for a value that resembles a [hikari.snowflakes.Snowflake][] object functionally.
+"""Type hint for a value that resembles a [`hikari.snowflakes.Snowflake`][] object functionally.
 
-This is a value that is [hikari.snowflakes.Snowflake][]-ish.
+This is a value that is [`hikari.snowflakes.Snowflake`][]-ish.
 
-A value is [hikari.snowflakes.Snowflake][]-ish if casting it to an [int][] allows it to be cast to
-a [hikari.snowflakes.Snowflake][].
+A value is [`hikari.snowflakes.Snowflake`][]-ish if casting it to an [`int`][] allows it to be cast to
+a [`hikari.snowflakes.Snowflake`][].
 
 The valid types for this type hint are:
 
-- [int][]
-- [hikari.snowflakes.Snowflake][]
+- [`int`][]
+- [`hikari.snowflakes.Snowflake`][]
 """
 
 SearchableSnowflakeish = typing.Union[Snowflakeish, "datetime.datetime"]
 """Type hint for a snowflakeish that can be searched for in history.
 
-This is just a [hikari.snowflakes.Snowflakeish][] that can alternatively be some form of
-[datetime.datetime][] instance.
+This is just a [`hikari.snowflakes.Snowflakeish`][] that can alternatively be some form of
+[`datetime.datetime`][] instance.
 
 The valid types for this type hint are:
 
-- [str][] containing digits.
-- [int][]
-- [hikari.snowflakes.Snowflake][]
-- [datetime.datetime][]
+- [`str`][] containing digits.
+- [`int`][]
+- [`hikari.snowflakes.Snowflake`][]
+- [`datetime.datetime`][]
 """
 
 T = typing.TypeVar("T", covariant=True, bound=Unique)
@@ -186,10 +186,10 @@ T = typing.TypeVar("T", covariant=True, bound=Unique)
 SnowflakeishOr = typing.Union[T, Snowflakeish]
 """Type hint representing a unique object entity.
 
-This is a value that is [hikari.snowflakes.Snowflake][]-ish or a specific type covariant.
+This is a value that is [`hikari.snowflakes.Snowflake`][]-ish or a specific type covariant.
 
 If you see `SnowflakeishOr[Foo]` anywhere as a type hint, it means the value
-may be a `Foo` instance, a [hikari.snowflakes.Snowflake][], an [int][] or a [str][]
+may be a `Foo` instance, a [`hikari.snowflakes.Snowflake`][], an [`int`][] or a [`str`][]
 with numeric digits only.
 
 Essentially this represents any concrete object, or ID of that object. It is
@@ -199,15 +199,15 @@ use of intents).
 
 The valid types for this type hint are:
 
-- [int][]
-- [hikari.snowflakes.Snowflake][]
+- [`int`][]
+- [`hikari.snowflakes.Snowflake`][]
 """
 
 SearchableSnowflakeishOr = typing.Union[T, SearchableSnowflakeish]
 """Type hint for a unique object entity that can be searched for.
 
-This is a variant of [hikari.snowflakes.SnowflakeishOr][] that also allows an alternative value
-of a [datetime.datetime][] to be specified.
+This is a variant of [`hikari.snowflakes.SnowflakeishOr`][] that also allows an alternative value
+of a [`datetime.datetime`][] to be specified.
 
 Essentially this represents any concrete object, or ID of that object. It is
 used across Hikari's API to allow use of functions when information is only
@@ -216,9 +216,9 @@ use of intents).
 
 The valid types for this type hint are:
 
-- [int][]
-- [hikari.snowflakes.Snowflake][]
-- [datetime.datetime][]
+- [`int`][]
+- [`hikari.snowflakes.Snowflake`][]
+- [`datetime.datetime`][]
 """
 
 SnowflakeishIterable = typing.Iterable[SnowflakeishOr[T]]

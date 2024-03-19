@@ -52,7 +52,7 @@ _FLOAT_PATTERN: typing.Final[typing.Pattern[str]] = re.compile(r"0\.\d*|\.\d+|1\
 
 
 def _to_rgb_float(value: str, name: str) -> float:
-    # Floats are easier to handle, as they don't overflow, they just become [inf][].
+    # Floats are easier to handle, as they don't overflow, they just become [`inf`][].
 
     if value.count(".") != 1:
         raise ValueError(f'Expected exactly 1 decimal point "." in {name} channel')
@@ -66,7 +66,7 @@ class Color(int):
 
     This value is immutable.
 
-    This is a specialization of [int][] which provides alternative overrides for
+    This is a specialization of [`int`][] which provides alternative overrides for
     common methods and color system conversions.
 
     This currently supports:
@@ -106,7 +106,7 @@ class Color(int):
     ```
 
     Alternatively, if you have an arbitrary input in one of the above formats
-    that you wish to become a color, you can use [hikari.colors.Color.of][] on
+    that you wish to become a color, you can use [`hikari.colors.Color.of`][] on
     the class itself to automatically attempt to resolve the color:
 
     ```py
@@ -163,7 +163,7 @@ class Color(int):
     def __init__(self, raw_rgb: typing.SupportsInt) -> None:
         if not (0 <= int(raw_rgb) <= 0xFFFFFF):
             raise ValueError(f"raw_rgb must be in the exclusive range of 0 and {0xFF_FF_FF}")
-        # The __new__ for [int][] initializes the value for us, this super-call does nothing other
+        # The __new__ for [`int`][] initializes the value for us, this super-call does nothing other
         # than keeping the linter happy.
         super().__init__()
 
@@ -230,7 +230,7 @@ class Color(int):
 
     @classmethod
     def from_rgb(cls, red: int, green: int, blue: int, /) -> Color:
-        """Convert the given RGB to a [hikari.colors.Color][] object.
+        """Convert the given RGB to a [`hikari.colors.Color`][] object.
 
         Each channel must be within the range [0, 255] (0x0, 0xFF).
 
@@ -263,7 +263,7 @@ class Color(int):
 
     @classmethod
     def from_rgb_float(cls, red: float, green: float, blue: float, /) -> Color:
-        """Convert the given RGB to a [hikari.colors.Color][] object.
+        """Convert the given RGB to a [`hikari.colors.Color`][] object.
 
         The color-space represented values have to be within the
         range [0, 1].
@@ -297,7 +297,7 @@ class Color(int):
 
     @classmethod
     def from_hex_code(cls, hex_code: str, /) -> Color:
-        """Convert the given hexadecimal color code to a [hikari.colors.Color][].
+        """Convert the given hexadecimal color code to a [`hikari.colors.Color`][].
 
         The inputs may be of the following format (case insensitive):
         `1a2`, `#1a2`, `0x1a2` (for web-safe colors), or
@@ -339,7 +339,7 @@ class Color(int):
 
     @classmethod
     def from_int(cls, integer: typing.SupportsInt, /) -> Color:
-        """Convert the given [typing.SupportsInt][] to a [hikari.colors.Color][].
+        """Convert the given [`typing.SupportsInt`][] to a [`hikari.colors.Color`][].
 
         Parameters
         ----------
@@ -355,7 +355,7 @@ class Color(int):
 
     @classmethod
     def from_tuple_string(cls, tuple_str: str, /) -> Color:
-        """Convert a string in a tuple-like format to a [hikari.colors.Color][].
+        """Convert a string in a tuple-like format to a [`hikari.colors.Color`][].
 
         This allows formats that are optionally enclosed by `()`,
         `{}`, `[]` or `<>`, and contain three floats or ints,
@@ -425,7 +425,7 @@ class Color(int):
 
     @classmethod
     def of(cls, value: Colorish, /) -> Color:
-        """Convert the value to a [hikari.colors.Color][].
+        """Convert the value to a [`hikari.colors.Color`][].
 
         This attempts to determine the correct data format based on the
         information provided.
@@ -543,14 +543,14 @@ Colorish = typing.Union[
 
 This may be:
 
-1. [hikari.colors.Color][]
-2. [hikari.colours.Colour][] (an alias for [hikari.colors.Color][]).
-3. A value that can be cast to an [int][] (RGB hex-code).
-4. a 3-[tuple][] of [int][] (RGB integers in range 0 through 255).
-5. a 3-[tuple][] of [float][] (RGB floats in range 0 through 1).
-6. a list of [int][].
-7. a list of [float][].
-8. a [str][] hex colour code.
+1. [`hikari.colors.Color`][]
+2. [`hikari.colours.Colour`][] (an alias for [`hikari.colors.Color`][]).
+3. A value that can be cast to an [`int`][] (RGB hex-code).
+4. a 3-[`tuple`][] of [`int`][] (RGB integers in range 0 through 255).
+5. a 3-[`tuple`][] of [`float`][] (RGB floats in range 0 through 1).
+6. a list of [`int`][].
+7. a list of [`float`][].
+8. a [`str`][] hex colour code.
 
 A hex colour code is expected to be in one of the following formats. Each of the
 following examples means the same thing semantically.

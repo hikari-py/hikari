@@ -49,7 +49,7 @@ class OwnUserUpdateEvent(shard_events.ShardEvent):
     old_user: typing.Optional[users.OwnUser] = attrs.field()
     """The old application user.
 
-    This will be [None][] if the user missing from the cache.
+    This will be [`None`][] if the user missing from the cache.
     """
 
     user: users.OwnUser = attrs.field()

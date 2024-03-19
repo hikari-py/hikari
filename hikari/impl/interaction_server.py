@@ -180,7 +180,7 @@ async def _consume_generator_listener(generator: typing.AsyncGenerator[typing.An
 
 
 class InteractionServer(interaction_server.InteractionServer):
-    """Standard implementation of [hikari.api.interaction_server.InteractionServer][].
+    """Standard implementation of [`hikari.api.interaction_server.InteractionServer`][].
 
     Parameters
     ----------
@@ -195,7 +195,7 @@ class InteractionServer(interaction_server.InteractionServer):
         The JSON decoder this server should use.
     public_key : typing.Optional[bytes]
         The public key this server should use for verifying request payloads from
-        Discord. If left as [None][] then the client will try to work this
+        Discord. If left as [`None`][] then the client will try to work this
         out using `rest_client`.
     rest_client : hikari.api.rest.RESTClient
         The client this should use for making REST requests.
@@ -280,7 +280,7 @@ class InteractionServer(interaction_server.InteractionServer):
         """Handle an AIOHTTP interaction request.
 
         This method handles aiohttp specific detail before calling
-        [hikari.impl.interaction_server.InteractionServer.on_interaction][] with the data extracted from the
+        [`hikari.impl.interaction_server.InteractionServer.on_interaction`][] with the data extracted from the
         request if it can and handles building an aiohttp response.
 
         Parameters

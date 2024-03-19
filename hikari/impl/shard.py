@@ -398,18 +398,18 @@ class GatewayShardImpl(shard.GatewayShard):
     ----------------
     compression : typing.Optional[str]
         Compression format to use for the shard. Only supported values are
-        `"transport_zlib_stream"` or [None][] to disable it.
+        `"transport_zlib_stream"` or [`None`][] to disable it.
     dumps : hikari.internal.data_binding.JSONEncoder
         The JSON encoder this application should use.
     loads : hikari.internal.data_binding.JSONDecoder
         The JSON decoder this application should use.
     initial_activity : typing.Optional[hikari.presences.Activity]
         The initial activity to appear to have for this shard, or
-        [None][] if no activity should be set initially. This is the
+        [`None`][] if no activity should be set initially. This is the
         default.
     initial_idle_since : typing.Optional[datetime.datetime]
-        The datetime to appear to be idle since, or [None][] if the
-        shard should not provide this. The default is [None][].
+        The datetime to appear to be idle since, or [`None`][] if the
+        shard should not provide this. The default is [`None`][].
     initial_is_afk : bool
         Whether to appear to be AFK or not on login.
     initial_status : hikari.presences.Status
@@ -774,7 +774,7 @@ class GatewayShardImpl(shard.GatewayShard):
                 return
 
             elif op == _INVALID_SESSION:
-                can_reconnect = payload[_D]  # We can resume if the payload data is [true][].
+                can_reconnect = payload[_D]  # We can resume if the payload data is [`true`][].
                 if not can_reconnect:
                     self._logger.info("received invalid session, will need to start a new session")
                     self._seq = None

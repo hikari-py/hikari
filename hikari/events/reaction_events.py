@@ -113,15 +113,15 @@ class ReactionAddEvent(ReactionEvent, abc.ABC):
         """Name of the emoji which was added if known.
 
         This can either be the string name of the custom emoji which was added,
-        the object of the [hikari.emojis.UnicodeEmoji][] which was added or
-        [None][] when the relevant custom emoji's data is not available
+        the object of the [`hikari.emojis.UnicodeEmoji`][] which was added or
+        [`None`][] when the relevant custom emoji's data is not available
         (e.g. the emoji has been deleted).
         """
 
     @property
     @abc.abstractmethod
     def emoji_id(self) -> typing.Optional[snowflakes.Snowflake]:
-        """ID of the emoji which was added if it is custom, else [None][]."""
+        """ID of the emoji which was added if it is custom, else [`None`][]."""
 
     @property
     @abc.abstractmethod
@@ -136,7 +136,7 @@ class ReactionAddEvent(ReactionEvent, abc.ABC):
         emoji : typing.Union[hikari.emojis.Emoji, str]
             The emoji to check.
 
-            Passing [str][] here indicates a unicode emoji.
+            Passing [`str`][] here indicates a unicode emoji.
 
         Returns
         -------
@@ -163,7 +163,7 @@ class ReactionDeleteEvent(ReactionEvent, abc.ABC):
         """Name of the emoji which was removed.
 
         Either the string name of the custom emoji which was removed, the object
-        of the [hikari.emojis.UnicodeEmoji][] which was removed or [None][]
+        of the [`hikari.emojis.UnicodeEmoji`][] which was removed or [`None`][]
         when the relevant custom emoji's data is not available (e.g. the emoji
         has been deleted).
         """
@@ -171,7 +171,7 @@ class ReactionDeleteEvent(ReactionEvent, abc.ABC):
     @property
     @abc.abstractmethod
     def emoji_id(self) -> typing.Optional[snowflakes.Snowflake]:
-        """ID of the emoji which was added if it is custom, else [None][]."""
+        """ID of the emoji which was added if it is custom, else [`None`][]."""
 
     def is_for_emoji(self, emoji: typing.Union[emojis.Emoji, str], /) -> bool:
         """Get whether the reaction event is for a specific emoji.
@@ -181,7 +181,7 @@ class ReactionDeleteEvent(ReactionEvent, abc.ABC):
         emoji : typing.Union[hikari.emojis.Emoji, str]
             The emoji to check.
 
-            Passing [str][] here indicates a unicode emoji.
+            Passing [`str`][] here indicates a unicode emoji.
 
         Returns
         -------
@@ -210,7 +210,7 @@ class ReactionDeleteEmojiEvent(ReactionEvent, abc.ABC):
         """Name of the emoji which was removed.
 
         Either the string name of the custom emoji which was removed, the object
-        of the [hikari.emojis.UnicodeEmoji][] which was removed or [None][]
+        of the [`hikari.emojis.UnicodeEmoji`][] which was removed or [`None`][]
         when the relevant custom emoji's data is not available (e.g. the emoji
         has been deleted).
         """
@@ -218,7 +218,7 @@ class ReactionDeleteEmojiEvent(ReactionEvent, abc.ABC):
     @property
     @abc.abstractmethod
     def emoji_id(self) -> typing.Optional[snowflakes.Snowflake]:
-        """ID of the emoji which was added if it is custom, else [None][]."""
+        """ID of the emoji which was added if it is custom, else [`None`][]."""
 
     def is_for_emoji(self, emoji: typing.Union[emojis.Emoji, str], /) -> bool:
         """Get whether the reaction event is for a specific emoji.
@@ -228,7 +228,7 @@ class ReactionDeleteEmojiEvent(ReactionEvent, abc.ABC):
         emoji : typing.Union[hikari.emojis.Emoji, str]
             The emoji to check.
 
-            Passing [str][] here indicates a unicode emoji.
+            Passing [`str`][] here indicates a unicode emoji.
 
         Returns
         -------

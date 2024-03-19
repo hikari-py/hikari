@@ -49,9 +49,9 @@ class SessionStartLimit:
     """The remaining number of session starts this bot has."""
 
     reset_after: datetime.timedelta = attrs.field(repr=True)
-    """When [hikari.sessions.SessionStartLimit.remaining][] will reset for the current bot.
+    """When [`hikari.sessions.SessionStartLimit.remaining`][] will reset for the current bot.
 
-    After it resets it will be set to [hikari.sessions.SessionStartLimit.total][].
+    After it resets it will be set to [`hikari.sessions.SessionStartLimit.total`][].
     """
 
     # This is not documented at the time of writing, but is a confirmed API

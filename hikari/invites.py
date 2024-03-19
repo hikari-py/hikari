@@ -103,8 +103,8 @@ class InviteGuild(guilds.PartialGuild):
     banner_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """The hash for the guild's banner.
 
-    This is only present if [hikari.guilds.GuildFeature.BANNER][] is in the
-    `features` for this guild. For all other purposes, it is [None][].
+    This is only present if [`hikari.guilds.GuildFeature.BANNER`][] is in the
+    `features` for this guild. For all other purposes, it is [`None`][].
     """
 
     description: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
@@ -116,8 +116,8 @@ class InviteGuild(guilds.PartialGuild):
     vanity_url_code: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=True)
     """The vanity URL code for the guild's vanity URL.
 
-    This is only present if [hikari.guilds.GuildFeature.VANITY_URL][] is in the
-    `features` for this guild. If not, this will always be [None][].
+    This is only present if [`hikari.guilds.GuildFeature.VANITY_URL`][] is in the
+    `features` for this guild. If not, this will always be [`None`][].
     """
 
     welcome_screen: typing.Optional[guilds.WelcomeScreen] = attrs.field(eq=False, hash=False, repr=False)
@@ -146,7 +146,7 @@ class InviteGuild(guilds.PartialGuild):
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL to the splash, or [None][] if not set.
+            The URL to the splash, or [`None`][] if not set.
 
         Raises
         ------
@@ -175,7 +175,7 @@ class InviteGuild(guilds.PartialGuild):
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
             animated).
 
-            If [None][], then the correct default extension is
+            If [`None`][], then the correct default extension is
             determined based on whether the banner is animated or not.
         size : int
             The size to set for the URL.
@@ -184,7 +184,7 @@ class InviteGuild(guilds.PartialGuild):
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL of the banner, or [None][] if no banner is set.
+            The URL of the banner, or [`None`][] if no banner is set.
 
         Raises
         ------
@@ -222,21 +222,21 @@ class Invite(InviteCode):
     guild: typing.Optional[InviteGuild] = attrs.field(eq=False, hash=False, repr=False)
     """The partial object of the guild this invite belongs to.
 
-    Will be [None][] for group DM invites and when attached to a gateway event;
-    for invites received over the gateway you should refer to [hikari.invites.Invite.guild_id][].
+    Will be [`None`][] for group DM invites and when attached to a gateway event;
+    for invites received over the gateway you should refer to [`hikari.invites.Invite.guild_id`][].
     """
 
     guild_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
     """The ID of the guild this invite belongs to.
 
-    Will be [None][] for group DM invites.
+    Will be [`None`][] for group DM invites.
     """
 
     channel: typing.Optional[channels.PartialChannel] = attrs.field(eq=False, hash=False, repr=False)
     """The partial object of the channel this invite targets.
 
-    Will be [None][] for invite objects that are attached to gateway events,
-    in which case you should refer to [hikari.invites.Invite.channel_id][].
+    Will be [`None`][] for invite objects that are attached to gateway events,
+    in which case you should refer to [`hikari.invites.Invite.channel_id`][].
     """
 
     channel_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
@@ -270,14 +270,14 @@ class Invite(InviteCode):
     """When this invite will expire.
 
     This field is only returned by the GET Invite REST endpoint and will be
-    returned as [None][] by said endpoint if the invite doesn't have a set
-    expiry date. Other places will always return this as [None][].
+    returned as [`None`][] by said endpoint if the invite doesn't have a set
+    expiry date. Other places will always return this as [`None`][].
     """
 
 
 @attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class InviteWithMetadata(Invite):
-    """Extends the base [hikari.invites.Invite][] object with metadata.
+    """Extends the base [`hikari.invites.Invite`][] object with metadata.
 
     The metadata is only returned when getting an invite with
     guild permissions, rather than it's code.
@@ -289,7 +289,7 @@ class InviteWithMetadata(Invite):
     max_uses: typing.Optional[int] = attrs.field(eq=False, hash=False, repr=True)
     """The limit for how many times this invite can be used before it expires.
 
-    If set to [None][] then this is unlimited.
+    If set to [`None`][] then this is unlimited.
     """
 
     # TODO: can we use a non-None value to represent infinity here somehow, or
@@ -297,7 +297,7 @@ class InviteWithMetadata(Invite):
     max_age: typing.Optional[datetime.timedelta] = attrs.field(eq=False, hash=False, repr=False)
     """The timedelta of how long this invite will be valid for.
 
-    If set to [None][] then this is unlimited.
+    If set to [`None`][] then this is unlimited.
     """
 
     is_temporary: bool = attrs.field(eq=False, hash=False, repr=True)
@@ -309,14 +309,14 @@ class InviteWithMetadata(Invite):
     expires_at: typing.Optional[datetime.datetime]
     """When this invite will expire.
 
-    If this invite doesn't have a set expiry then this will be [None][].
+    If this invite doesn't have a set expiry then this will be [`None`][].
     """
 
     @property
     def uses_left(self) -> typing.Optional[int]:
         """Return the number of uses left for this invite.
 
-        This will be [None][] if the invite has unlimited uses.
+        This will be [`None`][] if the invite has unlimited uses.
         """
         if self.max_uses:
             return self.max_uses - self.uses

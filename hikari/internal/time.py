@@ -49,7 +49,7 @@ Intervalish = typing.Union[int, float, datetime.timedelta]
 This is a type that is like an interval of some sort.
 
 This is an alias for [typing.Union[int, float, datetime.datetime]][],
-where [int][] and [float][] types are interpreted as a number of seconds.
+where [`int`][] and [`float`][] types are interpreted as a number of seconds.
 """
 
 DISCORD_EPOCH: typing.Final[datetime.timedelta] = datetime.timedelta(seconds=1_420_070_400)
@@ -106,7 +106,7 @@ iso8601_datetime_string_to_datetime: typing.Callable[[str], datetime.datetime] =
 
 
 def discord_epoch_to_datetime(epoch: int, /) -> datetime.datetime:
-    """Parse a Discord epoch into a [datetime.datetime][] object.
+    """Parse a Discord epoch into a [`datetime.datetime`][] object.
 
     Parameters
     ----------
@@ -122,7 +122,7 @@ def discord_epoch_to_datetime(epoch: int, /) -> datetime.datetime:
 
 
 def datetime_to_discord_epoch(timestamp: datetime.datetime) -> int:
-    """Parse a [datetime.datetime][] object into an [int][] `DISCORD_EPOCH` offset.
+    """Parse a [`datetime.datetime`][] object into an [`int`][] `DISCORD_EPOCH` offset.
 
     Parameters
     ----------
@@ -138,19 +138,19 @@ def datetime_to_discord_epoch(timestamp: datetime.datetime) -> int:
 
 
 def unix_epoch_to_datetime(epoch: typing.Union[int, float], /, *, is_millis: bool = True) -> datetime.datetime:
-    """Parse a UNIX epoch to a [datetime.datetime][] object.
+    """Parse a UNIX epoch to a [`datetime.datetime`][] object.
 
     !!! note
         If an epoch that's outside the range of what this system can handle,
-        this will return [datetime.datetime.max][] if the timestamp is positive,
-        or [datetime.datetime.min][] otherwise.
+        this will return [`datetime.datetime.max`][] if the timestamp is positive,
+        or [`datetime.datetime.min`][] otherwise.
 
     Parameters
     ----------
     epoch : typing.Union[int, float]
         Number of seconds/milliseconds since [1/1/1970 00:00:00 UTC][].
     is_millis : bool
-        [True][] by default, indicates the input timestamp is measured in
+        [`True`][] by default, indicates the input timestamp is measured in
         milliseconds rather than seconds.
 
     Returns

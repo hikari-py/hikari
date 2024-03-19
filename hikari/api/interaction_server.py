@@ -51,20 +51,20 @@ ListenerT = typing.Union[
 """Type hint of a Interaction server's listener callback.
 
 This should be an async callback which takes in one positional argument which
-subclasses [hikari.interactions.base_interactions.PartialInteraction][] and may return an
-instance of the relevant [hikari.api.special_endpoints.InteractionResponseBuilder][]
+subclasses [`hikari.interactions.base_interactions.PartialInteraction`][] and may return an
+instance of the relevant [`hikari.api.special_endpoints.InteractionResponseBuilder`][]
 subclass for the provided interaction type which will instruct the server on how
 to respond.
 
 !!! note
     For the standard implementations of
-    [hikari.api.special_endpoints.InteractionResponseBuilder][] see
-    [hikari.impl.special_endpoints][].
+    [`hikari.api.special_endpoints.InteractionResponseBuilder`][] see
+    [`hikari.impl.special_endpoints`][].
 """
 
 
 class Response(typing.Protocol):
-    """Protocol of the data returned by [hikari.api.interaction_server.InteractionServer.on_interaction][].
+    """Protocol of the data returned by [`hikari.api.interaction_server.InteractionServer.on_interaction`][].
 
     This is used to instruct lower-level REST server logic on how it should
     respond.
@@ -178,7 +178,7 @@ class InteractionServer(abc.ABC):
         -------
         typing.Optional[ListenersT[hikari.interactions.base_interactions.PartialInteraction, hikari.api.special_endpoints.InteractionResponseBuilder]
             The callback registered for the provided interaction type if found,
-            else [None][].
+            else [`None`][].
         """  # noqa: E501 - Line too long
 
     @typing.overload
@@ -245,7 +245,7 @@ class InteractionServer(abc.ABC):
         interaction_type : typing.Type[hikari.interactions.base_interactions.PartialInteraction]
             The type of interaction this listener should be registered for.
         listener : typing.Optional[ListenerT[hikari.interactions.base_interactions.PartialInteraction, hikari.api.special_endpoints.InteractionResponseBuilder]]
-            The asynchronous listener callback to set or [None][] to unset the previous listener.
+            The asynchronous listener callback to set or [`None`][] to unset the previous listener.
 
             An asynchronous listener can be either a normal coroutine or an
             async generator which should yield exactly once. This allows
@@ -260,5 +260,5 @@ class InteractionServer(abc.ABC):
         Raises
         ------
         TypeError
-            If `replace` is [False][] when a listener is already set.
+            If `replace` is [`False`][] when a listener is already set.
         """  # noqa: E501 - Line too long

@@ -73,7 +73,7 @@ class ComponentType(int, enums.Enum):
 
     !!! note
         This cannot be top-level and must be within a container component such
-        as [hikari.components.ComponentType.ACTION_ROW][].
+        as [`hikari.components.ComponentType.ACTION_ROW`][].
     """
 
     TEXT_SELECT_MENU = 3
@@ -81,7 +81,7 @@ class ComponentType(int, enums.Enum):
 
     !!! note
         This cannot be top-level and must be within a container component such
-        as [hikari.components.ComponentType.ACTION_ROW][].
+        as [`hikari.components.ComponentType.ACTION_ROW`][].
     """
 
     TEXT_INPUT = 4
@@ -92,7 +92,7 @@ class ComponentType(int, enums.Enum):
 
     !!! note
         This cannot be top-level and must be within a container component such
-        as [hikari.components.ComponentType.ACTION_ROW][].
+        as [`hikari.components.ComponentType.ACTION_ROW`][].
     """
 
     USER_SELECT_MENU = 5
@@ -100,7 +100,7 @@ class ComponentType(int, enums.Enum):
 
     !!! note
         This cannot be top-level and must be within a container component such
-        as [hikari.components.ComponentType.ACTION_ROW][].
+        as [`hikari.components.ComponentType.ACTION_ROW`][].
     """
 
     ROLE_SELECT_MENU = 6
@@ -108,7 +108,7 @@ class ComponentType(int, enums.Enum):
 
     !!! note
         This cannot be top-level and must be within a container component such
-        as [hikari.components.ComponentType.ACTION_ROW][].
+        as [`hikari.components.ComponentType.ACTION_ROW`][].
     """
 
     MENTIONABLE_SELECT_MENU = 7
@@ -116,7 +116,7 @@ class ComponentType(int, enums.Enum):
 
     !!! note
         This cannot be top-level and must be within a container component such
-        as [hikari.components.ComponentType.ACTION_ROW][].
+        as [`hikari.components.ComponentType.ACTION_ROW`][].
     """
 
     CHANNEL_SELECT_MENU = 8
@@ -124,7 +124,7 @@ class ComponentType(int, enums.Enum):
 
     !!! note
         This cannot be top-level and must be within a container component such
-        as [hikari.components.ComponentType.ACTION_ROW][].
+        as [`hikari.components.ComponentType.ACTION_ROW`][].
     """
 
 
@@ -223,14 +223,14 @@ class ButtonComponent(PartialComponent):
     !!! note
         This is required for the following button styles:
 
-        * [hikari.components.ButtonStyle.PRIMARY][]
-        * [hikari.components.ButtonStyle.SECONDARY][]
-        * [hikari.components.ButtonStyle.SUCCESS][]
-        * [hikari.components.ButtonStyle.DANGER][]
+        * [`hikari.components.ButtonStyle.PRIMARY`][]
+        * [`hikari.components.ButtonStyle.SECONDARY`][]
+        * [`hikari.components.ButtonStyle.SUCCESS`][]
+        * [`hikari.components.ButtonStyle.DANGER`][]
     """
 
     url: typing.Optional[str] = attrs.field(eq=False)
-    """Url for [hikari.components.ButtonStyle.LINK][] style buttons."""
+    """Url for [`hikari.components.ButtonStyle.LINK`][] style buttons."""
 
     is_disabled: bool = attrs.field(eq=False)
     """Whether the button is disabled."""
@@ -238,7 +238,7 @@ class ButtonComponent(PartialComponent):
 
 @attrs.define(kw_only=True, weakref_slot=False)
 class SelectMenuOption:
-    """Represents an option for a [hikari.components.SelectMenuComponent][]."""
+    """Represents an option for a [`hikari.components.SelectMenuComponent`][]."""
 
     label: str = attrs.field()
     """User-facing name of the option, max 100 characters."""
@@ -270,14 +270,14 @@ class SelectMenuComponent(PartialComponent):
     """The minimum amount of options which must be chosen for this menu.
 
     This will be greater than or equal to 0 and will be less than or equal to
-    [hikari.components.SelectMenuComponent.max_values][].
+    [`hikari.components.SelectMenuComponent.max_values`][].
     """
 
     max_values: int = attrs.field(eq=False)
     """The minimum amount of options which can be chosen for this menu.
 
     This will be less than or equal to 25 and will be greater than or equal to
-    [hikari.components.SelectMenuComponent.min_values][].
+    [`hikari.components.SelectMenuComponent.min_values`][].
     """
 
     is_disabled: bool = attrs.field(eq=False)
@@ -323,15 +323,15 @@ SelectMenuTypesT = typing.Union[
     typing.Literal[ComponentType.CHANNEL_SELECT_MENU],
     typing.Literal[8],
 ]
-"""Type hints of the [hikari.components.ComponentType][] values which are valid for select menus.
+"""Type hints of the [`hikari.components.ComponentType`][] values which are valid for select menus.
 
 The following values are valid for this:
 
-* [hikari.components.ComponentType.TEXT_SELECT_MENU][]/`3`
-* [hikari.components.ComponentType.USER_SELECT_MENU][]/`5`
-* [hikari.components.ComponentType.ROLE_SELECT_MENU][]/`6`
-* [hikari.components.ComponentType.MENTIONABLE_SELECT_MENU][]`/`7`
-* [hikari.components.ComponentType.CHANNEL_SELECT_MENU][]`/`8`
+* [`hikari.components.ComponentType.TEXT_SELECT_MENU`][]/`3`
+* [`hikari.components.ComponentType.USER_SELECT_MENU`][]/`5`
+* [`hikari.components.ComponentType.ROLE_SELECT_MENU`][]/`6`
+* [`hikari.components.ComponentType.MENTIONABLE_SELECT_MENU`][]`/`7`
+* [`hikari.components.ComponentType.CHANNEL_SELECT_MENU`][]`/`8`
 """
 
 SelectMenuTypes: typing.AbstractSet[SelectMenuTypesT] = frozenset(
@@ -343,15 +343,15 @@ SelectMenuTypes: typing.AbstractSet[SelectMenuTypesT] = frozenset(
         ComponentType.CHANNEL_SELECT_MENU,
     )
 )
-"""Set of the [hikari.components.ComponentType][] values which are valid for select menus.
+"""Set of the [`hikari.components.ComponentType`][] values which are valid for select menus.
 
 The following values are included in this:
 
-* [hikari.components.ComponentType.TEXT_SELECT_MENU][]
-* [hikari.components.ComponentType.USER_SELECT_MENU][]
-* [hikari.components.ComponentType.ROLE_SELECT_MENU][]
-* [hikari.components.ComponentType.MENTIONABLE_SELECT_MENU][]
-* [hikari.components.ComponentType.CHANNEL_SELECT_MENU][]
+* [`hikari.components.ComponentType.TEXT_SELECT_MENU`][]
+* [`hikari.components.ComponentType.USER_SELECT_MENU`][]
+* [`hikari.components.ComponentType.ROLE_SELECT_MENU`][]
+* [`hikari.components.ComponentType.MENTIONABLE_SELECT_MENU`][]
+* [`hikari.components.ComponentType.CHANNEL_SELECT_MENU`][]
 """
 
 InteractiveButtonTypesT = typing.Union[
@@ -364,43 +364,43 @@ InteractiveButtonTypesT = typing.Union[
     typing.Literal[ButtonStyle.DANGER],
     typing.Literal[4],
 ]
-"""Type hints of the [hikari.components.ButtonStyle][] values which are valid for interactive buttons.
+"""Type hints of the [`hikari.components.ButtonStyle`][] values which are valid for interactive buttons.
 
 The following values are valid for this:
 
-* [hikari.components.ButtonStyle.PRIMARY][]
-* [hikari.components.ButtonStyle.SECONDARY][]
-* [hikari.components.ButtonStyle.SUCCESS][]
-* [hikari.components.ButtonStyle.DANGER][]
+* [`hikari.components.ButtonStyle.PRIMARY`][]
+* [`hikari.components.ButtonStyle.SECONDARY`][]
+* [`hikari.components.ButtonStyle.SUCCESS`][]
+* [`hikari.components.ButtonStyle.DANGER`][]
 """
 
 InteractiveButtonTypes: typing.AbstractSet[InteractiveButtonTypesT] = frozenset(
     [ButtonStyle.PRIMARY, ButtonStyle.SECONDARY, ButtonStyle.SUCCESS, ButtonStyle.DANGER]
 )
-"""Set of the [hikari.components.ButtonStyle][] which are valid for interactive buttons.
+"""Set of the [`hikari.components.ButtonStyle`][] which are valid for interactive buttons.
 
 The following values are included in this:
 
-* [hikari.components.ButtonStyle.PRIMARY][]
-* [hikari.components.ButtonStyle.SECONDARY][]
-* [hikari.components.ButtonStyle.SUCCESS][]
-* [hikari.components.ButtonStyle.DANGER][]
+* [`hikari.components.ButtonStyle.PRIMARY`][]
+* [`hikari.components.ButtonStyle.SECONDARY`][]
+* [`hikari.components.ButtonStyle.SUCCESS`][]
+* [`hikari.components.ButtonStyle.DANGER`][]
 """
 
 MessageComponentTypesT = typing.Union[ButtonComponent, SelectMenuComponent]
-"""Type hint of the [hikari.components.PartialComponent][] that be contained in a [hikari.components.PartialComponent][].
+"""Type hint of the [`hikari.components.PartialComponent`][] that be contained in a [`hikari.components.PartialComponent`][].
 
 The following values are valid for this:
 
-* [hikari.components.ButtonComponent][]
-* [hikari.components.SelectMenuComponent][]
+* [`hikari.components.ButtonComponent`][]
+* [`hikari.components.SelectMenuComponent`][]
 """
 ModalComponentTypesT = TextInputComponent
-"""Type hint of the [hikari.components.PartialComponent][] that be contained in a [hikari.components.PartialComponent][].
+"""Type hint of the [`hikari.components.PartialComponent`][] that be contained in a [`hikari.components.PartialComponent`][].
 
 The following values are valid for this:
 
-* [hikari.components.TextInputComponent][]
+* [`hikari.components.TextInputComponent`][]
 """
 
 MessageActionRowComponent = ActionRowComponent[MessageComponentTypesT]

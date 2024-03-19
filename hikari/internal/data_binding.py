@@ -78,15 +78,15 @@ Stringish = typing.Union[str, int, bool, undefined.UndefinedType, None, snowflak
 JSONEncoder = typing.Callable[[typing.Union[JSONArray, JSONObject]], bytes]
 """Type hint for hikari-compatible JSON encoders.
 
-A hikari-compatible JSON encoder is one which will take in a JSON-ish object and output either [str][]
-or [bytes][].
+A hikari-compatible JSON encoder is one which will take in a JSON-ish object and output either [`str`][]
+or [`bytes`][].
 """
 
 JSONDecoder = typing.Callable[[typing.Union[str, bytes]], typing.Union[JSONArray, JSONObject]]
 """Type hint for hikari-compatible JSON decoder.
 
-A hikari-compatible JSON decoder is one which will take either a [str][] or [bytes][] and outputs
-the JSON-ish object, as well as raises a [ValueError][] on an incorrect JSON payload being passed in.
+A hikari-compatible JSON decoder is one which will take either a [`str`][] or [`bytes`][] and outputs
+the JSON-ish object, as well as raises a [`ValueError`][] on an incorrect JSON payload being passed in.
 """
 
 _StringMapBuilderArg = typing.Union[
@@ -115,7 +115,7 @@ except ModuleNotFoundError:
     _json_separators = (",", ":")
 
     def default_json_dumps(obj: typing.Union[JSONArray, JSONObject]) -> bytes:
-        """Encode a JSON object to a [str][]."""
+        """Encode a JSON object to a [`str`][]."""
         return json.dumps(obj, separators=_json_separators).encode(_UTF_8)
 
     default_json_loads = json.loads
@@ -131,7 +131,7 @@ class JSONPayload(aiohttp.BytesPayload):
 
 @typing.final
 class URLEncodedFormBuilder:
-    """Helper class to generate [aiohttp.FormData][]."""
+    """Helper class to generate [`aiohttp.FormData`][]."""
 
     __slots__: typing.Sequence[str] = ("_fields", "_resources")
 
@@ -167,13 +167,13 @@ class URLEncodedFormBuilder:
 class StringMapBuilder(multidict.MultiDict[str]):
     """Helper class used to quickly build query strings or header maps.
 
-    This will consume any items that are not [hikari.undefined.UNDEFINED][].
+    This will consume any items that are not [`hikari.undefined.UNDEFINED`][].
     If a value is unspecified, it will be ignored when inserting it. This reduces
     the amount of boilerplate needed for generating the headers and query strings for
     low-level HTTP API interaction, amongst other things.
 
     !!! warning
-        Because this subclasses [dict][], you should not use the
+        Because this subclasses [`dict`][], you should not use the
         index operator to set items on this object. Doing so will skip any
         form of validation on the type. Use the [put*][] methods instead.
     """
@@ -204,9 +204,9 @@ class StringMapBuilder(multidict.MultiDict[str]):
         """Add a key and value to the string map.
 
         !!! note
-            The value will always be cast to a [str][] before inserting it.
-            [True][] will be translated to `"true"`, [False][] will be
-            translated to `"false"`, and [None][] will be translated to
+            The value will always be cast to a [`str`][] before inserting it.
+            [`True`][] will be translated to `"true"`, [`False`][] will be
+            translated to `"false"`, and [`None`][] will be translated to
             `"null"`.
 
         Parameters
@@ -244,14 +244,14 @@ class StringMapBuilder(multidict.MultiDict[str]):
 class JSONObjectBuilder(typing.Dict[str, JSONish]):
     """Helper class used to quickly build JSON objects from various values.
 
-    If provided with any values that are [hikari.undefined.UNDEFINED][],
+    If provided with any values that are [`hikari.undefined.UNDEFINED`][],
     then these values will be ignored.
 
     This speeds up generation of JSON payloads for low level HTTP and websocket
     API interaction.
 
     !!! warning
-        Because this subclasses [dict][], you should not use the
+        Because this subclasses [`dict`][], you should not use the
         index operator to set items on this object. Doing so will skip any
         form of validation on the type. Use the [put*][] methods instead.
     """
@@ -280,7 +280,7 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
     ) -> None:
         """Put a JSON value.
 
-        If the value is [hikari.undefined.UNDEFINED][] it will not be stored.
+        If the value is [`hikari.undefined.UNDEFINED`][] it will not be stored.
 
         Parameters
         ----------
@@ -327,7 +327,7 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
     ) -> None:
         """Put a JSON array.
 
-        If the value is [hikari.undefined.UNDEFINED][] it will not be stored.
+        If the value is [`hikari.undefined.UNDEFINED`][] it will not be stored.
 
         If provided, a conversion will be applied to each item.
 
@@ -356,7 +356,7 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
     ) -> None:
         """Put a key with a snowflake value into the builder.
 
-        If the value is [hikari.undefined.UNDEFINED][] it will not be stored.
+        If the value is [`hikari.undefined.UNDEFINED`][] it will not be stored.
 
         Parameters
         ----------
@@ -364,7 +364,7 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
             The key to give the element.
         value : hikari.undefined.UndefinedNoneOr[hikari.snowflakes.SnowflakeishOr[hikari.snowflakes.Unique]]
             The JSON type to put. This may alternatively be undefined, in this
-            case, nothing is performed. This may also be [None][], in this
+            case, nothing is performed. This may also be [`None`][], in this
             case the value isn't cast.
         """
         if value is not undefined.UNDEFINED and value is not None:
@@ -377,9 +377,9 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
     ) -> None:
         """Put an array of snowflakes with the given key into this builder.
 
-        If the value is [hikari.undefined.UNDEFINED][] it will not be stored.
+        If the value is [`hikari.undefined.UNDEFINED`][] it will not be stored.
 
-        Each snowflake should be castable to an [int][].
+        Each snowflake should be castable to an [`int`][].
 
         Parameters
         ----------
@@ -402,7 +402,7 @@ def cast_variants_array(cast: typing.Callable[[T_co], T], raw_values: typing.Ite
         Callback to cast each variant to.
 
         This will ignore any variants which raises
-        [hikari.errors.UnrecognisedEntityError][] on cast.
+        [`hikari.errors.UnrecognisedEntityError`][] on cast.
     raw_values : typing.Iterable[T_co]
         Iterable of the raw values to cast.
 

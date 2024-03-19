@@ -89,7 +89,7 @@ class ScheduledEventStatus(int, enums.Enum):
     """Indicates an event has been canceled."""
 
     CANCELLED = CANCELED
-    """Alias of [hikari.scheduled_events.ScheduledEventStatus.CANCELED][]."""
+    """Alias of [`hikari.scheduled_events.ScheduledEventStatus.CANCELED`][]."""
 
 
 @attrs_extensions.with_copy
@@ -144,7 +144,7 @@ class ScheduledEvent(snowflakes.Unique):
     user_count: typing.Optional[int] = attrs.field(hash=False, repr=False)
     """The number of users that have subscribed to the event.
 
-    This will be [None][] on gateway events when creating and
+    This will be [`None`][] on gateway events when creating and
     editing a scheduled event.
     """
 
@@ -171,7 +171,7 @@ class ScheduledEvent(snowflakes.Unique):
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL, or [None][] if no cover image is set.
+            The URL, or [`None`][] if no cover image is set.
 
         Raises
         ------

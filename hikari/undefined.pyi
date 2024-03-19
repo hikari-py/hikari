@@ -20,7 +20,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Typehints for [hikari.undefined][]."""
+"""Typehints for [`hikari.undefined`][]."""
 
 import enum as __enum
 from typing import Any as __Any

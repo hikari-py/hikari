@@ -55,8 +55,8 @@ MAJOR_PARAM_COMBOS: typing.Mapping[typing.FrozenSet[str], typing.Callable[[typin
 class CompiledRoute:
     """A compiled representation of a route to a specific resource.
 
-    This is a similar representation to what [Route][] provides, except
-    [Route][] is treated as a template, this is treated as an instance.
+    This is a similar representation to what [`Route`][] provides, except
+    [`Route`][] is treated as a template, this is treated as an instance.
     """
 
     major_param_hash: str = attrs.field()
@@ -143,7 +143,7 @@ class Route:
     has_ratelimits: bool = attrs.field(hash=False, eq=False, repr=False)
     """Whether this route is affected by ratelimits.
 
-    This should be left as [True][] (the default) for most routes. This
+    This should be left as [`True`][] (the default) for most routes. This
     only covers specific routes where no ratelimits exist, so we can
     be a bit more efficient with them.
     """
@@ -161,7 +161,7 @@ class Route:
                 break
 
     def compile(self, **kwargs: typing.Any) -> CompiledRoute:
-        """Generate a formatted [CompiledRoute][] for this route.
+        """Generate a formatted [`CompiledRoute`][] for this route.
 
         This takes into account any URL parameters that have been passed.
 
@@ -228,7 +228,7 @@ class CDNRoute:
         file_format : str
             The file format to use for the asset.
         size : typing.Optional[int]
-            The custom size query parameter to set. If [None][],
+            The custom size query parameter to set. If [`None`][],
             it is not passed.
         **kwargs : typing.Any
             Parameters to interpolate into the path template.
@@ -282,7 +282,7 @@ class CDNRoute:
     def compile_to_file(
         self, base_url: str, *, file_format: str, size: typing.Optional[int] = None, **kwargs: typing.Any
     ) -> files.URL:
-        """Perform the same as `compile`, but return the URL as a [hikari.files.URL][]."""
+        """Perform the same as `compile`, but return the URL as a [`hikari.files.URL`][]."""
         return files.URL(self.compile(base_url, file_format=file_format, size=size, **kwargs))
 
 

@@ -90,13 +90,13 @@ class ChannelEvent(shard_events.ShardEvent, abc.ABC):
         """Perform an API call to fetch the details about this channel.
 
         !!! note
-            For [hikari.events.channel_events.GuildChannelDeleteEvent][] events, this will always raise
+            For [`hikari.events.channel_events.GuildChannelDeleteEvent`][] events, this will always raise
             an exception, since the channel will have already been removed.
 
         Returns
         -------
         hikari.channels.PartialChannel
-            A derivative of [hikari.channels.PartialChannel][]. The actual type
+            A derivative of [`hikari.channels.PartialChannel`][]. The actual type
             will vary depending on the type of channel this event concerns.
 
         Raises
@@ -104,7 +104,7 @@ class ChannelEvent(shard_events.ShardEvent, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [hikari.permissions.Permissions.VIEW_CHANNEL][] permission in the channel.
+            If you are missing the [`hikari.permissions.Permissions.VIEW_CHANNEL`][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -129,13 +129,13 @@ class GuildChannelEvent(ChannelEvent, abc.ABC):
     def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
         """Get the cached guild that this event relates to, if known.
 
-        If not, return [None][].
+        If not, return [`None`][].
 
         Returns
         -------
         typing.Optional[hikari.guilds.GatewayGuild]
             The gateway guild this event relates to, if known. Otherwise
-            this will return [None][].
+            this will return [`None`][].
         """
         if not isinstance(self.app, traits.CacheAware):
             return None
@@ -169,13 +169,13 @@ class GuildChannelEvent(ChannelEvent, abc.ABC):
     def get_channel(self) -> typing.Optional[channels.PermissibleGuildChannel]:
         """Get the cached channel that this event relates to, if known.
 
-        If not, return [None][].
+        If not, return [`None`][].
 
         Returns
         -------
         typing.Optional[hikari.channels.GuildChannel]
             The cached channel this event relates to. If not known, this
-            will return [None][] instead.
+            will return [`None`][] instead.
         """
         if not isinstance(self.app, traits.CacheAware):
             return None
@@ -186,13 +186,13 @@ class GuildChannelEvent(ChannelEvent, abc.ABC):
         """Perform an API call to fetch the details about this channel.
 
         !!! note
-            For [hikari.events.channel_events.GuildChannelDeleteEvent][] events, this will always raise
+            For [`hikari.events.channel_events.GuildChannelDeleteEvent`][] events, this will always raise
             an exception, since the channel will have already been removed.
 
         Returns
         -------
         hikari.channels.GuildChannel
-            A derivative of [hikari.channels.GuildChannel][]. The
+            A derivative of [`hikari.channels.GuildChannel`][]. The
             actual type will vary depending on the type of channel this event
             concerns.
 
@@ -201,7 +201,7 @@ class GuildChannelEvent(ChannelEvent, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [hikari.permissions.Permissions.VIEW_CHANNEL][] permission in the channel.
+            If you are missing the [`hikari.permissions.Permissions.VIEW_CHANNEL`][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -224,13 +224,13 @@ class DMChannelEvent(ChannelEvent, abc.ABC):
         """Perform an API call to fetch the details about this channel.
 
         !!! note
-            For [hikari.events.channel_events.GuildChannelDeleteEvent][] events, this will always raise
+            For [`hikari.events.channel_events.GuildChannelDeleteEvent`][] events, this will always raise
             an exception, since the channel will have already been removed.
 
         Returns
         -------
         hikari.channels.PrivateChannel
-            A derivative of [hikari.channels.PrivateChannel][]. The actual
+            A derivative of [`hikari.channels.PrivateChannel`][]. The actual
             type will vary depending on the type of channel this event
             concerns.
 
@@ -239,7 +239,7 @@ class DMChannelEvent(ChannelEvent, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [hikari.permissions.Permissions.VIEW_CHANNEL][] permission in the channel.
+            If you are missing the [`hikari.permissions.Permissions.VIEW_CHANNEL`][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -293,7 +293,7 @@ class GuildChannelUpdateEvent(GuildChannelEvent):
     old_channel: typing.Optional[channels.PermissibleGuildChannel] = attrs.field(repr=True)
     """The old guild channel object.
 
-    This will be [None][] if the channel missing from the cache.
+    This will be [`None`][] if the channel missing from the cache.
     """
 
     channel: channels.PermissibleGuildChannel = attrs.field(repr=True)
@@ -358,7 +358,7 @@ class PinsUpdateEvent(ChannelEvent, abc.ABC):
     def last_pin_timestamp(self) -> typing.Optional[datetime.datetime]:
         """Datetime of when the most recent message was pinned in the channel.
 
-        Will be [None][] if nothing is pinned or the information is
+        Will be [`None`][] if nothing is pinned or the information is
         unavailable.
         """
 
@@ -369,7 +369,7 @@ class PinsUpdateEvent(ChannelEvent, abc.ABC):
         Returns
         -------
         hikari.channels.TextableChannel
-            A derivative of [hikari.channels.TextableChannel][]. The actual
+            A derivative of [`hikari.channels.TextableChannel`][]. The actual
             type will vary depending on the type of channel this event
             concerns.
         """
@@ -409,13 +409,13 @@ class GuildPinsUpdateEvent(PinsUpdateEvent, GuildChannelEvent):
     def get_channel(self) -> typing.Optional[channels.PermissibleGuildChannel]:
         """Get the cached channel that this event relates to, if known.
 
-        If not, return [None][].
+        If not, return [`None`][].
 
         Returns
         -------
         typing.Optional[hikari.channels.TextableGuildChannel]
             The cached channel this event relates to. If not known, this
-            will return [None][] instead.
+            will return [`None`][] instead.
         """
         channel = super().get_channel()
         assert channel is None or isinstance(channel, channels.PermissibleGuildChannel)
@@ -427,7 +427,7 @@ class GuildPinsUpdateEvent(PinsUpdateEvent, GuildChannelEvent):
         Returns
         -------
         hikari.channels.TextableGuildChannel
-            A derivative of [hikari.channels.TextableGuildChannel][]. The actual
+            A derivative of [`hikari.channels.TextableGuildChannel`][]. The actual
             type will vary depending on the type of channel this event
             concerns.
 
@@ -436,7 +436,7 @@ class GuildPinsUpdateEvent(PinsUpdateEvent, GuildChannelEvent):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [hikari.permissions.Permissions.VIEW_CHANNEL][] permission in the channel.
+            If you are missing the [`hikari.permissions.Permissions.VIEW_CHANNEL`][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -474,7 +474,7 @@ class DMPinsUpdateEvent(PinsUpdateEvent, DMChannelEvent):
         Returns
         -------
         hikari.channels.DMChannel
-            A derivative of [hikari.channels.DMChannel][]. The actual
+            A derivative of [`hikari.channels.DMChannel`][]. The actual
             type will vary depending on the type of channel this event
             concerns.
 
@@ -586,7 +586,7 @@ class InviteDeleteEvent(InviteEvent):
     old_invite: typing.Optional[invites.InviteWithMetadata] = attrs.field()
     """Object of the old cached invite.
 
-    This will be [None][] if the invite is missing from the cache.
+    This will be [`None`][] if the invite is missing from the cache.
     """
 
     if typing.TYPE_CHECKING:
@@ -631,7 +631,7 @@ class WebhookUpdateEvent(GuildChannelEvent):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [hikari.permissions.Permissions.MANAGE_WEBHOOKS][] permission.
+            If you are missing the [`hikari.permissions.Permissions.MANAGE_WEBHOOKS`][] permission.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -655,7 +655,7 @@ class WebhookUpdateEvent(GuildChannelEvent):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [hikari.permissions.Permissions.MANAGE_WEBHOOKS][] permission.
+            If you are missing the [`hikari.permissions.Permissions.MANAGE_WEBHOOKS`][] permission.
         hikari.errors.NotFoundError
             If the guild is not found.
         hikari.errors.RateLimitTooLongError
@@ -687,13 +687,13 @@ class GuildThreadEvent(shard_events.ShardEvent, abc.ABC):
         """Perform an API call to fetch the details about this thread.
 
         !!! note
-            For [hikari.events.channel_events.GuildThreadDeleteEvent][] events, this will always raise
+            For [`hikari.events.channel_events.GuildThreadDeleteEvent`][] events, this will always raise
             an exception, since the channel will have already been removed.
 
         Returns
         -------
         hikari.channels.GuildThreadChannel
-            A derivative of [hikari.channels.GuildThreadChannel][]. The
+            A derivative of [`hikari.channels.GuildThreadChannel`][]. The
             actual type will vary depending on the type of channel this event
             concerns.
 
@@ -702,7 +702,7 @@ class GuildThreadEvent(shard_events.ShardEvent, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [hikari.permissions.Permissions.VIEW_CHANNEL][] permission in the channel.
+            If you are missing the [`hikari.permissions.Permissions.VIEW_CHANNEL`][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -863,13 +863,13 @@ class ThreadMembersUpdateEvent(GuildThreadEvent):
     guild_members: typing.Mapping[snowflakes.Snowflake, guilds.Member] = attrs.field()
     """Mapping of IDs to guild member objects of the added thread members.
 
-    Will only be filled if the [hikari.intents.Intents.GUILD_MEMBERS][] intent is declared.
+    Will only be filled if the [`hikari.intents.Intents.GUILD_MEMBERS`][] intent is declared.
     """
 
     guild_presences: typing.Mapping[snowflakes.Snowflake, presences.MemberPresence] = attrs.field()
     """Mapping of IDs to guild presence objects of the added members.
 
-    Will only be filled if the [hikari.intents.Intents.GUILD_PRESENCES][] intent is declared.
+    Will only be filled if the [`hikari.intents.Intents.GUILD_PRESENCES`][] intent is declared.
     """
 
 
@@ -891,7 +891,7 @@ class ThreadListSyncEvent(shard_events.ShardEvent):
     channel_ids: typing.Optional[typing.Sequence[snowflakes.Snowflake]] = attrs.field()
     """IDs of the text channels threads are being synced for.
 
-    If this is [None][] then threads are being synced for all text
+    If this is [`None`][] then threads are being synced for all text
     channels in the guild.
 
     This may contain channels that have no active threads as well to allow for

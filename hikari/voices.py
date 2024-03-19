@@ -53,7 +53,7 @@ class VoiceState:
     channel_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
     """The ID of the channel this user is connected to.
 
-    This will be [None][] if they are leaving voice.
+    This will be [`None`][] if they are leaving voice.
     """
 
     guild_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
@@ -96,7 +96,7 @@ class VoiceState:
     requested_to_speak_at: typing.Optional[datetime.datetime] = attrs.field(eq=False, hash=False, repr=True)
     """When the user requested to speak in a stage channel.
 
-    Will be [None][] if they have not requested to speak.
+    Will be [`None`][] if they have not requested to speak.
     """
 
 

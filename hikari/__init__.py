@@ -22,9 +22,9 @@
 # SOFTWARE.
 """A sane Python framework for writing modern Discord bots.
 
-To get started, you will want to initialize an instance of [hikari.impl.gateway_bot.GatewayBot][]
-for writing a gateway based bot, [hikari.impl.rest_bot.RESTBot][] for a REST based bot,
-or [hikari.impl.rest.RESTApp][] if you only need to use the REST API.
+To get started, you will want to initialize an instance of [`hikari.impl.gateway_bot.GatewayBot`][]
+for writing a gateway based bot, [`hikari.impl.rest_bot.RESTBot`][] for a REST based bot,
+or [`hikari.impl.rest.RESTApp`][] if you only need to use the REST API.
 """
 
 from __future__ import annotations

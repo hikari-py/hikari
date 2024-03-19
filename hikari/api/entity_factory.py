@@ -61,7 +61,7 @@ class GatewayGuildDefinition(abc.ABC):
     """Structure for handling entities within guild create and update events.
 
     !!! warning
-        The methods on this class may raise [LookupError][] if called
+        The methods on this class may raise [`LookupError`][] if called
         when the relevant resource isn't available in the inner payload.
     """
 
@@ -337,7 +337,7 @@ class EntityFactory(abc.ABC):
         Raises
         ------
         KeyError
-            If `guild_id` is left as [hikari.undefined.UNDEFINED][] when
+            If `guild_id` is left as [`hikari.undefined.UNDEFINED`][] when
             `"guild_id"` is not present in the passed payload.
         """
 
@@ -466,7 +466,7 @@ class EntityFactory(abc.ABC):
         Raises
         ------
         KeyError
-            If `guild_id` is left as [hikari.undefined.UNDEFINED][] when
+            If `guild_id` is left as [`hikari.undefined.UNDEFINED`][] when
             `"guild_id"` is not present in the passed payload.
         """
 
@@ -501,7 +501,7 @@ class EntityFactory(abc.ABC):
         Raises
         ------
         KeyError
-            If `guild_id` is left as [hikari.undefined.UNDEFINED][] when
+            If `guild_id` is left as [`hikari.undefined.UNDEFINED`][] when
             `"guild_id"` is not present in the passed payload.
         """
 
@@ -536,7 +536,7 @@ class EntityFactory(abc.ABC):
         Raises
         ------
         KeyError
-            If `guild_id` is left as [hikari.undefined.UNDEFINED][] when
+            If `guild_id` is left as [`hikari.undefined.UNDEFINED`][] when
             `"guild_id"` is not present in the passed payload.
         """
 
@@ -571,7 +571,7 @@ class EntityFactory(abc.ABC):
         Raises
         ------
         KeyError
-            If `guild_id` is left as [hikari.undefined.UNDEFINED][] when
+            If `guild_id` is left as [`hikari.undefined.UNDEFINED`][] when
             `"guild_id"` is not present in the passed payload.
         """
 
@@ -606,7 +606,7 @@ class EntityFactory(abc.ABC):
         Raises
         ------
         KeyError
-            If `guild_id` is left as [hikari.undefined.UNDEFINED][] when
+            If `guild_id` is left as [`hikari.undefined.UNDEFINED`][] when
             `"guild_id"` is not present in the passed payload.
         """
 
@@ -641,7 +641,7 @@ class EntityFactory(abc.ABC):
         Raises
         ------
         KeyError
-            If `guild_id` is left as [hikari.undefined.UNDEFINED][] when
+            If `guild_id` is left as [`hikari.undefined.UNDEFINED`][] when
             `"guild_id"` is not present in the passed payload.
         """
 
@@ -692,7 +692,7 @@ class EntityFactory(abc.ABC):
         Raises
         ------
         KeyError
-            If `thread_id` is left as [hikari.undefined.UNDEFINED][]
+            If `thread_id` is left as [`hikari.undefined.UNDEFINED`][]
             when the relevant field isn't present in the passed payload.
         """
 
@@ -727,7 +727,7 @@ class EntityFactory(abc.ABC):
         Raises
         ------
         KeyError
-            If `guild_id` is left as [hikari.undefined.UNDEFINED][] when
+            If `guild_id` is left as [`hikari.undefined.UNDEFINED`][] when
             `"guild_id"` is not present in the passed payload.
         """
 
@@ -767,7 +767,7 @@ class EntityFactory(abc.ABC):
         Raises
         ------
         KeyError
-            If `guild_id` is left as [hikari.undefined.UNDEFINED][] when
+            If `guild_id` is left as [`hikari.undefined.UNDEFINED`][] when
             `"guild_id"` is not present in the passed payload.
         """
 
@@ -807,7 +807,7 @@ class EntityFactory(abc.ABC):
         Raises
         ------
         KeyError
-            If `guild_id` is left as [hikari.undefined.UNDEFINED][] when
+            If `guild_id` is left as [`hikari.undefined.UNDEFINED`][] when
             `"guild_id"` is not present in the passed payload.
         """
 
@@ -847,7 +847,7 @@ class EntityFactory(abc.ABC):
         Raises
         ------
         KeyError
-            If `guild_id` is left as [hikari.undefined.UNDEFINED][] when
+            If `guild_id` is left as [`hikari.undefined.UNDEFINED`][] when
             `"guild_id"` is not present in the passed payload.
         """
 
@@ -886,7 +886,7 @@ class EntityFactory(abc.ABC):
         Raises
         ------
         KeyError
-            If `guild_id` is left as [hikari.undefined.UNDEFINED][] when
+            If `guild_id` is left as [`hikari.undefined.UNDEFINED`][] when
             `"guild_id"` is not present in the passed payload of a guild
             channel.
         hikari.errors.UnrecognisedEntityError
@@ -1108,7 +1108,7 @@ class EntityFactory(abc.ABC):
         Raises
         ------
         KeyError
-            If `guild_id` is left as [hikari.undefined.UNDEFINED][] when
+            If `guild_id` is left as [`hikari.undefined.UNDEFINED`][] when
             `"guild_id"` is not present in the passed payload.
         """
 
@@ -1176,7 +1176,7 @@ class EntityFactory(abc.ABC):
         Raises
         ------
         KeyError
-            If `guild_id` is left as [hikari.undefined.UNDEFINED][] when
+            If `guild_id` is left as [`hikari.undefined.UNDEFINED`][] when
             `"guild_id"` is not present in the passed payload for the payload of
             the integration.
         """
@@ -1243,13 +1243,13 @@ class EntityFactory(abc.ABC):
         -------
         GatewayGuildDefinition
             The deserialized guild object and the internal collections as
-            maps of [hikari.snowflakes.Snowflake][] mapping to
-            [hikari.channels.GuildChannel][],
-            [hikari.guilds.Member][],
-            [hikari.presences.MemberPresence][],
-            [hikari.guilds.Role][],
-            [hikari.emojis.KnownCustomEmoji][], and
-            [hikari.stickers.GuildSticker][]. This is provided in
+            maps of [`hikari.snowflakes.Snowflake`][] mapping to
+            [`hikari.channels.GuildChannel`][],
+            [`hikari.guilds.Member`][],
+            [`hikari.presences.MemberPresence`][],
+            [`hikari.guilds.Role`][],
+            [`hikari.emojis.KnownCustomEmoji`][], and
+            [`hikari.stickers.GuildSticker`][]. This is provided in
             several components to allow separate caching and linking
             between entities in various relational cache implementations
             internally.
@@ -1287,7 +1287,7 @@ class EntityFactory(abc.ABC):
         Raises
         ------
         KeyError
-            If `guild_id` is left as [hikari.undefined.UNDEFINED][] when
+            If `guild_id` is left as [`hikari.undefined.UNDEFINED`][] when
             `"guild_id"` is not present in the passed payload for the payload of
             the integration.
         """
@@ -1320,7 +1320,7 @@ class EntityFactory(abc.ABC):
         Raises
         ------
         KeyError
-            If `guild_id` is left as [hikari.undefined.UNDEFINED][] when
+            If `guild_id` is left as [`hikari.undefined.UNDEFINED`][] when
             `"guild_id"` is not present in the passed payload for the payload of
             the integration.
         """
@@ -1353,7 +1353,7 @@ class EntityFactory(abc.ABC):
         Raises
         ------
         KeyError
-            If `guild_id` is left as [hikari.undefined.UNDEFINED][] when
+            If `guild_id` is left as [`hikari.undefined.UNDEFINED`][] when
             `"guild_id"` is not present in the passed payload for the payload of
             the integration.
         hikari.errors.UnrecognisedEntityError
@@ -1463,7 +1463,7 @@ class EntityFactory(abc.ABC):
         !!! note
             This isn't required to implement logic for deserializing
             PING interactions and if you want to unmarshal those
-            [hikari.api.entity_factory.EntityFactory.deserialize_partial_interaction][] should be compatible.
+            [`hikari.api.entity_factory.EntityFactory.deserialize_partial_interaction`][] should be compatible.
 
         Parameters
         ----------
@@ -1698,7 +1698,7 @@ class EntityFactory(abc.ABC):
         Raises
         ------
         KeyError
-            If `guild_id` is left as [hikari.undefined.UNDEFINED][] when
+            If `guild_id` is left as [`hikari.undefined.UNDEFINED`][] when
             `"guild_id"` is not present in the passed payload.
         """
 
@@ -1899,7 +1899,7 @@ class EntityFactory(abc.ABC):
         Raises
         ------
         KeyError
-            If `guild_id` is left as [hikari.undefined.UNDEFINED][] when
+            If `guild_id` is left as [`hikari.undefined.UNDEFINED`][] when
             `"guild_id"` is not present in the passed payload for the payload of
             the voice state.
 

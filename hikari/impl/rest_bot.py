@@ -73,12 +73,12 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
     token : typing.Union[str, hikari.api.rest.TokenStrategy]
         The bot or bearer token.
     token_type : typing.Union[str, hikari.applications.TokenType, None]
-        The type of token in use. This should only be passed when [str][]
+        The type of token in use. This should only be passed when [`str`][]
         is passed for `token`, can be `"Bot"` or `"Bearer"` and defaults
         to `"Bot".
 
-        This should be left as [None][] when [hikari.api.rest.TokenStrategy][]
-        is passed for [token][].
+        This should be left as [`None`][] when [`hikari.api.rest.TokenStrategy`][]
+        is passed for [`token`][].
 
     Other Parameters
     ----------------
@@ -95,25 +95,25 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
     banner : typing.Optional[str]
         The package to search for a `banner.txt` in.
 
-        Setting this to [None][] will disable the banner being shown.
+        Setting this to [`None`][] will disable the banner being shown.
     suppress_optimization_warning : bool
         By default, Hikari warns you if you are not running your bot using
-        optimizations (`-O` or `-OO`). If this is [True][], you won't receive
+        optimizations (`-O` or `-OO`). If this is [`True`][], you won't receive
         these warnings, even if you are not running using optimizations.
     executor : typing.Optional[concurrent.futures.Executor]
-        If non-[None][], then this executor is used instead of the
-        [concurrent.futures.ThreadPoolExecutor][] attached to the
-        [asyncio.AbstractEventLoop][] that the bot will run on. This
+        If non-[`None`][], then this executor is used instead of the
+        [`concurrent.futures.ThreadPoolExecutor`][] attached to the
+        [`asyncio.AbstractEventLoop`][] that the bot will run on. This
         executor is used primarily for file-IO.
 
-        While mainly supporting the [concurrent.futures.ThreadPoolExecutor][]
+        While mainly supporting the [`concurrent.futures.ThreadPoolExecutor`][]
         implementation in the standard lib, hikari's file handling systems
-        should also work with [concurrent.futures.ProcessPoolExecutor][], which
+        should also work with [`concurrent.futures.ProcessPoolExecutor`][], which
         relies on all objects used in IPC to be pickleable. Many third-party
         libraries will not support this fully though, so your mileage may vary
         on using ProcessPoolExecutor implementations with this parameter.
     force_color : bool
-        If [True][], then this application will __force__ colour to be
+        If [`True`][], then this application will __force__ colour to be
         used in console-based output. Specifying a `"CLICOLOR_FORCE"`
         environment variable with a non-`"0"` value will
         override this setting.
@@ -122,26 +122,26 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
     http_settings : typing.Optional[hikari.config.HTTPSettings]
         Optional custom HTTP configuration settings to use. Allows you to
         customise functionality such as whether SSL-verification is enabled,
-        what timeouts [aiohttp][] should expect to use for requests, and behavior
+        what timeouts [`aiohttp`][] should expect to use for requests, and behavior
         regarding HTTP-redirects.
     logs : typing.Union[None, int, str, typing.Dict[str, typing.Any], os.PathLike[str]]
         The flavour to set the logging to.
 
-        This can be [None][] to not enable logging automatically.
+        This can be [`None`][] to not enable logging automatically.
 
-        If you pass a [str][] or a [int][], it is interpreted as
+        If you pass a [`str`][] or a [`int`][], it is interpreted as
         the global logging level to use, and should match one of `"DEBUG"`,
         `"INFO"`, `"WARNING"`, `"ERROR"` or `"CRITICAL"`.
         The configuration will be set up to use a `colorlog` coloured logger,
         and to use a sane logging format strategy. The output will be written
-        to [sys.stdout][] using this configuration.
+        to [`sys.stdout`][] using this configuration.
 
-        If you pass a [dict][], it is treated as the mapping to pass to
-        [logging.config.dictConfig][]. If the dict defines any handlers, default
+        If you pass a [`dict`][], it is treated as the mapping to pass to
+        [`logging.config.dictConfig`][]. If the dict defines any handlers, default
         handlers will not be setup if `incremental` is not specified.
 
-        If you pass a [str][] to an existing file or a [os.PathLike][], it is
-        interpreted as the file to load config from using [logging.config.fileConfig][].
+        If you pass a [`str`][] to an existing file or a [`os.PathLike`][], it is
+        interpreted as the file to load config from using [`logging.config.fileConfig`][].
 
         Note that `"TRACE_HIKARI"` is a library-specific logging level
         which is expected to be more verbose than `"DEBUG"`.
@@ -162,17 +162,17 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         Maximum number of times a request will be retried if
         it fails with a `5xx` status.
 
-        Defaults to 3 if set to [None][].
+        Defaults to 3 if set to [`None`][].
     proxy_settings : typing.Optional[hikari.impl.config.ProxySettings]
         Custom proxy settings to use with network-layer logic
         in your application to get through an HTTP-proxy.
     public_key : typing.Union[str, bytes, None]
         The public key to use to verify received interaction requests.
-        This may be a hex encoded [str][] or the raw [bytes][].
-        If left as [None][] then the client will try to work this value
-        out based on [token][].
+        This may be a hex encoded [`str`][] or the raw [`bytes`][].
+        If left as [`None`][] then the client will try to work this value
+        out based on [`token`][].
     rest_url : typing.Optional[str]
-        Defaults to the Discord REST API URL if [None][]. Can be
+        Defaults to the Discord REST API URL if [`None`][]. Can be
         overridden if you are attempting to point to an unofficial endpoint, or
         if you are attempting to mock/stub the Discord API for any reason.
         Generally you do not want to change this.
@@ -181,7 +181,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
     ------
     ValueError
         * If `token_type` is provided when a token strategy is passed for `token`.
-        * if `token_type` is left as [None][] when a string is passed for `token`.
+        * if `token_type` is left as [`None`][] when a string is passed for `token`.
 
     Examples
     --------
@@ -490,25 +490,25 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         Other Parameters
         ----------------
         asyncio_debug : bool
-            If [True][], then debugging is enabled for the asyncio event loop in use.
+            If [`True`][], then debugging is enabled for the asyncio event loop in use.
         backlog : int
             The number of unaccepted connections that the system will allow before
             refusing new connections.
         check_for_updates : bool
-            If [True][], will check for newer versions of hikari on
+            If [`True`][], will check for newer versions of hikari on
             PyPI and notify if available.
         close_loop : bool
-            If [True][], then once the bot enters a state where all components
+            If [`True`][], then once the bot enters a state where all components
             have shut down permanently during application shut down, then all
             asyncgens and background tasks will be destroyed, and the event
             loop will be shut down.
 
-            This will wait until all hikari-owned [aiohttp][] connectors have
+            This will wait until all hikari-owned [`aiohttp`][] connectors have
             had time to attempt to shut down correctly (around 250ms), and on
             Python 3.9 and newer, will also shut down the default event loop
             executor too.
         close_passed_executor : bool
-            If [True][], any custom [concurrent.futures.Executor][] passed
+            If [`True`][], any custom [`concurrent.futures.Executor`][] passed
             to the constructor will be shut down when the application
             terminates. This does not affect the default executor associated
             with the event loop, and will not do anything if you do not
@@ -520,10 +520,10 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
             coroutines may originate from, but generally you
             do not want to leave this enabled for performance reasons.
         enable_signal_handlers : typing.Optional[bool]
-            Defaults to [True][] if this is called in the main thread.
+            Defaults to [`True`][] if this is called in the main thread.
 
             If on a non-Windows OS with builtin support for kernel-level
-            POSIX signals, then setting this to [True][] will allow
+            POSIX signals, then setting this to [`True`][] will allow
             treating keyboard interrupts and other OS signals to safely shut
             down the application as calls to shut down the application properly
             rather than just killing the process in a dirty state immediately.
@@ -630,7 +630,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
             The number of unaccepted connections that the system will allow before
             refusing new connections.
         check_for_updates : bool
-            If [True][], will check for newer versions of hikari on PyPI
+            If [`True`][], will check for newer versions of hikari on PyPI
             and notify if available.
         host : typing.Optional[typing.Union[str, aiohttp.web.HostSequence]]
             TCP/IP host or a sequence of hosts for the HTTP server.

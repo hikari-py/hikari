@@ -20,7 +20,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""A utility for faster [typing.Protocol][] instance checks."""
+"""A utility for faster [`typing.Protocol`][] instance checks."""
 
 from __future__ import annotations
 
@@ -39,7 +39,7 @@ def _check_if_ignored(name: str) -> bool:
     return name.startswith("_abc_") or name in _IGNORED_ATTRS
 
 
-# This metaclass needs to subclass the same type as [typing.Protocol][] to be
+# This metaclass needs to subclass the same type as [`typing.Protocol`][] to be
 # able to overwrite it
 class _FastProtocolChecking(type(typing.Protocol)):
     _attributes_: typing.Tuple[str, ...]

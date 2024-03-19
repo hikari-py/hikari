@@ -108,7 +108,7 @@ class OAuth2Scope(str, enums.Enum):
     """OAuth2 Scopes that Discord allows.
 
     These are categories of permissions for applications using the OAuth2 API
-    directly. Most users will only ever need the [hikari.applications.OAuth2Scope.BOT][] scope when developing
+    directly. Most users will only ever need the [`hikari.applications.OAuth2Scope.BOT`][] scope when developing
     bots.
     """
 
@@ -147,7 +147,7 @@ class OAuth2Scope(str, enums.Enum):
     """Allows your application's commands to be used in a guild.
 
     This is used in Discord's special Bot Authorization Flow like
-    [hikari.applications.OAuth2Scope.BOT][] in-order to join an application into a guild as an
+    [`hikari.applications.OAuth2Scope.BOT`][] in-order to join an application into a guild as an
     application command providing integration.
     """
 
@@ -203,7 +203,7 @@ class OAuth2Scope(str, enums.Enum):
     """Enables viewing info about itself.
 
     !!! note
-        This does not include email address info. Use the [hikari.applications.OAuth2Scope.EMAIL][] scope instead
+        This does not include email address info. Use the [`hikari.applications.OAuth2Scope.EMAIL`][] scope instead
         to retrieve this information.
     """
 
@@ -277,19 +277,19 @@ class OwnConnection:
     """The type of service this connection is for."""
 
     is_revoked: bool = attrs.field(eq=False, hash=False, repr=False)
-    """[True][] if the connection has been revoked."""
+    """[`True`][] if the connection has been revoked."""
 
     integrations: typing.Sequence[guilds.PartialIntegration] = attrs.field(eq=False, hash=False, repr=False)
     """A sequence of the partial guild integration objects this connection has."""
 
     is_verified: bool = attrs.field(eq=False, hash=False, repr=False)
-    """[True][] if the connection has been verified."""
+    """[`True`][] if the connection has been verified."""
 
     is_friend_sync_enabled: bool = attrs.field(eq=False, hash=False, repr=False)
-    """[True][] if friends should be added based on this connection."""
+    """[`True`][] if friends should be added based on this connection."""
 
     is_activity_visible: bool = attrs.field(eq=False, hash=False, repr=False)
-    """[True][] if this connection's activities are shown in the user's presence."""
+    """[`True`][] if this connection's activities are shown in the user's presence."""
 
     visibility: typing.Union[ConnectionVisibility, int] = attrs.field(eq=False, hash=False, repr=True)
     """The visibility of the connection."""
@@ -303,7 +303,7 @@ class OwnGuild(guilds.PartialGuild):
     """A list of the features in this guild."""
 
     is_owner: bool = attrs.field(eq=False, hash=False, repr=True)
-    """[True][] when the current user owns this guild."""
+    """[`True`][] when the current user owns this guild."""
 
     my_permissions: permissions_.Permissions = attrs.field(eq=False, hash=False, repr=False)
     """The guild-level permissions that apply to the current user or bot."""
@@ -333,9 +333,9 @@ class OwnApplicationRoleConnection:
         provide a way to difference between them.
 
         You can deserialize them yourself based on what value you expect from the key:
-            - `INTEGER_X`: Cast to an [int][].
+            - `INTEGER_X`: Cast to an [`int`][].
             - `DATETIME_X`: Cast to [`datetime.datetime.fromisoformat`][] or `ciso8601.parse_rfc3339` (for speed).
-            - `BOOLEAN_X`: Cast to a [bool][].
+            - `BOOLEAN_X`: Cast to a [`bool`][].
     """
 
 
@@ -361,7 +361,7 @@ class TeamMember(users.User):
     permissions: typing.Sequence[str] = attrs.field(repr=False)
     """This member's permissions within a team.
 
-    At the time of writing, this will always be a sequence of one [str][],
+    At the time of writing, this will always be a sequence of one [`str`][],
     which will always be `"*"`. This may change in the future, however.
     """
 
@@ -461,7 +461,7 @@ class Team(snowflakes.Unique):
     icon_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """The CDN hash of this team's icon.
 
-    If no icon is provided, this will be [None][].
+    If no icon is provided, this will be [`None`][].
     """
 
     members: typing.Mapping[snowflakes.Snowflake, TeamMember] = attrs.field(eq=False, hash=False, repr=False)
@@ -479,7 +479,7 @@ class Team(snowflakes.Unique):
 
     @property
     def icon_url(self) -> typing.Optional[files.URL]:
-        """Icon URL, or [None][] if no icon exists."""
+        """Icon URL, or [`None`][] if no icon exists."""
         return self.make_icon_url()
 
     def make_icon_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
@@ -497,7 +497,7 @@ class Team(snowflakes.Unique):
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL, or [None][] if no icon exists.
+            The URL, or [`None`][] if no icon exists.
 
         Raises
         ------
@@ -549,7 +549,7 @@ class InviteApplication(guilds.PartialApplication):
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL, or [None][] if no cover image exists.
+            The URL, or [`None`][] if no cover image exists.
 
         Raises
         ------
@@ -588,10 +588,10 @@ class Application(guilds.PartialApplication):
     """Client application that models may use for procedures."""
 
     is_bot_public: bool = attrs.field(eq=False, hash=False, repr=True)
-    """[True][] if the bot associated with this application is public."""
+    """[`True`][] if the bot associated with this application is public."""
 
     is_bot_code_grant_required: bool = attrs.field(eq=False, hash=False, repr=False)
-    """[True][] if this application's bot is requiring code grant for invites."""
+    """[`True`][] if this application's bot is requiring code grant for invites."""
 
     owner: users.User = attrs.field(eq=False, hash=False, repr=True)
     """The application's owner."""
@@ -608,7 +608,7 @@ class Application(guilds.PartialApplication):
     team: typing.Optional[Team] = attrs.field(eq=False, hash=False, repr=False)
     """The team this application belongs to.
 
-    If the application is not part of a team, this will be [None][].
+    If the application is not part of a team, this will be [`None`][].
     """
 
     cover_image_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
@@ -655,7 +655,7 @@ class Application(guilds.PartialApplication):
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL, or [None][] if no cover image exists.
+            The URL, or [`None`][] if no cover image exists.
 
         Raises
         ------
@@ -674,21 +674,21 @@ class Application(guilds.PartialApplication):
 @attrs_extensions.with_copy
 @attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class AuthorizationApplication(guilds.PartialApplication):
-    """The application model found attached to [hikari.applications.AuthorizationInformation][]."""
+    """The application model found attached to [`hikari.applications.AuthorizationInformation`][]."""
 
     public_key: bytes = attrs.field(eq=False, hash=False, repr=False)
     """The key used for verifying interaction and GameSDK payload signatures."""
 
     is_bot_public: typing.Optional[bool] = attrs.field(eq=False, hash=False, repr=True)
-    """[True][] if the bot associated with this application is public.
+    """[`True`][] if the bot associated with this application is public.
 
-    Will be [None][] if this application doesn't have an associated bot.
+    Will be [`None`][] if this application doesn't have an associated bot.
     """
 
     is_bot_code_grant_required: typing.Optional[bool] = attrs.field(eq=False, hash=False, repr=False)
-    """[True][] if this application's bot is requiring code grant for invites.
+    """[`True`][] if this application's bot is requiring code grant for invites.
 
-    Will be [None][] if this application doesn't have a bot.
+    Will be [`None`][] if this application doesn't have a bot.
     """
 
     terms_of_service_url: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
@@ -716,7 +716,7 @@ class AuthorizationInformation:
     """The user who has authorized this token.
 
     This will only be included if the token is authorized for the
-    [hikari.applications.OAuth2Scope.IDENTIFY][] scope.
+    [`hikari.applications.OAuth2Scope.IDENTIFY`][] scope.
     """
 
 
@@ -757,14 +757,14 @@ class OAuth2AuthorizationToken(PartialOAuth2Token):
     """Object of the webhook that was created.
 
     This will only be present if this token was authorized with the
-    [hikari.applications.OAuth2Scope.WEBHOOK_INCOMING][] scope, otherwise this will be [None][].
+    [`hikari.applications.OAuth2Scope.WEBHOOK_INCOMING`][] scope, otherwise this will be [`None`][].
     """
 
     guild: typing.Optional[guilds.RESTGuild] = attrs.field(eq=False, hash=False, repr=True)
     """Object of the guild the user was added to.
 
     This will only be present if this token was authorized with the
-    [hikari.applications.OAuth2Scope.BOT][] scope, otherwise this will be [None][].
+    [`hikari.applications.OAuth2Scope.BOT`][] scope, otherwise this will be [`None`][].
     """
 
 

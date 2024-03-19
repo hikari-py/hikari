@@ -222,12 +222,12 @@ class GuildTypingEvent(TypingEvent):
     def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
         """Get the cached object of the guild this typing event occurred in.
 
-        If the guild is not found then this will return [None][].
+        If the guild is not found then this will return [`None`][].
 
         Returns
         -------
         typing.Optional[hikari.guilds.GatewayGuild]
-            The object of the gateway guild if found else [None][].
+            The object of the gateway guild if found else [`None`][].
         """
         if not isinstance(self.app, traits.CacheAware):
             return None
@@ -269,7 +269,7 @@ class DMTypingEvent(TypingEvent):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [hikari.permissions.Permissions.VIEW_CHANNEL][] permission in the channel.
+            If you are missing the [`hikari.permissions.Permissions.VIEW_CHANNEL`][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError

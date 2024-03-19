@@ -76,7 +76,7 @@ def warn_deprecated(
     stack_level : int
         The stack level to issue the warning in.
     quote : bool
-        Whether to quote [what][] when displaying the deprecation
+        Whether to quote [`what`][] when displaying the deprecation
 
     Raises
     ------

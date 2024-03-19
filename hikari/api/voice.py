@@ -62,7 +62,7 @@ class VoiceComponent(abc.ABC):
         Once this is done, unsubscribe from any events.
 
         If you simply wish to disconnect every connection, use
-        [hikari.api.VoiceComponent.disconnect][] instead.
+        [`hikari.api.VoiceComponent.disconnect`][] instead.
         """
 
     @abc.abstractmethod
@@ -101,26 +101,26 @@ class VoiceComponent(abc.ABC):
             The channel or channel ID to connect to.
         voice_connection_type : typing.Type[VoiceConnection]
             The type of voice connection to use. This should be initialized
-            internally using the [hikari.api.voice.VoiceConnection.initialize][]
+            internally using the [`hikari.api.voice.VoiceConnection.initialize`][]
             classmethod.
         deaf : bool
-            If [True][], the client will enter the voice channel deafened
+            If [`True`][], the client will enter the voice channel deafened
             (thus unable to hear other users).
         mute : bool
-            If [True][], the client will enter the voice channel muted
+            If [`True`][], the client will enter the voice channel muted
             (thus unable to send audio).
         timeout : typing.Optional[int]
             The amount of time, in seconds, to wait before erroring when
-            connecting to the voice channel. If timeout is [None][] there will be
+            connecting to the voice channel. If timeout is [`None`][] there will be
             no timeout.
 
             !!! warning
-                If timeout is [None][], this function will be awaited forever if an
+                If timeout is [`None`][], this function will be awaited forever if an
                 invalid `guild_id` or `channel_id` is provided.
 
         **kwargs : typing.Any
             Any arguments to provide to the
-            [hikari.api.voice.VoiceConnection.initialize][] method.
+            [`hikari.api.voice.VoiceConnection.initialize`][] method.
 
         Returns
         -------

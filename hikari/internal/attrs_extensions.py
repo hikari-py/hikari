@@ -20,7 +20,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Utility for extending and optimising the usage of [attr][] models."""
+"""Utility for extending and optimising the usage of [`attr`][] models."""
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
@@ -91,7 +91,7 @@ def get_fields_definition(
 
 # TODO: can we get if the init wasn't generated for the class?
 def generate_shallow_copier(cls: typing.Type[ModelT]) -> typing.Callable[[ModelT], ModelT]:
-    """Generate a function for shallow copying an attrs model with [init][] enabled.
+    """Generate a function for shallow copying an attrs model with [`init`][] enabled.
 
     Parameters
     ----------
@@ -138,7 +138,7 @@ def get_or_generate_shallow_copier(cls: typing.Type[ModelT]) -> typing.Callable[
 
 
 def copy_attrs(model: ModelT) -> ModelT:
-    """Shallow copy an attrs model with [init][] enabled.
+    """Shallow copy an attrs model with [`init`][] enabled.
 
     Parameters
     ----------
@@ -166,7 +166,7 @@ def _normalize_kwargs_and_setters(
 def generate_deep_copier(
     cls: typing.Type[ModelT],
 ) -> typing.Callable[[ModelT, typing.MutableMapping[int, typing.Any]], None]:
-    """Generate a function for deep copying an attrs model with [init][] enabled.
+    """Generate a function for deep copying an attrs model with [`init`][] enabled.
 
     Parameters
     ----------
@@ -221,11 +221,11 @@ def get_or_generate_deep_copier(
 
 
 def deep_copy_attrs(model: ModelT, memo: typing.Optional[typing.MutableMapping[int, typing.Any]] = None) -> ModelT:
-    """Deep copy an attrs model with [init][] enabled.
+    """Deep copy an attrs model with [`init`][] enabled.
 
     !!! note
         This won't deep copy attributes where "skip_deep_copy" is set to
-        [True][] in their metadata.
+        [`True`][] in their metadata.
 
     Parameters
     ----------

@@ -270,7 +270,7 @@ class AuditLogChangeKey(str, enums.Enum):
     """Role removed from a member."""
 
     COLOUR = COLOR
-    """Alias for [hikari.audit_logs.AuditLogChangeKey.COLOR][]."""
+    """Alias for [`hikari.audit_logs.AuditLogChangeKey.COLOR`][]."""
 
 
 @attrs_extensions.with_copy
@@ -395,7 +395,7 @@ class MessagePinEntryInfo(BaseAuditLogEntryInfo):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [hikari.permissions.Permissions.VIEW_CHANNEL][] permission in the channel.
+            If you are missing the [`hikari.permissions.Permissions.VIEW_CHANNEL`][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -421,7 +421,7 @@ class MessagePinEntryInfo(BaseAuditLogEntryInfo):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [hikari.permissions.Permissions.VIEW_CHANNEL][]
+            If you are missing the [`hikari.permissions.Permissions.VIEW_CHANNEL`][]
             permission in the channel that the message is in.
         hikari.errors.NotFoundError
             If the message is not found.
@@ -476,7 +476,7 @@ class MessageDeleteEntryInfo(MessageBulkDeleteEntryInfo):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [hikari.permissions.Permissions.VIEW_CHANNEL][] permission in the channel.
+            If you are missing the [`hikari.permissions.Permissions.VIEW_CHANNEL`][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -520,7 +520,7 @@ class MemberMoveEntryInfo(MemberDisconnectEntryInfo):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [hikari.permissions.Permissions.VIEW_CHANNEL][] permission in the channel.
+            If you are missing the [`hikari.permissions.Permissions.VIEW_CHANNEL`][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -554,7 +554,7 @@ class AuditLogEntry(snowflakes.Unique):
     """The ID of the entity affected by this change, if applicable."""
 
     changes: typing.Sequence[AuditLogChange] = attrs.field(eq=False, hash=False, repr=False)
-    """A sequence of the changes made to [hikari.audit_logs.AuditLogEntry.target_id][]."""
+    """A sequence of the changes made to [`hikari.audit_logs.AuditLogEntry.target_id`][]."""
 
     user_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
     """The ID of the user who made this change."""

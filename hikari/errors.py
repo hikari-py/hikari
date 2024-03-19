@@ -172,7 +172,7 @@ class ShardCloseCode(int, enums.Enum):
 
     @property
     def is_standard(self) -> bool:
-        """Return [True][] if this is a standard code."""
+        """Return [`True`][] if this is a standard code."""
         return (self.value // 1000) == 1
 
 
@@ -192,10 +192,10 @@ class GatewayServerClosedConnectionError(GatewayError):
     """Return the close code that was received, if there is one."""
 
     can_reconnect: bool = attrs.field(default=False)
-    """Return [True][] if we can recover from this closure.
+    """Return [`True`][] if we can recover from this closure.
 
-    If [True][], it will try to reconnect after this is raised rather
-    than it being propagated to the caller. If [False][], this will
+    If [`True`][], it will try to reconnect after this is raised rather
+    than it being propagated to the caller. If [`False`][], this will
     be raised, thus stopping the application unless handled explicitly by the
     user.
     """
@@ -222,7 +222,7 @@ class HTTPResponseError(HTTPError):
     status: typing.Union[http.HTTPStatus, int] = attrs.field()
     """The HTTP status code for the response.
 
-    This will be [int][] if it's outside the range of status codes in the HTTP
+    This will be [`int`][] if it's outside the range of status codes in the HTTP
     specification (e.g. one of Cloudflare's non-standard status codes).
     """
 
@@ -360,7 +360,7 @@ class NotFoundError(ClientHTTPResponseError):
 class RateLimitTooLongError(HTTPError):
     """Internal error raised if the wait for a rate limit is too long.
 
-    This is similar to [asyncio.TimeoutError][] in the way that it is used,
+    This is similar to [`asyncio.TimeoutError`][] in the way that it is used,
     but this will be raised pre-emptively and immediately if the period
     of time needed to wait is greater than a user-defined limit.
 

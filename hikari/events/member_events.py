@@ -72,13 +72,13 @@ class MemberEvent(shard_events.ShardEvent, abc.ABC):
     def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
         """Get the cached view of the guild this member event occurred in.
 
-        If the guild itself is not cached, this will return [None][].
+        If the guild itself is not cached, this will return [`None`][].
 
         Returns
         -------
         typing.Optional[hikari.guilds.GatewayGuild]
             The guild that this event occurred in, if known, else
-            [None][].
+            [`None`][].
         """
         if not isinstance(self.app, traits.CacheAware):
             return None
@@ -124,7 +124,7 @@ class MemberUpdateEvent(MemberEvent):
     old_member: typing.Optional[guilds.Member] = attrs.field()
     """The old member object.
 
-    This will be [None][] if the member missing from the cache.
+    This will be [`None`][] if the member missing from the cache.
     """
 
     member: guilds.Member = attrs.field()
@@ -159,5 +159,5 @@ class MemberDeleteEvent(MemberEvent):
     old_member: typing.Optional[guilds.Member] = attrs.field()
     """The old member object.
 
-    This will be [None][] if the member was missing from the cache.
+    This will be [`None`][] if the member was missing from the cache.
     """

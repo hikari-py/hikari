@@ -48,17 +48,17 @@ def generate_allowed_mentions(
     ----------
     mentions_everyone : hikari.undefined.UndefinedOr[bool]
         Whether @everyone and @here mentions are enabled. If
-        [hikari.undefined.UNDEFINED][] or [False][] then this will be disabled.
+        [`hikari.undefined.UNDEFINED`][] or [`False`][] then this will be disabled.
     mentions_reply : hikari.undefined.UndefinedOr[bool]
-        Whether the reply mention should be enabled. If [hikari.undefined.UNDEFINED][]
-        or [False][] then this will be disabled.
+        Whether the reply mention should be enabled. If [`hikari.undefined.UNDEFINED`][]
+        or [`False`][] then this will be disabled.
     user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
         Either a sequence of objects/IDs of the users to enabled mentions for,
-        [True][] to allow all mentions or [False][]/[hikari.undefined.UNDEFINED][]
+        [`True`][] to allow all mentions or [`False`][]/[`hikari.undefined.UNDEFINED`][]
         to disable all user mentions.
     role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], bool]]
         Either a sequence of objects/IDs of the roles to enabled mentions for,
-        [True][] to allow all mentions or [False][]/[hikari.undefined.UNDEFINED][]
+        [`True`][] to allow all mentions or [`False`][]/[`hikari.undefined.UNDEFINED`][]
         to disable all user mentions.
 
     Returns

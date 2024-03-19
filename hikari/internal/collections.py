@@ -70,7 +70,7 @@ class ExtendedMutableMapping(typing.MutableMapping[KeyT, ValueT], abc.ABC):
 
         Unlike simply doing [dict(mapping)][], this may rely on internal detail
         around how the data is being stored to allow for a more efficient copy.
-        This may look like calling [dict.copy][] and wrapping the result in a
+        This may look like calling [`dict.copy`][] and wrapping the result in a
         mapped collection.
 
         !!! note
@@ -88,10 +88,10 @@ class ExtendedMutableMapping(typing.MutableMapping[KeyT, ValueT], abc.ABC):
 
         Unlike simply doing [dict(mapping)][], this may rely on internal detail
         around how the data is being stored to allow for a more efficient copy.
-        This may look like calling [dict.copy][].
+        This may look like calling [`dict.copy`][].
 
         !!! note
-            Unlike [ExtendedMutableMapping.copy][], this should return a pure
+            Unlike [`ExtendedMutableMapping.copy`][], this should return a pure
             mapping with no removal policy at all.
 
         Returns
@@ -151,7 +151,7 @@ class LimitedCapacityCacheMap(ExtendedMutableMapping[KeyT, ValueT]):
     on_expire : typing.Optional[typing.Callable[[ValueT], None]]
         A function to call each time an item is garbage collected from this
         map. This should take one positional argument of the same type stored
-        in this mapping as the value and should return [None][].
+        in this mapping as the value and should return [`None`][].
 
         This will always be called after the entry has been removed.
     """
@@ -206,7 +206,7 @@ class LimitedCapacityCacheMap(ExtendedMutableMapping[KeyT, ValueT]):
 
 # TODO: can this be immutable?
 class SnowflakeSet(typing.MutableSet[snowflakes.Snowflake]):
-    r"""Set of [hikari.snowflakes.Snowflake][] objects.
+    r"""Set of [`hikari.snowflakes.Snowflake`][] objects.
 
     This internally uses a sorted bisect-array of 64 bit integers to represent
     the information. This reduces the space needed to store these objects
@@ -224,7 +224,7 @@ class SnowflakeSet(typing.MutableSet[snowflakes.Snowflake]):
     will be $$ \mathcal{O} \left( \log n \right) $$
 
     Insertions and removals will take $$ \mathcal{O} \left( \log n \right) $$
-    operations in the worst case, due to [bisect][] using a binary insertion sort
+    operations in the worst case, due to [`bisect`][] using a binary insertion sort
     algorithm internally. Average case will be
     $$ \mathcal{O} \left( \log n \right) $$ and best case will be
     $$ \Omega \left\( k \right) $$
@@ -264,7 +264,7 @@ class SnowflakeSet(typing.MutableSet[snowflakes.Snowflake]):
         for sf in sfs:
             # Yes, this is repeated code, but we want insertions to be as fast
             # as possible for caching purposes, so reduce the number of function
-            # calls as much as possible and reimplement the logic for [add][]
+            # calls as much as possible and reimplement the logic for [`add`][]
             # here.
             index = bisect.bisect_left(self._ids, sf)
             if index == len(self._ids):
@@ -334,7 +334,7 @@ def get_index_or_slice(
     Raises
     ------
     IndexError
-        If [index_or_slice][] is an int and is outside the range of the mapping's
+        If [`index_or_slice`][] is an int and is outside the range of the mapping's
         contents.
     """
     if isinstance(index_or_slice, slice):

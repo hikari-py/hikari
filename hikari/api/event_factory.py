@@ -129,7 +129,7 @@ class EventFactory(abc.ABC):
         Other Parameters
         ----------------
         old_channel : typing.Optional[hikari.channels.PermissibleGuildChannel]
-            The guild channel object or [None][].
+            The guild channel object or [`None`][].
 
         Returns
         -------
@@ -347,7 +347,7 @@ class EventFactory(abc.ABC):
         Other Parameters
         ----------------
         old_invite : typing.Optional[hikari.invites.InviteWithMetadata]
-            The invite object or [None][].
+            The invite object or [`None`][].
 
         Returns
         -------
@@ -440,7 +440,7 @@ class EventFactory(abc.ABC):
         Other Parameters
         ----------------
         old_guild : typing.Optional[hikari.guilds.GatewayGuild]
-            The guild object or [None][].
+            The guild object or [`None`][].
 
         Returns
         -------
@@ -468,7 +468,7 @@ class EventFactory(abc.ABC):
         Other Parameters
         ----------------
         old_guild : typing.Optional[hikari.guilds.GatewayGuild]
-            The guild object or [None][].
+            The guild object or [`None`][].
 
         Returns
         -------
@@ -553,7 +553,7 @@ class EventFactory(abc.ABC):
         Other Parameters
         ----------------
         old_emojis : typing.Optional[typing.Sequence[hikari.emojis.KnownCustomEmoji]]
-            The sequence of emojis or [None][].
+            The sequence of emojis or [`None`][].
 
         Returns
         -------
@@ -581,7 +581,7 @@ class EventFactory(abc.ABC):
         Other Parameters
         ----------------
         old_stickers : typing.Optional[typing.Sequence[hikari.stickers.GuildSticker]]
-            The sequence of stickers or [None][].
+            The sequence of stickers or [`None`][].
 
         Returns
         -------
@@ -666,7 +666,7 @@ class EventFactory(abc.ABC):
         Other Parameters
         ----------------
         old_presence : typing.Optional[hikari.presences.MemberPresence]
-            The presence object or [None][].
+            The presence object or [`None`][].
 
         Returns
         -------
@@ -759,7 +759,7 @@ class EventFactory(abc.ABC):
         Other Parameters
         ----------------
         old_member : typing.Optional[hikari.guilds.Member]
-            The member object or [None][].
+            The member object or [`None`][].
 
         Returns
         -------
@@ -787,7 +787,7 @@ class EventFactory(abc.ABC):
         Other Parameters
         ----------------
         old_member : typing.Optional[hikari.guilds.Member]
-            The member object or [None][].
+            The member object or [`None`][].
 
         Returns
         -------
@@ -838,7 +838,7 @@ class EventFactory(abc.ABC):
         Other Parameters
         ----------------
         old_role : typing.Optional[hikari.guilds.Role]
-            The role object or [None][].
+            The role object or [`None`][].
 
         Returns
         -------
@@ -866,7 +866,7 @@ class EventFactory(abc.ABC):
         Other Parameters
         ----------------
         old_role : typing.Optional[hikari.guilds.Role]
-            The role object or [None][].
+            The role object or [`None`][].
 
         Returns
         -------
@@ -1060,7 +1060,7 @@ class EventFactory(abc.ABC):
         Other Parameters
         ----------------
         old_message : typing.Optional[hikari.messages.PartialMessage]
-            The message object or [None][].
+            The message object or [`None`][].
 
         Returns
         -------
@@ -1336,7 +1336,7 @@ class EventFactory(abc.ABC):
         Other Parameters
         ----------------
         old_user : typing.Optional[hikari.users.OwnUser]
-            The OwnUser object or [None][].
+            The OwnUser object or [`None`][].
 
         Returns
         -------
@@ -1368,7 +1368,7 @@ class EventFactory(abc.ABC):
         Other Parameters
         ----------------
         old_state : typing.Optional[hikari.voices.VoiceState]
-            The VoiceState object or [None][].
+            The VoiceState object or [`None`][].
 
         Returns
         -------

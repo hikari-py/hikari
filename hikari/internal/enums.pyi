@@ -20,7 +20,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Typehints for [hikari.internal.enums][]."""
+"""Typehints for [`hikari.internal.enums`][]."""
 
 # Enums use a lot of internal voodoo that will not type check nicely, so we
 # skip that module with MyPy and just accept that "here be dragons".

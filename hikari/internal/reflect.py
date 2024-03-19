@@ -35,14 +35,14 @@ if typing.TYPE_CHECKING:
     _T = typing.TypeVar("_T")
 
 EMPTY: typing.Final[typing.Any] = inspect.Parameter.empty
-"""A singleton that empty annotations will be set to in [resolve_signature][]."""
+"""A singleton that empty annotations will be set to in [`resolve_signature`][]."""
 
 
 def resolve_signature(func: typing.Callable[..., typing.Any]) -> inspect.Signature:
-    """Get the [inspect.Signature][] of `func` with resolved forward annotations.
+    """Get the [`inspect.Signature`][] of `func` with resolved forward annotations.
 
     !!! warning
-        This will use [eval][] to resolve string type-hints and forward
+        This will use [`eval`][] to resolve string type-hints and forward
         references. This has a slight performance overhead, so attempt to cache
         this info as much as possible.
 
@@ -54,7 +54,7 @@ def resolve_signature(func: typing.Callable[..., typing.Any]) -> inspect.Signatu
     Returns
     -------
     inspect.Signature
-        A [inspect.Signature][] object with all forward reference annotations
+        A [`inspect.Signature`][] object with all forward reference annotations
         resolved.
     """
     if sys.version_info >= (3, 10):

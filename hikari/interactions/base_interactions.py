@@ -93,8 +93,8 @@ class ResponseType(int, enums.Enum):
     MESSAGE_CREATE = 4
     """An immediate message response to an interaction.
 
-    * [hikari.interactions.base_interactions.InteractionType.APPLICATION_COMMAND][]
-    * [hikari.interactions.base_interactions.InteractionType.MESSAGE_COMPONENT][]
+    * [`hikari.interactions.base_interactions.InteractionType.APPLICATION_COMMAND`][]
+    * [`hikari.interactions.base_interactions.InteractionType.MESSAGE_COMPONENT`][]
     """
 
     DEFERRED_MESSAGE_CREATE = 5
@@ -105,8 +105,8 @@ class ResponseType(int, enums.Enum):
 
     This is valid for the following interaction types:
 
-    * [hikari.interactions.base_interactions.InteractionType.APPLICATION_COMMAND][]
-    * [hikari.interactions.base_interactions.InteractionType.MESSAGE_COMPONENT][]
+    * [`hikari.interactions.base_interactions.InteractionType.APPLICATION_COMMAND`][]
+    * [`hikari.interactions.base_interactions.InteractionType.MESSAGE_COMPONENT`][]
     """
 
     DEFERRED_MESSAGE_UPDATE = 6
@@ -114,7 +114,7 @@ class ResponseType(int, enums.Enum):
 
     This is valid for the following interaction types:
 
-    * [hikari.interactions.base_interactions.InteractionType.MESSAGE_COMPONENT][]
+    * [`hikari.interactions.base_interactions.InteractionType.MESSAGE_COMPONENT`][]
     """
 
     MESSAGE_UPDATE = 7
@@ -122,7 +122,7 @@ class ResponseType(int, enums.Enum):
 
     This is valid for the following interaction types:
 
-    * [hikari.interactions.base_interactions.InteractionType.MESSAGE_COMPONENT][]
+    * [`hikari.interactions.base_interactions.InteractionType.MESSAGE_COMPONENT`][]
     """
 
     AUTOCOMPLETE = 8
@@ -130,7 +130,7 @@ class ResponseType(int, enums.Enum):
 
     This is valid for the following interaction types:
 
-    * [hikari.interactions.base_interactions.InteractionType.AUTOCOMPLETE][]
+    * [`hikari.interactions.base_interactions.InteractionType.AUTOCOMPLETE`][]
     """
 
     MODAL = 9
@@ -138,7 +138,7 @@ class ResponseType(int, enums.Enum):
 
     This is valid for the following interaction types:
 
-    * [hikari.interactions.base_interactions.InteractionType.MODAL_SUBMIT][]
+    * [`hikari.interactions.base_interactions.InteractionType.MODAL_SUBMIT`][]
     """
 
 
@@ -149,8 +149,8 @@ MESSAGE_RESPONSE_TYPES: typing.Final[typing.AbstractSet[MessageResponseTypesT]] 
 
 This includes the following:
 
-* [hikari.interactions.base_interactions.ResponseType.MESSAGE_CREATE][]
-* [hikari.interactions.base_interactions.ResponseType.MESSAGE_UPDATE][]
+* [`hikari.interactions.base_interactions.ResponseType.MESSAGE_CREATE`][]
+* [`hikari.interactions.base_interactions.ResponseType.MESSAGE_UPDATE`][]
 """
 
 MessageResponseTypesT = typing.Literal[ResponseType.MESSAGE_CREATE, 4, ResponseType.MESSAGE_UPDATE, 7]
@@ -158,8 +158,8 @@ MessageResponseTypesT = typing.Literal[ResponseType.MESSAGE_CREATE, 4, ResponseT
 
 The following are valid for this:
 
-* [hikari.interactions.base_interactions.ResponseType.MESSAGE_CREATE][]/`4`
-* [hikari.interactions.base_interactions.ResponseType.MESSAGE_UPDATE][]/`7`
+* [`hikari.interactions.base_interactions.ResponseType.MESSAGE_CREATE`][]/`4`
+* [`hikari.interactions.base_interactions.ResponseType.MESSAGE_UPDATE`][]/`7`
 """
 
 DEFERRED_RESPONSE_TYPES: typing.Final[typing.AbstractSet[DeferredResponseTypesT]] = frozenset(
@@ -169,8 +169,8 @@ DEFERRED_RESPONSE_TYPES: typing.Final[typing.AbstractSet[DeferredResponseTypesT]
 
 This includes the following:
 
-* [hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE][]
-* [hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_UPDATE][]
+* [`hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE`][]
+* [`hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_UPDATE`][]
 """
 
 DeferredResponseTypesT = typing.Literal[
@@ -180,8 +180,8 @@ DeferredResponseTypesT = typing.Literal[
 
 The following are valid for this:
 
-* [hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE][]/`5`
-* [hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_UPDATE][]/`6`
+* [`hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE`][]/`5`
+* [`hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_UPDATE`][]/`6`
 """
 
 
@@ -270,7 +270,7 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
 
         !!! warning
             Calling this on an interaction which already has an initial
-            response will result in this raising a [hikari.errors.NotFoundError][].
+            response will result in this raising a [`hikari.errors.NotFoundError`][].
             This includes if the REST interaction server has already responded
             to the request.
 
@@ -283,11 +283,11 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
         ----------------
         content : hikari.undefined.UndefinedOr[typing.Any]
             If provided, the message contents. If
-            [hikari.undefined.UNDEFINED][], then nothing will be sent
+            [`hikari.undefined.UNDEFINED`][], then nothing will be sent
             in the content. Any other value here will be cast to a
-            [str][].
+            [`str`][].
 
-            If this is a [hikari.embeds.Embed][] and no `embed` nor `embeds` kwarg
+            If this is a [`hikari.embeds.Embed`][] and no `embed` nor `embeds` kwarg
             is provided, then this will instead update the embed. This allows
             for simpler syntax when sending an embed alone.
         attachment : hikari.undefined.UndefinedNoneOr[typing.Union[hikari.files.Resourceish, hikari.messages.Attachment]]
@@ -309,8 +309,8 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
             If provided, the message flags this response should have.
 
             As of writing the only message flags which can be set here are
-            [hikari.messages.MessageFlag.EPHEMERAL][], [hikari.messages.MessageFlag.SUPPRESS_NOTIFICATIONS][]
-            and [hikari.messages.MessageFlag.SUPPRESS_EMBEDS][].
+            [`hikari.messages.MessageFlag.EPHEMERAL`][], [`hikari.messages.MessageFlag.SUPPRESS_NOTIFICATIONS`][]
+            and [`hikari.messages.MessageFlag.SUPPRESS_EMBEDS`][].
         tts : hikari.undefined.UndefinedOr[bool]
             If provided, whether the message will be read out by a screen
             reader using Discord's TTS (text-to-speech) system.
@@ -318,20 +318,20 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
             If provided, whether the message should parse @everyone/@here
             mentions.
         user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
-            If provided, and [True][], all user mentions will be detected.
-            If provided, and [False][], all user mentions will be ignored
+            If provided, and [`True`][], all user mentions will be detected.
+            If provided, and [`False`][], all user mentions will be ignored
             if appearing in the message body.
             Alternatively this may be a collection of
-            [hikari.snowflakes.Snowflake][], or
-            [hikari.users.PartialUser][] derivatives to enforce mentioning
+            [`hikari.snowflakes.Snowflake`][], or
+            [`hikari.users.PartialUser`][] derivatives to enforce mentioning
             specific users.
         role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], bool]]
-            If provided, and [True][], all role mentions will be detected.
-            If provided, and [False][], all role mentions will be ignored
+            If provided, and [`True`][], all role mentions will be detected.
+            If provided, and [`False`][], all role mentions will be ignored
             if appearing in the message body.
             Alternatively this may be a collection of
-            [hikari.snowflakes.Snowflake][], or
-            [hikari.guilds.PartialRole][] derivatives to enforce mentioning
+            [`hikari.snowflakes.Snowflake`][], or
+            [`hikari.guilds.PartialRole`][] derivatives to enforce mentioning
             specific roles.
 
         Raises
@@ -410,7 +410,7 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
         !!! warning
             If you specify a text `content`, `mentions_everyone`,
             `mentions_reply`, `user_mentions`, and `role_mentions` will default
-            to [False][] as the message will be re-parsed for mentions. This will
+            to [`False`][] as the message will be re-parsed for mentions. This will
             also occur if only one of the four are specified
 
             This is a limitation of Discord's design. If in doubt, specify all
@@ -420,71 +420,71 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
         ----------------
         content : hikari.undefined.UndefinedNoneOr[typing.Any]
             If provided, the message contents. If
-            [hikari.undefined.UNDEFINED][], then nothing will be sent
+            [`hikari.undefined.UNDEFINED`][], then nothing will be sent
             in the content. Any other value here will be cast to a
-            [str][].
+            [`str`][].
 
-            If this is a [hikari.embeds.Embed][] and neither the
+            If this is a [`hikari.embeds.Embed`][] and neither the
             `embed` or `embeds` kwargs are provided or if this is a
-            [hikari.files.Resourceish][] and neither the `attachment` or
+            [`hikari.files.Resourceish`][] and neither the `attachment` or
             `attachments` kwargs are provided, the values will be overwritten.
             This allows for simpler syntax when sending an embed or an
             attachment alone.
 
-            Likewise, if this is a [hikari.files.Resource][], then the
+            Likewise, if this is a [`hikari.files.Resource`][], then the
             content is instead treated as an attachment if no `attachment` and
             no `attachments` kwargs are provided.
         attachment : hikari.undefined.UndefinedNoneOr[typing.Union[hikari.files.Resourceish, hikari.messages.Attachment]]
             If provided, the attachment to set on the message. If
-            [hikari.undefined.UNDEFINED][], the previous attachment, if
-            present, is not changed. If this is [None][], then the
+            [`hikari.undefined.UNDEFINED`][], the previous attachment, if
+            present, is not changed. If this is [`None`][], then the
             attachment is removed, if present. Otherwise, the new attachment
             that was provided will be attached.
         attachments : hikari.undefined.UndefinedNoneOr[typing.Sequence[typing.Union[hikari.files.Resourceish, hikari.messages.Attachment]]]
             If provided, the attachments to set on the message. If
-            [hikari.undefined.UNDEFINED][], the previous attachments, if
-            present, are not changed. If this is [None][], then the
+            [`hikari.undefined.UNDEFINED`][], the previous attachments, if
+            present, are not changed. If this is [`None`][], then the
             attachments is removed, if present. Otherwise, the new attachments
             that were provided will be attached.
         component : hikari.undefined.UndefinedNoneOr[hikari.api.special_endpoints.ComponentBuilder]
             If provided, builder object of the component to set for this message.
             This component will replace any previously set components and passing
-            [None][] will remove all components.
+            [`None`][] will remove all components.
         components : hikari.undefined.UndefinedNoneOr[typing.Sequence[hikari.api.special_endpoints.ComponentBuilder]]
             If provided, a sequence of the component builder objects set for
             this message. These components will replace any previously set
-            components and passing [None][] or an empty sequence will
+            components and passing [`None`][] or an empty sequence will
             remove all components.
         embed : hikari.undefined.UndefinedNoneOr[hikari.embeds.Embed]
             If provided, the embed to set on the message. If
-            [hikari.undefined.UNDEFINED][], the previous embed(s) are not changed.
-            If this is [None][] then any present embeds are removed.
+            [`hikari.undefined.UNDEFINED`][], the previous embed(s) are not changed.
+            If this is [`None`][] then any present embeds are removed.
             Otherwise, the new embed that was provided will be used as the
             replacement.
         embeds : hikari.undefined.UndefinedNoneOr[typing.Sequence[hikari.embeds.Embed]]
             If provided, the embeds to set on the message. If
-            [hikari.undefined.UNDEFINED][], the previous embed(s) are not changed.
-            If this is [None][] then any present embeds are removed.
+            [`hikari.undefined.UNDEFINED`][], the previous embed(s) are not changed.
+            If this is [`None`][] then any present embeds are removed.
             Otherwise, the new embeds that were provided will be used as the
             replacement.
         mentions_everyone : hikari.undefined.UndefinedOr[bool]
             If provided, whether the message should parse @everyone/@here
             mentions.
         user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
-            If provided, and [True][], all user mentions will be detected.
-            If provided, and [False][], all user mentions will be ignored
+            If provided, and [`True`][], all user mentions will be detected.
+            If provided, and [`False`][], all user mentions will be ignored
             if appearing in the message body.
             Alternatively this may be a collection of
-            [hikari.snowflakes.Snowflake][], or
-            [hikari.users.PartialUser][] derivatives to enforce mentioning
+            [`hikari.snowflakes.Snowflake`][], or
+            [`hikari.users.PartialUser`][] derivatives to enforce mentioning
             specific users.
         role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], bool]]
-            If provided, and [True][], all role mentions will be detected.
-            If provided, and [False][], all role mentions will be ignored
+            If provided, and [`True`][], all role mentions will be detected.
+            If provided, and [`False`][], all role mentions will be ignored
             if appearing in the message body.
             Alternatively this may be a collection of
-            [hikari.snowflakes.Snowflake][], or
-            [hikari.guilds.PartialRole][] derivatives to enforce mentioning
+            [`hikari.snowflakes.Snowflake`][], or
+            [`hikari.guilds.PartialRole`][] derivatives to enforce mentioning
             specific roles.
 
         Returns
@@ -607,8 +607,8 @@ class ModalResponseMixin(PartialInteraction):
 class InteractionMember(guilds.Member):
     """Model of the member who triggered an interaction.
 
-    Unlike [hikari.guilds.Member][], this object comes with an extra
-    [hikari.interactions.base_interactions.InteractionMember.permissions][] field.
+    Unlike [`hikari.guilds.Member`][], this object comes with an extra
+    [`hikari.interactions.base_interactions.InteractionMember.permissions`][] field.
     """
 
     permissions: permissions_.Permissions = attrs.field(eq=False, hash=False, repr=False)

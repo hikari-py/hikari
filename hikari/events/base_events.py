@@ -188,13 +188,13 @@ FailedCallbackT = typing.Callable[[EventT], typing.Coroutine[typing.Any, typing.
 @attrs_extensions.with_copy
 @attrs.define(kw_only=True, weakref_slot=False)
 class ExceptionEvent(Event, typing.Generic[EventT]):
-    """Event that is raised when another event handler raises an [Exception][].
+    """Event that is raised when another event handler raises an [`Exception`][].
 
     !!! note
-        Only exceptions that derive from [Exception][] will be caught.
+        Only exceptions that derive from [`Exception`][] will be caught.
         Other exceptions outside this range will propagate past this callback.
         This prevents event handlers interfering with critical exceptions
-        such as [KeyboardInterrupt][] which would have potentially undesired
+        such as [`KeyboardInterrupt`][] which would have potentially undesired
         side-effects on the application runtime.
     """
 
@@ -216,7 +216,7 @@ class ExceptionEvent(Event, typing.Generic[EventT]):
     def shard(self) -> typing.Optional[gateway_shard.GatewayShard]:
         """Shard that received the event, if there was one associated.
 
-        This may be [None][] if no specific shard was the cause of this
+        This may be [`None`][] if no specific shard was the cause of this
         exception (e.g. when starting up or shutting down).
         """
         shard = getattr(self.failed_event, "shard", None)
@@ -226,9 +226,9 @@ class ExceptionEvent(Event, typing.Generic[EventT]):
 
     @property
     def exc_info(self) -> typing.Tuple[typing.Type[Exception], Exception, typing.Optional[types.TracebackType]]:
-        """Exception triplet that follows the same format as [sys.exc_info][].
+        """Exception triplet that follows the same format as [`sys.exc_info`][].
 
-        The [sys.exc_info][] triplet consists of the exception type, the exception
+        The [`sys.exc_info`][] triplet consists of the exception type, the exception
         instance, and the traceback of the exception.
         """
         return type(self.exception), self.exception, self.exception.__traceback__
