@@ -61,8 +61,8 @@ COMMAND_RESPONSE_TYPES: typing.Final[typing.AbstractSet[CommandResponseTypesT]] 
 
 This includes:
 
-* `hikari.interactions.base_interactions.ResponseType.MESSAGE_CREATE`
-* `hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE`
+* [`hikari.interactions.base_interactions.ResponseType.MESSAGE_CREATE`][]
+* [`hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE`][]
 """
 
 CommandResponseTypesT = typing.Literal[
@@ -72,15 +72,15 @@ CommandResponseTypesT = typing.Literal[
 
 The following types are valid for this:
 
-* `hikari.interactions.base_interactions.ResponseType.MESSAGE_CREATE`/`4`
-* `hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE`/`5`
+* [`hikari.interactions.base_interactions.ResponseType.MESSAGE_CREATE`][]/`4`
+* [`hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE`][]/`5`
 """
 
 InteractionChannel = base_interactions.InteractionChannel
-"""Deprecated alias of `hikari.base_interactions.InteractionChannel`."""
+"""Deprecated alias of [`hikari.interactions.base_interactions.InteractionChannel`][]."""
 
 ResolvedOptionData = base_interactions.ResolvedOptionData
-"""Deprecated alias of `hikari.base_interactions.ResolvedOptionData`."""
+"""Deprecated alias of [`hikari.interactions.base_interactions.ResolvedOptionData`][]."""
 
 
 @attrs_extensions.with_copy
@@ -97,7 +97,8 @@ class CommandInteractionOption:
     value: typing.Union[snowflakes.Snowflake, str, int, float, bool, None] = attrs.field(repr=True)
     """Value provided for this option.
 
-    Either `CommandInteractionOption.value` or `CommandInteractionOption.options`
+    Either [`hikari.interactions.command_interactions.CommandInteractionOption.value`][]
+    or [`hikari.interactions.command_interactions.CommandInteractionOption.options`][]
     will be provided with `value` being provided when an option is provided as a
     parameter with a value and `options` being provided when an option donates a
     subcommand or group.
@@ -106,7 +107,8 @@ class CommandInteractionOption:
     options: typing.Optional[typing.Sequence[Self]] = attrs.field(repr=True)
     """Options provided for this option.
 
-    Either `CommandInteractionOption.value` or `CommandInteractionOption.options`
+    Either [`hikari.interactions.command_interactions.CommandInteractionOption.value`][]
+    or [`hikari.interactions.command_interactions.CommandInteractionOption.options`][]
     will be provided with `value` being provided when an option is provided as a
     parameter with a value and `options` being provided when an option donates a
     subcommand or group.
@@ -140,25 +142,25 @@ class BaseCommandInteraction(base_interactions.PartialInteraction):
     guild_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
     """ID of the guild this command interaction event was triggered in.
 
-    This will be `None` for command interactions triggered in DMs.
+    This will be [`None`][] for command interactions triggered in DMs.
     """
 
     guild_locale: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=True)
     """The preferred language of the guild this command interaction was triggered in.
 
-    This will be `None` for command interactions triggered in DMs.
+    This will be [`None`][] for command interactions triggered in DMs.
 
-    .. note::
-        This value can usually only be changed if `COMMUNITY` is in `hikari.guilds.Guild.features`
+    !!! note
+        This value can usually only be changed if [COMMUNITY] is in [`hikari.guilds.Guild.features`][]
         for the guild and will otherwise default to `en-US`.
     """
 
     member: typing.Optional[base_interactions.InteractionMember] = attrs.field(eq=False, hash=False, repr=True)
     """The member who triggered this command interaction.
 
-    This will be `None` for command interactions triggered in DMs.
+    This will be [`None`][] for command interactions triggered in DMs.
 
-    .. note::
+    !!! note
         This member object comes with the extra field `permissions` which
         contains the member's permissions in the current channel.
     """
@@ -192,7 +194,7 @@ class BaseCommandInteraction(base_interactions.PartialInteraction):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the `READ_MESSAGES` permission in the channel.
+            If you are missing the [`hikari.permissions.Permissions.VIEW_CHANNEL`][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -211,15 +213,15 @@ class BaseCommandInteraction(base_interactions.PartialInteraction):
     def get_channel(self) -> typing.Optional[channels.TextableGuildChannel]:
         """Get the guild channel this was triggered in from the cache.
 
-        .. note::
-            This will always return `None` for interactions triggered
+        !!! note
+            This will always return [`None`][] for interactions triggered
             in a DM channel.
 
         Returns
         -------
         typing.Optional[hikari.channels.TextableGuildChannel]
             The object of the guild channel that was found in the cache or
-            `None`.
+            [`None`][].
         """
         if isinstance(self.app, traits.CacheAware):
             channel = self.app.cache.get_guild_channel(self.channel_id)
@@ -260,7 +262,7 @@ class BaseCommandInteraction(base_interactions.PartialInteraction):
         Returns
         -------
         typing.Optional[hikari.guilds.RESTGuild]
-            Object of the guild this interaction happened in or `None`
+            Object of the guild this interaction happened in or [`None`][]
             if this occurred within a DM channel.
 
         Raises
@@ -288,7 +290,7 @@ class BaseCommandInteraction(base_interactions.PartialInteraction):
         Returns
         -------
         typing.Optional[hikari.guilds.GatewayGuild]
-            The object of the guild if found, else `None`.
+            The object of the guild if found, else [`None`][].
         """
         if self.guild_id and isinstance(self.app, traits.CacheAware):
             return self.app.cache.get_guild(self.guild_id)
@@ -320,15 +322,14 @@ class CommandInteraction(
     def build_response(self) -> special_endpoints.InteractionMessageBuilder:
         """Get a message response builder for use in the REST server flow.
 
-        .. note::
+        !!! note
             For interactions received over the gateway
-            `CommandInteraction.create_initial_response` should be used to set
+            [`hikari.interactions.command_interactions.CommandInteraction.create_initial_response`][] should be used to set
             the interaction response message.
 
         Examples
         --------
-        .. code-block:: python
-
+        ```py
             async def handle_command_interaction(interaction: CommandInteraction) -> InteractionMessageBuilder:
                 return (
                     interaction
@@ -336,6 +337,7 @@ class CommandInteraction(
                     .add_embed(Embed(description="Hi there"))
                     .set_content("Konnichiwa")
                 )
+        ```
 
         Returns
         -------
@@ -347,24 +349,24 @@ class CommandInteraction(
     def build_deferred_response(self) -> special_endpoints.InteractionDeferredBuilder:
         """Get a deferred message response builder for use in the REST server flow.
 
-        .. note::
+        !!! note
             For interactions received over the gateway
-            `CommandInteraction.create_initial_response` should be used to set
+            [`hikari.interactions.command_interactions.CommandInteraction.create_initial_response`][] should be used to set
             the interaction response message.
 
-        .. note::
-            Unlike `hikari.api.special_endpoints.InteractionMessageBuilder`,
+        !!! note
+            Unlike [`hikari.api.special_endpoints.InteractionMessageBuilder`][],
             the result of this call can be returned as is without any modifications
             being made to it.
 
         Examples
         --------
-        .. code-block:: python
-
+        ```py
             async def handle_command_interaction(interaction: CommandInteraction) -> InteractionMessageBuilder:
                 yield interaction.build_deferred_response()
 
                 await interaction.edit_initial_response("Pong!")
+        ```
 
         Returns
         -------
@@ -387,9 +389,9 @@ class AutocompleteInteraction(BaseCommandInteraction):
     ) -> special_endpoints.InteractionAutocompleteBuilder:
         """Get a message response builder for use in the REST server flow.
 
-        .. note::
+        !!! note
             For interactions received over the gateway
-            `AutocompleteInteraction.create_response` should be used to set
+            [`hikari.interactions.command_interactions.AutocompleteInteraction.create_response`][] should be used to set
             the interaction response.
 
         Parameters
@@ -399,8 +401,7 @@ class AutocompleteInteraction(BaseCommandInteraction):
 
         Examples
         --------
-        .. code-block:: python
-
+        ```py
             async def handle_autocomplete_interaction(interaction: AutocompleteInteraction) -> InteractionAutocompleteBuilder:
                 return (
                     interaction
@@ -412,6 +413,7 @@ class AutocompleteInteraction(BaseCommandInteraction):
                         ]
                     )
                 )
+        ```
 
         Returns
         -------

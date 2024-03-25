@@ -89,10 +89,10 @@ def create_tcp_connector(
     Optional Parameters
     -------------------
     dns_cache : typing.Union[None, bool, int]
-        If `True`, DNS caching is used with a default TTL of 10 seconds.
-        If `False`, DNS caching is disabled. If an `int` is
+        If [`True`][], DNS caching is used with a default TTL of 10 seconds.
+        If [`False`][], DNS caching is disabled. If an [`int`][] is
         given, then DNS caching is enabled with an explicit TTL set. If
-        `None`, the cache will be enabled and never invalidate.
+        [`None`][], the cache will be enabled and never invalidate.
     limit : int
         Number of connections to allow in the pool at any given time.
 
@@ -120,10 +120,10 @@ def create_client_session(
 ) -> aiohttp.ClientSession:
     """Generate a client session using the given settings.
 
-    .. warning::
+    !!! warning
         You must invoke this from within a running event loop.
 
-    .. note::
+    !!! note
         If you pass an explicit connector, then the connection
         that is created will not own the connector. You will be
         expected to manually close it __after__ the returned
@@ -134,16 +134,15 @@ def create_client_session(
     connector : aiohttp.BaseConnector
         The connector to use.
     connector_owner : bool
-        If `True`, then the client session will close the
+        If [`True`][], then the client session will close the
         connector on shutdown. Otherwise, you must do it manually.
     http_settings : hikari.impl.config.HTTPSettings
         HTTP settings to use.
     raise_for_status : bool
-        `True` to default to throwing exceptions if a request
-        fails, or `False` to default to not.
+        Whether to raise an exception when a request fails
     trust_env : bool
-        `True` to trust anything in environment variables
-        and the `netrc` file, `False` to ignore it.
+        Whether to trust anything in environment variables
+        and the `netrc` file.
 
     Returns
     -------

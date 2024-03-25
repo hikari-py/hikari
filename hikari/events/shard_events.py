@@ -70,9 +70,9 @@ class ShardEvent(base_events.Event, abc.ABC):
 class ShardPayloadEvent(ShardEvent):
     """Event fired for most shard events with their raw payload.
 
-    .. note::
+    !!! note
         This will only be dispatched for real dispatch events received from
-        Discord and not artificial events like the `ShardStateEvent` events.
+        Discord and not artificial events like the [`hikari.events.shard_events.ShardStateEvent`][] events.
     """
 
     app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
@@ -205,14 +205,15 @@ class MemberChunkEvent(ShardEvent, typing.Sequence["guilds.Member"]):
     presences: typing.Mapping[snowflakes.Snowflake, presences_.MemberPresence] = attrs.field(repr=False)
     """Mapping of user IDs to found member presence objects.
 
-    This will be empty if no presences are found or `include_presences` is not passed as
-    `True` while requesting the member chunks.
+    This will be empty if no presences are found or
+    [`include_presences`][hikari.api.shard.GatewayShard.request_guild_members] is
+    not passed as [`True`][] while requesting the member chunks.
     """
 
     nonce: typing.Optional[str] = attrs.field(repr=True)
     """String nonce used to identify the request member chunks are associated with.
 
-    This is the nonce value passed while requesting member chunks or `None`
+    This is the nonce value passed while requesting member chunks or [`None`][]
     if there was no nonce passed.
     """
 

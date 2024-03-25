@@ -92,9 +92,9 @@ class ExecutableWebhook(abc.ABC):
     def token(self) -> typing.Optional[str]:
         """Webhook's token.
 
-        .. note::
-            If this is `None` then the methods provided by `ExecutableWebhook`
-            will always raise a `ValueError`.
+        !!! note
+            If this is [`None`][] then the methods provided by [`hikari.webhooks.ExecutableWebhook`][]
+            will always raise a [`ValueError`][].
         """
 
     async def execute(
@@ -121,27 +121,27 @@ class ExecutableWebhook(abc.ABC):
     ) -> messages_.Message:
         """Execute the webhook to create a message.
 
-        .. warning::
+        !!! warning
             At the time of writing, `username` and `avatar_url` are ignored for
             interaction webhooks.
 
-            Additionally, `SUPPRESS_EMBEDS`, `SUPPRESS_NOTIFICATIONS` and `EPHEMERAL`
-            are the only flags that can be set, with `EPHEMERAL` limited to
+            Additionally, [`hikari.messages.MessageFlag.SUPPRESS_EMBEDS`][], [`hikari.messages.MessageFlag.SUPPRESS_NOTIFICATIONS`][] and [`hikari.messages.MessageFlag.EPHEMERAL`][]
+            are the only flags that can be set, with [`hikari.messages.MessageFlag.EPHEMERAL`][] being limited to
             interaction webhooks.
 
         Parameters
         ----------
         content : hikari.undefined.UndefinedOr[typing.Any]
             If provided, the message contents. If
-            `hikari.undefined.UNDEFINED`, then nothing will be sent
+            [`hikari.undefined.UNDEFINED`][], then nothing will be sent
             in the content. Any other value here will be cast to a
-            `str`.
+            [`str`][].
 
-            If this is a `hikari.embeds.Embed` and no `embed` kwarg is
-            provided, then this will instead update the embed. This allows for
-            simpler syntax when sending an embed alone.
+            If this is a [`hikari.embeds.Embed`][] and no `embed` and no `embeds`
+            kwargs are provided, then this will instead update the embed. This
+            allows for simpler syntax when sending an embed alone.
 
-            Likewise, if this is a `hikari.files.Resource`, then the
+            Likewise, if this is a [`hikari.files.Resource`][], then the
             content is instead treated as an attachment if no `attachment` and
             no `attachments` kwargs are provided.
 
@@ -174,18 +174,18 @@ class ExecutableWebhook(abc.ABC):
             If provided, whether the message should parse @everyone/@here
             mentions.
         user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
-            If provided, and `True`, all mentions will be parsed.
-            If provided, and `False`, no mentions will be parsed.
+            If provided, and [`True`][], all mentions will be parsed.
+            If provided, and [`False`][], no mentions will be parsed.
             Alternatively this may be a collection of
-            `hikari.snowflakes.Snowflake`, or
-            `hikari.users.PartialUser` derivatives to enforce mentioning
+            [`hikari.snowflakes.Snowflake`][], or
+            [`hikari.users.PartialUser`][] derivatives to enforce mentioning
             specific users.
         role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], bool]]
-            If provided, and `True`, all mentions will be parsed.
-            If provided, and `False`, no mentions will be parsed.
+            If provided, and [`True`][], all mentions will be parsed.
+            If provided, and [`False`][], no mentions will be parsed.
             Alternatively this may be a collection of
-            `hikari.snowflakes.Snowflake`, or
-            `hikari.guilds.PartialRole` derivatives to enforce mentioning
+            [`hikari.snowflakes.Snowflake`][], or
+            [`hikari.guilds.PartialRole`][] derivatives to enforce mentioning
             specific roles.
         flags : typing.Union[hikari.undefined.UndefinedType, int, hikari.messages.MessageFlag]
             The flags to set for this webhook message.
@@ -209,9 +209,7 @@ class ExecutableWebhook(abc.ABC):
         hikari.errors.UnauthorizedError
             If you pass a token that's invalid for the target webhook.
         ValueError
-            If either `ExecutableWebhook.token` is `None` or more than 100 unique
-            objects/entities are passed for `role_mentions` or `user_mentions` or
-            if `token` is not available.
+            If `token` is not available.
         TypeError
             If both `attachment` and `attachments`, `component` and `components`
             or `embed` and `embeds` are specified.
@@ -255,7 +253,7 @@ class ExecutableWebhook(abc.ABC):
         Raises
         ------
         ValueError
-            If `token` is not available.
+            If [`token`][] is not available.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
@@ -298,16 +296,16 @@ class ExecutableWebhook(abc.ABC):
     ) -> messages_.Message:
         """Edit a message sent by a webhook.
 
-        .. note::
+        !!! note
             Mentioning everyone, roles, or users in message edits currently
             will not send a push notification showing a new mention to people
             on Discord. It will still highlight in their chat as if they
             were mentioned, however.
 
-        .. warning::
+        !!! warning
             If you specify a text `content`, `mentions_everyone`,
             `mentions_reply`, `user_mentions`, and `role_mentions` will default
-            to `False` as the message will be re-parsed for mentions. This will
+            to [`False`][] as the message will be re-parsed for mentions. This will
             also occur if only one of the four are specified
 
             This is a limitation of Discord's design. If in doubt, specify all
@@ -320,75 +318,75 @@ class ExecutableWebhook(abc.ABC):
             an existing message.
         content : hikari.undefined.UndefinedNoneOr[typing.Any]
             If provided, the message contents. If
-            `hikari.undefined.UNDEFINED`, then nothing will be sent
+            [`hikari.undefined.UNDEFINED`][], then nothing will be sent
             in the content. Any other value here will be cast to a
-            `str`.
+            [`str`][].
 
-            If this is a `hikari.embeds.Embed` and no `embed` nor
-            no `embeds` kwarg is provided, then this will instead
+            If this is a [`hikari.embeds.Embed`][] and no `embed` nor
+            `embeds` kwarg is provided, then this will instead
             update the embed. This allows for simpler syntax when
             sending an embed alone.
 
-            Likewise, if this is a `hikari.files.Resource`, then the
-            content is instead treated as an attachment if no `attachment` and
-            no `attachments` kwargs are provided.
+            Likewise, if this is a [`hikari.files.Resource`][], then the
+            content is instead treated as an attachment if no `attachment` nor
+            `attachments` kwargs are provided.
 
         Other Parameters
         ----------------
         attachment : hikari.undefined.UndefinedNoneOr[typing.Union[hikari.files.Resourceish, hikari.messages.Attachment]]
             If provided, the attachment to set on the message. If
-            `hikari.undefined.UNDEFINED`, the previous attachment, if
-            present, is not changed. If this is `None`, then the
+            [`hikari.undefined.UNDEFINED`][], the previous attachment, if
+            present, is not changed. If this is [`None`][], then the
             attachment is removed, if present. Otherwise, the new attachment
             that was provided will be attached.
         attachments : hikari.undefined.UndefinedNoneOr[typing.Sequence[typing.Union[hikari.files.Resourceish, hikari.messages.Attachment]]]
             If provided, the attachments to set on the message. If
-            `hikari.undefined.UNDEFINED`, the previous attachments, if
-            present, are not changed. If this is `None`, then the
+            [`hikari.undefined.UNDEFINED`][], the previous attachments, if
+            present, are not changed. If this is [`None`][], then the
             attachments is removed, if present. Otherwise, the new attachments
             that were provided will be attached.
         component : hikari.undefined.UndefinedNoneOr[hikari.api.special_endpoints.ComponentBuilder]
             If provided, builder object of the component to set for this message.
             This component will replace any previously set components and passing
-            `None` will remove all components.
+            [`None`][] will remove all components.
         components : hikari.undefined.UndefinedNoneOr[typing.Sequence[hikari.api.special_endpoints.ComponentBuilder]]
             If provided, a sequence of the component builder objects set for
             this message. These components will replace any previously set
-            components and passing `None` or an empty sequence will
+            components and passing [`None`][] or an empty sequence will
             remove all components.
         embed : hikari.undefined.UndefinedNoneOr[hikari.embeds.Embed]
             If provided, the embed to set on the message. If
-            `hikari.undefined.UNDEFINED`, the previous embed(s) are not changed.
-            If this is `None` then any present embeds are removed.
+            [`hikari.undefined.UNDEFINED`][], the previous embed(s) are not changed.
+            If this is [`None`][] then any present embeds are removed.
             Otherwise, the new embed that was provided will be used as the
             replacement.
         embeds : hikari.undefined.UndefinedNoneOr[typing.Sequence[hikari.embeds.Embed]]
             If provided, the embeds to set on the message. If
-            `hikari.undefined.UNDEFINED`, the previous embed(s) are not changed.
-            If this is `None` then any present embeds are removed.
+            [`hikari.undefined.UNDEFINED`][], the previous embed(s) are not changed.
+            If this is [`None`][] then any present embeds are removed.
             Otherwise, the new embeds that were provided will be used as the
             replacement.
         mentions_everyone : hikari.undefined.UndefinedOr[bool]
             If provided, sanitation for `@everyone` mentions. If
-            `hikari.undefined.UNDEFINED`, then the previous setting is
-            not changed. If `True`, then `@everyone`/`@here` mentions
+            [`hikari.undefined.UNDEFINED`][], then the previous setting is
+            not changed. If [`True`][], then `@everyone`/`@here` mentions
             in the message content will show up as mentioning everyone that can
             view the chat.
         user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
-            If provided, and `True`, all user mentions will be detected.
-            If provided, and `False`, all user mentions will be ignored
+            If provided, and [`True`][], all user mentions will be detected.
+            If provided, and [`False`][], all user mentions will be ignored
             if appearing in the message body.
             Alternatively this may be a collection of
-            `hikari.snowflakes.Snowflake`, or
-            `hikari.users.PartialUser` derivatives to enforce mentioning
+            [`hikari.snowflakes.Snowflake`][], or
+            [`hikari.users.PartialUser`][] derivatives to enforce mentioning
             specific users.
         role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], bool]]
-            If provided, and `True`, all role mentions will be detected.
-            If provided, and `False`, all role mentions will be ignored
+            If provided, and [`True`][], all role mentions will be detected.
+            If provided, and [`False`][], all role mentions will be ignored
             if appearing in the message body.
             Alternatively this may be a collection of
-            `hikari.snowflakes.Snowflake`, or
-            `hikari.guilds.PartialRole` derivatives to enforce mentioning
+            [`hikari.snowflakes.Snowflake`][], or
+            [`hikari.guilds.PartialRole`][] derivatives to enforce mentioning
             specific roles.
 
         Returns
@@ -500,17 +498,17 @@ class PartialWebhook(snowflakes.Unique):
     def mention(self) -> str:
         """Return a raw mention string for the given webhook's user.
 
-        .. note::
+        !!! note
             This exists purely for consistency. Webhooks do not receive events
             from the gateway, and without some bot backend to support it, will
             not be able to detect mentions of their webhook.
 
         Examples
         --------
-        .. code-block:: python
-
+        ```py
             >>> some_webhook.mention
             '<@123456789123456789>'
+        ```
         """
         return f"<@{self.id}>"
 
@@ -518,7 +516,7 @@ class PartialWebhook(snowflakes.Unique):
     def avatar_url(self) -> typing.Optional[files_.URL]:
         """URL for this webhook's avatar, if set.
 
-        May be `None` if no avatar is set. In this case, you should use
+        May be [`None`][] if no avatar is set. In this case, you should use
         `default_avatar_url` instead.
         """
         return self.make_avatar_url()
@@ -531,23 +529,23 @@ class PartialWebhook(snowflakes.Unique):
     def make_avatar_url(self, ext: str = "png", size: int = 4096) -> typing.Optional[files_.URL]:
         """Generate the avatar URL for this webhook's custom avatar if set.
 
-        If no avatar is specified, return `None`. In this case, you should
+        If no avatar is specified, return [`None`][]. In this case, you should
         use `default_avatar` instead.
 
         Parameters
         ----------
         ext : str
-            The extension to use for this URL, defaults to `png`.
+            The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
         size : int
-            The size to set for the URL, defaults to `4096`.
-            Can be any power of two between 16 and 4096.
+            The size to set for the URL.
+            Can be any power of two between `16` and `4096`.
             Will be ignored for default avatars.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL of the resource. `None` if no avatar is set (in
+            The URL of the resource. [`None`][] if no avatar is set (in
             this case, use the `default_avatar` instead).
 
         Raises
@@ -581,15 +579,15 @@ class IncomingWebhook(PartialWebhook, ExecutableWebhook):
     author: typing.Optional[users_.User] = attrs.field(eq=False, hash=False, repr=True)
     """The user that created the webhook.
 
-    .. note::
-        This will be `None` when fetched with the webhook's token
+    !!! note
+        This will be [`None`][] when fetched with the webhook's token
         rather than bot authorization or when received within audit logs.
     """
 
     token: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """The token for the webhook.
 
-    .. note::
+    !!! note
         This is only available for incoming webhooks that are created in the
         channel settings.
     """
@@ -605,8 +603,8 @@ class IncomingWebhook(PartialWebhook, ExecutableWebhook):
         Other Parameters
         ----------------
         use_token : hikari.undefined.UndefinedOr[bool]
-            If set to `True` then the webhook's token will be used for
-            this request; if set to `False` then bot authorization will
+            If set to [`True`][] then the webhook's token will be used for
+            this request; if set to [`False`][] then bot authorization will
             be used; if not specified then the webhook's token will be used for
             the request if it's set else bot authorization.
 
@@ -615,11 +613,11 @@ class IncomingWebhook(PartialWebhook, ExecutableWebhook):
         hikari.errors.NotFoundError
             If this webhook is not found.
         hikari.errors.ForbiddenError
-            If you either lack the `MANAGE_WEBHOOKS` permission or
+            If you either lack the [`hikari.permissions.Permissions.MANAGE_WEBHOOKS`][] permission or
             are not a member of the guild this webhook belongs to.
         ValueError
-            If `use_token` is passed as `True` when `IncomingWebhook.token` is
-            `None`.
+            If `use_token` is passed as [`True`][] when [`hikari.webhooks.IncomingWebhook.token`][] is
+            [`None`][].
         """
         token: undefined.UndefinedOr[str] = undefined.UNDEFINED
         if use_token:
@@ -648,7 +646,7 @@ class IncomingWebhook(PartialWebhook, ExecutableWebhook):
         name : hikari.undefined.UndefinedOr[str]
             If provided, the new name string.
         avatar : hikari.undefined.UndefinedOr[hikari.files.Resourceish]
-            If provided, the new avatar image. If `None`, then
+            If provided, the new avatar image. If [`None`][], then
             it is removed. If not specified, nothing is changed.
         channel : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.WebhookChannelT]]
             If provided, the object or ID of the new channel the given
@@ -658,8 +656,8 @@ class IncomingWebhook(PartialWebhook, ExecutableWebhook):
             was performed. This field will be used when using the webhook's
             token rather than bot authorization.
         use_token : hikari.undefined.UndefinedOr[bool]
-            If set to `True` then the webhook's token will be used for
-            this request; if set to `False` then bot authorization will
+            If set to [`True`][] then the webhook's token will be used for
+            this request; if set to [`False`][] then bot authorization will
             be used; if not specified then the webhook's token will be used for
             the request if it's set else bot authorization.
 
@@ -671,14 +669,14 @@ class IncomingWebhook(PartialWebhook, ExecutableWebhook):
         Raises
         ------
         ValueError
-            If `use_token` is passed as `True` when `IncomingWebhook.token` is `None`.
+            If `use_token` is passed as [`True`][] when [`hikari.webhooks.IncomingWebhook.token`][] is [`None`][].
         hikari.errors.BadRequestError
             If any invalid snowflake IDs are passed; a snowflake may be invalid
-            due to it being outside of the range of a 64 bit integer.
+            due to it being outside the range of a 64-bit integer.
         hikari.errors.NotFoundError
             If either the webhook or the channel are not found.
         hikari.errors.ForbiddenError
-            If you either lack the `MANAGE_WEBHOOKS` permission or
+            If you either lack the [`hikari.permissions.Permissions.MANAGE_WEBHOOKS`][] permission or
             are not a member of the guild this webhook belongs to.
         hikari.errors.UnauthorizedError
             If you pass a token that's invalid for the target webhook.
@@ -735,8 +733,8 @@ class IncomingWebhook(PartialWebhook, ExecutableWebhook):
         Other Parameters
         ----------------
         use_token : hikari.undefined.UndefinedOr[bool]
-            If set to `True` then the webhook's token will be used for
-            this request; if set to `False` then bot authorization will
+            If set to [`True`][] then the webhook's token will be used for
+            this request; if set to [`False`][] then bot authorization will
             be used; if not specified then the webhook's token will be used for
             the request if it's set else bot authorization.
 
@@ -748,11 +746,11 @@ class IncomingWebhook(PartialWebhook, ExecutableWebhook):
         Raises
         ------
         ValueError
-            If `use_token` is passed as `True` when `Webhook.token`
-            is `None`.
+            If `use_token` is passed as [`True`][] when [`hikari.webhooks.IncomingWebhook.token`][]
+            is [`None`][].
         hikari.errors.ForbiddenError
             If you're not in the guild that owns this webhook or
-            lack the `MANAGE_WEBHOOKS` permission.
+            lack the [`hikari.permissions.Permissions.MANAGE_WEBHOOKS`][] permission.
         hikari.errors.NotFoundError
             If the webhook is not found.
         hikari.errors.UnauthorizedError
@@ -790,21 +788,21 @@ class ChannelFollowerWebhook(PartialWebhook):
     author: typing.Optional[users_.User] = attrs.field(eq=False, hash=False, repr=True)
     """The user that created the webhook.
 
-    .. note::
-        This will be `None` when received within an audit log.
+    !!! note
+        This will be [`None`][] when received within an audit log.
     """
 
     source_channel: typing.Optional[channels_.PartialChannel] = attrs.field(eq=False, hash=False, repr=True)
     """The partial object of the channel this webhook is following.
 
-    This will be `None` when the user that followed the channel is no
+    This will be [`None`][] when the user that followed the channel is no
     longer in the source guild or has lost access to the source channel.
     """
 
     source_guild: typing.Optional[guilds_.PartialGuild] = attrs.field(eq=False, hash=False, repr=True)
     """The partial object of the guild this webhook is following.
 
-    This will be `None` when the user that followed the channel is no
+    This will be [`None`][] when the user that followed the channel is no
     longer in the source guild or has lost access to the source channel.
     """
 
@@ -816,7 +814,7 @@ class ChannelFollowerWebhook(PartialWebhook):
         hikari.errors.NotFoundError
             If this webhook is not found.
         hikari.errors.ForbiddenError
-            If you either lack the `MANAGE_WEBHOOKS` permission or
+            If you either lack the [`hikari.permissions.Permissions.MANAGE_WEBHOOKS`][] permission or
             are not a member of the guild this webhook belongs to.
         """
         await self.app.rest.delete_webhook(self.id)
@@ -836,7 +834,7 @@ class ChannelFollowerWebhook(PartialWebhook):
         name : hikari.undefined.UndefinedOr[str]
             If provided, the new name string.
         avatar : hikari.undefined.UndefinedOr[hikari.files.Resourceish]
-            If provided, the new avatar image. If `None`, then
+            If provided, the new avatar image. If [`None`][], then
             it is removed. If not specified, nothing is changed.
         channel : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.WebhookChannelT]]
             If provided, the object or ID of the new channel the given
@@ -859,7 +857,7 @@ class ChannelFollowerWebhook(PartialWebhook):
         hikari.errors.NotFoundError
             If either the webhook or the channel are not found.
         hikari.errors.ForbiddenError
-            If you either lack the `MANAGE_WEBHOOKS` permission or
+            If you either lack the [`hikari.permissions.Permissions.MANAGE_WEBHOOKS`][] permission or
             are not a member of the guild this webhook belongs to.
         hikari.errors.UnauthorizedError
             If you pass a token that's invalid for the target webhook.
@@ -911,7 +909,7 @@ class ChannelFollowerWebhook(PartialWebhook):
         ------
         hikari.errors.ForbiddenError
             If you're not in the guild that owns this webhook or
-            lack the `MANAGE_WEBHOOKS` permission.
+            lack the [`hikari.permissions.Permissions.MANAGE_WEBHOOKS`][] permission.
         hikari.errors.NotFoundError
             If the webhook is not found.
         hikari.errors.UnauthorizedError

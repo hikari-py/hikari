@@ -89,7 +89,7 @@ class ScheduledEventStatus(int, enums.Enum):
     """Indicates an event has been canceled."""
 
     CANCELLED = CANCELED
-    """Alias of `ScheduledEventStatus.CANCELED`."""
+    """Alias of [`hikari.scheduled_events.ScheduledEventStatus.CANCELED`][]."""
 
 
 @attrs_extensions.with_copy
@@ -144,7 +144,7 @@ class ScheduledEvent(snowflakes.Unique):
     user_count: typing.Optional[int] = attrs.field(hash=False, repr=False)
     """The number of users that have subscribed to the event.
 
-    This will be `None` on gateway events when creating and
+    This will be [`None`][] on gateway events when creating and
     editing a scheduled event.
     """
 
@@ -162,16 +162,16 @@ class ScheduledEvent(snowflakes.Unique):
         Parameters
         ----------
         ext : str
-            The extension to use for this URL, defaults to `png`.
-            Supports `png`, `jpeg`, `jpg` and `webp`.
+            The extension to use for this URL.
+            supports `png`, `jpeg`, `jpg` and `webp`.
         size : int
-            The size to set for the URL, defaults to `4096`.
-            Can be any power of two between 16 and 4096.
+            The size to set for the URL.
+            Can be any power of two between `16` and `4096`.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL, or `None` if no cover image is set.
+            The URL, or [`None`][] if no cover image is set.
 
         Raises
         ------
@@ -194,7 +194,7 @@ class ScheduledExternalEvent(ScheduledEvent):
     location: str = attrs.field(hash=False, repr=False)
     """The location of the scheduled event.
 
-    .. note::
+    !!! note
         There is no strict format for this field, and it will likely be a user
         friendly string.
     """

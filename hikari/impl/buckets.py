@@ -35,16 +35,16 @@ to document the theory of how this is handled here.
 What is the theory behind this implementation?
 ----------------------------------------------
 
-In this module, we refer to a `hikari.internal.routes.CompiledRoute` as a definition
+In this module, we refer to a `CompiledRoute` as a definition
 of a route with specific major parameter values included (e.g.
-`POST /channels/123/messages`), and a `hikari.internal.routes.Route` as a
-definition of a route without specific parameter values included (e.g.
-`POST /channels/{channel}/messages`). We can compile a
-`hikari.internal.routes.CompiledRoute` from a `hikari.internal.routes.Route`
-by providing the corresponding parameters as kwargs, as you may already know.
+`POST /channels/123/messages`), and a `Route` as a definition of a route
+without specific parameter values included
+(e.g. `POST /channels/{channel}/messages`). We can create a `CompiledRoute`
+from a `Route` by providing the corresponding parameters as kwargs, as you
+may already know.
 
 In this module, a "bucket" is an internal data structure that tracks and
-enforces the rate limit state for a specific `hikari.internal.routes.CompiledRoute`,
+enforces the rate limit state for a specific `CompiledRoute`,
 and can manage delaying tasks in the event that we begin to get rate limited.
 It also supports providing in-order execution of queued tasks.
 
@@ -63,18 +63,18 @@ time, so hard coding this logic is not a useful thing to be doing.
 Rate limits, on the other hand, apply to a bucket and are specific to the major
 parameters of the compiled route. This means that `POST /channels/123/messages`
 and `POST /channels/456/messages` do not share the same real bucket, despite
-Discord providing the same bucket hash. A real bucket hash is the `str` hash of
+Discord providing the same bucket hash. A real bucket hash is the string hash of
 the bucket that Discord sends us in a response concatenated to the corresponding
 major parameters. This is used for quick bucket indexing internally in this
 module.
 
 One issue that occurs from this is that we cannot effectively hash a
-`hikari.internal.routes.CompiledRoute` that has not yet been hit, meaning that
+`CompiledRoute` that has not yet been hit, meaning that
 until we receive a response from this endpoint, we have no idea what our rate
 limits could be, nor the bucket that they sit in. This is usually not
 problematic, as the first request to an endpoint should never be rate limited
 unless you are hitting it from elsewhere in the same time window outside your
-hikari.applications. To manage this situation, unknown endpoints are allocated to
+[`hikari.applications`][]. To manage this situation, unknown endpoints are allocated to
 a special unlimited bucket until they have an initial bucket hash code allocated
 from a response. Once this happens, the route is reallocated a dedicated bucket.
 Unknown buckets have a hardcoded initial hash code internally.
@@ -82,24 +82,24 @@ Unknown buckets have a hardcoded initial hash code internally.
 Initially acquiring time on a bucket
 ------------------------------------
 
-Each time you `BaseRateLimiter.acquire()` a request timeslice for a given
-`hikari.internal.routes.Route`, several things happen. The first is that we
+Each time you call [`hikari.impl.buckets.RESTBucket.acquire`][] a request
+timeslice for a given `Route`, several things happen. The first is that we
 attempt to find the existing bucket for that route, if there is one, or get an
 unknown bucket otherwise. This is done by creating a real bucket hash from the
 compiled route. The initial hash is calculated using a lookup table that maps
-`hikari.internal.routes.CompiledRoute` objects to their corresponding initial hash
+`CompiledRoute` objects to their corresponding initial hash
 codes, or to the unknown bucket hash code if not yet known. This initial hash is
-processed by the `hikari.internal.routes.CompiledRoute` to provide the real bucket
+processed by the `CompiledRoute` to provide the real bucket
 hash we need to get the route's bucket object internally.
 
-The `BaseRateLimiter.acquire()` method will take the bucket and acquire a new
-timeslice on it. This takes the form of a `asyncio.Future` which should be
-awaited by the caller and will complete once the caller is allowed to make a
-request. Most of the time, this is done instantly, but if the bucket has an
-active rate limit preventing requests being sent, then the future will be paused
-until the rate limit is over. This may be longer than the rate limit period if
-you have queued a large number of requests during this limit, as it is
-first-come-first-served.
+The [`hikari.impl.buckets.RESTBucket.acquire`][] method will take the
+bucket and acquire a new timeslice on it. This takes the form of a
+[`asyncio.Future`][] that is awaited and will complete once the caller is allowed
+to make a request. Most of the time, this is done instantly, but if the bucket
+has an active rate limit preventing requests being sent, then the future will
+be paused until the rate limit is over. This may be longer than the rate limit
+period if you have queued a large number of requests during this limit, as it
+is first-come-first-served.
 
 Acquiring a rate limited bucket will start a bucket-wide task (if not already
 running) that will wait until the rate limit has completed before allowing more
@@ -108,10 +108,12 @@ easily begin to re-ratelimit itself if needed. Once the task is complete, it
 tidies itself up and disposes of itself. This task will complete once the queue
 becomes empty.
 
-The result of `RESTBucketManager.acquire()` is a tuple of a `asyncio.Future` to
-await on which completes when you are allowed to proceed with making a request,
-and a real bucket hash which should be stored temporarily. This will be
-explained in the next section.
+The result of [`hikari.impl.buckets.RESTBucketManager.acquire_bucket`][] is an async
+context manager that must be acquired during the entirety of the request and
+released once it is done (in reality, it is just a
+[`hikari.impl.buckets.RESTBucket`][], but we want the ratelimit update to be
+forced through [`hikari.impl.buckets.RESTBucketManager.update_rate_limits`][]
+to keep proper state)
 
 Handling the rate limit headers of a response
 ---------------------------------------------
@@ -121,18 +123,19 @@ the vital rate limit headers manually and parse them to the correct data types.
 These headers are:
 
 * `X-RateLimit-Limit`:
-    an `int` describing the max requests in the bucket from empty to
+    an [`int`][] describing the max requests in the bucket from empty to
     being rate limited.
 * `X-RateLimit-Remaining`:
-    an `int` describing the remaining number of requests before rate
+    an [`int`][] describing the remaining number of requests before rate
     limiting occurs in the current window.
 * `X-RateLimit-Bucket`:
-    a `str` containing the initial bucket hash.
+    a [`str`][] containing the initial bucket hash.
 * `X-RateLimit-Reset-After`:
-    a `float` containing the number of seconds when the current rate
+    a [`float`][] containing the number of seconds when the current rate
     limit bucket will reset with decimal millisecond precision.
 
-Each of the above values should be passed to the `update_rate_limits` method to
+Each of the above values should be passed to the
+[`hikari.impl.buckets.RESTBucketManager.update_rate_limits`][] method to
 ensure that the bucket you acquired time from is correctly updated should
 Discord decide to alter their ratelimits on the fly without warning (including
 timings and the bucket).
@@ -143,17 +146,17 @@ information in each bucket you use.
 Tidying up
 ----------
 
-To prevent unused buckets cluttering up memory, each `RESTBucketManager`
-instance spins up a `asyncio.Task` that periodically locks the bucket list
+To prevent unused buckets cluttering up memory, each [`hikari.impl.buckets.RESTBucketManager`][]
+instance spins up a [`asyncio.Task`][] that periodically locks the bucket list
 (not threadsafe, only using the concept of asyncio not yielding in regular
 functions) and disposes of any clearly stale buckets that are no longer needed.
 These will be recreated again in the future if they are needed.
 
-When shutting down an application, one must remember to `close()` the
-`RESTBucketManager` that has been used. This will ensure the garbage collection
-task is stopped, and will also ensure any remaining futures in any bucket queues
-have an `asyncio.CancelledError` set on them to prevent deadlocking ratelimited
-calls that may be waiting to be unlocked.
+When shutting down an application, one must remember to call
+[`hikari.impl.buckets.RESTBucketManager.close`][]. This will ensure the
+garbage collection task is stopped, and will also ensure any remaining futures
+in any bucket queues have an [`asyncio.CancelledError`][] set on them to prevent
+deadlocking ratelimited calls that may be waiting to be unlocked.
 
 Body-field-specific rate limiting
 ---------------------------------
@@ -165,21 +168,27 @@ on what attributes you send in a JSON or form data payload.
 
 No information is sent in headers about these specific limits. You will only
 be made aware that they exist once you get ratelimited. In the 429 ratelimited
-response, you will have the `"global"` attribute set to `False`, and a
+response, you will have the `"global"` attribute set to [`False`][], and a
 `"reset_after"` attribute that differs entirely to the `X-RateLimit-Reset-After`
 header. Thus, it is important to not assume the value in the 429 response
-for the reset time is the same as the one in the bucket headers. Hikari's
-`hikari.api.rest.RESTClient` implementation specifically uses the value furthest
-in the future when working out which bucket to adhere to.
+for the reset time is the same as the one in the bucket headers. hikari's
+[`hikari.api.rest.RESTClient`][] implementation specifically uses the value
+furthest in the future when working out which bucket to adhere to.
 
 It is worth remembering that there is an API limit to the number of 401s,
 403s, and 429s you receive, which is around 10,000 per 15 minutes. Passing this
 limit results in a soft ban of your account.
 
-At the time of writing, the only example of this appears to be on the
-`PATCH /channels/{channel_id}` endpoint. This has a limit of two changes per
-10 minutes. More details about how this is implemented have yet to be
-released or documented...
+The true nature of these limits are not known and Discord staff have repeatedly
+pointed to them never being documented for the sake of system integrity.
+These special ratelimits are not something a normal user should encounter
+unless they are calling a single route multiple times with the end goal
+of editing a single attribute in quick succession. It is up to Discord's
+discretion on what is considered as "spammy" behaviour and one they would
+not like to allow on their API.
+
+These ratelimits should not be "properly" handled and instead be avoided
+completely by the end developer (similar to Cloudflare 429s).
 """
 
 from __future__ import annotations
@@ -211,7 +220,7 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
     Component to represent an active rate limit bucket on a specific HTTP route
     with a specific major parameter combo.
 
-    This is somewhat similar to the `WindowedBurstRateLimiter` in how it
+    This is somewhat similar to the [`hikari.impl.rate_limits.WindowedBurstRateLimiter`][] in how it
     works.
 
     This algorithm will use fixed-period time windows that have a given limit
@@ -223,7 +232,7 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
     capacity to zero, and tasks that are queued will start being able to drip
     again.
 
-    Additional logic is provided by the `RESTBucket.update_rate_limit` call
+    Additional logic is provided by the [`hikari.impl.buckets.RESTBucket.update_rate_limit`][] call
     which allows dynamically changing the enforced rate limits at any time.
     """
 
@@ -255,7 +264,7 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
 
     @property
     def is_unknown(self) -> bool:
-        """Return `True` if the bucket represents an `UNKNOWN` bucket."""
+        """Whether it represents an UNKNOWN bucket."""
         return self.name.startswith(UNKNOWN_HASH)
 
     def release(self) -> None:
@@ -265,10 +274,10 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
     async def acquire(self) -> None:
         """Acquire time and the lock on this bucket.
 
-        .. note::
-            You should afterwards invoke `RESTBucket.update_rate_limit` to
+        !!! note
+            You should afterwards invoke [`hikari.impl.buckets.RESTBucket.update_rate_limit`][] to
             update any rate limit information you are made aware of and
-            `RESTBucket.release` to release the lock.
+            [`hikari.impl.buckets.RESTBucket.release`][] to release the lock.
 
         Raises
         ------
@@ -317,9 +326,9 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
     def update_rate_limit(self, remaining: int, limit: int, reset_at: float) -> None:
         """Update the rate limit information.
 
-        .. note::
-            The `reset_at` epoch is expected to be a `time.monotonic`
-            monotonic epoch, rather than a `time.time` date-based epoch.
+        !!! note
+            The `reset_at` epoch is expected to be a [`time.monotonic`][]
+            monotonic epoch, rather than a [`time.time`][] date-based epoch.
 
         Parameters
         ----------
@@ -410,14 +419,13 @@ class RESTBucketManager:
         Parameters
         ----------
         poll_period : float
-            Period to poll the garbage collector at in seconds. Defaults
-            to `20` seconds.
+            Period to poll the garbage collector at in seconds.
         expire_after : float
-            Time after which the last `reset_at` was hit for a bucket to
+            Time after which the last [`hikari.impl.buckets.RESTBucket.reset_at`][] was hit for a bucket to
             remove it. Higher values will retain unneeded ratelimit info for
             longer, but may produce more effective rate-limiting logic as a
             result. Using `0` will make the bucket get garbage collected as soon
-            as the rate limit has reset. Defaults to `10` seconds.
+            as the rate limit has reset.
         """
         if self._gc_task:
             raise errors.ComponentStateConflictError("Cannot start an active bucket manager")
@@ -499,9 +507,9 @@ class RESTBucketManager:
     ) -> typing.AsyncContextManager[None]:
         """Acquire a bucket for the given route.
 
-        .. note::
+        !!! note
             You MUST keep the context manager acquired during the full duration
-            of the request: from making the request until calling `update_rate_limits`.
+            of the request: from making the request until calling [`hikari.impl.buckets.RESTBucket.update_rate_limit`][].
 
         Parameters
         ----------
@@ -554,11 +562,11 @@ class RESTBucketManager:
         bucket_header : str
             The `X-RateLimit-Bucket` header that was provided in the response.
         remaining_header : int
-            The `X-RateLimit-Remaining` header cast to an `int`.
+            The `X-RateLimit-Remaining` header cast to an [`int`][].
         limit_header : int
-            The `X-RateLimit-Limit` header cast to an `int`.
+            The `X-RateLimit-Limit` header cast to an [`int`][].
         reset_after : float
-            The `X-RateLimit-Reset-After` header cast to a `float`.
+            The `X-RateLimit-Reset-After` header cast to a [`float`][].
         """
         if not self._gc_task:
             raise errors.ComponentStateConflictError("Cannot interact with an inactive bucket manager")

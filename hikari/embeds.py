@@ -84,12 +84,12 @@ class EmbedResource(files.Resource[files.AsyncReader]):
         ----------
         executor : typing.Optional[concurrent.futures.Executor]
             The executor to run in for blocking operations.
-            If `None`, then the default executor is used for the
+            If [`None`][], then the default executor is used for the
             current event loop.
         head_only : bool
-            Defaults to `False`. If `True`, then the
-            implementation may only retrieve HEAD information if supported.
-            This currently only has any effect for web requests.
+            If [`True`][], then the implementation may only retrieve
+            HEAD information if supported. This currently only has
+            any effect for web requests.
         """
         return self.resource.stream(executor=executor, head_only=head_only)
 
@@ -99,9 +99,9 @@ class EmbedResourceWithProxy(EmbedResource):
     """Resource with a corresponding proxied element."""
 
     proxy_resource: typing.Optional[files.Resource[files.AsyncReader]] = attrs.field(default=None, repr=False)
-    """The proxied version of the resource, or `None` if not present.
+    """The proxied version of the resource, or [`None`][] if not present.
 
-    .. note::
+    !!! note
         This field cannot be set by bots or webhooks while sending an embed
         and will be ignored during serialization. Expect this to be
         populated on any received embed attached to a message event.
@@ -110,13 +110,13 @@ class EmbedResourceWithProxy(EmbedResource):
     @property
     @typing.final
     def proxy_url(self) -> typing.Optional[str]:
-        """Proxied URL of this embed resource if applicable, else `None`."""
+        """Proxied URL of this embed resource if applicable, else [`None`][]."""
         return self.proxy_resource.url if self.proxy_resource else None
 
     @property
     @typing.final
     def proxy_filename(self) -> typing.Optional[str]:
-        """File name of the proxied version of this embed resource if applicable, else `None`."""
+        """File name of the proxied version of this embed resource if applicable, else [`None`][]."""
         return self.proxy_resource.filename if self.proxy_resource else None
 
 
@@ -128,10 +128,10 @@ class EmbedFooter:
     # Discord says this is never None. We know that is invalid because Discord.py
     # sets it to None. Seems like undocumented behaviour again.
     text: typing.Optional[str] = attrs.field(default=None, repr=True)
-    """The footer text, or `None` if not present."""
+    """The footer text, or [`None`][] if not present."""
 
     icon: typing.Optional[EmbedResourceWithProxy] = attrs.field(default=None, repr=True)
-    """The URL of the footer icon, or `None` if not present."""
+    """The URL of the footer icon, or [`None`][] if not present."""
 
 
 @attrs.define(hash=False, kw_only=True, weakref_slot=False)
@@ -139,18 +139,18 @@ class EmbedImage(EmbedResourceWithProxy):
     """Represents an embed image."""
 
     height: typing.Optional[int] = attrs.field(default=None, repr=False)
-    """The height of the image, if present and known, otherwise `None`.
+    """The height of the image, if present and known, otherwise [`None`][].
 
-    .. note::
+    !!! note
         This field cannot be set by bots or webhooks while sending an embed and
         will be ignored during serialization. Expect this to be populated on
         any received embed attached to a message event.
     """
 
     width: typing.Optional[int] = attrs.field(default=None, repr=False)
-    """The width of the image, if present and known, otherwise `None`.
+    """The width of the image, if present and known, otherwise [`None`][].
 
-    .. note::
+    !!! note
         This field cannot be set by bots or webhooks while sending an embed and
         will be ignored during serialization. Expect this to be populated on
         any received embed attached to a message event.
@@ -161,7 +161,7 @@ class EmbedImage(EmbedResourceWithProxy):
 class EmbedVideo(EmbedResourceWithProxy):
     """Represents an embed video.
 
-    .. note::
+    !!! note
         This object cannot be set by bots or webhooks while sending an embed and
         will be ignored during serialization. Expect this to be populated on
         any received embed attached to a message event with a video attached.
@@ -182,7 +182,7 @@ class EmbedVideo(EmbedResourceWithProxy):
 class EmbedProvider:
     """Represents an embed provider.
 
-    .. note::
+    !!! note
         This object cannot be set by bots or webhooks while sending an embed and
         will be ignored during serialization. Expect this to be populated on
         any received embed attached to a message event provided by an external
@@ -205,16 +205,16 @@ class EmbedAuthor:
     """Represents an author of an embed."""
 
     name: typing.Optional[str] = attrs.field(default=None, repr=True)
-    """The name of the author, or `None` if not specified."""
+    """The name of the author, or [`None`][] if not specified."""
 
     url: typing.Optional[str] = attrs.field(default=None, repr=True)
     """The URL that the author's name should act as a hyperlink to.
 
-    This may be `None` if no hyperlink on the author's name is specified.
+    This may be [`None`][] if no hyperlink on the author's name is specified.
     """
 
     icon: typing.Optional[EmbedResourceWithProxy] = attrs.field(default=None, repr=False)
-    """The author's icon, or `None` if not present."""
+    """The author's icon, or [`None`][] if not present."""
 
 
 @attrs_extensions.with_copy
@@ -234,9 +234,9 @@ class EmbedField:
     # in the constructor for `_inline`.
     @property
     def is_inline(self) -> bool:
-        """Return `True` if the field should display inline.
+        """Whether the field should display inline.
 
-        Defaults to `False`.
+        Defaults to [`False`][].
         """
         return self._inline
 
@@ -289,7 +289,7 @@ class Embed:
     ) -> Embed:
         """Generate an embed from the given attributes.
 
-        .. warning::
+        !!! warning
             **This function is for internal use only!**
         """
         # Create an empty instance without the overhead of invoking the regular
@@ -351,7 +351,7 @@ class Embed:
     def title(self) -> typing.Optional[str]:
         """Return the title of the embed.
 
-        This will be `None` if not set.
+        This will be [`None`][] if not set.
         """
         return self._title
 
@@ -363,7 +363,7 @@ class Embed:
     def description(self) -> typing.Optional[str]:
         """Return the description of the embed.
 
-        This will be `None` if not set.
+        This will be [`None`][] if not set.
         """
         return self._description
 
@@ -375,7 +375,7 @@ class Embed:
     def url(self) -> typing.Optional[str]:
         """Return the URL of the embed title.
 
-        This will be `None` if not set.
+        This will be [`None`][] if not set.
         """
         return self._url
 
@@ -387,7 +387,7 @@ class Embed:
     def color(self) -> typing.Optional[colors.Color]:
         """Return the colour of the embed.
 
-        This will be `None` if not set.
+        This will be [`None`][] if not set.
         """
         return self._color
 
@@ -400,7 +400,7 @@ class Embed:
     # Alias.
     @property
     def colour(self) -> typing.Optional[colors.Color]:
-        """Alias of `color`."""
+        """Alias of [`hikari.colors.Color`][]."""
         return self._color
 
     # Alias.
@@ -414,21 +414,20 @@ class Embed:
     def timestamp(self) -> typing.Optional[datetime.datetime]:
         """Return the timestamp of the embed.
 
-        This will be `None` if not set.
+        This will be [`None`][] if not set.
 
-        .. warning::
+        !!! warning
             Setting a non-timezone-aware datetime will result in a warning
             being raised. This is done due to potential confusion caused by
             Discord requiring a UTC timestamp for this field. Any non-timezone
             aware timestamp is interpreted as using the system's current
-            timezone instead. Thus, using `datetime.datetime.utcnow` will
+            timezone instead. Thus, using [`datetime.datetime.utcnow`][] will
             result in a potentially incorrect timezone being set.
 
             To generate a timezone aware timestamp, use one of the following
             snippets:
 
-            .. code-block:: python
-
+            ```py
                 # Use UTC.
                 >>> datetime.datetime.now(tz=datetime.timezone.utc)
                 datetime.datetime(2020, 6, 5, 18, 29, 56, 424744, tzinfo=datetime.timezone.utc)
@@ -436,6 +435,7 @@ class Embed:
                 # Use your current timezone.
                 >>> datetime.datetime.now().astimezone()
                 datetime.datetime(2020, 7, 7, 8, 57, 9, 775328, tzinfo=..., 'BST'))
+            ```
 
             By specifying a timezone, Hikari can automatically adjust the given
             time to UTC without you needing to think about it.
@@ -444,8 +444,7 @@ class Embed:
             one by specifying a timezone. Hikari will detect any difference in
             timezone if the timestamp is non timezone-naive and fix it for you:
 
-            .. code-block:: python
-
+            ```py
                 # I am British, and it is June, so we are in daylight saving
                 # (UTC+1 or GMT+1, specifically).
                 >>> import datetime
@@ -465,12 +464,13 @@ class Embed:
                 # explicitly specified, Hikari will convert it to UTC for you when
                 # you send the embed.
                 >>> ...
+            ```
 
-            A library on PyPI called [tzlocal](...) also exists that may be useful
-            to you if you need to get your local timezone for any reason:
+            A library on PyPI called [tzlocal](https://pypi.org/project/tzlocal/)
+            also exists that may be useful to you if you need to get your local
+            timezone for any reason:
 
-            .. code-block:: python
-
+            ```py
                 >>> import datetime
                 >>> import tzlocal
 
@@ -488,6 +488,7 @@ class Embed:
                 datetime.datetime(2020, 6, 5, 18, 38, 27, 863990, tzinfo=datetime.timezone.utc)
                 >>> dt.astimezone(tzlocal.get_localzone())
                 datetime.datetime(2020, 6, 5, 19, 38, 27, 863990, tzinfo=<DstTzInfo 'Europe/London' BST+1:00:00 DST>)
+            ```
 
             ...this is not required, but you may find it more useful if using the
             timestamps in debug logs, for example.
@@ -535,7 +536,7 @@ class Embed:
     def footer(self) -> typing.Optional[EmbedFooter]:
         """Return the footer of the embed.
 
-        Will be `None` if not set.
+        Will be [`None`][] if not set.
         """
         return self._footer
 
@@ -543,10 +544,10 @@ class Embed:
     def image(self) -> typing.Optional[EmbedImage]:
         """Return the image set in the embed.
 
-        Will be `None` if not set.
+        Will be [`None`][] if not set.
 
-        .. note::
-            Use `set_image` to update this value.
+        !!! note
+            Use [`hikari.embeds.Embed.set_image`][] to update this value.
         """
         return self._image
 
@@ -554,10 +555,10 @@ class Embed:
     def thumbnail(self) -> typing.Optional[EmbedImage]:
         """Return the thumbnail set in the embed.
 
-        Will be `None` if not set.
+        Will be [`None`][] if not set.
 
-        .. note::
-            Use `set_thumbnail` to update this value.
+        !!! note
+            Use [`hikari.embeds.Embed.set_thumbnail`][] to update this value.
         """
         return self._thumbnail
 
@@ -565,9 +566,9 @@ class Embed:
     def video(self) -> typing.Optional[EmbedVideo]:
         """Return the video to show in the embed.
 
-        Will be `None` if not set.
+        Will be [`None`][] if not set.
 
-        .. note::
+        !!! note
             This object cannot be set by bots or webhooks while sending an embed
             and will be ignored during serialization. Expect this to be
             populated on any received embed attached to a message event with a
@@ -579,9 +580,9 @@ class Embed:
     def provider(self) -> typing.Optional[EmbedProvider]:
         """Return the provider to show in the embed.
 
-        Will be `None` if not set.
+        Will be [`None`][] if not set.
 
-        .. note::
+        !!! note
             This object cannot be set by bots or webhooks while sending an embed
             and will be ignored during serialization. Expect this to be
             populated on any received embed attached to a message event with a
@@ -593,10 +594,10 @@ class Embed:
     def author(self) -> typing.Optional[EmbedAuthor]:
         """Return the author to show in the embed.
 
-        Will be `None` if not set.
+        Will be [`None`][] if not set.
 
-        .. note::
-            Use `set_author` to update this value.
+        !!! note
+            Use [`hikari.embeds.Embed.set_author`][] to update this value.
         """
         return self._author
 
@@ -604,9 +605,9 @@ class Embed:
     def fields(self) -> typing.Sequence[EmbedField]:
         """Return the sequence of fields in the embed.
 
-        .. note::
-            Use `add_field` to add a new field, `edit_field` to edit an existing
-            field, or `remove_field` to remove a field.
+        !!! note
+            Use [`hikari.embeds.Embed.add_field`][] to add a new field, [`hikari.embeds.Embed.edit_field`][] to edit an existing
+            field, or [`hikari.embeds.Embed.remove_field`][] to remove a field.
         """
         return self._fields if self._fields else []
 
@@ -630,20 +631,20 @@ class Embed:
 
             This can be many different things, to aid in convenience.
 
-            - If `None`, nothing is set.
-            - If a `pathlib.PurePath` or `str` to a valid URL, the URL
+            - If [`None`][], nothing is set.
+            - If a [`pathlib.PurePath`][] or [`str`][] to a valid URL, the URL
                 is linked to directly.
-            - Subclasses of `hikari.files.WebResource` such as
-                `hikari.files.URL`,
-                `hikari.messages.Attachment`,
-                `hikari.emojis.Emoji`,
-                `EmbedResource`, etc will have their URL linked to directly.
+            - Subclasses of [`hikari.files.WebResource`][] such as
+                [`hikari.files.URL`][],
+                [`hikari.messages.Attachment`][],
+                [`hikari.emojis.Emoji`][],
+                [`hikari.embeds.EmbedResource`][], etc will have their URL linked to directly.
                 this field.
-            - If a `hikari.files.Bytes` is passed, or a `str`
+            - If a [`hikari.files.Bytes`][] is passed, or a [`str`][]
                 that contains a valid data URI is passed, then this is uploaded
                 as an attachment and linked into the embed.
-            - If a `hikari.files.File`, `pathlib.PurePath` or
-                `str` that is an absolute or relative path to a file
+            - If a [`hikari.files.File`][], [`pathlib.PurePath`][] or
+                [`str`][] that is an absolute or relative path to a file
                 on your file system is passed, then this resource is uploaded
                 as an attachment using non-blocking code internally and linked
                 into the embed.
@@ -667,26 +668,26 @@ class Embed:
         ----------
         text : typing.Optional[str]
             The mandatory text string to set in the footer.
-            If `None`, the footer is removed.
+            If [`None`][], the footer is removed.
         icon : typing.Optional[hikari.files.Resourceish]
             The optional image to show next to the embed footer.
 
             This can be many different things, to aid in convenience.
 
-            - If `None`, nothing is set.
-            - If a `pathlib.PurePath` or `str` to a valid URL, the URL
+            - If [`None`][], nothing is set.
+            - If a [`pathlib.PurePath`][] or [`str`][] to a valid URL, the URL
                 is linked to directly.
-            - Subclasses of `hikari.files.WebResource` such as
-                `hikari.files.URL`,
-                `hikari.messages.Attachment`,
-                `hikari.emojis.Emoji`,
-                `EmbedResource`, etc will have their URL linked to directly.
+            - Subclasses of [`hikari.files.WebResource`][] such as
+                [`hikari.files.URL`][],
+                [`hikari.messages.Attachment`][],
+                [`hikari.emojis.Emoji`][],
+                [`hikari.embeds.EmbedResource`][], etc. will have their URL linked to directly.
                 this field.
-            - If a `hikari.files.Bytes` is passed, or a `str`
+            - If a [`hikari.files.Bytes`][] is passed, or a [`str`][]
                 that contains a valid data URI is passed, then this is uploaded
                 as an attachment and linked into the embed.
-            - If a `hikari.files.File`, `pathlib.PurePath` or
-                `str` that is an absolute or relative path to a file
+            - If a [`hikari.files.File`][], [`pathlib.PurePath`][] or
+                [`str`][] that is an absolute or relative path to a file
                 on your file system is passed, then this resource is uploaded
                 as an attachment using non-blocking code internally and linked
                 into the embed.
@@ -719,20 +720,20 @@ class Embed:
 
             This can be many different things, to aid in convenience.
 
-            - If `None`, nothing is set.
-            - If a `pathlib.PurePath` or `str` to a valid URL, the URL
+            - If [`None`][], nothing is set.
+            - If a [`pathlib.PurePath`][] or [`str`][] to a valid URL, the URL
                 is linked to directly.
-            - Subclasses of `hikari.files.WebResource` such as
-                `hikari.files.URL`,
-                `hikari.messages.Attachment`,
-                `hikari.emojis.Emoji`,
-                `EmbedResource`, etc will have their URL linked to directly.
+            - Subclasses of [`hikari.files.WebResource`][] such as
+                [`hikari.files.URL`][],
+                [`hikari.messages.Attachment`][],
+                [`hikari.emojis.Emoji`][],
+                [`hikari.embeds.EmbedResource`][], etc will have their URL linked to directly.
                 this field.
-            - If a `hikari.files.Bytes` is passed, or a `str`
+            - If a [`hikari.files.Bytes`][] is passed, or a [`str`][]
                 that contains a valid data URI is passed, then this is uploaded
                 as an attachment and linked into the embed.
-            - If a `hikari.files.File`, `pathlib.PurePath` or
-                `str` that is an absolute or relative path to a file
+            - If a [`hikari.files.File`][], [`pathlib.PurePath`][] or
+                [`str`][] that is an absolute or relative path to a file
                 on your file system is passed, then this resource is uploaded
                 as an attachment using non-blocking code internally and linked
                 into the embed.
@@ -759,19 +760,19 @@ class Embed:
 
             This can be many different things, to aid in convenience.
 
-            - If `None`, nothing is set.
-            - If a `pathlib.PurePath` or `str` to a valid URL, the URL
+            - If [`None`][], nothing is set.
+            - If a [`pathlib.PurePath`][] or [`str`][] to a valid URL, the URL
                 is linked to directly.
-            - Subclasses of `hikari.files.WebResource` such as
-                `hikari.files.URL`,
-                `hikari.messages.Attachment`,
-                `hikari.emojis.Emoji`,
-                `EmbedResource`, etc will have their URL linked to directly.
-            - If a `hikari.files.Bytes` is passed, or a `str`
+            - Subclasses of [`hikari.files.WebResource`][] such as
+                [`hikari.files.URL`][],
+                [`hikari.messages.Attachment`][],
+                [`hikari.emojis.Emoji`][],
+                [`hikari.embeds.EmbedResource`][], etc will have their URL linked to directly.
+            - If a [`hikari.files.Bytes`][] is passed, or a [`str`][]
                 that contains a valid data URI is passed, then this is uploaded
                 as an attachment and linked into the embed.
-            - If a `hikari.files.File`, `pathlib.PurePath` or
-                `str` that is an absolute or relative path to a file
+            - If a [`hikari.files.File`][], [`pathlib.PurePath`][] or
+                [`str`][] that is an absolute or relative path to a file
                 on your file system is passed, then this resource is uploaded
                 as an attachment using non-blocking code internally and linked
                 into the embed.
@@ -803,9 +804,9 @@ class Embed:
         Other Parameters
         ----------------
         inline : bool
-            If `True`, the embed field may be shown "inline" on some
-            Discord clients with other fields. If `False`, it is always placed
-            on a separate line. This will default to `False`.
+            If [`True`][], the embed field may be shown "inline" on some
+            Discord clients with other fields. If [`False`][], it is always placed
+            on a separate line. This will default to [`False`][].
 
         Returns
         -------
@@ -836,14 +837,14 @@ class Embed:
         Other Parameters
         ----------------
         name : hikari.undefined.UndefinedOr[str]
-            The new field name to use. If left to the default (`undefined`),
+            The new field name to use. If left to the default ([`hikari.undefined.UNDEFINED`][]),
             then it will not be changed.
         value : hikari.undefined.UndefinedOr[str]
-            The new field value to use. If left to the default (`undefined`),
+            The new field value to use. If left to the default ([`hikari.undefined.UNDEFINED`][]),
             then it will not be changed.
         inline : hikari.undefined.UndefinedOr[bool]
-            `True` to inline the field, or `False` to force
-            it to be on a separate line. If left to the default (`undefined`),
+            [`True`][] to inline the field, or [`False`][] to force
+            it to be on a separate line. If left to the default ([`hikari.undefined.UNDEFINED`][]),
             then it will not be changed.
 
         Returns
