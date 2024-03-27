@@ -37,6 +37,7 @@ from hikari.events.reaction_events import *
 from hikari.events.role_events import *
 from hikari.events.scheduled_events import *
 from hikari.events.shard_events import *
+from hikari.events.stage_events import *
 from hikari.events.typing_events import *
 from hikari.events.user_events import *
 from hikari.events.voice_events import *

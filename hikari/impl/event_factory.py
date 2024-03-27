@@ -49,6 +49,7 @@ from hikari.events import reaction_events
 from hikari.events import role_events
 from hikari.events import scheduled_events
 from hikari.events import shard_events
+from hikari.events import stage_events
 from hikari.events import typing_events
 from hikari.events import user_events
 from hikari.events import voice_events
@@ -927,4 +928,29 @@ class EventFactoryImpl(event_factory.EventFactory):
         raw_endpoint = payload["endpoint"]
         return voice_events.VoiceServerUpdateEvent(
             app=self._app, shard=shard, guild_id=guild_id, token=token, raw_endpoint=raw_endpoint
+        )
+
+    #########################
+    # STAGE INSTANCE EVENTS #
+    #########################
+
+    def deserialize_stage_instance_create_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> stage_events.StageInstanceCreateEvent:
+        return stage_events.StageInstanceCreateEvent(
+            shard=shard, stage_instance=self._app.entity_factory.deserialize_stage_instance(payload)
+        )
+
+    def deserialize_stage_instance_edit_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> stage_events.StageInstanceEditEvent:
+        return stage_events.StageInstanceEditEvent(
+            shard=shard, stage_instance=self._app.entity_factory.deserialize_stage_instance(payload)
+        )
+
+    def deserialize_stage_instance_delete_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> stage_events.StageInstanceDeleteEvent:
+        return stage_events.StageInstanceDeleteEvent(
+            shard=shard, stage_instance=self._app.entity_factory.deserialize_stage_instance(payload)
         )

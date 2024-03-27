@@ -41,6 +41,7 @@ from hikari.events import reaction_events
 from hikari.events import role_events
 from hikari.events import scheduled_events
 from hikari.events import shard_events
+from hikari.events import stage_events
 from hikari.events import typing_events
 from hikari.events import user_events
 from hikari.events import voice_events
@@ -1458,3 +1459,58 @@ class TestEventFactoryImpl:
         assert event.token == "okokok"
         assert event.guild_id == 3122312
         assert event.raw_endpoint == "httppppppp"
+
+    #########################
+    # STAGE INSTANCE EVENTS #
+    #########################
+
+    def test_deserialize_stage_instance_create_event(self, event_factory, mock_app, mock_shard):
+        mock_payload = {
+            "id": "840647391636226060",
+            "guild_id": "197038439483310086",
+            "channel_id": "733488538393510049",
+            "topic": "Testing Testing, 123",
+            "privacy_level": 1,
+            "discoverable_disabled": False,
+        }
+        event = event_factory.deserialize_stage_instance_create_event(mock_shard, mock_payload)
+        assert isinstance(event, stage_events.StageInstanceCreateEvent)
+
+        assert event.shard is mock_shard
+        assert event.app is event.stage_instance.app
+        assert event.stage_instance_id == mock_app.entity_factory.deserialize_stage_instance.return_value.id
+        assert event.stage_instance == mock_app.entity_factory.deserialize_stage_instance.return_value
+
+    def test_deserialize_stage_instance_edit_event(self, event_factory, mock_app, mock_shard):
+        mock_payload = {
+            "id": "840647391636226060",
+            "guild_id": "197038439483310086",
+            "channel_id": "733488538393510049",
+            "topic": "Testing Testing, 124",
+            "privacy_level": 2,
+            "discoverable_disabled": True,
+        }
+        event = event_factory.deserialize_stage_instance_edit_event(mock_shard, mock_payload)
+        assert isinstance(event, stage_events.StageInstanceEditEvent)
+
+        assert event.shard is mock_shard
+        assert event.app is event.stage_instance.app
+        assert event.stage_instance_id == mock_app.entity_factory.deserialize_stage_instance.return_value.id
+        assert event.stage_instance == mock_app.entity_factory.deserialize_stage_instance.return_value
+
+    def test_deserialize_stage_instance_delete_event(self, event_factory, mock_app, mock_shard):
+        mock_payload = {
+            "id": "840647391636226060",
+            "guild_id": "197038439483310086",
+            "channel_id": "733488538393510049",
+            "topic": "Testing Testing, 124",
+            "privacy_level": 2,
+            "discoverable_disabled": True,
+        }
+        event = event_factory.deserialize_stage_instance_delete_event(mock_shard, mock_payload)
+        assert isinstance(event, stage_events.StageInstanceDeleteEvent)
+
+        assert event.shard is mock_shard
+        assert event.app is event.stage_instance.app
+        assert event.stage_instance_id == mock_app.entity_factory.deserialize_stage_instance.return_value.id
+        assert event.stage_instance == mock_app.entity_factory.deserialize_stage_instance.return_value
