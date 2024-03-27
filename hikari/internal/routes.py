@@ -534,6 +534,12 @@ GET_APPLICATION_ROLE_CONNECTION_METADATA_RECORDS: typing.Final[Route] = Route(
 PUT_APPLICATION_ROLE_CONNECTION_METADATA_RECORDS: typing.Final[Route] = Route(
     PUT, "/applications/{application}/role-connections/metadata"
 )
+GET_APPLICATION_SKUS: typing.Final[Route] = Route(GET, "/applications/{application}/skus")
+GET_APPLICATION_ENTITLEMENTS: typing.Final[Route] = Route(GET, "/applications/{application}/entitlements")
+POST_APPLICATION_TEST_ENTITLEMENT: typing.Final[Route] = Route(POST, "/applications/{application}/entitlements")
+DELETE_APPLICATION_TEST_ENTITLEMENT: typing.Final[Route] = Route(
+    DELETE, "/applications/{application}/entitlements/{entitlement}"
+)
 
 # Interactions
 # For these endpoints "webhook" is the application ID.

@@ -141,6 +141,17 @@ class ResponseType(int, enums.Enum):
     * [`hikari.interactions.base_interactions.InteractionType.MODAL_SUBMIT`][]
     """
 
+    PREMIUM_REQUIRED = 10
+    """An immediate interaction response with a premium upsell button
+    Only available for apps with monetization enabled.
+
+    This is valid for the following interaction types:
+
+    * `InteractionType.APPLICATION_COMMAND`
+    * `InteractionType.MESSAGE_COMPONENT`
+    * `InteractionType.MODAL_SUBMIT`
+    """
+
 
 MESSAGE_RESPONSE_TYPES: typing.Final[typing.AbstractSet[MessageResponseTypesT]] = frozenset(
     [ResponseType.MESSAGE_CREATE, ResponseType.MESSAGE_UPDATE]
@@ -212,6 +223,31 @@ class PartialInteraction(snowflakes.Unique, webhooks.ExecutableWebhook):
     def webhook_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from ExecutableWebhook>>.
         return self.application_id
+
+
+class PremiumResponseMixin(PartialInteraction):
+    """Mixin' class for all interaction types which can be responded to with a premium upsell."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    async def create_premium_required_response(self) -> None:
+        """Create a response by sending a premium upsell.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you cannot access the target interaction.
+        hikari.errors.NotFoundError
+            If the initial response isn't found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        return await self.app.rest.create_premium_required_response(self, self.token)
 
 
 class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTypesT]):

@@ -39,6 +39,7 @@ import attrs
 
 from hikari import channels
 from hikari import commands
+from hikari import monetization
 from hikari import snowflakes
 from hikari import traits
 from hikari import undefined
@@ -180,6 +181,9 @@ class BaseCommandInteraction(base_interactions.PartialInteraction):
     command_type: typing.Union[commands.CommandType, int] = attrs.field(eq=False, hash=False, repr=True)
     """The type of the command."""
 
+    entitlements: typing.Sequence[monetization.Entitlement] = attrs.field(eq=False, hash=False, repr=True)
+    """For monetized apps, any entitlements for the invoking user, represents access to SKUs."""
+
     async def fetch_channel(self) -> channels.TextableChannel:
         """Fetch the guild channel this was triggered in.
 
@@ -304,6 +308,7 @@ class CommandInteraction(
     BaseCommandInteraction,
     base_interactions.MessageResponseMixin[CommandResponseTypesT],
     base_interactions.ModalResponseMixin,
+    base_interactions.PremiumResponseMixin,
 ):
     """Represents a command interaction on Discord."""
 

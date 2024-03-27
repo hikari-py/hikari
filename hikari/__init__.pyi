@@ -59,6 +59,7 @@ from hikari.events.interaction_events import *
 from hikari.events.lifetime_events import *
 from hikari.events.member_events import *
 from hikari.events.message_events import *
+from hikari.events.monetization_events import *
 from hikari.events.reaction_events import *
 from hikari.events.role_events import *
 from hikari.events.scheduled_events import *
@@ -87,6 +88,7 @@ from hikari.invites import *
 from hikari.iterators import *
 from hikari.locales import *
 from hikari.messages import *
+from hikari.monetization import *
 from hikari.permissions import *
 from hikari.presences import *
 from hikari.scheduled_events import *
