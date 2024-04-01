@@ -232,7 +232,7 @@ class _EnumMeta(type):
             return _EnumNamespace(object)
 
         try:
-            # Fails if Enum is not defined. We check this in [`__new__`][] properly.
+            # Fails if Enum is not defined. We check this in `__new__` properly.
             base, enum_type = bases
 
             if isinstance(base, _EnumMeta):
