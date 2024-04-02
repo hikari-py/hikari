@@ -822,7 +822,7 @@ class GatewayShardImpl(shard.GatewayShard):
         initial_op = hello_payload[_OP]
 
         if initial_op == _RECONNECT:
-            # It is impossible that we receive RECONNECT as the initial opcode when the node we
+            # It is possible that we receive RECONNECT as the initial opcode when the node we
             # are connecting to is being restarted but the load balancer doesn't know it yet
             self._logger.info(
                 "received %s (RECONNECT) as first opcode. It is likely the node is being restarted, "
