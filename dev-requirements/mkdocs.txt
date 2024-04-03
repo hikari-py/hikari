@@ -1,0 +1,18 @@
+mkdocs==1.5.3
+
+# Mkdocs Material
+mkdocs-material[imaging]==9.5.17
+
+# Docstring parsing for API reference
+mkdocstrings[python]==0.24.1
+griffe-inherited-docstrings==1.0.0
+
+# Generate API reference pages dynamically
+mkdocs-gen-files==0.5.0
+mkdocs-literate-nav==0.6.1
+
+# Formatting signatures
+black==24.3.0
+
+# Image viewer ext
+mkdocs-glightbox==0.3.7

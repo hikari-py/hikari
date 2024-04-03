@@ -125,8 +125,8 @@ class ExecutorAware(fast_protocol.FastProtocolChecking, typing.Protocol):
     """Structural supertype for an executor-aware object.
 
     These components will contain an `executor` attribute that may return
-    a `concurrent.futures.Executor` or `None` if the
-    default `asyncio` thread pool for the event loop is used.
+    a [`concurrent.futures.Executor`][] or [`None`][] if the
+    default [`asyncio`][] thread pool for the event loop is used.
     """
 
     __slots__: typing.Sequence[str] = ()
@@ -136,7 +136,7 @@ class ExecutorAware(fast_protocol.FastProtocolChecking, typing.Protocol):
     def executor(self) -> typing.Optional[futures.Executor]:
         """Executor to use for blocking operations.
 
-        This may return `None` if the default `asyncio` thread pool
+        This may return [`None`][] if the default [`asyncio`][] thread pool
         should be used instead.
         """
         raise NotImplementedError
@@ -263,14 +263,14 @@ class ShardAware(
         """Return the bot user, if known.
 
         This should be available as soon as the bot has fired the
-        `hikari.events.lifetime_events.StartingEvent`.
+        [`hikari.events.lifetime_events.StartingEvent`][].
 
-        Until then, this may or may not be `None`.
+        Until then, this may or may not be [`None`][].
 
         Returns
         -------
         typing.Optional[hikari.users.OwnUser]
-            The bot user, if known, otherwise `None`.
+            The bot user, if known, otherwise [`None`][].
         """
         raise NotImplementedError
 
@@ -290,15 +290,15 @@ class ShardAware(
         retained. This means you do not have to track the global presence
         in your code.
 
-        .. note::
+        !!! note
             This will only send the update payloads to shards that are alive.
             Any shards that are not alive will cache the new presence for
             when they do start.
 
-        .. note::
+        !!! note
             If you want to set presences per shard, access the shard you wish
-            to update (e.g. by using `GatewayBot.shards`), and call
-            `hikari.api.shard.GatewayShard.update_presence` on that shard.
+            to update (e.g. by using [`hikari.GatewayBot.shards`][]), and call
+            [`hikari.api.shard.GatewayShard.update_presence`][] on that shard.
             This method is simply a facade to make performing this in bulk
             simpler.
 
@@ -308,8 +308,7 @@ class ShardAware(
             The datetime that the user started being idle. If undefined, this
             will not be changed.
         afk : hikari.undefined.UndefinedOr[bool]
-            If `True`, the user is marked as AFK. If `False`,
-            the user is marked as being active. If undefined, this will not be
+            Whether to be marked as AFK. If undefined, this will not be
             changed.
         activity : hikari.undefined.UndefinedNoneOr[hikari.presences.Activity]
             The activity to appear to be playing. If undefined, this will not be
@@ -335,15 +334,15 @@ class ShardAware(
         guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
             The guild or guild ID to update the voice state for.
         channel : typing.Optional[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildVoiceChannel]]
-            The channel or channel ID to update the voice state for. If `None`
+            The channel or channel ID to update the voice state for. If [`None`][]
             then the bot will leave the voice channel that it is in for the
             given guild.
         self_mute : bool
-            If specified and `True`, the bot will mute itself in that
-            voice channel. If `False`, then it will unmute itself.
+            If specified and [`True`][], the bot will mute itself in that
+            voice channel. If [`False`][], then it will unmute itself.
         self_deaf : bool
-            If specified and `True`, the bot will deafen itself in that
-            voice channel. If `False`, then it will undeafen itself.
+            If specified and [`True`][], the bot will deafen itself in that
+            voice channel. If [`False`][], then it will undeafen itself.
 
         Raises
         ------
@@ -365,7 +364,7 @@ class ShardAware(
     ) -> None:
         """Request for a guild chunk.
 
-        .. note::
+        !!! note
             To request the full list of members, set `query` to `""` (empty
             string) and `limit` to `0`.
 
@@ -390,11 +389,11 @@ class ShardAware(
         Raises
         ------
         ValueError
-            When trying to specify `users` with `query`/`limit`, if `limit` is not between
+            If trying to specify `users` with `query`/`limit`, if `limit` is not between
             0 and 100, both inclusive or if `users` length is over 100.
         hikari.errors.MissingIntentError
-            When trying to request presences without the `GUILD_MEMBERS` or when trying to
-            request the full list of members without `GUILD_PRESENCES`.
+            When trying to request presences without the [`hikari.intents.Intents.GUILD_MEMBERS`][] or when trying to
+            request the full list of members without [`hikari.intents.Intents.GUILD_PRESENCES`][].
         RuntimeError
             If the guild passed isn't covered by any of the shards in this sharded
             client.
@@ -442,8 +441,8 @@ class Runnable(fast_protocol.FastProtocolChecking, typing.Protocol):
         """Whether the application is running or not.
 
         This is useful as some functions might raise
-        `hikari.errors.ComponentStateConflictError` if this is
-        `False`.
+        [`hikari.errors.ComponentStateConflictError`][] if this is
+        [`False`][].
         """
         raise NotImplementedError
 

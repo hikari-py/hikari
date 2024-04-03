@@ -252,26 +252,26 @@ class RESTApp(traits.ExecutorAware):
     """The base for a HTTP-only Discord application.
 
     This comprises of a shared TCP connector connection pool, and can have
-    `RESTClientImpl` instances for specific credentials acquired
+    [`hikari.impl.rest.RESTClientImpl`][] instances for specific credentials acquired
     from it.
 
     Parameters
     ----------
     executor : typing.Optional[concurrent.futures.Executor]
-        The executor to use for blocking file IO operations. If `None`
-        is passed, then the default `concurrent.futures.ThreadPoolExecutor` for
-        the `asyncio.AbstractEventLoop` will be used instead.
+        The executor to use for blocking file IO operations. If [`None`][]
+        is passed, then the default [`concurrent.futures.ThreadPoolExecutor`][] for
+        the [`asyncio.AbstractEventLoop`][] will be used instead.
     http_settings : typing.Optional[hikari.impl.config.HTTPSettings]
         HTTP settings to use. Sane defaults are used if this is
-        `None`.
+        [`None`][].
     dumps : hikari.internal.data_binding.JSONEncoder
-        The JSON encoder this application should use. Defaults to `hikari.internal.data_binding.default_json_dumps`.
+        The JSON encoder this application should use.
     loads : hikari.internal.data_binding.JSONDecoder
-        The JSON decoder this application should use. Defaults to `hikari.internal.data_binding.default_json_loads`.
+        The JSON decoder this application should use.
     max_rate_limit : float
         Maximum number of seconds to sleep for when rate limited. If a rate
         limit occurs that is longer than this value, then a
-        `hikari.errors.RateLimitTooLongError` will be raised instead of waiting.
+        [`hikari.errors.RateLimitTooLongError`][] will be raised instead of waiting.
 
         This is provided since some endpoints may respond with non-sensible
         rate limits.
@@ -279,13 +279,15 @@ class RESTApp(traits.ExecutorAware):
         Defaults to five minutes if unspecified.
     max_retries : typing.Optional[int]
         Maximum number of times a request will be retried if
-        it fails with a `5xx` status. Defaults to 3 if set to `None`.
+        it fails with a `5xx` status.
+
+        Defaults to 3 if set to [`None`][].
     proxy_settings : typing.Optional[hikari.impl.config.ProxySettings]
-        Proxy settings to use. If `None` then no proxy configuration
+        Proxy settings to use. If [`None`][] then no proxy configuration
         will be used.
     url : typing.Optional[str]
         The base URL for the API. You can generally leave this as being
-        `None` and the correct default API base URL will be generated.
+        [`None`][] and the correct default API base URL will be generated.
     """
 
     __slots__: typing.Sequence[str] = (
@@ -355,14 +357,12 @@ class RESTApp(traits.ExecutorAware):
         await self._bucket_manager.close()
 
     @typing.overload
-    def acquire(self, token: typing.Optional[rest_api.TokenStrategy] = None) -> RESTClientImpl:
-        ...
+    def acquire(self, token: typing.Optional[rest_api.TokenStrategy] = None) -> RESTClientImpl: ...
 
     @typing.overload
     def acquire(
         self, token: str, token_type: typing.Union[str, applications.TokenType] = applications.TokenType.BEARER
-    ) -> RESTClientImpl:
-        ...
+    ) -> RESTClientImpl: ...
 
     def acquire(
         self,
@@ -371,15 +371,14 @@ class RESTApp(traits.ExecutorAware):
     ) -> RESTClientImpl:
         """Acquire an instance of this REST client.
 
-        .. note::
+        !!! note
             The returned REST client should be started before it can be used,
-            either by calling `RESTClientImpl.start` or by using it as an
+            either by calling [`hikari.impl.rest.RESTClientImpl.start`][] or by using it as an
             asynchronous context manager.
 
         Examples
         --------
-        .. code-block:: python
-
+        ```py
             rest_app = RESTApp()
             await rest_app.start()
 
@@ -389,6 +388,7 @@ class RESTApp(traits.ExecutorAware):
                 user = await client.fetch_my_user()
 
             await rest_app.close()
+        ```
 
         Parameters
         ----------
@@ -396,12 +396,12 @@ class RESTApp(traits.ExecutorAware):
             The bot or bearer token. If no token is to be used,
             this can be undefined.
         token_type : typing.Union[str, hikari.applications.TokenType, None]
-            The type of token in use. This should only be passed when `str`
+            The type of token in use. This should only be passed when [`str`][]
             is passed for `token`, can be `"Bot"` or `"Bearer"` and will be
             defaulted to `"Bearer"` in this situation.
 
-            This should be left as `None` when either
-            `hikari.api.rest.TokenStrategy` or `None` is passed for
+            This should be left as [`None`][] when either
+            [`hikari.api.rest.TokenStrategy`][] or [`None`][] is passed for
             `token`.
 
         Returns
@@ -492,24 +492,27 @@ class RESTClientImpl(rest_api.RESTClient):
     entity_factory : hikari.api.entity_factory.EntityFactory
         The entity factory to use.
     executor : typing.Optional[concurrent.futures.Executor]
-        The executor to use for blocking IO. Defaults to the `asyncio` thread
-        pool if set to `None`.
+        The executor to use for blocking IO.
+
+        Defaults to the [`asyncio`][] thread pool if set to [`None`][].
     max_retries : typing.Optional[int]
         Maximum number of times a request will be retried if
-        it fails with a `5xx` status. Defaults to 3 if set to `None`.
+        it fails with a `5xx` status.
+
+        Defaults to 3 if set to [`None`][].
     dumps : hikari.internal.data_binding.JSONEncoder
-        The JSON encoder this application should use. Defaults to `hikari.internal.data_binding.default_json_dumps`.
+        The JSON encoder this application should use.
     loads : hikari.internal.data_binding.JSONDecoder
-        The JSON decoder this application should use. Defaults to `hikari.internal.data_binding.default_json_loads`.
+        The JSON decoder this application should use.
     token : typing.Union[str, None, hikari.api.rest.TokenStrategy]
         The bot or bearer token. If no token is to be used,
         this can be undefined.
     token_type : typing.Union[str, hikari.applications.TokenType, None]
-        The type of token in use. This must be passed when a `str` is
+        The type of token in use. This must be passed when a [`str`][] is
         passed for `token` but and can be `"Bot"` or `"Bearer"`.
 
-        This should be left as `None` when either
-        `hikari.api.rest.TokenStrategy` or `None` is passed for
+        This should be left as [`None`][] when either
+        [`hikari.api.rest.TokenStrategy`][] or [`None`][] is passed for
         `token`.
     rest_url : str
         The HTTP API base URL. This can contain format-string specifiers to
@@ -519,7 +522,7 @@ class RESTClientImpl(rest_api.RESTClient):
     ------
     ValueError
         If `token_type` is provided when a token strategy is passed for `token`, if
-        `token_type` is left as `None` when a string is passed for `token` or if a
+        `token_type` is left as [`None`][] when a string is passed for `token` or if a
         value greater than 5 is provided for `max_retries`.
     """
 
@@ -648,7 +651,7 @@ class RESTClientImpl(rest_api.RESTClient):
     def start(self) -> None:
         """Start the HTTP client.
 
-        .. note::
+        !!! note
             This must be called within an active event loop.
 
         Raises
@@ -2546,6 +2549,7 @@ class RESTClientImpl(rest_api.RESTClient):
             snowflakes.SnowflakeishOr[channels_.GuildTextChannel]
         ] = undefined.UNDEFINED,
         preferred_locale: undefined.UndefinedOr[typing.Union[str, locales.Locale]] = undefined.UNDEFINED,
+        features: undefined.UndefinedOr[typing.Sequence[typing.Union[str, guilds.GuildFeature]]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.RESTGuild:
         route = routes.PATCH_GUILD.compile(guild=guild)
@@ -2556,6 +2560,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("explicit_content_filter", explicit_content_filter_level)
         body.put("afk_timeout", afk_timeout, conversion=time.timespan_to_int)
         body.put("preferred_locale", preferred_locale, conversion=str)
+        body.put_array("features", features, conversion=str)
         body.put_snowflake("afk_channel_id", afk_channel)
         body.put_snowflake("owner_id", owner)
         body.put_snowflake("system_channel_id", system_channel)

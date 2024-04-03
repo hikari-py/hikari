@@ -371,7 +371,7 @@ def _serialize_activity(activity: typing.Optional[presences.Activity]) -> data_b
 class GatewayShardImpl(shard.GatewayShard):
     """Implementation of a V10 compatible gateway.
 
-    .. note::
+    !!! note
         If all four of `initial_activity`, `initial_idle_since`,
         `initial_is_afk`, and `initial_status` are not defined and left to their
         default values, then the presence will not be _updated_ on startup
@@ -398,24 +398,22 @@ class GatewayShardImpl(shard.GatewayShard):
     ----------------
     compression : typing.Optional[str]
         Compression format to use for the shard. Only supported values are
-        `"transport_zlib_stream"` or `None` to disable it.
+        `"transport_zlib_stream"` or [`None`][] to disable it.
     dumps : hikari.internal.data_binding.JSONEncoder
-        The JSON encoder this application should use. Defaults to `hikari.internal.data_binding.default_json_dumps`.
+        The JSON encoder this application should use.
     loads : hikari.internal.data_binding.JSONDecoder
-        The JSON decoder this application should use. Defaults to `hikari.internal.data_binding.default_json_loads`.
+        The JSON decoder this application should use.
     initial_activity : typing.Optional[hikari.presences.Activity]
         The initial activity to appear to have for this shard, or
-        `None` if no activity should be set initially. This is the
+        [`None`][] if no activity should be set initially. This is the
         default.
     initial_idle_since : typing.Optional[datetime.datetime]
-        The datetime to appear to be idle since, or `None` if the
-        shard should not provide this. The default is `None`.
+        The datetime to appear to be idle since, or [`None`][] if the
+        shard should not provide this. The default is [`None`][].
     initial_is_afk : bool
-        Whether to appear to be AFK or not on login. Defaults to
-        `False`.
+        Whether to appear to be AFK or not on login.
     initial_status : hikari.presences.Status
-        The initial status to set on login for the shard. Defaults to
-        `hikari.presences.Status.ONLINE`.
+        The initial status to set on login for the shard.
     intents : hikari.intents.Intents
         Collection of intents to use.
     large_threshold : int
@@ -776,7 +774,7 @@ class GatewayShardImpl(shard.GatewayShard):
                 return
 
             elif op == _INVALID_SESSION:
-                can_reconnect = payload[_D]  # We can resume if the payload data is `true`.
+                can_reconnect = payload[_D]  # We can resume if the payload data is [`true`][].
                 if not can_reconnect:
                     self._logger.info("received invalid session, will need to start a new session")
                     self._seq = None
@@ -838,9 +836,13 @@ class GatewayShardImpl(shard.GatewayShard):
         )
         poll_events_task = asyncio.create_task(self._poll_events(), name=f"poll events (shard {self._shard_id})")
 
+        # Rate-limits are imposed per websocket connection
+        self._total_rate_limit.close()
+        self._non_priority_rate_limit.close()
+
         # Perform handshake
         if self._seq is None:
-            self._logger.debug("identifying with new session")
+            self._logger.info("identifying with new session")
             await self._send_json(
                 {
                     _OP: _IDENTIFY,
@@ -860,7 +862,7 @@ class GatewayShardImpl(shard.GatewayShard):
                 }
             )
         else:
-            self._logger.debug("resuming session %s", self._session_id)
+            self._logger.info("resuming session %s", self._session_id)
             await self._send_json(
                 {_OP: _RESUME, _D: {"token": self._token, "seq": self._seq, "session_id": self._session_id}}
             )
@@ -924,7 +926,7 @@ class GatewayShardImpl(shard.GatewayShard):
                 backoff.reset()
 
             except errors.GatewayError as ex:
-                self._logger.error("encountered generic gateway error", exc_info=ex)
+                self._logger.error("encountered gateway error", exc_info=ex)
                 raise
 
             except asyncio.CancelledError:

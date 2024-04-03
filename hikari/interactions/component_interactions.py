@@ -65,10 +65,10 @@ COMPONENT_RESPONSE_TYPES: typing.Final[typing.AbstractSet[ComponentResponseTypes
 
 This includes:
 
-* `hikari.interactions.base_interactions.ResponseType.MESSAGE_CREATE`
-* `hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE`
-* `hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_UPDATE`
-* `hikari.interactions.base_interactions.ResponseType.MESSAGE_UPDATE`
+* [`hikari.interactions.base_interactions.ResponseType.MESSAGE_CREATE`][]
+* [`hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE`][]
+* [`hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_UPDATE`][]
+* [`hikari.interactions.base_interactions.ResponseType.MESSAGE_UPDATE`][]
 """
 
 ComponentResponseTypesT = typing.Union[_ImmediateTypesT, _DeferredTypesT]
@@ -76,10 +76,10 @@ ComponentResponseTypesT = typing.Union[_ImmediateTypesT, _DeferredTypesT]
 
 The following types are valid for this:
 
-* `hikari.interactions.base_interactions.ResponseType.MESSAGE_CREATE`/`4`
-* `hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE`/`5`
-* `hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_UPDATE`/`6`
-* `hikari.interactions.base_interactions.ResponseType.MESSAGE_UPDATE`/`7`
+* [`hikari.interactions.base_interactions.ResponseType.MESSAGE_CREATE`][]/`4`
+* [`hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE`][]/`5`
+* [`hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_UPDATE`][]/`6`
+* [`hikari.interactions.base_interactions.ResponseType.MESSAGE_UPDATE`][]/`7`
 """
 
 
@@ -95,8 +95,8 @@ class ComponentInteraction(
     component_type: typing.Union[components_.ComponentType, int] = attrs.field(eq=False)
     """The type of component which triggers this interaction.
 
-    .. note::
-        This will never be `ButtonStyle.LINK` as link buttons don't trigger
+    !!! note
+        This will never be [`hikari.components.ButtonStyle.LINK`][] as link buttons don't trigger
         interactions.
     """
 
@@ -112,16 +112,16 @@ class ComponentInteraction(
     guild_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False)
     """ID of the guild this interaction was triggered in.
 
-    This will be `None` for component interactions triggered in DMs.
+    This will be [`None`][] for component interactions triggered in DMs.
     """
 
     guild_locale: typing.Optional[typing.Union[str, locales.Locale]] = attrs.field(eq=False, hash=False, repr=True)
     """The preferred language of the guild this component interaction was triggered in.
 
-    This will be `None` for component interactions triggered in DMs.
+    This will be [`None`][] for component interactions triggered in DMs.
 
-    .. note::
-        This value can usually only be changed if `COMMUNITY` is in `hikari.guilds.Guild.features`
+    !!! note
+        This value can usually only be changed if [COMMUNITY] is in [`hikari.guilds.Guild.features`][]
         for the guild and will otherwise default to `en-US`.
     """
 
@@ -131,9 +131,9 @@ class ComponentInteraction(
     member: typing.Optional[base_interactions.InteractionMember] = attrs.field(eq=False, hash=False, repr=True)
     """The member who triggered this interaction.
 
-    This will be `None` for interactions triggered in DMs.
+    This will be [`None`][] for interactions triggered in DMs.
 
-    .. note::
+    !!! note
         This member object comes with the extra field `permissions` which
         contains the member's permissions in the current channel.
     """
@@ -150,9 +150,9 @@ class ComponentInteraction(
     def build_response(self, type_: _ImmediateTypesT, /) -> special_endpoints.InteractionMessageBuilder:
         """Get a message response builder for use in the REST server flow.
 
-        .. note::
+        !!! note
             For interactions received over the gateway
-            `ComponentInteraction.create_initial_response` should be used to set
+            [`hikari.interactions.component_interactions.ComponentInteraction.create_initial_response`][] should be used to set
             the interaction response message.
 
         Parameters
@@ -162,13 +162,12 @@ class ComponentInteraction(
 
             This may be one of the following:
 
-            * `hikari.interactions.base_interactions.ResponseType.MESSAGE_CREATE`
-            * `hikari.interactions.base_interactions.ResponseType.MESSAGE_UPDATE`
+            * [`hikari.interactions.base_interactions.ResponseType.MESSAGE_CREATE`][]
+            * [`hikari.interactions.base_interactions.ResponseType.MESSAGE_UPDATE`][]
 
         Examples
         --------
-        .. code-block:: python
-
+        ```py
             async def handle_component_interaction(interaction: ComponentInteraction) -> InteractionMessageBuilder:
                 return (
                     interaction
@@ -176,6 +175,7 @@ class ComponentInteraction(
                     .add_embed(Embed(description="Hi there"))
                     .set_content("Konnichiwa")
                 )
+        ```
 
         Returns
         -------
@@ -190,13 +190,13 @@ class ComponentInteraction(
     def build_deferred_response(self, type_: _DeferredTypesT, /) -> special_endpoints.InteractionDeferredBuilder:
         """Get a deferred message response builder for use in the REST server flow.
 
-        .. note::
+        !!! note
             For interactions received over the gateway
-            `ComponentInteraction.create_initial_response` should be used to set
+            [`hikari.interactions.component_interactions.ComponentInteraction.create_initial_response`][] should be used to set
             the interaction response message.
 
-        .. note::
-            Unlike `hikari.api.special_endpoints.InteractionMessageBuilder`,
+        !!! note
+            Unlike [`hikari.api.special_endpoints.InteractionMessageBuilder`][],
             the result of this call can be returned as is without any modifications
             being made to it.
 
@@ -207,8 +207,8 @@ class ComponentInteraction(
 
             This may be one of the following:
 
-            * `hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE`
-            * `hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_UPDATE`
+            * [`hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE`][]
+            * [`hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_UPDATE`][]
 
         Returns
         -------
@@ -226,14 +226,14 @@ class ComponentInteraction(
         Returns
         -------
         hikari.channels.TextableChannel
-            The channel. This will be a _derivative_ of `hikari.channels.TextableChannel`.
+            The channel. This will be a _derivative_ of [`hikari.channels.TextableChannel`][].
 
         Raises
         ------
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the `READ_MESSAGES` permission in the channel.
+            If you are missing the [`hikari.permissions.Permissions.VIEW_CHANNEL`][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -252,15 +252,15 @@ class ComponentInteraction(
     def get_channel(self) -> typing.Union[channels.GuildTextChannel, channels.GuildNewsChannel, None]:
         """Get the guild channel this interaction occurred in.
 
-        .. note::
-            This will always return `None` for interactions triggered
+        !!! note
+            This will always return [`None`][] for interactions triggered
             in a DM channel.
 
         Returns
         -------
         typing.Union[hikari.channels.GuildTextChannel, hikari.channels.GuildNewsChannel, None]
             The object of the guild channel that was found in the cache or
-            `None`.
+            [`None`][].
         """
         if isinstance(self.app, traits.CacheAware):
             channel = self.app.cache.get_guild_channel(self.channel_id)
@@ -275,7 +275,7 @@ class ComponentInteraction(
         Returns
         -------
         typing.Optional[hikari.guilds.RESTGuild]
-            Object of the guild this interaction happened in or `None`
+            Object of the guild this interaction happened in or [`None`][]
             if this occurred within a DM channel.
 
         Raises
@@ -303,7 +303,7 @@ class ComponentInteraction(
         Returns
         -------
         typing.Optional[hikari.guilds.GatewayGuild]
-            The object of the guild if found, else `None`.
+            The object of the guild if found, else [`None`][].
         """
         if self.guild_id and isinstance(self.app, traits.CacheAware):
             return self.app.cache.get_guild(self.guild_id)

@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -20,27 +19,31 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Basic implementations of application components.
+"""Documentation pages generation."""
+from pipelines import config
+from pipelines import nox
 
-These components implement the interfaces in [`hikari.api`][] to provide the
-baseline functionality. For most applications that do not have bespoke
-performance or structural requirements, you will want to use these
-implementations.
-"""
 
-from __future__ import annotations
+@nox.session()
+def mkdocs(session: nox.Session):
+    """Generate docs using mkdocs."""
+    if "--no-refs" in session.posargs:
+        session.env["ENABLE_MKDOCSTRINGS"] = "false"
 
-from hikari.impl.buckets import *
-from hikari.impl.cache import *
-from hikari.impl.config import *
-from hikari.impl.entity_factory import *
-from hikari.impl.event_manager import *
-from hikari.impl.event_manager_base import *
-from hikari.impl.gateway_bot import *
-from hikari.impl.interaction_server import *
-from hikari.impl.rate_limits import *
-from hikari.impl.rest import *
-from hikari.impl.rest_bot import *
-from hikari.impl.shard import *
-from hikari.impl.special_endpoints import *
-from hikari.impl.voice import *
+    session.install("-e", ".", *nox.dev_requirements("mkdocs"))
+
+    session.run("mkdocs", "build", "-d", config.DOCUMENTATION_OUTPUT_PATH)
+
+
+@nox.session()
+def mkdocs_serve(session: nox.Session):
+    """Start an HTTP server that serves the generated docs in real time."""
+    if "--no-refs" in session.posargs:
+        session.env["ENABLE_MKDOCSTRINGS"] = "false"
+
+    session.install("-e", ".", *nox.dev_requirements("mkdocs"))
+
+    if "--no-reload" in session.posargs:
+        session.run("mkdocs", "serve", "--no-livereload")
+    else:
+        session.run("mkdocs", "serve")

@@ -61,8 +61,8 @@ class VoiceComponent(abc.ABC):
 
         Once this is done, unsubscribe from any events.
 
-        If you simply wish to disconnect every connection, use `disconnect`
-        instead.
+        If you simply wish to disconnect every connection, use
+        [`hikari.api.VoiceComponent.disconnect`][] instead.
         """
 
     @abc.abstractmethod
@@ -101,26 +101,26 @@ class VoiceComponent(abc.ABC):
             The channel or channel ID to connect to.
         voice_connection_type : typing.Type[VoiceConnection]
             The type of voice connection to use. This should be initialized
-            internally using the `VoiceConnection.initialize`
-            `classmethod`.
+            internally using the [`hikari.api.voice.VoiceConnection.initialize`][]
+            classmethod.
         deaf : bool
-            Defaulting to `False`, if `True`, the client will
-            enter the voice channel deafened (thus unable to hear other users).
+            If [`True`][], the client will enter the voice channel deafened
+            (thus unable to hear other users).
         mute : bool
-            Defaulting to `False`, if `True`, the client will
-            enter the voice channel muted (thus unable to send audio).
+            If [`True`][], the client will enter the voice channel muted
+            (thus unable to send audio).
         timeout : typing.Optional[int]
-            Defaulting to `5`, The amount of time to wait before erroring when
-            connecting to the voice channel. If timeout is `None` there will be
+            The amount of time, in seconds, to wait before erroring when
+            connecting to the voice channel. If timeout is [`None`][] there will be
             no timeout.
 
-            .. warning::
-                If timeout is `None`, this function will be awaited forever if an
+            !!! warning
+                If timeout is [`None`][], this function will be awaited forever if an
                 invalid `guild_id` or `channel_id` is provided.
 
         **kwargs : typing.Any
-            Any arguments to provide to the `VoiceConnection.initialize`
-            method.
+            Any arguments to provide to the
+            [`hikari.api.voice.VoiceConnection.initialize`][] method.
 
         Returns
         -------
@@ -169,7 +169,7 @@ class VoiceConnection(abc.ABC):
             The channel ID that the voice connection is actively connected to.
         endpoint : str
             The voice websocket endpoint to connect to. Will contain the
-            protocol at the start (i.e. `wss://`), and end with the **correct**
+            protocol at the start (i.e. [wss://][]), and end with the **correct**
             port (the port and protocol are sanitized since Discord still
             provide the wrong information four years later).
         guild_id : hikari.snowflakes.Snowflake

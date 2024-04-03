@@ -1,3 +1,27 @@
+## 2.0.0.dev123 (2024-03-31)
+
+### Breaking Changes
+
+- Remove previously deprecated `Permissions.MANAGE_EMOJIS_AND_STICKERS` ([#1762](https://github.com/hikari-py/hikari/issues/1762))
+
+### Features
+
+- Allow subscribing to generic events ([#1814](https://github.com/hikari-py/hikari/issues/1814))
+- Allow changing guild features (community, etc.) ([#1828](https://github.com/hikari-py/hikari/issues/1828))
+- Improve embed parameters typing ([#1841](https://github.com/hikari-py/hikari/issues/1841))
+
+### Bugfixes
+
+- Fix `CommandInteractionOption.value` typehint not including `float` ([#1805](https://github.com/hikari-py/hikari/issues/1805))
+- `Member.joined_at` is now nullable due to breaking API change
+   - This will be received on guest members with temporary membership ([#1812](https://github.com/hikari-py/hikari/issues/1812))
+- Shard rate-limiters are now reset per websocket connection, avoiding a rare issue where a persistent network issue could allow the shard to be rate-limited ([#1813](https://github.com/hikari-py/hikari/issues/1813))
+
+### Documentation Improvements
+
+- Switch documentation to mkdocs ([#1810](https://github.com/hikari-py/hikari/issues/1810))
+
+---
 ## 2.0.0.dev122 (2023-11-18)
 
 ### Deprecation

@@ -217,8 +217,7 @@ class TestRESTBucketManager:
 
     @pytest.mark.asyncio()
     async def test_gc_makes_gc_pass(self, bucket_manager):
-        class ExitError(Exception):
-            ...
+        class ExitError(Exception): ...
 
         with mock.patch.object(buckets.RESTBucketManager, "_purge_stale_buckets") as purge_stale_buckets:
             with mock.patch.object(asyncio, "sleep", side_effect=[None, ExitError]):

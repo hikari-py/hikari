@@ -1806,7 +1806,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if guild_id not in role_ids:
             role_ids.append(guild_id)
 
-        joined_at = time.iso8601_datetime_string_to_datetime(payload["joined_at"])
+        raw_joined_at = payload["joined_at"]
+        joined_at = time.iso8601_datetime_string_to_datetime(raw_joined_at) if raw_joined_at is not None else None
 
         raw_premium_since = payload.get("premium_since")
         premium_since = (
@@ -2814,16 +2815,14 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         self,
         payloads: data_binding.JSONArray,
         mapping: typing.Dict[int, typing.Callable[[data_binding.JSONObject], component_models.MessageComponentTypesT]],
-    ) -> typing.List[component_models.MessageActionRowComponent]:
-        ...
+    ) -> typing.List[component_models.MessageActionRowComponent]: ...
 
     @typing.overload
     def _deserialize_components(
         self,
         payloads: data_binding.JSONArray,
         mapping: typing.Dict[int, typing.Callable[[data_binding.JSONObject], component_models.ModalComponentTypesT]],
-    ) -> typing.List[component_models.ModalActionRowComponent]:
-        ...
+    ) -> typing.List[component_models.ModalActionRowComponent]: ...
 
     def _deserialize_components(
         self,
@@ -3080,9 +3079,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if component_payloads := payload.get("components"):
             components = self._deserialize_components(component_payloads, self._message_component_type_mapping)
 
-        channel_mentions: undefined.UndefinedOr[
-            typing.Dict[snowflakes.Snowflake, channel_models.PartialChannel]
-        ] = undefined.UNDEFINED
+        channel_mentions: undefined.UndefinedOr[typing.Dict[snowflakes.Snowflake, channel_models.PartialChannel]] = (
+            undefined.UNDEFINED
+        )
         if raw_channel_mentions := payload.get("mention_channels"):
             channel_mentions = {c.id: c for c in map(self.deserialize_partial_channel, raw_channel_mentions)}
 
