@@ -2062,6 +2062,7 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         username: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         avatar: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
+        banner: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
     ) -> users.OwnUser:
         route = routes.PATCH_MY_USER.compile()
         body = data_binding.JSONObjectBuilder()
@@ -2073,6 +2074,13 @@ class RESTClientImpl(rest_api.RESTClient):
             avatar_resource = files.ensure_resource(avatar)
             async with avatar_resource.stream(executor=self._executor) as stream:
                 body.put("avatar", await stream.data_uri())
+
+        if banner is None:
+            body.put("banner", None)
+        elif banner is not undefined.UNDEFINED:
+            banner_resource = files.ensure_resource(banner)
+            async with banner_resource.stream(executor=self._executor) as stream:
+                body.put("banner", await stream.data_uri())
 
         response = await self._request(route, json=body)
         assert isinstance(response, dict)
