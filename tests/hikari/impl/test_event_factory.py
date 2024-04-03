@@ -48,15 +48,15 @@ from hikari.impl import event_factory as event_factory_
 
 
 class TestEventFactoryImpl:
-    @pytest.fixture()
+    @pytest.fixture
     def mock_app(self):
         return mock.Mock(traits.RESTAware)
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_shard(self):
         return mock.Mock(shard.GatewayShard)
 
-    @pytest.fixture()
+    @pytest.fixture
     def event_factory(self, mock_app):
         return event_factory_.EventFactoryImpl(mock_app)
 

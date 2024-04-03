@@ -27,7 +27,7 @@ from hikari.events import shard_events
 
 
 class TestShardReadyEvent:
-    @pytest.fixture()
+    @pytest.fixture
     def event(self):
         return shard_events.ShardReadyEvent(
             my_user=mock.Mock(),
@@ -45,7 +45,7 @@ class TestShardReadyEvent:
 
 
 class TestMemberChunkEvent:
-    @pytest.fixture()
+    @pytest.fixture
     def event(self):
         return shard_events.MemberChunkEvent(
             app=mock.Mock(),

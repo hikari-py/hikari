@@ -38,7 +38,7 @@ class MyUnique(snowflakes.Unique):
 
 
 class TestURLEncodedFormBuilder:
-    @pytest.fixture()
+    @pytest.fixture
     def form_builder(self):
         return data_binding.URLEncodedFormBuilder()
 
@@ -54,7 +54,7 @@ class TestURLEncodedFormBuilder:
 
         assert form_builder._resources == [("lick", mock_resource)]
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_build(self, form_builder):
         resource1 = mock.Mock()
         resource2 = mock.Mock()

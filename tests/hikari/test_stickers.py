@@ -29,7 +29,7 @@ from hikari.internal import routes
 
 
 class TestStickerPack:
-    @pytest.fixture()
+    @pytest.fixture
     def model(self):
         return stickers.StickerPack(
             id=123,
@@ -62,7 +62,7 @@ class TestStickerPack:
 
 
 class TestPartialSticker:
-    @pytest.fixture()
+    @pytest.fixture
     def model(self):
         return stickers.PartialSticker(id=123, name="testing", format_type="some")
 

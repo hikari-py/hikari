@@ -28,7 +28,7 @@ from hikari.events import role_events
 
 
 class TestRoleCreateEvent:
-    @pytest.fixture()
+    @pytest.fixture
     def event(self):
         return role_events.RoleCreateEvent(shard=object(), role=mock.Mock(guilds.Role))
 
@@ -45,7 +45,7 @@ class TestRoleCreateEvent:
 
 
 class TestRoleUpdateEvent:
-    @pytest.fixture()
+    @pytest.fixture
     def event(self):
         return role_events.RoleUpdateEvent(shard=object(), role=mock.Mock(guilds.Role), old_role=mock.Mock(guilds.Role))
 

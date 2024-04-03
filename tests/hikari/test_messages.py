@@ -59,7 +59,7 @@ class TestReaction:
 
 
 class TestMessageApplication:
-    @pytest.fixture()
+    @pytest.fixture
     def message_application(self):
         return messages.MessageApplication(
             id=123, name="test app", description="", icon_hash="123abc", cover_image_hash="abc123"
@@ -85,7 +85,7 @@ class TestMessageApplication:
         )
 
 
-@pytest.fixture()
+@pytest.fixture
 def message():
     return messages.Message(
         app=None,
@@ -134,7 +134,7 @@ class TestMessage:
         assert message.make_link(None) == "https://discord.com/channels/@me/456/789"
 
 
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 class TestAsyncMessage:
     async def test_fetch_channel(self, message):
         message.app = mock.AsyncMock()

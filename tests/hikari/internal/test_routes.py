@@ -28,7 +28,7 @@ from tests.hikari import hikari_test_helpers
 
 
 class TestCompiledRoute:
-    @pytest.fixture()
+    @pytest.fixture
     def compiled_route(self):
         return routes.CompiledRoute(
             major_param_hash="abc123", route=mock.Mock(method="GET"), compiled_path="/some/endpoint"

@@ -27,7 +27,7 @@ from hikari.events import user_events
 
 
 class TestOwnUserUpdateEvent:
-    @pytest.fixture()
+    @pytest.fixture
     def event(self):
         return user_events.OwnUserUpdateEvent(shard=None, old_user=None, user=mock.Mock())
 

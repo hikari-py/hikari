@@ -150,7 +150,7 @@ class TestReactionDeleteEmojiEvent:
 
 
 class TestGuildReactionAddEvent:
-    @pytest.fixture()
+    @pytest.fixture
     def event(self):
         return reaction_events.GuildReactionAddEvent(
             shard=object(),

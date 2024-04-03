@@ -45,7 +45,7 @@ from tests.hikari import hikari_test_helpers
 
 
 class TestGenerateWeakListener:
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test__generate_weak_listener_when_method_is_None(self):
         def test():
             return None
@@ -58,7 +58,7 @@ class TestGenerateWeakListener:
         ):
             await call_weak_method(None)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test__generate_weak_listener(self):
         mock_listener = mock.AsyncMock()
         mock_event = object()
@@ -73,7 +73,7 @@ class TestGenerateWeakListener:
         mock_listener.assert_awaited_once_with(mock_event)
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_app():
     return mock.Mock()
 
@@ -91,7 +91,7 @@ class TestEventStream:
         stub_stream.open.assert_called_once_with()
         stub_stream.close.assert_called_once_with()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test__listener_when_filter_returns_false(self, mock_app):
         stream = event_manager_base.EventStream(mock_app, base_events.Event, timeout=None)
         stream.filter(lambda _: False)
@@ -101,7 +101,7 @@ class TestEventStream:
         assert not stream._queue
 
     @hikari_test_helpers.timeout()
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test__listener_when_filter_passes_and_queue_full(self, mock_app):
         stream = event_manager_base.EventStream(mock_app, base_events.Event, timeout=None, limit=2)
         stream._queue.append(object())
@@ -116,7 +116,7 @@ class TestEventStream:
             assert not stream._queue
 
     @hikari_test_helpers.timeout()
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test__listener_when_filter_passes_and_queue_not_full(self, mock_app):
         stream = event_manager_base.EventStream(mock_app, base_events.Event, timeout=None, limit=None)
         stream._queue.append(object())
@@ -130,7 +130,7 @@ class TestEventStream:
             assert await stream.next() is not mock_event
             assert await stream.next() is mock_event
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     @hikari_test_helpers.timeout()
     async def test___anext___when_stream_closed(self):
         streamer = event_manager_base.EventStream(mock.Mock(), event_type=base_events.Event, timeout=float("inf"))
@@ -139,7 +139,7 @@ class TestEventStream:
         with pytest.raises(TypeError):
             await streamer.__anext__()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     @hikari_test_helpers.timeout()
     async def test___anext___times_out(self):
         streamer = event_manager_base.EventStream(mock.Mock(), event_type=base_events.Event, timeout=0.001)
@@ -148,7 +148,7 @@ class TestEventStream:
             with pytest.raises(LookupError):
                 await streamer.next()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     @hikari_test_helpers.timeout()
     async def test___anext___waits_for_next_event(self):
         mock_event = object()
@@ -169,7 +169,7 @@ class TestEventStream:
             assert next_task.done()
             assert next_task.result() is mock_event
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     @hikari_test_helpers.timeout()
     async def test___anext__(self):
         mock_event = object()
@@ -183,7 +183,7 @@ class TestEventStream:
         with streamer:
             assert await streamer.next() is mock_event
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test___await__(self):
         mock_event_0 = object()
         mock_event_1 = object()
@@ -262,7 +262,7 @@ class TestEventStream:
         assert stream._active is False
         assert stream._registered_listener is None
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_filter(self):
         stream = hikari_test_helpers.mock_class_namespace(event_manager_base.EventStream)(
             event_manager=mock.Mock(), event_type=base_events.Event, timeout=0.001
@@ -285,7 +285,7 @@ class TestEventStream:
 
         assert await stream == [first_pass, second_pass]
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_filter_handles_calls_while_active(self):
         stream = hikari_test_helpers.mock_class_namespace(event_manager_base.EventStream)(
             event_manager=mock.Mock(), event_type=base_events.Event, timeout=0.001
@@ -370,7 +370,7 @@ class TestConsumer:
 
 
 class TestEventManagerBase:
-    @pytest.fixture()
+    @pytest.fixture
     def event_manager(self):
         class EventManagerBaseImpl(event_manager_base.EventManagerBase):
             on_existing_event = None
@@ -477,7 +477,7 @@ class TestEventManagerBase:
 
         assert event_manager._enabled_for_event(shard_events.ShardStateEvent) is False
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_consume_raw_event_when_KeyError(self, event_manager):
         event_manager._enabled_for_event = mock.Mock(return_value=True)
         mock_payload = {"id": "3123123123"}
@@ -497,7 +497,7 @@ class TestEventManagerBase:
         )
         event_manager._enabled_for_event.assert_called_once_with(shard_events.ShardPayloadEvent)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_consume_raw_event_when_found(self, event_manager):
         event_manager._enabled_for_event = mock.Mock(return_value=True)
         event_manager._handle_dispatch = mock.Mock()
@@ -522,7 +522,7 @@ class TestEventManagerBase:
         )
         event_manager._enabled_for_event.assert_called_once_with(shard_events.ShardPayloadEvent)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_consume_raw_event_skips_raw_dispatch_when_not_enabled(self, event_manager):
         event_manager._enabled_for_event = mock.Mock(return_value=False)
         event_manager._handle_dispatch = mock.Mock()
@@ -543,7 +543,7 @@ class TestEventManagerBase:
         event_manager._event_factory.deserialize_shard_payload_event.vassert_not_called()
         event_manager._enabled_for_event.assert_called_once_with(shard_events.ShardPayloadEvent)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_handle_dispatch_invokes_callback(self, event_manager):
         event_manager._enabled_for_consumer = mock.Mock(return_value=True)
         consumer = mock.AsyncMock()
@@ -558,7 +558,7 @@ class TestEventManagerBase:
         consumer.callback.assert_awaited_once_with(shard, pl)
         error_handler.assert_not_called()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_handle_dispatch_ignores_cancelled_errors(self, event_manager):
         event_manager._enabled_for_consumer = mock.Mock(return_value=True)
         consumer = mock.AsyncMock(side_effect=asyncio.CancelledError)
@@ -572,7 +572,7 @@ class TestEventManagerBase:
 
         error_handler.assert_not_called()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_handle_dispatch_handles_exceptions(self, event_manager):
         mock_task = mock.Mock()
         # On Python 3.12+ Asyncio uses this to get the task's context if set to call the
@@ -595,7 +595,7 @@ class TestEventManagerBase:
             {"exception": exc, "message": "Exception occurred in raw event dispatch conduit", "task": mock_task},
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_handle_dispatch_invokes_when_consumer_not_enabled(self, event_manager):
         consumer = mock.Mock(callback=mock.AsyncMock(__name__="ok"), is_enabled=False)
         error_handler = mock.MagicMock()
