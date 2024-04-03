@@ -270,7 +270,7 @@ class TestPrintBanner:
 
         write.assert_not_called()
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_args(self):
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(platform, "release", return_value="1.0.0"))
@@ -644,13 +644,13 @@ class TestHikariVersion:
         assert (ux.HikariVersion("1.2.3.dev99") >= other) is result
 
 
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 class TestCheckForUpdates:
-    @pytest.fixture()
+    @pytest.fixture
     def http_settings(self):
         return mock.Mock(spec_set=config.HTTPSettings)
 
-    @pytest.fixture()
+    @pytest.fixture
     def proxy_settings(self):
         return mock.Mock(spec_set=config.ProxySettings)
 

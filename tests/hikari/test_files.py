@@ -44,7 +44,7 @@ class TestURL:
 
 
 class TestAsyncReaderContextManager:
-    @pytest.fixture()
+    @pytest.fixture
     def reader(self):
         return hikari_test_helpers.mock_class_namespace(files.AsyncReaderContextManager)
 
@@ -70,21 +70,21 @@ def test__open_read_path():
 
 
 class TestThreadedFileReaderContextManagerImpl:
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_enter_dunder_method_when_already_open(self):
         manager = files._ThreadedFileReaderContextManagerImpl(mock.Mock(), "ea", pathlib.Path("ea"))
         manager.file = mock.Mock()
         with pytest.raises(RuntimeError, match="File is already open"):
             await manager.__aenter__()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_exit_dunder_method_when_not_open(self):
         manager = files._ThreadedFileReaderContextManagerImpl(mock.Mock(), "ea", pathlib.Path("ea"))
 
         with pytest.raises(RuntimeError, match="File isn't open"):
             await manager.__aexit__(None, None, None)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_context_manager(self):
         mock_file = mock.Mock()
         executor = object()
@@ -148,7 +148,7 @@ def test_open_write_path():
 
 
 class TestResource:
-    @pytest.fixture()
+    @pytest.fixture
     def resource(self):
         class MockReader:
             data = iter(("never", "gonna", "give", "you", "up"))
@@ -175,7 +175,7 @@ class TestResource:
 
         return ResourceImpl()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_save(self, resource):
         executor = object()
         file_open = mock.Mock()
@@ -209,11 +209,11 @@ def test_copy_to_path():
 
 
 class TestFile:
-    @pytest.fixture()
+    @pytest.fixture
     def file_obj(self):
         return files.File("one/path/something.txt")
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_save(self, file_obj):
         mock_executor = object()
         loop = mock.Mock(run_in_executor=mock.AsyncMock())
@@ -242,12 +242,12 @@ def test_write_bytes():
 
 
 class TestBytes:
-    @pytest.fixture()
+    @pytest.fixture
     def bytes_obj(self):
         return files.Bytes(b"some data", "something.txt")
 
     @pytest.mark.parametrize("data_type", [bytes, bytearray, memoryview])
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_save(self, bytes_obj, data_type):
         bytes_obj.data = mock.Mock(data_type)
         mock_executor = object()
@@ -262,7 +262,7 @@ class TestBytes:
             mock_executor, files._write_bytes, "some_path/", "something.txt", True, bytes_obj.data
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_save_when_data_is_not_bytes(self, bytes_obj):
         bytes_obj.data = object()
         mock_executor = object()

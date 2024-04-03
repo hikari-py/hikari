@@ -30,7 +30,7 @@ from tests.hikari import hikari_test_helpers
 
 
 class TestScheduledEvent:
-    @pytest.fixture()
+    @pytest.fixture
     def model(self) -> scheduled_events.ScheduledEvent:
         return hikari_test_helpers.mock_class_namespace(scheduled_events.ScheduledEvent, init_=False, slots_=False)()
 

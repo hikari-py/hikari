@@ -26,7 +26,7 @@ from hikari import embeds
 
 
 class TestEmbedResource:
-    @pytest.fixture()
+    @pytest.fixture
     def resource(self):
         return embeds.EmbedResource(resource=mock.Mock())
 
@@ -45,7 +45,7 @@ class TestEmbedResource:
 
 
 class TestEmbedResourceWithProxy:
-    @pytest.fixture()
+    @pytest.fixture
     def resource_with_proxy(self):
         return embeds.EmbedResourceWithProxy(resource=mock.Mock(), proxy_resource=mock.Mock())
 

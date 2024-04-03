@@ -31,13 +31,13 @@ from hikari.interactions import base_interactions
 from hikari.interactions import modal_interactions
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_app():
     return mock.Mock(rest=mock.AsyncMock())
 
 
 class TestModalInteraction:
-    @pytest.fixture()
+    @pytest.fixture
     def mock_modal_interaction(self, mock_app):
         return modal_interactions.ModalInteraction(
             app=mock_app,
@@ -78,7 +78,7 @@ class TestModalInteraction:
         assert response is mock_app.rest.interaction_deferred_builder.return_value
         mock_app.rest.interaction_deferred_builder.assert_called_once()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_fetch_channel(self, mock_modal_interaction, mock_app):
         mock_app.rest.fetch_channel.return_value = mock.Mock(channels.TextableChannel)
 
@@ -98,7 +98,7 @@ class TestModalInteraction:
 
         assert mock_modal_interaction.get_channel() is None
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_fetch_guild(self, mock_modal_interaction, mock_app):
         mock_modal_interaction.guild_id = 43123123
 
@@ -106,7 +106,7 @@ class TestModalInteraction:
 
         mock_app.rest.fetch_guild.assert_awaited_once_with(43123123)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_fetch_guild_for_dm_interaction(self, mock_modal_interaction, mock_app):
         mock_modal_interaction.guild_id = None
 

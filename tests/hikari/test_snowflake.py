@@ -29,12 +29,12 @@ from hikari import snowflakes
 from hikari.impl import gateway_bot
 
 
-@pytest.fixture()
+@pytest.fixture
 def raw_id():
     return 537_340_989_808_050_216
 
 
-@pytest.fixture()
+@pytest.fixture
 def neko_snowflake(raw_id):
     return snowflakes.Snowflake(raw_id)
 
@@ -95,7 +95,7 @@ class TestSnowflake:
 
 
 class TestUnique:
-    @pytest.fixture()
+    @pytest.fixture
     def neko_unique(self, neko_snowflake):
         class NekoUnique(snowflakes.Unique):
             id = neko_snowflake

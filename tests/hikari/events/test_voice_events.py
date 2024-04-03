@@ -28,7 +28,7 @@ from hikari.events import voice_events
 
 
 class TestVoiceStateUpdateEvent:
-    @pytest.fixture()
+    @pytest.fixture
     def event(self):
         return voice_events.VoiceStateUpdateEvent(
             shard=object(), state=mock.Mock(voices.VoiceState), old_state=mock.Mock(voices.VoiceState)
@@ -47,7 +47,7 @@ class TestVoiceStateUpdateEvent:
 
 
 class TestVoiceServerUpdateEvent:
-    @pytest.fixture()
+    @pytest.fixture
     def event(self):
         return voice_events.VoiceServerUpdateEvent(
             app=None, shard=object(), guild_id=123, token="token", raw_endpoint="voice.discord.com:123"
