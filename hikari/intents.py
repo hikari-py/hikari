@@ -296,24 +296,24 @@ class Intents(enums.Flag):
     DM_MESSAGES = 1 << 12
     """Subscribes to the events listed below.
 
-    * `MESSAGE_CREATE` (in private message channels (non-guild bound) only)
-    * `MESSAGE_UPDATE` (in private message channels (non-guild bound) only)
-    * `MESSAGE_DELETE` (in private message channels (non-guild bound) only)
+    * `MESSAGE_CREATE` (in direct message channels (non-guild bound) only)
+    * `MESSAGE_UPDATE` (in direct message channels (non-guild bound) only)
+    * `MESSAGE_DELETE` (in direct message channels (non-guild bound) only)
     """
 
     DM_MESSAGE_REACTIONS = 1 << 13
     """Subscribes to the events listed below.
 
-    * `MESSAGE_REACTION_ADD` (in private message channels (non-guild bound) only)
-    * `MESSAGE_REACTION_REMOVE` (in private message channels (non-guild bound) only)
-    * `MESSAGE_REACTION_REMOVE_ALL` (in private message channels (non-guild bound) only)
-    * `MESSAGE_REACTION_REMOVE_EMOJI` (in private message channels (non-guild bound) only)
+    * `MESSAGE_REACTION_ADD` (in direct message channels (non-guild bound) only)
+    * `MESSAGE_REACTION_REMOVE` (in direct message channels (non-guild bound) only)
+    * `MESSAGE_REACTION_REMOVE_ALL` (in direct message channels (non-guild bound) only)
+    * `MESSAGE_REACTION_REMOVE_EMOJI` (in direct message channels (non-guild bound) only)
     """
 
     DM_MESSAGE_TYPING = 1 << 14
     """Subscribes to the events listed below.
 
-    * `TYPING_START` (in private message channels (non-guild bound) only)
+    * `TYPING_START` (in direct message channels (non-guild bound) only)
     """
 
     MESSAGE_CONTENT = 1 << 15
@@ -375,7 +375,7 @@ class Intents(enums.Flag):
     """
 
     ALL_DMS = DM_MESSAGES | DM_MESSAGE_TYPING | DM_MESSAGE_REACTIONS
-    """All private message channel (non-guild bound) intents."""
+    """All direct message channel (non-guild bound) intents."""
 
     ALL_MESSAGES = DM_MESSAGES | GUILD_MESSAGES
     """All message intents."""
