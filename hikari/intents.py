@@ -72,7 +72,7 @@ class Intents(enums.Flag):
 
     ```py
         # One or two values that fit on one line.
-        my_intents = Intents.GUILD_MESSAGES | Intents.PRIVATE_MESSAGES
+        my_intents = Intents.GUILD_MESSAGES | Intents.DM_MESSAGES
 
         # Several intents together. You may find it useful to format these like
         # so to keep your code readable.
@@ -82,7 +82,7 @@ class Intents(enums.Flag):
             Intents.GUILD_INTEGRATIONS |
             Intents.GUILD_MESSAGES     |
             Intents.GUILD_MODERATION   |
-            Intents.PRIVATE_MESSAGES
+            Intents.DM_MESSAGES
         )
     ```
 
@@ -98,12 +98,12 @@ class Intents(enums.Flag):
             print("Guild messages are enabled")
 
         # Checking if ALL in a combination are set:
-        expected_intents = (Intents.GUILD_MESSAGES | Intents.PRIVATE_MESSAGES)
+        expected_intents = (Intents.GUILD_MESSAGES | Intents.DM_MESSAGES)
         if (my_intents & expected_intents) == expected_intents:
             print("Messages are enabled in guilds and private messages.")
 
         # Checking if AT LEAST ONE in a combination is set:
-        expected_intents = (Intents.GUILD_MESSAGES | Intents.PRIVATE_MESSAGES)
+        expected_intents = (Intents.GUILD_MESSAGES | Intents.DM_MESSAGES)
         if my_intents & expected_intents:
             print("Messages are enabled in guilds or private messages.")
     ```
@@ -118,9 +118,9 @@ class Intents(enums.Flag):
         my_intents ^= Intents.GUILD_MESSAGES
 
         # Remove all messages events.
-        my_intents = my_intents ^ (Intents.GUILD_MESSAGES | Intents.PRIVATE_MESSAGES)
+        my_intents = my_intents ^ (Intents.GUILD_MESSAGES | Intents.DM_MESSAGES)
         # or, simplifying
-        my_intents ^= (Intents.GUILD_MESSAGES | Intents.PRIVATE_MESSAGES)
+        my_intents ^= (Intents.GUILD_MESSAGES | Intents.DM_MESSAGES)
     ```
 
     What is and is not covered by intents?
