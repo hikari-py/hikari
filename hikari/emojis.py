@@ -81,7 +81,7 @@ class Emoji(files.WebResource, abc.ABC):
         """Mention string to use to mention the emoji with."""
 
     @classmethod
-    def parse(cls, string: str, /) -> Emoji:
+    def parse(cls, string: str, /) -> typing.Union[UnicodeEmoji, CustomEmoji]:
         """Parse a given string into an emoji object.
 
         Parameters
@@ -91,7 +91,7 @@ class Emoji(files.WebResource, abc.ABC):
 
         Returns
         -------
-        Emoji
+        typing.Union[UnicodeEmoji, CustomEmoji]
             The parsed emoji object. This will be a [`hikari.emojis.CustomEmoji`][] if a custom
             emoji mention, or a [`hikari.emojis.UnicodeEmoji`][] otherwise.
 
