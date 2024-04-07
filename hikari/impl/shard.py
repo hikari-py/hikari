@@ -818,16 +818,29 @@ class GatewayShardImpl(shard.GatewayShard):
             url=url,
         )
 
-        # Expect initial HELLO
         hello_payload = await self._ws.receive_json()
-        if hello_payload[_OP] != _HELLO:
+        initial_op = hello_payload[_OP]
+
+        if initial_op == _RECONNECT:
+            # It is possible that we receive RECONNECT as the initial opcode when the node we
+            # are connecting to is being restarted but the load balancer doesn't know it yet
+            self._logger.info(
+                "received %s (RECONNECT) as first opcode. It is likely the node is being restarted, "
+                "backing off and trying again",
+                initial_op,
+            )
+            await self._ws.send_close(code=errors.ShardCloseCode.NORMAL_CLOSURE, message=b"Reconnecting")
+            return ()
+
+        if initial_op != _HELLO:
+            # We expect the first opcode to be HELLO to begin the protocol
             self._logger.debug(
                 "expected %s (HELLO) opcode, received %s which makes no sense, closing with PROTOCOL ERROR",
                 _HELLO,
-                hello_payload[_OP],
+                initial_op,
             )
             await self._ws.send_close(code=errors.ShardCloseCode.PROTOCOL_ERROR, message=b"Expected HELLO op")
-            raise errors.GatewayError(f"Expected opcode {_HELLO} (HELLO), but received {hello_payload[_OP]}")
+            raise errors.GatewayError(f"Expected opcode {_HELLO} (HELLO), but received {initial_op}")
 
         # Spawn lifetime tasks
         heartbeat_interval = float(hello_payload[_D]["heartbeat_interval"]) / 1_000.0
