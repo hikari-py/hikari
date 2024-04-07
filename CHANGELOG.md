@@ -1,3 +1,20 @@
+## 2.0.0.dev124 (2024-04-07)
+
+### Features
+
+- Improve `Emoji.parse` typing to make it more explicit ([#1870](https://github.com/hikari-py/hikari/issues/1870))
+- Add ability to edit own user banner ([#1871](https://github.com/hikari-py/hikari/issues/1871))
+
+### Bugfixes
+
+- Fix incorrectly formatted error strings ([#1866](https://github.com/hikari-py/hikari/issues/1866))
+- Properly handle initial opcode as being RECONNECT (7) ([#1867](https://github.com/hikari-py/hikari/issues/1867))
+
+### Documentation Improvements
+
+- Replace mentions of `PRIVATE_MESSAGES` with `DM_MESSAGES` ([#1874](https://github.com/hikari-py/hikari/issues/1874))
+
+---
 ## 2.0.0.dev123 (2024-03-31)
 
 ### Breaking Changes
