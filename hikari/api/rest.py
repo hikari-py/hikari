@@ -2567,6 +2567,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         username: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         avatar: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
+        banner: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
     ) -> users.OwnUser:
         """Edit the token's associated user.
 
@@ -2577,6 +2578,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         avatar : undefined.UndefinedNoneOr[hikari.files.Resourceish]
             If provided, the new avatar. If [`None`][],
             the avatar will be removed.
+        banner : undefined.UndefinedNoneOr[hikari.files.Resourceish]
+            If provided, the new banner. If [`None`][],
+            the banner will be removed.
 
         Returns
         -------

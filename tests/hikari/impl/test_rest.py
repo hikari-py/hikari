@@ -3519,6 +3519,30 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
         rest_client._entity_factory.deserialize_my_user.assert_called_once_with({"id": "123"})
 
+    async def test_edit_my_user_when_banner_is_None(self, rest_client):
+        user = StubModel(123)
+        expected_route = routes.PATCH_MY_USER.compile()
+        expected_json = {"username": "new username", "banner": None}
+        rest_client._request = mock.AsyncMock(return_value={"id": "123"})
+        rest_client._entity_factory.deserialize_my_user = mock.Mock(return_value=user)
+
+        assert await rest_client.edit_my_user(username="new username", banner=None) is user
+
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
+        rest_client._entity_factory.deserialize_my_user.assert_called_once_with({"id": "123"})
+
+    async def test_edit_my_user_when_banner_is_file(self, rest_client, file_resource_patch):
+        user = StubModel(123)
+        expected_route = routes.PATCH_MY_USER.compile()
+        expected_json = {"username": "new username", "banner": "some data"}
+        rest_client._request = mock.AsyncMock(return_value={"id": "123"})
+        rest_client._entity_factory.deserialize_my_user = mock.Mock(return_value=user)
+
+        assert await rest_client.edit_my_user(username="new username", banner="somebanner.png") is user
+
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
+        rest_client._entity_factory.deserialize_my_user.assert_called_once_with({"id": "123"})
+
     async def test_fetch_my_connections(self, rest_client):
         connection1 = StubModel(123)
         connection2 = StubModel(456)
