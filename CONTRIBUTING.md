@@ -41,7 +41,7 @@ Possible types are:
 
 - `feature`: Signifying a new feature.
 - `bugfix`: Signifying a bugfix.
-- `doc`: Signifying a documentation improvement.
+- `documentation`: Signifying a documentation improvement.
 - `removal`: Signifying a deprecation or removal of public API.
 
 For changes that do not fall under any of the above cases, please specify the lack of the changelog in the pull request
