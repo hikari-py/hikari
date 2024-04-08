@@ -309,6 +309,18 @@ class MessageReference:
     a guild.
     """
 
+    def make_link(self) -> str:
+        """Generate a jump link to this message or channel in case for follow add messages.
+
+        Returns
+        -------
+        str
+            The jump link to the message.
+        """
+        guild_id_str = "@me" if self.guild_id is None else str(self.guild_id)
+        message_id_str = "" if self.id is None else str(self.id)
+        return f"{urls.BASE_URL}/channels/{guild_id_str}/{self.channel_id}/{message_id_str}"
+
 
 @attrs_extensions.with_copy
 @attrs.define(hash=True, kw_only=True, weakref_slot=False)

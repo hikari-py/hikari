@@ -134,6 +134,26 @@ class TestMessage:
         assert message.make_link(None) == "https://discord.com/channels/@me/456/789"
 
 
+@pytest.fixture
+def message_reference():
+    return messages.MessageReference(
+        app=None, guild_id=snowflakes.Snowflake(123), channel_id=snowflakes.Snowflake(456), id=snowflakes.Snowflake(789)
+    )
+
+
+class TestMessageReference:
+    def test_make_link_when_guild_is_not_none(self, message_reference):
+        assert message_reference.make_link() == "https://discord.com/channels/123/456/789"
+
+    def test_make_link_when_guild_is_none(self, message_reference):
+        message_reference.guild_id = None
+        assert message_reference.make_link() == "https://discord.com/channels/@me/456/789"
+
+    def test_make_link_when_id_is_none(self, message_reference):
+        message_reference.id = None
+        assert message_reference.make_link() == "https://discord.com/channels/123/456/"
+
+
 @pytest.mark.asyncio
 class TestAsyncMessage:
     async def test_fetch_channel(self, message):
