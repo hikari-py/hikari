@@ -310,7 +310,7 @@ class MessageReference:
     """
 
     def make_link(self) -> str:
-        """Generate a jump link to this message or channel in case for follow add messages.
+        """Generate a jump link to the referenced message or channel (in case for follow add messages).
 
         Returns
         -------
