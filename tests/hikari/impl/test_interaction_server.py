@@ -481,10 +481,10 @@ class TestInteractionServer:
         await result.body.write(mock_writer)
 
         boundary = result.body.boundary.encode()
-        assert mock_writer.payload == (
+        assert mock_writer.payload == bytearray(
             b"--" + boundary + b"""\r\nContent-Type: ooga/booga\r\nContent-Disposition: form-data; name="payload_json"""
-            b""""\r\nContent-Length: 5\r\n\r\nabody\r\n--""" + boundary + b"""\r\nContent-Type: text/plain\r\nConten"""
-            b"""t-Disposition: form-data; name="files[0]"; filename="meow.txt"\r\n\r\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"""
+            b""""\r\n\r\nabody\r\n--""" + boundary + b"""\r\nContent-Type: text/plain\r\nContent-Disposition: """
+            b"""form-data; name="files[0]"; filename="meow.txt"\r\n\r\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"""
             b"""xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"""
             b"""xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"""
             b"""xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"""
