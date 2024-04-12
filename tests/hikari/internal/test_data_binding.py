@@ -57,7 +57,7 @@ class TestURLEncodedFormBuilder:
                 # Make it easier to debug future errors
                 return f"TestBytesPayload({self.inner!r})"
 
-        with mock.patch.object(aiohttp, "BytesPayload", new=TestBytesPayload) as bytes_payload:
+        with mock.patch.object(aiohttp, "BytesPayload", new=TestBytesPayload):
             form_builder.add_field("test_name", "test_data", content_type="mimetype")
             form_builder.add_field("test_name2", b"test_data2", content_type="mimetype2")
 
