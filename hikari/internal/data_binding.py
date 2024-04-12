@@ -95,7 +95,6 @@ _StringMapBuilderArg = typing.Union[
 
 _APPLICATION_OCTET_STREAM: typing.Final[str] = "application/octet-stream"
 _JSON_CONTENT_TYPE: typing.Final[str] = "application/json"
-_BINARY: typing.Final[str] = "binary"
 _UTF_8: typing.Final[str] = "utf-8"
 
 default_json_dumps: JSONEncoder
@@ -153,7 +152,7 @@ class URLEncodedFormBuilder:
         form = aiohttp.FormData()
 
         for field in self._fields:
-            form.add_field(field[0], field[1], content_type=field[2], content_transfer_encoding=_BINARY)
+            form.add_field(field[0], aiohttp.BytesPayload(field[1]), content_type=field[2])
 
         for name, resource in self._resources:
             stream = await stack.enter_async_context(resource.stream(executor=executor))

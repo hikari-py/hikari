@@ -66,7 +66,8 @@ class TestURLEncodedFormBuilder:
         form_builder._resources = [("aye", resource1), ("lmao", resource2)]
 
         with mock.patch.object(aiohttp, "FormData") as mock_form_class:
-            assert await form_builder.build(mock_stack, executor) is mock_form_class.return_value
+            with mock.patch.object(aiohttp, "BytesPayload") as bytes_payload:
+                assert await form_builder.build(mock_stack, executor) is mock_form_class.return_value
 
         resource1.stream.assert_called_once_with(executor=executor)
         resource2.stream.assert_called_once_with(executor=executor)
@@ -75,8 +76,8 @@ class TestURLEncodedFormBuilder:
         )
         mock_form_class.return_value.add_field.assert_has_calls(
             [
-                mock.call("test_name", "test_data", content_type="mimetype", content_transfer_encoding="binary"),
-                mock.call("test_name2", "test_data2", content_type="mimetype2", content_transfer_encoding="binary"),
+                mock.call("test_name", bytes_payload("test_data"), content_type="mimetype"),
+                mock.call("test_name2", bytes_payload("test_data2"), content_type="mimetype2"),
                 mock.call("aye", stream1, filename="testing1", content_type="text"),
                 mock.call("lmao", stream2, filename="testing2", content_type="application/octet-stream"),
             ]
