@@ -315,7 +315,7 @@ class MessageReference:
         Returns
         -------
         str
-            The jump link to the message.
+            The jump link to the message reference target.
         """
         guild_id_str = "@me" if self.guild_id is None else str(self.guild_id)
         message_id_str = "" if self.id is None else str(self.id)
