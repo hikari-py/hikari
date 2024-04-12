@@ -317,8 +317,8 @@ class MessageReference:
         str
             The jump link to the message reference target.
         """
-        guild_id_str = "@me" if self.guild_id is None else str(self.guild_id)
-        message_id_str = "" if self.id is None else str(self.id)
+        guild_id_str = "@me" if self.guild_id is None else self.guild_id
+        message_id_str = "" if self.id is None else self.id
         return f"{urls.BASE_URL}/channels/{guild_id_str}/{self.channel_id}/{message_id_str}"
 
 
