@@ -95,7 +95,6 @@ _StringMapBuilderArg = typing.Union[
 
 _APPLICATION_OCTET_STREAM: typing.Final[str] = "application/octet-stream"
 _JSON_CONTENT_TYPE: typing.Final[str] = "application/json"
-_BINARY: typing.Final[str] = "binary"
 _UTF_8: typing.Final[str] = "utf-8"
 
 default_json_dumps: JSONEncoder
@@ -136,13 +135,16 @@ class URLEncodedFormBuilder:
     __slots__: typing.Sequence[str] = ("_fields", "_resources")
 
     def __init__(self) -> None:
-        self._fields: typing.List[typing.Tuple[str, typing.Union[str, bytes], typing.Optional[str]]] = []
+        self._fields: typing.List[typing.Tuple[str, aiohttp.BytesPayload, typing.Optional[str]]] = []
         self._resources: typing.List[typing.Tuple[str, files.Resource[files.AsyncReader]]] = []
 
     def add_field(
         self, name: str, data: typing.Union[str, bytes], *, content_type: typing.Optional[str] = None
     ) -> None:
-        self._fields.append((name, data, content_type))
+        if isinstance(data, str):
+            data = data.encode()
+
+        self._fields.append((name, aiohttp.BytesPayload(data), content_type))
 
     def add_resource(self, name: str, resource: files.Resource[files.AsyncReader]) -> None:
         self._resources.append((name, resource))
@@ -153,7 +155,7 @@ class URLEncodedFormBuilder:
         form = aiohttp.FormData()
 
         for field in self._fields:
-            form.add_field(field[0], field[1], content_type=field[2], content_transfer_encoding=_BINARY)
+            form.add_field(field[0], field[1], content_type=field[2])
 
         for name, resource in self._resources:
             stream = await stack.enter_async_context(resource.stream(executor=executor))
