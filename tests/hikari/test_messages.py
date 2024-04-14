@@ -143,15 +143,18 @@ def message_reference():
 
 class TestMessageReference:
     def test_make_link_when_guild_is_not_none(self, message_reference):
-        assert message_reference.make_link() == "https://discord.com/channels/123/456/789"
+        assert message_reference.message_link == "https://discord.com/channels/123/456/789"
+        assert message_reference.channel_link == "https://discord.com/channels/123/456"
 
     def test_make_link_when_guild_is_none(self, message_reference):
         message_reference.guild_id = None
-        assert message_reference.make_link() == "https://discord.com/channels/@me/456/789"
+        assert message_reference.message_link == "https://discord.com/channels/@me/456/789"
+        assert message_reference.channel_link == "https://discord.com/channels/@me/456"
 
     def test_make_link_when_id_is_none(self, message_reference):
         message_reference.id = None
-        assert message_reference.make_link() == "https://discord.com/channels/123/456"
+        assert message_reference.message_link is None
+        assert message_reference.channel_link == "https://discord.com/channels/123/456"
 
 
 @pytest.mark.asyncio
