@@ -321,7 +321,7 @@ class MessageReference:
 
         guild_id_str = "@me" if self.guild_id is None else self.guild_id
         return f"{urls.BASE_URL}/channels/{guild_id_str}/{self.channel_id}/{self.id}"
-    
+
     @property
     def channel_link(self) -> str:
         """Generate a jump link to the channel the referenced message was sent in.
