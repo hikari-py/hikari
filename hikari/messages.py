@@ -309,6 +309,28 @@ class MessageReference:
     a guild.
     """
 
+    @property
+    def message_link(self) -> typing.Optional[str]:
+        """Generate a jump link to the referenced message.
+
+        This will be [`None`][] for channel follow add messages. This may
+        point to a deleted message.
+        """
+        if self.id is None:
+            return None
+
+        guild_id_str = "@me" if self.guild_id is None else self.guild_id
+        return f"{urls.BASE_URL}/channels/{guild_id_str}/{self.channel_id}/{self.id}"
+
+    @property
+    def channel_link(self) -> str:
+        """Generate a jump link to the channel the referenced message was sent in.
+
+        This will always be a valid link.
+        """
+        guild_id_str = "@me" if self.guild_id is None else self.guild_id
+        return f"{urls.BASE_URL}/channels/{guild_id_str}/{self.channel_id}"
+
 
 @attrs_extensions.with_copy
 @attrs.define(hash=True, kw_only=True, weakref_slot=False)
