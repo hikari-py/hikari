@@ -62,6 +62,7 @@ from hikari import messages as messages_
 from hikari import permissions as permissions_
 from hikari import scheduled_events
 from hikari import snowflakes
+from hikari import stage_instances
 from hikari import traits
 from hikari import undefined
 from hikari import urls
@@ -4390,3 +4391,54 @@ class RESTClientImpl(rest_api.RESTClient):
         return special_endpoints_impl.ScheduledEventUserIterator(
             self._entity_factory, self._request, newest_first, str(start_at), guild, event
         )
+
+    async def fetch_stage_instance(
+        self, channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel]
+    ) -> stage_instances.StageInstance:
+        route = routes.GET_STAGE_INSTANCE.compile(channel=channel)
+        response = await self._request(route)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_stage_instance(response)
+
+    async def create_stage_instance(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel],
+        *,
+        topic: str,
+        send_start_notification: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        guild_scheduled_event_id: undefined.UndefinedOr[
+            snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent]
+        ] = undefined.UNDEFINED,
+    ) -> stage_instances.StageInstance:
+        route = routes.POST_STAGE_INSTANCE.compile()
+        body = data_binding.JSONObjectBuilder()
+        body.put_snowflake("channel_id", channel)
+        body.put("topic", topic)
+        body.put("send_start_notification", send_start_notification)
+        body.put_snowflake("guild_scheduled_event_id", guild_scheduled_event_id)
+
+        response = await self._request(route, json=body)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_stage_instance(response)
+
+    async def edit_stage_instance(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel],
+        *,
+        topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> stage_instances.StageInstance:
+        route = routes.PATCH_STAGE_INSTANCE.compile(channel=channel)
+        body = data_binding.JSONObjectBuilder()
+        body.put("topic", topic)
+
+        response = await self._request(route, json=body)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_stage_instance(response)
+
+    async def delete_stage_instance(
+        self, channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel]
+    ) -> stage_instances.StageInstance:
+        route = routes.DELETE_STAGE_INSTANCE.compile(channel=channel)
+        response = await self._request(route)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_stage_instance(response)

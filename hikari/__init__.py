@@ -124,6 +124,7 @@ from hikari.snowflakes import Snowflakeish
 from hikari.snowflakes import SnowflakeishOr
 from hikari.snowflakes import SnowflakeishSequence
 from hikari.snowflakes import Unique
+from hikari.stage_instances import *
 from hikari.stickers import *
 from hikari.templates import *
 from hikari.traits import *
