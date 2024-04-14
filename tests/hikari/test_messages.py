@@ -151,7 +151,7 @@ class TestMessageReference:
 
     def test_make_link_when_id_is_none(self, message_reference):
         message_reference.id = None
-        assert message_reference.make_link() == "https://discord.com/channels/123/456/"
+        assert message_reference.make_link() == "https://discord.com/channels/123/456"
 
 
 @pytest.mark.asyncio
