@@ -148,6 +148,6 @@ class Entitlement(snowflakes.Unique):
     # Only partially documented by Discord
     subscription_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the subscription that this entitlement is associated with.
-    
+
     Not present when using test entitlements.
     """

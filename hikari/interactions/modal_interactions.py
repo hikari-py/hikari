@@ -40,8 +40,8 @@ from hikari.interactions import base_interactions
 from hikari.internal import attrs_extensions
 
 if typing.TYPE_CHECKING:
-    from hikari import monetization
     from hikari import components as components_
+    from hikari import monetization
     from hikari import users as _users
     from hikari.api import special_endpoints
 

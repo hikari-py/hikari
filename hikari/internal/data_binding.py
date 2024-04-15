@@ -37,8 +37,8 @@ __all__: typing.Sequence[str] = (
     "URLEncodedFormBuilder",
 )
 
-import typing
 import datetime
+import typing
 
 import aiohttp
 import multidict
@@ -73,7 +73,7 @@ JSONArray = typing.Sequence[typing.Any]
 JSONish = typing.Union[str, int, float, bool, None, JSONArray, JSONObject]
 """Type hint for any valid JSON-decoded type."""
 
-Stringish = typing.Union[str, int, bool, undefined.UndefinedType, None, snowflakes.Unique]
+Stringish = typing.Union[str, int, bool, datetime.datetime, undefined.UndefinedType, None, snowflakes.Unique]
 """Type hint for any valid that can be put in a StringMapBuilder"""
 
 JSONEncoder = typing.Callable[[typing.Union[JSONArray, JSONObject]], bytes]

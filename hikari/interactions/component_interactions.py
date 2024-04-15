@@ -34,11 +34,11 @@ from hikari import traits
 from hikari.interactions import base_interactions
 
 if typing.TYPE_CHECKING:
-    from hikari import monetization
     from hikari import components as components_
     from hikari import guilds
     from hikari import locales
     from hikari import messages
+    from hikari import monetization
     from hikari import permissions
     from hikari import snowflakes
     from hikari import users

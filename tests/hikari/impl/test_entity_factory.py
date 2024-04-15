@@ -7142,7 +7142,7 @@ class TestEntityFactoryImpl:
     #  MONETIZATION  #
     ##################
 
-    @pytest.fixture()
+    @pytest.fixture
     def entitlement_payload(self):
         return {
             "id": "696969696969696",
@@ -7157,7 +7157,7 @@ class TestEntityFactoryImpl:
             "subscription_id": "1019653835926409216",
         }
 
-    @pytest.fixture()
+    @pytest.fixture
     def sku_payload(self):
         return {
             "id": "420420420420420",
