@@ -65,10 +65,7 @@ class EntitlementCreateEvent(EntitlementEvent):
 
 
 class EntitlementUpdateEvent(EntitlementEvent):
-    """Event fired when an entitlement is updated.
-
-    The `ends_at` field may have an updated value with the new expiration date.
-    """
+    """Event fired when an entitlement is updated."""
 
     __slots__: typing.Sequence[str] = ()
 

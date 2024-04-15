@@ -111,7 +111,7 @@ class SKU(snowflakes.Unique):
     """Discord-generated URL slug based on the SKU's name"""
 
     flags: SKUFlags = attrs.field(eq=False, hash=False, repr=True)
-    """	The flags for the SKU"""
+    """The flags for the SKU"""
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
@@ -128,7 +128,7 @@ class Entitlement(snowflakes.Unique):
     """ID of the parent application"""
 
     user_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
-    """	ID of the user that is granted access to the entitlement's SKU"""
+    """ID of the user that is granted access to the entitlement's SKU"""
 
     type: typing.Union[EntitlementType, int] = attrs.field(eq=False, hash=False, repr=True)
     """Type of entitlement"""
@@ -147,4 +147,7 @@ class Entitlement(snowflakes.Unique):
 
     # Only partially documented by Discord
     subscription_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
-    """The ID of the subscription that this entitlement is associated with. Not present when using test entitlements."""
+    """The ID of the subscription that this entitlement is associated with.
+    
+    Not present when using test entitlements.
+    """

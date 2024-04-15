@@ -2011,7 +2011,7 @@ class EntityFactory(abc.ABC):
 
         Returns
         -------
-        monetization_models.Entitlement
+        hikari.monetization.Entitlement
             The deserialized entitlement object.
         """
 
@@ -2026,6 +2026,6 @@ class EntityFactory(abc.ABC):
 
         Returns
         -------
-        monetization_models.SKU
+        hikari.monetization.SKU
             The deserialized SKU object.
         """

@@ -534,6 +534,8 @@ GET_APPLICATION_ROLE_CONNECTION_METADATA_RECORDS: typing.Final[Route] = Route(
 PUT_APPLICATION_ROLE_CONNECTION_METADATA_RECORDS: typing.Final[Route] = Route(
     PUT, "/applications/{application}/role-connections/metadata"
 )
+
+# Entitlements (monetization)
 GET_APPLICATION_SKUS: typing.Final[Route] = Route(GET, "/applications/{application}/skus")
 GET_APPLICATION_ENTITLEMENTS: typing.Final[Route] = Route(GET, "/applications/{application}/entitlements")
 POST_APPLICATION_TEST_ENTITLEMENT: typing.Final[Route] = Route(POST, "/applications/{application}/entitlements")

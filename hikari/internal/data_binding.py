@@ -38,6 +38,7 @@ __all__: typing.Sequence[str] = (
 )
 
 import typing
+import datetime
 
 import aiohttp
 import multidict
@@ -221,23 +222,27 @@ class StringMapBuilder(multidict.MultiDict[str]):
         conversion : typing.Optional[typing.Callable[[typing.Any], typing.Any]]
             An optional conversion to perform.
         """
-        if value is not undefined.UNDEFINED:
-            if conversion is not None:
-                value = conversion(value)
+        if value is undefined.UNDEFINED:
+            return
 
-            if value is True:
-                value = "true"
-            elif value is False:
-                value = "false"
-            elif value is None:
-                value = "null"
-            elif isinstance(value, snowflakes.Unique):
-                value = str(value.id)
-            else:
-                value = str(value)
+        if conversion is not None:
+            value = conversion(value)
 
-            # __setitem__ just overwrites the previous value.
-            self.add(key, value)
+        if value is True:
+            value = "true"
+        elif value is False:
+            value = "false"
+        elif value is None:
+            value = "null"
+        elif isinstance(value, snowflakes.Unique):
+            value = str(value.id)
+        elif isinstance(value, datetime.datetime):
+            value = snowflakes.Snowflake.from_datetime(value)
+        else:
+            value = str(value)
+
+        # __setitem__ just overwrites the previous value.
+        self.add(key, value)
 
 
 @typing.final
@@ -370,7 +375,7 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
         if value is not undefined.UNDEFINED and value is not None:
             self[key] = str(int(value))
         elif value is None:
-            self[key] = value
+            self[key] = None
 
     def put_snowflake_array(
         self, key: str, values: undefined.UndefinedOr[typing.Iterable[snowflakes.SnowflakeishOr[snowflakes.Unique]]], /

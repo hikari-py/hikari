@@ -30,11 +30,11 @@ import typing
 import attrs
 
 from hikari import channels
-from hikari import monetization
 from hikari import traits
 from hikari.interactions import base_interactions
 
 if typing.TYPE_CHECKING:
+    from hikari import monetization
     from hikari import components as components_
     from hikari import guilds
     from hikari import locales

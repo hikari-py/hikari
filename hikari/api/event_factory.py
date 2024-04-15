@@ -1411,6 +1411,7 @@ class EventFactory(abc.ABC):
         shard : hikari.api.shard.GatewayShard
             The shard that emitted this event.
         payload : hikari.internal.data_binding.JSONObject
+            The dict payload to parse.
 
         Returns
         -------
@@ -1428,7 +1429,8 @@ class EventFactory(abc.ABC):
         ----------
         shard : hikari.api.shard.GatewayShard
             The shard that emitted this event.
-        payload: hikari.internal.data_binding.JSONObject
+        payload : hikari.internal.data_binding.JSONObject
+            The dict payload to parse.
 
         Returns
         -------
@@ -1446,7 +1448,8 @@ class EventFactory(abc.ABC):
         ----------
         shard : hikari.api.shard.GatewayShard
             The shard that emitted this event.
-        payload: hikari.internal.data_binding.JSONObject
+        payload : hikari.internal.data_binding.JSONObject
+            The dict payload to parse.
 
         Returns
         -------

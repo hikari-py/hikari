@@ -8311,9 +8311,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         after : hikari.undefined.UndefinedOr[hikari.snowflakes.SearchableSnowflakeish]
             Retrieve entitlements after this time or ID.
         limit : hikari.undefined.UndefinedOr[int]
-            Number of entitlements to return, 1-100, default 100
+            Number of entitlements to return, 1-100, default 100.
         exclude_ended : hikari.undefined.UndefinedOr[bool]
-            Whether or not ended entitlements should be omitted
+            Whether or not ended entitlements should be omitted.
 
         Returns
         -------
@@ -8349,13 +8349,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         .. note::
             The created entitlement is only partial and the `subscription_id`,
-            `starts_at` and `ends_at` fields will be `None`.
+            `starts_at` and `ends_at` fields will be [`None`][].
 
         Parameters
         ----------
         application : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
             The application to create the entitlement for.
-        sku_id : hikari.snowflakes.Snowflakeish
+        sku : hikari.snowflakes.SnowflakeishOr[hikari.monetization.SKU]
             The SKU to create a test entitlement for.
         owner_id : hikari.snowflakes.Snowflakeish
             The ID of the owner of the entitlement.

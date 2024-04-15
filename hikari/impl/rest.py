@@ -4413,29 +4413,13 @@ class RESTClientImpl(rest_api.RESTClient):
         exclude_ended: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> typing.Sequence[monetization.Entitlement]:
         query = data_binding.StringMapBuilder()
-        if user is not undefined.UNDEFINED:
-            query.put("user_id", str(int(user)))
 
-        if guild is not undefined.UNDEFINED:
-            query.put("guild_id", str(int(guild)))
-
-        if before is not undefined.UNDEFINED:
-            if isinstance(before, datetime.datetime):
-                query.put("before", str(snowflakes.Snowflake.from_datetime(before)))
-            else:
-                query.put("before", str(int(before)))
-
-        if after is not undefined.UNDEFINED:
-            if isinstance(after, datetime.datetime):
-                query.put("after", str(snowflakes.Snowflake.from_datetime(after)))
-            else:
-                query.put("after", str(int(after)))
-
-        if limit is not undefined.UNDEFINED:
-            query.put("limit", limit)
-
-        if exclude_ended is not undefined.UNDEFINED:
-            query.put("exclude_ended", exclude_ended)
+        query.put("user_id", user)
+        query.put("guild_id", guild)
+        query.put("limit", limit)
+        query.put("exclude_ended", exclude_ended)
+        query.put("before", before)
+        query.put("after", after)
 
         route = routes.GET_APPLICATION_ENTITLEMENTS.compile(application=application)
         response = await self._request(route, query=query)
