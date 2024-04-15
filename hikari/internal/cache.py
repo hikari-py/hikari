@@ -95,7 +95,7 @@ class CacheMappingView(cache.CacheView[KeyT, ValueT]):
         wrapper or in a data form.
     builder : typing.Optional[typing.Callable[[DataT], ValueT]]
         The callable used to build entities before they're returned by the
-        mapping. This is used to cover the case when items stores `DataT` objects.
+        mapping. This is used to cover the case when items stores [`DataT`][] objects.
     """
 
     __slots__: typing.Sequence[str] = ("_data", "_builder")
@@ -180,49 +180,44 @@ class GuildRecord:
     is_available: typing.Optional[bool] = attrs.field(default=None)
     """Whether the cached guild is available or not.
 
-    This will be `None` when no `GuildRecord.guild` is also
-    `None` else `bool`.
+    This will be [`None`][] when no `guild` is also
+    [`None`][] else [`bool`][].
     """
 
     guild: typing.Optional[guilds.GatewayGuild] = attrs.field(default=None)
     """A cached guild object.
 
-    This will be `hikari.guilds.GatewayGuild` or `None` if not cached.
+    This will be [`None`][] if not cached.
     """
 
     channels: typing.Optional[typing.MutableSet[snowflakes.Snowflake]] = attrs.field(default=None)
     """A set of the IDs of the guild channels cached for this guild.
 
-    This will be `None` if no channels are cached for this guild else
-    `typing.MutableSet[hikari.snowflakes.Snowflake]` of channel IDs.
+    This will be [`None`][] if no channels are cached for this guild.
     """
 
     threads: typing.Optional[typing.MutableSet[snowflakes.Snowflake]] = attrs.field(default=None)
     """A set of the IDs of the guild threads cached for this guild.
 
-    This will be `None` if no threads are cached for this guild else
-    `typing.MutableSet[hikari.snowflakes.Snowflake]` of thread IDs.
+    This will be [`None`][] if no threads are cached for this guild.
     """
 
     emojis: typing.Optional[typing.MutableSet[snowflakes.Snowflake]] = attrs.field(default=None)
     """A set of the IDs of the emojis cached for this guild.
 
-    This will be `None` if no emojis are cached for this guild else
-    `typing.MutableSet[hikari.snowflakes.Snowflake]` of emoji IDs.
+    This will be [`None`][] if no emojis are cached for this guild.
     """
 
     stickers: typing.Optional[typing.MutableSet[snowflakes.Snowflake]] = attrs.field(default=None)
     """A sequence of sticker IDs cached for this guild.
 
-    This will be `None` if no stickers are cached for this guild else
-    `typing.Sequence[hikari.snowflakes.Snowflake]` of emoji IDs.
+    This will be [`None`][] if no stickers are cached for this guild.
     """
 
     invites: typing.Optional[typing.MutableSequence[str]] = attrs.field(default=None)
-    """A set of the `str` codes of the invites cached for this guild.
+    """A set of the [`str`][] codes of the invites cached for this guild.
 
-    This will be `None` if no invites are cached for this guild else
-    `typing.MutableSequence[str]` of invite codes.
+    This will be [`None`][] if no invites are cached for this guild.
     """
 
     members: typing.Optional[collections.ExtendedMutableMapping[snowflakes.Snowflake, RefCell[MemberData]]] = (
@@ -230,8 +225,7 @@ class GuildRecord:
     )
     """A mapping of user IDs to the objects of members cached for this guild.
 
-    This will be `None` if no members are cached for this guild else
-    `hikari.internal.collections.ExtendedMutableMapping[hikari.snowflakes.Snowflake, MemberData]`.
+    This will be [`None`][] if no members are cached for this guild.
     """
 
     presences: typing.Optional[collections.ExtendedMutableMapping[snowflakes.Snowflake, MemberPresenceData]] = (
@@ -239,15 +233,13 @@ class GuildRecord:
     )
     """A mapping of user IDs to objects of the presences cached for this guild.
 
-    This will be `None` if no presences are cached for this guild else
-    `hikari.internal.collections.ExtendedMutableMapping[hikari.snowflakes.Snowflake, MemberPresenceData]`.
+    This will be [`None`][] if no presences are cached for this guild.
     """
 
     roles: typing.Optional[typing.MutableSet[snowflakes.Snowflake]] = attrs.field(default=None)
     """A set of the IDs of the roles cached for this guild.
 
-    This will be `None` if no roles are cached for this guild else
-    `typing.MutableSet[hikari.snowflakes.Snowflake]` of role IDs.
+    This will be [`None`][] if no roles are cached for this guild.
     """
 
     voice_states: typing.Optional[collections.ExtendedMutableMapping[snowflakes.Snowflake, VoiceStateData]] = (
@@ -255,8 +247,7 @@ class GuildRecord:
     )
     """A mapping of user IDs to objects of the voice states cached for this guild.
 
-    This will be `None` if no voice states are cached for this guild else
-    `hikari.internal.collections.ExtendedMutableMapping[hikari.snowflakes.Snowflake, VoiceStateData]`.
+    This will be [`None`][] if no voice states are cached for this guild.
     """
 
     def empty(self) -> bool:
@@ -285,7 +276,7 @@ class GuildRecord:
 class BaseData(abc.ABC, typing.Generic[ValueT]):
     """A data class used for in-memory storage of entities in a more primitive form.
 
-    .. note::
+    !!! note
         This base implementation assumes that all the fields it'll handle will
         be immutable and to handle mutable fields you'll have to override
         build_entity and build_from_entity to explicitly copy them.
@@ -998,7 +989,7 @@ class RefCell(typing.Generic[ValueT]):
 
 
 def unwrap_ref_cell(cell: RefCell[ValueT]) -> ValueT:
-    """Unwrap a `RefCell` instance to it's contents.
+    """Unwrap a [`RefCell`][] instance to it's contents.
 
     Parameters
     ----------

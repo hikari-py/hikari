@@ -1,12 +1,8 @@
-# Welcome!
+---
+title: Home
+description: hikari documentation
+hide:
+  - navigation
+---
 
-```{include} ../README.md
-```
-
-```{toctree}
-:titlesonly:
-:maxdepth: 1
-
-API Reference </reference/hikari/index>
-/changelog/index
-```
+--8<-- "README.md"

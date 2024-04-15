@@ -121,11 +121,11 @@ class StickerPack(snowflakes.Unique):
         Parameters
         ----------
         ext : str
-            The extension to use for this URL, defaults to `png`.
+            The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
         size : int
-            The size to set for the URL, defaults to `4096`.
-            Can be any power of two between 16 and 4096.
+            The size to set for the URL.
+            Can be any power of two between `16` and `4096`.
 
         Returns
         -------
@@ -163,8 +163,9 @@ class PartialSticker(snowflakes.Unique):
     def image_url(self) -> files.URL:
         """URL for the image.
 
-        The extension will be based on `format_type`. If `format_type` is `StickerFormatType.LOTTIE`,
-        then the extension will be `.json`, if it's `StickerFormatType.GIF` it will be `.gif`. Otherwise, it will be `.png`.
+        The extension will be based on `format_type`. If `format_type` is [`hikari.stickers.StickerFormatType.LOTTIE`][],
+        then the extension will be `.json`, if it's [`hikari.stickers.StickerFormatType.GIF`][] it will be `.gif`.
+        Otherwise, it will be `.png`.
         """
         ext = _STICKER_EXTENSIONS.get(self.format_type, "png")
 
@@ -215,5 +216,5 @@ class GuildSticker(PartialSticker):
     user: typing.Optional[users.User] = attrs.field(eq=False, hash=False, repr=False)
     """The user that uploaded this sticker.
 
-    This will only available if you have the `MANAGE_EMOJIS_AND_STICKERS` permission.
+    This will only be available if you have the [`hikari.permissions.Permissions.MANAGE_GUILD_EXPRESSIONS`][] permission.
     """

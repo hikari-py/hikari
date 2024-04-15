@@ -27,7 +27,7 @@ from hikari import channels
 from hikari import snowflakes
 
 
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 class TestMessagePinEntryInfo:
     async def test_fetch_channel(self):
         app = mock.AsyncMock()
@@ -46,7 +46,7 @@ class TestMessagePinEntryInfo:
         model.app.rest.fetch_message.assert_awaited_once_with(123, 456)
 
 
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 class TestMessageDeleteEntryInfo:
     async def test_fetch_channel(self):
         app = mock.AsyncMock()
@@ -58,7 +58,7 @@ class TestMessageDeleteEntryInfo:
         model.app.rest.fetch_channel.assert_awaited_once_with(123)
 
 
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 class TestMemberMoveEntryInfo:
     async def test_fetch_channel(self):
         app = mock.AsyncMock()
@@ -71,7 +71,7 @@ class TestMemberMoveEntryInfo:
 
 
 class TestAuditLogEntry:
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_fetch_user_when_no_user(self):
         model = audit_logs.AuditLogEntry(
             app=mock.AsyncMock(),
@@ -89,7 +89,7 @@ class TestAuditLogEntry:
 
         model.app.rest.fetch_user.assert_not_called()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_fetch_user_when_user(self):
         model = audit_logs.AuditLogEntry(
             app=mock.AsyncMock(),

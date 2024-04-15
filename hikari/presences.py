@@ -68,7 +68,7 @@ class ActivityType(int, enums.Enum):
     STREAMING = 1
     """Shows up as `Streaming` and links to a Twitch or YouTube stream/video.
 
-    .. warning::
+    !!! warning
         You **MUST** provide a valid Twitch or YouTube stream URL to the
         activity you create in order for this to be valid. If you fail to
         do this, then the activity **WILL NOT** update.
@@ -83,7 +83,7 @@ class ActivityType(int, enums.Enum):
     CUSTOM = 4
     """Shows up as `<emoji> <name>`.
 
-    .. warning::
+    !!! warning
         As of the time of writing, emoji cannot be used by bot accounts.
     """
 
@@ -161,8 +161,8 @@ class ActivityAssets:
     def large_image_url(self) -> typing.Optional[files.URL]:
         """Large image asset URL.
 
-        .. note::
-            This will be `None` if no large image asset exists or if the
+        !!! note
+            This will be [`None`][] if no large image asset exists or if the
             asset's dynamic URL (indicated by a `{name}:` prefix) is not known.
         """
         try:
@@ -174,23 +174,23 @@ class ActivityAssets:
     def make_large_image_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the large image asset URL for this application.
 
-        .. note::
+        !!! note
             `ext` and `size` are ignored for images hosted outside of Discord
             or on Discord's media proxy.
 
         Parameters
         ----------
         ext : str
-            The extension to use for this URL, defaults to `png`.
+            The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
         size : int
-            The size to set for the URL, defaults to `4096`.
-            Can be any power of two between 16 and 4096.
+            The size to set for the URL.
+            Can be any power of two between `16` and `4096`.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL, or `None` if no icon exists.
+            The URL, or [`None`][] if no icon exists.
 
         Raises
         ------
@@ -198,7 +198,7 @@ class ActivityAssets:
             If the size is not an integer power of 2 between 16 and 4096
             (inclusive).
         RuntimeError
-            If `ActivityAssets.large_image` points towards an unknown asset type.
+            If [`hikari.presences.ActivityAssets.large_image`][] points towards an unknown asset type.
         """
         return self._make_asset_url(self.large_image, ext, size)
 
@@ -206,8 +206,8 @@ class ActivityAssets:
     def small_image_url(self) -> typing.Optional[files.URL]:
         """Small image asset URL.
 
-        .. note::
-            This will be `None` if no large image asset exists or if the
+        !!! note
+            This will be [`None`][] if no large image asset exists or if the
             asset's dynamic URL (indicated by a `{name}:` prefix) is not known.
         """
         try:
@@ -222,16 +222,16 @@ class ActivityAssets:
         Parameters
         ----------
         ext : str
-            The extension to use for this URL, defaults to `png`.
+            The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
         size : int
-            The size to set for the URL, defaults to `4096`.
-            Can be any power of two between 16 and 4096.
+            The size to set for the URL.
+            Can be any power of two between `16` and `4096`.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL, or `None` if no icon exists.
+            The URL, or [`None`][] if no icon exists.
 
         Raises
         ------
@@ -239,7 +239,7 @@ class ActivityAssets:
             If the size is not an integer power of 2 between 16 and 4096
             (inclusive).
         RuntimeError
-            If `ActivityAssets.small_image` points towards an unknown asset type.
+            If [`hikari.presences.ActivityAssets.small_image`][] points towards an unknown asset type.
         """
         return self._make_asset_url(self.small_image, ext, size)
 
@@ -313,7 +313,7 @@ class Activity:
     url: typing.Optional[str] = attrs.field(default=None, repr=False)
     """The activity URL, if set.
 
-    Only valid for `STREAMING` activities.
+    Only valid for [`hikari.presences.ActivityType.STREAMING`][] activities.
     """
 
     type: typing.Union[ActivityType, int] = attrs.field(converter=ActivityType, default=ActivityType.PLAYING)

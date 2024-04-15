@@ -191,15 +191,13 @@ jobs:
       - name: Setup python
         uses: actions/setup-python@v5
         with:
-          python-version: 3.9
-
-      - name: Setup node
-        uses: actions/setup-node@v4
+          # NOTE: This should be kept up to date with .readthedocs.yaml
+          python-version: 3.11
 
       - name: Build documentation
         run: |
           pip install -r dev-requirements.txt
-          nox -s sphinx
+          nox -s mkdocs
 
       - name: Upload artifacts
         if: github.event_name == 'pull_request'

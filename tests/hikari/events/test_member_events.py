@@ -30,7 +30,7 @@ from tests.hikari import hikari_test_helpers
 
 
 class TestMemberEvent:
-    @pytest.fixture()
+    @pytest.fixture
     def event(self):
         cls = hikari_test_helpers.mock_class_namespace(
             member_events.MemberEvent,
@@ -68,7 +68,7 @@ class TestMemberEvent:
 
 
 class TestMemberCreateEvent:
-    @pytest.fixture()
+    @pytest.fixture
     def event(self):
         return member_events.MemberCreateEvent(shard=None, member=mock.Mock())
 
@@ -83,7 +83,7 @@ class TestMemberCreateEvent:
 
 
 class TestMemberUpdateEvent:
-    @pytest.fixture()
+    @pytest.fixture
     def event(self):
         return member_events.MemberUpdateEvent(shard=None, member=mock.Mock(), old_member=mock.Mock(guilds.Member))
 

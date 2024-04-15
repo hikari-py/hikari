@@ -38,14 +38,33 @@ class MyUnique(snowflakes.Unique):
 
 
 class TestURLEncodedFormBuilder:
-    @pytest.fixture()
+    @pytest.fixture
     def form_builder(self):
         return data_binding.URLEncodedFormBuilder()
 
     def test_add_field(self, form_builder):
-        form_builder.add_field("test_name", "test_data", content_type="mimetype")
+        class TestBytesPayload:
+            def __init__(self, value: bytes) -> None:
+                self.inner = value
 
-        assert form_builder._fields == [("test_name", "test_data", "mimetype")]
+            def __eq__(self, other: typing.Any) -> bool:
+                if not isinstance(other, TestBytesPayload):
+                    return False
+
+                return self.inner == other.inner
+
+            def __repr__(self) -> str:
+                # Make it easier to debug future errors
+                return f"TestBytesPayload({self.inner!r})"
+
+        with mock.patch.object(aiohttp, "BytesPayload", new=TestBytesPayload):
+            form_builder.add_field("test_name", "test_data", content_type="mimetype")
+            form_builder.add_field("test_name2", b"test_data2", content_type="mimetype2")
+
+        assert form_builder._fields == [
+            ("test_name", TestBytesPayload(b"test_data"), "mimetype"),
+            ("test_name2", TestBytesPayload(b"test_data2"), "mimetype2"),
+        ]
 
     def test_add_resource(self, form_builder):
         mock_resource = object()
@@ -54,15 +73,17 @@ class TestURLEncodedFormBuilder:
 
         assert form_builder._resources == [("lick", mock_resource)]
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_build(self, form_builder):
         resource1 = mock.Mock()
         resource2 = mock.Mock()
         stream1 = mock.Mock(filename="testing1", mimetype="text")
         stream2 = mock.Mock(filename="testing2", mimetype=None)
+        data1 = aiohttp.BytesPayload(b"data1")
+        data2 = aiohttp.BytesPayload(b"data2")
         mock_stack = mock.AsyncMock(enter_async_context=mock.AsyncMock(side_effect=[stream1, stream2]))
         executor = object()
-        form_builder._fields = [("test_name", "test_data", "mimetype"), ("test_name2", "test_data2", "mimetype2")]
+        form_builder._fields = [("test_name", data1, "mimetype"), ("test_name2", data2, "mimetype2")]
         form_builder._resources = [("aye", resource1), ("lmao", resource2)]
 
         with mock.patch.object(aiohttp, "FormData") as mock_form_class:
@@ -75,8 +96,8 @@ class TestURLEncodedFormBuilder:
         )
         mock_form_class.return_value.add_field.assert_has_calls(
             [
-                mock.call("test_name", "test_data", content_type="mimetype", content_transfer_encoding="binary"),
-                mock.call("test_name2", "test_data2", content_type="mimetype2", content_transfer_encoding="binary"),
+                mock.call("test_name", data1, content_type="mimetype"),
+                mock.call("test_name2", data2, content_type="mimetype2"),
                 mock.call("aye", stream1, filename="testing1", content_type="text"),
                 mock.call("lmao", stream2, filename="testing2", content_type="application/octet-stream"),
             ]

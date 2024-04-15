@@ -371,7 +371,7 @@ def _serialize_activity(activity: typing.Optional[presences.Activity]) -> data_b
 class GatewayShardImpl(shard.GatewayShard):
     """Implementation of a V10 compatible gateway.
 
-    .. note::
+    !!! note
         If all four of `initial_activity`, `initial_idle_since`,
         `initial_is_afk`, and `initial_status` are not defined and left to their
         default values, then the presence will not be _updated_ on startup
@@ -398,24 +398,22 @@ class GatewayShardImpl(shard.GatewayShard):
     ----------------
     compression : typing.Optional[str]
         Compression format to use for the shard. Only supported values are
-        `"transport_zlib_stream"` or `None` to disable it.
+        `"transport_zlib_stream"` or [`None`][] to disable it.
     dumps : hikari.internal.data_binding.JSONEncoder
-        The JSON encoder this application should use. Defaults to `hikari.internal.data_binding.default_json_dumps`.
+        The JSON encoder this application should use.
     loads : hikari.internal.data_binding.JSONDecoder
-        The JSON decoder this application should use. Defaults to `hikari.internal.data_binding.default_json_loads`.
+        The JSON decoder this application should use.
     initial_activity : typing.Optional[hikari.presences.Activity]
         The initial activity to appear to have for this shard, or
-        `None` if no activity should be set initially. This is the
+        [`None`][] if no activity should be set initially. This is the
         default.
     initial_idle_since : typing.Optional[datetime.datetime]
-        The datetime to appear to be idle since, or `None` if the
-        shard should not provide this. The default is `None`.
+        The datetime to appear to be idle since, or [`None`][] if the
+        shard should not provide this. The default is [`None`][].
     initial_is_afk : bool
-        Whether to appear to be AFK or not on login. Defaults to
-        `False`.
+        Whether to appear to be AFK or not on login.
     initial_status : hikari.presences.Status
-        The initial status to set on login for the shard. Defaults to
-        `hikari.presences.Status.ONLINE`.
+        The initial status to set on login for the shard.
     intents : hikari.intents.Intents
         Collection of intents to use.
     large_threshold : int
@@ -776,7 +774,7 @@ class GatewayShardImpl(shard.GatewayShard):
                 return
 
             elif op == _INVALID_SESSION:
-                can_reconnect = payload[_D]  # We can resume if the payload data is `true`.
+                can_reconnect = payload[_D]  # We can resume if the payload data is [`true`][].
                 if not can_reconnect:
                     self._logger.info("received invalid session, will need to start a new session")
                     self._seq = None
@@ -820,16 +818,29 @@ class GatewayShardImpl(shard.GatewayShard):
             url=url,
         )
 
-        # Expect initial HELLO
         hello_payload = await self._ws.receive_json()
-        if hello_payload[_OP] != _HELLO:
+        initial_op = hello_payload[_OP]
+
+        if initial_op == _RECONNECT:
+            # It is possible that we receive RECONNECT as the initial opcode when the node we
+            # are connecting to is being restarted but the load balancer doesn't know it yet
+            self._logger.info(
+                "received %s (RECONNECT) as first opcode. It is likely the node is being restarted, "
+                "backing off and trying again",
+                initial_op,
+            )
+            await self._ws.send_close(code=errors.ShardCloseCode.NORMAL_CLOSURE, message=b"Reconnecting")
+            return ()
+
+        if initial_op != _HELLO:
+            # We expect the first opcode to be HELLO to begin the protocol
             self._logger.debug(
                 "expected %s (HELLO) opcode, received %s which makes no sense, closing with PROTOCOL ERROR",
                 _HELLO,
-                hello_payload[_OP],
+                initial_op,
             )
             await self._ws.send_close(code=errors.ShardCloseCode.PROTOCOL_ERROR, message=b"Expected HELLO op")
-            raise errors.GatewayError(f"Expected opcode {_HELLO} (HELLO), but received {hello_payload[_OP]}")
+            raise errors.GatewayError(f"Expected opcode {_HELLO} (HELLO), but received {initial_op}")
 
         # Spawn lifetime tasks
         heartbeat_interval = float(hello_payload[_D]["heartbeat_interval"]) / 1_000.0

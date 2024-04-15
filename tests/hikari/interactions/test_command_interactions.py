@@ -31,13 +31,13 @@ from hikari.interactions import base_interactions
 from hikari.interactions import command_interactions
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_app():
     return mock.Mock(traits.CacheAware, rest=mock.AsyncMock())
 
 
 class TestCommandInteraction:
-    @pytest.fixture()
+    @pytest.fixture
     def mock_command_interaction(self, mock_app):
         return command_interactions.CommandInteraction(
             app=mock_app,
@@ -90,7 +90,7 @@ class TestCommandInteraction:
             base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_fetch_channel(self, mock_command_interaction, mock_app):
         mock_app.rest.fetch_channel.return_value = mock.Mock(channels.TextableGuildChannel)
         assert await mock_command_interaction.fetch_channel() is mock_app.rest.fetch_channel.return_value
@@ -116,7 +116,7 @@ class TestCommandInteraction:
 
 
 class TestAutocompleteInteraction:
-    @pytest.fixture()
+    @pytest.fixture
     def mock_autocomplete_interaction(self, mock_app):
         return command_interactions.AutocompleteInteraction(
             app=mock_app,
@@ -151,7 +151,7 @@ class TestAutocompleteInteraction:
             ],
         )
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_command_choices(self):
         return [
             special_endpoints.AutocompleteChoiceBuilder(name="a", value="b"),
@@ -165,7 +165,7 @@ class TestAutocompleteInteraction:
         assert builder is mock_app.rest.interaction_autocomplete_builder.return_value
         mock_app.rest.interaction_autocomplete_builder.assert_called_once_with(mock_command_choices)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_create_response(
         self,
         mock_autocomplete_interaction: command_interactions.AutocompleteInteraction,

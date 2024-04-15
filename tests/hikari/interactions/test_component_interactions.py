@@ -30,13 +30,13 @@ from hikari.interactions import base_interactions
 from hikari.interactions import component_interactions
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_app():
     return mock.Mock(rest=mock.AsyncMock())
 
 
 class TestComponentInteraction:
-    @pytest.fixture()
+    @pytest.fixture
     def mock_component_interaction(self, mock_app):
         return component_interactions.ComponentInteraction(
             app=mock_app,
@@ -95,7 +95,7 @@ class TestComponentInteraction:
         with pytest.raises(ValueError, match="Invalid type passed for a deferred response"):
             mock_component_interaction.build_deferred_response(33333)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_fetch_channel(self, mock_component_interaction, mock_app):
         mock_app.rest.fetch_channel.return_value = mock.Mock(channels.TextableChannel)
 
@@ -122,7 +122,7 @@ class TestComponentInteraction:
 
         assert mock_component_interaction.get_channel() is None
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_fetch_guild(self, mock_component_interaction, mock_app):
         mock_component_interaction.guild_id = 43123123
 
@@ -130,7 +130,7 @@ class TestComponentInteraction:
 
         mock_app.rest.fetch_guild.assert_awaited_once_with(43123123)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_fetch_guild_for_dm_interaction(self, mock_component_interaction, mock_app):
         mock_component_interaction.guild_id = None
 

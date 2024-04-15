@@ -5,7 +5,7 @@ flake8==7.0.0
 
 flake8-bandit~=4.1.1                    # runs bandit
 flake8-black==0.3.6                     # runs black
-flake8-builtins==2.2.0                  # builtin shadowing checks
+flake8-builtins==2.5.0                  # builtin shadowing checks
 flake8-coding==1.3.2                    # coding magic-comment detection
 flake8-comprehensions==3.14.0           # comprehension checks
 flake8-docstrings==1.7.0                # pydocstyle support
@@ -18,7 +18,7 @@ flake8-mutable==1.2.0                   # mutable default argument detection
 flake8-pep3101==2.1.0                   # new-style format strings only
 flake8-print==5.0.0                     # complain about print statements in code
 flake8-printf-formatting==1.1.2         # forbey printf-style python2 string formatting
-flake8-pytest-style==1.7.2              # pytest checks
+flake8-pytest-style==2.0.0              # pytest checks
 flake8-raise==0.0.5                     # exception raising linting
 flake8-use-fstring==1.4                 # format string checking
 flake8-noqa==1.4.0                      # validate noqa commands

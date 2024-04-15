@@ -92,12 +92,12 @@ def test__serialize_datetime_when_datetime_is_not_None():
     assert shard._serialize_datetime(dt) == 1101081600000
 
 
-@pytest.fixture()
+@pytest.fixture
 def http_settings():
     return mock.Mock(spec_set=config.HTTPSettings)
 
 
-@pytest.fixture()
+@pytest.fixture
 def proxy_settings():
     return mock.Mock(spec_set=config.ProxySettings)
 
@@ -110,7 +110,7 @@ class StubResponse:
 
 
 class TestGatewayTransport:
-    @pytest.fixture()
+    @pytest.fixture
     def transport_impl(self):
         return shard._GatewayTransport(
             ws=mock.Mock(),
@@ -148,7 +148,7 @@ class TestGatewayTransport:
 
         assert transport._receive_and_check == transport._receive_and_check_text
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_send_close(self, transport_impl):
         transport_impl._sent_close = False
 
@@ -161,7 +161,7 @@ class TestGatewayTransport:
         transport_impl._exit_stack.aclose.assert_awaited_once_with()
         sleep.assert_awaited_once_with(0.25)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_send_close_when_TimeoutError(self, transport_impl):
         transport_impl._sent_close = False
         transport_impl._ws.close.side_effect = asyncio.TimeoutError
@@ -173,7 +173,7 @@ class TestGatewayTransport:
         transport_impl._exit_stack.aclose.assert_awaited_once_with()
         sleep.assert_awaited_once_with(0.25)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_send_close_when_already_sent(self, transport_impl):
         transport_impl._sent_close = True
 
@@ -182,7 +182,7 @@ class TestGatewayTransport:
 
         close.assert_not_called()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     @pytest.mark.parametrize("trace", [True, False])
     async def test_receive_json(self, transport_impl, trace):
         transport_impl._receive_and_check = mock.AsyncMock()
@@ -193,7 +193,7 @@ class TestGatewayTransport:
         transport_impl._receive_and_check.assert_awaited_once_with()
         transport_impl._loads.assert_called_once_with(transport_impl._receive_and_check.return_value)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     @pytest.mark.parametrize("trace", [True, False])
     async def test_send_json(self, transport_impl, trace):
         transport_impl._ws.send_bytes = mock.AsyncMock()
@@ -204,14 +204,14 @@ class TestGatewayTransport:
 
         transport_impl._ws.send_bytes.assert_awaited_once_with(b"some data")
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test__handle_other_message_when_TEXT(self, transport_impl):
         stub_response = StubResponse(type=aiohttp.WSMsgType.TEXT)
 
         with pytest.raises(errors.GatewayError, match="Unexpected message type received TEXT, expected BINARY"):
             transport_impl._handle_other_message(stub_response)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test__handle_other_message_when_BINARY(self, transport_impl):
         stub_response = StubResponse(type=aiohttp.WSMsgType.BINARY)
 
@@ -274,7 +274,7 @@ class TestGatewayTransport:
 
         assert exc_info.value.__cause__ is exception
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test__receive_and_check_text_when_message_type_is_TEXT(self, transport_impl):
         transport_impl._ws.receive = mock.AsyncMock(
             return_value=StubResponse(type=aiohttp.WSMsgType.TEXT, data="some text")
@@ -284,7 +284,7 @@ class TestGatewayTransport:
 
         transport_impl._ws.receive.assert_awaited_once_with()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test__receive_and_check_text_when_message_type_is_unknown(self, transport_impl):
         mock_exception = errors.GatewayError("aye")
         transport_impl._ws.receive = mock.AsyncMock(return_value=StubResponse(type=aiohttp.WSMsgType.BINARY))
@@ -299,7 +299,7 @@ class TestGatewayTransport:
         transport_impl._ws.receive.assert_awaited_once_with()
         handle_other_message.assert_called_once_with(transport_impl._ws.receive.return_value)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test__receive_and_check_zlib_when_message_type_is_BINARY(self, transport_impl):
         response = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"some initial data")
         transport_impl._ws.receive = mock.AsyncMock(return_value=response)
@@ -314,7 +314,7 @@ class TestGatewayTransport:
         transport_impl._ws.receive.assert_awaited_once_with()
         receive_and_check_complete_zlib_package.assert_awaited_once_with(b"some initial data")
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test__receive_and_check_zlib_when_message_type_is_BINARY_and_the_full_payload(self, transport_impl):
         response = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"some initial data\x00\x00\xff\xff")
         transport_impl._ws.receive = mock.AsyncMock(return_value=response)
@@ -325,7 +325,7 @@ class TestGatewayTransport:
         transport_impl._ws.receive.assert_awaited_once_with()
         transport_impl._zlib.decompress.assert_called_once_with(response.data)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test__receive_and_check_zlib_when_message_type_is_unknown(self, transport_impl):
         mock_exception = errors.GatewayError("aye")
         transport_impl._ws.receive = mock.AsyncMock(return_value=StubResponse(type=aiohttp.WSMsgType.TEXT))
@@ -340,7 +340,7 @@ class TestGatewayTransport:
         transport_impl._ws.receive.assert_awaited_once_with()
         handle_other_message.assert_called_once_with(transport_impl._ws.receive.return_value)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test__receive_and_check_complete_zlib_package_for_unexpected_message_type(self, transport_impl):
         mock_exception = errors.GatewayError("aye")
         response = StubResponse(type=aiohttp.WSMsgType.TEXT)
@@ -356,7 +356,7 @@ class TestGatewayTransport:
         transport_impl._ws.receive.assert_awaited_with()
         handle_other_message.assert_called_once_with(response)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test__receive_and_check_complete_zlib_package(self, transport_impl):
         response1 = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"more")
         response2 = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"data")
@@ -371,7 +371,7 @@ class TestGatewayTransport:
         transport_impl._zlib.decompress.assert_called_once_with(bytearray(b"somemoredata\x00\x00\xff\xff"))
 
     @pytest.mark.parametrize("transport_compression", [True, False])
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_connect(self, http_settings, proxy_settings, transport_compression):
         logger = mock.Mock()
         log_filterer = mock.Mock()
@@ -435,7 +435,7 @@ class TestGatewayTransport:
         exit_stack.aclose.assert_not_called()
         sleep.assert_not_called()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_connect_when_error_while_connecting(self, http_settings, proxy_settings):
         logger = mock.Mock()
         log_filterer = mock.Mock()
@@ -464,7 +464,7 @@ class TestGatewayTransport:
         exit_stack.aclose.assert_awaited_once_with()
         sleep.assert_awaited_once_with(0.25)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     @pytest.mark.parametrize(
         ("error", "reason"),
         [
@@ -508,7 +508,7 @@ class TestGatewayTransport:
         sleep.assert_awaited_once_with(0.25)
 
 
-@pytest.fixture()
+@pytest.fixture
 def client(http_settings, proxy_settings):
     return shard.GatewayShardImpl(
         event_manager=mock.Mock(),
@@ -666,7 +666,7 @@ class TestGatewayShardImpl:
         check_if_alive.assert_called_once_with()
 
 
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 class TestGatewayShardImplAsync:
     async def test_close_when_no_keep_alive_task(self, client):
         client._keep_alive_task = None

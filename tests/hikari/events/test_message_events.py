@@ -33,7 +33,7 @@ from tests.hikari import hikari_test_helpers
 
 
 class TestMessageCreateEvent:
-    @pytest.fixture()
+    @pytest.fixture
     def event(self):
         cls = hikari_test_helpers.mock_class_namespace(
             message_events.MessageCreateEvent,
@@ -85,7 +85,7 @@ class TestMessageCreateEvent:
 
 
 class TestMessageUpdateEvent:
-    @pytest.fixture()
+    @pytest.fixture
     def event(self):
         cls = hikari_test_helpers.mock_class_namespace(
             message_events.MessageUpdateEvent,
@@ -157,7 +157,7 @@ class TestMessageUpdateEvent:
 
 
 class TestGuildMessageCreateEvent:
-    @pytest.fixture()
+    @pytest.fixture
     def event(self):
         return message_events.GuildMessageCreateEvent(
             message=mock.Mock(
@@ -220,7 +220,7 @@ class TestGuildMessageCreateEvent:
 
 
 class TestGuildMessageUpdateEvent:
-    @pytest.fixture()
+    @pytest.fixture
     def event(self):
         return message_events.GuildMessageUpdateEvent(
             message=mock.Mock(
@@ -287,7 +287,7 @@ class TestGuildMessageUpdateEvent:
 
 
 class TestDMMessageUpdateEvent:
-    @pytest.fixture()
+    @pytest.fixture
     def event(self):
         return message_events.DMMessageUpdateEvent(
             message=mock.Mock(
@@ -302,7 +302,7 @@ class TestDMMessageUpdateEvent:
 
 
 class TestGuildMessageDeleteEvent:
-    @pytest.fixture()
+    @pytest.fixture
     def event(self):
         return message_events.GuildMessageDeleteEvent(
             guild_id=snowflakes.Snowflake(542342354564),

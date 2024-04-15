@@ -44,7 +44,7 @@ class TestEmoji:
 
 
 class TestUnicodeEmoji:
-    @pytest.fixture()
+    @pytest.fixture
     def emoji(self):
         return emojis.UnicodeEmoji("\N{OK HAND SIGN}")
 
@@ -111,7 +111,7 @@ class TestUnicodeEmoji:
 
 
 class TestCustomEmoji:
-    @pytest.fixture()
+    @pytest.fixture
     def emoji(self):
         return emojis.CustomEmoji(id=3213452, name="ok", is_animated=False)
 

@@ -182,7 +182,7 @@ async def _consume_generator_listener(generator: typing.AsyncGenerator[typing.An
 
 
 class InteractionServer(interaction_server.InteractionServer):
-    """Standard implementation of `hikari.api.interaction_server.InteractionServer`.
+    """Standard implementation of [`hikari.api.interaction_server.InteractionServer`][].
 
     Parameters
     ----------
@@ -192,12 +192,12 @@ class InteractionServer(interaction_server.InteractionServer):
     Other Parameters
     ----------------
     dumps : hikari.internal.data_binding.JSONEncoder
-        The JSON encoder this server should use. Defaults to `hikari.internal.data_binding.default_json_dumps`.
+        The JSON encoder this server should use.
     loads : hikari.internal.data_binding.JSONDecoder
-        The JSON decoder this server should use. Defaults to `hikari.internal.data_binding.default_json_loads`.
-    public_key : bytes
+        The JSON decoder this server should use.
+    public_key : typing.Optional[bytes]
         The public key this server should use for verifying request payloads from
-        Discord. If left as `None` then the client will try to work this
+        Discord. If left as [`None`][] then the client will try to work this
         out using `rest_client`.
     rest_client : hikari.api.rest.RESTClient
         The client this should use for making REST requests.
@@ -282,7 +282,7 @@ class InteractionServer(interaction_server.InteractionServer):
         """Handle an AIOHTTP interaction request.
 
         This method handles aiohttp specific detail before calling
-        `InteractionServer.on_interaction` with the data extracted from the
+        [`hikari.impl.interaction_server.InteractionServer.on_interaction`][] with the data extracted from the
         request if it can and handles building an aiohttp response.
 
         Parameters
@@ -401,7 +401,7 @@ class InteractionServer(interaction_server.InteractionServer):
     async def on_interaction(self, body: bytes, signature: bytes, timestamp: bytes) -> interaction_server.Response:
         """Handle an interaction received from Discord as a REST server.
 
-        .. note::
+        !!! note
             If this server instance is alive then this will be called internally
             by the server but if the instance isn't alive then this may still be
             called externally to trigger interaction dispatch.
@@ -504,7 +504,7 @@ class InteractionServer(interaction_server.InteractionServer):
     ) -> None:
         """Start the bot and wait for the internal server to startup then return.
 
-        .. note::
+        !!! note
             For more information on the other parameters such as defaults see
             AIOHTTP's documentation.
 
@@ -528,8 +528,8 @@ class InteractionServer(interaction_server.InteractionServer):
         socket : typing.Optional[socket.socket]
             A pre-existing socket object to accept connections on.
         shutdown_timeout : float
-            A delay to wait for graceful server shutdown before forcefully
-            disconnecting all open client sockets. This defaults to 60 seconds.
+            A delay to wait, in seconds, for graceful server shutdown
+            before forcefully disconnecting all open client sockets.
         ssl_context : typing.Optional[ssl.SSLContext]
             SSL context for HTTPS servers.
         """

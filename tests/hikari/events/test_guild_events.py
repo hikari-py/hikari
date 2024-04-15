@@ -31,7 +31,7 @@ from tests.hikari import hikari_test_helpers
 
 
 class TestGuildEvent:
-    @pytest.fixture()
+    @pytest.fixture
     def event(self):
         cls = hikari_test_helpers.mock_class_namespace(
             guild_events.GuildEvent, guild_id=mock.PropertyMock(return_value=snowflakes.Snowflake(534123123))
@@ -58,7 +58,7 @@ class TestGuildEvent:
 
         assert event.get_guild() is None
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_fetch_guild(self, event):
         event.app.rest.fetch_guild = mock.AsyncMock()
         result = await event.fetch_guild()
@@ -66,7 +66,7 @@ class TestGuildEvent:
         assert result is event.app.rest.fetch_guild.return_value
         event.app.rest.fetch_guild.assert_called_once_with(534123123)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_fetch_guild_preview(self, event):
         event.app.rest.fetch_guild_preview = mock.AsyncMock()
         result = await event.fetch_guild_preview()
@@ -76,7 +76,7 @@ class TestGuildEvent:
 
 
 class TestGuildAvailableEvent:
-    @pytest.fixture()
+    @pytest.fixture
     def event(self):
         return guild_events.GuildAvailableEvent(
             shard=object(),
@@ -100,7 +100,7 @@ class TestGuildAvailableEvent:
 
 
 class TestGuildUpdateEvent:
-    @pytest.fixture()
+    @pytest.fixture
     def event(self):
         return guild_events.GuildUpdateEvent(
             shard=object(),
@@ -124,7 +124,7 @@ class TestGuildUpdateEvent:
 
 
 class TestBanEvent:
-    @pytest.fixture()
+    @pytest.fixture
     def event(self):
         return hikari_test_helpers.mock_class_namespace(guild_events.BanEvent)()
 
@@ -133,7 +133,7 @@ class TestBanEvent:
 
 
 class TestPresenceUpdateEvent:
-    @pytest.fixture()
+    @pytest.fixture
     def event(self):
         return guild_events.PresenceUpdateEvent(
             shard=object(),
@@ -162,7 +162,7 @@ class TestPresenceUpdateEvent:
 
 
 class TestGuildStickersUpdateEvent:
-    @pytest.fixture()
+    @pytest.fixture
     def event(self):
         return guild_events.StickersUpdateEvent(
             app=mock.Mock(),
@@ -172,7 +172,7 @@ class TestGuildStickersUpdateEvent:
             stickers=(mock.Mock(), mock.Mock(), mock.Mock()),
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_fetch_stickers(self, event):
         event.app.rest.fetch_guild_stickers = mock.AsyncMock()
 
@@ -182,7 +182,7 @@ class TestGuildStickersUpdateEvent:
 
 
 class TestAuditLogEntryCreateEvent:
-    @pytest.fixture()
+    @pytest.fixture
     def event(self):
         return guild_events.AuditLogEntryCreateEvent(shard=mock.Mock(), entry=mock.Mock())
 

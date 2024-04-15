@@ -3,6 +3,7 @@ count = true
 
 # A002:  Argument is shadowing a python builtin.
 # A003: Class attribute is shadowing a python builtin.
+# A005: Module is shadowing a python builtin module.
 # CFQ002: Function has too many arguments.
 # CFQ004: Function has too many returns.
 # D102: Missing docstring in public method.
@@ -17,6 +18,7 @@ count = true
 ignore =
     A002,
     A003,
+    A005,
     CFQ002,
     CFQ004,
     D102,
