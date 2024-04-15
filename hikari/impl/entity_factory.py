@@ -2618,7 +2618,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             options=options,
             locale=locales.Locale(payload["locale"]),
             guild_locale=locales.Locale(payload["guild_locale"]) if "guild_locale" in payload else None,
-            entitlements=[self.deserialize_entitlement(entitlement) for entitlement in payload.get("entitlements", [])],
+            entitlements=[self.deserialize_entitlement(entitlement) for entitlement in payload.get("entitlements", ())],
         )
 
     def deserialize_modal_interaction(self, payload: data_binding.JSONObject) -> modal_interactions.ModalInteraction:
@@ -2661,7 +2661,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             custom_id=data_payload["custom_id"],
             components=self._deserialize_components(data_payload["components"], self._modal_component_type_mapping),
             message=message,
-            entitlements=[self.deserialize_entitlement(entitlement) for entitlement in payload.get("entitlements", [])],
+            entitlements=[self.deserialize_entitlement(entitlement) for entitlement in payload.get("entitlements", ())],
         )
 
     def deserialize_interaction(self, payload: data_binding.JSONObject) -> base_interactions.PartialInteraction:
@@ -2754,7 +2754,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             locale=locales.Locale(payload["locale"]),
             guild_locale=locales.Locale(payload["guild_locale"]) if "guild_locale" in payload else None,
             app_permissions=permission_models.Permissions(app_perms) if app_perms else None,
-            entitlements=[self.deserialize_entitlement(entitlement) for entitlement in payload.get("entitlements", [])],
+            entitlements=[self.deserialize_entitlement(entitlement) for entitlement in payload.get("entitlements", ())],
         )
 
     ##################
