@@ -41,6 +41,7 @@ if typing.TYPE_CHECKING:
     from hikari import guilds as guild_models
     from hikari import invites as invite_models
     from hikari import messages as message_models
+    from hikari import monetization as entitlement_models
     from hikari import presences as presence_models
     from hikari import scheduled_events as scheduled_events_models
     from hikari import sessions as gateway_models
@@ -1991,4 +1992,38 @@ class EntityFactory(abc.ABC):
         ------
         hikari.errors.UnrecognisedEntityError
             If the channel type is unknown.
+        """
+
+    ##################
+    #  MONETIZATION  #
+    ##################
+
+    @abc.abstractmethod
+    def deserialize_entitlement(self, payload: data_binding.JSONObject) -> entitlement_models.Entitlement:
+        """Parse a raw payload from Discord into an entitlement object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.monetization.Entitlement
+            The deserialized entitlement object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_sku(self, payload: data_binding.JSONObject) -> entitlement_models.SKU:
+        """Parse a raw payload from Discord into an SKU object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.monetization.SKU
+            The deserialized SKU object.
         """

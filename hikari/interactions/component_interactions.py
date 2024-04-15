@@ -38,6 +38,7 @@ if typing.TYPE_CHECKING:
     from hikari import guilds
     from hikari import locales
     from hikari import messages
+    from hikari import monetization
     from hikari import permissions
     from hikari import snowflakes
     from hikari import users
@@ -85,7 +86,9 @@ The following types are valid for this:
 
 @attrs.define(hash=True, weakref_slot=False)
 class ComponentInteraction(
-    base_interactions.MessageResponseMixin[ComponentResponseTypesT], base_interactions.ModalResponseMixin
+    base_interactions.MessageResponseMixin[ComponentResponseTypesT],
+    base_interactions.ModalResponseMixin,
+    base_interactions.PremiumResponseMixin,
 ):
     """Represents a component interaction on Discord."""
 
@@ -146,6 +149,9 @@ class ComponentInteraction(
 
     app_permissions: typing.Optional[permissions.Permissions] = attrs.field(eq=False, hash=False, repr=False)
     """Permissions the bot has in this interaction's channel if it's in a guild."""
+
+    entitlements: typing.Sequence[monetization.Entitlement] = attrs.field(eq=False, hash=False, repr=True)
+    """For monetized apps, any entitlements for the invoking user, represents access to SKUs."""
 
     def build_response(self, type_: _ImmediateTypesT, /) -> special_endpoints.InteractionMessageBuilder:
         """Get a message response builder for use in the REST server flow.

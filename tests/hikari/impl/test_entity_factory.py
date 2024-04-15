@@ -39,6 +39,7 @@ from hikari import guilds as guild_models
 from hikari import invites as invite_models
 from hikari import locales
 from hikari import messages as message_models
+from hikari import monetization as monetization_models
 from hikari import permissions as permission_models
 from hikari import presences as presence_models
 from hikari import scheduled_events as scheduled_event_models
@@ -4397,6 +4398,20 @@ class TestEntityFactoryImpl:
             "version": 69420,
             "application_id": "76234234",
             "app_permissions": "54123",
+            "entitlements": [
+                {
+                    "id": "696969696969696",
+                    "sku_id": "420420420420420",
+                    "application_id": "123123123123123",
+                    "type": 8,
+                    "deleted": False,
+                    "starts_at": "2022-09-14T17:00:18.704163+00:00",
+                    "ends_at": "2022-10-14T17:00:18.704163+00:00",
+                    "user_id": "115590097100865541",
+                    "guild_id": "1015034326372454400",
+                    "subscription_id": "1019653835926409216",
+                }
+            ],
         }
 
     def test_deserialize_command_interaction(
@@ -4430,6 +4445,8 @@ class TestEntityFactoryImpl:
             interaction_resolved_data_payload, guild_id=43123123
         )
         assert interaction.app_permissions == 54123
+        assert len(interaction.entitlements) == 1
+        assert interaction.entitlements[0].id == 696969696969696
 
         # CommandInteractionOption
         assert len(interaction.options) == 1
@@ -4478,6 +4495,20 @@ class TestEntityFactoryImpl:
             "version": 69420,
             "application_id": "76234234",
             "app_permissions": "54123123",
+            "entitlements": [
+                {
+                    "id": "696969696969696",
+                    "sku_id": "420420420420420",
+                    "application_id": "123123123123123",
+                    "type": 8,
+                    "deleted": False,
+                    "starts_at": "2022-09-14T17:00:18.704163+00:00",
+                    "ends_at": "2022-10-14T17:00:18.704163+00:00",
+                    "user_id": "115590097100865541",
+                    "guild_id": "1015034326372454400",
+                    "subscription_id": "1019653835926409216",
+                }
+            ],
         }
 
     def test_deserialize_command_interaction_with_context_menu_field(
@@ -4537,6 +4568,20 @@ class TestEntityFactoryImpl:
             "guild_locale": "en-US",
             "version": 69420,
             "application_id": "76234234",
+            "entitlements": [
+                {
+                    "id": "696969696969696",
+                    "sku_id": "420420420420420",
+                    "application_id": "123123123123123",
+                    "type": 8,
+                    "deleted": False,
+                    "starts_at": "2022-09-14T17:00:18.704163+00:00",
+                    "ends_at": "2022-10-14T17:00:18.704163+00:00",
+                    "user_id": "115590097100865541",
+                    "guild_id": "1015034326372454400",
+                    "subscription_id": "1019653835926409216",
+                }
+            ],
         }
 
     def test_deserialize_autocomplete_interaction(
@@ -4790,6 +4835,20 @@ class TestEntityFactoryImpl:
             "locale": "es-ES",
             "guild_locale": "en-US",
             "app_permissions": "5431234",
+            "entitlements": [
+                {
+                    "id": "696969696969696",
+                    "sku_id": "420420420420420",
+                    "application_id": "123123123123123",
+                    "type": 8,
+                    "deleted": False,
+                    "starts_at": "2022-09-14T17:00:18.704163+00:00",
+                    "ends_at": "2022-10-14T17:00:18.704163+00:00",
+                    "user_id": "115590097100865541",
+                    "guild_id": "1015034326372454400",
+                    "subscription_id": "1019653835926409216",
+                }
+            ],
         }
 
     def test_deserialize_component_interaction(
@@ -4830,6 +4889,9 @@ class TestEntityFactoryImpl:
         )
         assert isinstance(interaction, component_interactions.ComponentInteraction)
 
+        assert len(interaction.entitlements) == 1
+        assert interaction.entitlements[0].id == 696969696969696
+
     def test_deserialize_component_interaction_with_undefined_fields(
         self, entity_factory_impl, user_payload, message_payload
     ):
@@ -4845,6 +4907,20 @@ class TestEntityFactoryImpl:
                 "channel_id": "345626669114982999",
                 "application_id": "290926444748734465",
                 "locale": "es-ES",
+                "entitlements": [
+                    {
+                        "id": "696969696969696",
+                        "sku_id": "420420420420420",
+                        "application_id": "123123123123123",
+                        "type": 8,
+                        "deleted": False,
+                        "starts_at": "2022-09-14T17:00:18.704163+00:00",
+                        "ends_at": "2022-10-14T17:00:18.704163+00:00",
+                        "user_id": "115590097100865541",
+                        "guild_id": "1015034326372454400",
+                        "subscription_id": "1019653835926409216",
+                    }
+                ],
             }
         )
 
@@ -4877,6 +4953,20 @@ class TestEntityFactoryImpl:
             "application_id": "290926444748734465",
             "locale": "en-US",
             "guild_locale": "es-ES",
+            "entitlements": [
+                {
+                    "id": "696969696969696",
+                    "sku_id": "420420420420420",
+                    "application_id": "123123123123123",
+                    "type": 8,
+                    "deleted": False,
+                    "starts_at": "2022-09-14T17:00:18.704163+00:00",
+                    "ends_at": "2022-10-14T17:00:18.704163+00:00",
+                    "user_id": "115590097100865541",
+                    "guild_id": "1015034326372454400",
+                    "subscription_id": "1019653835926409216",
+                }
+            ],
         }
 
     def test_deserialize_modal_interaction(
@@ -4897,6 +4987,9 @@ class TestEntityFactoryImpl:
         )
         assert interaction.user is interaction.member.user
         assert isinstance(interaction, modal_interactions.ModalInteraction)
+
+        assert len(interaction.entitlements) == 1
+        assert interaction.entitlements[0].id == 696969696969696
 
         short_action_row = interaction.components[0]
         assert isinstance(short_action_row, component_models.ActionRowComponent)
@@ -7044,3 +7137,59 @@ class TestEntityFactoryImpl:
     def test_deserialize_webhook_for_unexpected_webhook_type(self, entity_factory_impl):
         with pytest.raises(errors.UnrecognisedEntityError):
             entity_factory_impl.deserialize_webhook({"type": -7999})
+
+    ##################
+    #  MONETIZATION  #
+    ##################
+
+    @pytest.fixture
+    def entitlement_payload(self):
+        return {
+            "id": "696969696969696",
+            "sku_id": "420420420420420",
+            "application_id": "123123123123123",
+            "type": 8,
+            "deleted": False,
+            "starts_at": "2022-09-14T17:00:18.704163+00:00",
+            "ends_at": "2022-10-14T17:00:18.704163+00:00",
+            "guild_id": "1015034326372454400",
+            "user_id": "115590097100865541",
+            "subscription_id": "1019653835926409216",
+        }
+
+    @pytest.fixture
+    def sku_payload(self):
+        return {
+            "id": "420420420420420",
+            "type": 5,
+            "application_id": "123123123123123",
+            "name": "hashire sori yo kaze no you ni tsukimihara wo padoru padoru",
+            "slug": "hashire-sori-yo-kaze-no-you-ni-tsukimihara-wo-padoru-padoru",
+            "flags": 1 << 2 | 1 << 7,
+        }
+
+    def test_deserialize_entitlement(self, entity_factory_impl, entitlement_payload):
+        entitlement = entity_factory_impl.deserialize_entitlement(entitlement_payload)
+
+        assert entitlement.id == 696969696969696
+        assert entitlement.sku_id == 420420420420420
+        assert entitlement.application_id == 123123123123123
+        assert entitlement.type is monetization_models.EntitlementType.APPLICATION_SUBSCRIPTION
+        assert entitlement.is_deleted is False
+        assert entitlement.starts_at == datetime.datetime(2022, 9, 14, 17, 0, 18, 704163, tzinfo=datetime.timezone.utc)
+        assert entitlement.ends_at == datetime.datetime(2022, 10, 14, 17, 0, 18, 704163, tzinfo=datetime.timezone.utc)
+        assert entitlement.guild_id == 1015034326372454400
+        assert entitlement.user_id == 115590097100865541
+        assert entitlement.subscription_id == 1019653835926409216
+        assert isinstance(entitlement, monetization_models.Entitlement)
+
+    def test_deserialize_sku(self, entity_factory_impl, sku_payload):
+        sku = entity_factory_impl.deserialize_sku(sku_payload)
+
+        assert sku.id == 420420420420420
+        assert sku.type is monetization_models.SKUType.SUBSCRIPTION
+        assert sku.application_id == 123123123123123
+        assert sku.name == "hashire sori yo kaze no you ni tsukimihara wo padoru padoru"
+        assert sku.slug == "hashire-sori-yo-kaze-no-you-ni-tsukimihara-wo-padoru-padoru"
+        assert sku.flags == (monetization_models.SKUFlags.AVAILABLE | monetization_models.SKUFlags.GUILD_SUBSCRIPTION)
+        assert isinstance(sku, monetization_models.SKU)

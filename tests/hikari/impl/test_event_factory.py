@@ -37,6 +37,7 @@ from hikari.events import interaction_events
 from hikari.events import lifetime_events
 from hikari.events import member_events
 from hikari.events import message_events
+from hikari.events import monetization_events
 from hikari.events import reaction_events
 from hikari.events import role_events
 from hikari.events import scheduled_events
@@ -1458,3 +1459,61 @@ class TestEventFactoryImpl:
         assert event.token == "okokok"
         assert event.guild_id == 3122312
         assert event.raw_endpoint == "httppppppp"
+
+    ##################
+    #  MONETIZATION  #
+    ##################
+
+    def test_deserialize_entitlement_create_event(self, event_factory, mock_app, mock_shard):
+        payload = {
+            "id": "696969696969696",
+            "sku_id": "420420420420420",
+            "application_id": "123123123123123",
+            "type": 8,
+            "deleted": False,
+            "starts_at": "2022-09-14T17:00:18.704163+00:00",
+            "ends_at": "2022-10-14T17:00:18.704163+00:00",
+            "guild_id": "1015034326372454400",
+            "user_id": "115590097100865541",
+            "subscription_id": "1019653835926409216",
+        }
+
+        event = event_factory.deserialize_entitlement_create_event(mock_shard, payload)
+
+        assert isinstance(event, monetization_events.EntitlementCreateEvent)
+
+    def test_deserialize_entitlement_update_event(self, event_factory, mock_app, mock_shard):
+        payload = {
+            "id": "696969696969696",
+            "sku_id": "420420420420420",
+            "application_id": "123123123123123",
+            "type": 8,
+            "deleted": False,
+            "starts_at": "2022-09-14T17:00:18.704163+00:00",
+            "ends_at": "2022-10-14T17:00:18.704163+00:00",
+            "guild_id": "1015034326372454400",
+            "user_id": "115590097100865541",
+            "subscription_id": "1019653835926409216",
+        }
+
+        event = event_factory.deserialize_entitlement_update_event(mock_shard, payload)
+
+        assert isinstance(event, monetization_events.EntitlementUpdateEvent)
+
+    def test_deserialize_entitlement_delete_event(self, event_factory, mock_app, mock_shard):
+        payload = {
+            "id": "696969696969696",
+            "sku_id": "420420420420420",
+            "application_id": "123123123123123",
+            "type": 8,
+            "deleted": False,
+            "starts_at": "2022-09-14T17:00:18.704163+00:00",
+            "ends_at": "2022-10-14T17:00:18.704163+00:00",
+            "guild_id": "1015034326372454400",
+            "user_id": "115590097100865541",
+            "subscription_id": "1019653835926409216",
+        }
+
+        event = event_factory.deserialize_entitlement_delete_event(mock_shard, payload)
+
+        assert isinstance(event, monetization_events.EntitlementDeleteEvent)
