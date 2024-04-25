@@ -1,4 +1,4 @@
-mkdocs==1.5.3
+mkdocs==1.6.0
 
 # Mkdocs Material
 mkdocs-material[imaging]==9.5.19
