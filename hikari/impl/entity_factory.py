@@ -1006,7 +1006,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             recipients=recipients,
         )
 
-    def _set_guild_channel_attrsibutes(
+    def _set_guild_channel_attributes(
         self, payload: data_binding.JSONObject, *, guild_id: undefined.UndefinedOr[snowflakes.Snowflake]
     ) -> _GuildChannelFields:
         if guild_id is undefined.UNDEFINED:
@@ -1030,7 +1030,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         *,
         guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> channel_models.GuildCategory:
-        channel_fields = self._set_guild_channel_attrsibutes(payload, guild_id=guild_id)
+        channel_fields = self._set_guild_channel_attributes(payload, guild_id=guild_id)
         permission_overwrites = {
             snowflakes.Snowflake(overwrite["id"]): self.deserialize_permission_overwrite(overwrite)
             for overwrite in payload["permission_overwrites"]
@@ -1053,7 +1053,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         *,
         guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> channel_models.GuildTextChannel:
-        channel_fields = self._set_guild_channel_attrsibutes(payload, guild_id=guild_id)
+        channel_fields = self._set_guild_channel_attributes(payload, guild_id=guild_id)
         # As of present this isn't included in the payloads of old channels where it hasn't been explicitly set.
         # In this case it's 1440 minutes.
         default_auto_archive_duration = datetime.timedelta(minutes=payload.get("default_auto_archive_duration", 1440))
@@ -1096,7 +1096,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         *,
         guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> channel_models.GuildNewsChannel:
-        channel_fields = self._set_guild_channel_attrsibutes(payload, guild_id=guild_id)
+        channel_fields = self._set_guild_channel_attributes(payload, guild_id=guild_id)
         # As of present this isn't included in the payloads of old channels where it hasn't been explicitly set.
         # In this case it's 1440 minutes.
         default_auto_archive_duration = datetime.timedelta(minutes=payload.get("default_auto_archive_duration", 1440))
@@ -1135,11 +1135,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         *,
         guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> channel_models.GuildVoiceChannel:
-        channel_fields = self._set_guild_channel_attrsibutes(payload, guild_id=guild_id)
-        permission_overwrites = {
-            snowflakes.Snowflake(overwrite["id"]): self.deserialize_permission_overwrite(overwrite)
-            for overwrite in payload["permission_overwrites"]
-        }
+        channel_fields = self._set_guild_channel_attributes(payload, guild_id=guild_id)
         # Discord seems to be only returning this after it's been initially PATCHed in for older channels.
         video_quality_mode = payload.get("video_quality_mode", channel_models.VideoQualityMode.AUTO)
 
@@ -1153,7 +1149,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=channel_fields.name,
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
-            permission_overwrites=permission_overwrites,
+            permission_overwrites={
+                snowflakes.Snowflake(overwrite["id"]): self.deserialize_permission_overwrite(overwrite)
+                for overwrite in payload["permission_overwrites"]
+            },
             is_nsfw=payload.get("nsfw", False),
             parent_id=channel_fields.parent_id,
             # There seems to be an edge case where rtc_region won't be included in gateway events (e.g. GUILD_CREATE)
@@ -1172,7 +1171,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         *,
         guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> channel_models.GuildStageChannel:
-        channel_fields = self._set_guild_channel_attrsibutes(payload, guild_id=guild_id)
+        channel_fields = self._set_guild_channel_attributes(payload, guild_id=guild_id)
+
+        # Discord seems to be only returning this after it's been initially PATCHed in for older channels.
+        video_quality_mode = payload.get("video_quality_mode", channel_models.VideoQualityMode.AUTO)
 
         last_message_id: typing.Optional[snowflakes.Snowflake] = None
         if (raw_last_message_id := payload.get("last_message_id")) is not None:
@@ -1193,6 +1195,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             region=payload["rtc_region"],
             bitrate=int(payload["bitrate"]),
             user_limit=int(payload["user_limit"]),
+            video_quality_mode=channel_models.VideoQualityMode(int(video_quality_mode)),
             position=int(payload["position"]),
             last_message_id=last_message_id,
         )
@@ -1203,7 +1206,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         *,
         guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> channel_models.GuildForumChannel:
-        channel_fields = self._set_guild_channel_attrsibutes(payload, guild_id=guild_id)
+        channel_fields = self._set_guild_channel_attributes(payload, guild_id=guild_id)
 
         # As of present this isn't included in the payloads of old channels where it hasn't been explicitly set.
         # In this case it's 1440 minutes.
@@ -1322,7 +1325,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         member: undefined.UndefinedNoneOr[channel_models.ThreadMember] = undefined.UNDEFINED,
         user_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> channel_models.GuildNewsThread:
-        channel_fields = self._set_guild_channel_attrsibutes(payload, guild_id=guild_id)
+        channel_fields = self._set_guild_channel_attributes(payload, guild_id=guild_id)
         last_message_id: typing.Optional[snowflakes.Snowflake] = None
         if (raw_last_message_id := payload.get("last_message_id")) is not None:
             last_message_id = snowflakes.Snowflake(raw_last_message_id)
@@ -1370,7 +1373,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         member: undefined.UndefinedNoneOr[channel_models.ThreadMember] = undefined.UNDEFINED,
         user_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> channel_models.GuildPublicThread:
-        channel_fields = self._set_guild_channel_attrsibutes(payload, guild_id=guild_id)
+        channel_fields = self._set_guild_channel_attributes(payload, guild_id=guild_id)
         flags = (
             channel_models.ChannelFlag(raw_flags)
             if (raw_flags := payload.get("flags"))
@@ -1426,7 +1429,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         member: undefined.UndefinedNoneOr[channel_models.ThreadMember] = undefined.UNDEFINED,
         user_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> channel_models.GuildPrivateThread:
-        channel_fields = self._set_guild_channel_attrsibutes(payload, guild_id=guild_id)
+        channel_fields = self._set_guild_channel_attributes(payload, guild_id=guild_id)
         last_message_id: typing.Optional[snowflakes.Snowflake] = None
         if (raw_last_message_id := payload.get("last_message_id")) is not None:
             last_message_id = snowflakes.Snowflake(raw_last_message_id)
@@ -1883,7 +1886,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     @staticmethod
-    def _set_partial_integration_attrsibutes(payload: data_binding.JSONObject) -> _IntegrationFields:
+    def _set_partial_integration_attributes(payload: data_binding.JSONObject) -> _IntegrationFields:
         account_payload = payload["account"]
         account = guild_models.IntegrationAccount(id=account_payload["id"], name=account_payload["name"])
         return _IntegrationFields(
@@ -1894,7 +1897,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     def deserialize_partial_integration(self, payload: data_binding.JSONObject) -> guild_models.PartialIntegration:
-        integration_fields = self._set_partial_integration_attrsibutes(payload)
+        integration_fields = self._set_partial_integration_attributes(payload)
         return guild_models.PartialIntegration(
             id=integration_fields.id,
             name=integration_fields.name,
@@ -1908,7 +1911,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         *,
         guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> guild_models.Integration:
-        integration_fields = self._set_partial_integration_attrsibutes(payload)
+        integration_fields = self._set_partial_integration_attributes(payload)
 
         role_id: typing.Optional[snowflakes.Snowflake] = None
         if (raw_role_id := payload.get("role_id")) is not None:
@@ -2066,7 +2069,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     def deserialize_vanity_url(self, payload: data_binding.JSONObject) -> invite_models.VanityURL:
         return invite_models.VanityURL(app=self._app, code=payload["code"], uses=int(payload["uses"]))
 
-    def _set_invite_attrsibutes(self, payload: data_binding.JSONObject) -> _InviteFields:
+    def _set_invite_attributes(self, payload: data_binding.JSONObject) -> _InviteFields:
         guild: typing.Optional[invite_models.InviteGuild] = None
         guild_id: typing.Optional[snowflakes.Snowflake] = None
         if "guild" in payload:
@@ -2131,7 +2134,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     def deserialize_invite(self, payload: data_binding.JSONObject) -> invite_models.Invite:
-        invite_fields = self._set_invite_attrsibutes(payload)
+        invite_fields = self._set_invite_attributes(payload)
 
         expires_at: typing.Optional[datetime.datetime] = None
         if raw_expires_at := payload.get("expires_at"):
@@ -2154,7 +2157,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     def deserialize_invite_with_metadata(self, payload: data_binding.JSONObject) -> invite_models.InviteWithMetadata:
-        invite_fields = self._set_invite_attrsibutes(payload)
+        invite_fields = self._set_invite_attributes(payload)
         created_at = time.iso8601_datetime_string_to_datetime(payload["created_at"])
         max_uses = int(payload["max_uses"])
 

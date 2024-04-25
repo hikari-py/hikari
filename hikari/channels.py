@@ -1358,7 +1358,7 @@ class GuildVoiceChannel(PermissibleGuildChannel, TextableGuildChannel):
     """
 
     video_quality_mode: typing.Union[VideoQualityMode, int] = attrs.field(eq=False, hash=False, repr=False)
-    """The video quality mode for the voice channel."""
+    """The video quality mode for this channel."""
 
     last_message_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the last message sent in this channel.
@@ -1389,6 +1389,9 @@ class GuildStageChannel(PermissibleGuildChannel, TextableGuildChannel):
 
     If this is `0`, then assume no limit.
     """
+
+    video_quality_mode: typing.Union[VideoQualityMode, int] = attrs.field(eq=False, hash=False, repr=False)
+    """The video quality mode for this channel."""
 
     last_message_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the last message sent in this channel.
