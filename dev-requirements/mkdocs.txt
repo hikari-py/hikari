@@ -12,7 +12,7 @@ mkdocs-gen-files==0.5.0
 mkdocs-literate-nav==0.6.1
 
 # Formatting signatures
-black==24.4.1
+black==24.4.2
 
 # Image viewer ext
 mkdocs-glightbox==0.3.7
