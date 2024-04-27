@@ -210,10 +210,10 @@ class _GatewayTransport:
 
     def _handle_other_message(self, message: aiohttp.WSMessage, /) -> typing.NoReturn:
         if message.type == aiohttp.WSMsgType.TEXT:
-            raise errors.GatewayError("Unexpected message type received TEXT, expected BINARY")
+            raise errors.GatewayTransportError("Unexpected message type received TEXT, expected BINARY")
 
         if message.type == aiohttp.WSMsgType.BINARY:
-            raise errors.GatewayError("Unexpected message type received BINARY, expected TEXT")
+            raise errors.GatewayTransportError("Unexpected message type received BINARY, expected TEXT")
 
         if message.type == aiohttp.WSMsgType.CLOSE:
             close_code = int(message.data)
