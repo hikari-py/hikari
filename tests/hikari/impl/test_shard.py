@@ -20,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 import asyncio
+import builtins
 import contextlib
 import datetime
 import platform
@@ -44,11 +45,11 @@ from tests.hikari import hikari_test_helpers
 
 
 def test_log_filterer():
-    filterer = shard._log_filterer("TOKEN")
+    filterer = shard._log_filterer(b"TOKEN")
 
-    returned = filterer("this log contains the TOKEN and it should get removed and the TOKEN here too")
+    returned = filterer(b"this log contains the TOKEN and it should get removed and the TOKEN here too")
     assert returned == (
-        "this log contains the **REDACTED TOKEN** and it should get removed and the **REDACTED TOKEN** here too"
+        b"this log contains the **REDACTED TOKEN** and it should get removed and the **REDACTED TOKEN** here too"
     )
 
 
@@ -275,12 +276,12 @@ class TestGatewayTransport:
         assert exc_info.value.__cause__ is exception
 
     @pytest.mark.asyncio
-    async def test__receive_and_check_text_when_message_type_is_TEXT(self, transport_impl):
+    async def test__receive_and_check_text(self, transport_impl):
         transport_impl._ws.receive = mock.AsyncMock(
             return_value=StubResponse(type=aiohttp.WSMsgType.TEXT, data="some text")
         )
 
-        assert await transport_impl._receive_and_check_text() == "some text"
+        assert await transport_impl._receive_and_check_text() == b"some text"
 
         transport_impl._ws.receive.assert_awaited_once_with()
 
@@ -300,75 +301,42 @@ class TestGatewayTransport:
         handle_other_message.assert_called_once_with(transport_impl._ws.receive.return_value)
 
     @pytest.mark.asyncio
-    async def test__receive_and_check_zlib_when_message_type_is_BINARY(self, transport_impl):
-        response = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"some initial data")
-        transport_impl._ws.receive = mock.AsyncMock(return_value=response)
+    async def test__receive_and_check_zlib_when_payload_split_across_frames(self, transport_impl):
+        response1 = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"x\xda\xf2H\xcd\xc9")
+        response2 = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"\xc9W(\xcf/\xcaIQ\x04\x00\x00")
+        response3 = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"\x00\xff\xff")
+        transport_impl._ws.receive = mock.AsyncMock(side_effect=[response1, response2, response3])
 
-        with mock.patch.object(
-            shard._GatewayTransport, "_receive_and_check_complete_zlib_package"
-        ) as receive_and_check_complete_zlib_package:
-            assert (
-                await transport_impl._receive_and_check_zlib() is receive_and_check_complete_zlib_package.return_value
-            )
+        assert await transport_impl._receive_and_check_zlib() == b"Hello world!"
 
-        transport_impl._ws.receive.assert_awaited_once_with()
-        receive_and_check_complete_zlib_package.assert_awaited_once_with(b"some initial data")
+        assert transport_impl._ws.receive.call_count == 3
 
     @pytest.mark.asyncio
-    async def test__receive_and_check_zlib_when_message_type_is_BINARY_and_the_full_payload(self, transport_impl):
-        response = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"some initial data\x00\x00\xff\xff")
+    async def test__receive_and_check_zlib_when_full_payload_in_one_frame(self, transport_impl):
+        response = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"x\xdaJLD\x07\x00\x00\x00\x00\xff\xff")
         transport_impl._ws.receive = mock.AsyncMock(return_value=response)
-        transport_impl._zlib = mock.Mock(decompress=mock.Mock(return_value=b"aaaaaaaaaaaaaaaaaa"))
 
-        assert await transport_impl._receive_and_check_zlib() == "aaaaaaaaaaaaaaaaaa"
+        assert await transport_impl._receive_and_check_zlib() == b"aaaaaaaaaaaaaaaaaa"
 
         transport_impl._ws.receive.assert_awaited_once_with()
-        transport_impl._zlib.decompress.assert_called_once_with(response.data)
 
     @pytest.mark.asyncio
     async def test__receive_and_check_zlib_when_message_type_is_unknown(self, transport_impl):
-        mock_exception = errors.GatewayError("aye")
         transport_impl._ws.receive = mock.AsyncMock(return_value=StubResponse(type=aiohttp.WSMsgType.TEXT))
 
-        with mock.patch.object(
-            shard._GatewayTransport, "_handle_other_message", side_effect=mock_exception
-        ) as handle_other_message:
-            with pytest.raises(errors.GatewayError) as exc_info:
-                await transport_impl._receive_and_check_zlib()
-
-        assert exc_info.value is mock_exception
-        transport_impl._ws.receive.assert_awaited_once_with()
-        handle_other_message.assert_called_once_with(transport_impl._ws.receive.return_value)
+        with pytest.raises(errors.GatewayError, match="Unexpected message type received TEXT, expected BINARY"):
+            await transport_impl._receive_and_check_zlib()
 
     @pytest.mark.asyncio
-    async def test__receive_and_check_complete_zlib_package_for_unexpected_message_type(self, transport_impl):
-        mock_exception = errors.GatewayError("aye")
-        response = StubResponse(type=aiohttp.WSMsgType.TEXT)
-        transport_impl._ws.receive = mock.AsyncMock(return_value=response)
-
-        with mock.patch.object(
-            shard._GatewayTransport, "_handle_other_message", side_effect=mock_exception
-        ) as handle_other_message:
-            with pytest.raises(errors.GatewayError) as exc_info:
-                await transport_impl._receive_and_check_complete_zlib_package(b"some")
-
-        assert exc_info.value is mock_exception
-        transport_impl._ws.receive.assert_awaited_with()
-        handle_other_message.assert_called_once_with(response)
-
-    @pytest.mark.asyncio
-    async def test__receive_and_check_complete_zlib_package(self, transport_impl):
-        response1 = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"more")
-        response2 = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"data")
-        response3 = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"\x00\x00\xff\xff")
+    async def test__receive_and_check_zlib_when_issue_during_reception_of_multiple_frames(self, transport_impl):
+        response1 = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"x\xda\xf2H\xcd\xc9")
+        response2 = StubResponse(type=aiohttp.WSMsgType.ERROR, data=b"Oh no! Something broke!")
+        response3 = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"\x00\xff\xff")
         transport_impl._ws.receive = mock.AsyncMock(side_effect=[response1, response2, response3])
-        transport_impl._zlib = mock.Mock(decompress=mock.Mock(return_value=b"decoded utf-8 encoded bytes"))
+        transport_impl._ws.exception = mock.Mock(return_value=None)
 
-        assert await transport_impl._receive_and_check_complete_zlib_package(b"some") == "decoded utf-8 encoded bytes"
-
-        assert transport_impl._ws.receive.call_count == 3
-        transport_impl._ws.receive.assert_has_awaits([mock.call(), mock.call(), mock.call()])
-        transport_impl._zlib.decompress.assert_called_once_with(bytearray(b"somemoredata\x00\x00\xff\xff"))
+        with pytest.raises(errors.GatewayError, match="Unexpected websocket exception from gateway"):
+            await transport_impl._receive_and_check_zlib()
 
     @pytest.mark.parametrize("transport_compression", [True, False])
     @pytest.mark.asyncio
@@ -1002,7 +970,7 @@ class TestGatewayShardImplAsync:
         with stack:
             assert await client._connect() == (heartbeat_task, poll_events_task)
 
-        log_filterer.assert_called_once_with("sometoken")
+        log_filterer.assert_called_once_with(b"sometoken")
         gateway_transport_connect.assert_called_once_with(
             http_settings=http_settings,
             log_filterer=log_filterer.return_value,
@@ -1087,7 +1055,7 @@ class TestGatewayShardImplAsync:
         with stack:
             assert await client._connect() == (heartbeat_task, poll_events_task)
 
-        log_filterer.assert_called_once_with("sometoken")
+        log_filterer.assert_called_once_with(b"sometoken")
         gateway_transport_connect.assert_called_once_with(
             http_settings=http_settings,
             log_filterer=log_filterer.return_value,
