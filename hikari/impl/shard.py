@@ -229,7 +229,8 @@ class _GatewayTransport:
             raise errors.GatewayConnectionError("Socket has closed")
 
         # Assume exception for now.
-        raise errors.GatewayError("Unexpected websocket exception from gateway") from self._ws.exception()
+        reason = f"{message.data!r} [extra={message.extra!r}, type={message.type}]"
+        raise errors.GatewayTransportError(reason) from self._ws.exception()
 
     async def _receive_and_check_text(self) -> str:
         message = await self._ws.receive()
@@ -919,6 +920,9 @@ class GatewayShardImpl(shard.GatewayShard):
 
             except errors.GatewayConnectionError as ex:
                 self._logger.warning("failed to communicate with server, reason was: %r. Will retry shortly", ex.reason)
+
+            except errors.GatewayTransportError as ex:
+                self._logger.error("encountered transport error. Will try to reconnect shorty", exc_info=ex)
 
             except errors.GatewayServerClosedConnectionError as ex:
                 if not ex.can_reconnect:

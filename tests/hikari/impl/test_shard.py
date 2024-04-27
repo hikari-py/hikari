@@ -269,7 +269,7 @@ class TestGatewayTransport:
         exception = Exception("some error")
         transport_impl._ws.exception = mock.Mock(return_value=exception)
 
-        with pytest.raises(errors.GatewayError, match="Unexpected websocket exception from gateway") as exc_info:
+        with pytest.raises(errors.GatewayTransportError) as exc_info:
             transport_impl._handle_other_message(stub_response)
 
         assert exc_info.value.__cause__ is exception
