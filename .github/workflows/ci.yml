@@ -101,7 +101,7 @@ jobs:
           coverage report
 
       - name: Upload coverage to codeclimate
-        uses: paambaati/codeclimate-action@v5.0.0
+        uses: paambaati/codeclimate-action@v6.0.0
         env:
           CC_TEST_REPORTER_ID: d40e64ea0ff74713f79365fea4378ab51a2141ad4fcf0fb118496bbf560d4192
         with:

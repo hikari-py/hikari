@@ -210,10 +210,10 @@ class _GatewayTransport:
 
     def _handle_other_message(self, message: aiohttp.WSMessage, /) -> typing.NoReturn:
         if message.type == aiohttp.WSMsgType.TEXT:
-            raise errors.GatewayError("Unexpected message type received TEXT, expected BINARY")
+            raise errors.GatewayTransportError("Unexpected message type received TEXT, expected BINARY")
 
         if message.type == aiohttp.WSMsgType.BINARY:
-            raise errors.GatewayError("Unexpected message type received BINARY, expected TEXT")
+            raise errors.GatewayTransportError("Unexpected message type received BINARY, expected TEXT")
 
         if message.type == aiohttp.WSMsgType.CLOSE:
             close_code = int(message.data)
@@ -229,7 +229,8 @@ class _GatewayTransport:
             raise errors.GatewayConnectionError("Socket has closed")
 
         # Assume exception for now.
-        raise errors.GatewayError("Unexpected websocket exception from gateway") from self._ws.exception()
+        reason = f"{message.data!r} [extra={message.extra!r}, type={message.type}]"
+        raise errors.GatewayTransportError(reason) from self._ws.exception()
 
     async def _receive_and_check_text(self) -> bytes:
         message = await self._ws.receive()
@@ -920,6 +921,9 @@ class GatewayShardImpl(shard.GatewayShard):
 
             except errors.GatewayConnectionError as ex:
                 self._logger.warning("failed to communicate with server, reason was: %r. Will retry shortly", ex.reason)
+
+            except errors.GatewayTransportError as ex:
+                self._logger.error("encountered transport error. Will try to reconnect shorty", exc_info=ex)
 
             except errors.GatewayServerClosedConnectionError as ex:
                 if not ex.can_reconnect:
